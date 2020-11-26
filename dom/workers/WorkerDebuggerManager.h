@@ -7,14 +7,15 @@
 #ifndef mozilla_dom_workers_workerdebuggermanager_h
 #define mozilla_dom_workers_workerdebuggermanager_h
 
-#include "mozilla/dom/WorkerCommon.h"
-
+#include "MainThreadUtils.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Mutex.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
 #include "nsIObserver.h"
+#include "nsISupports.h"
 #include "nsIWorkerDebuggerManager.h"
-
-#include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
-#include "nsThreadUtils.h"
 
 #define WORKERDEBUGGERMANAGER_CID                    \
   {                                                  \

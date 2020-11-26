@@ -4,37 +4,69 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WorkerScope.h"
+#include "mozilla/dom/WorkerScope.h"
 
+#include <stdio.h>
+#include <new>
 #include <utility>
-
 #include "Crypto.h"
+#include "GeckoProfiler.h"
+#include "MainThreadUtils.h"
 #include "Principal.h"
+#include "ScriptLoader.h"
+#include "js/CompilationAndEvaluation.h"
+#include "js/CompileOptions.h"
+#include "js/RealmOptions.h"
+#include "js/RootingAPI.h"
+#include "js/SourceText.h"
+#include "js/Value.h"
+#include "js/Wrapper.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/CompilationAndEvaluation.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/BaseProfilerMarkersPrerequisites.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/EventListenerManager.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
+#include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/TaskCategory.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/CSPEvalChecker.h"
+#include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/Clients.h"
+#include "mozilla/dom/Console.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/DebuggerNotification.h"
+#include "mozilla/dom/DebuggerNotificationBinding.h"
+#include "mozilla/dom/DebuggerNotificationManager.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
+#include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/ImageBitmap.h"
+#include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
+#include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
@@ -44,14 +76,32 @@
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerLocation.h"
 #include "mozilla/dom/WorkerNavigator.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/cache/CacheStorage.h"
+#include "mozilla/dom/cache/Types.h"
+#include "mozilla/fallible.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsAtom.h"
+#include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsDebug.h"
+#include "nsGkAtoms.h"
+#include "nsIEventTarget.h"
+#include "nsIGlobalObject.h"
+#include "nsIScriptError.h"
 #include "nsISerialEventTarget.h"
+#include "nsIWeakReference.h"
 #include "nsJSUtils.h"
+#include "nsLiteralString.h"
 #include "nsQueryObject.h"
-#include "ScriptLoader.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsTLiteralString.h"
+#include "nsThreadUtils.h"
+#include "nsWeakReference.h"
+#include "nsWrapperCacheInlines.h"
+#include "nscore.h"
 #include "xpcpublic.h"
 
 #ifdef ANDROID
@@ -116,6 +166,12 @@ bool WorkerScriptTimeoutHandler::Call(const char* aExecutionReason) {
   return true;
 };
 
+namespace workerinternals {
+void NamedWorkerGlobalScopeMixin::GetName(DOMString& aName) const {
+  aName.AsAString() = mName;
+}
+}  // namespace workerinternals
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(WorkerGlobalScopeBase)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerGlobalScopeBase,
@@ -166,6 +222,8 @@ WorkerGlobalScopeBase::WorkerGlobalScopeBase(
   BindToOwner(static_cast<nsIGlobalObject*>(this));
 }
 
+WorkerGlobalScopeBase::~WorkerGlobalScopeBase() = default;
+
 JSObject* WorkerGlobalScopeBase::GetGlobalJSObject() {
   mWorkerPrivate->AssertIsOnWorkerThread();
   return GetWrapper();
@@ -179,6 +237,14 @@ JSObject* WorkerGlobalScopeBase::GetGlobalJSObjectPreserveColor() const {
 bool WorkerGlobalScopeBase::IsSharedMemoryAllowed() const {
   mWorkerPrivate->AssertIsOnWorkerThread();
   return mWorkerPrivate->IsSharedMemoryAllowed();
+}
+
+Maybe<ClientInfo> WorkerGlobalScopeBase::GetClientInfo() const {
+  return Some(mClientSource->Info());
+}
+
+Maybe<ServiceWorkerDescriptor> WorkerGlobalScopeBase::GetController() const {
+  return mClientSource->GetController();
 }
 
 void WorkerGlobalScopeBase::Control(
@@ -268,6 +334,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(WorkerGlobalScope,
                                              WorkerGlobalScopeBase,
                                              nsISupportsWeakReference)
+
+WorkerGlobalScope::~WorkerGlobalScope() = default;
 
 Crypto* WorkerGlobalScope::GetCrypto(ErrorResult& aError) {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -593,6 +661,11 @@ WorkerGlobalScope::GetExistingDebuggerNotificationManager() {
   return mDebuggerNotificationManager;
 }
 
+Maybe<EventCallbackDebuggerNotificationType>
+WorkerGlobalScope::GetDebuggerNotificationType() const {
+  return Some(EventCallbackDebuggerNotificationType::Global);
+}
+
 RefPtr<ServiceWorkerRegistration>
 WorkerGlobalScope::GetServiceWorkerRegistration(
     const ServiceWorkerRegistrationDescriptor& aDescriptor) const {
@@ -747,6 +820,8 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(
       ,
       mRegistration(
           GetOrCreateServiceWorkerRegistration(aRegistrationDescriptor)) {}
+
+ServiceWorkerGlobalScope::~ServiceWorkerGlobalScope() = default;
 
 bool ServiceWorkerGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {

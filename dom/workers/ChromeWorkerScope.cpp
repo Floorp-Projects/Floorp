@@ -10,11 +10,8 @@
 #include "js/experimental/CTypes.h"  // JS::InitCTypesClass, JS::CTypesCallbacks, JS::SetCTypesCallbacks
 #include "js/MemoryFunctions.h"
 
-#include "nsXPCOM.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsString.h"
-
-#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {

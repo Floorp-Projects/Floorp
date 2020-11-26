@@ -8,8 +8,6 @@
 #define mozilla_dom_workers_WorkerCommon_h
 
 #include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/ServiceWorkerDescriptor.h"
 
 class nsPIDOMWindowInner;
 

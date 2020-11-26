@@ -7,6 +7,7 @@
 #include "WorkerCSPEventListener.h"
 #include "WorkerPrivate.h"
 #include "WorkerRef.h"
+#include "WorkerRunnable.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "mozilla/dom/SecurityPolicyViolationEventBinding.h"
 #include "mozilla/dom/WorkerRunnable.h"

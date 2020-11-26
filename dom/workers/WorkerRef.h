@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_workers_WorkerRef_h
 #define mozilla_dom_workers_WorkerRef_h
 
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerStatus.h"
-#include "mozilla/UniquePtr.h"
 #include <functional>
+#include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/RefPtr.h"
+#include "nsISupports.h"
 
 namespace mozilla {
 namespace dom {
