@@ -1,7 +1,7 @@
 Flags
 =====
 
-#### <code>--android-storage <var>ANDROID_STORAGE</var></code>
+#### <code>&#x2D;&#x2D;android-storage <var>ANDROID_STORAGE</var></code>
 
 Selects the test data location on the Android device, eg. the Firefox profile.
 By default `auto` is used.
@@ -47,7 +47,7 @@ By default `auto` is used.
 </table>
 
 
-#### <code>-b <var>BINARY</var></code> / <code>--binary <var>BINARY</var></code>
+#### <code>-b <var>BINARY</var></code> / <code>&#x2D;&#x2D;binary <var>BINARY</var></code>
 
 Path to the Firefox binary to use.  By default geckodriver tries to
 find and use the system installation of Firefox, but that behaviour
@@ -74,7 +74,7 @@ scanning the Windows registry.
 [whereis(1)]: http://www.manpagez.com/man/1/whereis/
 
 
-#### <code>--connect-existing</code>
+#### <code>&#x2D;&#x2D;connect-existing</code>
 
 Connect geckodriver to an existing Firefox instance.  This means
 geckodriver will abstain from the default of starting a new Firefox
@@ -85,29 +85,29 @@ To enable the remote protocol in Firefox, you can pass the
 `-marionette` flag.  Unless the `marionette.port` preference
 has been user-set, Marionette will listen on port 2828.  So when
 using `--connect-existing` it is likely you will also have to use
-[`--marionette-port`] to set the correct port.
+`--marionette-port` to set the correct port.
 
-[`--marionette-port`]: #marionette-port
+[`&#x2D;&#x2D;marionette-port`]: #marionette-port
 
 
-#### <code>--host <var>HOST</var></code>
+#### <code>&#x2D;&#x2D;host <var>HOST</var></code>
 
 Host to use for the WebDriver server.  Defaults to 127.0.0.1.
 
 
-#### <code>--log <var>LEVEL</var></code>
+#### <code>&#x2D;&#x2D;log <var>LEVEL</var></code>
 
 Set the Gecko and geckodriver log level.  Possible values are `fatal`,
 `error`, `warn`, `info`, `config`, `debug`, and `trace`.
 
 
-#### <code>--marionette-host <var>HOST</var></code>
+#### <code>&#x2D;&#x2D;marionette-host <var>HOST</var></code>
 
 Selects the host for geckodriver’s connection to the [Marionette]
 remote protocol. Defaults to 127.0.0.1.
 
 
-#### <code>--marionette-port <var>PORT</var></code>
+#### <code>&#x2D;&#x2D;marionette-port <var>PORT</var></code>
 
 Selects the port for geckodriver’s connection to the [Marionette]
 remote protocol.
@@ -116,13 +116,13 @@ In the default mode where geckodriver starts and manages the Firefox
 process, it will pick a free port assigned by the system and set the
 `marionette.port` preference in the profile.
 
-When [`--connect-existing`] is used and the Firefox process is not
+When `--connect-existing` is used and the Firefox process is not
 under geckodriver’s control, it will simply connect to <var>PORT</var>.
 
 [`--connect-existing`]: #connect-existing
 
 
-#### <code>-p <var>PORT</var></code> / <code>--port <var>PORT</var></code>
+#### <code>-p <var>PORT</var></code> / <code>&#x2D;&#x2D;port <var>PORT</var></code>
 
 Port to use for the WebDriver server.  Defaults to 4444.
 
@@ -130,7 +130,7 @@ A helpful trick is that it is possible to bind to 0 to get the
 system to atomically assign a free port.
 
 
-#### <code>--jsdebugger</code>
+#### <code>&#x2D;&#x2D;jsdebugger</code>
 
 Attach [browser toolbox] debugger when Firefox starts.  This is
 useful for debugging [Marionette] internals.
