@@ -65,7 +65,7 @@
           :root[sizemode=normal][tabsintitlebar] {
             border-top: 1px solid -moz-win-accentcolor;
           }
-          :root[tabsintitlebar]:not(:-moz-window-inactive):not(:-moz-lwtheme),
+          :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme),
           :root[tabsintitlebar]:not(:-moz-window-inactive)[lwt-default-theme-in-dark-mode] {
             background-color: -moz-win-accentcolor;
             color: -moz-win-accentcolortext;
@@ -301,7 +301,7 @@
     }
   }
 
-  :root[darkwindowframe="true"]:not(:-moz-window-inactive):not(:-moz-lwtheme) {
+  :root[darkwindowframe="true"]:not(:-moz-window-inactive, :-moz-lwtheme) {
     color: white;
   }
 
@@ -309,7 +309,7 @@
   @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
     /* Vertical toolbar border */
-    #main-window[sizemode=normal] .browser-toolbar:not(.titlebar-color):not(:-moz-lwtheme),
+    #main-window[sizemode=normal] .browser-toolbar:not(.titlebar-color, :-moz-lwtheme),
     #main-window[sizemode=normal] .browser-toolbar:-moz-lwtheme {
       border-inline: 1px solid @glassShadowColor@;
       background-clip: padding-box;
@@ -360,7 +360,7 @@
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
-  #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
+  #main-menubar:not(:-moz-lwtheme, :-moz-window-inactive) {
     background-color: rgba(255,255,255,.5);
     color: black;
     border-radius: 4px;

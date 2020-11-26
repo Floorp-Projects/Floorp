@@ -156,7 +156,7 @@ panelview[mainview] > .panel-header {
 }
 
 @supports not -moz-bool-pref("browser.tabs.tabmanager.enabled") {
-  #tabbrowser-tabs:not([overflow="true"]):not([hashiddentabs]) ~ #alltabs-button {
+  #tabbrowser-tabs:not([overflow="true"], [hashiddentabs]) ~ #alltabs-button {
     display: none;
   }
   #tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
@@ -187,7 +187,7 @@ panelview[mainview] > .panel-header {
   min-width: calc(var(--tab-min-width) + 10px);
 }
 
-.tabbrowser-tab:not([pinned]):not([fadein]) {
+.tabbrowser-tab:not([pinned], [fadein]) {
   max-width: 0.1px;
   min-width: 0.1px;
   visibility: hidden;
@@ -652,7 +652,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #urlbar[actionoverride] > #urlbar-input-container > #urlbar-label-box,
-#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]):not([searchmode]) > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"], [actiontype="extension"], [searchmode]) > #urlbar-input-container > #urlbar-label-box,
 #urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
 #urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
 #urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-label-box,
@@ -1444,7 +1444,7 @@ toolbarpaletteitem > toolbaritem {
   }
 }
 
-toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabstop {
+toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   -moz-user-focus: normal;
 }
 

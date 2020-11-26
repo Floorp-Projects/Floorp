@@ -31,8 +31,7 @@ test_newtab({
   before: setDefaultTopSites,
   // it should pin the website when we click the first option of the topsite context menu.
   test: async function topsites_pin_unpin() {
-    const siteSelector =
-      ".top-site-outer:not(.search-shortcut):not(.placeholder)";
+    const siteSelector = ".top-site-outer:not(.search-shortcut, .placeholder)";
     await ContentTaskUtils.waitForCondition(
       () => content.document.querySelector(siteSelector),
       "Topsite tippytop icon not found"

@@ -487,7 +487,7 @@
   margin-block: 1px 0;
 }
 
-.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]):not([multiselected]) {
+.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"], [multiselected]) {
   opacity: .9;
 }
 
@@ -499,7 +499,7 @@
   opacity: 0.9999;
 }
 
-.tab-label-container:not([selected="true"]):not([multiselected]) {
+.tab-label-container:not([selected="true"], [multiselected]) {
   opacity: .7;
 }
 

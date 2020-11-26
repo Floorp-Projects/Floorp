@@ -505,7 +505,7 @@
   height: 30px;
 }
 
-#page-action-buttons > :not([hidden]):not(toolbartabstop) ~ #pageActionSeparator {
+#page-action-buttons > :not([hidden], toolbartabstop) ~ #pageActionSeparator {
   /* Show the separator between the page actions and other elements when at
      least one of the latter is shown. */
   visibility: visible;

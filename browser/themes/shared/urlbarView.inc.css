@@ -99,7 +99,7 @@
   padding-block: 6px;
 }
 
-:root[uidensity=touch] .urlbarView-row:not([type=tip]):not([type=dynamic]) {
+:root[uidensity=touch] .urlbarView-row:not([type=tip], [type=dynamic]) {
   padding-block: 11px;
 }
 
@@ -151,7 +151,7 @@
   /* Note: switchtab entries show the url only in override mode,
      remotetab and sponsored ones only when selected or :hover. */
   .urlbarView[actionoverride] .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab]):not([sponsored]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+  .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab], [sponsored]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row:is([type=remotetab], [sponsored]):is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
     display: none;
@@ -172,12 +172,12 @@
   flex-wrap: wrap;
 }
 
-.urlbarView-row:not([type=tip]):not([type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
+.urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
 .urlbarView-url[overflow] {
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.urlbarView-row:not([type=tip]):not([type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
+.urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
@@ -186,11 +186,11 @@
   direction: ltr !important;
 }
 
-.urlbarView-row:not([type=tip]):not([type=dynamic]):hover > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip], [type=dynamic]):hover > .urlbarView-row-inner {
   background: var(--arrowpanel-dimmed);
 }
 
-.urlbarView-row:not([type=tip]):not([type=dynamic])[selected] > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip], [type=dynamic])[selected] > .urlbarView-row-inner {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
   fill-opacity: 1;
@@ -494,8 +494,8 @@
   color: inherit;
 }
 
-.urlbarView-row:is([type=remotetab], [sponsored]):not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-url,
-.urlbarView-row[type=search]:not([selected]):not(:hover):not([show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+.urlbarView-row:is([type=remotetab], [sponsored]):not([selected], :hover) > .urlbarView-row-inner > .urlbarView-url,
+.urlbarView-row[type=search]:not([selected], :hover, [show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
   /* Use visibility:collapse instead of display:none since the latter can
      confuse the overflow state of title and url elements when their content
@@ -504,7 +504,7 @@
 }
 
 .urlbarView-row:is([type=remotetab], [sponsored]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
-.urlbarView-row[type=search]:not([selected]):not(:hover):not([show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row[type=search]:not([selected], :hover, [show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   display: none;
 }

@@ -7,11 +7,11 @@
 .tab-icon-pending:not([pendingicon]),
 .tab-icon-pending[busy],
 .tab-icon-pending[pinned],
-.tab-icon-image:not([src]):not([pinned]):not([crashed]):not([pictureinpicture])[selected],
-.tab-icon-image:not([src]):not([pinned]):not([crashed]):not([sharing]):not([pictureinpicture]),
+.tab-icon-image:not([src], [pinned], [crashed], [pictureinpicture])[selected],
+.tab-icon-image:not([src], [pinned], [crashed], [sharing], [pictureinpicture]),
 .tab-icon-image[busy],
 .tab-throbber:not([busy]),
-.tab-icon-sound:not([soundplaying]):not([muted]):not([activemedia-blocked]):not([pictureinpicture]),
+.tab-icon-sound:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
 .tab-icon-sound[pinned],
 .tab-sharing-icon-overlay,
 .tab-icon-overlay {
@@ -40,13 +40,13 @@
 }
 
 .tab-label-container[textoverflow][labeldirection=ltr]:not([pinned]),
-.tab-label-container[textoverflow]:not([labeldirection]):not([pinned]):-moz-locale-dir(ltr) {
+.tab-label-container[textoverflow]:not([labeldirection], [pinned]):-moz-locale-dir(ltr) {
   direction: ltr;
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
 .tab-label-container[textoverflow][labeldirection=rtl]:not([pinned]),
-.tab-label-container[textoverflow]:not([labeldirection]):not([pinned]):-moz-locale-dir(rtl) {
+.tab-label-container[textoverflow]:not([labeldirection], [pinned]):-moz-locale-dir(rtl) {
   direction: rtl;
   mask-image: linear-gradient(to right, transparent, black 2em);
 }

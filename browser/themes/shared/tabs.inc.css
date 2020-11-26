@@ -460,8 +460,8 @@
   opacity: .8;
 }
 
-.tab-icon-sound[soundplaying-scheduledremoval]:not([muted]):not(:hover),
-.tab-icon-overlay[soundplaying-scheduledremoval]:not([muted]):not(:hover) {
+.tab-icon-sound[soundplaying-scheduledremoval]:not([muted], :hover),
+.tab-icon-overlay[soundplaying-scheduledremoval]:not([muted], :hover) {
   transition: opacity .3s linear var(--soundplaying-removal-delay);
   opacity: 0;
 }
@@ -506,7 +506,7 @@
   transition: opacity 150ms ease;
 }
 
-.tabbrowser-tab:not([visuallyselected=true]):not([multiselected]),
+.tabbrowser-tab:not([visuallyselected=true], [multiselected]),
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
 }
@@ -582,32 +582,32 @@
 
 /* Tab hover */
 
-.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]):not([multiselected]) {
+.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
   background-color: rgba(0,0,0,.1);
 }
 
-#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]):not([multiselected]) {
+#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
   background-color: rgba(255,255,255,.1);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .tab-line:not([selected=true]):not([multiselected]) {
+  .tab-line:not([selected=true], [multiselected]) {
     transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
   }
 }
 
-.tab-line:not([selected=true]):not([multiselected]) {
+.tab-line:not([selected=true], [multiselected]) {
   opacity: 0;
   transform: scaleX(0);
 }
 
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]):not([multiselected]) {
+.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true], [multiselected]) {
   background-color: rgba(0,0,0,.2);
   opacity: 1;
   transform: none;
 }
 
-#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]):not([multiselected]) {
+#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true], [multiselected]) {
   background-color: rgba(255,255,255,.2);
 }
 
@@ -636,11 +636,11 @@
   background-repeat: no-repeat;
 }
 
-.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([selected="true"]) {
+.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned], [selected="true"]) {
   background-position-x: left 11px;
 }
 
-.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([selected="true"]):-moz-locale-dir(rtl) {
+.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned], [selected="true"]):-moz-locale-dir(rtl) {
   background-position-x: right 11px;
 }
 

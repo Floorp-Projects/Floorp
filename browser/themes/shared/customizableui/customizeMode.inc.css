@@ -75,7 +75,7 @@
   padding: 2px 5px;
 }
 
-.customizationmode-checkbox:not(:-moz-lwtheme):not([disabled]),
+.customizationmode-checkbox:not(:-moz-lwtheme, [disabled]),
 .customizationmode-button {
   /* !important overrides :hover:active color from button.css on Mac */
   color: rgb(71, 71, 71) !important;

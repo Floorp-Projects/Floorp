@@ -260,7 +260,7 @@ var gSearchResultsPane = {
       // Building the range for highlighted areas
       let rootPreferencesChildren = [
         ...document.querySelectorAll(
-          "#mainPrefPane > *:not([data-hidden-from-search]):not(script):not(stringbundle)"
+          "#mainPrefPane > *:not([data-hidden-from-search], script, stringbundle)"
         ),
       ];
 
