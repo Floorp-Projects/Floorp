@@ -8893,6 +8893,27 @@ bool nsDisplayText::CreateWebRenderCommands(
     return true;
   }
 
+  // For large font sizes, punt to a blob image, to avoid the blurry rendering
+  // that results from WR clamping the glyph size used for rasterization.
+  //
+  // (See FONT_SIZE_LIMIT in webrender/src/glyph_rasterizer/mod.rs.)
+  //
+  // This is not strictly accurate, as final used font sizes might not be the
+  // same as claimed by the fontGroup's style.size (eg: due to font-size-adjust
+  // altering the used size of the font actually used).
+  // It also fails to consider how transforms might affect the device-font-size
+  // that webrender uses (and clamps).
+  // But it should be near enough for practical purposes; the limitations just
+  // mean we might sometimes end up with webrender still applying some bitmap
+  // scaling, or bail out when we didn't really need to.
+  constexpr float kWebRenderFontSizeLimit = 320.0;
+  f->EnsureTextRun(nsTextFrame::eInflated);
+  gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
+  if (textRun &&
+      textRun->GetFontGroup()->GetStyle()->size > kWebRenderFontSizeLimit) {
+    return false;
+  }
+
   gfx::Point deviceOffset =
       LayoutDevicePoint::FromAppUnits(bounds.TopLeft(), appUnitsPerDevPixel)
           .ToUnknownPoint();
