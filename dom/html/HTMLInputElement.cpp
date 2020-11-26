@@ -484,6 +484,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult) {
                mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder));
     nsCOMPtr<nsISupports> tmp;
     nsresult rv = mFilePicker->GetDomFileOrDirectory(getter_AddRefs(tmp));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Show a prompt to get user confirmation before allowing folder access.
     // This is to prevent sites from tricking the user into uploading files.
@@ -514,8 +515,6 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult) {
         return NS_OK;
       }
     }
-
-    NS_ENSURE_SUCCESS(rv, rv);
 
     RefPtr<Blob> blob = do_QueryObject(tmp);
     if (blob) {
