@@ -58,6 +58,10 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'threadmessage.c',
         'timecode.c'
     ]
+    if CONFIG['MOZ_WAYLAND']:
+        SOURCES += [
+            'hwcontext_vaapi.c',
+        ]
 
 SYMBOLS_FILE =  'avutil.symbols'
 NoVisibilityFlags()

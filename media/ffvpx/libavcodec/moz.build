@@ -96,6 +96,12 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'vp9prob.c',
         'vp9recon.c'
     ]
+    if CONFIG['MOZ_WAYLAND']:
+        SOURCES += [
+            'vaapi_decode.c',
+            'vaapi_vp8.c',
+            'vaapi_vp9.c',
+        ]
 
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [
