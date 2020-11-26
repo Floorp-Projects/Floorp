@@ -5,16 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DMABUFSurfaceImage.h"
-#include "gfxPlatform.h"
+#include "mozilla/widget/DMABufSurface.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/DMABUFTextureClientOGL.h"
 #include "mozilla/layers/TextureForwarder.h"
-#include "mozilla/UniquePtr.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
+
+DMABUFSurfaceImage::DMABUFSurfaceImage(DMABufSurface* aSurface)
+    : Image(nullptr, ImageFormat::DMABUF), mSurface(aSurface) {
+  mSurface->GlobalRefAdd();
+}
+
+DMABUFSurfaceImage::~DMABUFSurfaceImage() { mSurface->GlobalRefRelease(); }
 
 TextureClient* DMABUFSurfaceImage::GetTextureClient(
     KnowsCompositor* aKnowsCompositor) {
@@ -25,4 +31,8 @@ TextureClient* DMABUFSurfaceImage::GetTextureClient(
         aKnowsCompositor->GetTextureForwarder());
   }
   return mTextureClient;
+}
+
+gfx::IntSize DMABUFSurfaceImage::GetSize() const {
+  return gfx::IntSize::Truncate(mSurface->GetWidth(), mSurface->GetHeight());
 }
