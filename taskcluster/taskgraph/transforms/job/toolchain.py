@@ -220,7 +220,7 @@ def generic_worker_toolchain(config, job, taskdesc):
 
     run["using"] = "run-task"
 
-    args = run.pop("arguments", None)
+    args = run.pop("arguments", "")
     if args:
         args = " " + shell_quote(*args)
 
