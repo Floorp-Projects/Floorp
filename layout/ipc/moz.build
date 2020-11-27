@@ -9,21 +9,10 @@ with Files("**"):
 
 EXPORTS.mozilla.layout += [
     "RemoteLayerTreeOwner.h",
-    "VsyncChild.h",
-    "VsyncParent.h",
 ]
 
 UNIFIED_SOURCES += [
     "RemoteLayerTreeOwner.cpp",
-]
-
-SOURCES += [
-    "VsyncChild.cpp",
-    "VsyncParent.cpp",
-]
-
-IPDL_SOURCES = [
-    "PVsync.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
