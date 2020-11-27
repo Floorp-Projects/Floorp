@@ -1208,47 +1208,46 @@ fn white_point_from_temp(mut temp_K: i32) -> qcms_CIE_xyY {
     return white_point;
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
+pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
     return white_point_from_temp(6504);
 }
-#[no_mangle]
-pub unsafe extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
-    let mut profile: *mut qcms_profile;
-    let mut table: Vec<u16>;
-    let mut Rec709Primaries: qcms_CIE_xyYTRIPLE = {
-        let mut init = qcms_CIE_xyYTRIPLE {
-            red: {
-                let mut init = qcms_CIE_xyY {
-                    x: 0.6400f64,
-                    y: 0.3300f64,
-                    Y: 1.0f64,
-                };
-                init
-            },
-            green: {
-                let mut init = qcms_CIE_xyY {
-                    x: 0.3000f64,
-                    y: 0.6000f64,
-                    Y: 1.0f64,
-                };
-                init
-            },
-            blue: {
-                let mut init = qcms_CIE_xyY {
-                    x: 0.1500f64,
-                    y: 0.0600f64,
-                    Y: 1.0f64,
-                };
-                init
-            },
-        };
-        init
+
+fn profile_sRGB() -> Option<Box<qcms_profile>> {
+    let Rec709Primaries = qcms_CIE_xyYTRIPLE {
+        red: {
+            qcms_CIE_xyY {
+                x: 0.6400f64,
+                y: 0.3300f64,
+                Y: 1.0f64,
+            }
+        },
+        green: {
+            qcms_CIE_xyY {
+                x: 0.3000f64,
+                y: 0.6000f64,
+                Y: 1.0f64,
+            }
+        },
+        blue: {
+            qcms_CIE_xyY {
+                x: 0.1500f64,
+                y: 0.0600f64,
+                Y: 1.0f64,
+            }
+        },
     };
     let D65 = qcms_white_point_sRGB();
-    table = build_sRGB_gamma_table(1024);
+    let table = build_sRGB_gamma_table(1024);
 
-    profile = qcms_profile_create_rgb_with_table(D65, Rec709Primaries, table.as_ptr(), 1024);
-    return profile;
+    profile_create_rgb_with_table(D65, Rec709Primaries, &table)
+}
+#[no_mangle]
+pub extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
+    let profile = profile_sRGB();
+    match profile {
+        Some(profile) => Box::into_raw(profile),
+        None => null_mut(),
+    }
 }
 /* qcms_profile_from_memory does not hold a reference to the memory passed in */
 #[no_mangle]
