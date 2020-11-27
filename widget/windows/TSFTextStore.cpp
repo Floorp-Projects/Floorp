@@ -420,13 +420,6 @@ static const nsCString GetSinkMaskNameStr(DWORD aSinkMask) {
   return description;
 }
 
-static const char* GetActiveSelEndName(TsActiveSelEnd aSelEnd) {
-  return aSelEnd == TS_AE_NONE    ? "TS_AE_NONE"
-         : aSelEnd == TS_AE_START ? "TS_AE_START"
-         : aSelEnd == TS_AE_END   ? "TS_AE_END"
-                                  : "Unknown";
-}
-
 static const nsCString GetLockFlagNameStr(DWORD aLockFlags) {
   nsCString description;
   if ((aLockFlags & TS_LF_READWRITE) == TS_LF_READWRITE) {
@@ -2124,7 +2117,7 @@ TSFTextStore::RequestLock(DWORD dwLockFlags, HRESULT* phrSession) {
     return E_FAIL;
   }
   if (mDestroyed &&
-      (mContentForTSF.isNothing() || mSelectionForTSF.IsDirty())) {
+      (mContentForTSF.isNothing() || mSelectionForTSF.isNothing())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::RequestLock() FAILED due to "
              "being destroyed and no information of the contents",
@@ -2742,36 +2735,33 @@ TSFTextStore::GetSelection(ULONG ulIndex, ULONG ulCount,
     return TS_E_NOSELECTION;
   }
 
-  Selection& selectionForTSF = SelectionForTSFRef();
-  if (selectionForTSF.IsDirty()) {
+  Maybe<Selection>& selectionForTSF = SelectionForTSF();
+  if (selectionForTSF.isNothing()) {
     if (DoNotReturnErrorFromGetSelection()) {
-      AutoSetTemporarySelection temprarySetter(selectionForTSF);
-      *pSelection = selectionForTSF.ACP();
+      TS_SELECTION_ACP acp;
+      acp.acpStart = acp.acpEnd = 0;
+      acp.style.ase = TS_AE_START;
+      acp.style.fInterimChar = FALSE;
+      *pSelection = acp;
       *pcFetched = 1;
       MOZ_LOG(
           sTextStoreLog, LogLevel::Info,
           ("0x%p   TSFTextStore::GetSelection() returns fake selection range "
-           "for avoiding a crash in TSF, "
-           "acpStart=%d, acpEnd=%d (length=%d), reverted=%s",
-           this, selectionForTSF.StartOffset(), selectionForTSF.EndOffset(),
-           selectionForTSF.Length(),
-           GetBoolName(selectionForTSF.IsReversed())));
+           "for avoiding a crash in TSF, *pSelection=%s",
+           this, mozilla::ToString(*pSelection).c_str()));
       return S_OK;
     }
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetSelection() FAILED due to "
-             "SelectionForTSFRef() failure",
+             "SelectionForTSF() failure",
              this));
     return E_FAIL;
   }
-  *pSelection = selectionForTSF.ACP();
+  *pSelection = selectionForTSF->ACPRef();
   *pcFetched = 1;
-  MOZ_LOG(
-      sTextStoreLog, LogLevel::Info,
-      ("0x%p   TSFTextStore::GetSelection() succeeded, "
-       "acpStart=%d, acpEnd=%d (length=%d), reverted=%s",
-       this, selectionForTSF.StartOffset(), selectionForTSF.EndOffset(),
-       selectionForTSF.Length(), GetBoolName(selectionForTSF.IsReversed())));
+  MOZ_LOG(sTextStoreLog, LogLevel::Info,
+          ("0x%p   TSFTextStore::GetSelection() succeeded, *pSelection=%s",
+           this, mozilla::ToString(*pSelection).c_str()));
   return S_OK;
 }
 
@@ -2797,11 +2787,11 @@ Maybe<TSFTextStore::Content>& TSFTextStore::ContentForTSF() {
     return mContentForTSF;
   }
 
-  Selection& selectionForTSF = SelectionForTSFRef();
-  if (selectionForTSF.IsDirty()) {
+  Maybe<Selection>& selectionForTSF = SelectionForTSF();
+  if (selectionForTSF.isNothing()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::ContentForTSF(), FAILED, due to "
-             "SelectionForTSFRef() failure",
+             "SelectionForTSF() failure",
              this));
     mContentForTSF.reset();
     return mContentForTSF;
@@ -2834,7 +2824,7 @@ Maybe<TSFTextStore::Content>& TSFTextStore::ContentForTSF() {
 }
 
 bool TSFTextStore::CanAccessActualContentDirectly() const {
-  if (mContentForTSF.isNothing() || mSelectionForTSF.IsDirty()) {
+  if (mContentForTSF.isNothing() || mSelectionForTSF.isNothing()) {
     return true;
   }
 
@@ -2851,7 +2841,7 @@ bool TSFTextStore::CanAccessActualContentDirectly() const {
     return true;
   }
 
-  return mSelectionForTSF.EqualsExceptDirection(mPendingSelectionChangeData);
+  return mSelectionForTSF->EqualsExceptDirection(mPendingSelectionChangeData);
 }
 
 bool TSFTextStore::GetCurrentText(nsAString& aTextContent) {
@@ -2885,13 +2875,13 @@ bool TSFTextStore::GetCurrentText(nsAString& aTextContent) {
   return true;
 }
 
-TSFTextStore::Selection& TSFTextStore::SelectionForTSFRef() {
-  if (mSelectionForTSF.IsDirty()) {
+Maybe<TSFTextStore::Selection>& TSFTextStore::SelectionForTSF() {
+  if (mSelectionForTSF.isNothing()) {
     MOZ_ASSERT(!mDestroyed);
     // If the window has never been available, we should crash since working
     // with broken values may make TIP confused.
     if (!mWidget || mWidget->Destroyed()) {
-      MOZ_CRASH();
+      MOZ_ASSERT_UNREACHABLE("There should be non-destroyed widget");
     }
 
     WidgetQueryContentEvent querySelection(true, eQuerySelectedText, mWidget);
@@ -2901,17 +2891,15 @@ TSFTextStore::Selection& TSFTextStore::SelectionForTSFRef() {
       return mSelectionForTSF;
     }
 
-    mSelectionForTSF.SetSelection(
+    mSelectionForTSF = Some(Selection(
         querySelection.mReply.mOffset, querySelection.mReply.mString.Length(),
-        querySelection.mReply.mReversed, querySelection.GetWritingMode());
+        querySelection.mReply.mReversed, querySelection.GetWritingMode()));
   }
 
-  MOZ_LOG(
-      sTextStoreLog, LogLevel::Debug,
-      ("0x%p   TSFTextStore::SelectionForTSFRef(): "
-       "acpStart=%d, acpEnd=%d (length=%d), reverted=%s",
-       this, mSelectionForTSF.StartOffset(), mSelectionForTSF.EndOffset(),
-       mSelectionForTSF.Length(), GetBoolName(mSelectionForTSF.IsReversed())));
+  MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+          ("0x%p   TSFTextStore::SelectionForTSF() succeeded, "
+           "mSelectionForTSF=%s",
+           this, ToString(mSelectionForTSF).c_str()));
 
   return mSelectionForTSF;
 }
@@ -3094,16 +3082,16 @@ TSFTextStore::RestartCompositionIfNecessary(ITfRange* aRangeNew) {
 HRESULT TSFTextStore::RestartComposition(Composition& aCurrentComposition,
                                          ITfCompositionView* aCompositionView,
                                          ITfRange* aNewRange) {
-  Selection& selectionForTSF = SelectionForTSFRef();
+  Maybe<Selection>& selectionForTSF = SelectionForTSF();
 
   LONG newStart, newLength;
   HRESULT hr = GetRangeExtent(aNewRange, &newStart, &newLength);
   LONG newEnd = newStart + newLength;
 
-  if (selectionForTSF.IsDirty()) {
+  if (selectionForTSF.isNothing()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::RestartComposition() FAILED "
-             "due to SelectionForTSFRef() failure",
+             "due to SelectionForTSF() failure",
              this));
     return E_FAIL;
   }
@@ -3130,11 +3118,10 @@ HRESULT TSFTextStore::RestartComposition(Composition& aCurrentComposition,
       sTextStoreLog, LogLevel::Debug,
       ("0x%p   TSFTextStore::RestartComposition(aCompositionView=0x%p, "
        "aNewRange=0x%p { newStart=%d, newLength=%d }), aCurrentComposition=%s, "
-       "selectionForTSF={ IsDirty()=%s, StartOffset()=%d, Length()=%d }",
+       "selectionForTSF=%s",
        this, aCompositionView, aNewRange, newStart, newLength,
        ToString(aCurrentComposition).c_str(),
-       GetBoolName(selectionForTSF.IsDirty()), selectionForTSF.StartOffset(),
-       selectionForTSF.Length()));
+       ToString(selectionForTSF).c_str()));
 
   // If the new range has an overlap with the current one, we should not commit
   // the whole current range to avoid creating an odd undo transaction.
@@ -3143,7 +3130,7 @@ HRESULT TSFTextStore::RestartComposition(Composition& aCurrentComposition,
 
   // Backup current composition data and selection data.
   Composition oldComposition = aCurrentComposition;
-  Selection oldSelection = selectionForTSF;
+  Selection oldSelection = *selectionForTSF;
 
   // Commit only the part of composition.
   LONG keepComposingStartOffset =
@@ -3198,15 +3185,13 @@ HRESULT TSFTextStore::RestartComposition(Composition& aCurrentComposition,
       oldComposition.DataRef(),
       keepComposingStartOffset - oldComposition.StartOffset(),
       keepComposingLength));
-  selectionForTSF = oldSelection;
+  selectionForTSF = Some(oldSelection);
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::RestartComposition() succeeded, "
-           "mComposition=%s, selectionForTSF={ IsDirty()=%s, StartOffset()=%d, "
-           "Length()=%d }",
+           "mComposition=%s, selectionForTSF=%s",
            this, ToString(mComposition).c_str(),
-           GetBoolName(selectionForTSF.IsDirty()),
-           selectionForTSF.StartOffset(), selectionForTSF.Length()));
+           ToString(selectionForTSF).c_str()));
 
   return S_OK;
 }
@@ -3308,11 +3293,11 @@ TSFTextStore::RecordCompositionUpdateAction() {
   }
 
   // First, put the log of content and selection here.
-  Selection& selectionForTSF = SelectionForTSFRef();
-  if (selectionForTSF.IsDirty()) {
+  Maybe<Selection>& selectionForTSF = SelectionForTSF();
+  if (selectionForTSF.isNothing()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::RecordCompositionUpdateAction() FAILED "
-             "due to SelectionForTSFRef() failure",
+             "due to SelectionForTSF() failure",
              this));
     return E_FAIL;
   }
@@ -3422,10 +3407,10 @@ TSFTextStore::RecordCompositionUpdateAction() {
     // covers the composition string,  however, Gecko doesn't support the wide
     // caret drawing now (Gecko doesn't support XOR drawing), unfortunately.
     // For now, we should change the range style to undefined.
-    if (!selectionForTSF.IsCollapsed() && action->mRanges->Length() == 1) {
+    if (!selectionForTSF->Collapsed() && action->mRanges->Length() == 1) {
       TextRange& range = action->mRanges->ElementAt(0);
-      LONG start = selectionForTSF.MinOffset();
-      LONG end = selectionForTSF.MaxOffset();
+      LONG start = selectionForTSF->MinOffset();
+      LONG end = selectionForTSF->MaxOffset();
       if (range.mStartOffset == start - mComposition->StartOffset() &&
           range.mEndOffset == end - mComposition->StartOffset() &&
           range.mRangeStyle.IsNoChangeStyle()) {
@@ -3436,8 +3421,8 @@ TSFTextStore::RecordCompositionUpdateAction() {
     }
 
     // The caret position has to be collapsed.
-    uint32_t caretPosition = static_cast<uint32_t>(selectionForTSF.MaxOffset() -
-                                                   mComposition->StartOffset());
+    uint32_t caretPosition = static_cast<uint32_t>(
+        selectionForTSF->MaxOffset() - mComposition->StartOffset());
 
     // If caret is in the target clause and it doesn't have specific style,
     // the target clause will be painted as normal selection range.  Since
@@ -3467,23 +3452,21 @@ TSFTextStore::RecordCompositionUpdateAction() {
 HRESULT
 TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
                                    bool aDispatchCompositionChangeEvent) {
-  MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::SetSelectionInternal(pSelection={ "
-           "acpStart=%ld, acpEnd=%ld, style={ ase=%s, fInterimChar=%s} }, "
-           "aDispatchCompositionChangeEvent=%s), mComposition=%s",
-           this, pSelection->acpStart, pSelection->acpEnd,
-           GetActiveSelEndName(pSelection->style.ase),
-           GetBoolName(pSelection->style.fInterimChar),
-           GetBoolName(aDispatchCompositionChangeEvent),
-           ToString(mComposition).c_str()));
+  MOZ_LOG(
+      sTextStoreLog, LogLevel::Debug,
+      ("0x%p   TSFTextStore::SetSelectionInternal(pSelection=%s, "
+       "aDispatchCompositionChangeEvent=%s), mComposition=%s",
+       this, pSelection ? mozilla::ToString(*pSelection).c_str() : "nullptr",
+       GetBoolName(aDispatchCompositionChangeEvent),
+       ToString(mComposition).c_str()));
 
   MOZ_ASSERT(IsReadWriteLocked());
 
-  Selection& selectionForTSF = SelectionForTSFRef();
-  if (selectionForTSF.IsDirty()) {
+  Maybe<Selection>& selectionForTSF = SelectionForTSF();
+  if (selectionForTSF.isNothing()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::SetSelectionInternal() FAILED due to "
-             "SelectionForTSFRef() failure",
+             "SelectionForTSF() failure",
              this));
     return E_FAIL;
   }
@@ -3500,12 +3483,12 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
   // If actually the range is not changing, we should do nothing.
   // Perhaps, we can ignore the difference change because it must not be
   // important for following edit.
-  if (selectionForTSF.EqualsExceptDirection(*pSelection)) {
+  if (selectionForTSF->EqualsExceptDirection(*pSelection)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Warning,
             ("0x%p   TSFTextStore::SetSelectionInternal() Succeeded but "
              "did nothing because the selection range isn't changing",
              this));
-    selectionForTSF.SetSelection(*pSelection);
+    selectionForTSF->SetSelection(*pSelection);
     return S_OK;
   }
 
@@ -3529,7 +3512,7 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
       return TS_E_INVALIDPOS;
     }
     // Emulate selection during compositions
-    selectionForTSF.SetSelection(*pSelection);
+    selectionForTSF->SetSelection(*pSelection);
     if (aDispatchCompositionChangeEvent) {
       HRESULT hr = RecordCompositionUpdateAction();
       if (FAILED(hr)) {
@@ -3587,7 +3570,7 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
   action->mSelectionReversed = (selectionInContent.style.ase == TS_AE_START);
 
   // Use TSF specified selection for updating mSelectionForTSF.
-  selectionForTSF.SetSelection(*pSelection);
+  selectionForTSF->SetSelection(*pSelection);
 
   return S_OK;
 }
@@ -3595,13 +3578,10 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
 STDMETHODIMP
 TSFTextStore::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSelection) {
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
-          ("0x%p TSFTextStore::SetSelection(ulCount=%lu, pSelection=%p { "
-           "acpStart=%ld, acpEnd=%ld, style={ ase=%s, fInterimChar=%s } }), "
+          ("0x%p TSFTextStore::SetSelection(ulCount=%lu, pSelection=%s }), "
            "mComposition=%s",
-           this, ulCount, pSelection, pSelection ? pSelection->acpStart : 0,
-           pSelection ? pSelection->acpEnd : 0,
-           pSelection ? GetActiveSelEndName(pSelection->style.ase) : "",
-           pSelection ? GetBoolName(pSelection->style.fInterimChar) : "",
+           this, ulCount,
+           pSelection ? mozilla::ToString(pSelection).c_str() : "nullptr",
            ToString(mComposition).c_str()));
 
   if (!IsReadWriteLocked()) {
@@ -4080,21 +4060,21 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
           break;
         }
         case eTextVerticalWriting: {
-          Selection& selectionForTSF = SelectionForTSFRef();
+          Maybe<Selection>& selectionForTSF = SelectionForTSF();
           paAttrVals[count].varValue.vt = VT_BOOL;
           paAttrVals[count].varValue.boolVal =
-              !selectionForTSF.IsDirty() &&
-                      selectionForTSF.GetWritingMode().IsVertical()
+              selectionForTSF.isSome() &&
+                      selectionForTSF->GetWritingMode().IsVertical()
                   ? VARIANT_TRUE
                   : VARIANT_FALSE;
           break;
         }
         case eTextOrientation: {
-          Selection& selectionForTSF = SelectionForTSFRef();
+          Maybe<Selection>& selectionForTSF = SelectionForTSF();
           paAttrVals[count].varValue.vt = VT_I4;
           paAttrVals[count].varValue.lVal =
-              !selectionForTSF.IsDirty() &&
-                      selectionForTSF.GetWritingMode().IsVertical()
+              selectionForTSF.isSome() &&
+                      selectionForTSF->GetWritingMode().IsVertical()
                   ? 2700
                   : 0;
           break;
@@ -4349,19 +4329,14 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
            "acpStart=%ld, acpEnd=%ld, prc=0x%p, pfClipped=0x%p), "
            "IsHandlingCompositionInParent()=%s, "
            "IsHandlingCompositionInContent()=%s, mContentForTSF=%s, "
-           "mSelectionForTSF={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
-           "style.fInterimChar=%s }, mComposition=%s, "
-           "mDeferNotifyingTSF=%s, mWaitingQueryLayout=%s, "
-           "IMEHandler::IsA11yHandlingNativeCaret()=%s",
+           "mSelectionForTSF=%s, mComposition=%s, mDeferNotifyingTSF=%s, "
+           "mWaitingQueryLayout=%s, IMEHandler::IsA11yHandlingNativeCaret()=%s",
            this, vcView, acpStart, acpEnd, prc, pfClipped,
            GetBoolName(IsHandlingCompositionInParent()),
            GetBoolName(IsHandlingCompositionInContent()),
            mozilla::ToString(mContentForTSF).c_str(),
-           mSelectionForTSF.StartOffset(), mSelectionForTSF.EndOffset(),
-           GetActiveSelEndName(mSelectionForTSF.ActiveSelEnd()),
-           GetBoolName(mSelectionForTSF.IsInterimChar()),
-           ToString(mComposition).c_str(), GetBoolName(mDeferNotifyingTSF),
-           GetBoolName(mWaitingQueryLayout),
+           ToString(mSelectionForTSF).c_str(), ToString(mComposition).c_str(),
+           GetBoolName(mDeferNotifyingTSF), GetBoolName(mWaitingQueryLayout),
            GetBoolName(IMEHandler::IsA11yHandlingNativeCaret())));
 
   if (!IsReadLocked()) {
@@ -4471,7 +4446,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
     // Therefore, we should use relative to insertion point query since
     // TSF/TIP computes the offset from the cached selection.
     options.mRelativeToInsertionPoint = true;
-    startOffset -= mSelectionForTSF.StartOffset();
+    startOffset -= mSelectionForTSF->StartOffset();
   }
   // ContentEventHandler and ContentCache return actual caret rect when
   // the queried range is collapsed and selection is collapsed at the
@@ -4594,7 +4569,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
   // We need to compute active TIP now.  This may take a couple of milliseconds,
   // however, it'll be cached, so, must be faster than check active TIP every
   // GetTextExt() calls.
-  const Selection& selectionForTSF = SelectionForTSFRef();
+  const Maybe<Selection>& selectionForTSF = SelectionForTSF();
   switch (TSFStaticSink::ActiveTIP()) {
     // MS IME for Japanese doesn't support asynchronous handling at deciding
     // its suggest list window position.  The feature was implemented
@@ -4622,8 +4597,9 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // before unlocking the document.  In such case, we should return the
       // nearest character rect.
       if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret() &&
-          aACPStart == aACPEnd && selectionForTSF.IsCollapsed() &&
-          selectionForTSF.EndOffset() == aACPEnd) {
+          selectionForTSF.isSome() && aACPStart == aACPEnd &&
+          selectionForTSF->Collapsed() &&
+          selectionForTSF->EndOffset() == aACPEnd) {
         int32_t minOffsetOfLayoutChanged =
             static_cast<int32_t>(mContentForTSF->MinModifiedOffset().value());
         aACPEnd = aACPStart = std::max(minOffsetOfLayoutChanged - 1, 0);
@@ -4651,8 +4627,9 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // caret rect immediately after modifying the composition string but
       // before unlocking the document.  In such case, we should return the
       // nearest character rect.
-      else if (aACPStart == aACPEnd && selectionForTSF.IsCollapsed() &&
-               selectionForTSF.EndOffset() == aACPEnd) {
+      else if (aACPStart == aACPEnd && selectionForTSF.isSome() &&
+               selectionForTSF->Collapsed() &&
+               selectionForTSF->EndOffset() == aACPEnd) {
         int32_t minOffsetOfLayoutChanged =
             static_cast<int32_t>(mContentForTSF->MinModifiedOffset().value());
         aACPEnd = aACPStart = std::max(minOffsetOfLayoutChanged - 1, 0);
@@ -5011,23 +4988,23 @@ TSFTextStore::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText,
     }
 
     // Get selection first
-    Selection& selectionForTSF = SelectionForTSFRef();
-    if (selectionForTSF.IsDirty()) {
+    Maybe<Selection>& selectionForTSF = SelectionForTSF();
+    if (selectionForTSF.isNothing()) {
       MOZ_LOG(sTextStoreLog, LogLevel::Error,
               ("0x%p   TSFTextStore::InsertTextAtSelection() FAILED due to "
-               "SelectionForTSFRef() failure",
+               "SelectionForTSF() failure",
                this));
       return E_FAIL;
     }
 
     // Simulate text insertion
-    *pacpStart = selectionForTSF.StartOffset();
-    *pacpEnd = selectionForTSF.EndOffset();
+    *pacpStart = selectionForTSF->StartOffset();
+    *pacpEnd = selectionForTSF->EndOffset();
     if (pChange) {
-      pChange->acpStart = selectionForTSF.StartOffset();
-      pChange->acpOldEnd = selectionForTSF.EndOffset();
+      pChange->acpStart = selectionForTSF->StartOffset();
+      pChange->acpOldEnd = selectionForTSF->EndOffset();
       pChange->acpNewEnd =
-          selectionForTSF.StartOffset() + static_cast<LONG>(cch);
+          selectionForTSF->StartOffset() + static_cast<LONG>(cch);
     }
   } else {
     if (!IsReadWriteLocked()) {
@@ -5105,7 +5082,7 @@ bool TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
     return false;
   }
 
-  TS_SELECTION_ACP oldSelection = contentForTSF->Selection().ACP();
+  TS_SELECTION_ACP oldSelection = contentForTSF->Selection()->ACPRef();
   if (mComposition.isNothing()) {
     // Use a temporary composition to contain the text
     PendingAction* compositionStart = mPendingActions.AppendElements(2);
@@ -5138,7 +5115,7 @@ bool TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
   if (aTextChange) {
     aTextChange->acpStart = oldSelection.acpStart;
     aTextChange->acpOldEnd = oldSelection.acpEnd;
-    aTextChange->acpNewEnd = contentForTSF->Selection().EndOffset();
+    aTextChange->acpNewEnd = contentForTSF->Selection()->EndOffset();
   }
 
   MOZ_LOG(
@@ -5243,12 +5220,9 @@ HRESULT TSFTextStore::RecordCompositionStartAction(
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
             ("0x%p   TSFTextStore::RecordCompositionStartAction() "
              "succeeded: restoring the committed string as composing string, "
-             "mComposition=%s, mSelectionForTSF={ acpStart=%ld, acpEnd=%ld, "
-             "style.ase=%s, style.fInterimChar=%s }",
+             "mComposition=%s, mSelectionForTSF=%s",
              this, ToString(mComposition).c_str(),
-             mSelectionForTSF.StartOffset(), mSelectionForTSF.EndOffset(),
-             GetActiveSelEndName(mSelectionForTSF.ActiveSelEnd()),
-             GetBoolName(mSelectionForTSF.IsInterimChar())));
+             ToString(mSelectionForTSF).c_str()));
     return S_OK;
   }
 
@@ -5257,15 +5231,15 @@ HRESULT TSFTextStore::RecordCompositionStartAction(
   action->mSelectionStart = aStart;
   action->mSelectionLength = aLength;
 
-  Selection& selectionForTSF = SelectionForTSFRef();
-  if (selectionForTSF.IsDirty()) {
+  Maybe<Selection>& selectionForTSF = SelectionForTSF();
+  if (selectionForTSF.isNothing()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::RecordCompositionStartAction() FAILED "
-             "due to SelectionForTSFRef() failure",
+             "due to SelectionForTSF() failure",
              this));
     action->mAdjustSelection = true;
-  } else if (selectionForTSF.MinOffset() != aStart ||
-             selectionForTSF.MaxOffset() != aStart + aLength) {
+  } else if (selectionForTSF->MinOffset() != aStart ||
+             selectionForTSF->MaxOffset() != aStart + aLength) {
     // If new composition range is different from current selection range,
     // we need to set selection before dispatching compositionstart event.
     action->mAdjustSelection = true;
@@ -5284,12 +5258,9 @@ HRESULT TSFTextStore::RecordCompositionStartAction(
 
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
           ("0x%p   TSFTextStore::RecordCompositionStartAction() succeeded: "
-           "mComposition=%s, mSelectionForTSF={ acpStart=%ld, acpEnd=%ld, "
-           "style.ase=%s, style.fInterimChar=%s }",
-           this, ToString(mComposition).c_str(), mSelectionForTSF.StartOffset(),
-           mSelectionForTSF.EndOffset(),
-           GetActiveSelEndName(mSelectionForTSF.ActiveSelEnd()),
-           GetBoolName(mSelectionForTSF.IsInterimChar())));
+           "mComposition=%s, mSelectionForTSF=%s }",
+           this, ToString(mComposition).c_str(),
+           ToString(mSelectionForTSF).c_str()));
   return S_OK;
 }
 
@@ -5490,21 +5461,19 @@ TSFTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
   }
 
   if (MOZ_LOG_TEST(sTextStoreLog, LogLevel::Info)) {
-    Selection& selectionForTSF = SelectionForTSFRef();
-    if (selectionForTSF.IsDirty()) {
+    Maybe<Selection>& selectionForTSF = SelectionForTSF();
+    if (selectionForTSF.isNothing()) {
       MOZ_LOG(sTextStoreLog, LogLevel::Error,
               ("0x%p   TSFTextStore::OnUpdateComposition() FAILED due to "
-               "SelectionForTSFRef() failure",
+               "SelectionForTSF() failure",
                this));
       return E_FAIL;
     }
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
             ("0x%p   TSFTextStore::OnUpdateComposition() succeeded: "
-             "mComposition=%s, SelectionForTSFRef()={ acpStart=%ld, "
-             "acpEnd=%ld, style.ase=%s }",
+             "mComposition=%s, SelectionForTSF()=%s",
              this, ToString(mComposition).c_str(),
-             selectionForTSF.StartOffset(), selectionForTSF.EndOffset(),
-             GetActiveSelEndName(selectionForTSF.ActiveSelEnd())));
+             ToString(selectionForTSF).c_str()));
   }
   return S_OK;
 }
@@ -5930,7 +5899,7 @@ void TSFTextStore::NotifyTSFOfTextChange() {
   }
 
   // First, forget cached selection.
-  mSelectionForTSF.MarkDirty();
+  mSelectionForTSF.reset();
 
   // For making it safer, we should check if there is a valid sink to receive
   // text change notification.
@@ -6024,11 +5993,16 @@ void TSFTextStore::NotifyTSFOfSelectionChange() {
 
   // If selection range isn't actually changed, we don't need to notify TSF
   // of this selection change.
-  if (!mSelectionForTSF.SetSelection(
-          mPendingSelectionChangeData.mOffset,
-          mPendingSelectionChangeData.Length(),
-          mPendingSelectionChangeData.mReversed,
-          mPendingSelectionChangeData.GetWritingMode())) {
+  if (mSelectionForTSF.isNothing()) {
+    mSelectionForTSF.emplace(mPendingSelectionChangeData.mOffset,
+                             mPendingSelectionChangeData.Length(),
+                             mPendingSelectionChangeData.mReversed,
+                             mPendingSelectionChangeData.GetWritingMode());
+  } else if (!mSelectionForTSF->SetSelection(
+                 mPendingSelectionChangeData.mOffset,
+                 mPendingSelectionChangeData.Length(),
+                 mPendingSelectionChangeData.mReversed,
+                 mPendingSelectionChangeData.GetWritingMode())) {
     mPendingSelectionChangeData.Clear();
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
             ("0x%p   TSFTextStore::NotifyTSFOfSelectionChange(), "
@@ -6365,11 +6339,11 @@ void TSFTextStore::CreateNativeCaret() {
           ("0x%p   TSFTextStore::CreateNativeCaret(), mComposition=%s", this,
            ToString(mComposition).c_str()));
 
-  Selection& selectionForTSF = SelectionForTSFRef();
-  if (selectionForTSF.IsDirty()) {
+  Maybe<Selection>& selectionForTSF = SelectionForTSF();
+  if (selectionForTSF.isNothing()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-             "SelectionForTSFRef() failure",
+             "SelectionForTSF() failure",
              this));
     return;
   }
@@ -6380,7 +6354,7 @@ void TSFTextStore::CreateNativeCaret() {
   WidgetQueryContentEvent::Options options;
   // XXX If this is called without composition and the selection isn't
   //     collapsed, is it OK?
-  int64_t caretOffset = selectionForTSF.MaxOffset();
+  int64_t caretOffset = selectionForTSF->MaxOffset();
   if (mComposition.isSome()) {
     // If there is a composition, use insertion point relative query for
     // deciding caret position because composition might be at different
@@ -6393,7 +6367,7 @@ void TSFTextStore::CreateNativeCaret() {
     // Therefore, we should use relative to insertion point query since
     // TSF/TIP computes the offset from the cached selection.
     options.mRelativeToInsertionPoint = true;
-    caretOffset -= mSelectionForTSF.StartOffset();
+    caretOffset -= selectionForTSF->StartOffset();
   }
   queryCaretRect.InitForQueryCaretRect(caretOffset, options);
 
@@ -7047,8 +7021,11 @@ bool TSFTextStore::IsGoogleJapaneseInputActive() {
  *****************************************************************************/
 
 const nsDependentSubstring TSFTextStore::Content::GetSelectedText() const {
-  return GetSubstring(static_cast<uint32_t>(mSelection.StartOffset()),
-                      static_cast<uint32_t>(mSelection.Length()));
+  if (NS_WARN_IF(mSelection.isNothing())) {
+    return nsDependentSubstring();
+  }
+  return GetSubstring(static_cast<uint32_t>(mSelection->StartOffset()),
+                      static_cast<uint32_t>(mSelection->Length()));
 }
 
 const nsDependentSubstring TSFTextStore::Content::GetSubstring(
@@ -7057,7 +7034,10 @@ const nsDependentSubstring TSFTextStore::Content::GetSubstring(
 }
 
 void TSFTextStore::Content::ReplaceSelectedTextWith(const nsAString& aString) {
-  ReplaceTextWith(mSelection.StartOffset(), mSelection.Length(), aString);
+  if (NS_WARN_IF(mSelection.isNothing())) {
+    return;
+  }
+  ReplaceTextWith(mSelection->StartOffset(), mSelection->Length(), aString);
 }
 
 inline uint32_t FirstDifferentCharOffset(const nsAString& aStr1,
@@ -7138,8 +7118,8 @@ void TSFTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
                   aReplaceString);
   }
   // Selection should be collapsed at the end of the inserted string.
-  mSelection.CollapseAt(static_cast<uint32_t>(aStart) +
-                        aReplaceString.Length());
+  mSelection = Some(TSFTextStore::Selection(static_cast<uint32_t>(aStart) +
+                                            aReplaceString.Length()));
 }
 
 void TSFTextStore::Content::StartComposition(
@@ -7159,9 +7139,10 @@ void TSFTextStore::Content::StartComposition(
     // XXX Do we need to set a new writing-mode here when setting a new
     // selection? Currently, we just preserve the existing value.
     WritingMode writingMode =
-        mSelection.IsDirty() ? WritingMode() : mSelection.GetWritingMode();
-    mSelection.SetSelection(mComposition->StartOffset(), mComposition->Length(),
-                            false, writingMode);
+        mSelection.isNothing() ? WritingMode() : mSelection->GetWritingMode();
+    mSelection = Some(TSFTextStore::Selection(mComposition->StartOffset(),
+                                              mComposition->Length(), false,
+                                              writingMode));
   }
 }
 
@@ -7194,7 +7175,8 @@ void TSFTextStore::Content::EndComposition(const PendingAction& aCompEnd) {
     return;  // Avoid new crash in the beta and nightly channels.
   }
 
-  mSelection.CollapseAt(mComposition->StartOffset() + aCompEnd.mData.Length());
+  mSelection = Some(TSFTextStore::Selection(mComposition->StartOffset() +
+                                            aCompEnd.mData.Length()));
   mComposition.reset();
 }
 
