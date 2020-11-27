@@ -160,7 +160,7 @@ mod test {
                 qcms_enable_avx()
             }
         };
-        let sRGB_profile = unsafe { crate::iccread::qcms_profile_sRGB() };
+        let sRGB_profile = crate::iccread::qcms_profile_sRGB();
 
         let mut Rec709Primaries = qcms_CIE_xyYTRIPLE {
             red: qcms_CIE_xyY {
@@ -179,7 +179,7 @@ mod test {
                 Y: 1.0f64,
             },
         };
-        let D65 = unsafe { qcms_white_point_sRGB() };
+        let D65 = qcms_white_point_sRGB();
         let other = unsafe { qcms_profile_create_rgb_with_gamma(D65, Rec709Primaries, 2.2) };
         unsafe { qcms_profile_precache_output_transform(&mut *other) };
 
@@ -212,7 +212,7 @@ mod test {
 
     #[test]
     fn gray_alpha() {
-        let sRGB_profile = unsafe { crate::iccread::qcms_profile_sRGB() };
+        let sRGB_profile = crate::iccread::qcms_profile_sRGB();
         let other = unsafe { qcms_profile_create_gray_with_gamma(2.2) };
         unsafe { qcms_profile_precache_output_transform(&mut *other) };
 
@@ -299,7 +299,7 @@ mod test {
             unsafe { qcms_profile_from_memory(data.as_ptr() as *const c_void, data.len()) };
         assert_ne!(profile, std::ptr::null_mut());
 
-        let srgb_profile = unsafe { qcms_profile_sRGB() };
+        let srgb_profile = qcms_profile_sRGB();
         assert_ne!(srgb_profile, std::ptr::null_mut());
 
         unsafe { qcms_profile_precache_output_transform(&mut *srgb_profile) };
