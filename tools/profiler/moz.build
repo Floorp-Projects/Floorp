@@ -171,6 +171,7 @@ BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
         "-Wno-error=shadow",
+        "-Wno-error=stack-protector",
         "-Wno-ignored-qualifiers",  # due to use of breakpad headers
     ]
 
