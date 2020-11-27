@@ -1082,19 +1082,15 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 
     //XXX: should store the whitepoint
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
-        return 0 as *mut qcms_profile;
+        return null_mut();
     }
-    (*profile).redTRC = Some(curve_from_gamma(redGamma));
-    (*profile).blueTRC = Some(curve_from_gamma(blueGamma));
-    (*profile).greenTRC = Some(curve_from_gamma(greenGamma));
-    if (*profile).redTRC.is_none() || (*profile).blueTRC.is_none() || (*profile).greenTRC.is_none()
-    {
-        return 0 as *mut qcms_profile;
-    }
-    (*profile).class_type = DISPLAY_DEVICE_PROFILE;
-    (*profile).rendering_intent = QCMS_INTENT_PERCEPTUAL;
-    (*profile).color_space = RGB_SIGNATURE;
-    (*profile).pcs = XYZ_TYPE;
+    profile.redTRC = Some(curve_from_gamma(redGamma));
+    profile.blueTRC = Some(curve_from_gamma(blueGamma));
+    profile.greenTRC = Some(curve_from_gamma(greenGamma));
+    profile.class_type = DISPLAY_DEVICE_PROFILE;
+    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+    profile.color_space = RGB_SIGNATURE;
+    profile.pcs = XYZ_TYPE;
     return Box::into_raw(profile);
 }
 
@@ -1102,14 +1098,14 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut qcms_profile {
     let mut profile = qcms_profile_create();
 
-    (*profile).grayTRC = Some(curve_from_gamma(gamma));
-    if (*profile).grayTRC.is_none() {
-        return 0 as *mut qcms_profile;
+    profile.grayTRC = Some(curve_from_gamma(gamma));
+    if profile.grayTRC.is_none() {
+        return null_mut();
     }
-    (*profile).class_type = DISPLAY_DEVICE_PROFILE;
-    (*profile).rendering_intent = QCMS_INTENT_PERCEPTUAL;
-    (*profile).color_space = GRAY_SIGNATURE;
-    (*profile).pcs = XYZ_TYPE;
+    profile.class_type = DISPLAY_DEVICE_PROFILE;
+    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+    profile.color_space = GRAY_SIGNATURE;
+    profile.pcs = XYZ_TYPE;
     return Box::into_raw(profile);
 }
 
