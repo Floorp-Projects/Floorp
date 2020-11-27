@@ -78,25 +78,25 @@ pub const LAB_SIGNATURE: u32 = 0x4C616220;
 #[repr(C)]
 #[derive(Clone, Default)]
 pub struct qcms_profile {
-    pub class_type: u32,
-    pub color_space: u32,
-    pub pcs: u32,
-    pub rendering_intent: qcms_intent,
-    pub redColorant: XYZNumber,
-    pub blueColorant: XYZNumber,
-    pub greenColorant: XYZNumber,
-    pub redTRC: Option<Box<curveType>>,
-    pub blueTRC: Option<Box<curveType>>,
-    pub greenTRC: Option<Box<curveType>>,
-    pub grayTRC: Option<Box<curveType>>,
-    pub A2B0: Option<Box<lutType>>,
-    pub B2A0: Option<Box<lutType>>,
-    pub mAB: Option<Box<lutmABType>>,
-    pub mBA: Option<Box<lutmABType>>,
-    pub chromaticAdaption: matrix,
-    pub output_table_r: Option<Arc<precache_output>>,
-    pub output_table_g: Option<Arc<precache_output>>,
-    pub output_table_b: Option<Arc<precache_output>>,
+    pub(crate) class_type: u32,
+    pub(crate) color_space: u32,
+    pub(crate) pcs: u32,
+    pub(crate) rendering_intent: qcms_intent,
+    pub(crate) redColorant: XYZNumber,
+    pub(crate) blueColorant: XYZNumber,
+    pub(crate) greenColorant: XYZNumber,
+    pub(crate) redTRC: Option<Box<curveType>>,
+    pub(crate) blueTRC: Option<Box<curveType>>,
+    pub(crate) greenTRC: Option<Box<curveType>>,
+    pub(crate) grayTRC: Option<Box<curveType>>,
+    pub(crate) A2B0: Option<Box<lutType>>,
+    pub(crate) B2A0: Option<Box<lutType>>,
+    pub(crate) mAB: Option<Box<lutmABType>>,
+    pub(crate) mBA: Option<Box<lutmABType>>,
+    pub(crate) chromaticAdaption: matrix,
+    pub(crate) output_table_r: Option<Arc<precache_output>>,
+    pub(crate) output_table_g: Option<Arc<precache_output>>,
+    pub(crate) output_table_b: Option<Arc<precache_output>>,
 }
 
 #[repr(C)]
@@ -1212,7 +1212,7 @@ pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
     return white_point_from_temp(6504);
 }
 
-fn profile_sRGB() -> Option<Box<qcms_profile>> {
+pub fn profile_sRGB() -> Option<Box<qcms_profile>> {
     let Rec709Primaries = qcms_CIE_xyYTRIPLE {
         red: {
             qcms_CIE_xyY {
