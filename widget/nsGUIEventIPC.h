@@ -1032,20 +1032,41 @@ struct ParamTraits<mozilla::WritingMode> {
 };
 
 template <>
+struct ParamTraits<mozilla::ContentCache::Selection> {
+  typedef mozilla::ContentCache::Selection paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mAnchor);
+    WriteParam(aMsg, aParam.mFocus);
+    WriteParam(aMsg, aParam.mWritingMode);
+    WriteParam(aMsg, aParam.mAnchorCharRects[0]);
+    WriteParam(aMsg, aParam.mAnchorCharRects[1]);
+    WriteParam(aMsg, aParam.mFocusCharRects[0]);
+    WriteParam(aMsg, aParam.mFocusCharRects[1]);
+    WriteParam(aMsg, aParam.mRect);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mAnchor) &&
+           ReadParam(aMsg, aIter, &aResult->mFocus) &&
+           ReadParam(aMsg, aIter, &aResult->mWritingMode) &&
+           ReadParam(aMsg, aIter, &aResult->mAnchorCharRects[0]) &&
+           ReadParam(aMsg, aIter, &aResult->mAnchorCharRects[1]) &&
+           ReadParam(aMsg, aIter, &aResult->mFocusCharRects[0]) &&
+           ReadParam(aMsg, aIter, &aResult->mFocusCharRects[1]) &&
+           ReadParam(aMsg, aIter, &aResult->mRect);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::ContentCache> {
   typedef mozilla::ContentCache paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mCompositionStart);
     WriteParam(aMsg, aParam.mText);
-    WriteParam(aMsg, aParam.mSelection.mAnchor);
-    WriteParam(aMsg, aParam.mSelection.mFocus);
-    WriteParam(aMsg, aParam.mSelection.mWritingMode);
-    WriteParam(aMsg, aParam.mSelection.mAnchorCharRects[0]);
-    WriteParam(aMsg, aParam.mSelection.mAnchorCharRects[1]);
-    WriteParam(aMsg, aParam.mSelection.mFocusCharRects[0]);
-    WriteParam(aMsg, aParam.mSelection.mFocusCharRects[1]);
-    WriteParam(aMsg, aParam.mSelection.mRect);
+    WriteParam(aMsg, aParam.mSelection);
     WriteParam(aMsg, aParam.mFirstCharRect);
     WriteParam(aMsg, aParam.mCaret.mOffset);
     WriteParam(aMsg, aParam.mCaret.mRect);
@@ -1060,14 +1081,7 @@ struct ParamTraits<mozilla::ContentCache> {
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mCompositionStart) &&
            ReadParam(aMsg, aIter, &aResult->mText) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mAnchor) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mFocus) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mWritingMode) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mAnchorCharRects[0]) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mAnchorCharRects[1]) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mFocusCharRects[0]) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mFocusCharRects[1]) &&
-           ReadParam(aMsg, aIter, &aResult->mSelection.mRect) &&
+           ReadParam(aMsg, aIter, &aResult->mSelection) &&
            ReadParam(aMsg, aIter, &aResult->mFirstCharRect) &&
            ReadParam(aMsg, aIter, &aResult->mCaret.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mCaret.mRect) &&
