@@ -304,45 +304,48 @@ static void RemovePrefForDriverVersion() {
 }
 
 static OperatingSystem BlocklistOSToOperatingSystem(const nsAString& os) {
-  if (os.EqualsLiteral("WINNT 6.1"))
+  if (os.EqualsLiteral("WINNT 6.1")) {
     return OperatingSystem::Windows7;
-  else if (os.EqualsLiteral("WINNT 6.2"))
+  } else if (os.EqualsLiteral("WINNT 6.2")) {
     return OperatingSystem::Windows8;
-  else if (os.EqualsLiteral("WINNT 6.3"))
+  } else if (os.EqualsLiteral("WINNT 6.3")) {
     return OperatingSystem::Windows8_1;
-  else if (os.EqualsLiteral("WINNT 10.0"))
+  } else if (os.EqualsLiteral("WINNT 10.0")) {
     return OperatingSystem::Windows10;
-  else if (os.EqualsLiteral("Linux"))
+  } else if (os.EqualsLiteral("Linux")) {
     return OperatingSystem::Linux;
-  else if (os.EqualsLiteral("Darwin 9"))
+  } else if (os.EqualsLiteral("Darwin 9")) {
     return OperatingSystem::OSX10_5;
-  else if (os.EqualsLiteral("Darwin 10"))
+  } else if (os.EqualsLiteral("Darwin 10")) {
     return OperatingSystem::OSX10_6;
-  else if (os.EqualsLiteral("Darwin 11"))
+  } else if (os.EqualsLiteral("Darwin 11")) {
     return OperatingSystem::OSX10_7;
-  else if (os.EqualsLiteral("Darwin 12"))
+  } else if (os.EqualsLiteral("Darwin 12")) {
     return OperatingSystem::OSX10_8;
-  else if (os.EqualsLiteral("Darwin 13"))
+  } else if (os.EqualsLiteral("Darwin 13")) {
     return OperatingSystem::OSX10_9;
-  else if (os.EqualsLiteral("Darwin 14"))
+  } else if (os.EqualsLiteral("Darwin 14")) {
     return OperatingSystem::OSX10_10;
-  else if (os.EqualsLiteral("Darwin 15"))
+  } else if (os.EqualsLiteral("Darwin 15")) {
     return OperatingSystem::OSX10_11;
-  else if (os.EqualsLiteral("Darwin 16"))
+  } else if (os.EqualsLiteral("Darwin 16")) {
     return OperatingSystem::OSX10_12;
-  else if (os.EqualsLiteral("Darwin 17"))
+  } else if (os.EqualsLiteral("Darwin 17")) {
     return OperatingSystem::OSX10_13;
-  else if (os.EqualsLiteral("Darwin 18"))
+  } else if (os.EqualsLiteral("Darwin 18")) {
     return OperatingSystem::OSX10_14;
-  else if (os.EqualsLiteral("Darwin 19"))
+  } else if (os.EqualsLiteral("Darwin 19")) {
     return OperatingSystem::OSX10_15;
-  else if (os.EqualsLiteral("Darwin 20"))
+  } else if (os.EqualsLiteral("Darwin 20")) {
     return OperatingSystem::OSX11_0;
-  else if (os.EqualsLiteral("Android"))
+  } else if (os.EqualsLiteral("Android")) {
     return OperatingSystem::Android;
   // For historical reasons, "All" in blocklist means "All Windows"
-  else if (os.EqualsLiteral("All"))
+  } else if (os.EqualsLiteral("All")) {
     return OperatingSystem::Windows;
+  } else if (os.EqualsLiteral("Darwin")) {
+    return OperatingSystem::OSX;
+  }
 
   return OperatingSystem::Unknown;
 }
