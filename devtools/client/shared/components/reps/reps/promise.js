@@ -44,13 +44,13 @@ define(function(require, exports, module) {
     if (object.promiseState) {
       const { state, value, reason } = object.promiseState;
       const ownProperties = Object.create(null);
-      ownProperties["<state>"] = state;
+      ownProperties["<state>"] = { value: state };
       let ownPropertiesLength = 1;
       if (state == "fulfilled") {
-        ownProperties["<value>"] = value;
+        ownProperties["<value>"] = { value: value };
         ++ownPropertiesLength;
       } else if (state == "rejected") {
-        ownProperties["<reason>"] = reason;
+        ownProperties["<reason>"] = { value: reason };
         ++ownPropertiesLength;
       }
       object.preview = {
@@ -77,7 +77,7 @@ define(function(require, exports, module) {
       config,
       getTitle(object),
       span({ className: "objectLeftBrace" }, " { "),
-      Rep({ object: object.preview.ownProperties["<state>"] }),
+      Rep({ object: object.preview.ownProperties["<state>"].value }),
       span({ className: "objectRightBrace" }, " }")
     );
   }

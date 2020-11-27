@@ -179,10 +179,14 @@ stubs.set("Promise.resolve(1n)", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "fulfilled",
+      "<state>": {
+        value: "fulfilled",
+      },
       "<value>": {
-        type: "BigInt",
-        text: "1",
+        value: {
+          type: "BigInt",
+          text: "1",
+        },
       },
     },
     ownPropertiesLength: 2,

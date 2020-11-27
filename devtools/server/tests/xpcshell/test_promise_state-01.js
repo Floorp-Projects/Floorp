@@ -21,7 +21,7 @@ add_task(
 
     ok(grip.preview);
     equal(grip.class, "Promise");
-    equal(grip.preview.ownProperties["<state>"], "pending");
+    equal(grip.preview.ownProperties["<state>"].value, "pending");
 
     const objClient = threadFront.pauseGrip(grip);
     const { promiseState } = await objClient.getPromiseState();

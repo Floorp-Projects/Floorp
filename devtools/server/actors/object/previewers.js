@@ -364,17 +364,17 @@ const previewers = {
     function({ obj, hooks }, grip, rawObj) {
       const {state, value, reason} = ObjectUtils.getPromiseState(obj);
       const ownProperties = Object.create(null);
-      ownProperties["<state>"] = state;
+      ownProperties["<state>"] = { value: state };
       let ownPropertiesLength = 1;
 
       // Only expose <value> or <reason> in top-level promises, to avoid recursion.
       // <state> is not problematic because it's a string.
       if (hooks.getGripDepth() === 1) {
         if (state == "fulfilled") {
-          ownProperties["<value>"] = hooks.createValueGrip(value);
+          ownProperties["<value>"] = { value: hooks.createValueGrip(value) };
           ++ownPropertiesLength;
         } else if (state == "rejected") {
-          ownProperties["<reason>"] = hooks.createValueGrip(reason);
+          ownProperties["<reason>"] = { value: hooks.createValueGrip(reason) };
           ++ownPropertiesLength;
         }
       }

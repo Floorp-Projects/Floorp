@@ -21,9 +21,9 @@ add_task(
 
     ok(grip.preview);
     equal(grip.class, "Promise");
-    equal(grip.preview.ownProperties["<state>"], "fulfilled");
+    equal(grip.preview.ownProperties["<state>"].value, "fulfilled");
     equal(
-      grip.preview.ownProperties["<value>"].actorID,
+      grip.preview.ownProperties["<value>"].value.actorID,
       packet.frame.arguments[0].actorID,
       "The promise's fulfilled state value in the preview should be the same " +
         "value passed to the then function"
