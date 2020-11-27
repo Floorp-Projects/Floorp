@@ -107,7 +107,7 @@ void ContentCacheInChild::Clear() {
   mText.Truncate();
   mSelection.reset();
   mFirstCharRect.SetEmpty();
-  mCaret.Clear();
+  mCaret.reset();
   mTextRectArray.Clear();
   mLastCommitStringTextRectArray.Clear();
   mEditorRect.SetEmpty();
@@ -172,7 +172,7 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
           ("0x%p CacheSelection(aWidget=0x%p, aNotification=%s)", this, aWidget,
            GetNotificationName(aNotification)));
 
-  mCaret.Clear();
+  mCaret.reset();
   mSelection.reset();
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -206,33 +206,31 @@ bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
           ("0x%p CacheCaret(aWidget=0x%p, aNotification=%s)", this, aWidget,
            GetNotificationName(aNotification)));
 
-  mCaret.Clear();
+  mCaret.reset();
 
   if (NS_WARN_IF(mSelection.isNothing())) {
     return false;
   }
 
   // XXX Should be mSelection.mFocus?
-  mCaret.mOffset = mSelection->StartOffset();
+  uint32_t offset = mSelection->StartOffset();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetQueryContentEvent caretRect(true, eQueryCaretRect, aWidget);
-  caretRect.InitForQueryCaretRect(mCaret.mOffset);
+  caretRect.InitForQueryCaretRect(offset);
   aWidget->DispatchEvent(&caretRect, status);
   if (NS_WARN_IF(!caretRect.mSucceeded)) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
             ("0x%p CacheCaret(), FAILED, "
              "couldn't retrieve the caret rect at offset=%u",
-             this, mCaret.mOffset));
-    mCaret.Clear();
+             this, offset));
     return false;
   }
-  mCaret.mRect = caretRect.mReply.mRect;
+  mCaret.emplace(offset, caretRect.mReply.mRect);
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p CacheCaret(), Succeeded, "
-           "mSelection=%s, mCaret={ mOffset=%u, mRect=%s }",
-           this, ToString(mSelection).c_str(), mCaret.mOffset,
-           GetRectText(mCaret.mRect).get()));
+           "mSelection=%s, mCaret=%s",
+           this, ToString(mSelection).c_str(), ToString(mCaret).c_str()));
   return true;
 }
 
@@ -341,11 +339,10 @@ bool ContentCacheInChild::QueryCharRectArray(nsIWidget* aWidget,
 
 bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
                                          const IMENotification* aNotification) {
-  MOZ_LOG(sContentCacheLog, LogLevel::Info,
-          ("0x%p CacheTextRects(aWidget=0x%p, aNotification=%s), "
-           "mCaret={ mOffset=%u, IsValid()=%s }",
-           this, aWidget, GetNotificationName(aNotification), mCaret.mOffset,
-           GetBoolName(mCaret.IsValid())));
+  MOZ_LOG(
+      sContentCacheLog, LogLevel::Info,
+      ("0x%p CacheTextRects(aWidget=0x%p, aNotification=%s), mCaret=%s", this,
+       aWidget, GetNotificationName(aNotification), ToString(mCaret).c_str()));
 
   mCompositionStart.reset();
   mTextRectArray.Clear();
@@ -610,23 +607,21 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
     }
   }
 
-  MOZ_LOG(
-      sContentCacheLog, LogLevel::Info,
-      ("0x%p AssignContent(aNotification=%s), "
-       "Succeeded, mText.Length()=%u, mSelection=%s, mFirstCharRect=%s, "
-       "mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ mStart=%u, "
-       "mRects.Length()=%zu }, mWidgetHasComposition=%s, "
-       "mPendingCompositionCount=%u, mCompositionStart=%u, "
-       "mPendingCommitLength=%u, mEditorRect=%s, "
-       "mLastCommitStringTextRectArray={ mStart=%u, mRects.Length()=%zu }",
-       this, GetNotificationName(aNotification), mText.Length(),
-       ToString(mSelection).c_str(), GetRectText(mFirstCharRect).get(),
-       mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
-       mTextRectArray.mRects.Length(), GetBoolName(mWidgetHasComposition),
-       mPendingCompositionCount, mCompositionStart.valueOr(UINT32_MAX),
-       mPendingCommitLength, GetRectText(mEditorRect).get(),
-       mLastCommitStringTextRectArray.mStart,
-       mLastCommitStringTextRectArray.mRects.Length()));
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+          ("0x%p AssignContent(aNotification=%s), "
+           "Succeeded, mText.Length()=%u, mSelection=%s, mFirstCharRect=%s, "
+           "mCaret=%s, mTextRectArray={ mStart=%u, mRects.Length()=%zu }, "
+           "mWidgetHasComposition=%s, mPendingCompositionCount=%u, "
+           "mCompositionStart=%u, mPendingCommitLength=%u, mEditorRect=%s, "
+           "mLastCommitStringTextRectArray={ mStart=%u, mRects.Length()=%zu }",
+           this, GetNotificationName(aNotification), mText.Length(),
+           ToString(mSelection).c_str(), GetRectText(mFirstCharRect).get(),
+           ToString(mCaret).c_str(), mTextRectArray.mStart,
+           mTextRectArray.mRects.Length(), GetBoolName(mWidgetHasComposition),
+           mPendingCompositionCount, mCompositionStart.valueOr(UINT32_MAX),
+           mPendingCommitLength, GetRectText(mEditorRect).get(),
+           mLastCommitStringTextRectArray.mStart,
+           mLastCommitStringTextRectArray.mRects.Length()));
 }
 
 bool ContentCacheInParent::HandleQueryContentEvent(
@@ -1133,17 +1128,16 @@ bool ContentCacheInParent::GetCaretRect(uint32_t aOffset,
                                         bool aRoundToExistingOffset,
                                         LayoutDeviceIntRect& aCaretRect) const {
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
-          ("0x%p GetCaretRect(aOffset=%u, "
-           "aRoundToExistingOffset=%s), "
-           "mCaret={ mOffset=%u, mRect=%s, IsValid()=%s }, mTextRectArray={ "
-           "mStart=%u, mRects.Length()=%zu }, mSelection=%s, mFirstCharRect=%s",
-           this, aOffset, GetBoolName(aRoundToExistingOffset), mCaret.mOffset,
-           GetRectText(mCaret.mRect).get(), GetBoolName(mCaret.IsValid()),
-           mTextRectArray.mStart, mTextRectArray.mRects.Length(),
-           ToString(mSelection).c_str(), GetRectText(mFirstCharRect).get()));
+          ("0x%p GetCaretRect(aOffset=%u, aRoundToExistingOffset=%s), "
+           "mCaret=%s, mTextRectArray={ mStart=%u, mRects.Length()=%zu }, "
+           "mSelection=%s, mFirstCharRect=%s",
+           this, aOffset, GetBoolName(aRoundToExistingOffset),
+           ToString(mCaret).c_str(), mTextRectArray.mStart,
+           mTextRectArray.mRects.Length(), ToString(mSelection).c_str(),
+           GetRectText(mFirstCharRect).get()));
 
-  if (mCaret.IsValid() && mCaret.mOffset == aOffset) {
-    aCaretRect = mCaret.mRect;
+  if (mCaret.isSome() && mCaret->mOffset == aOffset) {
+    aCaretRect = mCaret->mRect;
     return true;
   }
 
@@ -1169,9 +1163,9 @@ bool ContentCacheInParent::GetCaretRect(uint32_t aOffset,
   //     direction.  However, this is usually used by IME, so, assuming the
   //     character is in LRT context must not cause any problem.
   if (mSelection.isSome() && mSelection->mWritingMode.IsVertical()) {
-    aCaretRect.SetHeight(mCaret.IsValid() ? mCaret.mRect.Height() : 1);
+    aCaretRect.SetHeight(mCaret.isSome() ? mCaret->mRect.Height() : 1);
   } else {
-    aCaretRect.SetWidth(mCaret.IsValid() ? mCaret.mRect.Width() : 1);
+    aCaretRect.SetWidth(mCaret.isSome() ? mCaret->mRect.Width() : 1);
   }
   return true;
 }

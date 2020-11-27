@@ -164,20 +164,28 @@ class ContentCache {
     uint32_t mOffset;
     LayoutDeviceIntRect mRect;
 
-    Caret() : mOffset(UINT32_MAX) {}
+    explicit Caret(uint32_t aOffset, LayoutDeviceIntRect aCaretRect)
+        : mOffset(aOffset), mRect(aCaretRect) {}
 
-    void Clear() {
-      mOffset = UINT32_MAX;
-      mRect.SetEmpty();
+    uint32_t Offset() const { return mOffset; }
+    bool HasRect() const { return !mRect.IsEmpty(); }
+
+    friend std::ostream& operator<<(std::ostream& aStream,
+                                    const Caret& aCaret) {
+      aStream << "{ mOffset=" << aCaret.mOffset;
+      if (aCaret.HasRect()) {
+        aStream << ", mRect=" << aCaret.mRect;
+      }
+      return aStream << " }";
     }
 
-    bool IsValid() const { return mOffset != UINT32_MAX; }
+   private:
+    Caret() = default;
 
-    uint32_t Offset() const {
-      NS_ASSERTION(IsValid(), "The caller should check if the caret is valid");
-      return mOffset;
-    }
-  } mCaret;
+    friend struct IPC::ParamTraits<ContentCache::Caret>;
+    friend struct IPC::ParamTraits<Maybe<ContentCache::Caret>>;
+  };
+  Maybe<Caret> mCaret;
 
   struct TextRectArray final {
     uint32_t mStart;
@@ -243,6 +251,7 @@ class ContentCache {
   friend class ContentCacheInParent;
   friend struct IPC::ParamTraits<ContentCache>;
   friend struct IPC::ParamTraits<ContentCache::Selection>;
+  friend struct IPC::ParamTraits<ContentCache::Caret>;
   friend std::ostream& operator<<(
       std::ostream& aStream,
       const Selection& aSelection);  // For e(Prev|Next)CharRect

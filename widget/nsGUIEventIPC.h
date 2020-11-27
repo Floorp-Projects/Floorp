@@ -1060,6 +1060,22 @@ struct ParamTraits<mozilla::ContentCache::Selection> {
 };
 
 template <>
+struct ParamTraits<mozilla::ContentCache::Caret> {
+  typedef mozilla::ContentCache::Caret paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mOffset);
+    WriteParam(aMsg, aParam.mRect);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mOffset) &&
+           ReadParam(aMsg, aIter, &aResult->mRect);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::ContentCache> {
   typedef mozilla::ContentCache paramType;
 
@@ -1068,8 +1084,7 @@ struct ParamTraits<mozilla::ContentCache> {
     WriteParam(aMsg, aParam.mText);
     WriteParam(aMsg, aParam.mSelection);
     WriteParam(aMsg, aParam.mFirstCharRect);
-    WriteParam(aMsg, aParam.mCaret.mOffset);
-    WriteParam(aMsg, aParam.mCaret.mRect);
+    WriteParam(aMsg, aParam.mCaret);
     WriteParam(aMsg, aParam.mTextRectArray.mStart);
     WriteParam(aMsg, aParam.mTextRectArray.mRects);
     WriteParam(aMsg, aParam.mLastCommitStringTextRectArray.mStart);
@@ -1083,8 +1098,7 @@ struct ParamTraits<mozilla::ContentCache> {
            ReadParam(aMsg, aIter, &aResult->mText) &&
            ReadParam(aMsg, aIter, &aResult->mSelection) &&
            ReadParam(aMsg, aIter, &aResult->mFirstCharRect) &&
-           ReadParam(aMsg, aIter, &aResult->mCaret.mOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mCaret.mRect) &&
+           ReadParam(aMsg, aIter, &aResult->mCaret) &&
            ReadParam(aMsg, aIter, &aResult->mTextRectArray.mStart) &&
            ReadParam(aMsg, aIter, &aResult->mTextRectArray.mRects) &&
            ReadParam(aMsg, aIter,
