@@ -56,5 +56,3 @@ $ for i in `cat $PATH_CENTRAL/media/ffvpx/FILES`; do git diff $REV_LASTSYNC HEAD
 Then apply patch.diff on the ffvpx tree.
 
 Compilation will reveal if any files are missing.
-
-Apply linux-vaapi-build.patch patch to enable build VA-API support for Linux.
