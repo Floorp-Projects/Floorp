@@ -163,6 +163,7 @@ static const char SandboxPolicyRDD[] = R"SANDBOX_LITERAL(
       (iokit-property "IOGLBundleName")
       (iokit-property "IOGVACodec")
       (iokit-property "IOGVAHEVCDecode")
+      (iokit-property "IOAVDHEVCDecodeCapabilities")
       (iokit-property "IOGVAHEVCEncode")
       (iokit-property "IOGVAXDecode")
       (iokit-property "IOPCITunnelled")
