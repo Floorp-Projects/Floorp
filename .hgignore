@@ -87,12 +87,6 @@ _OPT\.OBJ/
 # Local Gradle configuration properties.
 ^local.properties$
 
-# Python stuff installed at build time.
-^third_party/python/psutil/.*\.so
-^third_party/python/psutil/.*\.pyd
-^third_party/python/psutil/build/
-^third_party/python/psutil/tmp/
-
 # Git repositories
 .git/
 
