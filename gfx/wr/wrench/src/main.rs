@@ -305,15 +305,15 @@ impl WindowWrapper {
 }
 
 #[cfg(feature = "software")]
-fn make_software_context() -> Option<swgl::Context> {
+fn make_software_context() -> swgl::Context {
     let ctx = swgl::Context::create();
     ctx.make_current();
-    Some(ctx)
+    ctx
 }
 
 #[cfg(not(feature = "software"))]
-fn make_software_context() -> Option<swgl::Context> {
-    None
+fn make_software_context() -> swgl::Context {
+    panic!("software feature not enabled")
 }
 
 fn make_window(
@@ -326,7 +326,7 @@ fn make_window(
     software: bool,
 ) -> WindowWrapper {
     let sw_ctx = if software {
-        make_software_context()
+        Some(make_software_context())
     } else {
         None
     };
