@@ -213,7 +213,7 @@ class TSFTextStore final : public ITextStoreACP,
   static bool IsInTSFMode() { return sThreadMgr != nullptr; }
 
   static bool IsComposing() {
-    return (sEnabledTextStore && sEnabledTextStore->mComposition.IsComposing());
+    return (sEnabledTextStore && sEnabledTextStore->mComposition.isSome());
   }
 
   static bool IsComposingOn(nsWindowBase* aWidget) {
@@ -300,7 +300,9 @@ class TSFTextStore final : public ITextStoreACP,
   HRESULT GetDisplayAttribute(ITfProperty* aProperty, ITfRange* aRange,
                               TF_DISPLAYATTRIBUTE* aResult);
   HRESULT RestartCompositionIfNecessary(ITfRange* pRangeNew = nullptr);
-  HRESULT RestartComposition(ITfCompositionView* aCompositionView,
+  class Composition;
+  HRESULT RestartComposition(Composition& aCurrentComposition,
+                             ITfCompositionView* aCompositionView,
                              ITfRange* aNewRange);
 
   // Following methods record composing action(s) to mPendingActions.
@@ -308,7 +310,7 @@ class TSFTextStore final : public ITextStoreACP,
   HRESULT RecordCompositionStartAction(ITfCompositionView* aCompositionView,
                                        ITfRange* aRange,
                                        bool aPreserveSelection);
-  HRESULT RecordCompositionStartAction(ITfCompositionView* aComposition,
+  HRESULT RecordCompositionStartAction(ITfCompositionView* aCompositionView,
                                        LONG aStart, LONG aLength,
                                        bool aPreserveSelection);
   HRESULT RecordCompositionUpdateAction();
@@ -463,31 +465,24 @@ class TSFTextStore final : public ITextStoreACP,
   // and artifacts.
   class Composition final : public OffsetAndData<LONG> {
    public:
-    Composition() : OffsetAndData<LONG>(0, EmptyString()) {}
+    explicit Composition(ITfCompositionView* aCompositionView,
+                         LONG aCompositionStartOffset,
+                         const nsAString& aCompositionString)
+        : OffsetAndData<LONG>(aCompositionStartOffset, aCompositionString),
+          mView(aCompositionView) {}
 
-    bool IsComposing() const { return (mView != nullptr); }
     ITfCompositionView* GetView() const { return mView; }
-
-    // Start() and End() updates the members for emulating the latest state.
-    // Unless flush the pending actions, this data never matches the actual
-    // content.
-    void Start(ITfCompositionView* aCompositionView,
-               LONG aCompositionStartOffset,
-               const nsAString& aCompositionString);
-    void End();
 
     friend std::ostream& operator<<(std::ostream& aStream,
                                     const Composition& aComposition) {
-      aStream << "{ mView=0x" << aComposition.mView.get() << ", IsComposing()="
-              << (aComposition.IsComposing() ? "true" : "false")
+      aStream << "{ mView=0x" << aComposition.mView.get()
               << ", OffsetAndData<LONG>="
               << static_cast<const OffsetAndData<LONG>&>(aComposition) << " }";
       return aStream;
     }
 
    private:
-    // nullptr if no composition is active, otherwise the current composition
-    RefPtr<ITfCompositionView> mView;
+    RefPtr<ITfCompositionView> const mView;
   };
   // While the document is locked, we cannot dispatch any events which cause
   // DOM events since the DOM events' handlers may modify the locked document.
@@ -495,7 +490,7 @@ class TSFTextStore final : public ITextStoreACP,
   // For that, TSFTextStore modifies mComposition even while the document is
   // locked.  With mComposition, query methods can returns the text content
   // information.
-  Composition mComposition;
+  Maybe<Composition> mComposition;
 
   /**
    * IsHandlingCompositionInParent() returns true if eCompositionStart is
@@ -805,25 +800,16 @@ class TSFTextStore final : public ITextStoreACP,
    public:
     Content(TSFTextStore& aTSFTextStore, const nsAString& aText)
         : mText(aText),
+          mLastComposition(aTSFTextStore.mComposition),
           mComposition(aTSFTextStore.mComposition),
-          mSelection(aTSFTextStore.mSelectionForTSF) {
-      if (mComposition.IsComposing()) {
-        mLastComposition = Some(mComposition);
-      }
-    }
+          mSelection(aTSFTextStore.mSelectionForTSF) {}
 
     void OnLayoutChanged() { mMinModifiedOffset.reset(); }
 
     // OnCompositionEventsHandled() is called when all pending composition
     // events are handled in the focused content which may be in a remote
     // process.
-    void OnCompositionEventsHandled() {
-      if (mComposition.IsComposing()) {
-        mLastComposition = Some(mComposition);
-      } else {
-        mLastComposition.reset();
-      }
-    }
+    void OnCompositionEventsHandled() { mLastComposition = mComposition; }
 
     const nsDependentSubstring GetSelectedText() const;
     const nsDependentSubstring GetSubstring(uint32_t aStart,
@@ -874,7 +860,7 @@ class TSFTextStore final : public ITextStoreACP,
       return mLatestCompositionRange.isSome();
     }
 
-    TSFTextStore::Composition& Composition() { return mComposition; }
+    Maybe<TSFTextStore::Composition>& Composition() { return mComposition; }
     TSFTextStore::Selection& Selection() { return mSelection; }
 
     friend std::ostream& operator<<(std::ostream& aStream,
@@ -898,7 +884,7 @@ class TSFTextStore final : public ITextStoreACP,
     // mMinTextModifiedOffset.
     Maybe<OffsetAndData<LONG>> mLastComposition;
 
-    TSFTextStore::Composition& mComposition;
+    Maybe<TSFTextStore::Composition>& mComposition;
     TSFTextStore::Selection& mSelection;
 
     // The latest composition's start and end offset.
