@@ -191,42 +191,25 @@ class ContentCache {
     uint32_t mStart;
     RectArray mRects;
 
-    TextRectArray() : mStart(UINT32_MAX) {}
+    explicit TextRectArray(uint32_t aStartOffset) : mStart(aStartOffset) {}
 
-    void Clear() {
-      mStart = UINT32_MAX;
-      mRects.Clear();
-    }
-
-    bool IsValid() const {
-      if (mStart == UINT32_MAX) {
-        return false;
-      }
+    bool HasRects() const { return Length() > 0; }
+    uint32_t StartOffset() const { return mStart; }
+    uint32_t EndOffset() const {
       CheckedInt<uint32_t> endOffset =
           CheckedInt<uint32_t>(mStart) + mRects.Length();
-      return endOffset.isValid();
+      return endOffset.isValid() ? endOffset.value() : UINT32_MAX;
     }
-    bool HasRects() const { return IsValid() && !mRects.IsEmpty(); }
-    uint32_t StartOffset() const {
-      NS_ASSERTION(IsValid(), "The caller should check if the caret is valid");
-      return mStart;
+    uint32_t Length() const { return EndOffset() - mStart; }
+    bool IsOffsetInRange(uint32_t aOffset) const {
+      return StartOffset() <= aOffset && aOffset < EndOffset();
     }
-    uint32_t EndOffset() const {
-      NS_ASSERTION(IsValid(), "The caller should check if the caret is valid");
-      if (!IsValid()) {
-        return UINT32_MAX;
-      }
-      return mStart + mRects.Length();
-    }
-    bool InRange(uint32_t aOffset) const {
-      return IsValid() && StartOffset() <= aOffset && aOffset < EndOffset();
-    }
-    bool InRange(uint32_t aOffset, uint32_t aLength) const {
+    bool IsRangeCompletelyInRange(uint32_t aOffset, uint32_t aLength) const {
       CheckedInt<uint32_t> endOffset = CheckedInt<uint32_t>(aOffset) + aLength;
       if (NS_WARN_IF(!endOffset.isValid())) {
         return false;
       }
-      return InRange(aOffset) && aOffset + aLength <= EndOffset();
+      return IsOffsetInRange(aOffset) && aOffset + aLength <= EndOffset();
     }
     bool IsOverlappingWith(uint32_t aOffset, uint32_t aLength) const {
       if (!HasRects() || aOffset == UINT32_MAX || !aLength) {
@@ -242,9 +225,41 @@ class ContentCache {
     LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
     LayoutDeviceIntRect GetUnionRectAsFarAsPossible(
         uint32_t aOffset, uint32_t aLength, bool aRoundToExistingOffset) const;
+
+    friend std::ostream& operator<<(std::ostream& aStream,
+                                    const TextRectArray& aTextRectArray) {
+      aStream << "{ mStart=" << aTextRectArray.mStart
+              << ", mRects={ Length()=" << aTextRectArray.Length();
+      if (aTextRectArray.HasRects()) {
+        aStream << ", Elements()=[ ";
+        static constexpr uint32_t kMaxPrintRects = 4;
+        const uint32_t kFirstHalf = aTextRectArray.Length() <= kMaxPrintRects
+                                        ? UINT32_MAX
+                                        : (kMaxPrintRects + 1) / 2;
+        const uint32_t kSecondHalf =
+            aTextRectArray.Length() <= kMaxPrintRects ? 0 : kMaxPrintRects / 2;
+        for (uint32_t i = 0; i < aTextRectArray.Length(); i++) {
+          if (i > 0) {
+            aStream << ", ";
+          }
+          aStream << ToString(aTextRectArray.mRects[i]).c_str();
+          if (i + 1 == kFirstHalf) {
+            aStream << " ...";
+            i = aTextRectArray.Length() - kSecondHalf - 1;
+          }
+        }
+      }
+      return aStream << " ] } }";
+    }
+
+   private:
+    TextRectArray() = default;
+
+    friend struct IPC::ParamTraits<ContentCache::TextRectArray>;
+    friend struct IPC::ParamTraits<Maybe<ContentCache::TextRectArray>>;
   };
-  TextRectArray mTextRectArray;
-  TextRectArray mLastCommitStringTextRectArray;
+  Maybe<TextRectArray> mTextRectArray;
+  Maybe<TextRectArray> mLastCommitStringTextRectArray;
 
   LayoutDeviceIntRect mEditorRect;
 
@@ -252,6 +267,7 @@ class ContentCache {
   friend struct IPC::ParamTraits<ContentCache>;
   friend struct IPC::ParamTraits<ContentCache::Selection>;
   friend struct IPC::ParamTraits<ContentCache::Caret>;
+  friend struct IPC::ParamTraits<ContentCache::TextRectArray>;
   friend std::ostream& operator<<(
       std::ostream& aStream,
       const Selection& aSelection);  // For e(Prev|Next)CharRect

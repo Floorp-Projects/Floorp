@@ -1076,6 +1076,22 @@ struct ParamTraits<mozilla::ContentCache::Caret> {
 };
 
 template <>
+struct ParamTraits<mozilla::ContentCache::TextRectArray> {
+  typedef mozilla::ContentCache::TextRectArray paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mStart);
+    WriteParam(aMsg, aParam.mRects);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mStart) &&
+           ReadParam(aMsg, aIter, &aResult->mRects);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::ContentCache> {
   typedef mozilla::ContentCache paramType;
 
@@ -1085,10 +1101,8 @@ struct ParamTraits<mozilla::ContentCache> {
     WriteParam(aMsg, aParam.mSelection);
     WriteParam(aMsg, aParam.mFirstCharRect);
     WriteParam(aMsg, aParam.mCaret);
-    WriteParam(aMsg, aParam.mTextRectArray.mStart);
-    WriteParam(aMsg, aParam.mTextRectArray.mRects);
-    WriteParam(aMsg, aParam.mLastCommitStringTextRectArray.mStart);
-    WriteParam(aMsg, aParam.mLastCommitStringTextRectArray.mRects);
+    WriteParam(aMsg, aParam.mTextRectArray);
+    WriteParam(aMsg, aParam.mLastCommitStringTextRectArray);
     WriteParam(aMsg, aParam.mEditorRect);
   }
 
@@ -1099,12 +1113,8 @@ struct ParamTraits<mozilla::ContentCache> {
            ReadParam(aMsg, aIter, &aResult->mSelection) &&
            ReadParam(aMsg, aIter, &aResult->mFirstCharRect) &&
            ReadParam(aMsg, aIter, &aResult->mCaret) &&
-           ReadParam(aMsg, aIter, &aResult->mTextRectArray.mStart) &&
-           ReadParam(aMsg, aIter, &aResult->mTextRectArray.mRects) &&
-           ReadParam(aMsg, aIter,
-                     &aResult->mLastCommitStringTextRectArray.mStart) &&
-           ReadParam(aMsg, aIter,
-                     &aResult->mLastCommitStringTextRectArray.mRects) &&
+           ReadParam(aMsg, aIter, &aResult->mTextRectArray) &&
+           ReadParam(aMsg, aIter, &aResult->mLastCommitStringTextRectArray) &&
            ReadParam(aMsg, aIter, &aResult->mEditorRect);
   }
 };
