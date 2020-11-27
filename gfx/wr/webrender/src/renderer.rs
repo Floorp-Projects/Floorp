@@ -5051,6 +5051,8 @@ impl Renderer {
             // Work out the draw params based on the tile surface
             let (instance, textures, shader_params) = match tile.surface {
                 CompositeTileSurface::Color { color } => {
+                    let dummy = TextureSource::Dummy;
+                    let image_buffer_kind = dummy.image_buffer_kind();
                     (
                         CompositeInstance::new(
                             tile.rect,
@@ -5059,11 +5061,13 @@ impl Renderer {
                             0.0,
                             tile.z_id,
                         ),
-                        BatchTextures::color(TextureSource::Dummy),
-                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray),
+                        BatchTextures::color(dummy),
+                        (CompositeSurfaceFormat::Rgba, image_buffer_kind),
                     )
                 }
                 CompositeTileSurface::Clear => {
+                    let dummy = TextureSource::Dummy;
+                    let image_buffer_kind = dummy.image_buffer_kind();
                     (
                         CompositeInstance::new(
                             tile.rect,
@@ -5072,8 +5076,8 @@ impl Renderer {
                             0.0,
                             tile.z_id,
                         ),
-                        BatchTextures::color(TextureSource::Dummy),
-                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2D),
+                        BatchTextures::color(dummy),
+                        (CompositeSurfaceFormat::Rgba, image_buffer_kind),
                     )
                 }
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture, layer } } => {
