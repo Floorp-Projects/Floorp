@@ -5081,15 +5081,6 @@
   value: @IS_ANDROID@
   mirror: always
 
-#ifdef XP_WIN
-  # If true, automatically extend selection to cluster boundaries when
-  # TSF/TIP requests to select from/by middle of a cluster.
--   name: intl.tsf.hack.extend_setting_selection_range_to_cluster_boundaries
-    type: bool
-    value: @IS_NOT_EARLY_BETA_OR_EARLIER@
-    mirror: always
-#endif
-
 # If you use legacy Chinese IME which puts an ideographic space to composition
 # string as placeholder, this pref might be useful.  If this is true and when
 # web contents forcibly commits composition (e.g., moving focus), the
