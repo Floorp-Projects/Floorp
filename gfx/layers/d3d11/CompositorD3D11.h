@@ -258,6 +258,10 @@ class CompositorD3D11 : public Compositor {
 
   LayoutDeviceIntSize mSize;
 
+  // The size that we passed to ResizeBuffers to set
+  // the swapchain buffer size.
+  LayoutDeviceIntSize mBufferSize;
+
   HWND mHwnd;
 
   D3D_FEATURE_LEVEL mFeatureLevel;
