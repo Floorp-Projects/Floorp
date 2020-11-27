@@ -46,33 +46,6 @@ struct ITfCategoryMgr;
 class nsWindow;
 
 namespace mozilla {
-
-inline std::ostream& operator<<(std::ostream& aStream,
-                                const TS_SELECTIONSTYLE& aSelectionStyle) {
-  const char* ase = "Unknown";
-  switch (aSelectionStyle.ase) {
-    case TS_AE_START:
-      ase = "TS_AE_START";
-      break;
-    case TS_AE_END:
-      ase = "TS_AE_END";
-      break;
-    case TS_AE_NONE:
-      ase = "TS_AE_NONE";
-      break;
-  }
-  aStream << "{ ase=" << ase << ", fInterimChar="
-          << (aSelectionStyle.fInterimChar ? "TRUE" : "FALSE") << " }";
-  return aStream;
-}
-
-inline std::ostream& operator<<(std::ostream& aStream,
-                                const TS_SELECTION_ACP& aACP) {
-  aStream << "{ acpStart=" << aACP.acpStart << ", acpEnd=" << aACP.acpEnd
-          << ", style=" << ToString(aACP.style).c_str() << " }";
-  return aStream;
-}
-
 namespace widget {
 
 class TSFStaticSink;
@@ -541,22 +514,18 @@ class TSFTextStore final : public ITextStoreACP,
 
   class Selection {
    public:
-    const TS_SELECTION_ACP& ACPRef() const { return mACP; }
+    Selection() : mDirty(true) {}
 
-    explicit Selection(const TS_SELECTION_ACP& aSelection) {
-      SetSelection(aSelection);
-    }
+    bool IsDirty() const { return mDirty; };
+    void MarkDirty() { mDirty = true; }
 
-    explicit Selection(uint32_t aOffsetToCollapse) {
-      Collapse(aOffsetToCollapse);
-    }
-
-    explicit Selection(uint32_t aStart, uint32_t aLength, bool aReversed,
-                       const WritingMode& aWritingMode) {
-      SetSelection(aStart, aLength, aReversed, aWritingMode);
+    TS_SELECTION_ACP& ACP() {
+      MOZ_ASSERT(!mDirty);
+      return mACP;
     }
 
     void SetSelection(const TS_SELECTION_ACP& aSelection) {
+      mDirty = false;
       mACP = aSelection;
       // Selection end must be active in our editor.
       if (mACP.style.ase != TS_AE_START) {
@@ -568,9 +537,11 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
     bool SetSelection(uint32_t aStart, uint32_t aLength, bool aReversed,
-                      const WritingMode& aWritingMode) {
-      bool changed = mACP.acpStart != static_cast<LONG>(aStart) ||
+                      WritingMode aWritingMode) {
+      bool changed = mDirty || mACP.acpStart != static_cast<LONG>(aStart) ||
                      mACP.acpEnd != static_cast<LONG>(aStart + aLength);
+
+      mDirty = false;
       mACP.acpStart = static_cast<LONG>(aStart);
       mACP.acpEnd = static_cast<LONG>(aStart + aLength);
       mACP.style.ase = aReversed ? TS_AE_START : TS_AE_END;
@@ -580,51 +551,72 @@ class TSFTextStore final : public ITextStoreACP,
       return changed;
     }
 
-    bool Collapsed() const { return mACP.acpStart == mACP.acpEnd; }
+    bool IsCollapsed() const {
+      MOZ_ASSERT(!mDirty);
+      return (mACP.acpStart == mACP.acpEnd);
+    }
 
-    void Collapse(uint32_t aOffset) {
+    void CollapseAt(uint32_t aOffset) {
       // XXX This does not update the selection's mWritingMode.
       // If it is ever used to "collapse" to an entirely new location,
       // we may need to fix that.
+      mDirty = false;
       mACP.acpStart = mACP.acpEnd = static_cast<LONG>(aOffset);
       mACP.style.ase = TS_AE_END;
       mACP.style.fInterimChar = FALSE;
     }
 
     LONG MinOffset() const {
+      MOZ_ASSERT(!mDirty);
       LONG min = std::min(mACP.acpStart, mACP.acpEnd);
       MOZ_ASSERT(min >= 0);
       return min;
     }
 
     LONG MaxOffset() const {
+      MOZ_ASSERT(!mDirty);
       LONG max = std::max(mACP.acpStart, mACP.acpEnd);
       MOZ_ASSERT(max >= 0);
       return max;
     }
 
     LONG StartOffset() const {
+      MOZ_ASSERT(!mDirty);
       MOZ_ASSERT(mACP.acpStart >= 0);
       return mACP.acpStart;
     }
 
     LONG EndOffset() const {
+      MOZ_ASSERT(!mDirty);
       MOZ_ASSERT(mACP.acpEnd >= 0);
       return mACP.acpEnd;
     }
 
     LONG Length() const {
+      MOZ_ASSERT(!mDirty);
       MOZ_ASSERT(mACP.acpEnd >= mACP.acpStart);
       return std::abs(mACP.acpEnd - mACP.acpStart);
     }
 
-    bool IsReversed() const { return mACP.style.ase == TS_AE_START; }
+    bool IsReversed() const {
+      MOZ_ASSERT(!mDirty);
+      return (mACP.style.ase == TS_AE_START);
+    }
 
-    TsActiveSelEnd ActiveSelEnd() const { return mACP.style.ase; }
+    TsActiveSelEnd ActiveSelEnd() const {
+      MOZ_ASSERT(!mDirty);
+      return mACP.style.ase;
+    }
 
-    bool IsInterimChar() const { return mACP.style.fInterimChar != FALSE; }
+    bool IsInterimChar() const {
+      MOZ_ASSERT(!mDirty);
+      return (mACP.style.fInterimChar != FALSE);
+    }
 
-    WritingMode GetWritingMode() const { return mWritingMode; }
+    WritingMode GetWritingMode() const {
+      MOZ_ASSERT(!mDirty);
+      return mWritingMode;
+    }
 
     bool EqualsExceptDirection(const TS_SELECTION_ACP& aACP) const {
       if (mACP.style.ase == aACP.style.ase) {
@@ -635,29 +627,22 @@ class TSFTextStore final : public ITextStoreACP,
 
     bool EqualsExceptDirection(
         const SelectionChangeDataBase& aChangedSelection) const {
+      MOZ_ASSERT(!mDirty);
       MOZ_ASSERT(aChangedSelection.IsValid());
       return aChangedSelection.Length() == static_cast<uint32_t>(Length()) &&
              aChangedSelection.mOffset == static_cast<uint32_t>(StartOffset());
     }
 
-    friend std::ostream& operator<<(std::ostream& aStream,
-                                    const Selection& aSelection) {
-      aStream << "{ mACP=" << ToString(aSelection.mACP).c_str()
-              << ", mWritingMode=" << ToString(aSelection.mWritingMode).c_str()
-              << ",  Collapsed()="
-              << (aSelection.Collapsed() ? "true" : "false")
-              << ", Length=" << aSelection.Length() << " }";
-      return aStream;
-    }
-
    private:
     TS_SELECTION_ACP mACP;
     WritingMode mWritingMode;
+    bool mDirty;
   };
-  // Don't access mSelection directly.  Instead, Use SelectionForTSFRef().
-  // This is modified immediately when TSF requests to set selection and not
-  // updated by selection change in content until mContentForTSF is cleared.
-  Maybe<Selection> mSelectionForTSF;
+  // Don't access mSelection directly except at calling MarkDirty().
+  // Use SelectionForTSFRef() instead.  This is modified immediately when
+  // TSF requests to set selection and not updated by selection change in
+  // content until mContentForTSF is cleared.
+  Selection mSelectionForTSF;
 
   /**
    * Get the selection expected by TSF.  If mSelectionForTSF is already valid,
@@ -666,7 +651,28 @@ class TSFTextStore final : public ITextStoreACP,
    * actually using it.
    * Note that this is also called by ContentForTSF().
    */
-  Maybe<Selection>& SelectionForTSF();
+  Selection& SelectionForTSFRef();
+
+  class MOZ_STACK_CLASS AutoSetTemporarySelection final {
+   public:
+    explicit AutoSetTemporarySelection(Selection& aSelection)
+        : mSelection(aSelection) {
+      mDirty = mSelection.IsDirty();
+      if (mDirty) {
+        mSelection.CollapseAt(0);
+      }
+    }
+
+    ~AutoSetTemporarySelection() {
+      if (mDirty) {
+        mSelection.MarkDirty();
+      }
+    }
+
+   private:
+    Selection& mSelection;
+    bool mDirty;
+  };
 
   struct PendingAction final {
     enum class Type : uint8_t {
@@ -855,7 +861,7 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
     Maybe<TSFTextStore::Composition>& Composition() { return mComposition; }
-    Maybe<TSFTextStore::Selection>& Selection() { return mSelection; }
+    TSFTextStore::Selection& Selection() { return mSelection; }
 
     friend std::ostream& operator<<(std::ostream& aStream,
                                     const Content& aContent) {
@@ -879,7 +885,7 @@ class TSFTextStore final : public ITextStoreACP,
     Maybe<OffsetAndData<LONG>> mLastComposition;
 
     Maybe<TSFTextStore::Composition>& mComposition;
-    Maybe<TSFTextStore::Selection>& mSelection;
+    TSFTextStore::Selection& mSelection;
 
     // The latest composition's start and end offset.
     Maybe<StartAndEndOffsets<LONG>> mLatestCompositionRange;
