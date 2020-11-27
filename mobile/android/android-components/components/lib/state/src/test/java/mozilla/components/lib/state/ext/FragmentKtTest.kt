@@ -8,12 +8,17 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.test.setMain
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.TestAction
 import mozilla.components.lib.state.TestState
 import mozilla.components.lib.state.reducer
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
@@ -25,8 +30,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 @ExperimentalCoroutinesApi
 class FragmentKtTest {
@@ -260,5 +267,33 @@ class FragmentKtTest {
         assertTrue(latch.await(1, TimeUnit.SECONDS))
         assertEquals(25, receivedValue)
         latch = CountDownLatch(1)
+    }
+
+    @Test
+    fun `consumeFlow - creates flow synchronously`() {
+        val fragment = mock<Fragment>()
+        val fragmentLifecycle = mock<LifecycleRegistry>()
+        val view = mock<View>()
+        val store = Store(TestState(counter = 23), ::reducer)
+
+        doReturn(mock<FragmentActivity>()).`when`(fragment).activity
+        doReturn(fragmentLifecycle).`when`(fragment).lifecycle
+        doReturn(view).`when`(fragment).view
+
+        // Verify that we create the flow even if no other coroutine runs past this point
+        val noopDispatcher = object : CoroutineDispatcher() {
+            override fun dispatch(context: CoroutineContext, block: Runnable) {
+                // NOOP
+            }
+        }
+        Dispatchers.setMain(noopDispatcher)
+        fragment.consumeFlow(store) { flow ->
+            flow.collect { }
+        }
+
+        // Only way to verify that store.flow was called without triggering the channelFlow
+        // producer and in this test we want to make sure we call store.flow before the flow
+        // is "produced."
+        verify(fragmentLifecycle).addObserver(any())
     }
 }

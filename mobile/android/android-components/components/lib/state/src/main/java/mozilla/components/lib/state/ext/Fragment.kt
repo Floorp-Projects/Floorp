@@ -87,18 +87,21 @@ fun <S : State, A : Action> Fragment.consumeFlow(
     val fragment = this
     val view = checkNotNull(view) { "Fragment has no view yet. Call from onViewCreated()." }
 
+    // It's important to create the flow here directly instead of in the coroutine below,
+    // as otherwise the fragment could be removed before the subscription is created.
+    // This would cause us to create an unnecessary subscription leaking the fragment,
+    // as we only unsubscribe on destroy which already happened.
+    val flow = from.flow(owner)
+
     val scope = view.toScope()
-
     scope.launch {
-        val flow = from
-            .flow(owner)
-            .filter {
-                // We ignore state updates if the fragment does not have an activity or view
-                // attached anymore.
-                // See comment in [consumeFrom] above.
-                fragment.activity != null && fragment.view != null
-            }
+        val filtered = flow.filter {
+            // We ignore state updates if the fragment does not have an activity or view
+            // attached anymore.
+            // See comment in [consumeFrom] above.
+            fragment.activity != null && fragment.view != null
+        }
 
-        block(flow)
+        block(filtered)
     }
 }
