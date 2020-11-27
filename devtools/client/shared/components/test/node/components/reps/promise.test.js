@@ -107,7 +107,7 @@ describe("Promise - fulfilled with object", () => {
 describe("Promise - fulfilled with array", () => {
   const object = stubs.get("FulfilledWithArray");
   const length = getGripLengthBubbleText(
-    object.preview.ownProperties["<value>"],
+    object.preview.ownProperties["<value>"].value,
     {
       mode: MODE.TINY,
     }

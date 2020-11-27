@@ -13,7 +13,9 @@ stubs.set("Pending", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "pending",
+      "<state>": {
+        value: "pending",
+      },
     },
     ownPropertiesLength: 1,
   },
@@ -27,8 +29,12 @@ stubs.set("FulfilledWithNumber", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "fulfilled",
-      "<value>": 42,
+      "<state>": {
+        value: "fulfilled",
+      },
+      "<value>": {
+        value: 42,
+      },
     },
     ownPropertiesLength: 2,
   },
@@ -42,8 +48,12 @@ stubs.set("FulfilledWithString", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "fulfilled",
-      "<value>": "foo",
+      "<state>": {
+        value: "fulfilled",
+      },
+      "<value>": {
+        value: "foo",
+      },
     },
     ownPropertiesLength: 2,
   },
@@ -57,15 +67,19 @@ stubs.set("FulfilledWithObject", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "fulfilled",
+      "<state>": {
+        value: "fulfilled",
+      },
       "<value>": {
-        type: "object",
-        actor: "server1.conn1.child1/obj60",
-        class: "Object",
-        extensible: true,
-        frozen: false,
-        sealed: false,
-        ownPropertyLength: 2,
+        value: {
+          type: "object",
+          actor: "server1.conn1.child1/obj60",
+          class: "Object",
+          extensible: true,
+          frozen: false,
+          sealed: false,
+          ownPropertyLength: 2,
+        },
       },
     },
     ownPropertiesLength: 2,
@@ -80,18 +94,22 @@ stubs.set("FulfilledWithArray", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "fulfilled",
+      "<state>": {
+        value: "fulfilled",
+      },
       "<value>": {
-        type: "object",
-        actor: "server1.conn1.child1/obj58",
-        class: "Array",
-        extensible: true,
-        frozen: false,
-        sealed: false,
-        ownPropertyLength: 4,
-        preview: {
-          kind: "ArrayLike",
-          length: 3,
+        value: {
+          type: "object",
+          actor: "server1.conn1.child1/obj58",
+          class: "Array",
+          extensible: true,
+          frozen: false,
+          sealed: false,
+          ownPropertyLength: 4,
+          preview: {
+            kind: "ArrayLike",
+            length: 3,
+          },
         },
       },
     },
@@ -107,26 +125,30 @@ stubs.set("FulfilledWithNode", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "fulfilled",
+      "<state>": {
+        value: "fulfilled",
+      },
       "<value>": {
-        type: "object",
-        actor: "server1.conn1.child1/obj218",
-        class: "HTMLButtonElement",
-        extensible: true,
-        frozen: false,
-        sealed: false,
-        ownPropertyLength: 0,
-        preview: {
-          kind: "DOMNode",
-          nodeType: 1,
-          nodeName: "button",
-          isConnected: true,
-          attributes: {
-            id: "btn-1",
-            class: "btn btn-log",
-            type: "button",
+        value: {
+          type: "object",
+          actor: "server1.conn1.child1/obj218",
+          class: "HTMLButtonElement",
+          extensible: true,
+          frozen: false,
+          sealed: false,
+          ownPropertyLength: 0,
+          preview: {
+            kind: "DOMNode",
+            nodeType: 1,
+            nodeName: "button",
+            isConnected: true,
+            attributes: {
+              id: "btn-1",
+              class: "btn btn-log",
+              type: "button",
+            },
+            attributesLength: 3,
           },
-          attributesLength: 3,
         },
       },
     },
@@ -142,26 +164,30 @@ stubs.set("FulfilledWithDisconnectedNode", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "fulfilled",
+      "<state>": {
+        value: "fulfilled",
+      },
       "<value>": {
-        type: "object",
-        actor: "server1.conn1.child1/obj218",
-        class: "HTMLButtonElement",
-        extensible: true,
-        frozen: false,
-        sealed: false,
-        ownPropertyLength: 0,
-        preview: {
-          kind: "DOMNode",
-          nodeType: 1,
-          nodeName: "button",
-          isConnected: false,
-          attributes: {
-            id: "btn-1",
-            class: "btn btn-log",
-            type: "button",
+        value: {
+          type: "object",
+          actor: "server1.conn1.child1/obj218",
+          class: "HTMLButtonElement",
+          extensible: true,
+          frozen: false,
+          sealed: false,
+          ownPropertyLength: 0,
+          preview: {
+            kind: "DOMNode",
+            nodeType: 1,
+            nodeName: "button",
+            isConnected: false,
+            attributes: {
+              id: "btn-1",
+              class: "btn btn-log",
+              type: "button",
+            },
+            attributesLength: 3,
           },
-          attributesLength: 3,
         },
       },
     },
@@ -177,8 +203,12 @@ stubs.set("RejectedWithNumber", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "rejected",
-      "<reason>": 123,
+      "<state>": {
+        value: "rejected",
+      },
+      "<reason>": {
+        value: 123,
+      },
     },
     ownPropertiesLength: 2,
   },
@@ -192,15 +222,19 @@ stubs.set("RejectedWithObject", {
   preview: {
     kind: "Object",
     ownProperties: {
-      "<state>": "rejected",
+      "<state>": {
+        value: "rejected",
+      },
       "<reason>": {
-        type: "object",
-        actor: "server1.conn1.child1/obj68",
-        class: "Object",
-        extensible: true,
-        frozen: false,
-        sealed: false,
-        ownPropertyLength: 1,
+        value: {
+          type: "object",
+          actor: "server1.conn1.child1/obj68",
+          class: "Object",
+          extensible: true,
+          frozen: false,
+          sealed: false,
+          ownPropertyLength: 1,
+        },
       },
     },
     ownPropertiesLength: 2,
