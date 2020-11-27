@@ -48,6 +48,9 @@ async function run_test() {
       var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
       Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DEVICE);
 
+      status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRENDER);
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DEVICE);
+
       // Make sure unrelated features aren't affected
       status = gfxInfo.getFeatureStatus(
         Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS
