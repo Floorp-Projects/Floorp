@@ -14,48 +14,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851485
   /** Test for Bug 851485 **/
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
 
-function delayedVerifyScroll(win) {
-  ok(win.scrollY > 3000);
-  SimpleTest.finish();
-}
+var testRunning = false;
+async function runTest() {
+  if (testRunning) {
+    return;
+  }
+  testRunning = true;
 
-function verifyScroll(event) {
-  var win = event.target.defaultView;
-  win.onscroll = "";
-  setTimeout(function(){delayedVerifyScroll(win)},500)
-}
+  var e = document.getElementsByTagName('iframe')[0];
+  var win = e.contentWindow;
 
-function clickLink(link,win) {
+  var p = new Promise((r) => { win.addEventListener("hashchange", r, { once: true }); });
+  win.location.hash = '#anchor';
+  await p;
+
+  win.scrollTo(0, 500);
+
+  p = new Promise((r) => { e.addEventListener("load", r, { once: true }); });
+  win.location.reload();
+  await p;
+
+  is(win.location.hash, "#anchor", "We set the location's hash to 'anchor'");
+  is(win.scrollY, 500, "Reloading keeps scroll position");
+
+  var link = win.document.getElementsByTagName('a')[0];
+  var anchor = win.document.getElementsByTagName('a')[1];
+  p = new Promise((r) => {
+    var observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        r();
+      }
+    });
+    observer.observe(anchor);
+  });
   win.document.body.offsetHeight;
   synthesizeMouseAtCenter(link, {type: "mousedown"}, win);
   synthesizeMouseAtCenter(link, {type: "mouseup"}, win);
   sendMouseEvent({type: "click"}, link, win);
-}
+  await p;
 
-function verifyAfterLoad() {
-  var e = document.getElementsByTagName('iframe')[0];
-  var win = e.contentWindow;
-  if (win.location.hash != '') {
-    is(win.scrollY,500);
-    var link = win.document.getElementsByTagName('a')[0];
-    win.onscroll = verifyScroll;
-    clickLink(link,win);
-    return;
-  }
-}
+  ok(win.scrollY > 3000, "Scrolling after load works.");
 
-function runTest() {
-  var e = document.getElementsByTagName('iframe')[0];
-  var win = e.contentWindow;
-  if (win.location.hash != '') {
-    return;
-  }
-  win.location.hash='#anchor'
-  win.scrollTo(0,500);
-  e.setAttribute("onload","verifyAfterLoad()");
-  win.location.reload()
+  SimpleTest.finish();
 }
 
 
