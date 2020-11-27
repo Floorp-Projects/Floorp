@@ -22,8 +22,11 @@ jobs:
         symbol: I(ib)
     debian10-test:
         symbol: I(deb10-test)
+    ubuntu1804-test-base:
+        symbol: I(ub18-test-base)
     ubuntu1804-test:
         symbol: I(ub18-test)
+        parent: ubuntu1804-test-base
     # Neither the debian8-*raw nor the debian8-*packages images can have
     # packages dependencies.
     debian8-raw:
