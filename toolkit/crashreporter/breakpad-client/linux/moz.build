@@ -36,3 +36,6 @@ include('/toolkit/crashreporter/crashreporter.mozbuild')
 
 if CONFIG['MOZ_PHC']:
     DEFINES['MOZ_PHC'] = True
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=stack-protector']
