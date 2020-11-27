@@ -149,6 +149,42 @@
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DEVICE "
   },
+  {
+    "os": "WINNT 6.1",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x6666"
+    ],
+    "feature": " WEBRENDER ",
+    "featureStatus": " BLOCKED_DEVICE "
+  },
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x6666"
+    ],
+    "feature": " WEBRENDER ",
+    "featureStatus": " BLOCKED_DEVICE "
+  },
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x6666"
+    ],
+    "feature": " WEBRENDER ",
+    "featureStatus": " BLOCKED_DEVICE "
+  },
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x6666"
+    ],
+    "feature": " WEBRENDER ",
+    "featureStatus": " BLOCKED_DEVICE "
+  },
 
   {
     "os": "All",
