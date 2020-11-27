@@ -945,21 +945,13 @@ class TSFTextStore final : public ITextStoreACP,
     void UnadviseSink();
 
     bool IsUsing() const { return mSink != nullptr; }
-    bool InRange(uint32_t aOffset) const {
-      if (NS_WARN_IF(mStart < 0) || NS_WARN_IF(mLength <= 0)) {
-        return false;
-      }
-      return aOffset >= static_cast<uint32_t>(mStart) &&
-             aOffset < static_cast<uint32_t>(mStart + mLength);
-    }
     DWORD Cookie() const { return mCookie; }
     bool OnMouseButtonEvent(ULONG aEdge, ULONG aQuadrant, DWORD aButtonStatus);
-    LONG RangeStart() const { return mStart; }
+    const Maybe<StartAndEndOffsets<LONG>> Range() const { return mRange; }
 
    private:
     RefPtr<ITfMouseSink> mSink;
-    LONG mStart;
-    LONG mLength;
+    Maybe<StartAndEndOffsets<LONG>> mRange;
     DWORD mCookie;
   };
   // mMouseTrackers is an array to store each information of installed

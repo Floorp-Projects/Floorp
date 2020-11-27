@@ -6285,6 +6285,9 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
                .get()));
 
   uint32_t offset = aIMENotification.mMouseButtonEventData.mOffset;
+  if (offset > static_cast<uint32_t>(LONG_MAX)) {
+    return NS_OK;
+  }
   nsIntRect charRect =
       aIMENotification.mMouseButtonEventData.mCharRect.AsIntRect();
   nsIntPoint cursorPos =
@@ -6320,11 +6323,12 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
   }
   for (size_t i = 0; i < mMouseTrackers.Length(); i++) {
     MouseTracker& tracker = mMouseTrackers[i];
-    if (!tracker.IsUsing() || !tracker.InRange(offset)) {
+    if (!tracker.IsUsing() || tracker.Range().isNothing() ||
+        !tracker.Range()->IsOffsetInRange(offset)) {
       continue;
     }
-    if (tracker.OnMouseButtonEvent(edge - tracker.RangeStart(), quadrant,
-                                   buttonStatus)) {
+    if (tracker.OnMouseButtonEvent(edge - tracker.Range()->StartOffset(),
+                                   quadrant, buttonStatus)) {
       return NS_SUCCESS_EVENT_CONSUMED;
     }
   }
@@ -7191,8 +7195,7 @@ void TSFTextStore::Content::EndComposition(const PendingAction& aCompEnd) {
  *  TSFTextStore::MouseTracker
  *****************************************************************************/
 
-TSFTextStore::MouseTracker::MouseTracker()
-    : mStart(-1), mLength(-1), mCookie(kInvalidCookie) {}
+TSFTextStore::MouseTracker::MouseTracker() : mCookie(kInvalidCookie) {}
 
 HRESULT
 TSFTextStore::MouseTracker::Init(TSFTextStore* aTextStore) {
@@ -7239,7 +7242,10 @@ TSFTextStore::MouseTracker::AdviseSink(TSFTextStore* aTextStore,
     return E_FAIL;
   }
 
-  HRESULT hr = aTextRange->GetExtent(&mStart, &mLength);
+  MOZ_ASSERT(mRange.isNothing());
+
+  LONG start = 0, length = 0;
+  HRESULT hr = aTextRange->GetExtent(&start, &length);
   if (FAILED(hr)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::MouseTracker::AdviseMouseSink() FAILED "
@@ -7248,12 +7254,12 @@ TSFTextStore::MouseTracker::AdviseSink(TSFTextStore* aTextStore,
     return hr;
   }
 
-  if (mStart < 0 || mLength <= 0) {
+  if (start < 0 || length <= 0 || start + length > LONG_MAX) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::MouseTracker::AdviseMouseSink() FAILED "
              "due to odd result of ITfRangeACP::GetExtent(), "
-             "mStart=%d, mLength=%d",
-             this, mStart, mLength));
+             "start=%d, length=%d",
+             this, start, length));
     return E_INVALIDARG;
   }
 
@@ -7266,32 +7272,34 @@ TSFTextStore::MouseTracker::AdviseSink(TSFTextStore* aTextStore,
     return E_FAIL;
   }
 
-  if (textContent.Length() <= static_cast<uint32_t>(mStart) ||
-      textContent.Length() < static_cast<uint32_t>(mStart + mLength)) {
+  if (textContent.Length() <= static_cast<uint32_t>(start) ||
+      textContent.Length() < static_cast<uint32_t>(start + length)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::MouseTracker::AdviseMouseSink() FAILED "
-             "due to out of range, mStart=%d, mLength=%d, "
+             "due to out of range, start=%d, length=%d, "
              "textContent.Length()=%d",
-             this, mStart, mLength, textContent.Length()));
+             this, start, length, textContent.Length()));
     return E_INVALIDARG;
   }
+
+  mRange.emplace(start, start + length);
 
   mSink = aMouseSink;
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::MouseTracker::AdviseMouseSink(), "
-           "succeeded, mStart=%d, mLength=%d, textContent.Length()=%d",
-           this, mStart, mLength, textContent.Length()));
+           "succeeded, mRange=%s, textContent.Length()=%d",
+           this, ToString(mRange).c_str(), textContent.Length()));
   return S_OK;
 }
 
 void TSFTextStore::MouseTracker::UnadviseSink() {
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::MouseTracker::UnadviseSink(), "
-           "mCookie=%d, mSink=0x%p, mStart=%d, mLength=%d",
-           this, mCookie, mSink.get(), mStart, mLength));
+           "mCookie=%d, mSink=0x%p, mRange=%s",
+           this, mCookie, mSink.get(), ToString(mRange).c_str()));
   mSink = nullptr;
-  mStart = mLength = -1;
+  mRange.reset();
 }
 
 bool TSFTextStore::MouseTracker::OnMouseButtonEvent(ULONG aEdge,
