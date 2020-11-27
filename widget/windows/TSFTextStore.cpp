@@ -18,6 +18,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -97,6 +98,9 @@ enum class TextInputProcessorID {
   // TIP for Korean.
   eMicrosoftIMEForKorean,
   eMicrosoftOldHangul,
+
+  // Keyman Desktop, which can install various language keyboards.
+  eKeymanDesktop,
 };
 
 static const char* GetBoolName(bool aBool) { return aBool ? "true" : "false"; }
@@ -1154,12 +1158,32 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
         break;
       default:
         mActiveTIP = TextInputProcessorID::eUnknown;
+        break;
+    }
+    // Special case for Keyman Desktop, it is available for any languages.
+    // Therefore, we need to check it only if we don't know the active TIP.
+    if (mActiveTIP != TextInputProcessorID::eUnknown) {
+      return;
+    }
+
+    // Note that keyboard layouts for Keyman assign its GUID on install
+    // randomly, but CLSID is constant in any environments.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1670834#c7
+    // https://github.com/keymanapp/keyman/blob/318c73a9e1d571d942837ff9964590626e5bd5aa/windows/src/engine/kmtip/globals.cpp#L37
+    // {FE0420F1-38D1-4B4C-96BF-E7E20A74CFB7}
+    static constexpr CLSID kKeymanDesktop_CLSID = {
+        0xFE0420F1,
+        0x38D1,
+        0x4B4C,
+        {0x96, 0xBF, 0xE7, 0xE2, 0x0A, 0x74, 0xCF, 0xB7}};
+    if (mActiveTIPCLSID == kKeymanDesktop_CLSID) {
+      mActiveTIP = TextInputProcessorID::eKeymanDesktop;
     }
   }
 
   TextInputProcessorID ComputeActiveTIPAsJapanese() {
     // {A76C93D9-5523-4E90-AAFA-4DB112F9AC76} (Win7, Win8.1, Win10)
-    static const GUID kMicrosoftIMEForJapaneseGUID = {
+    static constexpr GUID kMicrosoftIMEForJapaneseGUID = {
         0xA76C93D9,
         0x5523,
         0x4E90,
@@ -1168,7 +1192,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftIMEForJapanese;
     }
     // {54EDCC94-1524-4BB1-9FB7-7BABE4F4CA64}
-    static const GUID kMicrosoftOfficeIME2010ForJapaneseGUID = {
+    static constexpr GUID kMicrosoftOfficeIME2010ForJapaneseGUID = {
         0x54EDCC94,
         0x1524,
         0x4BB1,
@@ -1177,7 +1201,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftOfficeIME2010ForJapanese;
     }
     // {773EB24E-CA1D-4B1B-B420-FA985BB0B80D}
-    static const GUID kGoogleJapaneseInputGUID = {
+    static constexpr GUID kGoogleJapaneseInputGUID = {
         0x773EB24E,
         0xCA1D,
         0x4B1B,
@@ -1195,7 +1219,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eATOK2011;
     }
     // {1DE01562-F445-401B-B6C3-E5B18DB79461}
-    static const GUID kATOK2012GUID = {
+    static constexpr GUID kATOK2012GUID = {
         0x1DE01562,
         0xF445,
         0x401B,
@@ -1204,7 +1228,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eATOK2012;
     }
     // {3C4DB511-189A-4168-B6EA-BFD0B4C85615}
-    static const GUID kATOK2013GUID = {
+    static constexpr GUID kATOK2013GUID = {
         0x3C4DB511,
         0x189A,
         0x4168,
@@ -1213,7 +1237,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eATOK2013;
     }
     // {4EF33B79-6AA9-4271-B4BF-9321C279381B}
-    static const GUID kATOK2014GUID = {
+    static constexpr GUID kATOK2014GUID = {
         0x4EF33B79,
         0x6AA9,
         0x4271,
@@ -1222,7 +1246,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eATOK2014;
     }
     // {EAB4DC00-CE2E-483D-A86A-E6B99DA9599A}
-    static const GUID kATOK2015GUID = {
+    static constexpr GUID kATOK2015GUID = {
         0xEAB4DC00,
         0xCE2E,
         0x483D,
@@ -1231,7 +1255,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eATOK2015;
     }
     // {0B557B4C-5740-4110-A60A-1493FA10BF2B}
-    static const GUID kATOK2016GUID = {
+    static constexpr GUID kATOK2016GUID = {
         0x0B557B4C,
         0x5740,
         0x4110,
@@ -1250,7 +1274,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
     }
 
     // {E6D66705-1EDA-4373-8D01-1D0CB2D054C7}
-    static const GUID kJapanist10GUID = {
+    static constexpr GUID kJapanist10GUID = {
         0xE6D66705,
         0x1EDA,
         0x4373,
@@ -1264,7 +1288,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
 
   TextInputProcessorID ComputeActiveTIPAsTraditionalChinese() {
     // {B2F9C502-1742-11D4-9790-0080C882687E} (Win8.1, Win10)
-    static const GUID kMicrosoftBopomofoGUID = {
+    static constexpr GUID kMicrosoftBopomofoGUID = {
         0xB2F9C502,
         0x1742,
         0x11D4,
@@ -1282,7 +1306,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftChangJie;
     }
     // {761309DE-317A-11D4-9B5D-0080C882687E} (Win7)
-    static const GUID kMicrosoftPhoneticGUID = {
+    static constexpr GUID kMicrosoftPhoneticGUID = {
         0x761309DE,
         0x317A,
         0x11D4,
@@ -1291,7 +1315,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftPhonetic;
     }
     // {6024B45F-5C54-11D4-B921-0080C882687E} (Win7, Win8.1, Win10)
-    static const GUID kMicrosoftQuickGUID = {
+    static constexpr GUID kMicrosoftQuickGUID = {
         0x6024B45F,
         0x5C54,
         0x11D4,
@@ -1300,7 +1324,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftQuick;
     }
     // {F3BA907A-6C7E-11D4-97FA-0080C882687E} (Win7)
-    static const GUID kMicrosoftNewChangJieGUID = {
+    static constexpr GUID kMicrosoftNewChangJieGUID = {
         0xF3BA907A,
         0x6C7E,
         0x11D4,
@@ -1309,7 +1333,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftNewChangJie;
     }
     // {B2F9C502-1742-11D4-9790-0080C882687E} (Win7)
-    static const GUID kMicrosoftNewPhoneticGUID = {
+    static constexpr GUID kMicrosoftNewPhoneticGUID = {
         0xB2F9C502,
         0x1742,
         0x11D4,
@@ -1318,7 +1342,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftNewPhonetic;
     }
     // {0B883BA0-C1C7-11D4-87F9-0080C882687E} (Win7)
-    static const GUID kMicrosoftNewQuickGUID = {
+    static constexpr GUID kMicrosoftNewQuickGUID = {
         0x0B883BA0,
         0xC1C7,
         0x11D4,
@@ -1350,7 +1374,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
     // FYI: This matches with neither "Microsoft Pinyin ABC Input Style" nor
     //      "Microsoft Pinyin New Experience Input Style" on Win7.
     // {FA550B04-5AD7-411F-A5AC-CA038EC515D7} (Win8.1, Win10)
-    static const GUID kMicrosoftPinyinGUID = {
+    static constexpr GUID kMicrosoftPinyinGUID = {
         0xFA550B04,
         0x5AD7,
         0x411F,
@@ -1360,7 +1384,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
     }
 
     // {F3BA9077-6C7E-11D4-97FA-0080C882687E} (Win7)
-    static const GUID kMicrosoftPinyinNewExperienceInputStyleGUID = {
+    static constexpr GUID kMicrosoftPinyinNewExperienceInputStyleGUID = {
         0xF3BA9077,
         0x6C7E,
         0x11D4,
@@ -1369,7 +1393,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftPinyinNewExperienceInputStyle;
     }
     // {82590C13-F4DD-44F4-BA1D-8667246FDF8E} (Win8.1, Win10)
-    static const GUID kMicrosoftWubiGUID = {
+    static constexpr GUID kMicrosoftWubiGUID = {
         0x82590C13,
         0xF4DD,
         0x44F4,
@@ -1391,7 +1415,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
 
   TextInputProcessorID ComputeActiveTIPAsKorean() {
     // {B5FE1F02-D5F2-4445-9C03-C568F23C99A1} (Win7, Win8.1, Win10)
-    static const GUID kMicrosoftIMEForKoreanGUID = {
+    static constexpr GUID kMicrosoftIMEForKoreanGUID = {
         0xB5FE1F02,
         0xD5F2,
         0x4445,
@@ -1400,7 +1424,7 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
       return TextInputProcessorID::eMicrosoftIMEForKorean;
     }
     // {B60AF051-257A-46BC-B9D3-84DAD819BAFB} (Win8.1, Win10)
-    static const GUID kMicrosoftOldHangulGUID = {
+    static constexpr GUID kMicrosoftOldHangulGUID = {
         0xB60AF051,
         0x257A,
         0x46BC,
@@ -1452,8 +1476,9 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
   // i.e., IMM-IME or just a keyboard layout, this is empty.
   nsString mActiveTIPKeyboardDescription;
 
-  // Active TIP's GUID
+  // Active TIP's GUID and CLSID
   GUID mActiveTIPGUID;
+  CLSID mActiveTIPCLSID;
 
   static StaticRefPtr<TSFStaticSink> sInstance;
 };
@@ -1548,6 +1573,7 @@ TSFStaticSink::OnActivated(DWORD dwProfileType, LANGID langid, REFCLSID rclsid,
     mOnActivatedCalled = true;
     mActiveTIP = TextInputProcessorID::eNotComputed;
     mActiveTIPGUID = guidProfile;
+    mActiveTIPCLSID = rclsid;
     mLangID = langid & 0xFFFF;
     mIsIMM_IME = IsIMM_IME(hkl);
     GetTIPDescription(rclsid, langid, guidProfile,
@@ -2302,6 +2328,11 @@ void TSFTextStore::FlushPendingActions() {
           selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
           selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
           selectionSet.mReversed = false;
+          selectionSet.mExpandToClusterBoundary =
+              TSFStaticSink::ActiveTIP() !=
+                  TextInputProcessorID::eKeymanDesktop &&
+              StaticPrefs::
+                  intl_tsf_hack_extend_setting_selection_range_to_cluster_boundaries();
           DispatchEvent(selectionSet);
           if (!selectionSet.mSucceeded) {
             MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -2442,6 +2473,11 @@ void TSFTextStore::FlushPendingActions() {
         selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
         selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
         selectionSet.mReversed = action.mSelectionReversed;
+        selectionSet.mExpandToClusterBoundary =
+            TSFStaticSink::ActiveTIP() !=
+                TextInputProcessorID::eKeymanDesktop &&
+            StaticPrefs::
+                intl_tsf_hack_extend_setting_selection_range_to_cluster_boundaries();
         DispatchEvent(selectionSet);
         if (!selectionSet.mSucceeded) {
           MOZ_LOG(sTextStoreLog, LogLevel::Error,
