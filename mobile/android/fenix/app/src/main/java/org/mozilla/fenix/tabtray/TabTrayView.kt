@@ -53,6 +53,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.updateAccessibilityCollectionInfo
 import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.MultiselectModeChange
 import org.mozilla.fenix.tabtray.TabTrayDialogFragmentState.Mode
+import org.mozilla.fenix.utils.Settings
 import java.text.NumberFormat
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -266,11 +267,15 @@ class TabTrayView(
 
         adjustNewTabButtonsForNormalMode()
 
+        displayInfoBannerIfNeccessary(tabs, view.context.settings())
+    }
+
+    private fun displayInfoBannerIfNeccessary(tabs: List<TabSessionState>, settings: Settings) {
         @Suppress("ComplexCondition")
-        if (
-            view.context.settings().shouldShowGridViewBanner &&
-            view.context.settings().canShowCfr &&
-            view.context.settings().listTabView &&
+        val infoBanner = if (
+            settings.shouldShowGridViewBanner &&
+            settings.canShowCfr &&
+            settings.listTabView &&
             tabs.size >= TAB_COUNT_SHOW_CFR
         ) {
             InfoBanner(
@@ -280,17 +285,14 @@ class TabTrayView(
                 actionText = view.context.getString(R.string.tab_tray_grid_view_banner_positive_button_text),
                 container = view.infoBanner,
                 dismissByHiding = true,
-                dismissAction = { view.context.settings().shouldShowGridViewBanner = false }
+                dismissAction = { settings.shouldShowGridViewBanner = false }
             ) {
                 interactor.onGoToTabsSettings()
-                view.context.settings().shouldShowGridViewBanner = false
-            }.apply {
-                view.infoBanner.visibility = View.VISIBLE
-                showBanner()
+                settings.shouldShowGridViewBanner = false
             }
         } else if (
-            view.context.settings().shouldShowAutoCloseTabsBanner &&
-            view.context.settings().canShowCfr &&
+            settings.shouldShowAutoCloseTabsBanner &&
+            settings.canShowCfr &&
             tabs.size >= TAB_COUNT_SHOW_CFR
         ) {
             InfoBanner(
@@ -300,14 +302,18 @@ class TabTrayView(
                 actionText = view.context.getString(R.string.tab_tray_close_tabs_banner_positive_button_text),
                 container = view.infoBanner,
                 dismissByHiding = true,
-                dismissAction = { view.context.settings().shouldShowAutoCloseTabsBanner = false }
+                dismissAction = { settings.shouldShowAutoCloseTabsBanner = false }
             ) {
                 interactor.onGoToTabsSettings()
-                view.context.settings().shouldShowAutoCloseTabsBanner = false
-            }.apply {
-                view.infoBanner.visibility = View.VISIBLE
-                showBanner()
+                settings.shouldShowAutoCloseTabsBanner = false
             }
+        } else {
+            null
+        }
+
+        infoBanner?.apply {
+            view.infoBanner.visibility = View.VISIBLE
+            showBanner()
         }
     }
 
