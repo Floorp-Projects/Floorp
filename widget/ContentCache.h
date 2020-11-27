@@ -15,6 +15,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ToString.h"
 #include "mozilla/WritingModes.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -70,71 +71,89 @@ class ContentCache {
     // Whole rect of selected text. This is empty if the selection is collapsed.
     LayoutDeviceIntRect mRect;
 
-    Selection() : mAnchor(UINT32_MAX), mFocus(UINT32_MAX) {}
+    explicit Selection(uint32_t aAnchorOffset, uint32_t aFocusOffset,
+                       const WritingMode& aWritingMode)
+        : mAnchor(aAnchorOffset),
+          mFocus(aFocusOffset),
+          mWritingMode(aWritingMode) {}
 
-    void Clear() {
-      mAnchor = mFocus = UINT32_MAX;
-      mWritingMode = WritingMode();
-      ClearAnchorCharRects();
-      ClearFocusCharRects();
+    void ClearRects() {
+      for (auto& rect : mAnchorCharRects) {
+        rect.SetEmpty();
+      }
+      for (auto& rect : mFocusCharRects) {
+        rect.SetEmpty();
+      }
       mRect.SetEmpty();
     }
-
-    void ClearAnchorCharRects() {
-      for (size_t i = 0; i < ArrayLength(mAnchorCharRects); i++) {
-        mAnchorCharRects[i].SetEmpty();
+    bool HasRects() const {
+      for (auto& rect : mAnchorCharRects) {
+        if (!rect.IsEmpty()) {
+          return true;
+        }
       }
-    }
-    void ClearFocusCharRects() {
-      for (size_t i = 0; i < ArrayLength(mFocusCharRects); i++) {
-        mFocusCharRects[i].SetEmpty();
+      for (auto& rect : mFocusCharRects) {
+        if (!rect.IsEmpty()) {
+          return true;
+        }
       }
+      return !mRect.IsEmpty();
     }
 
-    bool IsValid() const {
-      return mAnchor != UINT32_MAX && mFocus != UINT32_MAX;
-    }
-    bool Collapsed() const {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the selection is valid");
-      return mFocus == mAnchor;
-    }
-    bool Reversed() const {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the selection is valid");
-      return mFocus < mAnchor;
-    }
-    uint32_t StartOffset() const {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the selection is valid");
-      return Reversed() ? mFocus : mAnchor;
-    }
-    uint32_t EndOffset() const {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the selection is valid");
-      return Reversed() ? mAnchor : mFocus;
-    }
+    bool Collapsed() const { return mFocus == mAnchor; }
+    bool Reversed() const { return mFocus < mAnchor; }
+    uint32_t StartOffset() const { return Reversed() ? mFocus : mAnchor; }
+    uint32_t EndOffset() const { return Reversed() ? mAnchor : mFocus; }
     uint32_t Length() const {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the selection is valid");
       return Reversed() ? mAnchor - mFocus : mFocus - mAnchor;
     }
     LayoutDeviceIntRect StartCharRect() const {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the selection is valid");
       return Reversed() ? mFocusCharRects[eNextCharRect]
                         : mAnchorCharRects[eNextCharRect];
     }
     LayoutDeviceIntRect EndCharRect() const {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the selection is valid");
       return Reversed() ? mAnchorCharRects[eNextCharRect]
                         : mFocusCharRects[eNextCharRect];
     }
-  } mSelection;
+
+    friend std::ostream& operator<<(std::ostream& aStream,
+                                    const Selection& aSelection) {
+      aStream << "{ mAnchor=" << aSelection.mAnchor
+              << ", mFocus=" << aSelection.mFocus
+              << ", mWritingMode=" << ToString(aSelection.mWritingMode).c_str();
+      if (aSelection.HasRects()) {
+        if (aSelection.mAnchor > 0) {
+          aStream << ", mAnchorCharRects[ePrevCharRect]="
+                  << aSelection.mAnchorCharRects[ContentCache::ePrevCharRect];
+        }
+        aStream << ", mAnchorCharRects[eNextCharRect]="
+                << aSelection.mAnchorCharRects[ContentCache::eNextCharRect];
+        if (aSelection.mFocus > 0) {
+          aStream << ", mFocusCharRects[ePrevCharRect]="
+                  << aSelection.mFocusCharRects[ContentCache::ePrevCharRect];
+        }
+        aStream << ", mFocusCharRects[eNextCharRect]="
+                << aSelection.mFocusCharRects[ContentCache::eNextCharRect]
+                << ", mRect=" << aSelection.mRect;
+      }
+      aStream << ", Reversed()=" << (aSelection.Reversed() ? "true" : "false")
+              << ", StartOffset()=" << aSelection.StartOffset()
+              << ", EndOffset()=" << aSelection.EndOffset()
+              << ", Collapsed()=" << (aSelection.Collapsed() ? "true" : "false")
+              << ", Length()=" << aSelection.Length() << " }";
+      return aStream;
+    }
+
+   private:
+    Selection() = default;
+
+    friend struct IPC::ParamTraits<ContentCache::Selection>;
+    friend struct IPC::ParamTraits<Maybe<ContentCache::Selection>>;
+  };
+  Maybe<Selection> mSelection;
 
   bool IsSelectionValid() const {
-    return mSelection.IsValid() && mSelection.EndOffset() <= mText.Length();
+    return mSelection.isSome() && mSelection->EndOffset() <= mText.Length();
   }
 
   // Stores first char rect because Yosemite's Japanese IME sometimes tries
@@ -223,6 +242,10 @@ class ContentCache {
 
   friend class ContentCacheInParent;
   friend struct IPC::ParamTraits<ContentCache>;
+  friend struct IPC::ParamTraits<ContentCache::Selection>;
+  friend std::ostream& operator<<(
+      std::ostream& aStream,
+      const Selection& aSelection);  // For e(Prev|Next)CharRect
 };
 
 class ContentCacheInChild final : public ContentCache {
