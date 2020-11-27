@@ -38,19 +38,17 @@ add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
       tab.linkedBrowser,
       testVideoId
     );
-    await ensureMessageAndClosePiP(
-      tab.linkedBrowser,
-      testVideoId,
-      winPIP,
-      false
-    );
+    await Promise.all([
+      // To ensure the focus would be gave back to the original window. If we do
+      // not do that, then lacking of focus would interfere other following tests.
+      SimpleTest.promiseFocus(window),
+      ensureMessageAndClosePiP(tab.linkedBrowser, testVideoId, winPIP, false),
+    ]);
+
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);
     await tab.close();
-    // To ensure the focus would be gave back to the original window. If we do
-    // not do that, then lacking of focus would interfere other following tests.
-    await SimpleTest.promiseFocus(window);
   }
 });
 
