@@ -17,6 +17,10 @@
     <string name="no_open_tabs_description">ᱟᱢᱟᱜ ᱠᱷᱩᱞᱟᱹ ᱟᱠᱟᱱ ᱴᱮᱵ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱼᱜᱟ ᱾</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ᱟᱢᱟᱜ ᱱᱤᱡᱚᱨᱟᱜ ᱴᱮᱵᱽ ᱠᱚ ᱫᱚ ᱱᱚᱰᱮ ᱩᱫᱩᱜ ᱦᱩᱭᱩᱜ-ᱟ ᱾</string>
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">ᱵᱟᱭᱰᱩ</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮᱸ ᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮᱸ ᱾</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -89,6 +93,13 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">ᱮᱴᱟᱜᱟ ᱚᱯᱥᱚᱱ ᱠᱚ ᱫᱮᱠᱷᱟᱣᱢᱮᱸ</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ᱵᱟᱹᱰ</string>
+
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">ᱠᱷᱩᱞᱟᱹ ᱴᱮᱵ ᱞᱮᱭᱟᱩᱴ ᱠᱚ ᱵᱚᱫᱚᱞ ᱢᱮᱸ ᱾ ᱥᱟᱡᱟᱣ ᱴᱷᱮᱱ ᱪᱟᱞᱟᱣ ᱠᱟᱛᱮᱫᱽ ᱴᱮᱵ ᱣᱤᱣ ᱞᱟᱛᱟᱨ ᱨᱮ ᱜᱨᱤᱰ ᱪᱚᱭᱚᱱ ᱢᱮᱸ ᱾ </string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">ᱥᱟᱡᱟᱣ ᱛᱮ ᱪᱟᱞᱟᱜᱽ ᱢᱮᱸ</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">ᱵᱚᱸᱫᱽ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -427,6 +438,10 @@
     <string name="preferences_marketing_data">ᱢᱟᱨᱠᱮᱴᱤᱝ ᱰᱟᱴᱟ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Leanplum ᱚᱠᱚᱭ ᱫᱚ ᱟᱞᱮᱭᱤᱡ ᱢᱚᱵᱟᱭᱤᱞ ᱢᱟᱨᱠᱮᱴᱤᱝ ᱣᱮᱱᱰᱚᱨ ᱠᱟᱱᱟᱭ ᱩᱱᱤ ᱥᱟᱞᱟᱜ %1$s ᱨᱮ ᱯᱷᱤᱪᱚᱨ ᱵᱟᱵᱚᱛ ᱵᱮᱵᱷᱟᱨᱚᱜ ᱠᱟᱱ ᱰᱟᱴᱟ ᱦᱟᱹᱴᱤᱧᱚᱜᱼᱟ ᱾</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">ᱯᱟᱲᱦᱟᱣ ᱠᱚ</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Mozilla ᱥᱚᱫᱽᱷ ᱞᱚ ᱟᱹᱛᱩᱨ ᱟᱨ ᱫᱟᱹᱲ ᱪᱷᱚ ᱞᱟᱹᱤᱫᱽ ᱢᱮᱛᱟᱭ ᱢᱮᱸ</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">ᱵᱤᱰᱟᱣ</string>
     <!-- Summary for experiments preferences -->
@@ -581,6 +596,8 @@
     <string name="tab_tray_title">ᱡᱷᱤᱜ ᱴᱮᱵ ᱠᱚ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱸᱪᱟᱣ ᱢᱮᱸ</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">ᱪᱚᱭᱚᱱ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ᱡᱷᱚᱛᱚ ᱴᱮᱵ ᱠᱚ ᱦᱟᱹᱴᱧ ᱢᱮᱸ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -595,6 +612,14 @@
     <string name="tab_tray_menu_home">ᱚᱲᱟᱜ ᱪᱟᱞᱟᱜ ᱢᱮᱸ</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">ᱴᱮᱵ ᱢᱳᱰ ᱛᱚᱞᱟᱜ ᱢᱮᱸ</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">ᱵᱩᱻᱠᱢᱟᱨᱠ</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">ᱵᱚᱸᱫᱽ</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">ᱪᱚᱭᱚᱱ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱦᱟᱹᱴᱤᱧ ᱢᱮᱸ</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">ᱪᱚᱭᱚᱱ ᱟᱠᱟᱱ ᱴᱮᱵ ᱢᱮᱱᱭᱩ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ᱴᱮᱵ ᱛᱩᱢᱟᱹᱞ ᱠᱷᱚᱱ ᱚᱪᱚᱜ ᱢᱮᱸ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -967,6 +992,10 @@
     <string name="snackbar_tab_closed">ᱴᱮᱵ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ᱴᱮᱵ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">ᱵᱩᱻᱠᱢᱟᱨᱠ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱮᱱᱟ!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">ᱧᱮᱞ</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">ᱪᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱮᱱᱥ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->

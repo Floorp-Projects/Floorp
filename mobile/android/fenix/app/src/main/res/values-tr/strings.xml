@@ -260,7 +260,7 @@
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Kredi kartları ve adresler</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Varsayılan tarayıcı olarak ayarla</string>
+    <string name="preferences_set_as_default_browser">Varsayılan tarayıcı yap</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Gelişmiş</string>
     <!-- Preference category for privacy settings -->
@@ -1225,9 +1225,9 @@
     <string name="onboarding_theme_light_title">Açık tema</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
-    <string name="sync_sent_tabs_snackbar">Sekmeler gönderildi!</string>
+    <string name="sync_sent_tabs_snackbar">Sekmeler gönderildi</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
-    <string name="sync_sent_tab_snackbar">Sekme gönderildi!</string>
+    <string name="sync_sent_tab_snackbar">Sekme gönderildi</string>
     <!-- Text shown in snackbar when sharing tabs failed  -->
     <string name="sync_sent_tab_error_snackbar">Gönderilemedi</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->

@@ -445,7 +445,7 @@
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Istraživanja</string>
     <!-- Summary for studies preferences -->
-    <string name="preference_experiments_summary_2">Omogućuje Mozilli instalirati i pokrenuti istraživanja</string>
+    <string name="preference_experiments_summary_2">Omogućuje Mozilli instalaciju i pokretanje istraživanja</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Eksperimenti</string>
 
@@ -1615,7 +1615,7 @@
     <string name="browser_menu_add_to_top_sites">Dodaj u omiljene stranice</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
-    <string name="certificate_info_verified_by">Potvrđeno od: %1$s</string>
+    <string name="certificate_info_verified_by">Potvrđuje: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Izbriši</string>
     <!-- Login overflow menu edit button -->
