@@ -20,9 +20,9 @@ add_task(
     const grip = environment.bindings.variables.p.value;
     ok(grip.preview);
     equal(grip.class, "Promise");
-    equal(grip.preview.ownProperties["<state>"], "rejected");
+    equal(grip.preview.ownProperties["<state>"].value, "rejected");
     equal(
-      grip.preview.ownProperties["<reason>"].actorID,
+      grip.preview.ownProperties["<reason>"].value.actorID,
       packet.frame.arguments[0].actorID,
       "The promise's rejected state reason in the preview should be the same " +
         "value passed to the then function"
