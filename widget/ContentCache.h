@@ -277,7 +277,8 @@ class ContentCacheInChild final : public ContentCache {
   // again by Kakutei-Undo of Japanese IME.  Therefore, we need to keep
   // storing the last composition start to cache all character rects of the
   // last commit string.
-  Maybe<OffsetAndData<uint32_t>> mLastCommit;
+  Maybe<uint32_t> mLastCommitStringStart;
+  nsString mLastCommitString;
 };
 
 class ContentCacheInParent final : public ContentCache {

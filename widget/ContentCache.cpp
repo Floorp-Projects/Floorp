@@ -103,7 +103,8 @@ void ContentCacheInChild::Clear() {
   MOZ_LOG(sContentCacheLog, LogLevel::Info, ("0x%p Clear()", this));
 
   mCompositionStart.reset();
-  mLastCommit.reset();
+  mLastCommitStringStart.reset();
+  mLastCommitString.Truncate();
   mText.Truncate();
   mSelection.Clear();
   mFirstCharRect.SetEmpty();
@@ -119,37 +120,40 @@ void ContentCacheInChild::OnCompositionEvent(
     RefPtr<TextComposition> composition =
         IMEStateManager::GetTextCompositionFor(aCompositionEvent.mWidget);
     if (composition) {
-      nsAutoString lastCommitString;
       if (aCompositionEvent.mMessage == eCompositionCommitAsIs) {
-        lastCommitString = composition->CommitStringIfCommittedAsIs();
+        mLastCommitString = composition->CommitStringIfCommittedAsIs();
       } else {
-        lastCommitString = aCompositionEvent.mData;
+        mLastCommitString = aCompositionEvent.mData;
       }
       // We don't need to store canceling information because this is required
       // by undoing of last commit (Kakutei-Undo of Japanese IME).
-      if (!lastCommitString.IsEmpty()) {
-        mLastCommit = Some(OffsetAndData<uint32_t>(
-            composition->NativeOffsetOfStartComposition(), lastCommitString));
+      if (!mLastCommitString.IsEmpty()) {
+        mLastCommitStringStart =
+            Some(composition->NativeOffsetOfStartComposition());
         MOZ_LOG(
             sContentCacheLog, LogLevel::Debug,
             ("0x%p OnCompositionEvent(), stored last composition string data "
-             "(aCompositionEvent={ mMessage=%s, mData=\"%s\"}, mLastCommit=%s)",
+             "(aCompositionEvent={ mMessage=%s, mData=\"%s\"}, "
+             "mLastCommitStringStart=%u, mLastCommitString=\"%s\")",
              this, ToChar(aCompositionEvent.mMessage),
              GetEscapedUTF8String(aCompositionEvent.mData).get(),
-             ToString(mLastCommit).c_str()));
+             mLastCommitStringStart.value(),
+             GetEscapedUTF8String(mLastCommitString).get()));
         return;
       }
     }
   }
-  if (mLastCommit.isSome()) {
+  if (mLastCommitStringStart.isSome()) {
     MOZ_LOG(sContentCacheLog, LogLevel::Debug,
             ("0x%p OnCompositionEvent(), resetting the last composition string "
              "data (aCompositionEvent={ mMessage=%s, mData=\"%s\"}, "
-             "mLastCommit=%s)",
+             "mLastCommitStringStart=%u, mLastCommitString=\"%s\")",
              this, ToChar(aCompositionEvent.mMessage),
              GetEscapedUTF8String(aCompositionEvent.mData).get(),
-             ToString(mLastCommit).c_str()));
-    mLastCommit.reset();
+             mLastCommitStringStart.value(),
+             GetEscapedUTF8String(mLastCommitString).get()));
+    mLastCommitStringStart.reset();
+    mLastCommitString.Truncate();
   }
 }
 
@@ -285,19 +289,21 @@ bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
 
   // Forget last commit range if string in the range is different from the
   // last commit string.
-  if (mLastCommit.isSome() &&
-      nsDependentSubstring(mText, mLastCommit->StartOffset(),
-                           mLastCommit->Length()) != mLastCommit->DataRef()) {
+  if (mLastCommitStringStart.isSome() &&
+      nsDependentSubstring(mText, mLastCommitStringStart.value(),
+                           mLastCommitString.Length()) != mLastCommitString) {
     MOZ_LOG(sContentCacheLog, LogLevel::Debug,
             ("0x%p CacheText(), resetting the last composition string data "
-             "(mLastCommit=%s, current string=\"%s\")",
-             this, ToString(mLastCommit).c_str(),
-             PrintStringDetail(
-                 nsDependentSubstring(mText, mLastCommit->StartOffset(),
-                                      mLastCommit->Length()),
-                 PrintStringDetail::kMaxLengthForCompositionString)
+             "(mLastCommitStringStart=%u, mLastCommitString=\"%s\", current "
+             "string=\"%s\")",
+             this, mLastCommitStringStart.value(),
+             GetEscapedUTF8String(mLastCommitString).get(),
+             GetEscapedUTF8String(
+                 nsDependentSubstring(mText, mLastCommitStringStart.value(),
+                                      mLastCommitString.Length()))
                  .get()));
-    mLastCommit.reset();
+    mLastCommitStringStart.reset();
+    mLastCommitString.Truncate();
   }
 
   return CacheSelection(aWidget, aNotification);
@@ -489,25 +495,27 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     }
   }
 
-  if (mLastCommit.isSome()) {
-    mLastCommitStringTextRectArray.mStart = mLastCommit->StartOffset();
-    if (mLastCommit->Length() == 1) {
+  if (mLastCommitStringStart.isSome()) {
+    mLastCommitStringTextRectArray.mStart = mLastCommitStringStart.value();
+    if (mLastCommitString.Length() == 1) {
       MOZ_ASSERT(mSelection.Collapsed());
-      MOZ_ASSERT(mSelection.mAnchor - 1 == mLastCommit->StartOffset());
+      MOZ_ASSERT(mSelection.mAnchor - 1 == mLastCommitStringStart.value());
       mLastCommitStringTextRectArray.mRects.AppendElement(
           mSelection.mAnchorCharRects[ePrevCharRect]);
     } else if (NS_WARN_IF(!QueryCharRectArray(
-                   aWidget, mLastCommit->StartOffset(), mLastCommit->Length(),
+                   aWidget, mLastCommitStringTextRectArray.mStart,
+                   mLastCommitString.Length(),
                    mLastCommitStringTextRectArray.mRects))) {
       MOZ_LOG(sContentCacheLog, LogLevel::Error,
               ("0x%p CacheTextRects(), FAILED, "
                "couldn't retrieve text rect array of the last commit string",
                this));
       mLastCommitStringTextRectArray.Clear();
-      mLastCommit.reset();
+      mLastCommitStringStart.reset();
+      mLastCommitString.Truncate();
     }
     MOZ_ASSERT(mLastCommitStringTextRectArray.mRects.Length() ==
-               (mLastCommit.isSome() ? mLastCommit->Length() : 0));
+               mLastCommitString.Length());
   }
 
   MOZ_LOG(
@@ -551,19 +559,21 @@ void ContentCacheInChild::SetSelection(nsIWidget* aWidget,
   }
   mSelection.mWritingMode = aWritingMode;
 
-  if (mLastCommit.isSome()) {
+  if (mLastCommitStringStart.isSome()) {
     // Forget last commit string range if selection is not collapsed
     // at end of the last commit string.
     if (!mSelection.Collapsed() ||
-        mSelection.mAnchor != mLastCommit->EndOffset()) {
-      MOZ_LOG(
-          sContentCacheLog, LogLevel::Debug,
-          ("0x%p SetSelection(), forgetting last commit composition data "
-           "(mSelection={ mAnchor=%u, mFocus=%u, Collapsed()=%s } "
-           "mLastCommit=%s",
-           this, mSelection.mAnchor, mSelection.mFocus,
-           GetBoolName(mSelection.Collapsed()), ToString(mLastCommit).c_str()));
-      mLastCommit.reset();
+        mSelection.mAnchor !=
+            mLastCommitStringStart.value() + mLastCommitString.Length()) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Debug,
+              ("0x%p SetSelection(), forgetting last commit composition data "
+               "(mSelection={ mAnchor=%u, mFocus=%u, Collapsed()=%s } "
+               "mLastCommitStringStart=%u, mLastCommitString={ Length()=%u }",
+               this, mSelection.mAnchor, mSelection.mFocus,
+               GetBoolName(mSelection.Collapsed()),
+               mLastCommitStringStart.value(), mLastCommitString.Length()));
+      mLastCommitStringStart.reset();
+      mLastCommitString.Truncate();
     }
   }
 
