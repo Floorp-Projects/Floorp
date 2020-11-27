@@ -129,6 +129,7 @@
 #include "mozilla/dom/CrashReport.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIXULRuntime.h"
+#include "VsyncSource.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetParent.h"
@@ -224,6 +225,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mCustomCursorHotspotX(0),
       mCustomCursorHotspotY(0),
       mVerifyDropLinks{},
+      mVsyncParent(nullptr),
       mDocShellIsActive(false),
       mMarkedDestroying(false),
       mIsDestroyed(false),
@@ -562,6 +564,8 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
   if (!GetBrowserBridgeParent() && mBrowsingContext && mFrameElement) {
     mBrowsingContext->SetEmbedderElement(mFrameElement);
   }
+
+  UpdateVsyncParentVsyncSource();
 
   VisitChildren([aElement](BrowserBridgeParent* aBrowser) {
     if (auto* browserParent = aBrowser->GetBrowserParent()) {
@@ -1344,6 +1348,31 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
   BindPWindowGlobalEndpoint(std::move(aEndpoint), wgp);
   wgp->Init();
   return IPC_OK();
+}
+
+PVsyncParent* BrowserParent::AllocPVsyncParent() {
+  MOZ_ASSERT(!mVsyncParent);
+  mVsyncParent = new VsyncParent();
+  UpdateVsyncParentVsyncSource();
+  return mVsyncParent.forget().take();
+}
+
+bool BrowserParent::DeallocPVsyncParent(PVsyncParent* aActor) {
+  MOZ_ASSERT(aActor);
+  mVsyncParent = nullptr;
+  RefPtr<mozilla::dom::VsyncParent> actor =
+      dont_AddRef(static_cast<mozilla::dom::VsyncParent*>(aActor));
+  return true;
+}
+
+void BrowserParent::UpdateVsyncParentVsyncSource() {
+  if (!mVsyncParent) {
+    return;
+  }
+
+  if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
+    mVsyncParent->UpdateVsyncSource(widget->GetVsyncSource());
+  }
 }
 
 void BrowserParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
