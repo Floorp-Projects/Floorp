@@ -294,9 +294,53 @@ var clickOnInspectMenuItem = async function(testActor, selector) {
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
 var getNodeFrontInFrame = async function(selector, frameSelector, inspector) {
-  const iframe = await getNodeFront(frameSelector, inspector);
-  const { nodes } = await inspector.walker.children(iframe);
-  return inspector.walker.querySelector(nodes[0], selector);
+  let walker;
+
+  // If frameSelector is already a NodeFront, we can directly retrieve its walker
+  if (frameSelector._form) {
+    walker = frameSelector.walkerFront;
+  } else {
+    // The iframe could be remote, so we need to retrieve the associated target front.
+    const iframeBrowsingContextId = await SpecialPowers.spawn(
+      gBrowser.selectedTab.linkedBrowser,
+      [frameSelector],
+      function(innerFrameSelector) {
+        const el = content.document.querySelector(innerFrameSelector);
+        if (!el) {
+          return null;
+        }
+
+        return el.browsingContext.id;
+      }
+    );
+
+    if (!iframeBrowsingContextId) {
+      throw new Error(`Couldn't find an iframe matching "${frameSelector}"`);
+    }
+
+    const { descriptorFront } = inspector.inspectorFront.targetFront;
+    const watcherFront = await descriptorFront.getWatcher();
+    const target = await watcherFront.getBrowsingContextTarget(
+      iframeBrowsingContextId
+    );
+    const inspectorFront = await target.getFront("inspector");
+    walker = inspectorFront.walker;
+  }
+
+  let queryNode;
+  if (walker === inspector.inspectorFront.walker) {
+    // If the walker for the iframe is the same as the top-level target in the inspector,
+    // we need to retrieve the element from the iframe first children.
+    const iframe = await getNodeFront(frameSelector, inspector);
+    const { nodes } = await walker.children(iframe);
+    queryNode = nodes[0];
+  } else {
+    // whereas if we have a dedicated target for the iframe, we can directly query from
+    // the walker root node.
+    queryNode = walker.rootNode;
+  }
+
+  return walker.querySelector(queryNode, selector);
 };
 
 /**
