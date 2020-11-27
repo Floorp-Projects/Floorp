@@ -126,7 +126,7 @@ void TRRServiceBase::OnTRRModeChange() {
   }
 
   static bool readHosts = false;
-  if ((mMode == 2 || mMode == 3) && !readHosts) {
+  if ((mMode == MODE_TRRFIRST || mMode == MODE_TRRONLY) && !readHosts) {
     readHosts = true;
     ReadEtcHostsFile();
   }

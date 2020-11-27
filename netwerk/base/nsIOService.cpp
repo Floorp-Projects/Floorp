@@ -232,6 +232,7 @@ static const char* gCallbackPrefsForSocketProcess[] = {
     "network.ssl_tokens_cache_enabled",
     "network.send_ODA_to_content_directly",
     "network.trr.",
+    "doh-rollout.",
     "network.dns.disableIPv6",
     "network.dns.skipTRR-when-parental-control-enabled",
     "network.offline-mirrors-connectivity",
