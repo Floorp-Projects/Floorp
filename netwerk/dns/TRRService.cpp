@@ -296,16 +296,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
 
   if (!name || !strcmp(name, TRR_PREF("mode")) ||
       !strcmp(name, kRolloutModePref)) {
-    uint32_t prevMode = Mode();
-
     OnTRRModeChange();
-
-    // When the TRR service gets disabled we should purge the TRR cache to
-    // make sure we don't use any of the cached entries on a network where
-    // they are invalid - for example after turning on a VPN.
-    if (TRR_DISABLED(Mode()) && !TRR_DISABLED(prevMode)) {
-      ClearEntireCache();
-    }
   }
   if (!name || !strcmp(name, TRR_PREF("uri")) ||
       !strcmp(name, kRolloutURIPref)) {
