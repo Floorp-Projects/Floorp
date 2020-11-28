@@ -28,6 +28,11 @@ av_get_pcm_codec
 av_get_profile_name
 av_grow_packet
 av_hwaccel_next
+av_hwdevice_ctx_init
+av_hwdevice_ctx_alloc
+av_hwdevice_ctx_create_derived
+av_hwframe_transfer_get_formats
+av_hwframe_ctx_alloc
 av_init_packet
 av_lockmgr_register
 av_new_packet
@@ -93,6 +98,7 @@ avcodec_free_context
 avcodec_get_class
 avcodec_get_context_defaults3
 avcodec_get_frame_class
+avcodec_get_hw_config
 avcodec_get_name
 avcodec_get_subtitle_rect_class
 avcodec_get_type
