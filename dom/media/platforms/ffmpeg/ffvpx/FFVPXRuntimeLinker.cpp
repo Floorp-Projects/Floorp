@@ -64,10 +64,6 @@ bool FFVPXRuntimeLinker::Init() {
   MOZ_ASSERT(NS_IsMainThread());
   sLinkStatus = LinkStatus_FAILED;
 
-#ifdef MOZ_WAYLAND
-  sFFVPXLib.LinkVAAPILibs();
-#endif
-
   // We retrieve the path of the lgpllibs library as this is where mozavcodec
   // and mozavutil libs are located.
   PathString lgpllibsname = GetLibraryName(nullptr, "lgpllibs");
