@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/StackingContextHelper.h"
 
+#include "mozilla/PresShell.h"
 #include "UnitTransforms.h"
 #include "nsDisplayList.h"
 
@@ -60,6 +61,19 @@ StackingContextHelper::StackingContextHelper(
       mSnappingSurfaceTransform =
           transform2d * aParentSC.mSnappingSurfaceTransform;
     }
+
+  } else if (aParams.reference_frame_kind == wr::WrReferenceFrameKind::Zoom &&
+             aContainerItem &&
+             aContainerItem->GetType() == DisplayItemType::TYPE_ASYNC_ZOOM &&
+             aContainerItem->Frame()) {
+    double resolution = aContainerItem->Frame()->PresShell()->GetResolution();
+    gfx::Matrix transform = gfx::Matrix::Scaling(resolution, resolution);
+
+    mInheritedTransform = transform * aParentSC.mInheritedTransform;
+    mScale = resolution * aParentSC.mScale;
+
+    MOZ_ASSERT(!aParams.mAnimated);
+    mSnappingSurfaceTransform = transform * aParentSC.mSnappingSurfaceTransform;
 
   } else {
     mInheritedTransform = aParentSC.mInheritedTransform;
