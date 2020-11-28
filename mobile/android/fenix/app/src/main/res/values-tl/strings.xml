@@ -293,8 +293,55 @@
     <string name="history_menu_copy_button">Kopyahin</string>
 
 
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Ngayon</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Kahapon</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Mas luma</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Buksan</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">Burahin</string>
+
+
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">i-Edit</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Pumili</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Kopyahin</string>
+
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Burahin</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">i-Save</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">FOLDER</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">PANGALAN</string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Camera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikropono</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Lokasyon</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">On</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Off</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Mga Koleksyon</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Piliin lahat</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Isara</string>
 
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Kopyahin ang URL</string>

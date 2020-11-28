@@ -20,6 +20,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Vaše súkromné karty budú zobrazené tu.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 otvorená karta. Ťuknutím prepnete karty.</string>
 
@@ -93,6 +97,11 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">Zobraziť možnosti</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zavrieť</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Prejsť do nastavení</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">Zavrieť</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -437,6 +446,10 @@
     <string name="preferences_marketing_data">Marketingové údaje</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Zdieľa údaje o používaní funkcií v aplikácii %1$s so spoločnosťou Leanplum, našim partnerom v oblasti mobilného marketingu.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Štúdie</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Umožní Mozille inštalovať a spúšťať štúdie</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experimenty</string>
     <!-- Summary for experiments preferences -->
@@ -590,6 +603,12 @@
     <string name="tab_tray_menu_home">Domov</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Prepnúť režim kariet</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Pridať medzi záložky</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Zavrieť</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Zdieľať vybrané karty</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Odstrániť kartu z kolekcie</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -967,6 +986,12 @@
     <string name="snackbar_tab_closed">Karta bola zavretá</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Karty boli zavreté</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">Karty boli zavreté!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Záložky boli uložené!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Zobraziť</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Pridané do top stránok!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1114,6 +1139,10 @@
     <string name="onboarding_account_sign_in_header">S účtom Firefox môžete synchronizovať záložky, históriu prehliadania a omnoho viac.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Ďalšie informácie</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">V inom Firefoxe na tomto telefóne ste prihlásení ako %s. Chceli by ste sa prihlásiť s týmto účtom?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Prihlásiť sa</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1205,6 +1234,8 @@
     <string name="sign_in_with_camera">Prihláste sa pomocou fotoaparátu</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Použiť radšej e-mailovú adresu</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Ešte nemáte účet? <u>Vytvorte si ho</u> a synchronizujte svoj Firefox medzi zariadeniami.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox ukončí synchronizáciu s týmto účtom, ale neodstráni žiadnu históriu prehliadania.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1356,6 +1387,9 @@
     <string name="add_to_homescreen_continue">Pokračovať na webovú stránku</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Názov skratky</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Túto webovú stránku si môžete jednoducho pridať na svoju domovskú obrazovku a mať tak okamžitý prístup k prehliadaniu.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prihlasovacie údaje</string>
