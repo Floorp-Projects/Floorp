@@ -6,6 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWaylandDisplay.h"
+
+#include "base/message_loop.h"  // for MessageLoop
+#include "base/task.h"          // for NewRunnableMethod, etc
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_widget.h"
 
 namespace mozilla {
