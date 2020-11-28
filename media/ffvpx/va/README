@@ -1,2 +1,0 @@
-There are libva headers from libva 1.7.0 used to build vaapi support for in-tree ffvpx.
-Apply va.patch when you update it to new versions.
