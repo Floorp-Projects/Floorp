@@ -1052,6 +1052,7 @@ static void RecordEmptyFileEvent(const nsCString& aFileName) {
   // events.
   uint32_t from = findFilenameStart(aFileName);
 
+  Telemetry::SetEventRecordingEnabled("network.jar.channel"_ns, true);
   Telemetry::EventID eventType =
       Telemetry::EventID::NetworkJarChannel_Nodata_Onstop;
   Telemetry::RecordEvent(eventType, mozilla::Some(Substring(aFileName, from)),
