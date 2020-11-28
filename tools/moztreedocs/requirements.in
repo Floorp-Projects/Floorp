@@ -17,7 +17,7 @@ Jinja2==2.11.2
 jmespath==0.10.0
 jsonschema==3.2.0
 livereload==2.6.3
-Markdown==3.2.2
+Markdown==3.3.3
 MarkupSafe==1.1.1
 mock==4.0.2
 packaging==20.4
