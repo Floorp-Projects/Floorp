@@ -8,4 +8,6 @@ SOURCES += [
     'mozva.cpp',
 ]
 
+LOCAL_INCLUDES += ['/media/ffvpx']
+
 SharedLibrary('mozva')
