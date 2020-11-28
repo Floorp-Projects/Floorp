@@ -55,7 +55,14 @@ namespace mozilla {
 // We own the DMABufSurface underlying GPU data and we use it for
 // repeated rendering of video frames.
 //
-class DMABufSurfaceWrapper final {
+template <int V>
+class DMABufSurfaceWrapper {};
+
+template <>
+class DMABufSurfaceWrapper<LIBAV_VER>;
+
+template <>
+class DMABufSurfaceWrapper<LIBAV_VER> final {
  public:
   DMABufSurfaceWrapper(DMABufSurface* aSurface, FFmpegLibWrapper* aLib);
   ~DMABufSurfaceWrapper();
@@ -162,7 +169,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
                                 MediaDataDecoder::DecodedData& aResults);
 
   void ReleaseUnusedVAAPIFrames();
-  DMABufSurfaceWrapper* GetUnusedDMABufSurfaceWrapper();
+  DMABufSurfaceWrapper<LIBAV_VER>* GetUnusedDMABufSurfaceWrapper();
   void ReleaseDMABufSurfaces();
 #endif
 
@@ -180,7 +187,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   const bool mDisableHardwareDecoding;
   VADisplay mDisplay;
   bool mUseDMABufSurfaces;
-  nsTArray<DMABufSurfaceWrapper> mDMABufSurfaces;
+  nsTArray<DMABufSurfaceWrapper<LIBAV_VER>> mDMABufSurfaces;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
