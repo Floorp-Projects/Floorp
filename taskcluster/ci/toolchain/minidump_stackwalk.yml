@@ -31,7 +31,7 @@ linux64-minidump-stackwalk:
         symbol: TL(stackwalk)
     fetches:
         toolchain:
-            - linux64-clang-9
+            - linux64-clang-11
             - linux64-binutils
             - linux64-rust-1.47
 
