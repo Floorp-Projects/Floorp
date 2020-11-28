@@ -55,4 +55,8 @@ linux64-android-gradle-dependencies:
             # TODO do no hardcode
             ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
         max-run-time: 14400
+        artifacts:
+            - type: directory
+              name: public/logs/nexus
+              path: /opt/sonatype/nexus/logs
     worker-type: b-android-large
