@@ -122,7 +122,7 @@ use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_target::RenderTargetKind;
-use crate::render_task::{RenderTask, RenderTaskLocation, BlurTaskCache};
+use crate::render_task::{BlurTask, RenderTask, RenderTaskLocation, BlurTaskCache, RenderTaskKind};
 use crate::resource_cache::{ResourceCache, ImageGeneration};
 use crate::space::{SpaceMapper, SpaceSnapper};
 use crate::scene::SceneProperties;
@@ -4916,7 +4916,7 @@ impl PicturePrimitive {
                         // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
                         // what would be even better is to rasterize the picture at the down-scaled size
                         // directly.
-                        device_rect.size = RenderTask::adjusted_blur_source_size(
+                        device_rect.size = BlurTask::adjusted_blur_source_size(
                             device_rect.size,
                             blur_std_deviation,
                         );
@@ -4939,18 +4939,23 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
+                        let task_size = device_rect.size.to_i32();
+
                         let picture_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, device_rect.size.to_i32()),
-                                unclipped.size,
-                                pic_index,
-                                device_rect.origin,
-                                uv_rect_kind,
-                                surface_spatial_node_index,
-                                device_pixel_scale,
-                                PrimitiveVisibilityMask::all(),
-                                None,
-                                None,
+                            RenderTask::new_dynamic(
+                                task_size,
+                                RenderTaskKind::new_picture(
+                                    task_size,
+                                    unclipped.size,
+                                    pic_index,
+                                    device_rect.origin,
+                                    uv_rect_kind,
+                                    surface_spatial_node_index,
+                                    device_pixel_scale,
+                                    PrimitiveVisibilityMask::all(),
+                                    None,
+                                    None,
+                                )
                             )
                         );
 
@@ -4980,7 +4985,7 @@ impl PicturePrimitive {
                                 .intersection(&unclipped)
                                 .unwrap();
 
-                        device_rect.size = RenderTask::adjusted_blur_source_size(
+                        device_rect.size = BlurTask::adjusted_blur_source_size(
                             device_rect.size,
                             DeviceSize::new(
                                 max_std_deviation * scale_factors.0,
@@ -5005,18 +5010,23 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
+                        let task_size = device_rect.size.to_i32();
+
                         let picture_task_id = frame_state.render_tasks.add().init({
-                            let mut picture_task = RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, device_rect.size.to_i32()),
-                                unclipped.size,
-                                pic_index,
-                                device_rect.origin,
-                                uv_rect_kind,
-                                surface_spatial_node_index,
-                                device_pixel_scale,
-                                PrimitiveVisibilityMask::all(),
-                                None,
-                                None,
+                            let mut picture_task = RenderTask::new_dynamic(
+                                task_size,
+                                RenderTaskKind::new_picture(
+                                    task_size,
+                                    unclipped.size,
+                                    pic_index,
+                                    device_rect.origin,
+                                    uv_rect_kind,
+                                    surface_spatial_node_index,
+                                    device_pixel_scale,
+                                    PrimitiveVisibilityMask::all(),
+                                    None,
+                                    None,
+                                ),
                             );
                             picture_task.mark_for_saving();
 
@@ -5066,7 +5076,10 @@ impl PicturePrimitive {
                         );
 
                         let readback_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_readback(clipped.size.to_i32())
+                            RenderTask::new_dynamic(
+                                clipped.size.to_i32(),
+                                RenderTaskKind::new_readback(),
+                            )
                         );
 
                         frame_state.render_tasks.add_dependency(
@@ -5076,18 +5089,23 @@ impl PicturePrimitive {
 
                         self.secondary_render_task_id = Some(readback_task_id);
 
+                        let task_size = clipped.size.to_i32();
+
                         let render_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
-                                unclipped.size,
-                                pic_index,
-                                clipped.origin,
-                                uv_rect_kind,
-                                surface_spatial_node_index,
-                                device_pixel_scale,
-                                PrimitiveVisibilityMask::all(),
-                                None,
-                                None,
+                            RenderTask::new_dynamic(
+                                task_size,
+                                RenderTaskKind::new_picture(
+                                    task_size,
+                                    unclipped.size,
+                                    pic_index,
+                                    clipped.origin,
+                                    uv_rect_kind,
+                                    surface_spatial_node_index,
+                                    device_pixel_scale,
+                                    PrimitiveVisibilityMask::all(),
+                                    None,
+                                    None,
+                                )
                             )
                         );
 
@@ -5111,18 +5129,23 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
+                        let task_size = clipped.size.to_i32();
+
                         let render_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
-                                unclipped.size,
-                                pic_index,
-                                clipped.origin,
-                                uv_rect_kind,
-                                surface_spatial_node_index,
-                                device_pixel_scale,
-                                PrimitiveVisibilityMask::all(),
-                                None,
-                                None,
+                            RenderTask::new_dynamic(
+                                task_size,
+                                RenderTaskKind::new_picture(
+                                    task_size,
+                                    unclipped.size,
+                                    pic_index,
+                                    clipped.origin,
+                                    uv_rect_kind,
+                                    surface_spatial_node_index,
+                                    device_pixel_scale,
+                                    PrimitiveVisibilityMask::all(),
+                                    None,
+                                    None,
+                                )
                             )
                         );
 
@@ -5145,18 +5168,23 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
+                        let task_size = clipped.size.to_i32();
+
                         let render_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
-                                unclipped.size,
-                                pic_index,
-                                clipped.origin,
-                                uv_rect_kind,
-                                surface_spatial_node_index,
-                                device_pixel_scale,
-                                PrimitiveVisibilityMask::all(),
-                                None,
-                                None,
+                            RenderTask::new_dynamic(
+                                task_size,
+                                RenderTaskKind::new_picture(
+                                    task_size,
+                                    unclipped.size,
+                                    pic_index,
+                                    clipped.origin,
+                                    uv_rect_kind,
+                                    surface_spatial_node_index,
+                                    device_pixel_scale,
+                                    PrimitiveVisibilityMask::all(),
+                                    None,
+                                    None,
+                                )
                             )
                         );
 
@@ -5415,22 +5443,27 @@ impl PicturePrimitive {
                                     .round()
                                     .to_i32();
 
+                                let task_size = tile_cache.current_tile_size;
+
                                 let render_task_id = frame_state.render_tasks.add().init(
-                                    RenderTask::new_picture(
+                                    RenderTask::new(
                                         RenderTaskLocation::PictureCache {
-                                            size: tile_cache.current_tile_size,
+                                            size: task_size,
                                             surface,
                                         },
-                                        tile_cache.current_tile_size.to_f32(),
-                                        pic_index,
-                                        content_origin,
-                                        UvRectKind::Rect,
-                                        surface_spatial_node_index,
-                                        device_pixel_scale,
-                                        *visibility_mask,
-                                        Some(scissor_rect),
-                                        Some(valid_rect),
-                                    )
+                                        RenderTaskKind::new_picture(
+                                            task_size,
+                                            tile_cache.current_tile_size.to_f32(),
+                                            pic_index,
+                                            content_origin,
+                                            UvRectKind::Rect,
+                                            surface_spatial_node_index,
+                                            device_pixel_scale,
+                                            *visibility_mask,
+                                            Some(scissor_rect),
+                                            Some(valid_rect),
+                                        )
+                                    ),
                                 );
 
                                 frame_state.render_task_roots.push(render_task_id);
@@ -5506,18 +5539,23 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
+                        let task_size = clipped.size.to_i32();
+
                         let render_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
-                                unclipped.size,
-                                pic_index,
-                                clipped.origin,
-                                uv_rect_kind,
-                                surface_spatial_node_index,
-                                device_pixel_scale,
-                                PrimitiveVisibilityMask::all(),
-                                None,
-                                None,
+                            RenderTask::new_dynamic(
+                                task_size,
+                                RenderTaskKind::new_picture(
+                                    task_size,
+                                    unclipped.size,
+                                    pic_index,
+                                    clipped.origin,
+                                    uv_rect_kind,
+                                    surface_spatial_node_index,
+                                    device_pixel_scale,
+                                    PrimitiveVisibilityMask::all(),
+                                    None,
+                                    None,
+                                )
                             )
                         );
 
@@ -5541,18 +5579,23 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
+                        let task_size = clipped.size.to_i32();
+
                         let picture_task_id = frame_state.render_tasks.add().init(
-                            RenderTask::new_picture(
-                                RenderTaskLocation::Dynamic(None, clipped.size.to_i32()),
-                                unclipped.size,
-                                pic_index,
-                                clipped.origin,
-                                uv_rect_kind,
-                                surface_spatial_node_index,
-                                device_pixel_scale,
-                                PrimitiveVisibilityMask::all(),
-                                None,
-                                None,
+                            RenderTask::new_dynamic(
+                                task_size,
+                                RenderTaskKind::new_picture(
+                                    task_size,
+                                    unclipped.size,
+                                    pic_index,
+                                    clipped.origin,
+                                    uv_rect_kind,
+                                    surface_spatial_node_index,
+                                    device_pixel_scale,
+                                    PrimitiveVisibilityMask::all(),
+                                    None,
+                                    None,
+                                )
                             )
                         );
 

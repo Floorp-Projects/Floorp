@@ -327,7 +327,13 @@ impl RenderTaskGraph {
     pub fn write_task_data(&mut self) {
         profile_scope!("write_task_data");
         for task in &self.tasks {
-            self.task_data.push(task.write_task_data());
+            let (target_rect, target_index) = task.get_target_rect();
+            self.task_data.push(
+                task.kind.write_task_data(
+                    target_rect,
+                    target_index,
+                )
+            );
         }
     }
 
