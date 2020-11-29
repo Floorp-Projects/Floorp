@@ -88,13 +88,13 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 }
 
 void nsNativeBasicThemeGTK::PaintScrollbarThumb(
-    DrawTarget* aDrawTarget, const Rect& aRect, bool aHorizontal,
+    DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
   sRGBColor thumbColor =
       ComputeScrollbarthumbColor(aStyle, aElementState, aDocumentState);
-  Rect thumbRect(aRect);
+  LayoutDeviceRect thumbRect(aRect);
   thumbRect.Deflate(floorf((aHorizontal ? aRect.height : aRect.width) / 4.0f));
   auto radius = (aHorizontal ? thumbRect.height : thumbRect.width) / 2.0f;
   PaintRoundedRectWithRadius(aDrawTarget, thumbRect, thumbColor, sRGBColor(), 0,
@@ -102,19 +102,21 @@ void nsNativeBasicThemeGTK::PaintScrollbarThumb(
 }
 
 void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget* aDrawTarget,
-                                           const Rect& aRect, bool aHorizontal,
-                                           nsIFrame* aFrame,
+                                           const LayoutDeviceRect& aRect,
+                                           bool aHorizontal, nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
                                            DPIRatio aDpiRatio, bool aIsRoot) {
   sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
-  aDrawTarget->FillRect(aRect, gfx::ColorPattern(ToDeviceColor(trackColor)));
+  aDrawTarget->FillRect(aRect.ToUnknownRect(),
+                        gfx::ColorPattern(ToDeviceColor(trackColor)));
 }
 
 void nsNativeBasicThemeGTK::PaintScrollCorner(
-    DrawTarget* aDrawTarget, const Rect& aRect, nsIFrame* aFrame,
+    DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
     DPIRatio aDpiRatio, bool aIsRoot) {
   sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
-  aDrawTarget->FillRect(aRect, gfx::ColorPattern(ToDeviceColor(trackColor)));
+  aDrawTarget->FillRect(aRect.ToUnknownRect(),
+                        gfx::ColorPattern(ToDeviceColor(trackColor)));
 }
