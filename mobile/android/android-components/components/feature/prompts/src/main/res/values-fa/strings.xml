@@ -87,4 +87,10 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">ورودهای پیشنهادی را گسترش دهید</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">ورود‌های پیشنهاد شده</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">ارسال دوباره داده به این پایگاه؟</string>
+    <string name="mozac_feature_prompt_repost_message">نوسازی این صفحه می تواند اقدامات اخیر مانند پرداخت یا ارسال نظر را دوبار تکرار کند.</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">انصراف</string>
 </resources>
