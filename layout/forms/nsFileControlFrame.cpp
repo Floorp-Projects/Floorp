@@ -167,10 +167,12 @@ void nsFileControlFrame::Reflow(nsPresContext* aPresContext,
         labelBP +=
             lastLabelCont->GetLogicalUsedBorderAndPadding(wm).IStartEnd(wm);
       }
-      auto* buttonFrame = mBrowseFilesOrDirs->GetPrimaryFrame();
-      nscoord availableISizeForLabel =
-          contentISize - buttonFrame->ISize(wm) -
-          buttonFrame->GetLogicalUsedMargin(wm).IStartEnd(wm);
+      nscoord availableISizeForLabel = contentISize;
+      if (auto* buttonFrame = mBrowseFilesOrDirs->GetPrimaryFrame()) {
+        availableISizeForLabel -=
+            buttonFrame->ISize(wm) +
+            buttonFrame->GetLogicalUsedMargin(wm).IStartEnd(wm);
+      }
       if (CropTextToWidth(*aReflowInput.mRenderingContext, labelFrame,
                           availableISizeForLabel - labelBP, filename)) {
         nsBlockFrame::DidReflow(aPresContext, &aReflowInput);
