@@ -59,6 +59,9 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
                                       const TimeDuration& aDelta) {
   TimeStamp now = mApzc.GetFrameTime().Time();
   CSSToParentLayerScale2D zoom = aFrameMetrics.GetZoom();
+  if (zoom == CSSToParentLayerScale2D(0, 0)) {
+    return false;
+  }
 
   // If the animation is finished, make sure the final position is correct by
   // using one last displacement. Otherwise, compute the delta via the timing
@@ -80,7 +83,6 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
     mApzc.mX.SetVelocity(velocityPL.x / 1000.0);
     mApzc.mY.SetVelocity(velocityPL.y / 1000.0);
   }
-
   // Note: we ignore overscroll for generic animations.
   ParentLayerPoint adjustedOffset, overscroll;
   mApzc.mX.AdjustDisplacement(
@@ -89,7 +91,6 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   mApzc.mY.AdjustDisplacement(
       displacement.y, adjustedOffset.y, overscroll.y,
       mDirectionForcedToOverscroll == Some(ScrollDirection::eVertical));
-
   // If we expected to scroll, but there's no more scroll range on either axis,
   // then end the animation early. Note that the initial displacement could be 0
   // if the compositor ran very quickly (<1ms) after the animation was created.
@@ -98,7 +99,6 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
     // Nothing more to do - end the animation.
     return false;
   }
-
   mApzc.ScrollBy(adjustedOffset / zoom);
   return !finished;
 }
