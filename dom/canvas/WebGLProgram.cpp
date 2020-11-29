@@ -682,7 +682,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
     }
   }
 
-  if (hasActiveAttrib && !hasActiveDivisor0) {
+  if (!webgl->IsWebGL2() && hasActiveAttrib && !hasActiveDivisor0) {
     webgl->ErrorInvalidOperation(
         "One active vertex attrib (if any are active)"
         " must have a divisor of 0.");
