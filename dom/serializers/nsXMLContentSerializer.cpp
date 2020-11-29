@@ -1154,7 +1154,7 @@ bool nsXMLContentSerializer::AppendToString(const nsAString& aStr,
 #define _ 0
 
 // This table indexes into kEntityStrings[].
-static const uint8_t kEntities[] = {
+const uint8_t nsXMLContentSerializer::kEntities[] = {
     // clang-format off
   _, _, _, _, _, _, _, _, _, _,
   _, _, _, _, _, _, _, _, _, _,
@@ -1167,7 +1167,7 @@ static const uint8_t kEntities[] = {
 };
 
 // This table indexes into kEntityStrings[].
-static const uint8_t kAttrEntities[] = {
+const uint8_t nsXMLContentSerializer::kAttrEntities[] = {
     // clang-format off
   _, _, _, _, _, _, _, _, _, 5,
   6, _, _, 7, _, _, _, _, _, _,
@@ -1181,7 +1181,7 @@ static const uint8_t kAttrEntities[] = {
 
 #undef _
 
-static const char* const kEntityStrings[] = {
+const char* const nsXMLContentSerializer::kEntityStrings[] = {
     /* 0 */ nullptr,
     /* 1 */ "&quot;",
     /* 2 */ "&amp;",

@@ -41,6 +41,7 @@ EXPORTS += [
     "AnimationCommon.h",
     "CounterStyleManager.h",
     "nsAnimationManager.h",
+    "nsComputedDOMStyle.h",
     "nsCSSAnonBoxes.h",
     "nsCSSAnonBoxList.h",
     "nsCSSCounterDescList.h",

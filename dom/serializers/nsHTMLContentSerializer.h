@@ -45,6 +45,11 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
   MOZ_MUST_USE
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) override;
+
+ private:
+  static const uint8_t kEntities[];
+  static const uint8_t kAttrEntities[];
+  static const char* const kEntityStrings[];
 };
 
 nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);
