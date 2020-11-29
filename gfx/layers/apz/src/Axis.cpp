@@ -275,7 +275,6 @@ bool Axis::CanScroll(ParentLayerCoord aDelta) const {
 CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const {
   CSSToParentLayerScale zoom = GetScaleForAxis(GetFrameMetrics().GetZoom());
   ParentLayerCoord origin = aOrigin * zoom;
-
   ParentLayerCoord result;
   if (origin < GetPageStart()) {
     result = GetPageStart();
@@ -284,7 +283,9 @@ CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const {
   } else {
     return aOrigin;
   }
-
+  if (zoom == CSSToParentLayerScale(0)) {
+    return aOrigin;
+  }
   return result / zoom;
 }
 
@@ -333,10 +334,10 @@ CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const {
                "In an OVERSCROLL_BOTH condition in ScaleWillOverscrollAmount");
     return 0;
   }
-  if (minus) {
+  if (minus && zoom != CSSToParentLayerScale(0)) {
     return (originAfterScale - GetPageStart()) / zoom;
   }
-  if (plus) {
+  if (plus && zoom != CSSToParentLayerScale(0)) {
     return (originAfterScale + (GetCompositionLength() / aScale) -
             GetPageEnd()) /
            zoom;
