@@ -69,7 +69,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "56cc0e9826bddc261fdc60688901f5ffa9a088a6"
+        "revision": "12a1dc984f5d9fbfbf0ab2429ccb907bb1175d45"
     },
     "ast": {
         "pin": false,
