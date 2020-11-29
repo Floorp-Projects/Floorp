@@ -533,8 +533,7 @@ impl RenderTarget for ColorRenderTarget {
 
                 let target_rect = task
                     .get_target_rect()
-                    .0
-                    .inner_rect(task_info.padding);
+                    .0;
                 self.blits.push(BlitJob {
                     source,
                     target_rect,
@@ -790,7 +789,7 @@ impl TextureCacheRenderTarget {
                         // task to this target.
                         self.blits.push(BlitJob {
                             source: BlitJobSource::RenderTask(task_id),
-                            target_rect: target_rect.0.inner_rect(task_info.padding),
+                            target_rect: target_rect.0,
                         });
                     }
                 }

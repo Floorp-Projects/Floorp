@@ -30,7 +30,7 @@ use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
 use crate::render_backend::DataStores;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheEntryHandle, RenderTaskCacheKey, to_cache_size};
-use crate::render_task::RenderTask;
+use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::segment::SegmentBuilder;
 use crate::space::SpaceMapper;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
@@ -360,12 +360,14 @@ fn prepare_interned_prim_for_render(
                     None,
                     false,
                     |render_tasks| {
-                        render_tasks.add().init(RenderTask::new_line_decoration(
+                        render_tasks.add().init(RenderTask::new_dynamic(
                             task_size,
-                            cache_key.style,
-                            cache_key.orientation,
-                            cache_key.wavy_line_thickness.to_f32_px(),
-                            LayoutSize::from_au(cache_key.size),
+                            RenderTaskKind::new_line_decoration(
+                                cache_key.style,
+                                cache_key.orientation,
+                                cache_key.wavy_line_thickness.to_f32_px(),
+                                LayoutSize::from_au(cache_key.size),
+                            ),
                         ))
                     }
                 ));
@@ -494,13 +496,15 @@ fn prepare_interned_prim_for_render(
                     None,
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
                     |render_tasks| {
-                        render_tasks.add().init(RenderTask::new_border_segment(
+                        render_tasks.add().init(RenderTask::new_dynamic(
                             cache_size,
-                            build_border_instances(
-                                &segment.cache_key,
-                                cache_size,
-                                &border_data.border,
-                                scale,
+                            RenderTaskKind::new_border_segment(
+                                build_border_instances(
+                                    &segment.cache_key,
+                                    cache_size,
+                                    &border_data.border,
+                                    scale,
+                                )
                             ),
                         ))
                     }
@@ -820,12 +824,14 @@ fn prepare_interned_prim_for_render(
                                         None,
                                         is_opaque,
                                         |render_tasks| {
-                                            render_tasks.add().init(RenderTask::new_gradient(
+                                            render_tasks.add().init(RenderTask::new_dynamic(
                                                 task_size,
-                                                segment_stops,
-                                                orientation,
-                                                segment_start_point,
-                                                segment_end_point,
+                                                RenderTaskKind::new_gradient(
+                                                    segment_stops,
+                                                    orientation,
+                                                    segment_start_point,
+                                                    segment_end_point,
+                                                ),
                                             ))
                                         }),
                                     local_rect: local_rect,
@@ -1484,19 +1490,24 @@ pub fn update_clip_task(
             unadjusted_device_rect,
             device_pixel_scale,
         );
+        let task_size = device_rect.size.to_i32();
 
-        let clip_task_id = RenderTask::new_mask(
-            device_rect,
-            instance.vis.clip_chain.clips_range,
-            root_spatial_node_index,
-            frame_state.clip_store,
-            frame_state.gpu_cache,
-            frame_state.resource_cache,
-            frame_state.render_tasks,
-            &mut data_stores.clip,
-            device_pixel_scale,
-            frame_context.fb_config,
+        let clip_task = RenderTask::new_dynamic(
+            task_size,
+            RenderTaskKind::new_mask(
+                device_rect,
+                instance.vis.clip_chain.clips_range,
+                root_spatial_node_index,
+                frame_state.clip_store,
+                frame_state.gpu_cache,
+                frame_state.resource_cache,
+                frame_state.render_tasks,
+                &mut data_stores.clip,
+                device_pixel_scale,
+                frame_context.fb_config,
+            ),
         );
+        let clip_task_id = frame_state.render_tasks.add().init(clip_task);
         if instance.is_chased() {
             println!("\tcreated task {:?} with device rect {:?}",
                 clip_task_id, device_rect);
@@ -1570,19 +1581,24 @@ pub fn update_brush_segment_clip_task(
     };
 
     let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
+    let task_size = device_rect.size.to_i32();
 
-    let clip_task_id = RenderTask::new_mask(
-        device_rect,
-        clip_chain.clips_range,
-        root_spatial_node_index,
-        frame_state.clip_store,
-        frame_state.gpu_cache,
-        frame_state.resource_cache,
-        frame_state.render_tasks,
-        clip_data_store,
-        device_pixel_scale,
-        frame_context.fb_config,
+    let clip_task = RenderTask::new_dynamic(
+        task_size,
+        RenderTaskKind::new_mask(
+            device_rect,
+            clip_chain.clips_range,
+            root_spatial_node_index,
+            frame_state.clip_store,
+            frame_state.gpu_cache,
+            frame_state.resource_cache,
+            frame_state.render_tasks,
+            clip_data_store,
+            device_pixel_scale,
+            frame_context.fb_config,
+        ),
     );
+    let clip_task_id = frame_state.render_tasks.add().init(clip_task);
     let port = frame_state
         .surfaces[surface_index.0]
         .render_tasks
