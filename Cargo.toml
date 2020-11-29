@@ -64,6 +64,7 @@ debug-assertions = false
 panic = "abort"
 
 [patch.crates-io]
+chardetng = { git = "https://github.com/hsivonen/chardetng", rev="7d5e0608d3e012bdfea3bd199111e3546607dd31" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe780032a6bbb23d71be545f9c1834128d75" }
 rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="ed8bac8812e9f335d5fadd0f4ece96981aba88a3" }
