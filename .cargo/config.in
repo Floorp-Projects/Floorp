@@ -52,6 +52,11 @@ git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
 rev = "0917fe780032a6bbb23d71be545f9c1834128d75"
 
+[source."https://github.com/hsivonen/chardetng"]
+git = "https://github.com/hsivonen/chardetng"
+replace-with = "vendored-sources"
+rev = "7d5e0608d3e012bdfea3bd199111e3546607dd31"
+
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"

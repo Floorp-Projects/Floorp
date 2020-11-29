@@ -566,8 +566,7 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 [[package]]
 name = "chardetng"
 version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7817bfb797fd08f0b1cf095378254b28cb0b5000412ca32b490c9d9e225ffc38"
+source = "git+https://github.com/hsivonen/chardetng?rev=7d5e0608d3e012bdfea3bd199111e3546607dd31#7d5e0608d3e012bdfea3bd199111e3546607dd31"
 dependencies = [
  "encoding_rs",
  "memchr",
