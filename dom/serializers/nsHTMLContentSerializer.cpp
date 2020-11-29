@@ -351,7 +351,7 @@ static const uint16_t kValNBSP = 160;
 #define _ 0
 
 // This table indexes into kEntityStrings[].
-static const uint8_t kEntities[] = {
+const uint8_t nsHTMLContentSerializer::kEntities[] = {
     // clang-format off
   _, _, _, _, _, _, _, _, _, _,
   _, _, _, _, _, _, _, _, _, _,
@@ -374,7 +374,7 @@ static const uint8_t kEntities[] = {
 };
 
 // This table indexes into kEntityStrings[].
-static const uint8_t kAttrEntities[] = {
+const uint8_t nsHTMLContentSerializer::kAttrEntities[] = {
     // clang-format off
   _, _, _, _, _, _, _, _, _, _,
   _, _, _, _, _, _, _, _, _, _,
@@ -398,7 +398,7 @@ static const uint8_t kAttrEntities[] = {
 
 #undef _
 
-static const char* const kEntityStrings[] = {
+const char* const nsHTMLContentSerializer::kEntityStrings[] = {
     /* 0 */ nullptr,
     /* 1 */ "&quot;",
     /* 2 */ "&amp;",

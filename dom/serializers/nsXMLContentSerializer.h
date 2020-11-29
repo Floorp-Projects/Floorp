@@ -445,6 +445,10 @@ class nsXMLContentSerializer : public nsIContentSerializer {
  private:
   // number of nested elements which have preformated content
   MOZ_INIT_OUTSIDE_CTOR int32_t mPreLevel;
+
+  static const uint8_t kEntities[];
+  static const uint8_t kAttrEntities[];
+  static const char* const kEntityStrings[];
 };
 
 nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer);
