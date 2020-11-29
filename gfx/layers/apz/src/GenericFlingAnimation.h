@@ -132,8 +132,9 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
     ParentLayerPoint adjustedOffset;
     mApzc.mX.AdjustDisplacement(offset.x, adjustedOffset.x, overscroll.x);
     mApzc.mY.AdjustDisplacement(offset.y, adjustedOffset.y, overscroll.y);
-
-    mApzc.ScrollBy(adjustedOffset / aFrameMetrics.GetZoom());
+    if (aFrameMetrics.GetZoom() != CSSToParentLayerScale2D(0, 0)) {
+      mApzc.ScrollBy(adjustedOffset / aFrameMetrics.GetZoom());
+    }
 
     // The fling may have caused us to reach the end of our scroll range.
     if (!IsZero(overscroll)) {
