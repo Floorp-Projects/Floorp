@@ -9,10 +9,6 @@ bug's effect on Firefox.
 
 The field is display alongside the bug's priority.
 
-.. image:: screenshot-severity.png
-   :alt: Screenshot of severity field
-
-
 Values
 ------
 
