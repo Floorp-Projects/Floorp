@@ -103,22 +103,7 @@ class AudioCallbackBufferWrapper {
    * instance can be reused.
    */
   void BufferFilled() {
-    // It's okay to have exactly zero samples here, it can happen we have an
-    // audio callback driver because of a hint on MTG creation, but the
-    // AudioOutputStream has not been created yet, or if all the tracks have
-    // finished but we're still running. Note: it's also ok if we had data in
-    // the scratch buffer - and we usually do - and all the tracks were ended
-    // (no mixer callback occured).
-    // XXX Remove this warning, or find a way to avoid it if the mixer callback
-    // isn't called.
-    NS_WARNING_ASSERTION(
-        Available() == 0 || mSampleWriteOffset == 0,
-        "Audio Buffer is not full by the end of the callback.");
-    // Make sure the data returned is always set and not random!
-    if (Available()) {
-      PodZero(mBuffer + mSampleWriteOffset,
-              FramesToSamples(mChannels, Available()));
-    }
+    MOZ_ASSERT(Available() == 0, "Frames should have been written");
     MOZ_ASSERT(mSamples, "Buffer not set.");
     mSamples = 0;
     mSampleWriteOffset = 0;
