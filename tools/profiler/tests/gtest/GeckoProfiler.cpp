@@ -667,10 +667,10 @@ TEST(GeckoProfiler, Markers)
 
   // Keep this one first! (It's used to record `ts1` and `ts2`, to compare
   // to serialized numbers in other markers.)
-  MOZ_RELEASE_ASSERT(
-      profiler_add_marker("FirstMarker", geckoprofiler::category::OTHER,
-                          MarkerTiming::Interval(ts1, ts2),
-                          geckoprofiler::markers::Text{}, "First Marker"));
+  MOZ_RELEASE_ASSERT(profiler_add_marker(
+      "FirstMarker", geckoprofiler::category::OTHER,
+      MarkerTiming::Interval(ts1, ts2), geckoprofiler::markers::TextMarker{},
+      "First Marker"));
 
   // User-defined marker type with different properties, and fake schema.
   struct GtestMarker {
@@ -835,24 +835,24 @@ TEST(GeckoProfiler, Markers)
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
       {MarkerStack::Capture(), MarkerTiming::Interval(ts1, ts2)},
-      geckoprofiler::markers::Text{}, ""));
+      geckoprofiler::markers::TextMarker{}, ""));
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text from main thread with stack", geckoprofiler::category::OTHER,
       MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
-      geckoprofiler::markers::Text{}, ""));
+      geckoprofiler::markers::TextMarker{}, ""));
 
   std::thread registeredThread([]() {
     AUTO_PROFILER_REGISTER_THREAD("Marker test sub-thread");
     // Marker in non-profiled thread won't be stored.
     MOZ_RELEASE_ASSERT(profiler_add_marker(
         "Text in registered thread with stack", geckoprofiler::category::OTHER,
-        MarkerStack::Capture(), geckoprofiler::markers::Text{}, ""));
+        MarkerStack::Capture(), geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, with stack from registered thread.
     MOZ_RELEASE_ASSERT(profiler_add_marker(
         "Text from registered thread with stack",
         geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
-        geckoprofiler::markers::Text{}, ""));
+        geckoprofiler::markers::TextMarker{}, ""));
   });
   registeredThread.join();
 
@@ -861,14 +861,14 @@ TEST(GeckoProfiler, Markers)
     MOZ_RELEASE_ASSERT(profiler_add_marker(
         "Text in unregistered thread with stack",
         geckoprofiler::category::OTHER, MarkerStack::Capture(),
-        geckoprofiler::markers::Text{}, ""));
+        geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, but stack cannot be captured in an
     // unregistered thread.
     MOZ_RELEASE_ASSERT(profiler_add_marker(
         "Text from unregistered thread with stack",
         geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
-        geckoprofiler::markers::Text{}, ""));
+        geckoprofiler::markers::TextMarker{}, ""));
   });
   unregisteredThread.join();
 
@@ -876,9 +876,9 @@ TEST(GeckoProfiler, Markers)
       profiler_add_marker("Tracing", geckoprofiler::category::OTHER, {},
                           geckoprofiler::markers::Tracing{}, "category"));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker("Text", geckoprofiler::category::OTHER,
-                                         {}, geckoprofiler::markers::Text{},
-                                         "Text text"));
+  MOZ_RELEASE_ASSERT(
+      profiler_add_marker("Text", geckoprofiler::category::OTHER, {},
+                          geckoprofiler::markers::TextMarker{}, "Text text"));
 
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "MediaSample", geckoprofiler::category::OTHER, {},

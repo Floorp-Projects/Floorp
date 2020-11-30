@@ -138,7 +138,7 @@ inline mozilla::ProfileBufferBlockIndex profiler_add_marker(
 
 namespace geckoprofiler::markers {
 // Most common marker types. Others are in ProfilerMarkerTypes.h.
-using Text = ::mozilla::baseprofiler::markers::Text;
+using TextMarker = ::mozilla::baseprofiler::markers::TextMarker;
 using Tracing = mozilla::baseprofiler::markers::Tracing;
 }  // namespace geckoprofiler::markers
 
@@ -149,7 +149,7 @@ using Tracing = mozilla::baseprofiler::markers::Tracing;
       AUTO_PROFILER_STATS(PROFILER_MARKER_TEXT);                              \
       ::profiler_add_marker(markerName,                                       \
                             ::geckoprofiler::category::categoryName, options, \
-                            ::geckoprofiler::markers::Text{}, text);          \
+                            ::geckoprofiler::markers::TextMarker{}, text);    \
     } while (false)
 
 // RAII object that adds a PROFILER_MARKER_TEXT when destroyed; the marker's
@@ -177,7 +177,8 @@ class MOZ_RAII AutoProfilerTextMarker {
     AUTO_PROFILER_STATS(AUTO_PROFILER_MARKER_TEXT);
     profiler_add_marker(
         mozilla::ProfilerString8View::WrapNullTerminatedString(mMarkerName),
-        mCategory, std::move(mOptions), geckoprofiler::markers::Text{}, mText);
+        mCategory, std::move(mOptions), geckoprofiler::markers::TextMarker{},
+        mText);
   }
 
  protected:

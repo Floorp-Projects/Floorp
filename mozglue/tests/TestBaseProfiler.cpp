@@ -3472,7 +3472,7 @@ void TestProfiler() {
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "text", mozilla::baseprofiler::category::OTHER, {},
-        mozilla::baseprofiler::markers::Text{}, "text text"));
+        mozilla::baseprofiler::markers::TextMarker{}, "text text"));
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "media sample", mozilla::baseprofiler::category::OTHER, {},
@@ -4037,7 +4037,7 @@ void TestPredefinedMarkers() {
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("text"), mozilla::baseprofiler::category::OTHER,
-      {}, mozilla::baseprofiler::markers::Text{}, "text text"));
+      {}, mozilla::baseprofiler::markers::TextMarker{}, "text text"));
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("media"), mozilla::baseprofiler::category::OTHER,
