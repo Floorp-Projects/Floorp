@@ -919,9 +919,13 @@ class Document : public nsINode,
   /**
    * Set the principals responsible for this document.  Chances are, you do not
    * want to be using this.
+   * Set aSetContentBlockingAllowListPrincipal to false to skip updating the
+   * content blocking allowlist principal. Currently used to prevent setting it
+   * to a NullPrincipal for sandboxed documents.
    */
   void SetPrincipals(nsIPrincipal* aPrincipal,
-                     nsIPrincipal* aPartitionedPrincipal);
+                     nsIPrincipal* aPartitionedPrincipal,
+                     bool aSetContentBlockingAllowListPrincipal = true);
 
   /**
    * Returns true if exempt from HTTPS-Only Mode upgrade.
