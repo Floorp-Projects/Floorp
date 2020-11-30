@@ -981,7 +981,7 @@ namespace jit {
 
 #ifdef JS_CACHE_SIMULATOR_ARM64
 void SimulatorProcess::recordICacheFlush(void* start, size_t length) {
-  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  singleton_->lock_.assertOwnedByCurrentThread();
   AutoEnterOOMUnsafeRegion oomUnsafe;
   ICacheFlush range{start, length};
   for (auto& s : singleton_->pendingFlushes_) {
@@ -992,14 +992,14 @@ void SimulatorProcess::recordICacheFlush(void* start, size_t length) {
 }
 
 void SimulatorProcess::membarrier() {
-  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  singleton_->lock_.assertOwnedByCurrentThread();
   for (auto& s : singleton_->pendingFlushes_) {
     s.thread->pendingCacheRequests = true;
   }
 }
 
 SimulatorProcess::ICacheFlushes& SimulatorProcess::getICacheFlushes(Simulator* sim) {
-  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  singleton_->lock_.assertOwnedByCurrentThread();
   for (auto& s : singleton_->pendingFlushes_) {
     if (s.thread == sim) {
       return s.records;
@@ -1009,14 +1009,14 @@ SimulatorProcess::ICacheFlushes& SimulatorProcess::getICacheFlushes(Simulator* s
 }
 
 bool SimulatorProcess::registerSimulator(Simulator* sim) {
-  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  singleton_->lock_.assertOwnedByCurrentThread();
   ICacheFlushes empty;
   SimFlushes simFlushes{sim, std::move(empty)};
   return singleton_->pendingFlushes_.append(std::move(simFlushes));
 }
 
 void SimulatorProcess::unregisterSimulator(Simulator* sim) {
-  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  singleton_->lock_.assertOwnedByCurrentThread();
   for (auto& s : singleton_->pendingFlushes_) {
     if (s.thread == sim) {
       singleton_->pendingFlushes_.erase(&s);

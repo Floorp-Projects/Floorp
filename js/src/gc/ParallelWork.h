@@ -115,7 +115,7 @@ class MOZ_RAII AutoRunParallelWork {
   }
 
   ~AutoRunParallelWork() {
-    MOZ_ASSERT(gHelperThreadLock.ownedByCurrentThread());
+    gHelperThreadLock.assertOwnedByCurrentThread();
 
     for (size_t i = 0; i < tasksStarted; i++) {
       gc->joinTask(*tasks[i], phaseKind, lock);
