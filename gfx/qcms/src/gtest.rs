@@ -857,4 +857,36 @@ mod test {
             pt.TearDown();
         }
     }
+
+    #[test]
+    fn v4_output() {
+        unsafe {
+            qcms_enable_iccv4();
+        }
+        let input = qcms_profile_sRGB();
+        // B2A0-ident.icc was created from the profile in bug 1679621
+        // manually edited using iccToXML/iccFromXML
+        let output = profile_from_path("B2A0-ident.icc");
+
+        let transform = unsafe {
+            qcms_transform_create(
+                &*input,
+                QCMS_DATA_RGB_8,
+                &*output,
+                QCMS_DATA_RGB_8,
+                QCMS_INTENT_PERCEPTUAL,
+            )
+        };
+        let src = [0u8, 60, 195];
+        let mut dst = [0u8, 0, 0];
+        unsafe {
+            qcms_transform_data(
+                transform,
+                src.as_ptr() as *const libc::c_void,
+                dst.as_mut_ptr() as *mut libc::c_void,
+                1,
+            );
+        }
+        assert_eq!(dst, [15, 16, 122]);
+    }
 }
