@@ -4837,6 +4837,11 @@ var AboutHomeStartupCache = {
   // messages as a signal that it's likely time to refresh the cache.
   CACHE_DEBOUNCE_RATE_MS: 5000,
 
+  // This is how long we'll block the AsyncShutdown while waiting for
+  // the cache to write. If we fail to write within that time, we will
+  // allow the shutdown to proceed.
+  SHUTDOWN_CACHE_WRITE_TIMEOUT_MS: 1000,
+
   // The following values are as possible values for the
   // browser.startup.abouthome_cache_result scalar. Keep these in sync with the
   // scalar definition in Scalars.yaml. See setDeferredResult for more
@@ -5069,7 +5074,41 @@ var AboutHomeStartupCache = {
   async cacheNow() {
     this.log.trace("Caching now.");
     this._cacheProgress = "Getting cache streams";
-    let { pageInputStream, scriptInputStream } = await this.requestCache();
+
+    let requestCachePromise = this.requestCache();
+    let pageInputStream;
+    let scriptInputStream;
+
+    if (this._finalized) {
+      // If we're finalized, that means we're entering a cache task within the
+      // AsyncShutdown blocker. To avoid hanging shutdowns, we'll ensure that
+      // we wait a maximum of SHUTDOWN_CACHE_WRITE_TIMEOUT_MS millseconds before
+      // giving up.
+      let { setTimeout, clearTimeout } = ChromeUtils.import(
+        "resource://gre/modules/Timer.jsm"
+      );
+
+      const TIMED_OUT = Symbol();
+      let timeoutID = 0;
+
+      let timeoutPromise = new Promise(resolve => {
+        timeoutID = setTimeout(
+          () => resolve(TIMED_OUT),
+          this.SHUTDOWN_CACHE_WRITE_TIMEOUT_MS
+        );
+      });
+
+      let result = await Promise.race([timeoutPromise, requestCachePromise]);
+      clearTimeout(timeoutID);
+
+      if (result === TIMED_OUT) {
+        this.log.error("Timed out getting cache streams. Skipping cache task.");
+      } else {
+        ({ pageInputStream, scriptInputStream } = result);
+      }
+    } else {
+      ({ pageInputStream, scriptInputStream } = await requestCachePromise);
+    }
 
     if (!pageInputStream || !scriptInputStream) {
       this._cacheProgress = "Failed to get streams";
