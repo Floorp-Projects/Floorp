@@ -283,17 +283,9 @@ bool IonCacheIRCompiler::init() {
     case CacheKind::GetProp:
     case CacheKind::GetElem: {
       IonGetPropertyIC* ic = ic_->asGetPropertyIC();
-      TypedOrValueRegister output = ic->output();
+      ValueOperand output = ic->output();
 
-      if (output.hasValue()) {
-        available.add(output.valueReg());
-      } else if (!output.typedReg().isFloat()) {
-        available.add(output.typedReg().gpr());
-      }
-
-      if (ic->maybeTemp() != InvalidReg) {
-        available.add(ic->maybeTemp());
-      }
+      available.add(output);
 
       liveRegs_.emplace(ic->liveRegs());
       outputUnchecked_.emplace(output);
@@ -309,9 +301,9 @@ bool IonCacheIRCompiler::init() {
     case CacheKind::GetPropSuper:
     case CacheKind::GetElemSuper: {
       IonGetPropSuperIC* ic = ic_->asGetPropSuperIC();
-      TypedOrValueRegister output = ic->output();
+      ValueOperand output = ic->output();
 
-      available.add(output.valueReg());
+      available.add(output);
 
       liveRegs_.emplace(ic->liveRegs());
       outputUnchecked_.emplace(output);

@@ -223,24 +223,21 @@ class IonGetPropertyIC : public IonIC {
 
   TypedOrValueRegister value_;
   ConstantOrRegister id_;
-  TypedOrValueRegister output_;
-  Register maybeTemp_;  // Might be InvalidReg.
+  ValueOperand output_;
 
  public:
   IonGetPropertyIC(CacheKind kind, LiveRegisterSet liveRegs,
                    TypedOrValueRegister value, const ConstantOrRegister& id,
-                   TypedOrValueRegister output, Register maybeTemp)
+                   ValueOperand output)
       : IonIC(kind),
         liveRegs_(liveRegs),
         value_(value),
         id_(id),
-        output_(output),
-        maybeTemp_(maybeTemp) {}
+        output_(output) {}
 
   TypedOrValueRegister value() const { return value_; }
   ConstantOrRegister id() const { return id_; }
-  TypedOrValueRegister output() const { return output_; }
-  Register maybeTemp() const { return maybeTemp_; }
+  ValueOperand output() const { return output_; }
   LiveRegisterSet liveRegs() const { return liveRegs_; }
 
   static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,
@@ -254,12 +251,12 @@ class IonGetPropSuperIC : public IonIC {
   Register object_;
   TypedOrValueRegister receiver_;
   ConstantOrRegister id_;
-  TypedOrValueRegister output_;
+  ValueOperand output_;
 
  public:
   IonGetPropSuperIC(CacheKind kind, LiveRegisterSet liveRegs, Register object,
                     TypedOrValueRegister receiver, const ConstantOrRegister& id,
-                    TypedOrValueRegister output)
+                    ValueOperand output)
       : IonIC(kind),
         liveRegs_(liveRegs),
         object_(object),
@@ -270,7 +267,7 @@ class IonGetPropSuperIC : public IonIC {
   Register object() const { return object_; }
   TypedOrValueRegister receiver() const { return receiver_; }
   ConstantOrRegister id() const { return id_; }
-  TypedOrValueRegister output() const { return output_; }
+  ValueOperand output() const { return output_; }
   LiveRegisterSet liveRegs() const { return liveRegs_; }
 
   static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,

@@ -6,7 +6,6 @@
 
 #include "jit/IonIC.h"
 
-#include "jit/AutoDetectInvalidation.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/VMFunctions.h"
 #include "util/DiagnosticAssertions.h"
@@ -32,20 +31,11 @@ uint8_t* IonIC::rejoinAddr(IonScript* ionScript) const {
 Register IonIC::scratchRegisterForEntryJump() {
   switch (kind_) {
     case CacheKind::GetProp:
-    case CacheKind::GetElem: {
-      Register temp = asGetPropertyIC()->maybeTemp();
-      if (temp != InvalidReg) {
-        return temp;
-      }
-      TypedOrValueRegister output = asGetPropertyIC()->output();
-      return output.hasValue() ? output.valueReg().scratchReg()
-                               : output.typedReg().gpr();
-    }
+    case CacheKind::GetElem:
+      return asGetPropertyIC()->output().scratchReg();
     case CacheKind::GetPropSuper:
-    case CacheKind::GetElemSuper: {
-      TypedOrValueRegister output = asGetPropSuperIC()->output();
-      return output.valueReg().scratchReg();
-    }
+    case CacheKind::GetElemSuper:
+      return asGetPropSuperIC()->output().scratchReg();
     case CacheKind::SetProp:
     case CacheKind::SetElem:
       return asSetPropertyIC()->temp();
@@ -166,9 +156,7 @@ static void TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript,
 bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
                               IonGetPropertyIC* ic, HandleValue val,
                               HandleValue idVal, MutableHandleValue res) {
-  // Override the return value if we are invalidated (bug 728188).
   IonScript* ionScript = outerScript->ionScript();
-  AutoDetectInvalidation adi(cx, res, ionScript);
 
   // Optimized-arguments and other magic values must not escape to Ion ICs.
   MOZ_ASSERT(!val.isMagic());
@@ -221,9 +209,7 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
                                IonGetPropSuperIC* ic, HandleObject obj,
                                HandleValue receiver, HandleValue idVal,
                                MutableHandleValue res) {
-  // Override the return value if we are invalidated (bug 728188).
   IonScript* ionScript = outerScript->ionScript();
-  AutoDetectInvalidation adi(cx, res, ionScript);
 
   if (ic->state().maybeTransition()) {
     ic->discardStubs(cx->zone(), ionScript);
