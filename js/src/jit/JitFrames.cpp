@@ -596,14 +596,6 @@ void HandleException(ResumeFromException* rfe) {
 
   JitSpew(JitSpew_IonInvalidate, "handling exception");
 
-  // Clear any Ion return override that's been set.
-  // This may happen if a callVM function causes an invalidation (setting the
-  // override), and then fails, bypassing the bailout handlers that would
-  // otherwise clear the return override.
-  if (cx->hasIonReturnOverride()) {
-    cx->takeIonReturnOverride();
-  }
-
   JitActivation* activation = cx->activation()->asJit();
 
 #ifdef CHECK_OSIPOINT_REGISTERS
