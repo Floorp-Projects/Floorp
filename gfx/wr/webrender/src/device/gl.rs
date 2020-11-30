@@ -4418,8 +4418,6 @@ impl<'a> TextureUploader<'a> {
             Self::flush_buffer(device, self.pbo_pool, buffer);
         }
 
-        self.pbo_pool.end_frame(device);
-
         device.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
     }
 
