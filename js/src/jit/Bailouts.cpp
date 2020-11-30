@@ -288,8 +288,8 @@ void jit::CheckFrequentBailouts(JSContext* cx, JSScript* script,
       // the first execution bailout can be related to an inlined script,
       // so there is no need to penalize the caller.
       if (bailoutKind != BailoutKind::FirstExecution &&
-          !script->hadLICMBailout()) {
-        script->setHadLICMBailout();
+          !script->hadFrequentBailouts()) {
+        script->setHadFrequentBailouts();
       }
 
       JitSpew(JitSpew_IonInvalidate, "Invalidating due to too many bailouts");

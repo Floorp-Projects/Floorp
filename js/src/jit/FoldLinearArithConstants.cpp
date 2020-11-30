@@ -70,7 +70,6 @@ static void AnalyzeAdd(TempAllocator& alloc, MAdd* add) {
   add->block()->insertBefore(add, rhs);
 
   MAdd* addNew = MAdd::New(alloc, sum.term, rhs, add->truncateKind());
-  addNew->setBailoutKind(add->bailoutKind());
 
   add->replaceAllLiveUsesWith(addNew);
   add->block()->insertBefore(add, addNew);

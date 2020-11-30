@@ -307,8 +307,8 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has had hoisted shape guard fail.
   FailedShapeGuard = 1 << 19,
 
-  // Script has had instruction hoisted by LICM fail.
-  HadLICMBailout = 1 << 20,
+  // Script experienced frequent bailouts.
+  HadFrequentBailouts = 1 << 20,
 
   // An overflow happened where Range Analysis hoped it would not. The next
   // compile should be more conservative.
@@ -323,9 +323,6 @@ enum class MutableScriptFlagsEnum : uint32_t {
 
   // Lexical check did fail and bail out.
   FailedLexicalCheck = 1 << 24,
-
-  // A guard inserted by phi specialization failed.
-  HadSpeculativePhiBailout = 1 << 25,
 };
 
 }  // namespace js
