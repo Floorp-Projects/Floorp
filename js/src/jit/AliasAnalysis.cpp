@@ -163,6 +163,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::FunctionName:
     case MDefinition::Opcode::GuardArgumentsObjectNotOverriddenIterator:
     case MDefinition::Opcode::GuardIsExtensible:
+    case MDefinition::Opcode::GuardIndexGreaterThanDenseInitLength:
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:
