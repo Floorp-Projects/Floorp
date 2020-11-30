@@ -91,14 +91,6 @@ struct MOZ_RAII AutoEnterAnalysis {
     init(fop, zone);
   }
 
-  ~AutoEnterAnalysis() {
-    if (this != zone->types.activeAnalysis) {
-      return;
-    }
-
-    zone->types.activeAnalysis = nullptr;
-  }
-
  private:
   void init(JSFreeOp* fop, Zone* zone) {
 #ifdef JS_CRASH_DIAGNOSTICS
@@ -106,10 +98,6 @@ struct MOZ_RAII AutoEnterAnalysis {
 #endif
     this->freeOp = fop;
     this->zone = zone;
-
-    if (!zone->types.activeAnalysis) {
-      zone->types.activeAnalysis = this;
-    }
   }
 };
 
