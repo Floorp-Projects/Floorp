@@ -292,3 +292,8 @@ cfr-whatsnew-clear-cookies-image-alt = Cookie blocked illustration
 cfr-whatsnew-media-keys-header = More media controls
 cfr-whatsnew-media-keys-body = Play and pause audio or video right from your keyboard or headset, making it easy to control media from another tab, program, or even when your computer is locked. You can also move between tracks using the forward and back keys.
 cfr-whatsnew-media-keys-button = Learn how
+
+## What's new: Search shortcuts
+
+cfr-whatsnew-search-shortcuts-header = Search shortcuts in the address bar
+cfr-whatsnew-search-shortcuts-body = Now, when you type a search engine or specific site into the address bar, a blue shortcut will appear in the search suggestions beneath. Select that shortcut to complete your search directly from the address bar.
