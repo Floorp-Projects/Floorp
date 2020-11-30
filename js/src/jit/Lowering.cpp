@@ -3936,8 +3936,8 @@ void LIRGenerator::visitGetPropSuperCache(MGetPropSuperCache* ins) {
       id->type() == MIRType::String || id->type() == MIRType::Symbol;
 
   auto* lir = new (alloc())
-      LGetPropSuperCacheV(useRegister(obj), useBoxOrTyped(receiver),
-                          useBoxOrTypedOrConstant(id, useConstId));
+      LGetPropSuperCache(useRegister(obj), useBoxOrTyped(receiver),
+                         useBoxOrTypedOrConstant(id, useConstId));
   defineBox(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -3960,26 +3960,10 @@ void LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins) {
   bool useConstId =
       id->type() == MIRType::String || id->type() == MIRType::Symbol;
 
-  // We need a temp register if we can't use the output register as scratch.
-  // See IonIC::scratchRegisterForEntryJump.
-  LDefinition maybeTemp = LDefinition::BogusTemp();
-  if (ins->type() == MIRType::Double) {
-    maybeTemp = temp();
-  }
-
-  if (ins->type() == MIRType::Value) {
-    LGetPropertyCacheV* lir = new (alloc())
-        LGetPropertyCacheV(useBoxOrTyped(value),
-                           useBoxOrTypedOrConstant(id, useConstId), maybeTemp);
-    defineBox(lir, ins);
-    assignSafepoint(lir, ins);
-  } else {
-    LGetPropertyCacheT* lir = new (alloc())
-        LGetPropertyCacheT(useBoxOrTyped(value),
-                           useBoxOrTypedOrConstant(id, useConstId), maybeTemp);
-    define(lir, ins);
-    assignSafepoint(lir, ins);
-  }
+  auto* lir = new (alloc()) LGetPropertyCache(
+      useBoxOrTyped(value), useBoxOrTypedOrConstant(id, useConstId));
+  defineBox(lir, ins);
+  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic* ins) {
