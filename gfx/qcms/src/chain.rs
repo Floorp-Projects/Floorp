@@ -1069,8 +1069,10 @@ pub unsafe extern "C" fn qcms_modular_transform_create_input(
                 || transform.as_mut().unwrap().input_clut_table_g.is_none()
                 || transform.as_mut().unwrap().input_clut_table_b.is_none()
             {
+                append_transform(transform, next_transform);
                 current_block = 8903102000210989603;
             } else {
+                next_transform = append_transform(transform, next_transform);
                 transform = qcms_modular_transform_alloc();
                 if transform.is_none() {
                     current_block = 8903102000210989603;
