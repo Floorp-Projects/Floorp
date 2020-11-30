@@ -85,7 +85,6 @@ bool ArithPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
       replace = MToNumberInt32::New(alloc, in);
     }
 
-    replace->setBailoutKind(BailoutKind::TypePolicy);
     ins->block()->insertBefore(ins, replace);
     ins->replaceOperand(i, replace);
 
@@ -471,7 +470,6 @@ bool SymbolPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
   }
 
   MUnbox* replace = MUnbox::New(alloc, in, MIRType::Symbol, MUnbox::Fallible);
-  replace->setBailoutKind(BailoutKind::TypePolicy);
   ins->block()->insertBefore(ins, replace);
   ins->replaceOperand(Op, replace);
 
@@ -490,7 +488,6 @@ bool StringPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
   }
 
   MUnbox* replace = MUnbox::New(alloc, in, MIRType::String, MUnbox::Fallible);
-  replace->setBailoutKind(BailoutKind::TypePolicy);
   ins->block()->insertBefore(ins, replace);
   ins->replaceOperand(Op, replace);
 
@@ -540,7 +537,6 @@ bool UnboxedInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc,
   }
 
   MUnbox* replace = MUnbox::New(alloc, in, MIRType::Int32, MUnbox::Fallible);
-  replace->setBailoutKind(BailoutKind::TypePolicy);
   def->block()->insertBefore(def, replace);
   def->replaceOperand(Op, replace);
 
@@ -917,7 +913,6 @@ bool ObjectPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
   }
 
   MUnbox* replace = MUnbox::New(alloc, in, MIRType::Object, MUnbox::Fallible);
-  replace->setBailoutKind(BailoutKind::TypePolicy);
   ins->block()->insertBefore(ins, replace);
   ins->replaceOperand(Op, replace);
 
@@ -940,7 +935,6 @@ bool CallPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   if (func->type() != MIRType::Object) {
     MInstruction* unbox =
         MUnbox::New(alloc, func, MIRType::Object, MUnbox::Fallible);
-    unbox->setBailoutKind(BailoutKind::TypePolicy);
     call->block()->insertBefore(call, unbox);
     call->replaceCallee(unbox);
 

@@ -76,9 +76,7 @@ class CompileInfo {
         analysisMode_(analysisMode),
         scriptNeedsArgsObj_(scriptNeedsArgsObj),
         hadOverflowBailout_(script->hadOverflowBailout()),
-        hadSpeculativePhiBailout_(script->hadSpeculativePhiBailout()),
-        hadLICMBailout_(script->hadLICMBailout()),
-        hadBoundsCheckBailout_(script->failedBoundsCheck()),
+        hadFrequentBailouts_(script->hadFrequentBailouts()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
         isDerivedClassConstructor_(script->isDerivedClassConstructor()),
         inlineScriptTree_(inlineScriptTree) {
@@ -139,9 +137,7 @@ class CompileInfo {
         analysisMode_(Analysis_None),
         scriptNeedsArgsObj_(false),
         hadOverflowBailout_(false),
-        hadSpeculativePhiBailout_(false),
-        hadLICMBailout_(false),
-        hadBoundsCheckBailout_(false),
+        hadFrequentBailouts_(false),
         mayReadFrameArgsDirectly_(false),
         inlineScriptTree_(nullptr),
         needsBodyEnvironmentObject_(false),
@@ -369,9 +365,7 @@ class CompileInfo {
   // Check previous bailout states to prevent doing the same bailout in the
   // next compilation.
   bool hadOverflowBailout() const { return hadOverflowBailout_; }
-  bool hadSpeculativePhiBailout() const { return hadSpeculativePhiBailout_; }
-  bool hadLICMBailout() const { return hadLICMBailout_; }
-  bool hadBoundsCheckBailout() const { return hadBoundsCheckBailout_; }
+  bool hadFrequentBailouts() const { return hadFrequentBailouts_; }
   bool mayReadFrameArgsDirectly() const { return mayReadFrameArgsDirectly_; }
 
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
@@ -396,9 +390,7 @@ class CompileInfo {
   // Record the state of previous bailouts in order to prevent compiling the
   // same function identically the next time.
   bool hadOverflowBailout_;
-  bool hadSpeculativePhiBailout_;
-  bool hadLICMBailout_;
-  bool hadBoundsCheckBailout_;
+  bool hadFrequentBailouts_;
 
   bool mayReadFrameArgsDirectly_;
 
