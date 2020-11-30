@@ -66,6 +66,12 @@ const TEST_CASES = [
     testURL: "view-source:https://example.com/",
     hidden: true,
   },
+  {
+    type: "top level sandbox",
+    testURL:
+      "https://example.com/browser/browser/base/content/test/protectionsUI/sandboxed.html",
+    hidden: false,
+  },
 ];
 
 add_task(async function setup() {
@@ -97,7 +103,7 @@ add_task(async function setup() {
         if (testData.type === "certificateError") {
           pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
         } else {
-          pageLoaded = BrowserTestUtils.browserLoaded(browser);
+          pageLoaded = BrowserTestUtils.browserLoaded(browser, true);
         }
       },
       false
