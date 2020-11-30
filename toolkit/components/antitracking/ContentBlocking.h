@@ -122,7 +122,7 @@ class ContentBlocking final {
   friend class dom::ContentParent;
   // This should be running either in the parent process or in the child
   // processes with an in-process browsing context.
-  static MOZ_MUST_USE RefPtr<StorageAccessPermissionGrantPromise>
+  [[nodiscard]] static RefPtr<StorageAccessPermissionGrantPromise>
   CompleteAllowAccessFor(
       dom::BrowsingContext* aParentContext, uint64_t aTopLevelWindowId,
       nsIPrincipal* aTrackingPrincipal, const nsCString& aTrackingOrigin,
