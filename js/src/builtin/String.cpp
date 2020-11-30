@@ -65,7 +65,6 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/StringType-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 

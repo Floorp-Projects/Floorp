@@ -14,7 +14,6 @@
 #include "gc/ObjectKind-inl.h"
 #include "gc/WeakMap-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 

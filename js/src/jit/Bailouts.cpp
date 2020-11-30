@@ -9,6 +9,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include "jit/BaselineJIT.h"
+#include "jit/Invalidation.h"
 #include "jit/Ion.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"

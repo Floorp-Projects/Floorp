@@ -47,7 +47,6 @@
 #include "jit/TemplateObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;
