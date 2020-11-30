@@ -18,6 +18,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
+#include "js/UbiNode.h"
 #include "vm/TaggedProto.h"
 
 namespace js {
@@ -356,5 +357,30 @@ PlainObject* NewPlainObjectWithProperties(JSContext* cx,
                                           NewObjectKind newKind);
 
 }  // namespace js
+
+// JS::ubi::Nodes can point to object groups; they're js::gc::Cell instances
+// with no associated compartment.
+namespace JS {
+namespace ubi {
+
+template <>
+class Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> {
+ protected:
+  explicit Concrete(js::ObjectGroup* ptr)
+      : TracerConcrete<js::ObjectGroup>(ptr) {}
+
+ public:
+  static void construct(void* storage, js::ObjectGroup* ptr) {
+    new (storage) Concrete(ptr);
+  }
+
+  Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+  const char16_t* typeName() const override { return concreteTypeName; }
+  static const char16_t concreteTypeName[];
+};
+
+}  // namespace ubi
+}  // namespace JS
 
 #endif /* vm_ObjectGroup_h */
