@@ -78,8 +78,7 @@ add_task(async () => {
           // Fission case: https://bugzilla.mozilla.org/show_bug.cgi?id=1660805
           state = "innerclickbeforefocus";
         } else if (event.data == "middlefocus") {
-          // https://bugzilla.mozilla.org/show_bug.cgi?id=1661227
-          todo(false, "Ignoring extra middlefocus.");
+          is(false, "Should not get an extra middlefocus.");
         } else {
           is(event.data, "neverthisevent", "Unexpected event (first click)");
         }
