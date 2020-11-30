@@ -875,6 +875,7 @@ def findTestMediaDevices(log):
     subprocess.check_call(
         [
             gst,
+            "--no-fault",
             "videotestsrc",
             "pattern=green",
             "num-buffers=1",
