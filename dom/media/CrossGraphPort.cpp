@@ -106,9 +106,8 @@ void CrossGraphTransmitter::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   MediaTrack* input = mInputs[0]->GetSource();
 
-  if (mInputs[0]->GetSource()->Ended() &&
-      (mInputs[0]->GetSource()->GetEnd() <=
-       mInputs[0]->GetSource()->GraphTimeToTrackTimeWithBlocking(aFrom))) {
+  if (input->Ended() &&
+      (input->GetEnd() <= input->GraphTimeToTrackTimeWithBlocking(aFrom))) {
     mEnded = true;
     return;
   }
