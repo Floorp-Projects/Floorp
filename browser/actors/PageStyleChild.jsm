@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var EXPORTED_SYMBOLS = ["PageStyleChild"];
 
 class PageStyleChild extends JSWindowActorChild {
@@ -22,9 +20,8 @@ class PageStyleChild extends JSWindowActorChild {
         if (!window || window.closed) {
           return;
         }
-        let styleSheets = Array.from(this.document.styleSheets);
-        let filteredStyleSheets = this._filterStyleSheets(styleSheets, window);
 
+        let filteredStyleSheets = this._collectStyleSheets(window);
         this.sendAsyncMessage("PageStyle:Add", {
           filteredStyleSheets,
           authorStyleDisabled: this.docShell.contentViewer.authorStyleDisabled,
@@ -85,51 +82,29 @@ class PageStyleChild extends JSWindowActorChild {
   }
 
   /**
-   * Filter the stylesheets that actually apply to this webpage.
-   * @param styleSheets The list of stylesheets from the document.
-   * @param content     The window object that the webpage lives in.
+   * Get the stylesheets that have a title (and thus can be switched) in this
+   * webpage.
+   *
+   * @param content     The window object for the page.
    */
-  _filterStyleSheets(styleSheets, content) {
+  _collectStyleSheets(content) {
     let result = [];
 
     // Only stylesheets with a title can act as an alternative stylesheet.
-    for (let currentStyleSheet of styleSheets) {
-      if (!currentStyleSheet.title) {
+    for (let sheet of content.document.styleSheets) {
+      if (!sheet.title) {
         continue;
       }
 
       // Skip any stylesheets that don't match the screen media type.
-      if (currentStyleSheet.media.length) {
-        let mediaQueryList = currentStyleSheet.media.mediaText;
-        if (!content.matchMedia(mediaQueryList).matches) {
-          continue;
-        }
-      }
-
-      let URI;
-      try {
-        if (
-          !currentStyleSheet.ownerNode ||
-          // Special-case style nodes, which have no href.
-          currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style"
-        ) {
-          URI = Services.io.newURI(currentStyleSheet.href);
-        }
-      } catch (e) {
-        if (e.result != Cr.NS_ERROR_MALFORMED_URI) {
-          throw e;
-        }
+      let media = sheet.media.mediaText;
+      if (media && !content.matchMedia(media).matches) {
         continue;
       }
 
-      // We won't send data URIs all of the way up to the parent, as these
-      // can be arbitrarily large.
-      let sentURI = !URI || URI.scheme == "data" ? null : URI.spec;
-
       result.push({
-        title: currentStyleSheet.title,
-        disabled: currentStyleSheet.disabled,
-        href: sentURI,
+        title: sheet.title,
+        disabled: sheet.disabled,
       });
     }
 
