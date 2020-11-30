@@ -202,7 +202,7 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
 
       // If we've already reached the target number of pages for this sheet,
       // and this continuation page that we just created is meant to be
-      // dispayed (i.e. it's in the chosen page range), then we need to push it
+      // displayed (i.e. it's in the chosen page range), then we need to push it
       // to our overflow list so that it'll go onto a subsequent sheet.
       // Otherwise we leave it on this sheet. This ensures we *only* generate
       // another sheet IFF there's a displayable page that will end up on it.
