@@ -51,7 +51,7 @@ int MockCubebStream::Start() {
   MonitorAutoLock lock(mFrozenStartMonitor);
   if (mFrozenStart) {
     NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-        "MockCubebStream::WaitForUnfreezedStart",
+        "MockCubebStream::WaitForThawBeforeStart",
         [this, self = RefPtr<SmartMockCubebStream>(mSelf)] {
           MonitorAutoLock lock(mFrozenStartMonitor);
           while (mFrozenStart) {
@@ -111,7 +111,7 @@ void MockCubebStream::SetDriftFactor(float aDriftFactor) {
 
 void MockCubebStream::ForceError() { mForceErrorState = true; }
 
-void MockCubebStream::Unfreeze() {
+void MockCubebStream::Thaw() {
   MonitorAutoLock l(mFrozenStartMonitor);
   mFrozenStart = false;
   mFrozenStartMonitor.Notify();
