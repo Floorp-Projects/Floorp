@@ -15,7 +15,7 @@ FissionTestHelper.startTestPromise
   .then(waitUntilApzStable)
   .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
   .then(waitUntilApzStable)
-  .then(runAsyncContinuation(test))
+  .then(test)
   .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
 
 async function setup_in_oopif() {
@@ -72,7 +72,7 @@ async function observe_styling_in_oopif(aFrameCount) {
 
 // The actual test
 
-async function* test() {
+async function test() {
   // Generate an infinite animation which is initially scrolled out of view.
   // setup_in_oopif() returns the right bottom position of the animating element
   // on the iframe coodinate system.

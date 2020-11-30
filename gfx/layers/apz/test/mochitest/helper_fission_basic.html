@@ -15,13 +15,13 @@ FissionTestHelper.startTestPromise
   .then(waitUntilApzStable)
   .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
   .then(waitUntilApzStable)
-  .then(runAsyncContinuation(test))
+  .then(test)
   .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
 
 
 // The actual test
 
-async function* test() {
+async function test() {
   let iframeElement = document.getElementById("testframe");
   ok(SpecialPowers.wrap(window)
        .docShell
