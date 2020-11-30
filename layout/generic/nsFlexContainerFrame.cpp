@@ -4394,16 +4394,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   // be filled out for use by devtools.
   ComputedFlexContainerInfo* containerInfo = CreateOrClearFlexContainerInfo();
 
-  // We assume we are the last fragment by using
-  // PreReflowBlockLevelLogicalSkipSides(). We will skip block-end
-  // border/padding when we know our content-box size after DoFlexLayout.
-  LogicalMargin borderPadding =
-      aReflowInput.ComputedLogicalBorderPadding(wm).ApplySkipSides(
-          PreReflowBlockLevelLogicalSkipSides());
-
-  const LogicalSize availableSizeForItems =
-      ComputeAvailableSizeForItems(aReflowInput, borderPadding);
-
   const nscoord consumedBSize = CalcAndCacheConsumedBSize();
   nscoord contentBoxMainSize =
       GetMainSizeFromReflowInput(aReflowInput, axisTracker, consumedBSize);
@@ -4465,6 +4455,16 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     contentBoxMainSize = data->mContentBoxMainSize;
     contentBoxCrossSize = data->mContentBoxCrossSize;
   }
+
+  // We assume we are the last fragment by using
+  // PreReflowBlockLevelLogicalSkipSides(), and skip block-end border and
+  // padding if needed.
+  LogicalMargin borderPadding =
+      aReflowInput.ComputedLogicalBorderPadding(wm).ApplySkipSides(
+          PreReflowBlockLevelLogicalSkipSides());
+
+  const LogicalSize availableSizeForItems =
+      ComputeAvailableSizeForItems(aReflowInput, borderPadding);
 
   const LogicalSize contentBoxSize =
       axisTracker.LogicalSizeFromFlexRelativeSizes(contentBoxMainSize,
