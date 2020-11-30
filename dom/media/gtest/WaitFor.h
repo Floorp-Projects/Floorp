@@ -52,14 +52,18 @@ void WaitFor(MediaEventSource<void>& aEvent) {
  */
 template <typename R, typename E, bool Exc>
 Result<R, E> WaitFor(const RefPtr<MozPromise<R, E, Exc>>& aPromise) {
-  Maybe<Result<R, E>> result;
+  Maybe<R> success;
+  Maybe<E> error;
   aPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [&](R aResult) { result = Some(Result<R, E>(aResult)); },
-      [&](E aError) { result = Some(Result<R, E>(aError)); });
+      [&](R aResult) { success = Some(aResult); },
+      [&](E aError) { error = Some(aError); });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return result.isSome(); });
-  return result.extract();
+      [&] { return success.isSome() || error.isSome(); });
+  if (success.isSome()) {
+    return success.extract();
+  }
+  return Err(error.extract());
 }
 
 /**
