@@ -3283,6 +3283,17 @@ void MacroAssembler::branchIfNonNativeObj(Register obj, Register scratch,
                Imm32(JSClass::NON_NATIVE), label);
 }
 
+void MacroAssembler::branchIfObjectNotExtensible(Register obj, Register scratch,
+                                                 Label* label) {
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+
+  // Spectre-style checks are not needed here because we do not interpret data
+  // based on this check.
+  branchTest32(Assembler::NonZero, Address(scratch, BaseShape::offsetOfFlags()),
+               Imm32(js::BaseShape::NOT_EXTENSIBLE), label);
+}
+
 void MacroAssembler::copyObjGroupNoPreBarrier(Register sourceObj,
                                               Register destObj,
                                               Register scratch) {

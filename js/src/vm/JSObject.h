@@ -36,10 +36,6 @@ namespace gc {
 class RelocationOverlay;
 }  // namespace gc
 
-namespace jit {
-class CacheIRCompiler;
-}
-
 /****************************************************************************/
 
 class GlobalObject;
@@ -552,7 +548,6 @@ class JSObject
   // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
   // to call the method below.
   friend class js::jit::MacroAssembler;
-  friend class js::jit::CacheIRCompiler;
 
   static constexpr size_t offsetOfGroup() { return offsetOfHeaderPtr(); }
   static constexpr size_t offsetOfShape() { return offsetof(JSObject, shape_); }

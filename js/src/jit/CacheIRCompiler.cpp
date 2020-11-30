@@ -1960,21 +1960,7 @@ bool CacheIRCompiler::emitGuardIsExtensible(ObjOperandId objId) {
     return false;
   }
 
-  Address shape(obj, JSObject::offsetOfShape());
-  masm.loadPtr(shape, scratch);
-
-  Address baseShape(scratch, Shape::offsetOfBaseShape());
-  masm.loadPtr(baseShape, scratch);
-
-  Address baseShapeFlags(scratch, BaseShape::offsetOfFlags());
-  masm.loadPtr(baseShapeFlags, scratch);
-
-  masm.and32(Imm32(js::BaseShape::NOT_EXTENSIBLE), scratch);
-
-  // Spectre-style checks are not needed here because we do not
-  // interpret data based on this check.
-  masm.branch32(Assembler::Equal, scratch, Imm32(js::BaseShape::NOT_EXTENSIBLE),
-                failure->label());
+  masm.branchIfObjectNotExtensible(obj, scratch, failure->label());
   return true;
 }
 
