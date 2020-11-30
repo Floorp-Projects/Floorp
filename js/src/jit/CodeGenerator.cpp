@@ -14849,6 +14849,18 @@ void CodeGenerator::visitCallAddOrUpdateSparseElement(
   callVM<Fn, js::AddOrUpdateSparseElementHelper>(lir);
 }
 
+void CodeGenerator::visitCallGetSparseElement(LCallGetSparseElement* lir) {
+  Register object = ToRegister(lir->object());
+  Register index = ToRegister(lir->index());
+
+  pushArg(index);
+  pushArg(object);
+
+  using Fn =
+      bool (*)(JSContext*, HandleArrayObject, int32_t, MutableHandleValue);
+  callVM<Fn, js::GetSparseElementHelper>(lir);
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;
