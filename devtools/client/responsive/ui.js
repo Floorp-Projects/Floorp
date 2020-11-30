@@ -12,6 +12,9 @@ const {
 } = require("devtools/client/responsive/utils/orientation");
 const Constants = require("devtools/client/responsive/constants");
 const { TargetList } = require("devtools/shared/resources/target-list");
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
 
 loader.lazyRequireGetter(
   this,
@@ -93,6 +96,7 @@ class ResponsiveUI {
 
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
 
+    this.networkFront = null;
     // Promise resovled when the UI init has completed.
     this.inited = this.init();
 
@@ -113,6 +117,16 @@ class ResponsiveUI {
 
   get currentTarget() {
     return this.targetList.targetFront;
+  }
+
+  get watcherFront() {
+    return this.resourceWatcher.watcherFront;
+  }
+
+  get hasResourceWatcherSupport() {
+    return this.resourceWatcher.hasResourceWatcherSupport(
+      this.resourceWatcher.TYPES.NETWORK_EVENT
+    );
   }
 
   /**
@@ -290,10 +304,20 @@ class ResponsiveUI {
       // the tab has to be reloaded to remove the emulated settings created by RDM.
       currentTarget = this.currentTarget;
 
+      // Resseting the throtting needs to be done before the
+      // network events watching is stopped.
+      await this.updateNetworkThrottling();
+
       this.targetList.unwatchTargets(
         [this.targetList.TYPES.FRAME],
         this.onTargetAvailable
       );
+
+      this.resourceWatcher.unwatchResources(
+        [this.resourceWatcher.TYPES.NETWORK_EVENT],
+        { onAvailable: this.onNetworkResourceAvailable }
+      );
+
       this.targetList.destroy();
     }
 
@@ -325,7 +349,6 @@ class ResponsiveUI {
     if (!isTabContentDestroying) {
       let reloadNeeded = false;
       await this.updateDPPX();
-      await this.updateNetworkThrottling();
       reloadNeeded |=
         (await this.updateUserAgent()) && this.reloadOnChange("userAgent");
       reloadNeeded |=
@@ -374,12 +397,27 @@ class ResponsiveUI {
 
     const descriptor = await this.client.mainRoot.getTab();
     const targetFront = await descriptor.getTarget();
+
     this.targetList = new TargetList(this.client.mainRoot, targetFront);
+    this.resourceWatcher = new ResourceWatcher(this.targetList);
+
     this.targetList.startListening();
+
     await this.targetList.watchTargets(
       [this.targetList.TYPES.FRAME],
       this.onTargetAvailable
     );
+
+    // To support network throttling the resource watcher
+    // needs to be watching for network resources.
+    await this.resourceWatcher.watchResources(
+      [this.resourceWatcher.TYPES.NETWORK_EVENT],
+      { onAvailable: this.onNetworkResourceAvailable }
+    );
+
+    if (this.hasResourceWatcherSupport) {
+      this.networkFront = await this.watcherFront.getNetworkParentActor();
+    }
   }
 
   /**
@@ -813,13 +851,18 @@ class ResponsiveUI {
    *         (This is always immediate, so it's always false.)
    */
   async updateNetworkThrottling(enabled, profile) {
+    const throttlingFront =
+      this.hasResourceWatcherSupport && this.networkFront
+        ? this.networkFront
+        : this.responsiveFront;
+
     if (!enabled) {
-      await this.responsiveFront.clearNetworkThrottling();
+      await throttlingFront.clearNetworkThrottling();
       return false;
     }
     const data = throttlingProfiles.find(({ id }) => id == profile);
     const { download, upload, latency } = data;
-    await this.responsiveFront.setNetworkThrottling({
+    await throttlingFront.setNetworkThrottling({
       downloadThroughput: download,
       uploadThroughput: upload,
       latency,
@@ -1024,6 +1067,9 @@ class ResponsiveUI {
       await this.restoreActorState();
     }
   }
+  // This just needed to setup watching for network resources,
+  // to support network throttling.
+  onNetworkResourceAvailable() {}
 
   async onRemotenessChange(event) {
     // The current tab target will be destroyed by the process change.

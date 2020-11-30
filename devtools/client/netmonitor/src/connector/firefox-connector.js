@@ -46,6 +46,8 @@ class FirefoxConnector {
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
     this.onResourceUpdated = this.onResourceUpdated.bind(this);
+
+    this.networkFront = null;
   }
 
   get currentTarget() {
@@ -58,7 +60,7 @@ class FirefoxConnector {
     );
   }
 
-  get currentWatcherFront() {
+  get watcherFront() {
     return this.toolbox.resourceWatcher.watcherFront;
   }
 
@@ -163,6 +165,9 @@ class FirefoxConnector {
 
     // Initialize Responsive Emulation front for network throttling.
     this.responsiveFront = await this.currentTarget.getFront("responsive");
+    if (this.hasResourceWatcherSupport) {
+      this.networkFront = await this.watcherFront.getNetworkParentActor();
+    }
   }
 
   async onResourceAvailable(resources) {
@@ -412,9 +417,8 @@ class FirefoxConnector {
    * Get the list of blocked URLs
    */
   async getBlockedUrls() {
-    if (this.hasResourceWatcherSupport && this.currentWatcherFront) {
-      const network = await this.currentWatcherFront.getNetworkParentActor();
-      return network.getBlockedUrls();
+    if (this.hasResourceWatcherSupport && this.networkFront) {
+      return this.networkFront.getBlockedUrls();
     }
     if (!this.webConsoleFront.traits.blockedUrls) {
       return [];
@@ -428,9 +432,8 @@ class FirefoxConnector {
    * @param {object} urls An array of URL strings
    */
   async setBlockedUrls(urls) {
-    if (this.hasResourceWatcherSupport && this.currentWatcherFront) {
-      const network = await this.currentWatcherFront.getNetworkParentActor();
-      return network.setBlockedUrls(urls);
+    if (this.hasResourceWatcherSupport && this.networkFront) {
+      return this.networkFront.setBlockedUrls(urls);
     }
     return this.webConsoleFront.setBlockedUrls(urls);
   }
@@ -568,12 +571,22 @@ class FirefoxConnector {
   }
 
   async updateNetworkThrottling(enabled, profile) {
+    const throttlingFront =
+      this.hasResourceWatcherSupport && this.networkFront
+        ? this.networkFront
+        : this.responsiveFront;
+
     if (!enabled) {
-      await this.responsiveFront.clearNetworkThrottling();
+      throttlingFront.clearNetworkThrottling();
     } else {
-      const data = throttlingProfiles.find(({ id }) => id == profile);
-      const { download, upload, latency } = data;
-      await this.responsiveFront.setNetworkThrottling({
+      // The profile can be either a profile id which is used to
+      // search the predefined throttle profiles or a profile object
+      // as defined in the trottle tests.
+      if (typeof profile === "string") {
+        profile = throttlingProfiles.find(({ id }) => id == profile);
+      }
+      const { download, upload, latency } = profile;
+      await throttlingFront.setNetworkThrottling({
         downloadThroughput: download,
         uploadThroughput: upload,
         latency,

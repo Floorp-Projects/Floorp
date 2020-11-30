@@ -25,12 +25,75 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
     Actor.prototype.initialize.call(this, this.watcherActor.conn);
   },
 
+  // Caches the throttling data so that on clearing the
+  // current network throttling it can be reset to the previous.
+  defaultThrottleData: undefined,
+
+  isEqual(next, current) {
+    // If both objects, check all entries
+    if (current && next && next == current) {
+      return Object.entries(current).every(([k, v]) => {
+        return next[k] === v;
+      });
+    }
+    return false;
+  },
+
   destroy(conn) {
     Actor.prototype.destroy.call(this, conn);
   },
 
   get networkEventWatcher() {
     return getResourceWatcher(this.watcherActor, NETWORK_EVENT);
+  },
+
+  setNetworkThrottling(throttleData) {
+    if (!this.networkEventWatcher) {
+      throw new Error("Not listening for network events");
+    }
+
+    if (throttleData !== null) {
+      throttleData = {
+        latencyMean: throttleData.latency,
+        latencyMax: throttleData.latency,
+        downloadBPSMean: throttleData.downloadThroughput,
+        downloadBPSMax: throttleData.downloadThroughput,
+        uploadBPSMean: throttleData.uploadThroughput,
+        uploadBPSMax: throttleData.uploadThroughput,
+      };
+    }
+
+    const currentThrottleData = this.networkEventWatcher.getThrottleData();
+    if (this.isEqual(throttleData, currentThrottleData)) {
+      return;
+    }
+
+    if (this.defaultThrottleData === undefined) {
+      this.defaultThrottleData = currentThrottleData;
+    }
+
+    this.networkEventWatcher.setThrottleData(throttleData);
+  },
+
+  getNetworkThrottling() {
+    if (!this.networkEventWatcher) {
+      throw new Error("Not listening for network events");
+    }
+    const throttleData = this.networkEventWatcher.getThrottleData();
+    if (!throttleData) {
+      return null;
+    }
+    return {
+      downloadThroughput: throttleData.downloadBPSMax,
+      uploadThroughput: throttleData.uploadBPSMax,
+      latency: throttleData.latencyMax,
+    };
+  },
+
+  clearNetworkThrottling() {
+    if (this.defaultThrottleData !== undefined) {
+      this.setNetworkThrottling(this.defaultThrottleData);
+    }
   },
 
   /**

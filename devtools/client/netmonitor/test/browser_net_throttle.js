@@ -18,7 +18,7 @@ async function throttleTest(actuallyThrottle) {
   const { ACTIVITY_TYPE } = windowRequire(
     "devtools/client/netmonitor/src/constants"
   );
-  const { setPreferences, triggerActivity } = connector;
+  const { updateNetworkThrottling, triggerActivity } = connector;
   const { getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
   );
@@ -29,19 +29,15 @@ async function throttleTest(actuallyThrottle) {
   // of SIMPLE_URL in bytes.
   const size = actuallyThrottle ? 200 : 0;
 
-  const request = {
-    "NetworkMonitor.throttleData": {
-      latencyMean: 0,
-      latencyMax: 0,
-      downloadBPSMean: size,
-      downloadBPSMax: size,
-      uploadBPSMean: 10000,
-      uploadBPSMax: 10000,
-    },
+  const throttleProfile = {
+    latency: 0,
+    download: size,
+    upload: 10000,
   };
 
   info("sending throttle request");
-  await setPreferences(request);
+
+  await updateNetworkThrottling(true, throttleProfile);
 
   const wait = waitForNetworkEvents(monitor, 1);
   await triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);
