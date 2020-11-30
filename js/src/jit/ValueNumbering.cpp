@@ -797,10 +797,6 @@ bool ValueNumberer::visitDefinition(MDefinition* def) {
       sim->setGuardRangeBailoutsUnchecked();
     }
 
-    if (sim->bailoutKind() == BailoutKind::Unknown) {
-      sim->setBailoutKind(def->bailoutKind());
-    }
-
     if (DeadIfUnused(def)) {
       if (!discardDefsRecursively(def)) {
         return false;

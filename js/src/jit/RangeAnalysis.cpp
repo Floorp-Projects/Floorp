@@ -1953,7 +1953,7 @@ bool RangeAnalysis::analyzeLoop(MBasicBlock* header) {
     analyzeLoopPhi(iterationBound, *iter);
   }
 
-  if (!mir->compilingWasm() && !mir->outerInfo().hadBoundsCheckBailout()) {
+  if (!mir->compilingWasm()) {
     // Try to hoist any bounds checks from the loop using symbolic bounds.
 
     Vector<MBoundsCheck*, 0, JitAllocPolicy> hoistedChecks(alloc());
@@ -2281,14 +2281,12 @@ bool RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header,
   MBasicBlock* preLoop = header->loopPredecessor();
   MOZ_ASSERT(!preLoop->isMarked());
 
-  MDefinition* lowerTerm = ConvertLinearSum(alloc(), preLoop, lower->sum,
-                                            BailoutKind::HoistBoundsCheck);
+  MDefinition* lowerTerm = ConvertLinearSum(alloc(), preLoop, lower->sum);
   if (!lowerTerm) {
     return false;
   }
 
-  MDefinition* upperTerm = ConvertLinearSum(alloc(), preLoop, upper->sum,
-                                            BailoutKind::HoistBoundsCheck);
+  MDefinition* upperTerm = ConvertLinearSum(alloc(), preLoop, upper->sum);
   if (!upperTerm) {
     return false;
   }
@@ -2322,7 +2320,6 @@ bool RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header,
   lowerCheck->setMinimum(lowerConstant);
   lowerCheck->computeRange(alloc());
   lowerCheck->collectRangeInfoPreTrunc();
-  lowerCheck->setBailoutKind(BailoutKind::HoistBoundsCheck);
   preLoop->insertBefore(preLoop->lastIns(), lowerCheck);
 
   // Hoist the loop invariant upper bounds checks.
@@ -2339,7 +2336,6 @@ bool RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header,
     upperCheck->setMaximum(upperConstant);
     upperCheck->computeRange(alloc());
     upperCheck->collectRangeInfoPreTrunc();
-    upperCheck->setBailoutKind(BailoutKind::HoistBoundsCheck);
     preLoop->insertBefore(preLoop->lastIns(), upperCheck);
   }
 
@@ -3057,7 +3053,6 @@ static void AdjustTruncatedInputs(TempAllocator& alloc,
       } else {
         op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
       }
-      op->setBailoutKind(input->bailoutKind());
 
       if (truncated->isPhi()) {
         MBasicBlock* pred = block->getPredecessor(i);

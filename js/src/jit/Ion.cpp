@@ -1128,9 +1128,9 @@ bool OptimizeMIR(MIRGenerator* mir) {
   if (mir->optimizationInfo().licmEnabled()) {
     AutoTraceLog log(logger, TraceLogger_LICM);
     // LICM can hoist instructions from conditional branches and trigger
-    // bailouts. Disable it if a hoisted instruction has previously bailed
-    // out for this script.
-    if (!mir->outerInfo().hadLICMBailout()) {
+    // repeated bailouts. Disable it if this script is known to bailout
+    // frequently.
+    if (!mir->outerInfo().hadFrequentBailouts()) {
       if (!LICM(mir, graph)) {
         return false;
       }

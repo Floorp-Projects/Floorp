@@ -1594,9 +1594,6 @@ class TypeAnalyzer {
   bool specializeValidFloatOps();
   bool tryEmitFloatOperations();
 
-  bool shouldSpecializeOsrPhis() const;
-  MIRType guessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) const;
-
  public:
   TypeAnalyzer(MIRGenerator* mir, MIRGraph& graph) : mir(mir), graph(graph) {}
 
@@ -1605,7 +1602,7 @@ class TypeAnalyzer {
 
 } /* anonymous namespace */
 
-bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
+static bool ShouldSpecializeOsrPhis() {
   // [SMDOC] WarpBuilder OSR Phi Type Specialization
   //
   // IonBuilder does type specialization while building MIR. This includes
@@ -1643,7 +1640,7 @@ bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
   // OSR phi specialization happens in three steps:
   //
   // (1) Specialize phis but ignore MOsrValue phi inputs. In other words,
-  //     pretend the OSR entry block doesn't exist. See guessPhiType.
+  //     pretend the OSR entry block doesn't exist. See GuessPhiType.
   //
   // (2) Once phi specialization is done, look at the types of loop header phis
   //     and add these types to the corresponding preheader phis. This way, the
@@ -1660,12 +1657,11 @@ bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
   //
   //     * TypeAnalyzer::replaceRedundantPhi: adds a type guard for values that
   //       can't be unboxed (null/undefined/magic Values).
-  return JitOptions.warpBuilder && !mir->outerInfo().hadSpeculativePhiBailout();
+  return JitOptions.warpBuilder;
 }
 
 // Try to specialize this phi based on its non-cyclic inputs.
-MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
-                                   bool* hasInputsWithEmptyTypes) const {
+static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
 #ifdef DEBUG
   // Check that different magic constants aren't flowing together. Ignore
   // JS_OPTIMIZED_OUT, since an operand could be legitimately optimized
@@ -1704,16 +1700,15 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
       }
     }
 
-    // Ignore operands which we've never observed, unless this caused a
-    // bailout in a previous compilation of this script.
+    // Ignore operands which we've never observed.
     if (in->resultTypeSet() && in->resultTypeSet()->empty()) {
       *hasInputsWithEmptyTypes = true;
       continue;
     }
 
-    // See shouldSpecializeOsrPhis comment. This is the first step mentioned
+    // See ShouldSpecializeOsrPhis comment. This is the first step mentioned
     // there.
-    if (shouldSpecializeOsrPhis() && in->isOsrValue()) {
+    if (ShouldSpecializeOsrPhis() && in->isOsrValue()) {
       // TODO(post-Warp): simplify float32 handling in this function or (better)
       // make the float32 analysis a stand-alone optimization pass instead of
       // complicating type analysis. See bug 1655773.
@@ -1851,7 +1846,7 @@ bool TypeAnalyzer::specializePhis() {
       }
 
       bool hasInputsWithEmptyTypes;
-      MIRType type = guessPhiType(*phi, &hasInputsWithEmptyTypes);
+      MIRType type = GuessPhiType(*phi, &hasInputsWithEmptyTypes);
       phi->specialize(type);
       if (type == MIRType::None) {
         // We tried to guess the type but failed because all operands are
@@ -1880,7 +1875,7 @@ bool TypeAnalyzer::specializePhis() {
     }
 
     // When two phis have a cyclic dependency and inputs that have an empty
-    // typeset (which are ignored by guessPhiType), we may still have to
+    // typeset (which are ignored by GuessPhiType), we may still have to
     // specialize these to MIRType::Value.
     while (!phisWithEmptyInputTypes.empty()) {
       if (mir->shouldCancel("Specialize Phis (phisWithEmptyInputTypes)")) {
@@ -1897,8 +1892,8 @@ bool TypeAnalyzer::specializePhis() {
     }
   } while (!phiWorklist_.empty());
 
-  if (shouldSpecializeOsrPhis() && graph.osrBlock()) {
-    // See shouldSpecializeOsrPhis comment. This is the second step, propagating
+  if (ShouldSpecializeOsrPhis() && graph.osrBlock()) {
+    // See ShouldSpecializeOsrPhis comment. This is the second step, propagating
     // loop header phi types to preheader phis.
     MBasicBlock* preHeader = graph.osrPreHeaderBlock();
     MBasicBlock* header = preHeader->getSingleSuccessor();
@@ -1977,7 +1972,6 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
 
             MUnbox* unbox =
                 MUnbox::New(alloc(), in, MIRType::Double, MUnbox::Fallible);
-            unbox->setBailoutKind(BailoutKind::SpeculativePhi);
             in->block()->insertBefore(in->block()->lastIns(), unbox);
             replacement = MToFloat32::New(alloc(), in);
           }
@@ -1996,7 +1990,6 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
           replacement = MUnbox::New(alloc(), in, phiType, MUnbox::Fallible);
         }
 
-        replacement->setBailoutKind(BailoutKind::SpeculativePhi);
         in->block()->insertBefore(in->block()->lastIns(), replacement);
         phi->replaceOperand(i, replacement);
       }
@@ -2081,15 +2074,14 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
   block->insertBefore(*(block->begin()), c);
   phi->justReplaceAllUsesWith(c);
 
-  if (shouldSpecializeOsrPhis() && block == graph.osrPreHeaderBlock()) {
-    // See shouldSpecializeOsrPhis comment. This is part of the third step,
+  if (ShouldSpecializeOsrPhis() && block == graph.osrPreHeaderBlock()) {
+    // See ShouldSpecializeOsrPhis comment. This is part of the third step,
     // guard the incoming MOsrValue is of this type.
     MBasicBlock* osrBlock = graph.osrBlock();
     MOZ_ASSERT(block->getPredecessor(1) == osrBlock);
     MDefinition* def = phi->getOperand(1);
     if (def->isOsrValue()) {
       MGuardValue* guard = MGuardValue::New(alloc(), def, v);
-      guard->setBailoutKind(BailoutKind::SpeculativePhi);
       osrBlock->insertBefore(osrBlock->lastIns(), guard);
     } else {
       MOZ_ASSERT(def->isConstant());
@@ -4108,8 +4100,7 @@ void LinearSum::dump() const {
 }
 
 MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
-                                   const LinearSum& sum,
-                                   BailoutKind bailoutKind) {
+                                   const LinearSum& sum) {
   MDefinition* def = nullptr;
 
   for (size_t i = 0; i < sum.numTerms(); i++) {
@@ -4118,7 +4109,6 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
     if (term.scale == 1) {
       if (def) {
         def = MAdd::New(alloc, def, term.term, MIRType::Int32);
-        def->setBailoutKind(bailoutKind);
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       } else {
@@ -4131,7 +4121,6 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
         def->computeRange(alloc);
       }
       def = MSub::New(alloc, def, term.term, MIRType::Int32);
-      def->setBailoutKind(bailoutKind);
       block->insertAtEnd(def->toInstruction());
       def->computeRange(alloc);
     } else {
@@ -4139,12 +4128,10 @@ MDefinition* jit::ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
       MConstant* factor = MConstant::New(alloc, Int32Value(term.scale));
       block->insertAtEnd(factor);
       MMul* mul = MMul::New(alloc, term.term, factor, MIRType::Int32);
-      mul->setBailoutKind(bailoutKind);
       block->insertAtEnd(mul);
       mul->computeRange(alloc);
       if (def) {
         def = MAdd::New(alloc, def, mul, MIRType::Int32);
-        def->setBailoutKind(bailoutKind);
         block->insertAtEnd(def->toInstruction());
         def->computeRange(alloc);
       } else {
@@ -4953,7 +4940,7 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
 
       MIRType type = unbox->type();
       MUnbox::Mode mode = unbox->mode();
-      BailoutKind bailoutKind = unbox->bailoutKind();
+      BailoutKind bailoutKind = unbox->bailoutKindUnchecked();
 
       MInstruction* replacement;
       switch (load->op()) {

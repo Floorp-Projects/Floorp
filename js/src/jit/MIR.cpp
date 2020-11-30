@@ -3068,7 +3068,6 @@ MDefinition* MPow::foldsConstantPower(TempAllocator& alloc) {
 
   auto multiply = [this, &alloc](MDefinition* lhs, MDefinition* rhs) {
     MMul* mul = MMul::New(alloc, lhs, rhs, type());
-    mul->setBailoutKind(bailoutKind());
 
     // Multiplying the same number can't yield negative zero.
     mul->setCanBeNegativeZero(lhs != rhs && canBeNegativeZero());
@@ -6946,7 +6945,8 @@ static MInstruction* AddGroupGuard(TempAllocator& alloc, MBasicBlock* current,
   MInstruction* guard;
 
   if (key->isGroup()) {
-    guard = MGuardObjectGroup::New(alloc, obj, key->group(), bailOnEquality);
+    guard = MGuardObjectGroup::New(alloc, obj, key->group(), bailOnEquality,
+                                   BailoutKind::ObjectIdentityOrTypeGuard);
   } else {
     MConstant* singletonConst =
         MConstant::NewConstraintlessObject(alloc, key->singleton());
