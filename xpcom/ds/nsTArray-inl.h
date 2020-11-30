@@ -258,29 +258,31 @@ void nsTArray_base<Alloc, RelocationStrategy>::ShrinkCapacity(
     return;
   }
 
-  size_type size = sizeof(Header) + length * aElemSize;
-  void* ptr;
+  size_type newSize = sizeof(Header) + length * aElemSize;
 
+  Header* newHeader;
   if (!RelocationStrategy::allowRealloc) {
     // Malloc() and copy.
-    ptr = static_cast<Header*>(nsTArrayFallibleAllocator::Malloc(size));
-    if (!ptr) {
+    newHeader =
+        static_cast<Header*>(nsTArrayFallibleAllocator::Malloc(newSize));
+    if (!newHeader) {
       return;
     }
 
     RelocationStrategy::RelocateNonOverlappingRegionWithHeader(
-        ptr, mHdr, Length(), aElemSize);
+        newHeader, mHdr, Length(), aElemSize);
 
     nsTArrayFallibleAllocator::Free(mHdr);
   } else {
     // Realloc() existing data.
-    ptr = nsTArrayFallibleAllocator::Realloc(mHdr, size);
-    if (!ptr) {
+    newHeader =
+        static_cast<Header*>(nsTArrayFallibleAllocator::Realloc(mHdr, newSize));
+    if (!newHeader) {
       return;
     }
   }
 
-  mHdr = static_cast<Header*>(ptr);
+  mHdr = newHeader;
   mHdr->mCapacity = length;
 }
 
