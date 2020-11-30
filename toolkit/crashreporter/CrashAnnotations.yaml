@@ -740,6 +740,9 @@ QuotaManagerShutdownTimeout:
 
     The status of individual objects is constructed by taking selected object
     properties. Properties which contain origin strings are anonymized.
+
+    In addition, intermediate steps are recorded for change events after shutdown
+    started. These include the time difference and the type of object.
   type: string
   ping: true
 
