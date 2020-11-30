@@ -12602,6 +12602,29 @@ class MGuardIndexIsValidUpdateOrAdd
   }
 };
 
+// Add or update a sparse element of an array object. It's allowed for the
+// sparse element to be already present on the array. It may also be an accessor
+// property, so this instruction is always marked as effectful.
+class MCallAddOrUpdateSparseElement
+    : public MTernaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>,
+                       BoxPolicy<2>>::Data {
+  bool strict_;
+
+  MCallAddOrUpdateSparseElement(MDefinition* obj, MDefinition* index,
+                                MDefinition* value, bool strict)
+      : MTernaryInstruction(classOpcode, obj, index, value), strict_(strict) {}
+
+ public:
+  INSTRUCTION_HEADER(CallAddOrUpdateSparseElement)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, index), (2, value))
+
+  bool strict() const { return strict_; }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.

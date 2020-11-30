@@ -5545,6 +5545,24 @@ void LIRGenerator::visitGuardIndexIsValidUpdateOrAdd(
   redefine(ins, index);
 }
 
+void LIRGenerator::visitCallAddOrUpdateSparseElement(
+    MCallAddOrUpdateSparseElement* ins) {
+  MDefinition* object = ins->object();
+  MOZ_ASSERT(object->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  MDefinition* value = ins->value();
+  MOZ_ASSERT(value->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LCallAddOrUpdateSparseElement(
+      useRegisterAtStart(object), useRegisterAtStart(index),
+      useBoxAtStart(value));
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

@@ -1153,6 +1153,18 @@ bool WarpCacheIRTranspiler::emitGuardIndexIsValidUpdateOrAdd(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitCallAddOrUpdateSparseElementHelper(
+    ObjOperandId objId, Int32OperandId idId, ValOperandId rhsId, bool strict) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* id = getOperand(idId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MCallAddOrUpdateSparseElement::New(alloc(), obj, id, rhs, strict);
+  addEffectful(ins);
+
+  return resumeAfter(ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardTagNotEqual(ValueTagOperandId lhsId,
                                                  ValueTagOperandId rhsId) {
   MDefinition* lhs = getOperand(lhsId);
