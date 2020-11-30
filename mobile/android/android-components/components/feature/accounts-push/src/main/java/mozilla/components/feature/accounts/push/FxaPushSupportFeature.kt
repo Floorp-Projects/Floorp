@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.push.exceptions.SubscriptionException
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
@@ -227,11 +228,10 @@ internal class ConstellationObserver(
 
         val oldEndpoint = constellation.currentDevice?.subscription?.endpoint
         if (subscription.endpoint == oldEndpoint) {
-            val exception = IllegalStateException(
+            val exception = SubscriptionException(
                 "New push endpoint matches existing one",
                 Throwable(
-                    "New endpoint: ${subscription.endpoint.redactPartialUri()}\n" +
-                    "Old endpoint: ${oldEndpoint.redactPartialUri()}"
+                    "Endpoint: ${subscription.endpoint.redactPartialUri()}"
                 )
             )
 
@@ -246,42 +246,33 @@ internal class ConstellationObserver(
     }
 
     internal fun onSubscribeError(e: Exception) {
-        logger.warn("Re-subscribing failed; FxA push events will not be received.", e)
-        breadcrumb(
-            exception = e,
-            message = "Re-subscribing to failed FxA push after subscriptionExpired"
-        )
+        val errorMessage = "Re-subscribing failed; FxA push events will not be received."
+
+        logger.warn(errorMessage, e)
+        crashReporter?.submitCaughtException(SubscriptionException(errorMessage, e))
     }
 
     internal fun onUnsubscribeError(e: Exception) {
-        logger.warn("Un-subscribing failed; subscribe may return the same endpoint", e)
-        breadcrumb(
-            exception = e,
-            message = "Un-subscribing to failed FxA push after subscriptionExpired"
+        val errorMessage = "Un-subscribing to failed FxA push after subscriptionExpired"
+
+        logger.warn(errorMessage, e)
+        crashReporter?.recordCrashBreadcrumb(
+            Breadcrumb(
+                category = ConstellationObserver::class.java.simpleName,
+                message = errorMessage,
+                data = mapOf(
+                    "exception" to e.javaClass.name,
+                    "message" to e.message.orEmpty()
+                )
+            )
         )
     }
 
-    internal fun onUnsubscribeResult(success: Boolean) {
+    private fun onUnsubscribeResult(success: Boolean) {
         logger.info("Un-subscribing successful: $success")
         if (success) {
             logger.info("Subscribe call should give you a new endpoint.")
         }
-    }
-
-    private fun breadcrumb(
-        exception: Exception,
-        message: String
-    ) {
-        crashReporter?.recordCrashBreadcrumb(
-            Breadcrumb(
-                category = ConstellationObserver::class.java.simpleName,
-                message = message,
-                data = mapOf(
-                    "exception" to exception.javaClass.name,
-                    "message" to exception.message.orEmpty()
-                )
-            )
-        )
     }
 }
 

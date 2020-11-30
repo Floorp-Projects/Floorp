@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.setMain
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.push.exceptions.SubscriptionException
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceConstellation
@@ -146,7 +147,7 @@ class ConstellationObserverTest {
 
         observer.onSubscribeError(mock())
 
-        verify(crashReporter).recordCrashBreadcrumb(any())
+        verify(crashReporter).submitCaughtException(any<SubscriptionException>())
     }
 
     @Test
