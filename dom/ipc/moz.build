@@ -71,8 +71,6 @@ EXPORTS.mozilla.dom += [
     "URLClassifierChild.h",
     "URLClassifierParent.h",
     "UserActivationIPCUtils.h",
-    "VsyncChild.h",
-    "VsyncParent.h",
     "WindowGlobalActor.h",
     "WindowGlobalChild.h",
     "WindowGlobalParent.h",
@@ -132,8 +130,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "ContentChild.cpp",
     "ProcessHangMonitor.cpp",
-    "VsyncChild.cpp",
-    "VsyncParent.cpp",
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
@@ -159,7 +155,6 @@ IPDL_SOURCES += [
     "PURLClassifier.ipdl",
     "PURLClassifierInfo.ipdlh",
     "PURLClassifierLocal.ipdl",
-    "PVsync.ipdl",
     "PWindowGlobal.ipdl",
     "ServiceWorkerConfiguration.ipdlh",
     "WindowGlobalTypes.ipdlh",
