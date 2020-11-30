@@ -1751,6 +1751,18 @@ bool WarpCacheIRTranspiler::emitLoadDenseElementHoleExistsResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitCallObjectHasSparseElementResult(
+    ObjOperandId objId, Int32OperandId indexId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* ins = MCallObjectHasSparseElement::New(alloc(), obj, index);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
     ObjOperandId objId, Int32OperandId indexId) {
   MDefinition* obj = getOperand(objId);
