@@ -8284,6 +8284,20 @@ class LGuardHasGetterSetter : public LCallInstructionHelper<0, 1, 2> {
   MGuardHasGetterSetter* mir() const { return mir_->toGuardHasGetterSetter(); }
 };
 
+class LGuardIsExtensible : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(GuardIsExtensible)
+
+  LGuardIsExtensible(const LAllocation& object, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
