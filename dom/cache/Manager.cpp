@@ -267,6 +267,8 @@ class Manager::Factory {
 
     MOZ_ALWAYS_TRUE(sFactory->mManagerList.RemoveElement(&aManager));
 
+    CacheQuotaClient::Get()->MaybeRecordShutdownStep("Manager removed"_ns);
+
     // clean up the factory singleton if there are no more managers
     MaybeDestroyInstance();
   }
@@ -327,6 +329,36 @@ class Manager::Factory {
   static bool IsShutdownAllComplete() {
     mozilla::ipc::AssertIsOnBackgroundThread();
     return !sFactory;
+  }
+
+  static nsCString GetShutdownStatus() {
+    mozilla::ipc::AssertIsOnBackgroundThread();
+
+    nsCString data;
+
+    if (sFactory && !sFactory->mManagerList.IsEmpty()) {
+      data.Append(
+          "Managers: "_ns +
+          IntToCString(static_cast<uint64_t>(sFactory->mManagerList.Length())) +
+          " ("_ns);
+
+      for (const auto* const manager :
+           sFactory->mManagerList.NonObservingRange()) {
+        data.Append(quota::AnonymizedOriginString(
+            manager->GetManagerId().QuotaOrigin()));
+
+        data.AppendLiteral(": ");
+
+        data.Append(manager->GetState() == State::Open ? "Open"_ns
+                                                       : "Closing"_ns);
+
+        data.AppendLiteral(", ");
+      }
+
+      data.AppendLiteral(" )");
+    }
+
+    return data;
   }
 
  private:
@@ -1563,6 +1595,13 @@ bool Manager::IsShutdownAllComplete() {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   return Factory::IsShutdownAllComplete();
+}
+
+// static
+nsCString Manager::GetShutdownStatus() {
+  mozilla::ipc::AssertIsOnBackgroundThread();
+
+  return Factory::GetShutdownStatus();
 }
 
 // static

@@ -732,6 +732,9 @@ QuotaManagerShutdownTimeout:
     In the case of LocalStorage, objects are divided into three groups:
     PrepareDatastoreOperations, Datastores and LiveDatabases.
 
+    In the case of Cache API, objects are in one group only:
+    Managers.
+
     Each group is reported separately and contains the number of objects in the
     group and the status of individual objects in the group (duplicate entries
     are removed):
