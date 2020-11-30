@@ -139,8 +139,7 @@ bool LRecoverInfo::OperandIter::canOptimizeOutIfUnused() {
 #endif
 
 #ifdef JS_NUNBOX32
-LSnapshot* LIRGeneratorShared::buildSnapshot(LInstruction* ins,
-                                             MResumePoint* rp,
+LSnapshot* LIRGeneratorShared::buildSnapshot(MResumePoint* rp,
                                              BailoutKind kind) {
   LRecoverInfo* recoverInfo = getRecoverInfo(rp);
   if (!recoverInfo) {
@@ -201,8 +200,7 @@ LSnapshot* LIRGeneratorShared::buildSnapshot(LInstruction* ins,
 
 #elif JS_PUNBOX64
 
-LSnapshot* LIRGeneratorShared::buildSnapshot(LInstruction* ins,
-                                             MResumePoint* rp,
+LSnapshot* LIRGeneratorShared::buildSnapshot(MResumePoint* rp,
                                              BailoutKind kind) {
   LRecoverInfo* recoverInfo = getRecoverInfo(rp);
   if (!recoverInfo) {
@@ -260,7 +258,7 @@ void LIRGeneratorShared::assignSnapshot(LInstruction* ins, BailoutKind kind) {
     kind = BailoutKind::GenericIon;
   }
 
-  LSnapshot* snapshot = buildSnapshot(ins, lastResumePoint_, kind);
+  LSnapshot* snapshot = buildSnapshot(lastResumePoint_, kind);
   if (!snapshot) {
     abort(AbortReason::Alloc, "buildSnapshot failed");
     return;
@@ -278,7 +276,7 @@ void LIRGeneratorShared::assignSafepoint(LInstruction* ins, MInstruction* mir,
 
   MResumePoint* mrp =
       mir->resumePoint() ? mir->resumePoint() : lastResumePoint_;
-  LSnapshot* postSnapshot = buildSnapshot(ins, mrp, kind);
+  LSnapshot* postSnapshot = buildSnapshot(mrp, kind);
   if (!postSnapshot) {
     abort(AbortReason::Alloc, "buildSnapshot failed");
     return;
