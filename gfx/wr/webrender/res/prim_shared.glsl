@@ -17,6 +17,7 @@
 
 uniform sampler2DArray sPrevPassAlpha;
 uniform sampler2DArray sPrevPassColor;
+uniform sampler2DArray sClipMask;
 
 vec2 clamp_rect(vec2 pt, RectWithSize rect) {
     return clamp(pt, rect.p0, rect.p0 + rect.size);
@@ -271,7 +272,7 @@ float do_clip() {
     // is still interpolated and becomes a subject of precision-caused
     // fluctuations, see https://bugzilla.mozilla.org/show_bug.cgi?id=1491911
     ivec3 tc = ivec3(mask_uv, vClipMaskUv.z + 0.5);
-    return texelFetch(sPrevPassAlpha, tc, 0).r;
+    return texelFetch(sClipMask, tc, 0).r;
 }
 
 #ifdef WR_FEATURE_DITHERING
