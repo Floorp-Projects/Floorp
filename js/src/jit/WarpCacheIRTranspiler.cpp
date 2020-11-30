@@ -1142,6 +1142,17 @@ bool WarpCacheIRTranspiler::emitGuardIndexGreaterThanDenseInitLength(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIndexIsValidUpdateOrAdd(
+    ObjOperandId objId, Int32OperandId indexId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* ins = MGuardIndexIsValidUpdateOrAdd::New(alloc(), obj, index);
+  add(ins);
+  setOperand(indexId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardTagNotEqual(ValueTagOperandId lhsId,
                                                  ValueTagOperandId rhsId) {
   MDefinition* lhs = getOperand(lhsId);

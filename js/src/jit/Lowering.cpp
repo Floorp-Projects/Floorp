@@ -5527,6 +5527,24 @@ void LIRGenerator::visitGuardIndexGreaterThanDenseInitLength(
   redefine(ins, index);
 }
 
+void LIRGenerator::visitGuardIndexIsValidUpdateOrAdd(
+    MGuardIndexIsValidUpdateOrAdd* ins) {
+  MDefinition* object = ins->object();
+  MOZ_ASSERT(object->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  LDefinition spectreTemp =
+      BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
+
+  auto* guard = new (alloc()) LGuardIndexIsValidUpdateOrAdd(
+      useRegister(object), useRegister(index), temp(), spectreTemp);
+  assignSnapshot(guard, ins->bailoutKind());
+  add(guard, ins);
+  redefine(ins, index);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

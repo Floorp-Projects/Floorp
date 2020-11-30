@@ -8332,6 +8332,27 @@ class LGuardIndexGreaterThanDenseInitLength
   const LDefinition* spectreTemp() { return getTemp(1); }
 };
 
+class LGuardIndexIsValidUpdateOrAdd : public LInstructionHelper<0, 2, 2> {
+ public:
+  LIR_HEADER(GuardIndexIsValidUpdateOrAdd)
+
+  LGuardIndexIsValidUpdateOrAdd(const LAllocation& object,
+                                const LAllocation& index,
+                                const LDefinition& temp,
+                                const LDefinition& spectreTemp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+    setOperand(1, index);
+    setTemp(0, temp);
+    setTemp(1, spectreTemp);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LDefinition* temp() { return getTemp(0); }
+  const LDefinition* spectreTemp() { return getTemp(1); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
