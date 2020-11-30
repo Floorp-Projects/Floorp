@@ -292,6 +292,7 @@ TEST_VARIANTS = {
         "replace": {
             "run-on-projects": {
                 "by-test-platform": {
+                    "linux.*-64.*": ["trunk"],
                     "mac.*": ["trunk"],
                     "win.*": ["trunk"],
                     "default": [],
