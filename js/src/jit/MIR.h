@@ -9173,6 +9173,27 @@ class MGuardNullProto : public MUnaryInstruction,
   }
 };
 
+// Guard the object is a native object.
+class MGuardIsNativeObject : public MUnaryInstruction,
+                             public SingleObjectPolicy::Data {
+  explicit MGuardIsNativeObject(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardIsNativeObject)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Guard the object is a proxy.
 class MGuardIsProxy : public MUnaryInstruction,
                       public SingleObjectPolicy::Data {
