@@ -162,7 +162,7 @@ add_task(async _ => {
 
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#input",
-    { type: "mouseup" },
+    {},
     tab.linkedBrowser
   );
 
@@ -281,7 +281,7 @@ add_task(async _ => {
 
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#input",
-    { type: "mouseup" },
+    {},
     tab.linkedBrowser
   );
 

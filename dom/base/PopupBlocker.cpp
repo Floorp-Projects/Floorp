@@ -27,10 +27,6 @@ static uint32_t sPopupStatePusherCount = 0;
 
 static TimeStamp sLastAllowedExternalProtocolIFrameTimeStamp;
 
-// This token is by default set to false. When a popup/filePicker is shown, it
-// is set to true.
-static bool sUnusedPopupToken = false;
-
 static uint32_t sOpenPopupSpamCount = 0;
 
 void PopupAllowedEventsChanged() {
@@ -132,31 +128,12 @@ uint32_t PopupBlocker::GetPopupPermission(nsIPrincipal* aPrincipal) {
 }
 
 /* static */
-bool PopupBlocker::TryUsePopupOpeningToken(nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(sPopupStatePusherCount);
-
-  if (!sUnusedPopupToken) {
-    sUnusedPopupToken = true;
-    return true;
-  }
-
-  if (aPrincipal && aPrincipal->IsSystemPrincipal()) {
-    return true;
-  }
-
-  return false;
-}
-
-/* static */
 void PopupBlocker::PopupStatePusherCreated() { ++sPopupStatePusherCount; }
 
 /* static */
 void PopupBlocker::PopupStatePusherDestroyed() {
   MOZ_ASSERT(sPopupStatePusherCount);
-
-  if (!--sPopupStatePusherCount) {
-    sUnusedPopupToken = false;
-  }
+  --sPopupStatePusherCount;
 }
 
 // static
