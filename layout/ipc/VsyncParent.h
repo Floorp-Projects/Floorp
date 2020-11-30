@@ -4,51 +4,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ipc_VsyncParent_h
-#define mozilla_dom_ipc_VsyncParent_h
+#ifndef mozilla_layout_ipc_VsyncParent_h
+#define mozilla_layout_ipc_VsyncParent_h
 
-#include "mozilla/dom/PVsyncParent.h"
+#include "mozilla/layout/PVsyncParent.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
-#include "VsyncSource.h"
 
 class nsIThread;
 
-namespace mozilla::dom {
+namespace mozilla {
+
+namespace ipc {
+class BackgroundParentImpl;
+}  // namespace ipc
+
+namespace layout {
 
 // Use PBackground thread in the main process to send vsync notifications to
 // content process. This actor will be released when its parent protocol calls
 // DeallocPVsyncParent().
 class VsyncParent final : public PVsyncParent, public VsyncObserver {
+  friend class mozilla::ipc::BackgroundParentImpl;
   friend class PVsyncParent;
 
- public:
-  VsyncParent();
-  void UpdateVsyncSource(const RefPtr<gfx::VsyncSource>& aVsyncSource);
-
  private:
-  virtual ~VsyncParent() = default;
+  static already_AddRefed<VsyncParent> Create();
+
+  VsyncParent();
+  virtual ~VsyncParent();
 
   virtual bool NotifyVsync(const VsyncEvent& aVsync) override;
-  virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
+  mozilla::ipc::IPCResult RecvRequestVsyncRate();
 
   mozilla::ipc::IPCResult RecvObserve();
   mozilla::ipc::IPCResult RecvUnobserve();
+  virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   void DispatchVsyncEvent(const VsyncEvent& aVsync);
-  void UpdateVsyncRate();
-
-  bool IsOnInitialThread();
-  void AssertIsOnInitialThread();
 
   bool mObservingVsync;
   bool mDestroyed;
-  nsCOMPtr<nsIThread> mInitialThread;
-  RefPtr<gfx::VsyncSource> mVsyncSource;
+  nsCOMPtr<nsIThread> mBackgroundThread;
   RefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
 };
 
-}  // namespace mozilla::dom
+}  // namespace layout
+}  // namespace mozilla
 
-#endif  // mozilla_dom_ipc_VsyncParent_h
+#endif  // mozilla_layout_ipc_VsyncParent_h
