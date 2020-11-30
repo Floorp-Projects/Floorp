@@ -313,6 +313,11 @@ add_task(async function test_remove_all_dialog_remove_logins() {
       "Waiting for no logins view since all logins should be deleted"
     );
     await ContentTaskUtils.waitForCondition(
+      () =>
+        !content.document.documentElement.classList.contains("login-selected"),
+      "Waiting for the FxA Sync illustration to reappear"
+    );
+    await ContentTaskUtils.waitForCondition(
       () => loginList.classList.contains("no-logins"),
       "Waiting for login-list to be in no logins view as all logins should be deleted"
     );
