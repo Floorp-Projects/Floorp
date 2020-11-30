@@ -237,8 +237,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                            TypedOrValueRegister value,
-                           const ConstantOrRegister& id,
-                           TypedOrValueRegister output, Register maybeTemp);
+                           const ConstantOrRegister& id, ValueOperand output);
   void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                            Register objReg, Register temp,
                            const ConstantOrRegister& id,

@@ -5190,16 +5190,16 @@ class LCallGetIntrinsicValue : public LCallInstructionHelper<BOX_PIECES, 0, 0> {
   LCallGetIntrinsicValue() : LCallInstructionHelper(classOpcode) {}
 };
 
-class LGetPropSuperCacheV
+class LGetPropSuperCache
     : public LInstructionHelper<BOX_PIECES, 1 + 2 * BOX_PIECES, 0> {
  public:
-  LIR_HEADER(GetPropSuperCacheV)
+  LIR_HEADER(GetPropSuperCache)
 
   static const size_t Receiver = 1;
   static const size_t Id = Receiver + BOX_PIECES;
 
-  LGetPropSuperCacheV(const LAllocation& obj, const LBoxAllocation& receiver,
-                      const LBoxAllocation& id)
+  LGetPropSuperCache(const LAllocation& obj, const LBoxAllocation& receiver,
+                     const LBoxAllocation& id)
       : LInstructionHelper(classOpcode) {
     setOperand(0, obj);
     setBoxOperand(Receiver, receiver);
@@ -5211,43 +5211,20 @@ class LGetPropSuperCacheV
 
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
-class LGetPropertyCacheV
-    : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 1> {
+class LGetPropertyCache
+    : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0> {
  public:
-  LIR_HEADER(GetPropertyCacheV)
+  LIR_HEADER(GetPropertyCache)
 
   static const size_t Value = 0;
   static const size_t Id = BOX_PIECES;
 
-  LGetPropertyCacheV(const LBoxAllocation& value, const LBoxAllocation& id,
-                     const LDefinition& temp)
+  LGetPropertyCache(const LBoxAllocation& value, const LBoxAllocation& id)
       : LInstructionHelper(classOpcode) {
     setBoxOperand(Value, value);
     setBoxOperand(Id, id);
-    setTemp(0, temp);
   }
   const MGetPropertyCache* mir() const { return mir_->toGetPropertyCache(); }
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Patchable jump to stubs generated for a GetProperty cache, which loads a
-// value of a known type, possibly into an FP register.
-class LGetPropertyCacheT : public LInstructionHelper<1, 2 * BOX_PIECES, 1> {
- public:
-  LIR_HEADER(GetPropertyCacheT)
-
-  static const size_t Value = 0;
-  static const size_t Id = BOX_PIECES;
-
-  LGetPropertyCacheT(const LBoxAllocation& value, const LBoxAllocation& id,
-                     const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Value, value);
-    setBoxOperand(Id, id);
-    setTemp(0, temp);
-  }
-  const MGetPropertyCache* mir() const { return mir_->toGetPropertyCache(); }
-  const LDefinition* temp() { return getTemp(0); }
 };
 
 // Emit code to load a boxed value from an object's slots if its shape matches
