@@ -66,9 +66,13 @@ XUL <splitter> collapsing tests
     }
 
     var splitter;
-    async function runTests(rtl, splitterId) {
+    async function runTests(rtl, splitterId, reordersChildren = false) {
       splitter = document.getElementById(splitterId);
       await runPass(rtl, false, false);
+      if (reordersChildren) {
+        // FIXME: Collapsible splitters with reordered children are borked.
+        return;
+      }
       splitter.setAttribute("collapse", "before");
       await runPass(rtl, rtl, !rtl);
       splitter.setAttribute("collapse", "after");
@@ -80,6 +84,8 @@ XUL <splitter> collapsing tests
     async function runAllTests() {
       await runTests(false, "ltr-splitter");
       await runTests(true, "rtl-splitter");
+      await runTests(false, "ltr-splitter-reordered", true);
+      await runTests(true, "rtl-splitter-reordered", true);
       SimpleTest.finish();
     }
 
@@ -96,6 +102,18 @@ XUL <splitter> collapsing tests
     <vbox style="width: 100px; height: 300px;" flex="1"/>
     <splitter id="rtl-splitter"/>
     <vbox style="width: 100px; height: 300px;" flex="1"/>
+  </hbox>
+
+  <hbox style="max-width: 200px; height: 300px; direction: ltr;">
+    <vbox style="width: 100px; height: 300px; -moz-box-ordinal-group: 2" flex="1"/>
+    <splitter id="ltr-splitter-reordered"/>
+    <vbox style="width: 100px; height: 300px; -moz-box-ordinal-group: 0" flex="1"/>
+  </hbox>
+
+  <hbox style="max-width: 200px; height: 300px; direction: rtl;">
+    <vbox style="width: 100px; height: 300px; -moz-box-ordinal-group: 2" flex="1"/>
+    <splitter id="rtl-splitter-reordered"/>
+    <vbox style="width: 100px; height: 300px; -moz-box-ordinal-group: 0" flex="1"/>
   </hbox>
 
 </window>
