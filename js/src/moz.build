@@ -425,7 +425,6 @@ UNIFIED_SOURCES += [
     "vm/Time.cpp",
     "vm/ToSource.cpp",
     "vm/TypedArrayObject.cpp",
-    "vm/TypeInference.cpp",
     "vm/UbiNode.cpp",
     "vm/UbiNodeCensus.cpp",
     "vm/UbiNodeShortestPaths.cpp",
