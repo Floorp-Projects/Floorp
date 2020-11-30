@@ -895,6 +895,35 @@ add_task(async function test_privacy_other_prefs() {
     }
   );
 
+  const HTTPS_ONLY_PREF_NAME = "dom.security.https_only_mode";
+  const HTTPS_ONLY_PBM_PREF_NAME = "dom.security.https_only_mode_pbm";
+
+  Preferences.set(HTTPS_ONLY_PREF_NAME, false);
+  Preferences.set(HTTPS_ONLY_PBM_PREF_NAME, false);
+  await testGetting("network.httpsOnlyMode", {}, "never");
+
+  Preferences.set(HTTPS_ONLY_PREF_NAME, true);
+  Preferences.set(HTTPS_ONLY_PBM_PREF_NAME, false);
+  await testGetting("network.httpsOnlyMode", {}, "always");
+
+  Preferences.set(HTTPS_ONLY_PREF_NAME, false);
+  Preferences.set(HTTPS_ONLY_PBM_PREF_NAME, true);
+  await testGetting("network.httpsOnlyMode", {}, "private_browsing");
+
+  // Please note that if https_only_mode = true, then
+  // https_only_mode_pbm has no effect.
+  Preferences.set(HTTPS_ONLY_PREF_NAME, true);
+  Preferences.set(HTTPS_ONLY_PBM_PREF_NAME, true);
+  await testGetting("network.httpsOnlyMode", {}, "always");
+
+  // trying to "set" should have no effect when readonly!
+  extension.sendMessage("set", { value: "never" }, "network.httpsOnlyMode");
+  let readOnlyData = await extension.awaitMessage("settingData");
+  equal(readOnlyData.value, "always");
+
+  equal(Preferences.get(HTTPS_ONLY_PREF_NAME), true);
+  equal(Preferences.get(HTTPS_ONLY_PBM_PREF_NAME), true);
+
   await extension.unload();
 
   await promiseShutdownManager();
