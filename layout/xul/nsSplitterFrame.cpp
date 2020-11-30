@@ -23,6 +23,7 @@
 #include "nsFrameList.h"
 #include "nsHTMLParts.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "nsBoxLayoutState.h"
 #include "nsContainerFrame.h"
 #include "nsContentCID.h"
@@ -561,9 +562,13 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   mChildInfosBeforeCount = 0;
   mChildInfosAfterCount = 0;
 
-  nsIFrame* childBox = nsIFrame::GetChildXULBox(mParentBox);
-
-  while (childBox) {
+  CSSOrderAwareFrameIterator iter(
+      mParentBox, layout::kPrincipalList,
+      CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      CSSOrderAwareFrameIterator::OrderState::Unknown,
+      CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* childBox = iter.get();
     nsIContent* content = childBox->GetContent();
 
     // skip over any splitters
@@ -622,8 +627,6 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
         }
       }
     }
-
-    childBox = nsIFrame::GetNextXULBox(childBox);
     count++;
   }
 
@@ -793,7 +796,7 @@ static nsIFrame* GetChildBoxForContent(nsIFrame* aParentBox,
                                        nsIContent* aContent) {
   nsIFrame* childBox = nsIFrame::GetChildXULBox(aParentBox);
 
-  while (nullptr != childBox) {
+  while (childBox) {
     if (childBox->GetContent() == aContent) {
       return childBox;
     }
