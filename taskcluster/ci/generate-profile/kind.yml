@@ -94,7 +94,7 @@ jobs:
             platform: android-4-0-armv7-api16/pgo
         worker-type: t-linux-xlarge-pgo
         worker:
-            max-run-time: 1800
+            max-run-time: 2700
             docker-image: {in-tree: ubuntu1804-test}
             env:
                 WORKING_DIR: "/builds/worker"
