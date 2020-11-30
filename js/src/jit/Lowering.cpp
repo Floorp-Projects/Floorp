@@ -3185,16 +3185,13 @@ void LIRGenerator::visitInArray(MInArray* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Boolean);
 
-  LAllocation object;
+  auto* lir = new (alloc()) LInArray(useRegister(ins->elements()),
+                                     useRegisterOrConstant(ins->index()),
+                                     useRegister(ins->initLength()));
   if (ins->needsNegativeIntCheck()) {
-    object = useRegister(ins->object());
+    assignSnapshot(lir, ins->bailoutKind());
   }
-
-  LInArray* lir = new (alloc()) LInArray(
-      useRegister(ins->elements()), useRegisterOrConstant(ins->index()),
-      useRegister(ins->initLength()), object);
   define(lir, ins);
-  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitGuardElementNotHole(MGuardElementNotHole* ins) {

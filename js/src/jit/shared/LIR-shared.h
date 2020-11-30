@@ -4132,23 +4132,21 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0> {
   const LAllocation* index() { return getOperand(1); }
 };
 
-class LInArray : public LInstructionHelper<1, 4, 0> {
+class LInArray : public LInstructionHelper<1, 3, 0> {
  public:
   LIR_HEADER(InArray)
 
   LInArray(const LAllocation& elements, const LAllocation& index,
-           const LAllocation& initLength, const LAllocation& object)
+           const LAllocation& initLength)
       : LInstructionHelper(classOpcode) {
     setOperand(0, elements);
     setOperand(1, index);
     setOperand(2, initLength);
-    setOperand(3, object);
   }
   const MInArray* mir() const { return mir_->toInArray(); }
   const LAllocation* elements() { return getOperand(0); }
   const LAllocation* index() { return getOperand(1); }
   const LAllocation* initLength() { return getOperand(2); }
-  const LAllocation* object() { return getOperand(3); }
 };
 
 class LGuardElementNotHole : public LInstructionHelper<0, 2, 0> {
