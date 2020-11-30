@@ -131,7 +131,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * True if we're on aDriver's thread, or if we're on mGraphRunner's thread
    * and mGraphRunner is currently run by aDriver.
    */
-  bool InDriverIteration(GraphDriver* aDriver) override;
+  bool InDriverIteration(const GraphDriver* aDriver) const override;
 #endif
 
   /**
