@@ -16,80 +16,13 @@
 #include "MockCubeb.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "WaitFor.h"
 
 #define DRIFT_BUFFERING_PREF "media.clockdrift.buffering"
 
 using namespace mozilla;
 
 namespace {
-/**
- * Waits for an occurrence of aEvent on the current thread (by blocking it,
- * except tasks added to the event loop may run) and returns the event's
- * templated value, if it's non-void.
- *
- * The caller must be wary of eventloop issues, in
- * particular cases where we rely on a stable state runnable, but there is never
- * a task to trigger stable state. In such cases it is the responsibility of the
- * caller to create the needed tasks, as JS would. A noteworthy API that relies
- * on stable state is MediaTrackGraph::GetInstance.
- */
-template <typename T>
-T WaitFor(MediaEventSource<T>& aEvent) {
-  Maybe<T> value;
-  MediaEventListener listener = aEvent.Connect(
-      AbstractThread::GetCurrent(), [&](T aValue) { value = Some(aValue); });
-  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return value.isSome(); });
-  listener.Disconnect();
-  return value.value();
-}
-
-/**
- * Specialization of WaitFor<T> for void.
- */
-void WaitFor(MediaEventSource<void>& aEvent) {
-  bool done = false;
-  MediaEventListener listener =
-      aEvent.Connect(AbstractThread::GetCurrent(), [&] { done = true; });
-  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return done; });
-  listener.Disconnect();
-}
-
-/**
- * Variant of WaitFor that blocks the caller until a MozPromise has either been
- * resolved or rejected.
- */
-template <typename R, typename E, bool Exc>
-Result<R, E> WaitFor(const RefPtr<MozPromise<R, E, Exc>>& aPromise) {
-  Maybe<Result<R, E>> result;
-  aPromise->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [&](R aResult) { result = Some(Result<R, E>(aResult)); },
-      [&](E aError) { result = Some(Result<R, E>(aError)); });
-  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return result.isSome(); });
-  return result.extract();
-}
-
-/**
- * A variation of WaitFor that takes a callback to be called each time aEvent is
- * raised. Blocks the caller until the callback function returns true.
- */
-template <typename T, typename CallbackFunction>
-void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
-  bool done = false;
-  MediaEventListener listener =
-      aEvent.Connect(AbstractThread::GetCurrent(), [&](T aValue) {
-        if (!done) {
-          done = aF(aValue);
-        }
-      });
-  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return done; });
-  listener.Disconnect();
-}
-
 // Short-hand for InvokeAsync on the current thread.
 #define Invoke(f) InvokeAsync(GetCurrentSerialEventTarget(), __func__, f)
 
