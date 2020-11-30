@@ -19,16 +19,16 @@ XUL <splitter> collapsing tests
   <script type="application/javascript"><![CDATA[
     SimpleTest.waitForExplicitFinish();
 
-    function dragSplitter(offsetX, callback) {
-      var splitterWidth = splitter.getBoundingClientRect().width;
+    async function dragSplitter(offsetX) {
+      var splitterRect = splitter.getBoundingClientRect();
+      var splitterWidth = splitterRect.width;
       synthesizeMouse(splitter, splitterWidth / 2, 2, {type: "mousedown"});
       synthesizeMouse(splitter, splitterWidth / 2, 1, {type: "mousemove"});
-      SimpleTest.executeSoon(function() {
-        SimpleTest.is(splitter.getAttribute("state"), "dragging", "The splitter should be dragged");
-        synthesizeMouse(splitter, offsetX, 1, {type: "mousemove"});
-        synthesizeMouse(splitter, offsetX, 1, {type: "mouseup"});
-        SimpleTest.executeSoon(callback);
-      });
+      await new Promise(SimpleTest.executeSoon);
+      SimpleTest.is(splitter.getAttribute("state"), "dragging", "The splitter should be dragged");
+      synthesizeMouse(splitter, offsetX, 1, {type: "mousemove"});
+      synthesizeMouse(splitter, offsetX, 1, {type: "mouseup"});
+      await new Promise(SimpleTest.executeSoon);
     }
 
     function shouldBeCollapsed(where) {
@@ -40,66 +40,43 @@ XUL <splitter> collapsing tests
       SimpleTest.is(splitter.getAttribute("state"), "", "The splitter should not be collapsed");
     }
 
-    function runPass(rightCollapsed, leftCollapsed, callback) {
-      var containerWidth = container.getBoundingClientRect().width;
-      var isRTL = getComputedStyle(splitter, null).direction == "rtl";
-      dragSplitter(containerWidth, function() {
-        if (rightCollapsed) {
-          shouldBeCollapsed(isRTL ? "before" : "after");
-        } else {
-          shouldNotBeCollapsed();
-        }
-        dragSplitter(-containerWidth * 2, function() {
-          if (leftCollapsed) {
-            shouldBeCollapsed(isRTL ? "after" : "before");
-          } else {
-            shouldNotBeCollapsed();
-          }
-          dragSplitter(containerWidth / 2, function() {
-            // the splitter should never be collapsed in the middle
-            shouldNotBeCollapsed();
-            callback();
-          });
-        });
-      });
+    async function runPass(isRTL, rightCollapsed, leftCollapsed) {
+      var containerWidth = splitter.parentNode.getBoundingClientRect().width;
+      await dragSplitter(containerWidth);
+      if (rightCollapsed) {
+        shouldBeCollapsed(isRTL ? "before" : "after");
+      } else {
+        shouldNotBeCollapsed();
+      }
+      await dragSplitter(-containerWidth * 2);
+      if (leftCollapsed) {
+        shouldBeCollapsed(isRTL ? "after" : "before");
+      } else {
+        shouldNotBeCollapsed();
+      }
+      await dragSplitter(containerWidth / 2);
+      // the splitter should never be collapsed in the middle
+      shouldNotBeCollapsed();
     }
 
-    var splitter, container;
-    function runLTRTests(callback) {
-      splitter = document.getElementById("ltr-splitter");
-      container = splitter.parentNode;
+    var splitter;
+    async function runTests(rtl, splitterId) {
+      splitter = document.getElementById(splitterId);
       splitter.setAttribute("collapse", "before");
-      runPass(false, true, function() {
-        splitter.setAttribute("collapse", "after");
-        runPass(true, false, function() {
-          splitter.setAttribute("collapse", "both");
-          runPass(true, true, callback);
-        });
-      });
+      await runPass(rtl, rtl, !rtl);
+      splitter.setAttribute("collapse", "after");
+      await runPass(rtl, !rtl, rtl);
+      splitter.setAttribute("collapse", "both");
+      await runPass(rtl, true, true);
     }
 
-    function runRTLTests(callback) {
-      splitter = document.getElementById("rtl-splitter");
-      container = splitter.parentNode;
-      splitter.setAttribute("collapse", "before");
-      runPass(true, false, function() {
-        splitter.setAttribute("collapse", "after");
-        runPass(false, true, function() {
-          splitter.setAttribute("collapse", "both");
-          runPass(true, true, callback);
-        });
-      });
+    async function runAllTests() {
+      await runTests(false, "ltr-splitter");
+      await runTests(true, "rtl-splitter");
+      SimpleTest.finish();
     }
 
-    function runTests() {
-      runLTRTests(function() {
-        runRTLTests(function() {
-          SimpleTest.finish();
-        });
-      });
-    }
-
-    addLoadEvent(function() {SimpleTest.executeSoon(runTests);});
+    addLoadEvent(function() {SimpleTest.executeSoon(runAllTests);});
    ]]></script>
 
   <hbox style="max-width: 200px; height: 300px; direction: ltr;">
