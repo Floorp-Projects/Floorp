@@ -234,7 +234,7 @@ TEST(TestAudioTrackGraph, SetOutputDeviceID)
   DispatchFunction(
       [&] { dummySource = graph->CreateSourceTrack(MediaSegment::AUDIO); });
 
-  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
 
   EXPECT_EQ(stream->GetOutputDeviceID(), reinterpret_cast<cubeb_devid>(2))
       << "After init confirm the expected output device id";
@@ -307,7 +307,7 @@ TEST(TestAudioTrackGraph, ErrorCallback)
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
 
-  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   Result<bool, nsresult> rv = WaitFor(started);
   EXPECT_TRUE(rv.unwrapOr(false));
 
@@ -372,7 +372,7 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
   });
 
   auto p = Invoke([&] { return graph->NotifyWhenDeviceStarted(inputTrack); });
-  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   Unused << WaitFor(p);
 
@@ -458,7 +458,7 @@ TEST(TestAudioTrackGraph, ReOpenAudioInput)
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
 
-  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   Unused << WaitFor(p);
 
@@ -600,7 +600,7 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
 
-  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   Unused << WaitFor(p);
 
@@ -721,14 +721,15 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
   MockCubebStream* inputStream = nullptr;
   MockCubebStream* partnerStream = nullptr;
   // Wait for the streams to be created.
-  WaitUntil(cubeb->StreamInitEvent(), [&](MockCubebStream* aStream) {
-    if (aStream->mHasInput) {
-      inputStream = aStream;
-    } else {
-      partnerStream = aStream;
-    }
-    return inputStream && partnerStream;
-  });
+  WaitUntil(cubeb->StreamInitEvent(),
+            [&](const RefPtr<SmartMockCubebStream>& aStream) {
+              if (aStream->mHasInput) {
+                inputStream = aStream;
+              } else {
+                partnerStream = aStream;
+              }
+              return inputStream && partnerStream;
+            });
 
   partnerStream->SetDriftFactor(aDriftFactor);
 

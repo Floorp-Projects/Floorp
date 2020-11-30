@@ -15,10 +15,11 @@ MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
                                  cubeb_stream_params* aOutputStreamParams,
                                  cubeb_data_callback aDataCallback,
                                  cubeb_state_callback aStateCallback,
-                                 void* aUserPtr)
+                                 void* aUserPtr, SmartMockCubebStream* aSelf)
     : context(aContext),
       mHasInput(aInputStreamParams),
       mHasOutput(aOutputStreamParams),
+      mSelf(aSelf),
       mDataCallback(aDataCallback),
       mStateCallback(aStateCallback),
       mUserPtr(aUserPtr),
@@ -303,25 +304,27 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
                           cubeb_stream_params* aOutputStreamParams,
                           cubeb_data_callback aDataCallback,
                           cubeb_state_callback aStateCallback, void* aUserPtr) {
-  MockCubebStream* mockStream = new MockCubebStream(
+  auto mockStream = MakeRefPtr<SmartMockCubebStream>(
       aContext, aInputDevice, aInputStreamParams, aOutputDevice,
       aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr);
   *aStream = mockStream->AsCubebStream();
   mStreamInitEvent.Notify(mockStream);
+  // AddRef the stream to keep it alive. StreamDestroy releases it.
+  Unused << mockStream.forget().take();
   return CUBEB_OK;
 }
 
 void MockCubeb::StreamDestroy(cubeb_stream* aStream) {
   mStreamDestroyEvent.Notify();
-  MockCubebStream* mockStream = MockCubebStream::AsMock(aStream);
-  delete mockStream;
+  RefPtr<SmartMockCubebStream> mockStream =
+      dont_AddRef(MockCubebStream::AsMock(aStream)->mSelf);
 }
 
 void MockCubeb::GoFaster() { mFastMode = true; }
 
 void MockCubeb::DontGoFaster() { mFastMode = false; }
 
-MediaEventSource<MockCubebStream*>& MockCubeb::StreamInitEvent() {
+MediaEventSource<RefPtr<SmartMockCubebStream>>& MockCubeb::StreamInitEvent() {
   return mStreamInitEvent;
 }
 
@@ -331,8 +334,8 @@ MediaEventSource<void>& MockCubeb::StreamDestroyEvent() {
 
 void MockCubeb::StartStream(MockCubebStream* aStream) {
   auto streams = mLiveStreams.Lock();
-  MOZ_ASSERT(!streams->Contains(aStream));
-  streams->AppendElement(aStream);
+  MOZ_ASSERT(!streams->Contains(aStream->mSelf));
+  streams->AppendElement(aStream->mSelf);
   if (!mFakeAudioThread) {
     mFakeAudioThread = WrapUnique(new std::thread(ThreadFunction_s, this));
   }
@@ -342,11 +345,10 @@ int MockCubeb::StopStream(MockCubebStream* aStream) {
   UniquePtr<std::thread> audioThread;
   {
     auto streams = mLiveStreams.Lock();
-    if (!streams->Contains(aStream)) {
+    if (!streams->Contains(aStream->mSelf)) {
       return CUBEB_ERROR;
     }
-    MOZ_ASSERT(streams->Contains(aStream));
-    streams->RemoveElement(aStream);
+    streams->RemoveElement(aStream->mSelf);
     MOZ_ASSERT(mFakeAudioThread);
     if (streams->IsEmpty()) {
       audioThread = std::move(mFakeAudioThread);
