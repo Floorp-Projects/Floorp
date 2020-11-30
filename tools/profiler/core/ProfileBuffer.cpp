@@ -135,26 +135,26 @@ void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
                                          TimeDuration aCounters,
                                          TimeDuration aThreads) {
   double time = aSamplingTime.ToMilliseconds() * 1000.0;
-  if (mFirstSamplingTimeNs == 0.0) {
-    mFirstSamplingTimeNs = time;
+  if (mFirstSamplingTimeUs == 0.0) {
+    mFirstSamplingTimeUs = time;
   } else {
     // Note that we'll have 1 fewer interval than other numbers (because
     // we need both ends of an interval to know its duration). The final
     // difference should be insignificant over the expected many thousands
     // of iterations.
-    mIntervalsNs.Count(time - mLastSamplingTimeNs);
+    mIntervalsUs.Count(time - mLastSamplingTimeUs);
   }
-  mLastSamplingTimeNs = time;
+  mLastSamplingTimeUs = time;
   double locking = aLocking.ToMilliseconds() * 1000.0;
   double cleaning = aCleaning.ToMilliseconds() * 1000.0;
   double counters = aCounters.ToMilliseconds() * 1000.0;
   double threads = aThreads.ToMilliseconds() * 1000.0;
 
-  mOverheadsNs.Count(locking + cleaning + counters + threads);
-  mLockingsNs.Count(locking);
-  mCleaningsNs.Count(cleaning);
-  mCountersNs.Count(counters);
-  mThreadsNs.Count(threads);
+  mOverheadsUs.Count(locking + cleaning + counters + threads);
+  mLockingsUs.Count(locking);
+  mCleaningsUs.Count(cleaning);
+  mCountersUs.Count(counters);
+  mThreadsUs.Count(threads);
 
   AddEntry(ProfileBufferEntry::ProfilerOverheadTime(time));
   AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(locking));
@@ -168,12 +168,12 @@ ProfilerBufferInfo ProfileBuffer::GetProfilerBufferInfo() const {
           BufferRangeEnd(),
           static_cast<uint32_t>(*mEntries.BufferLength() /
                                 8),  // 8 bytes per entry.
-          mIntervalsNs,
-          mOverheadsNs,
-          mLockingsNs,
-          mCleaningsNs,
-          mCountersNs,
-          mThreadsNs};
+          mIntervalsUs,
+          mOverheadsUs,
+          mLockingsUs,
+          mCleaningsUs,
+          mCountersUs,
+          mThreadsUs};
 }
 
 /* ProfileBufferCollector */

@@ -732,17 +732,17 @@ struct ProfilerBufferInfo {
   // Buffer capacity in number of 8-byte entries.
   uint32_t mEntryCount;
   // Sampling stats: Interval between successive samplings.
-  ProfilerStats mIntervalsNs;
+  ProfilerStats mIntervalsUs;
   // Sampling stats: Total sampling duration. (Split detail below.)
-  ProfilerStats mOverheadsNs;
+  ProfilerStats mOverheadsUs;
   // Sampling stats: Time to acquire the lock before sampling.
-  ProfilerStats mLockingsNs;
+  ProfilerStats mLockingsUs;
   // Sampling stats: Time to discard expired data.
-  ProfilerStats mCleaningsNs;
+  ProfilerStats mCleaningsUs;
   // Sampling stats: Time to collect counter data.
-  ProfilerStats mCountersNs;
+  ProfilerStats mCountersUs;
   // Sampling stats: Time to sample thread stacks.
-  ProfilerStats mThreadsNs;
+  ProfilerStats mThreadsUs;
 };
 
 // Get information about the current buffer status.
