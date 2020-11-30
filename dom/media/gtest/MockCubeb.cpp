@@ -325,6 +325,19 @@ void MockCubeb::SetStreamStartFreezeEnabled(bool aEnabled) {
   mStreamStartFreezeEnabled = aEnabled;
 }
 
+auto MockCubeb::ForceAudioThread() -> RefPtr<ForcedAudioThreadPromise> {
+  RefPtr<ForcedAudioThreadPromise> p =
+      mForcedAudioThreadPromise.Ensure(__func__);
+  mForcedAudioThread = true;
+  StartStream(nullptr);
+  return p;
+}
+
+void MockCubeb::UnforceAudioThread() {
+  mForcedAudioThread = false;
+  StopStream(nullptr);
+}
+
 int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
                           cubeb_devid aInputDevice,
                           cubeb_stream_params* aInputStreamParams,
@@ -363,8 +376,13 @@ MediaEventSource<void>& MockCubeb::StreamDestroyEvent() {
 
 void MockCubeb::StartStream(MockCubebStream* aStream) {
   auto streams = mLiveStreams.Lock();
-  MOZ_ASSERT(!streams->Contains(aStream->mSelf));
-  streams->AppendElement(aStream->mSelf);
+  MOZ_ASSERT_IF(!aStream, mForcedAudioThread);
+  // Forcing an audio thread must happen before starting streams
+  MOZ_ASSERT_IF(!aStream, streams->IsEmpty());
+  if (aStream) {
+    MOZ_ASSERT(!streams->Contains(aStream->mSelf));
+    streams->AppendElement(aStream->mSelf);
+  }
   if (!mFakeAudioThread) {
     mFakeAudioThread = WrapUnique(new std::thread(ThreadFunction_s, this));
   }
@@ -374,12 +392,14 @@ int MockCubeb::StopStream(MockCubebStream* aStream) {
   UniquePtr<std::thread> audioThread;
   {
     auto streams = mLiveStreams.Lock();
-    if (!streams->Contains(aStream->mSelf)) {
-      return CUBEB_ERROR;
+    if (aStream) {
+      if (!streams->Contains(aStream->mSelf)) {
+        return CUBEB_ERROR;
+      }
+      streams->RemoveElement(aStream->mSelf);
     }
-    streams->RemoveElement(aStream->mSelf);
     MOZ_ASSERT(mFakeAudioThread);
-    if (streams->IsEmpty()) {
+    if (streams->IsEmpty() && !mForcedAudioThread) {
       audioThread = std::move(mFakeAudioThread);
     }
   }
@@ -390,13 +410,17 @@ int MockCubeb::StopStream(MockCubebStream* aStream) {
 }
 
 void MockCubeb::ThreadFunction() {
+  if (mForcedAudioThread) {
+    mForcedAudioThreadPromise.Resolve(MakeRefPtr<AudioThreadAutoUnforcer>(this),
+                                      __func__);
+  }
   while (true) {
     {
       auto streams = mLiveStreams.Lock();
       for (auto& stream : *streams) {
         stream->Process10Ms();
       }
-      if (streams->IsEmpty()) {
+      if (streams->IsEmpty() && !mForcedAudioThread) {
         break;
       }
     }
