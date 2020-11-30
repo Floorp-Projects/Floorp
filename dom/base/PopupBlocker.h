@@ -53,8 +53,6 @@ class PopupBlocker final {
   // aPrincipal is the system principal.
   static bool TryUsePopupOpeningToken(nsIPrincipal* aPrincipal);
 
-  static bool IsPopupOpeningTokenUnused();
-
   static PopupBlocker::PopupControlState GetEventPopupControlState(
       WidgetEvent* aEvent, Event* aDOMEvent = nullptr);
 

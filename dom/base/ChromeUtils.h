@@ -192,8 +192,6 @@ class ChromeUtils {
 
   static PopupBlockerState GetPopupControlState(GlobalObject& aGlobal);
 
-  static bool IsPopupTokenUnused(GlobalObject& aGlobal);
-
   static double LastExternalProtocolIframeAllowed(GlobalObject& aGlobal);
 
   static void ResetLastExternalProtocolIframeAllowed(GlobalObject& aGlobal);

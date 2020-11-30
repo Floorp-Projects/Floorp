@@ -455,9 +455,6 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   PopupBlockerState getPopupControlState();
 
-  [ChromeOnly]
-  boolean isPopupTokenUnused();
-
   /**
    * Milliseconds from the last iframe loading an external protocol.
    */

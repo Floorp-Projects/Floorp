@@ -9938,33 +9938,40 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                           nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                           &doesNotReturnData);
       if (doesNotReturnData) {
-        bool popupBlocked = true;
+        WindowContext* parentContext =
+            mBrowsingContext->GetParentWindowContext();
+        MOZ_ASSERT(parentContext);
+        const bool popupBlocked = [&] {
+          if (parentContext->ConsumeTransientUserGestureActivation()) {
+            return false;
+          }
 
-        // Let's consider external protocols as popups and let's check if the
-        // page is allowed to open them without abuse regardless of allowed
-        // events
-        if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
-          // This use-case of GetFrameElementInternal is fission safe,
-          // because PopupBlocker::TryUsePopupOpeningToken only uses
-          // the principal if it is the system principal, otherwise it
-          // only considers the popup token.
-          nsCOMPtr<nsINode> loadingNode =
-              mScriptGlobal->GetFrameElementInternal();
-          popupBlocked = !PopupBlocker::TryUsePopupOpeningToken(
-              loadingNode ? loadingNode->NodePrincipal() : nullptr);
-        } else if (mBrowsingContext->GetIsActive() &&
-                   PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe()) {
-          popupBlocked = false;
-        } else {
-          // Check if the parent context of the frame allows popups.
-          WindowContext* parentContext =
-              mBrowsingContext->GetParentWindowContext();
-          MOZ_ASSERT(parentContext);
-          popupBlocked = !parentContext->CanShowPopup();
-        }
+          // TODO(emilio): Can we remove this check? It seems like what prompted
+          // this code (bug 1514547) should be covered by transient user
+          // activation, see bug 1514547.
+          if (mBrowsingContext->GetIsActive() &&
+              PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe()) {
+            return false;
+          }
+
+          if (parentContext->CanShowPopup()) {
+            return false;
+          }
+
+          return true;
+        }();
 
         // No error must be returned when iframes are blocked.
         if (popupBlocked) {
+          nsAutoString message;
+          nsresult rv = nsContentUtils::GetLocalizedString(
+              nsContentUtils::eDOM_PROPERTIES,
+              "ExternalProtocolFrameBlockedNoUserActivation", message);
+          if (NS_SUCCEEDED(rv)) {
+            nsContentUtils::ReportToConsoleByWindowID(
+                message, nsIScriptError::warningFlag, "DOM"_ns,
+                parentContext->InnerWindowId());
+          }
           return NS_OK;
         }
       }
