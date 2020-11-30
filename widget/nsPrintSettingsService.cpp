@@ -144,6 +144,7 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetOrientation(&data->orientation());
 
   aSettings->GetNumCopies(&data->numCopies());
+  aSettings->GetNumPagesPerSheet(&data->numPagesPerSheet());
 
   aSettings->GetPrinterName(data->printerName());
 
@@ -233,6 +234,7 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetOrientation(data.orientation());
 
   settings->SetNumCopies(data.numCopies());
+  settings->SetNumPagesPerSheet(data.numPagesPerSheet());
 
   settings->SetPrinterName(data.printerName());
 
