@@ -676,11 +676,6 @@
   value: 500
   mirror: always
 
-- name: apz.relative-update.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "beacon."
 #---------------------------------------------------------------------------

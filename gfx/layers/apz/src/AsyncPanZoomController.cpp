@@ -486,12 +486,6 @@ typedef PlatformSpecificStateBase
  * How long to delay between repaint requests during a scale.
  * A negative number prevents repaint requests during a scale.\n
  * Units: ms
- *
- * \li\b apz.relative-update.enabled
- * Whether to enable relative scroll offset updates or not. Relative scroll
- * offset updates allow APZ and the main thread to concurrently update
- * the scroll offset and merge the result.
- *
  */
 
 /**
@@ -4887,8 +4881,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
           Metrics().GetVisualScrollOffset());
 
       CSSPoint destination;
-      if (StaticPrefs::apz_relative_update_enabled() &&
-          scrollUpdate.GetType() == ScrollUpdateType::Relative) {
+      if (scrollUpdate.GetType() == ScrollUpdateType::Relative) {
         CSSPoint delta =
             scrollUpdate.GetDestination() - scrollUpdate.GetSource();
         APZC_LOG("%p relative smooth scrolling from %s by %s\n", this,
@@ -4933,8 +4926,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 
     Maybe<CSSPoint> relativeDelta;
 
-    if (StaticPrefs::apz_relative_update_enabled() &&
-        scrollUpdate.GetType() == ScrollUpdateType::Relative) {
+    if (scrollUpdate.GetType() == ScrollUpdateType::Relative) {
       APZC_LOG(
           "%p relative updating scroll offset from %s by %s\n", this,
           ToString(Metrics().GetVisualScrollOffset()).c_str(),
