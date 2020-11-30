@@ -81,6 +81,10 @@ static void EnsureValidPremultipliedData(CGContextRef aContext,
   int stride = CGBitmapContextGetBytesPerRow(aContext);
 
   CGRect bounds = CGRectIntersection(bitmapBounds, aTextBounds);
+  if (CGRectIsEmpty(bounds)) {
+    return;
+  }
+
   int startX = bounds.origin.x;
   int endX = startX + bounds.size.width;
   MOZ_ASSERT(endX <= bitmapBounds.size.width);
