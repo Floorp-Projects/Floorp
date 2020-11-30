@@ -2179,6 +2179,11 @@ AttachDecision GetPropIRGenerator::tryAttachDenseElement(
   return AttachDecision::Attach;
 }
 
+static bool ClassCanHaveExtraProperties(const JSClass* clasp) {
+  return clasp->getResolve() || clasp->getOpsLookupProperty() ||
+         clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
+}
+
 static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
                                       bool allowIndexedReceiver = false) {
   // Make sure the objects on the prototype don't have any indexed properties
