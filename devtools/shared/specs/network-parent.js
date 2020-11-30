@@ -10,6 +10,22 @@ const networkParentSpec = generateActorSpec({
   typeName: "networkParent",
 
   methods: {
+    setNetworkThrottling: {
+      request: {
+        options: Arg(0, "json"),
+      },
+      response: {},
+    },
+    getNetworkThrottling: {
+      request: {},
+      response: {
+        state: RetVal("json"),
+      },
+    },
+    clearNetworkThrottling: {
+      request: {},
+      response: {},
+    },
     setBlockedUrls: {
       request: {
         urls: Arg(0, "array:string"),

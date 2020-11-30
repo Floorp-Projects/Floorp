@@ -47,6 +47,26 @@ class NetworkEventWatcher {
   }
 
   /**
+   * Gets the throttle settings
+   *
+   * @return {*} data
+   *
+   */
+  getThrottleData() {
+    return this.listener.throttleData;
+  }
+
+  /**
+   * Sets the throttle data
+   *
+   * @param {*} data
+   *
+   */
+  setThrottleData(data) {
+    this.listener.throttleData = data;
+  }
+
+  /**
    * Calls the listener to set blocked urls
    *
    * @param {Array} urls

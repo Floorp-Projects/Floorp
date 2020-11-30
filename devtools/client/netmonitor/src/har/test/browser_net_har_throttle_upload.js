@@ -32,19 +32,14 @@ async function throttleUploadTest(actuallyThrottle) {
   const size = 4096;
   const uploadSize = actuallyThrottle ? size / 3 : 0;
 
-  const request = {
-    "NetworkMonitor.throttleData": {
-      latencyMean: 0,
-      latencyMax: 0,
-      downloadBPSMean: 200000,
-      downloadBPSMax: 200000,
-      uploadBPSMean: uploadSize,
-      uploadBPSMax: uploadSize,
-    },
+  const throttleProfile = {
+    latency: 0,
+    download: 200000,
+    upload: uploadSize,
   };
 
   info("sending throttle request");
-  await connector.setPreferences(request);
+  await connector.updateNetworkThrottling(true, throttleProfile);
 
   // Execute one POST request on the page and wait till its done.
   const wait = waitForNetworkEvents(monitor, 1);
