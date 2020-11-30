@@ -148,6 +148,7 @@ window.addEventListener("AboutLoginsRemoveAllLoginsDialog", () => {
   try {
     dialogPromise.then(
       () => {
+        window.document.documentElement.classList.remove("login-selected");
         let removeAllEvt = new CustomEvent("AboutLoginsRemoveAllLogins", {
           bubbles: true,
         });
