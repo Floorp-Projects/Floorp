@@ -72,6 +72,8 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
 
  protected:
   ~nsViewSourceChannel() = default;
+  void ReleaseListeners();
+
   nsTArray<mozilla::net::PreferredAlternativeDataTypeParams> mEmptyArray;
 
   // Clones aURI and prefixes it with "view-source:" schema,
