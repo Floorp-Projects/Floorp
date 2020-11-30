@@ -518,8 +518,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void InitiateShutdown() override;
   bool IsShutdownCompleted() const override;
+  nsCString GetShutdownStatus() const override;
   void ForceKillActors() override;
-  void ShutdownTimedOut() override;
   void FinalizeShutdown() override;
 };
 
@@ -1815,9 +1815,9 @@ void QuotaClient::ForceKillActors() {
   // Currently we don't implement killing actors (are there any to kill here?).
 }
 
-void QuotaClient::ShutdownTimedOut() {
-  // XXX Crash here like in the other quota clients? (But maybe this handling
-  // will be moved to the QuotaManager)
+nsCString QuotaClient::GetShutdownStatus() const {
+  // XXX Gather information here.
+  return "To be implemented"_ns;
 }
 
 void QuotaClient::FinalizeShutdown() {

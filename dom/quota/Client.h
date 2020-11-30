@@ -141,8 +141,8 @@ class Client {
  private:
   virtual void InitiateShutdown() = 0;
   virtual bool IsShutdownCompleted() const = 0;
+  virtual nsCString GetShutdownStatus() const = 0;
   virtual void ForceKillActors() = 0;
-  virtual void ShutdownTimedOut() = 0;
   virtual void FinalizeShutdown() = 0;
 
  protected:
