@@ -191,7 +191,8 @@ class AppLinksUseCases(
         operator fun invoke(
             appIntent: Intent?,
             launchInNewTask: Boolean = true,
-            failedToLaunchAction: () -> Unit = {}
+            failedToLaunchAction: () -> Unit = {},
+            loadUrlAction: () -> Unit = {}
         ) {
             appIntent?.let {
                 try {
@@ -207,6 +208,7 @@ class AppLinksUseCases(
                 } catch (e: Exception) {
                     when (e) {
                         is ActivityNotFoundException, is SecurityException, is NullPointerException -> {
+                            loadUrlAction()
                             failedToLaunchAction()
                             Logger.error("failed to start third party app activity", e)
                         }

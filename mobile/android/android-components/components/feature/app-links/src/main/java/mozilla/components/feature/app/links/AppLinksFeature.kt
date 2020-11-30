@@ -59,12 +59,20 @@ class AppLinksFeature(
                     return
                 }
 
-                val doOpenApp = {
-                    useCases.openAppLink(appIntent, failedToLaunchAction = failedToLaunchAction)
-                }
-
                 val doNotOpenApp = {
                     loadUrlUseCase?.invoke(url, session, EngineSession.LoadUrlFlags.none())
+                }
+
+                val loadUrlAction = {
+                    loadUrlUseCase?.invoke(url, session, EngineSession.LoadUrlFlags.none())
+                }
+
+                val doOpenApp = {
+                    useCases.openAppLink(
+                        appIntent,
+                        failedToLaunchAction = failedToLaunchAction,
+                        loadUrlAction = loadUrlAction
+                    )
                 }
 
                 if (!session.private || fragmentManager == null) {

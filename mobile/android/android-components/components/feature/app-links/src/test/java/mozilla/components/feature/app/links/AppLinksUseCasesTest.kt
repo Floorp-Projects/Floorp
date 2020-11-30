@@ -370,12 +370,16 @@ class AppLinksUseCasesTest {
         val subject = AppLinksUseCases(context, { true })
 
         var failedToLaunch = false
+        var loadUrl = false
         val failedAction = { failedToLaunch = true }
+        val loadUrlAction = { loadUrl = true }
         `when`(context.startActivity(any())).thenThrow(ActivityNotFoundException("failed"))
-        subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
+        subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction,
+            loadUrlAction = loadUrlAction)
 
         verify(context).startActivity(any())
         assert(failedToLaunch)
+        assert(loadUrl)
     }
 
     @Test

@@ -265,7 +265,7 @@
     <ID>UndocumentedPublicFunction:AllSessionsObserver.kt$AllSessionsObserver.Observer$fun onRegisteredToSession(session: Session)</ID>
     <ID>UndocumentedPublicFunction:AllSessionsObserver.kt$AllSessionsObserver.Observer$fun onUnregisteredFromSession(session: Session)</ID>
     <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.GetAppLinkRedirect$operator fun invoke(url: String): AppLinkRedirect</ID>
-    <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.OpenAppLinkRedirect$operator fun invoke( appIntent: Intent?, launchInNewTask: Boolean = true, failedToLaunchAction: () -&gt; Unit = {} )</ID>
+    <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.OpenAppLinkRedirect$operator fun invoke( appIntent: Intent?, launchInNewTask: Boolean = true, failedToLaunchAction: () -&gt; Unit = {}, loadUrlAction: () -&gt; Unit = {} )</ID>
     <ID>UndocumentedPublicFunction:AutoSave.kt$AutoSave.Storage$fun save(snapshot: SessionManager.Snapshot): Boolean</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment.Companion$fun create(sessionId: String? = null)</ID>
     <ID>UndocumentedPublicFunction:BrowserMenu.kt$BrowserMenu$fun dismiss()</ID>

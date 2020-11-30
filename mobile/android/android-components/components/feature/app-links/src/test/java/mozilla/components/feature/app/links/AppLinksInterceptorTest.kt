@@ -417,7 +417,7 @@ class AppLinksInterceptorTest {
 
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
-        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
+        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any(), any())
     }
 
     @Test
@@ -447,7 +447,7 @@ class AppLinksInterceptorTest {
 
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, intentUrl, null, false, true, false, false, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
-        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
+        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any(), any())
     }
 
     @Test
