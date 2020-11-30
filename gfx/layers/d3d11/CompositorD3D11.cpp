@@ -251,6 +251,12 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
     if (!mSwapChain)
 #endif
     {
+      if (mWidget->AsWindows()->GetCompositorHwnd()) {
+        // Destroy compositor window.
+        mWidget->AsWindows()->DestroyCompositorWindow();
+        mHwnd = mWidget->AsWindows()->GetHwnd();
+      }
+
       DXGI_SWAP_CHAIN_DESC swapDesc;
       ::ZeroMemory(&swapDesc, sizeof(swapDesc));
       swapDesc.BufferDesc.Width = 0;
