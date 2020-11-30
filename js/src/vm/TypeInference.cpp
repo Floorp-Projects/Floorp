@@ -63,10 +63,7 @@ bool js::ClassCanHaveExtraProperties(const JSClass* clasp) {
 }
 
 TypeZone::TypeZone(Zone* zone)
-    : zone_(zone),
-      currentCompilationId_(zone),
-      keepJitScripts(zone, false),
-      activeAnalysis(zone, nullptr) {}
+    : currentCompilationId_(zone), keepJitScripts(zone, false) {}
 
 TypeZone::~TypeZone() { MOZ_ASSERT(!keepJitScripts); }
 
