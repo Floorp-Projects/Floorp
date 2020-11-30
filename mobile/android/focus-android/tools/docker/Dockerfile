@@ -11,6 +11,11 @@ MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 
 # -- System -----------------------------------------------------------------------------
 
+# Because this image is based on a very old Ubuntu, we have to grab the index for
+# an alternative source.
+RUN sed -i -e 's/archive\.ubuntu\.com/old-releases\.ubuntu\.com/' /etc/apt/sources.list
+RUN sed -i -e 's/security\.ubuntu\.com/old-releases\.ubuntu\.com/' /etc/apt/sources.list
+
 RUN apt-get update -qq
 
 RUN apt-get install -y openjdk-8-jdk \
@@ -26,7 +31,10 @@ RUN apt-get install -y openjdk-8-jdk \
 					   optipng \
 					   imagemagick \
 					   locales
-RUN gem install fastlane
+
+# Today's Fastlane depends on a newer Ruby version than Ubuntu 17.10 has, so since
+# fastlane is only used for screenshots (afaik) just skip it.
+#RUN gem install fastlane
 
 RUN locale-gen en_US.UTF-8
 
@@ -47,12 +55,14 @@ RUN echo y | android update sdk --no-ui --all --filter platform-tools | grep 'pa
 RUN echo y | android update sdk --no-ui --all --filter android-26 | grep 'package installed'
 RUN echo y | android update sdk --no-ui --all --filter android-27 | grep 'package installed'
 RUN echo y | android update sdk --no-ui --all --filter android-28 | grep 'package installed'
+RUN echo y | android update sdk --no-ui --all --filter android-29 | grep 'package installed'
 
 # Build tools 26.0.1
 RUN echo y | android update sdk --no-ui --all --filter build-tools-26.0.1 | grep 'package installed'
 RUN echo y | android update sdk --no-ui --all --filter build-tools-27.0.3 | grep 'package installed'
 RUN echo y | android update sdk --no-ui --all --filter build-tools-28.0.2 | grep 'package installed'
 RUN echo y | android update sdk --no-ui --all --filter build-tools-28.0.3 | grep 'package installed'
+RUN echo y | android update sdk --no-ui --all --filter build-tools-29.0.3 | grep 'package installed'
 
 # Extras
 RUN echo y | android update sdk --no-ui --all --filter extra-android-m2repository | grep 'package installed'
