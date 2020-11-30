@@ -102,13 +102,13 @@ static const gfx::sRGBColor sScrollbarButtonHoverColor(gfx::sRGBColor(0.86f,
                                                                       0.86f,
                                                                       0.86f));
 
-static const CSSIntCoord kMinimumWidgetSize = 14;
-static const CSSIntCoord kMinimumScrollbarSize = 14;
-static const CSSIntCoord kMinimumThinScrollbarSize = 6;
-static const CSSIntCoord kMinimumColorPickerHeight = 32;
-static const CSSIntCoord kMinimumRangeThumbSize = 20;
-static const CSSIntCoord kMinimumDropdownArrowButtonWidth = 18;
-static const CSSIntCoord kMinimumSpinnerButtonWidth = 31;
+static const CSSCoord kMinimumWidgetSize = 14.0f;
+static const CSSCoord kMinimumScrollbarSize = 14.0f;
+static const CSSCoord kMinimumThinScrollbarSize = 6.0f;
+static const CSSCoord kMinimumColorPickerHeight = 32.0f;
+static const CSSCoord kMinimumRangeThumbSize = 20.0f;
+static const CSSCoord kMinimumDropdownArrowButtonWidth = 18.0f;
+static const CSSCoord kMinimumSpinnerButtonWidth = 31.0f;
 static const CSSCoord kButtonBorderWidth = 1.0f;
 static const CSSCoord kMenulistBorderWidth = 1.0f;
 static const CSSCoord kTextFieldBorderWidth = 1.0f;
@@ -124,6 +124,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
  protected:
   using sRGBColor = mozilla::gfx::sRGBColor;
   using CSSCoord = mozilla::CSSCoord;
+  using CSSPoint = mozilla::CSSPoint;
   using CSSIntCoord = mozilla::CSSIntCoord;
   using ComputedStyle = mozilla::ComputedStyle;
   using EventStates = mozilla::EventStates;
@@ -132,8 +133,11 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using Rect = mozilla::gfx::Rect;
   using Point = mozilla::gfx::Point;
   using RectCornerRadii = mozilla::gfx::RectCornerRadii;
+  using LayoutDeviceCoord = mozilla::LayoutDeviceCoord;
 
  public:
+  using DPIRatio = mozilla::CSSToLayoutDeviceScale;
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // The nsITheme interface.
@@ -182,7 +186,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   nsNativeBasicTheme() = default;
   virtual ~nsNativeBasicTheme() = default;
 
-  static uint32_t GetDPIRatio(nsIFrame* aFrame);
+  static DPIRatio GetDPIRatio(nsIFrame* aFrame);
   static bool IsDateTimeResetButton(nsIFrame* aFrame);
   static bool IsDateTimeTextField(nsIFrame* aFrame);
   static bool IsColorPickerButton(nsIFrame* aFrame);
@@ -209,8 +213,10 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   };
 
   static void GetFocusStrokeRect(DrawTarget* aDrawTarget, Rect& aFocusRect,
-                                 CSSCoord aOffset, const CSSCoord aRadius,
-                                 CSSCoord aFocusWidth, RefPtr<Path>& aOutRect);
+                                 LayoutDeviceCoord aOffset,
+                                 const LayoutDeviceCoord aRadius,
+                                 LayoutDeviceCoord aFocusWidth,
+                                 RefPtr<Path>& aOutRect);
 
   virtual std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
       const EventStates& aState);
@@ -244,91 +250,91 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                           bool aIsRoot);
 
   void PaintRoundedFocusRect(DrawTarget* aDrawTarget, const Rect& aRect,
-                             uint32_t aDpiRatio, CSSCoord aRadius,
+                             DPIRatio aDpiRatio, CSSCoord aRadius,
                              CSSCoord aOffset);
   void PaintRoundedRect(DrawTarget* aDrawTarget, const Rect& aRect,
                         const sRGBColor& aBackgroundColor,
                         const sRGBColor& aBorderColor, CSSCoord aBorderWidth,
-                        RectCornerRadii aDpiAdjustedRadii, uint32_t aDpiRatio);
+                        RectCornerRadii aDpiAdjustedRadii, DPIRatio aDpiRatio);
   void PaintRoundedRectWithRadius(DrawTarget* aDrawTarget, const Rect& aRect,
                                   const sRGBColor& aBackgroundColor,
                                   const sRGBColor& aBorderColor,
                                   CSSCoord aBorderWidth, CSSCoord aRadius,
-                                  uint32_t aDpiRatio);
+                                  DPIRatio aDpiRatio);
   void PaintCheckboxControl(DrawTarget* aDrawTarget, const Rect& aRect,
-                            const EventStates& aState, uint32_t aDpiRatio);
+                            const EventStates& aState, DPIRatio aDpiRatio);
   void PaintCheckMark(DrawTarget* aDrawTarget, const Rect& aRect,
-                      const EventStates& aState, uint32_t aDpiRatio);
+                      const EventStates& aState, DPIRatio aDpiRatio);
   void PaintIndeterminateMark(DrawTarget* aDrawTarget, const Rect& aRect,
-                              const EventStates& aState, uint32_t aDpiRatio);
+                              const EventStates& aState, DPIRatio aDpiRatio);
   void PaintStrokedEllipse(DrawTarget* aDrawTarget, const Rect& aRect,
                            const sRGBColor& aBackgroundColor,
                            const sRGBColor& aBorderColor,
-                           const CSSCoord aBorderWidth, uint32_t aDpiRatio);
+                           const CSSCoord aBorderWidth, DPIRatio aDpiRatio);
   void PaintEllipseShadow(DrawTarget* aDrawTarget, const Rect& aRect,
-                          float aShadowAlpha, const Point& aShadowOffset,
-                          float aShadowBlurStdDev, uint32_t aDpiRatio);
+                          float aShadowAlpha, const CSSPoint& aShadowOffset,
+                          CSSCoord aShadowBlurStdDev, DPIRatio aDpiRatio);
   void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
-                         const EventStates& aState, uint32_t aDpiRatio);
+                         const EventStates& aState, DPIRatio aDpiRatio);
   void PaintRadioCheckmark(DrawTarget* aDrawTarget, const Rect& aRect,
-                           const EventStates& aState, uint32_t aDpiRatio);
+                           const EventStates& aState, DPIRatio aDpiRatio);
   void PaintTextField(DrawTarget* aDrawTarget, const Rect& aRect,
-                      const EventStates& aState, uint32_t aDpiRatio);
+                      const EventStates& aState, DPIRatio aDpiRatio);
   void PaintListbox(DrawTarget* aDrawTarget, const Rect& aRect,
-                    const EventStates& aState, uint32_t aDpiRatio);
+                    const EventStates& aState, DPIRatio aDpiRatio);
   void PaintMenulist(DrawTarget* aDrawTarget, const Rect& aRect,
-                     const EventStates& aState, uint32_t aDpiRatio);
+                     const EventStates& aState, DPIRatio aDpiRatio);
   void PaintArrow(DrawTarget* aDrawTarget, const Rect& aRect,
                   const int32_t aArrowPolygonX[],
                   const int32_t aArrowPolygonY[], const int32_t aArrowNumPoints,
                   const int32_t aArrowSize, const sRGBColor aFillColor,
-                  uint32_t aDpiRatio);
+                  DPIRatio aDpiRatio);
   void PaintMenulistArrowButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                 const Rect& aRect, const EventStates& aState,
-                                uint32_t aDpiRatio);
+                                DPIRatio aDpiRatio);
   void PaintSpinnerButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                           const Rect& aRect, const EventStates& aState,
-                          StyleAppearance aAppearance, uint32_t aDpiRatio);
+                          StyleAppearance aAppearance, DPIRatio aDpiRatio);
   void PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget, const Rect& aRect,
-                  const EventStates& aState, uint32_t aDpiRatio,
+                  const EventStates& aState, DPIRatio aDpiRatio,
                   bool aHorizontal);
   void PaintProgressBar(DrawTarget* aDrawTarget, const Rect& aRect,
-                        const EventStates& aState, uint32_t aDpiRatio);
+                        const EventStates& aState, DPIRatio aDpiRatio);
   void PaintProgresschunk(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                           const Rect& aRect, const EventStates& aState,
-                          uint32_t aDpiRatio);
+                          DPIRatio aDpiRatio);
   void PaintMeter(DrawTarget* aDrawTarget, const Rect& aRect,
-                  const EventStates& aState, uint32_t aDpiRatio);
+                  const EventStates& aState, DPIRatio aDpiRatio);
   void PaintMeterchunk(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                        const Rect& aRect, const EventStates& aState,
-                       uint32_t aDpiRatio);
+                       DPIRatio aDpiRatio);
   void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget, const Rect& aRect,
-                   const EventStates& aState, uint32_t aDpiRatio);
+                   const EventStates& aState, DPIRatio aDpiRatio);
 
   virtual void PaintScrollbarThumb(DrawTarget* aDrawTarget, const Rect& aRect,
                                    bool aHorizontal, nsIFrame* aFrame,
                                    const ComputedStyle& aStyle,
                                    const EventStates& aElementState,
                                    const EventStates& aDocumentState,
-                                   uint32_t aDpiRatio);
+                                   DPIRatio aDpiRatio);
   virtual void PaintScrollbar(DrawTarget* aDrawTarget, const Rect& aRect,
                               bool aHorizontal, nsIFrame* aFrame,
                               const ComputedStyle& aStyle,
                               const EventStates& aDocumentState,
-                              uint32_t aDpiRatio, bool aIsRoot);
+                              DPIRatio aDpiRatio, bool aIsRoot);
   virtual void PaintScrollbarTrack(DrawTarget* aDrawTarget, const Rect& aRect,
                                    bool aHorizontal, nsIFrame* aFrame,
                                    const ComputedStyle& aStyle,
                                    const EventStates& aDocumentState,
-                                   uint32_t aDpiRatio, bool aIsRoot);
+                                   DPIRatio aDpiRatio, bool aIsRoot);
   virtual void PaintScrollCorner(DrawTarget* aDrawTarget, const Rect& aRect,
                                  nsIFrame* aFrame, const ComputedStyle& aStyle,
                                  const EventStates& aDocumentState,
-                                 uint32_t aDpiRatio, bool aIsRoot);
+                                 DPIRatio aDpiRatio, bool aIsRoot);
   virtual void PaintScrollbarbutton(
       DrawTarget* aDrawTarget, StyleAppearance aAppearance, const Rect& aRect,
       const ComputedStyle& aStyle, const EventStates& aElementState,
-      const EventStates& aDocumentState, uint32_t aDpiRatio);
+      const EventStates& aDocumentState, DPIRatio aDpiRatio);
 };
 
 #endif
