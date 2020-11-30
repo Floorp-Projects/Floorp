@@ -9028,6 +9028,12 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Whether the pages per sheet print setting is enabled.
+- name: print.pages_per_sheet.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether we allow the print progress dialog to show up.
 - name: print.show_print_progress
   type: RelaxedAtomicBool

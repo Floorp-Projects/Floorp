@@ -87,6 +87,8 @@ printui-loading = Preparing Preview
 printui-preview-label =
     .aria-label = Print Preview
 
+printui-pages-per-sheet = Pages per sheet
+
 ## Paper sizes that may be supported by the Save to PDF destination:
 
 printui-paper-a5 = A5

@@ -265,8 +265,10 @@ class PrintHelper {
     await BrowserTestUtils.waitForEvent(this.doc, "preview-updated");
   }
 
-  async waitForSettingsEvent() {
-    await BrowserTestUtils.waitForEvent(this.doc, "print-settings");
+  async waitForSettingsEvent(changeFn) {
+    let changed = BrowserTestUtils.waitForEvent(this.doc, "print-settings");
+    await changeFn?.();
+    await changed;
   }
 
   click(el, { scroll = true } = {}) {
