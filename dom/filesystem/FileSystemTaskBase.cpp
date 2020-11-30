@@ -70,29 +70,6 @@ nsresult DispatchToIOThread(nsIRunnable* aRunnable) {
   return target->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
 
-// This runnable is used when an error value is set before doing any real
-// operation on the I/O thread. In this case we skip all and we directly
-// communicate the error.
-class ErrorRunnable final : public CancelableRunnable {
- public:
-  explicit ErrorRunnable(FileSystemTaskChildBase* aTask)
-      : CancelableRunnable("ErrorRunnable"), mTask(aTask) {
-    MOZ_ASSERT(aTask);
-  }
-
-  NS_IMETHOD
-  Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mTask->HasError());
-
-    mTask->HandlerCallback();
-    return NS_OK;
-  }
-
- private:
-  RefPtr<FileSystemTaskChildBase> mTask;
-};
-
 }  // anonymous namespace
 
 /**
