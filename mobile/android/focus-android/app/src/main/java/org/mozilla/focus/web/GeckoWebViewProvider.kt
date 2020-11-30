@@ -703,7 +703,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         ) {
             isLoadingInternalUrl = historyURL == LocalizedContent.URL_RIGHTS || historyURL ==
                     LocalizedContent.URL_ABOUT
-            geckoSession.loadData(data.toByteArray(Charsets.UTF_8), mimeType)
+            geckoSession.load(GeckoSession.Loader().data(data.toByteArray(Charsets.UTF_8), mimeType))
             currentUrl = historyURL
         }
 
