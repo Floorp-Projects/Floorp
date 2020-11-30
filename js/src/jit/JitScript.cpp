@@ -138,7 +138,7 @@ bool JSScript::createJitScript(JSContext* cx) {
 void JSScript::maybeReleaseJitScript(JSFreeOp* fop) {
   MOZ_ASSERT(hasJitScript());
 
-  if (zone()->types.keepJitScripts || jitScript()->hasBaselineScript() ||
+  if (zone()->jitZone()->keepJitScripts() || jitScript()->hasBaselineScript() ||
       jitScript()->active()) {
     return;
   }

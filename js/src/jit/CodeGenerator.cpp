@@ -11170,9 +11170,10 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
 
   IonCompilationId compilationId =
       cx->runtime()->jitRuntime()->nextCompilationId();
-  cx->zone()->types.currentCompilationIdRef().emplace(compilationId);
+  JitZone* jitZone = cx->zone()->jitZone();
+  jitZone->currentCompilationIdRef().emplace(compilationId);
   auto resetCurrentId = mozilla::MakeScopeExit(
-      [cx] { cx->zone()->types.currentCompilationIdRef().reset(); });
+      [jitZone] { jitZone->currentCompilationIdRef().reset(); });
 
   // Record constraints. If an error occured, returns false and potentially
   // prevent future compilations. Otherwise, if an invalidation occured, then
