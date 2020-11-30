@@ -172,7 +172,7 @@ class StringTest {
 
     @Test
     fun sanitizeFileName() {
-        var file = "/../../../../../../../../../../directory/file.txt"
+        var file = "/../../../../../../../../../../directory/file.......txt"
         val fileName = "file.txt"
 
         assertEquals(fileName, file.sanitizeFileName())
@@ -180,5 +180,15 @@ class StringTest {
         file = "/root/directory/file.txt"
 
         assertEquals(fileName, file.sanitizeFileName())
+
+        assertEquals("file", "file".sanitizeFileName())
+
+        assertEquals("file", "file..".sanitizeFileName())
+
+        assertEquals("file", "file.".sanitizeFileName())
+
+        assertEquals("file", ".file".sanitizeFileName())
+
+        assertEquals("test.2020.12.01.txt", "test.2020.12.01.txt".sanitizeFileName())
     }
 }

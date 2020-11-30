@@ -44,6 +44,7 @@ import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
+import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.utils.DownloadUtils
 import org.json.JSONObject
@@ -804,7 +805,7 @@ class GeckoEngineSession(
                             url = url,
                             contentLength = contentLength,
                             contentType = contentType,
-                            fileName = fileName,
+                            fileName = fileName.sanitizeFileName(),
                             response = response,
                             isPrivate = privateMode
                     )

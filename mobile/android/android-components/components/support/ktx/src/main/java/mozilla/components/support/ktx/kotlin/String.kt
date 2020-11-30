@@ -146,7 +146,13 @@ fun String.sanitizeURL(): String {
  * For example for an input of "/../../../../../../directory/file.txt" you will get "file.txt"
  */
 fun String.sanitizeFileName(): String {
-    return this.substringAfterLast(File.separatorChar)
+    val file = File(this.substringAfterLast(File.separatorChar))
+    // Remove unwanted subsequent dots in the file name.
+    return if (file.extension.trim().isNotEmpty() && file.nameWithoutExtension.isNotEmpty()) {
+        file.name.replace("\\.\\.+".toRegex(), ".")
+    } else {
+        file.name.replace(".", "")
+    }
 }
 
 /**
