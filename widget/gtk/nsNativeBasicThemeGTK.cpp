@@ -96,9 +96,10 @@ void nsNativeBasicThemeGTK::PaintScrollbarThumb(
       ComputeScrollbarthumbColor(aStyle, aElementState, aDocumentState);
   LayoutDeviceRect thumbRect(aRect);
   thumbRect.Deflate(floorf((aHorizontal ? aRect.height : aRect.width) / 4.0f));
-  auto radius = (aHorizontal ? thumbRect.height : thumbRect.width) / 2.0f;
+  LayoutDeviceCoord radius =
+      (aHorizontal ? thumbRect.height : thumbRect.width) / 2.0f;
   PaintRoundedRectWithRadius(aDrawTarget, thumbRect, thumbColor, sRGBColor(), 0,
-                             radius, aDpiRatio);
+                             radius / aDpiRatio, aDpiRatio);
 }
 
 void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget* aDrawTarget,
