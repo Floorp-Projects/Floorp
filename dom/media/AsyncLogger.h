@@ -196,7 +196,7 @@ class AsyncLogger {
         }
 #ifdef MOZ_GECKO_PROFILER
         {
-          struct Budget {
+          struct BudgetMarker {
             static constexpr Span<const char> MarkerTypeName() {
               return MakeStringSpan("Budget");
             }
@@ -220,7 +220,7 @@ class AsyncLogger {
                    (message.mPhase == TracingPhase::BEGIN)
                        ? MarkerTiming::IntervalStart(message.mTimestamp)
                        : MarkerTiming::IntervalEnd(message.mTimestamp)},
-                  Budget{});
+                  BudgetMarker{});
             } else {
               profiler_add_marker(
                   ProfilerString8View::WrapNullTerminatedString(message.mName),
@@ -230,7 +230,7 @@ class AsyncLogger {
                        message.mTimestamp,
                        message.mTimestamp + TimeDuration::FromMicroseconds(
                                                 message.mDurationUs))},
-                  Budget{});
+                  BudgetMarker{});
             }
           }
         }

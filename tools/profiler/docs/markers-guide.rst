@@ -238,8 +238,10 @@ How to Define New Marker Types
 ------------------------------
 
 Each marker type must be defined once and only once.
-The definition is a C++ ``struct``, its name is used when recording markers of
-that type in C++:
+The definition is a C++ ``struct``, its identifier is used when recording
+markers of that type in C++.
+By convention, the suffix "Marker" is recommended to better distinguish them
+from non-profiler entities in the source.
 
 .. code-block:: c++
 
