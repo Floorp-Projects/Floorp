@@ -12643,6 +12643,23 @@ class MCallGetSparseElement
   bool possiblyCalls() const override { return true; }
 };
 
+// Get any element from a native object.
+class MCallNativeGetElement
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>>::Data {
+  MCallNativeGetElement(MDefinition* obj, MDefinition* index)
+      : MBinaryInstruction(classOpcode, obj, index) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(CallNativeGetElement)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, index))
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
