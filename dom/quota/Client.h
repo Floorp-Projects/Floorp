@@ -68,9 +68,7 @@ class Client {
 
   static bool TypeToText(Type aType, nsAString& aText, const fallible_t&);
 
-  static void TypeToText(Type aType, nsAString& aText);
-
-  static void TypeToText(Type aType, nsACString& aText);
+  static nsAutoCString TypeToText(Type aType);
 
   static bool TypeFromText(const nsAString& aText, Type& aType,
                            const fallible_t&);
