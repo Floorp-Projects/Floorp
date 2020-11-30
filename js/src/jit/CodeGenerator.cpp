@@ -14833,6 +14833,22 @@ void CodeGenerator::visitGuardIndexIsValidUpdateOrAdd(
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitCallAddOrUpdateSparseElement(
+    LCallAddOrUpdateSparseElement* lir) {
+  Register object = ToRegister(lir->object());
+  Register index = ToRegister(lir->index());
+  ValueOperand value = ToValue(lir, LCallAddOrUpdateSparseElement::ValueIndex);
+
+  pushArg(Imm32(lir->mir()->strict()));
+  pushArg(value);
+  pushArg(index);
+  pushArg(object);
+
+  using Fn =
+      bool (*)(JSContext*, HandleArrayObject, int32_t, HandleValue, bool);
+  callVM<Fn, js::AddOrUpdateSparseElementHelper>(lir);
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;

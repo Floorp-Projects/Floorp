@@ -8353,6 +8353,30 @@ class LGuardIndexIsValidUpdateOrAdd : public LInstructionHelper<0, 2, 2> {
   const LDefinition* spectreTemp() { return getTemp(1); }
 };
 
+class LCallAddOrUpdateSparseElement
+    : public LCallInstructionHelper<0, 2 + BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(CallAddOrUpdateSparseElement)
+
+  LCallAddOrUpdateSparseElement(const LAllocation& object,
+                                const LAllocation& index,
+                                const LBoxAllocation& value)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, object);
+    setOperand(1, index);
+    setBoxOperand(ValueIndex, value);
+  }
+
+  static const size_t ValueIndex = 2;
+
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+
+  MCallAddOrUpdateSparseElement* mir() const {
+    return mir_->toCallAddOrUpdateSparseElement();
+  }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
