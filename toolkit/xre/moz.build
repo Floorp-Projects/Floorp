@@ -165,6 +165,7 @@ if CONFIG["MOZ_UPDATER"]:
     if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
         UNIFIED_SOURCES += [
             "nsUpdateDriver.cpp",
+            "nsUpdateSyncManager.cpp",
         ]
 
 if CONFIG["MOZ_PDF_PRINTING"]:
