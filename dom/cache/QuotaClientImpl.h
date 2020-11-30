@@ -132,8 +132,8 @@ class CacheQuotaClient final : public quota::Client {
 
   void InitiateShutdown() override;
   bool IsShutdownCompleted() const override;
+  nsCString GetShutdownStatus() const override;
   void ForceKillActors() override;
-  void ShutdownTimedOut() override;
   void FinalizeShutdown() override;
 
   Result<UsageInfo, nsresult> GetUsageForOriginInternal(

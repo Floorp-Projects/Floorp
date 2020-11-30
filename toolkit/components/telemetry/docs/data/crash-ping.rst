@@ -68,6 +68,7 @@ Structure:
           MemoryErrorCorrection: <type>, // Windows-only, indicates the type of ECC memory in use, see below
           MozCrashReason: <reason>, // Optional, contains the string passed to MOZ_CRASH()
           OOMAllocationSize: <size>, // Size of the allocation that caused an OOM
+          QuotaManagerShutdownTimeout: <log-string>, // Optional, contains a list of shutdown steps and status of the quota manager clients
           RemoteType: <type>, // Optional, type of content process, see below for a list of types
           SecondsSinceLastCrash: <duration>, // Seconds elapsed since the last crash occurred
           ShutdownProgress: <phase>, // Optional, contains a string describing the shutdown phase in which the crash occurred

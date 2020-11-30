@@ -262,9 +262,9 @@ void CacheQuotaClient::ForceKillActors() {
   // Currently we don't implement killing actors (are there any to kill here?).
 }
 
-void CacheQuotaClient::ShutdownTimedOut() {
-  // XXX Crash here like in the other quota clients? (But maybe this handling
-  // will be moved to the QuotaManager)
+nsCString CacheQuotaClient::GetShutdownStatus() const {
+  // XXX Gather information here.
+  return "To be implemented"_ns;
 }
 
 void CacheQuotaClient::FinalizeShutdown() {

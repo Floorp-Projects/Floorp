@@ -439,23 +439,6 @@ IAccessibleConfig:
     the computer's registry. The value is always set to "NoSystemTypeLibOrPS"
   type: string
 
-IndexedDBShutdownTimeout:
-  description: >
-    This annotation is present if IndexedDB shutdown was not finished in time
-    and the browser was crashed instead of waiting for IndexedDB shutdown to
-    finish. The condition that caused the hang is contained in the annotation.
-    The condition is constructed by stringifying status of objects which blocked
-    IndexedDB shutdown. Objects are divided into three groups:
-    FactoryOperations, LiveDatabases and DatabaseMaintenances. Each group is
-    reported separately and contains the number of objects in the group and
-    status of individual objects in the group (duplicit entries are removed):
-    "GroupName: N (objectStatus1, objectStatus2, ...)" where N is the number of
-    objects in the group. Status of individual objects is constructed by taking
-    selected object properties. Properties which contain origin strings are
-    anonymized.
-  type: string
-  ping: true
-
 InstallTime:
   description: >
     The time when Firefox was installed expressed as seconds since the Epoch
@@ -605,23 +588,6 @@ LauncherProcessState:
     mozilla::LauncherRegistryInfo::EnableState enum
   type: integer
 
-LocalStorageShutdownTimeout:
-  description: >
-    This annotation is present if LocalStorage shutdown was not finished in time
-    and the browser was crashed instead of waiting for LocalStorage shutdown to
-    finish. The condition that caused the hang is contained in the annotation.
-    The condition is constructed by stringifying status of objects which blocked
-    LocalStorage shutdown. Objects are divided into three groups:
-    PrepareDatastoreOperations, Datastores and LiveDatabases. Each group is
-    reported separately and contains the number of objects in the group and
-    status of individual objects in the group (duplicit entries are removed):
-    "GroupName: N (objectStatus1, objectStatus2, ...)" where N is the number of
-    objects in the group. Status of individual objects is constructed by taking
-    selected object properties. Properties which contain origin strings are
-    anonymized.
-  type: string
-  ping: true
-
 LowCommitSpaceEvents:
   description: >
     Number of times the available memory tracker has detected a that
@@ -749,6 +715,31 @@ PurgeablePhysicalMemory:
     macOS only. Amount of physical memory currently allocated but which may
     be deallocated by the system in case of memory pressure. Populated from
     vm_statistics64_data_t::purgeable_count * vm_page_size.
+  type: string
+  ping: true
+
+QuotaManagerShutdownTimeout:
+  description: >
+    This annotation is present if the quota manager shutdown (resp. the shutdown
+    of the quota manager clients) was not finished in time and the browser was
+    crashed instead of waiting for the shutdown to finish. The status of objects
+    which were blocking completion of the shutdown when reaching the timeout
+    is contained in the annotation.
+
+    In the case of IndexedDB, objects are divided into three groups:
+    FactoryOperations, LiveDatabases and DatabaseMaintenances.
+
+    In the case of LocalStorage, objects are divided into three groups:
+    PrepareDatastoreOperations, Datastores and LiveDatabases.
+
+    Each group is reported separately and contains the number of objects in the
+    group and the status of individual objects in the group (duplicate entries
+    are removed):
+    "GroupName: N (objectStatus1, objectStatus2, ...)" where N is the number of
+    objects in the group.
+
+    The status of individual objects is constructed by taking selected object
+    properties. Properties which contain origin strings are anonymized.
   type: string
   ping: true
 

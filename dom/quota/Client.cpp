@@ -275,7 +275,16 @@ void Client::ShutdownWorkThreads() {
                 auto* const quotaClient = static_cast<Client*>(aClosure);
 
                 MOZ_DIAGNOSTIC_ASSERT(!quotaClient->IsShutdownCompleted());
-                quotaClient->ShutdownTimedOut();
+
+                nsAutoCString type;
+                TypeToText(quotaClient->GetType(), type);
+
+                CrashReporter::AnnotateCrashReport(
+                    CrashReporter::Annotation::QuotaManagerShutdownTimeout,
+                    nsPrintfCString("%s: %s", type.get(),
+                                    quotaClient->GetShutdownStatus().get()));
+
+                MOZ_CRASH_UNSAFE_PRINTF("%s shutdown timed out", type.get());
               },
               aClosure, SHUTDOWN_FORCE_CRASH_TIMEOUT_MS,
               nsITimer::TYPE_ONE_SHOT,
