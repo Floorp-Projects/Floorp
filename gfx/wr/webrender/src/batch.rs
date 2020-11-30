@@ -16,7 +16,7 @@ use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance}
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
-use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter};
+use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter, DeferredResolveIndex};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, ClusterFlags};
 use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, ClipData};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
@@ -1288,7 +1288,7 @@ impl BatchBuilder {
                             .get_texture_cache_item(&rt_cache_entry.handle);
                         let textures = BatchTextures::color(cache_item.texture_id);
                         (
-                            BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
+                            BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
                             textures,
                             ImageBrushData {
                                 color_mode: ShaderColorMode::Image,
@@ -2046,7 +2046,7 @@ impl BatchBuilder {
                 };
 
                 let batch_params = BrushBatchParameters::shared(
-                    BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
+                    BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
                     textures,
                     ImageBrushData {
                         color_mode: ShaderColorMode::Image,
@@ -2181,11 +2181,11 @@ impl BatchBuilder {
                 }
 
                 // All yuv textures should be the same type.
-                let buffer_kind = get_buffer_kind(textures.colors[0]);
+                let buffer_kind = textures.colors[0].image_buffer_kind();
                 assert!(
                     textures.colors[1 .. yuv_image_data.format.get_plane_num()]
                         .iter()
-                        .all(|&tid| buffer_kind == get_buffer_kind(tid))
+                        .all(|&tid| buffer_kind == tid.image_buffer_kind())
                 );
 
                 let kind = BrushBatchKind::YuvImage(
@@ -2333,7 +2333,7 @@ impl BatchBuilder {
                     };
 
                     let batch_params = BrushBatchParameters::shared(
-                        BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
+                        BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
                         textures,
                         prim_user_data,
                         cache_item.uv_rect_handle.as_int(gpu_cache),
@@ -2468,7 +2468,9 @@ impl BatchBuilder {
                         }
 
                         let textures = BatchTextures::color(cache_item.texture_id);
-                        let batch_kind = BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id));
+                        let batch_kind = BrushBatchKind::Image(
+                            cache_item.texture_id.image_buffer_kind()
+                        );
                         let prim_user_data = ImageBrushData {
                             color_mode: ShaderColorMode::Image,
                             alpha_type: AlphaType::PremultipliedAlpha,
@@ -3027,7 +3029,7 @@ fn get_image_tile_params(
     } else {
         let textures = BatchTextures::color(cache_item.texture_id);
         Some((
-            BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
+            BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
             textures,
             gpu_cache.get_address(&cache_item.uv_rect_handle),
         ))
@@ -3114,8 +3116,22 @@ pub fn resolve_image(
                     // the deferred resolves list to be patched by
                     // the render thread...
                     let cache_handle = gpu_cache.push_deferred_per_frame_blocks(BLOCKS_PER_UV_RECT);
+
+                    let deferred_resolve_index = DeferredResolveIndex(deferred_resolves.len() as u32);
+
+                    let image_buffer_kind = match external_image.image_type {
+                        ExternalImageType::TextureHandle(target) => {
+                            target
+                        }
+                        ExternalImageType::Buffer => {
+                            // The ExternalImageType::Buffer should be handled by resource_cache.
+                            // It should go through the non-external case.
+                            panic!("Unexpected non-texture handle type");
+                        }
+                    };
+
                     let cache_item = CacheItem {
-                        texture_id: TextureSource::External(external_image),
+                        texture_id: TextureSource::External(deferred_resolve_index, image_buffer_kind),
                         uv_rect_handle: cache_handle,
                         uv_rect: DeviceIntRect::new(
                             DeviceIntPoint::zero(),
@@ -3538,26 +3554,6 @@ impl ClipBatcher {
 
             is_first_clip &= !added_clip;
         }
-    }
-}
-
-// TODO(gw): This should probably be a method on TextureSource
-pub fn get_buffer_kind(texture: TextureSource) -> ImageBufferKind {
-    match texture {
-        TextureSource::External(ext_image) => {
-            match ext_image.image_type {
-                ExternalImageType::TextureHandle(target) => {
-                    target.into()
-                }
-                ExternalImageType::Buffer => {
-                    // The ExternalImageType::Buffer should be handled by resource_cache.
-                    // It should go through the non-external case.
-                    panic!("Unexpected non-texture handle type");
-                }
-            }
-        }
-        TextureSource::TextureCache(..) => ImageBufferKind::Texture2D,
-        _ => ImageBufferKind::Texture2DArray,
     }
 }
 

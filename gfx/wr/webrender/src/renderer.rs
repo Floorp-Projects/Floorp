@@ -35,7 +35,9 @@
 //! calling `DrawTarget::to_framebuffer_rect`
 
 use api::{BlobImageHandler, ColorF, ColorU, MixBlendMode};
-use api::{DocumentId, Epoch, ExternalImageHandler, ExternalImageId};
+use api::{DocumentId, Epoch, ExternalImageHandler};
+#[cfg(feature = "replay")]
+use api::ExternalImageId;
 use api::{ExternalImageSource, ExternalImageType, FontRenderMode, ImageFormat};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest};
 use api::{VoidPtrToSizeFn, PremultipliedColorF};
@@ -74,7 +76,7 @@ use crate::gpu_types::{ClearInstance, CompositeInstance, ResolveInstanceData, Tr
 use crate::internal_types::{TextureSource, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
-use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle};
+use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle, DeferredResolveIndex};
 use malloc_size_of::MallocSizeOfOps;
 use crate::picture::{self, ResolvedSurfaceTexture};
 use crate::prim_store::DeferredResolve;
@@ -1166,7 +1168,7 @@ struct TextureResolver {
     texture_cache_map: FastHashMap<CacheTextureId, Texture>,
 
     /// Map of external image IDs to native textures.
-    external_images: FastHashMap<(ExternalImageId, u8), ExternalTexture>,
+    external_images: FastHashMap<DeferredResolveIndex, ExternalTexture>,
 
     /// A special 1x1 dummy texture used for shaders that expect to work with
     /// the output of the previous pass but are actually running in the first
@@ -1350,7 +1352,7 @@ impl TextureResolver {
         // Note: the order here is important, needs to match the logic in `RenderPass::build()`.
         if let Some(at) = self.prev_pass_color.take() {
             if let Some(index) = at.saved_index {
-                assert_eq!(self.saved_targets.len(), index.0);
+                assert_eq!(self.saved_targets.len() as u32, index.0);
                 self.saved_targets.push(at.texture);
             } else {
                 self.return_to_pool(device, at.texture);
@@ -1358,7 +1360,7 @@ impl TextureResolver {
         }
         if let Some(at) = self.prev_pass_alpha.take() {
             if let Some(index) = at.saved_index {
-                assert_eq!(self.saved_targets.len(), index.0);
+                assert_eq!(self.saved_targets.len() as u32, index.0);
                 self.saved_targets.push(at.texture);
             } else {
                 self.return_to_pool(device, at.texture);
@@ -1400,9 +1402,9 @@ impl TextureResolver {
                 device.bind_texture(sampler, texture, swizzle);
                 swizzle
             }
-            TextureSource::External(external_image) => {
+            TextureSource::External(ref index, _) => {
                 let texture = self.external_images
-                    .get(&(external_image.id, external_image.channel_index))
+                    .get(index)
                     .expect("BUG: External image should be resolved by now");
                 device.bind_external_texture(sampler, texture);
                 Swizzle::default()
@@ -1413,8 +1415,8 @@ impl TextureResolver {
                 swizzle
             }
             TextureSource::RenderTaskCache(saved_index, swizzle) => {
-                if saved_index.0 < self.saved_targets.len() {
-                    let texture = &self.saved_targets[saved_index.0];
+                if saved_index.0 < self.saved_targets.len() as u32 {
+                    let texture = &self.saved_targets[saved_index.0 as usize];
                     device.bind_texture(sampler, texture, swizzle)
                 } else {
                     // Check if this saved index is referring to a the prev pass
@@ -1467,7 +1469,7 @@ impl TextureResolver {
                 Some((&self.texture_cache_map[&index], swizzle))
             }
             TextureSource::RenderTaskCache(saved_index, swizzle) => {
-                Some((&self.saved_targets[saved_index.0], swizzle))
+                Some((&self.saved_targets[saved_index.0 as usize], swizzle))
             }
         }
     }
@@ -1480,9 +1482,9 @@ impl TextureResolver {
         default_value: TexelRect,
     ) -> TexelRect {
         match source {
-            TextureSource::External(ref external_image) => {
+            TextureSource::External(ref index, _) => {
                 let texture = self.external_images
-                    .get(&(external_image.id, external_image.channel_index))
+                    .get(index)
                     .expect("BUG: External image should be resolved by now");
                 texture.get_uv_rect()
             }
@@ -3635,11 +3637,6 @@ impl Renderer {
             self.update_debug_overlay(device_size);
         }
 
-        #[cfg(feature = "replay")]
-        self.texture_resolver.external_images.extend(
-            self.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
-        );
-
         let frame = &mut active_doc.frame;
         let profile = &mut active_doc.profile;
         assert!(self.current_compositor_kind == frame.composite_state.compositor_kind);
@@ -3649,7 +3646,7 @@ impl Renderer {
                     "Cleared texture cache without sending new document frame.");
         }
 
-        match self.prepare_gpu_cache(frame) {
+        match self.prepare_gpu_cache(&frame.deferred_resolves) {
             Ok(..) => {
                 assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
                     "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
@@ -3688,7 +3685,7 @@ impl Renderer {
             }
         }
 
-        self.unlock_external_images();
+        self.unlock_external_images(&frame.deferred_resolves);
 
         let _gm = self.gpu_profiler.start_marker("end frame");
         self.gpu_profiler.end_frame();
@@ -3914,7 +3911,10 @@ impl Renderer {
         self.profile.set(profiler::GPU_CACHE_BLOCKS_UPDATED, updated_blocks);
     }
 
-    fn prepare_gpu_cache(&mut self, frame: &Frame) -> Result<(), RendererError> {
+    fn prepare_gpu_cache(
+        &mut self,
+        deferred_resolves: &[DeferredResolve],
+    ) -> Result<(), RendererError> {
         if self.pending_gpu_cache_clear {
             let use_scatter =
                 matches!(self.gpu_cache_texture.bus, GpuCacheBus::Scatter { .. });
@@ -3924,7 +3924,7 @@ impl Renderer {
             self.pending_gpu_cache_clear = false;
         }
 
-        let deferred_update_list = self.update_deferred_resolves(&frame.deferred_resolves);
+        let deferred_update_list = self.update_deferred_resolves(deferred_resolves);
         self.pending_gpu_cache_updates.extend(deferred_update_list);
 
         self.update_gpu_cache();
@@ -5865,7 +5865,7 @@ impl Renderer {
             debug_commands: Vec::new(),
         };
 
-        for deferred_resolve in deferred_resolves {
+        for (i, deferred_resolve) in deferred_resolves.iter().enumerate() {
             self.gpu_profiler.place_marker("deferred resolve");
             let props = &deferred_resolve.image_properties;
             let ext_image = props
@@ -5915,7 +5915,7 @@ impl Renderer {
 
             self.texture_resolver
                 .external_images
-                .insert((ext_image.id, ext_image.channel_index), texture);
+                .insert(DeferredResolveIndex(i as u32), texture);
 
             list.updates.push(GpuCacheUpdate::Copy {
                 block_index: list.blocks.len(),
@@ -5929,14 +5929,21 @@ impl Renderer {
         Some(list)
     }
 
-    fn unlock_external_images(&mut self) {
+    fn unlock_external_images(
+        &mut self,
+        deferred_resolves: &[DeferredResolve],
+    ) {
         if !self.texture_resolver.external_images.is_empty() {
             let handler = self.external_image_handler
                 .as_mut()
                 .expect("Found external image, but no handler set!");
 
-            for (ext_data, _) in self.texture_resolver.external_images.drain() {
-                handler.unlock(ext_data.0, ext_data.1);
+            for (index, _) in self.texture_resolver.external_images.drain() {
+                let props = &deferred_resolves[index.0 as usize].image_properties;
+                let ext_image = props
+                    .external_image
+                    .expect("BUG: Deferred resolves must be external images!");
+                handler.unlock(ext_image.id, ext_image.channel_index);
             }
         }
     }
