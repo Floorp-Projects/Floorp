@@ -3223,7 +3223,6 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
   if (aSandboxFlags != SANDBOXED_NONE &&
       !(aSandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION) &&
       !(aSandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION)) {
-    nsCOMPtr<nsIURI> iframeUri;
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag, "Iframe Sandbox"_ns,
         aDocShell->GetDocument(), nsContentUtils::eSECURITY_PROPERTIES,
