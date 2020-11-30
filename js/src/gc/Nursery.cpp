@@ -31,7 +31,6 @@
 #include "vm/Realm.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/TypeInference.h"
 
 #include "gc/Marking-inl.h"
 #include "gc/Zone-inl.h"

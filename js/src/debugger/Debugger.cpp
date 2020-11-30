@@ -101,7 +101,6 @@
 #include "vm/Scope.h"                 // for Scope
 #include "vm/StringType.h"            // for JSString, PropertyName
 #include "vm/TraceLogging.h"          // for TraceLoggerForCurrentThread
-#include "vm/TypeInference.h"         // for TypeZone
 #include "vm/WrapperObject.h"         // for CrossCompartmentWrapperObject
 #include "wasm/WasmDebug.h"           // for DebugState
 #include "wasm/WasmInstance.h"        // for Instance
@@ -127,7 +126,6 @@
 #include "vm/ObjectOperations-inl.h"  // for GetProperty, HasProperty
 #include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
 #include "vm/Stack-inl.h"             // for AbstractFramePtr::script
-#include "vm/TypeInference-inl.h"     // for AutoEnterAnalysis
 
 namespace js {
 

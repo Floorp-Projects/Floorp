@@ -25,7 +25,6 @@
 #include "gc/Marking-inl.h"
 #include "vm/ObjectGroup-inl.h"
 #include "vm/Realm-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::gc;
