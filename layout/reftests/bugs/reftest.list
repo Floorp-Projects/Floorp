@@ -1377,7 +1377,7 @@ fuzzy-if(Android,0-5,0-2800) == 506481-1.html 506481-1-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
 pref(layout.css.xul-box-display-values.content.enabled,true) == 508816-2.html 508816-2-ref.html
-skip-if(isDebugBuild) == chrome://reftest/content/bugs/508908-1.xhtml chrome://reftest/content/bugs/508908-1-ref.xhtml
+== chrome://reftest/content/bugs/508908-1.xhtml chrome://reftest/content/bugs/508908-1-ref.xhtml
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
 fuzzy-if(Android,0-5,0-1656) fuzzy-if(skiaContent,0-1,0-1200) == 512410.html 512410-ref.html
