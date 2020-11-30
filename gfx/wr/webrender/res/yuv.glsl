@@ -86,8 +86,7 @@ mat3 get_yuv_color_matrix(int color_space) {
 }
 
 vec3 get_yuv_offset_vector(int color_space) {
-    // Float conversion to work around a macOS Intel shader compiler bug
-    if (float(color_space) == YUV_COLOR_SPACE_IDENTITY) {
+    if (color_space == YUV_COLOR_SPACE_IDENTITY) {
         return vec3(0.0, 0.0, 0.0);
     } else {
         return vec3(0.06275, 0.50196, 0.50196);
