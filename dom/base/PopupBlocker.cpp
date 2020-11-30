@@ -413,6 +413,10 @@ void PopupBlocker::Shutdown() {
 
 /* static */
 bool PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe() {
+  if (!StaticPrefs::dom_delay_block_external_protocol_in_iframes_enabled()) {
+    return false;
+  }
+
   TimeStamp now = TimeStamp::Now();
 
   if (sLastAllowedExternalProtocolIFrameTimeStamp.IsNull()) {
@@ -421,7 +425,7 @@ bool PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe() {
   }
 
   if ((now - sLastAllowedExternalProtocolIFrameTimeStamp).ToSeconds() <
-      (StaticPrefs::dom_delay_block_external_protocol_in_iframes())) {
+      StaticPrefs::dom_delay_block_external_protocol_in_iframes()) {
     return false;
   }
 

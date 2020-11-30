@@ -1585,11 +1585,17 @@
   value: false
   mirror: always
 
-# Any how many seconds we allow external protocol URLs in iframe when not in
+# After how many seconds we allow external protocol URLs in iframe when not in
 # single events
 - name: dom.delay.block_external_protocol_in_iframes
   type: uint32_t
   value: 10   # in seconds
+  mirror: always
+
+# Whether the above pref has any effect at all.
+- name: dom.delay.block_external_protocol_in_iframes.enabled
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
 # HTML <dialog> element
