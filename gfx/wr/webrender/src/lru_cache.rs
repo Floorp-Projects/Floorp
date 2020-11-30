@@ -123,6 +123,20 @@ impl<T, M> LRUCache<T, M> {
             })
     }
 
+    /// Return a reference to the oldest item in the cache, keeping it in the cache.
+    /// If the cache is empty, or all elements in the cache have manual eviction enabled,
+    /// this will return None.
+    pub fn peek_oldest(&self) -> Option<&T> {
+        self.lru
+            .peek_front()
+            .map(|handle| {
+                let entry = self.entries.get(handle);
+                // We should only find elements in this list with valid LRU location
+                debug_assert!(entry.lru_index.is_some());
+                &entry.value
+            })
+    }
+
     /// Remove the oldest item from the cache. This is used to select elements to
     /// be evicted. If the cache is empty, or all elements in the cache have manual
     /// eviction enabled, this will return None
@@ -382,6 +396,11 @@ impl<H> LRUTracker<H> where H: std::fmt::Debug {
         item_index
     }
 
+    /// Returns a reference to the oldest element, or None if the list is empty.
+    fn peek_front(&self) -> Option<&H> {
+        self.head.map(|head| self.items[head.as_usize()].handle.as_ref().unwrap())
+    }
+
     /// Remove the oldest element from the front of the LRU list. Returns None
     /// if the list is empty.
     fn pop_front(
@@ -524,6 +543,32 @@ impl<H> LRUTracker<H> where H: std::fmt::Debug {
             assert_eq!(i0, i1);
         }
     }
+}
+
+#[test]
+fn test_lru_tracker_push_peek() {
+    // Push elements, peek and ensure:
+    // - peek_oldest returns None before first element pushed
+    // - peek_oldest returns oldest element
+    // - subsequent calls to peek_oldest return same element (nothing was removed)
+    struct CacheMarker;
+    const NUM_ELEMENTS: usize = 50;
+
+    let mut cache: LRUCache<usize, CacheMarker> = LRUCache::new();
+    cache.validate();
+
+    assert_eq!(cache.peek_oldest(), None);
+
+    for i in 0 .. NUM_ELEMENTS {
+        cache.push_new(i);
+    }
+    cache.validate();
+
+    assert_eq!(cache.peek_oldest(), Some(&0));
+    assert_eq!(cache.peek_oldest(), Some(&0));
+
+    cache.pop_oldest();
+    assert_eq!(cache.peek_oldest(), Some(&1));
 }
 
 #[test]

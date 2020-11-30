@@ -928,19 +928,25 @@ impl TextureCache {
         // Keep evicting while memory is above the threshold, and we haven't
         // reached a maximum number of evictions this frame.
         while self.should_continue_evicting(eviction_count) {
-            match self.lru_cache.pop_oldest() {
-                Some(entry) => {
-                    entry.evict();
-                    self.free(&entry);
-                    eviction_count += 1;
-                }
-                None => {
-                    // It's possible that we could fail to pop an item from the LRU list to evict, if every
-                    // item in the cache is set to manual eviction mode. In this case, just break out of the
-                    // loop as there's nothing we can do until the calling code manually evicts items to
-                    // reduce the allocated cache size.
-                    break;
-                }
+            let should_evict = match self.lru_cache.peek_oldest() {
+                // Only evict this item if it wasn't used in the previous frame. The reason being that if it
+                // was used the previous frame then it will likely be used in this frame too, and we don't
+                // want to be continually evicting and reuploading the item every frame.
+                Some(entry) => entry.last_access.frame_id() < self.now.frame_id() - 1,
+                // It's possible that we could fail to pop an item from the LRU list to evict, if every
+                // item in the cache is set to manual eviction mode. In this case, just break out of the
+                // loop as there's nothing we can do until the calling code manually evicts items to
+                // reduce the allocated cache size.
+                None => false,
+            };
+
+            if should_evict {
+                let entry = self.lru_cache.pop_oldest().unwrap();
+                entry.evict();
+                self.free(&entry);
+                eviction_count += 1;
+            } else {
+                break;
             }
         }
     }
