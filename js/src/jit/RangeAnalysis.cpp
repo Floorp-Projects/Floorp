@@ -3244,6 +3244,7 @@ void MInArray::collectRangeInfoPreTrunc() {
   Range indexRange(index());
   if (indexRange.isFiniteNonNegative()) {
     needsNegativeIntCheck_ = false;
+    setNotGuard();
   }
 }
 

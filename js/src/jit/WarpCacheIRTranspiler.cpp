@@ -1731,6 +1731,26 @@ bool WarpCacheIRTranspiler::emitLoadDenseElementExistsResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadDenseElementHoleExistsResult(
+    ObjOperandId objId, Int32OperandId indexId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  // Get the elements vector.
+  auto* elements = MElements::New(alloc(), obj);
+  add(elements);
+
+  auto* length = MInitializedLength::New(alloc(), elements);
+  add(length);
+
+  // Check if id < initLength and elem[id] not a hole.
+  auto* ins = MInArray::New(alloc(), elements, index, length, obj);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
     ObjOperandId objId, Int32OperandId indexId) {
   MDefinition* obj = getOperand(objId);
