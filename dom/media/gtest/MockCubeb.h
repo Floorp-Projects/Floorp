@@ -140,6 +140,9 @@ class MockCubebStream {
   int Start();
   int Stop();
 
+  cubeb_stream* AsCubebStream();
+  static MockCubebStream* AsMock(cubeb_stream* aStream);
+
   cubeb_devid GetInputDeviceID() const;
   cubeb_devid GetOutputDeviceID() const;
 
@@ -205,6 +208,7 @@ class MockCubeb {
   // Cubeb backend implementation
   // This allows passing this class as a cubeb* instance.
   cubeb* AsCubebContext();
+  static MockCubeb* AsMock(cubeb* aContext);
   // Fill in the collection parameter with all devices of aType.
   int EnumerateDevices(cubeb_device_type aType,
                        cubeb_device_collection* collection);
