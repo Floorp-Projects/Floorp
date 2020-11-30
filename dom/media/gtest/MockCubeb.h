@@ -135,7 +135,7 @@ class MockCubebStream {
                   cubeb_stream_params* aOutputStreamParams,
                   cubeb_data_callback aDataCallback,
                   cubeb_state_callback aStateCallback, void* aUserPtr,
-                  SmartMockCubebStream* aSelf);
+                  SmartMockCubebStream* aSelf, bool aFrozenStart);
 
   ~MockCubebStream();
 
@@ -154,6 +154,7 @@ class MockCubebStream {
 
   void SetDriftFactor(float aDriftFactor);
   void ForceError();
+  void Unfreeze();
 
   MediaEventSource<uint32_t>& FramesProcessedEvent();
   MediaEventSource<uint32_t>& FramesVerifiedEvent();
@@ -170,6 +171,11 @@ class MockCubebStream {
   SmartMockCubebStream* const mSelf;
 
  private:
+  // Monitor used to block start until mFrozenStart is false.
+  Monitor mFrozenStartMonitor;
+  // Whether this stream should wait for an explicit start request before
+  // starting. Protected by FrozenStartMonitor.
+  bool mFrozenStart;
   // Signal to the audio thread that stream is stopped.
   std::atomic_bool mStreamStop{true};
   // The audio buffer used on data callback.
@@ -211,10 +217,11 @@ class SmartMockCubebStream
                        cubeb_devid aOutputDevice,
                        cubeb_stream_params* aOutputStreamParams,
                        cubeb_data_callback aDataCallback,
-                       cubeb_state_callback aStateCallback, void* aUserPtr)
+                       cubeb_state_callback aStateCallback, void* aUserPtr,
+                       bool aFrozenStart)
       : MockCubebStream(aContext, aInputDevice, aInputStreamParams,
                         aOutputDevice, aOutputStreamParams, aDataCallback,
-                        aStateCallback, aUserPtr, this) {}
+                        aStateCallback, aUserPtr, this, aFrozenStart) {}
 };
 
 // This class has two facets: it is both a fake cubeb backend that is intended
@@ -256,6 +263,11 @@ class MockCubeb {
   // This allows simulating a backend that does not support setting a device
   // collection invalidation callback, to be able to test the fallback path.
   void SetSupportDeviceChangeCallback(bool aSupports);
+
+  // Makes MockCubebStreams starting after this point wait for AllowStart().
+  // Callers must ensure they get a hold of the stream through StreamInitEvent
+  // to be able to start them.
+  void SetStreamStartFreezeEnabled(bool aEnabled);
 
   int StreamInit(cubeb* aContext, cubeb_stream** aStream,
                  cubeb_devid aInputDevice,
@@ -304,6 +316,8 @@ class MockCubeb {
   // notification via a system callback. If not, Gecko is expected to re-query
   // the list every time.
   bool mSupportsDeviceCollectionChangedCallback = true;
+  // Whether new MockCubebStreams should be frozen on start.
+  Atomic<bool> mStreamStartFreezeEnabled{false};
   // Our input and output devices.
   nsTArray<cubeb_device_info> mInputDevices;
   nsTArray<cubeb_device_info> mOutputDevices;
