@@ -18,9 +18,9 @@ namespace mozilla {
 #  undef LOG_TEST
 #endif
 
-extern LazyLogModule gMediaTrackGraphLog;
-#define LOG(type, msg) MOZ_LOG(gMediaTrackGraphLog, type, msg)
-#define LOG_TEST(type) MOZ_LOG_TEST(gMediaTrackGraphLog, type)
+extern LazyLogModule gForwardedInputTrackLog;
+#define LOG(type, msg) MOZ_LOG(gForwardedInputTrackLog, type, msg)
+#define LOG_TEST(type) MOZ_LOG_TEST(gForwardedInputTrackLog, type)
 
 UniquePtr<CrossGraphPort> CrossGraphPort::Connect(
     const RefPtr<dom::AudioStreamTrack>& aStreamTrack, AudioDeviceInfo* aSink,
@@ -106,8 +106,9 @@ void CrossGraphTransmitter::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   MediaTrack* input = mInputs[0]->GetSource();
 
-  if (input->Ended() &&
-      (input->GetEnd() <= input->GraphTimeToTrackTimeWithBlocking(aFrom))) {
+  if (mInputs[0]->GetSource()->Ended() &&
+      (mInputs[0]->GetSource()->GetEnd() <=
+       mInputs[0]->GetSource()->GraphTimeToTrackTimeWithBlocking(aFrom))) {
     mEnded = true;
     return;
   }

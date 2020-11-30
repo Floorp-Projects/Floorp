@@ -1365,17 +1365,17 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
   return false;
 }
 
-auto MediaTrackGraphImpl::OneIteration(GraphTime aStateTime,
+auto MediaTrackGraphImpl::OneIteration(GraphTime aStateEnd,
                                        GraphTime aIterationEnd,
                                        AudioMixer* aMixer) -> IterationResult {
   if (mGraphRunner) {
-    return mGraphRunner->OneIteration(aStateTime, aIterationEnd, aMixer);
+    return mGraphRunner->OneIteration(aStateEnd, aIterationEnd, aMixer);
   }
 
-  return OneIterationImpl(aStateTime, aIterationEnd, aMixer);
+  return OneIterationImpl(aStateEnd, aIterationEnd, aMixer);
 }
 
-auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
+auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
                                            GraphTime aIterationEnd,
                                            AudioMixer* aMixer)
     -> IterationResult {
@@ -1406,14 +1406,14 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
     NS_ProcessPendingEvents(nullptr);
   }
 
-  GraphTime stateTime = std::min(aStateTime, GraphTime(mEndTime));
-  UpdateGraph(stateTime);
+  GraphTime stateEnd = std::min(aStateEnd, GraphTime(mEndTime));
+  UpdateGraph(stateEnd);
 
-  mStateComputedTime = stateTime;
+  mStateComputedTime = stateEnd;
 
   GraphTime oldProcessedTime = mProcessedTime;
   Process(aMixer);
-  MOZ_ASSERT(mProcessedTime == stateTime);
+  MOZ_ASSERT(mProcessedTime == stateEnd);
 
   UpdateCurrentTimeForTracks(oldProcessedTime);
 
@@ -3095,7 +3095,7 @@ AbstractThread* MediaTrackGraph::AbstractMainThread() {
 }
 
 #ifdef DEBUG
-bool MediaTrackGraphImpl::InDriverIteration(const GraphDriver* aDriver) const {
+bool MediaTrackGraphImpl::InDriverIteration(GraphDriver* aDriver) {
   return aDriver->OnThread() ||
          (mGraphRunner && mGraphRunner->InDriverIteration(aDriver));
 }
@@ -3447,8 +3447,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
       // ControlMessage.
       MediaTrackGraphImpl* graphImpl = mMediaTrack->GraphImpl();
       if (graphImpl->CurrentDriver()->AsAudioCallbackDriver() &&
-          graphImpl->CurrentDriver()->ThreadRunning() &&
-          !graphImpl->CurrentDriver()->AsAudioCallbackDriver()->OnFallback()) {
+          graphImpl->CurrentDriver()->ThreadRunning()) {
         // Avoid Resolve's locking on the graph thread by doing it on main.
         graphImpl->Dispatch(NS_NewRunnableFunction(
             "MediaTrackGraphImpl::NotifyWhenGraphStarted::Resolver",
