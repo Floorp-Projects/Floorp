@@ -575,17 +575,22 @@ static void BuildPreviousPageOverflow(nsDisplayListBuilder* aBuilder,
   for (const PageAndOffset& pair : Reversed(previousPagesAndOffsets)) {
     auto* prevPageCF = pair.first;
     const nscoord offsetToCurrentPageBStart = pair.second;
-    const LogicalRect inkOverflow(
-        wm, prevPageCF->InkOverflowRectRelativeToSelf(), prevPageCF->GetSize());
+    // Only scrollable overflow create new pages, not ink overflow.
+    const LogicalRect scrollableOverflow(
+        wm, prevPageCF->ScrollableOverflowRectRelativeToSelf(),
+        prevPageCF->GetSize());
     const auto remainingOverflow =
-        inkOverflow.BEnd(wm) - offsetToCurrentPageBStart;
+        scrollableOverflow.BEnd(wm) - offsetToCurrentPageBStart;
     if (remainingOverflow <= 0) {
       continue;
     }
 
     // This rect represents the piece of prevPageCF's overflow that ends up on
     // the current pageContentFrame (in prevPageCF's coordinate system).
-    LogicalRect overflowRect(inkOverflow);
+    // Note that we use InkOverflow here since this is for painting.
+    LogicalRect overflowRect(
+        wm, prevPageCF->InkOverflowRectRelativeToSelf(),
+        prevPageCF->GetSize());
     overflowRect.BStart(wm) = offsetToCurrentPageBStart;
     overflowRect.BSize(wm) = std::min(remainingOverflow, prevPageCF->BSize(wm));
 
@@ -665,9 +670,10 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       BuildPreviousPageOverflow(aBuilder, this, currentPageCF, set);
     }
 
-    // Set the visible rect to ink overflow rect of the child nsPageContentFrame
-    // in parent nsPageFrame coordinate space.
-    const nsRect childOverflowRect = child->InkOverflowRectRelativeToSelf();
+    // Set the visible rect to scrollable overflow rect of the child
+    // nsPageContentFrame in parent nsPageFrame coordinate space.
+    const nsRect childOverflowRect =
+        child->ScrollableOverflowRectRelativeToSelf();
     const nsRect visibleRect = childOverflowRect + child->GetOffsetTo(this);
 
     nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(

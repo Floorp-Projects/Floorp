@@ -139,16 +139,15 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
                                aReflowInput.AvailableHeight());
     const nscoord pageBSize = GetLogicalRect(containerSize).BSize(wm);
     const nscoord overflowBSize =
-        LogicalRect(wm, InkOverflowRect(), GetSize()).BEnd(wm);
+        LogicalRect(wm, ScrollableOverflowRect(), GetSize()).BEnd(wm);
     const nscoord currentPageOverflow = overflowBSize - pageBSize;
     nscoord remainingOverflow =
         std::max(currentPageOverflow, previousPageOverflow - pageBSize);
 
     if (aStatus.IsFullyComplete() && remainingOverflow > 0) {
-      // If we have InkOverflow off the end of our page, then we report
+      // If we have ScrollableOverflow off the end of our page, then we report
       // ourselves as overflow-incomplete in order to produce an additional
-      // content-less page, which we expect to draw our InkOverflow on our
-      // behalf.
+      // content-less page, which we expect to draw our overflow on our behalf.
       aStatus.SetOverflowIncomplete();
     }
 
