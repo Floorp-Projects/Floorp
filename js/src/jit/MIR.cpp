@@ -5817,6 +5817,16 @@ MDefinition* MCheckObjCoercible::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
+MDefinition* MGuardIndexIsNonNegative::foldsTo(TempAllocator& alloc) {
+  MOZ_ASSERT(index()->type() == MIRType::Int32);
+
+  MDefinition* input = index();
+  if (!input->isConstant() || input->toConstant()->toInt32() < 0) {
+    return this;
+  }
+  return input;
+}
+
 MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
                                     WasmInstanceObject* instanceObj,
                                     const wasm::FuncExport& funcExport) {
