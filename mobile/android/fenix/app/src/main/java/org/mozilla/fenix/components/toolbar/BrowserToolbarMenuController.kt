@@ -236,10 +236,16 @@ class DefaultBrowserToolbarMenuController(
                 sessionManager.select(customTabSession)
 
                 // Switch to the actual browser which should now display our new selected session
-                activity.startActivity(openInFenixIntent)
+                activity.startActivity(openInFenixIntent.apply {
+                    // We never want to launch the browser in the same task as the external app
+                    // activity. So we force a new task here. IntentReceiverActivity will do the
+                    // right thing and take care of routing to an already existing browser and avoid
+                    // cloning a new one.
+                    flags = flags or Intent.FLAG_ACTIVITY_NEW_TASK
+                })
 
-                // Close this activity since it is no longer displaying any session
-                activity.finish()
+                // Close this activity (and the task) since it is no longer displaying any session
+                activity.finishAndRemoveTask()
             }
             ToolbarMenu.Item.Quit -> {
                 // We need to show the snackbar while the browsing data is deleting (if "Delete
