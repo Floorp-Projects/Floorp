@@ -79,6 +79,12 @@ bool HyperTextIterator::NormalizeForward() {
       mCurrentContainer = mCurrentContainer->Parent()->AsHyperText();
       mCurrentStartOffset = endOffset;
 
+      if (mCurrentContainer == mEndContainer &&
+          mCurrentStartOffset >= mEndOffset) {
+        // Reached end boundary.
+        return false;
+      }
+
       // Call NormalizeForward recursively to get top-most link if at the end of
       // one, or innermost link if at the beginning.
       NormalizeForward();
@@ -96,6 +102,12 @@ bool HyperTextIterator::NormalizeForward() {
         mCurrentStartOffset = bullet ? nsAccUtils::TextLength(bullet) : 0;
       } else {
         mCurrentStartOffset = 0;
+      }
+
+      if (mCurrentContainer == mEndContainer &&
+          mCurrentStartOffset >= mEndOffset) {
+        // Reached end boundary.
+        return false;
       }
 
       // Call NormalizeForward recursively to get top-most embedding ancestor
