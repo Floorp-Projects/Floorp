@@ -2799,8 +2799,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void InitiateShutdown() override;
   bool IsShutdownCompleted() const override;
+  nsCString GetShutdownStatus() const override;
   void ForceKillActors() override;
-  void ShutdownTimedOut() override;
   void FinalizeShutdown() override;
 
   nsresult CreateArchivedOriginScope(
@@ -9171,7 +9171,7 @@ bool QuotaClient::IsShutdownCompleted() const {
 
 void QuotaClient::ForceKillActors() { ForceKillDatabases(); }
 
-void QuotaClient::ShutdownTimedOut() {
+nsCString QuotaClient::GetShutdownStatus() const {
   AssertIsOnBackgroundThread();
 
   nsCString data;
@@ -9239,10 +9239,7 @@ void QuotaClient::ShutdownTimedOut() {
     data.Append(")\n");
   }
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::LocalStorageShutdownTimeout, data);
-
-  MOZ_CRASH("LocalStorage shutdown timed out");
+  return data;
 }
 
 void QuotaClient::FinalizeShutdown() {

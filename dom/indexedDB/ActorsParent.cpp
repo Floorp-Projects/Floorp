@@ -5132,8 +5132,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void InitiateShutdown() override;
   bool IsShutdownCompleted() const override;
+  nsCString GetShutdownStatus() const override;
   void ForceKillActors() override;
-  void ShutdownTimedOut() override;
   void FinalizeShutdown() override;
 
   static void DeleteTimerCallback(nsITimer* aTimer, void* aClosure);
@@ -13259,7 +13259,7 @@ void QuotaClient::ForceKillActors() {
   // Currently we don't implement force killing actors.
 }
 
-void QuotaClient::ShutdownTimedOut() {
+nsCString QuotaClient::GetShutdownStatus() const {
   AssertIsOnBackgroundThread();
 
   nsCString data;
@@ -13318,10 +13318,7 @@ void QuotaClient::ShutdownTimedOut() {
     data.Append(")\n");
   }
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IndexedDBShutdownTimeout, data);
-
-  MOZ_CRASH("IndexedDB shutdown timed out");
+  return data;
 }
 
 void QuotaClient::FinalizeShutdown() {
