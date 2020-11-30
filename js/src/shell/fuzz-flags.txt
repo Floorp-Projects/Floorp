@@ -65,9 +65,9 @@
 
 # wasm flags
 --wasm-gc
---wasm-compiler=ion
 --wasm-compiler=baseline
---wasm-compiler=cranelift
+--wasm-compiler=optimizing
+--wasm-compiler=baseline+optimizing
 --test-wasm-await-tier2
 --wasm-disable-huge-memory
 
