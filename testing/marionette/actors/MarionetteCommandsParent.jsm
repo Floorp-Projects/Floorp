@@ -8,6 +8,8 @@ const EXPORTED_SYMBOLS = [
   "clearElementIdCache",
   "getMarionetteCommandsActorProxy",
   "MarionetteCommandsParent",
+  "registerCommandsActor",
+  "unregisterCommandsActor",
 ];
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -350,4 +352,36 @@ function getMarionetteCommandsActorProxy(browsingContextFn) {
       },
     }
   );
+}
+
+/**
+ * Register the MarionetteCommands actor that holds all the commands.
+ */
+function registerCommandsActor() {
+  try {
+    ChromeUtils.registerWindowActor("MarionetteCommands", {
+      kind: "JSWindowActor",
+      parent: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
+      },
+      child: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
+      },
+
+      allFrames: true,
+      includeChrome: true,
+    });
+  } catch (e) {
+    if (e.name === "NotSupportedError") {
+      logger.warn(`MarionetteCommands actor is already registered!`);
+    } else {
+      throw e;
+    }
+  }
+}
+
+function unregisterCommandsActor() {
+  ChromeUtils.unregisterWindowActor("MarionetteCommands");
 }
