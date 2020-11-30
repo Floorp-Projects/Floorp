@@ -173,14 +173,14 @@ class ProfileBuffer final {
           mozilla::ProfileBufferChunk::SizeofChunkMetadata() +
           WorkerBufferBytes.Value())};
 
-  double mFirstSamplingTimeNs = 0.0;
-  double mLastSamplingTimeNs = 0.0;
-  ProfilerStats mIntervalsNs;
-  ProfilerStats mOverheadsNs;
-  ProfilerStats mLockingsNs;
-  ProfilerStats mCleaningsNs;
-  ProfilerStats mCountersNs;
-  ProfilerStats mThreadsNs;
+  double mFirstSamplingTimeUs = 0.0;
+  double mLastSamplingTimeUs = 0.0;
+  ProfilerStats mIntervalsUs;
+  ProfilerStats mOverheadsUs;
+  ProfilerStats mLockingsUs;
+  ProfilerStats mCleaningsUs;
+  ProfilerStats mCountersUs;
+  ProfilerStats mThreadsUs;
 };
 
 /**
