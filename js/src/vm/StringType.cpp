@@ -26,6 +26,7 @@
 
 #include "jsfriendapi.h"
 
+#include "builtin/Boolean.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParserAtom.h"
 #include "gc/Marking.h"

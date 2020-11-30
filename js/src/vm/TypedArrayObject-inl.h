@@ -21,6 +21,7 @@
 #include "jsnum.h"
 
 #include "builtin/Array.h"
+#include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
 #include "js/ScalarType.h"  // js::Scalar::Type

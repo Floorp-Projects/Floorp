@@ -32,8 +32,7 @@
 #include "vm/StringType.h"    // js::NameToId
 #include "vm/SymbolType.h"    // JS::Symbol
 
-#include "vm/JSAtom-inl.h"         // js::IndexToId
-#include "vm/TypeInference-inl.h"  // js::MarkTypePropertyNonData
+#include "vm/JSAtom-inl.h"  // js::IndexToId
 
 namespace js {
 
