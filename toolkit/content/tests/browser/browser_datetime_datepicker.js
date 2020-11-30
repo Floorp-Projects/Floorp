@@ -243,6 +243,8 @@ add_task(async function test_datepicker_focus_change() {
 /**
  * Ensure picker opens and closes with key bindings appropriately.
  */
+/*
+disabled for bug 1676078
 add_task(async function test_datepicker_keyboard_open() {
   const inputValue = "2016-12-15";
   const prevMonth = "2016-11-01";
@@ -284,6 +286,7 @@ add_task(async function test_datepicker_keyboard_open() {
 
   await helper.tearDown();
 });
+*/
 
 /**
  * When the prev month button is clicked, calendar should display the dates for
