@@ -164,18 +164,18 @@ def changeScreenResolution(xres=None, yres=None, BitsPerPixel=None):
     CDS_FULLSCREEN = 0x00000004
     SIZEOF_DEVMODE = 148
 
-    DevModeData = struct.calcsize("32BHH") * "\x00"
+    DevModeData = struct.calcsize("32BHH") * b"\x00"
     DevModeData += struct.pack("H", SIZEOF_DEVMODE)
-    DevModeData += struct.calcsize("H") * "\x00"
+    DevModeData += struct.calcsize("H") * b"\x00"
     dwFields = (
         (xres and DM_PELSWIDTH or 0)
         | (yres and DM_PELSHEIGHT or 0)
         | (BitsPerPixel and DM_BITSPERPEL or 0)
     )
     DevModeData += struct.pack("L", dwFields)
-    DevModeData += struct.calcsize("l9h32BHL") * "\x00"
+    DevModeData += struct.calcsize("l9h32BHL") * b"\x00"
     DevModeData += struct.pack("LLL", BitsPerPixel or 0, xres or 0, yres or 0)
-    DevModeData += struct.calcsize("8L") * "\x00"
+    DevModeData += struct.calcsize("8L") * b"\x00"
 
     return windll.user32.ChangeDisplaySettingsA(DevModeData, 0)
 
