@@ -42,22 +42,22 @@ MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
 MockCubebStream::~MockCubebStream() = default;
 
 int MockCubebStream::Start() {
+  mStateCallback(reinterpret_cast<cubeb_stream*>(this), mUserPtr,
+                 CUBEB_STATE_STARTED);
   mStreamStop = false;
   reinterpret_cast<MockCubeb*>(context)->StartStream(this);
-  cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
-  mStateCallback(stream, mUserPtr, CUBEB_STATE_STARTED);
   return CUBEB_OK;
 }
 
 int MockCubebStream::Stop() {
-  mStreamStop = true;
   mOutputVerificationEvent.Notify(MakeTuple(
       mAudioVerifier.PreSilenceSamples(), mAudioVerifier.EstimatedFreq(),
       mAudioVerifier.CountDiscontinuities()));
   int rv = reinterpret_cast<MockCubeb*>(context)->StopStream(this);
+  mStreamStop = true;
   if (rv == CUBEB_OK) {
-    cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
-    mStateCallback(stream, mUserPtr, CUBEB_STATE_STOPPED);
+    mStateCallback(reinterpret_cast<cubeb_stream*>(this), mUserPtr,
+                   CUBEB_STATE_STOPPED);
   }
   return rv;
 }
