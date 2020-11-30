@@ -17,11 +17,22 @@ interface FuzzingFunctions {
    * Synchronously perform a garbage collection.
    */
   static void garbageCollect();
+ 
+  /**
+   * Synchronously perform a compacting garbage collection.
+   */
+  static void garbageCollectCompacting();
 
   /**
    * Synchronously perform a cycle collection.
    */
   static void cycleCollect();
+
+  /**
+   * Send a memory pressure event, causes shrinking GC, cycle collection and
+   * other actions.
+   */
+  static void memoryPressure();
 
   /**
    * Enable accessibility.

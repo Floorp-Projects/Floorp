@@ -28,8 +28,20 @@ void FuzzingFunctions::GarbageCollect(const GlobalObject&) {
 }
 
 /* static */
+void FuzzingFunctions::GarbageCollectCompacting(const GlobalObject&) {
+  nsJSContext::GarbageCollectNow(JS::GCReason::COMPONENT_UTILS,
+                                 nsJSContext::NonIncrementalGC,
+                                 nsJSContext::ShrinkingGC);
+}
+
+/* static */
 void FuzzingFunctions::CycleCollect(const GlobalObject&) {
   nsJSContext::CycleCollectNow();
+}
+
+void FuzzingFunctions::MemoryPressure(const GlobalObject&) {
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  os->NotifyObservers(nullptr, "memory-pressure", u"heap-minimize");
 }
 
 /* static */
