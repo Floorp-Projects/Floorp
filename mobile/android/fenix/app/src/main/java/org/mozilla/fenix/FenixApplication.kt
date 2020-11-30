@@ -438,9 +438,5 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
-    companion object {
-        private const val KINTO_ENDPOINT_PROD = "https://firefox.settings.services.mozilla.com/v1"
-    }
-
     override fun getWorkManagerConfiguration() = Builder().setMinimumLoggingLevel(INFO).build()
 }
