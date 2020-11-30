@@ -716,22 +716,6 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
                              LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
                              Some(logicalCBSize), initFlags);
 
-  // Get the border values
-  WritingMode outerWM = aReflowInput.GetWritingMode();
-  const LogicalMargin border(outerWM, aDelegatingFrame->GetUsedBorder());
-
-  LogicalMargin margin = kidReflowInput.ComputedLogicalMargin(outerWM);
-
-  // If we're doing CSS Box Alignment in either axis, that will apply the
-  // margin for us in that axis (since the thing that's aligned is the margin
-  // box).  So, we clear out the margin here to avoid applying it twice.
-  if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign) {
-    margin.IStart(outerWM) = margin.IEnd(outerWM) = 0;
-  }
-  if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
-    margin.BStart(outerWM) = margin.BEnd(outerWM) = 0;
-  }
-
   bool constrainBSize =
       (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) &&
 
@@ -750,6 +734,10 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
       // across next-in-flow breaks yet.
       (aKidFrame->GetLogicalRect(aContainingBlock.Size()).BStart(wm) <=
        aReflowInput.AvailableBSize());
+
+  // Get the border values
+  const WritingMode outerWM = aReflowInput.GetWritingMode();
+  const LogicalMargin border = aDelegatingFrame->GetLogicalUsedBorder(outerWM);
 
   if (constrainBSize) {
     kidReflowInput.AvailableBSize() =
@@ -770,6 +758,17 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   const LogicalSize kidSize = kidDesiredSize.Size(outerWM);
 
   LogicalMargin offsets = kidReflowInput.ComputedLogicalOffsets(outerWM);
+  LogicalMargin margin = kidReflowInput.ComputedLogicalMargin(outerWM);
+
+  // If we're doing CSS Box Alignment in either axis, that will apply the
+  // margin for us in that axis (since the thing that's aligned is the margin
+  // box).  So, we clear out the margin here to avoid applying it twice.
+  if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign) {
+    margin.IStart(outerWM) = margin.IEnd(outerWM) = 0;
+  }
+  if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
+    margin.BStart(outerWM) = margin.BEnd(outerWM) = 0;
+  }
 
   // If we're solving for start in either inline or block direction,
   // then compute it now that we know the dimensions.
