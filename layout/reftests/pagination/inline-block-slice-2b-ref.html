@@ -13,34 +13,29 @@
 
 html,body {
   color:black; background-color:white; font:20px/1 monospace; padding:0; margin:0;
+  writing-mode: vertical-lr;
 }
 
 .ib {
   display: block;
-  inline-size: 50vw;
-  block-size: 130vh;
+  inline-size: 50vh;
+  block-size: 150vw;
   vertical-align: top;
   border: 5px solid black;
 }
 
-.ib > div {
-  inline-size: 50vw;
-  block-size: 150vh;
-  border: 5px solid grey;
-}
-
 .after {
-  inline-size: 60vw;
-  block-size: 10vh;
-  border: 5px dashed grey;
-  background-color: grey;
+  inline-size: 60vh;
+  block-size: 10vw;
+  position: relative;
+  inset-block-start: -20vw;
+  border: 5px solid grey;
+  background-color: white;
 }
 </style>
 </head>
 <body>
-    <div class="ib">
-      <div></div>
-    </div>
+    <div class="ib"></div>
     <div class="after"></div>
 </body>
 </html>
