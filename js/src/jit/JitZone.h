@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
 #include <stddef.h>
@@ -105,7 +106,12 @@ class JitZone {
                 MovableCellHasher<WeakHeapPtr<BaseScript*>>, SystemAllocPolicy>;
   InlinedScriptMap inlinedCompilations_;
 
+  mozilla::Maybe<IonCompilationId> currentCompilationId_;
+  bool keepJitScripts_ = false;
+
  public:
+  ~JitZone() { MOZ_ASSERT(!keepJitScripts_); }
+
   void traceWeak(JSTracer* trc);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -158,6 +164,16 @@ class JitZone {
 
   void removeInlinedCompilations(JSScript* inlined) {
     inlinedCompilations_.remove(inlined);
+  }
+
+  bool keepJitScripts() const { return keepJitScripts_; }
+  void setKeepJitScripts(bool keep) { keepJitScripts_ = keep; }
+
+  mozilla::Maybe<IonCompilationId> currentCompilationId() const {
+    return currentCompilationId_;
+  }
+  mozilla::Maybe<IonCompilationId>& currentCompilationIdRef() {
+    return currentCompilationId_;
   }
 };
 

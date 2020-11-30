@@ -29,7 +29,6 @@
 
 namespace js {
 
-class TypeZone;
 class PlainObject;
 
 namespace jit {
@@ -39,27 +38,6 @@ class JitScript;
 class TempAllocator;
 
 }  // namespace jit
-
-class TypeZone {
-  // Under CodeGenerator::link, the id of the current compilation.
-  ZoneData<mozilla::Maybe<IonCompilationId>> currentCompilationId_;
-
-  TypeZone(const TypeZone&) = delete;
-  void operator=(const TypeZone&) = delete;
-
- public:
-  ZoneData<bool> keepJitScripts;
-
-  explicit TypeZone(JS::Zone* zone);
-  ~TypeZone();
-
-  mozilla::Maybe<IonCompilationId> currentCompilationId() const {
-    return currentCompilationId_.ref();
-  }
-  mozilla::Maybe<IonCompilationId>& currentCompilationIdRef() {
-    return currentCompilationId_.ref();
-  }
-};
 
 } /* namespace js */
 

@@ -22,6 +22,8 @@ class JS_PUBLIC_API JSScript;
 namespace js {
 namespace jit {
 
+class JitZone;
+
 // Information about a script's bytecode, used by IonBuilder. This is cached
 // in JitScript.
 struct IonBytecodeInfo {
@@ -503,7 +505,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
 // Ensures no JitScripts are purged in the current zone.
 class MOZ_RAII AutoKeepJitScripts {
-  TypeZone& zone_;
+  jit::JitZone* zone_;
   bool prev_;
 
   AutoKeepJitScripts(const AutoKeepJitScripts&) = delete;

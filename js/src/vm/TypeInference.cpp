@@ -56,8 +56,3 @@ using mozilla::PodArrayZero;
 using mozilla::PodCopy;
 
 using js::jit::JitScript;
-
-TypeZone::TypeZone(Zone* zone)
-    : currentCompilationId_(zone), keepJitScripts(zone, false) {}
-
-TypeZone::~TypeZone() { MOZ_ASSERT(!keepJitScripts); }

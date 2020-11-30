@@ -147,7 +147,6 @@ JS::Zone::Zone(JSRuntime* rt)
       helperThreadUse_(HelperThreadUse::None),
       helperThreadOwnerContext_(nullptr),
       arenas(this),
-      types(this),
       data(this, nullptr),
       tenuredStrings(this, 0),
       tenuredBigInts(this, 0),
