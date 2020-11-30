@@ -18,28 +18,22 @@
 html,body {
   color:black; background-color:white; font:20px/1 Ahem; padding:0; margin:0;
 }
+html { block-size: 40vw; writing-mode: vertical-rl; }
 
 .ib {
   display: block;
-  inline-size: 50vw;
-  block-size: 210vh;
+  inline-size: 50vh;
+  block-size: 210vw;
   border: 5px solid black;
-  margin-left: 20px;
-  margin-top: -20px;
-}
-
-.after {
-  display: block;
-  inline-size: 60vw;
-  block-size: 10vh;
-  border: 5px dashed grey;
-  background-color: grey;
+  border-block-start-color: blue;
+  border-inline-start-color: lime;
+  margin-inline-start: 20px;
+  margin-block-start: -20px;
 }
 </style>
 </head>
 <body>
-  X<span style="display:inline-block; inline-size:50vw; border:5px solid transparent"></span>p
+  X<span style="display:inline-block; inline-size:50vh; border:5px solid transparent"></span>p
   <div class="ib"></div>
-  <div class="after"></div>
 </body>
 </html>

@@ -17,29 +17,31 @@
 
 html,body {
   color:black; background-color:white; font:20px/1 Ahem; padding:0; margin:0;
+  writing-mode: vertical-lr;
 }
+html { block-size: 40vw; }
 
 .ib {
   display: block;
-  inline-size: 50vw;
-  block-size: 210vh;
+  inline-size: 50vh;
+  block-size: 210vw;
   border: 5px solid black;
-  margin-left: 20px;
-  margin-top: -20px;
+  margin-top: 20px;
+  margin-right: -20px;
 }
 
 .after {
   display: block;
-  inline-size: 60vw;
-  block-size: 10vh;
+  inline-size: 60vh;
+  block-size: 10vw;
   border: 5px dashed grey;
   background-color: grey;
 }
 </style>
 </head>
 <body>
-  X<span style="display:inline-block; inline-size:50vw; border:5px solid transparent"></span>p
   <div class="ib"></div>
+  X<span style="display:inline-block; inline-size:50vh; border:5px solid transparent"></span>p
   <div class="after"></div>
 </body>
 </html>
