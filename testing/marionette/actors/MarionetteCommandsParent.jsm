@@ -33,15 +33,7 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     this._resolveDialogOpened = null;
 
     this.dialogObserver = new modal.DialogObserver();
-    this.dialogObserver.add((action, dialogRef, win) => {
-      if (
-        this._resolveDialogOpened &&
-        action == "opened" &&
-        win == this.browsingContext.topChromeWindow
-      ) {
-        this._resolveDialogOpened({ data: null });
-      }
-    });
+    this.dialogObserver.add(this.onDialog.bind(this));
 
     this.topWindow = this.browsingContext.top.embedderElement?.ownerGlobal;
     this.topWindow?.addEventListener("TabClose", _onTabClose);
@@ -72,7 +64,20 @@ class MarionetteCommandsParent extends JSWindowActorParent {
   }
 
   didDestroy() {
+    this.dialogObserver.remove(this.onDialog);
+    this.dialogObserver.unregister();
+
     this.topWindow?.removeEventListener("TabClose", _onTabClose);
+  }
+
+  onDialog(action, dialogRef, win) {
+    if (
+      this._resolveDialogOpened &&
+      action == "opened" &&
+      win == this.browsingContext.topChromeWindow
+    ) {
+      this._resolveDialogOpened({ data: null });
+    }
   }
 
   // Proxying methods for WebDriver commands
