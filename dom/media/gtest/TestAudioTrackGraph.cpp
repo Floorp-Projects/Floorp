@@ -609,14 +609,22 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
-  /* Primary graph: Create the graph and a SourceMediaTrack. */
+  cubeb->SetStreamStartFreezeEnabled(true);
+
+  /* Primary graph: Create the graph. */
   MediaTrackGraph* primary =
-      MediaTrackGraph::GetInstance(MediaTrackGraph::AUDIO_THREAD_DRIVER,
+      MediaTrackGraph::GetInstance(MediaTrackGraph::SYSTEM_THREAD_DRIVER,
                                    /*window*/ nullptr, aInputRate, nullptr);
+
+  /* Partner graph: Create the graph. */
+  MediaTrackGraph* partner = MediaTrackGraph::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*window*/ nullptr, aOutputRate,
+      /*OutputDeviceID*/ reinterpret_cast<cubeb_devid>(1));
 
   RefPtr<AudioInputTrack> inputTrack;
   RefPtr<AudioInputProcessing> listener;
-  DispatchFunction([&] {
+  auto primaryStarted = Invoke([&] {
+    /* Primary graph: Create input track and open it */
     inputTrack = AudioInputTrack::Create(primary);
     listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->GraphImpl()->AppendMessage(
@@ -624,18 +632,17 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
+    inputTrack->OpenAudioInput((void*)1, listener);
+    return primary->NotifyWhenDeviceStarted(inputTrack);
   });
-  WaitFor(cubeb->StreamInitEvent());
 
-  /* Partner graph: Create graph and the CrossGraphReceiver. */
-  MediaTrackGraph* partner = MediaTrackGraph::GetInstance(
-      MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr, aOutputRate,
-      /*OutputDeviceID*/ reinterpret_cast<cubeb_devid>(1));
+  RefPtr<SmartMockCubebStream> inputStream = WaitFor(cubeb->StreamInitEvent());
 
-  RefPtr<CrossGraphReceiver> receiver;
   RefPtr<CrossGraphTransmitter> transmitter;
   RefPtr<MediaInputPort> port;
-  DispatchFunction([&] {
+  RefPtr<CrossGraphReceiver> receiver;
+  auto partnerStarted = Invoke([&] {
+    /* Partner graph: Create CrossGraphReceiver */
     receiver = partner->CreateCrossGraphReceiver(primary->GraphRate());
 
     /* Primary graph: Create CrossGraphTransmitter */
@@ -645,31 +652,34 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
      * Check in MediaManager how it is connected to AudioStreamTrack. */
     port = transmitter->AllocateInputPort(inputTrack);
     receiver->AddAudioOutput((void*)1);
-
-    /* Primary graph: Open Audio Input through SourceMediaTrack */
-    // Device id does not matter. Ignore.
-    inputTrack->OpenAudioInput((void*)1, listener);
+    return partner->NotifyWhenDeviceStarted(receiver);
   });
 
-  MockCubebStream* inputStream = nullptr;
-  MockCubebStream* partnerStream = nullptr;
-  // Wait for the streams to be created.
-  WaitUntil(cubeb->StreamInitEvent(),
-            [&](const RefPtr<SmartMockCubebStream>& aStream) {
-              if (aStream->mHasInput) {
-                inputStream = aStream;
-              } else {
-                partnerStream = aStream;
-              }
-              return inputStream && partnerStream;
-            });
-
+  RefPtr<SmartMockCubebStream> partnerStream =
+      WaitFor(cubeb->StreamInitEvent());
   partnerStream->SetDriftFactor(aDriftFactor);
 
-  // Wait for a second worth of audio data. GoFaster is dispatched through a
-  // ControlMessage so that it is called in the first audio driver iteration.
-  // Otherwise the audio driver might be going very fast while the fallback
-  // system clock driver is still in an iteration.
+  cubeb->SetStreamStartFreezeEnabled(false);
+
+  // One source of non-determinism in this type of test is that inputStream
+  // and partnerStream are started in sequence by the CubebOperation thread pool
+  // (of size 1). To minimize the chance that the stream that starts first sees
+  // an iteration before the other has started - this is a source of pre-silence
+  // - we freeze both on start and thaw them together here.
+  // Note that another source of non-determinism is the fallback driver. Handing
+  // over from the fallback to the audio driver requires first an audio callback
+  // (deterministic with the fake audio thread), then a fallback driver
+  // iteration (non-deterministic, since each graph has its own fallback driver,
+  // each with its own dedicated thread, which we have no control over). This
+  // non-determinism is worrisome, but both fallback drivers are likely to
+  // exhibit similar characteristics, hopefully keeping the level of
+  // non-determinism down sufficiently for this test to pass.
+  inputStream->Thaw();
+  partnerStream->Thaw();
+
+  Unused << WaitFor(primaryStarted);
+  Unused << WaitFor(partnerStarted);
+
   // Wait for 3s worth of audio data on the receiver stream.
   DispatchFunction([&] {
     inputTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
@@ -709,7 +719,9 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
       static_cast<uint32_t>(partnerRate * aDriftFactor / 1000 * aBufferMs);
   uint32_t margin = partnerRate / 20 /* +/- 50ms */;
   EXPECT_NEAR(preSilenceSamples, expectedPreSilence, margin);
-  EXPECT_LE(nrDiscontinuities, 2U);
+  // The waveform from AudioGenerator starts at 0, but we don't control its
+  // ending, so we expect a discontinuity there.
+  EXPECT_LE(nrDiscontinuities, 1U);
 }
 
 TEST(TestAudioTrackGraph, CrossGraphPort)
