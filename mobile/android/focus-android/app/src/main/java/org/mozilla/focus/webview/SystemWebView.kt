@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.preference.PreferenceManager
 import androidx.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.util.Log
@@ -25,6 +24,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewDatabase
+import androidx.preference.PreferenceManager
 import mozilla.components.browser.session.Session
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.BuildConfig

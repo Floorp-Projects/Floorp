@@ -4,8 +4,8 @@
 
 package org.mozilla.focus.helpers
 
-import android.preference.PreferenceManager
 import androidx.annotation.CallSuper
+import androidx.preference.PreferenceManager
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import mozilla.components.support.utils.ThreadUtils

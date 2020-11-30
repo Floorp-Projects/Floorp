@@ -5,7 +5,7 @@
 package org.mozilla.focus.searchsuggestions
 
 import android.content.Context
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.focus.ext.components

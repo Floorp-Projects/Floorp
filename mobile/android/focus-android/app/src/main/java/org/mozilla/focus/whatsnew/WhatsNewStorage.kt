@@ -6,8 +6,8 @@ package org.mozilla.focus.whatsnew
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
 import androidx.annotation.VisibleForTesting
+import androidx.preference.PreferenceManager
 
 /**
  * Interface to abstract where the cached version and session counter is stored

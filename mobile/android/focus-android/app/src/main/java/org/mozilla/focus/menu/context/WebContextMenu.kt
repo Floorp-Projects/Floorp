@@ -17,7 +17,6 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Environment
-import android.preference.PreferenceManager
 import com.google.android.material.internal.NavigationMenuView
 import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AlertDialog
@@ -25,6 +24,7 @@ import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
+import androidx.preference.PreferenceManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
@@ -272,7 +272,7 @@ object WebContextMenu {
                     }
 
                     val clip = ClipData.newUri(dialog.context.contentResolver, "URI", uri)
-                    clipboard.primaryClip = clip
+                    clipboard.setPrimaryClip(clip)
                     true
                 }
                 else -> throw IllegalArgumentException("Unhandled menu item id=" + item.itemId)

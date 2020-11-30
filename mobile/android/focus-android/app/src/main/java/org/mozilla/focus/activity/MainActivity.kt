@@ -7,9 +7,9 @@ package org.mozilla.focus.activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.AttributeSet
 import android.view.View
+import androidx.preference.PreferenceManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.SessionState

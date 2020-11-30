@@ -106,7 +106,7 @@ class InfoFragment : WebFragment() {
     companion object {
         private const val ARGUMENT_URL = "url"
 
-        fun create(url: String): InfoFragment {
+        fun create(url: String?): InfoFragment {
             val arguments = Bundle()
             arguments.putString(ARGUMENT_URL, url)
             val fragment = InfoFragment()

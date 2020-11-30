@@ -23,7 +23,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.preference.PreferenceManager
 import androidx.annotation.RequiresApi
 import com.google.android.material.appbar.AppBarLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -49,6 +48,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.browser_display_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.coroutines.CoroutineScope
@@ -920,6 +920,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             return
         }
 
+        @Suppress("DEPRECATION")
         request.allowScanningByMediaScanner()
 
         @Suppress("TooGenericExceptionCaught")
@@ -1309,7 +1310,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             if (session.isCustomTabSession()) {
                 val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val uri = Uri.parse(url)
-                clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
+                clipBoard.setPrimaryClip(ClipData.newRawUri("Uri", uri))
                 Toast.makeText(context, getString(R.string.custom_tab_copy_url_action), Toast.LENGTH_SHORT).show()
             }
         }

@@ -7,7 +7,8 @@ package org.mozilla.focus.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.preference.PreferenceManager;
+
+import androidx.preference.PreferenceManager;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 import androidx.test.runner.AndroidJUnit4;

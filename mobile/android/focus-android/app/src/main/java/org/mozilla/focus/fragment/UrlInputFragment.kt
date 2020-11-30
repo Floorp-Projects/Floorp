@@ -10,7 +10,6 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.text.InputType
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
@@ -24,6 +23,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.android.synthetic.main.fragment_urlinput.view.*
 import kotlinx.coroutines.CoroutineScope

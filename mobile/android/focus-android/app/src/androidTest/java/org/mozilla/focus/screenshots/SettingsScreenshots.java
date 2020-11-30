@@ -6,7 +6,8 @@ package org.mozilla.focus.screenshots;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
+
+import androidx.preference.PreferenceManager;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.Espresso;
 import androidx.test.runner.AndroidJUnit4;

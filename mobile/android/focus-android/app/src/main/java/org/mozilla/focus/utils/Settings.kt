@@ -7,7 +7,7 @@ package org.mozilla.focus.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences

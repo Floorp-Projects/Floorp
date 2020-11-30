@@ -8,11 +8,12 @@ package org.mozilla.focus.webview.matcher;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.collection.ArrayMap;
+import androidx.preference.PreferenceManager;
+
 import android.util.JsonReader;
 
 import org.mozilla.focus.R;

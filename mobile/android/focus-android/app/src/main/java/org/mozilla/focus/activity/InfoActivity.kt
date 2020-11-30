@@ -25,7 +25,7 @@ import org.mozilla.focus.web.WebViewProvider
  * for showing any web based content, including About/Help/Rights, and also SUMO pages.
  */
 class InfoActivity : LocaleAwareAppCompatActivity() {
-    private lateinit var url: String
+    private var url: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

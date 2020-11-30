@@ -12,9 +12,9 @@ import android.content.Context
 import android.net.http.SslError
 import android.os.Build
 import android.os.StrictMode
-import android.preference.PreferenceManager
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
