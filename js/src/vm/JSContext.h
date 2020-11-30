@@ -888,34 +888,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // object.
   js::FutexThread fx;
 
-  // In certain cases, we want to optimize certain opcodes to typed
-  // instructions, to avoid carrying an extra register to feed into an unbox.
-  // Unfortunately, that's not always possible. For example, a GetPropertyCacheT
-  // could return a typed double, but if it takes its out-of-line path, it could
-  // return an object, and trigger invalidation. The invalidation bailout will
-  // consider the return value to be a double, and create a garbage Value.
-  //
-  // To allow the GetPropertyCacheT optimization, we allow the ability for
-  // GetPropertyCache to override the return value at the top of the stack - the
-  // value that will be temporarily corrupt. This special override value is set
-  // only in callVM() targets that are about to return *and* have invalidated
-  // their callee.
-  js::ContextData<js::Value> ionReturnOverride_;
-
-  bool hasIonReturnOverride() const {
-    return !ionReturnOverride_.ref().isMagic(JS_ARG_POISON);
-  }
-  js::Value takeIonReturnOverride() {
-    js::Value v = ionReturnOverride_;
-    ionReturnOverride_ = js::MagicValue(JS_ARG_POISON);
-    return v;
-  }
-  void setIonReturnOverride(const js::Value& v) {
-    MOZ_ASSERT(!hasIonReturnOverride());
-    MOZ_ASSERT(!v.isMagic());
-    ionReturnOverride_ = v;
-  }
-
   mozilla::Atomic<uintptr_t, mozilla::Relaxed> jitStackLimit;
 
   // Like jitStackLimit, but not reset to trigger interrupts.

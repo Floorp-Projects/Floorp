@@ -881,17 +881,7 @@ bool BaselineStackBuilder::buildExpressionStack() {
           exprStackSlots());
   for (uint32_t i = 0; i < exprStackSlots(); i++) {
     Value v;
-
-    if (!iter_.moreFrames() && i == exprStackSlots() - 1 &&
-        cx_->hasIonReturnOverride()) {
-      // If coming from an invalidation bailout, and this is the topmost
-      // value, and a value override has been specified, don't read from the
-      // iterator. Otherwise, we risk using a garbage value.
-      // TODO(post-Warp): Remove value overrides and AutoDetectInvalidation.
-      iter_.skip();
-      JitSpew(JitSpew_BaselineBailouts, "      [Return Override]");
-      v = cx_->takeIonReturnOverride();
-    } else if (propagatingIonExceptionForDebugMode()) {
+    if (propagatingIonExceptionForDebugMode()) {
       // If we are in the middle of propagating an exception from Ion by
       // bailing to baseline due to debug mode, we might not have all
       // the stack if we are at the newest frame.

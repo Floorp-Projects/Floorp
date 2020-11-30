@@ -151,8 +151,6 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
     data.osrFrame->clearRunningInJit();
   }
 
-  MOZ_ASSERT(!cx->hasIonReturnOverride());
-
   // Jit callers wrap primitive constructor return, except for derived
   // class constructors, which are forced to do it themselves.
   if (!data.result.isMagic() && data.constructing &&
