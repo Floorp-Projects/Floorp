@@ -245,3 +245,21 @@ addAccessibleTask(
     is(stringForRange(macDoc, range), "ello good");
   }
 );
+
+addAccessibleTask(
+  `<input id="input" value=""><a href="#">goodbye</a>`,
+  async (browser, accDoc) => {
+    let macDoc = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+
+    let input = getNativeInterface(accDoc, "input");
+
+    let range = macDoc.getParameterizedAttributeValue(
+      "AXTextMarkerRangeForUIElement",
+      input
+    );
+
+    is(stringForRange(macDoc, range), "", "string value is correct");
+  }
+);

@@ -171,10 +171,8 @@ inline NSString* ToNSString(id aValue) {
     return nil;
   }
 
-  GeckoTextMarker startMarker =
-      GeckoTextMarker::MarkerFromIndex(mGeckoAccessible, 0);
-
-  GeckoTextMarkerRange fromStartToSelection(startMarker, selection.mStart);
+  GeckoTextMarkerRange fromStartToSelection(
+      GeckoTextMarker(mGeckoAccessible, 0), selection.mStart);
 
   return [NSValue valueWithRange:NSMakeRange(fromStartToSelection.Length(),
                                              selection.Length())];
@@ -267,6 +265,10 @@ inline NSString* ToNSString(id aValue) {
 
 - (NSString*)moxStringForRange:(NSValue*)range {
   GeckoTextMarkerRange markerRange = [self textMarkerRangeFromRange:range];
+
+  if (!markerRange.IsValid()) {
+    return nil;
+  }
 
   return markerRange.Text();
 }
