@@ -23,6 +23,8 @@ using ::testing::Return;
 
 class MockGraphInterface : public GraphInterface {
   NS_DECL_THREADSAFE_ISUPPORTS
+  explicit MockGraphInterface(TrackRate aSampleRate)
+      : mSampleRate(aSampleRate) {}
   MOCK_METHOD4(NotifyOutputData,
                void(AudioDataValue*, size_t, TrackRate, uint32_t));
   MOCK_METHOD0(NotifyInputStopped, void());
@@ -31,7 +33,17 @@ class MockGraphInterface : public GraphInterface {
   MOCK_METHOD0(DeviceChanged, void());
   /* OneIteration cannot be mocked because IterationResult is non-memmovable and
    * cannot be passed as a parameter, which GMock does internally. */
-  IterationResult OneIteration(GraphTime, GraphTime, AudioMixer*) {
+  IterationResult OneIteration(GraphTime aStateComputedTime, GraphTime,
+                               AudioMixer* aMixer) {
+    GraphDriver* driver = mCurrentDriver;
+    if (aMixer) {
+      aMixer->StartMixing();
+      aMixer->Mix(nullptr,
+                  driver->AsAudioCallbackDriver()->OutputChannelCount(),
+                  aStateComputedTime - mStateComputedTime, mSampleRate);
+      aMixer->FinishMixing();
+    }
+    mStateComputedTime = aStateComputedTime;
     if (!mKeepProcessing) {
       return IterationResult::CreateStop(
           NS_NewRunnableFunction(__func__, [] {}));
@@ -49,11 +61,17 @@ class MockGraphInterface : public GraphInterface {
   }
 #endif
 
+  GraphTime StateComputedTime() const { return mStateComputedTime; }
+  void SetCurrentDriver(GraphDriver* aDriver) { mCurrentDriver = aDriver; }
+
   void StopIterating() { mKeepProcessing = false; }
 
   void SwitchTo(GraphDriver* aDriver) { mNextDriver = aDriver; }
+  const TrackRate mSampleRate;
 
  protected:
+  Atomic<GraphTime> mStateComputedTime{0};
+  Atomic<GraphDriver*> mCurrentDriver{nullptr};
   Atomic<bool> mKeepProcessing{true};
   Atomic<GraphDriver*> mNextDriver{nullptr};
   virtual ~MockGraphInterface() = default;
@@ -63,20 +81,22 @@ NS_IMPL_ISUPPORTS0(MockGraphInterface)
 
 TEST(TestAudioCallbackDriver, StartStop)
 MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+  const TrackRate rate = 44100;
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
   RefPtr<AudioCallbackDriver> driver;
-  auto graph = MakeRefPtr<NiceMock<MockGraphInterface>>();
+  auto graph = MakeRefPtr<NiceMock<MockGraphInterface>>(rate);
   EXPECT_CALL(*graph, NotifyInputStopped).Times(0);
   ON_CALL(*graph, NotifyOutputData)
       .WillByDefault([&](AudioDataValue*, size_t, TrackRate, uint32_t) {});
 
-  driver = MakeRefPtr<AudioCallbackDriver>(graph, nullptr, 44100, 2, 0, nullptr,
+  driver = MakeRefPtr<AudioCallbackDriver>(graph, nullptr, rate, 2, 0, nullptr,
                                            nullptr, AudioInputType::Unknown);
   EXPECT_FALSE(driver->ThreadRunning()) << "Verify thread is not running";
   EXPECT_FALSE(driver->IsStarted()) << "Verify thread is not started";
 
+  graph->SetCurrentDriver(driver);
   driver->Start();
   // Allow some time to "play" audio.
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
