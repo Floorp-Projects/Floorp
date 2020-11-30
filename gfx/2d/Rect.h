@@ -75,16 +75,20 @@ struct MarginTyped : public BaseMargin<F, MarginTyped<units, F> >,
            fabs(this->right - aOther.right) < aEpsilon &&
            fabs(this->bottom - aOther.bottom) < aEpsilon;
   }
+
+  IntMarginTyped<units> Rounded() const {
+    return IntMarginTyped<units>(int32_t(std::floor(this->top + 0.5f)),
+                                 int32_t(std::floor(this->right + 0.5f)),
+                                 int32_t(std::floor(this->bottom + 0.5f)),
+                                 int32_t(std::floor(this->left + 0.5f)));
+  }
 };
 typedef MarginTyped<UnknownUnits> Margin;
 typedef MarginTyped<UnknownUnits, double> MarginDouble;
 
 template <class units>
 IntMarginTyped<units> RoundedToInt(const MarginTyped<units>& aMargin) {
-  return IntMarginTyped<units>(int32_t(floorf(aMargin.top + 0.5f)),
-                               int32_t(floorf(aMargin.right + 0.5f)),
-                               int32_t(floorf(aMargin.bottom + 0.5f)),
-                               int32_t(floorf(aMargin.left + 0.5f)));
+  return aMargin.Rounded();
 }
 
 template <class units>
