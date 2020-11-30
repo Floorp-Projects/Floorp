@@ -517,8 +517,9 @@ void jit::AddPendingInvalidation(RecompileInfoVector& invalid,
 IonScript* RecompileInfo::maybeIonScriptToInvalidate() const {
   // Make sure this is not called under CodeGenerator::link (before the
   // IonScript is created).
-  MOZ_ASSERT_IF(script_->zone()->types.currentCompilationId(),
-                script_->zone()->types.currentCompilationId().ref() != id_);
+  MOZ_ASSERT_IF(
+      script_->zone()->jitZone()->currentCompilationId(),
+      script_->zone()->jitZone()->currentCompilationId().ref() != id_);
 
   if (!script_->hasIonScript() ||
       script_->ionScript()->compilationId() != id_) {
