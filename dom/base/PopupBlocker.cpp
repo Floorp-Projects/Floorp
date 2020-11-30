@@ -148,9 +148,6 @@ bool PopupBlocker::TryUsePopupOpeningToken(nsIPrincipal* aPrincipal) {
 }
 
 /* static */
-bool PopupBlocker::IsPopupOpeningTokenUnused() { return sUnusedPopupToken; }
-
-/* static */
 void PopupBlocker::PopupStatePusherCreated() { ++sPopupStatePusherCount; }
 
 /* static */

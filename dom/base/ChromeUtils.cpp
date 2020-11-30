@@ -1278,11 +1278,6 @@ PopupBlockerState ChromeUtils::GetPopupControlState(GlobalObject& aGlobal) {
 }
 
 /* static */
-bool ChromeUtils::IsPopupTokenUnused(GlobalObject& aGlobal) {
-  return PopupBlocker::IsPopupOpeningTokenUnused();
-}
-
-/* static */
 double ChromeUtils::LastExternalProtocolIframeAllowed(GlobalObject& aGlobal) {
   TimeStamp when = PopupBlocker::WhenLastExternalProtocolIframeAllowed();
   if (when.IsNull()) {
