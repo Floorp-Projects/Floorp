@@ -672,6 +672,17 @@ this.AntiTracking = {
       let browser = win.gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
+      info("Check the cookieJarSettings of the browser object");
+      ok(
+        browser.cookieJarSettings,
+        "The browser object has the cookieJarSettings."
+      );
+      is(
+        browser.cookieJarSettings.cookieBehavior,
+        options.cookieBehavior,
+        "The cookieJarSettings has the correct cookieBehavior"
+      );
+
       if (options.allowList) {
         info("Disabling content blocking for this page");
         win.gProtectionsHandler.disableForCurrentPage();
