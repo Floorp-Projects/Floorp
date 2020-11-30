@@ -12,6 +12,11 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 
 namespace mozilla {
+
+namespace layout {
+class VsyncParent;
+}  // namespace layout
+
 namespace ipc {
 
 // Instances of this class should never be created directly. This class is meant
