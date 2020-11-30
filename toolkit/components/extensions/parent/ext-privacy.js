@@ -72,6 +72,36 @@ ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("network.httpsOnlyMode", {
+  permission: "privacy",
+  prefNames: [
+    "dom.security.https_only_mode",
+    "dom.security.https_only_mode_pbm",
+  ],
+
+  setCallback(value) {
+    let prefs = {
+      "dom.security.https_only_mode": false,
+      "dom.security.https_only_mode_pbm": false,
+    };
+
+    switch (value) {
+      case "always":
+        prefs["dom.security.https_only_mode"] = true;
+        break;
+
+      case "private_browsing":
+        prefs["dom.security.https_only_mode_pbm"] = true;
+        break;
+
+      case "never":
+        break;
+    }
+
+    return prefs;
+  },
+});
+
 ExtensionPreferencesManager.addSetting("network.peerConnectionEnabled", {
   permission: "privacy",
   prefNames: ["media.peerconnection.enabled"],
@@ -312,6 +342,20 @@ this.privacy = class extends ExtensionAPI {
                 !getBoolPref("network.dns.disablePrefetch")
               );
             },
+          }),
+          httpsOnlyMode: getSettingsAPI({
+            context,
+            name: "network.httpsOnlyMode",
+            callback() {
+              if (getBoolPref("dom.security.https_only_mode")) {
+                return "always";
+              }
+              if (getBoolPref("dom.security.https_only_mode_pbm")) {
+                return "private_browsing";
+              }
+              return "never";
+            },
+            readOnly: true,
           }),
           peerConnectionEnabled: getSettingsAPI({
             context,
