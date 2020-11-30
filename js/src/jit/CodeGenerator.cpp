@@ -14781,6 +14781,13 @@ void CodeGenerator::visitGuardIsExtensible(LGuardIsExtensible* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardIndexIsNonNegative(
+    LGuardIndexIsNonNegative* lir) {
+  Register index = ToRegister(lir->index());
+
+  bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;
