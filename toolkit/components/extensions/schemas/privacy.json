@@ -62,6 +62,12 @@
             "description": "The maximum TLS version supported."
           }
         }
+      },
+      {
+        "id": "HTTPSOnlyModeOption",
+        "type": "string",
+        "enum": ["always", "private_browsing", "never"],
+        "description": "The mode for https-only mode."
       }
     ],
     "properties": {
@@ -80,6 +86,10 @@
       "tlsVersionRestriction": {
         "$ref": "types.Setting",
         "description": "This property controls the minimum and maximum TLS versions. This setting's value is an object of $(ref:tlsVersionRestrictionConfig)."
+      },
+      "httpsOnlyMode": {
+        "$ref": "types.Setting",
+        "description": "Allow users to query the mode for 'HTTPS-Only Mode'. This setting's value is of type HTTPSOnlyModeOption, defaulting to <code>never</code>."
       }
     }
   },
