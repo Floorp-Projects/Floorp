@@ -43,6 +43,7 @@ class MockGraphInterface : public GraphInterface {
                   aStateComputedTime - mStateComputedTime, mSampleRate);
       aMixer->FinishMixing();
     }
+      mFramesIteratedEvent.Notify(aStateComputedTime - mStateComputedTime);
     mStateComputedTime = aStateComputedTime;
     if (!mKeepProcessing) {
       return IterationResult::CreateStop(
@@ -69,11 +70,16 @@ class MockGraphInterface : public GraphInterface {
   void SwitchTo(GraphDriver* aDriver) { mNextDriver = aDriver; }
   const TrackRate mSampleRate;
 
+  MediaEventSource<uint32_t>& FramesIteratedEvent() {
+    return mFramesIteratedEvent;
+  }
+
  protected:
   Atomic<GraphTime> mStateComputedTime{0};
   Atomic<GraphDriver*> mCurrentDriver{nullptr};
   Atomic<bool> mKeepProcessing{true};
   Atomic<GraphDriver*> mNextDriver{nullptr};
+  MediaEventProducer<uint32_t> mFramesIteratedEvent;
   virtual ~MockGraphInterface() = default;
 };
 
