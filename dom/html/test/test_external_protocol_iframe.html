@@ -16,8 +16,7 @@ function test_initialize() {
 }
 
 function test_noUserInteraction() {
-  is(ChromeUtils.getPopupControlState(), "openAbused", "No user-interaction means: abuse state");
-  ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has not been used yet");
+  ok(!SpecialPowers.wrap(document).hasValidTransientUserGestureActivation, "No user interaction yet");
   is(ChromeUtils.lastExternalProtocolIframeAllowed(), 0, "No iframe loaded before this test!");
 
   for (let i = 0; i < 10; ++i) {
@@ -26,7 +25,6 @@ function test_noUserInteraction() {
     document.body.appendChild(ifr);
 
     is(ChromeUtils.getPopupControlState(), "openAbused", "No user-interaction means: abuse state");
-    ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has been used!");
     ok(ChromeUtils.lastExternalProtocolIframeAllowed() != 0, "We have 1 iframe loaded");
   }
 
@@ -36,16 +34,14 @@ function test_noUserInteraction() {
 function test_userInteraction() {
   let foo = document.getElementById('foo');
   foo.addEventListener('click', _ => {
-    is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
-    ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has not been used yet");
+    ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation, "User should've interacted");
 
     for (let i = 0; i < 10; ++i) {
       let ifr = document.createElement('iframe');
       ifr.src = "foo+bar:all_good";
       document.body.appendChild(ifr);
 
-      is(ChromeUtils.getPopupControlState(), "openAllowed", "Click events allow popups");
-      ok(ChromeUtils.isPopupTokenUnused(), "Popup token has been used!");
+      ok(!SpecialPowers.wrap(document).hasValidTransientUserGestureActivation, "User interaction should've been consumed");
     }
 
     next();
@@ -53,7 +49,7 @@ function test_userInteraction() {
   }, {once: true});
 
   setTimeout(_ => {
-    sendMouseEvent({type:'click'}, 'foo');
+    synthesizeMouseAtCenter(foo, {});
   }, 0);
 }
 
