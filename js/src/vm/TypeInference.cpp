@@ -61,9 +61,3 @@ TypeZone::TypeZone(Zone* zone)
     : currentCompilationId_(zone), keepJitScripts(zone, false) {}
 
 TypeZone::~TypeZone() { MOZ_ASSERT(!keepJitScripts); }
-
-JS::ubi::Node::Size JS::ubi::Concrete<js::ObjectGroup>::size(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
-  return size;
-}
