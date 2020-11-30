@@ -791,8 +791,7 @@ void nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 
 //////////////////////////////////////////////////////////////////////
 
-nsIFrame::LogicalSides nsInlineFrame::GetLogicalSkipSides(
-    const Maybe<SkipSidesDuringReflow>&) const {
+LogicalSides nsInlineFrame::GetLogicalSkipSides() const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {

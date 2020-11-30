@@ -214,8 +214,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
 
   void InsertColsReflow(int32_t aColIndex, const nsFrameList::Slice& aCols);
 
-  LogicalSides GetLogicalSkipSides(
-      const Maybe<SkipSidesDuringReflow>& = Nothing()) const override;
+  LogicalSides GetLogicalSkipSides() const override;
 
   // data members
   int32_t mColCount;

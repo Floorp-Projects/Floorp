@@ -257,8 +257,7 @@ void nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   DisplayRows(aBuilder, this, aLists);
 }
 
-nsIFrame::LogicalSides nsTableRowGroupFrame::GetLogicalSkipSides(
-    const Maybe<SkipSidesDuringReflow>&) const {
+LogicalSides nsTableRowGroupFrame::GetLogicalSkipSides() const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
