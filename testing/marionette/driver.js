@@ -47,10 +47,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   print: "chrome://marionette/content/print.js",
   proxy: "chrome://marionette/content/proxy.js",
   reftest: "chrome://marionette/content/reftest.js",
+  registerCommandsActor:
+    "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   Sandboxes: "chrome://marionette/content/evaluate.js",
   TimedPromise: "chrome://marionette/content/sync.js",
   Timeouts: "chrome://marionette/content/capabilities.js",
   UnhandledPromptBehavior: "chrome://marionette/content/capabilities.js",
+  unregisterCommandsActor:
+    "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   waitForEvent: "chrome://marionette/content/sync.js",
   waitForLoadEvent: "chrome://marionette/content/sync.js",
   waitForObserverTopic: "chrome://marionette/content/sync.js",
@@ -866,21 +870,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   await browserListening;
 
   if (MarionettePrefs.useActors) {
-    // Register the JSWindowActor pair that holds all the commands.
-    ChromeUtils.registerWindowActor("MarionetteCommands", {
-      kind: "JSWindowActor",
-      parent: {
-        moduleURI:
-          "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
-      },
-      child: {
-        moduleURI:
-          "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
-      },
-
-      allFrames: true,
-      includeChrome: true,
-    });
+    registerCommandsActor();
   }
 
   if (this.mainFrame) {
@@ -3014,7 +3004,7 @@ GeckoDriver.prototype.deleteSession = function() {
   if (MarionettePrefs.useActors) {
     clearElementIdCache();
 
-    ChromeUtils.unregisterWindowActor("MarionetteCommands");
+    unregisterCommandsActor();
   }
 
   // reset to the top-most frame, and clear browsing context references
