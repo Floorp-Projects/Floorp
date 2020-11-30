@@ -22,10 +22,11 @@ using namespace mozilla::gfx;
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeBasicTheme, nsNativeTheme, nsITheme)
 
 /* static */
-uint32_t nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame) {
-  return AppUnitsPerCSSPixel() / aFrame->PresContext()
-                                     ->DeviceContext()
-                                     ->AppUnitsPerDevPixelAtUnitFullZoom();
+auto nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame) -> DPIRatio {
+  return DPIRatio(float(AppUnitsPerCSSPixel()) /
+                  aFrame->PresContext()
+                      ->DeviceContext()
+                      ->AppUnitsPerDevPixelAtUnitFullZoom());
 }
 
 /* static */
@@ -80,9 +81,10 @@ Rect nsNativeBasicTheme::FixAspectRatio(const Rect& aRect) {
 
 /* static */
 void nsNativeBasicTheme::GetFocusStrokeRect(DrawTarget* aDrawTarget,
-                                            Rect& aFocusRect, CSSCoord aOffset,
-                                            const CSSCoord aRadius,
-                                            CSSCoord aFocusWidth,
+                                            Rect& aFocusRect,
+                                            LayoutDeviceCoord aOffset,
+                                            const LayoutDeviceCoord aRadius,
+                                            LayoutDeviceCoord aFocusWidth,
                                             RefPtr<Path>& aOutRect) {
   RectCornerRadii radii(aRadius, aRadius, aRadius, aRadius);
   aFocusRect.y -= aOffset;
@@ -359,7 +361,7 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarthumbColor(
 
 void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                                                const Rect& aRect,
-                                               uint32_t aDpiRatio,
+                                               DPIRatio aDpiRatio,
                                                CSSCoord aRadius,
                                                CSSCoord aOffset) {
   // NOTE(emilio): If the widths or offsets here change, make sure to tweak the
@@ -367,25 +369,25 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
   auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors();
   Rect focusRect(aRect);
   RefPtr<Path> roundedRect;
-  CSSCoord offset = aOffset * aDpiRatio;
-  CSSCoord strokeRadius((aRadius * aDpiRatio) + offset);
-  CSSCoord strokeWidth(2.0f * aDpiRatio);
+  LayoutDeviceCoord offset = aOffset * aDpiRatio;
+  LayoutDeviceCoord strokeRadius((aRadius * aDpiRatio) + offset);
+  LayoutDeviceCoord strokeWidth(CSSCoord(2.0f) * aDpiRatio);
   GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
                      roundedRect);
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(innerColor)),
                       StrokeOptions(strokeWidth));
 
-  offset = 1.0f * aDpiRatio;
+  offset = CSSCoord(1.0f) * aDpiRatio;
   strokeRadius += offset;
-  strokeWidth = 1.0f * aDpiRatio;
+  strokeWidth = CSSCoord(1.0f) * aDpiRatio;
   GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
                      roundedRect);
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(middleColor)),
                       StrokeOptions(strokeWidth));
 
-  offset = 2.0f * aDpiRatio;
+  offset = CSSCoord(2.0f) * aDpiRatio;
   strokeRadius += offset;
-  strokeWidth = 2.0f * aDpiRatio;
+  strokeWidth = CSSCoord(2.0f) * aDpiRatio;
   GetFocusStrokeRect(aDrawTarget, focusRect, offset, strokeRadius, strokeWidth,
                      roundedRect);
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(outerColor)),
@@ -398,8 +400,8 @@ void nsNativeBasicTheme::PaintRoundedRect(DrawTarget* aDrawTarget,
                                           const sRGBColor& aBorderColor,
                                           CSSCoord aBorderWidth,
                                           RectCornerRadii aDpiAdjustedRadii,
-                                          uint32_t aDpiRatio) {
-  const CSSCoord borderWidth(aBorderWidth * aDpiRatio);
+                                          DPIRatio aDpiRatio) {
+  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpiRatio);
 
   Rect rect(aRect);
   // Deflate the rect by half the border width, so that the middle of the stroke
@@ -417,8 +419,8 @@ void nsNativeBasicTheme::PaintRoundedRect(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintRoundedRectWithRadius(
     DrawTarget* aDrawTarget, const Rect& aRect,
     const sRGBColor& aBackgroundColor, const sRGBColor& aBorderColor,
-    CSSCoord aBorderWidth, CSSCoord aRadius, uint32_t aDpiRatio) {
-  const CSSCoord radius(aRadius * aDpiRatio);
+    CSSCoord aBorderWidth, CSSCoord aRadius, DPIRatio aDpiRatio) {
+  const LayoutDeviceCoord radius(aRadius * aDpiRatio);
   RectCornerRadii radii(radius, radius, radius, radius);
   PaintRoundedRect(aDrawTarget, aRect, aBackgroundColor, aBorderColor,
                    aBorderWidth, radii, aDpiRatio);
@@ -427,7 +429,7 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
 void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
                                               const Rect& aRect,
                                               const EventStates& aState,
-                                              uint32_t aDpiRatio) {
+                                              DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
   const CSSCoord radius = 2.0f;
   auto [backgroundColor, borderColor] = ComputeCheckboxColors(aState);
@@ -439,19 +441,24 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
   }
 }
 
+// Returns the right scale to cover aRect in the smaller dimension, accounting
+// for aDpiRatio.
+static float ScaleToWidgetRect(const Rect& aRect,
+                               nsNativeBasicTheme::DPIRatio aDpiRatio) {
+  return std::min(aRect.width, aRect.height) / kMinimumWidgetSize;
+}
+
 void nsNativeBasicTheme::PaintCheckMark(DrawTarget* aDrawTarget,
                                         const Rect& aRect,
                                         const EventStates& aState,
-                                        uint32_t aDpiRatio) {
+                                        DPIRatio aDpiRatio) {
   // Points come from the coordinates on a 14X14 unit box centered at 0,0
   const float checkPolygonX[] = {-4.5f, -1.5f, -0.5f, 5.0f, 4.75f,
                                  3.5f,  -0.5f, -1.5f, -3.5f};
   const float checkPolygonY[] = {0.5f,  4.0f, 4.0f,  -2.5f, -4.0f,
                                  -4.0f, 1.0f, 1.25f, -1.0f};
   const int32_t checkNumPoints = sizeof(checkPolygonX) / sizeof(float);
-  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
-                      (kMinimumWidgetSize * (float)aDpiRatio);
-
+  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
   auto center = aRect.Center();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
@@ -470,10 +477,9 @@ void nsNativeBasicTheme::PaintCheckMark(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget* aDrawTarget,
                                                 const Rect& aRect,
                                                 const EventStates& aState,
-                                                uint32_t aDpiRatio) {
+                                                DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
-  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
-                      (kMinimumWidgetSize * (float)aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
 
   Rect rect(aRect);
   rect.y += (rect.height / 2) - (borderWidth * scale / 2);
@@ -490,8 +496,8 @@ void nsNativeBasicTheme::PaintStrokedEllipse(DrawTarget* aDrawTarget,
                                              const sRGBColor& aBackgroundColor,
                                              const sRGBColor& aBorderColor,
                                              const CSSCoord aBorderWidth,
-                                             uint32_t aDpiRatio) {
-  const CSSCoord borderWidth(aBorderWidth * aDpiRatio);
+                                             DPIRatio aDpiRatio) {
+  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpiRatio);
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
   // Deflate for the same reason as PaintRoundedRectWithRadius. Note that the
@@ -505,11 +511,14 @@ void nsNativeBasicTheme::PaintStrokedEllipse(DrawTarget* aDrawTarget,
                       StrokeOptions(borderWidth));
 }
 
-void nsNativeBasicTheme::PaintEllipseShadow(
-    DrawTarget* aDrawTarget, const Rect& aRect, float aShadowAlpha,
-    const Point& aShadowOffset, float aShadowBlurStdDev, uint32_t aDpiRatio) {
+void nsNativeBasicTheme::PaintEllipseShadow(DrawTarget* aDrawTarget,
+                                            const Rect& aRect,
+                                            float aShadowAlpha,
+                                            const CSSPoint& aShadowOffset,
+                                            CSSCoord aShadowBlurStdDev,
+                                            DPIRatio aDpiRatio) {
   Float stdDev = aShadowBlurStdDev * aDpiRatio;
-  Point offset = aShadowOffset * aDpiRatio;
+  Point offset = (aShadowOffset * aDpiRatio).ToUnknownPoint();
 
   RefPtr<FilterNode> blurFilter =
       aDrawTarget->CreateFilter(FilterType::GAUSSIAN_BLUR);
@@ -548,7 +557,7 @@ void nsNativeBasicTheme::PaintEllipseShadow(
 void nsNativeBasicTheme::PaintRadioControl(DrawTarget* aDrawTarget,
                                            const Rect& aRect,
                                            const EventStates& aState,
-                                           uint32_t aDpiRatio) {
+                                           DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
   auto [backgroundColor, borderColor] = ComputeCheckboxColors(aState);
 
@@ -563,10 +572,9 @@ void nsNativeBasicTheme::PaintRadioControl(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintRadioCheckmark(DrawTarget* aDrawTarget,
                                              const Rect& aRect,
                                              const EventStates& aState,
-                                             uint32_t aDpiRatio) {
+                                             DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
-  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
-                      (kMinimumWidgetSize * (float)aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
   auto [backgroundColor, checkColor] = ComputeRadioCheckmarkColors(aState);
 
   Rect rect(aRect);
@@ -582,7 +590,7 @@ void nsNativeBasicTheme::PaintRadioCheckmark(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintTextField(DrawTarget* aDrawTarget,
                                         const Rect& aRect,
                                         const EventStates& aState,
-                                        uint32_t aDpiRatio) {
+                                        DPIRatio aDpiRatio) {
   auto [backgroundColor, borderColor] = ComputeTextfieldColors(aState);
 
   const CSSCoord radius = 2.0f;
@@ -598,7 +606,7 @@ void nsNativeBasicTheme::PaintTextField(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintListbox(DrawTarget* aDrawTarget,
                                       const Rect& aRect,
                                       const EventStates& aState,
-                                      uint32_t aDpiRatio) {
+                                      DPIRatio aDpiRatio) {
   const CSSCoord radius = 2.0f;
   auto [backgroundColor, borderColor] = ComputeTextfieldColors(aState);
 
@@ -613,7 +621,7 @@ void nsNativeBasicTheme::PaintListbox(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintMenulist(DrawTarget* aDrawTarget,
                                        const Rect& aRect,
                                        const EventStates& aState,
-                                       uint32_t aDpiRatio) {
+                                       DPIRatio aDpiRatio) {
   const CSSCoord radius = 4.0f;
   auto [backgroundColor, borderColor] = ComputeButtonColors(aState);
 
@@ -628,7 +636,7 @@ void nsNativeBasicTheme::PaintMenulist(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintArrow(
     DrawTarget* aDrawTarget, const Rect& aRect, const int32_t aArrowPolygonX[],
     const int32_t aArrowPolygonY[], const int32_t aArrowNumPoints,
-    const int32_t aArrowSize, const sRGBColor aFillColor, uint32_t aDpiRatio) {
+    const int32_t aArrowSize, const sRGBColor aFillColor, DPIRatio aDpiRatio) {
   nscoord paintScale = std::min(aRect.width, aRect.height) / aArrowSize;
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   Point p = aRect.Center() + Point(aArrowPolygonX[0] * paintScale,
@@ -643,22 +651,21 @@ void nsNativeBasicTheme::PaintArrow(
   RefPtr<Path> path = builder->Finish();
 
   aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(aFillColor)),
-                      StrokeOptions(2.0f * aDpiRatio));
+                      StrokeOptions(CSSCoord(2.0f) * aDpiRatio));
 }
 
 void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
                                                   DrawTarget* aDrawTarget,
                                                   const Rect& aRect,
                                                   const EventStates& aState,
-                                                  uint32_t aDpiRatio) {
+                                                  DPIRatio aDpiRatio) {
   const float arrowPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
                                  3.0f,  0.5f,  -0.5f, -3.0f, -3.5};
   const float arrowPolygonY[] = {-0.5f, 2.5f, 2.5f, -0.5f, -2.0f,
                                  -2.0f, 1.0f, 1.0f, -2.0f, -2.0f};
 
   const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
-  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
-                      (kMinimumWidgetSize * (float)aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
 
   auto center = aRect.Center();
 
@@ -680,7 +687,7 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
                                             const Rect& aRect,
                                             const EventStates& aState,
                                             StyleAppearance aAppearance,
-                                            uint32_t aDpiRatio) {
+                                            DPIRatio aDpiRatio) {
   auto [backgroundColor, borderColor] = ComputeButtonColors(aState);
 
   RefPtr<Path> pathRect = MakePathForRect(*aDrawTarget, aRect);
@@ -708,8 +715,7 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
                            -5.0f, -2.0f, -2.0f, -5.0f, -5.0f};
 
   const int32_t arrowNumPoints = sizeof(arrowPolygonX) / sizeof(float);
-  const float scale = aDpiRatio * std::min(aRect.width, aRect.height) /
-                      (kMinimumWidgetSize * (float)aDpiRatio);
+  const float scale = ScaleToWidgetRect(aRect, aDpiRatio);
 
   if (aAppearance == StyleAppearance::SpinnerUpbutton) {
     for (int32_t i = 0; i < arrowNumPoints; i++) {
@@ -733,7 +739,7 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
 void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                     const Rect& aRect,
                                     const EventStates& aState,
-                                    uint32_t aDpiRatio, bool aHorizontal) {
+                                    DPIRatio aDpiRatio, bool aHorizontal) {
   nsRangeFrame* rangeFrame = do_QueryFrame(aFrame);
   if (!rangeFrame) {
     return;
@@ -741,13 +747,13 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 
   double progress = rangeFrame->GetValueAsFractionOfRange();
   Rect rect(aRect);
-  Rect thumbRect(0, 0, kMinimumRangeThumbSize.value * aDpiRatio,
-                 kMinimumRangeThumbSize.value * aDpiRatio);
+  Rect thumbRect(0, 0, kMinimumRangeThumbSize * aDpiRatio,
+                 kMinimumRangeThumbSize * aDpiRatio);
   Rect overflowRect(aRect);
-  overflowRect.Inflate(6 * aDpiRatio);  // See GetWidgetOverflow
+  overflowRect.Inflate(CSSCoord(6.0f) * aDpiRatio);  // See GetWidgetOverflow
   Rect progressClipRect(overflowRect);
   Rect trackClipRect(overflowRect);
-  const CSSCoord verticalSize = kRangeHeight * aDpiRatio;
+  const LayoutDeviceCoord verticalSize = kRangeHeight * aDpiRatio;
   if (aHorizontal) {
     rect.height = verticalSize;
     rect.y = aRect.y + (aRect.height - rect.height) / 2;
@@ -808,8 +814,8 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 
     if (!aState.HasState(NS_EVENT_STATE_DISABLED)) {
       // Thumb shadow
-      PaintEllipseShadow(aDrawTarget, thumbRect, 0.3f, Point(0.0f, 2.0f), 2.0f,
-                         aDpiRatio);
+      PaintEllipseShadow(aDrawTarget, thumbRect, 0.3f, CSSPoint(0.0f, 2.0f),
+                         2.0f, aDpiRatio);
     }
   }
   aDrawTarget->PopClip();
@@ -829,12 +835,12 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintProgressBar(DrawTarget* aDrawTarget,
                                           const Rect& aRect,
                                           const EventStates& aState,
-                                          uint32_t aDpiRatio) {
+                                          DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 1.0f;
   const CSSCoord radius = 2.0f;
 
   Rect rect(aRect);
-  const CSSCoord height = kProgressbarHeight * aDpiRatio;
+  const LayoutDeviceCoord height = kProgressbarHeight * aDpiRatio;
   rect.y += (rect.height - height) / 2;
   rect.height = height;
 
@@ -848,7 +854,7 @@ void nsNativeBasicTheme::PaintProgresschunk(nsIFrame* aFrame,
                                             DrawTarget* aDrawTarget,
                                             const Rect& aRect,
                                             const EventStates& aState,
-                                            uint32_t aDpiRatio) {
+                                            DPIRatio aDpiRatio) {
   // TODO: vertical?
   // TODO: Address artifacts when position is between 0 and radius + border.
   // TODO: Handle indeterminate case.
@@ -858,16 +864,17 @@ void nsNativeBasicTheme::PaintProgresschunk(nsIFrame* aFrame,
   }
 
   const CSSCoord borderWidth = 1.0f;
-  const CSSCoord radius = 2.0f * aDpiRatio;
-  CSSCoord progressEndRadius = 0.0f;
+  const LayoutDeviceCoord radius = CSSCoord(2.0f) * aDpiRatio;
+  LayoutDeviceCoord progressEndRadius = 0.0f;
 
   Rect rect(aRect);
-  const CSSCoord height = kProgressbarHeight * aDpiRatio;
+  const LayoutDeviceCoord height = kProgressbarHeight * aDpiRatio;
   rect.y += (rect.height - height) / 2;
   rect.height = height;
 
   double position = GetProgressValue(aFrame) / GetProgressMaxValue(aFrame);
-  if (rect.width - (rect.width * position) < (borderWidth + radius)) {
+  if (rect.width - (rect.width * position) <
+      (borderWidth * aDpiRatio + radius)) {
     // Round corners when the progress chunk approaches the maximum value to
     // avoid artifacts.
     progressEndRadius = radius;
@@ -889,12 +896,12 @@ void nsNativeBasicTheme::PaintProgresschunk(nsIFrame* aFrame,
 
 void nsNativeBasicTheme::PaintMeter(DrawTarget* aDrawTarget, const Rect& aRect,
                                     const EventStates& aState,
-                                    uint32_t aDpiRatio) {
+                                    DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 1.0f;
   const CSSCoord radius = 5.0f;
 
   Rect rect(aRect);
-  const CSSCoord height = kMeterHeight * aDpiRatio;
+  const LayoutDeviceCoord height = kMeterHeight * aDpiRatio;
   rect.y += (rect.height - height) / 2;
   rect.height = height;
 
@@ -908,7 +915,7 @@ void nsNativeBasicTheme::PaintMeterchunk(nsIFrame* aFrame,
                                          DrawTarget* aDrawTarget,
                                          const Rect& aRect,
                                          const EventStates& aState,
-                                         uint32_t aDpiRatio) {
+                                         DPIRatio aDpiRatio) {
   // TODO: Address artifacts when position is between 0 and (radius + border).
   nsMeterFrame* meterFrame = do_QueryFrame(aFrame->GetParent());
   if (!meterFrame) {
@@ -916,11 +923,11 @@ void nsNativeBasicTheme::PaintMeterchunk(nsIFrame* aFrame,
   }
 
   const CSSCoord borderWidth = 1.0f;
-  const CSSCoord radius = 5.0f * aDpiRatio;
-  CSSCoord progressEndRadius = 0.0f;
+  const LayoutDeviceCoord radius = CSSCoord(5.0f) * aDpiRatio;
+  LayoutDeviceCoord progressEndRadius = 0.0f;
 
   Rect rect(aRect);
-  const CSSCoord height = kMeterHeight * aDpiRatio;
+  const LayoutDeviceCoord height = kMeterHeight * aDpiRatio;
   rect.y += (rect.height - height) / 2;
   rect.height = height;
 
@@ -929,7 +936,8 @@ void nsNativeBasicTheme::PaintMeterchunk(nsIFrame* aFrame,
   double value = meter->Value();
   double max = meter->Max();
   double position = value / max;
-  if (rect.width - (rect.width * position) < (borderWidth + radius)) {
+  if (rect.width - (rect.width * position) <
+      (borderWidth * aDpiRatio + radius)) {
     // Round corners when the progress chunk approaches the maximum value to
     // avoid artifacts.
     progressEndRadius = radius;
@@ -953,7 +961,7 @@ void nsNativeBasicTheme::PaintMeterchunk(nsIFrame* aFrame,
 void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                      const Rect& aRect,
                                      const EventStates& aState,
-                                     uint32_t aDpiRatio) {
+                                     DPIRatio aDpiRatio) {
   const CSSCoord radius = 4.0f;
   auto [backgroundColor, borderColor] = ComputeButtonColors(aState, aFrame);
 
@@ -971,7 +979,7 @@ void nsNativeBasicTheme::PaintScrollbarThumb(DrawTarget* aDrawTarget,
                                              const ComputedStyle& aStyle,
                                              const EventStates& aElementState,
                                              const EventStates& aDocumentState,
-                                             uint32_t aDpiRatio) {
+                                             DPIRatio aDpiRatio) {
   sRGBColor thumbColor =
       ComputeScrollbarthumbColor(aStyle, aElementState, aDocumentState);
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(thumbColor)));
@@ -982,7 +990,7 @@ void nsNativeBasicTheme::PaintScrollbarTrack(DrawTarget* aDrawTarget,
                                              bool aHorizontal, nsIFrame* aFrame,
                                              const ComputedStyle& aStyle,
                                              const EventStates& aDocumentState,
-                                             uint32_t aDpiRatio, bool aIsRoot) {
+                                             DPIRatio aDpiRatio, bool aIsRoot) {
   // Draw nothing by default. Subclasses can override this.
 }
 
@@ -991,7 +999,7 @@ void nsNativeBasicTheme::PaintScrollbar(DrawTarget* aDrawTarget,
                                         nsIFrame* aFrame,
                                         const ComputedStyle& aStyle,
                                         const EventStates& aDocumentState,
-                                        uint32_t aDpiRatio, bool aIsRoot) {
+                                        DPIRatio aDpiRatio, bool aIsRoot) {
   sRGBColor scrollbarColor =
       ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(scrollbarColor)));
@@ -1001,14 +1009,14 @@ void nsNativeBasicTheme::PaintScrollbar(DrawTarget* aDrawTarget,
   if (aStyle.StyleUI()->mScrollbarColor.IsAuto()) {
     RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
     Rect strokeRect(aRect);
-    strokeRect.Deflate(0.5f * aDpiRatio);
+    strokeRect.Deflate(CSSCoord(0.5f) * aDpiRatio);
     builder->MoveTo(Point(strokeRect.TopLeft()));
     builder->LineTo(
         Point(aHorizontal ? strokeRect.TopRight() : strokeRect.BottomLeft()));
     RefPtr<Path> path = builder->Finish();
     aDrawTarget->Stroke(path,
                         ColorPattern(ToDeviceColor(sScrollbarBorderColor)),
-                        StrokeOptions(1.0f * aDpiRatio));
+                        StrokeOptions(CSSCoord(1.0f) * aDpiRatio));
   }
 }
 
@@ -1016,7 +1024,7 @@ void nsNativeBasicTheme::PaintScrollCorner(DrawTarget* aDrawTarget,
                                            const Rect& aRect, nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
-                                           uint32_t aDpiRatio, bool aIsRoot) {
+                                           DPIRatio aDpiRatio, bool aIsRoot) {
   sRGBColor scrollbarColor =
       ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(scrollbarColor)));
@@ -1025,7 +1033,7 @@ void nsNativeBasicTheme::PaintScrollCorner(DrawTarget* aDrawTarget,
 void nsNativeBasicTheme::PaintScrollbarbutton(
     DrawTarget* aDrawTarget, StyleAppearance aAppearance, const Rect& aRect,
     const ComputedStyle& aStyle, const EventStates& aElementState,
-    const EventStates& aDocumentState, uint32_t aDpiRatio) {
+    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
   bool isActive = aElementState.HasState(NS_EVENT_STATE_ACTIVE);
   bool isHovered = aElementState.HasState(NS_EVENT_STATE_HOVER);
 
@@ -1116,7 +1124,7 @@ void nsNativeBasicTheme::PaintScrollbarbutton(
     RefPtr<Path> path = builder->Finish();
     aDrawTarget->Stroke(path,
                         ColorPattern(ToDeviceColor(sScrollbarBorderColor)),
-                        StrokeOptions(1.0f * aDpiRatio));
+                        StrokeOptions(CSSCoord(1.0f) * aDpiRatio));
   }
 }
 
@@ -1152,7 +1160,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     }
   }
 
-  uint32_t dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame);
 
   switch (aAppearance) {
     case StyleAppearance::Radio: {
@@ -1276,22 +1284,24 @@ aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
 
 LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  uint32_t dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame);
   switch (aAppearance) {
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::NumberInput: {
-      LayoutDeviceIntCoord w = kTextFieldBorderWidth * dpiRatio;
+      // FIXME: Do we want this margin not to be int-based? The native windows
+      // theme rounds (see ScaleForDPI)...
+      LayoutDeviceIntCoord w = (kTextFieldBorderWidth * dpiRatio).Rounded();
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton: {
-      const LayoutDeviceIntCoord w = kMenulistBorderWidth * dpiRatio;
+      LayoutDeviceIntCoord w = (kMenulistBorderWidth * dpiRatio).Rounded();
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Button: {
-      LayoutDeviceIntCoord w = kButtonBorderWidth * dpiRatio;
+      LayoutDeviceIntCoord w = (kButtonBorderWidth * dpiRatio).Rounded();
       return LayoutDeviceIntMargin(w, w, w, w);
     }
     default:
@@ -1324,17 +1334,16 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     return false;
   }
 
-  uint32_t dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame);
   switch (aAppearance) {
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
     case StyleAppearance::NumberInput:
+      *aResult = (CSSMargin(1.0f, 0, 1.0f, 4.0f) * dpiRatio).Rounded();
       if (IsFrameRTL(aFrame)) {
-        aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 0);
-      } else {
-        aResult->SizeTo(1 * dpiRatio, 0, 1 * dpiRatio, 4 * dpiRatio);
+        std::swap(aResult->left, aResult->right);
       }
       return true;
     case StyleAppearance::Textarea:
@@ -1343,21 +1352,21 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Menuitem:
     case StyleAppearance::MenulistText:
     case StyleAppearance::MenulistButton:
-      aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 4 * dpiRatio);
+      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
       return true;
     case StyleAppearance::Button:
       if (IsColorPickerButton(aFrame)) {
-        aResult->SizeTo(4 * dpiRatio, 4 * dpiRatio, 4 * dpiRatio, 4 * dpiRatio);
+        *aResult = (CSSMargin(4.0f, 4.0f, 4.0f, 4.0f) * dpiRatio).Rounded();
         return true;
       }
-      aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 4 * dpiRatio);
+      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
       return true;
     case StyleAppearance::Textfield:
       if (IsDateTimeTextField(aFrame)) {
-        aResult->SizeTo(2 * dpiRatio, 3 * dpiRatio, 0, 3 * dpiRatio);
+        *aResult = (CSSMargin(2.0f, 3.0f, 0.0f, 3.0f) * dpiRatio).Rounded();
         return true;
       }
-      aResult->SizeTo(1 * dpiRatio, 4 * dpiRatio, 1 * dpiRatio, 4 * dpiRatio);
+      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
       return true;
     default:
       return false;
@@ -1410,30 +1419,26 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          StyleAppearance aAppearance,
                                          LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable) {
-  uint32_t dpiRatio = GetDPIRatio(aFrame);
+  DPIRatio dpiRatio = GetDPIRatio(aFrame);
 
-  aResult->width = aResult->height =
-      static_cast<uint32_t>(kMinimumWidgetSize) * dpiRatio;
+  aResult->width = aResult->height = (kMinimumWidgetSize * dpiRatio).Rounded();
 
   switch (aAppearance) {
     case StyleAppearance::Button:
       if (IsColorPickerButton(aFrame)) {
-        aResult->height =
-            static_cast<uint32_t>(kMinimumColorPickerHeight) * dpiRatio;
+        aResult->height = (kMinimumColorPickerHeight * dpiRatio).Rounded();
       }
       break;
     case StyleAppearance::RangeThumb:
-      aResult->SizeTo(static_cast<uint32_t>(kMinimumRangeThumbSize) * dpiRatio,
-                      static_cast<uint32_t>(kMinimumRangeThumbSize) * dpiRatio);
+      aResult->SizeTo((kMinimumRangeThumbSize * dpiRatio).Rounded(),
+                      (kMinimumRangeThumbSize * dpiRatio).Rounded());
       break;
     case StyleAppearance::MozMenulistArrowButton:
-      aResult->width =
-          static_cast<uint32_t>(kMinimumDropdownArrowButtonWidth) * dpiRatio;
+      aResult->width = (kMinimumDropdownArrowButtonWidth * dpiRatio).Rounded();
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
-      aResult->width =
-          static_cast<uint32_t>(kMinimumSpinnerButtonWidth) * dpiRatio;
+      aResult->width = (kMinimumSpinnerButtonWidth * dpiRatio).Rounded();
       break;
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
@@ -1448,13 +1453,11 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::Scrollcorner: {
       ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
       if (style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
-        aResult->SizeTo(
-            static_cast<uint32_t>(kMinimumThinScrollbarSize) * dpiRatio,
-            static_cast<uint32_t>(kMinimumThinScrollbarSize) * dpiRatio);
+        aResult->SizeTo((kMinimumThinScrollbarSize * dpiRatio).Rounded(),
+                        (kMinimumThinScrollbarSize * dpiRatio).Rounded());
       } else {
-        aResult->SizeTo(
-            static_cast<uint32_t>(kMinimumScrollbarSize) * dpiRatio,
-            static_cast<uint32_t>(kMinimumScrollbarSize) * dpiRatio);
+        aResult->SizeTo((kMinimumScrollbarSize * dpiRatio).Rounded(),
+                        (kMinimumScrollbarSize * dpiRatio).Rounded());
       }
       break;
     }

@@ -25,15 +25,15 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
                            const ComputedStyle& aStyle,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState,
-                           uint32_t aDpiRatio) override;
+                           DPIRatio aDpiRatio) override;
   void PaintScrollbar(DrawTarget* aDrawTarget, const Rect& aRect,
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
-                      const EventStates& aDocumentState, uint32_t aDpiRatio,
+                      const EventStates& aDocumentState, DPIRatio aDpiRatio,
                       bool aIsRoot) override;
   void PaintScrollCorner(DrawTarget* aDrawTarget, const Rect& aRect,
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
-                         const EventStates& aDocumentState, uint32_t aDpiRatio,
+                         const EventStates& aDocumentState, DPIRatio aDpiRatio,
                          bool aIsRoot) override;
   bool ThemeSupportsScrollbarButtons() override { return false; }
 
