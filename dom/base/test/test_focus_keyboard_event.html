@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=552255
+-->
+<head>
+<title>Test for bug 552255</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=552255">Mozilla Bug 552255</a>
+<p id="display"></p>
+<input type="text"><br>
+<iframe src="http://example.org/tests/dom/base/test/file_empty.html"></iframe>
+<script>
+add_task(async function cross_origin_iframe() {
+  await SimpleTest.promiseFocus();
+
+  // Setup test in iframe
+  let iframe = document.querySelector("iframe");
+  await SpecialPowers.spawn(iframe, [], () => {
+    content.document.body.addEventListener("keydown", (e) => {
+      ok(false, `should not receive any keydown event, ${e.key}`);
+    });
+    content.addEventListener("focus", (e) => {
+      ok(false, `should not receive any focus event`);
+    });
+  });
+
+  let input = document.querySelector("input");
+  input.focus();
+
+  input.addEventListener("keydown", (e) => {
+    iframe.focus();
+  });
+
+  // Start test.
+  synthesizeKey("a");
+
+  await new Promise(SimpleTest.executeSoon);
+  ok(document.hasFocus(), "document should still have focus");
+  is(document.activeElement, input, "input should still have focus");
+});
+</script>
+</body>
+</html>

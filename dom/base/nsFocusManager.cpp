@@ -1453,6 +1453,16 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
 
   MOZ_ASSERT(newBrowsingContext);
 
+  BrowsingContext* browsingContextToFocus = newBrowsingContext;
+  if (RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(elementToFocus)) {
+    // Only look at pre-existing browsing contexts. If this function is
+    // called during reflow, calling GetBrowsingContext() could cause frame
+    // loader initialization at a time when it isn't safe.
+    if (BrowsingContext* bc = flo->GetExtantBrowsingContext()) {
+      browsingContextToFocus = bc;
+    }
+  }
+
   // don't allow focus to be placed in docshells or descendants of docshells
   // that are being destroyed. Also, ensure that the page hasn't been
   // unloaded. The prevents content from being refocused during an unload event.
@@ -1498,60 +1508,44 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   bool isElementInFocusedWindow =
       (focusedBrowsingContext == newBrowsingContext);
 
-  if (!isElementInFocusedWindow && newWindow &&
-      nsContentUtils::IsHandlingKeyBoardEvent()) {
+  if (focusedBrowsingContext &&
+      focusedBrowsingContext != browsingContextToFocus &&
+      nsContentUtils::IsHandlingKeyBoardEvent() &&
+      !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
+    MOZ_ASSERT(browsingContextToFocus,
+               "BrowsingContext to focus should be non-null.");
+
+    nsIPrincipal* focusedPrincipal = nullptr;
+    nsIPrincipal* newPrincipal = nullptr;
+
     if (XRE_IsParentProcess()) {
-      nsIPrincipal* focusedPrincipal = nullptr;
-      nsIPrincipal* newPrincipal = nullptr;
-
-      WindowGlobalParent* focusedWindowGlobalParent = nullptr;
-      if (focusedBrowsingContext) {
-        focusedWindowGlobalParent =
-            focusedBrowsingContext->Canonical()->GetCurrentWindowGlobal();
-      }
-      MOZ_ASSERT(newBrowsingContext, "Should still be non-null.");
-      WindowGlobalParent* newWindowGlobalParent =
-          newBrowsingContext->Canonical()->GetCurrentWindowGlobal();
-
-      if (focusedWindowGlobalParent) {
+      if (WindowGlobalParent* focusedWindowGlobalParent =
+              focusedBrowsingContext->Canonical()->GetCurrentWindowGlobal()) {
         focusedPrincipal = focusedWindowGlobalParent->DocumentPrincipal();
       }
-      if (newWindowGlobalParent) {
+
+      if (WindowGlobalParent* newWindowGlobalParent =
+              browsingContextToFocus->Canonical()->GetCurrentWindowGlobal()) {
         newPrincipal = newWindowGlobalParent->DocumentPrincipal();
       }
-
-      if (!focusedPrincipal || !newPrincipal) {
-        return;
-      }
-      bool subsumes = false;
-      focusedPrincipal->Subsumes(newPrincipal, &subsumes);
-      if (!subsumes && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-        NS_WARNING("Not allowed to focus the new window!");
-        return;
-      }
-    } else if (focusedBrowsingContext &&
-               focusedBrowsingContext->IsInProcess()) {
-      nsCOMPtr<nsPIDOMWindowOuter> focusedWindow =
-          focusedBrowsingContext->GetDOMWindow();
-      MOZ_ASSERT(focusedWindow,
-                 "BrowsingContext should always have a window here.");
+    } else if (focusedBrowsingContext->IsInProcess() &&
+               browsingContextToFocus->IsInProcess()) {
       nsCOMPtr<nsIScriptObjectPrincipal> focused =
-          do_QueryInterface(focusedWindow);
+          do_QueryInterface(focusedBrowsingContext->GetDOMWindow());
       nsCOMPtr<nsIScriptObjectPrincipal> newFocus =
-          do_QueryInterface(newWindow);
-      nsIPrincipal* focusedPrincipal = focused->GetPrincipal();
-      nsIPrincipal* newPrincipal = newFocus->GetPrincipal();
-      if (!focusedPrincipal || !newPrincipal) {
-        return;
-      }
-      bool subsumes = false;
-      focusedPrincipal->Subsumes(newPrincipal, &subsumes);
-      if (!subsumes && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-        NS_WARNING("Not allowed to focus the new window!");
-        return;
-      }
-    } else if (focusedBrowsingContext &&
-               !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
+          do_QueryInterface(browsingContextToFocus->GetDOMWindow());
+      MOZ_ASSERT(focused && newFocus,
+                 "BrowsingContext should always have a window here.");
+      focusedPrincipal = focused->GetPrincipal();
+      newPrincipal = newFocus->GetPrincipal();
+    }
+
+    if (!focusedPrincipal || !newPrincipal) {
+      return;
+    }
+
+    if (!focusedPrincipal->Subsumes(newPrincipal)) {
+      NS_WARNING("Not allowed to focus the new window!");
       return;
     }
   }
