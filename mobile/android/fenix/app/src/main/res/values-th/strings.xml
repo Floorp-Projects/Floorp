@@ -95,6 +95,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ยกเลิก</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">เปลี่ยนเค้าโครงของแท็บที่เปิดอยู่ ไปยังการตั้งค่าแล้วเลือกเส้นตารางภายใต้มุมมองแท็บ</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">ไปยังการตั้งค่า</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->

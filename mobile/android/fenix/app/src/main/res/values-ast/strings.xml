@@ -417,6 +417,10 @@
     <string name="preferences_marketing_data">Datos de marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Comparte los datos tocante a les carauterístiques qu\'uses en %1$s con Leanplum, el nuesu fornidor de marketing móvil.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Estudios</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Permite a Mozilla qu\'instale o execute estudios</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Esperimentos</string>
     <!-- Summary for experiments preferences -->
@@ -460,6 +464,10 @@
 
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Siguir l\'estilu del preséu</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Arrastrar p\'abaxo p\'anovar</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -507,6 +515,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Llingüetes</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Llista de les llinguüetes</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">En llista</string>
     <!-- Option for a grid tab view -->
@@ -521,6 +531,15 @@
     <string name="close_tabs_after_one_week">Dempués d\'una selmana</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Dempués d\'un mes</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Zarrales a mano</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Zarrales dempués d\'un día</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Zarrales dempués d\'una selmana</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Zarrales dempués d\'un mes</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -546,6 +565,16 @@
     <string name="tab_tray_menu_item_close">Zarrar toles llingüetes</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Llingüeta nueva</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Amestar a Marcadores</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Zarrar</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Compartir les llingüetes abiertes</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Menú de llingüetes abiertes</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Esbillar llingüetes</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Zarrar la llingüeta</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->

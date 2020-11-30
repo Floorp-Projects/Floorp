@@ -19,6 +19,10 @@
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ستظهر الألسنة الخاصة هنا.</string>
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">بايدو</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">لسان واحد مفتوح. انقر لتبديل الألسنة.</string>
 
@@ -94,8 +98,13 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">أهمِل</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">غيّر تخطيط الألسنة المفتوحة. انتقل إلى الإعدادات واختر ”شبكة“ من ”منظور الألسنة“.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">انتقل إلى الإعدادات</string>
+
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">تجاهَل</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -436,6 +445,10 @@
     <string name="preferences_marketing_data">بيانات التسويق</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">يُشارك بيانات الميزات التي تستعملها في %1$s مع Leanplum، شركة التسويق للمحمول التي نتعامل معها.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">الدراسات</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">تسمح لمؤسسة Mozilla بتثبيت الدراسات وتشغيلها</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">التجارب</string>
     <!-- Summary for experiments preferences -->
@@ -563,6 +576,13 @@
 
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">أغلِق يدويًا</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">أغلِق بعد يوم واحد</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">أغلِق بعد أسبوع واحد</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">أغلِق بعد شهر واحد</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

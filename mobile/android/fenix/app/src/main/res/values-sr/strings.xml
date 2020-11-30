@@ -441,6 +441,10 @@
     <string name="preferences_marketing_data">Маркетиншки подаци</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Дели податке о функцијама које користите у апликацији %1$s са Leanplum-ом, нашим провајдером мобилног маркетинга.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Студије</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Омогућава Mozilla-и да инсталира и покреће студије</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Експерименти</string>
     <!-- Summary for experiments preferences -->
