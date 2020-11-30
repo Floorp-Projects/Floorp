@@ -21,7 +21,6 @@
 #include "jit/IonTypes.h"
 #include "js/AllocPolicy.h"
 #include "js/HeapAPI.h"  // js::CurrentThreadCanAccessZone
-#include "js/UbiNode.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/ProtectedData.h"  // js::ZoneData
@@ -63,30 +62,5 @@ class TypeZone {
 };
 
 } /* namespace js */
-
-// JS::ubi::Nodes can point to object groups; they're js::gc::Cell instances
-// with no associated compartment.
-namespace JS {
-namespace ubi {
-
-template <>
-class Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> {
- protected:
-  explicit Concrete(js::ObjectGroup* ptr)
-      : TracerConcrete<js::ObjectGroup>(ptr) {}
-
- public:
-  static void construct(void* storage, js::ObjectGroup* ptr) {
-    new (storage) Concrete(ptr);
-  }
-
-  Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-
-  const char16_t* typeName() const override { return concreteTypeName; }
-  static const char16_t concreteTypeName[];
-};
-
-}  // namespace ubi
-}  // namespace JS
 
 #endif /* vm_TypeInference_h */

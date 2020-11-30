@@ -677,3 +677,9 @@ void ObjectGroupRealm::checkNewTableAfterMovingGC(NewTable* table) {
 }
 
 #endif  // JSGC_HASH_TABLE_CHECKS
+
+JS::ubi::Node::Size JS::ubi::Concrete<js::ObjectGroup>::size(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+  return size;
+}
