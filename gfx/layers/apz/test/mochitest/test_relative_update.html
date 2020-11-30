@@ -81,7 +81,7 @@ if (isApzEnabled()) {
   // Receiving a relative scroll offset update can cause scroll animations to
   // be cancelled. This should be fixed, but for now we can still test this
   // by disabling smooth scrolling.
-  pushPrefs([["apz.relative-update.enabled", true], ["general.smoothScroll", false]])
+  pushPrefs([["general.smoothScroll", false]])
   .then(waitUntilApzStable)
   .then(runContinuation(test))
   .then(SimpleTest.finish, SimpleTest.finishWithFailure);
