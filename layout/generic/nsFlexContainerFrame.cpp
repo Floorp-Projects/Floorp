@@ -4483,14 +4483,30 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
+  // Determine this frame's tentative border-box size. This is used for logical
+  // to physical coordinate conversion when positioning children.
+  //
+  // Note that vertical-rl writing-mode is the only case where the block flow
+  // direction progresses in a negative physical direction, and therefore block
+  // direction coordinate conversion depends on knowing the width of the
+  // coordinate space in order to translate between the logical and physical
+  // origins. As a result, if our final border-box block-size is different from
+  // this tentative one, and we are in vertical-rl writing mode, we need to
+  // adjust our children's position after reflowing them.
+  const LogicalSize tentativeBorderBoxSize(
+      wm, contentBoxSize.ISize(wm) + borderPadding.IStartEnd(wm),
+      std::min(effectiveContentBSize + borderPadding.BStartEnd(wm),
+               aReflowInput.AvailableBSize()));
+  const nsSize containerSize = tentativeBorderBoxSize.GetPhysicalSize(wm);
+
   const auto* prevInFlow = static_cast<nsFlexContainerFrame*>(GetPrevInFlow());
   OverflowAreas ocBounds;
   nsReflowStatus ocStatus;
   nscoord sumOfChildrenBlockSize;
   if (prevInFlow) {
-    ReflowOverflowContainerChildren(aPresContext, aReflowInput, ocBounds,
-                                    ReflowChildFlags::Default, ocStatus,
-                                    MergeSortedFrameListsFor);
+    ReflowOverflowContainerChildren(
+        aPresContext, aReflowInput, ocBounds, ReflowChildFlags::Default,
+        ocStatus, MergeSortedFrameListsFor, Some(containerSize));
     sumOfChildrenBlockSize =
         prevInFlow->GetProperty(SumOfChildrenBlockSizeProperty());
   } else {
@@ -4499,7 +4515,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   const auto [maxBlockEndEdgeOfChildren, areChildrenComplete] =
       ReflowChildren(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
-                     availableSizeForItems, borderPadding,
+                     containerSize, availableSizeForItems, borderPadding,
                      sumOfChildrenBlockSize, flexContainerAscent, lines,
                      placeholders, axisTracker, hasLineClampEllipsis);
 
@@ -5057,7 +5073,7 @@ void nsFlexContainerFrame::DoFlexLayout(
 
 std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
     const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
-    const nscoord aContentBoxCrossSize,
+    const nscoord aContentBoxCrossSize, const nsSize& aContainerSize,
     const LogicalSize& aAvailableSizeForItems,
     const LogicalMargin& aBorderPadding,
     const nscoord aSumOfPrevInFlowsChildrenBlockSize,
@@ -5070,12 +5086,6 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
   WritingMode flexWM = aReflowInput.GetWritingMode();
   const LogicalPoint containerContentBoxOrigin(
       flexWM, aBorderPadding.IStart(flexWM), aBorderPadding.BStart(flexWM));
-
-  // Determine flex container's border-box size (used in positioning children):
-  LogicalSize logSize = aAxisTracker.LogicalSizeFromFlexRelativeSizes(
-      aContentBoxMainSize, aContentBoxCrossSize);
-  logSize += aBorderPadding.Size(flexWM);
-  nsSize containerSize = logSize.GetPhysicalSize(flexWM);
 
   // If the flex container has no baseline-aligned items, it will use the first
   // item to determine its baseline:
@@ -5154,9 +5164,9 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
                         availableBSizeForItem)
                 .ConvertTo(itemWM, flexWM);
 
-        const nsReflowStatus childReflowStatus =
-            ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
-                           availableSize, containerSize, aHasLineClampEllipsis);
+        const nsReflowStatus childReflowStatus = ReflowFlexItem(
+            aAxisTracker, aReflowInput, item, framePos, availableSize,
+            aContainerSize, aHasLineClampEllipsis);
 
         if (childReflowStatus.IsIncomplete()) {
           incompleteItems.PutEntry(item.Frame());
@@ -5165,7 +5175,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         }
       } else {
         MoveFlexItemToFinalPosition(aReflowInput, item, framePos,
-                                    containerSize);
+                                    aContainerSize);
         // We didn't perform a final reflow of the item. If we still have a
         // -webkit-line-clamp ellipsis hanging around, but we shouldn't have
         // one any more, we need to clear that now.  Technically, we only need
@@ -5210,7 +5220,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
 
   if (!aPlaceholders.IsEmpty()) {
     ReflowPlaceholders(aReflowInput, aPlaceholders, containerContentBoxOrigin,
-                       containerSize);
+                       aContainerSize);
   }
 
   const bool anyChildIncomplete = PushIncompleteChildren(
