@@ -13061,55 +13061,43 @@ void CodeGenerator::visitInArray(LInArray* lir) {
   Register initLength = ToRegister(lir->initLength());
   Register output = ToRegister(lir->output());
 
-  // When the array is not packed we need to do a hole check in addition to the
-  // bounds check.
   Label falseBranch, done, trueBranch;
-
-  OutOfLineCode* ool = nullptr;
-  Label* failedInitLength = &falseBranch;
 
   if (lir->index()->isConstant()) {
     int32_t index = ToInt32(lir->index());
 
-    MOZ_ASSERT_IF(index < 0, mir->needsNegativeIntCheck());
-    if (mir->needsNegativeIntCheck()) {
-      using Fn = bool (*)(JSContext*, int32_t, HandleObject, bool*);
-      ool = oolCallVM<Fn, OperatorInI>(
-          lir, ArgList(Imm32(index), ToRegister(lir->object())),
-          StoreRegisterTo(output));
-      failedInitLength = ool->entry();
+    if (index < 0) {
+      MOZ_ASSERT(mir->needsNegativeIntCheck());
+      bailout(lir->snapshot());
+      return;
     }
 
     masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(index),
-                  failedInitLength);
-    if (mir->needsHoleCheck()) {
-      NativeObject::elementsSizeMustNotOverflow();
-      Address address = Address(elements, index * sizeof(Value));
-      masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
-    }
+                  &falseBranch);
+
+    NativeObject::elementsSizeMustNotOverflow();
+    Address address = Address(elements, index * sizeof(Value));
+    masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
   } else {
-    Label negativeIntCheck;
     Register index = ToRegister(lir->index());
 
+    Label negativeIntCheck;
+    Label* failedInitLength = &falseBranch;
     if (mir->needsNegativeIntCheck()) {
       failedInitLength = &negativeIntCheck;
     }
 
     masm.branch32(Assembler::BelowOrEqual, initLength, index, failedInitLength);
-    if (mir->needsHoleCheck()) {
-      BaseObjectElementIndex address(elements, ToRegister(lir->index()));
-      masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
-    }
-    masm.jump(&trueBranch);
+
+    BaseObjectElementIndex address(elements, index);
+    masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
 
     if (mir->needsNegativeIntCheck()) {
+      masm.jump(&trueBranch);
       masm.bind(&negativeIntCheck);
-      using Fn = bool (*)(JSContext*, int32_t, HandleObject, bool*);
-      ool = oolCallVM<Fn, OperatorInI>(
-          lir, ArgList(index, ToRegister(lir->object())),
-          StoreRegisterTo(output));
 
-      masm.branch32(Assembler::LessThan, index, Imm32(0), ool->entry());
+      bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
+
       masm.jump(&falseBranch);
     }
   }
@@ -13121,10 +13109,6 @@ void CodeGenerator::visitInArray(LInArray* lir) {
   masm.bind(&falseBranch);
   masm.move32(Imm32(0), output);
   masm.bind(&done);
-
-  if (ool) {
-    masm.bind(ool->rejoin());
-  }
 }
 
 void CodeGenerator::visitGuardElementNotHole(LGuardElementNotHole* lir) {
