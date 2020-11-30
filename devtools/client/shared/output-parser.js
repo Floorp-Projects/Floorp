@@ -16,19 +16,14 @@ const STYLE_INSPECTOR_PROPERTIES =
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
-const CONIC_GRADIENT_ENABLED = Services.prefs.getBoolPref(
-  "layout.css.conic-gradient.enabled"
-);
-
 // Functions that accept an angle argument.
 const ANGLE_TAKING_FUNCTIONS = [
   "linear-gradient",
   "-moz-linear-gradient",
   "repeating-linear-gradient",
   "-moz-repeating-linear-gradient",
-  ...(CONIC_GRADIENT_ENABLED
-    ? ["conic-gradient", "repeating-conic-gradient"]
-    : []),
+  "conic-gradient",
+  "repeating-conic-gradient",
   "rotate",
   "rotateX",
   "rotateY",
@@ -57,9 +52,8 @@ const COLOR_TAKING_FUNCTIONS = [
   "-moz-radial-gradient",
   "repeating-radial-gradient",
   "-moz-repeating-radial-gradient",
-  ...(CONIC_GRADIENT_ENABLED
-    ? ["conic-gradient", "repeating-conic-gradient"]
-    : []),
+  "conic-gradient",
+  "repeating-conic-gradient",
   "drop-shadow",
 ];
 // Functions that accept a shape argument.
