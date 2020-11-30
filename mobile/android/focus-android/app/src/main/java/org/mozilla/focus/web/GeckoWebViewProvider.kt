@@ -622,9 +622,10 @@ class GeckoWebViewProvider : IWebViewProvider {
                     geckoSession.open(geckoRuntime!!)
                 }
                 setSession(geckoSession)
-            } else {
+            } else if (restored) {
                 // App was backgrounded and restored;
-                // GV restored the GeckoSession itself, but we need to restore our variables
+                geckoSession = savedSession
+                setSession(geckoSession)
                 canGoBack = stateData.getBoolean(CAN_GO_BACK, false)
                 canGoForward = stateData.getBoolean(CAN_GO_FORWARD, false)
                 isSecure = stateData.getBoolean(IS_SECURE, false)
@@ -644,7 +645,6 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun saveWebViewState(session: Session) {
-            session.savedGeckoSession = geckoSession
             val sessionBundle = Bundle()
             sessionBundle.putBoolean(CAN_GO_BACK, canGoBack)
             sessionBundle.putBoolean(CAN_GO_FORWARD, canGoForward)
@@ -652,6 +652,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             sessionBundle.putString(WEBVIEW_TITLE, webViewTitle)
             sessionBundle.putString(CURRENT_URL, currentUrl)
             session.savedWebViewState = sessionBundle
+            session.savedGeckoSession = geckoSession
         }
 
         override fun getTitle(): String? {

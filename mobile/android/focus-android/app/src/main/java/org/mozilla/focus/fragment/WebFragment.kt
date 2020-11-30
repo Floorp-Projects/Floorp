@@ -14,6 +14,7 @@ import android.webkit.WebView
 import mozilla.components.browser.session.Session
 
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.savedGeckoSession
 import org.mozilla.focus.ext.savedWebViewState
 import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.locale.LocaleAwareFragment
@@ -136,7 +137,9 @@ abstract class WebFragment : LocaleAwareFragment() {
 
     private fun loadInitialUrl() {
         val session = session
-        if (session == null || session.savedWebViewState == null) {
+        if (session == null ||
+            session.savedWebViewState == null ||
+            session.savedGeckoSession == null) {
             val url = initialUrl
             if (!TextUtils.isEmpty(url)) {
                 webViewInstance!!.loadUrl(url)
@@ -146,7 +149,9 @@ abstract class WebFragment : LocaleAwareFragment() {
 
     private fun restoreStateOrLoadUrl() {
         val session = session
-        if (session == null || session.savedWebViewState == null) {
+        if (session == null ||
+            session.savedWebViewState == null ||
+            session.savedGeckoSession == null) {
             val url = initialUrl
             if (!TextUtils.isEmpty(url)) {
                 webViewInstance!!.loadUrl(url)
