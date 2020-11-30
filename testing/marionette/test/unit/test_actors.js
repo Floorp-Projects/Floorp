@@ -11,17 +11,33 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
+  registerCommandsActor:
+    "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   registerEventsActor:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
+  unregisterCommandsActor:
+    "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   unregisterEventsActor:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
 });
 
 registerCleanupFunction(function() {
+  unregisterCommandsActor();
   unregisterEventsActor();
 });
 
-add_test(function test_registering_event_actor() {
+add_test(function test_commandsActor_register() {
+  registerCommandsActor();
+  unregisterCommandsActor();
+
+  registerCommandsActor();
+  registerCommandsActor();
+  unregisterCommandsActor();
+
+  run_next_test();
+});
+
+add_test(function test_eventsActor_register() {
   registerEventsActor();
   unregisterEventsActor();
 
