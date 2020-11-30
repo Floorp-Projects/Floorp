@@ -29,6 +29,12 @@ XUL <splitter> collapsing tests
       synthesizeMouse(splitter, offsetX, 1, {type: "mousemove"});
       synthesizeMouse(splitter, offsetX, 1, {type: "mouseup"});
       await new Promise(SimpleTest.executeSoon);
+      var newSplitterRect = splitter.getBoundingClientRect();
+      is(
+        offsetX > 0,
+        newSplitterRect.left > splitterRect.left,
+        `Should move in the right direction ${splitterRect.left} -> ${newSplitterRect.left}, ${offsetX}`
+      );
     }
 
     function shouldBeCollapsed(where) {
@@ -62,6 +68,7 @@ XUL <splitter> collapsing tests
     var splitter;
     async function runTests(rtl, splitterId) {
       splitter = document.getElementById(splitterId);
+      await runPass(rtl, false, false);
       splitter.setAttribute("collapse", "before");
       await runPass(rtl, rtl, !rtl);
       splitter.setAttribute("collapse", "after");
