@@ -204,17 +204,12 @@ bool Client::TypeToText(Type aType, nsAString& aText, const fallible_t&) {
 }
 
 // static
-void Client::TypeToText(Type aType, nsAString& aText) {
-  if (!TypeTo_impl(aType, aText)) {
+nsAutoCString Client::TypeToText(Type aType) {
+  nsAutoCString res;
+  if (!TypeTo_impl(aType, res)) {
     BadType();
   }
-}
-
-// static
-void Client::TypeToText(Type aType, nsACString& aText) {
-  if (!TypeTo_impl(aType, aText)) {
-    BadType();
-  }
+  return res;
 }
 
 // static
@@ -276,8 +271,7 @@ void Client::ShutdownWorkThreads() {
 
                 MOZ_DIAGNOSTIC_ASSERT(!quotaClient->IsShutdownCompleted());
 
-                nsAutoCString type;
-                TypeToText(quotaClient->GetType(), type);
+                const auto type = TypeToText(quotaClient->GetType());
 
                 CrashReporter::AnnotateCrashReport(
                     CrashReporter::Annotation::QuotaManagerShutdownTimeout,

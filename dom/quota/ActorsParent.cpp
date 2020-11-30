@@ -3053,13 +3053,10 @@ void DirectoryLockImpl::Log() const {
   }
   QM_LOG(("  mOriginScope: %s", originScope.get()));
 
-  nsString clientType;
-  if (mClientType.IsNull()) {
-    clientType.AssignLiteral("null");
-  } else {
-    Client::TypeToText(mClientType.Value(), clientType);
-  }
-  QM_LOG(("  mClientType: %s", NS_ConvertUTF16toUTF8(clientType).get()));
+  const auto clientType = mClientType.IsNull()
+                              ? nsAutoCString{"null"_ns}
+                              : Client::TypeToText(mClientType.Value());
+  QM_LOG(("  mClientType: %s", clientType.get()));
 
   nsCString blockedOnString;
   for (auto blockedOn : mBlockedOn) {
