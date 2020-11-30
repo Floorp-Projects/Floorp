@@ -3816,6 +3816,7 @@ impl Renderer {
         // should ensure any left over render targets get invalidated and
         // returned to the pool correctly.
         self.texture_resolver.end_frame(&mut self.device, cpu_frame_id);
+        self.texture_upload_pbo_pool.end_frame(&mut self.device);
         self.device.end_frame();
 
         if device_size.is_some() {
