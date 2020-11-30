@@ -759,7 +759,7 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
           // example of this.
           if (layoutOverflow < 0) {
             LogicalRect so(kidWM, pifChild->ScrollableOverflowRect(),
-                           aReflowInput.ComputedSizeAsContainerIfConstrained());
+                           pifChild->GetSize());
             layoutOverflow = so.BEnd(kidWM) - canvasBSizeSum;
           }
           bOffset = std::max(bOffset, layoutOverflow);

@@ -186,9 +186,24 @@ asserts(2-3) pref(layout.display-list.improve-fragmentation,true) == inline-bloc
 asserts(2-3) pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-2.html inline-block-frag-offset-2-ref.html # Bug 1655630
 asserts(2) pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-text-1.html inline-block-frag-text-1-ref.html # Bug 1655630
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-1.html inline-block-slice-1-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-1b.html inline-block-slice-1b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-1c.html inline-block-slice-1c-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-2.html inline-block-slice-2-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-2b.html inline-block-slice-2b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-2c.html inline-block-slice-2c-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-3.html inline-block-slice-3-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-3b.html inline-block-slice-3b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-3c.html inline-block-slice-3c-ref.html
 asserts(4) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4.html inline-block-slice-4-ref.html # Bug 1655630
+asserts(4) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4b.html inline-block-slice-4b-ref.html
+asserts(4) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4c.html inline-block-slice-4c-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5.html inline-block-slice-5-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5b.html inline-block-slice-5b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5c.html inline-block-slice-5c-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6.html inline-block-slice-6-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6b.html inline-block-slice-6b-ref.html
+pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6c.html inline-block-slice-6c-ref.html
 pref(layout.display-list.improve-fragmentation,true) != inline-block-slice-7.html inline-block-slice-7-ref.html
+asserts(4) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8.html inline-block-slice-8-ref.html # Bug 1655630
+asserts(4) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8b.html inline-block-slice-8b-ref.html # Bug 1655630
+asserts(4) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8c.html inline-block-slice-8c-ref.html # Bug 1655630

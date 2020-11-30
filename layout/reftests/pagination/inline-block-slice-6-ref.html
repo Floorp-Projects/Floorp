@@ -18,12 +18,12 @@
 html,body {
   color:black; background-color:white; font:20px/1 Ahem; padding:0; margin:0;
 }
-html { height: 40vh; }
+html { block-size: 40vh; }
 
 .ib {
   display: block;
-  width: 50vw;
-  height: 210vh;
+  inline-size: 50vw;
+  block-size: 210vh;
   border: 5px solid black;
   margin-left: 20px;
   margin-top: -20px;
@@ -31,15 +31,15 @@ html { height: 40vh; }
 
 .after {
   display: block;
-  width: 60vw;
-  height: 10vh;
+  inline-size: 60vw;
+  block-size: 10vh;
   border: 5px dashed grey;
   background-color: grey;
 }
 </style>
 </head>
 <body>
-  X<span style="display:inline-block; width:50vw; border:5px solid transparent"></span>p
+  X<span style="display:inline-block; inline-size:50vw; border:5px solid transparent"></span>p
   <div class="ib"></div>
   <div class="after"></div>
 </body>

@@ -18,23 +18,23 @@
 html,body {
   color:black; background-color:white; font:20px/1 Ahem; padding:0; margin:0;
 }
-html { height: 40vh; }
+html { block-size: 40vh; }
 
 .ib {
   display: inline-block;
-  width: 50vw;
-  height: 210vh;
+  inline-size: 50vw;
+  block-size: 210vh;
   vertical-align: top;
   border: 5px solid black;
 }
 .ib > div {
-  height: 220vh; /* creates a bit of scrollable overflow on .ib */
+  block-size: 220vh; /* creates a bit of scrollable overflow on .ib */
 }
 
 .after {
   display: block;
-  width: 60vw;
-  height: 10vh;
+  inline-size: 60vw;
+  block-size: 10vh;
   border: 5px dashed grey;
   background-color: grey;
 }

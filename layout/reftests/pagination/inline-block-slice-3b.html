@@ -13,25 +13,28 @@
 
 html,body {
   color:black; background-color:white; font:20px/1 monospace; padding:0; margin:0;
+  writing-mode: vertical-lr;
 }
 
 .ib {
-  display: block;
-  inline-size: 50vw;
-  block-size: 130vh;
+  display: inline-block;
+  inline-size: 50vh;
+  block-size: 130vw;
   vertical-align: top;
   border: 5px solid black;
 }
 
 .ib > div {
-  inline-size: 50vw;
-  block-size: 150vh;
+  inline-size: 50vh;
+  block-size: 150vw;
   border: 5px solid grey;
 }
 
 .after {
-  inline-size: 60vw;
-  block-size: 10vh;
+  display: inline-block;
+  vertical-align: top;
+  inline-size: 60vh;
+  block-size: 10vw;
   border: 5px dashed grey;
   background-color: grey;
 }
