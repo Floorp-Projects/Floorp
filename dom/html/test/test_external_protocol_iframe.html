@@ -71,6 +71,7 @@ function next() {
 
 SpecialPowers.pushPrefEnv({'set': [
   ['dom.block_external_protocol_in_iframes', true],
+  ['dom.delay.block_external_protocol_in_iframes.enabled', true],
 ]}, next);
 
 SimpleTest.waitForExplicitFinish();
