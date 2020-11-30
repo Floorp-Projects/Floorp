@@ -13,6 +13,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/HangAnnotations.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/TimeStamp.h"
 #include "GeckoProfiler.h"
 #include "nsHashKeys.h"
@@ -23,6 +24,7 @@
 #include "nsString.h"
 #include "xpcpublic.h"
 
+using mozilla::DataMutex;
 using mozilla::dom::AutoJSAPI;
 
 #define USER_INTERACTION_VALUE_MAX_LENGTH 50  // bytes
@@ -57,7 +59,7 @@ static void LogError(JSContext* aCx, const nsCString& aMessage) {
 
 namespace mozilla::telemetry {
 
-class Timer final : public mozilla::LinkedListElement<Timer> {
+class Timer final : public mozilla::LinkedListElement<RefPtr<Timer>> {
  public:
   NS_INLINE_DECL_REFCOUNTING(Timer)
 
@@ -79,6 +81,11 @@ class Timer final : public mozilla::LinkedListElement<Timer> {
 
   bool& InSeconds() { return mInSeconds; }
 
+  /**
+   * Note that these values will want to be read from the
+   * BackgroundHangAnnotator thread. Callers should take a lock
+   * on Timers::mBHRAnnotationTimers before calling this.
+   */
   void SetBHRAnnotation(const nsAString& aBHRAnnotationKey,
                         const nsACString& aBHRAnnotationValue) {
     mBHRAnnotationKey = aBHRAnnotationKey;
@@ -186,6 +193,8 @@ class Timers final : public BackgroundHangAnnotator {
   bool FinishUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
                              JS::HandleObject aObj,
                              const dom::Optional<nsACString>& aAdditionalText);
+  bool CancelUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
+                             JS::HandleObject aObj);
 
   void AnnotateHang(BackgroundHangAnnotations& aAnnotations) final;
 
@@ -193,7 +202,7 @@ class Timers final : public BackgroundHangAnnotator {
   ~Timers();
 
   JS::PersistentRooted<JSObject*> mTimers;
-  mozilla::LinkedList<Timer> mBHRAnnotationTimers;
+  DataMutex<mozilla::LinkedList<RefPtr<Timer>>> mBHRAnnotationTimers;
   bool mSuppressErrors = false;
 
   static StaticRefPtr<Timers> sSingleton;
@@ -209,7 +218,8 @@ StaticRefPtr<Timers> Timers::sSingleton;
   return *sSingleton;
 }
 
-Timers::Timers() : mTimers(dom::RootingCx()) {
+Timers::Timers()
+    : mTimers(dom::RootingCx()), mBHRAnnotationTimers("BHRAnnotationTimers") {
   AutoJSAPI jsapi;
   MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
 
@@ -220,7 +230,12 @@ Timers::Timers() : mTimers(dom::RootingCx()) {
 }
 
 Timers::~Timers() {
-  mBHRAnnotationTimers.clear();
+  // We use a scope here to prevent a deadlock with the mutex that locks
+  // inside of ::UnregisterAnnotator.
+  {
+    auto annotationTimers = mBHRAnnotationTimers.Lock();
+    annotationTimers->clear();
+  }
   BackgroundHangMonitor::UnregisterAnnotator(*this);
 }
 
@@ -421,6 +436,8 @@ bool Timers::StartUserInteraction(JSContext* aCx,
   }
 
   if (RefPtr<Timer> timer = Get(aCx, aUserInteraction, aObj, VoidString())) {
+    auto annotationTimers = mBHRAnnotationTimers.Lock();
+
     if (timer->Started()) {
       if (!mSuppressErrors) {
         LogError(aCx,
@@ -428,6 +445,7 @@ bool Timers::StartUserInteraction(JSContext* aCx,
                      "UserInteraction with name \"%s\" was already initialized",
                      NS_ConvertUTF16toUTF8(aUserInteraction).get()));
       }
+      timer->removeFrom(*annotationTimers);
       Delete(aCx, aUserInteraction, aObj, VoidString());
       timer = Get(aCx, aUserInteraction, aObj, VoidString());
 
@@ -438,8 +456,7 @@ bool Timers::StartUserInteraction(JSContext* aCx,
       timer->SetBHRAnnotation(aUserInteraction, aValue);
     }
 
-    mBHRAnnotationTimers.insertBack(timer);
-
+    annotationTimers->insertBack(timer);
     timer->Start(false);
     return true;
   }
@@ -473,6 +490,7 @@ bool Timers::UpdateUserInteraction(JSContext* aCx,
     return false;
   }
 
+  auto lock = mBHRAnnotationTimers.Lock();
   if (RefPtr<Timer> timer = Get(aCx, aUserInteraction, aObj, VoidString())) {
     if (!timer->Started()) {
       if (!mSuppressErrors) {
@@ -529,16 +547,60 @@ bool Timers::FinishUserInteraction(
   }
 #endif
 
-  // The Timer _should_ get automatically get removed from the LinkedList
-  // when it runs its destructor, but let's remove it manually just in
-  // case something happens to be keeping the Timer alive.
-  timer->removeFrom(mBHRAnnotationTimers);
+  // The Timer will be held alive by the RefPtr that's still in the LinkedList,
+  // so the automatic removal from the LinkedList from the LinkedListElement
+  // destructor will not occur. We must remove it manually from the LinkedList
+  // instead.
+  {
+    auto annotationTimers = mBHRAnnotationTimers.Lock();
+    timer->removeFrom(*annotationTimers);
+  }
+
+  return true;
+}
+
+bool Timers::CancelUserInteraction(JSContext* aCx,
+                                   const nsAString& aUserInteraction,
+                                   JS::HandleObject aObj) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Ensure that this ID maps to a UserInteraction that can be recorded
+  // for this product.
+  if (!TelemetryUserInteraction::CanRecord(aUserInteraction)) {
+    if (!mSuppressErrors) {
+      LogError(aCx, nsPrintfCString(
+                        "UserInteraction with id \"%s\" cannot be recorded.",
+                        NS_ConvertUTF16toUTF8(aUserInteraction).get()));
+    }
+    return false;
+  }
+
+  RefPtr<Timer> timer = GetAndDelete(aCx, aUserInteraction, aObj, VoidString());
+  if (!timer) {
+    if (!mSuppressErrors) {
+      LogError(aCx, nsPrintfCString(
+                        "UserInteraction: cancelling nonexisting stopwatch. "
+                        "name: \"%s\"",
+                        NS_ConvertUTF16toUTF8(aUserInteraction).get()));
+    }
+    return false;
+  }
+
+  // The Timer will be held alive by the RefPtr that's still in the LinkedList,
+  // so the automatic removal from the LinkedList from the LinkedListElement
+  // destructor will not occur. We must remove it manually from the LinkedList
+  // instead.
+  {
+    auto annotationTimers = mBHRAnnotationTimers.Lock();
+    timer->removeFrom(*annotationTimers);
+  }
 
   return true;
 }
 
 void Timers::AnnotateHang(mozilla::BackgroundHangAnnotations& aAnnotations) {
-  for (Timer* bhrAnnotationTimer : mBHRAnnotationTimers) {
+  auto annotationTimers = mBHRAnnotationTimers.Lock();
+  for (Timer* bhrAnnotationTimer : *annotationTimers) {
     aAnnotations.AddAnnotation(bhrAnnotationTimer->GetBHRAnnotationKey(),
                                bhrAnnotationTimer->GetBHRAnnotationValue());
   }
@@ -668,8 +730,8 @@ bool UserInteractionStopwatch::Cancel(const dom::GlobalObject& aGlobal,
   if (!NS_IsMainThread()) {
     return false;
   }
-  return Timers::Singleton().Delete(aGlobal.Context(), aUserInteraction, aObj,
-                                    VoidString());
+  return Timers::Singleton().CancelUserInteraction(aGlobal.Context(),
+                                                   aUserInteraction, aObj);
 }
 
 /* static */
