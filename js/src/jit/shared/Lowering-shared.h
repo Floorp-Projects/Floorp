@@ -302,8 +302,7 @@ class LIRGeneratorShared {
   }
 
   LRecoverInfo* getRecoverInfo(MResumePoint* rp);
-  LSnapshot* buildSnapshot(LInstruction* ins, MResumePoint* rp,
-                           BailoutKind kind);
+  LSnapshot* buildSnapshot(MResumePoint* rp, BailoutKind kind);
   bool assignPostSnapshot(MInstruction* mir, LInstruction* ins);
 
   // Marks this instruction as fallible, meaning that before it performs
