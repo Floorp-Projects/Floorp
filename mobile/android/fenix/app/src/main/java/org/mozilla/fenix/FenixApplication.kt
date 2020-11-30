@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.SystemAction
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.crash.CrashReporter
@@ -295,6 +296,21 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
+
+        // Additional logging and breadcrumb to debug memory issues:
+        // https://github.com/mozilla-mobile/fenix/issues/12731
+
+        logger.info("onTrimMemory(), level=$level, main=${isMainProcess()}")
+
+        components.analytics.crashReporter.recordCrashBreadcrumb(Breadcrumb(
+            category = "Memory",
+            message = "onTrimMemory()",
+            data = mapOf(
+                "level" to level.toString(),
+                "main" to isMainProcess().toString()
+            ),
+            level = Breadcrumb.Level.INFO
+        ))
 
         runOnlyInMainProcess {
             components.core.icons.onTrimMemory(level)
