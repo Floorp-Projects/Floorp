@@ -1288,11 +1288,22 @@ void WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail,
 void WebGLContext::UniformData(const uint32_t loc, const bool transpose,
                                const Range<const uint8_t>& data) const {
   const FuncScope funcScope(*this, "uniform setter");
+
+  if (!IsWebGL2() && transpose) {
+    GenerateError(LOCAL_GL_INVALID_VALUE, "`transpose`:true requires WebGL 2.");
+    return;
+  }
+
+  // -
+
   const auto& link = mActiveProgramLinkInfo;
   if (!link) return;
 
   const auto locInfo = MaybeFind(link->locationMap, loc);
-  if (!locInfo) return;
+  if (!locInfo) {
+    // Null WebGLUniformLocations become -1, which will end up here.
+    return;
+  }
 
   const auto& validationInfo = locInfo->info;
   const auto& activeInfo = validationInfo.info;
@@ -1302,20 +1313,11 @@ void WebGLContext::UniformData(const uint32_t loc, const bool transpose,
   // -
 
   const auto lengthInType = data.length() / sizeof(float);
-  if (!lengthInType || lengthInType % channels != 0) {
-    GenerateError(LOCAL_GL_INVALID_VALUE,
-                  "(uniform %s) `values` length (%u) must be a positive "
-                  "integer multiple of "
-                  "size of %s.",
-                  activeInfo.name.c_str(), lengthInType,
-                  EnumString(activeInfo.elemType).c_str());
-    return;
-  }
   const auto elemCount = lengthInType / channels;
   if (elemCount > 1 && !validationInfo.isArray) {
     GenerateError(
         LOCAL_GL_INVALID_OPERATION,
-        "(uniform %s) `values` length (%u) must exactle match size of %s.",
+        "(uniform %s) `values` length (%u) must exactly match size of %s.",
         activeInfo.name.c_str(), lengthInType,
         EnumString(activeInfo.elemType).c_str());
     return;
