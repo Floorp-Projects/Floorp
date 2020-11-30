@@ -5596,6 +5596,21 @@ void LIRGenerator::visitCallNativeGetElement(MCallNativeGetElement* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitCallObjectHasSparseElement(
+    MCallObjectHasSparseElement* ins) {
+  MDefinition* object = ins->object();
+  MOZ_ASSERT(object->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LCallObjectHasSparseElement(
+      useRegisterAtStart(object), useRegisterAtStart(index),
+      tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+  assignSnapshot(lir, ins->bailoutKind());
+  defineReturn(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);
