@@ -10,7 +10,6 @@
 #include "vm/EnvironmentObject.h"
 
 #include "vm/JSObject-inl.h"
-#include "vm/TypeInference-inl.h"
 
 namespace js {
 

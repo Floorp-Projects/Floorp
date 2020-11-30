@@ -82,7 +82,6 @@
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/TypedArrayObject-inl.h"
-#include "vm/TypeInference-inl.h"
 #include "wasm/TypedObject-inl.h"
 
 using namespace js;

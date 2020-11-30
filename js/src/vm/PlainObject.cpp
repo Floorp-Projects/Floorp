@@ -20,11 +20,9 @@
 #include "vm/JSFunction.h"  // JSFunction
 #include "vm/JSObject.h"    // JSObject, js::GetPrototypeFromConstructor
 #include "vm/ObjectGroup.h"  // js::ObjectGroup, js::{Generic,Singleton,Tenured}Object
-#include "vm/TaggedProto.h"    // js::TaggedProto
-#include "vm/TypeInference.h"  // js::AutoSweepObjectGroup
+#include "vm/TaggedProto.h"  // js::TaggedProto
 
 #include "vm/JSObject-inl.h"  // js::GuessObjectGCKind, js::NewObjectWithGroup, js::NewObjectGCKind, js::NewSingletonObjectWithGivenTaggedProtoAndKind
-#include "vm/TypeInference-inl.h"  // js::AutoSweepObjectGroup::AutoSweepObjectGroup, js::TypeNewScript, js::jit::JitScript::MonitorThisType, js::TypeSet::ObjectType
 
 using JS::Handle;
 using JS::Rooted;

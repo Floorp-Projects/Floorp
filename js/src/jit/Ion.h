@@ -28,7 +28,6 @@
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
-#include "vm/TypeInference.h"
 
 namespace js {
 

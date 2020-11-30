@@ -30,7 +30,6 @@
 #include "jit/MacroAssembler-inl.h"
 #include "jit/VMFunctionList-inl.h"
 #include "vm/Realm-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;

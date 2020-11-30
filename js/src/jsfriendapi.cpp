@@ -35,15 +35,18 @@
 #include "proxy/DeadObjectProxy.h"
 #include "util/Poison.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/BooleanObject.h"
 #include "vm/DateObject.h"
 #include "vm/ErrorObject.h"
 #include "vm/FrameIter.h"  // js::FrameIter
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/NumberObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Printer.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"
+#include "vm/StringObject.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 

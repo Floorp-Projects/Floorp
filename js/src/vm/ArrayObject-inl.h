@@ -16,7 +16,6 @@
 #include "vm/JSObject-inl.h"
 #include "vm/ObjectGroup-inl.h"
 #include "vm/ObjectOperations-inl.h"  // js::GetElement
-#include "vm/TypeInference-inl.h"
 
 namespace js {
 

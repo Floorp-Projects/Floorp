@@ -25,7 +25,6 @@
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
 #include "vm/JSScript.h"
 #include "vm/Stack.h"
-#include "vm/TypeInference.h"
 #include "wasm/WasmInstance.h"
 
 #include "gc/FreeOp-inl.h"
@@ -33,7 +32,6 @@
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 #include "vm/JSScript-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;

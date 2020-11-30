@@ -17,10 +17,10 @@
 #include "jit/JSJitFrameIter.h"
 #include "jit/PerfSpewer.h"
 
+#include "jit/JitScript-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Stack-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;

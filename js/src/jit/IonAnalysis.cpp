@@ -24,14 +24,13 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
-#include "vm/TypeInference.h"
 
 #include "jit/InlineScriptTree-inl.h"
+#include "jit/JitScript-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;

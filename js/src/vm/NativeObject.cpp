@@ -35,7 +35,6 @@
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Shape-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 

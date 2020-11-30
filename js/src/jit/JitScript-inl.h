@@ -14,7 +14,6 @@
 #include "jit/JitZone.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSScript.h"
-#include "vm/TypeInference.h"
 
 #include "vm/JSContext-inl.h"
 

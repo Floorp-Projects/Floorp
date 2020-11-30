@@ -21,7 +21,6 @@
 #include "js/GCHashTable.h"
 #include "vm/AtomsTable.h"
 #include "vm/JSFunction.h"
-#include "vm/TypeInference.h"
 
 namespace js {
 
