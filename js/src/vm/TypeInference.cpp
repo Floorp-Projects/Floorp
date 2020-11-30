@@ -57,11 +57,6 @@ using mozilla::PodCopy;
 
 using js::jit::JitScript;
 
-bool js::ClassCanHaveExtraProperties(const JSClass* clasp) {
-  return clasp->getResolve() || clasp->getOpsLookupProperty() ||
-         clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
-}
-
 TypeZone::TypeZone(Zone* zone)
     : currentCompilationId_(zone), keepJitScripts(zone, false) {}
 
