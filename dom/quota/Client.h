@@ -10,6 +10,7 @@
 #include <cstdint>
 #include "ErrorList.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/InitializedOnce.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -136,12 +137,17 @@ class Client {
 
   void ShutdownWorkThreads();
 
+  void MaybeRecordShutdownStep(const nsACString& aStepDescription);
+
  private:
   virtual void InitiateShutdown() = 0;
   virtual bool IsShutdownCompleted() const = 0;
   virtual nsCString GetShutdownStatus() const = 0;
   virtual void ForceKillActors() = 0;
   virtual void FinalizeShutdown() = 0;
+
+  nsCString mShutdownSteps;
+  LazyInitializedOnce<const TimeStamp> mShutdownStartedAt;
 
  protected:
   virtual ~Client() = default;
