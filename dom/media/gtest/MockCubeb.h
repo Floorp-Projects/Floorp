@@ -154,7 +154,7 @@ class MockCubebStream {
 
   void SetDriftFactor(float aDriftFactor);
   void ForceError();
-  void Unfreeze();
+  void Thaw();
 
   MediaEventSource<uint32_t>& FramesProcessedEvent();
   MediaEventSource<uint32_t>& FramesVerifiedEvent();
