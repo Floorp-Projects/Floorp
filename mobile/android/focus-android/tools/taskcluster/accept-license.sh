@@ -8,8 +8,8 @@ set -ex
 
 # Accept SDK license
 if [[ $(type -P "sdkmanager") ]]; then
-    yes | sdkmanager "platforms;android-28" "build-tools;28.0.3"
+    yes | sdkmanager "platforms;android-29" "build-tools;28.0.3"
 elif [[ $(type -P "android") ]]; then
-    (while sleep 3; do echo "y"; done) | android update sdk --no-ui --all --filter android-28
+    (while sleep 3; do echo "y"; done) | android update sdk --no-ui --all --filter android-29
     (while sleep 3; do echo "y"; done) | android update sdk --no-ui --all --filter build-tools-28.0.3
 fi
