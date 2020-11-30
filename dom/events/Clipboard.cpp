@@ -116,7 +116,8 @@ already_AddRefed<Promise> Clipboard::Write(DataTransfer& aData,
       !nsContentUtils::IsCutCopyAllowed(doc, aSubjectPrincipal)) {
     MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
             ("Clipboard, Write, Not allowed to write to clipboard\n"));
-    p->MaybeRejectWithUndefined();
+    p->MaybeRejectWithNotAllowedError(
+        "Clipboard write was blocked due to lack of user activation.");
     return p.forget();
   }
 
