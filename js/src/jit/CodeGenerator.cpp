@@ -14788,6 +14788,24 @@ void CodeGenerator::visitGuardIndexIsNonNegative(
   bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
 }
 
+void CodeGenerator::visitGuardIndexGreaterThanDenseInitLength(
+    LGuardIndexGreaterThanDenseInitLength* lir) {
+  Register object = ToRegister(lir->object());
+  Register index = ToRegister(lir->index());
+  Register temp = ToRegister(lir->temp());
+  Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
+
+  // Load obj->elements.
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp);
+
+  // Ensure index >= initLength.
+  Label outOfBounds;
+  Address capacity(temp, ObjectElements::offsetOfInitializedLength());
+  masm.spectreBoundsCheck32(index, capacity, spectreTemp, &outOfBounds);
+  bailout(lir->snapshot());
+  masm.bind(&outOfBounds);
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;

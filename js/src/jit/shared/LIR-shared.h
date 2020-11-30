@@ -8310,6 +8310,28 @@ class LGuardIndexIsNonNegative : public LInstructionHelper<0, 1, 0> {
   const LAllocation* index() { return getOperand(0); }
 };
 
+class LGuardIndexGreaterThanDenseInitLength
+    : public LInstructionHelper<0, 2, 2> {
+ public:
+  LIR_HEADER(GuardIndexGreaterThanDenseInitLength)
+
+  LGuardIndexGreaterThanDenseInitLength(const LAllocation& object,
+                                        const LAllocation& index,
+                                        const LDefinition& temp,
+                                        const LDefinition& spectreTemp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+    setOperand(1, index);
+    setTemp(0, temp);
+    setTemp(1, spectreTemp);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LDefinition* temp() { return getTemp(0); }
+  const LDefinition* spectreTemp() { return getTemp(1); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
