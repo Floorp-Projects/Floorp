@@ -92,6 +92,9 @@ var AUSTLMY = {
   CHK_DISABLED_BY_POLICY: 37,
   // Update check failed due to write error
   CHK_ERR_WRITE_FAILURE: 38,
+  // Update check was delayed because another instance of the application is
+  // currently running
+  CHK_OTHER_INSTANCE: 39,
 
   /**
    * Submit a telemetry ping for the update check result code or a telemetry
