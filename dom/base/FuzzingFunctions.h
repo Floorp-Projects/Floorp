@@ -25,7 +25,11 @@ class FuzzingFunctions final {
  public:
   static void GarbageCollect(const GlobalObject&);
 
+  static void GarbageCollectCompacting(const GlobalObject&);
+
   static void CycleCollect(const GlobalObject&);
+
+  static void MemoryPressure(const GlobalObject&);
 
   static void EnableAccessibility(const GlobalObject&, ErrorResult& aRv);
 
