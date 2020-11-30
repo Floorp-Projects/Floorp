@@ -1101,6 +1101,8 @@ struct bvec3 {
   Bool z;
 };
 
+bvec3_scalar make_bvec3(bool n) { return bvec3_scalar{n, n, n}; }
+
 struct bvec4_scalar {
   bool x;
   bool y;
