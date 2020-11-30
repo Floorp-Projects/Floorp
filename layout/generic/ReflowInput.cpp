@@ -1511,10 +1511,11 @@ bool ReflowInput::IsInlineSizeComputableByBlockSizeAndAspectRatio(
 LogicalSize ReflowInput::CalculateAbsoluteSizeWithResolvedAutoBlockSize(
     nscoord aAutoBSize, bool aNeedsComputeInlineSizeByAspectRatio,
     const LogicalSize& aTentativeComputedSize) {
-  MOZ_ASSERT(aAutoBSize != NS_UNCONSTRAINEDSIZE,
-             "Shouldn't give an unresolved block size");
-  MOZ_ASSERT(!mFrame->IsFrameOfType(nsIFrame::eReplaced),
-             "Replaced element shouldn't have the unconstrained block size");
+  NS_WARNING_ASSERTION(aAutoBSize != NS_UNCONSTRAINEDSIZE,
+                       "Shouldn't give an unresolved block size");
+  NS_WARNING_ASSERTION(
+      !mFrame->IsFrameOfType(nsIFrame::eReplaced),
+      "Replaced element shouldn't have unconstrained block size");
 
   LogicalSize resultSize = aTentativeComputedSize;
   WritingMode wm = GetWritingMode();
