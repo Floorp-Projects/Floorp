@@ -41,16 +41,11 @@ class TempAllocator;
 
 }  // namespace jit
 
-/* Is this a reasonable PC to be doing inlining on? */
-inline bool isInlinableCall(jsbytecode* pc);
-
 bool ClassCanHaveExtraProperties(const JSClass* clasp);
 
 struct AutoEnterAnalysis;
 
 class TypeZone {
-  JS::Zone* const zone_;
-
   // Under CodeGenerator::link, the id of the current compilation.
   ZoneData<mozilla::Maybe<IonCompilationId>> currentCompilationId_;
 
@@ -60,13 +55,8 @@ class TypeZone {
  public:
   ZoneData<bool> keepJitScripts;
 
-  // The topmost AutoEnterAnalysis on the stack, if there is one.
-  ZoneData<AutoEnterAnalysis*> activeAnalysis;
-
   explicit TypeZone(JS::Zone* zone);
   ~TypeZone();
-
-  JS::Zone* zone() const { return zone_; }
 
   mozilla::Maybe<IonCompilationId> currentCompilationId() const {
     return currentCompilationId_.ref();
