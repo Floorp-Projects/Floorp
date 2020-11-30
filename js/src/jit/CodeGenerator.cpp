@@ -14806,6 +14806,33 @@ void CodeGenerator::visitGuardIndexGreaterThanDenseInitLength(
   masm.bind(&outOfBounds);
 }
 
+void CodeGenerator::visitGuardIndexIsValidUpdateOrAdd(
+    LGuardIndexIsValidUpdateOrAdd* lir) {
+  Register object = ToRegister(lir->object());
+  Register index = ToRegister(lir->index());
+  Register temp = ToRegister(lir->temp());
+  Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
+
+  // Load obj->elements.
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp);
+
+  Label success;
+
+  // If length is writable, branch to &success.  All indices are writable.
+  Address flags(temp, ObjectElements::offsetOfFlags());
+  masm.branchTest32(Assembler::Zero, flags,
+                    Imm32(ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH),
+                    &success);
+
+  // Otherwise, ensure index is in bounds.
+  Label bail;
+  Address length(temp, ObjectElements::offsetOfLength());
+  masm.spectreBoundsCheck32(index, length, spectreTemp, &bail);
+  masm.bind(&success);
+
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;

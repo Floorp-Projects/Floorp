@@ -12576,6 +12576,32 @@ class MGuardIndexGreaterThanDenseInitLength
   }
 };
 
+// Guard an array object's length can be updated successfully when adding an
+// element at the input index.
+class MGuardIndexIsValidUpdateOrAdd
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>>::Data {
+  MGuardIndexIsValidUpdateOrAdd(MDefinition* obj, MDefinition* index)
+      : MBinaryInstruction(classOpcode, obj, index) {
+    setResultType(MIRType::Int32);
+    setMovable();
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardIndexIsValidUpdateOrAdd)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, index))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
