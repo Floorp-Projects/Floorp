@@ -8377,6 +8377,20 @@ class LCallAddOrUpdateSparseElement
   }
 };
 
+class LCallGetSparseElement : public LCallInstructionHelper<BOX_PIECES, 2, 0> {
+ public:
+  LIR_HEADER(CallGetSparseElement)
+
+  LCallGetSparseElement(const LAllocation& object, const LAllocation& index)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, object);
+    setOperand(1, index);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;

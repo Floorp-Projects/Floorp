@@ -5563,6 +5563,19 @@ void LIRGenerator::visitCallAddOrUpdateSparseElement(
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitCallGetSparseElement(MCallGetSparseElement* ins) {
+  MDefinition* object = ins->object();
+  MOZ_ASSERT(object->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LCallGetSparseElement(useRegisterAtStart(object),
+                                                  useRegisterAtStart(index));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);
