@@ -30,6 +30,7 @@ this.StoragePrincipalHelper = {
           ["privacy.trackingprotection.pbmode.enabled", false],
           ["privacy.trackingprotection.annotate_channels", true],
           ["privacy.storagePrincipal.enabledForTrackers", true],
+          ["privacy.dynamic_firstparty.use_site", true],
           [
             "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
             "tracking.example.org",
@@ -55,6 +56,22 @@ this.StoragePrincipalHelper = {
 
       let browser = win.gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
+
+      info("Check the cookieJarSettings of the browser object");
+      ok(
+        browser.cookieJarSettings,
+        "The browser object has the cookieJarSettings."
+      );
+      is(
+        browser.cookieJarSettings.cookieBehavior,
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+        "The cookieJarSettings has the correct cookieBehavior"
+      );
+      is(
+        browser.cookieJarSettings.partitionKey,
+        "(http,example.net)",
+        "The cookieJarSettings has the correct partitionKey"
+      );
 
       info("Creating a 3rd party content");
       await SpecialPowers.spawn(
