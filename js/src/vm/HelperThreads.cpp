@@ -1407,8 +1407,8 @@ void GlobalHelperThreadState::destroyHelperContexts(
 }
 
 #ifdef DEBUG
-bool GlobalHelperThreadState::isLockedByCurrentThread() const {
-  return gHelperThreadLock.ownedByCurrentThread();
+void GlobalHelperThreadState::assertIsLockedByCurrentThread() const {
+  gHelperThreadLock.assertOwnedByCurrentThread();
 }
 #endif  // DEBUG
 
@@ -1536,7 +1536,9 @@ static inline bool IsHelperThreadSimulatingOOM(js::ThreadType threadType) {
 
 void GlobalHelperThreadState::addSizeOfIncludingThis(
     JS::GlobalStats* stats, AutoLockHelperThreadState& lock) const {
-  MOZ_ASSERT(isLockedByCurrentThread());
+#ifdef DEBUG
+  assertIsLockedByCurrentThread();
+#endif
 
   mozilla::MallocSizeOf mallocSizeOf = stats->mallocSizeOf_;
   JS::HelperThreadStats& htStats = stats->helperThread;

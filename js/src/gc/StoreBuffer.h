@@ -420,7 +420,7 @@ class StoreBuffer {
 #ifdef DEBUG
     if (JS::RuntimeHeapIsBusy()) {
       MOZ_ASSERT(!CurrentThreadIsGCMarking());
-      MOZ_ASSERT(lock_.ownedByCurrentThread());
+      lock_.assertOwnedByCurrentThread();
     } else {
       MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
     }

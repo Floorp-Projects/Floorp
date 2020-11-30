@@ -193,7 +193,7 @@ class GlobalHelperThreadState {
   void destroyHelperContexts(AutoLockHelperThreadState& lock);
 
 #ifdef DEBUG
-  bool isLockedByCurrentThread() const;
+  void assertIsLockedByCurrentThread() const;
 #endif
 
   enum CondVar {

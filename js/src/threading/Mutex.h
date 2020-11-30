@@ -50,41 +50,31 @@ class Mutex {
  private:
   MutexImpl impl_;
 
- public:
 #ifdef DEBUG
-  static bool Init();
-#else
-  static bool Init() { return true; }
-#endif
-
-  explicit Mutex(const MutexId& id)
-#ifdef DEBUG
-      : id_(id)
-#endif
-  {
-    MOZ_ASSERT(id_.order != 0);
-  }
-
-#ifdef DEBUG
-  void lock();
-  void unlock();
-#else
-  void lock() { impl_.lock(); }
-  void unlock() { impl_.unlock(); }
-#endif
-
-#ifdef DEBUG
- public:
-  // This is not threadsafe if the check fails, and should only be used to
-  // assert that the current thread holds the mutex.
-  bool ownedByCurrentThread() const;
-
- private:
   const MutexId id_;
   Mutex* prev_ = nullptr;
   ThreadId owningThread_;
 
   static MOZ_THREAD_LOCAL(Mutex*) HeldMutexStack;
+#endif
+
+ public:
+#ifdef DEBUG
+  static bool Init();
+
+  explicit Mutex(const MutexId& id) : id_(id) { MOZ_ASSERT(id_.order != 0); }
+
+  void lock();
+  void unlock();
+  void assertOwnedByCurrentThread() const;
+#else
+  static bool Init() { return true; }
+
+  explicit Mutex(const MutexId& id) {}
+
+  void lock() { impl_.lock(); }
+  void unlock() { impl_.unlock(); }
+  void assertOwnedByCurrentThread() const {};
 #endif
 
  private:

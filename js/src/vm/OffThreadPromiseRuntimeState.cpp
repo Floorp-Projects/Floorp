@@ -162,7 +162,7 @@ bool OffThreadPromiseRuntimeState::internalDispatchToEventLoop(
   OffThreadPromiseRuntimeState& state =
       *reinterpret_cast<OffThreadPromiseRuntimeState*>(closure);
   MOZ_ASSERT(state.usingInternalDispatchQueue());
-  MOZ_ASSERT(gHelperThreadLock.ownedByCurrentThread());
+  gHelperThreadLock.assertOwnedByCurrentThread();
 
   if (state.internalDispatchQueueClosed_) {
     return false;

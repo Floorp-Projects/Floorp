@@ -1085,10 +1085,12 @@ void GCMarker::traverse(AccessorShape* thing) {
 }
 }  // namespace js
 
+#ifdef DEBUG
 void GCMarker::setCheckAtomMarking(bool check) {
   MOZ_ASSERT(check != checkAtomMarking);
   checkAtomMarking = check;
 }
+#endif
 
 template <typename S, typename T>
 inline void GCMarker::checkTraversedEdge(S source, T* target) {

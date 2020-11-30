@@ -2530,12 +2530,12 @@ class SimulatorProcess
 #endif
 
   static void setRedirection(vixl::Redirection* redirection) {
-    MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+    singleton_->lock_.assertOwnedByCurrentThread();
     singleton_->redirection_ = redirection;
   }
 
   static vixl::Redirection* redirection() {
-    MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+    singleton_->lock_.assertOwnedByCurrentThread();
     return singleton_->redirection_;
   }
 
