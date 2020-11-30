@@ -905,8 +905,8 @@ pwmgr:
       updates to the doorhanger may change whether a login is actually saved or updated, but will
       not impact the sent object.
     objects: ["save", "update"]
-    bug_numbers: [1650929, 1650941]
-    expiry_version: "86"
+    bug_numbers: [1650929, 1650941, 1678200]
+    expiry_version: "92"
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: [main]
