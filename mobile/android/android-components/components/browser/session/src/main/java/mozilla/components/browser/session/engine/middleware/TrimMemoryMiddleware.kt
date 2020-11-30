@@ -11,11 +11,14 @@ import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * [Middleware] responsible for suspending [EngineSession] instances on low memory.
  */
 internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
+    private val logger = Logger("TrimMemoryMiddleware")
+
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -35,6 +38,8 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
         if (!shouldCloseEngineSessions(action.level)) {
             return
         }
+
+        logger.info("Suspending tabs to trim memory")
 
         // This is not the most efficient way of doing this. We are looping over all tabs and then
         // dispatching a SuspendEngineSessionAction for each tab that is no longer needed.
