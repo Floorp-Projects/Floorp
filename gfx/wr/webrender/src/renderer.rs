@@ -367,6 +367,7 @@ pub(crate) enum TextureSampler {
     Dither,
     PrimitiveHeadersF,
     PrimitiveHeadersI,
+    ClipMask,
 }
 
 impl TextureSampler {
@@ -396,6 +397,7 @@ impl Into<TextureSlot> for TextureSampler {
             TextureSampler::Dither => TextureSlot(8),
             TextureSampler::PrimitiveHeadersF => TextureSlot(9),
             TextureSampler::PrimitiveHeadersI => TextureSlot(10),
+            TextureSampler::ClipMask => TextureSlot(11),
         }
     }
 }
@@ -4291,6 +4293,12 @@ impl Renderer {
             }
         }
 
+        self.texture_resolver.bind(
+            &textures.clip_mask,
+            TextureSampler::ClipMask,
+            &mut self.device,
+        );
+
         // TODO: this probably isn't the best place for this.
         if let Some(ref texture) = self.dither_matrix_texture {
             self.device.bind_texture(TextureSampler::Dither, texture, Swizzle::default());
@@ -4492,7 +4500,7 @@ impl Renderer {
             self.draw_instanced_batch(
                 instances,
                 VertexArrayKind::Scale,
-                &BatchTextures::color(*source),
+                &BatchTextures::composite_rgb(*source),
                 stats,
             );
         }
@@ -4576,7 +4584,7 @@ impl Renderer {
                     self.draw_instanced_batch(
                         &[instance],
                         VertexArrayKind::Clear,
-                        &BatchTextures::no_texture(),
+                        &BatchTextures::empty(),
                         stats,
                     );
                     if clear_color.is_none() {
@@ -4914,13 +4922,11 @@ impl Renderer {
                             &mut self.renderer_errors
                         );
 
-                    let textures = BatchTextures {
-                        colors: [
-                            planes[0].texture,
-                            planes[1].texture,
-                            planes[2].texture,
-                        ],
-                    };
+                    let textures = BatchTextures::composite_yuv(
+                        planes[0].texture,
+                        planes[1].texture,
+                        planes[2].texture,
+                    );
 
                     // When the texture is an external texture, the UV rect is not known when
                     // the external surface descriptor is created, because external textures
@@ -4965,7 +4971,7 @@ impl Renderer {
                             &mut self.renderer_errors
                         );
 
-                    let textures = BatchTextures::color(plane.texture);
+                    let textures = BatchTextures::composite_rgb(plane.texture);
                     let mut uv_rect = self.texture_resolver.get_uv_rect(&textures.colors[0], plane.uv_rect);
                     if flip_y {
                         let y = uv_rect.uv0.y;
@@ -5022,7 +5028,7 @@ impl Renderer {
             );
 
         let mut current_shader_params = (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray);
-        let mut current_textures = BatchTextures::no_texture();
+        let mut current_textures = BatchTextures::empty();
         let mut instances = Vec::new();
 
         for tile in tiles_iter {
@@ -5062,7 +5068,7 @@ impl Renderer {
                             0.0,
                             tile.z_id,
                         ),
-                        BatchTextures::color(dummy),
+                        BatchTextures::composite_rgb(dummy),
                         (CompositeSurfaceFormat::Rgba, image_buffer_kind),
                     )
                 }
@@ -5077,7 +5083,7 @@ impl Renderer {
                             0.0,
                             tile.z_id,
                         ),
-                        BatchTextures::color(dummy),
+                        BatchTextures::composite_rgb(dummy),
                         (CompositeSurfaceFormat::Rgba, image_buffer_kind),
                     )
                 }
@@ -5090,7 +5096,7 @@ impl Renderer {
                             layer as f32,
                             tile.z_id,
                         ),
-                        BatchTextures::color(texture),
+                        BatchTextures::composite_rgb(texture),
                         (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray),
                     )
                 }
@@ -5099,14 +5105,11 @@ impl Renderer {
 
                     match surface.color_data {
                         ResolvedExternalSurfaceColorData::Yuv{ ref planes, color_space, format, rescale, .. } => {
-
-                            let textures = BatchTextures {
-                                colors: [
-                                    planes[0].texture,
-                                    planes[1].texture,
-                                    planes[2].texture,
-                                ],
-                            };
+                            let textures = BatchTextures::composite_yuv(
+                                planes[0].texture,
+                                planes[1].texture,
+                                planes[2].texture,
+                            );
 
                             // When the texture is an external texture, the UV rect is not known when
                             // the external surface descriptor is created, because external textures
@@ -5156,7 +5159,7 @@ impl Renderer {
                                     tile.z_id,
                                     uv_rect,
                                 ),
-                                BatchTextures::color(plane.texture),
+                                BatchTextures::composite_rgb(plane.texture),
                                 (CompositeSurfaceFormat::Rgba, surface.image_buffer_kind),
                             )
                         },
@@ -5404,7 +5407,7 @@ impl Renderer {
                 self.draw_instanced_batch(
                     &target.vertical_blurs,
                     VertexArrayKind::Blur,
-                    &BatchTextures::no_texture(),
+                    &BatchTextures::empty(),
                     stats,
                 );
             }
@@ -5413,7 +5416,7 @@ impl Renderer {
                 self.draw_instanced_batch(
                     &target.horizontal_blurs,
                     VertexArrayKind::Blur,
-                    &BatchTextures::no_texture(),
+                    &BatchTextures::empty(),
                     stats,
                 );
             }
@@ -5472,7 +5475,7 @@ impl Renderer {
             self.draw_instanced_batch(
                 &list.slow_rectangles,
                 VertexArrayKind::ClipRect,
-                &BatchTextures::no_texture(),
+                &BatchTextures::empty(),
                 stats,
             );
         }
@@ -5486,20 +5489,15 @@ impl Renderer {
             self.draw_instanced_batch(
                 &list.fast_rectangles,
                 VertexArrayKind::ClipRect,
-                &BatchTextures::no_texture(),
+                &BatchTextures::empty(),
                 stats,
             );
         }
+
         // draw box-shadow clips
         for (mask_texture_id, items) in list.box_shadows.iter() {
             let _gm2 = self.gpu_profiler.start_marker("box-shadows");
-            let textures = BatchTextures {
-                colors: [
-                    *mask_texture_id,
-                    TextureSource::Invalid,
-                    TextureSource::Invalid,
-                ],
-            };
+            let textures = BatchTextures::composite_rgb(*mask_texture_id);
             self.shaders.borrow_mut().cs_clip_box_shadow
                 .bind(&mut self.device, projection, &mut self.renderer_errors);
             self.draw_instanced_batch(
@@ -5513,13 +5511,7 @@ impl Renderer {
         // draw image masks
         for (mask_texture_id, items) in list.images.iter() {
             let _gm2 = self.gpu_profiler.start_marker("clip images");
-            let textures = BatchTextures {
-                colors: [
-                    *mask_texture_id,
-                    TextureSource::Invalid,
-                    TextureSource::Invalid,
-                ],
-            };
+            let textures = BatchTextures::composite_rgb(*mask_texture_id);
             self.shaders.borrow_mut().cs_clip_image
                 .bind(&mut self.device, projection, &mut self.renderer_errors);
             self.draw_instanced_batch(
@@ -5595,7 +5587,7 @@ impl Renderer {
                 self.draw_instanced_batch(
                     &target.vertical_blurs,
                     VertexArrayKind::Blur,
-                    &BatchTextures::no_texture(),
+                    &BatchTextures::empty(),
                     stats,
                 );
             }
@@ -5604,7 +5596,7 @@ impl Renderer {
                 self.draw_instanced_batch(
                     &target.horizontal_blurs,
                     VertexArrayKind::Blur,
-                    &BatchTextures::no_texture(),
+                    &BatchTextures::empty(),
                     stats,
                 );
             }
@@ -5716,7 +5708,7 @@ impl Renderer {
                 self.draw_instanced_batch(
                     &instances,
                     VertexArrayKind::Clear,
-                    &BatchTextures::no_texture(),
+                    &BatchTextures::empty(),
                     stats,
                 );
             } else {
@@ -5756,7 +5748,7 @@ impl Renderer {
                 self.draw_instanced_batch(
                     &target.border_segments_solid,
                     VertexArrayKind::Border,
-                    &BatchTextures::no_texture(),
+                    &BatchTextures::empty(),
                     stats,
                 );
             }
@@ -5771,7 +5763,7 @@ impl Renderer {
                 self.draw_instanced_batch(
                     &target.border_segments_complex,
                     VertexArrayKind::Border,
-                    &BatchTextures::no_texture(),
+                    &BatchTextures::empty(),
                     stats,
                 );
             }
@@ -5795,7 +5787,7 @@ impl Renderer {
             self.draw_instanced_batch(
                 &target.line_decorations,
                 VertexArrayKind::LineDecoration,
-                &BatchTextures::no_texture(),
+                &BatchTextures::empty(),
                 stats,
             );
 
@@ -5817,7 +5809,7 @@ impl Renderer {
             self.draw_instanced_batch(
                 &target.gradients,
                 VertexArrayKind::Gradient,
-                &BatchTextures::no_texture(),
+                &BatchTextures::empty(),
                 stats,
             );
         }
@@ -5837,7 +5829,7 @@ impl Renderer {
             self.draw_instanced_batch(
                 &target.horizontal_blurs,
                 VertexArrayKind::Blur,
-                &BatchTextures::no_texture(),
+                &BatchTextures::empty(),
                 stats,
             );
         }
@@ -6587,7 +6579,7 @@ impl Renderer {
         self.draw_instanced_batch(
             &instances,
             VertexArrayKind::Resolve,
-            &BatchTextures::no_texture(),
+            &BatchTextures::empty(),
             stats,
         );
     }
@@ -6617,7 +6609,7 @@ impl Renderer {
         self.draw_instanced_batch(
             &instances,
             VertexArrayKind::Resolve,
-            &BatchTextures::no_texture(),
+            &BatchTextures::empty(),
             stats,
         );
 

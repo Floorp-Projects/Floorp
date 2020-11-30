@@ -309,6 +309,16 @@ impl TextureSource {
             TextureSource::Invalid => ImageBufferKind::Texture2D,
         }
     }
+
+    #[inline]
+    pub fn is_compatible(
+        &self,
+        other: &TextureSource,
+    ) -> bool {
+        *self == TextureSource::Invalid ||
+        *other == TextureSource::Invalid ||
+        self == other
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

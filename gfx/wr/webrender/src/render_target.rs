@@ -936,7 +936,7 @@ fn add_svg_filter_instances(
     input_2_task: Option<RenderTaskId>,
     extra_data_address: Option<GpuCacheAddress>,
 ) {
-    let mut textures = BatchTextures::no_texture();
+    let mut textures = BatchTextures::empty();
 
     if let Some(saved_index) = input_1_task.map(|id| &render_tasks[id].saved_index) {
         textures.colors[0] = match saved_index {
