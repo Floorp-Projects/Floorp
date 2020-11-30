@@ -16,7 +16,7 @@ FissionTestHelper.startTestPromise
   .then(waitUntilApzStable)
   .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
   .then(waitUntilApzStable)
-  .then(runAsyncContinuation(test))
+  .then(test)
   .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
 
 
@@ -38,7 +38,7 @@ let code_for_oopif_to_run = function() {
   return true;
 };
 
-async function* test() {
+async function test() {
   let iframeElement = document.getElementById("testframe");
 
   let iframeResponse = await FissionTestHelper.sendToOopif(iframeElement, `(${code_for_oopif_to_run})()`);
