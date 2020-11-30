@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DocumentId, ExternalImageData, ExternalImageId, ExternalImageType, PrimitiveFlags};
+use api::{ColorF, DocumentId, ExternalImageId, PrimitiveFlags};
 use api::{ImageFormat, NotificationRequest, Shadow, FilterOp, ImageBufferKind};
 use api::units::*;
 use api;
@@ -233,7 +233,7 @@ pub struct SwizzleSettings {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct CacheTextureId(pub u64);
+pub struct CacheTextureId(pub u32);
 
 /// Canonical type for texture layer indices.
 ///
@@ -257,11 +257,16 @@ pub type LayerIndex = usize;
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct SavedTargetIndex(pub usize);
+pub struct SavedTargetIndex(pub u32);
 
 impl SavedTargetIndex {
     pub const PENDING: Self = SavedTargetIndex(!0);
 }
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct DeferredResolveIndex(pub u32);
 
 /// Identifies the source of an input texture to a shader.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -273,7 +278,7 @@ pub enum TextureSource {
     /// An entry in the texture cache.
     TextureCache(CacheTextureId, Swizzle),
     /// An external image texture, mananged by the embedding.
-    External(ExternalImageData),
+    External(DeferredResolveIndex, ImageBufferKind),
     /// The alpha target of the immediately-preceding pass.
     PrevPassAlpha,
     /// The color target of the immediately-preceding pass.
@@ -292,13 +297,7 @@ impl TextureSource {
         match *self {
             TextureSource::TextureCache(..) => ImageBufferKind::Texture2D,
 
-            TextureSource::External(external_image) => {
-                match external_image.image_type {
-                    ExternalImageType::TextureHandle(kind) => kind,
-                    // Raw buffer external textures go to the texture cache.
-                    ExternalImageType::Buffer => ImageBufferKind::Texture2D,
-                }
-            },
+            TextureSource::External(_, image_buffer_kind) => image_buffer_kind,
 
             // Render tasks use texture arrays for now.
             TextureSource::PrevPassAlpha
