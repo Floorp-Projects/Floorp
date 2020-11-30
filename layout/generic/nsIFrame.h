@@ -3674,23 +3674,12 @@ class nsIFrame : public nsQueryFrame {
    * @note (See also bug 743402, comment 11) GetSkipSides() checks to see
    *       if this frame has a previous or next continuation to determine
    *       if a side should be skipped.
-   *       Unfortunately, this only works after reflow has been completed. In
-   *       lieu of this, during reflow, a SkipSidesDuringReflow parameter can
-   *       be passed in, indicating that it should be used to determine if sides
-   *       should be skipped during reflow.
-   *
-   * FIXME(emilio, bug 1677917): That's wrong, fix BlockReflowInput and remove
-   * SkipSidesDuringReflow and related code.
+   *       So this only works after the entire frame tree has been reflowed.
+   *       During reflow, if this frame can be split in the block axis, you
+   *       should use nsSplittableFrame::PreReflowBlockLevelLogicalSkipSides().
    */
   Sides GetSkipSides() const;
-
-  struct SkipSidesDuringReflow {
-    const ReflowInput& mReflowInput;
-    const nscoord mConsumedBSize = NS_UNCONSTRAINEDSIZE;
-  };
-
-  virtual LogicalSides GetLogicalSkipSides(
-      const Maybe<SkipSidesDuringReflow>& = Nothing()) const {
+  virtual LogicalSides GetLogicalSkipSides() const {
     return LogicalSides(mWritingMode);
   }
 

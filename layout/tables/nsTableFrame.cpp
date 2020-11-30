@@ -1359,8 +1359,7 @@ nsMargin nsTableFrame::GetDeflationForBackground(
   return GetOuterBCBorder(wm).GetPhysicalMargin(wm);
 }
 
-nsIFrame::LogicalSides nsTableFrame::GetLogicalSkipSides(
-    const Maybe<SkipSidesDuringReflow>&) const {
+LogicalSides nsTableFrame::GetLogicalSkipSides() const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Clone)) {
