@@ -396,8 +396,6 @@ void AudioResampler::AppendInput(const AudioSegment& aInSegment) {
 }
 
 AudioSegment AudioResampler::Resample(uint32_t aOutFrames) {
-  MOZ_ASSERT(aOutFrames);
-
   AudioSegment segment;
 
   // We don't know what to do yet and we only have received silence if any just
