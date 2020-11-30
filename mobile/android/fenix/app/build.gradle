@@ -19,6 +19,13 @@ import static org.gradle.api.tasks.testing.TestResult.ResultType
 
 android {
     compileSdkVersion Config.compileSdkVersion
+
+    if (project.hasProperty("testBuildType")) {
+        // Allowing to configure the test build type via command line flag (./gradlew -PtestBuildType=beta ..)
+        // in order to run UI tests against other build variants than debug in automation.
+        testBuildType project.property("testBuildType")
+    }
+
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion Config.minSdkVersion
