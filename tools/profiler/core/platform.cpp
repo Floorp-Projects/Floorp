@@ -2752,7 +2752,8 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
       AddMarkerToBuffer(aProfileBuffer.UnderlyingChunkedBuffer(), markerName,
                         geckoprofiler::category::JAVA_ANDROID,
                         {MarkerThreadId(threadId), std::move(timing)},
-                        geckoprofiler::markers::Text{}, text->ToCString());
+                        geckoprofiler::markers::TextMarker{},
+                        text->ToCString());
     }
   }
 }
