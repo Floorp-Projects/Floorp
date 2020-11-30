@@ -22,8 +22,8 @@ static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
 class ABIArgGenerator {
-  unsigned usedArgSlots_;
-  bool firstArgFloat;
+  unsigned regIndex_;
+  uint32_t stackOffset_;
   ABIArg current_;
 
  public:
@@ -31,14 +31,8 @@ class ABIArgGenerator {
   ABIArg next(MIRType argType);
   ABIArg& current() { return current_; }
 
-  uint32_t stackBytesConsumedSoFar() const {
-    if (usedArgSlots_ <= 8) {
-      return 0;
-    }
-
-    return (usedArgSlots_ - 8) * sizeof(int64_t);
-  }
-  void increaseStackOffset(uint32_t bytes) { MOZ_CRASH("NYI"); }
+  uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
+  void increaseStackOffset(uint32_t bytes) { stackOffset_ += bytes; }
 };
 
 // These registers may be volatile or nonvolatile.
@@ -281,11 +275,6 @@ static inline bool GetTempRegForIntArg(uint32_t usedIntArgs,
   }
   *out = CallTempNonArgRegs[usedIntArgs];
   return true;
-}
-
-static inline uint32_t GetArgStackDisp(uint32_t usedArgSlots) {
-  MOZ_ASSERT(usedArgSlots >= NumIntArgRegs);
-  return (usedArgSlots - NumIntArgRegs) * sizeof(int64_t);
 }
 
 }  // namespace jit

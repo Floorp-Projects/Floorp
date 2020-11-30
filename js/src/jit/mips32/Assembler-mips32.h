@@ -254,12 +254,6 @@ static inline bool GetTempRegForIntArg(uint32_t usedIntArgs,
   return true;
 }
 
-static inline uint32_t GetArgStackDisp(uint32_t usedArgSlots) {
-  MOZ_ASSERT(usedArgSlots >= NumIntArgRegs);
-  // Even register arguments have place reserved on stack.
-  return usedArgSlots * sizeof(intptr_t);
-}
-
 }  // namespace jit
 }  // namespace js
 
