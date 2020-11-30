@@ -41,10 +41,6 @@ class TempAllocator;
 
 }  // namespace jit
 
-bool ClassCanHaveExtraProperties(const JSClass* clasp);
-
-struct AutoEnterAnalysis;
-
 class TypeZone {
   // Under CodeGenerator::link, the id of the current compilation.
   ZoneData<mozilla::Maybe<IonCompilationId>> currentCompilationId_;
