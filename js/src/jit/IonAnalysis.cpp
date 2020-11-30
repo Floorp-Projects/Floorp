@@ -3483,6 +3483,8 @@ static bool TryEliminateBoundsCheck(BoundsCheckMap& checks, size_t blockIndex,
 
   dominating->setMinimum(newMinimum);
   dominating->setMaximum(newMaximum);
+  dominating->setBailoutKind(BailoutKind::HoistBoundsCheck);
+
   return true;
 }
 
