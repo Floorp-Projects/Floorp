@@ -47,11 +47,9 @@ function do_test() {
     "-webkit-repeating-radial-gradient",
     "-moz-repeating-radial-gradient",
     "-webkit-gradient",
+    "conic-gradient",
+    "repeating-conic-gradient",
   ];
-
-  if (SpecialPowers.getBoolPref("layout.css.conic-gradient.enabled")) {
-    allGradients.push("conic-gradient", "repeating-conic-gradient");
-  }
 
   // test a property with keywords and colors
   var prop = "color";
