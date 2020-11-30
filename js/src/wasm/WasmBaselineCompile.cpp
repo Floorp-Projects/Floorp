@@ -655,15 +655,16 @@ class BaseRegAlloc {
 
   template <MIRType t>
   bool hasFPU() {
-    return availFPU.hasAny<RegTypeOf<t>::value>();
-  }
-
 #ifdef RABALDR_SIDEALLOC_V128
-  template <>
-  bool hasFPU<MIRType::Simd128>() {
-    MOZ_CRASH("Should not happen");
-  }
+    // Workaround for GCC problem, bug 1677690
+    if constexpr (t == MIRType::Simd128) {
+      MOZ_CRASH("Should not happen");
+    } else
 #endif
+    {
+      return availFPU.hasAny<RegTypeOf<t>::value>();
+    }
+  }
 
   bool isAvailableGPR(Register r) { return availGPR.has(r); }
 
@@ -746,15 +747,16 @@ class BaseRegAlloc {
 
   template <MIRType t>
   FloatRegister allocFPU() {
-    return availFPU.takeAny<RegTypeOf<t>::value>();
-  }
-
 #ifdef RABALDR_SIDEALLOC_V128
-  template <>
-  FloatRegister allocFPU<MIRType::Simd128>() {
-    MOZ_CRASH("Should not happen");
-  }
+    // Workaround for GCC problem, bug 1677690
+    if constexpr (t == MIRType::Simd128) {
+      MOZ_CRASH("Should not happen");
+    } else
 #endif
+    {
+      return availFPU.takeAny<RegTypeOf<t>::value>();
+    }
+  }
 
   void freeGPR(Register r) { availGPR.add(r); }
 
