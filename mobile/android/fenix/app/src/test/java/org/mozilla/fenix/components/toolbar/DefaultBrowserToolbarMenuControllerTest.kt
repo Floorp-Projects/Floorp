@@ -513,7 +513,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         verify { currentSession.customTabConfig = null }
         verify { sessionManager.select(currentSession) }
         verify { activity.startActivity(openInFenixIntent) }
-        verify { activity.finish() }
+        verify { activity.finishAndRemoveTask() }
     }
 
     @Test

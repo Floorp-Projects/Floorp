@@ -5,6 +5,7 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Intent
+import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import kotlinx.android.synthetic.main.activity_home.*
@@ -111,16 +112,19 @@ open class ExternalAppBrowserActivity : HomeActivity() {
         }
     }
 
-    private fun hasExternalTab(): Boolean {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun hasExternalTab(): Boolean {
         return getExternalTab() != null
     }
 
-    private fun getExternalTab(): SessionState? {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExternalTab(): SessionState? {
         val id = getExternalTabId() ?: return null
         return components.core.store.state.findCustomTab(id)
     }
 
-    private fun getExternalTabId(): String? {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExternalTabId(): String? {
         return getIntentSessionId(SafeIntent(intent))
     }
 }
