@@ -25,12 +25,15 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/AsyncFunction.h"
+#include "vm/BooleanObject.h"
 #include "vm/DateObject.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/ErrorObject.h"
 #include "vm/JSContext.h"
+#include "vm/NumberObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
+#include "vm/StringObject.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 
 #include "vm/JSObject-inl.h"
