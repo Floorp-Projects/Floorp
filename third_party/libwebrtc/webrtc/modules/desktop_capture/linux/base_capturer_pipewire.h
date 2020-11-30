@@ -84,6 +84,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   DesktopSize desktop_size_ = {};
   DesktopCaptureOptions options_ = {};
 
+  rtc::CriticalSection current_frame_lock_;
   std::unique_ptr<uint8_t[]> current_frame_;
   Callback* callback_ = nullptr;
 
