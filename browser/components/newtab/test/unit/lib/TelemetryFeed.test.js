@@ -916,7 +916,8 @@ describe("TelemetryFeed", () => {
       const { ping, pingType } = await instance.applySnippetsPolicy(data);
 
       assert.equal(pingType, "snippets");
-      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      // XXX Bug 1677723
+      assert.propertyVal(ping, "client_id", FAKE_UUID);
       assert.propertyVal(ping, "message_id", "snippets_message_01");
     });
   });

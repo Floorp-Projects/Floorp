@@ -98,7 +98,7 @@ class ASRouterChild extends JSWindowActorChild {
         case msg.TOOLBAR_PANEL_TELEMETRY:
         case msg.MOMENTS_PAGE_TELEMETRY:
         case msg.DOORHANGER_TELEMETRY: {
-          return this.telemetry.sendTelemetry(data);
+          return this.telemetry.sendTelemetry({ type, data });
         }
         // these messages don't need a repsonse
         case msg.DISABLE_PROVIDER:

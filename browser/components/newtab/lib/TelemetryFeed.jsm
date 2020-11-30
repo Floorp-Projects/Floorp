@@ -695,8 +695,10 @@ this.TelemetryFeed = class TelemetryFeed {
    * Per Bug 1485069, all the metrics for Snippets in AS router use client_id in
    * all the release channels
    */
-  async applySnippetsPolicy(ping) {
-    ping.client_id = await this.telemetryClientId;
+  applySnippetsPolicy(ping) {
+    // XXX Bug 1677723
+    // ping.client_id = await this.telemetryClientId;
+    ping.client_id = this._impressionId;
     delete ping.action;
     return { ping, pingType: "snippets" };
   }
