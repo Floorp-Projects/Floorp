@@ -24,6 +24,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "builtin/Boolean.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/String.h"

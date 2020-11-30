@@ -13,10 +13,12 @@
 
 #include <type_traits>
 
+#include "jit/IonOptimizationLevels.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+#include "jit/SharedICRegisters.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "util/Memory.h"
 #include "wasm/WasmTypes.h"

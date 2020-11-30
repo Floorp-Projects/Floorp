@@ -14,6 +14,7 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
 #include "vm/Probes.h"
+#include "vm/TypedArrayObject.h"
 
 #include "gc/FreeOp-inl.h"
 #include "gc/Marking-inl.h"
@@ -202,6 +203,21 @@ inline bool ClassCanHaveFixedData(const JSClass* clasp) {
   return !clasp->isNative() || clasp == &js::ArrayBufferObject::class_ ||
          js::IsTypedArrayClass(clasp);
 }
+
+class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
+  JS::Zone* zone;
+  bool saved;
+
+ public:
+  explicit AutoSuppressAllocationMetadataBuilder(JSContext* cx)
+      : zone(cx->zone()), saved(zone->suppressAllocationMetadataBuilder) {
+    zone->suppressAllocationMetadataBuilder = true;
+  }
+
+  ~AutoSuppressAllocationMetadataBuilder() {
+    zone->suppressAllocationMetadataBuilder = saved;
+  }
+};
 
 // This function is meant to be called from allocation fast paths.
 //

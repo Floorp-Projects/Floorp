@@ -39,25 +39,11 @@
 
 #include "jit/JitScript-inl.h"
 #include "vm/JSContext-inl.h"
+#include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/ObjectGroup-inl.h"
 
 namespace js {
-
-class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
-  JS::Zone* zone;
-  bool saved;
-
- public:
-  explicit AutoSuppressAllocationMetadataBuilder(JSContext* cx)
-      : zone(cx->zone()), saved(zone->suppressAllocationMetadataBuilder) {
-    zone->suppressAllocationMetadataBuilder = true;
-  }
-
-  ~AutoSuppressAllocationMetadataBuilder() {
-    zone->suppressAllocationMetadataBuilder = saved;
-  }
-};
 
 /*
  * Structure for type inference entry point functions. All functions which can
