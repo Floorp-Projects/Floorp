@@ -4,7 +4,7 @@
 
 use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering, ExternalImageId, ImageBufferKind};
 use api::units::*;
-use crate::batch::{resolve_image, get_buffer_kind};
+use crate::batch::{resolve_image};
 use euclid::Transform3D;
 use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
@@ -708,7 +708,7 @@ impl CompositeState {
             match external_surface.dependency {
                 ExternalSurfaceDependency::Yuv{ color_space, format, rescale, .. } => {
 
-                    let image_buffer_kind = get_buffer_kind(planes[0].texture);
+                    let image_buffer_kind = planes[0].texture.image_buffer_kind();
 
                     self.external_surfaces.push(ResolvedExternalSurface {
                         color_data: ResolvedExternalSurfaceColorData::Yuv {
@@ -724,7 +724,7 @@ impl CompositeState {
                 },
                 ExternalSurfaceDependency::Rgb{ flip_y, .. } => {
 
-                    let image_buffer_kind = get_buffer_kind(planes[0].texture);
+                    let image_buffer_kind = planes[0].texture.image_buffer_kind();
 
                     // Only propagate flip_y if the compositor doesn't support transforms,
                     // since otherwise it'll be handled as part of the transform.
