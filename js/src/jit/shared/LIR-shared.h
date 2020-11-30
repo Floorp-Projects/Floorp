@@ -8417,6 +8417,27 @@ class LCallNativeGetElement : public LCallInstructionHelper<BOX_PIECES, 2, 0> {
   const LAllocation* index() { return getOperand(1); }
 };
 
+class LCallObjectHasSparseElement : public LCallInstructionHelper<1, 2, 2> {
+ public:
+  LIR_HEADER(CallObjectHasSparseElement)
+
+  LCallObjectHasSparseElement(const LAllocation& object,
+                              const LAllocation& index,
+                              const LDefinition& temp1,
+                              const LDefinition& temp2)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, object);
+    setOperand(1, index);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;

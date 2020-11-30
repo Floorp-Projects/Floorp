@@ -165,6 +165,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::GuardIsExtensible:
     case MDefinition::Opcode::GuardIndexGreaterThanDenseInitLength:
     case MDefinition::Opcode::GuardIndexIsValidUpdateOrAdd:
+    case MDefinition::Opcode::CallObjectHasSparseElement:
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:

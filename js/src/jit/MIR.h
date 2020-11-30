@@ -12681,6 +12681,33 @@ class MCallNativeGetElement
   bool possiblyCalls() const override { return true; }
 };
 
+// Test if a native object has an own element (sparse or dense) at an index.
+class MCallObjectHasSparseElement
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>>::Data {
+  MCallObjectHasSparseElement(MDefinition* obj, MDefinition* index)
+      : MBinaryInstruction(classOpcode, obj, index) {
+    setResultType(MIRType::Boolean);
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(CallObjectHasSparseElement)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, index))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Element | AliasSet::ObjectFields |
+                          AliasSet::DynamicSlot | AliasSet::FixedSlot);
+  }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
