@@ -17,9 +17,20 @@ using namespace js;
 using namespace js::jit;
 
 ABIArgGenerator::ABIArgGenerator()
-    : usedArgSlots_(0), firstArgFloat(false), current_() {}
+    : regIndex_(0), stackOffset_(0), current_() {}
 
 ABIArg ABIArgGenerator::next(MIRType type) {
+  static_assert(NumIntArgRegs == NumFloatArgRegs);
+  if (regIndex_ == NumIntArgRegs) {
+    if (type != MIRType::Simd128) {
+      current_ = ABIArg(stackOffset_);
+      stackOffset_ += sizeof(uint64_t);
+    } else {
+      // Mips platform does not support simd yet.
+      MOZ_CRASH("Unexpected argument type");
+    }
+    return current_;
+  }
   switch (type) {
     case MIRType::Int32:
     case MIRType::Int64:
@@ -27,29 +38,18 @@ ABIArg ABIArgGenerator::next(MIRType type) {
     case MIRType::RefOrNull:
     case MIRType::StackResults: {
       Register destReg;
-      if (GetIntArgReg(usedArgSlots_, &destReg)) {
-        current_ = ABIArg(destReg);
-      } else {
-        current_ = ABIArg(GetArgStackDisp(usedArgSlots_));
-      }
-      usedArgSlots_++;
+      GetIntArgReg(regIndex_++, &destReg);
+      current_ = ABIArg(destReg);
       break;
     }
     case MIRType::Float32:
     case MIRType::Double: {
-      FloatRegister destFReg;
       FloatRegister::ContentType contentType;
-      if (!usedArgSlots_) {
-        firstArgFloat = true;
-      }
       contentType = (type == MIRType::Double) ? FloatRegisters::Double
                                               : FloatRegisters::Single;
-      if (GetFloatArgReg(usedArgSlots_, &destFReg)) {
-        current_ = ABIArg(FloatRegister(destFReg.id(), contentType));
-      } else {
-        current_ = ABIArg(GetArgStackDisp(usedArgSlots_));
-      }
-      usedArgSlots_++;
+      FloatRegister destFReg;
+      GetFloatArgReg(regIndex_++, &destFReg);
+      current_ = ABIArg(FloatRegister(destFReg.id(), contentType));
       break;
     }
     default:
