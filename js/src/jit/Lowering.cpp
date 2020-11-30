@@ -2121,7 +2121,10 @@ void LIRGenerator::visitToNumberInt32(MToNumberInt32* convert) {
                                               LValueToInt32::NORMAL);
       assignSnapshot(lir, convert->bailoutKind());
       define(lir, convert);
-      assignSafepoint(lir, convert);
+      if (lir->mode() == LValueToInt32::TRUNCATE ||
+          lir->mode() == LValueToInt32::TRUNCATE_NOWRAP) {
+        assignSafepoint(lir, convert);
+      }
       break;
     }
 
@@ -2997,7 +3000,6 @@ void LIRGenerator::visitGetNextEntryForIterator(MGetNextEntryForIterator* ins) {
                                                     useRegister(ins->result()),
                                                     temp(), temp(), temp());
   define(lir, ins);
-  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitArrayBufferByteLengthInt32(
@@ -4532,7 +4534,6 @@ void LIRGenerator::visitIteratorMore(MIteratorMore* ins) {
   LIteratorMore* lir =
       new (alloc()) LIteratorMore(useRegister(ins->iterator()), temp());
   defineBox(lir, ins);
-  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitIsNoIter(MIsNoIter* ins) {
@@ -4544,7 +4545,6 @@ void LIRGenerator::visitIteratorEnd(MIteratorEnd* ins) {
   LIteratorEnd* lir = new (alloc())
       LIteratorEnd(useRegister(ins->iterator()), temp(), temp(), temp());
   add(lir, ins);
-  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitStringLength(MStringLength* ins) {
@@ -5487,7 +5487,6 @@ void LIRGenerator::visitGuardHasGetterSetter(MGuardHasGetterSetter* ins) {
   assignSnapshot(guard, ins->bailoutKind());
   add(guard, ins);
   redefine(ins, object);
-  assignSafepoint(guard, ins);
 }
 
 void LIRGenerator::visitConstant(MConstant* ins) {
