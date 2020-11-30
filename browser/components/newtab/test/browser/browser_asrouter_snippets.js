@@ -4,7 +4,7 @@ const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
-add_task(async function some_test() {
+add_task(async function render_below_search_snippet() {
   ASRouter._validPreviewEndpoint = () => true;
   await BrowserTestUtils.withNewTab(
     {
@@ -41,7 +41,7 @@ add_task(async function some_test() {
   );
 });
 
-add_task(async function some_test() {
+add_task(async function render_snippets_icon_and_link() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -90,7 +90,7 @@ add_task(async function some_test() {
   );
 });
 
-add_task(async () => {
+add_task(async function render_preview_snippet() {
   ASRouter._validPreviewEndpoint = () => true;
   await BrowserTestUtils.withNewTab(
     {

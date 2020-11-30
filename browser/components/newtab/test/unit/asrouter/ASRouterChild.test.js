@@ -47,7 +47,8 @@ describe("ASRouterChild", () => {
           });
           sandbox.assert.calledOnce(asRouterChild.telemetry.sendTelemetry);
           sandbox.assert.calledWith(asRouterChild.telemetry.sendTelemetry, {
-            something: 1,
+            type,
+            data: { something: 1 },
           });
         });
       });
