@@ -549,13 +549,14 @@ struct JSRuntime {
   void decParseTaskRef() { numParseTasks--; }
 
 #ifdef DEBUG
-  bool currentThreadHasScriptDataAccess() const {
+  void assertCurrentThreadHasScriptDataAccess() const {
     if (!hasParseTasks()) {
-      return js::CurrentThreadCanAccessRuntime(this) &&
-             activeThreadHasScriptDataAccess;
+      MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(this) &&
+                 activeThreadHasScriptDataAccess);
+      return;
     }
 
-    return scriptDataLock.ownedByCurrentThread();
+    scriptDataLock.assertOwnedByCurrentThread();
   }
 
   bool currentThreadHasAtomsTableAccess() const {

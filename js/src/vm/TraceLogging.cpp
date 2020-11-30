@@ -79,8 +79,10 @@ void js::DestroyTraceLoggerThreadState() {
 }
 
 #ifdef DEBUG
-bool js::CurrentThreadOwnsTraceLoggerThreadStateLock() {
-  return traceLoggerState && traceLoggerState->lock.ownedByCurrentThread();
+void js::AssertCurrentThreadOwnsTraceLoggerThreadStateLock() {
+  if (traceLoggerState) {
+    traceLoggerState->lock.assertOwnedByCurrentThread();
+  }
 }
 #endif
 
