@@ -93,7 +93,7 @@ const BUILT_IN_SECTIONS = {
   "feeds.section.highlights": options => ({
     id: "highlights",
     pref: {
-      titleString: { id: "home-prefs-highlights-header" },
+      titleString: { id: "home-prefs-recent-activity-header" },
       descString: { id: "home-prefs-highlights-description" },
       nestedPrefs: [
         {
@@ -121,7 +121,7 @@ const BUILT_IN_SECTIONS = {
     shouldHidePref: false,
     eventSource: "HIGHLIGHTS",
     icon: "highlights",
-    title: { id: "newtab-section-header-highlights" },
+    title: { id: "newtab-section-header-recent-activity" },
     compactCards: true,
     rowsPref: "section.highlights.rows",
     maxRows: 4,
