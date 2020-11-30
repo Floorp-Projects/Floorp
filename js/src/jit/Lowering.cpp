@@ -5499,6 +5499,16 @@ void LIRGenerator::visitGuardIsExtensible(MGuardIsExtensible* ins) {
   redefine(ins, object);
 }
 
+void LIRGenerator::visitGuardIndexIsNonNegative(MGuardIndexIsNonNegative* ins) {
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  auto* guard = new (alloc()) LGuardIndexIsNonNegative(useRegister(index));
+  assignSnapshot(guard, ins->bailoutKind());
+  add(guard, ins);
+  redefine(ins, index);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

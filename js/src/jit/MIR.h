@@ -12526,6 +12526,30 @@ class MGuardIsExtensible : public MUnaryInstruction,
   }
 };
 
+// Guard the input index is non-negative.
+class MGuardIndexIsNonNegative : public MUnaryInstruction,
+                                 public UnboxedInt32Policy<0>::Data {
+  explicit MGuardIndexIsNonNegative(MDefinition* index)
+      : MUnaryInstruction(classOpcode, index) {
+    setResultType(MIRType::Int32);
+    setMovable();
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardIndexIsNonNegative)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, index))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.

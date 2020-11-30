@@ -8298,6 +8298,18 @@ class LGuardIsExtensible : public LInstructionHelper<0, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LGuardIndexIsNonNegative : public LInstructionHelper<0, 1, 0> {
+ public:
+  LIR_HEADER(GuardIndexIsNonNegative)
+
+  explicit LGuardIndexIsNonNegative(const LAllocation& index)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, index);
+  }
+
+  const LAllocation* index() { return getOperand(0); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
