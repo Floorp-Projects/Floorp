@@ -432,6 +432,8 @@ class DiscardableRunnable : public Runnable, public nsIDiscardableRunnable {
 };
 
 // This class is designed to be subclassed.
+// Derived classes should override Run() and Cancel() to provide that
+// calling Run() after Cancel() is a no-op.
 class CancelableRunnable : public DiscardableRunnable,
                            public nsICancelableRunnable {
  public:
