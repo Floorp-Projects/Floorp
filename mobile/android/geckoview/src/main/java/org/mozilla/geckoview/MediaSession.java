@@ -695,14 +695,6 @@ public class MediaSession {
             mMediaSession = new MediaSession(session);
         }
 
-        private void ensureActivated(final Delegate delegate) {
-            if (mMediaSession.isActive()) {
-                return;
-            }
-            mMediaSession.setActive(true);
-            delegate.onActivated(mSession, mMediaSession);
-        }
-
         @Override
         public void handleMessage(
                 final Delegate delegate,
@@ -714,31 +706,26 @@ public class MediaSession {
             }
 
             if (ACTIVATED_EVENT.equals(event)) {
-                ensureActivated(delegate);
+                mMediaSession.setActive(true);
+                delegate.onActivated(mSession, mMediaSession);
             } else if (DEACTIVATED_EVENT.equals(event)) {
                 mMediaSession.setActive(false);
                 delegate.onDeactivated(mSession, mMediaSession);
             } else if (METADATA_EVENT.equals(event)) {
-                ensureActivated(delegate);
                 final Metadata meta =
                         Metadata.fromBundle(message.getBundle("metadata"));
                 delegate.onMetadata(mSession, mMediaSession, meta);
             } else if (POSITION_STATE_EVENT.equals(event)) {
-                ensureActivated(delegate);
                 final PositionState state =
                         PositionState.fromBundle(message.getBundle("state"));
                 delegate.onPositionState(mSession, mMediaSession, state);
             } else if (PLAYBACK_NONE_EVENT.equals(event)) {
-                ensureActivated(delegate);
                 delegate.onStop(mSession, mMediaSession);
             } else if (PLAYBACK_PAUSED_EVENT.equals(event)) {
-                ensureActivated(delegate);
                 delegate.onPause(mSession, mMediaSession);
             } else if (PLAYBACK_PLAYING_EVENT.equals(event)) {
-                ensureActivated(delegate);
                 delegate.onPlay(mSession, mMediaSession);
             } else if (FEATURES_EVENT.equals(event)) {
-                ensureActivated(delegate);
                 final long features = Feature.fromBundle(
                         message.getBundle("features"));
                 delegate.onFeatures(mSession, mMediaSession, features);
