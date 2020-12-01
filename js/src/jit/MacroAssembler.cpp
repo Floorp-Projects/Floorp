@@ -838,7 +838,6 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
         templateObj.asNativeTemplateObject();
     MOZ_ASSERT_IF(!ntemplate.denseElementsAreCopyOnWrite(),
                   !ntemplate.hasDynamicElements());
-    MOZ_ASSERT_IF(ntemplate.convertDoubleElements(), ntemplate.isArrayObject());
 
     // If the object has dynamic slots, the slots member has already been
     // filled in.
@@ -865,9 +864,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
                                ObjectElements::offsetOfInitializedLength()));
       store32(Imm32(ntemplate.getArrayLength()),
               Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
-      store32(Imm32(ntemplate.convertDoubleElements()
-                        ? ObjectElements::CONVERT_DOUBLE_ELEMENTS
-                        : 0),
+      store32(Imm32(0),
               Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
       MOZ_ASSERT(!ntemplate.hasPrivate());
     } else if (ntemplate.isArgumentsObject()) {

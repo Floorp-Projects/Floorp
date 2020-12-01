@@ -4443,7 +4443,6 @@ MNewArray::MNewArray(TempAllocator& alloc, uint32_t length,
     : MUnaryInstruction(classOpcode, templateConst),
       length_(length),
       initialHeap_(initialHeap),
-      convertDoubleElements_(false),
       pc_(pc),
       vmCall_(vmCall) {
   setResultType(MIRType::Object);

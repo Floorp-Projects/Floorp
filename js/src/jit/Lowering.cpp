@@ -2697,24 +2697,6 @@ void LIRGenerator::visitConstantElements(MConstantElements* ins) {
          ins);
 }
 
-void LIRGenerator::visitConvertElementsToDoubles(
-    MConvertElementsToDoubles* ins) {
-  LInstruction* check =
-      new (alloc()) LConvertElementsToDoubles(useRegister(ins->elements()));
-  add(check, ins);
-  assignSafepoint(check, ins);
-}
-
-void LIRGenerator::visitMaybeToDoubleElement(MMaybeToDoubleElement* ins) {
-  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  MOZ_ASSERT(ins->value()->type() == MIRType::Int32);
-
-  LMaybeToDoubleElement* lir = new (alloc())
-      LMaybeToDoubleElement(useRegisterAtStart(ins->elements()),
-                            useRegisterAtStart(ins->value()), tempDouble());
-  defineBox(lir, ins);
-}
-
 void LIRGenerator::visitMaybeCopyElementsForWrite(
     MMaybeCopyElementsForWrite* ins) {
   LInstruction* check = new (alloc())

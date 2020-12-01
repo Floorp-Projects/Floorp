@@ -3498,9 +3498,6 @@ static bool TryOptimizeLoadObjectOrNull(MDefinition* def,
 }
 
 static inline MDefinition* PassthroughOperand(MDefinition* def) {
-  if (def->isConvertElementsToDoubles()) {
-    return def->toConvertElementsToDoubles()->elements();
-  }
   if (def->isMaybeCopyElementsForWrite()) {
     return def->toMaybeCopyElementsForWrite()->object();
   }
@@ -3657,10 +3654,6 @@ bool jit::AddKeepAliveInstructions(MIRGraph& graph) {
       MDefinition* ownerObject;
       switch (ins->op()) {
         case MDefinition::Opcode::ConstantElements:
-          continue;
-        case MDefinition::Opcode::ConvertElementsToDoubles:
-          // EliminateRedundantChecks should have replaced all uses.
-          MOZ_ASSERT(!ins->hasUses());
           continue;
         case MDefinition::Opcode::Elements:
         case MDefinition::Opcode::ArrayBufferViewElements:

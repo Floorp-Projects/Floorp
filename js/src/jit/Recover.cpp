@@ -1232,13 +1232,11 @@ bool MNewArray::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArray));
   writer.writeUnsigned(length());
-  writer.writeByte(uint8_t(convertDoubleElements()));
   return true;
 }
 
 RNewArray::RNewArray(CompactBufferReader& reader) {
   count_ = reader.readUnsigned();
-  convertDoubleElements_ = reader.readByte();
 }
 
 bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
@@ -1246,8 +1244,7 @@ bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue result(cx);
   RootedObjectGroup group(cx, templateObject->group());
 
-  ArrayObject* resultObject =
-      NewArrayWithGroup(cx, count_, group, convertDoubleElements_);
+  ArrayObject* resultObject = NewArrayWithGroup(cx, count_, group);
   if (!resultObject) {
     return false;
   }

@@ -4134,8 +4134,7 @@ ArrayObject* js::NewDenseCopyOnWriteArray(JSContext* cx,
 
 // TODO(no-TI): clean up.
 ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
-                                   HandleObjectGroup group,
-                                   bool convertDoubleElements) {
+                                   HandleObjectGroup group) {
   // Ion can call this with a group from a different realm when calling
   // another realm's Array constructor.
   Maybe<AutoRealm> ar;
@@ -4144,16 +4143,7 @@ ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
     ar.emplace(cx, group);
   }
 
-  ArrayObject* res = NewDenseFullyAllocatedArray(cx, length);
-  if (!res) {
-    return nullptr;
-  }
-
-  if (convertDoubleElements) {
-    res->setShouldConvertDoubleElements();
-  }
-
-  return res;
+  return NewDenseFullyAllocatedArray(cx, length);
 }
 
 #ifdef DEBUG
