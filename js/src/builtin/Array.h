@@ -97,10 +97,6 @@ extern ArrayObject* NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
                                                        HandleObjectGroup group,
                                                        size_t length);
 
-extern ArrayObject* NewCopiedArrayTryUseGroup(
-    JSContext* cx, HandleObjectGroup group, const Value* vp, size_t length,
-    NewObjectKind newKind = GenericObject);
-
 extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
                                       HandleObjectGroup group,
                                       bool convertDoubleElements);

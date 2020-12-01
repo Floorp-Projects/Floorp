@@ -4161,25 +4161,6 @@ ArrayObject* js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
                                                                     length);
 }
 
-ArrayObject* js::NewCopiedArrayTryUseGroup(JSContext* cx,
-                                           HandleObjectGroup group,
-                                           const Value* vp, size_t length,
-                                           NewObjectKind newKind) {
-  ArrayObject* obj =
-      NewFullyAllocatedArrayTryUseGroup(cx, group, length, newKind);
-  if (!obj) {
-    return nullptr;
-  }
-
-  DenseElementResult result = obj->setOrExtendDenseElements(cx, 0, vp, length);
-  if (result == DenseElementResult::Failure) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(result == DenseElementResult::Success);
-  return obj;
-}
-
 ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
                                    HandleObjectGroup group,
                                    bool convertDoubleElements) {
