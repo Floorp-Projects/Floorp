@@ -127,6 +127,7 @@ mod shade;
 mod spatial_node;
 mod storage;
 mod guillotine_allocator;
+mod slab_allocator;
 mod texture_cache;
 mod tile_cache;
 mod util;
