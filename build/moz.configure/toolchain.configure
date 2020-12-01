@@ -1873,6 +1873,17 @@ def security_hardening_cflags(
             js_flags.append("-fstack-protector-strong")
             js_ldflags.append("-fstack-protector-strong")
 
+            if (
+                c_compiler.type == "clang"
+                and c_compiler.version >= "11.0.0"
+                and target.os not in ("WINNT", "OSX")
+                and target.cpu in ("x86", "x86_64", "ppc64", "s390x")
+            ):
+                flags.append("-fstack-clash-protection")
+                ldflags.append("-fstack-clash-protection")
+                js_flags.append("-fstack-clash-protection")
+                js_ldflags.append("-fstack-clash-protection")
+
         # ftrivial-auto-var-init ------------------------------
         # Initialize local variables with a 0xAA pattern in clang debug builds.
         # Linux32 fails some xpcshell tests with -ftrivial-auto-var-init
