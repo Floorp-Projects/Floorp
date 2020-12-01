@@ -9,7 +9,6 @@ job-defaults:
             .*-ux/.*: 2400
             default: 1800
     suite: raptor
-    force-py2: true
     run-on-projects: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
