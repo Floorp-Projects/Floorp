@@ -107,6 +107,7 @@ class GfxInfo final : public GfxInfoBase {
   bool mIsWaylandDRM;
   bool mIsXWayland;
   bool mHasMultipleGPUs;
+  bool mGlxTestError;
 
   void AddCrashReportAnnotations();
 };
