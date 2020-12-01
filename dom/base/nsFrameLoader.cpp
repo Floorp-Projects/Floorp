@@ -3486,6 +3486,10 @@ void nsFrameLoader::StartPersistence(
   if (!context->GetDocShell() && XRE_IsParentProcess()) {
     CanonicalBrowsingContext* canonical =
         CanonicalBrowsingContext::Cast(context);
+    if (!canonical->GetCurrentWindowGlobal()) {
+      aRecv->OnError(NS_ERROR_NO_CONTENT);
+      return;
+    }
     RefPtr<BrowserParent> browserParent =
         canonical->GetCurrentWindowGlobal()->GetBrowserParent();
     browserParent->StartPersistence(canonical, aRecv, aRv);

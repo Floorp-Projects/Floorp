@@ -1713,6 +1713,11 @@ nsWebBrowserPersist::OnWalk::VisitBrowsingContext(
     nsIWebBrowserPersistDocument* aDoc, BrowsingContext* aContext) {
   RefPtr<dom::CanonicalBrowsingContext> context = aContext->Canonical();
 
+  if (NS_WARN_IF(!context->GetCurrentWindowGlobal())) {
+    EndVisit(nullptr, NS_ERROR_FAILURE);
+    return NS_ERROR_FAILURE;
+  }
+
   UniquePtr<WebBrowserPersistDocumentParent> actor(
       new WebBrowserPersistDocumentParent());
 
