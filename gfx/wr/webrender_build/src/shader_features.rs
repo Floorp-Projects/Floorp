@@ -12,10 +12,9 @@ bitflags! {
 
         const ADVANCED_BLEND_EQUATION = 1 << 8;
         const DUAL_SOURCE_BLENDING = 1 << 9;
-        const PIXEL_LOCAL_STORAGE = 1 << 10;
-        const DITHERING = 1 << 11;
-        const TEXTURE_EXTERNAL = 1 << 12;
-        const DEBUG = 1 << 13;
+        const DITHERING = 1 << 10;
+        const TEXTURE_EXTERNAL = 1 << 11;
+        const DEBUG = 1 << 12;
     }
 }
 
@@ -76,16 +75,6 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     }
 
     let mut base_prim_features = FeatureList::new();
-
-    // Pixel local storage shaders
-    if flags.contains(ShaderFeatureFlags::PIXEL_LOCAL_STORAGE) {
-        let feature = "PIXEL_LOCAL_STORAGE";
-        for name in &["pls_init", "pls_resolve"] {
-            shaders.insert(name, vec![feature.to_string()]);
-        }
-
-        base_prim_features.add(feature);
-    }
 
     // Brush shaders
     let mut brush_alpha_features = base_prim_features.with("ALPHA_PASS");
