@@ -203,7 +203,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # to clean the repo themselves.
     deleted_dir = os.path.join(topsrcdir, "third_party", "python", "psutil")
     if os.path.exists(deleted_dir):
-        shutil.rmtree(deleted_dir)
+        shutil.rmtree(deleted_dir, ignore_errors=True)
 
     # Global build system and mach state is stored in a central directory. By
     # default, this is ~/.mozbuild. However, it can be defined via an
