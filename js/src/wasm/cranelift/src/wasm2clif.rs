@@ -31,7 +31,7 @@ use cranelift_codegen::isa::{CallConv, TargetFrontendConfig, TargetIsa};
 use cranelift_codegen::packed_option::PackedOption;
 use cranelift_wasm::{
     FuncEnvironment, FuncIndex, FunctionBuilder, GlobalIndex, GlobalVariable, MemoryIndex,
-    ReturnMode, TableIndex, TargetEnvironment, WasmError, WasmResult, TypeIndex
+    ReturnMode, TableIndex, TargetEnvironment, TypeIndex, WasmError, WasmResult,
 };
 
 use crate::bindings::{self, GlobalDesc, SymbolicAddress};
