@@ -4,6 +4,8 @@ set -e
 
 [ "$1" != "aarch64-apple-darwin" ] && echo $1 is not supported yet && exit 1
 
+export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
+
 mkdir compiler-rt
 cd compiler-rt
 
@@ -18,8 +20,8 @@ cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_CONFIG_PATH=$MOZ_FETCHES_DIR/clang/bin/llvm-config \
-  -DCMAKE_C_FLAGS="-target aarch64-apple-darwin -mcpu=apple-a12 -B $MOZ_FETCHES_DIR/cctools/bin -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk" \
-  -DCMAKE_CXX_FLAGS="-target aarch64-apple-darwin -mcpu=apple-a12 -B $MOZ_FETCHES_DIR/cctools/bin -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk" \
+  -DCMAKE_C_FLAGS="-target aarch64-apple-darwin -mcpu=apple-a12 -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk" \
+  -DCMAKE_CXX_FLAGS="-target aarch64-apple-darwin -mcpu=apple-a12 -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk" \
   -DCMAKE_SYSTEM_NAME=Darwin \
   -DCMAKE_SYSTEM_VERSION=11.0 \
   -DDARWIN_osx_ARCHS=arm64 \
