@@ -23,6 +23,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "Region",
+  "resource://gre/modules/Region.jsm"
+);
+
 this.PrefsFeed = class PrefsFeed {
   constructor(prefMap) {
     this._prefMap = prefMap;
@@ -76,6 +82,16 @@ this.PrefsFeed = class PrefsFeed {
     // computed in main process
     values.isPrivateBrowsingEnabled = PrivateBrowsingUtils.enabled;
     values.platform = AppConstants.platform;
+
+    // Save the geo pref if we have it
+    if (Region.home) {
+      values.region = Region.home;
+      this.geo = values.region;
+    } else if (this.geo !== "") {
+      // Watch for geo changes and use a dummy value for now
+      Services.obs.addObserver(this, Region.REGION_TOPIC);
+      this.geo = "";
+    }
 
     // Get the firefox accounts url for links and to send firstrun metrics to.
     values.fxa_endpoint = Services.prefs.getStringPref(
@@ -139,8 +155,15 @@ this.PrefsFeed = class PrefsFeed {
     );
   }
 
+  uninit() {
+    this.removeListeners();
+  }
+
   removeListeners() {
     this._prefs.ignoreBranch(this);
+    if (this.geo === "") {
+      Services.obs.removeObserver(this, Region.REGION_TOPIC);
+    }
   }
 
   async _setIndexedDBPref(id, value) {
@@ -152,13 +175,28 @@ this.PrefsFeed = class PrefsFeed {
     }
   }
 
+  observe(subject, topic, data) {
+    switch (topic) {
+      case Region.REGION_TOPIC:
+        if (data === Region.REGION_UPDATED) {
+          this.store.dispatch(
+            ac.BroadcastToContent({
+              type: at.PREF_CHANGED,
+              data: { name: "region", value: Region.home },
+            })
+          );
+        }
+        break;
+    }
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
         this.init();
         break;
       case at.UNINIT:
-        this.removeListeners();
+        this.uninit();
         break;
       case at.CLEAR_PREF:
         Services.prefs.clearUserPref(this._prefs._branchStr + action.data.name);
