@@ -109,7 +109,7 @@ const AVAILABLE_UA_OVERRIDES = [
      * Spoofing as Chrome prevents the site from doing a constant page refresh
      */
     id: "bug1610010",
-    platform: "desktop",
+    platform: "all",
     domain: "criticalcareontario.ca",
     bug: "1610010",
     config: {
@@ -692,6 +692,44 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://goal.com/*"],
       uaTransformer: originalUA => {
         return originalUA + " Chrome/86.0.4240.110";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1679847 - Add UA override for avto.pro
+     * Webcompat issue #60043 - https://webcompat.com/issues/60043
+     *
+     * Unless Chrome is in the UA, the site serves a desktop version
+     * on catalog pages
+     */
+    id: "bug1679847",
+    platform: "android",
+    domain: "avto.pro",
+    bug: "1679847",
+    config: {
+      matches: ["https://avto.pro/catalog/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1679869 - Add UA override for vh1.com
+     * Webcompat issue #52755 - https://webcompat.com/issues/52755
+     *
+     * The site is not showing videos on Firefox on mobile stating
+     * that android 4.4.4 and chrome browser required
+     */
+    id: "bug1679869",
+    platform: "android",
+    domain: "vh1.com",
+    bug: "1679869",
+    config: {
+      matches: ["*://*.vh1.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
