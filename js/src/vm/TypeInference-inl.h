@@ -50,10 +50,7 @@ class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
 
  public:
   explicit AutoSuppressAllocationMetadataBuilder(JSContext* cx)
-      : AutoSuppressAllocationMetadataBuilder(cx->realm()->zone()) {}
-
-  explicit AutoSuppressAllocationMetadataBuilder(JS::Zone* zone)
-      : zone(zone), saved(zone->suppressAllocationMetadataBuilder) {
+      : zone(cx->zone()), saved(zone->suppressAllocationMetadataBuilder) {
     zone->suppressAllocationMetadataBuilder = true;
   }
 
@@ -78,27 +75,8 @@ struct MOZ_RAII AutoEnterAnalysis {
   // Prevent us from calling the objectMetadataCallback.
   js::AutoSuppressAllocationMetadataBuilder suppressMetadata;
 
-  JSFreeOp* freeOp;
-  Zone* zone;
-
   explicit AutoEnterAnalysis(JSContext* cx)
-      : suppressGC(cx), suppressMetadata(cx) {
-    init(cx->defaultFreeOp(), cx->zone());
-  }
-
-  AutoEnterAnalysis(JSFreeOp* fop, Zone* zone)
-      : suppressGC(TlsContext.get()), suppressMetadata(zone) {
-    init(fop, zone);
-  }
-
- private:
-  void init(JSFreeOp* fop, Zone* zone) {
-#ifdef JS_CRASH_DIAGNOSTICS
-    MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
-#endif
-    this->freeOp = fop;
-    this->zone = zone;
-  }
+      : suppressGC(cx), suppressMetadata(cx) {}
 };
 
 }  // namespace js
