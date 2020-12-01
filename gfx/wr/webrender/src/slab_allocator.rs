@@ -6,6 +6,29 @@ use euclid::{point2, size2, default::Box2D};
 use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use std::cmp;
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct AllocId(u32);
+
+fn pack_alloc_id(region_index: usize, location: TextureLocation) -> AllocId {
+    AllocId(
+        region_index as u32 & 0xFFFF
+        | (location.0 as u32) << 16
+        | (location.1 as u32) << 24
+    )
+}
+
+fn unpack_alloc_id(id: AllocId) -> (usize, TextureLocation) {
+    (
+        (id.0 & 0xFFFF) as usize,
+        TextureLocation(
+            ((id.0 >> 16) & 0xFF) as u8,
+            ((id.0 >> 24) & 0xFF) as u8,
+        ),
+    )
+}
+
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -183,22 +206,21 @@ impl TextureRegion {
     }
 
     // Attempt to allocate a fixed size block from this region.
-    fn alloc(&mut self) -> Option<DeviceIntPoint> {
+    fn alloc(&mut self) -> Option<(DeviceIntPoint, TextureLocation)> {
         debug_assert!(self.slab_size != SlabSize::invalid());
 
-        self.free_slots.pop().map(|location| {
+        self.free_slots.pop().map(|location| {(
             point2(
                 self.offset.x + self.slab_size.width * location.0 as i32,
                 self.offset.y + self.slab_size.height * location.1 as i32,
-            )
-        })
+            ),
+            location,
+        )})
     }
 
     // Free a block in this region.
-    fn free(&mut self, point: DeviceIntPoint, empty_regions: &mut usize) {
-        let x = (point.x - self.offset.x) / self.slab_size.width;
-        let y = (point.y - self.offset.y) / self.slab_size.height;
-        self.free_slots.push(TextureLocation::new(x, y));
+    fn free(&mut self, location: TextureLocation, empty_regions: &mut usize) {
+        self.free_slots.push(location);
 
         // If this region is completely unused, deinit it
         // so that it can become a different slab size
@@ -250,7 +272,7 @@ impl SlabAllocator {
     }
 
     // Returns the region index and allocated rect.
-    pub fn allocate(&mut self, size: DeviceIntSize) -> Option<(usize, DeviceIntRect)> {
+    pub fn allocate(&mut self, size: DeviceIntSize) -> Option<(AllocId, DeviceIntRect)> {
         let slab_size = self.slab_sizes.get(size);
 
         // Keep track of the location of an empty region,
@@ -266,11 +288,11 @@ impl SlabAllocator {
             if region.is_empty() {
                 empty_region_index = Some(i);
             } else if region.slab_size == slab_size {
-                if let Some(location) = region.alloc() {
+                if let Some((origin, location)) = region.alloc() {
                     return Some((
-                        region.index,
+                        pack_alloc_id(region.index, location),
                         DeviceIntRect {
-                            origin: location,
+                            origin,
                             size: allocated_size,
                         }
                     ));
@@ -281,11 +303,12 @@ impl SlabAllocator {
         if let Some(empty_region_index) = empty_region_index {
             let region = &mut self.regions[empty_region_index];
             region.init(slab_size, self.region_size, &mut self.empty_regions);
+            let (origin, location) = region.alloc().unwrap();
 
             return Some((
-                region.index,
+                pack_alloc_id(region.index, location),
                 DeviceIntRect {
-                    origin: region.alloc().unwrap(),
+                    origin,
                     size: allocated_size,
                 },
             ))
@@ -294,9 +317,11 @@ impl SlabAllocator {
         None
     }
 
-    pub fn deallocate(&mut self, origin: DeviceIntPoint, region_index: usize) -> DeviceIntSize {
+    pub fn deallocate(&mut self, id: AllocId) -> DeviceIntSize {
+        let (region_index, location) = unpack_alloc_id(id);
+
         let region = &mut self.regions[region_index];
-        region.free(origin, &mut self.empty_regions);
+        region.free(location, &mut self.empty_regions);
 
         size2(region.slab_size.width, region.slab_size.height)
     }
