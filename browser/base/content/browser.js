@@ -552,6 +552,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProton",
+  "browser.proton.enabled",
+  false,
+  (pref, oldValue, newValue) => {
+    document.documentElement.toggleAttribute("proton", newValue);
+  }
+);
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",
@@ -1697,6 +1707,8 @@ var gBrowserInit = {
     ) {
       document.documentElement.setAttribute("icon", "main-window");
     }
+
+    document.documentElement.toggleAttribute("proton", gProton);
 
     // Call this after we set attributes that might change toolbars' computed
     // text color.
