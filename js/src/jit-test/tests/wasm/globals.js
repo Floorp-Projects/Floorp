@@ -303,7 +303,7 @@ wasmAssert(`(module
         if (getBuildConfiguration().release_or_beta) {
             assertEq(s, "valueOf,value,");
         } else {
-            assertEq(s, "valueOf,type,value,");
+            assertEq(s, "type,valueOf,value,");
         }
     }
 
