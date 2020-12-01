@@ -68,46 +68,20 @@ inline bool NativeObject::canRemoveLastProperty() {
   return previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 
-inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
-                                              const Value& val) {
-  MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
-  // TODO(no-TI): remove.
-}
-
-inline void NativeObject::setDenseElementWithType(JSContext* cx, uint32_t index,
-                                                  const Value& val) {
-  MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
-
-  addDenseElementType(cx, index, val);
-  setDenseElement(index, val);
-}
-
-inline void NativeObject::initDenseElementWithType(JSContext* cx,
-                                                   uint32_t index,
-                                                   const Value& val) {
-  MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
-
-  addDenseElementType(cx, index, val);
-  initDenseElement(index, val);
-}
-
-inline void NativeObject::setDenseElementHole(JSContext* cx, uint32_t index) {
-  markDenseElementsNotPacked(cx);
+inline void NativeObject::setDenseElementHole(uint32_t index) {
+  markDenseElementsNotPacked();
   setDenseElementUnchecked(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
-inline void NativeObject::removeDenseElementForSparseIndex(JSContext* cx,
-                                                           uint32_t index) {
+inline void NativeObject::removeDenseElementForSparseIndex(uint32_t index) {
   MOZ_ASSERT(containsPure(INT_TO_JSID(index)));
   if (containsDenseElement(index)) {
-    setDenseElementHole(cx, index);
+    setDenseElementHole(index);
   }
 }
 
-// TODO(no-TI): remove cx argument.
-inline void NativeObject::markDenseElementsNotPacked(JSContext* cx) {
+inline void NativeObject::markDenseElementsNotPacked() {
   MOZ_ASSERT(isNative());
-
   getElementsHeader()->markNonPacked();
 }
 
@@ -155,7 +129,7 @@ inline void NativeObject::copyDenseElements(uint32_t dstStart, const Value* src,
   }
 }
 
-inline void NativeObject::initDenseElements(JSContext* cx, NativeObject* src,
+inline void NativeObject::initDenseElements(NativeObject* src,
                                             uint32_t srcStart, uint32_t count) {
   MOZ_ASSERT(src->getDenseInitializedLength() >= srcStart + count);
 
@@ -166,11 +140,11 @@ inline void NativeObject::initDenseElements(JSContext* cx, NativeObject* src,
     // to check this efficiently.
     static constexpr uint32_t MaxCountForPackedCheck = 30;
     if (count > MaxCountForPackedCheck) {
-      markDenseElementsNotPacked(cx);
+      markDenseElementsNotPacked();
     } else {
       for (uint32_t i = 0; i < count; i++) {
         if (vp[i].isMagic(JS_ELEMENTS_HOLE)) {
-          markDenseElementsNotPacked(cx);
+          markDenseElementsNotPacked();
           break;
         }
       }
@@ -339,8 +313,7 @@ inline void NativeObject::reverseDenseElementsNoPreBarrier(uint32_t length) {
   elementsRangePostWriteBarrier(0, length);
 }
 
-inline void NativeObject::ensureDenseInitializedLength(JSContext* cx,
-                                                       uint32_t index,
+inline void NativeObject::ensureDenseInitializedLength(uint32_t index,
                                                        uint32_t extra) {
   // Ensure that the array's contents have been initialized up to index, and
   // mark the elements through 'index + extra' as initialized in preparation
@@ -359,7 +332,7 @@ inline void NativeObject::ensureDenseInitializedLength(JSContext* cx,
   MOZ_ASSERT(isExtensible());
 
   if (index > initlen) {
-    markDenseElementsNotPacked(cx);
+    markDenseElementsNotPacked();
   }
 
   uint32_t numShifted = getElementsHeader()->numShiftedElements();
@@ -418,7 +391,7 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
   if (extra == 1) {
     /* Optimize for the common case. */
     if (index < getDenseCapacity()) {
-      ensureDenseInitializedLength(cx, index, 1);
+      ensureDenseInitializedLength(index, 1);
       return DenseElementResult::Success;
     }
     requiredCapacity = index + 1;
@@ -433,7 +406,7 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
       return DenseElementResult::Incomplete;
     }
     if (requiredCapacity <= getDenseCapacity()) {
-      ensureDenseInitializedLength(cx, index, extra);
+      ensureDenseInitializedLength(index, extra);
       return DenseElementResult::Success;
     }
   }
@@ -443,7 +416,7 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
     return result;
   }
 
-  ensureDenseInitializedLength(cx, index, extra);
+  ensureDenseInitializedLength(index, extra);
   return DenseElementResult::Success;
 }
 

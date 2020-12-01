@@ -2711,7 +2711,7 @@ MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
       if (!valuesArray) {
         return nullptr;
       }
-      valuesArray->ensureDenseInitializedLength(cx, 0, promiseCount);
+      valuesArray->ensureDenseInitializedLength(0, promiseCount);
 
       values.initialize(valuesArray);
     }

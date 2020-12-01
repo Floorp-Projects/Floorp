@@ -35,9 +35,7 @@ inline bool js::ListObject::append(JSContext* cx, JS::Handle<JS::Value> value) {
     return false;
   }
 
-  // Note: we can use setDenseElement instead of setDenseElementWithType because
-  // ListObject::create gave the object unknown properties.
-  ensureDenseInitializedLength(cx, len, 1);
+  ensureDenseInitializedLength(len, 1);
   setDenseElement(len, value);
   return true;
 }
@@ -51,9 +49,7 @@ inline bool js::ListObject::appendValueAndSize(JSContext* cx,
     return false;
   }
 
-  // Note: we can use setDenseElement instead of setDenseElementWithType because
-  // ListObject::create gave the object unknown properties.
-  ensureDenseInitializedLength(cx, len, 2);
+  ensureDenseInitializedLength(len, 2);
   setDenseElement(len, value);
   setDenseElement(len + 1, JS::DoubleValue(size));
   return true;

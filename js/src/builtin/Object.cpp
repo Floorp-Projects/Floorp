@@ -1751,7 +1751,7 @@ bool js::GetOwnPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags,
     return false;
   }
 
-  array->ensureDenseInitializedLength(cx, 0, keys.length());
+  array->ensureDenseInitializedLength(0, keys.length());
 
   RootedValue val(cx);
   for (size_t i = 0, len = keys.length(); i < len; i++) {

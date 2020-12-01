@@ -225,7 +225,7 @@ Handle<FixedArray> Isolate::NewFixedArray(int length) {
   if (!array) {
     oomUnsafe.crash("Irregexp NewFixedArray");
   }
-  array->ensureDenseInitializedLength(cx(), 0, length);
+  array->ensureDenseInitializedLength(0, length);
   return Handle<FixedArray>(JS::ObjectValue(*array), this);
 }
 

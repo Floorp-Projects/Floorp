@@ -668,8 +668,8 @@ static MOZ_ALWAYS_INLINE bool InitArrayElemOperation(JSContext* cx,
     // JSOp::InitElemArray cannot follow SpreadElements. Bump the initialized
     // length and store the hole value to ensure the index == initLength
     // invariant holds for later InitArrayElem ops.
-    arr->ensureDenseInitializedLength(cx, index, 1);
-    arr->setDenseElementHole(cx, index);
+    arr->ensureDenseInitializedLength(index, 1);
+    arr->setDenseElementHole(index);
     return true;
   }
 
