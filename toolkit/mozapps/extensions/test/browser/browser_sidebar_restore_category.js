@@ -45,12 +45,12 @@ add_task(async function testInvalidAddonType() {
   let categoryUtils = new CategoryUtilities(win.managerWindow);
   is(
     categoryUtils.getSelectedViewId(),
-    win.managerWindow.gViewDefault,
+    win.managerWindow.gViewController.defaultViewId,
     "default view is selected"
   );
   is(
     win.managerWindow.gViewController.currentViewId,
-    win.managerWindow.gViewDefault,
+    win.managerWindow.gViewController.defaultViewId,
     "default view is shown"
   );
 
@@ -63,12 +63,12 @@ add_task(async function testInvalidViewId() {
   let categoryUtils = new CategoryUtilities(win.managerWindow);
   is(
     categoryUtils.getSelectedViewId(),
-    win.managerWindow.gViewDefault,
+    win.managerWindow.gViewController.defaultViewId,
     "default view is selected"
   );
   is(
     win.managerWindow.gViewController.currentViewId,
-    win.managerWindow.gViewDefault,
+    win.managerWindow.gViewController.defaultViewId,
     "default view is shown"
   );
 
