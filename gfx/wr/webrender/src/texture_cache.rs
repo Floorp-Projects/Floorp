@@ -7,7 +7,7 @@ use api::{DebugFlags, ImageDescriptor};
 use api::units::*;
 #[cfg(test)]
 use api::{DocumentId, IdNamespace};
-use euclid::{point2, size2};
+use euclid::point2;
 use crate::device::{TextureFilter, TextureFormatPair};
 use crate::freelist::{FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
@@ -21,9 +21,9 @@ use crate::lru_cache::LRUCache;
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::FrameStamp;
 use crate::resource_cache::{CacheItem, CachedImageData};
+use crate::slab_allocator::*;
 use smallvec::SmallVec;
 use std::cell::Cell;
-use std::cmp;
 use std::mem;
 use std::rc::Rc;
 
@@ -1011,11 +1011,12 @@ impl TextureCache {
                 );
                 let unit = texture_array.units
                     .iter_mut()
-                    .find(|unit| unit.texture_id == entry.texture_id)
+                    .find(|unit| unit.texture_id() == entry.texture_id)
                     .expect("Unable to find the associated texture array unit");
-                let region = &mut unit.regions[region_index];
 
-                self.shared_bytes_allocated -= region.slab_size.size_in_bytes(texture_array.formats.internal);
+                let bpp = texture_array.formats.internal.bytes_per_pixel();
+                let slab_size = unit.deallocate(origin, region_index);
+                self.shared_bytes_allocated -= (slab_size.width * slab_size.height * bpp) as usize;
 
                 if self.debug_flags.contains(
                     DebugFlags::TEXTURE_CACHE_DBG |
@@ -1024,12 +1025,11 @@ impl TextureCache {
                     self.pending_updates.push_debug_clear(
                         entry.texture_id,
                         origin,
-                        region.slab_size.width,
-                        region.slab_size.height,
+                        slab_size.width,
+                        slab_size.height,
                         0,
                     );
                 }
-                region.free(origin, &mut unit.empty_regions);
             }
         }
     }
@@ -1244,274 +1244,6 @@ impl TextureCache {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-enum SlabSizes {
-    Default,
-    Glyphs,
-}
-
-impl SlabSizes {
-    fn get(&self, requested_size: DeviceIntSize) -> SlabSize {
-        match *self {
-            SlabSizes::Default => Self::default_slab_size(requested_size),
-            SlabSizes::Glyphs => Self::glyphs_slab_size(requested_size),
-        }
-    }
-
-    fn default_slab_size(size: DeviceIntSize) -> SlabSize {
-        fn quantize_dimension(size: i32) -> i32 {
-            match size {
-                0 => unreachable!(),
-                1..=16 => 16,
-                17..=32 => 32,
-                33..=64 => 64,
-                65..=128 => 128,
-                129..=256 => 256,
-                257..=512 => 512,
-                _ => panic!("Invalid dimensions for cache!"),
-            }
-        }
-
-
-        let x_size = quantize_dimension(size.width);
-        let y_size = quantize_dimension(size.height);
-
-        let (width, height) = match (x_size, y_size) {
-            // Special cased rectangular slab pages.
-            (512, 0..=64) => (512, 64),
-            (512, 128) => (512, 128),
-            (512, 256) => (512, 256),
-            (0..=64, 512) => (64, 512),
-            (128, 512) => (128, 512),
-            (256, 512) => (256, 512),
-
-            // If none of those fit, use a square slab size.
-            (x_size, y_size) => {
-                let square_size = cmp::max(x_size, y_size);
-                (square_size, square_size)
-            }
-        };
-
-        SlabSize {
-            width,
-            height,
-        }
-    }
-
-    fn glyphs_slab_size(size: DeviceIntSize) -> SlabSize {
-        fn quantize_dimension(size: i32) -> i32 {
-            match size {
-                0 => unreachable!(),
-                1..=8 => 8,
-                9..=16 => 16,
-                17..=32 => 32,
-                33..=64 => 64,
-                65..=128 => 128,
-                _ => panic!("Invalid dimensions for cache!"),
-            }
-        }
-
-
-        let x_size = quantize_dimension(size.width);
-        let y_size = quantize_dimension(size.height);
-
-        let (width, height) = match (x_size, y_size) {
-            // Special cased rectangular slab pages.
-            (8, 16) => (8, 16),
-            (16, 32) => (16, 32),
-
-            // If none of those fit, use a square slab size.
-            (x_size, y_size) => {
-                let square_size = cmp::max(x_size, y_size);
-                (square_size, square_size)
-            }
-        };
-
-        SlabSize {
-            width,
-            height,
-        }
-    }
-}
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Copy, Clone, PartialEq)]
-struct SlabSize {
-    width: i32,
-    height: i32,
-}
-
-impl SlabSize {
-    fn size_in_bytes(&self, format: ImageFormat) -> usize {
-        let bpp = format.bytes_per_pixel();
-        (self.width * self.height * bpp) as usize
-    }
-
-    fn invalid() -> SlabSize {
-        SlabSize {
-            width: 0,
-            height: 0,
-        }
-    }
-}
-
-// The x/y location within a texture region of an allocation.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-struct TextureLocation(u8, u8);
-
-impl TextureLocation {
-    fn new(x: i32, y: i32) -> Self {
-        debug_assert!(x >= 0 && y >= 0 && x < 0x100 && y < 0x100);
-        TextureLocation(x as u8, y as u8)
-    }
-}
-
-/// A region is a rectangular part of a texture cache texture, split into fixed-size slabs.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-struct TextureRegion {
-    index: usize,
-    slab_size: SlabSize,
-    offset: DeviceIntPoint,
-    free_slots: Vec<TextureLocation>,
-    total_slot_count: usize,
-}
-
-impl TextureRegion {
-    fn new(index: usize, offset: DeviceIntPoint) -> Self {
-        TextureRegion {
-            index,
-            slab_size: SlabSize::invalid(),
-            offset,
-            free_slots: Vec::new(),
-            total_slot_count: 0,
-        }
-    }
-
-    // Initialize a region to be an allocator for a specific slab size.
-    fn init(&mut self, slab_size: SlabSize, region_size: i32, empty_regions: &mut usize) {
-        debug_assert!(self.slab_size == SlabSize::invalid());
-        debug_assert!(self.free_slots.is_empty());
-
-        self.slab_size = slab_size;
-        let slots_per_x_axis = region_size / self.slab_size.width;
-        let slots_per_y_axis = region_size / self.slab_size.height;
-
-        // Add each block to a freelist.
-        for y in 0 .. slots_per_y_axis {
-            for x in 0 .. slots_per_x_axis {
-                self.free_slots.push(TextureLocation::new(x, y));
-            }
-        }
-
-        self.total_slot_count = self.free_slots.len();
-        *empty_regions -= 1;
-    }
-
-    // Deinit a region, allowing it to become a region with
-    // a different allocator size.
-    fn deinit(&mut self, empty_regions: &mut usize) {
-        self.slab_size = SlabSize::invalid();
-        self.free_slots.clear();
-        self.total_slot_count = 0;
-        *empty_regions += 1;
-    }
-
-    fn is_empty(&self) -> bool {
-        self.slab_size == SlabSize::invalid()
-    }
-
-    // Attempt to allocate a fixed size block from this region.
-    fn alloc(&mut self) -> Option<DeviceIntPoint> {
-        debug_assert!(self.slab_size != SlabSize::invalid());
-
-        self.free_slots.pop().map(|location| {
-            point2(
-                self.offset.x + self.slab_size.width * location.0 as i32,
-                self.offset.y + self.slab_size.height * location.1 as i32,
-            )
-        })
-    }
-
-    // Free a block in this region.
-    fn free(&mut self, point: DeviceIntPoint, empty_regions: &mut usize) {
-        let x = (point.x - self.offset.x) / self.slab_size.width;
-        let y = (point.y - self.offset.y) / self.slab_size.height;
-        self.free_slots.push(TextureLocation::new(x, y));
-
-        // If this region is completely unused, deinit it
-        // so that it can become a different slab size
-        // as required.
-        if self.free_slots.len() == self.total_slot_count {
-            self.deinit(empty_regions);
-        }
-    }
-}
-
-/// A 2D texture divided into regions.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-struct TextureUnit {
-    texture_id: CacheTextureId,
-    regions: Vec<TextureRegion>,
-    region_size: i32,
-    empty_regions: usize,
-}
-
-impl TextureUnit {
-    fn is_empty(&self) -> bool {
-        self.empty_regions == self.regions.len()
-    }
-
-    // Returns the region index and allocated rect.
-    fn allocate(&mut self, slab_size: SlabSize) -> Option<(usize, DeviceIntRect)> {
-        // Keep track of the location of an empty region,
-        // in case we need to select a new empty region
-        // after the loop.
-        let mut empty_region_index = None;
-
-        let allocated_size = size2(slab_size.width, slab_size.height);
-
-        // Run through the existing regions of this size, and see if
-        // we can find a free block in any of them.
-        for (i, region) in self.regions.iter_mut().enumerate() {
-            if region.is_empty() {
-                empty_region_index = Some(i);
-            } else if region.slab_size == slab_size {
-                if let Some(location) = region.alloc() {
-                    return Some((
-                        region.index,
-                        DeviceIntRect {
-                            origin: location,
-                            size: allocated_size,
-                        }
-                    ));
-                }
-            }
-        }
-
-        if let Some(empty_region_index) = empty_region_index {
-            let region = &mut self.regions[empty_region_index];
-            region.init(slab_size, self.region_size, &mut self.empty_regions);
-
-            return Some((
-                region.index,
-                DeviceIntRect {
-                    origin: region.alloc().unwrap(),
-                    size: allocated_size,
-                },
-            ))
-        }
-
-        None
-    }
-
-}
-
 /// A number of 2D textures (single layer), each with a number of
 /// regions that can act as a slab allocator.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -1546,32 +1278,13 @@ impl TextureUnits {
     /// Returns the number of GPU bytes consumed by this texture array.
     fn size_in_bytes(&self) -> usize {
         let bpp = self.formats.internal.bytes_per_pixel() as usize;
-        let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
-        num_regions * (self.region_size * self.region_size) as usize * bpp
+        (self.size * self.size) as usize * bpp
     }
 
     fn add_texture(&mut self, texture_id: CacheTextureId) -> usize {
-        let regions_per_row = self.size / self.region_size;
-        let num_regions = (regions_per_row * regions_per_row) as usize;
-
-        let mut texture = TextureUnit {
-            texture_id,
-            regions: Vec::with_capacity(num_regions),
-            region_size: self.region_size,
-            empty_regions: num_regions,
-        };
-
-        for index in 0..num_regions {
-            let offset = point2(
-                (index as i32 % regions_per_row) * self.region_size,
-                (index as i32 / regions_per_row) * self.region_size,
-            );
-
-            texture.regions.push(TextureRegion::new(index, offset));
-        }
 
         let unit_index = self.units.len();
-        self.units.push(texture);
+        self.units.push(TextureUnit::new(texture_id, self.size, self.region_size, self.slab_sizes));
 
         unit_index
     }
@@ -1586,11 +1299,9 @@ impl TextureUnits {
         next_id: &mut CacheTextureId,
     ) -> (CacheTextureId, usize, DeviceIntRect) {
         let mut allocation = None;
-        let slab_size = self.slab_sizes.get(requested_size);
         for unit in &mut self.units {
-            if let Some((region, rect)) = unit.allocate(slab_size) {
-                allocation = Some((unit.texture_id, region, rect));
-                break;
+            if let Some((region, rect)) = unit.allocate(requested_size) {
+                allocation = Some((unit.texture_id(), region, rect));
             }
         }
 
@@ -1615,7 +1326,7 @@ impl TextureUnits {
             let unit_index = self.add_texture(texture_id);
 
             let (region_index, rect) = self.units[unit_index]
-                .allocate(slab_size)
+                .allocate(requested_size)
                 .unwrap();
 
             (texture_id, region_index, rect)
@@ -1624,14 +1335,14 @@ impl TextureUnits {
 
     fn clear(&mut self, updates: &mut TextureUpdateList) {
         for unit in self.units.drain(..) {
-            updates.push_free(unit.texture_id);
+            updates.push_free(unit.texture_id());
         }
     }
 
     fn release_empty_textures(&mut self, updates: &mut TextureUpdateList) {
         self.units.retain(|unit| {
             if unit.is_empty() {
-                updates.push_free(unit.texture_id);
+                updates.push_free(unit.texture_id());
 
                 false
             } else {
@@ -1641,7 +1352,7 @@ impl TextureUnits {
     }
 
     fn update_profile(&self, count_idx: usize, mem_idx: usize, profile: &mut TransactionProfile) {
-        let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
+        let num_regions: usize = self.units.iter().map(|u| u.num_regions()).sum();
         profile.set(count_idx, num_regions);
         profile.set(mem_idx, profiler::bytes_to_mb(self.size_in_bytes()));
     }
@@ -1649,19 +1360,16 @@ impl TextureUnits {
     #[allow(dead_code)]
     pub fn dump_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
         use svg_fmt::*;
+        use euclid::default::Box2D;
 
         let num_arrays = self.units.len() as f32;
-        let region_size = self.region_size as f32;
 
         let text_spacing = 15.0;
-        let array_spacing = 30.0;
-        let unit_spacing = 5.0;
-        let unit_size = 200.0 * (self.region_size as f32 / 512.0);
-        let regions_per_row = (self.size / self.region_size) as usize;
-        let texture_size = text_spacing + array_spacing + (unit_size + unit_spacing) * regions_per_row as f32;
+        let unit_spacing = 30.0;
+        let texture_size = self.size as f32 / 2.0;
 
-        let svg_w = array_spacing * 2.0 + regions_per_row as f32 * (unit_size + unit_spacing);
-        let svg_h = array_spacing + num_arrays * (texture_size + array_spacing);
+        let svg_w = unit_spacing * 2.0 + texture_size;
+        let svg_h = unit_spacing + num_arrays * (texture_size + text_spacing + unit_spacing);
 
         writeln!(output, "{}", BeginSvg { w: svg_w, h: svg_h })?;
 
@@ -1673,42 +1381,21 @@ impl TextureUnits {
                 .fill(rgb(50, 50, 50))
         )?;
 
-        let mut y = array_spacing;
+        let mut y = unit_spacing;
         for unit in &self.units {
-            writeln!(output, "    {}", text(array_spacing, y, format!("{:?}", unit.texture_id)).color(rgb(230, 230, 230)))?;
-            for (idx, region) in unit.regions.iter().enumerate() {
-                let slab_size = region.slab_size;
-                let x = array_spacing + (idx % regions_per_row) as f32 * (unit_size + unit_spacing);
+            writeln!(output, "    {}", text(unit_spacing, y, format!("{:?}", unit.texture_id())).color(rgb(230, 230, 230)))?;
 
-                let y = y + text_spacing + (idx / regions_per_row) as f32 * (unit_size + unit_spacing);
+            let rect = Box2D {
+                min: point2(unit_spacing, y),
+                max: point2(unit_spacing + texture_size, y + texture_size),
+            };
 
-                let texture_background = if region.is_empty() { rgb(30, 30, 30) } else { rgb(40, 40, 130) };
-                writeln!(output, "    {}", rectangle(x, y, unit_size, unit_size).inflate(1.0, 1.0).fill(rgb(10, 10, 10)))?;
-                writeln!(output, "    {}", rectangle(x, y, unit_size, unit_size).fill(texture_background))?;
+            unit.dump_as_svg(&rect, output)?;
 
-                let sw = (slab_size.width as f32 / region_size) * unit_size;
-                let sh = (slab_size.height as f32 / region_size) * unit_size;
-
-                for slot in &region.free_slots {
-                    let sx = x + slot.0 as f32 * sw;
-                    let sy = y + slot.1 as f32 * sh;
-
-                    // Allocation slot.
-                    writeln!(output, "    {}", rectangle(sx, sy, sw, sh).inflate(-0.5, -0.5).fill(rgb(30, 30, 30)))?;
-                }
-
-                if slab_size.width != 0 {
-                    let region_text = format!("{}x{}", slab_size.width, slab_size.height);
-                    let tx = x + 1.0;
-                    let ty = y + unit_size - 1.0;
-                    writeln!(output, "    {}", text(tx, ty, region_text).color(rgb(230, 230, 230)))?;
-                }
-            }
-
-            y += array_spacing + texture_size;
+            y += unit_spacing + texture_size + text_spacing;
         }
 
-        writeln!(output, "{}", EndSvg)
+        writeln!(output, "{}", EndSvg)  
     }
 }
 
