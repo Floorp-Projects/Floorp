@@ -216,14 +216,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
                                                 ObjectGroup* oldGroup,
                                                 const JSClass* clasp,
                                                 TaggedProto proto);
-
-  // Static accessors for ObjectGroupRealm ArrayObjectTable and
-  // PlainObjectTable.
-
-  // Create an ArrayObject with the specified elements and a group specialized
-  // for the elements.
-  static ArrayObject* newArrayObject(JSContext* cx, const Value* vp,
-                                     size_t length, NewObjectKind newKind);
 };
 
 // Structure used to manage the groups in a realm.

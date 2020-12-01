@@ -465,8 +465,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::Rest: {
-        ArrayObject* templateObject =
-            ObjectGroup::newArrayObject(cx, nullptr, 0, TenuredObject);
+        ArrayObject* templateObject = NewTenuredDenseEmptyArray(cx);
         if (!templateObject) {
           return false;
         }
@@ -2409,8 +2408,7 @@ bool DoRestFallback(JSContext* cx, BaselineFrame* frame, ICRest_Fallback* stub,
   unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
   Value* rest = frame->argv() + numFormals;
 
-  ArrayObject* obj =
-      ObjectGroup::newArrayObject(cx, rest, numRest, GenericObject);
+  ArrayObject* obj = NewDenseCopiedArray(cx, numRest, rest);
   if (!obj) {
     return false;
   }
