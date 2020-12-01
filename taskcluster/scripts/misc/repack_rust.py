@@ -661,14 +661,14 @@ def args():
         " 1.xx.y, beta-yyyy-mm-dd,"
         " nightly-yyyy-mm-dd,"
         " bors-$rev (grab a build from rust's CI),"
-        " or 1.xx.y-dev (build from source).",
+        " or dev (build from source).",
         required=True,
     )
     parser.add_argument(
         "--patch",
         nargs="+",
         help="apply the given patch file to a dev build."
-        " Patch files should be placed in /build/rust-build."
+        " Patch files should be placed in /build/build-rust."
         " Patches can be prefixed with `module-path:` to specify they"
         " apply to that git submodule in the Rust source."
         " e.g. `src/llvm-project:mypatch.diff` patches rust's llvm.",
