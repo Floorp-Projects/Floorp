@@ -87,7 +87,7 @@
     <string name="open_in_app_cfr_negative_button_text">Ricusà</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
-    <string name="camera_permissions_needed_message">Accessu richiestu à l’appareghju-fotò. Accidite à e preferenze d’Android, picchichjate Permessi, è dopu Permette.</string>
+    <string name="camera_permissions_needed_message">Accessu richiestu à l’apparechju-fotò. Accidite à e preferenze d’Android, picchichjate Permessi, è dopu Permette.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Apre e preferenze</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -480,7 +480,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Analizate u codice QR affissatu nant’à <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Apre l’appareghju-fotò</string>
+    <string name="pair_open_camera">Apre l’apparechju-fotò</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Abbandunà</string>
 
@@ -857,7 +857,7 @@
     <!-- Preference for altering video and audio autoplay for all websites -->
     <string name="preference_browser_feature_autoplay">Leghje autumaticamente elementi multimedia</string>
     <!-- Preference for altering the camera access for all websites -->
-    <string name="preference_phone_feature_camera">Appareghju-fotò</string>
+    <string name="preference_phone_feature_camera">Apparechju-fotò</string>
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">Microfonu</string>
     <!-- Preference for altering the location access for all websites -->
@@ -1254,7 +1254,7 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Prontu à numerizà</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">Cunnettatevi cù u vostru appareghju-fotò</string>
+    <string name="sign_in_with_camera">Cunnettatevi cù u vostru apparechju-fotò</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Impiegà piuttostu un messaghju elettronicu</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->

@@ -435,6 +435,8 @@
     <string name="preferences_marketing_data">Roadennoù Marketing</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Rann ar roadennoù diwar-benn ar cʼheweriusterioù arveret ganeocʼh e %1$s gant Leanplim, hor cʼheveler marketing hezoug.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Studioù</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Arnodoù</string>
     <!-- Summary for experiments preferences -->
@@ -746,7 +748,7 @@
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Dibab un teuliad</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
-    <string name="bookmark_delete_folder_confirmation_dialog">Ha fellout a ra deocʼh dilemel an teuliad-mañ ?</string>
+    <string name="bookmark_delete_folder_confirmation_dialog">Ha fellout a ra deocʼh dilemel an teuliad-mañ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s a zilamo an elfennoù diuzet</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
@@ -1577,7 +1579,7 @@
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Pennadoù pennañ</string>
     <!-- Bookmark deletion confirmation -->
-    <string name="bookmark_deletion_confirmation">Ha fellout a ra deocʼh dilemel ar sined-mañ ?</string>
+    <string name="bookmark_deletion_confirmation">Ha fellout a ra deocʼh dilemel ar sined-mañ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Lakaat el lecʼhiennoù gwellañ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
