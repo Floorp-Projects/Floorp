@@ -44,14 +44,12 @@
  * allocated using C memory allocation functions.
  */
 
-// XXX(Bug 1677529) Without undefining MALLOC_H, an ASAN build breaks. Maybe
-// this is actually the right thing to do, but Bug 1677529 should check that.
-#if defined(MALLOC_H) && !defined(XP_DARWIN)
-#  undef MALLOC_H
-#endif
-
-#include "mozilla/mozalloc.h"
 #include "mozHunspellAllocator.h"
+
+// Ensure that malloc is imported before we set our malloc-counting hooks below.
+// Otherwise, if malloc is imported afterwards, its source will be trampled
+// over by the "#define"s.
+#include "mozmemory.h"
 
 #define malloc(size) HunspellAllocator::CountingMalloc(size)
 #define calloc(count, size) HunspellAllocator::CountingCalloc(count, size)
