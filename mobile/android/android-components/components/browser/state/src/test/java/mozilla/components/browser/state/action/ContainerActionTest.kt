@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.state.action
 
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
@@ -79,28 +78,6 @@ class ContainerActionTest {
         assertEquals(container1, store.state.containers.values.first())
         assertEquals(container2, store.state.containers.values.elementAt(1))
         assertEquals(container3, store.state.containers.values.last())
-    }
-
-    @Test
-    fun `InitializeContainerState - Initializes the BrowserState containers state`() {
-        val container = ContainerState(
-            contextId = "contextId",
-            name = "Personal",
-            color = ContainerState.Color.GREEN,
-            icon = ContainerState.Icon.CART
-        )
-        val store = BrowserStore(
-            initialState = BrowserState(
-                containers = mapOf(container.contextId to container)
-            )
-        )
-
-        assertFalse(store.state.containers.isEmpty())
-        assertEquals(container, store.state.containers.values.first())
-
-        val state = store.state
-        store.dispatch(ContainerAction.InitializeContainerState).joinBlocking()
-        assertSame(state, store.state)
     }
 
     @Test

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContainerAction
+import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.Container
 import mozilla.components.browser.state.state.ContainerState
@@ -39,7 +40,7 @@ class ContainerMiddleware(
         action: BrowserAction
     ) {
         when (action) {
-            is ContainerAction.InitializeContainerState -> initializeContainers(context.store)
+            is InitAction -> initializeContainers(context.store)
             is ContainerAction.AddContainerAction -> addContainer(action)
             is ContainerAction.RemoveContainerAction -> removeContainer(context.store, action)
         }

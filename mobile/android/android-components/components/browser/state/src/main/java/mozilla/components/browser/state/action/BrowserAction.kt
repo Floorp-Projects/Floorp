@@ -1009,11 +1009,6 @@ sealed class ContainerAction : BrowserAction() {
     data class AddContainersAction(val containers: List<ContainerState>) : ContainerAction()
 
     /**
-     * Initializes the [BrowserState.containers] state.
-     */
-    object InitializeContainerState : ContainerAction()
-
-    /**
      * Removes all state of the removed container from [BrowserState.containers].
      */
     data class RemoveContainerAction(val contextId: String) : ContainerAction()

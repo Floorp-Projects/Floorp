@@ -26,7 +26,6 @@ internal object ContainerReducer {
                         .toMap())
                 )
             }
-            is ContainerAction.InitializeContainerState -> state
             is ContainerAction.RemoveContainerAction -> {
                 state.copy(
                     containers = state.containers - action.contextId

@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -24,7 +25,6 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class ContainerMiddlewareTest {
-
     // Test container
     private val container = ContainerState(
         contextId = "contextId",
@@ -36,7 +36,7 @@ class ContainerMiddlewareTest {
     @Test
     fun `container storage stores the provided container on add container action`() =
         runBlockingTest {
-            val storage: ContainerStorage = mock()
+            val storage = mockStorage()
             val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
             val store = BrowserStore(
                 initialState = BrowserState(),
@@ -56,20 +56,15 @@ class ContainerMiddlewareTest {
     @Test
     fun `fetch the containers from the container storage and load into browser state on initialize container state action`() =
         runBlockingTest {
-            val storage: ContainerStorage = mock()
-            whenever(storage.getContainers()).thenReturn(
-                flow {
-                    emit(listOf(container))
-                }
-            )
-
+            val storage = mockStorage(listOf(container))
             val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
             val store = BrowserStore(
                 initialState = BrowserState(),
                 middleware = listOf(middleware)
             )
 
-            store.dispatch(ContainerAction.InitializeContainerState).joinBlocking()
+            // Wait until init action is processed
+            store.waitUntilIdle()
 
             verify(storage).getContainers()
             assertEquals(container, store.state.containers["contextId"])
@@ -78,7 +73,7 @@ class ContainerMiddlewareTest {
     @Test
     fun `container storage removes the provided container on remove container action`() =
         runBlockingTest {
-            val storage: ContainerStorage = mock()
+            val storage = mockStorage()
             val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
             val store = BrowserStore(
                 initialState = BrowserState(
@@ -94,4 +89,16 @@ class ContainerMiddlewareTest {
 
             verify(storage).removeContainer(container)
         }
+
+    private fun mockStorage(
+        containers: List<ContainerState> = emptyList()
+    ): ContainerStorage {
+        val storage: ContainerStorage = mock()
+        whenever(storage.getContainers()).thenReturn(
+            flow {
+                emit(containers)
+            }
+        )
+        return storage
+    }
 }
