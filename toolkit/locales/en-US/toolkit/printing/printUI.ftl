@@ -78,6 +78,7 @@ printui-system-dialog-link = Print using the system dialog…
 printui-primary-button = Print
 printui-primary-button-save = Save
 printui-cancel-button = Cancel
+printui-close-button = Close
 
 printui-loading = Preparing Preview
 

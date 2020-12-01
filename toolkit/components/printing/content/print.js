@@ -212,11 +212,21 @@ var PrintEventHandler = {
     logger.debug("defaultSystemPrinter: ", defaultSystemPrinter);
 
     document.addEventListener("print", async () => {
+      let cancelButton = document.getElementById("cancel-button");
+      document.l10n.setAttributes(
+        cancelButton,
+        cancelButton.dataset.closeL10nId
+      );
       let didPrint = await this.print();
       if (!didPrint) {
         // Re-enable elements of the form if the user cancels saving
         this.printForm.enable();
       }
+      // Reset the cancel button regardless of the outcome.
+      document.l10n.setAttributes(
+        cancelButton,
+        cancelButton.dataset.cancelL10nId
+      );
     });
     document.addEventListener("update-print-settings", e =>
       this.onUserSettingsChange(e.detail)
