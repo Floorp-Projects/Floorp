@@ -3439,7 +3439,7 @@ static ArrayObject* CharSplitHelper(JSContext* cx, HandleLinearString str,
       splits->initDenseElement(i, StringValue(staticStrings.getUnit(c)));
     }
   } else {
-    splits->ensureDenseInitializedLength(cx, 0, resultlen);
+    splits->ensureDenseInitializedLength(0, resultlen);
 
     for (size_t i = 0; i < resultlen; ++i) {
       JSString* sub = staticStrings.getUnitStringForElement(cx, str, i);
@@ -3475,7 +3475,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* SplitSingleCharHelper(
   if (!splits) {
     return nullptr;
   }
-  splits->ensureDenseInitializedLength(cx, 0, count + 1);
+  splits->ensureDenseInitializedLength(0, count + 1);
 
   // Add substrings.
   uint32_t splitsIndex = 0;

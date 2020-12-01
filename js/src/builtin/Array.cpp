@@ -545,7 +545,7 @@ static bool DeleteArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
         if (idx + 1 == aobj->getDenseInitializedLength()) {
           aobj->setDenseInitializedLengthMaybeNonExtensible(cx, idx);
         } else {
-          aobj->setDenseElementHole(cx, idx);
+          aobj->setDenseElementHole(idx);
         }
         if (!SuppressDeletedElement(cx, obj, idx)) {
           return false;
@@ -1590,7 +1590,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
     }
 
     /* Fill out the array's initialized length to its proper length. */
-    obj->ensureDenseInitializedLength(cx, length, 0);
+    obj->ensureDenseInitializedLength(length, 0);
   } else {
     if (!obj->maybeCopyElementsForWrite(cx)) {
       return DenseElementResult::Failure;
@@ -1610,7 +1610,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
       return true;
     }
 
-    obj->setDenseElementHole(cx, index);
+    obj->setDenseElementHole(index);
     return SuppressDeletedProperty(cx, obj, INT_TO_JSID(index));
   };
 
@@ -2121,7 +2121,7 @@ static bool FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start,
     }
 
     for (uint32_t i = 0; i < count; i++) {
-      nobj->setDenseElementWithType(cx, start + i, UndefinedHandleValue);
+      nobj->setDenseElement(start + i, UndefinedHandleValue);
     }
 
     return true;
@@ -2340,7 +2340,7 @@ bool js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v) {
 
   arr->setDenseInitializedLength(length + 1);
   arr->setLength(length + 1);
-  arr->initDenseElementWithType(cx, length, v);
+  arr->initDenseElement(length, v);
   return true;
 }
 
@@ -2667,7 +2667,7 @@ static bool array_unshift(JSContext* cx, unsigned argc, Value* vp) {
         }
       }
       for (uint32_t i = 0; i < args.length(); i++) {
-        nobj->setDenseElementWithType(cx, i, args[i]);
+        nobj->setDenseElement(i, args[i]);
       }
       optimized = true;
     } while (false);
@@ -2812,7 +2812,7 @@ static ArrayObject* CopyDenseArrayElements(JSContext* cx,
   narr->setLength(count);
 
   if (newlength > 0) {
-    narr->initDenseElements(cx, obj, begin, newlength);
+    narr->initDenseElements(obj, begin, newlength);
   }
 
   return narr;
@@ -2850,7 +2850,7 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
 
           break;
         }
-        result->setDenseElementWithType(cx, index, value);
+        result->setDenseElement(index, value);
       }
     }
     startIndex = index + 1;
@@ -3578,7 +3578,7 @@ static bool ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr,
       if (!result->ensureElements(cx, newlength)) {
         return false;
       }
-      result->initDenseElements(cx, arr, begin, newlength);
+      result->initDenseElements(arr, begin, newlength);
     }
   }
 

@@ -422,7 +422,7 @@ bool js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp) {
   if (!result) {
     return false;
   }
-  result->ensureDenseInitializedLength(cx, 0, keys->length());
+  result->ensureDenseInitializedLength(0, keys->length());
 
   UErrorCode status = U_ZERO_ERROR;
 

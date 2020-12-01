@@ -160,7 +160,7 @@ bool BucketCount::report(JSContext* cx, CountBase& countBase,
   if (!arr) {
     return false;
   }
-  arr->ensureDenseInitializedLength(cx, 0, length);
+  arr->ensureDenseInitializedLength(0, length);
 
   for (size_t i = 0; i < length; i++) {
     arr->setDenseElement(i, NumberValue(count.ids_[i]));

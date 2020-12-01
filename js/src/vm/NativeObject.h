@@ -1329,8 +1329,7 @@ class NativeObject : public JSObject {
     }
   }
 
-  inline void ensureDenseInitializedLength(JSContext* cx, uint32_t index,
-                                           uint32_t extra);
+  inline void ensureDenseInitializedLength(uint32_t index, uint32_t extra);
 
   void setDenseElement(uint32_t index, const Value& val) {
     // Note: Streams code can call this for the internal ListObject type with
@@ -1359,26 +1358,19 @@ class NativeObject : public JSObject {
     elements_[index].set(this, HeapSlot::Element, unshiftedIndex(index), val);
   }
 
-  inline void addDenseElementType(JSContext* cx, uint32_t index,
-                                  const Value& val);
-
   // Mark the dense elements as possibly containing holes.
-  inline void markDenseElementsNotPacked(JSContext* cx);
+  inline void markDenseElementsNotPacked();
 
  public:
-  inline void setDenseElementWithType(JSContext* cx, uint32_t index,
-                                      const Value& val);
-  inline void initDenseElementWithType(JSContext* cx, uint32_t index,
-                                       const Value& val);
-  inline void setDenseElementHole(JSContext* cx, uint32_t index);
-  inline void removeDenseElementForSparseIndex(JSContext* cx, uint32_t index);
+  inline void setDenseElementHole(uint32_t index);
+  inline void removeDenseElementForSparseIndex(uint32_t index);
 
   inline void copyDenseElements(uint32_t dstStart, const Value* src,
                                 uint32_t count);
 
   inline void initDenseElements(const Value* src, uint32_t count);
-  inline void initDenseElements(JSContext* cx, NativeObject* src,
-                                uint32_t srcStart, uint32_t count);
+  inline void initDenseElements(NativeObject* src, uint32_t srcStart,
+                                uint32_t count);
 
   // Store the Values in the range [begin, end) as elements of this array.
   //
