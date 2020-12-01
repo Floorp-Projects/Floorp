@@ -21,8 +21,9 @@ class nsICancelableRunnable : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANCELABLERUNNABLE_IID)
 
   /*
-   * Cancels a pending task.  If the task has already been executed this will
-   * be a no-op.  Calling this method twice is considered an error.
+   * Cancels a pending task, so that calling run() on the task is a no-op.
+   * Calling cancel after the task execution has begun will be a no-op.
+   * Calling this method twice is considered an error.
    *
    * @throws NS_ERROR_UNEXPECTED
    *   Indicates that the runnable has already been canceled.
