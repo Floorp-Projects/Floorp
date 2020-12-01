@@ -1081,7 +1081,6 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      bool supportsExternalCompositing = false;
       // XXX Add P010 and P016 support.
       if (GetFormat() == gfx::SurfaceFormat::NV12 &&
           gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
