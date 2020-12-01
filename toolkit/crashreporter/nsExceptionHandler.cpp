@@ -1635,6 +1635,7 @@ static void PrepareChildExceptionTimeAnnotations(
 }
 
 #ifdef XP_WIN
+
 static void ReserveBreakpadVM() {
   if (!gBreakpadReservedVM) {
     gBreakpadReservedVM =
@@ -1670,25 +1671,31 @@ static bool IsCrashingException(EXCEPTION_POINTERS* exinfo) {
   }
 }
 
+#endif  // XP_WIN
+
 // Do various actions to prepare the child process for minidump generation.
 // This includes disabling the I/O interposer and DLL blocklist which both
 // would get in the way. We also free the address space we had reserved in
 // 32-bit builds to free room for the minidump generation to do its work.
 static void PrepareForMinidump() {
   mozilla::IOInterposer::Disable();
+#if defined(XP_WIN)
 #  if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
   DllBlocklist_Shutdown();
 #  endif
   FreeBreakpadVM();
+#endif  // XP_WIN
 }
+
+#ifdef XP_WIN
 
 /**
  * Filters out floating point exceptions which are handled by nsSigHandlers.cpp
  * and should not be handled as crashes.
  */
-static ExceptionHandler::FilterResult FPEFilter(void* context,
-                                                EXCEPTION_POINTERS* exinfo,
-                                                MDRawAssertionInfo* assertion) {
+static ExceptionHandler::FilterResult Filter(void* context,
+                                             EXCEPTION_POINTERS* exinfo,
+                                             MDRawAssertionInfo* assertion) {
   if (!IsCrashingException(exinfo)) {
     return ExceptionHandler::FilterResult::ContinueSearch;
   }
@@ -1697,7 +1704,7 @@ static ExceptionHandler::FilterResult FPEFilter(void* context,
   return ExceptionHandler::FilterResult::HandleException;
 }
 
-static ExceptionHandler::FilterResult ChildFPEFilter(
+static ExceptionHandler::FilterResult ChildFilter(
     void* context, EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion) {
   if (!IsCrashingException(exinfo)) {
     return ExceptionHandler::FilterResult::ContinueSearch;
@@ -1709,19 +1716,6 @@ static ExceptionHandler::FilterResult ChildFPEFilter(
 
   PrepareForMinidump();
   return ExceptionHandler::FilterResult::HandleException;
-}
-
-static bool ChildMinidumpCallback(const wchar_t* dump_path,
-                                  const wchar_t* minidump_id, void* context,
-                                  EXCEPTION_POINTERS* exinfo,
-                                  MDRawAssertionInfo* assertion,
-                                  const mozilla::phc::AddrInfo* addr_info,
-                                  bool succeeded) {
-  if (succeeded) {
-    PrepareChildExceptionTimeAnnotations(addr_info);
-  }
-
-  return true;
 }
 
 static MINIDUMP_TYPE GetMinidumpType() {
@@ -1753,7 +1747,41 @@ static MINIDUMP_TYPE GetMinidumpType() {
   return minidump_type;
 }
 
-#endif  // XP_WIN
+#else
+
+static bool Filter(void* context) {
+  PrepareForMinidump();
+  return true;
+}
+
+static bool ChildFilter(void* context) {
+  if (gEncounteredChildException.exchange(true)) {
+    return false;
+  }
+
+  PrepareForMinidump();
+  return true;
+}
+
+#endif  // !defined(XP_WIN)
+
+static bool ChildMinidumpCallback(
+#if defined(XP_WIN)
+    const wchar_t* dump_path, const wchar_t* minidump_id,
+#elif defined(XP_LINUX)
+    const MinidumpDescriptor& descriptor,
+#else  // defined(XP_MACOSX)
+    const char* dump_dir, const char* minidump_id,
+#endif
+    void* context,
+#if defined(XP_WIN)
+    EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion,
+#endif  // defined(XP_WIN)
+    const mozilla::phc::AddrInfo* addr_info, bool succeeded) {
+
+  PrepareChildExceptionTimeAnnotations(addr_info);
+  return succeeded;
+}
 
 static bool ShouldReport() {
   // this environment variable prevents us from launching
@@ -1770,25 +1798,6 @@ static bool ShouldReport() {
 
   return true;
 }
-
-#if !defined(XP_WIN)
-
-static bool Filter(void* context, const phc::AddrInfo* addrInfo) {
-  mozilla::IOInterposer::Disable();
-  return true;
-}
-
-static bool ChildFilter(void* context, const phc::AddrInfo* addrInfo) {
-  if (gEncounteredChildException.exchange(true)) {
-    return false;
-  }
-
-  mozilla::IOInterposer::Disable();
-  PrepareChildExceptionTimeAnnotations(addrInfo);
-  return true;
-}
-
-#endif  // !defined(XP_WIN)
 
 static void TerminateHandler() { MOZ_CRASH("Unhandled exception"); }
 
@@ -2010,12 +2019,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
                      tempPath.get(),
 #endif
 
-#ifdef XP_WIN
-      FPEFilter,
-#else
-      Filter,
-#endif
-      MinidumpCallback, nullptr,
+      Filter, MinidumpCallback, nullptr,
 #ifdef XP_WIN
       google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
       (const wchar_t*)nullptr, nullptr);
@@ -3479,7 +3483,7 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
 #if defined(XP_WIN)
   gChildCrashAnnotationReportFd = (FileHandle)aCrashTimeAnnotationFile;
   gExceptionHandler = new google_breakpad::ExceptionHandler(
-      L"", ChildFPEFilter, ChildMinidumpCallback,
+      L"", ChildFilter, ChildMinidumpCallback,
       nullptr,  // no callback context
       google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
       NS_ConvertASCIItoUTF16(aCrashPipe).get(), nullptr);
@@ -3492,19 +3496,17 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
   // MinidumpDescriptor requires a non-empty path.
   google_breakpad::MinidumpDescriptor path(".");
 
-  gExceptionHandler =
-      new google_breakpad::ExceptionHandler(path, ChildFilter,
-                                            nullptr,  // no minidump callback
-                                            nullptr,  // no callback context
-                                            true,     // install signal handlers
-                                            gMagicChildCrashReportFd);
+  gExceptionHandler = new google_breakpad::ExceptionHandler(
+      path, ChildFilter, ChildMinidumpCallback,
+      nullptr,  // no callback context
+      true,     // install signal handlers
+      gMagicChildCrashReportFd);
 #elif defined(XP_MACOSX)
-  gExceptionHandler =
-      new google_breakpad::ExceptionHandler("", ChildFilter,
-                                            nullptr,  // no minidump callback
-                                            nullptr,  // no callback context
-                                            true,     // install signal handlers
-                                            aCrashPipe);
+  gExceptionHandler = new google_breakpad::ExceptionHandler(
+      "", ChildFilter, ChildMinidumpCallback,
+      nullptr,  // no callback context
+      true,     // install signal handlers
+      aCrashPipe);
 #endif
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);

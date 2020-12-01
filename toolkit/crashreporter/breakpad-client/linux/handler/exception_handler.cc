@@ -468,7 +468,7 @@ bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
   GetPHCAddrInfo(info, &addr_info);
 #endif
 
-  if (filter_ && !filter_(callback_context_, &addr_info))
+  if (filter_ && !filter_(callback_context_))
     return false;
 
   // Allow ourselves to be dumped if the signal is trusted.
@@ -528,8 +528,17 @@ bool ExceptionHandler::SimulateSignalDelivery(int sig) {
 // This function may run in a compromised context: see the top of the file.
 bool ExceptionHandler::GenerateDump(
     CrashContext *context, const mozilla::phc::AddrInfo* addr_info) {
-  if (IsOutOfProcess())
-    return crash_generation_client_->RequestDump(context, sizeof(*context));
+  if (IsOutOfProcess()) {
+    bool success =
+      crash_generation_client_->RequestDump(context, sizeof(*context));
+
+    if (callback_) {
+      success =
+        callback_(minidump_descriptor_, callback_context_, addr_info, success);
+    }
+
+    return success;
+  }
 
   // Allocating too much stack isn't a problem, and better to err on the side
   // of caution than smash it into random locations.
