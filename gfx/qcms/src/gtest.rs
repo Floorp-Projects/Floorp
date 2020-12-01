@@ -888,5 +888,10 @@ mod test {
             );
         }
         assert_eq!(dst, [15, 16, 122]);
+        unsafe {
+            qcms_transform_release(transform);
+            qcms_profile_release(input);
+            qcms_profile_release(output);
+        }
     }
 }
