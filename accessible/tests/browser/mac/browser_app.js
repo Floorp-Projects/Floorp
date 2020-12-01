@@ -159,3 +159,23 @@ add_task(async () => {
     }
   );
 });
+
+/**
+ * Tests for location bar
+ */
+add_task(async () => {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    async browser => {
+      let input = await getMacAccessible("urlbar-input");
+      is(
+        input.getAttributeValue("AXValue"),
+        "example.com",
+        "Location bar has correct value"
+      );
+    }
+  );
+});

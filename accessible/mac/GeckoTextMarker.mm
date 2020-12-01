@@ -353,16 +353,26 @@ GeckoTextMarkerRange::GeckoTextMarkerRange(
 
 GeckoTextMarkerRange::GeckoTextMarkerRange(
     const AccessibleOrProxy& aAccessible) {
-  mStart = GeckoTextMarker(aAccessible.Parent(), 0);
-  mEnd = GeckoTextMarker(aAccessible.Parent(), 0);
-  if (mStart.mContainer.IsProxy()) {
-    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
-    Unused << ipcDoc->GetPlatformExtension()->SendRangeOfChild(
-        mStart.mContainer.AsProxy()->ID(), aAccessible.AsProxy()->ID(),
-        &mStart.mOffset, &mEnd.mOffset);
-  } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
-    htWrap->RangeOfChild(aAccessible.AsAccessible(), &mStart.mOffset,
-                         &mEnd.mOffset);
+  if ((aAccessible.IsAccessible() &&
+       aAccessible.AsAccessible()->IsHyperText()) ||
+      (aAccessible.IsProxy() && aAccessible.AsProxy()->mIsHyperText)) {
+    // The accessible is a hypertext. Initialize range to its inner text range.
+    mStart = GeckoTextMarker(aAccessible, 0);
+    mEnd = GeckoTextMarker(aAccessible, (CharacterCount(aAccessible)));
+  } else {
+    // The accessible is not a hypertext (maybe a text leaf?). Initialize range
+    // to its offsets in its container.
+    mStart = GeckoTextMarker(aAccessible.Parent(), 0);
+    mEnd = GeckoTextMarker(aAccessible.Parent(), 0);
+    if (mStart.mContainer.IsProxy()) {
+      DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+      Unused << ipcDoc->GetPlatformExtension()->SendRangeOfChild(
+          mStart.mContainer.AsProxy()->ID(), aAccessible.AsProxy()->ID(),
+          &mStart.mOffset, &mEnd.mOffset);
+    } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
+      htWrap->RangeOfChild(aAccessible.AsAccessible(), &mStart.mOffset,
+                           &mEnd.mOffset);
+    }
   }
 }
 
