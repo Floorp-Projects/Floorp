@@ -291,6 +291,7 @@ mod test {
     use crate::{common_test::*, ipc, metrics};
 
     #[test]
+    #[ignore] // TODO: Enable them back when bug 1677456 lands.
     fn smoke_test_timing_distribution() {
         let _lock = lock_test();
 
@@ -307,6 +308,7 @@ mod test {
     }
 
     #[test]
+    #[ignore] // TODO: Enable them back when bug 1677456 lands.
     fn timing_distribution_child() {
         let _lock = lock_test();
 
