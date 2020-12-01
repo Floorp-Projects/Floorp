@@ -3798,8 +3798,7 @@ static inline bool ArrayConstructorImpl(JSContext* cx, CallArgs& args,
     }
   }
 
-  ArrayObject* obj =
-      NewPartlyAllocatedArrayForCallingAllocationSite(cx, length, proto);
+  ArrayObject* obj = NewDensePartlyAllocatedArray(cx, length, proto);
   if (!obj) {
     return false;
   }
@@ -4170,27 +4169,6 @@ ArrayObject* js::NewFullyAllocatedArrayTryUseGroup(JSContext* cx,
 ArrayObject* js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
                                                     HandleObjectGroup group,
                                                     size_t length) {
-  return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group,
-                                                                    length);
-}
-
-ArrayObject* js::NewFullyAllocatedArrayForCallingAllocationSite(
-    JSContext* cx, size_t length, NewObjectKind newKind) {
-  RootedObjectGroup group(
-      cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
-  if (!group) {
-    return nullptr;
-  }
-  return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind);
-}
-
-ArrayObject* js::NewPartlyAllocatedArrayForCallingAllocationSite(
-    JSContext* cx, size_t length, HandleObject proto) {
-  RootedObjectGroup group(
-      cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array, proto));
-  if (!group) {
-    return nullptr;
-  }
   return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group,
                                                                     length);
 }
