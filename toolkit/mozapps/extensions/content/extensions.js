@@ -47,8 +47,8 @@ function initialize(event) {
   }
 
   // If there is a history state to restore then use that
-  if (window.history.state) {
-    gViewController.updateState(window.history.state);
+  if (history.state) {
+    gViewController.updateState(history.state);
   }
 }
 
@@ -108,120 +108,6 @@ function loadView(aViewId) {
   }
 }
 
-/**
- * A wrapper around the HTML5 session history service that allows the browser
- * back/forward controls to work within the manager
- */
-var HTML5History = {
-  get index() {
-    return window.docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
-      .index;
-  },
-
-  get canGoBack() {
-    return window.docShell.QueryInterface(Ci.nsIWebNavigation).canGoBack;
-  },
-
-  get canGoForward() {
-    return window.docShell.QueryInterface(Ci.nsIWebNavigation).canGoForward;
-  },
-
-  back() {
-    window.history.back();
-  },
-
-  forward() {
-    window.history.forward();
-  },
-
-  pushState(aState) {
-    window.history.pushState(aState, document.title);
-  },
-
-  replaceState(aState) {
-    window.history.replaceState(aState, document.title);
-  },
-
-  popState() {
-    function onStatePopped(aEvent) {
-      window.removeEventListener("popstate", onStatePopped, true);
-      // TODO To ensure we can't go forward again we put an additional entry
-      // for the current state into the history. Ideally we would just strip
-      // the history but there doesn't seem to be a way to do that. Bug 590661
-      window.history.pushState(aEvent.state, document.title);
-    }
-    window.addEventListener("popstate", onStatePopped, true);
-    window.history.back();
-  },
-};
-
-/**
- * A wrapper around a fake history service
- */
-var FakeHistory = {
-  pos: 0,
-  states: [null],
-
-  get index() {
-    return this.pos;
-  },
-
-  get canGoBack() {
-    return this.pos > 0;
-  },
-
-  get canGoForward() {
-    return this.pos + 1 < this.states.length;
-  },
-
-  back() {
-    if (this.pos == 0) {
-      throw Components.Exception("Cannot go back from this point");
-    }
-
-    this.pos--;
-    gViewController.updateState(this.states[this.pos]);
-  },
-
-  forward() {
-    if (this.pos + 1 >= this.states.length) {
-      throw Components.Exception("Cannot go forward from this point");
-    }
-
-    this.pos++;
-    gViewController.updateState(this.states[this.pos]);
-  },
-
-  pushState(aState) {
-    this.pos++;
-    this.states.splice(this.pos, this.states.length);
-    this.states.push(aState);
-  },
-
-  replaceState(aState) {
-    this.states[this.pos] = aState;
-  },
-
-  popState() {
-    if (this.pos == 0) {
-      throw Components.Exception("Cannot popState from this view");
-    }
-
-    this.states.splice(this.pos, this.states.length);
-    this.pos--;
-
-    gViewController.updateState(this.states[this.pos]);
-  },
-};
-
-// If the window has a session history then use the HTML5 History wrapper
-// otherwise use our fake history implementation
-if (window.docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory) {
-  var gHistory = HTML5History;
-} else {
-  gHistory = FakeHistory;
-}
-
 var gViewController = {
   defaultViewId: "addons://discover/",
   currentViewId: "",
@@ -266,7 +152,7 @@ var gViewController = {
       previousView: this.currentViewId,
       historyEntryId: ++this.nextHistoryEntryId,
     };
-    gHistory.pushState(state);
+    history.pushState(state, "");
     this.loadViewInternal(aViewId, this.currentViewId, state);
   },
 
@@ -282,7 +168,7 @@ var gViewController = {
       previousView: null,
       historyEntryId: ++this.nextHistoryEntryId,
     };
-    gHistory.replaceState(state);
+    history.replaceState(state, "");
     this.loadViewInternal(aViewId, null, state);
   },
 
@@ -292,7 +178,7 @@ var gViewController = {
       previousView: null,
       historyEntryId: ++this.nextHistoryEntryId,
     };
-    gHistory.replaceState(state);
+    history.replaceState(state, "");
 
     this.loadViewInternal(aViewId, null, state);
     notifyInitialized();
