@@ -13,11 +13,11 @@ add_task(async function run_test() {
   await do_content_crash(
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
-      crashReporter.annotateCrashReport("TestKey", "a".repeat(32768));
+      crashReporter.annotateCrashReport("TestKey", "a".repeat(65536));
     },
     function(mdump, extra) {
       Assert.ok(
-        extra.TestKey == "a".repeat(32768),
+        extra.TestKey == "a".repeat(65536),
         "The TestKey annotation matches the expected value"
       );
     }

@@ -573,18 +573,26 @@ class PlatformWriter {
 
   void Flush() {
     if (mPos > 0) {
-#ifdef XP_WIN
       char* buffer = mBuffer;
       size_t length = mPos;
       while (length > 0) {
-        DWORD nBytes = 0;
-        Unused << WriteFile(mFD, buffer, length, &nBytes, nullptr);
-        buffer += nBytes;
-        length -= nBytes;
-      }
+#ifdef XP_WIN
+        DWORD written_bytes = 0;
+        Unused << WriteFile(mFD, buffer, length, &written_bytes, nullptr);
 #elif defined(XP_UNIX)
-      mozilla::Unused << sys_write(mFD, mBuffer, mPos);
+        ssize_t written_bytes = sys_write(mFD, buffer, length);
+        if (written_bytes < 0) {
+          if (errno == EAGAIN) {
+            continue;
+          }
+
+          break;
+        }
 #endif
+        buffer += written_bytes;
+        length -= written_bytes;
+      }
+
       mPos = 0;
     }
   }
