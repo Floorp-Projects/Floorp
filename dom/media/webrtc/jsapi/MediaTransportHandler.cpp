@@ -370,6 +370,8 @@ static Maybe<NrIceCtx::NatSimulatorConfig> GetNatConfig() {
       "media.peerconnection.nat_simulator.block_tcp", false);
   bool block_udp = Preferences::GetBool(
       "media.peerconnection.nat_simulator.block_udp", false);
+  int error_code_for_drop = Preferences::GetInt(
+      "media.peerconnection.nat_simulator.error_code_for_drop", 0);
   nsAutoCString mapping_type;
   (void)Preferences::GetCString(
       "media.peerconnection.nat_simulator.mapping_type", mapping_type);
@@ -384,6 +386,7 @@ static Maybe<NrIceCtx::NatSimulatorConfig> GetNatConfig() {
     NrIceCtx::NatSimulatorConfig natConfig;
     natConfig.mBlockUdp = block_udp;
     natConfig.mBlockTcp = block_tcp;
+    natConfig.mErrorCodeForDrop = error_code_for_drop;
     natConfig.mFilteringType = filtering_type;
     natConfig.mMappingType = mapping_type;
     return Some(natConfig);

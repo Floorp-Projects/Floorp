@@ -299,12 +299,12 @@ int TestNrSocket::sendto(const void* msg, size_t len, int flags,
 
   if (nat_->nat_delegate_ &&
       nat_->nat_delegate_->on_sendto(nat_, msg, len, flags, to)) {
-    return 0;
+    return nat_->error_code_for_drop_;
   }
 
   UCHAR* buf = static_cast<UCHAR*>(const_cast<void*>(msg));
   if (nat_->block_stun_ && nr_is_stun_message(buf, len)) {
-    return 0;
+    return nat_->error_code_for_drop_;
   }
 
   /* TODO: improve the functionality of this in bug 1253657 */
@@ -322,8 +322,7 @@ int TestNrSocket::sendto(const void* msg, size_t len, int flags,
   destroy_stale_port_mappings();
 
   if (to->protocol == IPPROTO_UDP && nat_->block_udp_) {
-    // Silently eat the packet
-    return 0;
+    return nat_->error_code_for_drop_;
   }
 
   // Choose our port mapping based on our most selective criteria
