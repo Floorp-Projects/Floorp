@@ -204,12 +204,9 @@ impl SwTile {
         // Offset the valid rect to the appropriate surface origin.
         let valid = self.valid_rect.translate(self.origin(surface).to_vector());
         // The destination rect is the valid rect transformed and then clipped.
-        let dest_rect = transform
-            .outer_transformed_rect(&valid.to_f32())?
-            .round_out()
-            .to_i32();
+        let dest_rect = transform.outer_transformed_rect(&valid.to_f32())?.round_out().to_i32();
         if !dest_rect.intersects(clip_rect) {
-             return None;
+            return None;
         }
         // To get a valid source rect, we need to inverse transform the clipped destination rect to find out the effect
         // of the clip rect in source-space. After this, we subtract off the source-space valid rect origin to get
@@ -464,9 +461,10 @@ impl SwCompositeJob {
         let band_offset = (self.clipped_dst.size.height * band_index) / num_bands;
         let band_height = (self.clipped_dst.size.height * (band_index + 1)) / num_bands - band_offset;
         // Create a rect that is the intersection of the band with the clipped dest
-        let band_clip = DeviceIntRect::new(DeviceIntPoint::new(self.clipped_dst.origin.x,
-                                                               self.clipped_dst.origin.y + band_offset),
-                                           DeviceIntSize::new(self.clipped_dst.size.width, band_height));
+        let band_clip = DeviceIntRect::new(
+            DeviceIntPoint::new(self.clipped_dst.origin.x, self.clipped_dst.origin.y + band_offset),
+            DeviceIntSize::new(self.clipped_dst.size.width, band_height),
+        );
         match self.locked_src {
             SwCompositeSource::BGRA(ref resource) => {
                 self.locked_dst.composite(
@@ -1622,7 +1620,8 @@ impl Compositor for SwCompositor {
             for &mut (ref _id, ref _transform, ref mut clip_rect, _filter) in &mut self.frame_surfaces {
                 *clip_rect = clip_rect.intersection(&dirty_rects[0]).unwrap_or_default();
             }
-            self.frame_surfaces.retain(|&(_, _, clip_rect, _)| !clip_rect.is_empty());
+            self.frame_surfaces
+                .retain(|&(_, _, clip_rect, _)| !clip_rect.is_empty());
         }
 
         if let Some(ref composite_thread) = self.composite_thread {
