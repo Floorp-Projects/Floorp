@@ -9,8 +9,16 @@
 
 #include "mozilla/ipc/SharedMemory.h"
 
+#if defined(XP_MACOSX) && defined(__x86_64__)
+#include "prenv.h"
+#endif
+
 namespace mozilla {
 namespace ipc {
+
+#if defined(XP_MACOSX) && defined(__x86_64__)
+std::atomic<size_t> sPageSizeOverride = 0;
+#endif
 
 void SharedMemory::SystemProtect(char* aAddr, size_t aSize, int aRights) {
   if (!SystemProtectFallible(aAddr, aSize, aRights)) {
@@ -28,7 +36,20 @@ bool SharedMemory::SystemProtectFallible(char* aAddr, size_t aSize,
   return 0 == mprotect(aAddr, aSize, flags);
 }
 
-size_t SharedMemory::SystemPageSize() { return sysconf(_SC_PAGESIZE); }
+size_t SharedMemory::SystemPageSize() {
+#if defined(XP_MACOSX) && defined(__x86_64__)
+  if (sPageSizeOverride == 0) {
+    if (PR_GetEnv("MOZ_SHMEM_PAGESIZE_16K")) {
+      sPageSizeOverride = 16 * 1024;
+    } else {
+      sPageSizeOverride = sysconf(_SC_PAGESIZE);
+    }
+  }
+  return sPageSizeOverride;
+#else
+  return sysconf(_SC_PAGESIZE);
+#endif
+}
 
 }  // namespace ipc
 }  // namespace mozilla
