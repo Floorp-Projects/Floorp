@@ -1826,7 +1826,7 @@ class LIRGraph {
   // constantPool_ is a mozilla::Vector, not a js::Vector, because
   // js::Vector<Value> is prohibited as unsafe. This particular Vector of
   // Values is safe because it is only used within the scope of an
-  // AutoEnterAnalysis (in IonCompile), which inhibits GC.
+  // AutoSuppressGC (in IonCompile), which inhibits GC.
   mozilla::Vector<Value, 0, JitAllocPolicy> constantPool_;
   typedef HashMap<Value, uint32_t, ValueHasher, JitAllocPolicy> ConstantPoolMap;
   ConstantPoolMap constantPoolMap_;
