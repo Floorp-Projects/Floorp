@@ -75,9 +75,10 @@ enum class BailoutKind : uint8_t {
   // invalidate the current Warp script and disable recompilation.
   TypePolicy,
 
-  // An instruction hoisted by LICM.
-  // If this instruction bails out, we will invalidate the current Warp script
-  // and mark the LICMBailout flag on the script.
+  // An instruction hoisted by LICM.  If this instruction bails out, we will
+  // bail out to baseline to see if we attach a new stub. If we do, then the
+  // more than once, we will invalidate the current Warp script and
+  // mark the hadLICMInvalidation flag on the script.
   LICM,
 
   // An instruction created or hoisted by tryHoistBoundsCheck.
