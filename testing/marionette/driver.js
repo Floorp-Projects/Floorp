@@ -1187,8 +1187,12 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
     await this.listener.switchToFrame();
   }
 
-  const currentURL = await this._getCurrentURL();
-  const loadEventExpected = navigate.isLoadEventExpected(currentURL, validURL);
+  const loadEventExpected = navigate.isLoadEventExpected(
+    await this._getCurrentURL(),
+    {
+      future: validURL,
+    }
+  );
 
   await navigate.waitForNavigationCompleted(
     this,
@@ -2170,7 +2174,7 @@ GeckoDriver.prototype.getActiveElement = async function() {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.clickElement = async function(cmd) {
-  assert.open(this.getBrowsingContext());
+  const browsingContext = assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2179,12 +2183,19 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
   if (MarionettePrefs.useActors) {
     const actor = this.getActor();
 
-    const target = await actor.getElementAttribute(webEl, "target");
+    const loadEventExpected = navigate.isLoadEventExpected(
+      await this._getCurrentURL(),
+      {
+        browsingContext,
+        target: await actor.getElementAttribute(webEl, "target"),
+      }
+    );
+
     await navigate.waitForNavigationCompleted(
       this,
       () => actor.clickElement(webEl, this.capabilities),
       {
-        loadEventExpected: target !== "_blank",
+        loadEventExpected,
         // The click might trigger a navigation, so don't count on it.
         requireBeforeUnload: false,
       }
@@ -2199,13 +2210,19 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
       break;
 
     case Context.Content:
-      const target = await this.listener.getElementAttribute(webEl, "target");
+      const loadEventExpected = navigate.isLoadEventExpected(
+        await this._getCurrentURL(),
+        {
+          browsingContext,
+          target: this.listener.getElementAttribute(webEl, "target"),
+        }
+      );
 
       await navigate.waitForNavigationCompleted(
         this,
         () => this.listener.clickElement(webEl, this.capabilities),
         {
-          loadEventExpected: target !== "_blank",
+          loadEventExpected,
           // The click might trigger a navigation, so don't count on it.
           requireBeforeUnload: false,
         }
