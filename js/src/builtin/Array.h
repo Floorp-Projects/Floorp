@@ -90,8 +90,7 @@ extern ArrayObject* NewDenseCopyOnWriteArray(JSContext* cx,
                                              HandleArrayObject templateObject);
 
 extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
-                                      HandleObjectGroup group,
-                                      bool convertDoubleElements);
+                                      HandleObjectGroup group);
 
 extern bool ToLength(JSContext* cx, HandleValue v, uint64_t* out);
 

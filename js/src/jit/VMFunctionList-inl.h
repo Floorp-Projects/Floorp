@@ -84,7 +84,6 @@ namespace jit {
   _(CheckPrivateFieldOperation, js::CheckPrivateFieldOperation)                \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
   _(ConcatStrings, js::ConcatStrings<CanGC>)                                   \
-  _(ConvertElementsToDoubles, js::ObjectElements::ConvertElementsToDoubles)    \
   _(CopyElementsForWrite, js::NativeObject::CopyElementsForWrite)              \
   _(CopyLexicalEnvironmentObject, js::jit::CopyLexicalEnvironmentObject)       \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \

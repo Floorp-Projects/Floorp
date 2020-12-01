@@ -713,7 +713,7 @@ static bool IndexOf(MDefinition* ins, int32_t* res) {
 // Returns False if the elements is not escaped and if it is optimizable by
 // ScalarReplacementOfArray.
 static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
-  MOZ_ASSERT(def->isElements() || def->isConvertElementsToDoubles());
+  MOZ_ASSERT(def->isElements());
 
   JitSpewDef(JitSpew_Escape, "Check elements\n", def);
   JitSpewIndent spewIndent(JitSpew_Escape);
@@ -801,14 +801,6 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
 
       case MDefinition::Opcode::ArrayLength:
         MOZ_ASSERT(access->toArrayLength()->elements() == def);
-        break;
-
-      case MDefinition::Opcode::ConvertElementsToDoubles:
-        MOZ_ASSERT(access->toConvertElementsToDoubles()->elements() == def);
-        if (IsElementEscaped(access, arraySize)) {
-          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", access);
-          return true;
-        }
         break;
 
       default:
@@ -962,7 +954,6 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitInitializedLength(MInitializedLength* ins);
   void visitArrayLength(MArrayLength* ins);
   void visitMaybeCopyElementsForWrite(MMaybeCopyElementsForWrite* ins);
-  void visitConvertElementsToDoubles(MConvertElementsToDoubles* ins);
 };
 
 const char* ArrayMemoryView::phaseName = "Scalar Replacement of Array";
@@ -1252,27 +1243,6 @@ void ArrayMemoryView::visitMaybeCopyElementsForWrite(
 
   // Replace the guard with the array.
   ins->replaceAllUsesWith(arr_);
-
-  // Remove original instruction.
-  ins->block()->discard(ins);
-}
-
-void ArrayMemoryView::visitConvertElementsToDoubles(
-    MConvertElementsToDoubles* ins) {
-  MOZ_ASSERT(ins->numOperands() == 1);
-  MOZ_ASSERT(ins->type() == MIRType::Elements);
-
-  // Skip other array objects.
-  MDefinition* elements = ins->elements();
-  if (!isArrayStateElements(elements)) {
-    return;
-  }
-
-  // We don't have to do anything else here: MConvertElementsToDoubles just
-  // exists to allow MLoadELement to use masm.loadDouble (without checking
-  // for int32 elements), but since we're using scalar replacement for the
-  // elements that doesn't matter.
-  ins->replaceAllUsesWith(elements);
 
   // Remove original instruction.
   ins->block()->discard(ins);
