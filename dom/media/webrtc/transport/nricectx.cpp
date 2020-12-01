@@ -608,6 +608,8 @@ bool NrIceCtx::Initialize() {
         TestNat::ToNatBehavior(config_.mNatSimulatorConfig->mMappingType.get());
     test_nat->block_udp_ = config_.mNatSimulatorConfig->mBlockUdp;
     test_nat->block_tcp_ = config_.mNatSimulatorConfig->mBlockTcp;
+    test_nat->error_code_for_drop_ =
+        config_.mNatSimulatorConfig->mErrorCodeForDrop;
     test_nat->enabled_ = true;
     SetNat(test_nat);
   }

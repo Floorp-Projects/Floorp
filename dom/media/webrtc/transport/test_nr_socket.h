@@ -156,6 +156,7 @@ class TestNat {
         block_udp_(false),
         block_stun_(false),
         block_tcp_(false),
+        error_code_for_drop_(0),
         delay_stun_resp_ms_(0),
         nat_delegate_(nullptr),
         sockets_() {}
@@ -185,6 +186,7 @@ class TestNat {
   bool block_udp_;
   bool block_stun_;
   bool block_tcp_;
+  bool error_code_for_drop_;
   /* Note: this can only delay a single response so far (bug 1253657) */
   uint32_t delay_stun_resp_ms_;
 

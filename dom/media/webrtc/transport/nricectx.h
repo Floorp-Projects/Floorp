@@ -205,6 +205,7 @@ class NrIceCtx {
   struct NatSimulatorConfig {
     bool mBlockTcp = false;
     bool mBlockUdp = false;
+    int mErrorCodeForDrop = 0;
     nsCString mMappingType = "ENDPOINT_INDEPENDENT"_ns;
     nsCString mFilteringType = "ENDPOINT_INDEPENDENT"_ns;
   };
