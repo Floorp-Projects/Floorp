@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    force-py2: true
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2400

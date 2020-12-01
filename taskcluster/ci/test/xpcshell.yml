@@ -4,7 +4,6 @@
 ---
 job-defaults:
     suite: xpcshell
-    force-py2: true
     variants:
         by-test-platform:
             linux1804-64/debug: ['fission', 'socketprocess_networking']
