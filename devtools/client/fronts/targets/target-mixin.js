@@ -135,7 +135,8 @@ function TargetMixin(parentClass) {
      * @return {TargetMixin} the parent target.
      */
     getWatcherFront() {
-      // Starting with FF77, all additional frame targets are spawn by the WatcherActor and are managed by it.
+      // @backward-compat { version 77 } On newer servers, all additional frame targets
+      // are spawn by the WatcherActor and are managed by it.
       if (this.parentFront.typeName == "watcher") {
         return this.parentFront;
       }
@@ -150,7 +151,7 @@ function TargetMixin(parentClass) {
         return this.parentFront.getWatcher();
       }
 
-      // Finally, for FF<=76, there is no watcher.
+      // @backward-compat { version 77 } There is no watcher on older servers.
       return null;
     }
 
@@ -160,7 +161,8 @@ function TargetMixin(parentClass) {
      * @return {TargetMixin} the parent target.
      */
     async getParentTarget() {
-      // Starting with FF77, we support frames watching via watchTargets for Tab and Process descriptors.
+      // @backward-compat { version 77 } We now support frames watching via watchTargets
+      // for Tab and Process descriptors.
       const watcherFront = await this.getWatcherFront();
       if (watcherFront) {
         // Safety check, in theory all watcher should support frames.
@@ -180,10 +182,8 @@ function TargetMixin(parentClass) {
         return null;
       }
 
-      // Backward compat for FF<=76
-      //
-      // In these versions of Firefox, we still have FrameDescriptor for Frame targets
-      // and can fetch the parent target from it.
+      // @backward-compat { version 77 } On older servers, we still have FrameDescriptor
+      // for Frame targets and can fetch the parent target from it.
       return this.parentFront.getParentTarget();
     }
 

@@ -26,8 +26,7 @@ class PreferenceFront extends FrontClassWithSpec(preferenceSpec) {
     try {
       this._traits = await this.getTraits();
     } catch (e) {
-      // Backward compatibility: can be removed when FF82 is on the release
-      // channel.
+      // @backward-compat { version 82 } getTraits isn't supported on older server.
       this._traits = {};
     }
     return this._traits;

@@ -39,7 +39,7 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
       continue;
     }
 
-    // Handling cached messages for servers older than Firefox 78.
+    // @backward-compat { version 78 } Handling cached messages for older servers.
     // Wrap the message into a `pageError` attribute, to match `pageError` behavior
     if (message._type) {
       message = {

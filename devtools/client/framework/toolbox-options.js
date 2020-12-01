@@ -289,7 +289,8 @@ OptionsPanel.prototype = {
       checkboxLabel.appendChild(checkboxInput);
       checkboxLabel.appendChild(checkboxSpanLabel);
 
-      // TODO: remove in Firefox 71, with bug #1519103
+      // @backward-compat { version 71 } We shouldn't have deprecated anymore. We might
+      // want to remove this code.
       if (tool.deprecated) {
         const deprecationURL = this.panelDoc.createElement("a");
         deprecationURL.title = deprecationURL.href = tool.deprecationURL;

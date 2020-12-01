@@ -53,10 +53,9 @@ const {
 const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 
 function isCachedActorNeeded(runtime, type, id) {
-  // Unique ids for workers were introduced in Firefox 68 (Bug 1539328). When debugging
-  // older browsers, the id falls back to the actor ID. Check if the target id is a worker
-  // actorID (which means getFrontByID() should return an actor with id).
-  // Can be removed when Firefox 68 is in Release channel.
+  // @backward-compat { version 68 } Unique ids for workers were introduced in Bug 1539328.
+  // When debugging older browsers, the id falls back to the actor ID. Check if the target
+  // id is a worker actorID (which means getFrontByID() should return an actor with id).
   return (
     type === DEBUG_TARGETS.WORKER &&
     runtime.runtimeDetails.clientWrapper.client.getFrontByID(id)
@@ -194,8 +193,7 @@ function requestTabs() {
       );
       const tabs = isSupported
         ? await clientWrapper.listTabs({
-            // Backward compatibility: this is only used for FF75 or older.
-            // The argument can be dropped when FF76 hits the release channel.
+            // @backward-compat { version 75 } This is only used for older servers.
             favicons: true,
           })
         : [];
@@ -228,9 +226,8 @@ function requestExtensions() {
 
       // Filter out hidden & system addons unless the dedicated preference is set to true.
       if (!getState().ui.showHiddenAddons) {
-        // System addons should normally also have the hidden flag. However on DevTools
-        // side, `hidden` is not available on FF67 servers or older. Check both flags for
-        // backward compatibility.
+        // @backward-compat { version 67 } Older servers don't return the `hidden` property
+        // for System addons.
         extensions = extensions.filter(e => !e.isSystem && !e.hidden);
       }
 
@@ -296,10 +293,9 @@ function requestWorkers() {
           const subscription = await registrationFront.getPushSubscription();
           serviceWorker.subscription = subscription;
         } catch (e) {
-          // See Bug 1637687. On GeckoView, some PushSubscription methods are
-          // not implemented. PushSubscriptionActor was patched in FF78 to avoid
-          // throwing, but old servers might still throw.
-          // Backward-compatibility: remove when FF78 hits release.
+          // @backward-compat { version 78 } See Bug 1637687.
+          // On older GeckoView, some PushSubscription methods were not implemented and
+          // getPushSubscription would throw.
           console.error("Failed to retrieve service worker subscription", e);
         }
       }

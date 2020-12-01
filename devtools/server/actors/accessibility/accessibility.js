@@ -47,8 +47,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
     // The traits are used to know if accessibility actors support particular
     // API on the server side.
     return {
-      // Backward compatibility: can be removed when FF84 is on release.
-      // Fixed on the server by Bug 1654956.
+      // @backward-compat { version 84 } Fixed on the server by Bug 1654956.
       tabbingOrder: true,
     };
   },

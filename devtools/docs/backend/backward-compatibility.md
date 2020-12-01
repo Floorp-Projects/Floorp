@@ -76,13 +76,13 @@ Whenever traits are added, make sure to add a relevant backward compatibility co
 
 When introducing backward compatibility code, a comment should be added for extra information.
 In order to simplify future code cleanups, the comment should follow the following syntax:
-`// @backward-compat { added in XX } Detailed comment`, where `XX` is the Firefox version this code was added in.
+`// @backward-compat { version XX } Detailed comment`, where `XX` is the Firefox version this code was added in.
 
 Below is a made-up example of what it should look like:
 
 ```js
-// @backward-compat { added in 85 } For older server which don't have the AwesomeActor,
-//                                  we have to do this another way.
+// @backward-compat { version 85 } For older server which don't have the AwesomeActor,
+//                                 we have to do this another way.
 if (!toolbox.target.hasActor("awesome")) {
 ```
 

@@ -253,8 +253,8 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
       response = await super.promiseState();
       promiseState = response.promiseState;
     } catch (error) {
-      // Before Firefox 85 (bug 1552648), the promiseState request didn't exist.
-      // The promise state was directly included in the grip.
+      // @backward-compat { version 85 } On older server, the promiseState request didn't
+      // didn't exist (bug 1552648). The promise state was directly included in the grip.
       if (error.message.includes("unrecognizedPacketType")) {
         promiseState = this._grip.promiseState;
         response = { promiseState };

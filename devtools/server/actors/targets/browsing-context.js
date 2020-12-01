@@ -291,7 +291,7 @@ const browsingContextTargetPrototype = {
       frames: true,
       // Supports the logInPage request.
       logInPage: true,
-      // Supports watchpoints in the server for Fx71+
+      // @backward-compat { version 71 } Supports watchpoints in the server.
       watchpoints: true,
       // Supports back and forward navigation
       navigation: true,
@@ -526,8 +526,8 @@ const browsingContextTargetPrototype = {
       actor: this.actorID,
       browsingContextID: this.browsingContextID,
       traits: {
-        // FF64+ exposes a new trait to help identify BrowsingContextActor's inherited
-        // actors from the client side.
+        // @backward-compat { version 64 } Exposes a new trait to help identify
+        // BrowsingContextActor's inherited actors from the client side.
         isBrowsingContext: true,
       },
     };
@@ -1082,7 +1082,7 @@ const browsingContextTargetPrototype = {
     return {};
   },
 
-  // Added in Firefox 79
+  // @backward-compat { version 79 }
   goForward() {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
@@ -1101,7 +1101,7 @@ const browsingContextTargetPrototype = {
     return {};
   },
 
-  // Added in Firefox 79
+  // @backward-compat { version 79 }
   goBack() {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.

@@ -188,8 +188,8 @@ const proto = {
   },
 
   _getOwnPropertyLength: function() {
-    // FF40+: Allow to know how many properties an object has to lazily display them
-    // when there is a bunch.
+    // @backward-compat { version 40 } Allow to know how many properties an object has to
+    // lazily display them when there is a bunch.
     if (isTypedArray(this.obj)) {
       // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
       return getArrayLength(this.obj);
