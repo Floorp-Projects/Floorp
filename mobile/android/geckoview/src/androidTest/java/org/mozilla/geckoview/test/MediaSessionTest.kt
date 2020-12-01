@@ -608,9 +608,7 @@ class MediaSessionTest : BaseSessionTest() {
                         equalTo(true))
             }
 
-            // TODO: Find out why this is intermittently called more than once.
-            // Bug 1674110.
-            @AssertCalled
+            @AssertCalled(count = 1)
             override fun onMetadata(
                     session: GeckoSession,
                     mediaSession: MediaSession,
