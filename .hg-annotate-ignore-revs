@@ -405,3 +405,6 @@ ff3fb0b4a5121abae41a70ef854a9de397c80397 - Ricky Stewart - Bug 1672023 - Remove 
 9006d6f3cb29754037aa0b5ef4c9b2ae67006459 - Bogdan Tara - Backed out 10 changesets (bug 1654103, bug 1672023, bug 1518999) for PanZoomControllerTest.touchEventForResult gv-junit failures CLOSED TREE
 994ae8e4833c90447d91f0e26a718573cff5a514 - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`.
 e46822faf5d85ea1ca89fc153aaf5a83ce0418b5 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml`
+e52e5ee6f9d6217f3be04a71ff089148116f8fb0 - Simon Giesecke - Bug 1648010 - Remove NS_NAMED_LITERAL_CSTRING and NS_NAMED_LITERAL_STRING macros. r=froydnj
+3d7ffaefcd5a6c10988a1ecc3b75c3d55e1cd9e2 - Simon Giesecke - Bug 1648010 - Fix uses of NS_LITERAL_STRING with C string literals. r=geckoview-reviewers,agi,froydnj
+3f8100fb74318f9e0b3b6351ade737994d13bcf8 - Simon Giesecke - Bug 1648010 - Replace uses of NS_LITERAL_STRING/NS_LITERAL_CSTRING macros by _ns literals. r=geckoview-reviewers,jgilbert,agi,hsivonen,froydnj
