@@ -18,16 +18,17 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
   static already_AddRefed<GamepadEventChannelParent> Create();
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvVibrateHaptic(const uint32_t& aControllerIdx,
-                                            const uint32_t& aHapticIndex,
-                                            const double& aIntensity,
-                                            const double& aDuration,
-                                            const uint32_t& aPromiseID);
-  mozilla::ipc::IPCResult RecvStopVibrateHaptic(const uint32_t& aControllerIdx);
+  mozilla::ipc::IPCResult RecvVibrateHaptic(
+      const Tainted<uint32_t>& aControllerIdx,
+      const Tainted<uint32_t>& aHapticIndex, const Tainted<double>& aIntensity,
+      const Tainted<double>& aDuration, const Tainted<uint32_t>& aPromiseID);
+  mozilla::ipc::IPCResult RecvStopVibrateHaptic(
+      const Tainted<uint32_t>& aControllerIdx);
   mozilla::ipc::IPCResult RecvLightIndicatorColor(
-      const uint32_t& aControllerIdx, const uint32_t& aLightColorIndex,
-      const uint8_t& aRed, const uint8_t& aGreen, const uint8_t& aBlue,
-      const uint32_t& aPromiseID);
+      const Tainted<uint32_t>& aControllerIdx,
+      const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
+      const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue,
+      const Tainted<uint32_t>& aPromiseID);
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
 
   GamepadEventChannelParent(const GamepadEventChannelParent&) = delete;

@@ -68,10 +68,10 @@ class udev_lib {
 
  private:
   bool LoadSymbols() {
-#define DLSYM(s)                   \
-  do {                             \
-    s = (typeof(s))dlsym(lib, #s); \
-    if (!s) return false;          \
+#define DLSYM(s)                       \
+  do {                                 \
+    s = (__typeof__(s))dlsym(lib, #s); \
+    if (!s) return false;              \
   } while (0)
 
     DLSYM(udev_new);
