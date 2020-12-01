@@ -46,26 +46,26 @@ pub struct FreeRect {
     rect: DeviceIntRect,
 }
 
-/// A texture allocator using the guillotine algorithm with the rectangle merge improvement. See
-/// sections 2.2 and 2.2.5 in "A Thousand Ways to Pack the Bin - A Practical Approach to Two-
+/// A texture allocator using the guillotine algorithm.
+///
+/// See sections 2.2 and 2.2.5 in "A Thousand Ways to Pack the Bin - A Practical Approach to Two-
 /// Dimensional Rectangle Bin Packing":
 ///
 ///    http://clb.demon.fi/files/RectangleBinPack.pdf
 ///
-/// This approach was chosen because of its simplicity, good performance, and easy support for
-/// dynamic texture deallocation.
+/// This approach was chosen because of its simplicity and good performance.
 ///
 /// Note: the allocations are spread across multiple textures, and also are binned
 /// orthogonally in order to speed up the search.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct ArrayAllocationTracker {
+pub struct GuillotineAllocator {
     bins: [Vec<FreeRect>; NUM_BINS],
 }
 
-impl ArrayAllocationTracker {
+impl GuillotineAllocator {
     pub fn new(initial_size: Option<DeviceIntSize>) -> Self {
-        let mut allocator = ArrayAllocationTracker {
+        let mut allocator = GuillotineAllocator {
             bins: [
                 Vec::new(),
                 Vec::new(),
@@ -222,7 +222,7 @@ fn random_fill(count: usize, texture_size: i32) -> f32 {
         DeviceIntSize::new(texture_size, texture_size),
     );
     let mut rng = thread_rng();
-    let mut allocator = ArrayAllocationTracker::new(None);
+    let mut allocator = GuillotineAllocator::new(None);
 
     // check for empty allocation
     assert_eq!(

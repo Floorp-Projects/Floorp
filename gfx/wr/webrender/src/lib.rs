@@ -126,7 +126,7 @@ mod segment;
 mod shade;
 mod spatial_node;
 mod storage;
-mod texture_allocator;
+mod guillotine_allocator;
 mod texture_cache;
 mod tile_cache;
 mod util;
