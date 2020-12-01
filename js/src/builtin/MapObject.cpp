@@ -332,8 +332,6 @@ bool MapIteratorObject::next(MapIteratorObject* mapIterator,
     return true;
   }
 
-  // Note: we don't need to call setDenseElementWithType because
-  // MapIteratorObject::createResultPair gave the elements unknown-types.
   switch (mapIterator->kind()) {
     case MapObject::Keys:
       resultPairObj->setDenseElement(0, range->front().key.get());
@@ -1130,8 +1128,6 @@ bool SetIteratorObject::next(SetIteratorObject* setIterator,
     return true;
   }
 
-  // Note: we don't need to call setDenseElementWithType because
-  // SetIteratorObject::createResult gave the elements unknown-types.
   resultObj->setDenseElement(0, range->front().get());
   range->popFront();
   return false;

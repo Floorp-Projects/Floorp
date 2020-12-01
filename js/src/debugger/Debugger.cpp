@@ -4514,7 +4514,7 @@ bool Debugger::CallData::getDebuggees() {
   if (!arrobj) {
     return false;
   }
-  arrobj->ensureDenseInitializedLength(cx, 0, count);
+  arrobj->ensureDenseInitializedLength(0, count);
   for (i = 0; i < count; i++) {
     RootedValue v(cx, debuggees[i]);
     if (!dbg->wrapDebuggeeValue(cx, &v)) {
@@ -5524,7 +5524,7 @@ bool Debugger::CallData::findScripts() {
     return false;
   }
 
-  result->ensureDenseInitializedLength(cx, 0, resultLength);
+  result->ensureDenseInitializedLength(0, resultLength);
 
   for (size_t i = 0; i < scripts.length(); i++) {
     JSObject* scriptObject = dbg->wrapScript(cx, scripts[i]);
@@ -5652,7 +5652,7 @@ bool Debugger::CallData::findSources() {
     return false;
   }
 
-  result->ensureDenseInitializedLength(cx, 0, resultLength);
+  result->ensureDenseInitializedLength(0, resultLength);
 
   size_t i = 0;
   for (auto iter = sources.get().iter(); !iter.done(); iter.next()) {
@@ -5873,7 +5873,7 @@ bool Debugger::CallData::findObjects() {
     return false;
   }
 
-  result->ensureDenseInitializedLength(cx, 0, length);
+  result->ensureDenseInitializedLength(0, length);
 
   for (size_t i = 0; i < length; i++) {
     RootedValue debuggeeVal(cx, ObjectValue(*query.objects[i]));

@@ -4387,7 +4387,7 @@ static bool FindPath(JSContext* cx, unsigned argc, Value* vp) {
   if (!result) {
     return false;
   }
-  result->ensureDenseInitializedLength(cx, 0, length);
+  result->ensureDenseInitializedLength(0, length);
 
   // Walk |nodes| and |edges| in the stored order, and construct the result
   // array in start-to-target order.
@@ -4584,7 +4584,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
   if (!results) {
     return false;
   }
-  results->ensureDenseInitializedLength(cx, 0, length);
+  results->ensureDenseInitializedLength(0, length);
 
   for (size_t i = 0; i < length; i++) {
     size_t numPaths = values[i].length();
@@ -4594,7 +4594,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
     if (!pathsArray) {
       return false;
     }
-    pathsArray->ensureDenseInitializedLength(cx, 0, numPaths);
+    pathsArray->ensureDenseInitializedLength(0, numPaths);
 
     for (size_t j = 0; j < numPaths; j++) {
       size_t pathLength = values[i][j].length();
@@ -4604,7 +4604,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
       if (!path) {
         return false;
       }
-      path->ensureDenseInitializedLength(cx, 0, pathLength);
+      path->ensureDenseInitializedLength(0, pathLength);
 
       for (size_t k = 0; k < pathLength; k++) {
         RootedPlainObject part(cx, NewBuiltinClassInstance<PlainObject>(cx));
@@ -5981,7 +5981,7 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
   if (!array) {
     return false;
   }
-  array->ensureDenseInitializedLength(cx, 0, 2);
+  array->ensureDenseInitializedLength(0, 2);
 
   uint32_t length;
   bool isSharedMemory;

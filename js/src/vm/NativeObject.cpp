@@ -634,7 +634,7 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
     }
   }
 
-  obj->ensureDenseInitializedLength(cx, newInitializedLength, 0);
+  obj->ensureDenseInitializedLength(newInitializedLength, 0);
 
   if (ObjectRealm::get(obj).objectMaybeInIteration(obj)) {
     // Mark the densified elements as maybe-in-iteration. See also the comment
@@ -1297,7 +1297,7 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHookDense(JSContext* cx,
 
     RootedId id(cx, INT_TO_JSID(index));
     if (!CallJSAddPropertyOp(cx, addProperty, obj, id, value)) {
-      obj->setDenseElementHole(cx, index);
+      obj->setDenseElementHole(index);
       return false;
     }
   }
@@ -1416,7 +1416,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
       return false;
     }
     if (edResult == DenseElementResult::Success) {
-      obj->setDenseElementWithType(cx, index, desc.value());
+      obj->setDenseElement(index, desc.value());
       if (!CallAddPropertyHookDense(cx, obj, index, desc.value())) {
         return false;
       }
@@ -1459,7 +1459,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     }
 
     uint32_t index = JSID_TO_INT(id);
-    obj->removeDenseElementForSparseIndex(cx, index);
+    obj->removeDenseElementForSparseIndex(index);
     DenseElementResult edResult =
         NativeObject::maybeDensifySparseElements(cx, obj);
     if (edResult == DenseElementResult::Failure) {
@@ -2713,7 +2713,7 @@ static bool SetDenseElement(JSContext* cx, HandleNativeObject obj,
     return false;
   }
 
-  obj->setDenseElementWithType(cx, index, v);
+  obj->setDenseElement(index, v);
   return result.succeed();
 }
 
@@ -2919,7 +2919,7 @@ bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
       return false;
     }
 
-    obj->setDenseElementHole(cx, prop.denseElementIndex());
+    obj->setDenseElementHole(prop.denseElementIndex());
   } else {
     if (!NativeObject::removeProperty(cx, obj, id)) {
       return false;

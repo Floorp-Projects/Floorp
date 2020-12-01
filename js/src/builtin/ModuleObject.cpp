@@ -1294,7 +1294,7 @@ static ArrayObject* ModuleBuilderInitArray(
     return nullptr;
   }
 
-  resultArray->ensureDenseInitializedLength(cx, 0, vector.length());
+  resultArray->ensureDenseInitializedLength(0, vector.length());
 
   RootedAtom specifier(cx);
   RootedAtom localName(cx);

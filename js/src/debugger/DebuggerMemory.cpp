@@ -204,7 +204,7 @@ bool DebuggerMemory::CallData::drainAllocationsLog() {
   if (!result) {
     return false;
   }
-  result->ensureDenseInitializedLength(cx, 0, length);
+  result->ensureDenseInitializedLength(0, length);
 
   for (size_t i = 0; i < length; i++) {
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
