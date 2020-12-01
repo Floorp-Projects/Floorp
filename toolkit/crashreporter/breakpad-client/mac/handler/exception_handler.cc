@@ -398,7 +398,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
     if (exception_type && exception_code) {
       // If this is a real exception, give the filter (if any) a chance to
       // decide if this should be sent.
-      if (filter_ && !filter_(callback_context_, &addr_info))
+      if (filter_ && !filter_(callback_context_))
         return false;
       result = crash_generation_client_->RequestDumpForException(
           exception_type,
@@ -406,6 +406,12 @@ bool ExceptionHandler::WriteMinidumpWithException(
           exception_subcode,
           thread_name,
           task_name);
+
+      if (callback_) {
+        result = callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
+                           &addr_info, result);
+      }
+
       if (result && exit_after_write) {
         _exit(exception_type);
       }
@@ -424,7 +430,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
       if (exception_type && exception_code) {
         // If this is a real exception, give the filter (if any) a chance to
         // decide if this should be sent.
-        if (filter_ && !filter_(callback_context_, nullptr))
+        if (filter_ && !filter_(callback_context_))
           return false;
 
         md.SetExceptionInformation(exception_type, exception_code,
