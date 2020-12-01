@@ -42,3 +42,34 @@ macosx64-plain/opt:
             - macosx64-rust
     optimization:
         skip-unless-expanded: null
+
+macosx64-plain/debug:
+    description: "MacOS X x64 Debug Plain"
+    index:
+        job-name: macosx64-plain-debug
+    treeherder:
+        symbol: Bp
+        platform: osx/debug
+        tier: 2
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: plain
+    run:
+        actions: [build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_macosx.py
+        extra-config:
+            disable_package_metrics: true
+            stage_platform: macosx64
+            mozconfig_platform: macosx64
+        mozconfig-variant: plain-debug
+    run-on-projects: ['trunk']
+    fetches:
+        toolchain:
+            - macosx64-cbindgen
+            - macosx64-nasm
+            - macosx64-node
+            - macosx64-rust
+    optimization:
+        skip-unless-expanded: null
