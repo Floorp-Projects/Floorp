@@ -104,7 +104,7 @@ linux64-rust-macos-beta:
         symbol: TL(rust-macos-beta)
     run:
         arguments: [
-            '--channel', 'beta-2020-11-18',
+            '--channel', 'beta-2020-11-26',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -158,17 +158,6 @@ win64-rust-1.47:
             '--target', 'aarch64-pc-windows-msvc',
         ]
         toolchain-alias: win64-rust
-
-macosx64-rust-beta:
-    treeherder:
-        symbol: TM(rust-beta)
-    run:
-        arguments: [
-            '--channel', 'beta-2020-11-18',
-            '--host', 'x86_64-apple-darwin',
-            '--target', 'x86_64-apple-darwin',
-            '--target', 'aarch64-apple-darwin',
-        ]
 
 mingw32-rust-1.47:
     treeherder:
