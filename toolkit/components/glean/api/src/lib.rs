@@ -2,13 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! The public Glean SDK API, for Rust consumers.
-//!
-//! ## Example:
-//!
-//! ```rust,ignore
-//! assert!(glean::is_upload_enabled())
-//! ```
+//! The public FOG APIs, for Rust consumers.
 
 // Re-exporting for later use in generated code.
 pub extern crate chrono;
@@ -16,7 +10,6 @@ pub extern crate once_cell;
 pub extern crate uuid;
 
 pub mod metrics;
-pub mod ping_upload;
 pub mod pings;
 pub mod private;
 
@@ -37,21 +30,4 @@ where
         .lock()
         .unwrap();
     f(&mut lock)
-}
-
-/// Determine whether upload is enabled.
-///
-/// See `glean_core::Glean.is_upload_enabled`.
-pub fn is_upload_enabled() -> bool {
-    with_glean(|glean| glean.is_upload_enabled())
-}
-
-pub fn flush_init() -> Result<(), dispatcher::DispatchError> {
-    dispatcher::flush_init()
-}
-
-pub fn shutdown() {
-    if let Err(e) = dispatcher::try_shutdown() {
-        log::error!("Can't shutdown dispatcher thread: {:?}", e);
-    }
 }
