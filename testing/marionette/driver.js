@@ -887,6 +887,8 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   this.dialogObserver = new modal.DialogObserver(this);
   this.dialogObserver.add(this.handleModalDialog.bind(this));
 
+  Services.obs.addObserver(this, "browsing-context-attached");
+
   // Check if there is already an open dialog for the selected browser window.
   this.dialog = modal.findModalDialogs(this.curBrowser);
 
@@ -894,6 +896,32 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     sessionId: this.sessionID,
     capabilities: this.capabilities,
   };
+};
+
+GeckoDriver.prototype.observe = function(subject, topic, data) {
+  switch (topic) {
+    case "browsing-context-attached":
+      // For cross-group navigations the complete browsing context tree of a tab
+      // gets replaced. An indication for that is when the newly attached
+      // browsing context has the same browserId as the currently selected
+      // content browsing context, and doesn't have a parent.
+      //
+      // Also the current content browsing context gets only updated when it's
+      // the top-level one to not automatically switch away from the currently
+      // selected frame.
+      if (
+        subject.browserId == this.contentBrowsingContext?.browserId &&
+        !subject.parent &&
+        !this.contentBrowsingContext?.parent
+      ) {
+        logger.trace(
+          "Remoteness change detected. Set new top-level browsing context " +
+            `to ${subject.id}`
+        );
+        this.contentBrowsingContext = subject;
+      }
+      break;
+  }
 };
 
 /**
@@ -3034,6 +3062,10 @@ GeckoDriver.prototype.deleteSession = function() {
     this.dialogObserver = null;
   }
 
+  try {
+    Services.obs.removeObserver(this, "browsing-context-attached");
+  } catch (e) {}
+
   this.sandboxes.clear();
   allowAllCerts.disable();
 
@@ -3637,6 +3669,10 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       return { frameId };
 
     case "Marionette:ListenersAttached":
+      if (MarionettePrefs.useActors) {
+        return;
+      }
+
       if (message.json.frameId === this.curBrowser.curFrameId) {
         const browsingContext = BrowsingContext.get(message.json.frameId);
 
