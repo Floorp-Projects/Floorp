@@ -1522,10 +1522,8 @@ static bool array_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /* vector must point to rooted memory. */
-static bool SetArrayElements(
-    JSContext* cx, HandleObject obj, uint64_t start, uint32_t count,
-    const Value* vector,
-    ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update) {
+static bool SetArrayElements(JSContext* cx, HandleObject obj, uint64_t start,
+                             uint32_t count, const Value* vector) {
   MOZ_ASSERT(count <= MAX_ARRAY_INDEX);
   MOZ_ASSERT(start + count < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
 
@@ -1535,8 +1533,8 @@ static bool SetArrayElements(
 
   if (!ObjectMayHaveExtraIndexedProperties(obj) && start <= UINT32_MAX) {
     NativeObject* nobj = &obj->as<NativeObject>();
-    DenseElementResult result = nobj->setOrExtendDenseElements(
-        cx, uint32_t(start), vector, count, updateTypes);
+    DenseElementResult result =
+        nobj->setOrExtendDenseElements(cx, uint32_t(start), vector, count);
     if (result != DenseElementResult::Incomplete) {
       return result == DenseElementResult::Success;
     }
@@ -2215,11 +2213,9 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
     undefs = 0;
     bool allStrings = true;
     bool allInts = true;
-    bool extraIndexed;
     RootedValue v(cx);
     if (IsPackedArray(obj)) {
       HandleArrayObject array = obj.as<ArrayObject>();
-      extraIndexed = false;
 
       for (uint32_t i = 0; i < len; i++) {
         if (!CheckForInterrupt(cx)) {
@@ -2237,8 +2233,6 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
         allInts = allInts && v.isInt32();
       }
     } else {
-      extraIndexed = ObjectMayHaveExtraIndexedProperties(obj);
-
       for (uint32_t i = 0; i < len; i++) {
         if (!CheckForInterrupt(cx)) {
           return false;
@@ -2308,13 +2302,7 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    // We can omit the type update when neither collecting the elements
-    // nor calling the default comparator can execute a (getter) function
-    // that might run user code.
-    ShouldUpdateTypes updateTypes = !extraIndexed && (allStrings || allInts)
-                                        ? ShouldUpdateTypes::DontUpdate
-                                        : ShouldUpdateTypes::Update;
-    if (!SetArrayElements(cx, obj, 0, uint32_t(n), vec.begin(), updateTypes)) {
+    if (!SetArrayElements(cx, obj, 0, uint32_t(n), vec.begin())) {
       return false;
     }
   }
@@ -4176,16 +4164,14 @@ ArrayObject* js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
 ArrayObject* js::NewCopiedArrayTryUseGroup(JSContext* cx,
                                            HandleObjectGroup group,
                                            const Value* vp, size_t length,
-                                           NewObjectKind newKind,
-                                           ShouldUpdateTypes updateTypes) {
+                                           NewObjectKind newKind) {
   ArrayObject* obj =
       NewFullyAllocatedArrayTryUseGroup(cx, group, length, newKind);
   if (!obj) {
     return nullptr;
   }
 
-  DenseElementResult result =
-      obj->setOrExtendDenseElements(cx, 0, vp, length, updateTypes);
+  DenseElementResult result = obj->setOrExtendDenseElements(cx, 0, vp, length);
   if (result == DenseElementResult::Failure) {
     return nullptr;
   }

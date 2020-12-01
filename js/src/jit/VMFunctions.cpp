@@ -907,8 +907,8 @@ template bool StringsCompare<ComparisonKind::GreaterThanOrEqual>(
 bool ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v,
                     uint32_t* length) {
   *length = arr->length();
-  DenseElementResult result = arr->setOrExtendDenseElements(
-      cx, *length, v.address(), 1, ShouldUpdateTypes::DontUpdate);
+  DenseElementResult result =
+      arr->setOrExtendDenseElements(cx, *length, v.address(), 1);
   if (result != DenseElementResult::Incomplete) {
     (*length)++;
     return result == DenseElementResult::Success;
@@ -1667,11 +1667,10 @@ bool IonForcedInvalidation(JSContext* cx) {
 bool SetDenseElement(JSContext* cx, HandleNativeObject obj, int32_t index,
                      HandleValue value, bool strict) {
   // This function is called from Ion code for StoreElementHole's OOL path.
-  // In this case we know the object is native and that no type changes are
-  // needed.
+  // In this case we know the object is native.
 
-  DenseElementResult result = obj->setOrExtendDenseElements(
-      cx, index, value.address(), 1, ShouldUpdateTypes::DontUpdate);
+  DenseElementResult result =
+      obj->setOrExtendDenseElements(cx, index, value.address(), 1);
   if (result != DenseElementResult::Incomplete) {
     return result == DenseElementResult::Success;
   }

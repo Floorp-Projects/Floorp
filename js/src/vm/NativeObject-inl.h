@@ -463,8 +463,7 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
 }
 
 inline DenseElementResult NativeObject::setOrExtendDenseElements(
-    JSContext* cx, uint32_t start, const Value* vp, uint32_t count,
-    ShouldUpdateTypes updateTypes) {
+    JSContext* cx, uint32_t start, const Value* vp, uint32_t count) {
   if (!isExtensible()) {
     return DenseElementResult::Incomplete;
   }
@@ -483,8 +482,7 @@ inline DenseElementResult NativeObject::setOrExtendDenseElements(
     as<ArrayObject>().setLength(start + count);
   }
 
-  if (updateTypes == ShouldUpdateTypes::DontUpdate &&
-      !shouldConvertDoubleElements()) {
+  if (!shouldConvertDoubleElements()) {
     copyDenseElements(start, vp, count);
   } else {
     for (size_t i = 0; i < count; i++) {
