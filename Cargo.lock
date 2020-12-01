@@ -1545,6 +1545,7 @@ dependencies = [
  "ffi-support",
  "glean",
  "glean-core",
+ "inherent",
  "log",
  "nsstring",
  "once_cell",
