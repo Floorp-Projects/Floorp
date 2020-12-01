@@ -5,7 +5,6 @@
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -54,7 +53,10 @@ HandlerService.prototype = {
   get _store() {
     if (!this.__store) {
       this.__store = new JSONFile({
-        path: OS.Path.join(OS.Constants.Path.profileDir, "handlers.json"),
+        path: PathUtils.join(
+          Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+          "handlers.json"
+        ),
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
     }
@@ -312,7 +314,10 @@ HandlerService.prototype = {
   asyncInit() {
     if (!this.__store) {
       this.__store = new JSONFile({
-        path: OS.Path.join(OS.Constants.Path.profileDir, "handlers.json"),
+        path: PathUtils.join(
+          Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+          "handlers.json"
+        ),
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
       this.__store
