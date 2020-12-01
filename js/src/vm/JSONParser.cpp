@@ -598,8 +598,8 @@ inline bool JSONParserBase::finishArray(MutableHandleValue vp,
                                         ElementVector& elements) {
   MOZ_ASSERT(&elements == &stack.back().elements());
 
-  ArrayObject* obj = ObjectGroup::newArrayObject(
-      cx, elements.begin(), elements.length(), GenericObject);
+  ArrayObject* obj =
+      NewDenseCopiedArray(cx, elements.length(), elements.begin());
   if (!obj) {
     return false;
   }

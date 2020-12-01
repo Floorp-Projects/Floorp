@@ -125,14 +125,9 @@ static JSObject* InterpretObjLiteralArray(
     }
   }
 
-  RootedObject result(
-      cx, ObjectGroup::newArrayObject(cx, elements.begin(), elements.length(),
-                                      NewObjectKind::TenuredObject));
-  if (!result) {
-    return nullptr;
-  }
-
-  return result;
+  return NewDenseCopiedArray(cx, elements.length(), elements.begin(),
+                             /* proto = */ nullptr,
+                             NewObjectKind::TenuredObject);
 }
 
 JSObject* InterpretObjLiteral(JSContext* cx,

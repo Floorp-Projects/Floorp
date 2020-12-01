@@ -392,14 +392,6 @@ ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
   return group;
 }
 
-/* static */
-ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
-                                         size_t length, NewObjectKind newKind) {
-  MOZ_ASSERT(newKind != SingletonObject);
-
-  return NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
-}
-
 static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
                                      IdValuePair* properties,
                                      size_t nproperties) {
