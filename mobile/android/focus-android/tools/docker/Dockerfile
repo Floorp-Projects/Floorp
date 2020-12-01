@@ -5,32 +5,31 @@
 # Inspired by:
 # https://hub.docker.com/r/runmymind/docker-android-sdk/~/dockerfile/
 
-FROM ubuntu:17.10
+FROM ubuntu:18.04
 
 MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 
 # -- System -----------------------------------------------------------------------------
 
-# Because this image is based on a very old Ubuntu, we have to grab the index for
-# an alternative source.
-RUN sed -i -e 's/archive\.ubuntu\.com/old-releases\.ubuntu\.com/' /etc/apt/sources.list
-RUN sed -i -e 's/security\.ubuntu\.com/old-releases\.ubuntu\.com/' /etc/apt/sources.list
+ENV GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
+    LANG='en_US.UTF-8' \
+    TERM='dumb'
 
-RUN apt-get update -qq
-
-RUN apt-get install -y openjdk-8-jdk \
-					   wget \
-					   expect \
-					   git \
-					   curl \
-					   ruby \
-					   ruby-dev \
-					   ruby-build \
-					   python \
-					   python-pip \
-					   optipng \
-					   imagemagick \
-					   locales
+RUN apt-get update -qq \
+    # We need to install tzdata before all of the other packages. Otherwise it will show an interactive dialog
+    # which we cannot navigate while building the Docker image.
+    && apt-get install -y tzdata \
+    && apt-get install -y openjdk-8-jdk \
+                          expect \
+                          git \
+                          curl \
+                          python \
+                          python-pip \
+                          python3 \
+                          locales \
+                          unzip \
+			  mercurial \
+    && apt-get clean
 
 # Today's Fastlane depends on a newer Ruby version than Ubuntu 17.10 has, so since
 # fastlane is only used for screenshots (afaik) just skip it.
@@ -40,60 +39,14 @@ RUN locale-gen en_US.UTF-8
 
 # -- Android SDK ------------------------------------------------------------------------
 
-RUN cd /opt && wget -q https://dl.google.com/android/android-sdk_r24.4.1-linux.tgz -O android-sdk.tgz
-RUN cd /opt && tar -xvzf android-sdk.tgz
-RUN cd /opt && rm -f android-sdk.tgz
+RUN cd /opt && curl --location --retry 5 --output android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip \
+  && unzip -d /opt/android-sdk-linux android-sdk.zip \
+  && rm -f android-sdk.zip
 
 ENV ANDROID_SDK_HOME /opt/android-sdk-linux
 ENV ANDROID_HOME /opt/android-sdk-linux
-ENV PATH ${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/platform-tools:/opt/tools:${ANDROID_SDK_HOME}/build-tools/28.0.3
 
-# Platform tools
-RUN echo y | android update sdk --no-ui --all --filter platform-tools | grep 'package installed'
-
-# Android 8.0 / SDK 26
-RUN echo y | android update sdk --no-ui --all --filter android-26 | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter android-27 | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter android-28 | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter android-29 | grep 'package installed'
-
-# Build tools 26.0.1
-RUN echo y | android update sdk --no-ui --all --filter build-tools-26.0.1 | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter build-tools-27.0.3 | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter build-tools-28.0.2 | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter build-tools-28.0.3 | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter build-tools-29.0.3 | grep 'package installed'
-
-# Extras
-RUN echo y | android update sdk --no-ui --all --filter extra-android-m2repository | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter extra-google-m2repository | grep 'package installed'
-RUN echo y | android update sdk --no-ui --all --filter extra-google-google_play_services | grep 'package installed'
-
-# Copy tools from our repository into the docker image
-COPY tools /opt/tools
-
-# Accept licenses
-COPY licenses ${ANDROID_SDK_HOME}/licenses
-
-# -- Emulator ---------------------------------------------------------------------------
-
-# Android 5.0 / SDK 21
-RUN echo y | android update sdk --no-ui --all --filter android-21 | grep 'package installed'
-
-# Emulator image
-RUN echo y | android update sdk --no-ui --all --filter sys-img-armeabi-v7a-android-21 | grep 'package installed'
-
-# Create emulator AVD
-RUN echo no | android create avd -f -n test -t android-21 --abi default/armeabi-v7a --skin 480x800
-
-# Create fake keymap file (Otherwise the emulator won't start up)
-RUN mkdir /opt/android-sdk-linux/tools/keymaps && \
-    touch /opt/android-sdk-linux/tools/keymaps/en-us
-
-# -- Update SDK -------------------------------------------------------------------------
-
-# Update SDK
-RUN /opt/tools/android-accept-licenses.sh android update sdk --no-ui --obsolete --force
+RUN yes | "${ANDROID_SDK_HOME}/tools/bin/sdkmanager" --licenses
 
 # -- Project setup ----------------------------------------------------------------------
 
@@ -104,30 +57,16 @@ RUN git clone https://github.com/mozilla-mobile/focus-android.git
 
 # Build project and run gradle tasks once to pull all dependencies
 WORKDIR /opt/focus-android
-RUN ./gradlew --no-daemon assemble testFocusX86DebugUnitTest lint detektCheck ktlint
+RUN ./gradlew assembleFocusAarch64Debug \
+  && ./gradlew testFocusAarch64DebugUnitTest \
+  && ./gradlew detektCheck \
+  && ./gradlew ktlint \
+  && ./gradlew clean
 
 # -- Post setup -------------------------------------------------------------------------
-
-# Install dependencies needed to run Android2Po
-RUN pip install -r tools/l10n/android2po/requirements.txt
 
 # Install taskcluster python library (used by decision tasks)
 # 5.0.0 is still incompatible with taskclusterProxy, meaning no decision task is able
 # to schedule the rest of the Taskcluster tasks. Please upgrade to taskcluster>=5 once
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1460015 is fixed
 RUN pip install 'taskcluster>=4,<5'
-
-# Install Google Cloud SDK for using Firebase Device Lab
-RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-184.0.0-linux-x86_64.tar.gz --output /gcloud.tar.gz
-RUN tar -xvf /gcloud.tar.gz -C /
-RUN /google-cloud-sdk/install.sh --quiet
-RUN /google-cloud-sdk/bin/gcloud --quiet components update
-
-# Needed for verifying cyclic redundancy check (CRC) headers (Google Cloud SDK)
-RUN apt-get install gcc python-dev python-setuptools
-RUN easy_install -U pip
-RUN pip install -U crcmod
-
-# -- Cleanup ----------------------------------------------------------------------------
-
-RUN apt-get clean
