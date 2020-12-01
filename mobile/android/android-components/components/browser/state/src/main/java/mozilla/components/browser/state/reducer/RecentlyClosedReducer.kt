@@ -20,7 +20,6 @@ internal object RecentlyClosedReducer {
                     .take(action.maxTabs))
             }
             is RecentlyClosedAction.ReplaceTabsAction -> state.copy(closedTabs = action.tabs)
-            is RecentlyClosedAction.InitializeRecentlyClosedState -> state
             is RecentlyClosedAction.RemoveClosedTabAction -> {
                 state.copy(
                     closedTabs = state.closedTabs - action.tab

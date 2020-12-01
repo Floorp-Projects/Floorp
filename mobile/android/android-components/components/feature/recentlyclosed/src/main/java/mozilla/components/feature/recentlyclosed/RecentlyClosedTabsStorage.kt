@@ -25,11 +25,11 @@ import java.io.File
  * A storage implementation that saves snapshots of recently closed tabs / sessions.
  */
 @Suppress("TooManyFunctions")
-class RecentlyClosedTabsStorage(
+internal class RecentlyClosedTabsStorage(
     context: Context,
     private val engine: Engine,
     private val scope: CoroutineScope = CoroutineScope(IO)
-) {
+) : RecentlyClosedMiddleware.Storage {
     private val filesDir by lazy { context.filesDir }
 
     @VisibleForTesting
@@ -39,7 +39,7 @@ class RecentlyClosedTabsStorage(
     /**
      * Returns an observable list of [ClosedTab]s.
      */
-    fun getTabs(): Flow<List<ClosedTab>> {
+    override fun getTabs(): Flow<List<ClosedTab>> {
         return database.value.recentlyClosedTabDao().getTabs().map { list ->
             list.map { it.toClosedTab(filesDir, engine) }
         }
@@ -48,7 +48,7 @@ class RecentlyClosedTabsStorage(
     /**
      * Removes the given [ClosedTab].
      */
-    fun removeTab(recentlyClosedTab: ClosedTab) {
+    override fun removeTab(recentlyClosedTab: ClosedTab) {
         val entity = recentlyClosedTab.toRecentlyClosedTabEntity()
         entity.getStateFile(filesDir).delete()
         database.value.recentlyClosedTabDao().deleteTab(entity)
@@ -57,7 +57,7 @@ class RecentlyClosedTabsStorage(
     /**
      * Removes all [ClosedTab]s.
      */
-    fun removeAllTabs() {
+    override fun removeAllTabs() {
         getStateDirectory(filesDir).truncateDirectory()
         database.value.recentlyClosedTabDao().removeAllTabs()
     }
@@ -71,7 +71,7 @@ class RecentlyClosedTabsStorage(
     /**
      * Adds up to [maxTabs] [TabSessionState]s to storage, and then prunes storage to keep only the newest [maxTabs].
      */
-    internal fun addTabsToCollectionWithMax(
+    override fun addTabsToCollectionWithMax(
         tab: List<ClosedTab>,
         maxTabs: Int
     ) {

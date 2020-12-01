@@ -65,9 +65,8 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `closed tab storage stores the provided tab on add tab action`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
 
             val store = BrowserStore(
                 initialState = BrowserState(),
@@ -86,9 +85,8 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `closed tab storage adds normal tabs removed with TabListAction`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
 
             val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
             val tab2 = createTab("https://www.firefox.com", private = false, id = "5678")
@@ -129,9 +127,8 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `closed tab storage adds a normal tab removed with TabListAction`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
 
             val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
 
@@ -165,9 +162,8 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `closed tab storage does not add a private tab removed with TabListAction`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
 
             val tab = createTab("https://www.mozilla.org", private = true, id = "1234")
 
@@ -184,15 +180,15 @@ class RecentlyClosedMiddlewareTest {
             dispatcher.advanceUntilIdle()
             store.waitUntilIdle()
 
-            verifyNoMoreInteractions(middleware.recentlyClosedTabsStorage)
+            verify(storage).getTabs()
+            verifyNoMoreInteractions(storage)
         }
 
     @Test
     fun `closed tab storage adds all normals tab removed with TabListAction RemoveAllNormalTabsAction`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
 
             val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
             val tab2 = createTab("https://www.firefox.com", private = true, id = "3456")
@@ -227,9 +223,8 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `closed tab storage adds all normal tabs and no private tabs removed with TabListAction RemoveAllTabsAction`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
 
             val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
             val tab2 = createTab("https://www.firefox.com", private = true, id = "3456")
@@ -264,18 +259,15 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `fetch the tabs from the recently closed storage and load into browser state on initialize tab state action`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage(tabs = listOf(closedTab))
 
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
             val store = BrowserStore(initialState = BrowserState(), middleware = listOf(middleware))
-            whenever(storage.getTabs()).thenReturn(
-                flow {
-                    emit(listOf(closedTab))
-                }
-            )
 
-            store.dispatch(RecentlyClosedAction.InitializeRecentlyClosedState).joinBlocking()
+            // Wait for Init action of store to be processed
+            store.waitUntilIdle()
+
+            // Now wait for Middleware to process Init action and store to process action from middleware
             dispatcher.advanceUntilIdle()
             store.waitUntilIdle()
 
@@ -286,9 +278,8 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `recently closed storage removes the provided tab on remove tab action`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
 
             val store = BrowserStore(
                 initialState = BrowserState(
@@ -311,9 +302,8 @@ class RecentlyClosedMiddlewareTest {
     @Test
     fun `recently closed storage removes all tabs on remove all tabs action`() =
         runBlockingTest {
-            val storage: RecentlyClosedTabsStorage = mock()
-            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
-            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+            val storage = mockStorage()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope))
             val store = BrowserStore(
                 initialState = BrowserState(
                     closedTabs = listOf(
@@ -331,4 +321,18 @@ class RecentlyClosedMiddlewareTest {
             store.waitUntilIdle()
             verify(storage).removeAllTabs()
         }
+}
+
+private fun mockStorage(
+    tabs: List<ClosedTab> = emptyList()
+): RecentlyClosedMiddleware.Storage {
+    val storage: RecentlyClosedMiddleware.Storage = mock()
+
+    whenever(storage.getTabs()).thenReturn(
+        flow {
+            emit(tabs)
+        }
+    )
+
+    return storage
 }

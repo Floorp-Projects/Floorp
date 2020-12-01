@@ -85,11 +85,6 @@ sealed class SystemAction : BrowserAction() {
  */
 sealed class RecentlyClosedAction : BrowserAction() {
     /**
-     * Initializes the [BrowserState.closedTabs] state.
-     */
-    object InitializeRecentlyClosedState : RecentlyClosedAction()
-
-    /**
      * Adds a list of [ClosedTab] to the [BrowserState.closedTabs] list.
      *
      * @property tabs the [ClosedTab]s to add
