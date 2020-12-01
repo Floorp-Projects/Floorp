@@ -4,7 +4,6 @@
 ---
 job-defaults:
     suite: awsy
-    force-py2: true
     max-run-time: 7200
     instance-size: xlarge
     virtualization:
