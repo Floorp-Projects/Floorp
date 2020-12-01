@@ -70,6 +70,15 @@ add_task(async function testWritesEnabledOnPrefChange() {
   );
   is(enabled, 0, "Pre-XUL skeleton UI is disabled in the Windows registry");
 
+  Services.prefs.setBoolPref("browser.startup.preXulSkeletonUI", true);
+  Services.prefs.setBoolPref("browser.tabs.drawInTitlebar", false);
+  enabled = WindowsRegistry.readRegKey(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+    "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
+    `${firefoxPath}|Enabled`
+  );
+  is(enabled, 0, "Pre-XUL skeleton UI is disabled in the Windows registry");
+
   await BrowserTestUtils.closeWindow(win);
 });
 
