@@ -86,9 +86,11 @@ void StopGamepadMonitoring() {
       java::GeckoAppShell::GetApplicationContext());
 }
 
-void SetGamepadLightIndicatorColor(uint32_t aControllerIdx,
-                                   uint32_t aLightColorIndex, uint8_t aRed,
-                                   uint8_t aGreen, uint8_t aBlue) {
+void SetGamepadLightIndicatorColor(const Tainted<uint32_t>& aControllerIdx,
+                                   const Tainted<uint32_t>& aLightColorIndex,
+                                   const Tainted<uint8_t>& aRed,
+                                   const Tainted<uint8_t>& aGreen,
+                                   const Tainted<uint8_t>& aBlue) {
   NS_WARNING("Android doesn't support gamepad light indicator.");
 }
 
