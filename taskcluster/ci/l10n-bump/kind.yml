@@ -15,7 +15,10 @@ job-defaults:
         implementation: treescript
         tags: []
         bump: false
-        dontbuild: true
+        dontbuild:
+            by-project:
+                mozilla-beta: false
+                default: true
         ignore-closed-tree: false
         push:
             by-project:
