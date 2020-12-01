@@ -23,6 +23,7 @@ DIRS += [
     '/config/external/nspr',
     '/config/external/zlib',
     '/memory',
+    '/mfbt',
     '/mozglue',
 ]
 

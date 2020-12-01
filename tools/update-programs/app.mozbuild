@@ -33,6 +33,7 @@ if CONFIG['MOZ_UPDATER']:
         '/config/external/sqlite',
         '/config/external/zlib',
         '/memory',
+        '/mfbt',
         '/mozglue',
         '/security',
     ]
