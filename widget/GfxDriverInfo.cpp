@@ -166,6 +166,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
     case DeviceFamily::MicrosoftAll:
     case DeviceFamily::ParallelsAll:
     case DeviceFamily::QualcommAll:
+    case DeviceFamily::AppleAll:
       return nullptr;
     default:
       break;
@@ -791,6 +792,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
     case DeviceFamily::MicrosoftAll:
     case DeviceFamily::ParallelsAll:
     case DeviceFamily::QualcommAll:
+    case DeviceFamily::AppleAll:
       NS_WARNING("Invalid DeviceFamily id");
       break;
   }
@@ -932,6 +934,9 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::ParallelsAll:
       vendor = DeviceVendor::Parallels;
       break;
+    case DeviceFamily::AppleAll:
+      vendor = DeviceVendor::Apple;
+      break;
     case DeviceFamily::QualcommAll:
       // Choose an arbitrary Qualcomm PCI VENdor ID for now.
       // TODO: This should be "QCOM" when Windows device ID parsing is reworked.
@@ -969,6 +974,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
     DECLARE_VENDOR_ID(Parallels, "0x1ab8");
     DECLARE_VENDOR_ID(VMWare, "0x15ad");
     DECLARE_VENDOR_ID(VirtualBox, "0x80ee");
+    DECLARE_VENDOR_ID(Apple, "0x106b");
     // Choose an arbitrary Qualcomm PCI VENdor ID for now.
     // TODO: This should be "QCOM" when Windows device ID parsing is reworked.
     DECLARE_VENDOR_ID(Qualcomm, "0x5143");
