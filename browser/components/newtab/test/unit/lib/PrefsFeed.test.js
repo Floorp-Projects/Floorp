@@ -28,6 +28,10 @@ describe("PrefsFeed", () => {
         getIntPref: sinon.spy(),
         getBoolPref: sinon.spy(),
       },
+      obs: {
+        removeObserver: sinon.spy(),
+        addObserver: sinon.spy(),
+      },
     };
     feed.store = {
       dispatch: sinon.spy(),
@@ -89,10 +93,33 @@ describe("PrefsFeed", () => {
     assert.calledOnce(feed.store.dbStorage.getDbTable);
     assert.calledWithExactly(feed.store.dbStorage.getDbTable, "sectionPrefs");
   });
+  it("should handle region on init", () => {
+    feed.init();
+    assert.equal(feed.geo, "US");
+  });
+  it("should add region observer on init", () => {
+    sandbox.stub(global.Region, "home").get(() => "");
+    feed.init();
+    assert.equal(feed.geo, "");
+    assert.calledWith(
+      ServicesStub.obs.addObserver,
+      feed,
+      global.Region.REGION_TOPIC
+    );
+  });
   it("should remove the branch observer on uninit", () => {
     feed.onAction({ type: at.UNINIT });
     assert.calledOnce(feed._prefs.ignoreBranch);
     assert.calledWith(feed._prefs.ignoreBranch, feed);
+  });
+  it("should call removeObserver", () => {
+    feed.geo = "";
+    feed.uninit();
+    assert.calledWith(
+      ServicesStub.obs.removeObserver,
+      feed,
+      global.Region.REGION_TOPIC
+    );
   });
   it("should send a PREF_CHANGED action when onPrefChanged is called", () => {
     feed.onPrefChanged("foo", 2);
@@ -138,5 +165,15 @@ describe("PrefsFeed", () => {
         data: { name: "baz", value: { value: 2, skipBroadcast: true } },
       })
     );
+  });
+  describe("#observe", () => {
+    it("should call dispatch from observe", () => {
+      feed.observe(
+        undefined,
+        global.Region.REGION_TOPIC,
+        global.Region.REGION_UPDATED
+      );
+      assert.calledOnce(feed.store.dispatch);
+    });
   });
 });

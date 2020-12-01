@@ -152,7 +152,10 @@ export class BaseContent extends React.PureComponent {
       !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showLogo = prefs["logowordmark.alwaysVisible"] && !pocketEnabled;
+    const showLogo =
+      prefs["logowordmark.alwaysVisible"] &&
+      (!prefs["feeds.section.topstories"] ||
+        (!prefs["feeds.system.topstories"] && prefs.region));
 
     const outerClassName = [
       "outer-wrapper",
