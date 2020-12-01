@@ -92,7 +92,7 @@ use crate::scene_builder_thread::{SceneBuilderThread, SceneBuilderThreadChannels
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
-use crate::texture_allocator::{ArrayAllocationTracker, FreeRectSlice};
+use crate::guillotine_allocator::{GuillotineAllocator, FreeRectSlice};
 use crate::texture_cache::TextureCache;
 use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget, RenderTargetList};
@@ -4118,7 +4118,7 @@ impl Renderer {
 
                     if use_batch_upload {
                         let (allocator, buffers) = batch_upload_buffers.entry(texture.get_format())
-                            .or_insert_with(|| (ArrayAllocationTracker::new(None), Vec::new()));
+                            .or_insert_with(|| (GuillotineAllocator::new(None), Vec::new()));
 
                         // Allocate a region within the staging buffer for this update. If there is
                         // no room in an existing buffer then allocate another texture and buffer.
