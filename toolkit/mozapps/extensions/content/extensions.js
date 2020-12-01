@@ -66,7 +66,6 @@ function notifyInitialized() {
 }
 
 function shutdown() {
-  gViewController.shutdown();
   Services.obs.removeObserver(sendEMPong, "EM-ping");
 }
 
@@ -242,15 +241,9 @@ var gViewController = {
 
     gCategories.initialize();
 
-    window.controllers.appendController(this);
-
     window.addEventListener("popstate", e => {
       this.updateState(e.state);
     });
-  },
-
-  shutdown() {
-    window.controllers.removeController(this);
   },
 
   updateState(state) {
@@ -340,8 +333,6 @@ var gViewController = {
 
     this.initialViewSelected = true;
   },
-
-  onEvent() {},
 };
 
 var gCategories = {
