@@ -4151,20 +4151,7 @@ static inline ArrayObject* NewArrayTryUseGroup(
   MOZ_ASSERT(newKind != SingletonObject);
 
   RootedObject proto(cx, group->proto().toObject());
-  ArrayObject* res = NewArray<maxLength>(cx, length, proto, newKind);
-  if (!res) {
-    return nullptr;
-  }
-
-  res->setGroup(group);
-
-  // If the length calculation overflowed, make sure that is marked for the
-  // new group.
-  if (res->length() > INT32_MAX) {
-    res->setLength(cx, res->length());
-  }
-
-  return res;
+  return NewArray<maxLength>(cx, length, proto, newKind);
 }
 
 ArrayObject* js::NewFullyAllocatedArrayTryUseGroup(JSContext* cx,
