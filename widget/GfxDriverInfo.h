@@ -171,6 +171,7 @@ enum class DeviceFamily : uint8_t {
   MicrosoftAll,
   ParallelsAll,
   QualcommAll,
+  AppleAll,
   IntelGMA500,
   IntelGMA900,
   IntelGMA950,
@@ -216,6 +217,7 @@ enum class DeviceVendor : uint8_t {
   Qualcomm,
   MicrosoftBasic,
   MicrosoftHyperV,
+  Apple,
 
   Max
 };
