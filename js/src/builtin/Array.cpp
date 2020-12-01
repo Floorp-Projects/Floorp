@@ -3827,9 +3827,8 @@ ArrayObject* js::ArrayConstructorOneArg(JSContext* cx,
   }
 
   uint32_t length = uint32_t(lengthInt);
-  RootedObjectGroup group(cx, templateObject->group());
-  ArrayObject* res = NewPartlyAllocatedArrayTryUseGroup(cx, group, length);
-  MOZ_ASSERT_IF(res, res->realm() == group->realm());
+  ArrayObject* res = NewDensePartlyAllocatedArray(cx, length);
+  MOZ_ASSERT_IF(res, res->realm() == templateObject->realm());
   return res;
 }
 
@@ -4133,34 +4132,7 @@ ArrayObject* js::NewDenseCopyOnWriteArray(JSContext* cx,
   return arr;
 }
 
-// Return a new array with the specified length and allocated capacity (up to
-// maxLength), using the specified group if possible. If the specified group
-// cannot be used, ensure that the created array at least has the given
-// [[Prototype]].
-template <uint32_t maxLength>
-static inline ArrayObject* NewArrayTryUseGroup(
-    JSContext* cx, HandleObjectGroup group, size_t length,
-    NewObjectKind newKind = GenericObject) {
-  MOZ_ASSERT(newKind != SingletonObject);
-
-  RootedObject proto(cx, group->proto().toObject());
-  return NewArray<maxLength>(cx, length, proto, newKind);
-}
-
-ArrayObject* js::NewFullyAllocatedArrayTryUseGroup(JSContext* cx,
-                                                   HandleObjectGroup group,
-                                                   size_t length,
-                                                   NewObjectKind newKind) {
-  return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind);
-}
-
-ArrayObject* js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
-                                                    HandleObjectGroup group,
-                                                    size_t length) {
-  return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group,
-                                                                    length);
-}
-
+// TODO(no-TI): clean up.
 ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
                                    HandleObjectGroup group,
                                    bool convertDoubleElements) {
@@ -4172,7 +4144,7 @@ ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
     ar.emplace(cx, group);
   }
 
-  ArrayObject* res = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
+  ArrayObject* res = NewDenseFullyAllocatedArray(cx, length);
   if (!res) {
     return nullptr;
   }
