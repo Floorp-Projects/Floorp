@@ -1011,11 +1011,11 @@ impl TextureCache {
                 );
                 let unit = texture_array.units
                     .iter_mut()
-                    .find(|unit| unit.texture_id() == entry.texture_id)
+                    .find(|unit| unit.texture_id == entry.texture_id)
                     .expect("Unable to find the associated texture array unit");
 
                 let bpp = texture_array.formats.internal.bytes_per_pixel();
-                let slab_size = unit.deallocate(origin, region_index);
+                let slab_size = unit.allocator.deallocate(origin, region_index);
                 self.shared_bytes_allocated -= (slab_size.width * slab_size.height * bpp) as usize;
 
                 if self.debug_flags.contains(
@@ -1248,6 +1248,15 @@ impl TextureCache {
 /// regions that can act as a slab allocator.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+struct TextureUnit {
+    allocator: SlabAllocator,
+    texture_id: CacheTextureId,
+}
+
+/// A number of 2D textures (single layer), each with a number of
+/// regions that can act as a slab allocator.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureUnits {
     filter: TextureFilter,
     formats: TextureFormatPair<ImageFormat>,
@@ -1284,7 +1293,10 @@ impl TextureUnits {
     fn add_texture(&mut self, texture_id: CacheTextureId) -> usize {
 
         let unit_index = self.units.len();
-        self.units.push(TextureUnit::new(texture_id, self.size, self.region_size, self.slab_sizes));
+        self.units.push(TextureUnit {
+            allocator: SlabAllocator::new(self.size, self.region_size, self.slab_sizes),
+            texture_id,
+        });
 
         unit_index
     }
@@ -1300,8 +1312,8 @@ impl TextureUnits {
     ) -> (CacheTextureId, usize, DeviceIntRect) {
         let mut allocation = None;
         for unit in &mut self.units {
-            if let Some((region, rect)) = unit.allocate(requested_size) {
-                allocation = Some((unit.texture_id(), region, rect));
+            if let Some((region, rect)) = unit.allocator.allocate(requested_size) {
+                allocation = Some((unit.texture_id, region, rect));
             }
         }
 
@@ -1326,6 +1338,7 @@ impl TextureUnits {
             let unit_index = self.add_texture(texture_id);
 
             let (region_index, rect) = self.units[unit_index]
+                .allocator
                 .allocate(requested_size)
                 .unwrap();
 
@@ -1335,14 +1348,14 @@ impl TextureUnits {
 
     fn clear(&mut self, updates: &mut TextureUpdateList) {
         for unit in self.units.drain(..) {
-            updates.push_free(unit.texture_id());
+            updates.push_free(unit.texture_id);
         }
     }
 
     fn release_empty_textures(&mut self, updates: &mut TextureUpdateList) {
         self.units.retain(|unit| {
-            if unit.is_empty() {
-                updates.push_free(unit.texture_id());
+            if unit.allocator.is_empty() {
+                updates.push_free(unit.texture_id);
 
                 false
             } else {
@@ -1352,7 +1365,7 @@ impl TextureUnits {
     }
 
     fn update_profile(&self, count_idx: usize, mem_idx: usize, profile: &mut TransactionProfile) {
-        let num_regions: usize = self.units.iter().map(|u| u.num_regions()).sum();
+        let num_regions: usize = self.units.iter().map(|u| u.allocator.num_regions()).sum();
         profile.set(count_idx, num_regions);
         profile.set(mem_idx, profiler::bytes_to_mb(self.size_in_bytes()));
     }
@@ -1383,14 +1396,14 @@ impl TextureUnits {
 
         let mut y = unit_spacing;
         for unit in &self.units {
-            writeln!(output, "    {}", text(unit_spacing, y, format!("{:?}", unit.texture_id())).color(rgb(230, 230, 230)))?;
+            writeln!(output, "    {}", text(unit_spacing, y, format!("{:?}", unit.texture_id)).color(rgb(230, 230, 230)))?;
 
             let rect = Box2D {
                 min: point2(unit_spacing, y),
                 max: point2(unit_spacing + texture_size, y + texture_size),
             };
 
-            unit.dump_as_svg(&rect, output)?;
+            unit.allocator.dump_as_svg(&rect, output)?;
 
             y += unit_spacing + texture_size + text_spacing;
         }
