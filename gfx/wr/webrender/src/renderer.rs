@@ -72,7 +72,7 @@ use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, PrimitiveInstanceData, ScalingInstance, SvgFilterInstance};
-use crate::gpu_types::{ClearInstance, CompositeInstance, ResolveInstanceData, TransformData, ZBufferId};
+use crate::gpu_types::{ClearInstance, CompositeInstance, TransformData, ZBufferId};
 use crate::internal_types::{TextureSource, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
@@ -2396,7 +2396,6 @@ impl Renderer {
             options.use_optimized_shaders,
             options.upload_method.clone(),
             options.cached_programs.take(),
-            options.allow_pixel_local_storage_support,
             options.allow_texture_storage_support,
             options.allow_texture_swizzling,
             options.dump_shader_source.take(),
@@ -2408,10 +2407,7 @@ impl Renderer {
         let swizzle_settings = device.swizzle_settings();
         let use_dual_source_blending =
             device.get_capabilities().supports_dual_source_blending &&
-            options.allow_dual_source_blending &&
-            // If using pixel local storage, subpixel AA isn't supported (we disable it on all
-            // mobile devices explicitly anyway).
-            !device.get_capabilities().supports_pixel_local_storage;
+            options.allow_dual_source_blending;
         let ext_blend_equation_advanced =
             options.allow_advanced_blend_equation &&
             device.get_capabilities().supports_advanced_blend_equation;
@@ -4687,23 +4683,6 @@ impl Renderer {
             let mut prev_blend_mode = BlendMode::None;
             let shaders_rc = self.shaders.clone();
 
-            // If the device supports pixel local storage, initialize the PLS buffer for
-            // the transparent pass. This involves reading the current framebuffer value
-            // and storing that in PLS.
-            // TODO(gw): This is quite expensive and relies on framebuffer fetch being
-            //           available. We can probably switch the opaque pass over to use
-            //           PLS too, and remove this pass completely.
-            if self.device.get_capabilities().supports_pixel_local_storage {
-                // TODO(gw): If using PLS, the fixed function blender is disabled. It's possible
-                //           we could take advantage of this by skipping batching on the blend
-                //           mode in these cases.
-                self.init_pixel_local_storage(
-                    alpha_batch_container.task_rect,
-                    projection,
-                    stats,
-                );
-            }
-
             for batch in &alpha_batch_container.alpha_batches {
                 if should_skip_batch(&batch.key.kind, self.debug_flags) {
                     continue;
@@ -4826,17 +4805,6 @@ impl Renderer {
                 if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
                     prev_blend_mode = BlendMode::None;
                 }
-            }
-
-            // If the device supports pixel local storage, resolve the PLS values.
-            // This pass reads the final PLS color value, and writes it to a normal
-            // fragment output.
-            if self.device.get_capabilities().supports_pixel_local_storage {
-                self.resolve_pixel_local_storage(
-                    alpha_batch_container.task_rect,
-                    projection,
-                    stats,
-                );
             }
 
             self.set_blend(false, framebuffer_kind);
@@ -6552,70 +6520,6 @@ impl Renderer {
         }
     }
 
-    /// Initialize the PLS block, by reading the current framebuffer color.
-    pub fn init_pixel_local_storage(
-        &mut self,
-        task_rect: DeviceIntRect,
-        projection: &default::Transform3D<f32>,
-        stats: &mut RendererStats,
-    ) {
-        self.device.enable_pixel_local_storage(true);
-
-        self.shaders
-            .borrow_mut()
-            .pls_init
-            .as_mut()
-            .unwrap()
-            .bind(
-                &mut self.device,
-                projection,
-                &mut self.renderer_errors,
-            );
-
-        let instances = [
-            ResolveInstanceData::new(task_rect),
-        ];
-
-        self.draw_instanced_batch(
-            &instances,
-            VertexArrayKind::Resolve,
-            &BatchTextures::empty(),
-            stats,
-        );
-    }
-
-    /// Resolve the current PLS structure, writing it to a fragment color output.
-    pub fn resolve_pixel_local_storage(
-        &mut self,
-        task_rect: DeviceIntRect,
-        projection: &default::Transform3D<f32>,
-        stats: &mut RendererStats,
-    ) {
-        self.shaders
-            .borrow_mut()
-            .pls_resolve
-            .as_mut()
-            .unwrap()
-            .bind(
-                &mut self.device,
-                projection,
-                &mut self.renderer_errors,
-            );
-
-        let instances = [
-            ResolveInstanceData::new(task_rect),
-        ];
-
-        self.draw_instanced_batch(
-            &instances,
-            VertexArrayKind::Resolve,
-            &BatchTextures::empty(),
-            stats,
-        );
-
-        self.device.enable_pixel_local_storage(false);
-    }
-
     pub fn debug_renderer(&mut self) -> Option<&mut DebugRenderer> {
         self.debug.get_mut(&mut self.device)
     }
@@ -7309,11 +7213,6 @@ pub struct RendererOptions {
     pub gpu_supports_fast_clears: bool,
     pub allow_dual_source_blending: bool,
     pub allow_advanced_blend_equation: bool,
-    /// If true, allow WR to use pixel local storage if the device supports it.
-    /// For now, this defaults to false since the code is still experimental
-    /// and not complete. This option will probably be removed once support is
-    /// complete, and WR can implicitly choose whether to make use of PLS.
-    pub allow_pixel_local_storage_support: bool,
     /// If true, allow textures to be initialized with glTexStorage.
     /// This affects VRAM consumption and data upload paths.
     pub allow_texture_storage_support: bool,
@@ -7391,7 +7290,6 @@ impl Default for RendererOptions {
             gpu_supports_fast_clears: false,
             allow_dual_source_blending: true,
             allow_advanced_blend_equation: false,
-            allow_pixel_local_storage_support: false,
             allow_texture_storage_support: true,
             allow_texture_swizzling: true,
             clear_caches_with_quads: true,

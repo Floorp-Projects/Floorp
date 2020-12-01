@@ -55,7 +55,6 @@ const DEBUG_OVERDRAW_FEATURE: &str = "DEBUG_OVERDRAW";
 const DITHERING_FEATURE: &str = "DITHERING";
 const DUAL_SOURCE_FEATURE: &str = "DUAL_SOURCE_BLENDING";
 const FAST_PATH_FEATURE: &str = "FAST_PATH";
-const PIXEL_LOCAL_STORAGE_FEATURE: &str = "PIXEL_LOCAL_STORAGE";
 
 pub(crate) enum ShaderKind {
     Primitive,
@@ -311,7 +310,6 @@ impl BrushShader {
         shader_list: &ShaderFeatures,
         use_advanced_blend: bool,
         use_dual_source: bool,
-        use_pixel_local_storage: bool,
     ) -> Result<Self, ShaderError> {
         let opaque_features = features.to_vec();
         let opaque = LazilyCompiledShader::new(
@@ -325,9 +323,6 @@ impl BrushShader {
 
         let mut alpha_features = opaque_features.to_vec();
         alpha_features.push(ALPHA_FEATURE);
-        if use_pixel_local_storage {
-            alpha_features.push(PIXEL_LOCAL_STORAGE_FEATURE);
-        }
 
         let alpha = LazilyCompiledShader::new(
             ShaderKind::Brush,
@@ -577,12 +572,6 @@ pub struct Shaders {
     pub ps_text_run: TextShader,
     pub ps_text_run_dual_source: Option<TextShader>,
 
-    // Helper shaders for pixel local storage render paths.
-    // pls_init: Initialize pixel local storage, based on current framebuffer value.
-    // pls_resolve: Convert pixel local storage, writing out to fragment value.
-    pub pls_init: Option<LazilyCompiledShader>,
-    pub pls_resolve: Option<LazilyCompiledShader>,
-
     ps_split_composite: LazilyCompiledShader,
     pub ps_clear: LazilyCompiledShader,
 
@@ -607,16 +596,9 @@ impl Shaders {
         gl_type: GlType,
         options: &RendererOptions,
     ) -> Result<Self, ShaderError> {
-        let use_pixel_local_storage = device
-            .get_capabilities()
-            .supports_pixel_local_storage;
-        // If using PLS, we disable all subpixel AA implicitly. Subpixel AA is always
-        // disabled on mobile devices anyway, due to uncertainty over the subpixel
-        // layout configuration.
         let use_dual_source_blending =
             device.get_capabilities().supports_dual_source_blending &&
-            options.allow_dual_source_blending &&
-            !use_pixel_local_storage;
+            options.allow_dual_source_blending;
         let use_advanced_blend_equation =
             device.get_capabilities().supports_advanced_blend_equation &&
             options.allow_advanced_blend_equation;
@@ -625,7 +607,6 @@ impl Shaders {
             GlType::Gl => ShaderFeatureFlags::GL,
             GlType::Gles => ShaderFeatureFlags::GLES | ShaderFeatureFlags::TEXTURE_EXTERNAL,
         };
-        shader_flags.set(ShaderFeatureFlags::PIXEL_LOCAL_STORAGE, use_pixel_local_storage);
         shader_flags.set(ShaderFeatureFlags::ADVANCED_BLEND_EQUATION, use_advanced_blend_equation);
         shader_flags.set(ShaderFeatureFlags::DUAL_SOURCE_BLENDING, use_dual_source_blending);
         shader_flags.set(ShaderFeatureFlags::DITHERING, options.enable_dithering);
@@ -639,7 +620,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let brush_blend = BrushShader::new(
@@ -650,7 +630,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let brush_mix_blend = BrushShader::new(
@@ -661,7 +640,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let brush_conic_gradient = BrushShader::new(
@@ -676,7 +654,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let brush_radial_gradient = BrushShader::new(
@@ -691,7 +668,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let brush_linear_gradient = BrushShader::new(
@@ -706,7 +682,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let brush_opacity_aa = BrushShader::new(
@@ -717,7 +692,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let brush_opacity = BrushShader::new(
@@ -728,7 +702,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            use_pixel_local_storage,
         )?;
 
         let cs_blur_a8 = LazilyCompiledShader::new(
@@ -794,32 +767,6 @@ impl Shaders {
             &shader_list,
         )?;
 
-        let pls_init = if use_pixel_local_storage {
-            Some(LazilyCompiledShader::new(
-                ShaderKind::Resolve,
-                "pls_init",
-                &[PIXEL_LOCAL_STORAGE_FEATURE],
-                device,
-                options.precache_flags,
-                &shader_list,
-            )?)
-        } else {
-            None
-        };
-
-        let pls_resolve = if use_pixel_local_storage {
-            Some(LazilyCompiledShader::new(
-                ShaderKind::Resolve,
-                "pls_resolve",
-                &[PIXEL_LOCAL_STORAGE_FEATURE],
-                device,
-                options.precache_flags,
-                &shader_list,
-            )?)
-        } else {
-            None
-        };
-
         let mut cs_scale = Vec::new();
         let scale_shader_num = IMAGE_BUFFER_KINDS.len();
         // PrimitiveShader is not clonable. Use push() to initialize the vec.
@@ -854,21 +801,16 @@ impl Shaders {
         // TODO(gw): The split composite + text shader are special cases - the only
         //           shaders used during normal scene rendering that aren't a brush
         //           shader. Perhaps we can unify these in future?
-        let mut extra_prim_features = Vec::new();
-        if use_pixel_local_storage {
-            extra_prim_features.push(PIXEL_LOCAL_STORAGE_FEATURE);
-        }
 
         let ps_text_run = TextShader::new("ps_text_run",
             device,
-            &extra_prim_features,
+            &[],
             options.precache_flags,
             &shader_list,
         )?;
 
         let ps_text_run_dual_source = if use_dual_source_blending {
-            let mut dual_source_features = extra_prim_features.clone();
-            dual_source_features.push(DUAL_SOURCE_FEATURE);
+            let dual_source_features = vec![DUAL_SOURCE_FEATURE];
             Some(TextShader::new("ps_text_run",
                 device,
                 &dual_source_features,
@@ -882,7 +824,7 @@ impl Shaders {
         let ps_split_composite = LazilyCompiledShader::new(
             ShaderKind::Primitive,
             "ps_split_composite",
-            &extra_prim_features,
+            &[],
             device,
             options.precache_flags,
             &shader_list,
@@ -891,7 +833,7 @@ impl Shaders {
         let ps_clear = LazilyCompiledShader::new(
             ShaderKind::Clear,
             "ps_clear",
-            &extra_prim_features,
+            &[],
             device,
             options.precache_flags,
             &shader_list,
@@ -924,7 +866,6 @@ impl Shaders {
                 &shader_list,
                 use_advanced_blend_equation,
                 use_dual_source_blending,
-                use_pixel_local_storage,
             )?);
 
             image_features.push("REPETITION");
@@ -938,7 +879,6 @@ impl Shaders {
                 &shader_list,
                 use_advanced_blend_equation,
                 use_dual_source_blending,
-                use_pixel_local_storage,
             )?);
 
             image_features.clear();
@@ -975,7 +915,6 @@ impl Shaders {
                     &shader_list,
                     false /* advanced blend */,
                     false /* dual source */,
-                    use_pixel_local_storage,
                 )?;
 
                 let composite_yuv_shader = LazilyCompiledShader::new(
@@ -1068,8 +1007,6 @@ impl Shaders {
             cs_clip_rectangle_fast,
             cs_clip_box_shadow,
             cs_clip_image,
-            pls_init,
-            pls_resolve,
             ps_text_run,
             ps_text_run_dual_source,
             ps_split_composite,
@@ -1200,12 +1137,6 @@ impl Shaders {
         self.cs_clip_rectangle_fast.deinit(device);
         self.cs_clip_box_shadow.deinit(device);
         self.cs_clip_image.deinit(device);
-        if let Some(shader) = self.pls_init {
-            shader.deinit(device);
-        }
-        if let Some(shader) = self.pls_resolve {
-            shader.deinit(device);
-        }
         self.ps_text_run.deinit(device);
         if let Some(shader) = self.ps_text_run_dual_source {
             shader.deinit(device);

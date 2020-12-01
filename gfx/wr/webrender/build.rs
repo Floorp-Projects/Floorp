@@ -120,7 +120,6 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
             flags.remove(ShaderFeatureFlags::TEXTURE_EXTERNAL);
         }
         flags.remove(ShaderFeatureFlags::DITHERING);
-        flags.remove(ShaderFeatureFlags::PIXEL_LOCAL_STORAGE);
 
         for (shader_name, configs) in get_shader_features(flags) {
             for config in configs {

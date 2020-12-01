@@ -231,26 +231,6 @@ pub struct PrimitiveInstanceData {
     data: [i32; 4],
 }
 
-/// Vertex format for resolve style operations with pixel local storage.
-#[derive(Debug, Clone)]
-#[repr(C)]
-pub struct ResolveInstanceData {
-    rect: [f32; 4],
-}
-
-impl ResolveInstanceData {
-    pub fn new(rect: DeviceIntRect) -> Self {
-        ResolveInstanceData {
-            rect: [
-                rect.origin.x as f32,
-                rect.origin.y as f32,
-                rect.size.width as f32,
-                rect.size.height as f32,
-            ],
-        }
-    }
-}
-
 /// Vertex format for picture cache composite shader.
 /// When editing the members, update desc::COMPOSITE
 /// so its list of instance_attributes matches:
