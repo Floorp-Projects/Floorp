@@ -382,7 +382,8 @@ static void testDestructor() {
 
     {
       Variant<char, UniquePtr<char[]>, Destroyer> v1(d);
-      MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 0);  // None detroyed yet.
+      MOZ_RELEASE_ASSERT(Destroyer::destroyedCount ==
+                         0);  // None destroyed yet.
     }
 
     MOZ_RELEASE_ASSERT(Destroyer::destroyedCount ==

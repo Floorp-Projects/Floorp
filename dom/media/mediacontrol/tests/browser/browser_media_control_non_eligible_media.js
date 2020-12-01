@@ -27,7 +27,7 @@ const gNonEligibleElementIds = [
  * eligible for being controlled by media control keys.
  * (1) If media is inaudible all the time, then we would not control it.
  * (2) If media starts inaudibly, we would not try to control it. But once it
- * becomes audible later, we would keep controlling it until it's detroyed.
+ * becomes audible later, we would keep controlling it until it's destroyed.
  * (3) If media's duration is too short (<3s), then we would not control it.
  */
 add_task(async function setupTestingPref() {

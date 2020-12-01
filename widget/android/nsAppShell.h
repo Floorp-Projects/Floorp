@@ -157,7 +157,7 @@ class nsAppShell : public nsBaseAppShell {
 
   class NativeCallbackEvent : public Event {
     // Capturing the nsAppShell instance is safe because if the app
-    // shell is detroyed, this lambda will not be called either.
+    // shell is destroyed, this lambda will not be called either.
     nsAppShell* const appShell;
 
    public:
