@@ -102,10 +102,6 @@ extern ArrayObject* NewCopiedArrayTryUseGroup(
     NewObjectKind newKind = GenericObject,
     ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
 
-extern ArrayObject* NewCopiedArrayForCallingAllocationSite(
-    JSContext* cx, const Value* vp, size_t length,
-    HandleObject proto = nullptr);
-
 extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
                                       HandleObjectGroup group,
                                       bool convertDoubleElements);
