@@ -4,7 +4,6 @@
 
 use euclid::{point2, size2, default::Box2D};
 use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use crate::internal_types::CacheTextureId;
 use std::cmp;
 
 #[derive(Copy, Clone, Debug)]
@@ -213,8 +212,7 @@ impl TextureRegion {
 /// A 2D texture divided into regions.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct TextureUnit {
-    texture_id: CacheTextureId,
+pub struct SlabAllocator {
     regions: Vec<TextureRegion>,
     size: i32,
     region_size: i32,
@@ -222,8 +220,8 @@ pub struct TextureUnit {
     slab_sizes: SlabSizes,
 }
 
-impl TextureUnit {
-    pub fn new(texture_id: CacheTextureId, size: i32, region_size: i32, slab_sizes: SlabSizes) -> Self {
+impl SlabAllocator {
+    pub fn new(size: i32, region_size: i32, slab_sizes: SlabSizes) -> Self {
         let regions_per_row = size / region_size;
         let num_regions = (regions_per_row * regions_per_row) as usize;
 
@@ -238,18 +236,13 @@ impl TextureUnit {
             regions.push(TextureRegion::new(index, offset));
         }
 
-        TextureUnit {
-            texture_id,
+        SlabAllocator {
             regions,
             region_size,
             size,
             empty_regions: num_regions,
             slab_sizes,
         }
-    }
-
-    pub fn texture_id(&self) -> CacheTextureId {
-        self.texture_id
     }
 
     pub fn is_empty(&self) -> bool {
