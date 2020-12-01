@@ -14,11 +14,21 @@
     @media screen and (min-width: 1px) {
       div {
         width: 200px;
+        background-color: yellow;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      div {
+        background-color: darkblue;
       }
     }
   </style>
 </head>
 <body>
 <div></div>
+<iframe
+  src='http://example.org/document-builder.sjs?html=<style>html { background: cyan;} @media (prefers-color-scheme: dark) {html {background: darkred;}}'>
+</iframe>
 </body>
 </html>
