@@ -15,7 +15,6 @@ job-defaults:
         resources:
             - 'build/moz.configure'
             - 'config/external/zlib'
-            - 'mfbt'
             - 'moz.configure'
             - 'toolkit/crashreporter'
             - 'toolkit/crashreporter/google-breakpad/src/common'

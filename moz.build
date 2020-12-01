@@ -171,10 +171,6 @@ if not CONFIG["JS_STANDALONE"] or not CONFIG["MOZ_BUILD_APP"]:
     GENERATED_FILES["buildid.h"].script = "build/variables.py:buildid_header"
     GENERATED_FILES["source-repo.h"].script = "build/variables.py:source_repo_header"
 
-DIRS += [
-    "mfbt",
-]
-
 if CONFIG["MOZ_BUILD_APP"]:
     # Bring in the configuration for the configured application.
     include("/" + CONFIG["MOZ_BUILD_APP"] + "/app.mozbuild")
