@@ -1656,17 +1656,17 @@ var BookmarkingUI = {
     let menuItems = [
       [
         showOnNewTabMenuItem,
-        "toolbar-context-menu-bookmarks-toolbar-on-new-tab",
+        "toolbar-context-menu-bookmarks-toolbar-on-new-tab-2",
         "newtab",
       ],
       [
         alwaysShowMenuItem,
-        "toolbar-context-menu-bookmarks-toolbar-always-show",
+        "toolbar-context-menu-bookmarks-toolbar-always-show-2",
         "always",
       ],
       [
         alwaysHideMenuItem,
-        "toolbar-context-menu-bookmarks-toolbar-never-show",
+        "toolbar-context-menu-bookmarks-toolbar-never-show-2",
         "never",
       ],
     ];
