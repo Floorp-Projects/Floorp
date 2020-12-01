@@ -20,7 +20,10 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("have to test that https-only mode background request does not happen");
 SimpleTest.requestLongerTimeout(8);
 
-const EXPECTED_KICK_OFF_REQUEST = "http://example.com/tests/dom/security/test/https-only/file_http_background_request.sjs?sensitive";
+const SJS_PATH = "tests/dom/security/test/https-only/file_http_background_request.sjs?sensitive";
+
+const EXPECTED_KICK_OFF_REQUEST = "http://example.com/" + SJS_PATH;
+const EXPECTED_KICK_OFF_REQUEST_LOCAL = "http://localhost:8/" + SJS_PATH;
 const EXPECTED_UPGRADE_REQUEST = EXPECTED_KICK_OFF_REQUEST.replace("http://", "https://");
 let expectedBackgroundRequest = "";
 let requestCounter = 0;
@@ -36,12 +39,17 @@ examiner.prototype  = {
     // On Android we have other requests appear here as well. Let's make
     // sure we only evaluate requests triggered by the test.
     if (!data.startsWith("http://example.com") &&
-        !data.startsWith("https://example.com")) {
+        !data.startsWith("https://example.com") &&
+        !data.startsWith("http://localhost:8") &&
+        !data.startsWith("https://localhost:8")) {
       return;
     }
     ++requestCounter;
     if (requestCounter == 1) {
-      is(data, EXPECTED_KICK_OFF_REQUEST, "kick off request needs to be http");
+      ok(
+        data === EXPECTED_KICK_OFF_REQUEST || data === EXPECTED_KICK_OFF_REQUEST_LOCAL,
+        "kick off request needs to be http"
+      );
       return;
     }
     if (requestCounter == 2) {
@@ -81,6 +89,14 @@ async function runTests() {
   let testWin = window.open(EXPECTED_KICK_OFF_REQUEST, "_blank");
   await resolveAfter4Seconds();
   is(requestCounter, 3, "three requests total (kickoff, upgraded, background)");
+  testWin.close();
+
+  // (x) Test no http background request happens when localhost
+  expectedBackgroundRequest = "";
+  requestCounter = 0;
+  testWin = window.open(EXPECTED_KICK_OFF_REQUEST_LOCAL, "_blank");
+  await resolveAfter4Seconds();
+  is(requestCounter, 1, "one requests total (kickoff, no upgraded, no background)");
   testWin.close();
 
   // (b) Test no http background request happens if pref is set to false
