@@ -46,9 +46,7 @@ pub struct qcms_modular_transform {
     pub input_clut_table_g: Option<Vec<f32>>,
     pub input_clut_table_b: Option<Vec<f32>>,
     pub input_clut_table_length: u16,
-    pub r_clut: *mut f32,
-    pub g_clut: *mut f32,
-    pub b_clut: *mut f32,
+    pub clut: Option<Vec<f32>>,
     pub grid_size: u16,
     pub output_clut_table_r: *mut f32,
     pub output_clut_table_g: *mut f32,
@@ -229,12 +227,13 @@ unsafe extern "C" fn qcms_transform_module_clut_only(
     let mut xy_len: i32 = 1;
     let mut x_len: i32 = (*transform).grid_size as i32;
     let mut len: i32 = x_len * x_len;
-    let mut r_table: *mut f32 = (*transform).r_clut;
-    let mut g_table: *mut f32 = (*transform).g_clut;
-    let mut b_table: *mut f32 = (*transform).b_clut;
+    let mut r_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(0isize);
+    let mut g_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(1isize);
+    let mut b_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(2isize);
+
     let mut i: usize = 0;
     let CLU =
-        |table: *mut f32, x, y, z| *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
+        |table: *const f32, x, y, z| *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
 
     while i < length {
         debug_assert!((*transform).grid_size as i32 >= 1);
@@ -302,11 +301,11 @@ unsafe extern "C" fn qcms_transform_module_clut(
     let mut xy_len: i32 = 1;
     let mut x_len: i32 = (*transform).grid_size as i32;
     let mut len: i32 = x_len * x_len;
-    let mut r_table: *mut f32 = (*transform).r_clut;
-    let mut g_table: *mut f32 = (*transform).g_clut;
-    let mut b_table: *mut f32 = (*transform).b_clut;
+    let mut r_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(0isize);
+    let mut g_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(1isize);
+    let mut b_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(2isize);
     let CLU =
-        |table: *mut f32, x, y, z| *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
+        |table: *const f32, x, y, z| *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
 
     let mut i: usize = 0;
     let input_clut_table_r = (*transform).input_clut_table_r.as_ref().unwrap();
@@ -709,23 +708,8 @@ unsafe extern "C" fn qcms_modular_transform_release(mut t: Option<Box<qcms_modul
         (*transform).input_clut_table_g = None;
         (*transform).input_clut_table_b = None;
 
-        if (*transform).r_clut.offset(1isize) == (*transform).g_clut
-            && (*transform).g_clut.offset(1isize) == (*transform).b_clut
-        {
-            if !(*transform).r_clut.is_null() {
-                free((*transform).r_clut as *mut libc::c_void);
-            }
-        } else {
-            if !(*transform).r_clut.is_null() {
-                free((*transform).r_clut as *mut libc::c_void);
-            }
-            if !(*transform).g_clut.is_null() {
-                free((*transform).g_clut as *mut libc::c_void);
-            }
-            if !(*transform).b_clut.is_null() {
-                free((*transform).b_clut as *mut libc::c_void);
-            }
-        }
+        transform.clut = None;
+
         if (*transform)
             .output_clut_table_r
             .offset((*transform).output_clut_table_length as i32 as isize)
@@ -793,7 +777,6 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
     let mut transform;
     if !(*lut).a_curves[0].is_none() {
         let mut clut_length: usize;
-        let mut clut: *mut f32;
         // If the A curve is present this also implies the
         // presence of a CLUT.
         if (*lut).clut_table.is_none() {
@@ -826,21 +809,12 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
                     if transform.is_none() {
                         current_block = 7590209878260659629;
                     } else {
-                        clut_length = (::std::mem::size_of::<f32>() as f64
-                            * ((*lut).num_grid_points[0] as f64).powf(3f64)
-                            * 3f64) as usize;
-                        clut = malloc(clut_length) as *mut f32;
-                        if clut.is_null() {
+                        clut_length = ((*lut).num_grid_points[0] as usize).pow(3) * 3;
+                        if false {
                             current_block = 7590209878260659629;
                         } else {
-                            memcpy(
-                                clut as *mut libc::c_void,
-                                (*lut).clut_table.as_ref().unwrap().as_ptr() as *const libc::c_void,
-                                clut_length,
-                            );
-                            transform.as_mut().unwrap().r_clut = clut.offset(0isize);
-                            transform.as_mut().unwrap().g_clut = clut.offset(1isize);
-                            transform.as_mut().unwrap().b_clut = clut.offset(2isize);
+                            assert_eq!(clut_length, lut.clut_table.as_ref().unwrap().len());
+                            transform.as_mut().unwrap().clut = lut.clut_table.clone();
                             transform.as_mut().unwrap().grid_size = (*lut).num_grid_points[0] as u16;
                             transform.as_mut().unwrap().transform_module_fn = Some(
                                 qcms_transform_module_clut_only,
@@ -941,7 +915,6 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
     let mut clut_length: usize;
     let mut out_curve_len: usize;
     let mut in_curves: *mut f32;
-    let mut clut: *mut f32;
     let mut out_curves: *mut f32;
     let mut transform = qcms_modular_transform_alloc();
     if !transform.is_none() {
@@ -980,19 +953,11 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
                     );
                     transform.as_mut().unwrap().input_clut_table_length = (*lut).num_input_table_entries;
                     // Prepare table
-                    clut_length = (::std::mem::size_of::<f32>() as f64
-                        * ((*lut).num_clut_grid_points as f64).powf(3f64)
-                        * 3f64) as usize;
-                    clut = malloc(clut_length) as *mut f32;
-                    if !clut.is_null() {
-                        memcpy(
-                            clut as *mut libc::c_void,
-                            (*lut).clut_table.as_ptr() as *const libc::c_void,
-                            clut_length,
-                        );
-                        transform.as_mut().unwrap().r_clut = clut.offset(0isize);
-                        transform.as_mut().unwrap().g_clut = clut.offset(1isize);
-                        transform.as_mut().unwrap().b_clut = clut.offset(2isize);
+                    clut_length = ((*lut).num_clut_grid_points as usize).pow(3) * 3;
+                    if true {
+                        assert_eq!(clut_length, lut.clut_table.len());
+                        transform.as_mut().unwrap().clut = Some((*lut).clut_table.clone());
+
                         transform.as_mut().unwrap().grid_size = (*lut).num_clut_grid_points as u16;
                         // Prepare output curves
                         out_curve_len = ::std::mem::size_of::<f32>()
