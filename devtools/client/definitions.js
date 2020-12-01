@@ -581,10 +581,8 @@ function createHighlightButton(highlighterName, id) {
       if (highlighter.isShown()) {
         return highlighter.hide();
       }
-      // @backward-compat { version 63 } On newer server, higlighter's spec accept a null
-      // first argument. Still pass an empty object to fake a domnode front in order to
-      // support old servers.
-      return highlighter.show({});
+
+      return highlighter.show();
     },
     isChecked(toolbox) {
       // if the inspector doesn't exist, then the highlighter has not yet been connected
