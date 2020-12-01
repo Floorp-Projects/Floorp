@@ -88,6 +88,9 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   GMP_LOG_DEBUG("GMPProcessParent::Launch() mChildLaunchArch: %d",
                 mChildLaunchArch);
   mLaunchOptions->arch = mChildLaunchArch;
+  if (mChildLaunchArch == base::PROCESS_ARCH_X86_64) {
+    mLaunchOptions->env_map["MOZ_SHMEM_PAGESIZE_16K"] = 1;
+  }
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
