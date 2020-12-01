@@ -183,6 +183,7 @@ imply_option("MOZ_LD64_KNOWN_GOOD", depends_if("MOZ_AUTOMATION")(lambda _: True)
 @depends(
     "--enable-lto",
     c_compiler,
+    select_linker,
     "MOZ_AUTOMATION",
     "MOZ_LD64_KNOWN_GOOD",
     target,
@@ -193,6 +194,7 @@ imply_option("MOZ_LD64_KNOWN_GOOD", depends_if("MOZ_AUTOMATION")(lambda _: True)
 def lto(
     value,
     c_compiler,
+    select_linker,
     automation,
     ld64_known_good,
     target,
@@ -303,7 +305,7 @@ def lto(
                 # is applied as a patch to our automation toolchain.
                 ldflags.append("-opt:ltonewpassmanager")
                 ldflags.append("-mllvm:-import-hot-multiplier=30")
-            elif target.os != "OSX" and c_compiler.type == "clang":
+            elif select_linker.KIND != "ld64" and c_compiler.type == "clang":
                 ldflags.append("-Wl,-plugin-opt=new-pass-manager")
                 ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
 
