@@ -232,7 +232,7 @@
    Bug 984196
    Memcheck:Leak
    ...
-   fun:glxtest
+   fun:childgltest
    ...
 }
 
