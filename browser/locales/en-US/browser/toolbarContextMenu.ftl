@@ -55,14 +55,14 @@ toolbar-context-menu-view-customize-toolbar =
     .label = Customize…
     .accesskey = C
 
-toolbar-context-menu-bookmarks-toolbar-always-show =
-    .label = Always
+toolbar-context-menu-bookmarks-toolbar-always-show-2 =
+    .label = Always Show
     .accesskey = A
-toolbar-context-menu-bookmarks-toolbar-never-show =
-    .label = Never
+toolbar-context-menu-bookmarks-toolbar-never-show-2 =
+    .label = Never Show
     .accesskey = N
-toolbar-context-menu-bookmarks-toolbar-on-new-tab =
-    .label = Only on New Tab
+toolbar-context-menu-bookmarks-toolbar-on-new-tab-2 =
+    .label = Only Show on New Tab
     .accesskey = O
 
 toolbar-context-menu-bookmarks-show-other-bookmarks =
