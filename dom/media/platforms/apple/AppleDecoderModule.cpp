@@ -139,18 +139,17 @@ bool AppleDecoderModule::CanCreateVP9Decoder() {
       return false;
     }
 
+    // Check that we can instantiate a VP9 decoder.
     VideoInfo info(1920, 1080);
     info.mMimeType = "video/vp9";
     VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
 
     RefPtr<AppleVTDecoder> decoder =
         new AppleVTDecoder(info, nullptr, {}, nullptr);
-    nsAutoCString reason;
     MediaResult rv = decoder->InitializeSession();
-    bool isHardwareAccelerated = decoder->IsHardwareAccelerated(reason);
     decoder->Shutdown();
 
-    return NS_SUCCEEDED(rv) && isHardwareAccelerated;
+    return NS_SUCCEEDED(rv);
   }
 
   return false;
