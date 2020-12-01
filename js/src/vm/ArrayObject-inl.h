@@ -19,13 +19,6 @@
 
 namespace js {
 
-inline void ArrayObject::setLength(JSContext* cx, uint32_t length) {
-  MOZ_ASSERT(lengthIsWritable());
-  MOZ_ASSERT_IF(length != getElementsHeader()->length,
-                !denseElementsAreFrozen());
-  getElementsHeader()->length = length;
-}
-
 /* static */ inline ArrayObject* ArrayObject::createArrayInternal(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
     HandleObjectGroup group, AutoSetNewObjectMetadata&) {
