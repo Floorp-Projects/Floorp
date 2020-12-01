@@ -3399,8 +3399,7 @@ static ArrayObject* SplitHelper(JSContext* cx, HandleLinearString str,
 
     // Step 14.c.ii.5.
     if (splits.length() == limit) {
-      return NewCopiedArrayTryUseGroup(cx, group, splits.begin(),
-                                       splits.length());
+      return NewDenseCopiedArray(cx, splits.length(), splits.begin());
     }
 
     // Step 14.c.ii.6.
@@ -3420,7 +3419,7 @@ static ArrayObject* SplitHelper(JSContext* cx, HandleLinearString str,
   }
 
   // Step 18.
-  return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
+  return NewDenseCopiedArray(cx, splits.length(), splits.begin());
 }
 
 // Fast-path for splitting a string into a character array via split("").
