@@ -36,8 +36,9 @@ use xpcom::interfaces::{
 };
 use xpcom::{RefPtr, XpCom};
 
-use client_info::ClientInfo;
-use glean_core::Configuration;
+//use client_info::ClientInfo;
+//use glean_core::Configuration;
+use glean::{Configuration, ClientInfoMetrics};
 
 mod api;
 mod client_info;
@@ -68,12 +69,9 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         Err(e) => return e,
     };
 
-    let client_info = ClientInfo {
+    let client_info = ClientInfoMetrics {
         app_build,
         app_display_version,
-        channel: Some(channel),
-        os_version,
-        architecture,
     };
     log::debug!("Client Info: {:#?}", client_info);
 
@@ -94,7 +92,9 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         application_id: "firefox.desktop".to_string(),
         max_events: None,
         delay_ping_lifetime_io: false,
-        language_binding_name: "Rust".into(),
+        channel: Some(channel),
+        server_endpoint: None,
+        uploader: None,
     };
 
     log::debug!("Configuration: {:#?}", configuration);
@@ -113,7 +113,7 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
     }
 
     if configuration.data_path.len() > 0 {
-        std::thread::spawn(move || {
+        /*std::thread::spawn(move || {
             if let Err(e) = api::initialize(configuration, client_info) {
                 log::error!("Failed to init FOG due to {:?}", e);
                 return;
@@ -126,7 +126,8 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
 
             fog::metrics::fog::initialization.stop();
             schedule_fog_validation_ping();
-        });
+        });*/
+        glean::initialize(configuration, client_info);
     }
 
     NS_OK
@@ -275,7 +276,7 @@ impl UploadPrefObserver {
         );
 
         let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
-        api::set_upload_enabled(upload_enabled);
+        glean::set_upload_enabled(upload_enabled);
         NS_OK
     }
 }
