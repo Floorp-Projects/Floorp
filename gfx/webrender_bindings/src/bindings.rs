@@ -1193,7 +1193,6 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>) -> De
         use_optimized_shaders,
         upload_method,
         cached_programs,
-        false,
         true,
         true,
         None,
@@ -1596,7 +1595,6 @@ pub extern "C" fn wr_window_new(
         clear_color: Some(color),
         precache_flags,
         namespace_alloc_by_client: true,
-        allow_pixel_local_storage_support: false,
         // SWGL doesn't support the GL_ALWAYS depth comparison function used by
         // `clear_caches_with_quads`, but scissored clears work well.
         clear_caches_with_quads: !software && !allow_scissored_cache_clears,
@@ -3907,7 +3905,6 @@ pub extern "C" fn wr_shaders_new(
 
     let opts = RendererOptions {
         precache_flags,
-        allow_pixel_local_storage_support: false,
         ..Default::default()
     };
 
