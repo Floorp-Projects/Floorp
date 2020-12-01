@@ -392,45 +392,6 @@ ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
   return group;
 }
 
-inline const JSClass* GetClassForProtoKey(JSProtoKey key) {
-  switch (key) {
-    case JSProto_Null:
-    case JSProto_Object:
-      return &PlainObject::class_;
-    case JSProto_Array:
-      return &ArrayObject::class_;
-
-    case JSProto_Int8Array:
-    case JSProto_Uint8Array:
-    case JSProto_Int16Array:
-    case JSProto_Uint16Array:
-    case JSProto_Int32Array:
-    case JSProto_Uint32Array:
-    case JSProto_Float32Array:
-    case JSProto_Float64Array:
-    case JSProto_Uint8ClampedArray:
-    case JSProto_BigInt64Array:
-    case JSProto_BigUint64Array:
-      return &TypedArrayObject::classes[key - JSProto_Int8Array];
-
-    default:
-      // We only expect to see plain objects, arrays, and typed arrays here.
-      MOZ_CRASH("Bad proto key");
-  }
-}
-
-/* static */
-ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, JSProtoKey key) {
-  JSObject* proto = nullptr;
-  if (key != JSProto_Null) {
-    proto = GlobalObject::getOrCreatePrototype(cx, key);
-    if (!proto) {
-      return nullptr;
-    }
-  }
-  return defaultNewGroup(cx, GetClassForProtoKey(key), TaggedProto(proto));
-}
-
 /* static */
 ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
                                          size_t length, NewObjectKind newKind,
@@ -479,20 +440,6 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
     return nullptr;
   }
   return obj;
-}
-
-/* static */
-ObjectGroup* ObjectGroup::allocationSiteGroup(
-    JSContext* cx, JSScript* scriptArg, jsbytecode* pc, JSProtoKey kind,
-    HandleObject protoArg /* = nullptr */) {
-  MOZ_ASSERT_IF(protoArg, kind == JSProto_Array);
-  MOZ_ASSERT(cx->realm() == scriptArg->realm());
-
-  if (protoArg) {
-    return defaultNewGroup(cx, GetClassForProtoKey(kind),
-                           TaggedProto(protoArg));
-  }
-  return defaultNewGroup(cx, kind);
 }
 
 /* static */

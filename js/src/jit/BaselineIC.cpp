@@ -254,8 +254,13 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::NewArray: {
-        ObjectGroup* group = ObjectGroup::allocationSiteGroup(
-            cx, script, loc.toRawBytecode(), JSProto_Array);
+        JSObject* proto =
+            GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
+        if (!proto) {
+          return false;
+        }
+        ObjectGroup* group = ObjectGroup::defaultNewGroup(
+            cx, &ArrayObject::class_, TaggedProto(proto));
         if (!group) {
           return false;
         }
