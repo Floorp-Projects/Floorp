@@ -45,7 +45,9 @@ use std::sync::Mutex;
 pub use configuration::Configuration;
 use configuration::DEFAULT_GLEAN_ENDPOINT;
 pub use core_metrics::ClientInfoMetrics;
-pub use glean_core::{global_glean, setup_glean, CommonMetricData, Error, Glean, Lifetime, Result};
+pub use glean_core::{
+    global_glean, setup_glean, CommonMetricData, Error, ErrorType, Glean, Lifetime, Result,
+};
 use private::RecordedExperimentData;
 
 mod configuration;
@@ -55,6 +57,9 @@ mod glean_metrics;
 pub mod net;
 pub mod private;
 mod system;
+
+#[cfg(test)]
+mod common_test;
 
 const LANGUAGE_BINDING_NAME: &str = "Rust";
 
@@ -75,6 +80,11 @@ struct RustBindingsState {
 /// This allows to detect calls that happen before `glean::initialize()` was called.
 /// Note: The initialization might still be in progress, as it runs in a separate thread.
 static INITIALIZE_CALLED: AtomicBool = AtomicBool::new(false);
+
+/// Keep track of the debug features before Glean is initialized.
+static PRE_INIT_DEBUG_VIEW_TAG: OnceCell<Mutex<String>> = OnceCell::new();
+static PRE_INIT_LOG_PINGS: AtomicBool = AtomicBool::new(false);
+static PRE_INIT_SOURCE_TAGS: OnceCell<Mutex<Vec<String>>> = OnceCell::new();
 
 /// A global singleton storing additional state for Glean.
 ///
@@ -218,6 +228,29 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
         with_glean_mut(|glean| {
             let state = global_state().lock().unwrap();
 
+            // The debug view tag might have been set before initialize,
+            // get the cached value and set it.
+            if let Some(tag) = PRE_INIT_DEBUG_VIEW_TAG.get() {
+                let lock = tag.try_lock();
+                if let Ok(ref debug_tag) = lock {
+                    glean.set_debug_view_tag(debug_tag);
+                }
+            }
+            // The log pings debug option might have been set before initialize,
+            // get the cached value and set it.
+            let log_pigs = PRE_INIT_LOG_PINGS.load(Ordering::SeqCst);
+            if log_pigs {
+                glean.set_log_pings(log_pigs);
+            }
+            // The source tags might have been set before initialize,
+            // get the cached value and set them.
+            if let Some(tags) = PRE_INIT_SOURCE_TAGS.get() {
+                let lock = tags.try_lock();
+                if let Ok(ref source_tags) = lock {
+                    glean.set_source_tags(source_tags.to_vec());
+                }
+            }
+
             // Get the current value of the dirty flag so we know whether to
             // send a dirty startup baseline ping below.  Immediately set it to
             // `false` so that dirty startup pings won't be sent if Glean
@@ -287,6 +320,16 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
     // Mark the initialization as called: this needs to happen outside of the
     // dispatched block!
     INITIALIZE_CALLED.store(true, Ordering::SeqCst);
+}
+
+/// Shuts down Glean.
+///
+/// This currently only attempts to shut down the
+/// internal dispatcher.
+pub fn shutdown() {
+    if let Err(e) = dispatcher::try_shutdown() {
+        log::error!("Can't shutdown dispatcher thread: {:?}", e);
+    }
 }
 
 /// Checks if `glean::initialize` was ever called.
@@ -387,11 +430,14 @@ pub fn register_ping_type(ping: &private::PingType) {
 /// Collects and submits a ping for eventual uploading.
 ///
 /// See `glean_core::Glean.submit_ping`.
-pub fn submit_ping(ping: &private::PingType, reason: Option<&str>) {
+pub(crate) fn submit_ping(ping: &private::PingType, reason: Option<&str>) {
     submit_ping_by_name(&ping.name, reason)
 }
 
 /// Collects and submits a ping for eventual uploading by name.
+///
+/// Note that this needs to be public in order for RLB consumers to
+/// use Glean debugging facilities.
 ///
 /// See `glean_core::Glean.submit_ping_by_name`.
 pub fn submit_ping_by_name(ping: &str, reason: Option<&str>) {
@@ -415,7 +461,7 @@ pub fn submit_ping_by_name(ping: &str, reason: Option<&str>) {
 /// queued for sending, unless explicitly specified otherwise in the registry
 /// file.
 ///
-/// ## Arguments
+/// # Arguments
 ///
 /// * `ping_name` - the name of the ping to submit.
 /// * `reason` - the reason the ping is being submitted.
@@ -496,7 +542,6 @@ pub(crate) fn test_get_experiment_data(experiment_id: String) -> RecordedExperim
 }
 
 /// Destroy the global Glean state.
-#[cfg(test)]
 pub(crate) fn destroy_glean(clear_stores: bool) {
     // Destroy the existing glean instance from glean-core.
     if was_initialize_called() {
@@ -519,15 +564,85 @@ pub(crate) fn destroy_glean(clear_stores: bool) {
     }
 }
 
+/// TEST ONLY FUNCTION.
 /// Resets the Glean state and triggers init again.
-#[cfg(test)]
-#[allow(dead_code)]
-pub(crate) fn reset_glean(cfg: Configuration, client_info: ClientInfoMetrics, clear_stores: bool) {
+pub fn test_reset_glean(cfg: Configuration, client_info: ClientInfoMetrics, clear_stores: bool) {
     destroy_glean(clear_stores);
 
     // Always log pings for tests
     //Glean.setLogPings(true)
     initialize(cfg, client_info);
+}
+
+/// Sets a debug view tag.
+///
+/// When the debug view tag is set, pings are sent with a `X-Debug-ID` header with the
+/// value of the tag and are sent to the ["Ping Debug Viewer"](https://mozilla.github.io/glean/book/dev/core/internal/debug-pings.html).
+///
+/// # Arguments
+///
+/// * `tag` - A valid HTTP header value. Must match the regex: "[a-zA-Z0-9-]{1,20}".
+///
+/// # Returns
+///
+/// This will return `false` in case `tag` is not a valid tag and `true` otherwise.
+/// If called before Glean is initialized it will always return `true`.
+pub fn set_debug_view_tag(tag: &str) -> bool {
+    if was_initialize_called() {
+        with_glean_mut(|glean| glean.set_debug_view_tag(tag))
+    } else {
+        // Glean has not been initialized yet. Cache the provided tag value.
+        let m = PRE_INIT_DEBUG_VIEW_TAG.get_or_init(Default::default);
+        let mut lock = m.lock().unwrap();
+        *lock = tag.to_string();
+        // When setting the debug view tag before initialization,
+        // we don't validate the tag, thus this function always returns true.
+        true
+    }
+}
+
+/// Sets the log pings debug option.
+///
+/// When the log pings debug option is `true`,
+/// we log the payload of all succesfully assembled pings.
+///
+/// # Arguments
+///
+/// * `value` - The value of the log pings option
+pub fn set_log_pings(value: bool) {
+    if was_initialize_called() {
+        with_glean_mut(|glean| glean.set_log_pings(value));
+    } else {
+        PRE_INIT_LOG_PINGS.store(value, Ordering::SeqCst);
+    }
+}
+
+/// Sets source tags.
+///
+/// Overrides any existing source tags.
+/// Source tags will show in the destination datasets, after ingestion.
+///
+/// # Arguments
+///
+/// * `tags` - A vector of at most 5 valid HTTP header values. Individual
+///   tags must match the regex: "[a-zA-Z0-9-]{1,20}".
+///
+/// # Returns
+///
+/// This will return `false` in case `value` contains invalid tags and `true`
+/// otherwise or if the tag is set before Glean is initialized.
+pub fn set_source_tags(tags: Vec<String>) -> bool {
+    if was_initialize_called() {
+        with_glean_mut(|glean| glean.set_source_tags(tags))
+    } else {
+        // Glean has not been initialized yet. Cache the provided source tags.
+        let m = PRE_INIT_SOURCE_TAGS.get_or_init(Default::default);
+        let mut lock = m.lock().unwrap();
+        *lock = tags;
+        // When setting the source tags before initialization,
+        // we don't validate the tags, thus this function always returns true.
+        true
+    }
 }
 
 #[cfg(test)]
