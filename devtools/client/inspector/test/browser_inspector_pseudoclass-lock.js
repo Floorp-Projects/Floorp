@@ -61,7 +61,7 @@ add_task(async function() {
   const tab = toolbox.target.localTab;
   await toolbox.destroy();
 
-  // As the toolbox get detroyed, we need to fetch a new test-actor
+  // As the toolbox get destroyed, we need to fetch a new test-actor
   testActor = await getTestActorWithoutToolbox(tab);
 
   await assertPseudoRemovedFromNode(testActor, "#div-1");
