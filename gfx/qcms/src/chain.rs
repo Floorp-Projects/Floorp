@@ -48,9 +48,9 @@ pub struct qcms_modular_transform {
     pub input_clut_table_length: u16,
     pub clut: Option<Vec<f32>>,
     pub grid_size: u16,
-    pub output_clut_table_r: *mut f32,
-    pub output_clut_table_g: *mut f32,
-    pub output_clut_table_b: *mut f32,
+    pub output_clut_table_r: Option<Vec<f32>>,
+    pub output_clut_table_g: Option<Vec<f32>>,
+    pub output_clut_table_b: Option<Vec<f32>>,
     pub output_clut_table_length: u16,
     pub output_gamma_lut_r: Option<Vec<u16>>,
     pub output_gamma_lut_g: Option<Vec<u16>>,
@@ -360,24 +360,16 @@ unsafe extern "C" fn qcms_transform_module_clut(
         let mut clut_b: f32 = lerp(b_y1, b_y2, z_d);
         let mut pcs_r: f32 = lut_interp_linear_float(
             clut_r,
-            std::slice::from_raw_parts(
-                (*transform).output_clut_table_r,
-                (*transform).output_clut_table_length as usize,
-            ),
+            &(*transform).output_clut_table_r.as_ref().unwrap(),
         );
         let mut pcs_g: f32 = lut_interp_linear_float(
             clut_g,
-            std::slice::from_raw_parts(
-                (*transform).output_clut_table_g,
-                (*transform).output_clut_table_length as usize,
-            ),
+            &(*transform).output_clut_table_g.as_ref().unwrap(),
         );
         let mut pcs_b: f32 = lut_interp_linear_float(
             clut_b,
-            std::slice::from_raw_parts(
-                (*transform).output_clut_table_b,
-                (*transform).output_clut_table_length as usize,
-            ),
+            &(*transform).output_clut_table_b.as_ref().unwrap(),
+
         );
         let fresh21 = dest;
         dest = dest.offset(1);
@@ -710,29 +702,10 @@ unsafe extern "C" fn qcms_modular_transform_release(mut t: Option<Box<qcms_modul
 
         transform.clut = None;
 
-        if (*transform)
-            .output_clut_table_r
-            .offset((*transform).output_clut_table_length as i32 as isize)
-            == (*transform).output_clut_table_g
-            && (*transform)
-                .output_clut_table_g
-                .offset((*transform).output_clut_table_length as i32 as isize)
-                == (*transform).output_clut_table_b
-        {
-            if !(*transform).output_clut_table_r.is_null() {
-                free((*transform).output_clut_table_r as *mut libc::c_void);
-            }
-        } else {
-            if !(*transform).output_clut_table_r.is_null() {
-                free((*transform).output_clut_table_r as *mut libc::c_void);
-            }
-            if !(*transform).output_clut_table_g.is_null() {
-                free((*transform).output_clut_table_g as *mut libc::c_void);
-            }
-            if !(*transform).output_clut_table_b.is_null() {
-                free((*transform).output_clut_table_b as *mut libc::c_void);
-            }
-        }
+        (*transform).output_clut_table_r = None;
+        (*transform).output_clut_table_g = None;
+        (*transform).output_clut_table_b = None;
+
         if !(*transform).output_gamma_lut_r.is_none() {
             (*transform).output_gamma_lut_r = None;
         }
@@ -960,22 +933,10 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
 
                         transform.as_mut().unwrap().grid_size = (*lut).num_clut_grid_points as u16;
                         // Prepare output curves
-                        out_curve_len = ::std::mem::size_of::<f32>()
-                            * (*lut).num_output_table_entries as usize
-                            * 3;
-                        out_curves = malloc(out_curve_len) as *mut f32;
-                        if !out_curves.is_null() {
-                            memcpy(
-                                out_curves as *mut libc::c_void,
-                                (*lut).output_table.as_ptr() as *const libc::c_void,
-                                out_curve_len,
-                            );
-                            transform.as_mut().unwrap().output_clut_table_r = out_curves
-                                .offset(((*lut).num_output_table_entries as i32 * 0) as isize);
-                            transform.as_mut().unwrap().output_clut_table_g = out_curves
-                                .offset(((*lut).num_output_table_entries as i32 * 1) as isize);
-                            transform.as_mut().unwrap().output_clut_table_b = out_curves
-                                .offset(((*lut).num_output_table_entries as i32 * 2) as isize);
+                        if true {
+                            transform.as_mut().unwrap().output_clut_table_r = Some((*lut).output_table[0..(*lut).num_output_table_entries as usize].to_vec());
+                            transform.as_mut().unwrap().output_clut_table_g = Some((*lut).output_table[(*lut).num_output_table_entries as usize..(*lut).num_output_table_entries as usize*2].to_vec());
+                            transform.as_mut().unwrap().output_clut_table_b = Some((*lut).output_table[(*lut).num_output_table_entries as usize*2..(*lut).num_output_table_entries as usize*3].to_vec());
                             transform.as_mut().unwrap().output_clut_table_length = (*lut).num_output_table_entries;
                             transform.as_mut().unwrap().transform_module_fn = Some(
                                 qcms_transform_module_clut,
