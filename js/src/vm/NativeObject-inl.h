@@ -68,16 +68,6 @@ inline bool NativeObject::canRemoveLastProperty() {
   return previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 
-inline void NativeObject::setShouldConvertDoubleElements() {
-  MOZ_ASSERT(is<ArrayObject>() && !hasEmptyElements());
-  getElementsHeader()->setShouldConvertDoubleElements();
-}
-
-inline void NativeObject::clearShouldConvertDoubleElements() {
-  MOZ_ASSERT(is<ArrayObject>() && !hasEmptyElements());
-  getElementsHeader()->clearShouldConvertDoubleElements();
-}
-
 inline void NativeObject::addDenseElementType(JSContext* cx, uint32_t index,
                                               const Value& val) {
   MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
@@ -89,17 +79,12 @@ inline void NativeObject::setDenseElementWithType(JSContext* cx, uint32_t index,
   MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
 
   addDenseElementType(cx, index, val);
-  if (val.isInt32() && shouldConvertDoubleElements()) {
-    setDenseElement(index, DoubleValue(val.toInt32()));
-  } else {
-    setDenseElement(index, val);
-  }
+  setDenseElement(index, val);
 }
 
 inline void NativeObject::initDenseElementWithType(JSContext* cx,
                                                    uint32_t index,
                                                    const Value& val) {
-  MOZ_ASSERT(!shouldConvertDoubleElements());
   MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
 
   addDenseElementType(cx, index, val);
@@ -482,14 +467,7 @@ inline DenseElementResult NativeObject::setOrExtendDenseElements(
     as<ArrayObject>().setLength(start + count);
   }
 
-  if (!shouldConvertDoubleElements()) {
-    copyDenseElements(start, vp, count);
-  } else {
-    for (size_t i = 0; i < count; i++) {
-      setDenseElementWithType(cx, start + i, vp[i]);
-    }
-  }
-
+  copyDenseElements(start, vp, count);
   return DenseElementResult::Success;
 }
 

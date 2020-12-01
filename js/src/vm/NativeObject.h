@@ -181,8 +181,7 @@ extern bool ArraySetLength(JSContext* cx, Handle<ArrayObject*> obj, HandleId id,
 class ObjectElements {
  public:
   enum Flags : uint16_t {
-    // Integers written to these elements must be converted to doubles.
-    CONVERT_DOUBLE_ELEMENTS = 0x1,
+    // (0x1 is unused)
 
     // Present only if these elements correspond to an array with
     // non-writable length; never present for non-arrays.
@@ -191,10 +190,7 @@ class ObjectElements {
     // These elements are shared with another object and must be copied
     // before they can be changed. A pointer to the original owner of the
     // elements, which is immutable, is stored immediately after the
-    // elements data. There is one case where elements can be written to
-    // before being copied: when setting the CONVERT_DOUBLE_ELEMENTS flag
-    // the shared elements may change (from ints to doubles) without
-    // making a copy first.
+    // elements data.
     COPY_ON_WRITE = 0x4,
 
     // For TypedArrays only: this TypedArray's storage is mapping shared
@@ -272,17 +268,6 @@ class ObjectElements {
   /* 'length' property of array objects, unused for other objects. */
   uint32_t length;
 
-  bool shouldConvertDoubleElements() const {
-    return flags & CONVERT_DOUBLE_ELEMENTS;
-  }
-  void setShouldConvertDoubleElements() {
-    // Note: allow isCopyOnWrite() here, see comment above.
-    flags |= CONVERT_DOUBLE_ELEMENTS;
-  }
-  void clearShouldConvertDoubleElements() {
-    MOZ_ASSERT(!isCopyOnWrite());
-    flags &= ~CONVERT_DOUBLE_ELEMENTS;
-  }
   bool hasNonwritableArrayLength() const {
     return flags & NONWRITABLE_ARRAY_LENGTH;
   }
@@ -402,7 +387,6 @@ class ObjectElements {
     return int(offsetof(ObjectElements, length)) - int(sizeof(ObjectElements));
   }
 
-  static void ConvertElementsToDoubles(JSContext* cx, uintptr_t elements);
   static bool MakeElementsCopyOnWrite(JSContext* cx, NativeObject* obj);
 
   static MOZ_MUST_USE bool PrepareForPreventExtensions(JSContext* cx,
@@ -1417,13 +1401,6 @@ class NativeObject : public JSObject {
                                                      uint32_t start,
                                                      const Value* vp,
                                                      uint32_t count);
-
-  bool shouldConvertDoubleElements() {
-    return getElementsHeader()->shouldConvertDoubleElements();
-  }
-
-  inline void setShouldConvertDoubleElements();
-  inline void clearShouldConvertDoubleElements();
 
   bool denseElementsAreCopyOnWrite() const {
     return getElementsHeader()->isCopyOnWrite();
