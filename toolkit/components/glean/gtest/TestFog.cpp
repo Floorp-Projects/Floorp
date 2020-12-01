@@ -36,9 +36,10 @@ TEST(FOG, FogInitDoesntCrash)
   Preferences::SetBool(DATA_PREF, true);
 }
 
-extern "C" void Rust_MeasureInitializeTime();
-TEST(FOG, TestMeasureInitializeTime)
-{ Rust_MeasureInitializeTime(); }
+// TODO: to be enabled after changes from bug 1677455 are vendored.
+// extern "C" void Rust_MeasureInitializeTime();
+// TEST(FOG, TestMeasureInitializeTime)
+// { Rust_MeasureInitializeTime(); }
 
 TEST(FOG, BuiltinPingsRegistered)
 {
@@ -47,9 +48,8 @@ TEST(FOG, BuiltinPingsRegistered)
   nsAutoCString baselinePingName("baseline");
   nsAutoCString eventsPingName("events");
   ASSERT_EQ(NS_OK, fog_submit_ping(&metricsPingName));
-  // This will probably change to NS_OK once "duration" is implemented.
-  ASSERT_EQ(NS_ERROR_NO_CONTENT, fog_submit_ping(&baselinePingName));
-  ASSERT_EQ(NS_ERROR_NO_CONTENT, fog_submit_ping(&eventsPingName));
+  ASSERT_EQ(NS_OK, fog_submit_ping(&baselinePingName));
+  ASSERT_EQ(NS_OK, fog_submit_ping(&eventsPingName));
 }
 
 TEST(FOG, TestCppCounterWorks)
@@ -72,16 +72,17 @@ TEST(FOG, TestCppStringWorks)
                                  .get());
 }
 
-TEST(FOG, TestCppTimespanWorks)
-{
-  mozilla::glean::test_only::can_we_time_it.Start();
-  PR_Sleep(PR_MillisecondsToInterval(10));
-  mozilla::glean::test_only::can_we_time_it.Stop();
-
-  ASSERT_TRUE(
-      mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping")
-          .value() > 0);
-}
+// TODO: to be enabled after changes from bug 1677455 are vendored.
+// TEST(FOG, TestCppTimespanWorks)
+// {
+//   mozilla::glean::test_only::can_we_time_it.Start();
+//   PR_Sleep(PR_MillisecondsToInterval(10));
+//   mozilla::glean::test_only::can_we_time_it.Stop();
+//
+//   ASSERT_TRUE(
+//       mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping")
+//           .value() > 0);
+// }
 
 TEST(FOG, TestCppUuidWorks)
 {
@@ -97,11 +98,12 @@ TEST(FOG, TestCppUuidWorks)
                test_only::what_id_it.TestGetValue("test-ping").value().get());
 }
 
-TEST(FOG, TestCppDatetimeWorks)
-{
-  PRExplodedTime date = {0, 35, 10, 12, 6, 10, 2020, 0, 0, {5 * 60 * 60, 0}};
-  test_only::what_a_date.Set(&date);
-
-  auto received = test_only::what_a_date.TestGetValue("test-ping");
-  ASSERT_STREQ(received.value().get(), "2020-11-06T12:10:35+05:00");
-}
+// TODO: to be enabled after changes from bug 1677448 are vendored.
+// TEST(FOG, TestCppDatetimeWorks)
+// {
+//   PRExplodedTime date = {0, 35, 10, 12, 6, 10, 2020, 0, 0, {5 * 60 * 60, 0}};
+//   test_only::what_a_date.Set(&date);
+//
+//   auto received = test_only::what_a_date.TestGetValue("test-ping");
+//   ASSERT_STREQ(received.value().get(), "2020-11-06T12:10:35+05:00");
+// }
