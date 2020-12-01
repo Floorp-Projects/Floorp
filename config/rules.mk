@@ -881,35 +881,6 @@ endif
 # hacks in recursivemake.py that check if Makefile.in sets the variable.
 ifneq ($(XPI_PKGNAME),)
 tools realchrome::
-ifdef STRIP_XPI
-ifndef MOZ_DEBUG
-	@echo 'Stripping $(XPI_PKGNAME) package directory...'
-	@echo $(FINAL_TARGET)
-	@cd $(FINAL_TARGET) && find . ! -type d \
-			! -name '*.js' \
-			! -name '*.xpt' \
-			! -name '*.gif' \
-			! -name '*.jpg' \
-			! -name '*.png' \
-			! -name '*.xpm' \
-			! -name '*.txt' \
-			! -name '*.rdf' \
-			! -name '*.sh' \
-			! -name '*.properties' \
-			! -name '*.dtd' \
-			! -name '*.html' \
-			! -name '*.xul' \
-			! -name '*.css' \
-			! -name '*.xml' \
-			! -name '*.jar' \
-			! -name '*.dat' \
-			! -name '*.tbl' \
-			! -name '*.src' \
-			! -name '*.reg' \
-			$(PLATFORM_EXCLUDE_LIST) \
-			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
-endif
-endif
 	@echo 'Packaging $(XPI_PKGNAME).xpi...'
 	$(call py_action,zip,-C $(FINAL_TARGET) ../$(XPI_PKGNAME).xpi '*')
 endif
