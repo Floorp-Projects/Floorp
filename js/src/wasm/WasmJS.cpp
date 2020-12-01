@@ -2324,9 +2324,6 @@ bool WasmMemoryObject::bufferGetter(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 const JSPropertySpec WasmMemoryObject::properties[] = {
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-    JS_PSG("type", WasmMemoryObject::typeGetter, JSPROP_ENUMERATE),
-#endif
     JS_PSG("buffer", WasmMemoryObject::bufferGetter, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "WebAssembly.Memory", JSPROP_READONLY),
     JS_PS_END};
@@ -2364,6 +2361,9 @@ bool WasmMemoryObject::grow(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 const JSFunctionSpec WasmMemoryObject::methods[] = {
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+    JS_FN("type", WasmMemoryObject::type, 0, JSPROP_ENUMERATE),
+#endif
     JS_FN("grow", WasmMemoryObject::grow, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSFunctionSpec WasmMemoryObject::static_methods[] = {JS_FS_END};
@@ -2380,7 +2380,7 @@ SharedArrayRawBuffer* WasmMemoryObject::sharedArrayRawBuffer() const {
 }
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
-bool WasmMemoryObject::typeGetterImpl(JSContext* cx, const CallArgs& args) {
+bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
   RootedWasmMemoryObject memoryObj(
       cx, &args.thisv().toObject().as<WasmMemoryObject>());
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -2415,9 +2415,9 @@ bool WasmMemoryObject::typeGetterImpl(JSContext* cx, const CallArgs& args) {
   return true;
 }
 
-bool WasmMemoryObject::typeGetter(JSContext* cx, unsigned argc, Value* vp) {
+bool WasmMemoryObject::type(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsMemory, typeGetterImpl>(cx, args);
+  return CallNonGenericMethod<IsMemory, typeImpl>(cx, args);
 }
 #endif
 
@@ -2825,9 +2825,6 @@ bool WasmTableObject::lengthGetter(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 const JSPropertySpec WasmTableObject::properties[] = {
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-    JS_PSG("type", WasmTableObject::typeGetter, JSPROP_ENUMERATE),
-#endif
     JS_PSG("length", WasmTableObject::lengthGetter, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "WebAssembly.Table", JSPROP_READONLY),
     JS_PS_END};
@@ -2849,7 +2846,7 @@ static bool ToTableIndex(JSContext* cx, HandleValue v, const Table& table,
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
 /* static */
-bool WasmTableObject::typeGetterImpl(JSContext* cx, const CallArgs& args) {
+bool WasmTableObject::typeImpl(JSContext* cx, const CallArgs& args) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
   Table& table = args.thisv().toObject().as<WasmTableObject>().table();
 
@@ -2895,9 +2892,9 @@ bool WasmTableObject::typeGetterImpl(JSContext* cx, const CallArgs& args) {
 }
 
 /* static */
-bool WasmTableObject::typeGetter(JSContext* cx, unsigned argc, Value* vp) {
+bool WasmTableObject::type(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsTable, typeGetterImpl>(cx, args);
+  return CallNonGenericMethod<IsTable, typeImpl>(cx, args);
 }
 #endif
 
@@ -3063,6 +3060,9 @@ bool WasmTableObject::grow(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 const JSFunctionSpec WasmTableObject::methods[] = {
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+    JS_FN("type", WasmTableObject::type, 0, JSPROP_ENUMERATE),
+#endif
     JS_FN("get", WasmTableObject::get, 1, JSPROP_ENUMERATE),
     JS_FN("set", WasmTableObject::set, 2, JSPROP_ENUMERATE),
     JS_FN("grow", WasmTableObject::grow, 1, JSPROP_ENUMERATE), JS_FS_END};
@@ -3446,15 +3446,15 @@ bool WasmGlobalObject::valueSetter(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 const JSPropertySpec WasmGlobalObject::properties[] = {
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-    JS_PSG("type", WasmGlobalObject::typeGetter, JSPROP_ENUMERATE),
-#endif
     JS_PSGS("value", WasmGlobalObject::valueGetter,
             WasmGlobalObject::valueSetter, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "WebAssembly.Global", JSPROP_READONLY),
     JS_PS_END};
 
 const JSFunctionSpec WasmGlobalObject::methods[] = {
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+    JS_FN("type", WasmGlobalObject::type, 0, JSPROP_ENUMERATE),
+#endif
     JS_FN(js_valueOf_str, WasmGlobalObject::valueGetter, 0, JSPROP_ENUMERATE),
     JS_FS_END};
 
@@ -3516,7 +3516,7 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
 /* static */
-bool WasmGlobalObject::typeGetterImpl(JSContext* cx, const CallArgs& args) {
+bool WasmGlobalObject::typeImpl(JSContext* cx, const CallArgs& args) {
   RootedWasmGlobalObject global(
       cx, &args.thisv().toObject().as<WasmGlobalObject>());
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -3545,9 +3545,9 @@ bool WasmGlobalObject::typeGetterImpl(JSContext* cx, const CallArgs& args) {
 }
 
 /* static */
-bool WasmGlobalObject::typeGetter(JSContext* cx, unsigned argc, Value* vp) {
+bool WasmGlobalObject::type(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsGlobal, typeGetterImpl>(cx, args);
+  return CallNonGenericMethod<IsGlobal, typeImpl>(cx, args);
 }
 #endif
 
