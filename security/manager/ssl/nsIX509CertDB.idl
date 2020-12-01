@@ -27,6 +27,12 @@ interface nsIOpenSignedAppFileCallback : nsISupports
                                  in nsIX509Cert aSignerCert);
 };
 
+[scriptable, function, uuid(07c08655-8b11-4650-b6c4-0c145595ceb5)]
+interface nsIAsyncBoolCallback : nsISupports
+{
+    void onResult(in bool result);
+};
+
 /**
  * Callback type for use with asyncVerifyCertAtTime.
  * If aPRErrorCode is PRErrorCodeSuccess (i.e. 0), aVerifiedChain represents the
@@ -335,4 +341,11 @@ interface nsIX509CertDB : nsISupports {
    */
   [must_use]
   ACString asPKCS7Blob(in Array<nsIX509Cert> certList);
+
+  /**
+   * Iterates through all the certs and returns false if any of the trusted
+   * CA certs are not built-in roots; and true otherwise.
+   */
+  [must_use]
+  void asyncHasThirdPartyRoots(in nsIAsyncBoolCallback callback);
 };
