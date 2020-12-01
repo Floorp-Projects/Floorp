@@ -232,11 +232,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
       JSContext* cx, const Value* vp, size_t length, NewObjectKind newKind,
       NewArrayKind arrayKind = NewArrayKind::Normal);
 
-  // Create a PlainObject with the specified properties and a group specialized
-  // for those properties.
-  static JSObject* newPlainObject(JSContext* cx, IdValuePair* properties,
-                                  size_t nproperties, NewObjectKind newKind);
-
   // Static accessors for ObjectGroupRealm AllocationSiteTable.
 
   // Get a non-singleton group to use for objects created at the specified

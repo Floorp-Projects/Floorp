@@ -94,8 +94,9 @@ static JSObject* InterpretObjLiteralObj(
     }
   }
 
+  // TODO(no-TI): remove specificGroup, merge with call below.
   if (specificGroup) {
-    return ObjectGroup::newPlainObject(
+    return NewPlainObjectWithProperties(
         cx, properties.begin(), properties.length(),
         singleton ? SingletonObject : TenuredObject);
   }
