@@ -98,8 +98,13 @@ function checkReadyState(pageLoadStrategy, eventData = {}) {
  *
  * @param {URL} current
  *     URL the browser is currently visiting.
- * @param {URL=} future
+ * @param {Object} options
+ * @param {BrowsingContext=} options.browsingContext
+ *     The current browsing context. Needed for targets of _parent and _top.
+ * @param {URL=} options.future
  *     Destination URL, if known.
+ * @param {target=} options.target
+ *     Link target, if known.
  *
  * @return {boolean}
  *     Full page load would be expected if future is followed.
@@ -108,10 +113,26 @@ function checkReadyState(pageLoadStrategy, eventData = {}) {
  *     If <code>current</code> is not defined, or any of
  *     <code>current</code> or <code>future</code>  are invalid URLs.
  */
-navigate.isLoadEventExpected = function(current, future = undefined) {
-  // assume we will go somewhere exciting
+navigate.isLoadEventExpected = function(current, options = {}) {
+  const { browsingContext, future, target } = options;
+
   if (typeof current == "undefined") {
     throw new TypeError("Expected at least one URL");
+  }
+
+  if (["_parent", "_top"].includes(target) && !browsingContext) {
+    throw new TypeError(
+      "Expected browsingContext when target is _parent or _top"
+    );
+  }
+
+  // Don't wait if the navigation happens in a different browsing context
+  if (
+    target === "_blank" ||
+    (target === "_parent" && browsingContext.parent) ||
+    (target === "_top" && browsingContext.top != browsingContext)
+  ) {
+    return false;
   }
 
   // Assume we will go somewhere exciting

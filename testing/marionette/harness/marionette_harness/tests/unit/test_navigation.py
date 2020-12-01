@@ -185,36 +185,6 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate(self.test_page_frameset)
         self.marionette.find_element(By.NAME, "third")
 
-    def test_navigate_top_frame_from_nested_context(self):
-        sub_frame = inline(
-            """
-          <title>bar</title>
-          <a href="{}" target="_top">consume top frame</a>
-        """.format(
-                self.test_page_remote
-            )
-        )
-        top_frame = inline(
-            """
-          <title>foo</title>
-          <iframe src="{}">
-        """.format(
-                sub_frame
-            )
-        )
-
-        self.marionette.navigate(top_frame)
-        frame = self.marionette.find_element(By.TAG_NAME, "iframe")
-        self.marionette.switch_to_frame(frame)
-
-        link = self.marionette.find_element(By.TAG_NAME, "a")
-        link.click()
-
-        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            lambda mn: mn.get_url() == self.test_page_remote,
-            message="{} hasn't been loaded".format(self.test_page_remote),
-        )
-
     def test_invalid_url(self):
         with self.assertRaises(errors.MarionetteException):
             self.marionette.navigate("foo")
