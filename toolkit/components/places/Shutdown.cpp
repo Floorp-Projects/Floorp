@@ -4,7 +4,9 @@
 
 #include "Shutdown.h"
 #include "mozilla/Unused.h"
-#include "nsIWritablePropertyBag2.h"
+#include "mozilla/SimpleEnumerator.h"
+#include "nsIProperty.h"
+#include "nsIWritablePropertyBag.h"
 
 namespace mozilla {
 namespace places {
@@ -48,36 +50,37 @@ NS_IMETHODIMP
 PlacesShutdownBlocker::GetState(nsIPropertyBag** _state) {
   NS_ENSURE_ARG_POINTER(_state);
 
-  nsCOMPtr<nsIWritablePropertyBag2> bag =
+  nsCOMPtr<nsIWritablePropertyBag> bag =
       do_CreateInstance("@mozilla.org/hash-property-bag;1");
   NS_ENSURE_TRUE(bag, NS_ERROR_OUT_OF_MEMORY);
-  bag.forget(_state);
 
-  // Put `mState` in field `progress`
   RefPtr<nsVariant> progress = new nsVariant();
-  nsresult rv = progress->SetAsUint8(mState);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-  rv = static_cast<nsIWritablePropertyBag2*>(*_state)->SetPropertyAsInterface(
-      u"progress"_ns, progress);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
+  Unused << NS_WARN_IF(NS_FAILED(progress->SetAsUint8(mState)));
+  Unused << NS_WARN_IF(
+      NS_FAILED(bag->SetProperty(u"PlacesShutdownProgress"_ns, progress)));
 
-  // Put `mBarrier`'s state in field `barrier`, if possible
-  if (!mBarrier) {
-    return NS_OK;
+  if (mBarrier) {
+    nsCOMPtr<nsIPropertyBag> barrierState;
+    if (NS_SUCCEEDED(mBarrier->GetState(getter_AddRefs(barrierState))) &&
+        barrierState) {
+      nsCOMPtr<nsISimpleEnumerator> enumerator;
+      if (NS_SUCCEEDED(
+              barrierState->GetEnumerator(getter_AddRefs(enumerator))) &&
+          enumerator) {
+        for (const auto& property : SimpleEnumerator<nsIProperty>(enumerator)) {
+          nsAutoString prefix(u"Barrier: "_ns);
+          nsAutoString name;
+          Unused << NS_WARN_IF(NS_FAILED(property->GetName(name)));
+          prefix.Append(name);
+          nsCOMPtr<nsIVariant> value;
+          Unused << NS_WARN_IF(
+              NS_FAILED(property->GetValue(getter_AddRefs(value))));
+          Unused << NS_WARN_IF(NS_FAILED(bag->SetProperty(prefix, value)));
+        }
+      }
+    }
   }
-  nsCOMPtr<nsIPropertyBag> barrierState;
-  rv = mBarrier->GetState(getter_AddRefs(barrierState));
-  if (NS_FAILED(rv)) {
-    return NS_OK;
-  }
-
-  RefPtr<nsVariant> barrier = new nsVariant();
-  rv = barrier->SetAsInterface(NS_GET_IID(nsIPropertyBag), barrierState);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-  rv = static_cast<nsIWritablePropertyBag2*>(*_state)->SetPropertyAsInterface(
-      u"Barrier"_ns, barrier);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-
+  bag.forget(_state);
   return NS_OK;
 }
 
