@@ -206,7 +206,7 @@ add_task(async function testLocalesHiddenIfPreviousViewAndNoLocales() {
 
   is(
     categoryUtils.getSelectedViewId(),
-    win.managerWindow.gViewDefault,
+    win.managerWindow.gViewController.defaultViewId,
     "default view is selected"
   );
 
