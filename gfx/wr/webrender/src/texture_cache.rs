@@ -67,8 +67,8 @@ enum EntryDetails {
     Cache {
         /// Origin within the texture layer where this item exists.
         origin: DeviceIntPoint,
-        /// The index of the allocator region.
-        region_index: usize,
+        /// ID of the allocation specific to its allocator.
+        alloc_id: AllocId,
     },
 }
 
@@ -1001,7 +1001,7 @@ impl TextureCache {
                 // This is a standalone texture allocation. Free it directly.
                 self.pending_updates.push_free(entry.texture_id);
             }
-            EntryDetails::Cache { origin, region_index, .. } => {
+            EntryDetails::Cache { origin, alloc_id, .. } => {
                 // Free the block in the given region.
                 let texture_array = self.shared_textures.select(
                     entry.size,
@@ -1015,7 +1015,7 @@ impl TextureCache {
                     .expect("Unable to find the associated texture array unit");
 
                 let bpp = texture_array.formats.internal.bytes_per_pixel();
-                let slab_size = unit.allocator.deallocate(origin, region_index);
+                let slab_size = unit.allocator.deallocate(alloc_id);
                 self.shared_bytes_allocated -= (slab_size.width * slab_size.height * bpp) as usize;
 
                 if self.debug_flags.contains(
@@ -1046,7 +1046,7 @@ impl TextureCache {
             params.shader,
         );
 
-        let (texture_id, region_index, allocated_rect) = units.allocate(
+        let (texture_id, alloc_id, allocated_rect) = units.allocate(
             params.descriptor.size,
             &mut self.pending_updates,
             &mut self.next_id,
@@ -1070,7 +1070,7 @@ impl TextureCache {
             last_access: self.now,
             details: EntryDetails::Cache {
                 origin: allocated_rect.origin,
-                region_index: region_index,
+                alloc_id,
             },
             uv_rect_handle: GpuCacheHandle::new(),
             input_format: params.descriptor.format,
@@ -1309,11 +1309,11 @@ impl TextureUnits {
         requested_size: DeviceIntSize,
         pending_updates: &mut TextureUpdateList,
         next_id: &mut CacheTextureId,
-    ) -> (CacheTextureId, usize, DeviceIntRect) {
+    ) -> (CacheTextureId, AllocId, DeviceIntRect) {
         let mut allocation = None;
         for unit in &mut self.units {
-            if let Some((region, rect)) = unit.allocator.allocate(requested_size) {
-                allocation = Some((unit.texture_id, region, rect));
+            if let Some((alloc_id, rect)) = unit.allocator.allocate(requested_size) {
+                allocation = Some((unit.texture_id, alloc_id, rect));
             }
         }
 
@@ -1337,12 +1337,12 @@ impl TextureUnits {
 
             let unit_index = self.add_texture(texture_id);
 
-            let (region_index, rect) = self.units[unit_index]
+            let (alloc_id, rect) = self.units[unit_index]
                 .allocator
                 .allocate(requested_size)
                 .unwrap();
 
-            (texture_id, region_index, rect)
+            (texture_id, alloc_id, rect)
         })
     }
 
