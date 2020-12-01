@@ -228,20 +228,20 @@ macosx64-add-on-devel/opt:
             - linux64-sccache
             - wasi-sysroot
 
-macosx64-x64-shippable/opt:
+macosx64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
-    use-pgo: macosx64-shippable/opt
+    use-pgo: true
     attributes:
+        shippable: true
         enable-full-crashsymbols: true
-        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: firefox
     index:
-        job-name: macosx64-x64-opt
+        job-name: macosx64-opt
         type: shippable
     treeherder:
         platform: osx-shippable/opt
-        symbol: Bpgo(Bx)
+        symbol: Bpgo(B)
         tier: 1
     run-on-projects: ['release']
     worker:
@@ -258,186 +258,6 @@ macosx64-x64-shippable/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - wasi-sysroot
-
-macosx64-aarch64-shippable/opt:
-    description: "MacOS X aarch64 Cross-compile"
-    use-pgo: macosx64-shippable/opt
-    attributes:
-        enable-full-crashsymbols: true
-        skip-verify-test-packaging: true
-    shipping-phase: build
-    shipping-product: firefox
-    index:
-        job-name: macosx64-aarch64-opt
-        type: shippable
-    treeherder:
-        platform: osx-aarch64-shippable/opt
-        symbol: Bpgo(B)
-        tier: 1
-    run-on-projects: ['release']
-    worker:
-        max-run-time: 7200
-        env:
-            TOOLTOOL_MANIFEST: ""
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
-            PERFHERDER_EXTRA_OPTIONS: aarch64
-    run:
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_mac_64_cross_builds.py
-            - taskcluster_nightly.py
-        extra-config:
-            mozconfig_platform: macosx64-aarch64
-    dependencies:
-        linux64-rust-macos-beta: toolchain-linux64-rust-macos-beta
-    fetches:
-        toolchain:
-            - linux64-cctools-port
-            - linux64-clang-macosx-aarch64-cross
-            - macosx64-sdk-11.0
-        # Because job-defaults contain linux64-rust-macos, which we can't
-        # remove, and that would extract to the same directory, with no
-        # guaranteed order,we need to manually extract to a different
-        # directory, and make the build use that instead, until we can use
-        # a stable rust.
-        linux64-rust-macos-beta:
-            - artifact: rustc.tar.zst
-              dest: rustc-beta
-
-macosx64-shippable/opt:
-    description: "MacOS X Universal"
-    attributes:
-        shippable: true
-        enable-build-signing: true
-        skip-upload-crashsymbols: true
-        skip-verify-test-packaging: true
-    shipping-phase: build
-    shipping-product: firefox
-    index:
-        job-name: macosx64-opt
-        type: shippable
-    treeherder:
-        platform: osx-shippable/opt
-        symbol: Bpgo(B)
-        tier: 1
-    run-on-projects: ['release']
-    worker:
-        max-run-time: 1800
-    run:
-        job-script: taskcluster/scripts/misc/unify.sh
-        config:
-            - builds/releng_base_firefox.py
-    dependencies:
-        macosx64-x64-shippable-opt: build-macosx64-x64-shippable/opt
-        macosx64-aarch64-shippable-opt: build-macosx64-aarch64-shippable/opt
-    fetches:
-        macosx64-x64-shippable-opt:
-            - artifact: target.dmg
-              extract: false
-              dest: x64
-            - artifact: buildhub.json
-              extract: false
-              dest: ../artifacts
-            - artifact: host/bin/mar
-              extract: false
-              dest: ../artifacts/host/bin
-            - artifact: host/bin/mbsdiff
-              extract: false
-              dest: ../artifacts/host/bin
-            - artifact: target.txt
-              extract: false
-              dest: ../artifacts
-            - artifact: target_info.txt
-              extract: false
-              dest: ../artifacts
-            - artifact: target.json
-              extract: false
-              dest: ../artifacts
-            - artifact: target.mozinfo.json
-              extract: false
-              dest: ../artifacts
-            - artifact: target.test_packages.json
-              extract: false
-              dest: ../artifacts
-            - artifact: target.common.tests.tar.gz
-              dest: x64/common
-            - artifact: target.cppunittest.tests.tar.gz
-              dest: x64/cppunittest
-            - artifact: target.gtest.tests.tar.gz
-              dest: x64/gtest
-            - artifact: target.jittest.tests.tar.gz
-              dest: x64/jittest
-            - artifact: target.jsreftest.tests.tar.gz
-              dest: x64/jsreftest
-            - artifact: target.mochitest.tests.tar.gz
-              dest: x64/mochitest
-            - artifact: target.reftest.tests.tar.gz
-              dest: x64/reftest
-            - artifact: target.talos.tests.tar.gz
-              dest: x64/talos
-            - artifact: target.raptor.tests.tar.gz
-              dest: x64/raptor
-            - artifact: target.condprof.tests.tar.gz
-              dest: x64/confprof
-            - artifact: target.awsy.tests.tar.gz
-              dest: x64/awsy
-            - artifact: target.xpcshell.tests.tar.gz
-              dest: x64/xpcshell
-            - artifact: target.web-platform.tests.tar.gz
-              dest: x64/web-platform
-            - artifact: target.updater-dep.tests.tar.gz
-              dest: x64/updater-dep
-            - artifact: target.crashreporter-symbols.zip
-              dest: x64/crashreporter-symbols
-            - artifact: target.jsshell.zip
-              dest: x64/jsshell
-            - artifact: target.generated-files.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.langpack.xpi
-              extract: false
-              dest: ../artifacts
-            - artifact: mozharness.zip
-              extract: false
-              dest: ../artifacts
-        macosx64-aarch64-shippable-opt:
-            - artifact: target.dmg
-              extract: false
-              dest: aarch64
-            - artifact: target.common.tests.tar.gz
-              dest: aarch64/common
-            - artifact: target.cppunittest.tests.tar.gz
-              dest: aarch64/cppunittest
-            - artifact: target.gtest.tests.tar.gz
-              dest: aarch64/gtest
-            - artifact: target.jittest.tests.tar.gz
-              dest: aarch64/jittest
-            - artifact: target.jsreftest.tests.tar.gz
-              dest: aarch64/jsreftest
-            - artifact: target.mochitest.tests.tar.gz
-              dest: aarch64/mochitest
-            - artifact: target.reftest.tests.tar.gz
-              dest: aarch64/reftest
-            - artifact: target.talos.tests.tar.gz
-              dest: aarch64/talos
-            - artifact: target.raptor.tests.tar.gz
-              dest: aarch64/raptor
-            - artifact: target.condprof.tests.tar.gz
-              dest: aarch64/confprof
-            - artifact: target.awsy.tests.tar.gz
-              dest: aarch64/awsy
-            - artifact: target.xpcshell.tests.tar.gz
-              dest: aarch64/xpcshell
-            - artifact: target.web-platform.tests.tar.gz
-              dest: aarch64/web-platform
-            - artifact: target.updater-dep.tests.tar.gz
-              dest: aarch64/updater-dep
-            - artifact: target.crashreporter-symbols.zip
-              dest: aarch64/crashreporter-symbols
-            - artifact: target.jsshell.zip
-              dest: aarch64/jsshell
-        toolchain:
-            - linux64-cctools-port
 
 macosx64-ccov/opt:
     description: "MacOS X x64 Cross-compile Code Coverage"
