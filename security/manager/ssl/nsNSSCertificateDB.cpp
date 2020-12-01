@@ -1180,6 +1180,62 @@ nsNSSCertificateDB::GetCerts(nsTArray<RefPtr<nsIX509Cert>>& _retval) {
                                                                   _retval);
 }
 
+NS_IMETHODIMP
+nsNSSCertificateDB::AsyncHasThirdPartyRoots(nsIAsyncBoolCallback* aCallback) {
+  NS_ENSURE_ARG_POINTER(aCallback);
+  nsMainThreadPtrHandle<nsIAsyncBoolCallback> callback(
+      new nsMainThreadPtrHolder<nsIAsyncBoolCallback>("AsyncHasThirdPartyRoots",
+                                                      aCallback));
+
+  return NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "nsNSSCertificateDB::AsyncHasThirdPartyRoots",
+          [cb = std::move(callback), self = RefPtr{this}] {
+            bool hasThirdPartyRoots = [self]() -> bool {
+              nsTArray<RefPtr<nsIX509Cert>> certs;
+              nsresult rv = self->GetCerts(certs);
+              if (NS_FAILED(rv)) {
+                return false;
+              }
+
+              for (const auto& cert : certs) {
+                bool isTrusted = false;
+                nsresult rv =
+                    self->IsCertTrusted(cert, nsIX509Cert::CA_CERT,
+                                        nsIX509CertDB::TRUSTED_SSL, &isTrusted);
+                if (NS_FAILED(rv)) {
+                  return false;
+                }
+
+                if (!isTrusted) {
+                  continue;
+                }
+
+                bool isBuiltInRoot = false;
+                rv = cert->GetIsBuiltInRoot(&isBuiltInRoot);
+                if (NS_FAILED(rv)) {
+                  return false;
+                }
+
+                if (!isBuiltInRoot) {
+                  return true;
+                }
+              }
+
+              return false;
+            }();
+
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "nsNSSCertificateDB::AsyncHasThirdPartyRoots callback",
+                [cb, hasThirdPartyRoots]() {
+                  cb->OnResult(hasThirdPartyRoots);
+                }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  return NS_OK;
+}
+
 nsresult VerifyCertAtTime(nsIX509Cert* aCert,
                           int64_t /*SECCertificateUsage*/ aUsage,
                           uint32_t aFlags, const nsACString& aHostname,
