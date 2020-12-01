@@ -22,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -96,7 +97,6 @@ class MediaSessionFeatureTest {
         verify(mockApplicationContext, never()).startForegroundService(any())
 
         store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(store.state.tabs[0].id, mock()))
-
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, never()).startForegroundService(any())
@@ -105,6 +105,67 @@ class MediaSessionFeatureTest {
             MediaSession.PlaybackState.PLAYING))
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
-        verify(mockApplicationContext).startForegroundService(any())
+    }
+
+    @Test
+    fun `feature only starts foreground service when there were no previous media session`() {
+        val mockApplicationContext: Context = mock()
+        val initialState = BrowserState(
+            tabs = listOf(createTab(
+                "https://www.mozilla.org",
+                mediaSessionState = null
+            ), createTab(
+                "https://www.mozilla.org",
+                mediaSessionState = null
+            ))
+        )
+        val store = BrowserStore(initialState)
+        val feature = MediaSessionFeature(
+            mockApplicationContext,
+            MediaSessionServiceDelegate::class.java,
+            store
+        )
+
+        feature.start()
+        verify(mockApplicationContext, never()).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(store.state.tabs[0].id, mock()))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, never()).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
+            MediaSession.PlaybackState.PLAYING))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, times(1)).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
+            MediaSession.PlaybackState.PAUSED))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, times(1)).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.DeactivatedMediaSessionAction(store.state.tabs[0].id))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, times(1)).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(store.state.tabs[0].id, mock()))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, times(1)).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
+            MediaSession.PlaybackState.PLAYING))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, times(2)).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[1].id,
+            MediaSession.PlaybackState.PLAYING))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, times(2)).startForegroundService(any())
     }
 }

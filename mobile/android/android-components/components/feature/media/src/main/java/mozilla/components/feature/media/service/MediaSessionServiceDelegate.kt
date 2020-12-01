@@ -161,6 +161,7 @@ internal class MediaSessionServiceDelegate(
     }
 
     private fun shutdown() {
+        audioFocus.abandon()
         mediaSession.release()
         service.stopSelf()
     }

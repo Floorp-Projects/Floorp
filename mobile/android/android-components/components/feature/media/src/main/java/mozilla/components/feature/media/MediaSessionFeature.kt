@@ -10,7 +10,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
-import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.feature.media.service.AbstractMediaSessionService
@@ -39,10 +38,12 @@ class MediaSessionFeature(
             flow.map {
                 it.tabs + it.customTabs
             }.map { tab ->
-                tab.filter { it.mediaSessionState != null &&
-                    it.mediaSessionState!!.playbackState != MediaSession.PlaybackState.UNKNOWN }
-            }.ifChanged().collect { states ->
-                process(states)
+                tab.none {
+                    it.mediaSessionState != null &&
+                        it.mediaSessionState!!.playbackState != MediaSession.PlaybackState.UNKNOWN
+                }
+            }.ifChanged().collect { isEmpty ->
+                process(isEmpty)
             }
         }
     }
@@ -54,8 +55,8 @@ class MediaSessionFeature(
         scope?.cancel()
     }
 
-    private fun process(sessionStates: List<SessionState>) {
-        if (sessionStates.isNotEmpty()) {
+    private fun process(isEmpty: Boolean) {
+        if (!isEmpty) {
             launch()
         }
     }
