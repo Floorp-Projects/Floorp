@@ -3442,8 +3442,7 @@ static bool ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin,
     }
   }
 
-  RootedArrayObject narr(cx,
-                         NewPartlyAllocatedArrayTryReuseGroup(cx, obj, count));
+  RootedArrayObject narr(cx, NewDensePartlyAllocatedArray(cx, count));
   if (!narr) {
     return false;
   }
@@ -4071,6 +4070,13 @@ ArrayObject* JS_FASTCALL js::NewDenseFullyAllocatedArray(
   return NewArray<UINT32_MAX>(cx, length, proto, newKind);
 }
 
+ArrayObject* js::NewDensePartlyAllocatedArray(
+    JSContext* cx, uint32_t length, HandleObject proto /* = nullptr */,
+    NewObjectKind newKind /* = GenericObject */) {
+  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, proto,
+                                                         newKind);
+}
+
 ArrayObject* JS_FASTCALL js::NewDenseUnallocatedArray(
     JSContext* cx, uint32_t length, HandleObject proto /* = nullptr */,
     NewObjectKind newKind /* = GenericObject */) {
@@ -4166,46 +4172,6 @@ ArrayObject* js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
                                                     size_t length) {
   return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group,
                                                                     length);
-}
-
-static bool CanReuseGroupForNewArray(JSObject* obj, JSContext* cx) {
-  if (!obj->is<ArrayObject>()) {
-    return false;
-  }
-  if (obj->as<ArrayObject>().realm() != cx->realm()) {
-    return false;
-  }
-  if (obj->staticPrototype() != cx->global()->maybeGetArrayPrototype()) {
-    return false;
-  }
-  return true;
-}
-
-// Return a new array with the default prototype and specified allocated
-// capacity and length. If possible, try to reuse the group of the input
-// object. The resulting array will either reuse the input object's group or
-// will have unknown property types.
-template <uint32_t maxLength>
-static inline ArrayObject* NewArrayTryReuseGroup(
-    JSContext* cx, HandleObject obj, size_t length,
-    NewObjectKind newKind = GenericObject) {
-  if (!CanReuseGroupForNewArray(obj, cx)) {
-    return NewArray<maxLength>(cx, length, nullptr, newKind);
-  }
-
-  RootedObjectGroup group(cx, JSObject::getGroup(cx, obj));
-  if (!group) {
-    return nullptr;
-  }
-
-  return NewArrayTryUseGroup<maxLength>(cx, group, length, newKind);
-}
-
-ArrayObject* js::NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx,
-                                                      HandleObject obj,
-                                                      size_t length) {
-  return NewArrayTryReuseGroup<ArrayObject::EagerAllocationMaxLength>(cx, obj,
-                                                                      length);
 }
 
 ArrayObject* js::NewFullyAllocatedArrayForCallingAllocationSite(
