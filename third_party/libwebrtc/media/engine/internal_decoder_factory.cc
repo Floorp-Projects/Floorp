@@ -48,8 +48,8 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
     formats.push_back(format);
   for (const SdpVideoFormat& h264_format : SupportedH264Codecs())
     formats.push_back(h264_format);
-  if (kIsLibaomAv1DecoderSupported)
-    formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
+  //if (kIsLibaomAv1DecoderSupported)
+  //  formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
   return formats;
 }
 
@@ -66,9 +66,9 @@ std::unique_ptr<VideoDecoder> InternalDecoderFactory::CreateVideoDecoder(
     return VP9Decoder::Create();
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
     return H264Decoder::Create();
-  if (kIsLibaomAv1DecoderSupported &&
-      absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName))
-    return CreateLibaomAv1Decoder();
+  //if (kIsLibaomAv1DecoderSupported &&
+  //    absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName))
+  //  return CreateLibaomAv1Decoder();
 
   RTC_NOTREACHED();
   return nullptr;
