@@ -170,8 +170,6 @@ UNIFIED_SOURCES += [
 
 if CONFIG["MOZ_BUILD_APP"] not in (
     "memory",
-    "tools/crashreporter",
-    "tools/update-packaging",
     "tools/update-programs",
 ):
     # Building MFBT tests adds a large overhead when building.
