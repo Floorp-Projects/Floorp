@@ -137,6 +137,14 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+- (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
+  [super stateChanged:state isEnabled:enabled];
+
+  if (state & (states::CHECKED | states::PRESSED | states::MIXED)) {
+    [self moxPostNotification:NSAccessibilityValueChangedNotification];
+  }
+}
+
 @end
 
 @implementation mozPaneAccessible
