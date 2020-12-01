@@ -18,7 +18,6 @@ cranelift-wasm = { version = "0.68.0" }
 log = { version = "0.4.6", default-features = false, features = ["release_max_level_info"] }
 env_logger = "0.8"
 smallvec = "1.0"
-wasmparser = { version = "0.67" }
 
 [build-dependencies]
 bindgen = {version = "0.53", default-features = false} # disable `logging` to reduce code size

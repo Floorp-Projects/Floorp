@@ -220,7 +220,6 @@ dependencies = [
  "env_logger",
  "log",
  "smallvec",
- "wasmparser 0.67.0",
 ]
 
 [[package]]
