@@ -93,7 +93,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // When we send events to extensions, we wait this amount of time in
   // milliseconds for them to respond before timing out.
-  ["extension.timeout", 200],
+  ["extension.timeout", 400],
 
   // When true, `javascript:` URLs are not included in search results.
   ["filter.javascript", true],
