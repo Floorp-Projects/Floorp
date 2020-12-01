@@ -3639,8 +3639,8 @@ static bool array_isArray(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool ArrayFromCallArgs(JSContext* cx, CallArgs& args,
                               HandleObject proto = nullptr) {
-  ArrayObject* obj = NewCopiedArrayForCallingAllocationSite(
-      cx, args.array(), args.length(), proto);
+  ArrayObject* obj =
+      NewDenseCopiedArray(cx, args.length(), args.array(), proto);
   if (!obj) {
     return false;
   }
@@ -4192,17 +4192,6 @@ ArrayObject* js::NewCopiedArrayTryUseGroup(JSContext* cx,
 
   MOZ_ASSERT(result == DenseElementResult::Success);
   return obj;
-}
-
-ArrayObject* js::NewCopiedArrayForCallingAllocationSite(
-    JSContext* cx, const Value* vp, size_t length,
-    HandleObject proto /* = nullptr */) {
-  RootedObjectGroup group(
-      cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array, proto));
-  if (!group) {
-    return nullptr;
-  }
-  return NewCopiedArrayTryUseGroup(cx, group, vp, length);
 }
 
 ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
