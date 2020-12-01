@@ -209,12 +209,12 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   options = {}
 ) {
   const {
-    browsingContext = driver.getBrowsingContext(),
+    browsingContextFn = driver.getBrowsingContext.bind(driver),
     loadEventExpected = true,
     requireBeforeUnload = true,
   } = options;
 
-  const chromeWindow = browsingContext.topChromeWindow;
+  const chromeWindow = browsingContextFn().topChromeWindow;
   const pageLoadStrategy = driver.capabilities.get("pageLoadStrategy");
 
   // Return immediately if no load event is expected
@@ -288,10 +288,12 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       // Only care about navigation events from the actor of the current frame.
       // Bug 1674329: Always use the currently active browsing context,
       // and not the original one to not cause hangs for remoteness changes.
-      if (data.browsingContext != driver.getBrowsingContext()) {
+      if (data.browsingContext != browsingContextFn()) {
         return;
       }
-    } else if (data.browsingContext.browserId != browsingContext.browserId) {
+    } else if (
+      data.browsingContext.browserId != browsingContextFn().browserId
+    ) {
       return;
     }
 
@@ -327,10 +329,10 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   const onBrowsingContextDiscarded = (subject, topic) => {
     // With the currentWindowGlobal gone the browsing context hasn't been
     // replaced due to a remoteness change but closed.
-    if (subject == browsingContext && !subject.currentWindowGlobal) {
+    if (subject == browsingContextFn() && !subject.currentWindowGlobal) {
       logger.trace(
         "Canceled page load listener " +
-          `because frame with id ${subject.id} has been removed`
+          `because browsing context with id ${subject.id} has been removed`
       );
       checkDone({ finished: true });
     }
