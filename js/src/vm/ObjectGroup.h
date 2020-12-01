@@ -240,10 +240,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
                                           jsbytecode* pc, JSProtoKey key,
                                           HandleObject proto = nullptr);
 
-  // Get a non-singleton group to use for objects created in a JSNative call.
-  static ObjectGroup* callingAllocationSiteGroup(JSContext* cx, JSProtoKey key,
-                                                 HandleObject proto = nullptr);
-
   static ArrayObject* getOrFixupCopyOnWriteObject(JSContext* cx,
                                                   HandleScript script,
                                                   jsbytecode* pc);

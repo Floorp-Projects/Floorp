@@ -1026,22 +1026,10 @@ PlainObject* js::ObjectCreateImpl(JSContext* cx, HandleObject proto,
   // object literals ({}).
   gc::AllocKind allocKind = GuessObjectGCKind(0);
 
-  if (!proto) {
-    // Object.create(null) is common, optimize it by using an allocation
-    // site specific ObjectGroup. Because GetCallerInitGroup is pretty
-    // slow, the caller can pass in the group if it's known and we use that
-    // instead.
-    RootedObjectGroup ngroup(cx, group);
-    if (!ngroup) {
-      ngroup = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Null);
-      if (!ngroup) {
-        return nullptr;
-      }
-    }
-
-    MOZ_ASSERT(!ngroup->proto().toObjectOrNull());
-
-    return NewObjectWithGroup<PlainObject>(cx, ngroup, allocKind, newKind);
+  // Use a faster allocation path if the group is known.
+  if (group) {
+    MOZ_ASSERT(group->proto().toObjectOrNull() == proto);
+    return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
   }
 
   return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,

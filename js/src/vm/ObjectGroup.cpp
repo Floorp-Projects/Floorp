@@ -496,18 +496,6 @@ ObjectGroup* ObjectGroup::allocationSiteGroup(
 }
 
 /* static */
-ObjectGroup* ObjectGroup::callingAllocationSiteGroup(JSContext* cx,
-                                                     JSProtoKey key,
-                                                     HandleObject proto) {
-  MOZ_ASSERT_IF(proto, key == JSProto_Array);
-
-  if (proto) {
-    return defaultNewGroup(cx, GetClassForProtoKey(key), TaggedProto(proto));
-  }
-  return defaultNewGroup(cx, key);
-}
-
-/* static */
 ArrayObject* ObjectGroup::getOrFixupCopyOnWriteObject(JSContext* cx,
                                                       HandleScript script,
                                                       jsbytecode* pc) {
