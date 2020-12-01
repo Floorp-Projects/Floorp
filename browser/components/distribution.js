@@ -553,25 +553,21 @@ DistributionCustomizer.prototype = {
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (this._newProfile) {
-      let xulStore = Services.xulStore;
-
       try {
         var showPersonalToolbar = Services.prefs.getBoolPref(
           "browser.showPersonalToolbar"
         );
         if (showPersonalToolbar) {
-          xulStore.setValue(
-            BROWSER_DOCURL,
-            "PersonalToolbar",
-            "collapsed",
-            "false"
+          Services.prefs.setCharPref(
+            "browser.toolbars.bookmarks.visibility",
+            "always"
           );
         }
       } catch (e) {}
       try {
         var showMenubar = Services.prefs.getBoolPref("browser.showMenubar");
         if (showMenubar) {
-          xulStore.setValue(
+          Services.xulStore.setValue(
             BROWSER_DOCURL,
             "toolbar-menubar",
             "autohide",
