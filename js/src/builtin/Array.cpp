@@ -908,7 +908,7 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
 
   // Update array length. Technically we should have been doing this
   // throughout the loop, in step 19.d.iii.
-  arr->setLength(cx, newLen);
+  arr->setLength(newLen);
 
   // Step 20.
   if (attrs & JSPROP_READONLY) {
@@ -961,7 +961,7 @@ static bool array_addProperty(JSContext* cx, HandleObject obj, HandleId id,
   if (index >= length) {
     MOZ_ASSERT(arr->lengthIsWritable(),
                "how'd this element get added if length is non-writable?");
-    arr->setLength(cx, index + 1);
+    arr->setLength(index + 1);
   }
   return true;
 }
@@ -2119,7 +2119,7 @@ static bool FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start,
 
     if (obj->is<ArrayObject>() &&
         start + count >= obj->as<ArrayObject>().length()) {
-      obj->as<ArrayObject>().setLengthInt32(start + count);
+      obj->as<ArrayObject>().setLength(start + count);
     }
 
     for (uint32_t i = 0; i < count; i++) {
@@ -2351,7 +2351,7 @@ bool js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v) {
   }
 
   arr->setDenseInitializedLength(length + 1);
-  arr->setLengthInt32(length + 1);
+  arr->setLength(length + 1);
   arr->initDenseElementWithType(cx, length, v);
   return true;
 }
@@ -2821,7 +2821,7 @@ static ArrayObject* CopyDenseArrayElements(JSContext* cx,
   }
 
   MOZ_ASSERT(count >= narr->length());
-  narr->setLength(cx, count);
+  narr->setLength(count);
 
   if (newlength > 0) {
     narr->initDenseElements(cx, obj, begin, newlength);
@@ -3596,7 +3596,7 @@ static bool ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr,
   }
 
   MOZ_ASSERT(count >= result->length());
-  result->setLength(cx, count);
+  result->setLength(count);
 
   return true;
 }
@@ -3991,7 +3991,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
         /* Fixup the elements pointer and length, which may be incorrect. */
         ArrayObject* arr = &obj->as<ArrayObject>();
         arr->setFixedElements();
-        arr->setLength(cx, length);
+        arr->setLength(length);
         if (maxLength > 0 &&
             !EnsureNewArrayElements(cx, arr, std::min(maxLength, length))) {
           return nullptr;

@@ -1461,7 +1461,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
         return nullptr;
       }
       arrRes->initDenseElements(rest, length);
-      arrRes->setLengthInt32(length);
+      arrRes->setLength(length);
     }
     return arrRes;
   }
