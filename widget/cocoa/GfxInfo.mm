@@ -442,6 +442,9 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::NvidiaRolloutWebRender,
                                    nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
                                    "FEATURE_ROLLOUT_NVIDIA_MAC");
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::AppleAll,
+                                   nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
+                                   "FEATURE_ROLLOUT_APPLE_SILICON_MAC");
   }
   return *sDriverInfo;
 }
