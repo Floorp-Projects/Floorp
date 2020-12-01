@@ -141,8 +141,6 @@ ObjectGroup* JSObject::makeLazyGroup(JSContext* cx, HandleObject obj) {
     return nullptr;
   }
 
-  AutoEnterAnalysis enter(cx);
-
   obj->setGroupRaw(group);
 
   return group;
@@ -300,7 +298,7 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
     return group;
   }
 
-  AutoEnterAnalysis enter(cx);
+  gc::AutoSuppressGC suppressGC(cx);
 
   ObjectGroupRealm::NewTable*& table = groups.defaultNewTable;
 
@@ -377,7 +375,7 @@ ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
     return group;
   }
 
-  AutoEnterAnalysis enter(cx);
+  gc::AutoSuppressGC suppressGC(cx);
 
   Rooted<TaggedProto> protoRoot(cx, proto);
   ObjectGroup* group = ObjectGroupRealm::makeGroup(

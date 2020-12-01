@@ -482,7 +482,7 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
       new (raw) ICScript(initialWarmUpCount, allocSize, depth, root_));
 
   {
-    // Suppress GC. This matches the AutoEnterAnalysis in
+    // Suppress GC. This matches the AutoSuppressGC in
     // JSScript::createJitScript. It is needed for allocating the
     // template object for JSOp::Rest and the object group for
     // JSOp::NewArray.

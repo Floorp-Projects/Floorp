@@ -374,10 +374,10 @@ void jit::LinkIonScript(JSContext* cx, HandleScript calleeScript) {
   }
 
   {
-    AutoEnterAnalysis enterTypes(cx);
+    gc::AutoSuppressGC suppressGC(cx);
     if (!LinkBackgroundCodeGen(cx, task)) {
       // Silently ignore OOM during code generation. The assembly code
-      // doesn't has code to handle it after linking happened. So it's
+      // doesn't have code to handle it after linking happened. So it's
       // not OK to throw a catchable exception from there.
       cx->clearPendingException();
     }
@@ -1617,8 +1617,7 @@ static void TrackAndSpewIonAbort(JSContext* cx, JSScript* script,
 static AbortReasonOr<WarpSnapshot*> CreateWarpSnapshot(JSContext* cx,
                                                        MIRGenerator* mirGen,
                                                        HandleScript script) {
-  // Suppress GC. This matches the AutoEnterAnalysis (which suppresses GC) in
-  // BuildMIR.
+  // Suppress GC during compilation.
   gc::AutoSuppressGC suppressGC(cx);
 
   SpewBeginFunction(mirGen, script);
@@ -1755,7 +1754,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
 
   bool succeeded = false;
   {
-    AutoEnterAnalysis enter(cx);
+    gc::AutoSuppressGC suppressGC(cx);
     UniquePtr<CodeGenerator> codegen(CompileBackEnd(mirGen, snapshot));
     if (!codegen) {
       JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
