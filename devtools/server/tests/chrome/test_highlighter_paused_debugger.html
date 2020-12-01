@@ -54,7 +54,7 @@ window.onload = async function() {
   ok(isHidden("root"), "The highlighter is hidden");
 
   info("Show the highlighter with overlay and toolbar");
-  let didShow = highlighter.show(null, { "reason": "breakpoint" });
+  let didShow = highlighter.show("breakpoint");
   ok(didShow, "Calling show returned true");
   ok(!isHidden("root"), "The highlighter is shown");
   ok(isOverlayShown(), "The overlay is shown");
@@ -65,7 +65,7 @@ window.onload = async function() {
   );
 
   info("Call show again with another reason");
-  didShow = highlighter.show(null, {"reason": "debuggerStatement"});
+  didShow = highlighter.show("debuggerStatement");
   ok(didShow, "Calling show returned true too");
   ok(!isHidden("root"), "The highlighter is still shown");
   is(getReason(), "Paused on debugger statement",

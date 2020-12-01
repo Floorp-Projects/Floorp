@@ -498,7 +498,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     ) {
       const reason = this._priorPause.why.type;
       await this.pauseOverlay.isReady;
-      this.pauseOverlay.show(null, { reason });
+      this.pauseOverlay.show(reason);
     }
   },
 
