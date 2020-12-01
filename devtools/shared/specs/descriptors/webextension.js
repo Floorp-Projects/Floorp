@@ -14,7 +14,7 @@ const webExtensionDescriptorSpec = generateActorSpec({
       response: { addon: RetVal("json") },
     },
 
-    // FF70+ The method is now called getTarget`
+    // @backward-compat { version 70 } The method is now called getTarget
     connect: {
       request: {},
       response: { form: RetVal("json") },

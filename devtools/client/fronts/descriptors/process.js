@@ -51,8 +51,7 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
     front.actorID = form.actor;
     front.form(form);
 
-    // FF84+ pass the processID via ContentProcessTargetFront's form, so that
-    // there is no need to override it from the descriptor anymore
+    // @backward-compat { version 84 } Older server don't send the processID in the form
     if (!front.processID) {
       front.processID = this.id;
     }

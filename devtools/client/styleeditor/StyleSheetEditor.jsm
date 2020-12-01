@@ -284,7 +284,7 @@ StyleSheetEditor.prototype = {
       // So, for now, we use OriginalSource.getText() as it is.
       longStr = await this.styleSheet.getText();
     } else if (!traits.supportResourceRequests) {
-      // Backward compat, can be removed when FF 81 hits release.
+      // @backward-compat { version 81 } Older server don't support resource requests.
       longStr = await this.styleSheet.getText();
     } else {
       longStr = await styleSheetsFront.getText(this.resourceId);

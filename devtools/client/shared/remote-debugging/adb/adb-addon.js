@@ -11,7 +11,8 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const PREF_ADB_EXTENSION_URL = "devtools.remote.adb.extensionURL";
 const PREF_ADB_EXTENSION_ID = "devtools.remote.adb.extensionID";
 
-// Extension ID for adb helper extension that might be installed on Firefox 63 or older.
+// @backward-compat { version 63 } Extension ID for adb helper extension that might be
+// installed on older versions.
 const ADB_HELPER_ADDON_ID = "adbhelper@mozilla.org";
 // Extension ID for Valence extension that is no longer supported.
 const VALENCE_ADDON_ID = "fxdevtools-adapters@mozilla.org";

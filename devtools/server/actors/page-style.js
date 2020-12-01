@@ -178,7 +178,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         // expected support of font-stretch at CSS Fonts Level 4.
         fontWeightLevel4:
           CSS.supports("font-weight: 1") && CSS.supports("font-stretch: 100%"),
-        // Introduced in Firefox 80.
+        // @backward-compat { version 80 }
         getAttributesInOwnerDocument: true,
       },
     };

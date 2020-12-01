@@ -38,7 +38,7 @@ define(function(require, exports, module) {
   function PromiseRep(props) {
     const object = props.object;
 
-    // @backward-compat { added in 85 } On older servers, the preview of a promise was
+    // @backward-compat { version 85 } On older servers, the preview of a promise was
     // useless and didn't include the internal promise state, which was directly exposed
     // in the grip.
     if (object.promiseState) {

@@ -70,7 +70,7 @@ class ServiceWorkerRegistrationFront extends FrontClassWithSpec(
   form(form) {
     this.actorID = form.actor;
     this._form = form;
-    // FF70+ ServiceWorkerRegistration actor starts exposing traits object
+    // @backward-compat { version 70 } ServiceWorkerRegistration actor now exposes traits
     this.traits = form.traits || {};
   }
 }

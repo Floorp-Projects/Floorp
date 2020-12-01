@@ -15,8 +15,7 @@ exports.CSS_ANGLEUNIT = {
 };
 
 /**
- * Mapping of InspectorPropertyType to old type ID.
- * Kept for backwards compatibility. Remove after Firefox 70.
+ * @backward-compat { version 70 } Mapping of InspectorPropertyType to old type ID.
  */
 exports.CSS_TYPES = {
   color: 2,

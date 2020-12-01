@@ -238,8 +238,8 @@ function normalizeCssData(db) {
   // and it is not the client CSS_PROPERTIES_DB object.
   // (prevent comparing to CSS_PROPERTIES_DB to avoid loading client database)
   if (typeof db.from == "string") {
-    // Firefox 49's getCSSDatabase() just returned the properties object, but
-    // now it returns an object with multiple types of CSS information.
+    // @backward-compat { version 49 } On older server, getCSSDatabase() just returned
+    // the properties object, but now it returns an object with multiple types of CSS information.
     if (!db.properties) {
       db = { properties: db };
     }

@@ -109,14 +109,14 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     return {
       actor: this.actorID,
       traits: {
-        // FF77+ supports frames in Watcher actor
+        // @backward-compat { version 77 } supports frames in Watcher actor
         [Targets.TYPES.FRAME]: true,
-        // FF84+ supports processes
+        // @backward-compat { version 84 } supports processes in Watcher actor
         [Targets.TYPES.PROCESS]: true,
-        // FF84+ supports workers in Watcher actor for content toolbox.
+        // @backward-compat { version 84 } supports workers in Watcher actor for content toolbox.
         [Targets.TYPES.WORKER]: hasBrowserElement,
         resources: {
-          // FF81+ (bug 1642295) added support for:
+          // @backward-compat { version 81 } added support for:
           // - CONSOLE_MESSAGE
           // - CSS_CHANGE
           // - CSS_MESSAGE

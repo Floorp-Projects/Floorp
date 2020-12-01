@@ -56,9 +56,9 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   getTraits() {
     return {
       traits: {
-        // FF81+ addStyleSheet supports file name parameter.
+        // @backward-compat { version 81 } addStyleSheet now supports file name parameter.
         isFileNameSupported: true,
-        // FF81+ resource requesting supports.
+        // @backward-compat { version 81 } resource requesting supports.
         supportResourceRequests: true,
       },
     };

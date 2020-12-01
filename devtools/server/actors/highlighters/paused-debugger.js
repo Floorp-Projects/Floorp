@@ -209,7 +209,7 @@ PausedDebuggerOverlay.prototype = {
     try {
       reason = L10N.getStr(`whyPaused.${reason}`);
     } catch (e) {
-      // This is a temporary workaround to be uplifted to Firefox 71.
+      // @backward-compat { version 71 } This is a temporary workaround.
       // This actors relies on a client side properties file. This file will not
       // be available when debugging Firefox for Android / Gecko View.
       // The highlighter also shows buttons that use client only images and are

@@ -27,7 +27,7 @@ class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
     }
 
     try {
-      // FF81+ getTraits() is supported.
+      // @backward-compat { version 81 } getTraits isn't supported on older server.
       const { traits } = await super.getTraits();
       this._traits = traits;
     } catch (e) {

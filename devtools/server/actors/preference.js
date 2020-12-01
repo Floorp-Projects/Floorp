@@ -34,11 +34,9 @@ var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
     // default values for them. See the about:debugging module
     // runtime-default-preferences.js
     return {
-      // Backward compatibility: can be removed when FF81 is on release.
-      // Fixed on the server by Bug 1659866.
+      // @backward-compat { version 81 } Fixed on the server by Bug 1659866.
       overflowDebuggingPref: true,
-      // Backward compatibility: can be removed when FF82 is on release.
-      // Fixed on the server by Bug 1662058.
+      // @backward-compat { version 82 } Fixed on the server by Bug 1662058.
       targetBrowsersPref: true,
     };
   },

@@ -531,8 +531,7 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
     try {
       this._traits = await this.getTraits();
     } catch (e) {
-      // Backward compatibility: can be removed when FF84 is on the release
-      // channel.
+      // @backward-compat { version 84 } getTraits isn't available on older server.
       this._traits = {};
     }
   }

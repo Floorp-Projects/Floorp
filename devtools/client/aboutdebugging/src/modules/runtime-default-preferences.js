@@ -32,16 +32,14 @@ exports.PREFERENCE_TYPES = PREFERENCE_TYPES;
  * - type {String}: the preference type (either BOOL, CHAR or INT).
  */
 const DEFAULT_PREFERENCES = [
-  // Backward compatibility: can be removed when FF82 is on release.
-  // Fixed on the server by Bug 1662058.
+  // @backward-compat { version 82 } Fixed on the server by Bug 1662058.
   {
     prefName: "devtools.inspector.compatibility.target-browsers",
     defaultValue: "",
     trait: "targetBrowsersPref",
     type: PREFERENCE_TYPES.CHAR,
   },
-  // Backward compatibility: can be removed when FF81 is on release.
-  // Fixed on the server by Bug 1659866.
+  // @backward-compat { version 82 } Fixed on the server by Bug 1659866.
   {
     prefName: "devtools.overflow.debugging.enabled",
     defaultValue: false,

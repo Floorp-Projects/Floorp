@@ -36,11 +36,11 @@ const styleSheetSpec = generateActorSpec({
   },
 
   methods: {
-    // Backward-compatibility: remove when FF81 hits release.
+    // @backward-compat { version 81 }
     toggleDisabled: {
       response: { disabled: RetVal("boolean") },
     },
-    // Backward-compatibility: remove when FF81 hits release.
+    // @backward-compat { version 81 }
     getText: {
       response: {
         text: RetVal("longstring"),
@@ -52,7 +52,7 @@ const styleSheetSpec = generateActorSpec({
         mediaRules: RetVal("nullable:array:mediarule"),
       },
     },
-    // Backward-compatibility: remove when FF81 hits release.
+    // @backward-compat { version 81 }
     update: {
       request: {
         text: Arg(0, "string"),

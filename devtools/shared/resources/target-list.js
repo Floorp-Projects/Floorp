@@ -296,7 +296,8 @@ class TargetList extends EventEmitter {
       }
       this._setListening(type, true);
 
-      // Starting with FF77, we support frames watching via watchTargets for Tab and Process descriptors
+      // @backward-compat { version 77 } We now support frames watching via watchTargets
+      // for Tab and Process descriptors.
       if (this.hasTargetWatcherSupport(type)) {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.
@@ -335,7 +336,8 @@ class TargetList extends EventEmitter {
       }
       this._setListening(type, false);
 
-      // Starting with FF77, we support frames watching via watchTargets for Tab and Process descriptors
+      // @backward-compat { version 77 } We now support frames watching via watchTargets
+      // for Tab and Process descriptors.
       if (this.hasTargetWatcherSupport(type)) {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.

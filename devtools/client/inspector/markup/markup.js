@@ -1411,9 +1411,8 @@ MarkupView.prototype = {
       let target = mutation.target;
 
       if (mutation.type === "documentUnload") {
-        // Backward compatibility for FF80 or older.
-        // The documentUnload mutation was removed in FF81 in favor of the
-        // root-node resource.
+        // @backward-compat { version 81 } The documentUnload mutation was removed in
+        // favor of the root-node resource.
 
         // Treat this as a childList change of the child (maybe the protocol
         // should do this).

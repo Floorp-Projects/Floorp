@@ -31,9 +31,7 @@ class WorkerDescriptorFront extends TargetMixin(
 
   form(json) {
     this.actorID = json.actor;
-    // `id` was added in Firefox 68 to the worker target actor. Fallback to the actorID
-    // when debugging older clients.
-    // Fallback can be removed when Firefox 68 will be in the Release channel.
+    // @backward-compat { version 68 } On older server, we fall back to actorID.
     this.id = json.id || this.actorID;
 
     // Save the full form for Target class usage.
@@ -96,8 +94,7 @@ class WorkerDescriptorFront extends TargetMixin(
       if (this.actorID.includes("workerDescriptor")) {
         connectResponse = await super.getTarget();
       } else {
-        // Backwards compatibility for FF82 servers and below.
-        // Can be deleted once FF83 is merged into release.
+        // @backward-compat { version 83 } Older servers don't support worker descriptors.
         connectResponse = await this.connect({});
       }
 
