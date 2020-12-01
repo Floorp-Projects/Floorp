@@ -74,8 +74,6 @@ const sourceSpec = generateActorSpec({
       },
     },
     source: {
-      // we are sending the type "source" to be compatible
-      // with FF67 and older
       request: {},
       response: RetVal("source.onsource"),
     },

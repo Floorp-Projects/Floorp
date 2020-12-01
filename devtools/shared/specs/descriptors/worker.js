@@ -17,8 +17,7 @@ const workerDescriptorSpec = generateActorSpec({
       request: {},
       response: RetVal("json"),
     },
-    // Backwards compatibility for FF82 servers and below.
-    // Can be deleted once FF83 is merged into release.
+    // @backward-compat { version 83 } We don't use `connect` anymore.
     connect: {
       request: {
         options: Arg(0, "json"),

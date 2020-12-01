@@ -58,6 +58,6 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
   isActive: actorBridgeWithSpec("isActive"),
   isSupportedPlatform: actorBridgeWithSpec("isSupportedPlatform"),
   isLockedForPrivateBrowsing: actorBridgeWithSpec("isLockedForPrivateBrowsing"),
-  // Added in Firefox 72.
+  // @backward-compat { version 72 }
   getSupportedFeatures: actorBridgeWithSpec("getSupportedFeatures"),
 });

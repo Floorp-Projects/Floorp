@@ -29,8 +29,8 @@ class CombinedProgress {
 
     let combinedTotal = 0;
     let combinedCompleted = 0;
-    // TODO: We can stop using percentage when Firefox 79 is on the release
-    // channel. Until then ...
+    // @backward-compat { version 79 } When connection to older version of Firefox, we
+    // need to use `percentage` instead of `completed`.
     for (const {
       completed,
       total,

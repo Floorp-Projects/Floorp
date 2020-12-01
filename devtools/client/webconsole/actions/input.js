@@ -111,9 +111,9 @@ function evaluateExpression(expression, from = "input") {
       })
       .then(onSettled, onSettled);
 
-    // Before Firefox 77, the response did not have a `startTime` property, so we're using
-    // the `resultID`, which does contain the server time at which the evaluation started
-    // (its shape is `${timestamp}-${someId}`).
+    // @backward-compat { version 77 } On older server, the response did not have a
+    // `startTime` property, so we're using the `resultID`, which does contain the server
+    // time at which the evaluation started (its shape is `${timestamp}-${someId}`).
     const serverConsoleCommandTimestamp =
       response.startTime ||
       (response.resultID && Number(response.resultID.replace(/\-\d*$/, ""))) ||

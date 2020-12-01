@@ -154,7 +154,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       id: this.id,
       isParent: this.isParent,
       traits: {
-        // FF77+ supports the Watcher actor
+        // @backward-compat { version 77 } supports the Watcher actor
         watcher: true,
       },
     };

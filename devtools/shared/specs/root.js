@@ -29,8 +29,7 @@ const rootSpecPrototype = {
 
     listTabs: {
       request: {
-        // Backward compatibility: this is only used for FF75 or older.
-        // The argument can be dropped when FF76 hits the release channel.
+        // @backward-compat { version 76 } The argument is only used on older servers.
         favicons: Option(0, "boolean"),
       },
       response: {

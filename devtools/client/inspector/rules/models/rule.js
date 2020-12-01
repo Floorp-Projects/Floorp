@@ -89,8 +89,8 @@ class Rule {
     this.onStyleRuleFrontUpdated = this.onStyleRuleFrontUpdated.bind(this);
     this.updateOriginalLocation = this.updateOriginalLocation.bind(this);
 
-    // Added in Firefox 72 for backwards compatibility of initial fix for Bug 1557689.
-    // See follow-up fix in Bug 1593944.
+    // @backward-compat { version 72 } Older server don't emit rule-updated.
+    // Added during the initial fix for Bug 1557689. See follow-up fix in Bug 1593944.
     if (this.domRule.traits.emitsRuleUpdatedEvent) {
       this.domRule.on("rule-updated", this.onStyleRuleFrontUpdated);
     } else {
@@ -103,7 +103,8 @@ class Rule {
       this._unsubscribeSourceMap();
     }
 
-    // Added in Firefox 72
+    // @backward-compat { version 72 } Older server don't emit rule-updated.
+    // Added during the initial fix for Bug 1557689. See follow-up fix in Bug 1593944.
     if (this.domRule.traits.emitsRuleUpdatedEvent) {
       this.domRule.off("rule-updated", this.onStyleRuleFrontUpdated);
     } else {
@@ -657,7 +658,7 @@ class Rule {
     const textProps = [];
     const store = this.elementStyle.store;
 
-    // Starting with FF49, StyleRuleActors provide parsed declarations.
+    // @backward-compat { version 49 } StyleRuleActors now provides parsed declarations.
     let props = this.domRule.declarations;
     if (!props.length) {
       // If the authored text has an invalid property, it will show up
@@ -929,7 +930,7 @@ class Rule {
   }
 
   /**
-   * TODO: Remove after Firefox 75. Keep until then for backwards-compatibility for Bug
+   * @backward-compat { version 75 } Keep until then for backwards-compatibility for Bug
    * 1557689 which has an updated fix from Bug 1593944.
    * Handler for "declarations-updated" events fired from the StyleRuleActor for a
    * CSS rule when the status of any of its CSS declarations change.

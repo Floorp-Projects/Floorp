@@ -144,26 +144,27 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
   }
 
   /**
-   * This method is mostly intended for backward compatibility (FF76 and older).
+   * @backward-compat { version 77 }
+   * This method is mostly intended for backward compatibility.
    *
    * It also retrieves the favicon via getFavicon() for regular servers, but
    * the main reason this is done here is to keep it close to the solution
-   * used to get the favicon for FF75.
+   * used to get the favicon for older servers.
    *
-   * Once FF75 & FF76 hit release, we could let callers explicitly retrieve the
-   * favicon instead of inserting it in the form dynamically.
+   * Once we don't need to support those older servers, we could let callers
+   * explicitly retrieve the favicon instead of inserting it in the form dynamically.
    */
   async retrieveAsyncFormData() {
     try {
       if (!this.traits.hasTabInfo) {
-        // Backward compatibility for FF76 or older
+        // @backward-compat { version 77 }
         const targetForm = await super.getTarget();
         this._form.outerWindowID = targetForm.outerWindowID;
         this._form.title = targetForm.title;
         this._form.url = targetForm.url;
 
         if (!this.traits.getFavicon) {
-          // Backward compatibility for FF75 or older.
+          // @backward-compat { version 76 }
           this._form.favicon = targetForm.favicon;
         }
       }

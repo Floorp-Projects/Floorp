@@ -65,7 +65,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     // calling watchRootNode, so we keep this assignment as a fallback.
     this.rootNode = types.getType("domnode").read(json.root, this);
 
-    // FF42+ the actor starts exposing traits
+    // @backward-compat { version 42 } Actor on older server does not expose traits.
     this.traits = json.traits || {};
   }
 
@@ -330,9 +330,8 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           targetFront._form.numChildren = change.numChildren;
         }
       } else if (change.type === "frameLoad") {
-        // Backward compatibility for FF80 or older.
-        // The frameLoad mutation was removed in FF81 in favor of the root-node
-        // resource.
+        // @backward-compat { version 81 } The frameLoad mutation was removed in favor
+        // of the root-node resource.
 
         // Nothing we need to do here, except verify that we don't have any
         // document children, because we should have gotten a documentUnload
@@ -347,9 +346,8 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           }
         }
       } else if (change.type === "documentUnload") {
-        // Backward compatibility for FF80 or older.
-        // The documentUnload mutation was removed in FF81 in favor of the
-        // root-node resource.
+        // @backward-compat { version 81 } The documentUnload mutation was removed in
+        // favor of the root-node resource.
 
         // We try to give fronts instead of actorIDs, but these fronts need
         // to be destroyed now.
@@ -588,7 +586,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     }
     this._isPicking = true;
 
-    // Firefox 80 - backwards compatibility for servers without walker.pick()
+    // @backward-compat { version 80 } On older server, walker.pick doesn't exist.
     if (!this.traits.supportsNodePicker) {
       // parent is InspectorFront
       return doFocus
@@ -608,7 +606,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     }
     this._isPicking = false;
 
-    // Firefox 80 - backwards compatibility for servers without walker.cancelPick()
+    // @backward-compat { version 80 } On older server, walker.cancelPick doesn't exist.
     if (!this.traits.supportsNodePicker) {
       // parent is InspectorFront
       return this.parentFront.highlighter.cancelPick();

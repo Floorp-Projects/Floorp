@@ -20,8 +20,8 @@ const perfDescription = {
       interval: Arg(1, "number"),
       features: Arg(2, "number"),
       duration: Arg(3, "nullable:number"),
-      // Firefox 72 introduces `activeBrowsingContextID` property on the options
-      // passed to `profiler_start`. It's used to determine the active tab when
+      // @backward-compat { version 72 } The `activeBrowsingContextID` option
+      // passed to `profiler_start` is used to determine the active tab when
       // user starts the profiler. This is a parameter that is generated on the
       // server, that's why we don't need to pass anything on `startProfiler`
       // actor method. But we return this in "profiler-started" event because
@@ -88,7 +88,7 @@ const perfDescription = {
       response: { value: RetVal("boolean") },
     },
 
-    // Added in Firefox 72.
+    // @backward-compat { version 72 }
     getSupportedFeatures: {
       request: {},
       response: { value: RetVal("array:string") },
