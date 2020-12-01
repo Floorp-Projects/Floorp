@@ -97,12 +97,6 @@ extern ArrayObject* NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
                                                        HandleObjectGroup group,
                                                        size_t length);
 
-extern ArrayObject* NewFullyAllocatedArrayForCallingAllocationSite(
-    JSContext* cx, size_t length, NewObjectKind newKind = GenericObject);
-
-extern ArrayObject* NewPartlyAllocatedArrayForCallingAllocationSite(
-    JSContext* cx, size_t length, HandleObject proto);
-
 extern ArrayObject* NewCopiedArrayTryUseGroup(
     JSContext* cx, HandleObjectGroup group, const Value* vp, size_t length,
     NewObjectKind newKind = GenericObject,
