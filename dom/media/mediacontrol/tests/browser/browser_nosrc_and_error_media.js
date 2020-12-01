@@ -33,18 +33,18 @@ add_task(async function testNoSrcOrErrorMediaEntersPIPMode() {
       ok(false, "should not get activated!");
     };
 
-    info(`enter and leave PIP mode which would not affect controller`);
+    info(`enter PIP mode which would not affect controller`);
     const winPIP = await triggerPictureInPicture(
       tab.linkedBrowser,
       testVideoId
     );
-    await Promise.all([
-      // To ensure the focus would be gave back to the original window. If we do
-      // not do that, then lacking of focus would interfere other following tests.
-      SimpleTest.promiseFocus(window),
-      ensureMessageAndClosePiP(tab.linkedBrowser, testVideoId, winPIP, false),
-    ]);
-
+    info(`leave PIP mode`);
+    await ensureMessageAndClosePiP(
+      tab.linkedBrowser,
+      testVideoId,
+      winPIP,
+      false
+    );
     ok(!controller.isActive, "controller is still inactive");
 
     info(`remove tab`);
@@ -64,7 +64,6 @@ add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
     };
 
     info(`enter and leave fullscreen which would not affect controller`);
-    await ensureTabIsAlreadyFocused(tab);
     await enterAndLeaveFullScreen(tab, testVideoId);
     ok(!controller.isActive, "controller is still inactive");
 
@@ -76,26 +75,11 @@ add_task(async function testNoSrcOrErrorMediaEntersFullscreen() {
 /**
  * The following is helper function.
  */
-function ensureTabIsAlreadyFocused(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    // fullscreen can only be request from a visible tab, sometime we excecute
-    // this method too early where the tab hasn't become a focus tab.
-    if (content.document.visibilityState != "visible") {
-      info(`wait until tab becomes a focus tab`);
-      return new Promise(r => {
-        content.document.onvisibilitychange = () => {
-          if (content.document.visibilityState == "visible") {
-            r();
-          }
-        };
-      });
-    }
-    return Promise.resolve();
-  });
-}
-
-function enterAndLeaveFullScreen(tab, elementId) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [elementId], elementId => {
+async function enterAndLeaveFullScreen(tab, elementId) {
+  await new Promise(resolve =>
+    SimpleTest.waitForFocus(resolve, tab.linkedBrowser.ownerGlobal)
+  );
+  await SpecialPowers.spawn(tab.linkedBrowser, [elementId], elementId => {
     return new Promise(r => {
       const element = content.document.getElementById(elementId);
       ok(!content.document.fullscreenElement, "no fullscreen element");
