@@ -712,9 +712,6 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
       initFlags += ReflowInput::InitFlag::StaticPosIsCBOrigin;
     }
   }
-  ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
-                             LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
-                             Some(logicalCBSize), initFlags);
 
   bool constrainBSize =
       (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) &&
@@ -739,10 +736,18 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   const WritingMode outerWM = aReflowInput.GetWritingMode();
   const LogicalMargin border = aDelegatingFrame->GetLogicalUsedBorder(outerWM);
 
-  if (constrainBSize) {
-    kidReflowInput.AvailableBSize() =
-        aReflowInput.AvailableBSize() -
-        border.ConvertTo(wm, outerWM).BStart(wm) -
+  const nscoord availBSize = constrainBSize
+                                 ? aReflowInput.AvailableBSize() -
+                                       border.ConvertTo(wm, outerWM).BStart(wm)
+                                 : NS_UNCONSTRAINEDSIZE;
+
+  ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
+                             LogicalSize(wm, availISize, availBSize),
+                             Some(logicalCBSize), initFlags);
+
+  if (kidReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+    // Shrink available block-size if it's constrained.
+    kidReflowInput.AvailableBSize() -=
         kidReflowInput.ComputedLogicalMargin(wm).BStart(wm);
     const nscoord kidOffsetBStart =
         kidReflowInput.ComputedLogicalOffsets(wm).BStart(wm);
