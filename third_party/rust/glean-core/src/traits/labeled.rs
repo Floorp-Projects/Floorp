@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::ErrorType;
+use crate::metrics::MetricType;
 
 /// A description for the `LabeledMetric` type.
 ///
@@ -10,7 +10,7 @@ use crate::ErrorType;
 /// implemented in the related type in `../metrics/`.
 pub trait Labeled<T>
 where
-    T: Clone,
+    T: MetricType + Clone,
 {
     /// Gets a specific metric for a given label.
     ///
@@ -25,22 +25,9 @@ where
     /// If an invalid label is used, the metric will be recorded in the special `OTHER_LABEL` label.
     fn get(&self, label: &str) -> T;
 
-    /// **Exported for test purposes.**
+    /// Gets the template submetric.
     ///
-    /// Gets the number of recorded errors for the given metric and error type.
-    ///
-    /// # Arguments
-    ///
-    /// * `error` - The type of error
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
-    ///
-    /// # Returns
-    ///
-    /// The number of errors reported.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
-        &self,
-        error: ErrorType,
-        ping_name: S,
-    ) -> i32;
+    /// The template submetric is the actual metric that is cloned and modified
+    /// to record for a specific label.
+    fn get_submetric(&self) -> &T;
 }
