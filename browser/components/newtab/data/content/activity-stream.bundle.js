@@ -750,7 +750,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showLogo = prefs["logowordmark.alwaysVisible"] && !pocketEnabled;
+    const showLogo = prefs["logowordmark.alwaysVisible"] && (!prefs["feeds.section.topstories"] || !prefs["feeds.system.topstories"] && prefs.region);
     const customizationMenuEnabled = prefs["customizationMenu.enabled"];
     const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
     const canShowCustomizationMenu = customizationMenuEnabled || newNewtabExperienceEnabled;
