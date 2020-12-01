@@ -2262,6 +2262,8 @@ BigInt* BigInt::rshByAbsolute(JSContext* cx, HandleBigInt x, HandleBigInt y) {
     return nullptr;
   }
   if (!bitsShift) {
+    // If roundingCanOverflow, manually initialize the overflow digit.
+    result->setDigit(resultLength - 1, 0);
     for (int i = digitShift; i < length; i++) {
       result->setDigit(i - digitShift, x->digit(i));
     }
