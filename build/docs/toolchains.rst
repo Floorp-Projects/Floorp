@@ -7,11 +7,121 @@ Creating Toolchain Archives
 There are various scripts in the repository for producing archives
 of the build tools (e.g. compilers and linkers) required to build.
 
-Clang
-=====
+Clang and Rust
+==============
 
-See the ``build/build-clang`` directory. Read ``build/build-clang/README``
-for more.
+To modify the toolchains used for a particular task, you may need several
+things:
+
+1. A `build task`_
+
+2. Which uses a toolchain task
+
+    - `clang toolchain`_
+    - `rust toolchain`_
+
+3. Which uses a git fetch
+
+    - `clang fetch`_
+    - (from-source ``dev`` builds only) `rust fetch`_
+
+4. (clang only) Which uses a `config json`_
+
+5. Which takes patches_ you may want to apply.
+
+For the most part, you should be able to accomplish what you want by
+copying/editing the existing examples in those files.
+
+.. _build task: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/ci/build/linux.yml#5-45
+.. _clang toolchain: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/ci/toolchain/clang.yml#51-72
+.. _rust toolchain: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/ci/toolchain/rust.yml#57-74
+.. _clang fetch: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/ci/fetch/toolchains.yml#413-418
+.. _rust fetch: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/ci/fetch/toolchains.yml#434-439
+.. _config json: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/build/build-clang/clang-linux64.json
+.. _patches: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/build/build-clang/static-llvm-symbolizer.patch
+
+Clang
+-----
+
+Building clang is handled by `build-clang.py`_, which uses several resources
+in the `build-clang`_ directory. Read the `build-clang README`_ for more
+details.
+
+.. _build-clang.py: https://searchfox.org/mozilla-central/source/build/build-clang/build-clang.py
+.. _build-clang README: https://searchfox.org/mozilla-central/source/build/build-clang/README
+.. _build-clang: https://searchfox.org/mozilla-central/source/build/build-clang/
+
+Rust
+----
+
+Rust builds are handled by `repack_rust.py`_. The primary purpose of
+that script is to download prebuilt tarballs from the Rust project.
+
+It uses the same basic format as `rustup` for specifying the toolchain
+(via ``--channel``):
+
+- request a stable build with ``1.xx.y`` (e.g. ``1.47.0``)
+- request a beta build with ``beta-yyyy-mm-dd`` (e.g. ``beta-2020-08-26``)
+- request a nightly build with ``nightly-yyyy-mm-dd`` (e.g. ``nightly-2020-08-26``)
+- request a build from `Rust's ci`_ with ``bors-$sha`` (e.g. ``bors-796a2a9bbe7614610bd67d4cd0cf0dfff0468778``)
+- request a from-source build with ``dev``
+
+Rust From Source
+----------------
+
+As of this writing, from-source builds for Rust are a new feature, and not
+used anywhere by default. The feature was added so that we can test patches
+to rustc against the tree. Expect things to be a bit hacky and limited.
+
+Most importantly, building from source requires your toolchain to have a
+`fetch of the rust tree`_ as well as `clang and binutils toolchains`_. It is also
+recommended to upgrade the worker-type to e.g. ``b-linux-large``.
+
+Rust's build dependencies are fairly minimal, and it has a sanity check
+that should catch any missing or too-old dependencies. See the `Rust README`_
+for more details.
+
+Patches are set via `the --patch flag`_ (passed via ``toolchain/rust.yml``).
+Patch paths are assumed to be relative to ``/build/build-rust/``, and may be
+optionally prefixed with ``module-path:`` to specify they apply to that git
+submodule in the Rust source. e.g. ``--patch src/llvm-project:mypatch.diff``
+patches rust's llvm with ``/build/build-rust/mypatch.diff``. There are no
+currently checked in rust patches to use as an example, but they should be
+the same format as `the clang ones`_.
+
+Rust builds are not currently configurable, and uses a `hardcoded config.toml`_,
+which you may need to edit for your purposes. See Rust's `example config`_ for
+details/defaults. Note that these options do occasionally change, so be sure
+you're using options for the version you're targeting. For instance, there was
+a large change around Rust ~1.48, and the currently checked in config was for
+1.47, so it may not work properly when building the latest version of Rust.
+
+Rust builds are currently limited to targeting only the host platform.
+Although the machinery is in place to request additional targets, the
+cross-compilation fails for some unknown reason. We have not yet investigated
+what needs to be done to get this working.
+
+While Rust generally maintains a clean tree for building ``rustc`` and
+``cargo``, other tools like ``rustfmt`` or ``miri`` are allowed to be
+transiently broken. This means not every commit in the Rust tree will be
+able to build the `tools we require`_.
+
+Although ``repack_rust`` considers ``rustfmt`` an optional package, Rust builds
+do not currently implement this and will fail if ``rustfmt`` is busted. Some
+attempt was made to work around it, but `more work is needed`_.
+
+.. _Rust's ci: https://github.com/rust-lang/rust/pull/77875#issuecomment-736092083
+.. _repack_rust.py: https://searchfox.org/mozilla-central/source/taskcluster/scripts/misc/repack_rust.py
+.. _fetch of the rust tree: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/ci/toolchain/rust.yml#69-71
+.. _clang and binutils toolchains: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/ci/toolchain/rust.yml#72-74
+.. _the --patch flag: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/scripts/misc/repack_rust.py#667-675
+.. _the clang ones: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/build/build-clang/static-llvm-symbolizer.patch
+.. _Rust README: https://github.com/rust-lang/rust/#building-on-a-unix-like-system
+.. _hardcoded config.toml: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/scripts/misc/repack_rust.py#384-421
+.. _example config: https://github.com/rust-lang/rust/blob/b7ebc6b0c1ba3c27ebb17c0b496ece778ef11e18/config.toml.example
+.. _tools we require: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/scripts/misc/repack_rust.py#398
+.. _more work is needed: https://github.com/rust-lang/rust/issues/79249
+
 
 Windows
 =======
