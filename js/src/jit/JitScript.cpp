@@ -65,7 +65,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   MOZ_ASSERT_IF(IsBaselineInterpreterEnabled(),
                 CanBaselineInterpretScript(this));
 
-  AutoEnterAnalysis enter(cx);
+  gc::AutoSuppressGC suppressGC(cx);
 
   // Run the arguments-analysis if needed. Both the Baseline Interpreter and
   // Compiler rely on this.

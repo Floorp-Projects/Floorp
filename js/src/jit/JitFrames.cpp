@@ -1904,9 +1904,10 @@ bool SnapshotIterator::computeInstructionResults(
       return true;
     }
 
-    // Use AutoEnterAnalysis to avoid invoking the object metadata callback,
-    // which could try to walk the stack while bailing out.
-    AutoEnterAnalysis enter(cx);
+    // Avoid invoking the object metadata callback, which could try to walk the
+    // stack while bailing out.
+    gc::AutoSuppressGC suppressGC(cx);
+    js::AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
     // Fill with the results of recover instructions.
     SnapshotIterator s(*this);

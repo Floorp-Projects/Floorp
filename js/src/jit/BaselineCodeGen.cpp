@@ -222,8 +222,8 @@ MethodStatus BaselineCompiler::compile() {
     }
   }
 
-  // Pin analysis info during compilation.
-  AutoEnterAnalysis autoEnterAnalysis(cx);
+  // Suppress GC during compilation.
+  gc::AutoSuppressGC suppressGC(cx);
 
   MOZ_ASSERT(!script->hasBaselineScript());
 

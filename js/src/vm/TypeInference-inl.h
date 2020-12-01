@@ -43,28 +43,4 @@
 #include "vm/JSScript-inl.h"
 #include "vm/ObjectGroup-inl.h"
 
-namespace js {
-
-/*
- * Structure for type inference entry point functions. All functions which can
- * change type information must use this, and functions which depend on
- * intermediate types (i.e. JITs) can use this to ensure that intermediate
- * information is not collected and does not change.
- *
- * Ensures that GC cannot occur. Does additional sanity checking that inference
- * is not reentrant and that recompilations occur properly.
- */
-struct MOZ_RAII AutoEnterAnalysis {
-  // Prevent GC activity in the middle of analysis.
-  gc::AutoSuppressGC suppressGC;
-
-  // Prevent us from calling the objectMetadataCallback.
-  js::AutoSuppressAllocationMetadataBuilder suppressMetadata;
-
-  explicit AutoEnterAnalysis(JSContext* cx)
-      : suppressGC(cx), suppressMetadata(cx) {}
-};
-
-}  // namespace js
-
 #endif /* vm_TypeInference_inl_h */
