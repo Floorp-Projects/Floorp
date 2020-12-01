@@ -89,14 +89,6 @@ extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(
 extern ArrayObject* NewDenseCopyOnWriteArray(JSContext* cx,
                                              HandleArrayObject templateObject);
 
-extern ArrayObject* NewFullyAllocatedArrayTryUseGroup(
-    JSContext* cx, HandleObjectGroup group, size_t length,
-    NewObjectKind newKind = GenericObject);
-
-extern ArrayObject* NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
-                                                       HandleObjectGroup group,
-                                                       size_t length);
-
 extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
                                       HandleObjectGroup group,
                                       bool convertDoubleElements);
