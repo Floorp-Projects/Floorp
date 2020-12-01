@@ -2543,6 +2543,23 @@ bool GlobalHelperThreadState::submitTask(PromiseHelperTask* task) {
 
 void GlobalHelperThreadState::trace(JSTracer* trc) {
   AutoLockHelperThreadState lock;
+
+#ifdef DEBUG
+  // Since we hold the helper thread lock here we must disable GCMarker's
+  // checking of the atom marking bitmap since that also relies on taking the
+  // lock.
+  GCMarker* marker = nullptr;
+  if (trc->isMarkingTracer()) {
+    marker = GCMarker::fromTracer(trc);
+    marker->setCheckAtomMarking(false);
+  }
+  auto reenableAtomMarkingCheck = mozilla::MakeScopeExit([marker] {
+    if (marker) {
+      marker->setCheckAtomMarking(true);
+    }
+  });
+#endif
+
   for (auto task : ionWorklist(lock)) {
     task->alloc().lifoAlloc()->setReadWrite();
     task->trace(trc);
