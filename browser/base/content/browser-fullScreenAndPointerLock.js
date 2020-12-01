@@ -349,10 +349,6 @@ var FullScreen = {
       this._isPopupOpen = false;
       this.cleanup();
     }
-
-    if (enterFS && !document.fullscreenElement) {
-      Services.telemetry.scalarAdd("fullscreen.used", 1);
-    }
   },
 
   exitDomFullScreen() {
