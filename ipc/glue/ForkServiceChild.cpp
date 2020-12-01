@@ -45,7 +45,7 @@ void ForkServiceChild::StartForkServer() {
 void ForkServiceChild::StopForkServer() { sForkServiceChild = nullptr; }
 
 ForkServiceChild::ForkServiceChild(int aFd, GeckoChildProcessHost* aProcess)
-    : mWaitForHello(true), mProcess(aProcess) {
+    : mWaitForHello(true), mFailed(false), mProcess(aProcess) {
   mTcver = MakeUnique<MiniTransceiver>(aFd);
 }
 
@@ -76,6 +76,7 @@ bool ForkServiceChild::SendForkNewSubprocess(
   if (!mTcver->Send(msg)) {
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("the pipe to the fork server is closed or having errors"));
+    OnError();
     return false;
   }
 
@@ -83,6 +84,7 @@ bool ForkServiceChild::SendForkNewSubprocess(
   if (!mTcver->Recv(reply)) {
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("the pipe to the fork server is closed or having errors"));
+    OnError();
     return false;
   }
   OnMessageReceived(std::move(reply));
@@ -104,6 +106,11 @@ void ForkServiceChild::OnMessageReceived(IPC::Message&& message) {
     MOZ_CRASH("Error deserializing 'pid_t'");
   }
   message.EndRead(iter__, message.type());
+}
+
+void ForkServiceChild::OnError() {
+  mFailed = true;
+  ForkServerLauncher::RestartForkServer();
 }
 
 NS_IMPL_ISUPPORTS(ForkServerLauncher, nsIObserver)
@@ -156,6 +163,19 @@ ForkServerLauncher::Observe(nsISupports* aSubject, const char* aTopic,
     mSingleton = nullptr;
   }
   return NS_OK;
+}
+
+void ForkServerLauncher::RestartForkServer() {
+  // Restart fork server
+  NS_SUCCEEDED(NS_DispatchToMainThreadQueue(
+      NS_NewRunnableFunction("OnForkServerError",
+                             [] {
+                               if (mSingleton) {
+                                 ForkServiceChild::StopForkServer();
+                                 ForkServiceChild::StartForkServer();
+                               }
+                             }),
+      EventQueuePriority::Idle));
 }
 
 }  // namespace ipc
