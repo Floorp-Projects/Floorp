@@ -234,19 +234,10 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   // Static accessors for ObjectGroupRealm AllocationSiteTable.
 
-  // Get a non-singleton group to use for objects created at the specified
-  // allocation site.
-  static ObjectGroup* allocationSiteGroup(JSContext* cx, JSScript* script,
-                                          jsbytecode* pc, JSProtoKey key,
-                                          HandleObject proto = nullptr);
-
   static ArrayObject* getOrFixupCopyOnWriteObject(JSContext* cx,
                                                   HandleScript script,
                                                   jsbytecode* pc);
   static ArrayObject* getCopyOnWriteObject(JSScript* script, jsbytecode* pc);
-
- private:
-  static ObjectGroup* defaultNewGroup(JSContext* cx, JSProtoKey key);
 };
 
 // Structure used to manage the groups in a realm.

@@ -5129,56 +5129,22 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
   return stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), optimized);
 }
 
+// TODO(no-TI): clean up. Remove JSOp::NewObjectWithGroup.
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
                                  jsbytecode* pc,
                                  NewObjectKind newKind /* = GenericObject */) {
   MOZ_ASSERT(newKind != SingletonObject);
   bool withTemplate =
       (JSOp(*pc) == JSOp::NewObject || JSOp(*pc) == JSOp::NewObjectWithGroup);
-  bool withTemplateGroup = (JSOp(*pc) == JSOp::NewObjectWithGroup);
 
-  RootedObjectGroup group(cx);
-  RootedPlainObject baseObject(cx);
-
-  // Extract the template object, if one exists.
+  // Extract the template object, if one exists, and copy it.
   if (withTemplate) {
-    baseObject = &script->getObject(pc)->as<PlainObject>();
+    RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
+    return CopyInitializerObject(cx, baseObject, newKind);
   }
 
-  // Choose the group. Three cases:
-  // - JSOp::NewObjectWithGroup explicitly indicates that we should use the
-  //   same group as the template object's group.
-  // - otherwise, if some heuristics indicate that we should use a singleton,
-  //   we set the allocation-kind to ensure this.
-  // - otherwise, we look up a group based on the allocation site, i.e., the
-  //   (script, pc) tuple.
-  if (withTemplateGroup) {
-    group = baseObject->getGroup(cx, baseObject);
-  } else {
-    group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Object);
-    if (!group) {
-      return nullptr;
-    }
-  }
-
-  RootedPlainObject obj(cx);
-
-  // Actually allocate the object.
-  if (withTemplate) {
-    obj = CopyInitializerObject(cx, baseObject, newKind);
-  } else {
-    MOZ_ASSERT(JSOp(*pc) == JSOp::NewInit);
-    obj = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
-  }
-
-  if (!obj) {
-    return nullptr;
-  }
-
-  // TODO(no-TI): clean up. Remove JSOp::NewObjectWithGroup.
-  obj->setGroup(group);
-
-  return obj;
+  MOZ_ASSERT(JSOp(*pc) == JSOp::NewInit);
+  return NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
 }
 
 JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
