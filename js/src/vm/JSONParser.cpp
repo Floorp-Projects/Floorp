@@ -580,7 +580,7 @@ inline bool JSONParserBase::finishObject(MutableHandleValue vp,
                                          PropertyVector& properties) {
   MOZ_ASSERT(&properties == &stack.back().properties());
 
-  JSObject* obj = ObjectGroup::newPlainObject(
+  JSObject* obj = NewPlainObjectWithProperties(
       cx, properties.begin(), properties.length(), GenericObject);
   if (!obj) {
     return false;

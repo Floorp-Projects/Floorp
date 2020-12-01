@@ -1237,8 +1237,8 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
   }
 
   NewObjectKind newKind = obj->isSingleton() ? SingletonObject : TenuredObject;
-  return ObjectGroup::newPlainObject(cx, properties.begin(),
-                                     properties.length(), newKind);
+  return NewPlainObjectWithProperties(cx, properties.begin(),
+                                      properties.length(), newKind);
 }
 
 static bool InitializePropertiesFromCompatibleNativeObject(
@@ -1413,8 +1413,8 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
 
   if (mode == XDR_DECODE) {
     NewObjectKind newKind = isSingleton ? SingletonObject : TenuredObject;
-    obj.set(ObjectGroup::newPlainObject(cx, properties.begin(),
-                                        properties.length(), newKind));
+    obj.set(NewPlainObjectWithProperties(cx, properties.begin(),
+                                         properties.length(), newKind));
     if (!obj) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }

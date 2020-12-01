@@ -1372,8 +1372,8 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    JSObject* obj = ObjectGroup::newPlainObject(cx, props.begin(),
-                                                props.length(), GenericObject);
+    JSObject* obj = NewPlainObjectWithProperties(cx, props.begin(),
+                                                 props.length(), GenericObject);
     if (!obj) {
       return false;
     }
@@ -1442,8 +1442,8 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    JSObject* obj = ObjectGroup::newPlainObject(cx, props.begin(),
-                                                props.length(), GenericObject);
+    JSObject* obj = NewPlainObjectWithProperties(cx, props.begin(),
+                                                 props.length(), GenericObject);
     if (!obj) {
       return false;
     }
@@ -2406,7 +2406,7 @@ bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  JSObject* memoryType = ObjectGroup::newPlainObject(
+  JSObject* memoryType = NewPlainObjectWithProperties(
       cx, props.begin(), props.length(), GenericObject);
   if (!memoryType) {
     return false;
@@ -2882,7 +2882,7 @@ bool WasmTableObject::typeImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  JSObject* tableType = ObjectGroup::newPlainObject(
+  JSObject* tableType = NewPlainObjectWithProperties(
       cx, props.begin(), props.length(), GenericObject);
   if (!tableType) {
     return false;
@@ -3535,7 +3535,7 @@ bool WasmGlobalObject::typeImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  JSObject* globalType = ObjectGroup::newPlainObject(
+  JSObject* globalType = NewPlainObjectWithProperties(
       cx, props.begin(), props.length(), GenericObject);
   if (!globalType) {
     return false;
