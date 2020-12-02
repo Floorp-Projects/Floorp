@@ -17,6 +17,7 @@
 #include "jit/CompileWrappers.h"
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
+#include "util/DifferentialTesting.h"
 #include "vm/ProxyObject.h"
 #include "vm/Runtime.h"
 
@@ -810,10 +811,10 @@ void MacroAssembler::canonicalizeFloat(FloatRegister reg) {
 }
 
 void MacroAssembler::canonicalizeFloatIfDeterministic(FloatRegister reg) {
-#ifdef JS_MORE_DETERMINISTIC
   // See the comment in TypedArrayObjectTemplate::getElement.
-  canonicalizeFloat(reg);
-#endif  // JS_MORE_DETERMINISTIC
+  if (js::SupportDifferentialTesting()) {
+    canonicalizeFloat(reg);
+  }
 }
 
 void MacroAssembler::canonicalizeDouble(FloatRegister reg) {
@@ -824,10 +825,10 @@ void MacroAssembler::canonicalizeDouble(FloatRegister reg) {
 }
 
 void MacroAssembler::canonicalizeDoubleIfDeterministic(FloatRegister reg) {
-#ifdef JS_MORE_DETERMINISTIC
   // See the comment in TypedArrayObjectTemplate::getElement.
-  canonicalizeDouble(reg);
-#endif  // JS_MORE_DETERMINISTIC
+  if (js::SupportDifferentialTesting()) {
+    canonicalizeDouble(reg);
+  }
 }
 
 // ========================================================================

@@ -37,6 +37,7 @@
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
+#include "util/DifferentialTesting.h"
 #include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"
@@ -973,10 +974,10 @@ bool TypedArrayObjectTemplate<NativeType>::convertValue(JSContext* cx,
     return false;
   }
 
-#ifdef JS_MORE_DETERMINISTIC
-  // See the comment in ElementSpecific::doubleToNative.
-  d = JS::CanonicalizeNaN(d);
-#endif
+  if (js::SupportDifferentialTesting()) {
+    // See the comment in ElementSpecific::doubleToNative.
+    d = JS::CanonicalizeNaN(d);
+  }
 
   // Assign based on characteristics of the destination type
   if constexpr (ArrayTypeIsFloatingPoint()) {
