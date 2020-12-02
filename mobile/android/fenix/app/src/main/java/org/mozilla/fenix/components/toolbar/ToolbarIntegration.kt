@@ -111,7 +111,7 @@ class DefaultToolbarIntegration(
                 Configuration.UI_MODE_NIGHT_YES -> {
                     AppCompatResources.getDrawable(context, R.drawable.shield_dark)
                 }
-                else -> null
+                else -> AppCompatResources.getDrawable(context, R.drawable.shield_light)
             }
 
         toolbar.display.indicators =
