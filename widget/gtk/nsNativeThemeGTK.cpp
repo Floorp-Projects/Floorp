@@ -1244,7 +1244,7 @@ WidgetNodeType nsNativeThemeGTK::NativeThemeToGtkTheme(
 }
 
 static void FixupForVerticalWritingMode(WritingMode aWritingMode,
-                                        LayoutDeviceMargin* aResult) {
+                                        LayoutDeviceIntMargin* aResult) {
   if (aWritingMode.IsVertical()) {
     bool rtl = aWritingMode.IsBidiRTL();
     LogicalMargin logical(aWritingMode, aResult->top,
@@ -1261,7 +1261,7 @@ static void FixupForVerticalWritingMode(WritingMode aWritingMode,
 void nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
                                              StyleAppearance aAppearance,
                                              GtkTextDirection aDirection,
-                                             LayoutDeviceMargin* aResult) {
+                                             LayoutDeviceIntMargin* aResult) {
   aResult->SizeTo(0, 0, 0, 0);
 
   WidgetNodeType gtkWidgetType;
@@ -1275,10 +1275,8 @@ void nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
     if (mBorderCacheValid[cacheIndex] & cacheBit) {
       *aResult = mBorderCache[gtkWidgetType];
     } else {
-      LayoutDeviceIntMargin r;
-      moz_gtk_get_widget_border(gtkWidgetType, &r.left, &r.top, &r.right,
-                                &r.bottom, aDirection);
-      aResult->SizeTo(r.top, r.right, r.bottom, r.left);
+      moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
+                                &aResult->right, &aResult->bottom, aDirection);
       if (gtkWidgetType != MOZ_GTK_DROPDOWN) {  // depends on aDirection
         mBorderCacheValid[cacheIndex] |= cacheBit;
         mBorderCache[gtkWidgetType] = *aResult;
@@ -1288,9 +1286,9 @@ void nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
   FixupForVerticalWritingMode(aFrame->GetWritingMode(), aResult);
 }
 
-LayoutDeviceMargin nsNativeThemeGTK::GetWidgetBorder(
+LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  LayoutDeviceMargin result;
+  LayoutDeviceIntMargin result;
   GtkTextDirection direction = GetTextDirection(aFrame);
   switch (aAppearance) {
     case StyleAppearance::ScrollbarHorizontal:
@@ -1344,10 +1342,9 @@ LayoutDeviceMargin nsNativeThemeGTK::GetWidgetBorder(
                                 &flags)) {
         return result;
       }
-      LayoutDeviceIntMargin r;
-      moz_gtk_get_tab_border(&r.left, &r.top, &r.right, &r.bottom, direction,
-                             (GtkTabFlags)flags, gtkWidgetType);
-      result.SizeTo(r.top, r.right, r.bottom, r.left);
+      moz_gtk_get_tab_border(&result.left, &result.top, &result.right,
+                             &result.bottom, direction, (GtkTabFlags)flags,
+                             gtkWidgetType);
     } break;
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
@@ -1373,7 +1370,7 @@ LayoutDeviceMargin nsNativeThemeGTK::GetWidgetBorder(
 bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                         nsIFrame* aFrame,
                                         StyleAppearance aAppearance,
-                                        LayoutDeviceMargin* aResult) {
+                                        LayoutDeviceIntMargin* aResult) {
   switch (aAppearance) {
     case StyleAppearance::ButtonFocus:
     case StyleAppearance::Toolbarbutton:
@@ -1453,7 +1450,7 @@ NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
-                                       LayoutDeviceSize* aResult,
+                                       LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
@@ -1545,15 +1542,12 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     } break;
     case StyleAppearance::TabScrollArrowBack:
     case StyleAppearance::TabScrollArrowForward: {
-      LayoutDeviceIntSize r;
-      moz_gtk_get_tab_scroll_arrow_size(&r.width, &r.height);
-      aResult->SizeTo(r.width, r.height);
+      moz_gtk_get_tab_scroll_arrow_size(&aResult->width, &aResult->height);
       *aIsOverridable = false;
     } break;
     case StyleAppearance::MozMenulistArrowButton: {
-      LayoutDeviceIntSize r;
-      moz_gtk_get_combo_box_entry_button_size(&r.width, &r.height);
-      aResult->SizeTo(r.width, r.height);
+      moz_gtk_get_combo_box_entry_button_size(&aResult->width,
+                                              &aResult->height);
       *aIsOverridable = false;
     } break;
     case StyleAppearance::Menuseparator: {
@@ -1577,9 +1571,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::ButtonArrowDown:
     case StyleAppearance::ButtonArrowNext:
     case StyleAppearance::ButtonArrowPrevious: {
-      LayoutDeviceIntSize r;
-      moz_gtk_get_arrow_size(MOZ_GTK_TOOLBARBUTTON_ARROW, &r.width, &r.height);
-      aResult->SizeTo(r.width, r.height);
+      moz_gtk_get_arrow_size(MOZ_GTK_TOOLBARBUTTON_ARROW, &aResult->width,
+                             &aResult->height);
       *aIsOverridable = false;
     } break;
     case StyleAppearance::MozWindowButtonClose: {
@@ -1615,16 +1608,15 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::Treeheadercell: {
       if (aAppearance == StyleAppearance::Menulist ||
           aAppearance == StyleAppearance::MenulistButton) {
-        LayoutDeviceIntSize r;
         // Include the arrow size.
-        moz_gtk_get_arrow_size(MOZ_GTK_DROPDOWN, &r.width, &r.height);
-        aResult->SizeTo(r.width, r.height);
+        moz_gtk_get_arrow_size(MOZ_GTK_DROPDOWN, &aResult->width,
+                               &aResult->height);
       }
       // else the minimum size is missing consideration of container
       // descendants; the value returned here will not be helpful, but the
       // box model may consider border and padding with child minimum sizes.
 
-      LayoutDeviceMargin border;
+      LayoutDeviceIntMargin border;
       GetCachedWidgetBorder(aFrame, aAppearance, GetTextDirection(aFrame),
                             &border);
       aResult->width += border.left + border.right;

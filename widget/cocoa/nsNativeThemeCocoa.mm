@@ -3180,15 +3180,15 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
   }
 }
 
-LayoutDeviceMargin nsNativeThemeCocoa::DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
-                                                            nsIFrame* aFrame) {
+LayoutDeviceIntMargin nsNativeThemeCocoa::DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
+                                                               nsIFrame* aFrame) {
   // Assuming aMargin was originally specified for a horizontal LTR context,
   // reinterpret the values as logical, and then map to physical coords
   // according to aFrame's actual writing mode.
   WritingMode wm = aFrame->GetWritingMode();
   nsMargin m = LogicalMargin(wm, aMargin.top, aMargin.right, aMargin.bottom, aMargin.left)
                    .GetPhysicalMargin(wm);
-  return LayoutDeviceMargin(m.top, m.right, m.bottom, m.left);
+  return LayoutDeviceIntMargin(m.top, m.right, m.bottom, m.left);
 }
 
 static const LayoutDeviceIntMargin kAquaDropdownBorder(1, 22, 2, 5);
@@ -3196,9 +3196,10 @@ static const LayoutDeviceIntMargin kAquaComboboxBorder(3, 20, 3, 4);
 static const LayoutDeviceIntMargin kAquaSearchfieldBorder(3, 5, 2, 19);
 static const LayoutDeviceIntMargin kAquaSearchfieldBorderBigSur(5, 5, 4, 26);
 
-LayoutDeviceMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                                       StyleAppearance aAppearance) {
-  LayoutDeviceMargin result;
+LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
+                                                          nsIFrame* aFrame,
+                                                          StyleAppearance aAppearance) {
+  LayoutDeviceIntMargin result;
 
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -3307,7 +3308,7 @@ LayoutDeviceMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext
 // if you want to override CSS padding values.
 bool nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                                           StyleAppearance aAppearance,
-                                          LayoutDeviceMargin* aResult) {
+                                          LayoutDeviceIntMargin* aResult) {
   // We don't want CSS padding being used for certain widgets.
   // See bug 381639 for an example of why.
   switch (aAppearance) {
@@ -3389,7 +3390,7 @@ bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* 
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                         StyleAppearance aAppearance, LayoutDeviceSize* aResult,
+                                         StyleAppearance aAppearance, LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

@@ -25,7 +25,6 @@
 #include "nsNodeInfoManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ServoStyleSet.h"
-#include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 
 #ifdef ACCESSIBILITY
@@ -385,7 +384,7 @@ Decimal nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent) {
     // We need to get the size of the thumb from the theme.
     nsPresContext* presContext = PresContext();
     bool notUsedCanOverride;
-    LayoutDeviceSize size;
+    LayoutDeviceIntSize size;
     presContext->Theme()->GetMinimumWidgetSize(presContext, this,
                                                StyleAppearance::RangeThumb,
                                                &size, &notUsedCanOverride);
@@ -593,7 +592,7 @@ nscoord nsRangeFrame::AutoCrossSize(Length aEm) {
   nscoord minCrossSize(0);
   if (IsThemed()) {
     bool unused;
-    LayoutDeviceSize size;
+    LayoutDeviceIntSize size;
     nsPresContext* pc = PresContext();
     pc->Theme()->GetMinimumWidgetSize(pc, this, StyleAppearance::RangeThumb,
                                       &size, &unused);

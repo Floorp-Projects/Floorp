@@ -599,10 +599,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return NSIntPixelsToAppUnits(aPixels, AppUnitsPerDevPixel());
   }
 
-  nscoord DevPixelsToAppUnits(float aPixels) const {
-    return NSFloatPixelsToAppUnits(aPixels, AppUnitsPerDevPixel());
-  }
-
   int32_t AppUnitsToDevPixels(nscoord aAppUnits) const {
     return NSAppUnitsToIntPixels(aAppUnits, float(AppUnitsPerDevPixel()));
   }
