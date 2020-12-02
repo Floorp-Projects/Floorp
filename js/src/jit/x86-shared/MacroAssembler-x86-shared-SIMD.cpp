@@ -717,6 +717,31 @@ void MacroAssemblerX86Shared::compareFloat32x4(FloatRegister lhs, Operand rhs,
   }
 }
 
+void MacroAssemblerX86Shared::compareFloat32x4(Assembler::Condition cond,
+                                               const SimdConstant& rhs,
+                                               FloatRegister lhsDest) {
+  switch (cond) {
+    case Assembler::Condition::Equal:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmpeqps,
+                    &MacroAssembler::vcmpeqpsSimd128);
+      break;
+    case Assembler::Condition::LessThan:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmpltps,
+                    &MacroAssembler::vcmpltpsSimd128);
+      break;
+    case Assembler::Condition::LessThanOrEqual:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmpleps,
+                    &MacroAssembler::vcmplepsSimd128);
+      break;
+    case Assembler::Condition::NotEqual:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmpneqps,
+                    &MacroAssembler::vcmpneqpsSimd128);
+      break;
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+}
+
 void MacroAssemblerX86Shared::compareFloat64x2(FloatRegister lhs, Operand rhs,
                                                Assembler::Condition cond,
                                                FloatRegister output) {
@@ -754,6 +779,31 @@ void MacroAssemblerX86Shared::compareFloat64x2(FloatRegister lhs, Operand rhs,
       // We reverse these operations in the -inl.h file so that we don't have to
       // copy into and out of temporaries after codegen.
       MOZ_CRASH("should have reversed this");
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+}
+
+void MacroAssemblerX86Shared::compareFloat64x2(Assembler::Condition cond,
+                                               const SimdConstant& rhs,
+                                               FloatRegister lhsDest) {
+  switch (cond) {
+    case Assembler::Condition::Equal:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmpeqpd,
+                    &MacroAssembler::vcmpeqpdSimd128);
+      break;
+    case Assembler::Condition::LessThan:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmpltpd,
+                    &MacroAssembler::vcmpltpdSimd128);
+      break;
+    case Assembler::Condition::LessThanOrEqual:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmplepd,
+                    &MacroAssembler::vcmplepdSimd128);
+      break;
+    case Assembler::Condition::NotEqual:
+      binarySimd128(rhs, lhsDest, &MacroAssembler::vcmpneqpd,
+                    &MacroAssembler::vcmpneqpdSimd128);
+      break;
     default:
       MOZ_CRASH("unexpected condition op");
   }
