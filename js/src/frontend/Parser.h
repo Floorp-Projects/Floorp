@@ -708,6 +708,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::hasValidSimpleStrictParameterNames;
   using Base::isUnexpectedEOF_;
   using Base::nameIsArgumentsOrEval;
+  using Base::newDotGeneratorName;
   using Base::newFunction;
   using Base::newFunctionBox;
   using Base::newName;
@@ -750,6 +751,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::anyChars;
   using Base::cx_;
   using Base::handler_;
+  using Base::noteUsedName;
   using Base::pc_;
   using Base::usedNames_;
 
@@ -758,13 +760,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::finishFunction;
   using Base::identifierReference;
   using Base::leaveInnerFunction;
-  using Base::newDotGeneratorName;
   using Base::newInternalDotName;
   using Base::newThisName;
   using Base::nextTokenContinuesLetDeclaration;
   using Base::noSubstitutionTaggedTemplate;
   using Base::noteDestructuredPositionalFormalParameter;
-  using Base::noteUsedName;
   using Base::prefixAccessorName;
   using Base::privateNameReference;
   using Base::processExport;
@@ -1648,6 +1648,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::newName;
   using Base::newVarScopeData;
   using Base::noteDeclaredName;
+  using Base::noteUsedName;
   using Base::null;
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::statementList;
