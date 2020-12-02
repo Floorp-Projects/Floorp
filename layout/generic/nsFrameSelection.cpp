@@ -2129,6 +2129,27 @@ nsFrameSelection::CreateRangeExtendedToSomewhere(
   return range;
 }
 
+nsresult nsFrameSelection::SelectAll() {
+  nsCOMPtr<nsIContent> rootContent;
+  if (mLimiters.mLimiter) {
+    rootContent = mLimiters.mLimiter;  // addrefit
+  } else if (mLimiters.mAncestorLimiter) {
+    rootContent = mLimiters.mAncestorLimiter;
+  } else {
+    NS_ENSURE_STATE(mPresShell);
+    Document* doc = mPresShell->GetDocument();
+    if (!doc) return NS_ERROR_FAILURE;
+    rootContent = doc->GetRootElement();
+    if (!rootContent) return NS_ERROR_FAILURE;
+  }
+  int32_t numChildren = rootContent->GetChildCount();
+  SetChangeReasons(nsISelectionListener::NO_REASON);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  AutoPrepareFocusRange prep(mDomSelections[index], false);
+  return TakeFocus(rootContent, 0, numChildren, CARET_ASSOCIATE_BEFORE,
+                   FocusMode::kCollapseToNewPoint);
+}
+
 //////////END FRAMESELECTION
 
 void nsFrameSelection::StartBatchChanges() { mBatching.mCounter++; }

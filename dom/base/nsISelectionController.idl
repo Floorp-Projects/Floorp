@@ -276,6 +276,10 @@ interface nsISelectionController : nsISelectionDisplay
    */
     void scrollCharacter(in boolean right);
 
+  /** SelectAll will select the whole page
+   */
+    void selectAll();
+
   /** CheckVisibility will return true if textnode and offsets are actually rendered
    *  in the current precontext.
    *  @param aNode textNode to test
