@@ -80,4 +80,16 @@ async function acceptAndContinue(temporary) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.history.length == 1) {
+        document.getElementById('advancedPanelBackButton').style.display = 'none';
+    } else {
+        document.getElementById('advancedPanelBackButton').addEventListener('click', () => window.history.back());
+    }
+
+    document.getElementById('errorTryAgain').addEventListener('click', () => window.location.reload());
+    document.getElementById('advancedButton').addEventListener('click', toggleAdvanced);
+    document.getElementById('advancedPanelAcceptButton').addEventListener('click', () => acceptAndContinue(true));
+});
+
 parseQuery(document.documentURI);

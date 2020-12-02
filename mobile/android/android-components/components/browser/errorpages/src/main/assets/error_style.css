@@ -155,3 +155,11 @@ button {
   overflow: auto;
   white-space: pre-line;
 }
+
+#advancedButton {
+  display: none;
+}
+
+#badCertAdvancedPanel {
+  display: none;
+}

@@ -44,6 +44,9 @@ permalink: /changelog/
 * **feature-tab-collections**:
     * [createCollection] now returns the id of the newly created collection
 
+* **browser-errorpages**:
+  * ⚠️ The url encoded error page - `error_page_js` is now clean of inline code. Clients should not rely on inlined code anymore.
+
 # 67.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v66.0.0...v67.0.0)
