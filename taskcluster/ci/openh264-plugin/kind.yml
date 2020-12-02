@@ -43,11 +43,11 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/linux32.py
-            tooltool-downloads: public
         fetches:
             toolchain:
                 - linux64-binutils
                 - linux64-clang
+                - linux64-dump-syms
                 - linux64-nasm
     linux64/opt:
         attributes:
@@ -67,11 +67,11 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/linux64.py
-            tooltool-downloads: public
         fetches:
             toolchain:
                 - linux64-binutils
                 - linux64-clang
+                - linux64-dump-syms
                 - linux64-nasm
     macosx64/opt:
         attributes:
@@ -96,6 +96,7 @@ jobs:
             toolchain:
                 - linux64-cctools-port
                 - linux64-clang
+                - linux64-dump-syms
     win32/opt:
         attributes:
             build_platform: win32
@@ -118,6 +119,7 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win64-dump-syms
     win64/opt:
         attributes:
             build_platform: win64
@@ -140,6 +142,7 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win64-dump-syms
     win64-aarch64/opt:
         attributes:
             build_platform: win64-aarch64
@@ -162,3 +165,4 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win64-dump-syms

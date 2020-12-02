@@ -19,7 +19,9 @@ config = {
         "gittool.py": [sys.executable, os.path.join(external_tools_path, "gittool.py")],
         "python2.7": "c:\\mozilla-build\\python\\python.exe",
     },
-    "dump_syms_binary": "dump_syms.exe",
+    "dump_syms_binary": "{}/dump_syms/dump_syms.exe".format(
+        os.environ["MOZ_FETCHES_DIR"]
+    ),
     "arch": "x64",
     "use_yasm": True,
     "partial_env": {
