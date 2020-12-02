@@ -4,7 +4,6 @@
 "use strict";
 
 var ManifestFinder = {
-  // jshint ignore:line
   /**
    * Check from content process if DOM Window has a conforming
    * manifest link relationship.
@@ -59,7 +58,4 @@ function checkForManifest(aWindow) {
   return true;
 }
 
-var EXPORTED_SYMBOLS = [
-  // jshint ignore:line
-  "ManifestFinder",
-];
+var EXPORTED_SYMBOLS = ["ManifestFinder"];

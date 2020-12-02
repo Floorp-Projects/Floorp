@@ -1,5 +1,3 @@
-// Used by JSHint:
-/* global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
 
 Services.prefs.setBoolPref("dom.manifest.enabled", true);

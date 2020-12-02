@@ -17,7 +17,6 @@
  *   .process(aManifest, aBaseURL, aMemberName);
  *
  */
-/* exported EXPORTED_SYMBOLS*/
 
 "use strict";
 
@@ -258,4 +257,4 @@ ImageObjectProcessor.prototype.process = function(
     }
   }
 };
-var EXPORTED_SYMBOLS = ["ImageObjectProcessor"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["ImageObjectProcessor"];

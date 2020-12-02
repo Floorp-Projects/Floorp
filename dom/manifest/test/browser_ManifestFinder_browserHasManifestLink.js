@@ -1,5 +1,3 @@
-// Used by JSHint:
-/* global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
 const { ManifestFinder } = ChromeUtils.import(
   "resource://gre/modules/ManifestFinder.jsm"
