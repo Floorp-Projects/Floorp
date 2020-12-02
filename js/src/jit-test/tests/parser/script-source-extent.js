@@ -13,6 +13,9 @@
 let dbg = new Debugger();
 let debuggeeCompartment = newGlobal({newCompartment: true});
 
+// Some static class field initializer lambdas may be thrown away by GC.
+gczeal(0);
+
 function getScriptSourceExtent(source) {
     // NOTE: We will _evaluate_ the source below which may introduce dynamic
     //       scripts which are also reported. This is intended so that we may test
