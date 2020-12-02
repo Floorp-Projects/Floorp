@@ -389,7 +389,7 @@ class LiveSavedFrameCache {
   // youngest. They must all be younger than the frame that the |find| method
   // found a hit for; or you must have cleared the entire cache with the
   // |clear| method.
-  bool insert(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
+  bool insert(JSContext* cx, FramePtr&& framePtr, const jsbytecode* pc,
               HandleSavedFrame savedFrame);
 
   // Remove all entries from the cache.
