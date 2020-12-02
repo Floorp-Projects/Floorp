@@ -21,17 +21,23 @@ void js::gc::SortedArenaListSegment::append(Arena* arena) {
 
 inline js::gc::ArenaList::ArenaList() { clear(); }
 
-void js::gc::ArenaList::copy(const ArenaList& other) {
+inline js::gc::ArenaList::ArenaList(ArenaList&& other) { moveFrom(other); }
+
+inline js::gc::ArenaList::~ArenaList() { MOZ_ASSERT(isEmpty()); }
+
+void js::gc::ArenaList::moveFrom(ArenaList& other) {
   other.check();
+
   head_ = other.head_;
   cursorp_ = other.isCursorAtHead() ? &head_ : other.cursorp_;
+  other.clear();
+
   check();
 }
 
-inline js::gc::ArenaList::ArenaList(const ArenaList& other) { copy(other); }
-
-js::gc::ArenaList& js::gc::ArenaList::operator=(const ArenaList& other) {
-  copy(other);
+js::gc::ArenaList& js::gc::ArenaList::operator=(ArenaList&& other) {
+  MOZ_ASSERT(isEmpty());
+  moveFrom(other);
   return *this;
 }
 
@@ -59,12 +65,6 @@ void js::gc::ArenaList::clear() {
   check();
 }
 
-js::gc::ArenaList js::gc::ArenaList::copyAndClear() {
-  ArenaList result = *this;
-  clear();
-  return result;
-}
-
 bool js::gc::ArenaList::isEmpty() const {
   check();
   return !head_;
@@ -83,12 +83,6 @@ bool js::gc::ArenaList::isCursorAtHead() const {
 bool js::gc::ArenaList::isCursorAtEnd() const {
   check();
   return !*cursorp_;
-}
-
-void js::gc::ArenaList::moveCursorToEnd() {
-  while (!isCursorAtEnd()) {
-    cursorp_ = &(*cursorp_)->next;
-  }
 }
 
 js::gc::Arena* js::gc::ArenaList::arenaAfterCursor() const {
@@ -128,18 +122,22 @@ void js::gc::ArenaList::insertBeforeCursor(Arena* a) {
 }
 
 js::gc::ArenaList& js::gc::ArenaList::insertListWithCursorAtEnd(
-    const ArenaList& other) {
+    ArenaList& other) {
   check();
   other.check();
   MOZ_ASSERT(other.isCursorAtEnd());
-  if (other.isCursorAtHead()) {
+
+  if (other.isEmpty()) {
     return *this;
   }
+
   // Insert the full arenas of |other| after those of |this|.
   *other.cursorp_ = *cursorp_;
   *cursorp_ = other.head_;
   cursorp_ = other.cursorp_;
   check();
+
+  other.clear();
   return *this;
 }
 
