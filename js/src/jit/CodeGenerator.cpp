@@ -4224,26 +4224,6 @@ void CodeGenerator::visitElements(LElements* lir) {
   masm.loadPtr(elements, ToRegister(lir->output()));
 }
 
-void CodeGenerator::visitMaybeCopyElementsForWrite(
-    LMaybeCopyElementsForWrite* lir) {
-  Register object = ToRegister(lir->object());
-  Register temp = ToRegister(lir->temp());
-
-  using Fn = bool (*)(JSContext*, NativeObject*);
-  OutOfLineCode* ool = oolCallVM<Fn, NativeObject::CopyElementsForWrite>(
-      lir, ArgList(object), StoreNothing());
-
-  if (lir->mir()->checkNative()) {
-    masm.branchIfNonNativeObj(object, temp, ool->rejoin());
-  }
-
-  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp);
-  masm.branchTest32(Assembler::NonZero,
-                    Address(temp, ObjectElements::offsetOfFlags()),
-                    Imm32(ObjectElements::COPY_ON_WRITE), ool->entry());
-  masm.bind(ool->rejoin());
-}
-
 void CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment* lir) {
   Address environment(ToRegister(lir->function()),
                       JSFunction::offsetOfEnvironment());
@@ -10452,17 +10432,6 @@ void CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
   // Bailout if the incremented length does not fit in int32.
   bailoutCmp32(Assembler::AboveOrEqual, length, Imm32(INT32_MAX),
                lir->snapshot());
-
-#ifdef DEBUG
-  // Assert that there are no copy-on-write elements.
-  Label success;
-  Address elementsFlags(elementsTemp, ObjectElements::offsetOfFlags());
-  masm.branchTest32(Assembler::Zero, elementsFlags,
-                    Imm32(ObjectElements::COPY_ON_WRITE), &success);
-  masm.assumeUnreachable(
-      "ArrayPush must not be used with copy-on-write elements");
-  masm.bind(&success);
-#endif
 
   // Guard length == initializedLength.
   Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());

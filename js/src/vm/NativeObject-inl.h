@@ -105,7 +105,6 @@ inline void NativeObject::elementsRangePostWriteBarrier(uint32_t start,
 inline void NativeObject::copyDenseElements(uint32_t dstStart, const Value* src,
                                             uint32_t count) {
   MOZ_ASSERT(dstStart + count <= getDenseCapacity());
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(isExtensible());
   MOZ_ASSERT_IF(count > 0, src != nullptr);
 #ifdef DEBUG
@@ -157,7 +156,6 @@ inline void NativeObject::initDenseElements(NativeObject* src,
 inline void NativeObject::initDenseElements(const Value* src, uint32_t count) {
   MOZ_ASSERT(getDenseInitializedLength() == 0);
   MOZ_ASSERT(count <= getDenseCapacity());
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(isExtensible());
 
   setDenseInitializedLength(count);
@@ -182,7 +180,6 @@ inline bool NativeObject::initDenseElementsFromRange(JSContext* cx, Iter begin,
   MOZ_ASSERT(!isIndexed());
   MOZ_ASSERT(is<ArrayObject>());
   MOZ_ASSERT(as<ArrayObject>().lengthIsWritable());
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(!denseElementsAreFrozen());
   MOZ_ASSERT(getElementsHeader()->numShiftedElements() == 0);
 
@@ -218,7 +215,7 @@ inline bool NativeObject::tryShiftDenseElements(uint32_t count) {
 
   ObjectElements* header = getElementsHeader();
   if (header->initializedLength == count ||
-      count > ObjectElements::MaxShiftedElements || header->isCopyOnWrite() ||
+      count > ObjectElements::MaxShiftedElements ||
       header->hasNonwritableArrayLength()) {
     return false;
   }
@@ -252,7 +249,6 @@ inline void NativeObject::moveDenseElements(uint32_t dstStart,
                                             uint32_t srcStart, uint32_t count) {
   MOZ_ASSERT(dstStart + count <= getDenseCapacity());
   MOZ_ASSERT(srcStart + count <= getDenseInitializedLength());
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(isExtensible());
 
   /*
@@ -292,7 +288,6 @@ inline void NativeObject::moveDenseElements(uint32_t dstStart,
 inline void NativeObject::reverseDenseElementsNoPreBarrier(uint32_t length) {
   MOZ_ASSERT(!zone()->needsIncrementalBarrier());
 
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(isExtensible());
 
   MOZ_ASSERT(length > 1);
@@ -319,7 +314,6 @@ inline void NativeObject::ensureDenseInitializedLength(uint32_t index,
   // mark the elements through 'index + extra' as initialized in preparation
   // for a write.
 
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(!denseElementsAreFrozen());
   MOZ_ASSERT(isExtensible() || (containsDenseElement(index) && extra == 1));
   MOZ_ASSERT(index + extra <= getDenseCapacity());
@@ -349,7 +343,6 @@ inline void NativeObject::ensureDenseInitializedLength(uint32_t index,
 DenseElementResult NativeObject::extendDenseElements(JSContext* cx,
                                                      uint32_t requiredCapacity,
                                                      uint32_t extra) {
-  MOZ_ASSERT(!denseElementsAreCopyOnWrite());
   MOZ_ASSERT(isExtensible());
 
   /*
@@ -382,10 +375,6 @@ inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
                                                             uint32_t extra) {
   MOZ_ASSERT(isNative());
   MOZ_ASSERT(isExtensible() || (containsDenseElement(index) && extra == 1));
-
-  if (!maybeCopyElementsForWrite(cx)) {
-    return DenseElementResult::Failure;
-  }
 
   uint32_t requiredCapacity;
   if (extra == 1) {

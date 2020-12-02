@@ -7013,14 +7013,6 @@ static bool IsLatin1(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool HasCopyOnWriteElements(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(
-      args.get(0).isObject() && args[0].toObject().isNative() &&
-      args[0].toObject().as<NativeObject>().denseElementsAreCopyOnWrite());
-  return true;
-}
-
 static bool EnableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -9107,10 +9099,6 @@ JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
     JS_FN_HELP("isLatin1", IsLatin1, 1, 0,
 "isLatin1(s)",
 "  Return true iff the string's characters are stored as Latin1."),
-
-    JS_FN_HELP("hasCopyOnWriteElements", HasCopyOnWriteElements, 1, 0,
-"hasCopyOnWriteElements(o)",
-"  Return true iff the object has copy-on-write dense elements."),
 
     JS_FN_HELP("stackPointerInfo", StackPointerInfo, 0, 0,
 "stackPointerInfo()",

@@ -1913,7 +1913,7 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
         }
 
         case SlotsOrElementsKind::Elements: {
-          base = nobj->getDenseElementsAllowCopyOnWrite();
+          base = nobj->getDenseElements();
 
           // Account for shifted elements.
           size_t numShifted = nobj->getElementsHeader()->numShiftedElements();
@@ -2028,15 +2028,7 @@ scan_obj : {
       break;
     }
 
-    if (nobj->denseElementsAreCopyOnWrite()) {
-      JSObject* owner = nobj->getElementsHeader()->ownerObject();
-      if (owner != nobj) {
-        traverseEdge(obj, owner);
-        break;
-      }
-    }
-
-    base = nobj->getDenseElementsAllowCopyOnWrite();
+    base = nobj->getDenseElements();
     kind = SlotsOrElementsKind::Elements;
     index = 0;
     end = nobj->getDenseInitializedLength();
@@ -3117,10 +3109,8 @@ void js::TenuringTracer::traceObject(JSObject* obj) {
     return;
   }
 
-  // Note: the contents of copy on write elements pointers are filled in
-  // during parsing and cannot contain nursery pointers.
   NativeObject* nobj = &obj->as<NativeObject>();
-  if (!nobj->hasEmptyElements() && !nobj->denseElementsAreCopyOnWrite()) {
+  if (!nobj->hasEmptyElements()) {
     HeapSlotArray elements = nobj->getDenseElements();
     Value* elems = elements.begin()->unbarrieredAddress();
     traceSlots(elems, elems + nobj->getDenseInitializedLength());
@@ -3338,7 +3328,7 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
 size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
                                                  NativeObject* src,
                                                  AllocKind dstKind) {
-  if (src->hasEmptyElements() || src->denseElementsAreCopyOnWrite()) {
+  if (src->hasEmptyElements()) {
     return 0;
   }
 

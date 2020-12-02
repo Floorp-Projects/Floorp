@@ -83,32 +83,6 @@ namespace js {
   return finishCreateArray(obj, shape, metadata);
 }
 
-/* static */ inline ArrayObject* ArrayObject::createCopyOnWriteArray(
-    JSContext* cx, gc::InitialHeap heap,
-    HandleArrayObject sharedElementsOwner) {
-  MOZ_ASSERT(sharedElementsOwner->getElementsHeader()->isCopyOnWrite());
-  MOZ_ASSERT(sharedElementsOwner->getElementsHeader()->ownerObject() ==
-             sharedElementsOwner);
-
-  // Use the smallest allocation kind for the array, as it can't have any
-  // fixed slots (see the assert in createArrayInternal) and will not be using
-  // its fixed elements.
-  gc::AllocKind kind = gc::AllocKind::OBJECT0_BACKGROUND;
-
-  AutoSetNewObjectMetadata metadata(cx);
-  RootedShape shape(cx, sharedElementsOwner->lastProperty());
-  RootedObjectGroup group(cx, sharedElementsOwner->group());
-  ArrayObject* obj =
-      createArrayInternal(cx, kind, heap, shape, group, metadata);
-  if (!obj) {
-    return nullptr;
-  }
-
-  obj->elements_ = sharedElementsOwner->getDenseElementsAllowCopyOnWrite();
-
-  return finishCreateArray(obj, shape, metadata);
-}
-
 }  // namespace js
 
 #endif  // vm_ArrayObject_inl_h

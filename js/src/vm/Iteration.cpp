@@ -947,9 +947,7 @@ static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
   // is set correctly.
   if (obj->is<NativeObject>() &&
       obj->as<NativeObject>().getDenseInitializedLength() > 0) {
-    if (!obj->as<NativeObject>().markDenseElementsMaybeInIteration(cx)) {
-      return nullptr;
-    }
+    obj->as<NativeObject>().markDenseElementsMaybeInIteration();
   }
 
   PropertyIteratorObject* iterobj =

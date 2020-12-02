@@ -49,12 +49,6 @@ class ArrayObject : public NativeObject {
                                          uint32_t length,
                                          AutoSetNewObjectMetadata& metadata);
 
-  // Make a copy-on-write array object which shares the elements of an
-  // existing object.
-  static inline ArrayObject* createCopyOnWriteArray(
-      JSContext* cx, gc::InitialHeap heap,
-      HandleArrayObject sharedElementsOwner);
-
  private:
   // Helper for the above methods.
   static inline ArrayObject* createArrayInternal(

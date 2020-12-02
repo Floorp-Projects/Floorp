@@ -2697,14 +2697,6 @@ void LIRGenerator::visitConstantElements(MConstantElements* ins) {
          ins);
 }
 
-void LIRGenerator::visitMaybeCopyElementsForWrite(
-    MMaybeCopyElementsForWrite* ins) {
-  LInstruction* check = new (alloc())
-      LMaybeCopyElementsForWrite(useRegister(ins->object()), temp());
-  add(check, ins);
-  assignSafepoint(check, ins);
-}
-
 void LIRGenerator::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   switch (ins->type()) {
     case MIRType::Value:

@@ -539,9 +539,6 @@ static bool DeleteArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
     if (index <= UINT32_MAX) {
       uint32_t idx = uint32_t(index);
       if (idx < aobj->getDenseInitializedLength()) {
-        if (!aobj->maybeCopyElementsForWrite(cx)) {
-          return false;
-        }
         if (idx + 1 == aobj->getDenseInitializedLength()) {
           aobj->setDenseInitializedLengthMaybeNonExtensible(cx, idx);
         } else {
@@ -674,10 +671,6 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
                         ObjectOpResult& result) {
   MOZ_ASSERT(id == NameToId(cx->names().length));
 
-  if (!arr->maybeCopyElementsForWrite(cx)) {
-    return false;
-  }
-
   // Step 1.
   uint32_t newLen;
   if (attrs & JSPROP_IGNORE_VALUE) {
@@ -772,10 +765,6 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     // (non-configurable) elements.
     if (!arr->isIndexed() && !arr->denseElementsMaybeInIteration() &&
         !arr->denseElementsAreSealed()) {
-      if (!arr->maybeCopyElementsForWrite(cx)) {
-        return false;
-      }
-
       uint32_t oldCapacity = arr->getDenseCapacity();
       uint32_t oldInitializedLength = arr->getDenseInitializedLength();
       MOZ_ASSERT(oldCapacity >= oldInitializedLength);
@@ -1591,10 +1580,6 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
 
     /* Fill out the array's initialized length to its proper length. */
     obj->ensureDenseInitializedLength(length, 0);
-  } else {
-    if (!obj->maybeCopyElementsForWrite(cx)) {
-      return DenseElementResult::Failure;
-    }
   }
 
   if (!obj->denseElementsMaybeInIteration() &&
@@ -2453,7 +2438,6 @@ void js::ArrayShiftMoveElements(ArrayObject* arr) {
   MOZ_ASSERT(arr->isExtensible());
   MOZ_ASSERT(arr->lengthIsWritable());
   MOZ_ASSERT_IF(jit::JitOptions.warpBuilder, IsPackedArray(arr));
-  MOZ_ASSERT(!arr->denseElementsAreCopyOnWrite());
   MOZ_ASSERT(!arr->denseElementsHaveMaybeInIterationFlag());
 
   size_t initlen = arr->getDenseInitializedLength();
@@ -2473,19 +2457,6 @@ static inline void SetInitializedLength(JSContext* cx, NativeObject* obj,
   if (initlen < oldInitlen) {
     obj->shrinkElements(cx, initlen);
   }
-}
-
-static MOZ_MUST_USE bool MoveDenseElements(JSContext* cx, NativeObject* obj,
-                                           uint32_t dstStart, uint32_t srcStart,
-                                           uint32_t length) {
-  MOZ_ASSERT(obj->isExtensible());
-
-  if (!obj->maybeCopyElementsForWrite(cx)) {
-    return false;
-  }
-
-  obj->moveDenseElements(dstStart, srcStart, length);
-  return true;
 }
 
 static DenseElementResult ArrayShiftDenseKernel(JSContext* cx, HandleObject obj,
@@ -2517,9 +2488,7 @@ static DenseElementResult ArrayShiftDenseKernel(JSContext* cx, HandleObject obj,
     return DenseElementResult::Success;
   }
 
-  if (!MoveDenseElements(cx, nobj, 0, 1, initlen - 1)) {
-    return DenseElementResult::Failure;
-  }
+  nobj->moveDenseElements(0, 1, initlen - 1);
 
   SetInitializedLength(cx, nobj, initlen - 1);
   return DenseElementResult::Success;
@@ -3026,11 +2995,8 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       /* Steps 15.a-b. */
       HandleArrayObject arr = obj.as<ArrayObject>();
       if (targetIndex != 0 || !arr->tryShiftDenseElements(sourceIndex)) {
-        if (!MoveDenseElements(cx, arr, uint32_t(targetIndex),
-                               uint32_t(sourceIndex),
-                               uint32_t(len - sourceIndex))) {
-          return false;
-        }
+        arr->moveDenseElements(uint32_t(targetIndex), uint32_t(sourceIndex),
+                               uint32_t(len - sourceIndex));
       }
 
       /* Steps 15.c-d. */
@@ -4118,18 +4084,7 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
 
 ArrayObject* js::NewDenseCopyOnWriteArray(JSContext* cx,
                                           HandleArrayObject templateObject) {
-  MOZ_ASSERT(!gc::IsInsideNursery(templateObject));
-
-  gc::InitialHeap heap = GetInitialHeap(GenericObject, templateObject->group());
-
-  ArrayObject* arr =
-      ArrayObject::createCopyOnWriteArray(cx, heap, templateObject);
-  if (!arr) {
-    return nullptr;
-  }
-
-  probes::CreateObject(cx, arr);
-  return arr;
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 // TODO(no-TI): clean up.

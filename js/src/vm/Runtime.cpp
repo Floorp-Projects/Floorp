@@ -565,10 +565,6 @@ JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime, bool isDefault)
 }
 
 JSFreeOp::~JSFreeOp() {
-  for (size_t i = 0; i < freeLaterList.length(); i++) {
-    freeUntracked(freeLaterList[i]);
-  }
-
   if (!jitPoisonRanges.empty()) {
     jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
   }

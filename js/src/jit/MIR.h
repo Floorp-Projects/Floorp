@@ -934,7 +934,7 @@ class MDefinition : public MNode {
   bool isEffectful() const { return getAliasSet().isStore(); }
 
 #ifdef DEBUG
-  virtual bool needsResumePoint() const {
+  bool needsResumePoint() const {
     // Return whether this instruction should have its own resume point.
     return isEffectful();
   }
@@ -7301,40 +7301,6 @@ class MConstantElements : public MNullaryInstruction {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   ALLOW_CLONE(MConstantElements)
-};
-
-// Passes through an object, after ensuring its elements are not copy on write.
-class MMaybeCopyElementsForWrite : public MUnaryInstruction,
-                                   public SingleObjectPolicy::Data {
-  bool checkNative_;
-
-  explicit MMaybeCopyElementsForWrite(MDefinition* object, bool checkNative)
-      : MUnaryInstruction(classOpcode, object), checkNative_(checkNative) {
-    setGuard();
-    setMovable();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(MaybeCopyElementsForWrite)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool checkNative() const { return checkNative_; }
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins) &&
-           checkNative() == ins->toMaybeCopyElementsForWrite()->checkNative();
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::ObjectFields);
-  }
-#ifdef DEBUG
-  bool needsResumePoint() const override {
-    // This instruction is idempotent and does not change observable
-    // behavior, so does not need its own resume point.
-    return false;
-  }
-#endif
 };
 
 // Load the initialized length from an elements header.

@@ -563,7 +563,6 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
     // Ordinarily ArraySetLength handles this, but we're going behind its back
     // right now, so we must do this manually.
     if (level == IntegrityLevel::Frozen && obj->is<ArrayObject>()) {
-      MOZ_ASSERT(!nobj->denseElementsAreCopyOnWrite());
       obj->as<ArrayObject>().setNonWritableLength(cx);
     }
   } else {
@@ -1214,14 +1213,8 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
       }
     }
 
-    ObjectGroup::NewArrayKind arrayKind = ObjectGroup::NewArrayKind::Normal;
-    if (obj->is<ArrayObject>() &&
-        obj->as<ArrayObject>().denseElementsAreCopyOnWrite()) {
-      arrayKind = ObjectGroup::NewArrayKind::CopyOnWrite;
-    }
-
     return ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
-                                       TenuredObject, arrayKind);
+                                       TenuredObject);
   }
 
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
@@ -1352,19 +1345,9 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
       MOZ_TRY(XDRScriptConst(xdr, values[i]));
     }
 
-    uint32_t copyOnWrite;
-    if (mode == XDR_ENCODE) {
-      copyOnWrite = obj->is<ArrayObject>() &&
-                    obj->as<ArrayObject>().denseElementsAreCopyOnWrite();
-    }
-    MOZ_TRY(xdr->codeUint32(&copyOnWrite));
-
     if (mode == XDR_DECODE) {
-      ObjectGroup::NewArrayKind arrayKind =
-          copyOnWrite ? ObjectGroup::NewArrayKind::CopyOnWrite
-                      : ObjectGroup::NewArrayKind::Normal;
       obj.set(ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
-                                          TenuredObject, arrayKind));
+                                          TenuredObject));
       if (!obj) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -1847,24 +1830,6 @@ NativeObject* js::InitClass(JSContext* cx, HandleObject obj,
 void JSObject::fixupAfterMovingGC() {
   if (IsForwarded(groupRaw())) {
     setGroupRaw(Forwarded(groupRaw()));
-  }
-
-  // For copy-on-write objects that don't own their elements, fix up the
-  // elements pointer if it points to inline elements in the owning object.
-  if (is<NativeObject>()) {
-    NativeObject& obj = as<NativeObject>();
-    if (obj.denseElementsAreCopyOnWrite()) {
-      NativeObject* owner = obj.getElementsHeader()->ownerObject();
-      // Get the new owner pointer but don't call MaybeForwarded as we
-      // don't need to access the object's shape.
-      if (IsForwarded(owner)) {
-        owner = Forwarded(owner);
-      }
-      if (owner != &obj && owner->hasFixedElements()) {
-        obj.elements_ = owner->getElementsHeader()->elements();
-      }
-      MOZ_ASSERT(!IsForwarded(obj.getElementsHeader()->ownerObject().get()));
-    }
   }
 }
 
@@ -2609,9 +2574,7 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj,
 
     // Prepare the elements. We have to do this before we mark the object
     // non-extensible; that's fine because these changes are not observable.
-    if (!ObjectElements::PrepareForPreventExtensions(cx, nobj)) {
-      return false;
-    }
+    ObjectElements::PrepareForPreventExtensions(cx, nobj);
   }
 
   // Finally, set the NOT_EXTENSIBLE flag on the BaseShape and ObjectElements.
@@ -3503,9 +3466,6 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (nobj->isIndexed()) {
       out.put(" indexed");
     }
-    if (nobj->denseElementsAreCopyOnWrite()) {
-      out.put(" copy_on_write_elements");
-    }
     if (!nobj->denseElementsArePacked()) {
       out.put(" non_packed_elements");
     }
@@ -3798,11 +3758,8 @@ void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
   }
 
   if (is<NativeObject>() && as<NativeObject>().hasDynamicElements()) {
-    js::ObjectElements* elements = as<NativeObject>().getElementsHeader();
-    if (!elements->isCopyOnWrite() || elements->ownerObject() == this) {
-      void* allocatedElements = as<NativeObject>().getUnshiftedElementsHeader();
-      info->objectsMallocHeapElementsNormal += mallocSizeOf(allocatedElements);
-    }
+    void* allocatedElements = as<NativeObject>().getUnshiftedElementsHeader();
+    info->objectsMallocHeapElementsNormal += mallocSizeOf(allocatedElements);
   }
 
   // Other things may be measured in the future if DMD indicates it is
@@ -3866,10 +3823,8 @@ size_t JSObject::sizeOfIncludingThisInNursery() const {
 
     if (native.hasDynamicElements()) {
       js::ObjectElements& elements = *native.getElementsHeader();
-      if (!elements.isCopyOnWrite() || elements.ownerObject() == this) {
-        size += (elements.capacity + elements.numShiftedElements()) *
-                sizeof(HeapSlot);
-      }
+      size += (elements.capacity + elements.numShiftedElements()) *
+              sizeof(HeapSlot);
     }
 
     if (is<ArgumentsObject>()) {
@@ -3918,20 +3873,9 @@ void JSObject::traceChildren(JSTracer* trc) {
       MOZ_ASSERT(nslots == nobj->slotSpan());
     }
 
-    do {
-      if (nobj->denseElementsAreCopyOnWrite()) {
-        GCPtrNativeObject& owner = nobj->getElementsHeader()->ownerObject();
-        if (owner != nobj) {
-          TraceEdge(trc, &owner, "objectElementsOwner");
-          break;
-        }
-      }
-
-      TraceRange(
-          trc, nobj->getDenseInitializedLength(),
-          static_cast<HeapSlot*>(nobj->getDenseElementsAllowCopyOnWrite()),
-          "objectElements");
-    } while (false);
+    TraceRange(trc, nobj->getDenseInitializedLength(),
+               static_cast<HeapSlot*>(nobj->getDenseElements()),
+               "objectElements");
   }
 
   // Call the trace hook at the end so that during a moving GC the trace hook

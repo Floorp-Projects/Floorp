@@ -5206,15 +5206,7 @@ ArrayObject* js::NewArrayOperationWithTemplate(JSContext* cx,
 ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
                                               HandleScript script,
                                               jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::NewArrayCopyOnWrite);
-
-  RootedArrayObject baseobj(
-      cx, ObjectGroup::getOrFixupCopyOnWriteObject(cx, script, pc));
-  if (!baseobj) {
-    return nullptr;
-  }
-
-  return NewDenseCopyOnWriteArray(cx, baseobj);
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
