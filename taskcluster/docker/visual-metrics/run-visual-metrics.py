@@ -337,8 +337,6 @@ def main(log, args):
                 )
                 failed_runs += 1
             else:
-                # Python 3.5 requires a str object (not 3.6+)
-                res = json.loads(res.decode("utf8"))
                 for name, value in res.items():
                     append_result(
                         log, suites, job.test_name, name, value, job.extra_options
@@ -401,7 +399,32 @@ def run_visual_metrics(job, visualmetrics_path, options):
         str(job.video_path),
     ]
     cmd.extend(options)
-    return run_command(log, cmd, job.count)
+    rc, res = run_command(log, cmd, job.count)
+
+    if rc == 0:
+        # Python 3.5 requires a str object (not 3.6+)
+        res = json.loads(res.decode("utf8"))
+
+        # Ensure that none of these values are at 0 which
+        # is indicative of a failling test
+        monitored_tests = [
+            "contentfulspeedindex",
+            "lastvisualchange",
+            "perceptualspeedindex",
+            "speedindex",
+        ]
+        failed_tests = []
+        for metric, val in res.items():
+            if metric.lower() in monitored_tests and val == 0:
+                failed_tests.append(metric)
+        if failed_tests:
+            log.error(
+                "[TEST-UNEXPECTED-FAIL] Some visual metrics have an erroneous value of 0."
+            )
+            log.info("Tests which failed: %s" % str(failed_tests))
+            rc += 1
+
+    return rc, res
 
 
 if __name__ == "__main__":
