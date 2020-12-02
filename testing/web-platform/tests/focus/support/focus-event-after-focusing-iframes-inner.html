@@ -7,6 +7,21 @@
 <body>
 <h1>Inner</h1>
 <script>
+let innerlog = "innerlog:";
+
+window.onmessage = function(e) {
+  if (e.data == "getlog") {
+    parent.postMessage(innerlog, "*");
+  }
+};
+
+window.onfocus = function() {
+  innerlog += "windowfocus,";
+};
+
+window.onblur = function() {
+  innerlog += "windowblur,";
+};
 </script>
 </body>
 </html>
