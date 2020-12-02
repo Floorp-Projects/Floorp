@@ -3436,8 +3436,23 @@ this.XPIDatabaseReconcile = {
           id
         );
 
+        // Bug 1664144:  If the addon changed on disk we will catch it during
+        // the second scan initiated by getNewSideloads.  The addon may have
+        // already started, if so we need to ensure it restarts during the
+        // update, otherwise we're left in a state where the addon is enabled
+        // but not started.  We use the bootstrap started state to check that.
+        // isActive alone is not sufficient as that changes the characteristics
+        // of other updates and breaks many tests.
+        let restart =
+          isActive && XPIInternal.BootstrapScope.get(currentAddon).started;
+        if (restart) {
+          logger.warn(
+            `Updating and restart addon ${previousAddon.id} that changed on disk after being already started.`
+          );
+        }
         promise = XPIInternal.BootstrapScope.get(previousAddon).update(
-          currentAddon
+          currentAddon,
+          restart
         );
       }
 

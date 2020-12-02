@@ -314,7 +314,7 @@ var BootstrapMonitor = {
       equal(
         params.oldVersion,
         lastParams.version,
-        "params.version should match last call"
+        "params.oldVersion should match last call"
       );
     } else {
       equal(
