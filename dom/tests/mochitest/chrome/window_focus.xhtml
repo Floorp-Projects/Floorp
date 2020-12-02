@@ -426,15 +426,6 @@ function startTest()
   is(t19.selectionEnd, 5, "input focused from tab key selectionEnd");
   t19.setSelectionRange(0, 0);
 
-  gLastFocusMethod = 0;
-  var selectFired = false;
-  function selectListener() { selectFired = true; }
-  t19.addEventListener("select", selectListener, false);
-  expectFocusShift(() => t19.select(),
-                   null, getById("t" + 19), true, "input.select()");
-  t19.removeEventListener("select", selectListener, false);
-  ok(selectFired, "select event fires for input");
-
   // mouse clicking
   gLastFocusMethod = fm.FLAG_BYMOUSE;
   for (idx = kTabbableSteps; idx >= 1; idx--) {
