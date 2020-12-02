@@ -23,12 +23,13 @@ using mozilla::wr::ByteBuffer;
 namespace mozilla {
 namespace ipc {
 
-class IPCStreamSource::Callback final : public nsIInputStreamCallback,
-                                        public nsIRunnable,
-                                        public nsICancelableRunnable {
+class IPCStreamSource::Callback final : public DiscardableRunnable,
+                                        public nsIInputStreamCallback {
  public:
   explicit Callback(IPCStreamSource* aSource)
-      : mSource(aSource), mOwningEventTarget(GetCurrentSerialEventTarget()) {
+      : DiscardableRunnable("IPCStreamSource::Callback"),
+        mSource(aSource),
+        mOwningEventTarget(GetCurrentSerialEventTarget()) {
     MOZ_ASSERT(mSource);
   }
 
@@ -60,12 +61,9 @@ class IPCStreamSource::Callback final : public nsIInputStreamCallback,
     return NS_OK;
   }
 
-  nsresult Cancel() override {
-    // Cancel() gets called when the Worker thread is being shutdown.  We have
-    // nothing to do here because IPCStreamChild handles this case via
-    // the WorkerRef.
-    return NS_OK;
-  }
+  // OnDiscard() gets called when the Worker thread is being shutdown.  We have
+  // nothing to do here because IPCStreamChild handles this case via
+  // the WorkerRef.
 
   void ClearSource() {
     MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
@@ -88,11 +86,11 @@ class IPCStreamSource::Callback final : public nsIInputStreamCallback,
 
   nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 };
 
-NS_IMPL_ISUPPORTS(IPCStreamSource::Callback, nsIInputStreamCallback,
-                  nsIRunnable, nsICancelableRunnable);
+NS_IMPL_ISUPPORTS_INHERITED(IPCStreamSource::Callback, DiscardableRunnable,
+                            nsIInputStreamCallback);
 
 IPCStreamSource::IPCStreamSource(nsIAsyncInputStream* aInputStream)
     : mStream(aInputStream), mState(ePending) {

@@ -244,15 +244,16 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
 #ifdef DEBUG
   if (runnable && !onWorkerThread) {
-    nsCOMPtr<nsICancelableRunnable> cancelable = do_QueryInterface(runnable);
+    nsCOMPtr<nsIDiscardableRunnable> discardable = do_QueryInterface(runnable);
 
     {
       MutexAutoLock lock(mLock);
 
-      // Only enforce cancelable runnables after we've started the worker loop.
+      // Only enforce discardable runnables after we've started the worker loop.
       if (!mAcceptingNonWorkerRunnables) {
-        MOZ_ASSERT(cancelable,
-                   "Only nsICancelableRunnable may be dispatched to a worker!");
+        MOZ_ASSERT(
+            discardable,
+            "Only nsIDiscardableRunnable may be dispatched to a worker!");
       }
     }
   }

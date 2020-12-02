@@ -19,7 +19,7 @@ namespace mozilla {
 // one has to either explicitly Cancel() the runner or have
 // MayContinueProcessing() callback return false to completely remove
 // the runner.
-class IdleTaskRunner final : public IdleRunnable {
+class IdleTaskRunner final : public CancelableIdleRunnable {
  public:
   // Return true if some meaningful work was done.
   using CallbackType = std::function<bool(TimeStamp aDeadline)>;

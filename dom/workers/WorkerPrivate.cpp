@@ -199,13 +199,11 @@ class ExternalRunnableWrapper final : public WorkerRunnable {
   }
 
   nsresult Cancel() override {
-    nsresult rv;
-    nsCOMPtr<nsICancelableRunnable> cancelable =
+    nsCOMPtr<nsIDiscardableRunnable> doomed =
         do_QueryInterface(mWrappedRunnable);
-    MOZ_ASSERT(cancelable);  // We checked this earlier!
-    rv = cancelable->Cancel();
-    nsresult rv2 = WorkerRunnable::Cancel();
-    return NS_FAILED(rv) ? rv : rv2;
+    MOZ_ASSERT(doomed);  // We checked this earlier!
+    doomed->OnDiscard();
+    return WorkerRunnable::Cancel();
   }
 };
 
@@ -1571,9 +1569,11 @@ already_AddRefed<WorkerRunnable> WorkerPrivate::MaybeWrapAsWorkerRunnable(
     return workerRunnable.forget();
   }
 
-  nsCOMPtr<nsICancelableRunnable> cancelable = do_QueryInterface(runnable);
-  if (!cancelable) {
-    MOZ_CRASH("All runnables destined for a worker thread must be cancelable!");
+  nsCOMPtr<nsIDiscardableRunnable> maybe = do_QueryInterface(runnable);
+  if (!maybe) {
+    MOZ_CRASH(
+        "All runnables destined for a worker thread must be "
+        "nsIDiscardableRunnable!");
   }
 
   workerRunnable = new ExternalRunnableWrapper(this, runnable);
