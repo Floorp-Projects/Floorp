@@ -226,6 +226,15 @@ function popcount(n) {
   return ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24
 }
 
+function jsValueToWasmName(x) {
+    if (typeof x == "number") {
+        if (x == 0) return 1 / x < 0 ? "-0" : "0";
+        if (isNaN(x)) return "+nan";
+        if (!isFinite(x)) return (x < 0 ? "-" : "+") + "inf";
+    }
+    return x;
+}
+
 // For each input array, a set of arrays of the proper length for v128, with
 // values in range but possibly of the wrong signedness (eg, for Int8Array, 128
 // is in range but is really -128).  Also a unary operator `rectify` that
@@ -479,20 +488,12 @@ for ( let start of [0, 1]) {
 // read the result at offset 0.  Also: test with constant lhs, constant rhs, and
 // both.
 
-function expandConstantInputs(op, memtype, inputs) {
-    function cleanup(x) {
-        if (typeof x == "number") {
-            if (x == 0) return 1 / x < 0 ? "-0" : "0";
-            if (isNaN(x)) return "+nan";
-            if (!isFinite(x)) return (x < 0 ? "-" : "+") + "inf";
-        }
-        return x;
-    }
+function expandConstantBinopInputs(op, memtype, inputs) {
     let s = '';
     let ident = 0;
     for ( let [a, b] of inputs ) {
-        let constlhs = `${memtype.layoutName} ${a.map(cleanup).join(' ')}`;
-        let constrhs = `${memtype.layoutName} ${b.map(cleanup).join(' ')}`;
+        let constlhs = `${memtype.layoutName} ${a.map(jsValueToWasmName).join(' ')}`;
+        let constrhs = `${memtype.layoutName} ${b.map(jsValueToWasmName).join(' ')}`;
         s += `
     ;; lhs is constant, rhs is variable
     (func (export "run_constlhs${ident}")
@@ -531,7 +532,7 @@ function insAndMemBinop(op, memtype, resultmemtype, inputs) {
     (func $doit (param $a v128) (param $b v128) (result v128)
       (${op} (local.get $a) (local.get $b)))
 
-    ${expandConstantInputs(op, memtype, inputs)})`);
+    ${expandConstantBinopInputs(op, memtype, inputs)})`);
     var mem = new memtype(ins.exports.mem.buffer);
     var resultmem = !resultmemtype || memtype == resultmemtype ? mem : new resultmemtype(ins.exports.mem.buffer);
     return [ins, mem, resultmem];
@@ -755,6 +756,7 @@ for ( let [op, memtype, rop, resultmemtype] of
     let inputs = cross(memtype.inputs);
     let len = 16/memtype.BYTES_PER_ELEMENT;
     let xs = iota(len);
+    let zero = xs.map(_ => 0);
     let [ins, mem, resultmem] = insAndMemBinop(op, memtype, resultmemtype, inputs);
     let bitsForF32 = memtype == Float32Array ? new Uint32Array(mem.buffer) : null;
     let bitsForF64 = memtype == Float64Array ? new BigInt64Array(mem.buffer) : null;
@@ -781,8 +783,6 @@ for ( let [op, memtype, rop, resultmemtype] of
     }
 
     function testConstIt(i,r) {
-        let zero = iota(len).map(_ => 0);
-
         set(resultmem, 0, zero);
         ins.exports["run_constlhs" + i]();
         assertSame(get(resultmem, 0, len), r);
@@ -899,15 +899,34 @@ assertSame(get(memf64, 0, 2), [26789.125, 26789.125]);
 // Simple unary operators.  Place parameter in memory at offset 16,
 // read the result at offset 0.
 
-function insAndMemUnop(op, memtype, resultmemtype) {
+function expandConstantUnopInputs(op, memtype, inputs) {
+    let s = '';
+    let ident = 0;
+    for ( let a of inputs ) {
+        let constval = `${memtype.layoutName} ${a.map(jsValueToWasmName).join(' ')}`;
+        s += `
+    (func (export "run_const${ident}")
+      (v128.store (i32.const 0)
+        (${op} (v128.const ${constval}))))
+`;
+        ident++;
+    }
+    return s;
+}
+
+function insAndMemUnop(op, memtype, resultmemtype, inputs) {
     var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
+
     (func (export "run")
       (v128.store (i32.const 0)
         (call $doit (v128.load (i32.const 16)))))
+
     (func $doit (param $a v128) (result v128)
-      (${op} (local.get $a))))`);
+      (${op} (local.get $a)))
+
+    ${expandConstantUnopInputs(op, memtype, inputs)})`);
     var mem = new memtype(ins.exports.mem.buffer);
     var resultmem = !resultmemtype || memtype == resultmemtype ? mem : new resultmemtype(ins.exports.mem.buffer);
     return [ins, mem, resultmem];
@@ -954,14 +973,14 @@ for ( let [op, memtype, rop, resultmemtype] of
        ['v128.not', Uint8Array, bitnot],
       ])
 {
-    let [ins, mem, resultmem] = insAndMemUnop(op, memtype, resultmemtype);
+    let [ins, mem, resultmem] = insAndMemUnop(op, memtype, resultmemtype, memtype.inputs);
     let len = 16/memtype.BYTES_PER_ELEMENT;
     let xs = iota(len);
+    let zero = xs.map(_ => 0);
     let bitsForF32 = memtype == Float32Array ? new Uint32Array(mem.buffer) : null;
     let bitsForF64 = memtype == Float64Array ? new BigInt64Array(mem.buffer) : null;
 
-    function testIt(a) {
-        let r = xs.map((i) => rop(a[i]));
+    function testIt(a, r) {
         set(mem, len, a);
         ins.exports.run();
         assertSame(get(resultmem, 0, len), r);
@@ -979,8 +998,19 @@ for ( let [op, memtype, rop, resultmemtype] of
         }
     }
 
-    for (let a of memtype.inputs)
-        testIt(a);
+    function testConstIt(i,r) {
+        set(resultmem, 0, zero);
+        ins.exports["run_const" + i]();
+        assertSame(get(resultmem, 0, len), r);
+    }
+
+    let i = 0;
+    for (let a of memtype.inputs) {
+        let r = xs.map((i) => rop(a[i]));
+        testIt(a, r);
+        testConstIt(i, r);
+        i++;
+    }
 }
 
 // AnyTrue.  Ion constant folds, so test that too.
