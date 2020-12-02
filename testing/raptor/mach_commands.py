@@ -301,9 +301,16 @@ class MachRaptor(MachCommandBase):
             ):  # Equivalent to 'run_local' = True.
                 return 1
 
-        debug_command = "--debug-command"
-        if debug_command in sys.argv:
-            sys.argv.remove(debug_command)
+        # Remove mach global arguments from sys.argv to prevent them
+        # from being consumed by raptor. Treat any item in sys.argv
+        # occuring before "raptor" as a mach global argument.
+        argv = []
+        in_mach = True
+        for arg in sys.argv:
+            if not in_mach:
+                argv.append(arg)
+            if arg.startswith("raptor"):
+                in_mach = False
 
         raptor = self._spawn(RaptorRunner)
         device = None
@@ -312,7 +319,7 @@ class MachRaptor(MachCommandBase):
             if kwargs["power_test"] and is_android:
                 device = ADBDeviceFactory(verbose=True)
                 disable_charging(device)
-            return raptor.run_test(sys.argv[2:], kwargs)
+            return raptor.run_test(argv, kwargs)
         except BinaryNotFoundException as e:
             self.log(logging.ERROR, "raptor", {"error": str(e)}, "ERROR: {error}")
             self.log(logging.INFO, "raptor", {"help": e.help()}, "{help}")
