@@ -519,8 +519,6 @@ private fun assertDesktopSite() {
     desktopSiteButton().check(matches(isDisplayed()))
 }
 
-private fun openInAppButton() =
-    onView(allOf(withText(R.string.browser_menu_open_app_link)))
 private fun assertOpenInAppButton() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(

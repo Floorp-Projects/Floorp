@@ -125,32 +125,71 @@ class SmokeTest {
     @Test
     fun verifyPageMainMenuItemsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        // Add this to check openInApp and youtube is a default app available in every Android emulator/device
-        val youtubeUrl = "www.youtube.com"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
             verifyThreeDotMainMenuItems()
+        }
+    }
+
+    // Could be removed when more smoke tests from the History category are added
+    @Test
+    fun openMainMenuHistoryItemTest() {
+        homeScreen {
+        }.openThreeDotMenu {
         }.openHistory {
             verifyHistoryMenuView()
-        }.goBackToBrowser {
+        }
+    }
+
+    // Could be removed when more smoke tests from the Bookmarks category are added
+    @Test
+    fun openMainMenuBookmarksItemTest() {
+        homeScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
             verifyBookmarksMenuView()
-        }.goBackToBrowser {
+        }
+    }
+
+    @Test
+    fun openMainMenuSyncedTabsItemTest() {
+        homeScreen {
         }.openThreeDotMenu {
         }.openSyncedTabs {
             verifySyncedTabsMenuHeader()
-        }.goBack {
+        }
+    }
+
+    // Could be removed when more smoke tests from the Settings category are added
+    @Test
+    fun openMainMenuSettingsItemTest() {
+        homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
             verifySettingsView()
-        }.goBackToBrowser {
+        }
+    }
+
+    @Test
+    fun openMainMenuFindInPageTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openFindInPage {
             verifyFindInPageSearchBarItems()
-        }.closeFindInPage {
+        }
+    }
+
+    @Test
+    fun openMainMenuAddTopSiteTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
@@ -158,30 +197,84 @@ class SmokeTest {
         }.openNewTab {
         }.dismissSearchBar {
             verifyExistingTopSitesTabs(defaultWebPage.title)
-        }.openTabDrawer {
-        }.openTab(defaultWebPage.title) {
+        }
+    }
+
+    @Test
+    fun mainMenuAddToHomeScreenTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openAddToHomeScreen {
             verifyShortcutNameField(defaultWebPage.title)
             clickAddShortcutButton()
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(defaultWebPage.title) {
+            verifyPageContent(defaultWebPage.content)
+        }
+    }
+
+    @Test
+    fun openMainMenuAddToCollectionTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openSaveToCollection {
             verifyCollectionNameTextField()
-        }.exitSaveCollection {
+        }
+    }
+
+    @Test
+    fun mainMenuBookmarkButtonTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.bookmarkPage {
             verifySnackBarText("Bookmark saved!")
+        }
+    }
+
+    @Test
+    fun mainMenuShareButtonTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.sharePage {
             verifyShareAppsLayout()
-        }.closeShareDialogReturnToPage {
+        }
+    }
+
+    @Test
+    fun mainMenuRefreshButtonTest() {
+        val refreshWebPage = TestAssetHelper.getRefreshAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(refreshWebPage.url) {
+            mDevice.waitForIdle()
         }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+            verifyRefreshButton()
         }.refreshPage {
-            verifyUrl(defaultWebPage.url.toString())
-        }.openNavigationToolbar {
+            verifyPageContent("REFRESHED")
+        }
+    }
+
+    @Test
+    fun mainMenuOpenInAppTest() {
+        // Using youtube as is a default app available in every Android emulator/device
+        val youtubeUrl = "www.youtube.com"
+
+        navigationToolbar {
         }.enterURLAndEnterToBrowser(youtubeUrl.toUri()) {
+            verifyPageContent("YouTube")
         }.openThreeDotMenu {
             verifyOpenInAppButton()
         }
@@ -209,7 +302,6 @@ class SmokeTest {
             }.goBackToBrowser {
                 clickEnhancedTrackingProtectionPanel()
                 verifyEnhancedTrackingProtectionSwitch()
-                // Turning off TP Switch results in adding the WebPage to exception list
                 clickEnhancedTrackingProtectionSwitchOffOn()
             }
         }

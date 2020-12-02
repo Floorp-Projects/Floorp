@@ -82,7 +82,7 @@ class BrowserRobot {
             Until.findObject(By.res("org.mozilla.fenix.debug:id/engineView")),
             waitingTime
         )
-        assertTrue(mDevice.findObject(UiSelector().text(expectedText)).waitForExists(waitingTime))
+        assertTrue(mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime))
     }
 
     fun verifyTabCounter(expectedText: String) {
