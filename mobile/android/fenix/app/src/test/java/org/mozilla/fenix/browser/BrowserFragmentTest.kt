@@ -38,6 +38,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
@@ -282,6 +283,26 @@ class BrowserFragmentTest {
         addAndSelectTab(newSelectedTab)
 
         verify(exactly = 0) { onboarding.finish() }
+    }
+
+    @Test
+    fun `WHEN isPullToRefreshEnabledInBrowser is disabled THEN pull down refresh is disabled`() {
+        every { homeActivity.isImmersive } returns false
+        every { context.settings().isPullToRefreshEnabledInBrowser } returns true
+        assert(browserFragment.shouldPullToRefreshBeEnabled())
+
+        every { context.settings().isPullToRefreshEnabledInBrowser } returns false
+        assert(!browserFragment.shouldPullToRefreshBeEnabled())
+    }
+
+    @Test
+    fun `WHEN in immersive mode THEN pull down refresh is disabled`() {
+        every { homeActivity.isImmersive } returns false
+        every { context.settings().isPullToRefreshEnabledInBrowser } returns true
+        assert(browserFragment.shouldPullToRefreshBeEnabled())
+
+        every { homeActivity.isImmersive } returns true
+        assert(!browserFragment.shouldPullToRefreshBeEnabled())
     }
 
     private fun addAndSelectTab(tab: TabSessionState) {

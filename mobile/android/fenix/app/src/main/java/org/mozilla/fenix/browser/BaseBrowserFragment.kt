@@ -644,8 +644,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                     .collect { tab -> pipModeChanged(tab) }
             }
 
-            view.swipeRefresh.isEnabled =
-                FeatureFlags.pullToRefreshEnabled && context.settings().isPullToRefreshEnabledInBrowser
+            view.swipeRefresh.isEnabled = shouldPullToRefreshBeEnabled()
+
             if (view.swipeRefresh.isEnabled) {
                 val primaryTextColor =
                     ThemeManager.resolveAttribute(R.attr.primaryText, context)
@@ -769,6 +769,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         ).show()
 
         browserToolbarView.expand()
+    }
+
+    @VisibleForTesting
+    internal fun shouldPullToRefreshBeEnabled(): Boolean {
+        return FeatureFlags.pullToRefreshEnabled &&
+                requireContext().settings().isPullToRefreshEnabledInBrowser &&
+                !(requireActivity() as HomeActivity).isImmersive
     }
 
     private fun initializeEngineView(toolbarHeight: Int) {
