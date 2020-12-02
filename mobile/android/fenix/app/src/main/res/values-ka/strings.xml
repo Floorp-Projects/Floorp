@@ -441,6 +441,10 @@
     <string name="preferences_marketing_data">მარკეტინგული მონაცემები</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">გაუზიარებს მონაცემებს, თუ რომელი შესაძლებლობებით მოგწონთ %1$s ყველაზე მეტად, Leanplum-ს, მობილურის მარკეტინგის მომსახურების ჩვენს მომწოდებელს.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">კვლევები</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">ნებას დართავს Mozilla-ს, ჩადგას და გაუშვას კვლევები</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">კვლევები</string>
     <!-- Summary for experiments preferences -->

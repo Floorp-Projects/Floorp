@@ -20,6 +20,10 @@
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ਤੁਹਾਡੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਵਿਖਾਇਆ ਜਾਵੇਗਾ।</string>
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">ਬਾਈਡੂ</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">ਜੇਡੀ</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ਟੈਬ ਖੁੱਲ੍ਹੀ। ਟੈਬਾਂ ਲਈ ਸਵਿੱਚ ਕਰਨ ਵਾਸਤੇ ਟੈਪ ਕਰੋ।</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -74,14 +78,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ਨਹੀਂ, ਧੰਨਵਾਦ</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">ਫਾਇਰਫਾਕਸ ਹੋਰ ਛੇਤੀ ਲਵੋ। ਆਪਣੀ ਮੁੱਖ ਸਕਰੀਨ ਉੱਤੇ ਵਿਜੈਟ ਜੋੜੋ।</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">ਵਿਜੈੱਟ ਜੋੜੋ</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">ਹੁਣੇ ਨਹੀਂ</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">ਤੁਸੀਂ ਐਪਾਂ ਵਿਚਲੇ ਲਿੰਕਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ Firefox ਨਾਲ ਖੋਲ੍ਹਣ ਲਈ ਸੈੱਟ ਕਰੋ।</string>
@@ -98,10 +94,20 @@
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">ਖੋਲ੍ਹੀਆਂ ਟੈਬਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਬੰਦ ਕਰਨਾ ਨਿਯਤ ਕਰੋ, ਜੋ ਕਿ ਪਿਛਲੇ ਦਿਨ, ਹਫ਼ਤੇ ਜਾਂ ਮਹੀਨੇ ਵਿੱਚ 
+ਵੇਖੀਆਂ ਗਈਆਂ।</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">ਚੋਣਾਂ ਵੇਖੋ</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
+
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">ਖੁੱਲ੍ਹੀਆਂ ਟੈਬਾਂ ਦੇ ਖਾਤੇ ਨੂੰ ਬਦਲੋ। ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ ਅਤੇ ਟੈਬ ਵੇਖਣ ਲਈ ਗਿੱਡ ਚੁਣੋ।</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -275,6 +281,8 @@
     <string name="preferences_open_links_in_a_private_tab">ਲਿੰਕ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">ਪ੍ਰਾਈਵੇਟ ਬ੍ਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਸਕਰੀਨਸ਼ਾਟ ਮਨਜ਼ੂਰ ਕਰੋ</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">ਜੇ ਇਜਾਜ਼ਤ ਦਿੱਤੀ ਤਾਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਉਦੋਂ ਵੀ ਦਿਖਾਈ ਦੇਣਗੀਆਂ, ਜਦੋਂ ਕਈ ਐਪਾਂ ਖੁੱਲ੍ਹੀਆਂ ਹੁੰਦੀਆਂ ਹਨ</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
     <!-- Preference for accessibility -->
@@ -361,6 +369,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">ਭੰਡਾਰ ਮਾਲਕ (ਵਰਤੋਂਕਾਰ ID)</string>
 
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">ਐਡ-ਆਨ ਭੰਡਾਰ ਸੋਧਿਆ ਗਿਆ। ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ
+ਬੰਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ਹੁਣੇ ਸਿੰਕ ਕਰੋ</string>
@@ -442,6 +454,10 @@
     <string name="preferences_marketing_data">ਮਾਰਕੀਟਿੰਗ ਡਾਟਾ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">%1$s ਵਿੱਚ ਕਿਹੜੇ ਫੀਚਰ ਤੁਸੀਂ ਵਰਤਦੇ ਹੋ, ਬਾਰੇ ਡਾਟੇ ਨੂੰ Leanplum, ਸਾਡੇ ਮਾਰਕੀਟਿੰਗ ਵੇਂਡਰ ਨਾਲ ਸਾਂਝਾ ਕਰਦਾ ਹੈ।</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">ਅਧਿਐਨ</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Mozilla ਨੂੰ ਅਧਿਐਨ ਇੰਸਟਾਲ ਕਰਨ ਤੇ ਚਲਾਉਣ ਦੇ ਇਜਾਜ਼ਤ ਦਿਓ</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">ਤਜਰਬੇ</string>
     <!-- Summary for experiments preferences -->
@@ -569,6 +585,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">ਖੁਦ ਬੰਦ ਕਰੋ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">ਇੱਕ ਦਿਨ ਬਾਅਦ ਬੰਦ ਕਰੋ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">ਇੱਕ ਹਫ਼ਤੇ ਬਾਅਦ ਬੰਦ ਕਰੋ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ ਬੰਦ ਕਰੋ</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
@@ -586,6 +611,8 @@
     <string name="tab_tray_title">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">ਭੰਡਾਰ ਵਿੱਚ ਸੰਭਾਲੋ</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">ਚੁਣੋ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ਸਾਰੀਆਂ ਟੈਬਾਂ ਸਾਂਝੀਆਂ ਕਰੋ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -600,8 +627,18 @@
     <string name="tab_tray_menu_home">ਮੁੱਖ ਸਫ਼ੇ ਉੱਤੇ ਜਾਓ</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">ਟੈਬ ਢੰਗ ਨੂੰ ਬਦਲੋ</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">ਬੁੱਕਮਾਰਕ</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">ਬੰਦ ਕਰੋ</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">ਚੁਣੀਆਂ ਟੈਬਾਂ ਸਾਂਝੀਆਂ ਕਰੋ</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">ਚੁਣੀਆਂ ਟੈਬਾਂ ਦਾ ਮੇਨੂ</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ਟੈਬ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">ਟੈਬਾਂ ਚੁਣੋ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ਟੈਬ ਬੰਦ ਕਰੋ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -638,8 +675,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">ਭੰਡਾਰ ਦਾ ਨਾਂ</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">ਹਟਾਓ</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">ਨਾਂ ਬਦਲੋ</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">ਹਟਾਓ</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">ਅਤੀਤ ਵਿੱਚੋਂ ਹਟਾਓ</string>
@@ -693,11 +732,23 @@
     <string name="history_empty_message">ਇ਼ੱਥੇ ਕੋਈ ਅਤੀਤ ਨਹੀਂ ਹੈ</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">ਡਾਊਨਲੋਡ ਹਟਾਓ</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">ਕੀ ਤੁਸੀਂ ਆਪਣੇ ਡਾਊਨਲੋਡਾਂ ਨੂੰ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
+    <string name="download_delete_multiple_items_snackbar">ਡਾਊਨਲੋਡ ਹਟਾਏ ਗਏ</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">ਡਾਊਨਲੋਡ ਨਹੀਂ ਹੈ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d ਚੁਣੇ</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">ਖੋਲ੍ਹੋ</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="download_delete_item">ਹਟਾਓ</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -855,6 +906,9 @@
     <string name="collections_header">ਭੰਡਾਰ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">ਭੰਡਾਰ ਮੇਨੂ</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">ਚੀਜ਼ਾਂ, ਜੋ ਤੁਹਾਡੇ ਲਈ ਅਰਥ ਰੱਖਦੀਆਂ ਹਨ, ਨੂੰ ਇਕੱਤਰ ਕਰੋ।\nਬਾਅਦ ਚ ਫ਼ੌਰੀ ਤੌਰ ਉੱਤੇ ਲੱਭਣ
+ਲਈ ਇੱਕੋ ਜੇਹੀਆਂ ਖੋਜਾਂ, ਸਾਈਟਾਂ ਤੇ ਟੈਬਾਂ ਦਾ ਗਰੁੱਪ ਬਣਾਓ।</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ਟੈਬਾਂ ਚੁਣੋ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -959,6 +1013,12 @@
     <string name="snackbar_tab_closed">ਟੈਬ ਬੰਦ ਕੀਤੀ</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ਟੈਬਾਂ ਬੰਦ ਕੀਤੀਆਂ</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">ਟੈਬਾਂ ਬੰਦ ਕਰੋ!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">ਬੁੱਕਮਾਰਕ ਸੰਭਾਲੇ ਗਏ!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">ਵੇਖੋ</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵਿੱਚ ਜੋੜੋ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1106,6 +1166,8 @@
     <string name="onboarding_whats_new_description">%s ਮੁੜ-ਡਿਜ਼ਾਈਨ ਬਾਰੇ ਕੋਈ ਸਵਾਲ ਹੈ? ਲੱਭ ਰਹੇ ਕੋ ਕਿ ਕੀ ਬਦਲਿਆ ਹੈ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ਜਵਾਬ ਇੱਥੇ ਲਵੋ</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">ਆਪਣੇ Firefox ਖਾਤੇ ਨਾਲ ਬੁੱਕਮਾਰਕ, ਪਾਸਵਰਡ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ।</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">ਹੋਰ ਜਾਣੋ</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1360,6 +1422,10 @@
     <string name="add_to_homescreen_continue">ਵੈੱਬਸਾਈਟ ਨਾਲ ਜਾਰੀ ਰੱਖੋ</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">ਸ਼ਾਰਟਕੱਟ ਨਾਂ</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">ਤੁਸੀਂ ਇਸ ਵੈੱਬਸਾਈਟ ਨੂੰ ਫ਼ੌਰੀ ਤੌਰ ਉੱਤੇ ਵਰਤਣ ਤੇ ਐਪ ਵਾਂਗ ਤੇਜ਼ ਬਰਾਊਜ਼ ਕਰਨ ਲਈ ਸੌਖੀ ਤਰ੍ਹਾਂ 
+ਮੁੱਖ ਸਕਰੀਨ ਉੱਤੇ ਸੌਖੀ ਤਰ੍ਹਾਂ ਜੋੜ ਸਕਦੇ ਹੋ।</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡ</string>
@@ -1616,6 +1682,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹੀਆਂ ਸਾਈਟਾਂ ਵੇਖੋ</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">ਨਾਂ</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">ਸਿਰਖਲੀ ਸਾਈਟ ਦਾ ਨਾਂ</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ਠੀਕ ਹੈ</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">ਰੱਦ ਕਰੋ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ਹਟਾਓ</string>

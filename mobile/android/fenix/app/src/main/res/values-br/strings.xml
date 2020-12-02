@@ -437,6 +437,8 @@
     <string name="preferences_marketing_data_description">Rann ar roadennoù diwar-benn ar cʼheweriusterioù arveret ganeocʼh e %1$s gant Leanplim, hor cʼheveler marketing hezoug.</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Studioù</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Aotren Mozilla da staliañ ha da luskañ studioù</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Arnodoù</string>
     <!-- Summary for experiments preferences -->
