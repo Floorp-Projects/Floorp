@@ -127,7 +127,7 @@ internal class SuggestionsAdapter(
         position: Int
     ) = synchronized(suggestions) {
         val suggestion = suggestions[position]
-        holder.actual.bind(suggestion) { awesomeBar.listener?.invoke() }
+        holder.actual.bind(suggestion, awesomeBar.customizeForBottomToolbar) { awesomeBar.listener?.invoke() }
     }
 
     override fun onViewRecycled(holder: ViewHolderWrapper) {

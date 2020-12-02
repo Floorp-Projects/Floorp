@@ -15,6 +15,7 @@ import androidx.core.widget.ImageViewCompat
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.awesomebar.R
+import mozilla.components.browser.awesomebar.layout.DefaultSuggestionViewHolder.Chips.Companion.EDIT_ARROW_ROTATION
 import mozilla.components.browser.awesomebar.widget.FlowLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
 
@@ -47,7 +48,11 @@ internal sealed class DefaultSuggestionViewHolder {
             ImageViewCompat.setImageTintList(this, ColorStateList.valueOf(awesomeBar.styling.descriptionTextColor))
         }
 
-        override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) {
+        override fun bind(
+            suggestion: AwesomeBar.Suggestion,
+            customizeForBottomToolbar: Boolean,
+            selectionListener: () -> Unit
+        ) {
             val title = if (suggestion.title.isNullOrEmpty()) suggestion.description else suggestion.title
 
             iconView.setImageBitmap(suggestion.icon)
@@ -79,6 +84,11 @@ internal sealed class DefaultSuggestionViewHolder {
                 editView.visibility = View.GONE
             } else {
                 editView.visibility = View.VISIBLE
+
+                if (customizeForBottomToolbar) {
+                    editView.rotation = EDIT_ARROW_ROTATION
+                }
+
                 editView.setOnClickListener {
                     awesomeBar.editSuggestionListener?.invoke(suggestion.editSuggestion!!)
                 }
@@ -103,7 +113,11 @@ internal sealed class DefaultSuggestionViewHolder {
         private val inflater = LayoutInflater.from(view.context)
         private val iconView = view.findViewById<ImageView>(R.id.mozac_browser_awesomebar_icon)
 
-        override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) {
+        override fun bind(
+            suggestion: AwesomeBar.Suggestion,
+            customizeForBottomToolbar: Boolean,
+            selectionListener: () -> Unit
+        ) {
             chipsView.removeAllViews()
 
             iconView.setImageBitmap(suggestion.icon)
@@ -131,6 +145,7 @@ internal sealed class DefaultSuggestionViewHolder {
 
         companion object {
             val LAYOUT_ID = R.layout.mozac_browser_awesomebar_item_chips
+            const val EDIT_ARROW_ROTATION = 270f
         }
     }
 }

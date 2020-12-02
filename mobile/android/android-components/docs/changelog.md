@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-toolbar**
   * 🌟 Added API to show site permission indicators for more information see [#9131](https://github.com/mozilla-mobile/android-components/issues/9131).
 
+* **browser-awesomebar**:
+    * Awesomebar can now be customized for bottom toolbar using the [customizeForBottomToolbar] property
+    
 # 69.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v68.0.0...v69.0.0)

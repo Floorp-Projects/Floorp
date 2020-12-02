@@ -7,6 +7,7 @@ package mozilla.components.browser.awesomebar.layout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
@@ -54,6 +55,56 @@ class DefaultSuggestionViewHolderTest {
         val descriptionView = view.findViewById<TextView>(R.id.mozac_browser_awesomebar_description)
         assertEquals("https://www.mozilla.org", descriptionView.text)
         assertEquals(View.VISIBLE, descriptionView.visibility)
+    }
+
+    @Test
+    fun `DefaultViewHolder has a rotated image for edit button if set as such in awesomebar`() {
+        val view = LayoutInflater.from(testContext).inflate(
+            R.layout.mozac_browser_awesomebar_item_generic, null, false)
+
+        val awesomeBar = BrowserAwesomeBar(testContext)
+        awesomeBar.customizeForBottomToolbar = true
+        val viewHolder = DefaultSuggestionViewHolder.Default(awesomeBar, view)
+
+        val suggestion = AwesomeBar.Suggestion(
+            mock(),
+            title = "Hello World",
+            description = "https://www.mozilla.org",
+            editSuggestion = "https://www.mozilla.org"
+        )
+
+        viewHolder.bind(suggestion, awesomeBar.customizeForBottomToolbar) {
+            // Do nothing
+        }
+
+        val editArrowButton = view.findViewById<ImageButton>(R.id.mozac_browser_awesomebar_edit_suggestion)
+        assertEquals(View.VISIBLE, editArrowButton.visibility)
+        assertEquals(270f, editArrowButton.rotation)
+    }
+
+    @Test
+    fun `DefaultViewHolder does not have a rotated image for edit button if set as such in awesomebar`() {
+        val view = LayoutInflater.from(testContext).inflate(
+            R.layout.mozac_browser_awesomebar_item_generic, null, false)
+
+        val awesomeBar = BrowserAwesomeBar(testContext)
+        awesomeBar.customizeForBottomToolbar = false
+        val viewHolder = DefaultSuggestionViewHolder.Default(awesomeBar, view)
+
+        val suggestion = AwesomeBar.Suggestion(
+            mock(),
+            title = "Hello World",
+            description = "https://www.mozilla.org",
+            editSuggestion = "https://www.mozilla.org"
+        )
+
+        viewHolder.bind(suggestion, awesomeBar.customizeForBottomToolbar) {
+            // Do nothing
+        }
+
+        val editArrowButton = view.findViewById<ImageButton>(R.id.mozac_browser_awesomebar_edit_suggestion)
+        assertEquals(View.VISIBLE, editArrowButton.visibility)
+        assertEquals(0f, editArrowButton.rotation)
     }
 
     @Test

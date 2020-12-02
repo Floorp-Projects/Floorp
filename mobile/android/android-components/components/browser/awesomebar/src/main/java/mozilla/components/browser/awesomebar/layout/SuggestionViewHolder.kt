@@ -19,8 +19,14 @@ abstract class SuggestionViewHolder(
      * Contract: When a suggestion was selected/clicked the view will invoke the appropriate callback of the suggestion
      * ([AwesomeBar.Suggestion.onSuggestionClicked] or [AwesomeBar.Suggestion.onChipClicked]) as well as the provided
      * [selectionListener] function.
+     * Using [customizeForBottomToolbar] a client app can chose to modify suggestions UI
+     * in order to improve the integration with a bottom toolbar.
      */
-    abstract fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit)
+    abstract fun bind(
+        suggestion: AwesomeBar.Suggestion,
+        customizeForBottomToolbar: Boolean = false,
+        selectionListener: () -> Unit
+    )
 
     /**
      * Notifies this [SuggestionViewHolder] that it has been recycled. If this holder (or its views) keep references to

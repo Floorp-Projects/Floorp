@@ -20,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
@@ -207,7 +208,7 @@ class SuggestionsAdapterTest {
 
         adapter.onBindViewHolder(wrapper, 0)
 
-        verify(viewHolder).bind(eq(suggestion), any())
+        verify(viewHolder).bind(eq(suggestion), anyBoolean(), any())
     }
 
     @Test
@@ -232,7 +233,7 @@ class SuggestionsAdapterTest {
         val suggestion: AwesomeBar.Suggestion = mock()
 
         val holder = spy(object : SuggestionViewHolder(View(testContext)) {
-            override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) = Unit
+            override fun bind(suggestion: AwesomeBar.Suggestion, customizeForBottomToolbar: Boolean, selectionListener: () -> Unit) = Unit
         })
 
         val layout: SuggestionLayout = mock()

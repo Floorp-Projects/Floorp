@@ -50,6 +50,7 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     internal var listener: (() -> Unit)? = null
     internal var editSuggestionListener: ((String) -> Unit)? = null
     internal val styling: BrowserAwesomeBarStyling
+    var customizeForBottomToolbar: Boolean = false
 
     /**
      * The [SuggestionLayout] implementation controls layout inflation and view binding for suggestions.
