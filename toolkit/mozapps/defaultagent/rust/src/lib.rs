@@ -108,7 +108,6 @@ fn is_agent_remote_disabled<S: AsRef<str>>(url: S) -> Result<bool, Error> {
 
 // This is an easy way to consume `MOZ_APP_DISPLAYNAME` from Rust code.
 extern "C" {
-    #[no_mangle]
     static gWinEventLogSourceName: *const u16;
 }
 
