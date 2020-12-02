@@ -164,8 +164,8 @@ function shouldShowPermissionsPrompt(addon) {
     return false;
   }
 
-  const { origins, permissions } = addon.userPermissions;
-  return !!origins.length || !!permissions.length;
+  let perms = addon.userPermissions;
+  return perms?.origins.length || perms?.permissions.length;
 }
 
 function showPermissionsPrompt(addon) {
