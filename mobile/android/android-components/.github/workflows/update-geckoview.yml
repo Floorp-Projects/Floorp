@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: "Update GV (Beta)"
         uses: mozilla-mobile/relbot@master
-        if: github.repository == ‘mozilla-mobile/android-components’
+        if: github.repository == "mozilla-mobile/android-components"
         with:
           project: android-components
           command: update-geckoview-beta
