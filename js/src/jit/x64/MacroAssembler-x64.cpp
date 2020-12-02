@@ -35,7 +35,7 @@ void MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest) {
   // PC-relative addressing. Use "jump" label support code, because we need
   // the same PC-relative address patching that jumps use.
   JmpSrc j = masm.vmovsd_ripr(dest.encoding());
-  propagateOOM(dbl->uses.append(j));
+  propagateOOM(dbl->uses.append(CodeOffset(j.offset())));
 }
 
 void MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest) {
@@ -48,7 +48,7 @@ void MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest) {
   }
   // See comment in loadConstantDouble
   JmpSrc j = masm.vmovss_ripr(dest.encoding());
-  propagateOOM(flt->uses.append(j));
+  propagateOOM(flt->uses.append(CodeOffset(j.offset())));
 }
 
 void MacroAssemblerX64::vpRiprOpSimd128(
@@ -60,7 +60,7 @@ void MacroAssemblerX64::vpRiprOpSimd128(
     return;
   }
   JmpSrc j = (masm.*op)(reg.encoding());
-  propagateOOM(val->uses.append(j));
+  propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
 
 void MacroAssemblerX64::loadConstantSimd128Int(const SimdConstant& v,
@@ -349,51 +349,12 @@ void MacroAssemblerX64::vpcmpgtdSimd128(const SimdConstant& v,
   vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vpcmpgtd_ripr);
 }
 
-void MacroAssemblerX64::vcmpeqpsSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpeqps_ripr);
-}
-
-void MacroAssemblerX64::vcmpneqpsSimd128(const SimdConstant& v,
-                                         FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpneqps_ripr);
-}
-
-void MacroAssemblerX64::vcmpltpsSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpltps_ripr);
-}
-
-void MacroAssemblerX64::vcmplepsSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpleps_ripr);
-}
-
-void MacroAssemblerX64::vcmpeqpdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpeqpd_ripr);
-}
-
-void MacroAssemblerX64::vcmpneqpdSimd128(const SimdConstant& v,
-                                         FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpneqpd_ripr);
-}
-
-void MacroAssemblerX64::vcmpltpdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpltpd_ripr);
-}
-
-void MacroAssemblerX64::vcmplepdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmplepd_ripr);
-}
-
 void MacroAssemblerX64::bindOffsets(
     const MacroAssemblerX86Shared::UsesVector& uses) {
-  for (JmpSrc src : uses) {
+  for (CodeOffset use : uses) {
     JmpDst dst(currentOffset());
-    // Using linkJump here is safe, as explained in the comment in
+    JmpSrc src(use.offset());
+    // Using linkJump here is safe, as explaind in the comment in
     // loadConstantDouble.
     masm.linkJump(src, dst);
   }
