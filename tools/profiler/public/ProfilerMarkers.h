@@ -264,31 +264,6 @@ class MOZ_RAII AutoProfilerTracing {
         categoryString, markerName, geckoprofiler::category::categoryPair,  \
         profiler_get_inner_window_id_from_docshell(docShell))
 
-extern template mozilla::ProfileBufferBlockIndex AddMarkerToBuffer(
-    mozilla::ProfileChunkedBuffer&, const mozilla::ProfilerString8View&,
-    const mozilla::MarkerCategory&, mozilla::MarkerOptions&&,
-    mozilla::baseprofiler::markers::NoPayload);
-
-extern template mozilla::ProfileBufferBlockIndex AddMarkerToBuffer(
-    mozilla::ProfileChunkedBuffer&, const mozilla::ProfilerString8View&,
-    const mozilla::MarkerCategory&, mozilla::MarkerOptions&&,
-    mozilla::baseprofiler::markers::TextMarker, const std::string&);
-
-extern template mozilla::ProfileBufferBlockIndex profiler_add_marker(
-    const mozilla::ProfilerString8View&, const mozilla::MarkerCategory&,
-    mozilla::MarkerOptions&&, mozilla::baseprofiler::markers::TextMarker,
-    const std::string&);
-
-extern template mozilla::ProfileBufferBlockIndex profiler_add_marker(
-    const mozilla::ProfilerString8View&, const mozilla::MarkerCategory&,
-    mozilla::MarkerOptions&&, mozilla::baseprofiler::markers::TextMarker,
-    const nsCString&);
-
-extern template mozilla::ProfileBufferBlockIndex profiler_add_marker(
-    const mozilla::ProfilerString8View&, const mozilla::MarkerCategory&,
-    mozilla::MarkerOptions&&, mozilla::baseprofiler::markers::Tracing,
-    const mozilla::ProfilerString8View&);
-
 #endif  // nfed MOZ_GECKO_PROFILER else
 
 #endif  // ProfilerMarkers_h
