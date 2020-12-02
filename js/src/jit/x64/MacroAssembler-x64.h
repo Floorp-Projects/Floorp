@@ -987,6 +987,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void vpcmpgtwSimd128(const SimdConstant& v, FloatRegister src);
   void vpcmpeqdSimd128(const SimdConstant& v, FloatRegister src);
   void vpcmpgtdSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmpeqpsSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmpneqpsSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmpltpsSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmplepsSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmpeqpdSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmpneqpdSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmpltpdSimd128(const SimdConstant& v, FloatRegister src);
+  void vcmplepdSimd128(const SimdConstant& v, FloatRegister src);
 
   void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
     loadPtr(Address(WasmTlsReg,
