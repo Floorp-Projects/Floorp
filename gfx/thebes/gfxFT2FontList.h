@@ -80,6 +80,12 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
 
   FT_MM_Var* GetMMVar() override;
 
+  // Get a harfbuzz face for this font, if possible. The caller is responsible
+  // to destroy the face when no longer needed.
+  // This may be a bit expensive, so avoid calling multiple times if the same
+  // face can be re-used for several purposes instead.
+  hb_face_t* CreateHBFace() const;
+
   /**
    * Append this face's metadata to aFaceList for storage in the FontNameCache
    * (for faster startup).
@@ -104,6 +110,8 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
   uint8_t mFTFontIndex;
 
   mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontFreeType> mUnscaledFont;
+
+  nsTHashtable<nsUint32HashKey> mAvailableTables;
 
   bool mHasVariations = false;
   bool mHasVariationsInitialized = false;
