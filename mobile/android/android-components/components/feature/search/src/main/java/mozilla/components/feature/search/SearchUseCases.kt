@@ -37,7 +37,7 @@ class SearchUseCases(
         fun invoke(
             searchTerms: String,
             searchEngine: LegacySearchEngine? = null,
-            parentSession: Session? = null
+            parentSessionId: String? = null
         )
     }
 
@@ -55,7 +55,7 @@ class SearchUseCases(
         override fun invoke(
             searchTerms: String,
             searchEngine: LegacySearchEngine?,
-            parentSession: Session?
+            parentSessionId: String?
         ) {
             invoke(searchTerms, sessionManager.selectedSession, searchEngine)
         }
@@ -104,7 +104,7 @@ class SearchUseCases(
         override fun invoke(
             searchTerms: String,
             searchEngine: LegacySearchEngine?,
-            parentSession: Session?
+            parentSessionId: String?
         ) {
             invoke(
                 searchTerms,
@@ -112,7 +112,7 @@ class SearchUseCases(
                 selected = true,
                 private = isPrivate,
                 searchEngine = searchEngine,
-                parentSession = parentSession
+                parentSessionId = parentSessionId
             )
         }
 
@@ -133,7 +133,7 @@ class SearchUseCases(
             selected: Boolean = true,
             private: Boolean = false,
             searchEngine: LegacySearchEngine? = null,
-            parentSession: Session? = null
+            parentSessionId: String? = null
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
@@ -146,6 +146,8 @@ class SearchUseCases(
 
             val session = Session(searchUrl, private, source)
             session.searchTerms = searchTerms
+
+            val parentSession = parentSessionId?.let { sessionManager.findSessionById(it) }
 
             sessionManager.add(session, selected, parent = parentSession)
 

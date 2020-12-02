@@ -137,7 +137,9 @@ class SearchUseCasesTest {
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
 
         val parentSession = mock<Session>()
-        useCases.newPrivateTabSearch.invoke(searchTerms, parentSession = parentSession)
+        whenever(sessionManager.findSessionById("test-parent")).thenReturn(parentSession)
+
+        useCases.newPrivateTabSearch.invoke(searchTerms, parentSessionId = "test-parent")
 
         val captor = argumentCaptor<Session>()
         verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null), eq(parentSession))
