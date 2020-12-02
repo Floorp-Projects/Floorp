@@ -441,7 +441,7 @@ class CancelableRunnable : public DiscardableRunnable,
   // nsIDiscardableRunnable
   void OnDiscard() override;
   // nsICancelableRunnable
-  virtual nsresult Cancel() override;
+  virtual nsresult Cancel() override = 0;
 
   CancelableRunnable() = delete;
   explicit CancelableRunnable(const char* aName) : DiscardableRunnable(aName) {}
