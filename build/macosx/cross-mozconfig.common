@@ -16,7 +16,7 @@ mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
 #   tar -C $(dirname ${sdk_path}) -cHjf /tmp/$(basename ${sdk_path}).tar.bz2 $(basename ${sdk_path})
 # Upload the resulting tarball from /tmp to tooltool, and change the entry in
 # `browser/config/tooltool-manifests/macosx64/cross-releng.manifest`.
-CROSS_SYSROOT=$topsrcdir/MacOSX10.11.sdk
+CROSS_SYSROOT=$topsrcdir/MacOSX10.12.sdk
 
 export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
 export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"

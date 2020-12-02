@@ -445,7 +445,7 @@ macosx64-clang-11:
     worker:
         max-run-time: 3600
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng-12.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run-on-projects:
         - trunk
     run:

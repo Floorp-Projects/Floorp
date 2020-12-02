@@ -38,7 +38,7 @@ Linux)
         export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
         export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
         export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
-        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
+        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX10.12.sdk"
         cargo build --features "all $COMMON_FEATURES" --verbose --release --target $TARGET
     else
         cargo build --features "all dist-server openssl/vendored $COMMON_FEATURES" --verbose --release
