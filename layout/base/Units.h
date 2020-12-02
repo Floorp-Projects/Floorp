@@ -501,15 +501,6 @@ struct LayoutDevicePixel {
                     aMargin.bottom * aAppUnitsPerDevPixel,
                     aMargin.left * aAppUnitsPerDevPixel);
   }
-
-  static nsMargin ToAppUnits(const LayoutDeviceMargin& aMargin,
-                             nscoord aAppUnitsPerDevPixel) {
-    return nsMargin(
-        NSFloatPixelsToAppUnits(aMargin.top, aAppUnitsPerDevPixel),
-        NSFloatPixelsToAppUnits(aMargin.right, aAppUnitsPerDevPixel),
-        NSFloatPixelsToAppUnits(aMargin.bottom, aAppUnitsPerDevPixel),
-        NSFloatPixelsToAppUnits(aMargin.left, aAppUnitsPerDevPixel));
-  }
 };
 
 /*

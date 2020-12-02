@@ -125,6 +125,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using sRGBColor = mozilla::gfx::sRGBColor;
   using CSSCoord = mozilla::CSSCoord;
   using CSSPoint = mozilla::CSSPoint;
+  using CSSIntCoord = mozilla::CSSIntCoord;
   using ComputedStyle = mozilla::ComputedStyle;
   using EventStates = mozilla::EventStates;
   using DrawTarget = mozilla::gfx::DrawTarget;
@@ -151,18 +152,18 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                         mozilla::layers::RenderRootStateManager*
      aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect&
      aRect) override;*/
-  [[nodiscard]] LayoutDeviceMargin GetWidgetBorder(
+  [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
   bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
-                        LayoutDeviceMargin* aResult) override;
+                        LayoutDeviceIntMargin* aResult) override;
   bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                          StyleAppearance aAppearance,
                          nsRect* aOverflowRect) override;
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceSize* aResult,
+                                  mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
   Transparency GetWidgetTransparency(nsIFrame* aFrame,
                                      StyleAppearance aAppearance) override;

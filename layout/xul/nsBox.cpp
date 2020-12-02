@@ -120,7 +120,7 @@ nsresult nsIFrame::GetXULBorder(nsMargin& aBorder) {
     nsPresContext* pc = PresContext();
     nsITheme* theme = pc->Theme();
     if (theme->ThemeSupportsWidget(pc, this, appearance)) {
-      LayoutDeviceMargin margin =
+      LayoutDeviceIntMargin margin =
           theme->GetWidgetBorder(pc->DeviceContext(), this, appearance);
       aBorder =
           LayoutDevicePixel::ToAppUnits(margin, pc->AppUnitsPerDevPixel());
@@ -140,7 +140,7 @@ nsresult nsIFrame::GetXULPadding(nsMargin& aBorderAndPadding) {
     nsPresContext* pc = PresContext();
     nsITheme* theme = pc->Theme();
     if (theme->ThemeSupportsWidget(pc, this, appearance)) {
-      LayoutDeviceMargin padding;
+      LayoutDeviceIntMargin padding;
       bool useThemePadding = theme->GetWidgetPadding(pc->DeviceContext(), this,
                                                      appearance, &padding);
       if (useThemePadding) {
@@ -405,7 +405,7 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
     nsITheme* theme = pc->Theme();
     StyleAppearance appearance = display->EffectiveAppearance();
     if (theme->ThemeSupportsWidget(pc, aBox, appearance)) {
-      LayoutDeviceSize size;
+      LayoutDeviceIntSize size;
       theme->GetMinimumWidgetSize(pc, aBox, appearance, &size, &canOverride);
       if (size.width) {
         aSize.width = pc->DevPixelsToAppUnits(size.width);

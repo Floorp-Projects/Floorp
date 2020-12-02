@@ -713,7 +713,7 @@ nscoord nsComboboxControlFrame::DropDownButtonISize() {
     return 0;
   }
 
-  LayoutDeviceSize dropdownButtonSize;
+  LayoutDeviceIntSize dropdownButtonSize;
   bool canOverride = true;
   nsPresContext* presContext = PresContext();
   presContext->Theme()->GetMinimumWidgetSize(

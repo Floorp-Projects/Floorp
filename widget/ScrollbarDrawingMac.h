@@ -33,9 +33,9 @@ struct ScrollbarParams {
 
 class ScrollbarDrawingMac final {
  public:
-  static LayoutDeviceSize GetMinimumWidgetSize(StyleAppearance aAppearance,
-                                               nsIFrame* aFrame,
-                                               float aDpiRatio);
+  static LayoutDeviceIntSize GetMinimumWidgetSize(StyleAppearance aAppearance,
+                                                  nsIFrame* aFrame,
+                                                  float aDpiRatio);
   static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
                                                 const ComputedStyle& aStyle,
                                                 bool aIsHorizontal);

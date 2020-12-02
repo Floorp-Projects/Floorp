@@ -16,11 +16,9 @@ already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
 }
 
 NS_IMETHODIMP
-nsNativeBasicThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                              nsIFrame* aFrame,
-                                              StyleAppearance aAppearance,
-                                              LayoutDeviceSize* aResult,
-                                              bool* aIsOverridable) {
+nsNativeBasicThemeCocoa::GetMinimumWidgetSize(
+    nsPresContext* aPresContext, nsIFrame* aFrame, StyleAppearance aAppearance,
+    mozilla::LayoutDeviceIntSize* aResult, bool* aIsOverridable) {
   DPIRatio dpiRatio = GetDPIRatio(aFrame);
 
   switch (aAppearance) {

@@ -11,7 +11,6 @@
 #include "nsDateTimeControlFrame.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
-#include "nsNativeBasicTheme.h"
 #include "PathHelpers.h"
 
 using namespace mozilla;
@@ -23,20 +22,29 @@ namespace widget {
 
 static const sRGBColor sBackgroundColor(sRGBColor(1.0f, 1.0f, 1.0f));
 static const sRGBColor sBackgroundActiveColor(sRGBColor(0.88f, 0.88f, 0.9f));
+static const sRGBColor sBackgroundActiveColorDisabled(sRGBColor(0.88f, 0.88f,
+                                                                0.9f, 0.4f));
 static const sRGBColor sBorderColor(sRGBColor(0.62f, 0.62f, 0.68f));
 static const sRGBColor sBorderColorDisabled(sRGBColor(0.44f, 0.44f, 0.44f,
                                                       0.4f));
 static const sRGBColor sBorderHoverColor(sRGBColor(0.5f, 0.5f, 0.56f));
+static const sRGBColor sBorderHoverColorDisabled(sRGBColor(0.5f, 0.5f, 0.56f,
+                                                           0.4f));
 static const sRGBColor sBorderFocusColor(sRGBColor(0.04f, 0.52f, 1.0f));
 static const sRGBColor sCheckBackgroundColor(sRGBColor(0.18f, 0.39f, 0.89f));
 static const sRGBColor sCheckBackgroundColorDisabled(sRGBColor(0.18f, 0.39f,
                                                                0.89f, 0.4f));
 static const sRGBColor sCheckBackgroundHoverColor(sRGBColor(0.02f, 0.24f,
                                                             0.58f));
+static const sRGBColor sCheckBackgroundHoverColorDisabled(
+    sRGBColor(0.02f, 0.24f, 0.58f, 0.4f));
 static const sRGBColor sCheckBackgroundActiveColor(sRGBColor(0.03f, 0.19f,
                                                              0.45f));
+static const sRGBColor sCheckBackgroundActiveColorDisabled(
+    sRGBColor(0.03f, 0.19f, 0.45f, 0.4f));
 static const sRGBColor sDisabledColor(sRGBColor(0.89f, 0.89f, 0.89f));
 static const sRGBColor sActiveColor(sRGBColor(0.47f, 0.47f, 0.48f));
+static const sRGBColor sInputHoverColor(sRGBColor(0.05f, 0.05f, 0.05f, 0.5f));
 static const sRGBColor sRangeInputBackgroundColor(sRGBColor(0.89f, 0.89f,
                                                             0.89f));
 static const sRGBColor sButtonColor(sRGBColor(0.98f, 0.98f, 0.98f));
@@ -686,7 +694,7 @@ mozilla::layers::StackingContextHelper& aSc,
 aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
 }*/
 
-LayoutDeviceMargin nsNativeThemeAndroid::GetWidgetBorder(
+LayoutDeviceIntMargin nsNativeThemeAndroid::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
   uint32_t dpi = GetDPIRatio(aFrame);
   switch (aAppearance) {
@@ -694,27 +702,27 @@ LayoutDeviceMargin nsNativeThemeAndroid::GetWidgetBorder(
     case StyleAppearance::Textarea:
     case StyleAppearance::NumberInput: {
       const LayoutDeviceIntCoord w = kTextFieldBorderWidth * dpi;
-      return LayoutDeviceMargin(w, w, w, w);
+      return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton: {
       const LayoutDeviceIntCoord w = kMenulistBorderWidth * dpi;
-      return LayoutDeviceMargin(w, w, w, w);
+      return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Button: {
       const LayoutDeviceIntCoord w = kButtonBorderWidth * dpi;
-      return LayoutDeviceMargin(w, w, w, w);
+      return LayoutDeviceIntMargin(w, w, w, w);
     }
     default:
-      return {};
+      return LayoutDeviceIntMargin();
   }
 }
 
 bool nsNativeThemeAndroid::GetWidgetPadding(nsDeviceContext* aContext,
                                             nsIFrame* aFrame,
                                             StyleAppearance aAppearance,
-                                            LayoutDeviceMargin* aResult) {
+                                            LayoutDeviceIntMargin* aResult) {
   uint32_t dpiRatio = GetDPIRatio(aFrame);
   switch (aAppearance) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
@@ -777,7 +785,7 @@ NS_IMETHODIMP
 nsNativeThemeAndroid::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                            nsIFrame* aFrame,
                                            StyleAppearance aAppearance,
-                                           LayoutDeviceSize* aResult,
+                                           LayoutDeviceIntSize* aResult,
                                            bool* aIsOverridable) {
   uint32_t dpiRatio = GetDPIRatio(aFrame);
   aResult->width = aResult->height =

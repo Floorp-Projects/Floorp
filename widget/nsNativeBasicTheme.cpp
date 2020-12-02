@@ -1303,35 +1303,37 @@ mozilla::layers::StackingContextHelper& aSc,
 aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
 }*/
 
-LayoutDeviceMargin nsNativeBasicTheme::GetWidgetBorder(
+LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
   DPIRatio dpiRatio = GetDPIRatio(aFrame);
   switch (aAppearance) {
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
     case StyleAppearance::NumberInput: {
-      LayoutDeviceCoord w = kTextFieldBorderWidth * dpiRatio;
-      return {w, w, w, w};
+      // FIXME: Do we want this margin not to be int-based? The native windows
+      // theme rounds (see ScaleForDPI)...
+      LayoutDeviceIntCoord w = (kTextFieldBorderWidth * dpiRatio).Rounded();
+      return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton: {
-      LayoutDeviceCoord w = kMenulistBorderWidth * dpiRatio;
-      return {w, w, w, w};
+      LayoutDeviceIntCoord w = (kMenulistBorderWidth * dpiRatio).Rounded();
+      return LayoutDeviceIntMargin(w, w, w, w);
     }
     case StyleAppearance::Button: {
-      LayoutDeviceCoord w = kButtonBorderWidth * dpiRatio;
-      return {w, w, w, w};
+      LayoutDeviceIntCoord w = (kButtonBorderWidth * dpiRatio).Rounded();
+      return LayoutDeviceIntMargin(w, w, w, w);
     }
     default:
-      return {};
+      return LayoutDeviceIntMargin();
   }
 }
 
 bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
                                           nsIFrame* aFrame,
                                           StyleAppearance aAppearance,
-                                          LayoutDeviceMargin* aResult) {
+                                          LayoutDeviceIntMargin* aResult) {
   switch (aAppearance) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
     // and have a meaningful baseline, so they can't have
@@ -1360,7 +1362,7 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
       aResult->SizeTo(0, 0, 0, 0);
       return true;
     case StyleAppearance::NumberInput:
-      *aResult = CSSMargin(1.0f, 0, 1.0f, 4.0f) * dpiRatio;
+      *aResult = (CSSMargin(1.0f, 0, 1.0f, 4.0f) * dpiRatio).Rounded();
       if (IsFrameRTL(aFrame)) {
         std::swap(aResult->left, aResult->right);
       }
@@ -1371,21 +1373,21 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Menuitem:
     case StyleAppearance::MenulistText:
     case StyleAppearance::MenulistButton:
-      *aResult = CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio;
+      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
       return true;
     case StyleAppearance::Button:
       if (IsColorPickerButton(aFrame)) {
-        *aResult = CSSMargin(4.0f, 4.0f, 4.0f, 4.0f) * dpiRatio;
+        *aResult = (CSSMargin(4.0f, 4.0f, 4.0f, 4.0f) * dpiRatio).Rounded();
         return true;
       }
-      *aResult = CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio;
+      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
       return true;
     case StyleAppearance::Textfield:
       if (IsDateTimeTextField(aFrame)) {
-        *aResult = CSSMargin(2.0f, 3.0f, 0.0f, 3.0f) * dpiRatio;
+        *aResult = (CSSMargin(2.0f, 3.0f, 0.0f, 3.0f) * dpiRatio).Rounded();
         return true;
       }
-      *aResult = CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio;
+      *aResult = (CSSMargin(1.0f, 4.0f, 1.0f, 4.0f) * dpiRatio).Rounded();
       return true;
     default:
       return false;
@@ -1436,28 +1438,28 @@ NS_IMETHODIMP
 nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          StyleAppearance aAppearance,
-                                         LayoutDeviceSize* aResult,
+                                         LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable) {
   DPIRatio dpiRatio = GetDPIRatio(aFrame);
 
-  aResult->width = aResult->height = kMinimumWidgetSize * dpiRatio;
+  aResult->width = aResult->height = (kMinimumWidgetSize * dpiRatio).Rounded();
 
   switch (aAppearance) {
     case StyleAppearance::Button:
       if (IsColorPickerButton(aFrame)) {
-        aResult->height = kMinimumColorPickerHeight * dpiRatio;
+        aResult->height = (kMinimumColorPickerHeight * dpiRatio).Rounded();
       }
       break;
     case StyleAppearance::RangeThumb:
-      aResult->SizeTo(kMinimumRangeThumbSize * dpiRatio,
-                      kMinimumRangeThumbSize * dpiRatio);
+      aResult->SizeTo((kMinimumRangeThumbSize * dpiRatio).Rounded(),
+                      (kMinimumRangeThumbSize * dpiRatio).Rounded());
       break;
     case StyleAppearance::MozMenulistArrowButton:
-      aResult->width = kMinimumDropdownArrowButtonWidth * dpiRatio;
+      aResult->width = (kMinimumDropdownArrowButtonWidth * dpiRatio).Rounded();
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
-      aResult->width = kMinimumSpinnerButtonWidth * dpiRatio;
+      aResult->width = (kMinimumSpinnerButtonWidth * dpiRatio).Rounded();
       break;
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
@@ -1472,11 +1474,11 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::Scrollcorner: {
       ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
       if (style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
-        aResult->SizeTo(kMinimumThinScrollbarSize * dpiRatio,
-                        kMinimumThinScrollbarSize * dpiRatio);
+        aResult->SizeTo((kMinimumThinScrollbarSize * dpiRatio).Rounded(),
+                        (kMinimumThinScrollbarSize * dpiRatio).Rounded());
       } else {
-        aResult->SizeTo(kMinimumScrollbarSize * dpiRatio,
-                        kMinimumScrollbarSize * dpiRatio);
+        aResult->SizeTo((kMinimumScrollbarSize * dpiRatio).Rounded(),
+                        (kMinimumScrollbarSize * dpiRatio).Rounded());
       }
       break;
     }

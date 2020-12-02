@@ -1828,7 +1828,7 @@ nsITheme* nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
   }
 
   if (useTheme) {
-    LayoutDeviceSize minTwistySizePx;
+    LayoutDeviceIntSize minTwistySizePx;
     bool canOverride = true;
     theme->GetMinimumWidgetSize(aPresContext, this, appearance,
                                 &minTwistySizePx, &canOverride);

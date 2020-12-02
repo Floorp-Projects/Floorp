@@ -39,7 +39,7 @@ NS_IMETHODIMP
 nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                             nsIFrame* aFrame,
                                             StyleAppearance aAppearance,
-                                            LayoutDeviceSize* aResult,
+                                            LayoutDeviceIntSize* aResult,
                                             bool* aIsOverridable) {
   DPIRatio dpiRatio = GetDPIRatio(aFrame);
 

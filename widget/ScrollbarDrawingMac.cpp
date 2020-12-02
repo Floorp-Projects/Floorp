@@ -42,7 +42,7 @@ static bool IsParentScrollbarRolledOver(nsIFrame* aFrame) {
                    .HasState(NS_EVENT_STATE_HOVER);
 }
 
-LayoutDeviceSize ScrollbarDrawingMac::GetMinimumWidgetSize(
+LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
     StyleAppearance aAppearance, nsIFrame* aFrame, float aDpiRatio) {
   auto fn = [](StyleAppearance aAppearance, nsIFrame* aFrame) -> IntSize {
     switch (aAppearance) {
@@ -85,9 +85,9 @@ LayoutDeviceSize ScrollbarDrawingMac::GetMinimumWidgetSize(
 
   IntSize minSize = fn(aAppearance, aFrame);
   if (aDpiRatio >= 2.0f) {
-    return LayoutDeviceSize(minSize.width * 2.0f, minSize.height * 2.0f);
+    return LayoutDeviceIntSize{minSize.width * 2, minSize.height * 2};
   }
-  return LayoutDeviceSize(minSize.width, minSize.height);
+  return LayoutDeviceIntSize{minSize.width, minSize.height};
 }
 
 ScrollbarParams ScrollbarDrawingMac::ComputeScrollbarParams(

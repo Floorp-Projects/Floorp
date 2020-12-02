@@ -15,7 +15,7 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  LayoutDeviceSize* aResult,
+                                  mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
   nsITheme::Transparency GetWidgetTransparency(
