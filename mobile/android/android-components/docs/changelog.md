@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-search**
   * ⚠️ **This is a breaking change**: Use cases in `SearchUseCases` now take the ID of s session/tab as parameter instead of a `Session` instance.
 
+* **browser-menu**:
+  * 🚒 Bug fixed [issue #9101](https://github.com/mozilla-mobile/android-components/issues/9101) - Fix BrowserMenu position after rotating the screen on Android <=23
+
 # 68.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v67.0.0...v68.0.0)
