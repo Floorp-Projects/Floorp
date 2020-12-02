@@ -763,7 +763,7 @@ if __name__ == "__main__":
         raise ValueError("Config file needs to set gcc_dir")
 
     if is_darwin() or osx_cross_compile:
-        os.environ["MACOSX_DEPLOYMENT_TARGET"] = "10.11"
+        os.environ["MACOSX_DEPLOYMENT_TARGET"] = "10.12"
 
     cc = get_tool(config, "cc")
     cxx = get_tool(config, "cxx")
