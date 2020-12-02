@@ -81,6 +81,16 @@
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
+/*
+ * Make the empty bookmarks toolbar message take up no horizontal space.
+ * This avoids drag/drop of urls/bookmarks to the toolbar not working,
+ * because they land on the personal-toolbar-empty element.
+ */
+#PersonalToolbar[collapsed=false] > #personal-toolbar-empty[nowidth] > #personal-toolbar-empty-description {
+  width: 0;
+  white-space: nowrap;
+}
+
 #PersonalToolbar[collapsed=true].instant {
   visibility: collapse;
 }
