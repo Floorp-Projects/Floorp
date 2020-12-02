@@ -835,6 +835,10 @@ void ModuleObject::initFunctionDeclarations(
   *functionDeclarations() = std::move(decls);
 }
 
+void ModuleObject::initAsyncSlots(JSContext* cx, bool isAsync) {
+  initReservedSlot(AsyncSlot, BooleanValue(isAsync));
+}
+
 void ModuleObject::initScriptSlots(HandleScript script) {
   MOZ_ASSERT(script);
   initReservedSlot(ScriptSlot, PrivateGCThingValue(script));
@@ -957,6 +961,10 @@ ModuleStatus ModuleObject::status() const {
   ModuleStatus status = getReservedSlot(StatusSlot).toInt32();
   AssertValidModuleStatus(status);
   return status;
+}
+
+bool ModuleObject::isAsync() const {
+  return getReservedSlot(AsyncSlot).toBoolean();
 }
 
 bool ModuleObject::hadEvaluationError() const {
@@ -1149,6 +1157,7 @@ DEFINE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries,
 DEFINE_GETTER_FUNCTIONS(ModuleObject, starExportEntries, StarExportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, dfsIndex, DFSIndexSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, dfsAncestorIndex, DFSAncestorIndexSlot)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, async, AsyncSlot)
 
 /* static */
 bool GlobalObject::initModuleProto(JSContext* cx,
@@ -1165,6 +1174,7 @@ bool GlobalObject::initModuleProto(JSContext* cx,
       JS_PSG("starExportEntries", ModuleObject_starExportEntriesGetter, 0),
       JS_PSG("dfsIndex", ModuleObject_dfsIndexGetter, 0),
       JS_PSG("dfsAncestorIndex", ModuleObject_dfsAncestorIndexGetter, 0),
+      JS_PSG("async", ModuleObject_asyncGetter, 0),
       JS_PS_END};
 
   static const JSFunctionSpec protoFunctions[] = {
@@ -1210,6 +1220,10 @@ bool ModuleBuilder::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
     return false;
   }
   return true;
+}
+
+void ModuleBuilder::noteAsync(frontend::StencilModuleMetadata& metadata) {
+  metadata.isAsync = true;
 }
 
 bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
@@ -2205,6 +2219,18 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
     module->initImportExportData(requestedModules, importEntries,
                                  localExportEntries, indirectExportEntries,
                                  starExportEntries);
+  }
+
+  /* isAsync Slot */
+  uint8_t isAsyncModule = 0;
+  if (mode == XDR_ENCODE) {
+    isAsyncModule = module->isAsync() ? 1 : 0;
+  }
+
+  MOZ_TRY(xdr->codeUint8(&isAsyncModule));
+
+  if (mode == XDR_DECODE) {
+    module->initAsyncSlots(cx, isAsyncModule == 1);
   }
 
   modp.set(module);

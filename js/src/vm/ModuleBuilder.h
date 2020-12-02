@@ -71,6 +71,8 @@ class MOZ_STACK_CLASS ModuleBuilder {
   bool noteFunctionDeclaration(JSContext* cx, uint32_t funIndex);
   void finishFunctionDecls(frontend::StencilModuleMetadata& metadata);
 
+  void noteAsync(frontend::StencilModuleMetadata& metadata);
+
  private:
   using RequestedModuleVector =
       Vector<frontend::StencilModuleEntry, 0, js::SystemAllocPolicy>;

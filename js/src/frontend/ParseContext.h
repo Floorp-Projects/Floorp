@@ -11,6 +11,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/CompilationInfo.h"
 #include "frontend/ErrorReporter.h"
+#include "frontend/ModuleSharedContext.h"
 #include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
@@ -499,7 +500,8 @@ class ParseContext : public Nestable<ParseContext> {
   }
 
   bool isAsync() const {
-    return sc_->isFunctionBox() && sc_->asFunctionBox()->isAsync();
+    return sc_->isSuspendableContext() &&
+           sc_->asSuspendableContext()->isAsync();
   }
 
   bool isGeneratorOrAsync() const { return isGenerator() || isAsync(); }
