@@ -114,7 +114,7 @@ class DownloadView(
         download_list.isVisible = userHasDownloads
         download_empty_view.isVisible = !userHasDownloads
         if (!userHasDownloads) {
-            download_empty_view.announceForAccessibility(context.getString(R.string.download_empty_message))
+            download_empty_view.announceForAccessibility(context.getString(R.string.download_empty_message_1))
         }
     }
 

@@ -5,7 +5,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/select_all_downloads_multi_select"
+        android:title="@string/create_collection_select_all"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/delete_downloads_multi_select"
-        android:title="@string/download_delete_item"
+        android:title="@string/download_delete_item_1"
         app:showAsAction="never" />
 </menu>

@@ -128,7 +128,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                         launch(Dispatchers.Main) {
                             showSnackBar(
                                 requireView(),
-                                getString(R.string.download_delete_multiple_items_snackbar)
+                                getString(R.string.download_delete_multiple_items_snackbar_1)
                             )
                         }
                     }
@@ -175,7 +175,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         inflater.inflate(menuRes, menu)
 
         menu.findItem(R.id.delete_downloads_multi_select)?.title =
-            SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
+            SpannableString(getString(R.string.download_delete_item_1)).apply {
                 setTextColor(requireContext(), R.attr.destructive)
             }
     }
@@ -191,16 +191,23 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             downloadStore.dispatch(DownloadFragmentAction.ExitEditMode)
             true
         }
+
+        R.id.select_all_downloads_multi_select -> {
+            for (items in downloadStore.state.items) {
+                downloadInteractor.select(items)
+            }
+            true
+        }
         else -> super.onOptionsItemSelected(item)
     }
 
     private fun getMultiSelectSnackBarMessage(downloadItems: Set<DownloadItem>): String {
         return if (downloadItems.size > 1) {
-            getString(R.string.download_delete_multiple_items_snackbar)
+            getString(R.string.download_delete_multiple_items_snackbar_1)
         } else {
             String.format(
                 requireContext().getString(
-                    R.string.history_delete_single_item_snackbar
+                    R.string.download_delete_single_item_snackbar
                 ), downloadItems.first().fileName
             )
         }

@@ -36,7 +36,7 @@ class DownloadAdapter(
     override fun onBindViewHolder(holder: DownloadsListItemViewHolder, position: Int) {
         val current = downloads[position]
         val isPendingDeletion = pendingDeletionIds.contains(current.id)
-        holder.bind(downloads[position], position == 0, mode, isPendingDeletion)
+        holder.bind(downloads[position], mode, isPendingDeletion)
     }
 
     fun updateDownloads(downloads: List<DownloadItem>) {

@@ -42,7 +42,6 @@ class DownloadsListItemViewHolder(
 
     fun bind(
         item: DownloadItem,
-        showDeleteButton: Boolean,
         mode: DownloadFragmentState.Mode,
         isPendingDeletion: Boolean = false
     ) {
@@ -54,14 +53,20 @@ class DownloadsListItemViewHolder(
         itemView.download_layout.titleView.text = item.fileName
         itemView.download_layout.urlView.text = item.size.toLong().toMegabyteOrKilobyteString()
 
-        toggleTopContent(showDeleteButton, mode == DownloadFragmentState.Mode.Normal)
+        toggleTopContent(false, mode == DownloadFragmentState.Mode.Normal)
 
         itemView.download_layout.setSelectionInteractor(item, selectionHolder, downloadInteractor)
         itemView.download_layout.changeSelected(item in selectionHolder.selectedItems)
 
         itemView.favicon.setImageResource(item.getIcon())
 
+        itemView.overflow_menu.setImageResource(R.drawable.ic_delete)
+
         itemView.overflow_menu.showAndEnable()
+
+        itemView.overflow_menu.setOnClickListener {
+            downloadInteractor.onDeleteSome(setOf(item))
+        }
 
         this.item = item
     }

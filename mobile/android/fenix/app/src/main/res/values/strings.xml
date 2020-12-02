@@ -710,16 +710,18 @@
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Are you sure you want to clear your downloads?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Downloads Deleted</string>
+    <string name="download_delete_multiple_items_snackbar_1">Downloads Removed</string>
+    <!-- Text for the snackbar to confirm that a single download item has been deleted. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Removed %1$s</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">No downloads here</string>
+    <string name="download_empty_message_1">No downloaded files</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d selected</string>
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Open</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Delete</string>
+    <string name="download_delete_item_1">Remove</string>
 
 
     <!-- Crashes -->
