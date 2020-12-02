@@ -29,18 +29,19 @@ extern crate xpcom;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
-use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
+use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_CONTENT, NS_OK};
 use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsStr, nsString};
 use xpcom::interfaces::{
     mozIViaduct, nsIFile, nsIObserver, nsIPrefBranch, nsIPropertyBag2, nsISupports, nsIXULAppInfo,
 };
 use xpcom::{RefPtr, XpCom};
 
-use glean::{ClientInfoMetrics, Configuration};
+use client_info::ClientInfo;
+use glean_core::Configuration;
 
-mod viaduct_uploader;
-
-use crate::viaduct_uploader::ViaductUploader;
+mod api;
+mod client_info;
+mod core_metrics;
 
 /// Project FOG's entry point.
 ///
@@ -62,15 +63,17 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         Err(e) => return e,
     };
 
-    // TODO: os_version will be sent as a new metric in bug 1679835.
-    let (_os_version, _architecture) = match get_system_info() {
+    let (os_version, architecture) = match get_system_info() {
         Ok(si) => si,
         Err(e) => return e,
     };
 
-    let client_info = ClientInfoMetrics {
+    let client_info = ClientInfo {
         app_build,
         app_display_version,
+        channel: Some(channel),
+        os_version,
+        architecture,
     };
     log::debug!("Client Info: {:#?}", client_info);
 
@@ -83,14 +86,6 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         return e;
     }
 
-    const SERVER: &str = "https://incoming.telemetry.mozilla.org";
-    let localhost_port = static_prefs::pref!("telemetry.fog.test.localhost_port");
-    let server = if localhost_port > 0 {
-        format!("http://localhost:{}", localhost_port)
-    } else {
-        String::from(SERVER)
-    };
-
     let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
     let data_path = data_path.to_string();
     let configuration = Configuration {
@@ -99,9 +94,7 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         application_id: "firefox.desktop".to_string(),
         max_events: None,
         delay_ping_lifetime_io: false,
-        channel: Some(channel),
-        server_endpoint: Some(server),
-        uploader: Some(Box::new(crate::ViaductUploader) as Box<dyn glean::net::PingUploader>),
+        language_binding_name: "Rust".into(),
     };
 
     log::debug!("Configuration: {:#?}", configuration);
@@ -120,9 +113,20 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
     }
 
     if configuration.data_path.len() > 0 {
-        glean::initialize(configuration, client_info);
-        fog::metrics::fog::initialization.stop();
-        schedule_fog_validation_ping();
+        std::thread::spawn(move || {
+            if let Err(e) = api::initialize(configuration, client_info) {
+                log::error!("Failed to init FOG due to {:?}", e);
+                return;
+            }
+
+            if let Err(e) = fog::flush_init() {
+                log::error!("Failed to flush pre-init buffer due to {:?}", e);
+                return;
+            }
+
+            fog::metrics::fog::initialization.stop();
+            schedule_fog_validation_ping();
+        });
     }
 
     NS_OK
@@ -130,7 +134,7 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
 
 #[no_mangle]
 pub unsafe extern "C" fn fog_shutdown() {
-    glean::shutdown();
+    fog::shutdown();
 }
 
 /// Construct and return the data_path from the profile dir, or return an error.
@@ -271,7 +275,7 @@ impl UploadPrefObserver {
         );
 
         let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
-        glean::set_upload_enabled(upload_enabled);
+        api::set_upload_enabled(upload_enabled);
         NS_OK
     }
 }
@@ -325,7 +329,7 @@ pub unsafe extern "C" fn fog_use_ipc_buf(buf: *const u8, buf_len: usize) {
 /// Sets the debug tag for pings assembled in the future.
 /// Returns an error result if the provided value is not a valid tag.
 pub unsafe extern "C" fn fog_set_debug_view_tag(value: &nsACString) -> nsresult {
-    let result = glean::set_debug_view_tag(&value.to_string());
+    let result = api::set_debug_view_tag(&value.to_string());
     if result {
         return NS_OK;
     } else {
@@ -335,17 +339,26 @@ pub unsafe extern "C" fn fog_set_debug_view_tag(value: &nsACString) -> nsresult 
 
 #[no_mangle]
 /// Submits a ping by name.
+/// Returns NS_OK if the ping was successfully submitted, NS_ERROR_NO_CONTENT
+/// if the ping wasn't sent, or NS_ERROR_FAILURE if some part of the ping
+/// submission mechanism failed.
 pub unsafe extern "C" fn fog_submit_ping(ping_name: &nsACString) -> nsresult {
-    glean::submit_ping_by_name(&ping_name.to_string(), None);
-    NS_OK
+    match api::submit_ping(&ping_name.to_string()) {
+        Ok(true) => NS_OK,
+        Ok(false) => NS_ERROR_NO_CONTENT,
+        _ => NS_ERROR_FAILURE,
+    }
 }
 
 #[no_mangle]
 /// Turns ping logging on or off.
 /// Returns an error if the logging failed to be configured.
 pub unsafe extern "C" fn fog_set_log_pings(value: bool) -> nsresult {
-    glean::set_log_pings(value);
-    NS_OK
+    if api::set_log_pings(value) {
+        return NS_OK;
+    } else {
+        return NS_ERROR_FAILURE;
+    }
 }
 
 fn schedule_fog_validation_ping() {

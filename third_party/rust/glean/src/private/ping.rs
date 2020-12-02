@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use inherent::inherent;
-
 /// A Glean ping.
 #[derive(Clone, Debug)]
 pub struct PingType {
@@ -38,10 +36,7 @@ impl PingType {
         crate::register_ping_type(&me);
         me
     }
-}
 
-#[inherent(pub)]
-impl glean_core::traits::Ping for PingType {
     /// Collect and submit the ping for eventual upload.
     ///
     /// This will collect all stored data to be included in the ping.
@@ -61,7 +56,7 @@ impl glean_core::traits::Ping for PingType {
     ///
     /// * `reason` - The reason the ping is being submitted.
     ///              Must be one of the configured `reason_codes`.
-    fn submit(&self, reason: Option<&str>) {
+    pub fn submit(&self, reason: Option<&str>) {
         crate::submit_ping(self, reason)
     }
 }

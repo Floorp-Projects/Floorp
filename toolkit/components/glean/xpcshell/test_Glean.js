@@ -38,8 +38,7 @@ add_task(async function test_fog_string_works() {
   Assert.equal(value, Glean.test_only.cheesy_string.testGetValue("test-ping"));
 });
 
-// Enable test after bug 1677455 is fixed.
-add_task({ skip_if: () => true }, async function test_fog_timespan_works() {
+add_task(async function test_fog_timespan_works() {
   // We start, briefly sleep and then stop.
   // That guarantees some time to measure.
   Glean.test_only.can_we_time_it.start();
@@ -63,8 +62,7 @@ add_task(async function test_fog_uuid_works() {
   );
 });
 
-// Enable test after bug 1677448 is fixed.
-add_task({ skip_if: () => true }, function test_fog_datetime_works() {
+add_task(function test_fog_datetime_works() {
   const value = new Date("2020-06-11T12:00:00");
 
   Glean.test_only.what_a_date.set(value.getTime() * 1000);
