@@ -90,8 +90,6 @@ def main():
         import gzip
         import tarfile
         import tempfile
-
-        config._ensure_zstd()
         import zstandard
 
         def prepare_zip_from(archive, tmpdir):
