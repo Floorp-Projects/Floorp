@@ -947,34 +947,37 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  WidgetQueryContentEvent charAt(true, eQueryCharacterAtPoint, widget);
-  charAt.mRefPoint.x = x;
-  charAt.mRefPoint.y = y;
+  WidgetQueryContentEvent queryCharAtPointEvent(true, eQueryCharacterAtPoint,
+                                                widget);
+  queryCharAtPointEvent.mRefPoint.x = x;
+  queryCharAtPointEvent.mRefPoint.y = y;
   ContentEventHandler handler(presContext);
-  handler.OnQueryCharacterAtPoint(&charAt);
+  handler.OnQueryCharacterAtPoint(&queryCharAtPointEvent);
 
-  if (NS_WARN_IF(!charAt.mSucceeded) ||
-      charAt.mReply.mOffset == WidgetQueryContentEvent::NOT_FOUND) {
+  if (NS_WARN_IF(queryCharAtPointEvent.Failed()) ||
+      queryCharAtPointEvent.DidNotFindChar()) {
     return NS_ERROR_FAILURE;
   }
 
-  WidgetQueryContentEvent selection(true, eQuerySelectedText, widget);
-  handler.OnQuerySelectedText(&selection);
+  WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                 widget);
+  handler.OnQuerySelectedText(&querySelectedTextEvent);
+  if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection())) {
+    return NS_ERROR_FAILURE;
+  }
 
-  bool useSelection = false;
-  uint32_t offset = charAt.mReply.mOffset;
+  uint32_t offset = queryCharAtPointEvent.mReply->StartOffset();
   uint32_t begin, length;
 
   // macOS prioritizes user selected text if the current point falls within the
   // selection range. So we check the selection first.
-  if (selection.mSucceeded) {
-    begin = selection.mReply.mOffset;
-    length = selection.mReply.mString.Length();
-    useSelection = (offset >= begin && offset < (begin + length));
-  }
-
-  if (!useSelection) {
-    WidgetQueryContentEvent textContent(true, eQueryTextContent, widget);
+  if (querySelectedTextEvent.FoundSelection() &&
+      querySelectedTextEvent.mReply->IsOffsetInRange(offset)) {
+    begin = querySelectedTextEvent.mReply->StartOffset();
+    length = querySelectedTextEvent.mReply->DataLength();
+  } else {
+    WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
+                                                  widget);
     // OSX 10.7 queries 50 characters before/after current point.  So we fetch
     // same length.
     if (offset > 50) {
@@ -982,10 +985,10 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
     } else {
       offset = 0;
     }
-    textContent.InitForQueryTextContent(offset, 100);
-    handler.OnQueryTextContent(&textContent);
-    if (NS_WARN_IF(!textContent.mSucceeded ||
-                   textContent.mReply.mString.IsEmpty())) {
+    queryTextContentEvent.InitForQueryTextContent(offset, 100);
+    handler.OnQueryTextContent(&queryTextContentEvent);
+    if (NS_WARN_IF(queryTextContentEvent.Failed()) ||
+        NS_WARN_IF(queryTextContentEvent.mReply->IsDataEmpty())) {
       return NS_ERROR_FAILURE;
     }
 
@@ -998,8 +1001,9 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
     }
 
     mozilla::intl::WordRange range = wordBreaker->FindWord(
-        textContent.mReply.mString.get(), textContent.mReply.mString.Length(),
-        charAt.mReply.mOffset - offset);
+        queryTextContentEvent.mReply->DataRef().get(),
+        queryTextContentEvent.mReply->DataLength(),
+        queryCharAtPointEvent.mReply->StartOffset() - offset);
     if (range.mEnd == range.mBegin) {
       return NS_ERROR_FAILURE;
     }
@@ -1007,26 +1011,27 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
     length = range.mEnd - range.mBegin;
   }
 
-  WidgetQueryContentEvent lookUpContent(true, eQueryTextContent, widget);
-  lookUpContent.InitForQueryTextContent(begin, length);
-  lookUpContent.RequestFontRanges();
-  handler.OnQueryTextContent(&lookUpContent);
-  if (NS_WARN_IF(!lookUpContent.mSucceeded ||
-                 lookUpContent.mReply.mString.IsEmpty())) {
+  WidgetQueryContentEvent queryLookUpContentEvent(true, eQueryTextContent,
+                                                  widget);
+  queryLookUpContentEvent.InitForQueryTextContent(begin, length);
+  queryLookUpContentEvent.RequestFontRanges();
+  handler.OnQueryTextContent(&queryLookUpContentEvent);
+  if (NS_WARN_IF(queryLookUpContentEvent.Failed()) ||
+      NS_WARN_IF(queryLookUpContentEvent.mReply->IsDataEmpty())) {
     return NS_ERROR_FAILURE;
   }
 
-  WidgetQueryContentEvent charRect(true, eQueryTextRect, widget);
-  charRect.InitForQueryTextRect(begin, length);
-  handler.OnQueryTextRect(&charRect);
-  if (NS_WARN_IF(!charRect.mSucceeded)) {
+  WidgetQueryContentEvent queryTextRectEvent(true, eQueryTextRect, widget);
+  queryTextRectEvent.InitForQueryTextRect(begin, length);
+  handler.OnQueryTextRect(&queryTextRectEvent);
+  if (NS_WARN_IF(queryTextRectEvent.Failed())) {
     return NS_ERROR_FAILURE;
   }
 
-  widget->LookUpDictionary(lookUpContent.mReply.mString,
-                           lookUpContent.mReply.mFontRanges,
-                           charRect.mReply.mWritingMode.IsVertical(),
-                           charRect.mReply.mRect.TopLeft());
+  widget->LookUpDictionary(queryLookUpContentEvent.mReply->DataRef(),
+                           queryLookUpContentEvent.mReply->mFontRanges,
+                           queryTextRectEvent.mReply->mWritingMode.IsVertical(),
+                           queryTextRectEvent.mReply->mRect.TopLeft());
 
   return NS_OK;
 }

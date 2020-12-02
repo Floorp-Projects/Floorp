@@ -1616,16 +1616,17 @@ bool nsChildView::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeybo
   // the physical direction of the arrow.
   if (aEvent.mKeyCode >= NS_VK_LEFT && aEvent.mKeyCode <= NS_VK_DOWN) {
     // XXX This may be expensive. Should use the cache in TextInputHandler.
-    WidgetQueryContentEvent query(true, eQuerySelectedText, this);
-    DispatchWindowEvent(query);
+    WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText, this);
+    DispatchWindowEvent(querySelectedTextEvent);
 
-    if (query.mSucceeded && query.mReply.mWritingMode.IsVertical()) {
+    if (querySelectedTextEvent.FoundSelection() &&
+        querySelectedTextEvent.mReply->mWritingMode.IsVertical()) {
       uint32_t geckoKey = 0;
       uint32_t cocoaKey = 0;
 
       switch (aEvent.mKeyCode) {
         case NS_VK_LEFT:
-          if (query.mReply.mWritingMode.IsVerticalLR()) {
+          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
             geckoKey = NS_VK_UP;
             cocoaKey = kVK_UpArrow;
           } else {
@@ -1635,7 +1636,7 @@ bool nsChildView::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeybo
           break;
 
         case NS_VK_RIGHT:
-          if (query.mReply.mWritingMode.IsVerticalLR()) {
+          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
             geckoKey = NS_VK_DOWN;
             cocoaKey = kVK_DownArrow;
           } else {
@@ -1677,9 +1678,9 @@ NSView<mozView>* nsChildView::GetEditorView() {
   // need any layout information right now.
   queryContentState.mNeedsToFlushLayout = false;
   DispatchWindowEvent(queryContentState);
-  if (queryContentState.mSucceeded && queryContentState.mReply.mFocusedWidget) {
+  if (queryContentState.Succeeded() && queryContentState.mReply->mFocusedWidget) {
     NSView<mozView>* view = static_cast<NSView<mozView>*>(
-        queryContentState.mReply.mFocusedWidget->GetNativeData(NS_NATIVE_WIDGET));
+        queryContentState.mReply->mFocusedWidget->GetNativeData(NS_NATIVE_WIDGET));
     if (view) editorView = view;
   }
   return editorView;
