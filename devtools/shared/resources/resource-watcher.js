@@ -294,9 +294,6 @@ class ResourceWatcher {
         // ...request existing resource and new one to come from this one target
         // *but* only do that for backward compat, where we don't have the watcher API
         // (See bug 1626647)
-        if (this.hasResourceWatcherSupport(resourceType)) {
-          continue;
-        }
         await this._watchResourcesForTarget(targetFront, resourceType);
       }
     }
@@ -615,8 +612,31 @@ class ResourceWatcher {
     );
   }
 
+  /**
+   * Tells if the server supports listening to the given resource type
+   * via the watcher actor's watchResources method.
+   *
+   * @return {Boolean} True, if the server supports this type.
+   */
   hasResourceWatcherSupport(resourceType) {
     return this.watcherFront?.traits?.resources?.[resourceType];
+  }
+
+  /**
+   * Tells if the server supports listening to the given resource type
+   * via the watcher actor's watchResources method, and that, for a specific
+   * target.
+   *
+   * @return {Boolean} True, if the server supports this type.
+   */
+  _hasResourceWatcherSupportForTarget(resourceType, targetFront) {
+    // First check if the watcher supports this target type.
+    // If it doesn't, no resource type can be listened via the Watcher actor for this target.
+    if (!this.targetList.hasTargetWatcherSupport(targetFront.targetType)) {
+      return false;
+    }
+
+    return this.hasResourceWatcherSupport(resourceType);
   }
 
   /**
@@ -648,7 +668,19 @@ class ResourceWatcher {
     // this resource type, use this API
     if (this.hasResourceWatcherSupport(resourceType)) {
       await this.watcherFront.watchResources([resourceType]);
-      return;
+
+      // Bug 1678385: In order to support watching for JS Source resource
+      // for service workers and parent process workers, which aren't supported yet
+      // by the watcher actor, we do not bail out here and allow to execute
+      // the legacy listener for these targets.
+      // Once bug 1608848 is fixed, we can remove this and always return.
+      // If this isn't fixed soon, we may add other resources we want to see
+      // being fetched from these targets.
+      const shouldRunLegacyListeners =
+        resourceType == ResourceWatcher.TYPES.SOURCE;
+      if (!shouldRunLegacyListeners) {
+        return;
+      }
     }
     // Otherwise, fallback on backward compat mode and use LegacyListeners.
 
@@ -677,6 +709,12 @@ class ResourceWatcher {
    * type of resource from a given target.
    */
   _watchResourcesForTarget(targetFront, resourceType) {
+    if (this._hasResourceWatcherSupportForTarget(resourceType, targetFront)) {
+      // This resource / target pair should already be handled by the watcher,
+      // no need to start legacy listeners.
+      return Promise.resolve();
+    }
+
     if (targetFront.isDestroyed()) {
       return Promise.resolve();
     }
@@ -727,7 +765,13 @@ class ResourceWatcher {
     // this resource type, use this API
     if (this.hasResourceWatcherSupport(resourceType)) {
       this.watcherFront.unwatchResources([resourceType]);
-      return;
+
+      // See comment in `_startListening`
+      const shouldRunLegacyListeners =
+        resourceType == ResourceWatcher.TYPES.SOURCE;
+      if (!shouldRunLegacyListeners) {
+        return;
+      }
     }
     // Otherwise, fallback on backward compat mode and use LegacyListeners.
 
@@ -743,6 +787,10 @@ class ResourceWatcher {
    * Backward compatibility code, reverse of _watchResourcesForTarget.
    */
   _unwatchResourcesForTarget(targetFront, resourceType) {
+    if (this._hasResourceWatcherSupportForTarget(resourceType, targetFront)) {
+      // This resource / target pair should already be handled by the watcher,
+      // no need to stop legacy listeners.
+    }
     // Is there really a point in:
     // - unregistering `onAvailable` RDP event callbacks from target-scoped actors?
     // - calling `stopListeners()` as we are most likely closing the toolbox and destroying everything?
