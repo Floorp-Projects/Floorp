@@ -8,22 +8,19 @@
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
-function* test(testDriver) {
+async function test() {
   ok(screen.height > 500, "Screen height must be at least 500 pixels for this test to work");
-
-  // This listener will trigger the test to continue once APZ is done with
-  // processing the scroll.
-  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
-
-  // Note on the synthesizeNativeTouchDrag() calls in this file: by using
-  // yield and *not* passing |testDriver| as the |aObserver| argument, these
-  // calls block until something else (in this case, the APZ:TransformEnd
-  // notification) resumes the test.
 
   // Scroll down to the iframe. Do it in two drags instead of one in case the
   // device screen is short.
-  yield synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
-  yield synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
+  let transformEnd = promiseTransformEnd();
+  synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
+  await transformEnd;
+
+  transformEnd = promiseTransformEnd();
+  synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
+  await transformEnd;
+
   // Now the top of the visible area should be at y=350 of the top-level page,
   // so if the screen is >= 500px tall, the entire iframe should be visible, at
   // least vertically.
@@ -32,19 +29,18 @@ function* test(testDriver) {
   // scrolling is happening in APZ and is not reflected in the main-thread
   // scroll position (it is stored in the callback transform instead). We check
   // this by checking the scroll offset.
-  yield flushApzRepaints(testDriver);
+  await promiseApzRepaintsFlushed();
   is(window.scrollY, 0, "Main-thread scroll position is still at 0");
 
   // Scroll the iframe by 150px.
   var subframe = document.getElementById("subframe");
-  yield synthesizeNativeTouchDrag(subframe, 10, 100, 0, -150);
-
-  // Remove the observer, we don't need it any more.
-  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+  transformEnd = promiseTransformEnd();
+  synthesizeNativeTouchDrag(subframe, 10, 100, 0, -150);
+  await transformEnd;
 
   // Flush any pending paints on the APZ side, and wait for the main thread
   // to process them all so that we get the correct test data
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   // get the displayport for the subframe
   var utils = SpecialPowers.getDOMWindowUtils(window);
@@ -65,7 +61,7 @@ function* test(testDriver) {
 
 SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
