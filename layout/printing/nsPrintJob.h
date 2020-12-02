@@ -127,6 +127,8 @@ class nsPrintJob final : public nsIObserver,
   bool HasEverPrinted() const { return mHasEverPrinted; }
   /// If the returned value is not greater than zero, an error occurred.
   int32_t GetRawNumPages() const;
+  // Returns whether the preview is empty due to page range exclusion.
+  bool GetIsEmpty() const;
 
   // Returns the total number of PrintedSheetFrames (i.e. faces of a sheet of
   // paper) for this print job. (This may be less than the raw number of pages,
