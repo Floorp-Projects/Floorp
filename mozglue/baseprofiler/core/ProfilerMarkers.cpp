@@ -203,3 +203,29 @@ Span<const char> MarkerSchema::FormatToStringSpan(
 }
 
 }  // namespace mozilla
+
+template MFBT_API mozilla::MarkerSchema::DataRowVector::reference
+mozilla::MarkerSchema::DataRowVector::emplace_back(
+    mozilla::VariantType<mozilla::MarkerSchema::DynamicData>&&,
+    mozilla::MarkerSchema::DynamicData&&);
+
+template MFBT_API mozilla::MarkerSchema::DataRowVector::reference
+mozilla::MarkerSchema::DataRowVector::emplace_back(
+    mozilla::VariantType<mozilla::MarkerSchema::StaticData>&&,
+    mozilla::MarkerSchema::StaticData&&);
+
+namespace mozilla::baseprofiler {
+template MFBT_API ProfileBufferBlockIndex AddMarker(const ProfilerString8View&,
+                                                    const MarkerCategory&,
+                                                    MarkerOptions&&,
+                                                    markers::TextMarker,
+                                                    const std::string&);
+
+template MFBT_API ProfileBufferBlockIndex
+AddMarkerToBuffer(ProfileChunkedBuffer&, const ProfilerString8View&,
+                  const MarkerCategory&, MarkerOptions&&, markers::NoPayload);
+
+template MFBT_API ProfileBufferBlockIndex AddMarkerToBuffer(
+    ProfileChunkedBuffer&, const ProfilerString8View&, const MarkerCategory&,
+    MarkerOptions&&, markers::TextMarker, const std::string&);
+}  // namespace mozilla::baseprofiler
