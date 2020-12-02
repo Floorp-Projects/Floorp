@@ -208,44 +208,58 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
 // i: Pixel summed and stored (between loops)
 // c: Pixel summed not stored
 // x: Pixel not summed not stored
-static void boxsum3(coef *dst, const pixel *src, const int w, const int h) {
+static void boxsum3(int32_t *sumsq, coef *sum, const pixel *src,
+                    const int w, const int h)
+{
     // We skip the first row, as it is never used
     src += REST_UNIT_STRIDE;
-    dst += REST_UNIT_STRIDE;
 
     // We skip the first and last columns, as they are never used
     for (int x = 1; x < w - 1; x++) {
-        coef *ds = dst + x;
+        coef *sum_v = sum + x;
+        int32_t *sumsq_v = sumsq + x;
         const pixel *s = src + x;
-        int a = s[0], b = s[REST_UNIT_STRIDE];
+        int a = s[0], a2 = a * a;
+        int b = s[REST_UNIT_STRIDE], b2 = b * b;
 
         // We skip the first 2 rows, as they are skipped in the next loop and
         // we don't need the last 2 row as it is skipped in the next loop
         for (int y = 2; y < h - 2; y++) {
             s += REST_UNIT_STRIDE;
             const int c = s[REST_UNIT_STRIDE];
-            ds += REST_UNIT_STRIDE;
-            *ds = a + b + c;
+            const int c2 = c * c;
+            sum_v += REST_UNIT_STRIDE;
+            sumsq_v += REST_UNIT_STRIDE;
+            *sum_v = a + b + c;
+            *sumsq_v = a2 + b2 + c2;
             a = b;
+            a2 = b2;
             b = c;
+            b2 = c2;
         }
      }
 
-    // We skip the first 2 rows as they are never read
-    dst += REST_UNIT_STRIDE;
+    // We skip the first row as it is never read
+    sum += REST_UNIT_STRIDE;
+    sumsq += REST_UNIT_STRIDE;
     // We skip the last 2 rows as it is never read
     for (int y = 2; y < h - 2; y++) {
-        int a = dst[1], b = dst[2];
+        int a = sum[1], a2 = sumsq[1];
+        int b = sum[2], b2 = sumsq[2];
 
         // We don't store the first column as it is never read and
         // we don't store the last 2 columns as they are never read
         for (int x = 2; x < w - 2; x++) {
-            const int c = dst[x + 1];
-            dst[x] = a + b + c;
+            const int c = sum[x + 1], c2 = sumsq[x + 1];
+            sum[x] = a + b + c;
+            sumsq[x] = a2 + b2 + c2;
             a = b;
+            a2 = b2;
             b = c;
+            b2 = c2;
         }
-        dst += REST_UNIT_STRIDE;
+        sum += REST_UNIT_STRIDE;
+        sumsq += REST_UNIT_STRIDE;
     }
 }
 
@@ -271,141 +285,62 @@ static void boxsum3(coef *dst, const pixel *src, const int w, const int h) {
 // i: Pixel summed and stored (between loops)
 // c: Pixel summed not stored
 // x: Pixel not summed not stored
-static void boxsum5(coef *dst, const pixel *const src, const int w, const int h) {
-    // We skip the first row, as it is never used
-    dst += REST_UNIT_STRIDE;
-
+static void boxsum5(int32_t *sumsq, coef *sum, const pixel *const src,
+                    const int w, const int h)
+{
     for (int x = 0; x < w; x++) {
-        coef *ds = dst + x;
+        coef *sum_v = sum + x;
+        int32_t *sumsq_v = sumsq + x;
         const pixel *s = src + 3 * REST_UNIT_STRIDE + x;
-        int a = s[-3 * REST_UNIT_STRIDE];
-        int b = s[-2 * REST_UNIT_STRIDE];
-        int c = s[-1 * REST_UNIT_STRIDE];
-        int d = s[0];
+        int a = s[-3 * REST_UNIT_STRIDE], a2 = a * a;
+        int b = s[-2 * REST_UNIT_STRIDE], b2 = b * b;
+        int c = s[-1 * REST_UNIT_STRIDE], c2 = c * c;
+        int d = s[0], d2 = d * d;
 
         // We skip the first 2 rows, as they are skipped in the next loop and
         // we don't need the last 2 row as it is skipped in the next loop
         for (int y = 2; y < h - 2; y++) {
             s += REST_UNIT_STRIDE;
-            const int e = *s;
-            ds += REST_UNIT_STRIDE;
-            *ds = a + b + c + d + e;
+            const int e = *s, e2 = e * e;
+            sum_v += REST_UNIT_STRIDE;
+            sumsq_v += REST_UNIT_STRIDE;
+            *sum_v = a + b + c + d + e;
+            *sumsq_v = a2 + b2 + c2 + d2 + e2;
             a = b;
             b = c;
             c = d;
             d = e;
+            a2 = b2;
+            b2 = c2;
+            c2 = d2;
+            d2 = e2;
         }
     }
-
-    // We skip the first 2 rows as they are never read
-    dst += REST_UNIT_STRIDE;
-    for (int y = 2; y < h - 2; y++) {
-        int a = dst[0];
-        int b = dst[1];
-        int c = dst[2];
-        int d = dst[3];
-
-        for (int x = 2; x < w - 2; x++) {
-            const int e = dst[x + 2];
-            dst[x] = a + b + c + d + e;
-            a = b;
-            b = c;
-            c = d;
-            d = e;
-        }
-        dst += REST_UNIT_STRIDE;
-    }
-}
-
-// See boxsum3 function comments for details on row and column skipping
-static void boxsum3sqr(int32_t *dst, const pixel *src, const int w, const int h) {
-    // We skip the first row, as it is never used
-    src += REST_UNIT_STRIDE;
-    dst += REST_UNIT_STRIDE;
-
-    // We skip the first and last columns, as they are never used
-    for (int x = 1; x < w - 1; x++) {
-        int32_t *ds = dst + x;
-        const pixel *s = src + x;
-        int a = s[0] * s[0];
-        int b = s[REST_UNIT_STRIDE] * s[REST_UNIT_STRIDE];
-
-        // We skip the first row, as it is skipped in the next loop and
-        // we don't need the last row as it is skipped in the next loop
-        for (int y = 2; y < h - 2; y++) {
-            s += REST_UNIT_STRIDE;
-            const int c = s[REST_UNIT_STRIDE] * s[REST_UNIT_STRIDE];
-            ds += REST_UNIT_STRIDE;
-            *ds = a + b + c;
-            a = b;
-            b = c;
-        }
-     }
 
     // We skip the first row as it is never read
-    dst += REST_UNIT_STRIDE;
-    // We skip the last row as it is never read
+    sum += REST_UNIT_STRIDE;
+    sumsq += REST_UNIT_STRIDE;
     for (int y = 2; y < h - 2; y++) {
-        int a = dst[1], b = dst[2];
+        int a = sum[0], a2 = sumsq[0];
+        int b = sum[1], b2 = sumsq[1];
+        int c = sum[2], c2 = sumsq[2];
+        int d = sum[3], d2 = sumsq[3];
 
-        // We don't store the first column as it is never read and
-        // we don't store the last 2 columns as they are never read
         for (int x = 2; x < w - 2; x++) {
-            const int c = dst[x + 1];
-            dst[x] = a + b + c;
-            a = b;
-            b = c;
-        }
-        dst += REST_UNIT_STRIDE;
-    }
-}
-
-// See boxsum5 function comments for details on row and column skipping
-static void boxsum5sqr(int32_t *dst, const pixel *const src, const int w,
-                       const int h)
-{
-    // We skip the first row, as it is never used
-    dst += REST_UNIT_STRIDE;
-
-    for (int x = 0; x < w; x++) {
-        int32_t *ds = dst + x;
-        const pixel *s = src + 3 * REST_UNIT_STRIDE + x;
-        int a = s[-3 * REST_UNIT_STRIDE] * s[-3 * REST_UNIT_STRIDE];
-        int b = s[-2 * REST_UNIT_STRIDE] * s[-2 * REST_UNIT_STRIDE];
-        int c = s[-1 * REST_UNIT_STRIDE] * s[-1 * REST_UNIT_STRIDE];
-        int d = s[0] * s[0];
-
-        // We skip the first 2 rows, as they are skipped in the next loop and
-        // we don't need the last 2 row as it is skipped in the next loop
-        for (int y = 2; y < h - 2; y++) {
-            s += REST_UNIT_STRIDE;
-            const int e = s[0] * s[0];
-            ds += REST_UNIT_STRIDE;
-            *ds = a + b + c + d + e;
+            const int e = sum[x + 2], e2 = sumsq[x + 2];
+            sum[x] = a + b + c + d + e;
+            sumsq[x] = a2 + b2 + c2 + d2 + e2;
             a = b;
             b = c;
             c = d;
             d = e;
+            a2 = b2;
+            b2 = c2;
+            c2 = d2;
+            d2 = e2;
         }
-    }
-
-    // We skip the first 2 rows as they are never read
-    dst += REST_UNIT_STRIDE;
-    for (int y = 2; y < h - 2; y++) {
-        int a = dst[0];
-        int b = dst[1];
-        int c = dst[2];
-        int d = dst[3];
-
-        for (int x = 2; x < w - 2; x++) {
-            const int e = dst[x + 2];
-            dst[x] = a + b + c + d + e;
-            a = b;
-            b = c;
-            c = d;
-            d = e;
-        }
-        dst += REST_UNIT_STRIDE;
+        sum += REST_UNIT_STRIDE;
+        sumsq += REST_UNIT_STRIDE;
     }
 }
 
@@ -418,21 +353,18 @@ static void selfguided_filter(coef *dst, const pixel *src,
 
     // Selfguided filter is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
-    int32_t A_[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
-    int32_t *A = A_ + 3 * REST_UNIT_STRIDE + 3;
+    int32_t sumsq[68 /*(64 + 2 + 2)*/ * REST_UNIT_STRIDE];
+    int32_t *A = sumsq + 2 * REST_UNIT_STRIDE + 3;
     // By inverting A and B after the boxsums, B can be of size coef instead
     // of int32_t
-    coef B_[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
-    coef *B = B_ + 3 * REST_UNIT_STRIDE + 3;
+    coef sum[68 /*(64 + 2 + 2)*/ * REST_UNIT_STRIDE];
+    coef *B = sum + 2 * REST_UNIT_STRIDE + 3;
 
     const int step = (n == 25) + 1;
-    if (n == 25) {
-        boxsum5(B_, src, w + 6, h + 6);
-        boxsum5sqr(A_, src, w + 6, h + 6);
-    } else {
-        boxsum3(B_, src, w + 6, h + 6);
-        boxsum3sqr(A_, src, w + 6, h + 6);
-    }
+    if (n == 25)
+        boxsum5(sumsq, sum, src, w + 6, h + 6);
+    else
+        boxsum3(sumsq, sum, src, w + 6, h + 6);
     const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
 
     int32_t *AA = A - REST_UNIT_STRIDE;

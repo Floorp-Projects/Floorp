@@ -182,6 +182,8 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     elif CONFIG['CPU_ARCH'] == 'arm':
         SOURCES += [
             '../../../third_party/dav1d/src/arm/32/cdef.S',
+            '../../../third_party/dav1d/src/arm/32/cdef16.S',
+            '../../../third_party/dav1d/src/arm/32/cdef_tmpl.S',
             '../../../third_party/dav1d/src/arm/32/ipred.S',
             '../../../third_party/dav1d/src/arm/32/itx.S',
             '../../../third_party/dav1d/src/arm/32/loopfilter.S',
