@@ -276,13 +276,6 @@ class Session(
         get() = store?.state?.findTabOrCustomTab(id)?.content?.icon
 
     /**
-     * List of recording devices (e.g. camera or microphone) currently in use by web content.
-     */
-    var recordingDevices: List<RecordingDevice> by Delegates.observable(emptyList()) { _, old, new ->
-        notifyObservers(old, new) { onRecordingDevicesChanged(this@Session, new) }
-    }
-
-    /**
      * Returns whether or not this session is used for a Custom Tab.
      */
     fun isCustomTabSession() = customTabConfig != null

@@ -51,7 +51,7 @@ import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.media.MediaSessionFeature
-import mozilla.components.feature.media.RecordingDevicesNotificationFeature
+import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppInterceptor
 import mozilla.components.feature.pwa.WebAppShortcutManager
@@ -140,7 +140,8 @@ open class DefaultComponents(private val applicationContext: Context) {
                 applicationContext,
                 LocationService.default()
             ),
-            SearchMiddleware(applicationContext)
+            SearchMiddleware(applicationContext),
+            RecordingDevicesMiddleware(applicationContext)
         ) + EngineMiddleware.create(engine, ::findSessionById))
     }
 
@@ -170,9 +171,6 @@ open class DefaultComponents(private val applicationContext: Context) {
                 .whenSessionsChange()
 
             icons.install(engine, store)
-
-            RecordingDevicesNotificationFeature(applicationContext, sessionManager = this)
-                .enable()
 
             WebNotificationFeature(applicationContext, engine, icons, R.drawable.ic_notification,
                 permissionStorage, BrowserActivity::class.java)

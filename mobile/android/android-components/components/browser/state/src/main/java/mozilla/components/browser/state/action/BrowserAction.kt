@@ -37,6 +37,7 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.prompt.PromptRequest
@@ -499,6 +500,14 @@ sealed class ContentAction : BrowserAction() {
      * */
     data class ClearAppPermissionRequests(
         val sessionId: String
+    ) : ContentAction()
+
+    /**
+     * Sets the list of active recording devices (webcam, microphone, ..) used by web content.
+     */
+    data class SetRecordingDevices(
+        val sessionId: String,
+        val devices: List<RecordingDevice>
     ) : ContentAction()
 }
 

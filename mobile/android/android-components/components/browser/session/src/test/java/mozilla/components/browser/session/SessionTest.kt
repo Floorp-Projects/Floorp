@@ -20,7 +20,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
-import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -637,27 +636,6 @@ class SessionTest {
     fun `toString returns string containing id and url`() {
         val session = Session(id = "my-session-id", initialUrl = "https://www.mozilla.org")
         assertEquals("Session(my-session-id, https://www.mozilla.org)", session.toString())
-    }
-
-    @Test
-    fun `observer is notified when recording devices change`() {
-        val observer = mock(Session.Observer::class.java)
-
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-
-        assertTrue(session.recordingDevices.isEmpty())
-
-        val twoDevices = listOf(
-            RecordingDevice(RecordingDevice.Type.MICROPHONE, RecordingDevice.Status.RECORDING),
-            RecordingDevice(RecordingDevice.Type.CAMERA, RecordingDevice.Status.INACTIVE)
-        )
-        session.recordingDevices = twoDevices
-        verify(observer).onRecordingDevicesChanged(session, twoDevices)
-
-        val oneDevice = listOf(RecordingDevice(RecordingDevice.Type.MICROPHONE, RecordingDevice.Status.RECORDING))
-        session.recordingDevices = oneDevice
-        verify(observer).onRecordingDevicesChanged(session, oneDevice)
     }
 
     @Test

@@ -34,7 +34,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 dependencies {
     implementation project(':concept-engine')
-    implementation project(':browser-session')
+    implementation project(':browser-state')
     implementation project(':ui-icons')
     implementation project(':support-ktx')
     implementation project(':support-base')

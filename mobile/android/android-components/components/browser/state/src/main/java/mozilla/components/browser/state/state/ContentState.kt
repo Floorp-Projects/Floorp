@@ -10,6 +10,7 @@ import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.content.HistoryState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
@@ -50,6 +51,8 @@ import mozilla.components.concept.engine.window.WindowRequest
  * True if a page refresh was cancelled by the user, defaults to false. Note that this is not about
  * stopping an ongoing page load but useful in cases like swipe-to-refresh which allow users to
  * cancel or abort before a page is refreshed.
+ * @property recordingDevices List of recording devices (e.g. camera or microphone) currently in use
+ * by web content.
  */
 data class ContentState(
     val url: String,
@@ -78,5 +81,6 @@ data class ContentState(
     val appPermissionRequestsList: List<PermissionRequest> = emptyList(),
     val pictureInPictureEnabled: Boolean = false,
     val loadRequest: LoadRequestState? = null,
-    val refreshCanceled: Boolean = false
+    val refreshCanceled: Boolean = false,
+    val recordingDevices: List<RecordingDevice> = emptyList()
 )

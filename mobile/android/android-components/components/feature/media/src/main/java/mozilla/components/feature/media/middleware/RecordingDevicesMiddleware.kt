@@ -2,18 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.media
+package mozilla.components.feature.media.middleware
 
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.utils.AllSessionsObserver
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.media.RecordingDevice
+import mozilla.components.feature.media.R
 import mozilla.components.feature.media.notification.MediaNotificationChannel
+import mozilla.components.lib.state.Middleware
+import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.ids.SharedIdsHelper
 
 private const val NOTIFICATION_TAG = "mozac.feature.media.recordingDevices"
@@ -21,37 +27,64 @@ private const val NOTIFICATION_ID = 1
 private const val PENDING_INTENT_TAG = "mozac.feature.media.pendingintent"
 
 /**
- * Feature for displaying an ongoing notification while recording devices (camera, microphone) are used.
- *
- * This feature should be initialized globally (application scope) and only once.
+ * Middleware for displaying an ongoing notification while recording devices (camera, microphone)
+ * are used by web content.
  */
-class RecordingDevicesNotificationFeature(
-    private val context: Context,
-    private val sessionManager: SessionManager
-) {
+class RecordingDevicesMiddleware(
+    private val context: Context
+) : Middleware<BrowserState, BrowserAction> {
     private var isShowingNotification: Boolean = false
 
-    /**
-     * Enable the media notification feature. An ongoing notification will be shown while recording devices (camera,
-     * microphone) are used.
-     */
-    fun enable() {
-        AllSessionsObserver(sessionManager, DevicesObserver(this))
-            .start()
+    override fun invoke(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        next: (BrowserAction) -> Unit,
+        action: BrowserAction
+    ) {
+        next(action)
+
+        // Whenever the recording devices of a tab change or tabs get added/removed then process
+        // the current list and show/hide the notification.
+        if (
+            action is ContentAction.SetRecordingDevices ||
+            action is TabListAction ||
+            action is CustomTabListAction
+        ) {
+            process(context.state)
+        }
     }
 
-    @Synchronized
-    internal fun updateRecordingState(state: RecordingState) {
-        if (state.isRecording && !isShowingNotification) {
-            showNotification(state)
+    private fun process(state: BrowserState) {
+        val devices = state.tabs
+            .map { tab -> tab.content.recordingDevices }
+            .flatten()
+            .filter { device -> device.status == RecordingDevice.Status.RECORDING }
+            .distinctBy { device -> device.type }
+
+        val isUsingCamera = devices.find { it.type == RecordingDevice.Type.CAMERA } != null
+        val isUsingMicrophone = devices.find { it.type == RecordingDevice.Type.MICROPHONE } != null
+
+        val recordingState = when {
+            isUsingCamera && isUsingMicrophone -> RecordingState.CameraAndMicrophone
+            isUsingCamera -> RecordingState.Camera
+            isUsingMicrophone -> RecordingState.Microphone
+            else -> RecordingState.None
+        }
+
+        updateNotification(recordingState)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun updateNotification(recordingState: RecordingState) {
+        if (recordingState.isRecording && !isShowingNotification) {
+            showNotification(recordingState)
             isShowingNotification = true
-        } else if (!state.isRecording && isShowingNotification) {
+        } else if (!recordingState.isRecording && isShowingNotification) {
             hideNotification()
             isShowingNotification = false
         }
     }
 
-    private fun showNotification(state: RecordingState) {
+    private fun showNotification(recordingState: RecordingState) {
         val channelId = MediaNotificationChannel.ensureChannelExists(context)
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
@@ -62,8 +95,8 @@ class RecordingDevicesNotificationFeature(
             SharedIdsHelper.getIdForTag(context, PENDING_INTENT_TAG), intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(state.iconResource)
-            .setContentTitle(context.getString(state.titleResource))
+            .setSmallIcon(recordingState.iconResource)
+            .setContentTitle(context.getString(recordingState.titleResource))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setContentIntent(pendingIntent)
@@ -77,48 +110,6 @@ class RecordingDevicesNotificationFeature(
     private fun hideNotification() {
         NotificationManagerCompat.from(context)
             .cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
-    }
-}
-
-private class DevicesObserver(
-    private val feature: RecordingDevicesNotificationFeature
-) : AllSessionsObserver.Observer {
-    private val deviceMap = mutableMapOf<Session, List<RecordingDevice>>()
-
-    override fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) {
-        if (devices.isEmpty()) {
-            deviceMap.remove(session)
-        } else {
-            deviceMap[session] = devices
-        }
-
-        notifyFeature()
-    }
-
-    override fun onUnregisteredFromSession(session: Session) {
-        deviceMap.remove(session)
-
-        notifyFeature()
-    }
-
-    private fun notifyFeature() {
-        val recordingDevices = deviceMap.values.flatten().filter { device ->
-            device.status == RecordingDevice.Status.RECORDING
-        }.distinctBy { device ->
-            device.type
-        }
-
-        val isUsingCamera = recordingDevices.find { it.type == RecordingDevice.Type.CAMERA } != null
-        val isUsingMicrophone = recordingDevices.find { it.type == RecordingDevice.Type.MICROPHONE } != null
-
-        val state = when {
-            isUsingCamera && isUsingMicrophone -> RecordingState.CameraAndMicrophone
-            isUsingCamera -> RecordingState.Camera
-            isUsingMicrophone -> RecordingState.Microphone
-            else -> RecordingState.None
-        }
-
-        feature.updateRecordingState(state)
     }
 }
 
