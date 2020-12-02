@@ -2641,14 +2641,10 @@ nsresult HTMLInputElement::SetValueInternal(const nsAString& aValue,
 
   // We want to remember if the SetValueInternal() call is being made for a XUL
   // element.  We do that by looking at the parent node here, and if that node
-  // is a XUL node, we consider our control a XUL control. XUL controls preserve
-  // edit history across value setters.
-  //
-  // TODO(emilio): Rather than doing this maybe add an attribute instead and
-  // read it only on chrome docs or something? That'd allow front-end code to
-  // move away from xul without weird side-effects.
-  if (mParent && mParent->IsXULElement()) {
-    aFlags |= TextControlState::eSetValue_PreserveHistory;
+  // is a XUL node, we consider our control a XUL control.
+  nsIContent* parent = GetParent();
+  if (parent && parent->IsXULElement()) {
+    aFlags |= TextControlState::eSetValue_ForXUL;
   }
 
   switch (GetValueMode()) {
