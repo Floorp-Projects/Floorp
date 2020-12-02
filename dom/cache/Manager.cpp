@@ -275,30 +275,17 @@ class Manager::Factory {
 
   static void Abort(const nsACString& aOrigin) {
     mozilla::ipc::AssertIsOnBackgroundThread();
+    MOZ_ASSERT(!aOrigin.IsEmpty());
 
-    if (!sFactory) {
-      return;
-    }
+    AbortMatching([&aOrigin](const auto& manager) {
+      return manager->mManagerId->QuotaOrigin() == aOrigin;
+    });
+  }
 
-    MOZ_DIAGNOSTIC_ASSERT(!sFactory->mManagerList.IsEmpty());
+  static void AbortAll() {
+    mozilla::ipc::AssertIsOnBackgroundThread();
 
-    {
-      // Note that we are synchronously calling abort code here.  If any
-      // of the shutdown code synchronously decides to delete the Factory
-      // we need to delay that delete until the end of this method.
-      AutoRestore<bool> restore(sFactory->mInSyncAbortOrShutdown);
-      sFactory->mInSyncAbortOrShutdown = true;
-
-      for (auto* manager : sFactory->mManagerList.ForwardRange()) {
-        if (aOrigin.IsVoid() || manager->mManagerId->QuotaOrigin() == aOrigin) {
-          auto pinnedManager =
-              SafeRefPtr{manager, AcquireStrongRefFromRawPtr{}};
-          pinnedManager->Abort();
-        }
-      }
-    }
-
-    MaybeDestroyInstance();
+    AbortMatching([](const auto&) { return true; });
   }
 
   static void ShutdownAll() {
@@ -438,6 +425,35 @@ class Manager::Factory {
     return foundIt != range.end()
                ? SafeRefPtr{*foundIt, AcquireStrongRefFromRawPtr{}}
                : nullptr;
+  }
+
+  template <typename Condition>
+  static void AbortMatching(const Condition& aCondition) {
+    mozilla::ipc::AssertIsOnBackgroundThread();
+
+    if (!sFactory) {
+      return;
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(!sFactory->mManagerList.IsEmpty());
+
+    {
+      // Note that we are synchronously calling abort code here.  If any
+      // of the shutdown code synchronously decides to delete the Factory
+      // we need to delay that delete until the end of this method.
+      AutoRestore<bool> restore(sFactory->mInSyncAbortOrShutdown);
+      sFactory->mInSyncAbortOrShutdown = true;
+
+      for (auto* manager : sFactory->mManagerList.ForwardRange()) {
+        if (aCondition(manager)) {
+          auto pinnedManager =
+              SafeRefPtr{manager, AcquireStrongRefFromRawPtr{}};
+          pinnedManager->Abort();
+        }
+      }
+    }
+
+    MaybeDestroyInstance();
   }
 
   // Singleton created on demand and deleted when last Manager is cleared
@@ -1609,6 +1625,13 @@ void Manager::Abort(const nsACString& aOrigin) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   Factory::Abort(aOrigin);
+}
+
+// static
+void Manager::AbortAll() {
+  mozilla::ipc::AssertIsOnBackgroundThread();
+
+  Factory::AbortAll();
 }
 
 void Manager::RemoveListener(Listener* aListener) {

@@ -50,6 +50,8 @@ class CacheQuotaClient final : public quota::Client {
   virtual void AbortOperationsForProcess(
       ContentParentId aContentParentId) override;
 
+  virtual void AbortAllOperations() override;
+
   virtual void StartIdleMaintenance() override;
 
   virtual void StopIdleMaintenance() override;
