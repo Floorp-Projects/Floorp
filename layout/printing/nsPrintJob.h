@@ -132,7 +132,7 @@ class nsPrintJob final : public nsIObserver,
   // paper) for this print job. (This may be less than the raw number of pages,
   // due to pages having been skipped in a page range or combined into a single
   // sheet via pages-per-sheet.)
-  int32_t GetPrintPreviewNumSheets();
+  int32_t GetPrintPreviewNumSheets() const;
   already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
 
   // The setters here also update the DocViewer
@@ -141,7 +141,7 @@ class nsPrintJob final : public nsIObserver,
   void SetIsPrintPreview(bool aIsPrintPreview);
   bool GetIsCreatingPrintPreview() const { return mIsCreatingPrintPreview; }
 
-  std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountSheets();
+  std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountSheets() const;
 
   bool PrePrintSheet();
   bool PrintSheet(nsPrintObject* aPOect, bool& aInRange);
