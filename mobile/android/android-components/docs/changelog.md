@@ -46,6 +46,7 @@ permalink: /changelog/
 
 * **browser-errorpages**:
   * ⚠️ The url encoded error page - `error_page_js` is now clean of inline code. Clients should not rely on inlined code anymore.
+  * ⚠️ **This is a breaking change**: Removed the data url encoded error page - `error_pages` which was already deprecated by `error_page_js`.
 
 # 67.0.0
 

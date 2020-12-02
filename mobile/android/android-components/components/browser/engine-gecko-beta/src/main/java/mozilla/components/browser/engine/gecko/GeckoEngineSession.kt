@@ -39,7 +39,6 @@ import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import mozilla.components.support.ktx.kotlin.isGeoLocation
@@ -529,17 +528,12 @@ class GeckoEngineSession(
             uri: String?,
             error: WebRequestError
         ): GeckoResult<String> {
-            val uriToLoad = settings.requestInterceptor?.onErrorRequest(
+            val response = settings.requestInterceptor?.onErrorRequest(
                 this@GeckoEngineSession,
                 geckoErrorToErrorType(error.code),
                 uri
-            )?.run {
-                when (this) {
-                    is RequestInterceptor.ErrorResponse.Content -> Base64.encodeToUriString(data)
-                    is RequestInterceptor.ErrorResponse.Uri -> this.uri
-                }
-            }
-            return GeckoResult.fromValue(uriToLoad)
+            )
+            return GeckoResult.fromValue(response?.uri)
         }
 
         private fun maybeInterceptRequest(

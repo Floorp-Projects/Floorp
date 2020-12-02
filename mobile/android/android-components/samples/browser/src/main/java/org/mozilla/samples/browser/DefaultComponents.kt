@@ -82,7 +82,7 @@ import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.integration.P2PIntegration
 import org.mozilla.samples.browser.media.MediaSessionService
-import org.mozilla.samples.browser.request.SampleRequestInterceptor
+import org.mozilla.samples.browser.request.SampleUrlEncodedRequestInterceptor
 import java.util.concurrent.TimeUnit
 
 private const val DAY_IN_MINUTES = 24 * 60L
@@ -101,7 +101,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     val engineSettings by lazy {
         DefaultSettings().apply {
             historyTrackingDelegate = HistoryDelegate(lazyHistoryStorage)
-            requestInterceptor = SampleRequestInterceptor(applicationContext)
+            requestInterceptor = SampleUrlEncodedRequestInterceptor(applicationContext)
             remoteDebuggingEnabled = true
             supportMultipleWindows = true
             preferredColorScheme = PreferredColorScheme.Dark

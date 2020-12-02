@@ -1558,7 +1558,7 @@ class GeckoEngineSessionTest {
                 errorType: ErrorType,
                 uri: String?
             ): RequestInterceptor.ErrorResponse? =
-                RequestInterceptor.ErrorResponse.Content("nonNullData")
+                RequestInterceptor.ErrorResponse("nonNullData")
         }
 
         val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)

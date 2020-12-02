@@ -8,7 +8,6 @@ import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Test
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
-import mozilla.components.concept.engine.request.RequestInterceptor.ErrorResponse
 import org.junit.Assert.assertEquals
 import org.mockito.Mockito.mock
 
@@ -26,15 +25,6 @@ class RequestInterceptorTest {
 
         assertEquals("https://mozilla.org", url)
         assertEquals(Triple("data", "UTF-8", "text/html"), content)
-    }
-
-    @Test
-    fun `error response has default values`() {
-        val errorResponse = ErrorResponse.Content("data")
-        assertEquals("data", errorResponse.data)
-        assertEquals("text/html", errorResponse.mimeType)
-        assertEquals("UTF-8", errorResponse.encoding)
-        assertEquals(null, errorResponse.url)
     }
 
     @Test
