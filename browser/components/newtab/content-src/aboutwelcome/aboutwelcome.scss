@@ -525,6 +525,17 @@ body {
     }
   }
 
+  // "tiles-media-section" styles here will support tiles of type 
+  // "video" when the screen JSON it set in the below format:
+
+  // "tiles": {
+  //   "type": "video",
+  //   "source": {
+  //     "default" : "<media-file-uri>",
+  //     "dark" : "<media-file-dark-mode-uri>"
+  //   }
+  // }
+
   .tiles-media-section {
     align-self: center;
     position: relative;
@@ -543,16 +554,13 @@ body {
       width: 800px;
     }
 
-    @media (prefers-reduced-motion) {
+    &.privacy {
+      background: top no-repeat url('chrome://activity-stream/content/data/content/assets/firefox-protections.svg');
       height: 200px;
       width: 800px;
       margin: 0;
 
-      &.privacy {
-        background: top no-repeat url('chrome://activity-stream/content/data/content/assets/firefox-protections.svg');
-      }
-
-      .media {
+      &.media {
         opacity: 0;
       }
     }
