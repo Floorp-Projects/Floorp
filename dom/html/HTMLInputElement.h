@@ -670,7 +670,7 @@ class HTMLInputElement final : public TextControlElement,
 
   already_AddRefed<nsINodeList> GetLabels();
 
-  void Select();
+  MOZ_CAN_RUN_SCRIPT void Select();
 
   Nullable<uint32_t> GetSelectionStart(ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void SetSelectionStart(const Nullable<uint32_t>& aValue,
