@@ -2212,6 +2212,11 @@ void TextControlState::SetSelectionDirection(const nsAString& aDirection,
   nsITextControlFrame::SelectionDirection dir =
       DirectionStringToSelectionDirection(aDirection);
 
+  if (IsSelectionCached()) {
+    GetSelectionProperties().SetDirection(dir);
+    return;
+  }
+
   uint32_t start, end;
   GetSelectionRange(&start, &end, aRv);
   if (aRv.Failed()) {
