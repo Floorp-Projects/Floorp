@@ -1,12 +1,5 @@
 [
   {
-    "size": 56832,
-    "visibility": "public",
-    "digest": "01e6bd936ef008061b95a94008682869ebf2a29d1c035e49cd6579b1a020d0d195431221577f127eb52b97137337efe30e6de6c5a2f4b6a87ff2a990e9874e8e",
-    "algorithm": "sha512",
-    "filename": "dump_syms.exe"
-  },
-  {
     "version": "Visual Studio 2017 15.9.6 / SDK 10.0.17134.0",
     "size": 490015895,
     "visibility": "internal",
