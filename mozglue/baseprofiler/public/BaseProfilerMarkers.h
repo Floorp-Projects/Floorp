@@ -215,18 +215,6 @@ class MOZ_RAII AutoProfilerTextMarker {
   std::string mText;
 };
 
-extern template MFBT_API ProfileBufferBlockIndex
-AddMarker(const ProfilerString8View&, const MarkerCategory&, MarkerOptions&&,
-          markers::TextMarker, const std::string&);
-
-extern template MFBT_API ProfileBufferBlockIndex
-AddMarkerToBuffer(ProfileChunkedBuffer&, const ProfilerString8View&,
-                  const MarkerCategory&, MarkerOptions&&, markers::NoPayload);
-
-extern template MFBT_API ProfileBufferBlockIndex AddMarkerToBuffer(
-    ProfileChunkedBuffer&, const ProfilerString8View&, const MarkerCategory&,
-    MarkerOptions&&, markers::TextMarker, const std::string&);
-
 }  // namespace mozilla::baseprofiler
 
 // Creates an AutoProfilerTextMarker RAII object.  This macro is safe to use
