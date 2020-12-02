@@ -217,13 +217,17 @@ TEST_F(SandboxBrokerTest, Stat) {
   EXPECT_EQ(realStat.st_ino, brokeredStat.st_ino);
   EXPECT_EQ(realStat.st_rdev, brokeredStat.st_rdev);
 
-  // Add some indirection to avoid -Wnonnull warnings.
-  [&](const char* aPath) {
-    EXPECT_EQ(-1, statsyscall(aPath, &realStat));
-    EXPECT_EQ(errno, EFAULT);
+#if defined(__clang__) || defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnonnull"
+#endif
+  EXPECT_EQ(-1, statsyscall(nullptr, &realStat));
+  EXPECT_EQ(errno, EFAULT);
 
-    EXPECT_EQ(-EFAULT, Stat(aPath, &brokeredStat));
-  }(nullptr);
+  EXPECT_EQ(-EFAULT, Stat(nullptr, &brokeredStat));
+#if defined(__clang__) || defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
 
   EXPECT_EQ(-ENOENT, Stat("/var/empty/qwertyuiop", &brokeredStat));
   EXPECT_EQ(-EACCES, Stat("/dev", &brokeredStat));
