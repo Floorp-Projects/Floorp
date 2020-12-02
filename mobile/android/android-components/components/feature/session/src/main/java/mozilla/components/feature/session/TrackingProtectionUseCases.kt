@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.session
 
+import mozilla.components.browser.state.action.TrackingProtectionAction
+import androidx.core.net.toUri
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -71,6 +73,15 @@ class TrackingProtectionUseCases(
          */
         operator fun invoke(exception: TrackingProtectionException) {
             engine.trackingProtectionExceptionStore.remove(exception)
+            // Find all tabs that need to update their tracking protection status.
+            val tabs = (store.state.tabs + store.state.customTabs).filter { tab ->
+                val tabDomain = tab.content.url.toUri().host
+                val exceptionDomain = exception.url.toUri().host
+                tabDomain == exceptionDomain
+            }
+            tabs.forEach {
+                store.dispatch(TrackingProtectionAction.ToggleExclusionListAction(it.id, false))
+            }
         }
     }
 

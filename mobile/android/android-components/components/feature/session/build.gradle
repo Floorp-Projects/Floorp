@@ -36,6 +36,7 @@ dependencies {
     implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.google_material
     implementation Dependencies.androidx_swiperefreshlayout
 
