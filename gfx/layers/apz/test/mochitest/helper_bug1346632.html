@@ -25,13 +25,15 @@
     }
   </style>
   <script type="text/javascript">
-function* test(testDriver) {
+async function test() {
   var root = document.scrollingElement;
   var scrollPos = root.scrollTop;
-  document.addEventListener("scroll", () => {
-    ok(root.scrollTop > scrollPos, "document scrolled after dragging scrollbar");
-    setTimeout(testDriver, 0);
-  }, {once: true});
+  var scrollPromise = new Promise((resolve, reject) => {
+    document.addEventListener("scroll", () => {
+      ok(root.scrollTop > scrollPos, "document scrolled after dragging scrollbar");
+      resolve();
+    }, {once: true});
+  });
 
   if (window.innerWidth == root.clientWidth) {
     // No scrollbar, abort the test. This can happen e.g. on local macOS runs
@@ -42,19 +44,19 @@ function* test(testDriver) {
 
   var scrollbarX = (window.innerWidth + root.clientWidth) / 2;
   // Move the mouse to the scrollbar
-  yield synthesizeNativeMouseEvent(root, scrollbarX, 100, nativeMouseMoveEventMsg(), testDriver);
+  await promiseNativeMouseEvent(root, scrollbarX, 100, nativeMouseMoveEventMsg());
   // mouse down
-  yield synthesizeNativeMouseEvent(root, scrollbarX, 100, nativeMouseDownEventMsg(), testDriver);
+  await promiseNativeMouseEvent(root, scrollbarX, 100, nativeMouseDownEventMsg());
   // drag vertically
-  yield synthesizeNativeMouseEvent(root, scrollbarX, 150, nativeMouseMoveEventMsg(), testDriver);
-  // wait for the scroll listener to fire, which will resume this function
-  yield;
+  await promiseNativeMouseEvent(root, scrollbarX, 150, nativeMouseMoveEventMsg());
+  // wait for the scroll listener to fire
+  await scrollPromise;
   // and release
-  yield synthesizeNativeMouseEvent(root, scrollbarX, 150, nativeMouseUpEventMsg(), testDriver);
+  await promiseNativeMouseEvent(root, scrollbarX, 150, nativeMouseUpEventMsg());
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
