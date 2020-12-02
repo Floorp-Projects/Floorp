@@ -89,7 +89,6 @@
 #  include "unicode/utypes.h"
 #  include "unicode/uversion.h"
 #endif
-#include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/AsyncFunction.h"
@@ -419,6 +418,15 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef JS_MORE_DETERMINISTIC
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "more-deterministic", value)) {
+    return false;
+  }
+
 #ifdef MOZ_PROFILING
   value = BooleanValue(true);
 #else
@@ -580,7 +588,9 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
+#ifndef JS_MORE_DETERMINISTIC
   size_t preBytes = cx->runtime()->gc.heapSize.bytes();
+#endif
 
   if (zone) {
     PrepareForDebugGC(cx->runtime());
@@ -591,10 +601,10 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
   JS::NonIncrementalGC(cx, gckind, reason);
 
   char buf[256] = {'\0'};
-  if (!js::SupportDifferentialTesting()) {
-    SprintfLiteral(buf, "before %zu, after %zu\n", preBytes,
-                   cx->runtime()->gc.heapSize.bytes());
-  }
+#ifndef JS_MORE_DETERMINISTIC
+  SprintfLiteral(buf, "before %zu, after %zu\n", preBytes,
+                 cx->runtime()->gc.heapSize.bytes());
+#endif
   return ReturnStringCopy(cx, args, buf);
 }
 
@@ -3049,11 +3059,11 @@ static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool Terminate(JSContext* cx, unsigned arg, Value* vp) {
-  // Print a message to stderr in differential testing to help jsfunfuzz
+#ifdef JS_MORE_DETERMINISTIC
+  // Print a message to stderr in more-deterministic builds to help jsfunfuzz
   // find uncatchable-exception bugs.
-  if (js::SupportDifferentialTesting()) {
-    fprintf(stderr, "terminate called\n");
-  }
+  fprintf(stderr, "terminate called\n");
+#endif
 
   JS_ClearPendingException(cx);
   return false;
@@ -3938,18 +3948,16 @@ static bool DetachArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool HelperThreadCount(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (js::SupportDifferentialTesting()) {
-    // Always return 0 to get consistent output with and without --no-threads.
-    args.rval().setInt32(0);
-    return true;
-  }
-
+#ifdef JS_MORE_DETERMINISTIC
+  // Always return 0 to get consistent output with and without --no-threads.
+  args.rval().setInt32(0);
+#else
   if (CanUseExtraThreads()) {
     args.rval().setInt32(HelperThreadState().threadCount);
   } else {
     args.rval().setInt32(0);
   }
+#endif
   return true;
 }
 
@@ -4032,14 +4040,6 @@ static bool SharedArrayRawBufferRefcount(JSContext* cx, unsigned argc,
 #ifdef NIGHTLY_BUILD
 static bool ObjectAddress(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (js::SupportDifferentialTesting()) {
-    RootedObject callee(cx, &args.callee());
-    ReportUsageErrorASCII(cx, callee,
-                          "Function unavailable in differential testing mode.");
-    return false;
-  }
-
   if (args.length() != 1) {
     RootedObject callee(cx, &args.callee());
     ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
@@ -4051,23 +4051,20 @@ static bool ObjectAddress(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#  ifdef JS_MORE_DETERMINISTIC
+  args.rval().setInt32(0);
+  return true;
+#  else
   void* ptr = js::UncheckedUnwrap(&args[0].toObject(), true);
   char buffer[64];
   SprintfLiteral(buffer, "%p", ptr);
 
   return ReturnStringCopy(cx, args, buffer);
+#  endif
 }
 
 static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (js::SupportDifferentialTesting()) {
-    RootedObject callee(cx, &args.callee());
-    ReportUsageErrorASCII(cx, callee,
-                          "Function unavailable in differential testing mode.");
-    return false;
-  }
-
   if (args.length() != 1) {
     RootedObject callee(cx, &args.callee());
     ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
@@ -4079,6 +4076,9 @@ static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#  ifdef JS_MORE_DETERMINISTIC
+  args.rval().setString(cx->staticStrings().getUint(0));
+#  else
   RootedObject obj(cx, CheckedUnwrapStatic(&args[0].toObject()));
   if (!obj) {
     ReportAccessDenied(cx);
@@ -4100,6 +4100,7 @@ static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setString(str);
+#  endif
 
   return true;
 }
@@ -6105,12 +6106,14 @@ static bool BaselineCompile(JSContext* cx, unsigned argc, Value* vp) {
 
   const char* returnedStr = nullptr;
   do {
+#ifdef JS_MORE_DETERMINISTIC
     // In order to check for differential behaviour, baselineCompile should have
     // the same output whether --no-baseline is used or not.
-    if (js::SupportDifferentialTesting()) {
-      returnedStr = "skipped (differential testing)";
+    if (fuzzingSafe) {
+      returnedStr = "skipped (fuzzing-safe)";
       break;
     }
+#endif
 
     AutoRealm ar(cx, script);
     if (script->hasBaselineScript()) {
