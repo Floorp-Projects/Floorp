@@ -6,7 +6,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ReceiverStateMachine"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["ReceiverStateMachine"];
 
 const { CommandType, State } = ChromeUtils.import(
   "resource://gre/modules/presentation/StateMachineHelper.jsm"
@@ -20,7 +20,7 @@ function debug(str) {
 var handlers = [
   function _initHandler(stateMachine, command) {
     // shouldn't receive any command at init state
-    DEBUG && debug("unexpected command: " + JSON.stringify(command)); // jshint ignore:line
+    DEBUG && debug("unexpected command: " + JSON.stringify(command));
   },
   function _connectingHandler(stateMachine, command) {
     switch (command.type) {
@@ -91,7 +91,7 @@ var handlers = [
   },
   function _closedHandler(stateMachine, command) {
     // ignore every command in closed state.
-    DEBUG && debug("unexpected command: " + JSON.stringify(command)); // jshint ignore:line
+    DEBUG && debug("unexpected command: " + JSON.stringify(command));
   },
 ];
 
@@ -190,7 +190,7 @@ ReceiverStateMachine.prototype = {
         break;
       default:
         DEBUG &&
-          debug("unexpected channel close: " + reason + ", " + isByRemote); // jshint ignore:line
+          debug("unexpected channel close: " + reason + ", " + isByRemote);
         break;
     }
   },
