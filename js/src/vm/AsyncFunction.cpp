@@ -225,6 +225,22 @@ AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
   return obj;
 }
 
+JSFunction* NewHandler(JSContext* cx, Native handler,
+                       JS::Handle<JSObject*> target) {
+  cx->check(target);
+
+  JS::Handle<PropertyName*> funName = cx->names().empty;
+  JS::Rooted<JSFunction*> handlerFun(
+      cx, NewNativeFunction(cx, handler, 0, funName,
+                            gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
+  if (!handlerFun) {
+    return nullptr;
+  }
+  handlerFun->setExtendedSlot(FunctionExtended::MODULE_SLOT,
+                              JS::ObjectValue(*target));
+  return handlerFun;
+}
+
 AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
     JSContext* cx, HandleModuleObject module) {
   // TODO: Module is currently hitching a ride with
@@ -246,6 +262,23 @@ AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
     return nullptr;
   }
   obj->initFixedSlot(PROMISE_SLOT, ObjectValue(*resultPromise));
+
+  RootedObject onFulfilled(
+      cx, NewHandler(cx, AsyncModuleExecutionFulfilledHandler, module));
+  if (!onFulfilled) {
+    return nullptr;
+  }
+
+  RootedObject onRejected(
+      cx, NewHandler(cx, AsyncModuleExecutionRejectedHandler, module));
+  if (!onRejected) {
+    return nullptr;
+  }
+
+  if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(
+          cx, resultPromise, onFulfilled, onRejected)) {
+    return nullptr;
+  }
 
   // Starts in the running state.
   obj->setResumeIndex(AbstractGeneratorObject::RESUME_INDEX_RUNNING);
