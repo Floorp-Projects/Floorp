@@ -913,6 +913,13 @@ class MozbuildObject(ProcessExecutionMixin):
             logging.INFO if not verbose else logging.DEBUG
         )
 
+    def _ensure_zstd(self):
+        try:
+            import zstandard  # noqa: F401
+        except (ImportError, AttributeError):
+            self.activate_virtualenv()
+            self.virtualenv_manager.install_pip_package("zstandard>=0.9.0,<=0.13.0")
+
 
 class MachCommandBase(MozbuildObject):
     """Base class for mach command providers that wish to be MozbuildObjects.
