@@ -402,6 +402,8 @@ class StencilModuleMetadata {
   EntryVector indirectExportEntries;
   EntryVector starExportEntries;
   FunctionDeclarationVector functionDecls;
+  // Set to true if the module has a top-level await keyword.
+  bool isAsync = false;
 
   StencilModuleMetadata() = default;
 
