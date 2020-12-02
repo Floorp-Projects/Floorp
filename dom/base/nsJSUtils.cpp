@@ -173,8 +173,8 @@ nsresult nsJSUtils::ModuleInstantiate(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult nsJSUtils::ModuleEvaluate(JSContext* aCx,
-                                   JS::Handle<JSObject*> aModule) {
+JSObject* nsJSUtils::ModuleEvaluate(JSContext* aCx,
+                                    JS::Handle<JSObject*> aModule) {
   AUTO_PROFILER_LABEL("nsJSUtils::ModuleEvaluate", JS);
 
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
@@ -182,13 +182,9 @@ nsresult nsJSUtils::ModuleEvaluate(JSContext* aCx,
   MOZ_ASSERT(CycleCollectedJSContext::Get() &&
              CycleCollectedJSContext::Get()->MicroTaskLevel());
 
-  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
+  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), nullptr);
 
-  if (!JS::ModuleEvaluate(aCx, aModule)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return JS::ModuleEvaluate(aCx, aModule);
 }
 
 static bool AddScopeChainItem(JSContext* aCx, nsINode* aNode,
