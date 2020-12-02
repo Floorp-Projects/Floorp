@@ -25,7 +25,7 @@ linux64-dump-syms:
         toolchain:
             - linux64-binutils
             - linux64-clang-9
-            - linux64-rust
+            - linux64-rust-1.47
 
 macosx64-dump-syms:
     treeherder:
@@ -42,7 +42,7 @@ macosx64-dump-syms:
         toolchain-artifact: public/build/dump_syms.tar.xz
     fetches:
         toolchain:
-            - linux64-rust-macos
+            - linux64-rust-macos-1.47
             - linux64-clang-9
             - linux64-cctools-port-clang-9
             - linux64-llvm-dsymutil
@@ -62,4 +62,4 @@ win64-dump-syms:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-rust
+            - win64-rust-1.47
