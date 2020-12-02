@@ -169,10 +169,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             requireComponents.core.engine
         )
 
+        val awesomeBar = view.awesome_bar
+        awesomeBar.customizeForBottomToolbar = requireContext().settings().shouldUseBottomToolbar
+
         awesomeBarView = AwesomeBarView(
             activity,
             interactor,
-            view.awesome_bar
+            awesomeBar
         )
 
         view.awesome_bar.setOnTouchListener { _, _ ->
