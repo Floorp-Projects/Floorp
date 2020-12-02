@@ -184,13 +184,14 @@ Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInScope(
   return innermostEmitterScope()->locationBoundInScope(name, target);
 }
 
-Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInFunctionScope(
+template <typename T>
+Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInScopeType(
     const ParserAtom* name, EmitterScope* source) {
-  EmitterScope* funScope = source;
-  while (!funScope->scope(this).is<FunctionScope>()) {
-    funScope = funScope->enclosingInFrame();
+  EmitterScope* aScope = source;
+  while (!aScope->scope(this).is<T>()) {
+    aScope = aScope->enclosingInFrame();
   }
-  return source->locationBoundInScope(name, funScope);
+  return source->locationBoundInScope(name, aScope);
 }
 
 bool BytecodeEmitter::markStepBreakpoint() {
@@ -2464,6 +2465,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
 
   TDZCheckCache tdzCache(this);
   EmitterScope emitterScope(this);
+  Maybe<AsyncEmitter> topLevelAwait;
   if (sc->isGlobalContext()) {
     if (!emitterScope.enterGlobal(this, sc->asGlobalContext())) {
       return false;
@@ -2476,6 +2478,9 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     MOZ_ASSERT(sc->isModuleContext());
     if (!emitterScope.enterModule(this, sc->asModuleContext())) {
       return false;
+    }
+    if (sc->asModuleContext()->isAsync()) {
+      topLevelAwait.emplace(this);
     }
   }
 
@@ -2524,12 +2529,24 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     if (!emitDeclarationInstantiation(body)) {
       return false;
     }
+    if (topLevelAwait) {
+      if (!topLevelAwait->prepareForModule()) {
+        return false;
+      }
+    }
 
     if (!switchToMain()) {
       return false;
     }
 
+    if (topLevelAwait) {
+      if (!topLevelAwait->prepareForBody()) {
+        return false;
+      }
+    }
+
     if (!emitTree(body)) {
+      // [stack]
       return false;
     }
 
@@ -2537,6 +2554,13 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       return false;
     }
   }
+
+  if (topLevelAwait) {
+    if (!topLevelAwait->emitEnd()) {
+      return false;
+    }
+  }
+
   if (!markSimpleBreakpoint()) {
     return false;
   }
@@ -6102,7 +6126,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   if (needsFinalYield) {
     // We know that .generator is on the function scope, as we just exited
     // all nested scopes.
-    NameLocation loc = *locationOfNameBoundInFunctionScope(
+    NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
         cx->parserNames().dotGenerator, varEmitterScope);
 
     // Resolve the return value before emitting the final yield.
@@ -6152,7 +6176,13 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
 }
 
 bool BytecodeEmitter::emitGetDotGeneratorInScope(EmitterScope& currentScope) {
-  NameLocation loc = *locationOfNameBoundInFunctionScope(
+  if (!sc->isFunction() && sc->isModuleContext() &&
+      sc->asModuleContext()->isAsync()) {
+    NameLocation loc = *locationOfNameBoundInScopeType<ModuleScope>(
+        cx->parserNames().dotGenerator, &currentScope);
+    return emitGetNameAtLocation(cx->parserNames().dotGenerator, loc);
+  }
+  NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
       cx->parserNames().dotGenerator, &currentScope);
   return emitGetNameAtLocation(cx->parserNames().dotGenerator, loc);
 }
