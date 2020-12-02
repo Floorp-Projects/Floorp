@@ -34,8 +34,6 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
                 "chrome",
                 "--chrome.binaryPath",
                 binary_path,
-                "--xvfbParams.display",
-                "0",
             ]
         return args_list + [
             "--browser",
