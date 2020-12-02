@@ -2106,9 +2106,7 @@ void MacroAssembler::unsignedCompareInt32x4(Assembler::Condition cond,
 void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
                                       FloatRegister rhs,
                                       FloatRegister lhsDest) {
-  // Code in the SIMD implementation allows operands to be reversed like this,
-  // this benefits the baseline compiler.  Ion takes care of the reversing
-  // itself and never generates GT/GE.
+  // There's a hack in the assembler to allow operands to be reversed like this.
   if (cond == Assembler::GreaterThan) {
     MacroAssemblerX86Shared::compareFloat32x4(rhs, Operand(lhsDest),
                                               Assembler::LessThan, lhsDest);
@@ -2121,20 +2119,10 @@ void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
   }
 }
 
-void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
-                                      const SimdConstant& rhs,
-                                      FloatRegister lhsDest) {
-  MOZ_ASSERT(cond != Assembler::Condition::GreaterThan &&
-             cond != Assembler::Condition::GreaterThanOrEqual);
-  MacroAssemblerX86Shared::compareFloat32x4(cond, rhs, lhsDest);
-}
-
 void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
                                       FloatRegister rhs,
                                       FloatRegister lhsDest) {
-  // Code in the SIMD implementation allows operands to be reversed like this,
-  // this benefits the baseline compiler.  Ion takes care of the reversing
-  // itself and never generates GT/GE.
+  // There's a hack in the assembler to allow operands to be reversed like this.
   if (cond == Assembler::GreaterThan) {
     MacroAssemblerX86Shared::compareFloat64x2(rhs, Operand(lhsDest),
                                               Assembler::LessThan, lhsDest);
@@ -2145,14 +2133,6 @@ void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
     MacroAssemblerX86Shared::compareFloat64x2(lhsDest, Operand(rhs), cond,
                                               lhsDest);
   }
-}
-
-void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
-                                      const SimdConstant& rhs,
-                                      FloatRegister lhsDest) {
-  MOZ_ASSERT(cond != Assembler::Condition::GreaterThan &&
-             cond != Assembler::Condition::GreaterThanOrEqual);
-  MacroAssemblerX86Shared::compareFloat64x2(cond, rhs, lhsDest);
 }
 
 // Load.  See comments above regarding integer operation.
