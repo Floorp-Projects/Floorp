@@ -91,10 +91,6 @@ extern ArrayObject* NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
                                                        HandleObjectGroup group,
                                                        size_t length);
 
-extern ArrayObject* NewFullyAllocatedArrayTryReuseGroup(
-    JSContext* cx, HandleObject obj, size_t length,
-    NewObjectKind newKind = GenericObject);
-
 extern ArrayObject* NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx,
                                                          HandleObject obj,
                                                          size_t length);
