@@ -691,30 +691,11 @@ unsafe extern "C" fn qcms_transform_module_matrix(
 unsafe extern "C" fn qcms_modular_transform_alloc() -> Option<Box<qcms_modular_transform>> {
     return Some(Box::new(std::mem::zeroed()))
 }
-unsafe extern "C" fn qcms_modular_transform_release(mut t: Option<Box<qcms_modular_transform>>) {
+fn qcms_modular_transform_release(mut t: Option<Box<qcms_modular_transform>>) {
+    // destroy a list of transforms non-recursively
     let mut next_transform;
     while let Some(mut transform) = t {
         next_transform = std::mem::replace(&mut (*transform).next_transform, None);
-
-        (*transform).input_clut_table_r = None;
-        (*transform).input_clut_table_g = None;
-        (*transform).input_clut_table_b = None;
-
-        transform.clut = None;
-
-        (*transform).output_clut_table_r = None;
-        (*transform).output_clut_table_g = None;
-        (*transform).output_clut_table_b = None;
-
-        if !(*transform).output_gamma_lut_r.is_none() {
-            (*transform).output_gamma_lut_r = None;
-        }
-        if !(*transform).output_gamma_lut_g.is_none() {
-            (*transform).output_gamma_lut_g = None;
-        }
-        if !(*transform).output_gamma_lut_b.is_none() {
-            (*transform).output_gamma_lut_b = None;
-        }
         t = next_transform
     }
 }
