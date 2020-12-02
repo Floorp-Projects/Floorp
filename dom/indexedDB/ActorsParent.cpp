@@ -13201,10 +13201,12 @@ void QuotaClient::InvalidateLiveDatabasesMatching(const Condition& aCondition) {
   nsTArray<SafeRefPtr<Database>> databases;
 
   for (const auto& liveDatabasesEntry : *gLiveDatabaseHashtable) {
-    for (Database* database : liveDatabasesEntry.GetData()->mLiveDatabases) {
-      if (aCondition(database)) {
+    for (const auto& database : liveDatabasesEntry.GetData()->mLiveDatabases) {
+      MOZ_ASSERT(database);
+
+      if (aCondition(*database)) {
         databases.AppendElement(
-            SafeRefPtr{database, AcquireStrongRefFromRawPtr{}});
+            SafeRefPtr{database.get(), AcquireStrongRefFromRawPtr{}});
       }
     }
   }
@@ -13219,15 +13221,15 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
   InvalidateLiveDatabasesMatching([&aOrigin](const auto& database) {
-    return database->GroupAndOrigin().mOrigin == aOrigin;
+    return database.GroupAndOrigin().mOrigin == aOrigin;
   });
 }
 
 void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
   AssertIsOnBackgroundThread();
 
-  InvalidateLiveDatabasesMatching([aContentParentId](const auto& database) {
-    return database->IsOwnedByProcess(aContentParentId);
+  InvalidateLiveDatabasesMatching([&aContentParentId](const auto& database) {
+    return database.IsOwnedByProcess(aContentParentId);
   });
 }
 
