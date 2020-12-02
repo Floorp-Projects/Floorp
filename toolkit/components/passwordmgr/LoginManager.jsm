@@ -159,7 +159,7 @@ LoginManager.prototype = {
    *        the number of milliseconds since January 1, 1970, 00:00:00 UTC.
    *        This is set to a fake value during unit testing.
    */
-  _gatherTelemetry(referenceTimeMs) {
+  async _gatherTelemetry(referenceTimeMs) {
     function clearAndGetHistogram(histogramId) {
       let histogram = Services.telemetry.getHistogramById(histogramId);
       histogram.clear();
@@ -200,7 +200,7 @@ LoginManager.prototype = {
       return;
     }
 
-    let logins = this.getAllLogins();
+    let logins = await this.getAllLoginsAsync();
 
     let usernamePresentHistogram = clearAndGetHistogram(
       "PWMGR_USERNAME_PRESENT"
