@@ -271,6 +271,36 @@ add_task(async function testShowingOtherBookmarksContextMenuItem() {
     children: [{ title: "firefox", url: "http://example.com" }],
   });
   await testIsOtherBookmarksMenuItemShown(true);
+
+  info(
+    "Ensure that displaying Other Bookmarks is consistent across separate windows."
+  );
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
+
+  await TestUtils.waitForCondition(() => {
+    let otherBookmarks = newWin.document.getElementById("OtherBookmarks");
+    return !otherBookmarks.hidden;
+  }, "Other Bookmarks folder failed to show in other window.");
+
+  info("Hide the Other Bookmarks folder from the original window.");
+  await selectShowOtherBookmarksMenuItem();
+
+  await TestUtils.waitForCondition(() => {
+    let otherBookmarks = newWin.document.getElementById("OtherBookmarks");
+    return otherBookmarks.hidden;
+  }, "Other Bookmarks folder failed to be hidden in other window.");
+  ok(true, "Other Bookmarks was successfully hidden in other window.");
+
+  info("Show the Other Bookmarks folder from the original window.");
+  await selectShowOtherBookmarksMenuItem();
+
+  await TestUtils.waitForCondition(() => {
+    let otherBookmarks = newWin.document.getElementById("OtherBookmarks");
+    return !otherBookmarks.hidden;
+  }, "Other Bookmarks folder failed to be shown in other window.");
+  ok(true, "Other Bookmarks was successfully shown in other window.");
+
+  await BrowserTestUtils.closeWindow(newWin);
 });
 
 // Test 'Show Other Bookmarks' isn't shown when pref is false.

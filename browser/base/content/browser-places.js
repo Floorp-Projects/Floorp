@@ -19,6 +19,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.newtabpage.enabled",
   false
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SHOW_OTHER_BOOKMARKS",
+  "browser.toolbars.bookmarks.showOtherBookmarks",
+  true,
+  (aPref, aPrevVal, aNewVal) => {
+    BookmarkingUI.maybeShowOtherBookmarksFolder();
+  }
+);
 ChromeUtils.defineModuleGetter(
   this,
   "PanelMultiView",
@@ -2413,14 +2422,10 @@ var BookmarkingUI = {
     let unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
     let numberOfBookmarks = PlacesUtils.getChildCountForFolder(unfiledGuid);
     let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
-    let showOtherBookmarksEnabled = Services.prefs.getBoolPref(
-      "browser.toolbars.bookmarks.showOtherBookmarks",
-      true
-    );
 
     if (
       numberOfBookmarks > 0 &&
-      showOtherBookmarksEnabled &&
+      SHOW_OTHER_BOOKMARKS &&
       placement?.area == CustomizableUI.AREA_BOOKMARKS
     ) {
       let otherBookmarksPopup = document.getElementById("OtherBookmarksPopup");
@@ -2443,17 +2448,12 @@ var BookmarkingUI = {
       return null;
     }
 
-    let showOtherBookmarksMenuItem = Services.prefs.getBoolPref(
-      "browser.toolbars.bookmarks.showOtherBookmarks",
-      true
-    );
-
     let menuItem = document.createXULElement("menuitem");
 
     menuItem.setAttribute("id", "show-other-bookmarks_PersonalToolbar");
     menuItem.setAttribute("toolbarId", "PersonalToolbar");
     menuItem.setAttribute("type", "checkbox");
-    menuItem.setAttribute("checked", showOtherBookmarksMenuItem);
+    menuItem.setAttribute("checked", SHOW_OTHER_BOOKMARKS);
     menuItem.setAttribute("selectiontype", "none|single");
 
     MozXULElement.insertFTLIfNeeded("browser/toolbarContextMenu.ftl");
@@ -2464,10 +2464,8 @@ var BookmarkingUI = {
     menuItem.addEventListener("command", () => {
       Services.prefs.setBoolPref(
         "browser.toolbars.bookmarks.showOtherBookmarks",
-        !showOtherBookmarksMenuItem
+        !SHOW_OTHER_BOOKMARKS
       );
-
-      BookmarkingUI.maybeShowOtherBookmarksFolder();
     });
 
     return menuItem;
