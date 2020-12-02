@@ -3369,8 +3369,6 @@ void gfxPlatform::NotifyGPUProcessDisabled() {
     gfxConfig::GetFeature(Feature::WEBRENDER)
         .ForceDisable(FeatureStatus::Unavailable, "GPU Process is disabled",
                       "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
-    MOZ_RELEASE_ASSERT(!WebRenderEnvvarEnabled(),
-                       "Forced WebRender but now disabled");
     gfxVars::SetUseWebRender(false);
   }
   gfxVars::SetRemoteCanvasEnabled(false);
