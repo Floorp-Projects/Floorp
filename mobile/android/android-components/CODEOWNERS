@@ -38,12 +38,12 @@
 /components/browser/icons/                  @pocmo
 /components/browser/menu/                   @mozilla-mobile/act
 /components/browser/menu2/                  @jonalmeida
-/components/browser/search/                 @boek @pocmo
+/components/browser/search/                 @pocmo
 /components/browser/session/                @pocmo @csadilek
 /components/browser/state/                  @pocmo @csadilek
 /components/browser/storage-memory/         @grigoryk
 /components/browser/storage-sync/           @grigoryk
-/components/browser/tabstray/               @jonalmeida @boek
+/components/browser/tabstray/               @jonalmeida
 /components/browser/thumbnails/             @jonalmeida @gabrielluong
 /components/browser/toolbar/                @pocmo
 
@@ -55,7 +55,7 @@
 /components/concept/push/                   @jonalmeida
 /components/concept/storage/                @grigoryk
 /components/concept/sync/                   @grigoryk
-/components/concept/tabstray/               @jonalmeida @boek
+/components/concept/tabstray/               @jonalmeida
 /components/concept/toolbar/                @pocmo
 
 /components/feature/accounts-push/          @jonalmeida
@@ -69,7 +69,7 @@
 /components/feature/downloads/              @Amejia481 @csadilek
 /components/feature/findinpage/             @Amejia481
 /components/feature/intent/                 @mozilla-mobile/act
-/components/feature/media/                  @pocmo
+/components/feature/media/                  @pocmo @rocketsroger
 /components/feature/p2p/                    @espertus @jonalmeida
 /components/feature/privatemode/            @mozilla-mobile/act
 /components/feature/prompts/                @amejia481 @ekager
@@ -84,7 +84,7 @@
 /components/feature/sitepermissions/        @amejia481
 /components/feature/syncedtabs/             @jonalmeida @eoger
 /components/feature/tab-collections/        @pocmo
-/components/feature/tabs/                   @jonalmeida @boek
+/components/feature/tabs/                   @jonalmeida
 /components/feature/toolbar/                @pocmo
 /components/feature/top-sites/              @gabrielluong @grigoryk
 /components/feature/webcompat-reporter/     @mozilla-mobile/Webcompat
