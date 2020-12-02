@@ -129,10 +129,13 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request,
     bool isTRR = false;
     rec->IsTRR(&isTRR);
 
+    uint32_t effectiveTRRMode = 0;
+    rec->GetEffectiveTRRMode(&effectiveTRRMode);
+
     SendLookupCompletedHelper(
-        mIPCActor,
-        DNSRequestResponse(DNSRecord(cname, array, trrFetchDuration,
-                                     trrFetchDurationNetworkOnly, isTRR)));
+        mIPCActor, DNSRequestResponse(DNSRecord(cname, array, trrFetchDuration,
+                                                trrFetchDurationNetworkOnly,
+                                                isTRR, effectiveTRRMode)));
   } else {
     SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(status));
   }
