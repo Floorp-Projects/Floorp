@@ -1786,7 +1786,7 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
   MOZ_ASSERT(!aOrigin.IsVoid());
 
   AllowToCloseConnectionsMatching([&aOrigin](const auto& connection) {
-    return connection->Origin() == aOrigin;
+    return connection.Origin() == aOrigin;
   });
 }
 
@@ -1809,8 +1809,10 @@ void QuotaClient::AllowToCloseConnectionsMatching(const Condition& aCondition) {
   AssertIsOnBackgroundThread();
 
   if (gOpenConnections) {
-    for (Connection* connection : *gOpenConnections) {
-      if (aCondition(connection)) {
+    for (const auto& connection : *gOpenConnections) {
+      MOZ_ASSERT(connection);
+
+      if (aCondition(*connection)) {
         connection->AllowToClose();
       }
     }
