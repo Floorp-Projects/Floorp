@@ -5124,7 +5124,7 @@ AttachDecision CallIRGenerator::tryAttachArraySlice(HandleFunction callee) {
   }
 
   JSObject* templateObj =
-      NewFullyAllocatedArrayTryReuseGroup(cx_, arr, 0, TenuredObject);
+      NewDenseFullyAllocatedArray(cx_, 0, /* proto = */ nullptr, TenuredObject);
   if (!templateObj) {
     cx_->recoverFromOutOfMemory();
     return AttachDecision::NoAction;
@@ -8920,31 +8920,6 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
       // we don't end up with a template whose structure might change later.
       res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx_, count,
                                                              TenuredObject));
-      return !!res;
-    }
-
-    case InlinableNative::ArraySlice: {
-      if (!thisval_.isObject()) {
-        return true;
-      }
-
-      RootedObject obj(cx_, &thisval_.toObject());
-      if (obj->isSingleton()) {
-        return true;
-      }
-
-      if (IsPackedArray(obj)) {
-        // This case is handled by tryAttachArraySlice.
-        return true;
-      }
-
-      // TODO(Warp): Support non-packed arrays in tryAttachArraySlice if they're
-      // common in user code.
-      if (JitOptions.warpBuilder) {
-        return true;
-      }
-
-      res.set(NewFullyAllocatedArrayTryReuseGroup(cx_, obj, 0, TenuredObject));
       return !!res;
     }
 
