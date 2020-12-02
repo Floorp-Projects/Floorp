@@ -87,11 +87,14 @@ class nsJSUtils {
    *        The JSContext where this is executed.
    * @param JS::Handle<JSObject*> aModule
    *        The module to be evaluated.
-   * @returns JS::MutableHandle<JSObject*> aEvaluationPromise
-   *        The evaluaation promise returned from evaluating the module.
+   * @param JS::Handle<Value*> aResult
+   *        If Top level await is enabled:
+   *          The evaluation promise returned from evaluating the module.
+   *        Otherwise:
+   *          Undefined
    */
-  static JSObject* ModuleEvaluate(JSContext* aCx,
-                                  JS::Handle<JSObject*> aModule);
+  static nsresult ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule,
+                                 JS::MutableHandle<JS::Value> aResult);
 
   // Returns false if an exception got thrown on aCx.  Passing a null
   // aElement is allowed; that wil produce an empty aScopeChain.
