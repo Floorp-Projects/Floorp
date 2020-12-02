@@ -5127,6 +5127,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void AbortOperationsForProcess(ContentParentId aContentParentId) override;
 
+  void AbortAllOperations() override;
+
   void StartIdleMaintenance() override;
 
   void StopIdleMaintenance() override;
@@ -13214,9 +13216,10 @@ void QuotaClient::InvalidateLiveDatabasesMatching(const Condition& aCondition) {
 
 void QuotaClient::AbortOperations(const nsACString& aOrigin) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!aOrigin.IsEmpty());
 
   InvalidateLiveDatabasesMatching([&aOrigin](const auto& database) {
-    return aOrigin.IsVoid() || database->GroupAndOrigin().mOrigin == aOrigin;
+    return database->GroupAndOrigin().mOrigin == aOrigin;
   });
 }
 
@@ -13226,6 +13229,12 @@ void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
   InvalidateLiveDatabasesMatching([aContentParentId](const auto& database) {
     return database->IsOwnedByProcess(aContentParentId);
   });
+}
+
+void QuotaClient::AbortAllOperations() {
+  AssertIsOnBackgroundThread();
+
+  InvalidateLiveDatabasesMatching([](const auto&) { return true; });
 }
 
 void QuotaClient::StartIdleMaintenance() {
@@ -13256,7 +13265,7 @@ void QuotaClient::InitiateShutdown() {
 
   mShutdownRequested.Flip();
 
-  AbortOperations(VoidCString());
+  AbortAllOperations();
 }
 
 bool QuotaClient::IsShutdownCompleted() const {

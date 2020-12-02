@@ -131,6 +131,8 @@ class Client {
 
   virtual void AbortOperationsForProcess(ContentParentId aContentParentId) = 0;
 
+  virtual void AbortAllOperations() = 0;
+
   virtual void StartIdleMaintenance() = 0;
 
   virtual void StopIdleMaintenance() = 0;

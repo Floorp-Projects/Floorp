@@ -225,6 +225,7 @@ void CacheQuotaClient::ReleaseIOThreadObjects() {
 
 void CacheQuotaClient::AbortOperations(const nsACString& aOrigin) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!aOrigin.IsEmpty());
 
   Manager::Abort(aOrigin);
 }
@@ -240,6 +241,12 @@ void CacheQuotaClient::AbortOperationsForProcess(
   // handles asynchronous actor destruction when the child process dies.
   //
   // Therefore, do nothing here.
+}
+
+void CacheQuotaClient::AbortAllOperations() {
+  AssertIsOnBackgroundThread();
+
+  Manager::AbortAll();
 }
 
 void CacheQuotaClient::StartIdleMaintenance() {}

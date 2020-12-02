@@ -2790,12 +2790,21 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void AbortOperationsForProcess(ContentParentId aContentParentId) override;
 
+  void AbortAllOperations() override;
+
   void StartIdleMaintenance() override;
 
   void StopIdleMaintenance() override;
 
  private:
   ~QuotaClient() override;
+
+  template <typename Condition>
+  static void InvalidatePrepareDatastoreOpsMatching(
+      const Condition& aCondition);
+
+  template <typename Condition>
+  static void InvalidatePreparedDatastoresMatching(const Condition& aCondition);
 
   void InitiateShutdown() override;
   bool IsShutdownCompleted() const override;
@@ -9114,6 +9123,7 @@ void QuotaClient::ReleaseIOThreadObjects() {
 
 void QuotaClient::AbortOperations(const nsACString& aOrigin) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!aOrigin.IsEmpty());
 
   // A PrepareDatastoreOp object could already acquire a directory lock for
   // the given origin. Its last step is creation of a Datastore object (which
@@ -9128,54 +9138,37 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
   // will close the Datastore on the parent side (the closing releases the
   // directory lock).
 
-  if (gPrepareDatastoreOps) {
-    for (PrepareDatastoreOp* prepareDatastoreOp : *gPrepareDatastoreOps) {
-      MOZ_ASSERT(prepareDatastoreOp);
+  InvalidatePrepareDatastoreOpsMatching(
+      [&aOrigin](const auto& prepareDatastoreOp) {
+        // Explicitely check if a directory lock has been requested.
+        // Origin clearing can't be blocked by this PrepareDatastoreOp if it
+        // hasn't requested a directory lock yet, so we can just ignore it.
+        // This will also guarantee that PrepareDatastoreOp has a known origin.
+        // And it also ensures that the ordering is right. Without the check we
+        // could invalidate ops whose directory locks were requested after we
+        // requested a directory lock for origin clearing.
+        if (!prepareDatastoreOp->RequestedDirectoryLock()) {
+          return false;
+        }
 
-      // Explicitely check if a directory lock has been requested.
-      // Origin clearing can't be blocked by this PrepareDatastoreOp if it
-      // hasn't requested a directory lock yet, so we can just ignore it.
-      // This will also guarantee that PrepareDatastoreOp has a known origin.
-      // And it also ensures that the ordering is right. Without the check we
-      // could invalidate ops whose directory locks were requested after we
-      // requested a directory lock for origin clearing.
-      if (!prepareDatastoreOp->RequestedDirectoryLock()) {
-        continue;
-      }
+        MOZ_ASSERT(prepareDatastoreOp->OriginIsKnown());
 
-      MOZ_ASSERT(prepareDatastoreOp->OriginIsKnown());
+        return prepareDatastoreOp->Origin() == aOrigin;
+      });
 
-      if (aOrigin.IsVoid() || prepareDatastoreOp->Origin() == aOrigin) {
-        prepareDatastoreOp->Invalidate();
-      }
-    }
-  }
-
-  if (gPrivateDatastores &&
-      (aOrigin.IsVoid() ||
-       (gPrivateDatastores->Remove(aOrigin) && !gPrivateDatastores->Count()))) {
+  if (gPrivateDatastores && gPrivateDatastores->Remove(aOrigin) &&
+      !gPrivateDatastores->Count()) {
     gPrivateDatastores = nullptr;
   }
 
-  if (gPreparedDatastores) {
-    for (auto iter = gPreparedDatastores->ConstIter(); !iter.Done();
-         iter.Next()) {
-      const auto& preparedDatastore = iter.Data();
-      MOZ_ASSERT(preparedDatastore);
+  InvalidatePreparedDatastoresMatching(
+      [&aOrigin](const auto& preparedDatastore) {
+        return preparedDatastore->Origin() == aOrigin;
+      });
 
-      if (aOrigin.IsVoid() || preparedDatastore->Origin() == aOrigin) {
-        preparedDatastore->Invalidate();
-      }
-    }
-  }
-
-  if (aOrigin.IsVoid()) {
-    RequestAllowToCloseIf([](const Database* const) { return true; });
-  } else {
-    RequestAllowToCloseIf([&aOrigin](const Database* const aDatabase) {
-      return aDatabase->Origin() == aOrigin;
-    });
-  }
+  RequestAllowToCloseIf([&aOrigin](const Database* const aDatabase) {
+    return aDatabase->Origin() == aOrigin;
+  });
 }
 
 void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
@@ -9186,9 +9179,59 @@ void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
   });
 }
 
+void QuotaClient::AbortAllOperations() {
+  AssertIsOnBackgroundThread();
+
+  InvalidatePrepareDatastoreOpsMatching([](const auto& prepareDatastoreOp) {
+    return prepareDatastoreOp->RequestedDirectoryLock();
+  });
+
+  if (gPrivateDatastores) {
+    gPrivateDatastores = nullptr;
+  }
+
+  InvalidatePreparedDatastoresMatching([](const auto&) { return true; });
+
+  RequestAllowToCloseIf([](const auto&) { return true; });
+}
+
 void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
 void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
+
+template <typename Condition>
+void QuotaClient::InvalidatePrepareDatastoreOpsMatching(
+    const Condition& aCondition) {
+  if (!gPrepareDatastoreOps) {
+    return;
+  }
+
+  for (PrepareDatastoreOp* prepareDatastoreOp : *gPrepareDatastoreOps) {
+    MOZ_ASSERT(prepareDatastoreOp);
+
+    if (aCondition(prepareDatastoreOp)) {
+      prepareDatastoreOp->Invalidate();
+    }
+  }
+}
+
+template <typename Condition>
+void QuotaClient::InvalidatePreparedDatastoresMatching(
+    const Condition& aCondition) {
+  if (!gPreparedDatastores) {
+    return;
+  }
+
+  for (auto iter = gPreparedDatastores->ConstIter(); !iter.Done();
+       iter.Next()) {
+    const auto& preparedDatastore = iter.Data();
+    MOZ_ASSERT(preparedDatastore);
+
+    if (aCondition(preparedDatastore)) {
+      preparedDatastore->Invalidate();
+    }
+  }
+}
 
 void QuotaClient::InitiateShutdown() {
   MOZ_ASSERT(!mShutdownRequested);
