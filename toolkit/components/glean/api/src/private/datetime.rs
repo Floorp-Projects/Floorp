@@ -193,7 +193,6 @@ mod test {
     use crate::{common_test::*, ipc, metrics};
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677448 lands.
     fn sets_datetime_value() {
         let _lock = lock_test();
 
@@ -211,7 +210,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677448 lands.
     fn sets_datetime_value_with_details() {
         let _lock = lock_test();
 
@@ -226,7 +224,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677448 lands.
     fn datetime_ipc() {
         // DatetimeMetric doesn't support IPC.
         let _lock = lock_test();

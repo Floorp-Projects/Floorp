@@ -2,24 +2,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use inherent::inherent;
-
-use glean_core::traits::Boolean;
+use std::sync::Arc;
 
 use super::CommonMetricData;
 
+use crate::dispatcher;
 use crate::ipc::need_ipc;
 use crate::private::MetricId;
 
 /// A boolean metric.
 ///
 /// Records a simple true or false value.
-#[derive(Clone)]
+#[derive(Debug)]
 pub enum BooleanMetric {
-    Parent(glean::private::BooleanMetric),
+    Parent(Arc<BooleanMetricImpl>),
     Child(BooleanMetricIpc),
 }
 #[derive(Clone, Debug)]
+pub struct BooleanMetricImpl(pub(crate) glean_core::metrics::BooleanMetric);
+#[derive(Debug)]
 pub struct BooleanMetricIpc;
 
 impl BooleanMetric {
@@ -28,7 +29,7 @@ impl BooleanMetric {
         if need_ipc() {
             BooleanMetric::Child(BooleanMetricIpc)
         } else {
-            BooleanMetric::Parent(glean::private::BooleanMetric::new(meta))
+            BooleanMetric::Parent(Arc::new(BooleanMetricImpl::new(meta)))
         }
     }
 
@@ -39,22 +40,23 @@ impl BooleanMetric {
             BooleanMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
-}
 
-#[inherent(pub)]
-impl Boolean for BooleanMetric {
     /// Set to the specified boolean value.
     ///
     /// ## Arguments
     ///
     /// * `value` - the value to set.
-    fn set(&self, value: bool) {
+    pub fn set(&self, value: bool) {
         match self {
             BooleanMetric::Parent(p) => {
-                Boolean::set(&*p, value);
+                let metric = Arc::clone(&p);
+                dispatcher::launch(move || metric.set(value));
             }
             BooleanMetric::Child(_) => {
-                log::error!("Unable to set boolean metric in non-parent process. Ignoring.");
+                log::error!(
+                    "Unable to set boolean metric {:?} in non-parent process. Ignoring.",
+                    self
+                );
                 // TODO: Record an error.
             }
         }
@@ -67,18 +69,36 @@ impl Boolean for BooleanMetric {
     ///
     /// ## Arguments
     ///
-    /// * `ping_name` - the storage name to look into.
+    /// * `storage_name` - the storage name to look into.
     ///
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<bool> {
+    pub fn test_get_value(&self, storage_name: &str) -> Option<bool> {
         match self {
-            BooleanMetric::Parent(p) => p.test_get_value(ping_name),
-            BooleanMetric::Child(_) => {
-                panic!("Cannot get test value for boolean metric in non-parent process!",)
+            BooleanMetric::Parent(p) => {
+                dispatcher::block_on_queue();
+                p.test_get_value(storage_name)
             }
+            BooleanMetric::Child(_) => panic!(
+                "Cannot get test value for {:?} in non-parent process!",
+                self
+            ),
         }
+    }
+}
+
+impl BooleanMetricImpl {
+    pub fn new(meta: CommonMetricData) -> Self {
+        Self(glean_core::metrics::BooleanMetric::new(meta))
+    }
+
+    pub fn set(&self, value: bool) {
+        crate::with_glean(move |glean| self.0.set(glean, value))
+    }
+
+    pub fn test_get_value(&self, storage_name: &str) -> Option<bool> {
+        crate::with_glean(move |glean| self.0.test_get_value(glean, storage_name))
     }
 }
 

@@ -2,44 +2,91 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use inherent::inherent;
+use std::sync::RwLock;
+
+use glean_core::metrics::MetricType;
 
 use super::{BooleanMetric, CommonMetricData, CounterMetric, ErrorType, MetricId, StringMetric};
+use crate::dispatcher;
 use crate::ipc::need_ipc;
 
 /// Sealed traits protect against downstream implementations.
 ///
 /// We wrap it in a private module that is inaccessible outside of this module.
 mod private {
-    use super::{BooleanMetric, CounterMetric, StringMetric};
+    use super::{BooleanMetric, CommonMetricData, CounterMetric, MetricId, StringMetric};
+    use crate::ipc::need_ipc;
+    use std::sync::Arc;
 
     /// The sealed trait.
     ///
-    /// This allows us to define which FOG metrics can be used
-    /// as labeled types.
+    /// This also allows us to hide methods, that are only used internally
+    /// and should not be visible to users.
     pub trait Sealed {
-        type GleanMetric: glean::private::AllowLabeled + Clone;
+        type Inner: glean_core::metrics::MetricType + Clone;
+
+        /// Create a new metric object from the inner type.
+        fn from_inner(id: MetricId, metric: Self::Inner) -> Self;
+
+        /// Create a new `glean_core `metric of the inner type.
+        fn new_inner(meta: CommonMetricData) -> Self::Inner;
     }
 
     // `LabeledMetric<BooleanMetric>` is possible.
     //
     // See [Labeled Booleans](https://mozilla.github.io/glean/book/user/metrics/labeled_booleans.html).
     impl Sealed for BooleanMetric {
-        type GleanMetric = glean::private::BooleanMetric;
+        type Inner = glean_core::metrics::BooleanMetric;
+
+        fn from_inner(_id: MetricId, metric: Self::Inner) -> Self {
+            assert!(
+                !need_ipc(),
+                "Labeled Boolean metrics are not supported in non-main processes"
+            );
+            BooleanMetric::Parent(Arc::new(crate::private::boolean::BooleanMetricImpl(metric)))
+        }
+
+        fn new_inner(meta: CommonMetricData) -> Self::Inner {
+            glean_core::metrics::BooleanMetric::new(meta)
+        }
     }
 
     // `LabeledMetric<StringMetric>` is possible.
     //
     // See [Labeled Strings](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html).
     impl Sealed for StringMetric {
-        type GleanMetric = glean::private::StringMetric;
+        type Inner = glean_core::metrics::StringMetric;
+
+        fn from_inner(_id: MetricId, metric: Self::Inner) -> Self {
+            assert!(
+                !need_ipc(),
+                "Labeled String metrics are not supported in non-main processes"
+            );
+            StringMetric::Parent(crate::private::string::StringMetricImpl(metric))
+        }
+
+        fn new_inner(meta: CommonMetricData) -> Self::Inner {
+            glean_core::metrics::StringMetric::new(meta)
+        }
     }
 
     // `LabeledMetric<CounterMetric>` is possible.
     //
     // See [Labeled Counters](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html).
     impl Sealed for CounterMetric {
-        type GleanMetric = glean::private::CounterMetric;
+        type Inner = glean_core::metrics::CounterMetric;
+
+        fn from_inner(id: MetricId, metric: Self::Inner) -> Self {
+            assert!(!need_ipc());
+            CounterMetric::Parent {
+                id,
+                inner: Arc::new(crate::private::counter::CounterMetricImpl(metric)),
+            }
+        }
+
+        fn new_inner(meta: CommonMetricData) -> Self::Inner {
+            glean_core::metrics::CounterMetric::new(meta)
+        }
     }
 }
 
@@ -80,18 +127,17 @@ impl<T> AllowLabeled for T where T: private::Sealed {}
 /// ```rust,ignore
 /// errro::seen_one.get("upload").set(true);
 /// ```
-//#[derive(Debug)]
+#[derive(Debug)]
 pub struct LabeledMetric<T: AllowLabeled> {
-    // TODO: the `_id` is currently not needed, hence the
-    // prefix, but it will be needed when adding IPC support
-    // to this type.
     /// The metric ID of the underlying metric.
-    _id: MetricId,
+    id: MetricId,
 
     /// Wrapping the underlying core metric.
     ///
     /// We delegate all functionality to this and wrap it up again in our own metric type.
-    core: glean::private::LabeledMetric<T::GleanMetric>,
+    ///
+    /// *Note*: Needs to be thread-safe mutable, as required by the underlying `glean_core` type.
+    core: RwLock<glean_core::metrics::LabeledMetric<T::Inner>>,
 }
 
 impl<T> LabeledMetric<T>
@@ -106,58 +152,72 @@ where
         meta: CommonMetricData,
         labels: Option<Vec<String>>,
     ) -> LabeledMetric<T> {
-        let core = glean::private::LabeledMetric::new(meta, labels);
-        LabeledMetric { _id: id, core }
-    }
-}
+        let submetric = T::new_inner(meta);
+        let core = glean_core::metrics::LabeledMetric::new(submetric, labels);
 
-#[inherent(pub)]
-impl<U> glean_core::traits::Labeled<U::GleanMetric> for LabeledMetric<U>
-where
-    U: AllowLabeled + Clone,
-{
-    /// Gets a specific metric for a given label.
+        LabeledMetric {
+            id,
+            core: RwLock::new(core),
+        }
+    }
+
+    /// Get a specific metric for a given label.
     ///
     /// If a set of acceptable labels were specified in the `metrics.yaml` file,
-    /// and the given label is not in the set, it will be recorded under the special `OTHER_LABEL` label.
+    /// and the given label is not in the set, it will be recorded under the special `__other__` label.
     ///
     /// If a set of acceptable labels was not specified in the `metrics.yaml` file,
     /// only the first 16 unique labels will be used.
-    /// After that, any additional labels will be recorded under the special `OTHER_LABEL` label.
+    /// After that, any additional labels will be recorded under the special `__other__` label.
     ///
-    /// Labels must be `snake_case` and less than 30 characters.
-    /// If an invalid label is used, the metric will be recorded in the special `OTHER_LABEL` label.
-    fn get(&self, label: &str) -> U::GleanMetric {
+    /// Labels must conform to the [label formatting regular expression](https://mozilla.github.io/glean/book/user/metrics/index.html#label-format).
+    /// Labels must be made up of dot-separated identifiers with lowercase ASCII alphanumerics, containing underscores and dashes.
+    ///
+    /// If an invalid label is used, the metric will be recorded in the special `__other__` label.
+    pub fn get(&self, label: &str) -> T {
         if need_ipc() {
             panic!("Use of labeled metrics in IPC land not yet implemented!");
         } else {
-            self.core.get(label)
+            let core = self
+                .core
+                .write()
+                .expect("lock of wrapped metric was poisoned");
+            let inner = core.get(label);
+            T::from_inner(self.id, inner)
         }
     }
 
-    /// **Exported for test purposes.**
+    /// **Test-only API.**
     ///
-    /// Gets the number of recorded errors for the given metric and error type.
+    /// Get the number of recorded errors for this labeled metric and error type.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
-    /// * `error` - The type of error
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
+    /// * error - The type of error
+    /// * `storage_name` - the storage name to look into.
     ///
-    /// # Returns
+    /// ## Return value
     ///
-    /// The number of errors reported.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    /// The number of errors reported if any.
+    /// Otherwise an error.
+    pub fn test_get_num_recorded_errors(
         &self,
-        error: ErrorType,
-        ping_name: S,
-    ) -> i32 {
-        if need_ipc() {
-            panic!("Use of labeled metrics in IPC land not yet implemented!");
-        } else {
-            self.core.test_get_num_recorded_errors(error, ping_name)
-        }
+        error_type: ErrorType,
+        storage_name: Option<&str>,
+    ) -> Result<i32, String> {
+        dispatcher::block_on_queue();
+        crate::with_glean(move |glean| {
+            let core = self
+                .core
+                .read()
+                .expect("lock of wrapped metric was poisoned");
+            glean_core::test_get_num_recorded_errors(
+                &glean,
+                &core.get_submetric().meta(),
+                error_type,
+                storage_name,
+            )
+        })
     }
 }
 
@@ -288,7 +348,7 @@ mod test {
             .set(true);
 
         assert_eq!(
-            1,
+            Ok(1),
             metric.test_get_num_recorded_errors(ErrorType::InvalidLabel, None)
         );
     }
@@ -325,9 +385,8 @@ mod test {
             metric.get("__other__").test_get_value("store1").unwrap()
         );
 
-        assert_eq!(
-            0,
-            metric.test_get_num_recorded_errors(ErrorType::InvalidLabel, None)
-        );
+        assert!(metric
+            .test_get_num_recorded_errors(ErrorType::InvalidLabel, None)
+            .is_err());
     }
 }

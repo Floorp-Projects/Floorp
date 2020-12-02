@@ -156,7 +156,6 @@ mod test {
     use crate::{common_test::*, ipc, metrics};
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677454 lands.
     fn sets_string_list_value() {
         let _lock = lock_test();
 
@@ -172,7 +171,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677454 lands.
     fn string_list_ipc() {
         // StringListMetric supports IPC only for `add`, not `set`.
         let _lock = lock_test();

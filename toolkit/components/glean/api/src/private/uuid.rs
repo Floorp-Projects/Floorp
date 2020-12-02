@@ -2,22 +2,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use inherent::inherent;
+use std::sync::Arc;
 
 use uuid::Uuid;
 
 use super::{CommonMetricData, MetricId};
 
-use crate::ipc::need_ipc;
+use crate::{dispatcher, ipc::need_ipc};
 
 /// A UUID metric.
 ///
 /// Stores UUID values.
+#[derive(Debug)]
 pub enum UuidMetric {
-    Parent(glean::private::UuidMetric),
+    Parent(Arc<UuidMetricImpl>),
     Child(UuidMetricIpc),
 }
 
+#[derive(Clone, Debug)]
+pub struct UuidMetricImpl(pub(crate) glean_core::metrics::UuidMetric);
 #[derive(Debug)]
 pub struct UuidMetricIpc;
 
@@ -27,7 +30,7 @@ impl UuidMetric {
         if need_ipc() {
             UuidMetric::Child(UuidMetricIpc)
         } else {
-            UuidMetric::Parent(glean::private::UuidMetric::new(meta))
+            UuidMetric::Parent(Arc::new(UuidMetricImpl::new(meta)))
         }
     }
 
@@ -38,42 +41,43 @@ impl UuidMetric {
             UuidMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
-}
 
-#[inherent(pub)]
-impl glean_core::traits::Uuid for UuidMetric {
     /// Set to the specified value.
     ///
     /// ## Arguments
     ///
     /// * `value` - The UUID to set the metric to.
-    fn set(&self, value: Uuid) {
+    pub fn set(&self, value: Uuid) {
         match self {
             UuidMetric::Parent(p) => {
-                glean_core::traits::Uuid::set(&*p, value);
+                let metric = Arc::clone(&p);
+                dispatcher::launch(move || metric.set(value));
             }
             UuidMetric::Child(_c) => {
-                log::error!("Unable to set the uuid metric in non-main process. Ignoring.");
+                log::error!(
+                    "Unable to set UUID metric {:?} in non-main process. Ignoring.",
+                    self
+                );
                 // TODO: Record an error.
             }
         };
     }
 
     /// Generate a new random UUID and set the metric to it.
-    ///
-    /// ## Return value
-    ///
-    /// Returns the stored UUID value or `Uuid::nil` if called from
-    /// a non-parent process.
-    fn generate_and_set(&self) -> Uuid {
+    pub fn generate_and_set(&self) {
         match self {
-            UuidMetric::Parent(p) => glean_core::traits::Uuid::generate_and_set(&*p),
-            UuidMetric::Child(_c) => {
-                log::error!("Unable to set the uuid metric in non-main process. Ignoring.");
-                // TODO: Record an error.
-                Uuid::nil()
+            UuidMetric::Parent(p) => {
+                let metric = Arc::clone(&p);
+                dispatcher::launch(move || metric.generate_and_set());
             }
-        }
+            UuidMetric::Child(_c) => {
+                log::error!(
+                    "Unable to set UUID metric {:?} in non-main process. Ignoring.",
+                    self
+                );
+                // TODO: Record an error.
+            }
+        };
     }
 
     /// **Test-only API.**
@@ -88,37 +92,37 @@ impl glean_core::traits::Uuid for UuidMetric {
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, storage_name: S) -> Option<Uuid> {
+    pub fn test_get_value(&self, storage_name: &str) -> Option<Uuid> {
         match self {
-            UuidMetric::Parent(p) => p.test_get_value(storage_name),
-            UuidMetric::Child(_c) => panic!("Cannot get test value for in non-parent process!"),
+            UuidMetric::Parent(p) => {
+                dispatcher::block_on_queue();
+                p.test_get_value(storage_name).map(|uuid| {
+                    Uuid::parse_str(&uuid).expect("can't parse internally created UUID value")
+                })
+            }
+            UuidMetric::Child(_c) => panic!(
+                "Cannot get test value for {:?} in non-parent process!",
+                self
+            ),
         }
     }
+}
 
-    /// **Exported for test purposes.**
-    ///
-    /// Gets the number of recorded errors for the given metric and error type.
-    ///
-    /// # Arguments
-    ///
-    /// * `error` - The type of error
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
-    ///
-    /// # Returns
-    ///
-    /// The number of errors reported.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
-        &self,
-        error: glean::ErrorType,
-        ping_name: S,
-    ) -> i32 {
-        match self {
-            UuidMetric::Parent(p) => p.test_get_num_recorded_errors(error, ping_name),
-            UuidMetric::Child(_c) => {
-                panic!("Cannot get test value for UuidMetric in non-parent process!")
-            }
-        }
+impl UuidMetricImpl {
+    fn new(meta: CommonMetricData) -> Self {
+        Self(glean_core::metrics::UuidMetric::new(meta))
+    }
+
+    fn set(&self, value: Uuid) {
+        crate::with_glean(move |glean| self.0.set(glean, value));
+    }
+
+    fn generate_and_set(&self) {
+        crate::with_glean(move |glean| self.0.generate_and_set(glean));
+    }
+
+    fn test_get_value(&self, storage_name: &str) -> Option<String> {
+        crate::with_glean(move |glean| self.0.test_get_value(glean, storage_name))
     }
 }
 
