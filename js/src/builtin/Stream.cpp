@@ -29,7 +29,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/SelfHosting.h"
 
-#include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler
+#include "builtin/HandlerFunction-inl.h"  // js::NewHandler
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::Unwrap{ReaderFromStream{,NoThrow},StreamFromReader}
 #include "vm/Compartment-inl.h"
 #include "vm/List-inl.h"  // js::ListObject, js::StoreNewListInFixedSlot
@@ -421,7 +421,7 @@ static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
 
     MOZ_RELEASE_ASSERT(unwrappedStream->mode() ==
                        JS::ReadableStreamMode::ExternalSource);
-#if 0   // disable user-defined byte streams
+#if 0  // disable user-defined byte streams
         if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource)
 #endif  // user-defined byte streams
     {
@@ -448,7 +448,7 @@ static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
       queueTotalSize = queueTotalSize - bytesWritten;
     }
 
-#if 0   // disable user-defined byte streams
+#if 0  // disable user-defined byte streams
         else {
             // Step 3.b: Let entry be the first element of this.[[queue]].
             // Step 3.c: Remove entry from this.[[queue]], shifting all other
