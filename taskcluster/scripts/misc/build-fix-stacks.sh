@@ -27,8 +27,8 @@ x86_64-apple-darwin)
     export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++
     export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
     export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
-    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
-    export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
+    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX10.12.sdk"
+    export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX10.12.sdk"
     ;;
 i686-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.
