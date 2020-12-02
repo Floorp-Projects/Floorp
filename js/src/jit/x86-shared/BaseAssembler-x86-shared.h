@@ -4092,6 +4092,7 @@ class BaseAssembler : public GenericAssembler {
     }
 
     assertValidJmpSrc(from);
+    MOZ_ASSERT(from.trailing() == 0);
 
     const unsigned char* code = m_formatter.data();
     int32_t offset = GetInt32(code + from.offset());
@@ -4138,6 +4139,7 @@ class BaseAssembler : public GenericAssembler {
     }
 
     assertValidJmpSrc(from);
+    MOZ_ASSERT(from.trailing() == 0);
     MOZ_RELEASE_ASSERT(to.offset() == -1 || size_t(to.offset()) <= size());
 
     unsigned char* code = m_formatter.data();
@@ -4159,7 +4161,7 @@ class BaseAssembler : public GenericAssembler {
 
     spew(".set .Lfrom%d, .Llabel%d", from.offset(), to.offset());
     unsigned char* code = m_formatter.data();
-    SetRel32(code + from.offset(), code + to.offset());
+    SetRel32(code + from.offset(), code + to.offset(), from.trailing());
   }
 
   void executableCopy(void* dst) {
