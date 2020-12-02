@@ -5,7 +5,7 @@ export TARGET_TRIPLE="x86_64-apple-darwin"
 
 source "${GECKO_PATH}/taskcluster/scripts/misc/tooltool-download.sh"
 
-MACOS_SYSROOT="${MOZ_FETCHES_DIR}/MacOSX10.11.sdk"
+MACOS_SYSROOT="${MOZ_FETCHES_DIR}/MacOSX10.12.sdk"
 CLANGDIR="${MOZ_FETCHES_DIR}/clang"
 
 # Deploy the wrench dependencies
