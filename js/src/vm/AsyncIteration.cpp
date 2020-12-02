@@ -511,7 +511,7 @@ static JSObject* CreateAsyncGeneratorFunction(JSContext* cx, JSProtoKey key) {
 
 static JSObject* CreateAsyncGeneratorFunctionPrototype(JSContext* cx,
                                                        JSProtoKey key) {
-  return NewSingletonObjectWithFunctionPrototype(cx, cx->global());
+  return NewTenuredObjectWithFunctionPrototype(cx, cx->global());
 }
 
 static bool AsyncGeneratorFunctionClassFinish(JSContext* cx,
