@@ -27,7 +27,14 @@ class MacroAssemblerX86Shared : public Assembler {
   const MacroAssembler& asMasm() const;
 
  public:
-  typedef Vector<CodeOffset, 0, SystemAllocPolicy> UsesVector;
+#ifdef JS_CODEGEN_X64
+  typedef X86Encoding::JmpSrc UsesItem;
+#else
+  typedef CodeOffset UsesItem;
+#endif
+
+  typedef Vector<UsesItem, 0, SystemAllocPolicy> UsesVector;
+  static_assert(sizeof(UsesItem) == 4);
 
  protected:
   // For Double, Float and SimdData, make the move ctors explicit so that MSVC
