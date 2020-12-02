@@ -1199,12 +1199,9 @@ bool ModuleObject::Instantiate(JSContext* cx, HandleModuleObject self) {
 }
 
 /* static */
-JSObject* ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self) {
-  RootedValue rval(cx);
-  if (!InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate, &rval)) {
-    return nullptr;
-  }
-  return &rval.toObject();
+bool ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self,
+                            MutableHandleValue rval) {
+  return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate, rval);
 }
 
 /* static */
@@ -2314,6 +2311,45 @@ bool js::FinishDynamicModuleImport(JSContext* cx,
 
   return JS::AddPromiseReactionsIgnoringUnhandledRejection(
       cx, evaluationPromise, onResolved, onRejected);
+}
+
+bool js::FinishDynamicModuleImport_NoTLA(JSContext* cx,
+                                         JS::DynamicImportStatus status,
+                                         HandleValue referencingPrivate,
+                                         HandleString specifier,
+                                         HandleObject promiseArg) {
+  MOZ_ASSERT_IF(cx->isExceptionPending(),
+                status == JS::DynamicImportStatus::Failed);
+
+  Handle<PromiseObject*> promise = promiseArg.as<PromiseObject>();
+
+  auto releasePrivate = mozilla::MakeScopeExit(
+      [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
+
+  if (status == JS::DynamicImportStatus::Failed) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  RootedObject result(cx,
+                      CallModuleResolveHook(cx, referencingPrivate, specifier));
+  if (!result) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  RootedModuleObject module(cx, &result->as<ModuleObject>());
+  if (module->status() != MODULE_STATUS_EVALUATED) {
+    JS_ReportErrorASCII(
+        cx, "Unevaluated or errored module returned by module resolve hook");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  RootedObject ns(cx, ModuleObject::GetOrCreateModuleNamespace(cx, module));
+  if (!ns) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  RootedValue value(cx, ObjectValue(*ns));
+  return PromiseObject::resolve(cx, promise, value);
 }
 
 template <XDRMode mode>
