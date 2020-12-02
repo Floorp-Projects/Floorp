@@ -61,7 +61,8 @@ void DocAccessibleWrap::AttributeChanged(dom::Element* aElement,
         // needs to be removed.
         if (const nsRoleMapEntry* roleMap = accessible->ARIARoleMap()) {
           // aria role defines it as a live region. It's live!
-          if (roleMap->liveAttRule == ePoliteLiveAttr) {
+          if (roleMap->liveAttRule == ePoliteLiveAttr ||
+              roleMap->liveAttRule == eAssertiveLiveAttr) {
             FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED,
                              accessible);
           }

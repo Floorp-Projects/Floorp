@@ -48,7 +48,8 @@ AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
     } else if (const nsRoleMapEntry* roleMap =
                    aria::GetRoleMap(aContent->AsElement())) {
       // aria role defines it as a live region. It's live!
-      if (roleMap->liveAttRule == ePoliteLiveAttr) {
+      if (roleMap->liveAttRule == ePoliteLiveAttr ||
+          roleMap->liveAttRule == eAssertiveLiveAttr) {
         doc->QueueNewLiveRegion(this);
       }
     } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(

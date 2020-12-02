@@ -362,6 +362,9 @@ bool nsAccUtils::GetLiveAttrValue(uint32_t aRule, nsAString& aValue) {
     case ePoliteLiveAttr:
       aValue = u"polite"_ns;
       return true;
+    case eAssertiveLiveAttr:
+      aValue = u"assertive"_ns;
+      return true;
   }
 
   return false;

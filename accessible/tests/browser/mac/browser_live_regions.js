@@ -96,6 +96,7 @@ addAccessibleTask(
         <div id="region-1" aria-live="polite"></div>
         <div id="region-2" aria-live="assertive"></div>
         <div id="region-3" aria-live="off"></div>
+        <div id="alert" role="alert"></div>
         <div id="status" role="status"></div>
         <output id="output"></output>`;
     });
@@ -113,7 +114,7 @@ addAccessibleTask(
     );
     Assert.deepEqual(
       liveRegions.map(r => r.getAttributeValue("AXDOMIdentifier")),
-      ["region-1", "region-2", "status", "output"],
+      ["region-1", "region-2", "alert", "status", "output"],
       "SearchPredicate returned all live regions"
     );
   }
