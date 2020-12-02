@@ -311,19 +311,18 @@ inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
 }
 
 inline void InitGlobalLexicalOperation(JSContext* cx,
-                                       LexicalEnvironmentObject* lexicalEnvArg,
+                                       LexicalEnvironmentObject* lexicalEnv,
                                        JSScript* script, jsbytecode* pc,
                                        HandleValue value) {
   MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
-                lexicalEnvArg == &cx->global()->lexicalEnvironment());
+                lexicalEnv == &cx->global()->lexicalEnvironment());
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitGLexical);
-  Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
-  RootedShape shape(cx, lexicalEnv->lookup(cx, script->getName(pc)));
+
+  Shape* shape = lexicalEnv->lookup(cx, script->getName(pc));
   MOZ_ASSERT(shape);
   MOZ_ASSERT(IsUninitializedLexical(lexicalEnv->getSlot(shape->slot())));
 
-  // Don't treat the initial assignment to global lexicals as overwrites.
-  lexicalEnv->setSlotWithType(cx, shape, value, /* overwriting = */ false);
+  lexicalEnv->setSlot(shape->slot(), value);
 }
 
 inline bool InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj,

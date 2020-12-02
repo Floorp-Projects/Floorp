@@ -1148,10 +1148,6 @@ class NativeObject : public JSObject {
   inline void shiftDenseElementsUnchecked(uint32_t count);
 
  public:
-  MOZ_ALWAYS_INLINE void setSlotWithType(JSContext* cx, Shape* shape,
-                                         const Value& value,
-                                         bool overwriting = true);
-
   MOZ_ALWAYS_INLINE const Value& getReservedSlot(uint32_t index) const {
     MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
     return getSlot(index);
