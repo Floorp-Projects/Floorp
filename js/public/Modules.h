@@ -94,8 +94,9 @@ enum class DynamicImportStatus { Failed = 0, Ok };
  * complete the user's promise.
  */
 extern JS_PUBLIC_API bool FinishDynamicModuleImport(
-    JSContext* cx, DynamicImportStatus status, Handle<Value> referencingPrivate,
-    Handle<JSString*> specifier, Handle<JSObject*> promise);
+    JSContext* cx, Handle<JSObject*> evaluationPromise,
+    Handle<Value> referencingPrivate, Handle<JSString*> specifier,
+    Handle<JSObject*> promise);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global
@@ -137,16 +138,29 @@ extern JS_PUBLIC_API bool ModuleInstantiate(JSContext* cx,
                                             Handle<JSObject*> moduleRecord);
 
 /*
- * Perform the ModuleEvaluate operation on the given source text module record.
+ * Perform the ModuleEvaluate operation on the given source text module record
+ * and returns a promise.
  *
- * This does nothing if this module has already been evaluated. Otherwise, it
- * transitively evaluates all dependences of this module and then evaluates this
- * module.
+ * If this module has already been evaluated, it returns the evaluation
+ * promise. Otherwise, it transitively evaluates all dependences of this module
+ * and then evaluates this module.
  *
  * ModuleInstantiate must have completed prior to calling this.
  */
-extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
-                                         Handle<JSObject*> moduleRecord);
+extern JS_PUBLIC_API JSObject* ModuleEvaluate(JSContext* cx,
+                                              Handle<JSObject*> moduleRecord);
+
+/*
+ * If a module evaluation fails, unwrap the result and rethrow.
+ *
+ * This does nothing if this module succeeds in evaluation. Otherwise, it
+ * takes the reason for the module throwing, unwraps it and throws it as a
+ * regular error rather than as an uncaught promise.
+ *
+ * ModuleEvaluate must have completed prior to calling this.
+ */
+extern JS_PUBLIC_API bool ThrowOnModuleEvaluationFailure(
+    JSContext* cx, Handle<JSObject*> evaluationPromise);
 
 /*
  * Get a list of the module specifiers used by a source text module
