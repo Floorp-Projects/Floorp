@@ -136,11 +136,11 @@ void ChannelEventQueue::ResumeInternal() {
 
     // Hold a strong reference of mOwner to avoid the channel release
     // before CompleteResume was executed.
-    class CompleteResumeRunnable : public CancelableRunnable {
+    class CompleteResumeRunnable : public Runnable {
      public:
       explicit CompleteResumeRunnable(ChannelEventQueue* aQueue,
                                       nsISupports* aOwner)
-          : CancelableRunnable("CompleteResumeRunnable"),
+          : Runnable("CompleteResumeRunnable"),
             mQueue(aQueue),
             mOwner(aOwner) {}
 
