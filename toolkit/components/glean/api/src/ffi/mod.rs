@@ -96,9 +96,7 @@ pub extern "C" fn fog_uuid_set(id: u32, value: &nsACString) {
 #[no_mangle]
 pub extern "C" fn fog_uuid_generate_and_set(id: u32) {
     match crate::metrics::__glean_metric_maps::UUID_MAP.get(&id.into()) {
-        Some(metric) => {
-            metric.generate_and_set();
-        }
+        Some(metric) => metric.generate_and_set(),
         None => panic!("No metric for id {}", id),
     }
 }

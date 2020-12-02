@@ -197,7 +197,6 @@ mod test {
     use crate::{common_test::*, ipc, metrics};
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1673668 lands.
     fn smoke_test_event() {
         let _lock = lock_test();
 
@@ -221,7 +220,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1673668 lands.
     fn smoke_test_event_with_extra() {
         let _lock = lock_test();
 
@@ -269,7 +267,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1673668 lands.
     fn event_ipc() {
         use metrics::test_only_ipc::AnEventKeys;
 
