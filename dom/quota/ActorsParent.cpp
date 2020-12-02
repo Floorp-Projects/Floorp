@@ -295,8 +295,6 @@ const char kProfileDoChangeTopic[] = "profile-do-change";
 
 const int32_t kCacheVersion = 1;
 
-const int64_t kBypassDirectoryLockIdTableId = -1;
-
 /******************************************************************************
  * SQLite functions
  ******************************************************************************/
@@ -743,6 +741,8 @@ Result<mozilla::Ok, nsresult> CollectEachFileEntry(
 
 }  // namespace
 
+enum class ShouldUpdateLockIdTableFlag { No, Yes };
+
 class DirectoryLockImpl final : public DirectoryLock {
   const NotNull<RefPtr<QuotaManager>> mQuotaManager;
 
@@ -765,6 +765,8 @@ class DirectoryLockImpl final : public DirectoryLock {
   // registraction/unregistration from updating origin access time, etc.
   const bool mInternal;
 
+  const bool mShouldUpdateLockIdTable;
+
   bool mRegistered;
   FlippedOnce<false> mInvalidated;
 
@@ -775,6 +777,7 @@ class DirectoryLockImpl final : public DirectoryLock {
                     const nsACString& aGroup, const OriginScope& aOriginScope,
                     const Nullable<Client::Type>& aClientType, bool aExclusive,
                     bool aInternal,
+                    ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag,
                     RefPtr<OpenDirectoryListener> aOpenListener);
 
   void AssertIsOnOwningThread() const
@@ -808,9 +811,7 @@ class DirectoryLockImpl final : public DirectoryLock {
   // for now and to not register directory locks for eviction in
   // QuotaMnaager::mDirectoryLockIdTable. This can be improved in future after
   // some refactoring of the mutex locking.
-  bool ShouldUpdateLockIdTable() const {
-    return mId != kBypassDirectoryLockIdTableId;
-  }
+  bool ShouldUpdateLockIdTable() const { return mShouldUpdateLockIdTable; }
 
   bool ShouldUpdateLockTable() {
     return !mInternal &&
@@ -2862,7 +2863,8 @@ DirectoryLockImpl::DirectoryLockImpl(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const int64_t aId,
     const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive, bool aInternal,
+    const bool aExclusive, const bool aInternal,
+    const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag,
     RefPtr<OpenDirectoryListener> aOpenListener)
     : mQuotaManager(std::move(aQuotaManager)),
       mPersistenceType(aPersistenceType),
@@ -2872,6 +2874,8 @@ DirectoryLockImpl::DirectoryLockImpl(
       mId(aId),
       mExclusive(aExclusive),
       mInternal(aInternal),
+      mShouldUpdateLockIdTable(aShouldUpdateLockIdTableFlag ==
+                               ShouldUpdateLockIdTableFlag::Yes),
       mRegistered(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
@@ -2986,8 +2990,8 @@ already_AddRefed<DirectoryLock> DirectoryLockImpl::Specialize(
       Nullable<PersistenceType>(aPersistenceType), aGroupAndOrigin.mGroup,
       OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
       Nullable<Client::Type>(aClientType),
-      /* aExclusive */ false, mInternal, /* aOpenListener */ nullptr);
-
+      /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes,
+      /* aOpenListener */ nullptr);
   if (NS_WARN_IF(!Overlaps(*lock))) {
     return nullptr;
   }
@@ -3722,7 +3726,7 @@ auto QuotaManager::CreateDirectoryLock(
   RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(
       WrapNotNullUnchecked(this), GenerateDirectoryLockId(), aPersistenceType,
       aGroup, aOriginScope, aClientType, aExclusive, aInternal,
-      std::move(aOpenListener));
+      ShouldUpdateLockIdTableFlag::Yes, std::move(aOpenListener));
 
   mPendingDirectoryLocks.AppendElement(lock);
 
@@ -3756,12 +3760,12 @@ auto QuotaManager::CreateDirectoryLockForEviction(
   MOZ_ASSERT(!aGroupAndOrigin.mOrigin.IsEmpty());
 
   RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(
-      WrapNotNullUnchecked(this),
-      /* aDirectoryLockId */ kBypassDirectoryLockIdTableId,
+      WrapNotNullUnchecked(this), GenerateDirectoryLockId(),
       Nullable<PersistenceType>(aPersistenceType), aGroupAndOrigin.mGroup,
       OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
       Nullable<Client::Type>(),
-      /* aExclusive */ true, /* aInternal */ true, nullptr);
+      /* aExclusive */ true, /* aInternal */ true,
+      ShouldUpdateLockIdTableFlag::No, nullptr);
 
 #ifdef DEBUG
   for (uint32_t index = mDirectoryLocks.Length(); index > 0; index--) {
@@ -4842,7 +4846,6 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
 already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     const int64_t aDirectoryLockId, const nsAString& aPath) {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  MOZ_DIAGNOSTIC_ASSERT(aDirectoryLockId != kBypassDirectoryLockIdTableId);
 
   Maybe<MutexAutoLock> lock;
 
@@ -4856,6 +4859,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     MOZ_CRASH("Getting quota object for an unregistered directory lock?");
   }
   MOZ_DIAGNOSTIC_ASSERT(directoryLock);
+  MOZ_DIAGNOSTIC_ASSERT(directoryLock->ShouldUpdateLockIdTable());
 
   const PersistenceType persistenceType = directoryLock->GetPersistenceType();
   const GroupAndOrigin& groupAndOrigin = directoryLock->GroupAndOrigin();
