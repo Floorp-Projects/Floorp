@@ -1,4 +1,3 @@
-// |jit-test| --enable-top-level-await;
 // Test 'this' is undefined in modules.
 
 function parseAndEvaluate(source) {
@@ -7,19 +6,10 @@ function parseAndEvaluate(source) {
     return m.evaluation();
 }
 
-parseAndEvaluate("this")
-  .then(value => assertEq(typeof(value), "undefined"))
-  .catch(error => {
-    // We shouldn't throw in this case.
-    assertEq(false, true)
-  });
+assertEq(typeof(parseAndEvaluate("this")), "undefined");
 
 let m = parseModule("export function getThis() { return this; }");
 m.declarationInstantiation();
-m.evaluation()
-  .then(() => {
-    let f = getModuleEnvironmentValue(m, "getThis");
-    assertEq(typeof(f()), "undefined");
-  });
-
-drainJobQueue();
+m.evaluation();
+let f = getModuleEnvironmentValue(m, "getThis");
+assertEq(typeof(f()), "undefined");

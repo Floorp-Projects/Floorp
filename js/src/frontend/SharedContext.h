@@ -108,7 +108,6 @@ enum class ThisBinding : uint8_t {
 class GlobalSharedContext;
 class EvalSharedContext;
 class ModuleSharedContext;
-class SuspendableContext;
 
 using ParserBindingName = AbstractBindingName<const ParserAtom>;
 using ParserBindingIter = AbstractBindingIter<const ParserAtom>;
@@ -231,8 +230,6 @@ class SharedContext {
   inline FunctionBox* asFunctionBox();
   bool isModuleContext() const { return isModule(); }
   inline ModuleSharedContext* asModuleContext();
-  bool isSuspendableContext() const { return isFunction() || isModule(); }
-  inline SuspendableContext* asSuspendableContext();
   bool isGlobalContext() const {
     return !(isFunction() || isModule() || isForEval());
   }
@@ -319,23 +316,7 @@ inline EvalSharedContext* SharedContext::asEvalContext() {
 
 enum class HasHeritage { No, Yes };
 
-class SuspendableContext : public SharedContext {
- public:
-  SuspendableContext(JSContext* cx, Kind kind, CompilationInfo& compilationInfo,
-                     Directives directives, SourceExtent extent,
-                     bool isGenerator, bool isAsync);
-
-  IMMUTABLE_FLAG_GETTER_SETTER(isAsync, IsAsync)
-  IMMUTABLE_FLAG_GETTER_SETTER(isGenerator, IsGenerator)
-
-  bool needsFinalYield() const { return isGenerator() || isAsync(); }
-  bool needsDotGeneratorName() const { return isGenerator() || isAsync(); }
-  bool needsClearSlotsOnExit() const { return isGenerator() || isAsync(); }
-  bool needsIteratorResult() const { return isGenerator() && !isAsync(); }
-  bool needsPromiseResult() const { return isAsync() && !isGenerator(); }
-};
-
-class FunctionBox : public SuspendableContext {
+class FunctionBox : public SharedContext {
   friend struct GCThingList;
 
   // If this FunctionBox refers to a lazy child of the function being
@@ -699,11 +680,6 @@ class FunctionBox : public SuspendableContext {
 inline FunctionBox* SharedContext::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());
   return static_cast<FunctionBox*>(this);
-}
-
-inline SuspendableContext* SharedContext::asSuspendableContext() {
-  MOZ_ASSERT(isSuspendableContext());
-  return static_cast<SuspendableContext*>(this);
 }
 
 }  // namespace frontend

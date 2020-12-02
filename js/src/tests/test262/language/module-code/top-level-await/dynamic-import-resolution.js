@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-top-level-await) skip-if(!xulRuntime.shell) module async -- requires shell-options
+// |reftest| skip module async -- top-level-await is not supported
 // Copyright (C) 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

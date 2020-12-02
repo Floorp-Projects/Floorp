@@ -1733,16 +1733,6 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   MOZ_ASSERT(stmtList->isKind(ParseNodeKind::StatementList));
   moduleNode->setBody(&stmtList->as<ListNode>());
 
-  if (pc_->isAsync()) {
-    if (!noteUsedName(cx_->parserNames().dotGenerator)) {
-      return null();
-    }
-
-    if (!pc_->declareTopLevelDotGeneratorName()) {
-      return null();
-    }
-  }
-
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
@@ -1750,12 +1740,6 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   if (tt != TokenKind::Eof) {
     error(JSMSG_GARBAGE_AFTER_INPUT, "module", TokenKindToDesc(tt));
     return null();
-  }
-
-  // Set the module to async if an await keyword was found at the top level.
-  if (pc_->isAsync()) {
-    pc_->sc()->asModuleContext()->builder.noteAsync(
-        this->compilationInfo_.stencil.moduleMetadata);
   }
 
   // Generate the Import/Export tables and store in CompilationInfo.
@@ -6276,16 +6260,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
   IteratorKind iterKind = IteratorKind::Sync;
   unsigned iflags = 0;
 
-  if (pc_->isAsync() || pc_->sc()->isModuleContext()) {
+  if (pc_->isAsync()) {
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Await)) {
       return null();
-    }
-
-    // If we come across a top level await here, mark the module as async.
-    if (matched && pc_->sc()->isModuleContext() && !pc_->isAsync()) {
-      pc_->sc()->asModuleContext()->setIsAsync();
-      MOZ_ASSERT(pc_->isAsync());
     }
 
     if (matched) {
@@ -8284,19 +8262,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
     }
 
     default: {
-      // If we encounter an await in a module, and the module is not marked
-      // as async, mark the module as async.
-      if (tt == TokenKind::Await && !pc_->isAsync()) {
-        if (pc_->atModuleTopLevel()) {
-          if (!options().topLevelAwait) {
-            error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
-            return null();
-          }
-          pc_->sc()->asModuleContext()->setIsAsync();
-          MOZ_ASSERT(pc_->isAsync());
-        }
-      }
-
       // Avoid getting next token with SlashIsDiv.
       if (tt == TokenKind::Await && pc_->isAsync()) {
         return expressionStatement(yieldHandling);
@@ -8541,19 +8506,6 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     }
 
     default: {
-      // If we encounter an await in a module, and the module is not marked
-      // as async, mark the module as async.
-      if (tt == TokenKind::Await && !pc_->isAsync()) {
-        if (pc_->atModuleTopLevel()) {
-          if (!options().topLevelAwait) {
-            error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
-            return null();
-          }
-          pc_->sc()->asModuleContext()->setIsAsync();
-          MOZ_ASSERT(pc_->isAsync());
-        }
-      }
-
       // Avoid getting next token with SlashIsDiv.
       if (tt == TokenKind::Await && pc_->isAsync()) {
         return expressionStatement(yieldHandling);
@@ -9562,16 +9514,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
     }
 
     case TokenKind::Await: {
-      // If we encounter an await in a module, mark it as async.
-      if (!pc_->isAsync() && pc_->sc()->isModule()) {
-        if (!options().topLevelAwait) {
-          error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
-          return null();
-        }
-        pc_->sc()->asModuleContext()->setIsAsync();
-        MOZ_ASSERT(pc_->isAsync());
-      }
-
       if (pc_->isAsync()) {
         if (inParametersOfAsyncFunction()) {
           error(JSMSG_AWAIT_IN_PARAMETER);

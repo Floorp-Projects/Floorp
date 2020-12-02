@@ -132,7 +132,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool nonSyntacticScope = false;
   bool privateClassFields = false;
   bool privateClassMethods = false;
-  bool topLevelAwait = false;
 
   // True if transcoding to XDR should use Stencil instead of JSScripts.
   bool useStencilXDR = false;
