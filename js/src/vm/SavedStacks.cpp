@@ -67,7 +67,7 @@ void LiveSavedFrameCache::trace(JSTracer* trc) {
   }
 }
 
-bool LiveSavedFrameCache::insert(JSContext* cx, FramePtr& framePtr,
+bool LiveSavedFrameCache::insert(JSContext* cx, FramePtr&& framePtr,
                                  const jsbytecode* pc,
                                  HandleSavedFrame savedFrame) {
   MOZ_ASSERT(savedFrame);
