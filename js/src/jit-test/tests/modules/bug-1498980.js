@@ -1,4 +1,3 @@
-// |jit-test| --enable-top-level-await;
 dbgGlobal = newGlobal({newCompartment: true});
 dbg = new dbgGlobal.Debugger;
 dbg.addDebuggee(this);
@@ -10,20 +9,16 @@ function f() {
 function execModule(source) {
     m = parseModule(source);
     m.declarationInstantiation();
-    return m.evaluation();
+    m.evaluation();
 }
 
-execModule("f();").then(() => {
-  gc();
+execModule("f();");
+gc();
 
-  execModule("throw 'foo'")
-    .then(r => {
-      // We should not reach here.
-      assertEq(false, true);
-    })
-    .catch(e => {
-      assertEq(e, 'foo');
-    });
-})
-
-drainJobQueue();
+let caught;
+try {
+    execModule("throw 'foo'");
+} catch (e) {
+    caught = e;
+}
+assertEq(caught, 'foo');

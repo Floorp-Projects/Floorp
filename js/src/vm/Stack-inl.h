@@ -13,7 +13,6 @@
 #include "mozilla/PodOperations.h"
 
 #include "builtin/Array.h"  // js::NewDenseEmptyArray
-#include "builtin/ModuleObject.h"
 #include "jit/BaselineFrame.h"
 #include "jit/RematerializedFrame.h"
 #include "js/Debug.h"
@@ -669,7 +668,7 @@ inline bool AbstractFramePtr::isFunctionFrame() const {
 }
 
 inline bool AbstractFramePtr::isGeneratorFrame() const {
-  if (!isFunctionFrame() && !isModuleFrame()) {
+  if (!isFunctionFrame()) {
     return false;
   }
   JSScript* s = script();

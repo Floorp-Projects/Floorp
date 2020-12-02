@@ -184,14 +184,13 @@ Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInScope(
   return innermostEmitterScope()->locationBoundInScope(name, target);
 }
 
-template <typename T>
-Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInScopeType(
+Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInFunctionScope(
     const ParserAtom* name, EmitterScope* source) {
-  EmitterScope* aScope = source;
-  while (!aScope->scope(this).is<T>()) {
-    aScope = aScope->enclosingInFrame();
+  EmitterScope* funScope = source;
+  while (!funScope->scope(this).is<FunctionScope>()) {
+    funScope = funScope->enclosingInFrame();
   }
-  return source->locationBoundInScope(name, aScope);
+  return source->locationBoundInScope(name, funScope);
 }
 
 bool BytecodeEmitter::markStepBreakpoint() {
@@ -2465,7 +2464,6 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
 
   TDZCheckCache tdzCache(this);
   EmitterScope emitterScope(this);
-  Maybe<AsyncEmitter> topLevelAwait;
   if (sc->isGlobalContext()) {
     if (!emitterScope.enterGlobal(this, sc->asGlobalContext())) {
       return false;
@@ -2478,9 +2476,6 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     MOZ_ASSERT(sc->isModuleContext());
     if (!emitterScope.enterModule(this, sc->asModuleContext())) {
       return false;
-    }
-    if (sc->asModuleContext()->isAsync()) {
-      topLevelAwait.emplace(this);
     }
   }
 
@@ -2529,24 +2524,12 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     if (!emitDeclarationInstantiation(body)) {
       return false;
     }
-    if (topLevelAwait) {
-      if (!topLevelAwait->prepareForModule()) {
-        return false;
-      }
-    }
 
     if (!switchToMain()) {
       return false;
     }
 
-    if (topLevelAwait) {
-      if (!topLevelAwait->prepareForBody()) {
-        return false;
-      }
-    }
-
     if (!emitTree(body)) {
-      // [stack]
       return false;
     }
 
@@ -2554,13 +2537,6 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       return false;
     }
   }
-
-  if (topLevelAwait) {
-    if (!topLevelAwait->emitEnd()) {
-      return false;
-    }
-  }
-
   if (!markSimpleBreakpoint()) {
     return false;
   }
@@ -2909,11 +2885,8 @@ bool BytecodeEmitter::emitIteratorNext(
     const Maybe<uint32_t>& callSourceCoordOffset,
     IteratorKind iterKind /* = IteratorKind::Sync */,
     bool allowSelfHosted /* = false */) {
-  // TODO: migrate Module code to cpp, to avoid having the extra check here.
-  MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting ||
-                 (sc->isModuleContext() && sc->asModuleContext()->isAsync()),
-             ".next() iteration is prohibited in non-module self-hosted code "
-             "because it"
+  MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting,
+             ".next() iteration is prohibited in self-hosted code because it "
              "can run user-modifiable iteration code");
 
   //                [stack] ... NEXT ITER
@@ -5494,9 +5467,9 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
   unsigned iflags = forOfLoop->iflags();
   IteratorKind iterKind =
       (iflags & JSITER_FORAWAITOF) ? IteratorKind::Async : IteratorKind::Sync;
-  MOZ_ASSERT_IF(iterKind == IteratorKind::Async, sc->isSuspendableContext());
+  MOZ_ASSERT_IF(iterKind == IteratorKind::Async, sc->asFunctionBox());
   MOZ_ASSERT_IF(iterKind == IteratorKind::Async,
-                sc->asSuspendableContext()->isAsync());
+                sc->asFunctionBox()->isAsync());
 
   ParseNode* forHeadExpr = forOfHead->kid3();
 
@@ -6062,8 +6035,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
       return false;
     }
 
-    if (sc->asSuspendableContext()->isAsync() &&
-        sc->asSuspendableContext()->isGenerator()) {
+    if (sc->asFunctionBox()->isAsync() && sc->asFunctionBox()->isGenerator()) {
       if (!emitAwaitInInnermostScope()) {
         return false;
       }
@@ -6129,7 +6101,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   if (needsFinalYield) {
     // We know that .generator is on the function scope, as we just exited
     // all nested scopes.
-    NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
+    NameLocation loc = *locationOfNameBoundInFunctionScope(
         cx->parserNames().dotGenerator, varEmitterScope);
 
     // Resolve the return value before emitting the final yield.
@@ -6179,13 +6151,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
 }
 
 bool BytecodeEmitter::emitGetDotGeneratorInScope(EmitterScope& currentScope) {
-  if (!sc->isFunction() && sc->isModuleContext() &&
-      sc->asModuleContext()->isAsync()) {
-    NameLocation loc = *locationOfNameBoundInScopeType<ModuleScope>(
-        cx->parserNames().dotGenerator, &currentScope);
-    return emitGetNameAtLocation(cx->parserNames().dotGenerator, loc);
-  }
-  NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
+  NameLocation loc = *locationOfNameBoundInFunctionScope(
       cx->parserNames().dotGenerator, &currentScope);
   return emitGetNameAtLocation(cx->parserNames().dotGenerator, loc);
 }
@@ -6236,7 +6202,7 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   }
 
   // 25.5.3.7 AsyncGeneratorYield step 5.
-  if (sc->asSuspendableContext()->isAsync()) {
+  if (sc->asFunctionBox()->isAsync()) {
     MOZ_ASSERT(!needsIteratorResult);
     if (!emitAwaitInInnermostScope()) {
       //            [stack] RESULT
@@ -6273,7 +6239,7 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
 }
 
 bool BytecodeEmitter::emitAwaitInInnermostScope(UnaryNode* awaitNode) {
-  MOZ_ASSERT(sc->isSuspendableContext());
+  MOZ_ASSERT(sc->isFunctionBox());
   MOZ_ASSERT(awaitNode->isKind(ParseNodeKind::AwaitExpr));
 
   if (!emitTree(awaitNode->kid())) {
@@ -6299,7 +6265,7 @@ bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
     return false;
   }
 
-  if (sc->asSuspendableContext()->needsPromiseResult()) {
+  if (sc->asFunctionBox()->needsPromiseResult()) {
     if (!emitGetDotGeneratorInScope(currentScope)) {
       //            [stack] VALUE GENERATOR
       return false;
@@ -6336,14 +6302,13 @@ bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
 // 14.4.14 Runtime Semantics: Evaluation
 // YieldExpression : yield* AssignmentExpression
 bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
-  MOZ_ASSERT(sc->isSuspendableContext());
-  MOZ_ASSERT(sc->asSuspendableContext()->isGenerator());
+  MOZ_ASSERT(sc->isFunctionBox());
+  MOZ_ASSERT(sc->asFunctionBox()->isGenerator());
 
   // Step 1.
-  IteratorKind iterKind = sc->asSuspendableContext()->isAsync()
-                              ? IteratorKind::Async
-                              : IteratorKind::Sync;
-  bool needsIteratorResult = sc->asSuspendableContext()->needsIteratorResult();
+  IteratorKind iterKind =
+      sc->asFunctionBox()->isAsync() ? IteratorKind::Async : IteratorKind::Sync;
+  bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
 
   // Steps 2-5.
   if (!emitTree(iter)) {

@@ -405,8 +405,7 @@ void ExecutionRunnable::RunOnWorkletThread() {
   // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-module-script
   // without /rethrow errors/ and so unhandled exceptions do not cause the
   // promise to be rejected.
-  JS::Rooted<JS::Value> ignored(cx);
-  JS::ModuleEvaluate(cx, module, &ignored);
+  JS::ModuleEvaluate(cx, module);
 
   // All done.
   mResult = NS_OK;

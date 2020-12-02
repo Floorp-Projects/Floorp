@@ -25,6 +25,7 @@ UNSUPPORTED_FEATURES = set(
         "regexp-match-indices",
         "Intl.DateTimeFormat-quarter",
         "Intl.Segmenter",
+        "top-level-await",
         "Atomics.waitAsync",
         "legacy-regexp",
         "TypedArray.prototype.item",
@@ -50,7 +51,6 @@ SHELL_OPTIONS = {
     "class-static-fields-private": "--enable-private-fields",
     "class-methods-private": "--enable-private-methods",
     "class-static-methods-private": "--enable-private-methods",
-    "top-level-await": "--enable-top-level-await",
 }
 
 
