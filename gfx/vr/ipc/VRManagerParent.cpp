@@ -16,6 +16,8 @@
 #include "VRManager.h"
 #include "VRThread.h"
 
+using mozilla::dom::GamepadHandle;
+
 namespace mozilla {
 using namespace layers;
 namespace gfx {
@@ -240,21 +242,21 @@ mozilla::ipc::IPCResult VRManagerParent::RecvResetPuppet() {
 }
 
 mozilla::ipc::IPCResult VRManagerParent::RecvVibrateHaptic(
-    const uint32_t& aControllerIdx, const uint32_t& aHapticIndex,
-    const double& aIntensity, const double& aDuration,
-    const uint32_t& aPromiseID) {
+    const mozilla::dom::GamepadHandle& aGamepadHandle,
+    const uint32_t& aHapticIndex, const double& aIntensity,
+    const double& aDuration, const uint32_t& aPromiseID) {
   VRManager* vm = VRManager::Get();
   VRManagerPromise promise(this, aPromiseID);
 
-  vm->VibrateHaptic(aControllerIdx, aHapticIndex, aIntensity, aDuration,
+  vm->VibrateHaptic(aGamepadHandle, aHapticIndex, aIntensity, aDuration,
                     promise);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult VRManagerParent::RecvStopVibrateHaptic(
-    const uint32_t& aControllerIdx) {
+    const mozilla::dom::GamepadHandle& aGamepadHandle) {
   VRManager* vm = VRManager::Get();
-  vm->StopVibrateHaptic(aControllerIdx);
+  vm->StopVibrateHaptic(aGamepadHandle);
   return IPC_OK();
 }
 

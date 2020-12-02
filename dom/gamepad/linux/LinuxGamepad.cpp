@@ -19,18 +19,22 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "nscore.h"
+#include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/Tainting.h"
+#include "mozilla/UniquePtr.h"
 #include "udev.h"
 
 namespace {
 
 using namespace mozilla::dom;
+using mozilla::MakeUnique;
 using mozilla::udev_device;
 using mozilla::udev_enumerate;
 using mozilla::udev_lib;
 using mozilla::udev_list_entry;
 using mozilla::udev_monitor;
+using mozilla::UniquePtr;
 
 static const float kMaxAxisValue = 32767.0;
 static const char kJoystickPath[] = "/dev/input/js";
@@ -38,7 +42,7 @@ static const char kJoystickPath[] = "/dev/input/js";
 // TODO: should find a USB identifier for each device so we can
 // provide something that persists across connect/disconnect cycles.
 typedef struct {
-  int index;
+  GamepadHandle handle;
   guint source_id;
   int numAxes;
   int numButtons;
@@ -74,7 +78,7 @@ class LinuxGamepadService {
   struct udev_monitor* mMonitor;
   guint mMonitorSourceID;
   // Information about currently connected gamepads.
-  AutoTArray<Gamepad, 4> mGamepads;
+  AutoTArray<UniquePtr<Gamepad>, 4> mGamepads;
 };
 
 // singleton instance
@@ -94,13 +98,13 @@ void LinuxGamepadService::AddDevice(struct udev_device* dev) {
 
   // Ensure that this device hasn't already been added.
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    if (strcmp(mGamepads[i].devpath, devpath) == 0) {
+    if (strcmp(mGamepads[i]->devpath, devpath) == 0) {
       return;
     }
   }
 
-  Gamepad gamepad;
-  snprintf(gamepad.devpath, sizeof(gamepad.devpath), "%s", devpath);
+  auto gamepad = MakeUnique<Gamepad>();
+  snprintf(gamepad->devpath, sizeof(gamepad->devpath), "%s", devpath);
   GIOChannel* channel = g_io_channel_new_file(devpath, "r", nullptr);
   if (!channel) {
     return;
@@ -127,28 +131,28 @@ void LinuxGamepadService::AddDevice(struct udev_device* dev) {
       model_id = mUdev.udev_device_get_sysattr_value(parent, "id/product");
     }
   }
-  snprintf(gamepad.idstring, sizeof(gamepad.idstring), "%s-%s-%s",
+  snprintf(gamepad->idstring, sizeof(gamepad->idstring), "%s-%s-%s",
            vendor_id ? vendor_id : "unknown", model_id ? model_id : "unknown",
            name);
 
   char numAxes = 0, numButtons = 0;
   ioctl(fd, JSIOCGAXES, &numAxes);
-  gamepad.numAxes = numAxes;
+  gamepad->numAxes = numAxes;
   ioctl(fd, JSIOCGBUTTONS, &numButtons);
-  gamepad.numButtons = numButtons;
+  gamepad->numButtons = numButtons;
 
-  gamepad.index = service->AddGamepad(
-      gamepad.idstring, mozilla::dom::GamepadMappingType::_empty,
-      mozilla::dom::GamepadHand::_empty, gamepad.numButtons, gamepad.numAxes, 0,
-      0, 0);  // TODO: Bug 680289, implement gamepad haptics for Linux.
+  gamepad->handle = service->AddGamepad(
+      gamepad->idstring, mozilla::dom::GamepadMappingType::_empty,
+      mozilla::dom::GamepadHand::_empty, gamepad->numButtons, gamepad->numAxes,
+      0, 0, 0);  // TODO: Bug 680289, implement gamepad haptics for Linux.
   // TODO: Bug 1523355, implement gamepad lighindicator and touch for Linux.
 
-  gamepad.source_id =
+  gamepad->source_id =
       g_io_add_watch(channel, GIOCondition(G_IO_IN | G_IO_ERR | G_IO_HUP),
-                     OnGamepadData, GINT_TO_POINTER(gamepad.index));
+                     OnGamepadData, gamepad.get());
   g_io_channel_unref(channel);
 
-  mGamepads.AppendElement(gamepad);
+  mGamepads.AppendElement(std::move(gamepad));
 }
 
 void LinuxGamepadService::RemoveDevice(struct udev_device* dev) {
@@ -164,10 +168,13 @@ void LinuxGamepadService::RemoveDevice(struct udev_device* dev) {
   }
 
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    if (strcmp(mGamepads[i].devpath, devpath) == 0) {
-      g_source_remove(mGamepads[i].source_id);
-      service->RemoveGamepad(mGamepads[i].index);
+    if (strcmp(mGamepads[i]->devpath, devpath) == 0) {
+      auto gamepad = std::move(mGamepads[i]);
       mGamepads.RemoveElementAt(i);
+
+      g_source_remove(gamepad->source_id);
+      service->RemoveGamepad(gamepad->handle);
+
       break;
     }
   }
@@ -236,7 +243,7 @@ void LinuxGamepadService::Startup() {
 
 void LinuxGamepadService::Shutdown() {
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    g_source_remove(mGamepads[i].source_id);
+    g_source_remove(mGamepads[i]->source_id);
   }
   mGamepads.Clear();
   RemoveMonitor();
@@ -279,7 +286,8 @@ gboolean LinuxGamepadService::OnGamepadData(GIOChannel* source,
   if (!service) {
     return TRUE;
   }
-  int index = GPOINTER_TO_INT(data);
+  auto* gamepad = static_cast<Gamepad*>(data);
+
   // TODO: remove gamepad?
   if (condition & G_IO_ERR || condition & G_IO_HUP) return FALSE;
 
@@ -300,10 +308,10 @@ gboolean LinuxGamepadService::OnGamepadData(GIOChannel* source,
 
     switch (event.type) {
       case JS_EVENT_BUTTON:
-        service->NewButtonEvent(index, event.number, !!event.value);
+        service->NewButtonEvent(gamepad->handle, event.number, !!event.value);
         break;
       case JS_EVENT_AXIS:
-        service->NewAxisMoveEvent(index, event.number,
+        service->NewAxisMoveEvent(gamepad->handle, event.number,
                                   ((float)event.value) / kMaxAxisValue);
         break;
     }
@@ -343,7 +351,7 @@ void StopGamepadMonitoring() {
   gService = nullptr;
 }
 
-void SetGamepadLightIndicatorColor(const Tainted<uint32_t>& aControllerIdx,
+void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
                                    const Tainted<uint32_t>& aLightColorIndex,
                                    const Tainted<uint8_t>& aRed,
                                    const Tainted<uint8_t>& aGreen,

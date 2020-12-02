@@ -4,13 +4,12 @@
 
 include "mozilla/dom/GamepadMessageUtils.h";
 
-using mozilla::dom::GamepadServiceType from "mozilla/dom/GamepadServiceType.h";
 using mozilla::dom::GamepadPoseState from "mozilla/dom/GamepadPoseState.h";
 using mozilla::dom::GamepadTouchState from "mozilla/dom/GamepadTouchState.h";
 using mozilla::dom::GamepadLightIndicatorType from "mozilla/dom/GamepadLightIndicatorBinding.h";
 using mozilla::dom::GamepadMappingType from "mozilla/dom/GamepadBinding.h";
 using mozilla::dom::GamepadHand from "mozilla/dom/GamepadBinding.h";
-
+using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
 
 namespace mozilla {
 namespace dom {
@@ -71,8 +70,7 @@ union GamepadChangeEventBody {
 };
 
 struct GamepadChangeEvent {
-  uint32_t index;
-  GamepadServiceType service_type;
+  GamepadHandle handle;
   GamepadChangeEventBody body;
 };
 

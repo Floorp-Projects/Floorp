@@ -16,6 +16,7 @@ IPDL_SOURCES += [
 EXPORTS.mozilla.dom += [
     "Gamepad.h",
     "GamepadButton.h",
+    "GamepadHandle.h",
     "GamepadHapticActuator.h",
     "GamepadLightIndicator.h",
     "GamepadManager.h",
@@ -30,7 +31,6 @@ EXPORTS.mozilla.dom += [
     "ipc/GamepadEventChannelChild.h",
     "ipc/GamepadEventChannelParent.h",
     "ipc/GamepadMessageUtils.h",
-    "ipc/GamepadServiceType.h",
     "ipc/GamepadTestChannelChild.h",
     "ipc/GamepadTestChannelParent.h",
 ]
@@ -38,6 +38,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES = [
     "Gamepad.cpp",
     "GamepadButton.cpp",
+    "GamepadHandle.cpp",
     "GamepadHapticActuator.cpp",
     "GamepadLightIndicator.cpp",
     "GamepadManager.cpp",

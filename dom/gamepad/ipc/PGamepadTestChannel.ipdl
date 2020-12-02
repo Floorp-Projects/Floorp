@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 include protocol PBackground;
+include "mozilla/dom/GamepadMessageUtils.h";
 include GamepadEventTypes;
+
+using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
 
 namespace mozilla {
 namespace dom {
@@ -13,7 +16,7 @@ refcounted protocol PGamepadTestChannel {
     async GamepadTestEvent(uint32_t aID, GamepadChangeEvent aGamepadEvent);
     async __delete__();
   child:
-    async ReplyGamepadIndex(uint32_t aID, uint32_t aIndex);
+    async ReplyGamepadHandle(uint32_t aID, GamepadHandle aHandle);
 };
 
 }

@@ -21,10 +21,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GamepadHapticActuator, mParent)
 
 GamepadHapticActuator::GamepadHapticActuator(nsISupports* aParent,
-                                             uint32_t aGamepadId,
+                                             GamepadHandle aGamepadHandle,
                                              uint32_t aIndex)
     : mParent(aParent),
-      mGamepadId(aGamepadId),
+      mGamepadHandle(aGamepadHandle),
       mType(GamepadHapticActuatorType::Vibration),
       mIndex(aIndex) {}
 
@@ -55,7 +55,7 @@ already_AddRefed<Promise> GamepadHapticActuator::Pulse(double aValue,
   switch (mType) {
     case GamepadHapticActuatorType::Vibration: {
       RefPtr<Promise> promise = gamepadManager->VibrateHaptic(
-          mGamepadId, mIndex, value, duration, global, aRv);
+          mGamepadHandle, mIndex, value, duration, global, aRv);
       if (!promise) {
         return nullptr;
       }
@@ -72,7 +72,7 @@ already_AddRefed<Promise> GamepadHapticActuator::Pulse(double aValue,
 GamepadHapticActuatorType GamepadHapticActuator::Type() const { return mType; }
 
 void GamepadHapticActuator::Set(const GamepadHapticActuator* aOther) {
-  mGamepadId = aOther->mGamepadId;
+  mGamepadHandle = aOther->mGamepadHandle;
   mType = aOther->mType;
   mIndex = aOther->mIndex;
 }
