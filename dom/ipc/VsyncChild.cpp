@@ -20,26 +20,6 @@ VsyncChild::VsyncChild()
 
 VsyncChild::~VsyncChild() { MOZ_ASSERT(NS_IsMainThread()); }
 
-/* do not delete yet so the file history is preserved
-bool VsyncChild::SendObserve() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mObservingVsync && !mIsShutdown) {
-    mObservingVsync = true;
-    PVsyncChild::SendObserve();
-  }
-  return true;
-}
-
-bool VsyncChild::SendUnobserve() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mObservingVsync && !mIsShutdown) {
-    mObservingVsync = false;
-    PVsyncChild::SendUnobserve();
-  }
-  return true;
-}
-*/
-
 void VsyncChild::AddChildRefreshTimer(VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mObservers.Contains(aVsyncObserver));
