@@ -278,7 +278,7 @@ class Manager::Factory {
     MOZ_ASSERT(!aOrigin.IsEmpty());
 
     AbortMatching([&aOrigin](const auto& manager) {
-      return manager->mManagerId->QuotaOrigin() == aOrigin;
+      return manager.mManagerId->QuotaOrigin() == aOrigin;
     });
   }
 
@@ -444,8 +444,10 @@ class Manager::Factory {
       AutoRestore<bool> restore(sFactory->mInSyncAbortOrShutdown);
       sFactory->mInSyncAbortOrShutdown = true;
 
-      for (auto* manager : sFactory->mManagerList.ForwardRange()) {
-        if (aCondition(manager)) {
+      for (const auto& manager : sFactory->mManagerList.ForwardRange()) {
+        MOZ_DIAGNOSTIC_ASSERT(manager);
+
+        if (aCondition(*manager)) {
           auto pinnedManager =
               SafeRefPtr{manager, AcquireStrongRefFromRawPtr{}};
           pinnedManager->Abort();
