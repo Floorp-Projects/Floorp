@@ -183,7 +183,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   async getSources() {
     let sources = [];
     try {
-      ({ sources } = await super.sources());
+      sources = await super.sources();
     } catch (e) {
       // we may have closed the connection
       console.log(`getSources failed. Connection may have closed: ${e}`);

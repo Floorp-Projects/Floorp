@@ -22,6 +22,10 @@ types.addDictType("console.startlisteners", {
   traits: "console.traits",
 });
 
+types.addDictType("console.stoplisteners", {
+  stoppedListeners: "array:string",
+});
+
 types.addDictType("console.autocomplete", {
   matches: "array:string",
   matchProp: "string",
@@ -128,7 +132,7 @@ const webconsoleSpecPrototype = {
       request: {
         listeners: Arg(0, "nullable:array:string"),
       },
-      response: RetVal("array:string"),
+      response: RetVal("console.stoplisteners"),
     },
     /**
      * Retrieve the cached messages from the server.
@@ -248,7 +252,9 @@ const webconsoleSpecPrototype = {
     },
     getBlockedUrls: {
       request: {},
-      response: RetVal("array:string"),
+      response: {
+        blockedUrls: RetVal("array:string"),
+      },
     },
   },
 };

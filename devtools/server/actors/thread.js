@@ -1492,9 +1492,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // overhead of an RDP packet for every source right now. Let the default
     // timeout flush the buffered packets.
 
-    return {
-      sources: this.sourcesManager.iter().map(s => s.form()),
-    };
+    return this.sourcesManager.iter().map(s => s.form());
   },
 
   /**

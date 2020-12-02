@@ -49,14 +49,18 @@ const compatibilitySpec = generateActorSpec({
         declarationBlock: Arg(0, "array:declaration"),
         targetBrowsers: Arg(1, "array:browsertype"),
       },
-      response: RetVal("array:compatibilityissues"),
+      response: {
+        compatibilityIssues: RetVal("array:compatibilityissues"),
+      },
     },
     getNodeCssIssues: {
       request: {
         node: Arg(0, "domnode"),
         targetBrowsers: Arg(1, "array:browsertype"),
       },
-      response: RetVal("array:compatibilityissues"),
+      response: {
+        compatibilityIssues: RetVal("array:compatibilityissues"),
+      },
     },
   },
 });
