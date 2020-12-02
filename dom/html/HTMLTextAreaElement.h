@@ -254,7 +254,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   // via bindings.
   void SetCustomValidity(const nsAString& aError);
 
-  void Select();
+  MOZ_CAN_RUN_SCRIPT void Select();
   Nullable<uint32_t> GetSelectionStart(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT void SetSelectionStart(
       const Nullable<uint32_t>& aSelectionStart, ErrorResult& aError);
