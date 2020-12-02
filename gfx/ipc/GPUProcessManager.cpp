@@ -475,6 +475,9 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError,
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid value");
   }
+
+  MOZ_RELEASE_ASSERT(!gfxPlatform::WebRenderEnvvarEnabled(),
+                     "Forced WebRender but now disabled");
   gfx::gfxVars::SetUseWebRender(false);
   gfx::gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
 
