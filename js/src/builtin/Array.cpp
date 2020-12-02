@@ -54,7 +54,6 @@
 #include "vm/IsGivenTypeObject-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/ObjectGroup-inl.h"  // JSObject::setSingleton
 
 using namespace js;
 
@@ -3824,8 +3823,7 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
   RootedArrayObject arrayProto(
       cx, ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
                                    shape, group, 0, metadata));
-  if (!arrayProto || !JSObject::setSingleton(cx, arrayProto) ||
-      !JSObject::setDelegate(cx, arrayProto) ||
+  if (!arrayProto || !JSObject::setDelegate(cx, arrayProto) ||
       !AddLengthProperty(cx, arrayProto)) {
     return nullptr;
   }
