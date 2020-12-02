@@ -14,6 +14,8 @@
 #include "Units.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/widget/IMEData.h"
 
 class nsIWidget;
 
@@ -26,13 +28,12 @@ class nsQueryContentEventResult final : public nsIQueryContentEventResult {
   void SetEventResult(nsIWidget* aWidget);
 
  protected:
-  ~nsQueryContentEventResult();
+  ~nsQueryContentEventResult() = default;
 
   mozilla::EventMessage mEventMessage;
 
-  uint32_t mOffset;
-  uint32_t mTentativeCaretOffset;
-  nsString mString;
+  mozilla::Maybe<mozilla::OffsetAndData<uint32_t>> mOffsetAndData;
+  mozilla::Maybe<uint32_t> mTentativeCaretOffset;
   mozilla::LayoutDeviceIntRect mRect;
   CopyableTArray<mozilla::LayoutDeviceIntRect> mRectArray;
 
