@@ -25,22 +25,16 @@ config = {
     "partial_env": {
         "CXXFLAGS": (
             "-target x86_64-apple-darwin "
-            "-B {MOZ_FETCHES_DIR}/cctools/bin "
             "-isysroot %(abs_work_dir)s/MacOSX10.11.sdk "
-            "-mmacosx-version-min=10.11".format(
-                MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
-            )
+            "-mmacosx-version-min=10.11"
         ),
         "LDFLAGS": (
             "-target x86_64-apple-darwin "
-            "-B {MOZ_FETCHES_DIR}/cctools/bin "
             "-isysroot %(abs_work_dir)s/MacOSX10.11.sdk "
-            "-mmacosx-version-min=10.11".format(
-                MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
-            )
+            "-mmacosx-version-min=10.11"
         ),
         "PATH": (
-            "{MOZ_FETCHES_DIR}/clang/bin/:%(PATH)s".format(
+            "{MOZ_FETCHES_DIR}/clang/bin/:{MOZ_FETCHES_DIR}/cctools/bin/:%(PATH)s".format(
                 MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
             )
         ),
