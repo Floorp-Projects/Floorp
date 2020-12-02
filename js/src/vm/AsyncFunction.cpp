@@ -8,6 +8,7 @@
 
 #include "mozilla/Maybe.h"
 
+#include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
@@ -213,6 +214,34 @@ AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
   }
 
   auto* obj = NewBuiltinClassInstance<AsyncFunctionGeneratorObject>(cx);
+  if (!obj) {
+    return nullptr;
+  }
+  obj->initFixedSlot(PROMISE_SLOT, ObjectValue(*resultPromise));
+
+  // Starts in the running state.
+  obj->setResumeIndex(AbstractGeneratorObject::RESUME_INDEX_RUNNING);
+
+  return obj;
+}
+
+AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
+    JSContext* cx, HandleModuleObject module) {
+  // TODO: Module is currently hitching a ride with
+  // AsyncFunctionGeneratorObject. The reason for this is we have some work in
+  // the JITs that make use of this object when we hit AsyncAwait bytecode. At
+  // the same time, top level await shares a lot of it's implementation with
+  // AsyncFunction. I am not sure if the best thing to do here is inherit,
+  // override, or do something else. Comments appreciated.
+  MOZ_ASSERT(module->script()->isAsync());
+
+  Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
+  if (!resultPromise) {
+    return nullptr;
+  }
+
+  Rooted<AsyncFunctionGeneratorObject*> obj(
+      cx, NewBuiltinClassInstance<AsyncFunctionGeneratorObject>(cx));
   if (!obj) {
     return nullptr;
   }
