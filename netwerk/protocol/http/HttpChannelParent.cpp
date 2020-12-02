@@ -55,6 +55,7 @@
 #include "nsThreadUtils.h"
 #include "nsQueryObject.h"
 #include "nsIMultiPartChannel.h"
+#include "nsIViewSourceChannel.h"
 
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;
@@ -1141,6 +1142,9 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
       multiPartChannel->GetPartID(&partID);
       multiPartID = Some(partID);
       multiPartChannel->GetIsLastPart(&isLastPartOfMultiPart);
+    } else if (nsCOMPtr<nsIViewSourceChannel> viewSourceChannel =
+                   do_QueryInterface(aRequest)) {
+      chan = do_QueryObject(viewSourceChannel->GetInnerChannel());
     }
   }
   MOZ_ASSERT(multiPartID || !isMultiPart, "Changed multi-part state?");
