@@ -10,38 +10,35 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.fragment.app.DialogFragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import androidx.appcompat.app.AppCompatDialogFragment
 import kotlinx.android.synthetic.main.fragment_sign_out.view.*
 import kotlinx.coroutines.launch
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 
-class SignOutFragment : BottomSheetDialogFragment() {
+class SignOutFragment : AppCompatDialogFragment() {
     private lateinit var accountManager: FxaAccountManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(DialogFragment.STYLE_NO_TITLE, R.style.FirefoxAccountsDialogStyle)
+        setStyle(STYLE_NO_TITLE, R.style.BottomSheet)
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-
-        dialog.setOnShowListener {
-            val bottomSheet = dialog.findViewById<View>(
-                com.google.android.material.R.id.design_bottom_sheet
-            ) as FrameLayout
-            val behavior = BottomSheetBehavior.from(bottomSheet)
-            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        BottomSheetDialog(requireContext(), this.theme).apply {
+            setOnShowListener {
+                val bottomSheet =
+                    findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout
+                val behavior = BottomSheetBehavior.from(bottomSheet)
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }
         }
-
-        return dialog
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,13 +60,15 @@ class SignOutFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.signOutDisconnect.setOnClickListener {
-            viewLifecycleOwner.lifecycleScope.launch {
+            lifecycleScope.launch {
                 requireComponents
                     .backgroundServices.accountAbnormalities.userRequestedLogout()
                 accountManager.logout()
             }.invokeOnCompletion {
-                if (!findNavController().popBackStack(R.id.settingsFragment, false)) {
-                    dismiss()
+                runIfFragmentIsAttached {
+                    if (!findNavController().popBackStack(R.id.settingsFragment, false)) {
+                        dismiss()
+                    }
                 }
             }
         }

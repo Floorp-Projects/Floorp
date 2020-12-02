@@ -343,17 +343,6 @@
         <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
-    <style name="SitePermissionCancelButton" parent="SitePermissionButton">
-        <item name="android:textColor">?accent</item>
-        <item name="android:backgroundTint">?foundation</item>
-    </style>
-
-    <style name="SitePermissionPrimaryButton" parent="SitePermissionButton">
-        <item name="android:background">@drawable/dialog_button_background</item>
-        <item name="android:textColor">?contrastText</item>
-        <item name="android:backgroundTint">?accent</item>
-    </style>
-
     <style name="DialogStyleBase" parent="NormalTheme">
         <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
         <item name="android:colorControlNormal">?accentHighContrast</item>
@@ -534,11 +523,6 @@
         <item name="android:textSize">@dimen/share_header_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="fontFamily">@font/metropolis_semibold</item>
-    </style>
-
-    <style name="FirefoxAccountsDialogStyle" parent="DialogStyleBase">
-        <item name="android:windowBackground">@drawable/scrim_background</item>
-        <item name="android:colorControlHighlight">@android:color/transparent</item>
     </style>
 
     <style name="ShareDialogStyle" parent="DialogStyleBase"/>
