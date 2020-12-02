@@ -121,12 +121,6 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
    * Get the text direction of the grid container.
    */
   get direction() {
-    // @backward-compat { version 60 } Older server didn't return the `direction` property
-    // in the form.
-    if (!this._form.direction) {
-      return "ltr";
-    }
-
     return this._form.direction;
   }
 
@@ -148,12 +142,6 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
    * Get the writing mode of the grid container.
    */
   get writingMode() {
-    // @backward-compat { version 60 } Older server didn't return the `horizontal-tb`
-    // property in the form.
-    if (!this._form.writingMode) {
-      return "horizontal-tb";
-    }
-
     return this._form.writingMode;
   }
 }
