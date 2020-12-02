@@ -303,5 +303,69 @@ int main(void) {
   MOZ_RELEASE_ASSERT(bl11.ReadBytes(iter, data, 16));
   MOZ_RELEASE_ASSERT(memcmp(data, "abcdefgh12345678", 16) == 0);
 
+  // RangeLength.
+
+  BufferList bl12(0, 0, 8);
+  MOZ_ALWAYS_TRUE(bl12.WriteBytes("abcdefgh", 8));
+  MOZ_ALWAYS_TRUE(bl12.WriteBytes("12345678", 8));
+
+  // |iter| is at position 0 (1st segment).
+  iter = bl12.Iter();
+  iter1 = bl12.Iter();
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 0);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 4);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 8);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 12);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 3));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 15);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 1));
+  MOZ_RELEASE_ASSERT(iter1.Done());
+
+  // |iter| is at position 1 (1st segment).
+  iter = bl12.Iter();
+  iter1 = bl12.Iter();
+  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl12, 1));
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 1));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 0);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 4);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 8);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 12);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 2));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 14);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 1));
+  MOZ_RELEASE_ASSERT(iter1.Done());
+
+  // |iter| is at position 8 (2nd segment).
+  iter = bl12.Iter();
+  iter1 = bl12.Iter();
+  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl12, 8));
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 8));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 0);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 4);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 3));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 7);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 1));
+  MOZ_RELEASE_ASSERT(iter1.Done());
+
+  // |iter| is at position 9 (2nd segment).
+  iter = bl12.Iter();
+  iter1 = bl12.Iter();
+  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl12, 9));
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 9));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 0);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 4));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 4);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 2));
+  MOZ_RELEASE_ASSERT(bl12.RangeLength(iter, iter1) == 6);
+  MOZ_RELEASE_ASSERT(iter1.AdvanceAcrossSegments(bl12, 1));
+  MOZ_RELEASE_ASSERT(iter1.Done());
+
   return 0;
 }
