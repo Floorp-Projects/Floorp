@@ -1422,20 +1422,6 @@ static void EmitStoreDenseElement(MacroAssembler& masm,
   masm.storeTypedOrValue(reg, target);
 }
 
-static void EmitAssertNoCopyOnWriteElements(MacroAssembler& masm,
-                                            Register elementsReg) {
-#ifdef DEBUG
-  // IonBuilder::initOrSetElemTryCache ensures we have no copy-on-write
-  // elements. Assert this in debug builds.
-  Address elementsFlags(elementsReg, ObjectElements::offsetOfFlags());
-  Label ok;
-  masm.branchTest32(Assembler::Zero, elementsFlags,
-                    Imm32(ObjectElements::COPY_ON_WRITE), &ok);
-  masm.assumeUnreachable("Unexpected copy-on-write elements in Ion IC!");
-  masm.bind(&ok);
-#endif
-}
-
 static void EmitAssertExtensibleElements(MacroAssembler& masm,
                                          Register elementsReg) {
 #ifdef DEBUG
@@ -1482,8 +1468,6 @@ bool IonCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   // Load obj->elements in scratch1.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch1);
 
-  EmitAssertNoCopyOnWriteElements(masm, scratch1);
-
   // Bounds check.
   Address initLength(scratch1, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, spectreScratch,
@@ -1522,8 +1506,6 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
 
   // Load obj->elements in scratch1.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch1);
-
-  EmitAssertNoCopyOnWriteElements(masm, scratch1);
 
   EmitAssertExtensibleElements(masm, scratch1);
   if (handleAdd) {

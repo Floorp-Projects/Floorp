@@ -220,24 +220,10 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   // Static accessors for ObjectGroupRealm ArrayObjectTable and
   // PlainObjectTable.
 
-  enum class NewArrayKind {
-    Normal,       // Specialize array group based on its element type.
-    CopyOnWrite,  // Make an array with copy-on-write elements.
-    UnknownIndex  // Make an array with an unknown element type.
-  };
-
   // Create an ArrayObject with the specified elements and a group specialized
   // for the elements.
-  static ArrayObject* newArrayObject(
-      JSContext* cx, const Value* vp, size_t length, NewObjectKind newKind,
-      NewArrayKind arrayKind = NewArrayKind::Normal);
-
-  // Static accessors for ObjectGroupRealm AllocationSiteTable.
-
-  static ArrayObject* getOrFixupCopyOnWriteObject(JSContext* cx,
-                                                  HandleScript script,
-                                                  jsbytecode* pc);
-  static ArrayObject* getCopyOnWriteObject(JSScript* script, jsbytecode* pc);
+  static ArrayObject* newArrayObject(JSContext* cx, const Value* vp,
+                                     size_t length, NewObjectKind newKind);
 };
 
 // Structure used to manage the groups in a realm.

@@ -394,20 +394,8 @@ ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
 
 /* static */
 ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
-                                         size_t length, NewObjectKind newKind,
-                                         NewArrayKind arrayKind) {
+                                         size_t length, NewObjectKind newKind) {
   MOZ_ASSERT(newKind != SingletonObject);
-
-  // If we are making a copy on write array, don't try to adjust the group as
-  // getOrFixupCopyOnWriteObject will do this before any objects are copied
-  // from this one.
-  if (arrayKind == NewArrayKind::CopyOnWrite) {
-    ArrayObject* obj = NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
-    if (!obj || !ObjectElements::MakeElementsCopyOnWrite(cx, obj)) {
-      return nullptr;
-    }
-    return obj;
-  }
 
   return NewDenseCopiedArray(cx, length, vp, nullptr, newKind);
 }
@@ -439,27 +427,6 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
   if (!obj || !AddPlainObjectProperties(cx, obj, properties, nproperties)) {
     return nullptr;
   }
-  return obj;
-}
-
-/* static */
-ArrayObject* ObjectGroup::getOrFixupCopyOnWriteObject(JSContext* cx,
-                                                      HandleScript script,
-                                                      jsbytecode* pc) {
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-/* static */
-ArrayObject* ObjectGroup::getCopyOnWriteObject(JSScript* script,
-                                               jsbytecode* pc) {
-  // getOrFixupCopyOnWriteObject should already have been called for
-  // script/pc, ensuring that the template object has a group with the
-  // COPY_ON_WRITE flag. We don't assert this here, due to a corner case
-  // where this property doesn't hold. See jsop_newarray_copyonwrite in
-  // IonBuilder.
-  ArrayObject* obj = &script->getObject(pc)->as<ArrayObject>();
-  MOZ_ASSERT(obj->denseElementsAreCopyOnWrite());
-
   return obj;
 }
 

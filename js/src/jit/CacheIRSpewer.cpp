@@ -424,8 +424,6 @@ void CacheIRSpewer::valueProperty(const char* name, const Value& v) {
                      nobj->getDenseInitializedLength());
           j.property("denseCapacity", nobj->getDenseCapacity());
           j.property("denseElementsAreSealed", nobj->denseElementsAreSealed());
-          j.property("denseElementsAreCopyOnWrite",
-                     nobj->denseElementsAreCopyOnWrite());
           j.property("denseElementsAreFrozen", nobj->denseElementsAreFrozen());
         }
         j.endObject();

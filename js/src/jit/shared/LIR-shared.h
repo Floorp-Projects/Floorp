@@ -3808,27 +3808,6 @@ class LElements : public LInstructionHelper<1, 1, 0> {
   const MElements* mir() const { return mir_->toElements(); }
 };
 
-// If necessary, copy the elements in an object so they may be written to.
-class LMaybeCopyElementsForWrite : public LInstructionHelper<0, 1, 1> {
- public:
-  LIR_HEADER(MaybeCopyElementsForWrite)
-
-  explicit LMaybeCopyElementsForWrite(const LAllocation& obj,
-                                      const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setTemp(0, temp);
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-
-  const LDefinition* temp() { return getTemp(0); }
-
-  const MMaybeCopyElementsForWrite* mir() const {
-    return mir_->toMaybeCopyElementsForWrite();
-  }
-};
-
 // Load the initialized length from an elements header.
 class LInitializedLength : public LInstructionHelper<1, 1, 0> {
  public:

@@ -5009,7 +5009,6 @@ AttachDecision CallIRGenerator::tryAttachArrayPopShift(HandleFunction callee,
   // Other conditions:
   //
   // * The array length needs to be writable because we're changing it.
-  // * The elements must not be copy-on-write because we're deleting an element.
   // * The array must be extensible. Non-extensible arrays require preserving
   //   the |initializedLength == capacity| invariant on ObjectElements.
   //   See NativeObject::shrinkCapacityToInitializedLength.
@@ -5017,8 +5016,8 @@ AttachDecision CallIRGenerator::tryAttachArrayPopShift(HandleFunction callee,
   // * There must not be a for-in iterator for the elements because the IC stub
   //   does not suppress deleted properties.
   ArrayObject* arr = &thisval_.toObject().as<ArrayObject>();
-  if (!arr->lengthIsWritable() || arr->denseElementsAreCopyOnWrite() ||
-      !arr->isExtensible() || arr->denseElementsHaveMaybeInIterationFlag()) {
+  if (!arr->lengthIsWritable() || !arr->isExtensible() ||
+      arr->denseElementsHaveMaybeInIterationFlag()) {
     return AttachDecision::NoAction;
   }
 

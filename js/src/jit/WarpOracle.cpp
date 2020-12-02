@@ -388,12 +388,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
 
       case JSOp::NewArrayCopyOnWrite: {
         MOZ_CRASH("Bug 1626854: COW arrays disabled without TI for now");
-
-        // Fix up the copy-on-write ArrayObject if needed.
-        jsbytecode* pc = loc.toRawBytecode();
-        if (!ObjectGroup::getOrFixupCopyOnWriteObject(cx_, script_, pc)) {
-          return abort(AbortReason::Error);
-        }
         break;
       }
 

@@ -2859,29 +2859,7 @@ bool BaselineCodeGen<Handler>::emit_NewArray() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_NewArrayCopyOnWrite() {
-  // This is like the interpreter implementation, but we can call
-  // getOrFixupCopyOnWriteObject at compile-time.
-
-  RootedScript scriptRoot(cx, handler.script());
-  JSObject* obj =
-      ObjectGroup::getOrFixupCopyOnWriteObject(cx, scriptRoot, handler.pc());
-  if (!obj) {
-    return false;
-  }
-
-  prepareVMCall();
-
-  pushArg(ImmGCPtr(obj));
-
-  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject);
-  if (!callVM<Fn, js::NewDenseCopyOnWriteArray>()) {
-    return false;
-  }
-
-  // Box and push return value.
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.push(R0);
-  return true;
+  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 template <>
