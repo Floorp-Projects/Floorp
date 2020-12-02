@@ -663,7 +663,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "72f05a5e365981ab4a375851c43918739b78d706"
+        "revision": "8226b4fe8b73be74be8ef9820d773a5dac5f57da"
     },
     "gn": {
         "pin": false,
@@ -939,7 +939,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "4ddb26e88d0b408eeaad6449c42624724ad87ec3"
+        "revision": "04beb9dd56bf63d589c64ba85dbb069c0731fa08"
     },
     "kk": {
         "pin": false,
