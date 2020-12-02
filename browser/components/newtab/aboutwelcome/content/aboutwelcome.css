@@ -458,15 +458,13 @@ body {
     .onboardingContainer .tiles-media-section .media {
       height: 390px;
       width: 800px; }
-    @media (prefers-reduced-motion) {
-      .onboardingContainer .tiles-media-section {
-        height: 200px;
-        width: 800px;
-        margin: 0; }
-        .onboardingContainer .tiles-media-section.privacy {
-          background: top no-repeat url("chrome://activity-stream/content/data/content/assets/firefox-protections.svg"); }
-        .onboardingContainer .tiles-media-section .media {
-          opacity: 0; } }
+    .onboardingContainer .tiles-media-section.privacy {
+      background: top no-repeat url("chrome://activity-stream/content/data/content/assets/firefox-protections.svg");
+      height: 200px;
+      width: 800px;
+      margin: 0; }
+      .onboardingContainer .tiles-media-section.privacy.media {
+        opacity: 0; }
   .onboardingContainer button {
     font-family: inherit;
     cursor: pointer;
