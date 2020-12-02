@@ -2059,9 +2059,9 @@ SocketTransportShim::GetFirstRetryError(nsresult* aFirstRetryError) {
 }
 
 NS_IMETHODIMP
-SocketTransportShim::GetEsniUsed(bool* aEsniUsed) {
+SocketTransportShim::GetEchConfigUsed(bool* aEchConfigUsed) {
   if (mIsWebsocket) {
-    LOG3(("WARNING: SocketTransportShim::GetEsniUsed %p", this));
+    LOG3(("WARNING: SocketTransportShim::GetEchConfigUsed %p", this));
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
