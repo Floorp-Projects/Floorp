@@ -959,30 +959,6 @@ JS_FRIEND_API JSObject* js::NewProxyObject(JSContext* cx,
                           options.clasp());
 }
 
-JS_FRIEND_API JSObject* js::NewSingletonProxyObject(
-    JSContext* cx, const BaseProxyHandler* handler, HandleValue priv,
-    JSObject* proto_, const ProxyOptions& options) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  // This can be called from the compartment wrap hooks while in a realm with a
-  // gray global. Trigger the read barrier on the global to ensure this is
-  // unmarked.
-  cx->realm()->maybeGlobal();
-
-  if (proto_ != TaggedProto::LazyProto) {
-    cx->check(proto_);  // |priv| might be cross-compartment.
-  }
-
-  if (options.lazyProto()) {
-    MOZ_ASSERT(!proto_);
-    proto_ = TaggedProto::LazyProto;
-  }
-
-  return ProxyObject::NewSingleton(cx, handler, priv, TaggedProto(proto_),
-                                   options.clasp());
-}
-
 void ProxyObject::renew(const BaseProxyHandler* handler, const Value& priv) {
   MOZ_ASSERT(!IsInsideNursery(this));
   MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
