@@ -249,6 +249,11 @@ dictionary PrintPreviewSuccessInfo {
   unsigned long totalPageCount = 0;
 
   /**
+   * Whether the preview is empty because of page range selection.
+   */
+  boolean isEmpty = false;
+
+  /**
    * Whether the document has a selection that can be printed.
    */
   boolean hasSelection = false;

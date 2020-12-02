@@ -41,6 +41,8 @@ class PrintedSheetFrame final : public nsContainerFrame {
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
+  uint32_t GetNumPages() const { return mNumPages; }
+
  private:
   // Private construtor & destructor, to avoid accidental (non-FrameArena)
   // instantiation/deletion:
@@ -51,6 +53,8 @@ class PrintedSheetFrame final : public nsContainerFrame {
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
   nsSharedPageData* mPD = nullptr;
+  // The number of visible pages in this sheet.
+  uint32_t mNumPages = 0;
 };
 
 }  // namespace mozilla

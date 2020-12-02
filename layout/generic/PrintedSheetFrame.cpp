@@ -244,6 +244,7 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(numPagesOnThisSheet <= desiredPagesPerSheet,
              "Shouldn't have more than desired number of displayable pages "
              "on this sheet");
+  mNumPages = numPagesOnThisSheet;
 
   // Populate our ReflowOutput outparam -- just use up all the
   // available space, for both our desired size & overflow areas.

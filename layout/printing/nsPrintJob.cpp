@@ -862,7 +862,7 @@ nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
   if (NS_FAILED(rv)) {
     if (mPrintPreviewCallback) {
       mPrintPreviewCallback(
-          PrintPreviewResultInfo(0, 0, false));  // signal error
+          PrintPreviewResultInfo(0, 0, false, false));  // signal error
       mPrintPreviewCallback = nullptr;
     }
   }
@@ -873,6 +873,17 @@ int32_t nsPrintJob::GetRawNumPages() const {
   auto [seqFrame, numSheets] = GetSeqFrameAndCountSheets();
   Unused << numSheets;
   return seqFrame ? seqFrame->GetRawNumPages() : 0;
+}
+
+bool nsPrintJob::GetIsEmpty() const {
+  auto [seqFrame, numSheets] = GetSeqFrameAndCountSheets();
+  if (!seqFrame) {
+    return true;
+  }
+  if (numSheets > 1) {
+    return false;
+  }
+  return seqFrame->GetPagesInFirstSheet() > 0;
 }
 
 int32_t nsPrintJob::GetPrintPreviewNumSheets() const {
@@ -1066,7 +1077,8 @@ nsresult nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting) {
 //---------------------------------------------------------------------
 void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
   if (mPrintPreviewCallback) {
-    mPrintPreviewCallback(PrintPreviewResultInfo(0, 0, false));  // signal error
+    mPrintPreviewCallback(
+        PrintPreviewResultInfo(0, 0, false, false));  // signal error
     mPrintPreviewCallback = nullptr;
   }
 
@@ -2589,7 +2601,7 @@ nsresult nsPrintJob::FinishPrintPreview() {
 
   if (mPrintPreviewCallback) {
     mPrintPreviewCallback(PrintPreviewResultInfo(
-        GetPrintPreviewNumSheets(), GetRawNumPages(),
+        GetPrintPreviewNumSheets(), GetRawNumPages(), GetIsEmpty(),
         !mDisallowSelectionPrint && printData->mSelectionRoot));
     mPrintPreviewCallback = nullptr;
   }

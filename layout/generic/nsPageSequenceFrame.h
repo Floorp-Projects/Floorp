@@ -133,6 +133,8 @@ class nsPageSequenceFrame final : public nsContainerFrame {
 
   int32_t GetRawNumPages() const { return mPageData->mRawNumPages; }
 
+  uint32_t GetPagesInFirstSheet() const;
+
   nsresult DoPageEnd();
 
   // We must allow Print Preview UI to have a background, no matter what the
