@@ -347,7 +347,6 @@ class TextInputSelectionController final : public nsSupportsWeakReference,
   NS_IMETHOD ScrollPage(bool aForward) override;
   NS_IMETHOD ScrollLine(bool aForward) override;
   NS_IMETHOD ScrollCharacter(bool aRight) override;
-  NS_IMETHOD SelectAll(void) override;
   NS_IMETHOD CheckVisibility(nsINode* node, int16_t startOffset,
                              int16_t EndOffset, bool* _retval) override;
   virtual nsresult CheckVisibilityContent(nsIContent* aNode,
@@ -750,15 +749,6 @@ TextInputSelectionController::ScrollCharacter(bool aRight) {
   mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0), ScrollUnit::LINES,
                          ScrollMode::Smooth);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-TextInputSelectionController::SelectAll() {
-  if (!mFrameSelection) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-  return frameSelection->SelectAll();
 }
 
 void TextInputSelectionController::SelectionWillTakeFocus() {
@@ -2776,61 +2766,16 @@ bool TextControlState::SetValueWithTextEditor(
   // by script.
   AutoInputEventSuppresser suppressInputEventDispatching(textEditor);
 
-  if (aHandlingSetValue.GetSetValueFlags() & eSetValue_ForXUL) {
-    // On XUL <textbox> element, we need to preserve existing undo
-    // transactions.
-    // XXX Do we really need to do such complicated optimization?
-    //     This was landed for web pages which set <textarea> value
-    //     per line (bug 518122).  For example:
-    //       for (;;) {
-    //         textarea.value += oneLineText + "\n";
-    //       }
-    //     However, this path won't be used in web content anymore.
-    nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
-    // Use nsString to avoid copying string buffer in most cases.
-    nsString currentValue;
-    if (aHandlingSetValue.GetOldValue()) {
-      currentValue.Assign(*aHandlingSetValue.GetOldValue());
-    } else {
-      mBoundFrame->GetText(currentValue);
-    }
-    uint32_t currentLength = currentValue.Length();
-    uint32_t newlength = aHandlingSetValue.GetSettingValue().Length();
-    if (!currentLength ||
-        !StringBeginsWith(aHandlingSetValue.GetSettingValue(), currentValue)) {
-      // Replace the whole text.
-      currentLength = 0;
-      kungFuDeathGrip->SelectAll();
-    } else {
-      // Collapse selection to the end so that we can append data.
-      mBoundFrame->SelectAllOrCollapseToEndOfText(false);
-    }
-    const nsAString& insertValue = StringTail(
-        aHandlingSetValue.GetSettingValue(), newlength - currentLength);
-
-    if (insertValue.IsEmpty()) {
-      // In this case, we makes the editor stop dispatching "input"
-      // event so that passing nullptr as nsIPrincipal is safe for
-      // now.
-      nsresult rv = textEditor->DeleteSelectionAsAction(
-          nsIEditor::eNone, nsIEditor::eNoStrip, nullptr);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "TextEditor::DeleteSelectionAsAction() failed");
-      return rv != NS_ERROR_OUT_OF_MEMORY;
-    }
-    // In this case, we makes the editor stop dispatching "input"
-    // event so that passing nullptr as nsIPrincipal is safe for
-    // now.
-    nsresult rv = textEditor->InsertTextAsAction(insertValue, nullptr);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "TextEditor::InsertTextAsAction() failed");
-    return rv != NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // On <input> or <textarea>, we shouldn't preserve existing undo
   // transactions because other browsers do not preserve them too
   // and not preserving transactions makes setting value faster.
-  AutoDisableUndo disableUndo(textEditor);
+  //
+  // (Except if chrome opts into this behavior).
+  Maybe<AutoDisableUndo> disableUndo;
+  if (!(aHandlingSetValue.GetSetValueFlags() & eSetValue_PreserveHistory)) {
+    disableUndo.emplace(textEditor);
+  }
+
   if (selection) {
     // Since we don't use undo transaction, we don't need to store
     // selection state.  SetText will set selection to tail.
