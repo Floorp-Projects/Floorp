@@ -27,14 +27,7 @@ class MacroAssemblerX86Shared : public Assembler {
   const MacroAssembler& asMasm() const;
 
  public:
-#ifdef JS_CODEGEN_X64
-  typedef X86Encoding::JmpSrc UsesItem;
-#else
-  typedef CodeOffset UsesItem;
-#endif
-
-  typedef Vector<UsesItem, 0, SystemAllocPolicy> UsesVector;
-  static_assert(sizeof(UsesItem) == 4);
+  typedef Vector<CodeOffset, 0, SystemAllocPolicy> UsesVector;
 
  protected:
   // For Double, Float and SimdData, make the move ctors explicit so that MSVC
@@ -397,12 +390,6 @@ class MacroAssemblerX86Shared : public Assembler {
                                                    FloatRegister),
                      void (MacroAssembler::*constOp)(const SimdConstant&,
                                                      FloatRegister));
-  void binarySimd128(const SimdConstant& rhs, FloatRegister lhsDest,
-                     void (MacroAssembler::*regOp)(const Operand&,
-                                                   FloatRegister),
-                     void (MacroAssembler::*constOp)(const SimdConstant&,
-                                                     FloatRegister));
-
   // SIMD methods, defined in MacroAssembler-x86-shared-SIMD.cpp.
 
   void unsignedConvertInt32x4ToFloat32x4(FloatRegister src, FloatRegister dest);
@@ -463,12 +450,8 @@ class MacroAssemblerX86Shared : public Assembler {
                               FloatRegister tmp1, FloatRegister tmp2);
   void compareFloat32x4(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
-  void compareFloat32x4(Assembler::Condition cond, const SimdConstant& rhs,
-                        FloatRegister lhsDest);
   void compareFloat64x2(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
-  void compareFloat64x2(Assembler::Condition cond, const SimdConstant& rhs,
-                        FloatRegister lhsDest);
 
   void minMaxFloat32x4(bool isMin, FloatRegister lhs, Operand rhs,
                        FloatRegister temp1, FloatRegister temp2,

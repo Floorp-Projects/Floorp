@@ -75,12 +75,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
                             X86Encoding::XMMRegisterID srcId,
                             X86Encoding::XMMRegisterID destId));
 
-  void vpPatchOpSimd128(const SimdConstant& v, FloatRegister reg,
-                        size_t (X86Encoding::BaseAssemblerX86::*op)(
-                            const void* address,
-                            X86Encoding::XMMRegisterID srcId,
-                            X86Encoding::XMMRegisterID destId));
-
  public:
   using MacroAssemblerX86Shared::call;
   using MacroAssemblerX86Shared::load32;
@@ -941,14 +935,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   void vpcmpgtwSimd128(const SimdConstant& v, FloatRegister src);
   void vpcmpeqdSimd128(const SimdConstant& v, FloatRegister src);
   void vpcmpgtdSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmpeqpsSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmpneqpsSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmpltpsSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmplepsSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmpeqpdSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmpneqpdSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmpltpdSimd128(const SimdConstant& v, FloatRegister src);
-  void vcmplepdSimd128(const SimdConstant& v, FloatRegister src);
 
   Condition testInt32Truthy(bool truthy, const ValueOperand& operand) {
     test32(operand.payloadReg(), operand.payloadReg());
