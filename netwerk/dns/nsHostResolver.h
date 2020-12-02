@@ -256,6 +256,8 @@ class AddrHostRecord final : public nsHostRecord {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
+  nsIRequest::TRRMode EffectiveTRRMode() const { return mEffectiveTRRMode; }
+
  private:
   friend class nsHostResolver;
   friend class mozilla::net::TRR;

@@ -128,4 +128,9 @@ interface nsIDNSAddrRecord : nsIDNSRecord
      * Thee time is measured in milliseconds.
      */
     readonly attribute double trrFetchDurationNetworkOnly;
+
+    /**
+     * The TRR mode this record is used.
+     */
+    readonly attribute unsigned long effectiveTRRMode;
 };

@@ -345,6 +345,12 @@ nsDNSRecord::ReportUnusable(uint16_t aPort) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSRecord::GetEffectiveTRRMode(uint32_t* aMode) {
+  *aMode = mHostRecord->EffectiveTRRMode();
+  return NS_OK;
+}
+
 class nsDNSByTypeRecord : public nsIDNSByTypeRecord,
                           public nsIDNSTXTRecord,
                           public nsIDNSHTTPSSVCRecord {
