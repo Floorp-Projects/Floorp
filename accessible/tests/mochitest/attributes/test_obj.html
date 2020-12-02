@@ -72,6 +72,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("live", {"live": "polite"}, true);
       testAttrs("live2", {"live": "polite"}, true);
       testAbsentAttrs("live3", {"live": ""});
+      if (MAC) {
+        testAttrs("alert", {"live": "assertive"}, true);
+      } else {
+        testAbsentAttrs("alert", {"live": "assertive"});
+      }
       testAttrs("log", {"live": "polite"}, true);
       testAttrs("logAssertive", {"live": "assertive"}, true);
       testAttrs("marquee", {"live": "off"}, true);
@@ -82,6 +87,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       // container-live object attribute
       testAttrs("liveChild", {"container-live": "polite"}, true);
       testAttrs("live2Child", {"container-live": "polite"}, true);
+      if (MAC) {
+        testAttrs("alertChild", {"container-live": "assertive"}, true);
+      } else {
+        testAbsentAttrs("alertChild", {"container-live": "assertive"});
+      }
       testAttrs("logChild", {"container-live": "polite"}, true);
       testAttrs("logAssertiveChild", {"container-live": "assertive"}, true);
       testAttrs("marqueeChild", {"container-live": "off"}, true);
@@ -234,6 +244,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
   <div id="live2" role="marquee" aria-live="polite">excuse <div id="live2Child">me</div></div>
   <div id="live3" role="region">excuse</div>
+  <div id="alert" role="alert">excuse <div id="alertChild">me</div></div>
   <div id="log" role="log">excuse <div id="logChild">me</div></div>
   <div id="logAssertive" role="log" aria-live="assertive">excuse <div id="logAssertiveChild">me</div></div>
   <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
