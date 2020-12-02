@@ -2481,12 +2481,6 @@ PresShell::CompleteMove(bool aForward, bool aExtend) {
           nsISelectionController::SCROLL_FOR_CARET_MOVE);
 }
 
-NS_IMETHODIMP
-PresShell::SelectAll() {
-  RefPtr<nsFrameSelection> frameSelection = mSelection;
-  return frameSelection->SelectAll();
-}
-
 static void DoCheckVisibility(nsPresContext* aPresContext, nsIContent* aNode,
                               int16_t aStartOffset, int16_t aEndOffset,
                               bool* aRetval) {

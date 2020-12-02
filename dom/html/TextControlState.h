@@ -194,10 +194,10 @@ class TextControlState final : public SupportsWeakPtr {
     // TODO(mbrodesser): update comment and enumerator identifier to reflect
     // that also the direction is set to forward.
     eSetValue_MoveCursorToEndIfValueChanged = 1 << 4,
-    // The value is changed for a XUL text control as opposed to for an HTML
-    // text control.  Such value changes are different in that they preserve the
-    // undo history.
-    eSetValue_ForXUL = 1 << 5,
+
+    // The value change should preserve undo history.
+    eSetValue_PreserveHistory = 1 << 5,
+
     // Whether it should be tried to move the cursor to the beginning of the
     // text control and set the selection direction to "forward".
     // TODO(mbrodesser): As soon as "none" is supported
