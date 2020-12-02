@@ -457,7 +457,7 @@ impl SecurityState {
         path.push("crlite.stash");
         let mut stash_file = OpenOptions::new().append(true).create(true).open(path)?;
         stash_file.write_all(&stash)?;
-        self.load_crlite_stash()?;
+        self.load_crlite_stash_from(&mut stash.as_slice())?;
         Ok(())
     }
 
@@ -470,6 +470,11 @@ impl SecurityState {
             return Ok(());
         }
         let mut stash_file = File::open(path)?;
+        self.load_crlite_stash_from(&mut stash_file)?;
+        Ok(())
+    }
+
+    fn load_crlite_stash_from(&mut self, reader: &mut dyn Read) -> Result<(), SecurityStateError> {
         // The basic unit of the stash file is an issuer subject public key info
         // hash (sha-256) followed by a number of serial numbers corresponding
         // to revoked certificates issued by that issuer. More specifically,
@@ -483,15 +488,15 @@ impl SecurityState {
         // The stash file consists of any number of these units concatenated
         // together.
         loop {
-            let num_serials = match stash_file.read_u32::<LittleEndian>() {
+            let num_serials = match reader.read_u32::<LittleEndian>() {
                 Ok(num_serials) => num_serials,
                 Err(_) => break, // end-of-file, presumably
             };
-            let issuer_spki_hash_len = stash_file.read_u8().map_err(|e| {
+            let issuer_spki_hash_len = reader.read_u8().map_err(|e| {
                 SecurityStateError::from(format!("error reading stash issuer_spki_hash_len: {}", e))
             })?;
             let mut issuer_spki_hash = vec![0; issuer_spki_hash_len as usize];
-            stash_file.read_exact(&mut issuer_spki_hash).map_err(|e| {
+            reader.read_exact(&mut issuer_spki_hash).map_err(|e| {
                 SecurityStateError::from(format!("error reading stash issuer_spki_hash: {}", e))
             })?;
             let serials = self
@@ -499,11 +504,11 @@ impl SecurityState {
                 .entry(issuer_spki_hash)
                 .or_insert(HashSet::new());
             for _ in 0..num_serials {
-                let serial_len = stash_file.read_u8().map_err(|e| {
+                let serial_len = reader.read_u8().map_err(|e| {
                     SecurityStateError::from(format!("error reading stash serial_len: {}", e))
                 })?;
                 let mut serial = vec![0; serial_len as usize];
-                stash_file.read_exact(&mut serial).map_err(|e| {
+                reader.read_exact(&mut serial).map_err(|e| {
                     SecurityStateError::from(format!("error reading stash serial: {}", e))
                 })?;
                 let _ = serials.insert(serial);
