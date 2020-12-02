@@ -38,7 +38,7 @@ static JSObject* CreateAsyncFunction(JSContext* cx, JSProtoKey key) {
 }
 
 static JSObject* CreateAsyncFunctionPrototype(JSContext* cx, JSProtoKey key) {
-  return NewSingletonObjectWithFunctionPrototype(cx, cx->global());
+  return NewTenuredObjectWithFunctionPrototype(cx, cx->global());
 }
 
 static bool AsyncFunctionClassFinish(JSContext* cx, HandleObject asyncFunction,

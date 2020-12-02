@@ -4556,8 +4556,8 @@ static JSObject* CreateWebAssemblyObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewSingletonObjectWithGivenProto(cx, &WasmNamespaceObject::class_,
-                                          proto);
+  return NewTenuredObjectWithGivenProto(cx, &WasmNamespaceObject::class_,
+                                        proto);
 }
 
 static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
