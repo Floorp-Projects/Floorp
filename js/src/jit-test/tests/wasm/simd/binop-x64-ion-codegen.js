@@ -149,6 +149,14 @@ codegenTestX64_v128xLITERAL_v128(
       `0f 59 05 ${RIPRADDR}      mulpsx ${RIPR}, %xmm0`],
      ['f32x4.div', '(v128.const f32x4 1 2 3 4)',
       `0f 5e 05 ${RIPRADDR}      divpsx ${RIPR}, %xmm0`],
+     ['f32x4.eq', '(v128.const f32x4 1 2 3 4)',
+      `0f c2 05 ${RIPRADDR} 00   cmppsx \\$0x00, ${RIPR}, %xmm0`],
+     ['f32x4.ne', '(v128.const f32x4 1 2 3 4)',
+      `0f c2 05 ${RIPRADDR} 04   cmppsx \\$0x04, ${RIPR}, %xmm0`],
+     ['f32x4.lt', '(v128.const f32x4 1 2 3 4)',
+      `0f c2 05 ${RIPRADDR} 01   cmppsx \\$0x01, ${RIPR}, %xmm0`],
+     ['f32x4.le', '(v128.const f32x4 1 2 3 4)',
+      `0f c2 05 ${RIPRADDR} 02   cmppsx \\$0x02, ${RIPR}, %xmm0`],
 
      ['f64x2.add', '(v128.const f64x2 1 2)',
       `66 0f 58 05 ${RIPRADDR}      addpdx ${RIPR}, %xmm0`],
@@ -157,7 +165,15 @@ codegenTestX64_v128xLITERAL_v128(
      ['f64x2.mul', '(v128.const f64x2 1 2)',
       `66 0f 59 05 ${RIPRADDR}      mulpdx ${RIPR}, %xmm0`],
      ['f64x2.div', '(v128.const f64x2 1 2)',
-      `66 0f 5e 05 ${RIPRADDR}      divpdx ${RIPR}, %xmm0`]]);
+      `66 0f 5e 05 ${RIPRADDR}      divpdx ${RIPR}, %xmm0`],
+     ['f64x2.eq', '(v128.const f64x2 1 2)',
+      `66 0f c2 05 ${RIPRADDR} 00   cmppdx \\$0x00, ${RIPR}, %xmm0`],
+     ['f64x2.ne', '(v128.const f64x2 1 2)',
+      `66 0f c2 05 ${RIPRADDR} 04   cmppdx \\$0x04, ${RIPR}, %xmm0`],
+     ['f64x2.lt', '(v128.const f64x2 1 2)',
+      `66 0f c2 05 ${RIPRADDR} 01   cmppdx \\$0x01, ${RIPR}, %xmm0`],
+     ['f64x2.le', '(v128.const f64x2 1 2)',
+      `66 0f c2 05 ${RIPRADDR} 02   cmppdx \\$0x02, ${RIPR}, %xmm0`]]);
 
 // Commutative operations with constants on the lhs should generate the same
 // code as with the constant on the rhs.
