@@ -3,11 +3,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* jshint esnext:true, globalstrict:true, moz:true, undef:true, unused:true */
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["State", "CommandType"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["State", "CommandType"];
 
 const State = Object.freeze({
   INIT: 0,
@@ -35,5 +34,5 @@ const CommandType = Object.freeze({
   ICE_CANDIDATE: "ice-candidate", // { candidate: <string> }
 });
 
-this.State = State; // jshint ignore:line
-this.CommandType = CommandType; // jshint ignore:line
+this.State = State;
+this.CommandType = CommandType;
