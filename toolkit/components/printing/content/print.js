@@ -533,6 +533,7 @@ var PrintEventHandler = {
           let { marginTop, marginBottom } = this.viewSettings.defaultMargins;
           changedSettings.marginTop = changedSettings.customMarginTop = marginTop;
           changedSettings.marginBottom = changedSettings.customMarginBottom = marginBottom;
+          delete this._userChangedSettings.customMargins;
         }
 
         if (
@@ -547,6 +548,7 @@ var PrintEventHandler = {
           let { marginLeft, marginRight } = this.viewSettings.defaultMargins;
           changedSettings.marginLeft = changedSettings.customMarginLeft = marginLeft;
           changedSettings.marginRight = changedSettings.customMarginRight = marginRight;
+          delete this._userChangedSettings.customMargins;
         }
       } catch (e) {
         this.reportPrintingError("PAPER_MARGINS");
