@@ -286,7 +286,7 @@ jobs:
           - mozilla-central
           - mozilla-beta
       when:
-          - {minute: 45}
+          - {hour: 18, minute: 45}
 
     - name: system-symbols
       job:
