@@ -500,7 +500,7 @@ nsresult nsJARChannel::CheckPendingEvents() {
 
   nsresult rv;
 
-  auto suspendCount = mPendingEvent.suspendCount;
+  uint32_t suspendCount = mPendingEvent.suspendCount;
   while (suspendCount--) {
     if (NS_WARN_IF(NS_FAILED(rv = mPump->Suspend()))) {
       return rv;
