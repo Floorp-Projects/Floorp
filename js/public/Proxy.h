@@ -583,10 +583,6 @@ JS_FRIEND_API JSObject* NewProxyObject(
     JSContext* cx, const BaseProxyHandler* handler, JS::HandleValue priv,
     JSObject* proto, const ProxyOptions& options = ProxyOptions());
 
-JS_FRIEND_API JSObject* NewSingletonProxyObject(
-    JSContext* cx, const BaseProxyHandler* handler, JS::HandleValue priv,
-    JSObject* proto, const ProxyOptions& options = ProxyOptions());
-
 JSObject* RenewProxyObject(JSContext* cx, JSObject* obj,
                            BaseProxyHandler* handler, const JS::Value& priv);
 

@@ -43,11 +43,6 @@ class ProxyObject : public JSObject {
                           HandleValue priv, TaggedProto proto_,
                           const JSClass* clasp);
 
-  static ProxyObject* NewSingleton(JSContext* cx,
-                                   const BaseProxyHandler* handler,
-                                   HandleValue priv, TaggedProto proto_,
-                                   const JSClass* clasp);
-
   void init(const BaseProxyHandler* handler, HandleValue priv, JSContext* cx);
 
   // Proxies usually store their ProxyValueArray inline in the object.

@@ -295,7 +295,7 @@ JSObject* Wrapper::NewSingleton(JSContext* cx, JSObject* obj,
     ar.emplace(cx, &cx->compartment()->globalForNewCCW());
   }
   RootedValue priv(cx, ObjectValue(*obj));
-  return NewSingletonProxyObject(cx, handler, priv, options.proto(), options);
+  return NewProxyObject(cx, handler, priv, options.proto(), options);
 }
 
 JSObject* Wrapper::Renew(JSObject* existing, JSObject* obj,
