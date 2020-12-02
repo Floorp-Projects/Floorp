@@ -842,6 +842,7 @@ class MarkerSchema {
   std::string mTooltipLabel;
   std::string mTableLabel;
   // Main display, made of zero or more rows of key+label+format or label+value.
+ private:
   struct DynamicData {
     std::string mKey;
     mozilla::Maybe<std::string> mLabel;
@@ -853,10 +854,22 @@ class MarkerSchema {
     std::string mValue;
   };
   using DataRow = mozilla::Variant<DynamicData, StaticData>;
-  std::vector<DataRow> mData;
+  using DataRowVector = std::vector<DataRow>;
+
+  DataRowVector mData;
 };
 
 }  // namespace mozilla
+
+extern template MFBT_API mozilla::MarkerSchema::DataRowVector::reference
+mozilla::MarkerSchema::DataRowVector::emplace_back(
+    mozilla::VariantType<mozilla::MarkerSchema::DynamicData>&&,
+    mozilla::MarkerSchema::DynamicData&&);
+
+extern template MFBT_API mozilla::MarkerSchema::DataRowVector::reference
+mozilla::MarkerSchema::DataRowVector::emplace_back(
+    mozilla::VariantType<mozilla::MarkerSchema::StaticData>&&,
+    mozilla::MarkerSchema::StaticData&&);
 
 #endif  // MOZ_GECKO_PROFILER
 
