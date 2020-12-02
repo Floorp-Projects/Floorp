@@ -22,7 +22,7 @@
 #include "vm/ObjectGroup.h"  // js::ObjectGroup, js::{Generic,Singleton,Tenured}Object
 #include "vm/TaggedProto.h"  // js::TaggedProto
 
-#include "vm/JSObject-inl.h"  // js::GuessObjectGCKind, js::NewObjectWithGroup, js::NewObjectGCKind, js::NewSingletonObjectWithGivenTaggedProtoAndKind
+#include "vm/JSObject-inl.h"  // js::GuessObjectGCKind, js::NewObjectWithGroup, js::NewObjectGCKind
 
 using JS::Handle;
 using JS::Rooted;
@@ -33,7 +33,6 @@ using js::GuessObjectGCKind;
 using js::NewObjectGCKind;
 using js::NewObjectKind;
 using js::NewObjectWithGroup;
-using js::NewSingletonObjectWithGivenTaggedProtoAndKind;
 using js::ObjectGroup;
 using js::PlainObject;
 using js::SingletonObject;
@@ -45,11 +44,7 @@ static PlainObject* CreateThisForFunctionWithGroup(JSContext* cx,
                                                    NewObjectKind newKind) {
   js::gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
 
-  if (newKind == SingletonObject) {
-    Rooted<TaggedProto> protoRoot(cx, group->proto());
-    return NewSingletonObjectWithGivenTaggedProtoAndKind<PlainObject>(
-        cx, protoRoot, allocKind);
-  }
+  MOZ_ASSERT(newKind != SingletonObject);
 
   return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
 }
