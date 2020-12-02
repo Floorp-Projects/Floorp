@@ -49,6 +49,23 @@ function getHash(aStr) {
   return hexify(getHashCommon(aStr, false));
 }
 
+// Get the name of the file in the test directory to serve as the attachment
+// for the given filter.
+function getFilenameForFilter(filter) {
+  if (filter.type == "full") {
+    return "20201017-0-filter";
+  }
+  if (filter.id == "0001") {
+    return "20201017-1-filter.stash";
+  }
+  // The addition of another stash file was written more than a month after
+  // other parts of this test. As such, the second stash file for October 17th,
+  // 2020 was not readily available. Since the structure of stash files don't
+  // depend on each other, though, any two stash files are compatible, and so
+  // this stash from December 1st is used instead.
+  return "20201201-3-filter.stash";
+}
+
 /**
  * Simulate a Remote Settings synchronization by filling up the local data with
  * fake records.
@@ -64,8 +81,7 @@ async function syncAndDownload(filters, clear = true) {
   }
 
   for (let filter of filters) {
-    const filename =
-      filter.type == "diff" ? "20201017-1-filter.stash" : "20201017-0-filter";
+    const filename = getFilenameForFilter(filter);
     const file = do_get_file(`test_crlite_filters/${filename}`);
     const fileBytes = readFile(file);
 
@@ -468,24 +484,24 @@ add_task(
       0
     );
 
-    result = await syncAndDownload([
-      { timestamp: "2020-10-17T00:00:00Z", type: "full", id: "0000" },
-      {
-        timestamp: "2020-10-17T03:00:00Z",
-        type: "diff",
-        id: "0001",
-        parent: "0000",
-      },
-    ]);
-    let [status, filters] = result.split(";");
-    equal(status, "finished", "CRLite filter download should have run");
-    deepEqual(
-      filters,
-      ["2020-10-17T00:00:00Z-full", "2020-10-17T03:00:00Z-diff"],
+    result = await syncAndDownload(
+      [
+        {
+          timestamp: "2020-10-17T03:00:00Z",
+          type: "diff",
+          id: "0001",
+          parent: "0000",
+        },
+      ],
+      false
+    );
+    equal(
+      result,
+      "finished;2020-10-17T03:00:00Z-diff",
       "Should have downloaded the expected CRLite filters"
     );
 
-    // After downloading the stash, this should be revoked.
+    // After downloading the first stash, this should be revoked.
     await checkCertErrorGenericAtTime(
       certdb,
       revokedInStashCert,
@@ -494,6 +510,50 @@ add_task(
       new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
       "stokedmoto.com",
+      0
+    );
+
+    // Before downloading the second stash, this should not be revoked.
+    let revokedInStash2Cert = constructCertFromFile(
+      "test_crlite_filters/revoked-in-stash-2.pem"
+    );
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedInStash2Cert,
+      PRErrorCodeSuccess,
+      certificateUsageSSLServer,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+      false,
+      "icsreps.com",
+      0
+    );
+
+    result = await syncAndDownload(
+      [
+        {
+          timestamp: "2020-10-17T06:00:00Z",
+          type: "diff",
+          id: "0002",
+          parent: "0001",
+        },
+      ],
+      false
+    );
+    equal(
+      result,
+      "finished;2020-10-17T06:00:00Z-diff",
+      "Should have downloaded the expected CRLite filters"
+    );
+
+    // After downloading the second stash, this should be revoked.
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedInStash2Cert,
+      SEC_ERROR_REVOKED_CERTIFICATE,
+      certificateUsageSSLServer,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+      false,
+      "icsreps.com",
       0
     );
 
@@ -517,6 +577,17 @@ add_task(
       new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
       "us-datarecovery.com",
+      0
+    );
+
+    await checkCertErrorGenericAtTime(
+      certdb,
+      revokedInStashCert,
+      SEC_ERROR_REVOKED_CERTIFICATE,
+      certificateUsageSSLServer,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+      false,
+      "stokedmoto.com",
       0
     );
 
