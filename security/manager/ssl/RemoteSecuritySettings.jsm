@@ -797,7 +797,6 @@ class CRLiteFilters {
       filtersToDownload.push(nextFilter);
       nextFilter = parentIdMap[nextFilter.id];
     }
-    let filtersDownloaded = [];
     const certList = Cc["@mozilla.org/security/certstorage;1"].getService(
       Ci.nsICertStorage
     );
@@ -805,6 +804,7 @@ class CRLiteFilters {
       filter => !filter.loaded_into_cert_storage
     );
     log.debug("filtersToDownload:", filtersToDownload);
+    let filtersDownloaded = [];
     for (let filter of filtersToDownload) {
       try {
         // If we've already downloaded this, the backend should just grab it from its cache.
@@ -812,29 +812,55 @@ class CRLiteFilters {
         let buffer = await (await fetch(localURI)).arrayBuffer();
         let bytes = new Uint8Array(buffer);
         log.debug(`Downloaded ${filter.details.name}: ${bytes.length} bytes`);
+        filter.bytes = bytes;
         filtersDownloaded.push(filter);
-        if (!filter.incremental) {
-          let timestamp = Math.floor(filter.effectiveTimestamp / 1000);
-          log.debug(`setting CRLite filter timestamp to ${timestamp}`);
-          await new Promise(resolve => {
-            certList.setFullCRLiteFilter(bytes, timestamp, rv => {
-              log.debug(`setFullCRLiteFilter: ${rv}`);
-              resolve();
-            });
-          });
-        } else {
-          log.debug("adding incremental update");
-          await new Promise(resolve => {
-            certList.addCRLiteStash(bytes, rv => {
-              log.debug(`addCRLiteStash: ${rv}`);
-              resolve();
-            });
-          });
-        }
       } catch (e) {
         log.debug(e);
         Cu.reportError("failed to download CRLite filter", e);
       }
+    }
+    let fullFiltersDownloaded = filtersDownloaded.filter(
+      filter => !filter.incremental
+    );
+    if (fullFiltersDownloaded.length > 0) {
+      if (fullFiltersDownloaded.length > 1) {
+        log.warn("trying to install more than one full CRLite filter?");
+      }
+      let filter = fullFiltersDownloaded[0];
+      let timestamp = Math.floor(filter.effectiveTimestamp / 1000);
+      log.debug(`setting CRLite filter timestamp to ${timestamp}`);
+      await new Promise(resolve => {
+        certList.setFullCRLiteFilter(filter.bytes, timestamp, rv => {
+          log.debug(`setFullCRLiteFilter: ${rv}`);
+          resolve();
+        });
+      });
+    }
+    let stashes = filtersDownloaded.filter(filter => filter.incremental);
+    let totalLength = stashes.reduce(
+      (sum, filter) => sum + filter.bytes.length,
+      0
+    );
+    let concatenatedStashes = new Uint8Array(totalLength);
+    let offset = 0;
+    for (let filter of stashes) {
+      concatenatedStashes.set(filter.bytes, offset);
+      offset += filter.bytes.length;
+    }
+    if (concatenatedStashes.length > 0) {
+      log.debug(
+        `adding concatenated incremental updates of total length ${concatenatedStashes.length}`
+      );
+      await new Promise(resolve => {
+        certList.addCRLiteStash(concatenatedStashes, rv => {
+          log.debug(`addCRLiteStash: ${rv}`);
+          resolve();
+        });
+      });
+    }
+
+    for (let filter of filtersDownloaded) {
+      delete filter.bytes;
     }
 
     await this.client.db.importChanges(
