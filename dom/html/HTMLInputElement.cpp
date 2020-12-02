@@ -3020,11 +3020,17 @@ void HTMLInputElement::Select() {
     return;
   }
 
-  TextControlState* state = GetEditorState();
-  MOZ_ASSERT(state, "Single line text controls are expected to have a state");
+  // XXX Bug?  We have to give the input focus before contents can be
+  // selected
 
-  if (FocusState() != eUnfocusable) {
-    RefPtr<nsFrameSelection> fs = state->GetConstFrameSelection();
+  FocusTristate state = FocusState();
+  if (state == eUnfocusable) {
+    return;
+  }
+
+  TextControlState* tes = GetEditorState();
+  if (tes) {
+    RefPtr<nsFrameSelection> fs = tes->GetConstFrameSelection();
     if (fs && fs->MouseDownRecorded()) {
       // This means that we're being called while the frame selection has a
       // mouse down event recorded to adjust the caret during the mouse up
@@ -3033,24 +3039,27 @@ void HTMLInputElement::Select() {
       // select() call takes effect.
       fs->SetDelayedCaretData(nullptr);
     }
-
-    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
-      fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
-
-      // A focus event handler may change the type attribute, which will destroy
-      // the previous state object.
-      state = GetEditorState();
-      if (!state) {
-        return;
-      }
-    }
   }
 
-  // Directly call TextControlState::SetSelectionRange because
-  // HTMLInputElement::SetSelectionRange only applies to fewer types
-  state->SetSelectionRange(0, UINT32_MAX,
-                           nsITextControlFrame::SelectionDirection::eNone,
-                           IgnoredErrorResult());
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+
+  RefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
+  if (state == eInactiveWindow) {
+    if (fm) fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
+    SelectAll(presContext);
+    return;
+  }
+
+  DispatchSelectEvent(presContext);
+  if (fm) {
+    fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
+
+    // ensure that the element is actually focused
+    if (this == fm->GetFocusedElement()) {
+      // Now Select all the text!
+      SelectAll(presContext);
+    }
+  }
 }
 
 void HTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext) {
