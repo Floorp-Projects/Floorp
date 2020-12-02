@@ -95,9 +95,12 @@
       // to the character that immediately follows the text entry cursor.
       assert_equals(el.selectionStart, el.value.length,
                     "SelectionStart offset without selection in " + el.id);
+      if (!el.parentNode) {
+        return;
+      }
       el.select();
       assert_equals(el.selectionStart, 0, "SelectionStart offset");
-      el.remove();
+      el.parentNode.removeChild(el);
     }, "test SelectionStart offset for input that is " +
          (append ? "appended" : " not appended"));
   }
@@ -109,9 +112,12 @@
       // to the character that immediately follows the text entry cursor.
       assert_equals(el.selectionStart, el.value.length,
                     "SelectionStart offset without selection in " + el.id);
+      if (!el.parentNode) {
+        return;
+      }
       el.select();
       assert_equals(el.selectionStart, 0, "SelectionStart offset");
-      el.remove();
+      el.parentNode.removeChild(el);
     }, "test SelectionStart offset for textarea that is " +
          (append ? "appended" : " not appended"));
   }
@@ -123,9 +129,12 @@
       // to the character that immediately follows the text entry cursor.
       assert_equals(el.selectionEnd, el.value.length,
                     "SelectionEnd offset without selection in " + el.id);
+      if (!el.parentNode) {
+        return;
+      }
       el.select();
       assert_equals(el.selectionEnd, el.value.length, "SelectionEnd offset");
-      el.remove();
+      el.parentNode.removeChild(el);
     }, "test SelectionEnd offset for input that is " +
          (append ? "appended" : " not appended"));
   }
@@ -138,9 +147,12 @@
       // to the character that immediately follows the text entry cursor.
       assert_equals(el.selectionEnd, el.value.length,
                     "SelectionEnd offset without selection in " + el.id);
+      if (!el.parentNode) {
+        return;
+      }
       el.select();
       assert_equals(el.selectionEnd, el.value.length, "SelectionEnd offset");
-      el.remove();
+      el.parentNode.removeChild(el);
     }, "test SelectionEnd offset for textarea that is " +
          (append ? "appended" : " not appended"));
   }
