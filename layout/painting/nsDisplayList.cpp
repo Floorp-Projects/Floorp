@@ -7841,9 +7841,9 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
 
   float viewportRatio =
       StaticPrefs::layout_animation_prerender_viewport_ratio_limit();
-  uint32_t absoluteLimitX =
+  int32_t absoluteLimitX =
       StaticPrefs::layout_animation_prerender_absolute_limit_x();
-  uint32_t absoluteLimitY =
+  int32_t absoluteLimitY =
       StaticPrefs::layout_animation_prerender_absolute_limit_y();
   nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
 

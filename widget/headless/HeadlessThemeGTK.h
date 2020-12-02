@@ -22,16 +22,16 @@ class HeadlessThemeGTK final : private nsNativeTheme, public nsITheme {
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
-  [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
+  [[nodiscard]] LayoutDeviceMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
-                        LayoutDeviceIntMargin* aResult) override;
+                        LayoutDeviceMargin* aResult) override;
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  LayoutDeviceSize* aResult,
                                   bool* aIsOverridable) override;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppearance,

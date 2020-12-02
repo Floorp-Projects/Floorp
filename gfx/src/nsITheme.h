@@ -58,7 +58,9 @@ class IpcResourceUpdateQueue;
  */
 class nsITheme : public nsISupports {
  protected:
-  using LayoutDeviceIntMargin = mozilla::LayoutDeviceIntMargin;
+  using LayoutDeviceMargin = mozilla::LayoutDeviceMargin;
+  using LayoutDeviceRect = mozilla::LayoutDeviceRect;
+  using LayoutDeviceSize = mozilla::LayoutDeviceSize;
   using StyleAppearance = mozilla::StyleAppearance;
 
  public:
@@ -95,7 +97,7 @@ class nsITheme : public nsISupports {
   /**
    * Return the border for the widget, in device pixels.
    */
-  [[nodiscard]] virtual LayoutDeviceIntMargin GetWidgetBorder(
+  [[nodiscard]] virtual LayoutDeviceMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
       StyleAppearance aWidgetType) = 0;
 
@@ -110,7 +112,7 @@ class nsITheme : public nsISupports {
    */
   virtual bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                                 StyleAppearance aWidgetType,
-                                LayoutDeviceIntMargin* aResult) = 0;
+                                LayoutDeviceMargin* aResult) = 0;
 
   /**
    * On entry, *aResult is positioned at 0,0 and sized to the new size
@@ -140,7 +142,7 @@ class nsITheme : public nsISupports {
    */
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aWidgetType,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  LayoutDeviceSize* aResult,
                                   bool* aIsOverridable) = 0;
 
   enum Transparency { eOpaque = 0, eTransparent, eUnknownTransparency };

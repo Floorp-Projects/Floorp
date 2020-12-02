@@ -4669,7 +4669,7 @@ static nscoord AddIntrinsicSizeOffset(
 
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   if (aFrame->IsThemed(disp)) {
-    LayoutDeviceIntSize devSize;
+    LayoutDeviceSize devSize;
     bool canOverride = true;
     nsPresContext* pc = aFrame->PresContext();
     pc->Theme()->GetMinimumWidgetSize(pc, aFrame, disp->EffectiveAppearance(),
