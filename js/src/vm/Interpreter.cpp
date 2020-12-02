@@ -4183,7 +4183,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(InitialYield) {
       MOZ_ASSERT(!cx->isExceptionPending());
-      MOZ_ASSERT(REGS.fp()->isFunctionFrame());
+      MOZ_ASSERT_IF(script->isModule() && script->isAsync(),
+                    REGS.fp()->isModuleFrame());
+      MOZ_ASSERT_IF(!script->isModule() && script->isAsync(),
+                    REGS.fp()->isFunctionFrame());
       ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
       POP_RETURN_VALUE();
       MOZ_ASSERT(REGS.stackDepth() == 0);
@@ -4197,7 +4200,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(Yield)
     CASE(Await) {
       MOZ_ASSERT(!cx->isExceptionPending());
-      MOZ_ASSERT(REGS.fp()->isFunctionFrame());
+      MOZ_ASSERT_IF(script->isModule() && script->isAsync(),
+                    REGS.fp()->isModuleFrame());
+      MOZ_ASSERT_IF(!script->isModule() && script->isAsync(),
+                    REGS.fp()->isFunctionFrame());
       ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
       if (!AbstractGeneratorObject::suspend(
               cx, obj, REGS.fp(), REGS.pc,
