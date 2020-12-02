@@ -20,7 +20,7 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  LayoutDeviceSize* aResult,
                                   bool* aIsOverridable) override;
 
   void PaintScrollbarThumb(DrawTarget* aDrawTarget,

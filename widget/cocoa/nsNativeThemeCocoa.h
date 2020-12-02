@@ -362,18 +362,17 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                                         mozilla::layers::RenderRootStateManager* aManager,
                                         nsIFrame* aFrame, StyleAppearance aAppearance,
                                         const nsRect& aRect) override;
-  [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                                      StyleAppearance aAppearance) override;
+  [[nodiscard]] LayoutDeviceMargin GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
+                                                   StyleAppearance aAppearance) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance,
-                        LayoutDeviceIntMargin* aResult) override;
+                        LayoutDeviceMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                  StyleAppearance aAppearance, nsRect* aOverflowRect) override;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  StyleAppearance aAppearance, LayoutDeviceSize* aResult,
                                   bool* aIsOverridable) override;
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppearance, nsAtom* aAttribute,
                                 bool* aShouldRepaint, const nsAttrValue* aOldValue) override;
@@ -398,8 +397,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
  protected:
   virtual ~nsNativeThemeCocoa();
 
-  LayoutDeviceIntMargin DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
-                                             nsIFrame* aFrame);
+  LayoutDeviceMargin DirectionAwareMargin(const mozilla::LayoutDeviceIntMargin& aMargin,
+                                          nsIFrame* aFrame);
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
   bool IsWindowSheet(nsIFrame* aFrame);
   ControlParams ComputeControlParams(nsIFrame* aFrame, mozilla::EventStates aEventState);

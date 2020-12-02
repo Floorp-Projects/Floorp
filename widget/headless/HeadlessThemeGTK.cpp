@@ -22,10 +22,11 @@ HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   return NS_OK;
 }
 
-LayoutDeviceIntMargin HeadlessThemeGTK::GetWidgetBorder(
+LayoutDeviceMargin HeadlessThemeGTK::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  LayoutDeviceIntMargin result;
+  LayoutDeviceMargin result;
   // The following values are generated from the Ubuntu GTK theme.
+  // FIXME: Should apply DPI scaling.
   switch (aAppearance) {
     case StyleAppearance::Button:
     case StyleAppearance::Toolbarbutton:
@@ -110,7 +111,7 @@ LayoutDeviceIntMargin HeadlessThemeGTK::GetWidgetBorder(
 bool HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                         nsIFrame* aFrame,
                                         StyleAppearance aAppearance,
-                                        LayoutDeviceIntMargin* aResult) {
+                                        LayoutDeviceMargin* aResult) {
   // The following values are generated from the Ubuntu GTK theme.
   switch (aAppearance) {
     case StyleAppearance::Radio:
@@ -153,7 +154,7 @@ NS_IMETHODIMP
 HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
-                                       LayoutDeviceIntSize* aResult,
+                                       LayoutDeviceSize* aResult,
                                        bool* aIsOverridable) {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;

@@ -1593,7 +1593,7 @@ nsMargin nsIFrame::GetUsedBorder() const {
   const nsStyleDisplay* disp = StyleDisplay();
   if (mutable_this->IsThemed(disp)) {
     nsPresContext* pc = PresContext();
-    LayoutDeviceIntMargin widgetBorder = pc->Theme()->GetWidgetBorder(
+    LayoutDeviceMargin widgetBorder = pc->Theme()->GetWidgetBorder(
         pc->DeviceContext(), mutable_this, disp->EffectiveAppearance());
     border =
         LayoutDevicePixel::ToAppUnits(widgetBorder, pc->AppUnitsPerDevPixel());
@@ -1622,7 +1622,7 @@ nsMargin nsIFrame::GetUsedPadding() const {
   const nsStyleDisplay* disp = StyleDisplay();
   if (mutable_this->IsThemed(disp)) {
     nsPresContext* pc = PresContext();
-    LayoutDeviceIntMargin widgetPadding;
+    LayoutDeviceMargin widgetPadding;
     if (pc->Theme()->GetWidgetPadding(pc->DeviceContext(), mutable_this,
                                       disp->EffectiveAppearance(),
                                       &widgetPadding)) {
@@ -5953,12 +5953,12 @@ static nsIFrame::IntrinsicSizeOffsetData IntrinsicSizeOffsets(
   if (aFrame->IsThemed(disp)) {
     nsPresContext* presContext = aFrame->PresContext();
 
-    LayoutDeviceIntMargin border = presContext->Theme()->GetWidgetBorder(
+    LayoutDeviceMargin border = presContext->Theme()->GetWidgetBorder(
         presContext->DeviceContext(), aFrame, disp->EffectiveAppearance());
     result.border = presContext->DevPixelsToAppUnits(
         verticalAxis ? border.TopBottom() : border.LeftRight());
 
-    LayoutDeviceIntMargin padding;
+    LayoutDeviceMargin padding;
     if (presContext->Theme()->GetWidgetPadding(
             presContext->DeviceContext(), aFrame, disp->EffectiveAppearance(),
             &padding)) {
@@ -6392,7 +6392,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   }
 
   if (IsThemed(disp)) {
-    LayoutDeviceIntSize widget;
+    LayoutDeviceSize widget;
     bool canOverride = true;
     nsPresContext* presContext = PresContext();
     presContext->Theme()->GetMinimumWidgetSize(
