@@ -132,37 +132,14 @@ nsresult HTMLTextAreaElement::Clone(dom::NodeInfo* aNodeInfo,
 // nsIContent
 
 void HTMLTextAreaElement::Select() {
-  // XXX Bug?  We have to give the input focus before contents can be
-  // selected
-
-  FocusTristate state = FocusState();
-  if (state == eUnfocusable) {
-    return;
-  }
-
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-
-  RefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
-  if (state == eInactiveWindow) {
-    if (fm) fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
-    SelectAll(presContext);
-    return;
-  }
-
-  WidgetGUIEvent event(true, eFormSelect, nullptr);
-  // XXXbz HTMLInputElement guards against this reentering; shouldn't we?
-  EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
-                            &event);
-
-  if (fm) {
-    fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
-
-    // ensure that the element is actually focused
-    if (this == fm->GetFocusedElement()) {
-      // Now Select all the text!
-      SelectAll(presContext);
+  if (FocusState() != eUnfocusable) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+      fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
     }
   }
+
+  SetSelectionRange(0, UINT32_MAX, mozilla::dom::Optional<nsAString>(),
+                    IgnoredErrorResult());
 }
 
 NS_IMETHODIMP
