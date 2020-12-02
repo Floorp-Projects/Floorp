@@ -177,7 +177,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             self.error("missing a required key.")
 
     def query_package_name(self):
-        if self.config["arch"] == "x64":
+        if self.config["arch"] in ("x64", "aarch64"):
             bits = "64"
         else:
             bits = "32"
@@ -189,8 +189,11 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                     version=version, arch=self.config["arch"]
                 )
             elif self.config.get("operating_system") == "darwin":
-                return "openh264-macosx{bits}-{version}.zip".format(
-                    version=version, bits=bits
+                suffix = ""
+                if self.config["arch"] != "x64":
+                    suffix = "-" + self.config["arch"]
+                return "openh264-macosx{bits}{suffix}-{version}.zip".format(
+                    version=version, bits=bits, suffix=suffix
                 )
             else:
                 return "openh264-linux{bits}-{version}.zip".format(
@@ -218,15 +221,18 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         else:
             retval.append("ENABLE64BIT=No")
 
+        if self.config["arch"] == "x86":
+            retval.append("ARCH=x86")
+        elif self.config["arch"] == "x64":
+            retval.append("ARCH=x86_64")
+        elif self.config["arch"] == "aarch64":
+            retval.append("ARCH=arm64")
+        else:
+            self.fatal("Unknown arch: {}".format(self.config["arch"]))
+
         if "operating_system" in self.config:
             retval.append("OS=%s" % self.config["operating_system"])
             if self.config["operating_system"] == "android":
-                if self.config["arch"] == "x86":
-                    retval.append("ARCH=x86")
-                elif self.config["arch"] == "aarch64":
-                    retval.append("ARCH=arm64")
-                else:
-                    retval.append("ARCH=arm")
                 retval.append("TARGET=invalid")
                 retval.append("NDKLEVEL=%s" % self.config["min_sdk"])
                 retval.append("NDKROOT=%s/android-ndk" % os.environ["MOZ_FETCHES_DIR"])
@@ -242,14 +248,10 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             retval.append("CC=clang-cl")
             retval.append("CXX=clang-cl")
             if self.config["arch"] == "x86":
-                retval.append("ARCH=x86")
                 retval.append("CFLAGS=-m32")
             elif self.config["arch"] == "aarch64":
-                retval.append("ARCH=arm64")
                 retval.append("CFLAGS=--target=aarch64-windows-msvc")
                 retval.append("CXX_LINK_O=-nologo --target=aarch64-windows-msvc -Fe$@")
-            else:
-                retval.append("ARCH=x86_64")
         else:
             retval.append("CC=clang")
             retval.append("CXX=clang++")
