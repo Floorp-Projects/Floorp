@@ -1764,7 +1764,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 #ifndef EARLY_BETA_OR_EARLIER
     // Bug 1680063
     APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows7, DeviceFamily::IntelSandybridge,
+        OperatingSystem::Windows7, DeviceFamily::IntelSandyBridge,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
         "SLOW_GEN6_ON_WIN7_BUG_1680063");
