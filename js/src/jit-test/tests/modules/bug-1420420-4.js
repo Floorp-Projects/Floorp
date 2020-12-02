@@ -8,7 +8,11 @@ let c = registerModule("c", parseModule(`import "a";`));
 b.declarationInstantiation();
 c.declarationInstantiation();
 
-let count = 0;
-try { b.evaluation() } catch (e) { count++; }
-try { c.evaluation() } catch (e) { count++; }
-assertEq(count, 2);
+(async () => {
+  let count = 0;
+  try { await b.evaluation() } catch (e) { count++; }
+  try { await c.evaluation() } catch (e) { count++; }
+  assertEq(count, 2);
+})();
+
+drainJobQueue();
