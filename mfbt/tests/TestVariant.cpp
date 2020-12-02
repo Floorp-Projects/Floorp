@@ -9,6 +9,8 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
 
+#include <tuple>
+
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 using mozilla::Variant;
@@ -237,7 +239,10 @@ static void testDetails() {
 
 static void testSimple() {
   printf("testSimple\n");
-  Variant<uint32_t, uint64_t> v(uint64_t(1));
+  using V = Variant<uint32_t, uint64_t>;
+
+  // Non-const lvalue.
+  V v(uint64_t(1));
   MOZ_RELEASE_ASSERT(v.is<uint64_t>());
   MOZ_RELEASE_ASSERT(!v.is<uint32_t>());
   MOZ_RELEASE_ASSERT(v.as<uint64_t>() == 1);
@@ -245,8 +250,44 @@ static void testSimple() {
   MOZ_RELEASE_ASSERT(v.is<1>());
   MOZ_RELEASE_ASSERT(!v.is<0>());
   static_assert(std::is_same_v<decltype(v.as<1>()), uint64_t&>,
-                "as<1>() should return a uint64_t");
+                "v.as<1>() should return a uint64_t&");
   MOZ_RELEASE_ASSERT(v.as<1>() == 1);
+
+  // Const lvalue.
+  const V& cv = v;
+  MOZ_RELEASE_ASSERT(cv.is<uint64_t>());
+  MOZ_RELEASE_ASSERT(!cv.is<uint32_t>());
+  MOZ_RELEASE_ASSERT(cv.as<uint64_t>() == 1);
+
+  MOZ_RELEASE_ASSERT(cv.is<1>());
+  MOZ_RELEASE_ASSERT(!cv.is<0>());
+  static_assert(std::is_same_v<decltype(cv.as<1>()), const uint64_t&>,
+                "cv.as<1>() should return a const uint64_t&");
+  MOZ_RELEASE_ASSERT(cv.as<1>() == 1);
+
+  // Non-const rvalue, using a function to create a temporary.
+  auto MakeV = []() { return V(uint64_t(1)); };
+  MOZ_RELEASE_ASSERT(MakeV().is<uint64_t>());
+  MOZ_RELEASE_ASSERT(!MakeV().is<uint32_t>());
+  MOZ_RELEASE_ASSERT(MakeV().as<uint64_t>() == 1);
+
+  MOZ_RELEASE_ASSERT(MakeV().is<1>());
+  MOZ_RELEASE_ASSERT(!MakeV().is<0>());
+  static_assert(std::is_same_v<decltype(MakeV().as<1>()), uint64_t&&>,
+                "MakeV().as<1>() should return a uint64_t&&");
+  MOZ_RELEASE_ASSERT(MakeV().as<1>() == 1);
+
+  // Const rvalue, using a function to create a temporary.
+  auto MakeCV = []() -> const V { return V(uint64_t(1)); };
+  MOZ_RELEASE_ASSERT(MakeCV().is<uint64_t>());
+  MOZ_RELEASE_ASSERT(!MakeCV().is<uint32_t>());
+  MOZ_RELEASE_ASSERT(MakeCV().as<uint64_t>() == 1);
+
+  MOZ_RELEASE_ASSERT(MakeCV().is<1>());
+  MOZ_RELEASE_ASSERT(!MakeCV().is<0>());
+  static_assert(std::is_same_v<decltype(MakeCV().as<1>()), const uint64_t&&>,
+                "MakeCV().as<1>() should return a const uint64_t&&");
+  MOZ_RELEASE_ASSERT(MakeCV().as<1>() == 1);
 }
 
 static void testDuplicate() {
@@ -432,51 +473,111 @@ static void testEquality() {
   MOZ_RELEASE_ASSERT(v6 == v6);
 }
 
+// Matcher that returns a description of how its call-operator was invoked.
 struct Describer {
-  static const char* littleNonConst;
-  static const char* mediumNonConst;
-  static const char* bigNonConst;
+  enum class ParameterSize { NA, U8, U32, U64 };
+  enum class ParameterQualifier {
+    NA,
+    ParamLREF,
+    ParamCLREF,
+    ParamRREF,
+    ParamCRREF
+  };
+  enum class ThisQualifier { NA, ThisLREF, ThisCLREF, ThisRREF, ThisCRREF };
 
-  static const char* littleConst;
-  static const char* mediumConst;
-  static const char* bigConst;
+  using Result =
+      std::tuple<ParameterSize, ParameterQualifier, ThisQualifier, uint64_t>;
 
-  static const char* littleRRef;
-  static const char* mediumRRef;
-  static const char* bigRRef;
+#define RESULT(SIZE, PQUAL, TQUAL, VALUE)                 \
+  Describer::Result(Describer::ParameterSize::SIZE,       \
+                    Describer::ParameterQualifier::PQUAL, \
+                    Describer::ThisQualifier::TQUAL, VALUE)
 
-  const char* operator()(const uint8_t&) & { return littleNonConst; }
-  const char* operator()(const uint32_t&) & { return mediumNonConst; }
-  const char* operator()(const uint64_t&) & { return bigNonConst; }
+#define CALL(TYPE, SIZE, PQUAL, TREF, TQUAL)   \
+  Result operator()(TYPE aValue) TREF {        \
+    return RESULT(SIZE, PQUAL, TQUAL, aValue); \
+  }
 
-  const char* operator()(const uint8_t&) const& { return littleConst; }
-  const char* operator()(const uint32_t&) const& { return mediumConst; }
-  const char* operator()(const uint64_t&) const& { return bigConst; }
+  // All combinations of possible call operators:
+  // Every line, the parameter integer type changes.
+  // Every 3 lines, the parameter type changes constness.
+  // Every 6 lines, the parameter changes reference l/r-valueness.
+  // Every 12 lines, the member function qualifier changes constness.
+  // After 24 lines, the member function qualifier changes ref l/r-valueness.
+  CALL(uint8_t&, U8, ParamLREF, &, ThisLREF)
+  CALL(uint32_t&, U32, ParamLREF, &, ThisLREF)
+  CALL(uint64_t&, U64, ParamLREF, &, ThisLREF)
 
-  const char* operator()(const uint8_t&) && { return littleRRef; }
-  const char* operator()(const uint32_t&) && { return mediumRRef; }
-  const char* operator()(const uint64_t&) && { return bigRRef; }
+  CALL(const uint8_t&, U8, ParamCLREF, &, ThisLREF)
+  CALL(const uint32_t&, U32, ParamCLREF, &, ThisLREF)
+  CALL(const uint64_t&, U64, ParamCLREF, &, ThisLREF)
+
+  CALL(uint8_t&&, U8, ParamRREF, &, ThisLREF)
+  CALL(uint32_t&&, U32, ParamRREF, &, ThisLREF)
+  CALL(uint64_t&&, U64, ParamRREF, &, ThisLREF)
+
+  CALL(const uint8_t&&, U8, ParamCRREF, &, ThisLREF)
+  CALL(const uint32_t&&, U32, ParamCRREF, &, ThisLREF)
+  CALL(const uint64_t&&, U64, ParamCRREF, &, ThisLREF)
+
+  CALL(uint8_t&, U8, ParamLREF, const&, ThisCLREF)
+  CALL(uint32_t&, U32, ParamLREF, const&, ThisCLREF)
+  CALL(uint64_t&, U64, ParamLREF, const&, ThisCLREF)
+
+  CALL(const uint8_t&, U8, ParamCLREF, const&, ThisCLREF)
+  CALL(const uint32_t&, U32, ParamCLREF, const&, ThisCLREF)
+  CALL(const uint64_t&, U64, ParamCLREF, const&, ThisCLREF)
+
+  CALL(uint8_t&&, U8, ParamRREF, const&, ThisCLREF)
+  CALL(uint32_t&&, U32, ParamRREF, const&, ThisCLREF)
+  CALL(uint64_t&&, U64, ParamRREF, const&, ThisCLREF)
+
+  CALL(const uint8_t&&, U8, ParamCRREF, const&, ThisCLREF)
+  CALL(const uint32_t&&, U32, ParamCRREF, const&, ThisCLREF)
+  CALL(const uint64_t&&, U64, ParamCRREF, const&, ThisCLREF)
+
+  CALL(uint8_t&, U8, ParamLREF, &&, ThisRREF)
+  CALL(uint32_t&, U32, ParamLREF, &&, ThisRREF)
+  CALL(uint64_t&, U64, ParamLREF, &&, ThisRREF)
+
+  CALL(const uint8_t&, U8, ParamCLREF, &&, ThisRREF)
+  CALL(const uint32_t&, U32, ParamCLREF, &&, ThisRREF)
+  CALL(const uint64_t&, U64, ParamCLREF, &&, ThisRREF)
+
+  CALL(uint8_t&&, U8, ParamRREF, &&, ThisRREF)
+  CALL(uint32_t&&, U32, ParamRREF, &&, ThisRREF)
+  CALL(uint64_t&&, U64, ParamRREF, &&, ThisRREF)
+
+  CALL(const uint8_t&&, U8, ParamCRREF, &&, ThisRREF)
+  CALL(const uint32_t&&, U32, ParamCRREF, &&, ThisRREF)
+  CALL(const uint64_t&&, U64, ParamCRREF, &&, ThisRREF)
+
+  CALL(uint8_t&, U8, ParamLREF, const&&, ThisCRREF)
+  CALL(uint32_t&, U32, ParamLREF, const&&, ThisCRREF)
+  CALL(uint64_t&, U64, ParamLREF, const&&, ThisCRREF)
+
+  CALL(const uint8_t&, U8, ParamCLREF, const&&, ThisCRREF)
+  CALL(const uint32_t&, U32, ParamCLREF, const&&, ThisCRREF)
+  CALL(const uint64_t&, U64, ParamCLREF, const&&, ThisCRREF)
+
+  CALL(uint8_t&&, U8, ParamRREF, const&&, ThisCRREF)
+  CALL(uint32_t&&, U32, ParamRREF, const&&, ThisCRREF)
+  CALL(uint64_t&&, U64, ParamRREF, const&&, ThisCRREF)
+
+  CALL(const uint8_t&&, U8, ParamCRREF, const&&, ThisCRREF)
+  CALL(const uint32_t&&, U32, ParamCRREF, const&&, ThisCRREF)
+  CALL(const uint64_t&&, U64, ParamCRREF, const&&, ThisCRREF)
+
+#undef CALL
 
   // Catch-all, to verify that there is no call with any type other than the
   // expected ones above.
   template <typename Other>
-  const char* operator()(const Other&) {
+  Result operator()(const Other&) {
     MOZ_RELEASE_ASSERT(false);
-    return "uh?";
+    return RESULT(NA, NA, NA, 0);
   }
 };
-
-const char* Describer::littleNonConst = "little non-const";
-const char* Describer::mediumNonConst = "medium non-const";
-const char* Describer::bigNonConst = "big non-const";
-
-const char* Describer::littleConst = "little const";
-const char* Describer::mediumConst = "medium const";
-const char* Describer::bigConst = "big const";
-
-const char* Describer::littleRRef = "little rvalue-ref";
-const char* Describer::mediumRRef = "medium rvalue-ref";
-const char* Describer::bigRRef = "big rvalue-ref";
 
 static void testMatching() {
   printf("testMatching\n");
@@ -484,38 +585,137 @@ static void testMatching() {
 
   Describer desc;
   const Describer descConst;
+  auto MakeDescriber = []() { return Describer(); };
+  auto MakeConstDescriber = []() -> const Describer { return Describer(); };
 
   V v1(uint8_t(1));
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::littleNonConst);
-  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::mediumNonConst);
-  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::bigNonConst);
-
-  MOZ_RELEASE_ASSERT(v1.match(descConst) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(v2.match(descConst) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(v3.match(descConst) == Describer::bigConst);
-
-  MOZ_RELEASE_ASSERT(v1.match(Describer()) == Describer::littleRRef);
-  MOZ_RELEASE_ASSERT(v2.match(Describer()) == Describer::mediumRRef);
-  MOZ_RELEASE_ASSERT(v3.match(Describer()) == Describer::bigRRef);
-
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
-  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::littleNonConst);
-  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::mediumNonConst);
-  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::bigNonConst);
+  // Create a temporary variant by returning a copy of one.
+  auto CopyV = [](const V& aV) { return aV; };
 
-  MOZ_RELEASE_ASSERT(constRef1.match(descConst) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(constRef2.match(descConst) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(constRef3.match(descConst) == Describer::bigConst);
+  // Create a temporary variant by returning a const copy of one.
+  auto CopyConstV = [](const V& aV) -> const V { return aV; };
 
-  MOZ_RELEASE_ASSERT(constRef1.match(Describer()) == Describer::littleRRef);
-  MOZ_RELEASE_ASSERT(constRef2.match(Describer()) == Describer::mediumRRef);
-  MOZ_RELEASE_ASSERT(constRef3.match(Describer()) == Describer::bigRRef);
+  // All combinations of possible calls:
+  // Every line, the variant integer type changes.
+  // Every 3 lines, the variant type changes constness.
+  // Every 6 lines, the variant changes reference l/r-valueness.
+  // Every 12 lines, the matcher changes constness.
+  // After 24 lines, the matcher changes ref l/r-valueness.
+  MOZ_RELEASE_ASSERT(v1.match(desc) == RESULT(U8, ParamLREF, ThisLREF, 1));
+  MOZ_RELEASE_ASSERT(v2.match(desc) == RESULT(U32, ParamLREF, ThisLREF, 2));
+  MOZ_RELEASE_ASSERT(v3.match(desc) == RESULT(U64, ParamLREF, ThisLREF, 3));
+
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) ==
+                     RESULT(U8, ParamCLREF, ThisLREF, 1));
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) ==
+                     RESULT(U32, ParamCLREF, ThisLREF, 2));
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) ==
+                     RESULT(U64, ParamCLREF, ThisLREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(desc) ==
+                     RESULT(U8, ParamRREF, ThisLREF, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(desc) ==
+                     RESULT(U32, ParamRREF, ThisLREF, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(desc) ==
+                     RESULT(U64, ParamRREF, ThisLREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(desc) ==
+                     RESULT(U8, ParamCRREF, ThisLREF, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(desc) ==
+                     RESULT(U32, ParamCRREF, ThisLREF, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(desc) ==
+                     RESULT(U64, ParamCRREF, ThisLREF, 3));
+
+  MOZ_RELEASE_ASSERT(v1.match(descConst) ==
+                     RESULT(U8, ParamLREF, ThisCLREF, 1));
+  MOZ_RELEASE_ASSERT(v2.match(descConst) ==
+                     RESULT(U32, ParamLREF, ThisCLREF, 2));
+  MOZ_RELEASE_ASSERT(v3.match(descConst) ==
+                     RESULT(U64, ParamLREF, ThisCLREF, 3));
+
+  MOZ_RELEASE_ASSERT(constRef1.match(descConst) ==
+                     RESULT(U8, ParamCLREF, ThisCLREF, 1));
+  MOZ_RELEASE_ASSERT(constRef2.match(descConst) ==
+                     RESULT(U32, ParamCLREF, ThisCLREF, 2));
+  MOZ_RELEASE_ASSERT(constRef3.match(descConst) ==
+                     RESULT(U64, ParamCLREF, ThisCLREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(descConst) ==
+                     RESULT(U8, ParamRREF, ThisCLREF, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(descConst) ==
+                     RESULT(U32, ParamRREF, ThisCLREF, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(descConst) ==
+                     RESULT(U64, ParamRREF, ThisCLREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(descConst) ==
+                     RESULT(U8, ParamCRREF, ThisCLREF, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(descConst) ==
+                     RESULT(U32, ParamCRREF, ThisCLREF, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(descConst) ==
+                     RESULT(U64, ParamCRREF, ThisCLREF, 3));
+
+  MOZ_RELEASE_ASSERT(v1.match(MakeDescriber()) ==
+                     RESULT(U8, ParamLREF, ThisRREF, 1));
+  MOZ_RELEASE_ASSERT(v2.match(MakeDescriber()) ==
+                     RESULT(U32, ParamLREF, ThisRREF, 2));
+  MOZ_RELEASE_ASSERT(v3.match(MakeDescriber()) ==
+                     RESULT(U64, ParamLREF, ThisRREF, 3));
+
+  MOZ_RELEASE_ASSERT(constRef1.match(MakeDescriber()) ==
+                     RESULT(U8, ParamCLREF, ThisRREF, 1));
+  MOZ_RELEASE_ASSERT(constRef2.match(MakeDescriber()) ==
+                     RESULT(U32, ParamCLREF, ThisRREF, 2));
+  MOZ_RELEASE_ASSERT(constRef3.match(MakeDescriber()) ==
+                     RESULT(U64, ParamCLREF, ThisRREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(MakeDescriber()) ==
+                     RESULT(U8, ParamRREF, ThisRREF, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(MakeDescriber()) ==
+                     RESULT(U32, ParamRREF, ThisRREF, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(MakeDescriber()) ==
+                     RESULT(U64, ParamRREF, ThisRREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(MakeDescriber()) ==
+                     RESULT(U8, ParamCRREF, ThisRREF, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(MakeDescriber()) ==
+                     RESULT(U32, ParamCRREF, ThisRREF, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(MakeDescriber()) ==
+                     RESULT(U64, ParamCRREF, ThisRREF, 3));
+
+  MOZ_RELEASE_ASSERT(v1.match(MakeConstDescriber()) ==
+                     RESULT(U8, ParamLREF, ThisCRREF, 1));
+  MOZ_RELEASE_ASSERT(v2.match(MakeConstDescriber()) ==
+                     RESULT(U32, ParamLREF, ThisCRREF, 2));
+  MOZ_RELEASE_ASSERT(v3.match(MakeConstDescriber()) ==
+                     RESULT(U64, ParamLREF, ThisCRREF, 3));
+
+  MOZ_RELEASE_ASSERT(constRef1.match(MakeConstDescriber()) ==
+                     RESULT(U8, ParamCLREF, ThisCRREF, 1));
+  MOZ_RELEASE_ASSERT(constRef2.match(MakeConstDescriber()) ==
+                     RESULT(U32, ParamCLREF, ThisCRREF, 2));
+  MOZ_RELEASE_ASSERT(constRef3.match(MakeConstDescriber()) ==
+                     RESULT(U64, ParamCLREF, ThisCRREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(MakeConstDescriber()) ==
+                     RESULT(U8, ParamRREF, ThisCRREF, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(MakeConstDescriber()) ==
+                     RESULT(U32, ParamRREF, ThisCRREF, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(MakeConstDescriber()) ==
+                     RESULT(U64, ParamRREF, ThisCRREF, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(MakeConstDescriber()) ==
+                     RESULT(U8, ParamCRREF, ThisCRREF, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(MakeConstDescriber()) ==
+                     RESULT(U32, ParamCRREF, ThisCRREF, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(MakeConstDescriber()) ==
+                     RESULT(U64, ParamCRREF, ThisCRREF, 3));
 }
 
 static void testMatchingLambda() {
@@ -523,21 +723,42 @@ static void testMatchingLambda() {
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
   // Note: Lambdas' call operators are const by default (unless the lambda is
-  // declared `mutable`), hence the use of "...Const" strings below.
+  // declared `mutable`).
   // There is no need to test mutable lambdas, nor rvalue lambda, because there
   // would be no way to distinguish how each lambda is actually invoked because
   // there is only one choice of call operator in each overload set.
-  auto desc = [](auto& a) {
-    switch (sizeof(a)) {
-      case 1:
-        return Describer::littleConst;
-      case 4:
-        return Describer::mediumConst;
-      case 8:
-        return Describer::bigConst;
-      default:
-        MOZ_RELEASE_ASSERT(false);
-        return "";
+  auto desc = [](auto&& a) {
+    if constexpr (std::is_same_v<decltype(a), uint8_t&>) {
+      return RESULT(U8, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&>) {
+      return RESULT(U8, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint8_t&&>) {
+      return RESULT(U8, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&&>) {
+      return RESULT(U8, ParamCRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint32_t&>) {
+      return RESULT(U32, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&>) {
+      return RESULT(U32, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint32_t&&>) {
+      return RESULT(U32, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&&>) {
+      return RESULT(U32, ParamCRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint64_t&>) {
+      return RESULT(U64, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&>) {
+      return RESULT(U64, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint64_t&&>) {
+      return RESULT(U64, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&&>) {
+      return RESULT(U64, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
     }
   };
 
@@ -545,17 +766,34 @@ static void testMatchingLambda() {
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::bigConst);
-
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
-  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::bigConst);
+  // Create a temporary variant by returning a copy of one.
+  auto CopyV = [](const V& aV) { return aV; };
+
+  // Create a temporary variant by returning a const copy of one.
+  auto CopyConstV = [](const V& aV) -> const V { return aV; };
+
+  MOZ_RELEASE_ASSERT(v1.match(desc) == RESULT(U8, ParamLREF, NA, 1));
+  MOZ_RELEASE_ASSERT(v2.match(desc) == RESULT(U32, ParamLREF, NA, 2));
+  MOZ_RELEASE_ASSERT(v3.match(desc) == RESULT(U64, ParamLREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) == RESULT(U8, ParamCLREF, NA, 1));
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) == RESULT(U32, ParamCLREF, NA, 2));
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) == RESULT(U64, ParamCLREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(desc) == RESULT(U8, ParamRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(desc) == RESULT(U32, ParamRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(desc) == RESULT(U64, ParamRREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(desc) ==
+                     RESULT(U8, ParamCRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(desc) ==
+                     RESULT(U32, ParamCRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(desc) ==
+                     RESULT(U64, ParamCRREF, NA, 3));
 }
 
 static void testMatchingLambdaWithIndex() {
@@ -567,21 +805,51 @@ static void testMatchingLambdaWithIndex() {
   // There is no need to test mutable lambdas, nor rvalue lambda, because there
   // would be no way to distinguish how each lambda is actually invoked because
   // there is only one choice of call operator in each overload set.
-  auto desc = [](auto aIndex, auto& a) {
+  auto desc = [](auto aIndex, auto&& a) {
     static_assert(sizeof(aIndex) < sizeof(size_t), "Expected small index type");
-    switch (sizeof(a)) {
-      case 1:
-        MOZ_RELEASE_ASSERT(aIndex == 0);
-        return Describer::littleConst;
-      case 4:
-        MOZ_RELEASE_ASSERT(aIndex == 1);
-        return Describer::mediumConst;
-      case 8:
-        MOZ_RELEASE_ASSERT(aIndex == 2);
-        return Describer::bigConst;
-      default:
-        MOZ_RELEASE_ASSERT(false);
-        return "";
+    if constexpr (std::is_same_v<decltype(a), uint8_t&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 0);
+      return RESULT(U8, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 0);
+      return RESULT(U8, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint8_t&&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 0);
+      return RESULT(U8, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 0);
+      return RESULT(U8, ParamCRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint32_t&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 1);
+      return RESULT(U32, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 1);
+      return RESULT(U32, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint32_t&&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 1);
+      return RESULT(U32, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 1);
+      return RESULT(U32, ParamCRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint64_t&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 2);
+      return RESULT(U64, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 2);
+      return RESULT(U64, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint64_t&&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 2);
+      return RESULT(U64, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&&>) {
+      MOZ_RELEASE_ASSERT(aIndex == 2);
+      return RESULT(U64, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
     }
   };
 
@@ -589,83 +857,244 @@ static void testMatchingLambdaWithIndex() {
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(v2.match(desc) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(v3.match(desc) == Describer::bigConst);
-
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
-  MOZ_RELEASE_ASSERT(constRef1.match(desc) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(constRef2.match(desc) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(constRef3.match(desc) == Describer::bigConst);
+  // Create a temporary variant by returning a copy of one.
+  auto CopyV = [](const V& aV) { return aV; };
+
+  // Create a temporary variant by returning a const copy of one.
+  auto CopyConstV = [](const V& aV) -> const V { return aV; };
+
+  MOZ_RELEASE_ASSERT(v1.match(desc) == RESULT(U8, ParamLREF, NA, 1));
+  MOZ_RELEASE_ASSERT(v2.match(desc) == RESULT(U32, ParamLREF, NA, 2));
+  MOZ_RELEASE_ASSERT(v3.match(desc) == RESULT(U64, ParamLREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(constRef1.match(desc) == RESULT(U8, ParamCLREF, NA, 1));
+  MOZ_RELEASE_ASSERT(constRef2.match(desc) == RESULT(U32, ParamCLREF, NA, 2));
+  MOZ_RELEASE_ASSERT(constRef3.match(desc) == RESULT(U64, ParamCLREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(desc) == RESULT(U8, ParamRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(desc) == RESULT(U32, ParamRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(desc) == RESULT(U64, ParamRREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(desc) ==
+                     RESULT(U8, ParamCRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(desc) ==
+                     RESULT(U32, ParamCRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(desc) ==
+                     RESULT(U64, ParamCRREF, NA, 3));
 }
 
 static void testMatchingLambdas() {
   printf("testMatchingLambdas\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
-  auto desc8 = [](const uint8_t& a) { return Describer::littleConst; };
-  auto desc32 = [](const uint32_t& a) { return Describer::mediumConst; };
-  auto desc64 = [](const uint64_t& a) { return Describer::bigConst; };
+  auto desc8 = [](auto&& a) {
+    if constexpr (std::is_same_v<decltype(a), uint8_t&>) {
+      return RESULT(U8, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&>) {
+      return RESULT(U8, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint8_t&&>) {
+      return RESULT(U8, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&&>) {
+      return RESULT(U8, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
+    }
+  };
+  auto desc32 = [](auto&& a) {
+    if constexpr (std::is_same_v<decltype(a), uint32_t&>) {
+      return RESULT(U32, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&>) {
+      return RESULT(U32, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint32_t&&>) {
+      return RESULT(U32, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&&>) {
+      return RESULT(U32, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
+    }
+  };
+  auto desc64 = [](auto&& a) {
+    if constexpr (std::is_same_v<decltype(a), uint64_t&>) {
+      return RESULT(U64, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&>) {
+      return RESULT(U64, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint64_t&&>) {
+      return RESULT(U64, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&&>) {
+      return RESULT(U64, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
+    }
+  };
 
   V v1(uint8_t(1));
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc8, desc32, desc64) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(v2.match(desc8, desc32, desc64) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(v3.match(desc8, desc32, desc64) == Describer::bigConst);
-
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
+  // Create a temporary variant by returning a copy of one.
+  auto CopyV = [](const V& aV) { return aV; };
+
+  // Create a temporary variant by returning a const copy of one.
+  auto CopyConstV = [](const V& aV) -> const V { return aV; };
+
+  MOZ_RELEASE_ASSERT(v1.match(desc8, desc32, desc64) ==
+                     RESULT(U8, ParamLREF, NA, 1));
+  MOZ_RELEASE_ASSERT(v2.match(desc8, desc32, desc64) ==
+                     RESULT(U32, ParamLREF, NA, 2));
+  MOZ_RELEASE_ASSERT(v3.match(desc8, desc32, desc64) ==
+                     RESULT(U64, ParamLREF, NA, 3));
+
   MOZ_RELEASE_ASSERT(constRef1.match(desc8, desc32, desc64) ==
-                     Describer::littleConst);
+                     RESULT(U8, ParamCLREF, NA, 1));
   MOZ_RELEASE_ASSERT(constRef2.match(desc8, desc32, desc64) ==
-                     Describer::mediumConst);
+                     RESULT(U32, ParamCLREF, NA, 2));
   MOZ_RELEASE_ASSERT(constRef3.match(desc8, desc32, desc64) ==
-                     Describer::bigConst);
+                     RESULT(U64, ParamCLREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(desc8, desc32, desc64) ==
+                     RESULT(U8, ParamRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(desc8, desc32, desc64) ==
+                     RESULT(U32, ParamRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(desc8, desc32, desc64) ==
+                     RESULT(U64, ParamRREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(desc8, desc32, desc64) ==
+                     RESULT(U8, ParamCRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(desc8, desc32, desc64) ==
+                     RESULT(U32, ParamCRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(desc8, desc32, desc64) ==
+                     RESULT(U64, ParamCRREF, NA, 3));
 }
 
 static void testMatchingLambdasWithIndex() {
   printf("testMatchingLambdasWithIndex\n");
   using V = Variant<uint8_t, uint32_t, uint64_t>;
 
-  auto desc8 = [](size_t aIndex, const uint8_t& a) {
+  auto desc8 = [](size_t aIndex, auto&& a) {
     MOZ_RELEASE_ASSERT(aIndex == 0);
-    return Describer::littleConst;
+    if constexpr (std::is_same_v<decltype(a), uint8_t&>) {
+      return RESULT(U8, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&>) {
+      return RESULT(U8, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint8_t&&>) {
+      return RESULT(U8, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint8_t&&>) {
+      return RESULT(U8, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
+    }
   };
-  auto desc32 = [](size_t aIndex, const uint32_t& a) {
+  auto desc32 = [](size_t aIndex, auto&& a) {
     MOZ_RELEASE_ASSERT(aIndex == 1);
-    return Describer::mediumConst;
+    if constexpr (std::is_same_v<decltype(a), uint32_t&>) {
+      return RESULT(U32, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&>) {
+      return RESULT(U32, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint32_t&&>) {
+      return RESULT(U32, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint32_t&&>) {
+      return RESULT(U32, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
+    }
   };
-  auto desc64 = [](size_t aIndex, const uint64_t& a) {
+  auto desc64 = [](size_t aIndex, auto&& a) {
     MOZ_RELEASE_ASSERT(aIndex == 2);
-    return Describer::bigConst;
+    if constexpr (std::is_same_v<decltype(a), uint64_t&>) {
+      return RESULT(U64, ParamLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&>) {
+      return RESULT(U64, ParamCLREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), uint64_t&&>) {
+      return RESULT(U64, ParamRREF, NA, a);
+    } else if constexpr (std::is_same_v<decltype(a), const uint64_t&&>) {
+      return RESULT(U64, ParamCRREF, NA, a);
+    } else {
+      // We don't expect any other type.
+      // Tech note: We can't just do `static_assert(false)` which would always
+      // fail during the initial parsing. So we depend on the templated
+      // parameter to delay computing `false` until actual instantiation.
+      static_assert(sizeof(a) == size_t(-1));
+      return RESULT(NA, NA, NA, 0);
+    }
   };
 
   V v1(uint8_t(1));
   V v2(uint32_t(2));
   V v3(uint64_t(3));
 
-  MOZ_RELEASE_ASSERT(v1.match(desc8, desc32, desc64) == Describer::littleConst);
-  MOZ_RELEASE_ASSERT(v2.match(desc8, desc32, desc64) == Describer::mediumConst);
-  MOZ_RELEASE_ASSERT(v3.match(desc8, desc32, desc64) == Describer::bigConst);
-
   const V& constRef1 = v1;
   const V& constRef2 = v2;
   const V& constRef3 = v3;
 
+  // Create a temporary variant by returning a copy of one.
+  auto CopyV = [](const V& aV) { return aV; };
+
+  // Create a temporary variant by returning a const copy of one.
+  auto CopyConstV = [](const V& aV) -> const V { return aV; };
+
+  MOZ_RELEASE_ASSERT(v1.match(desc8, desc32, desc64) ==
+                     RESULT(U8, ParamLREF, NA, 1));
+  MOZ_RELEASE_ASSERT(v2.match(desc8, desc32, desc64) ==
+                     RESULT(U32, ParamLREF, NA, 2));
+  MOZ_RELEASE_ASSERT(v3.match(desc8, desc32, desc64) ==
+                     RESULT(U64, ParamLREF, NA, 3));
+
   MOZ_RELEASE_ASSERT(constRef1.match(desc8, desc32, desc64) ==
-                     Describer::littleConst);
+                     RESULT(U8, ParamCLREF, NA, 1));
   MOZ_RELEASE_ASSERT(constRef2.match(desc8, desc32, desc64) ==
-                     Describer::mediumConst);
+                     RESULT(U32, ParamCLREF, NA, 2));
   MOZ_RELEASE_ASSERT(constRef3.match(desc8, desc32, desc64) ==
-                     Describer::bigConst);
+                     RESULT(U64, ParamCLREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyV(v1).match(desc8, desc32, desc64) ==
+                     RESULT(U8, ParamRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyV(v2).match(desc8, desc32, desc64) ==
+                     RESULT(U32, ParamRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyV(v3).match(desc8, desc32, desc64) ==
+                     RESULT(U64, ParamRREF, NA, 3));
+
+  MOZ_RELEASE_ASSERT(CopyConstV(v1).match(desc8, desc32, desc64) ==
+                     RESULT(U8, ParamCRREF, NA, 1));
+  MOZ_RELEASE_ASSERT(CopyConstV(v2).match(desc8, desc32, desc64) ==
+                     RESULT(U32, ParamCRREF, NA, 2));
+  MOZ_RELEASE_ASSERT(CopyConstV(v3).match(desc8, desc32, desc64) ==
+                     RESULT(U64, ParamCRREF, NA, 3));
 }
+
+#undef RESULT
 
 static void testAddTagToHash() {
   printf("testAddToHash\n");
