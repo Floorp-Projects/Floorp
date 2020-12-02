@@ -37,18 +37,8 @@ inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
   gc::AllocKind extendedFinalizeKind = gc::AllocKind::FUNCTION_EXTENDED;
   gc::AllocKind kind = fun->isExtended() ? extendedFinalizeKind : finalizeKind;
 
-  if (CanReuseScriptForClone(cx->realm(), fun, enclosingEnv)) {
-    return CloneFunctionReuseScript(cx, fun, enclosingEnv, kind, proto);
-  }
-
-  RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-  if (!script) {
-    return nullptr;
-  }
-  RootedScope enclosingScope(cx, script->enclosingScope());
-  Rooted<ScriptSourceObject*> sourceObject(cx, script->sourceObject());
-  return CloneFunctionAndScript(cx, fun, enclosingEnv, enclosingScope,
-                                sourceObject, kind, proto);
+  MOZ_ASSERT(CanReuseScriptForClone(cx->realm(), fun, enclosingEnv));
+  return CloneFunctionReuseScript(cx, fun, enclosingEnv, kind, proto);
 }
 
 } /* namespace js */
