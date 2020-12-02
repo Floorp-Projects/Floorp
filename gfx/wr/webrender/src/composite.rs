@@ -157,8 +157,12 @@ impl ExternalPlaneDescriptor {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ResolvedExternalSurfaceIndex(pub usize);
+
+impl ResolvedExternalSurfaceIndex {
+    pub const INVALID: ResolvedExternalSurfaceIndex = ResolvedExternalSurfaceIndex(usize::MAX);
+}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -618,14 +622,11 @@ impl CompositeState {
         // For each compositor surface that was promoted, build the
         // information required for the compositor to draw it
         for external_surface in &tile_cache.external_surfaces {
+            let clip_rect = external_surface
+                .clip_rect
+                .intersection(&device_clip_rect)
+                .unwrap_or_else(DeviceRect::zero);
 
-            let mut planes = [
-                ExternalPlaneDescriptor::invalid(),
-                ExternalPlaneDescriptor::invalid(),
-                ExternalPlaneDescriptor::invalid(),
-            ];
-
-            // Step through the image keys, and build a plane descriptor for each
             let required_plane_count =
                 match external_surface.dependency {
                     ExternalSurfaceDependency::Yuv { format, .. } => {
@@ -635,7 +636,6 @@ impl CompositeState {
                         1
                     }
                 };
-            let mut valid_plane_count = 0;
 
             let mut image_dependencies = [ImageDependency::INVALID; 3];
 
@@ -649,99 +649,24 @@ impl CompositeState {
                     }
                 };
                 image_dependencies[i] = dependency;
-
-                let request = ImageRequest {
-                    key: dependency.key,
-                    rendering: external_surface.image_rendering,
-                    tile: None,
-                };
-
-                let cache_item = resolve_image(
-                    request,
-                    resource_cache,
-                    gpu_cache,
-                    deferred_resolves,
-                );
-
-                if cache_item.texture_id != TextureSource::Invalid {
-                    valid_plane_count += 1;
-                    let plane = &mut planes[i];
-                    *plane = ExternalPlaneDescriptor {
-                        texture: cache_item.texture_id,
-                        texture_layer: cache_item.texture_layer,
-                        uv_rect: cache_item.uv_rect.into(),
-                    };
-                }
             }
-
-            // Check if there are valid images added for each YUV plane
-            if valid_plane_count < required_plane_count {
-                warn!("Warnings: skip a YUV/RGB compositor surface, found {}/{} valid images",
-                    valid_plane_count,
-                    required_plane_count,
-                );
-                continue;
-            }
-
-            let clip_rect = external_surface
-                .clip_rect
-                .intersection(&device_clip_rect)
-                .unwrap_or_else(DeviceRect::zero);
 
             // Get a new z_id for each compositor surface, to ensure correct ordering
             // when drawing with the simple (Draw) compositor.
-
-            let surface = CompositeTileSurface::ExternalSurface {
-                external_surface_index: ResolvedExternalSurfaceIndex(self.external_surfaces.len()),
-            };
-
-            // If the external surface descriptor reports that the native surface
-            // needs to be updated, create an update params tuple for the renderer
-            // to use.
-            let update_params = external_surface.update_params.map(|surface_size| {
-                (
-                    external_surface.native_surface_id.expect("bug: no native surface!"),
-                    surface_size
-                )
-            });
-
-            match external_surface.dependency {
-                ExternalSurfaceDependency::Yuv{ color_space, format, rescale, .. } => {
-
-                    let image_buffer_kind = planes[0].texture.image_buffer_kind();
-
-                    self.external_surfaces.push(ResolvedExternalSurface {
-                        color_data: ResolvedExternalSurfaceColorData::Yuv {
-                            image_dependencies,
-                            planes,
-                            color_space,
-                            format,
-                            rescale,
-                        },
-                        image_buffer_kind,
-                        update_params,
-                    });
-                },
-                ExternalSurfaceDependency::Rgb{ flip_y, .. } => {
-
-                    let image_buffer_kind = planes[0].texture.image_buffer_kind();
-
-                    // Only propagate flip_y if the compositor doesn't support transforms,
-                    // since otherwise it'll be handled as part of the transform.
-                    self.external_surfaces.push(ResolvedExternalSurface {
-                        color_data: ResolvedExternalSurfaceColorData::Rgb {
-                            image_dependency: image_dependencies[0],
-                            plane: planes[0],
-                            flip_y: flip_y && !self.compositor_kind.supports_transforms(),
-                        },
-                        image_buffer_kind,
-                        update_params,
-                    });
-                },
+            let external_surface_index = self.compute_external_surface_dependencies(
+                &external_surface,
+                &image_dependencies,
+                required_plane_count,
+                resource_cache,
+                gpu_cache,
+                deferred_resolves,
+            );
+            if external_surface_index == ResolvedExternalSurfaceIndex::INVALID {
+                continue;
             }
 
             let tile = CompositeTile {
-                surface,
+                surface: CompositeTileSurface::ExternalSurface { external_surface_index },
                 rect: external_surface.surface_rect,
                 valid_rect: external_surface.device_rect.translate(-external_surface.device_rect.origin.to_vector()),
                 dirty_rect: external_surface.device_rect.translate(-external_surface.device_rect.origin.to_vector()),
@@ -784,6 +709,105 @@ impl CompositeState {
                 }
             );
         }
+    }
+
+    fn compute_external_surface_dependencies(
+        &mut self,
+        external_surface: &ExternalSurfaceDescriptor,
+        image_dependencies: &[ImageDependency; 3],
+        required_plane_count: usize,
+        resource_cache: &ResourceCache,
+        gpu_cache: &mut GpuCache,
+        deferred_resolves: &mut Vec<DeferredResolve>,
+    ) -> ResolvedExternalSurfaceIndex {
+        let mut planes = [
+            ExternalPlaneDescriptor::invalid(),
+            ExternalPlaneDescriptor::invalid(),
+            ExternalPlaneDescriptor::invalid(),
+        ];
+
+        let mut valid_plane_count = 0;
+        for i in 0 .. required_plane_count {
+            let request = ImageRequest {
+                key: image_dependencies[i].key,
+                rendering: external_surface.image_rendering,
+                tile: None,
+            };
+
+            let cache_item = resolve_image(
+                request,
+                resource_cache,
+                gpu_cache,
+                deferred_resolves,
+            );
+
+            if cache_item.texture_id != TextureSource::Invalid {
+                valid_plane_count += 1;
+                let plane = &mut planes[i];
+                *plane = ExternalPlaneDescriptor {
+                    texture: cache_item.texture_id,
+                    texture_layer: cache_item.texture_layer,
+                    uv_rect: cache_item.uv_rect.into(),
+                };
+            }
+        }
+
+        // Check if there are valid images added for each YUV plane
+        if valid_plane_count < required_plane_count {
+            warn!("Warnings: skip a YUV/RGB compositor surface, found {}/{} valid images",
+                valid_plane_count,
+                required_plane_count,
+            );
+            return ResolvedExternalSurfaceIndex::INVALID;
+        }
+            
+        let external_surface_index = ResolvedExternalSurfaceIndex(self.external_surfaces.len());
+
+        // If the external surface descriptor reports that the native surface
+        // needs to be updated, create an update params tuple for the renderer
+        // to use.
+        let update_params = external_surface.update_params.map(|surface_size| {
+            (
+                external_surface.native_surface_id.expect("bug: no native surface!"),
+                surface_size
+            )
+        });
+
+        match external_surface.dependency {
+            ExternalSurfaceDependency::Yuv{ color_space, format, rescale, .. } => {
+
+                let image_buffer_kind = planes[0].texture.image_buffer_kind();
+
+                self.external_surfaces.push(ResolvedExternalSurface {
+                    color_data: ResolvedExternalSurfaceColorData::Yuv {
+                        image_dependencies: *image_dependencies,
+                        planes,
+                        color_space,
+                        format,
+                        rescale,
+                    },
+                    image_buffer_kind,
+                    update_params,
+                });
+            },
+            ExternalSurfaceDependency::Rgb{ flip_y, .. } => {
+
+                let image_buffer_kind = planes[0].texture.image_buffer_kind();
+
+                // Only propagate flip_y if the compositor doesn't support transforms,
+                // since otherwise it'll be handled as part of the transform.
+                self.external_surfaces.push(ResolvedExternalSurface {
+                    color_data: ResolvedExternalSurfaceColorData::Rgb {
+                        image_dependency: image_dependencies[0],
+                        plane: planes[0],
+                        flip_y: flip_y && !self.compositor_kind.supports_transforms(),
+                    },
+                    image_buffer_kind,
+                    update_params,
+                });
+            },
+        }
+        external_surface_index
     }
 
     /// Add a tile to the appropriate array, depending on tile properties and compositor mode.
