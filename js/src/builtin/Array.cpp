@@ -2815,7 +2815,7 @@ static ArrayObject* CopyDenseArrayElements(JSContext* cx,
     newlength = std::min<uint32_t>(initlen - begin, count);
   }
 
-  ArrayObject* narr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, newlength);
+  ArrayObject* narr = NewDenseFullyAllocatedArray(cx, newlength);
   if (!narr) {
     return nullptr;
   }
@@ -2971,7 +2971,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       }
     } else {
       /* Step 9. */
-      arr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, count);
+      arr = NewDenseFullyAllocatedArray(cx, count);
       if (!arr) {
         return false;
       }
@@ -4199,13 +4199,6 @@ static inline ArrayObject* NewArrayTryReuseGroup(
   }
 
   return NewArrayTryUseGroup<maxLength>(cx, group, length, newKind);
-}
-
-ArrayObject* js::NewFullyAllocatedArrayTryReuseGroup(JSContext* cx,
-                                                     HandleObject obj,
-                                                     size_t length,
-                                                     NewObjectKind newKind) {
-  return NewArrayTryReuseGroup<UINT32_MAX>(cx, obj, length, newKind);
 }
 
 ArrayObject* js::NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx,
