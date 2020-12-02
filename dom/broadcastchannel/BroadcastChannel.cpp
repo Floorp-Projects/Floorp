@@ -43,26 +43,23 @@ using namespace ipc;
 
 namespace {
 
-class CloseRunnable final : public nsIRunnable, public nsICancelableRunnable {
+class CloseRunnable final : public DiscardableRunnable {
  public:
-  NS_DECL_ISUPPORTS
-
-  explicit CloseRunnable(BroadcastChannel* aBC) : mBC(aBC) { MOZ_ASSERT(mBC); }
+  explicit CloseRunnable(BroadcastChannel* aBC)
+      : DiscardableRunnable("BroadcastChannel CloseRunnable"), mBC(aBC) {
+    MOZ_ASSERT(mBC);
+  }
 
   NS_IMETHOD Run() override {
     mBC->Shutdown();
     return NS_OK;
   }
 
-  nsresult Cancel() override { return NS_OK; }
-
  private:
   ~CloseRunnable() = default;
 
   RefPtr<BroadcastChannel> mBC;
 };
-
-NS_IMPL_ISUPPORTS(CloseRunnable, nsICancelableRunnable, nsIRunnable)
 
 class TeardownRunnable {
  protected:

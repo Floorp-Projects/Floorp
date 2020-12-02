@@ -29,7 +29,7 @@ IdleTaskRunner::IdleTaskRunner(
     const CallbackType& aCallback, const char* aRunnableName, uint32_t aDelay,
     int64_t aBudget, bool aRepeating,
     const MayStopProcessingCallbackType& aMayStopProcessing)
-    : IdleRunnable(aRunnableName),
+    : CancelableIdleRunnable(aRunnableName),
       mCallback(aCallback),
       mDelay(aDelay),
       mBudget(TimeDuration::FromMilliseconds(aBudget)),

@@ -87,14 +87,27 @@ Runnable::GetName(nsACString& aName) {
 }
 #  endif
 
-NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, Runnable, nsICancelableRunnable)
+NS_IMPL_ISUPPORTS_INHERITED(DiscardableRunnable, Runnable,
+                            nsIDiscardableRunnable)
+
+NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, DiscardableRunnable,
+                            nsICancelableRunnable)
+
+void CancelableRunnable::OnDiscard() {
+  // Tasks that implement Cancel() can be safely cleaned up if it turns out
+  // that the task will not run.
+  (void)NS_WARN_IF(NS_FAILED(Cancel()));
+}
 
 nsresult CancelableRunnable::Cancel() {
   // Do nothing
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(IdleRunnable, CancelableRunnable, nsIIdleRunnable)
+NS_IMPL_ISUPPORTS_INHERITED(IdleRunnable, DiscardableRunnable, nsIIdleRunnable)
+
+NS_IMPL_ISUPPORTS_INHERITED(CancelableIdleRunnable, CancelableRunnable,
+                            nsIIdleRunnable)
 
 NS_IMPL_ISUPPORTS_INHERITED(PrioritizableRunnable, Runnable,
                             nsIRunnablePriority)
