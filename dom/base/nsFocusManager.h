@@ -181,9 +181,6 @@ class nsFocusManager final : public nsIFocusManager,
   };
   static mozilla::dom::Element* GetFocusedDescendant(
       nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
-      bool* aFocusIsOutOfProcess, nsPIDOMWindowOuter** aFocusedWindow);
-  static mozilla::dom::Element* GetFocusedDescendant(
-      nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
       nsPIDOMWindowOuter** aFocusedWindow);
 
   /**
@@ -460,8 +457,7 @@ class nsFocusManager final : public nsIFocusManager,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Focus(nsPIDOMWindowOuter* aWindow, mozilla::dom::Element* aContent,
              uint32_t aFlags, bool aIsNewDocument, bool aFocusChanged,
-             bool aWindowRaised, bool aAdjustWidget,
-             bool aFocusInOtherContentProcess, uint64_t aActionId,
+             bool aWindowRaised, bool aAdjustWidget, uint64_t aActionId,
              const mozilla::Maybe<BlurredElementInfo>& = mozilla::Nothing());
 
   /**

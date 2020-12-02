@@ -290,17 +290,8 @@ static nsPIDOMWindowOuter* GetCurrentWindow(nsIContent* aContent) {
 Element* nsFocusManager::GetFocusedDescendant(
     nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
     nsPIDOMWindowOuter** aFocusedWindow) {
-  bool ignored;
-  return GetFocusedDescendant(aWindow, aSearchRange, &ignored, aFocusedWindow);
-}
-
-// static
-Element* nsFocusManager::GetFocusedDescendant(
-    nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
-    bool* aFocusIsOutOfProcess, nsPIDOMWindowOuter** aFocusedWindow) {
   NS_ENSURE_TRUE(aWindow, nullptr);
 
-  *aFocusIsOutOfProcess = false;
   *aFocusedWindow = nullptr;
 
   Element* currentElement = nullptr;
@@ -314,16 +305,6 @@ Element* nsFocusManager::GetFocusedDescendant(
 
     window = GetContentWindow(currentElement);
     if (!window) {
-      if (RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(currentElement)) {
-        // Only look at pre-existing browsing contexts. If this function is
-        // called during reflow, calling GetBrowsingContext() could cause frame
-        // loader initialization at a time when it isn't safe.
-        if (BrowsingContext* bc = flo->GetExtantBrowsingContext()) {
-          if (!bc->IsInProcess()) {
-            *aFocusIsOutOfProcess = true;
-          }
-        }
-      }
       break;
     }
 
@@ -593,7 +574,7 @@ nsFocusManager::ClearFocus(mozIDOMWindowProxy* aWindow) {
       // if we are clearing the focus on an ancestor of the focused window,
       // the ancestor will become the new focused window, so focus it
       if (isAncestor) {
-        Focus(window, nullptr, 0, true, false, false, true, false, actionId);
+        Focus(window, nullptr, 0, true, false, false, true, actionId);
       }
     }
   } else {
@@ -762,17 +743,8 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow,
 
   // retrieve the last focused element within the window that was raised
   nsCOMPtr<nsPIDOMWindowOuter> currentWindow;
-  bool focusInOtherContentProcess = false;
   RefPtr<Element> currentFocus = GetFocusedDescendant(
-      window, eIncludeAllDescendants, &focusInOtherContentProcess,
-      getter_AddRefs(currentWindow));
-
-  // Keep mochitest-browser-chrome harness happy by ignoring
-  // focusInOtherContentProcess in the chrome process, because
-  // the harness expects that.
-  if (XRE_IsParentProcess()) {
-    focusInOtherContentProcess = false;
-  }
+      window, eIncludeAllDescendants, getter_AddRefs(currentWindow));
 
   NS_ASSERTION(currentWindow, "window raised with no window current");
   if (!currentWindow) {
@@ -787,7 +759,7 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow,
   // still be true because focused browsing context is synced, and we won't
   // fire a focus event while focusing if we use it as condition.
   Focus(currentWindow, currentFocus, 0, currentWindow != mFocusedWindow, false,
-        appWin != nullptr, true, focusInOtherContentProcess, aActionId);
+        appWin != nullptr, true, aActionId);
 }
 
 void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow,
@@ -987,21 +959,12 @@ void nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow,
 
   if (aNeedsFocus) {
     nsCOMPtr<nsPIDOMWindowOuter> currentWindow;
-    bool focusInOtherContentProcess = false;
     RefPtr<Element> currentFocus = GetFocusedDescendant(
-        window, eIncludeAllDescendants, &focusInOtherContentProcess,
-        getter_AddRefs(currentWindow));
-
-    // Keep mochitest-browser-chrome harness happy by ignoring
-    // focusInOtherContentProcess in the chrome process, because
-    // the harness expects that.
-    if (XRE_IsParentProcess()) {
-      focusInOtherContentProcess = false;
-    }
+        window, eIncludeAllDescendants, getter_AddRefs(currentWindow));
 
     if (currentWindow) {
       Focus(currentWindow, currentFocus, 0, true, false, false, true,
-            focusInOtherContentProcess, GenerateFocusActionId());
+            GenerateFocusActionId());
     }
   } else {
     // Sometimes, an element in a window can be focused before the window is
@@ -1423,20 +1386,11 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   // within the frame is retrieved and that will be focused instead.
   nsCOMPtr<nsPIDOMWindowOuter> newWindow;
   nsCOMPtr<nsPIDOMWindowOuter> subWindow = GetContentWindow(elementToFocus);
-  bool focusInOtherContentProcess = false;
   if (subWindow) {
     // XXX What if this is an out-of-process iframe?
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1613054
     elementToFocus = GetFocusedDescendant(subWindow, eIncludeAllDescendants,
-                                          &focusInOtherContentProcess,
                                           getter_AddRefs(newWindow));
-
-    // Keep mochitest-browser-chrome harness happy by ignoring
-    // focusInOtherContentProcess in the chrome process, because
-    // the harness expects that.
-    if (XRE_IsParentProcess()) {
-      focusInOtherContentProcess = false;
-    }
 
     // since a window is being refocused, clear aFocusChanged so that the
     // caret position isn't updated.
@@ -1706,8 +1660,7 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     }
 
     Focus(newWindow, elementToFocus, aFlags, !isElementInFocusedWindow,
-          aFocusChanged, false, aAdjustWidget, focusInOtherContentProcess,
-          aActionId, blurredInfo);
+          aFocusChanged, false, aAdjustWidget, aActionId, blurredInfo);
   } else {
     // otherwise, for inactive windows and when the caller cannot steal the
     // focus, update the node in the window, and  raise the window if desired.
@@ -2393,7 +2346,7 @@ void nsFocusManager::ActivateRemoteFrameIfNeeded(Element& aElement,
 void nsFocusManager::Focus(
     nsPIDOMWindowOuter* aWindow, Element* aElement, uint32_t aFlags,
     bool aIsNewDocument, bool aFocusChanged, bool aWindowRaised,
-    bool aAdjustWidget, bool aFocusInOtherContentProcess, uint64_t aActionId,
+    bool aAdjustWidget, uint64_t aActionId,
     const Maybe<BlurredElementInfo>& aBlurredElementInfo) {
   LOGFOCUS(("<<Focus begin>>"));
 
@@ -2416,6 +2369,21 @@ void nsFocusManager::Focus(
   RefPtr<PresShell> presShell = docShell->GetPresShell();
   if (!presShell) {
     return;
+  }
+
+  bool focusInOtherContentProcess = false;
+  // Keep mochitest-browser-chrome harness happy by ignoring
+  // focusInOtherContentProcess in the chrome process, because the harness
+  // expects that.
+  if (!XRE_IsParentProcess()) {
+    if (RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(aElement)) {
+      // Only look at pre-existing browsing contexts. If this function is
+      // called during reflow, calling GetBrowsingContext() could cause frame
+      // loader initialization at a time when it isn't safe.
+      if (BrowsingContext* bc = flo->GetExtantBrowsingContext()) {
+        focusInOtherContentProcess = !bc->IsInProcess();
+      }
+    }
   }
 
   // If the focus actually changed, set the focus method (mouse, keyboard, etc).
@@ -2503,12 +2471,12 @@ void nsFocusManager::Focus(
       IMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
                                      GetFocusMoveActionCause(aFlags));
     }
-    if (doc && !aFocusInOtherContentProcess) {
+    if (doc && !focusInOtherContentProcess) {
       SendFocusOrBlurEvent(eFocus, presShell, doc, ToSupports(doc),
                            aFlags & FOCUSMETHOD_MASK, aWindowRaised);
     }
     if (GetFocusedBrowsingContext() == aWindow->GetBrowsingContext() &&
-        !mFocusedElement && !aFocusInOtherContentProcess) {
+        !mFocusedElement && !focusInOtherContentProcess) {
       SendFocusOrBlurEvent(eFocus, presShell, doc,
                            aWindow->GetCurrentInnerWindow(),
                            aFlags & FOCUSMETHOD_MASK, aWindowRaised);
@@ -2566,7 +2534,10 @@ void nsFocusManager::Focus(
         aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
       }
 
-      if (!aFocusInOtherContentProcess) {
+      // XXX Bug 1675484, We should consider the possibility that something
+      // expects the event to fire on iframe element as in Blink compat-wise by
+      // now.
+      if (aFocusChanged || !focusInOtherContentProcess) {
         SendFocusOrBlurEvent(
             eFocus, presShell, aElement->GetComposedDoc(), aElement,
             aFlags & FOCUSMETHOD_MASK, aWindowRaised, isRefocus,
