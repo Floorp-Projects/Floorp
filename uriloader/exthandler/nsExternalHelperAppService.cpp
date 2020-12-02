@@ -247,13 +247,12 @@ static bool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
     // We can get an extension if the filename is from a header, or if getting
     // it from the URL was allowed.
     bool canGetExtensionFromFilename =
-      !gotFileNameFromURI ||
-      aAllowURLExtension;
+        !gotFileNameFromURI || aAllowURLExtension;
     // ... , or if the mimetype is meaningless and we have nothing to go on:
     if (!canGetExtensionFromFilename) {
       nsAutoCString contentType;
       if (NS_SUCCEEDED(aChannel->GetContentType(contentType))) {
-          canGetExtensionFromFilename =
+        canGetExtensionFromFilename =
             contentType.EqualsIgnoreCase(APPLICATION_OCTET_STREAM) ||
             contentType.EqualsIgnoreCase("binary/octet-stream") ||
             contentType.EqualsIgnoreCase("application/x-msdownload");
