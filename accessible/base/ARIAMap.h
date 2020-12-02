@@ -74,7 +74,12 @@ enum EActionRule {
 /**
  * Used to define if role exposes default value of aria-live attribute.
  */
-enum ELiveAttrRule { eNoLiveAttr, eOffLiveAttr, ePoliteLiveAttr };
+enum ELiveAttrRule {
+  eNoLiveAttr,
+  eOffLiveAttr,
+  ePoliteLiveAttr,
+  eAssertiveLiveAttr
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Role constants
