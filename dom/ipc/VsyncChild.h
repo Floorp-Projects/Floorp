@@ -4,22 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layout_ipc_VsyncChild_h
-#define mozilla_layout_ipc_VsyncChild_h
+#ifndef mozilla_dom_ipc_VsyncChild_h
+#define mozilla_dom_ipc_VsyncChild_h
 
-#include "mozilla/layout/PVsyncChild.h"
-#include "nsISupportsImpl.h"
+#include "mozilla/dom/PVsyncChild.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 
 class VsyncObserver;
 
-namespace ipc {
-class BackgroundChildImpl;
-}  // namespace ipc
-
-namespace layout {
+namespace dom {
 
 // The PVsyncChild actor receives a vsync event from the main process and
 // delivers it to the child process. Currently this is restricted to the main
@@ -28,15 +25,17 @@ namespace layout {
 class VsyncChild final : public PVsyncChild {
   NS_INLINE_DECL_REFCOUNTING(VsyncChild)
 
-  friend class mozilla::ipc::BackgroundChildImpl;
   friend class PVsyncChild;
 
  public:
-  // Hide the SendObserve/SendUnobserve in PVsyncChild. We add an flag
-  // mObservingVsync to handle the race problem of unobserving vsync event.
-  bool SendObserve();
-  bool SendUnobserve();
+  VsyncChild();
 
+  void AddChildRefreshTimer(VsyncObserver* aVsyncObserver);
+  void RemoveChildRefreshTimer(VsyncObserver* aVsyncObserver);
+
+  TimeDuration GetVsyncRate();
+
+  /*
   // Bind a VsyncObserver into VsyncChild after ipc channel connected.
   void SetVsyncObserver(VsyncObserver* aVsyncObserver);
   // GetVsyncRate is a getter for mVsyncRate which sends a requests to
@@ -48,24 +47,21 @@ class VsyncChild final : public PVsyncChild {
   // TimeDuration::Forever() if mVsyncRate hasn't been set by calling
   // GetVsyncRate.
   TimeDuration VsyncRate();
+  */
 
  private:
-  VsyncChild();
   virtual ~VsyncChild();
 
-  mozilla::ipc::IPCResult RecvNotify(const VsyncEvent& aVsync);
-  mozilla::ipc::IPCResult RecvVsyncRate(const float& aVsyncRate);
+  mozilla::ipc::IPCResult RecvNotify(const VsyncEvent& aVsync,
+                                     const float& aVsyncRate);
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
-  bool mObservingVsync;
   bool mIsShutdown;
-
-  // The content side vsync observer.
-  RefPtr<VsyncObserver> mObserver;
   TimeDuration mVsyncRate;
+  nsTObserverArray<VsyncObserver*> mObservers;
 };
 
-}  // namespace layout
+}  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_layout_ipc_VsyncChild_h
+#endif  // mozilla_dom_ipc_VsyncChild_h
