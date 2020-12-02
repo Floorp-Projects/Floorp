@@ -178,7 +178,7 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
-  NS_IMETHOD GetEsniUsed(bool* aEsniUsed) override {
+  NS_IMETHOD GetEchConfigUsed(bool* aEchConfigUsed) override {
     MOZ_ASSERT(false);
     return NS_OK;
   }
