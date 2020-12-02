@@ -51,10 +51,6 @@ class CannotDeleteFromRootOfRepositoryException(Exception):
     the repository, which is not permitted."""
 
 
-class NonexistentFile(Exception):
-    """Represents that we attempted to get the content of a file that does not exist."""
-
-
 def get_tool_path(tool):
     """Obtain the path of `tool`."""
     if os.path.isabs(tool) and os.path.exists(tool):
@@ -113,7 +109,6 @@ class Repository(object):
         pass
 
     def _run(self, *args, **runargs):
-        universal_newlines = runargs.get("universal_newlines", True)
         return_codes = runargs.get("return_codes", [])
 
         cmd = (self._tool,) + args
@@ -122,7 +117,7 @@ class Repository(object):
                 cmd,
                 cwd=self.path,
                 env=ensure_subprocess_env(self._env),
-                universal_newlines=universal_newlines,
+                universal_newlines=True,
             )
         except subprocess.CalledProcessError as e:
             if e.returncode in return_codes:
@@ -234,14 +229,6 @@ class Repository(object):
         """
 
     @abc.abstractmethod
-    def get_file_content(self, path, revision=None):
-        """Return as a bytestring the contents of the file as of the given
-        revision, or the current revision if none is provided.
-
-        Returns the file content or raises NonexistentFile if the file cannot be found.
-        """
-
-    @abc.abstractmethod
     def working_directory_clean(self, untracked=False, ignored=False):
         """Determine if the working directory is free of modifications.
 
@@ -345,16 +332,12 @@ class HgRepository(Repository):
         self._client.close()
 
     def _run(self, *args, **runargs):
-        universal_newlines = runargs.get("universal_newlines", True)
         if not self._client.server:
             return super(HgRepository, self)._run(*args, **runargs)
 
         # hglib requires bytes on python 3
         args = [a.encode("utf-8") if not isinstance(a, bytes) else a for a in args]
-        res = self._client.rawcommand(args)
-        if universal_newlines:
-            return res.decode("utf-8")
-        return res
+        return self._client.rawcommand(args).decode("utf-8")
 
     def get_commit_time(self):
         newest_public_revision_time = self._run(
@@ -472,15 +455,6 @@ class HgRepository(Repository):
             p.replace("\\", "/") for p in self._run("files", "-0").split("\0") if p
         )
         return FileListFinder(files)
-
-    def get_file_content(self, path, revision=None):
-        args = ["cat", path]
-        if revision:
-            args += ["-r", revision]
-        try:
-            return self._run(*args, universal_newlines=False)
-        except subprocess.CalledProcessError as e:
-            raise NonexistentFile("Could not find file; got error %s" % e)
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ["status", "--modified", "--added", "--removed", "--deleted"]
@@ -620,13 +594,6 @@ class GitRepository(Repository):
     def get_tracked_files_finder(self):
         files = [p for p in self._run("ls-files", "-z").split("\0") if p]
         return FileListFinder(files)
-
-    def get_file_content(self, path, revision=None):
-        revision = revision or "HEAD"
-        try:
-            return self._run("show", revision + ":" + path, universal_newlines=False)
-        except subprocess.CalledProcessError as e:
-            raise NonexistentFile("Could not find file; got error %s" % e)
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ["status", "--porcelain"]
