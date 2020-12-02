@@ -9,6 +9,10 @@
 
 // Globals
 
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // To prevent intermittent failures when the test is executed at a time that is
@@ -73,8 +77,9 @@ const StatisticsTestData = [
  * Triggers the collection of those statistics that are not accumulated each
  * time an action is taken, but are a static snapshot of the current state.
  */
-function triggerStatisticsCollection() {
+async function triggerStatisticsCollection() {
   Services.obs.notifyObservers(null, "gather-telemetry", "" + gReferenceTimeMs);
+  await TestUtils.topicObserved("passwordmgr-gather-telemetry-complete");
 }
 
 /**
@@ -129,11 +134,11 @@ add_task(function test_initialize() {
 /**
  * Tests the collection of statistics related to login metadata.
  */
-add_task(function test_logins_statistics() {
+add_task(async function test_logins_statistics() {
   // Repeat the operation twice to test that histograms are not accumulated.
   for (let pass of [1, 2]) {
     info(`pass ${pass}`);
-    triggerStatisticsCollection();
+    await triggerStatisticsCollection();
 
     // Should record 1 in the bucket corresponding to the number of passwords.
     testHistogram("PWMGR_NUM_SAVED_PASSWORDS", { 10: 1 });
@@ -162,22 +167,22 @@ add_task(function test_logins_statistics() {
  * Tests the collection of statistics related to hosts for which passowrd saving
  * has been explicitly disabled.
  */
-add_task(function test_disabledHosts_statistics() {
+add_task(async function test_disabledHosts_statistics() {
   // Should record 1 in the bucket corresponding to the number of sites for
   // which password saving is disabled.
   Services.logins.setLoginSavingEnabled("http://www.example.com", false);
-  triggerStatisticsCollection();
+  await triggerStatisticsCollection();
   testHistogram("PWMGR_BLOCKLIST_NUM_SITES", { 1: 1 });
 
   Services.logins.setLoginSavingEnabled("http://www.example.com", true);
-  triggerStatisticsCollection();
+  await triggerStatisticsCollection();
   testHistogram("PWMGR_BLOCKLIST_NUM_SITES", { 0: 1 });
 });
 
 /**
  * Tests the collection of statistics related to general settings.
  */
-add_task(function test_settings_statistics() {
+add_task(async function test_settings_statistics() {
   let oldRememberSignons = Services.prefs.getBoolPref("signon.rememberSignons");
   registerCleanupFunction(function() {
     Services.prefs.setBoolPref("signon.rememberSignons", oldRememberSignons);
@@ -188,7 +193,7 @@ add_task(function test_settings_statistics() {
     // This change should be observed immediately by the login service.
     Services.prefs.setBoolPref("signon.rememberSignons", remember);
 
-    triggerStatisticsCollection();
+    await triggerStatisticsCollection();
 
     // Should record 1 in either bucket 0 or bucket 1 based on the preference.
     testHistogram("PWMGR_SAVING_ENABLED", remember ? { 1: 1 } : { 0: 1 });

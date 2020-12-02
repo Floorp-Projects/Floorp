@@ -241,6 +241,8 @@ LoginManager.prototype = {
       "weave:telemetry:histogram",
       "PWMGR_NUM_PASSWORDS_PER_HOSTNAME"
     );
+
+    Services.obs.notifyObservers(null, "passwordmgr-gather-telemetry-complete");
   },
 
   /**
