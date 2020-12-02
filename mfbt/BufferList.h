@@ -275,10 +275,9 @@ class BufferList : private AllocPolicy {
       MOZ_ASSERT(aTarget.IsIn(aBuffers));
 
       char* data = mData;
-      for (uintptr_t segment = mSegment; segment < aTarget.mSegment;
-           segment++) {
+      for (uintptr_t segment = mSegment; segment < aTarget.mSegment;) {
         offset += aBuffers.mSegments[segment].End() - data;
-        data = aBuffers.mSegments[segment].mData;
+        data = aBuffers.mSegments[++segment].mData;
       }
 
       MOZ_RELEASE_ASSERT(IsIn(aBuffers));
