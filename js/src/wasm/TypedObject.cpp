@@ -394,8 +394,7 @@ ArrayTypeDescr* ArrayMetaTypeDescr::create(JSContext* cx,
                                            int32_t length) {
   MOZ_ASSERT(arrayTypePrototype);
   Rooted<ArrayTypeDescr*> obj(cx);
-  obj =
-      NewSingletonObjectWithGivenProto<ArrayTypeDescr>(cx, arrayTypePrototype);
+  obj = NewTenuredObjectWithGivenProto<ArrayTypeDescr>(cx, arrayTypePrototype);
   if (!obj) {
     return nullptr;
   }
@@ -623,8 +622,8 @@ StructTypeDescr* StructMetaTypeDescr::createFromArrays(
   // Now create the resulting type descriptor.
 
   Rooted<StructTypeDescr*> descr(cx);
-  descr = NewSingletonObjectWithGivenProto<StructTypeDescr>(
-      cx, structTypePrototype);
+  descr =
+      NewTenuredObjectWithGivenProto<StructTypeDescr>(cx, structTypePrototype);
   if (!descr) {
     return nullptr;
   }
@@ -844,7 +843,7 @@ static bool DefineSimpleTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
     return false;
   }
 
-  Rooted<T*> descr(cx, NewSingletonObjectWithGivenProto<T>(cx, funcProto));
+  Rooted<T*> descr(cx, NewTenuredObjectWithGivenProto<T>(cx, funcProto));
   if (!descr) {
     return false;
   }
@@ -956,7 +955,7 @@ TypedProto* TypedProto::create(JSContext* cx) {
     return nullptr;
   }
 
-  return NewSingletonObjectWithGivenProto<TypedProto>(cx, objProto);
+  return NewTenuredObjectWithGivenProto<TypedProto>(cx, objProto);
 }
 
 /******************************************************************************

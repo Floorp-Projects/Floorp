@@ -483,12 +483,6 @@ inline T* NewObjectWithGivenProto(JSContext* cx, HandleObject proto) {
 }
 
 template <typename T>
-inline T* NewSingletonObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return detail::NewObjectWithGivenTaggedProtoForKind<T, SingletonObject>(
-      cx, AsTaggedProto(proto));
-}
-
-template <typename T>
 inline T* NewTenuredObjectWithGivenProto(JSContext* cx, HandleObject proto) {
   return detail::NewObjectWithGivenTaggedProtoForKind<T, TenuredObject>(
       cx, AsTaggedProto(proto));
