@@ -95,9 +95,7 @@ const PropertyIteratorActor = protocol.ActorClassWithSpec(
       for (const idx of indexes) {
         list.push(this.iterator.propertyName(idx));
       }
-      return {
-        names: indexes,
-      };
+      return indexes;
     },
 
     slice({ start, count }) {

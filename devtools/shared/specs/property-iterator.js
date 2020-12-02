@@ -23,7 +23,9 @@ const propertyIteratorSpec = generateActorSpec({
       request: {
         indexes: Option(0, "array:number"),
       },
-      response: RetVal("array:string"),
+      response: {
+        names: RetVal("array:string"),
+      },
     },
     slice: {
       request: {

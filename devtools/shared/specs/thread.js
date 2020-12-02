@@ -98,7 +98,9 @@ const threadSpec = generateActorSpec({
       },
     },
     sources: {
-      response: RetVal("array:json"),
+      response: {
+        sources: RetVal("array:json"),
+      },
     },
     skipBreakpoints: {
       request: {

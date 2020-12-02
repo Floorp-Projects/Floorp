@@ -76,7 +76,9 @@ const childSpec = protocol.generateActorSpec({
     },
     getIntArray: {
       request: { inputArray: Arg(0, "array:number") },
-      response: RetVal("array:number"),
+      response: {
+        intArray: RetVal("array:number"),
+      },
     },
     getSibling: {
       request: { id: Arg(0) },
