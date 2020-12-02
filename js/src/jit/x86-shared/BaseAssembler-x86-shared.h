@@ -2678,11 +2678,64 @@ class BaseAssembler : public GenericAssembler {
     twoByteOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps, order, address, src0,
                      dst);
   }
+
+  static constexpr size_t CMPPS_MR_PATCH_OFFSET = 1;
+
+  size_t vcmpeqps_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    vcmpps_mr(X86Encoding::ConditionCmp_EQ, address, src0, dst);
+    return CMPPS_MR_PATCH_OFFSET;
+  }
+  size_t vcmpneqps_mr(const void* address, XMMRegisterID src0,
+                      XMMRegisterID dst) {
+    vcmpps_mr(X86Encoding::ConditionCmp_NEQ, address, src0, dst);
+    return CMPPS_MR_PATCH_OFFSET;
+  }
+  size_t vcmpltps_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    vcmpps_mr(X86Encoding::ConditionCmp_LT, address, src0, dst);
+    return CMPPS_MR_PATCH_OFFSET;
+  }
+  size_t vcmpleps_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    vcmpps_mr(X86Encoding::ConditionCmp_LE, address, src0, dst);
+    return CMPPS_MR_PATCH_OFFSET;
+  }
+
   void vcmppd_rr(uint8_t order, XMMRegisterID src1, XMMRegisterID src0,
                  XMMRegisterID dst) {
     twoByteOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd, order, src1, src0,
                      dst);
   }
+  void vcmppd_mr(uint8_t order, const void* address, XMMRegisterID src0,
+                 XMMRegisterID dst) {
+    twoByteOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd, order, address, src0,
+                     dst);
+  }
+
+  static constexpr size_t CMPPD_MR_PATCH_OFFSET = 1;
+
+  size_t vcmpeqpd_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    vcmppd_mr(X86Encoding::ConditionCmp_EQ, address, src0, dst);
+    return CMPPD_MR_PATCH_OFFSET;
+  }
+  size_t vcmpneqpd_mr(const void* address, XMMRegisterID src0,
+                      XMMRegisterID dst) {
+    vcmppd_mr(X86Encoding::ConditionCmp_NEQ, address, src0, dst);
+    return CMPPD_MR_PATCH_OFFSET;
+  }
+  size_t vcmpltpd_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    vcmppd_mr(X86Encoding::ConditionCmp_LT, address, src0, dst);
+    return CMPPD_MR_PATCH_OFFSET;
+  }
+  size_t vcmplepd_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    vcmppd_mr(X86Encoding::ConditionCmp_LE, address, src0, dst);
+    return CMPPD_MR_PATCH_OFFSET;
+  }
+
   void vrcpps_rr(XMMRegisterID src, XMMRegisterID dst) {
     twoByteOpSimd("vrcpps", VEX_PS, OP2_RCPPS_VpsWps, src, invalid_xmm, dst);
   }
