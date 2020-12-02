@@ -108,15 +108,14 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
     return {
       actor: this.actorID,
+      // The resources and target traits should be removed all at the same time since the
+      // client has generic ways to deal with all of them (See Bug 1680280).
       traits: {
-        // @backward-compat { version 77 } supports frames in Watcher actor
         [Targets.TYPES.FRAME]: true,
-        // @backward-compat { version 84 } supports processes in Watcher actor
         [Targets.TYPES.PROCESS]: true,
-        // @backward-compat { version 84 } supports workers in Watcher actor for content toolbox.
         [Targets.TYPES.WORKER]: hasBrowserElement,
         resources: {
-          // @backward-compat { version 81 } added support for:
+          // In Firefox 81 we added support for:
           // - CONSOLE_MESSAGE
           // - CSS_CHANGE
           // - CSS_MESSAGE
