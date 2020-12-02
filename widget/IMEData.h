@@ -8,6 +8,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/ToString.h"
 
 #include "nsPoint.h"
 #include "nsRect.h"
@@ -106,6 +107,11 @@ class StartAndEndOffsets {
 // the length is shrunken.  However, the string itself is not shrunken.
 // Therefore, moving it to where all of the string can be contained,
 // they will return longer/bigger value.
+enum class OffsetAndDataFor {
+  CompositionString,
+  SelectedString,
+  EditorString,
+};
 template <typename IntType>
 class OffsetAndData {
  protected:
@@ -113,8 +119,10 @@ class OffsetAndData {
 
  public:
   OffsetAndData() = delete;
-  explicit OffsetAndData(IntType aStartOffset, const nsAString& aData)
-      : mData(aData), mOffset(aStartOffset) {}
+  explicit OffsetAndData(
+      IntType aStartOffset, const nsAString& aData,
+      OffsetAndDataFor aFor = OffsetAndDataFor::CompositionString)
+      : mData(aData), mOffset(aStartOffset), mFor(aFor) {}
 
   IntType StartOffset() const { return mOffset; }
   IntType Length() const {
@@ -132,6 +140,7 @@ class OffsetAndData {
     // this just returns the data as-is.
     return mData;
   }
+  bool IsDataEmpty() const { return mData.IsEmpty(); }
 
   bool IsOffsetInRange(IntType aOffset) const {
     return aOffset >= mOffset && aOffset < EndOffset();
@@ -146,6 +155,7 @@ class OffsetAndData {
     mData = aData;
   }
   void SetData(const nsAString& aData) { mData = aData; }
+  void TruncateData(uint32_t aLength = 0) { mData.Truncate(aLength); }
   void ReplaceData(nsAString::size_type aCutStart,
                    nsAString::size_type aCutLength,
                    const nsAString& aNewString) {
@@ -154,11 +164,14 @@ class OffsetAndData {
 
   friend std::ostream& operator<<(
       std::ostream& aStream, const OffsetAndData<IntType>& aOffsetAndData) {
+    const auto maxDataLength =
+        aOffsetAndData.mFor == OffsetAndDataFor::CompositionString
+            ? PrintStringDetail::kMaxLengthForCompositionString
+            : (aOffsetAndData.mFor == OffsetAndDataFor::SelectedString
+                   ? PrintStringDetail::kMaxLengthForSelectedString
+                   : PrintStringDetail::kMaxLengthForEditor);
     aStream << "{ mOffset=" << aOffsetAndData.mOffset << ", mData="
-            << PrintStringDetail(
-                   aOffsetAndData.mData,
-                   PrintStringDetail::kMaxLengthForCompositionString)
-                   .get()
+            << PrintStringDetail(aOffsetAndData.mData, maxDataLength).get()
             << ", Length()=" << aOffsetAndData.Length()
             << ", EndOffset()=" << aOffsetAndData.EndOffset() << " }";
     return aStream;
@@ -167,6 +180,7 @@ class OffsetAndData {
  private:
   nsString mData;
   IntType mOffset;
+  OffsetAndDataFor mFor;
 };
 
 namespace widget {

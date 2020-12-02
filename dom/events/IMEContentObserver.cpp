@@ -647,17 +647,18 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
                                    !mNeedsToNotifyIMEOfSelectionChange;
   if (isSelectionCacheAvailable && aEvent->mMessage == eQuerySelectedText &&
       aEvent->mInput.mSelectionType == SelectionType::eNormal) {
-    aEvent->mReply.mContentsRoot = mRootContent;
-    aEvent->mReply.mHasSelection = !mSelectionData.IsCollapsed();
-    aEvent->mReply.mOffset = mSelectionData.mOffset;
-    aEvent->mReply.mString = mSelectionData.String();
-    aEvent->mReply.mWritingMode = mSelectionData.GetWritingMode();
-    aEvent->mReply.mReversed = mSelectionData.mReversed;
-    aEvent->mSucceeded = true;
+    aEvent->EmplaceReply();
+    aEvent->mReply->mOffsetAndData.emplace(mSelectionData.mOffset,
+                                           mSelectionData.String(),
+                                           OffsetAndDataFor::SelectedString);
+    aEvent->mReply->mContentsRoot = mRootContent;
+    aEvent->mReply->mHasSelection = !mSelectionData.IsCollapsed();
+    aEvent->mReply->mWritingMode = mSelectionData.GetWritingMode();
+    aEvent->mReply->mReversed = mSelectionData.mReversed;
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
             ("0x%p IMEContentObserver::HandleQueryContentEvent(aEvent={ "
-             "mMessage=%s })",
-             this, ToChar(aEvent->mMessage)));
+             "mMessage=%s, mReply=%s })",
+             this, ToChar(aEvent->mMessage), ToString(aEvent->mReply).c_str()));
     return NS_OK;
   }
 
@@ -699,7 +700,7 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
   if (NS_WARN_IF(Destroyed())) {
     // If this has already destroyed during querying the content, the query
     // is outdated even if it's succeeded.  So, make the query fail.
-    aEvent->mSucceeded = false;
+    aEvent->mReply.reset();
     MOZ_LOG(sIMECOLog, LogLevel::Warning,
             ("0x%p IMEContentObserver::HandleQueryContentEvent(), WARNING, "
              "IMEContentObserver has been destroyed during the query, "
@@ -708,10 +709,10 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
     return rv;
   }
 
-  if (!IsInitializedWithPlugin() &&
-      NS_WARN_IF(aEvent->mReply.mContentsRoot != mRootContent)) {
+  if (aEvent->Succeeded() && !IsInitializedWithPlugin() &&
+      NS_WARN_IF(aEvent->mReply->mContentsRoot != mRootContent)) {
     // Focus has changed unexpectedly, so make the query fail.
-    aEvent->mSucceeded = false;
+    aEvent->mReply.reset();
   }
   return rv;
 }
@@ -740,13 +741,13 @@ bool IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
 
   RefPtr<IMEContentObserver> kungFuDeathGrip(this);
 
-  WidgetQueryContentEvent charAtPt(true, eQueryCharacterAtPoint,
-                                   aMouseEvent->mWidget);
-  charAtPt.mRefPoint = aMouseEvent->mRefPoint;
+  WidgetQueryContentEvent queryCharAtPointEvent(true, eQueryCharacterAtPoint,
+                                                aMouseEvent->mWidget);
+  queryCharAtPointEvent.mRefPoint = aMouseEvent->mRefPoint;
   ContentEventHandler handler(aPresContext);
-  handler.OnQueryCharacterAtPoint(&charAtPt);
-  if (NS_WARN_IF(!charAtPt.mSucceeded) ||
-      charAtPt.mReply.mOffset == WidgetQueryContentEvent::NOT_FOUND) {
+  handler.OnQueryCharacterAtPoint(&queryCharAtPointEvent);
+  if (NS_WARN_IF(queryCharAtPointEvent.Failed()) ||
+      queryCharAtPointEvent.DidNotFindChar()) {
     return false;
   }
 
@@ -760,23 +761,26 @@ bool IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   // We should notify it with offset in the widget.
   nsIWidget* topLevelWidget = mWidget->GetTopLevelWidget();
   if (topLevelWidget && topLevelWidget != mWidget) {
-    charAtPt.mReply.mRect.MoveBy(topLevelWidget->WidgetToScreenOffset() -
-                                 mWidget->WidgetToScreenOffset());
+    queryCharAtPointEvent.mReply->mRect.MoveBy(
+        topLevelWidget->WidgetToScreenOffset() -
+        mWidget->WidgetToScreenOffset());
   }
   // The refPt is relative to its widget.
   // We should notify it with offset in the widget.
   if (aMouseEvent->mWidget != mWidget) {
-    charAtPt.mRefPoint += aMouseEvent->mWidget->WidgetToScreenOffset() -
-                          mWidget->WidgetToScreenOffset();
+    queryCharAtPointEvent.mRefPoint +=
+        aMouseEvent->mWidget->WidgetToScreenOffset() -
+        mWidget->WidgetToScreenOffset();
   }
 
   IMENotification notification(NOTIFY_IME_OF_MOUSE_BUTTON_EVENT);
   notification.mMouseButtonEventData.mEventMessage = aMouseEvent->mMessage;
-  notification.mMouseButtonEventData.mOffset = charAtPt.mReply.mOffset;
+  notification.mMouseButtonEventData.mOffset =
+      queryCharAtPointEvent.mReply->StartOffset();
   notification.mMouseButtonEventData.mCursorPos.Set(
-      charAtPt.mRefPoint.ToUnknownPoint());
+      queryCharAtPointEvent.mRefPoint.ToUnknownPoint());
   notification.mMouseButtonEventData.mCharRect.Set(
-      charAtPt.mReply.mRect.ToUnknownRect());
+      queryCharAtPointEvent.mReply->mRect.ToUnknownRect());
   notification.mMouseButtonEventData.mButton = aMouseEvent->mButton;
   notification.mMouseButtonEventData.mButtons = aMouseEvent->mButtons;
   notification.mMouseButtonEventData.mModifiers = aMouseEvent->mModifiers;
@@ -1311,20 +1315,24 @@ bool IMEContentObserver::UpdateSelectionCache(bool aRequireFlush /* = true */) {
 
   // XXX Cannot we cache some information for reducing the cost to compute
   //     selection offset and writing mode?
-  WidgetQueryContentEvent selection(true, eQuerySelectedText, mWidget);
-  selection.mNeedsToFlushLayout = aRequireFlush;
+  WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                 mWidget);
+  querySelectedTextEvent.mNeedsToFlushLayout = aRequireFlush;
   ContentEventHandler handler(GetPresContext());
-  handler.OnQuerySelectedText(&selection);
-  if (NS_WARN_IF(!selection.mSucceeded) ||
-      NS_WARN_IF(selection.mReply.mContentsRoot != mRootContent)) {
+  handler.OnQuerySelectedText(&querySelectedTextEvent);
+  if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection()) ||
+      NS_WARN_IF(querySelectedTextEvent.mReply->mContentsRoot !=
+                 mRootContent)) {
     return false;
   }
+  MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
 
-  mFocusedWidget = selection.mReply.mFocusedWidget;
-  mSelectionData.mOffset = selection.mReply.mOffset;
-  *mSelectionData.mString = selection.mReply.mString;
-  mSelectionData.SetWritingMode(selection.GetWritingMode());
-  mSelectionData.mReversed = selection.mReply.mReversed;
+  mFocusedWidget = querySelectedTextEvent.mReply->mFocusedWidget;
+  mSelectionData.mOffset = querySelectedTextEvent.mReply->StartOffset();
+  *mSelectionData.mString = querySelectedTextEvent.mReply->DataRef();
+  mSelectionData.SetWritingMode(
+      querySelectedTextEvent.mReply->WritingModeRef());
+  mSelectionData.mReversed = querySelectedTextEvent.mReply->mReversed;
 
   // WARNING: Don't modify the reason of selection change here.
 

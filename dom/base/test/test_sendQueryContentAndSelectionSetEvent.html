@@ -127,25 +127,21 @@ function runTests()
   var top = {};
   var width = {};
   var height = {};
+  textRectArray.getCharacterRect(0, left, top, width, height);
+  is(top.value, textRect.top,
+     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same top that returns QUERY_TEXT_RECT");
+  is(left.value, textRect.left,
+     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same left that returns QUERY_TEXT_RECT");
+
   var left2 = {};
   var top2 = {};
   var width2 = {};
   var height2 = {};
-  textRectArray.getCharacterRect(0, left, top, width, height);
-  is(textRect.top, top.value,
-     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same top that returns QUERY_TEXT_RECT");
-  is(textRect.left, left.value,
-     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same left that returns QUERY_TEXT_RECT");
   textRectArray.getCharacterRect(1, left2, top2, width2, height2);
+  isfuzzy(width.value + width2.value, textRect.width, 2,
+          "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same width that QUERY_TEXT_RECT is returned for offset 1 and 2");
 
-  // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500961
-  // jdescottes: Bug 1467712 - wrong usage of ok(). This does not pass when switching to is():
-  // "got 16, expected 17". However on some other platforms it works as expected so we cannot
-  // use todo_is().
-  // is(textRect.width, width.value + width2.value,
-  //     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same width that QUERY_TEXT_RECT is returned for offset 1 and 2");
-
-  is(textRect.height, height.value,
+  is(height.value, textRect.height,
      "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same height that returns QUERY_TEXT_RECT");
 
   // QueryCharacterAtOffset

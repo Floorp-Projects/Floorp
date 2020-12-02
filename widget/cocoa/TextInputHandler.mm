@@ -15,6 +15,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/ToString.h"
 
 #include "nsChildView.h"
 #include "nsCocoaFeatures.h"
@@ -403,6 +404,13 @@ static void EnsureToLogAllKeyboardLayoutsAndIMEs() {
     TextInputHandler::DebugPrintAllKeyboardLayouts();
     IMEInputHandler::DebugPrintAllIMEModes();
   }
+}
+
+inline NSRange MakeNSRangeFrom(const Maybe<OffsetAndData<uint32_t>>& aOffsetAndData) {
+  if (aOffsetAndData.isNothing()) {
+    return NSMakeRange(NSNotFound, 0);
+  }
+  return NSMakeRange(aOffsetAndData->StartOffset(), aOffsetAndData->Length());
 }
 
 #pragma mark -
@@ -4036,7 +4044,7 @@ NSAttributedString* IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aR
   }
 
   nsAutoString str;
-  WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
+  WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent, mWidget);
   WidgetQueryContentEvent::Options options;
   int64_t startOffset = aRange.location;
   if (IsIMEComposing()) {
@@ -4048,28 +4056,26 @@ NSAttributedString* IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aR
     options.mRelativeToInsertionPoint = true;
     startOffset -= mIMECompositionStart;
   }
-  textContent.InitForQueryTextContent(startOffset, aRange.length, options);
-  textContent.RequestFontRanges();
-  DispatchEvent(textContent);
+  queryTextContentEvent.InitForQueryTextContent(startOffset, aRange.length, options);
+  queryTextContentEvent.RequestFontRanges();
+  DispatchEvent(queryTextContentEvent);
 
   MOZ_LOG(gLog, LogLevel::Info,
           ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
-           "textContent={ mSucceeded=%s, mReply={ mString=\"%s\", mOffset=%u } }",
-           this, TrueOrFalse(textContent.mSucceeded),
-           NS_ConvertUTF16toUTF8(textContent.mReply.mString).get(), textContent.mReply.mOffset));
+           "queryTextContentEvent={ mReply=%s }",
+           this, ToString(queryTextContentEvent.mReply).c_str()));
 
-  if (!textContent.mSucceeded) {
+  if (queryTextContentEvent.Failed()) {
     return nil;
   }
 
   // We don't set vertical information at this point.  If required,
   // OS will calls drawsVerticallyForCharacterAtIndex.
   NSMutableAttributedString* result = nsCocoaUtils::GetNSMutableAttributedString(
-      textContent.mReply.mString, textContent.mReply.mFontRanges, false,
+      queryTextContentEvent.mReply->DataRef(), queryTextContentEvent.mReply->mFontRanges, false,
       mWidget->BackingScaleFactor());
   if (aActualRange) {
-    aActualRange->location = textContent.mReply.mOffset;
-    aActualRange->length = textContent.mReply.mString.Length();
+    *aActualRange = MakeNSRangeFrom(queryTextContentEvent.mReply->mOffsetAndData);
   }
   return result;
 
@@ -4119,21 +4125,19 @@ NSRange IMEInputHandler::SelectedRange() {
 
   RefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetQueryContentEvent selection(true, eQuerySelectedText, mWidget);
-  DispatchEvent(selection);
+  WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText, mWidget);
+  DispatchEvent(querySelectedTextEvent);
 
   MOZ_LOG(gLog, LogLevel::Info,
-          ("%p IMEInputHandler::SelectedRange, selection={ mSucceeded=%s, "
-           "mReply={ mOffset=%u, mString.Length()=%u } }",
-           this, TrueOrFalse(selection.mSucceeded), selection.mReply.mOffset,
-           selection.mReply.mString.Length()));
+          ("%p IMEInputHandler::SelectedRange, querySelectedTextEvent={ mReply=%s }", this,
+           ToString(querySelectedTextEvent.mReply).c_str()));
 
-  if (!selection.mSucceeded) {
+  if (querySelectedTextEvent.Failed()) {
     return mSelectedRange;
   }
 
-  mWritingMode = selection.GetWritingMode();
-  mRangeForWritingMode = NSMakeRange(selection.mReply.mOffset, selection.mReply.mString.Length());
+  mWritingMode = querySelectedTextEvent.mReply->WritingModeRef();
+  mRangeForWritingMode = MakeNSRangeFrom(querySelectedTextEvent.mReply->mOffsetAndData);
 
   if (mIMEHasFocus) {
     mSelectedRange = mRangeForWritingMode;
@@ -4202,7 +4206,7 @@ NSRect IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange, NSRange* aAc
   LayoutDeviceIntRect r;
   bool useCaretRect = (aRange.length == 0);
   if (!useCaretRect) {
-    WidgetQueryContentEvent charRect(true, eQueryTextRect, mWidget);
+    WidgetQueryContentEvent queryTextRectEvent(true, eQueryTextRect, mWidget);
     WidgetQueryContentEvent::Options options;
     int64_t startOffset = aRange.location;
     if (IsIMEComposing()) {
@@ -4214,13 +4218,12 @@ NSRect IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange, NSRange* aAc
       options.mRelativeToInsertionPoint = true;
       startOffset -= mIMECompositionStart;
     }
-    charRect.InitForQueryTextRect(startOffset, 1, options);
-    DispatchEvent(charRect);
-    if (charRect.mSucceeded) {
-      r = charRect.mReply.mRect;
-      actualRange.location = charRect.mReply.mOffset;
-      actualRange.length = charRect.mReply.mString.Length();
-      mWritingMode = charRect.GetWritingMode();
+    queryTextRectEvent.InitForQueryTextRect(startOffset, 1, options);
+    DispatchEvent(queryTextRectEvent);
+    if (queryTextRectEvent.Succeeded()) {
+      r = queryTextRectEvent.mReply->mRect;
+      actualRange = MakeNSRangeFrom(queryTextRectEvent.mReply->mOffsetAndData);
+      mWritingMode = queryTextRectEvent.mReply->WritingModeRef();
       mRangeForWritingMode = actualRange;
     } else {
       useCaretRect = true;
@@ -4228,7 +4231,7 @@ NSRect IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange, NSRange* aAc
   }
 
   if (useCaretRect) {
-    WidgetQueryContentEvent caretRect(true, eQueryCaretRect, mWidget);
+    WidgetQueryContentEvent queryCaretRectEvent(true, eQueryCaretRect, mWidget);
     WidgetQueryContentEvent::Options options;
     int64_t startOffset = aRange.location;
     if (IsIMEComposing()) {
@@ -4240,14 +4243,14 @@ NSRect IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange, NSRange* aAc
       options.mRelativeToInsertionPoint = true;
       startOffset -= mIMECompositionStart;
     }
-    caretRect.InitForQueryCaretRect(startOffset, options);
-    DispatchEvent(caretRect);
-    if (!caretRect.mSucceeded) {
+    queryCaretRectEvent.InitForQueryCaretRect(startOffset, options);
+    DispatchEvent(queryCaretRectEvent);
+    if (queryCaretRectEvent.Failed()) {
       return rect;
     }
-    r = caretRect.mReply.mRect;
+    r = queryCaretRectEvent.mReply->mRect;
     r.width = 0;
-    actualRange.location = caretRect.mReply.mOffset;
+    actualRange.location = queryCaretRectEvent.mReply->StartOffset();
     actualRange.length = 0;
   }
 
@@ -4290,18 +4293,20 @@ NSUInteger IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint) {
     return NSNotFound;
   }
 
-  WidgetQueryContentEvent charAt(true, eQueryCharacterAtPoint, mWidget);
+  WidgetQueryContentEvent queryCharAtPointEvent(true, eQueryCharacterAtPoint, mWidget);
   NSPoint ptInWindow = nsCocoaUtils::ConvertPointFromScreen(mainWindow, aPoint);
   NSPoint ptInView = [mView convertPoint:ptInWindow fromView:nil];
-  charAt.mRefPoint.x = static_cast<int32_t>(ptInView.x) * mWidget->BackingScaleFactor();
-  charAt.mRefPoint.y = static_cast<int32_t>(ptInView.y) * mWidget->BackingScaleFactor();
-  mWidget->DispatchWindowEvent(charAt);
-  if (!charAt.mSucceeded || charAt.mReply.mOffset == WidgetQueryContentEvent::NOT_FOUND ||
-      charAt.mReply.mOffset >= static_cast<uint32_t>(NSNotFound)) {
+  queryCharAtPointEvent.mRefPoint.x =
+      static_cast<int32_t>(ptInView.x) * mWidget->BackingScaleFactor();
+  queryCharAtPointEvent.mRefPoint.y =
+      static_cast<int32_t>(ptInView.y) * mWidget->BackingScaleFactor();
+  mWidget->DispatchWindowEvent(queryCharAtPointEvent);
+  if (queryCharAtPointEvent.Failed() || queryCharAtPointEvent.DidNotFindChar() ||
+      queryCharAtPointEvent.mReply->StartOffset() >= static_cast<uint32_t>(NSNotFound)) {
     return NSNotFound;
   }
 
-  return charAt.mReply.mOffset;
+  return queryCharAtPointEvent.mReply->StartOffset();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNotFound);
 }

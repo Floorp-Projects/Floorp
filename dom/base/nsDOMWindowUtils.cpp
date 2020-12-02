@@ -2055,7 +2055,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType, int64_t aOffset,
   nsresult rv = targetWidget->DispatchEvent(&queryEvent, status);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto* result = new nsQueryContentEventResult(queryEvent);
+  auto* result = new nsQueryContentEventResult(std::move(queryEvent));
   result->SetEventResult(widget);
   NS_ADDREF(*aResult = result);
   return NS_OK;

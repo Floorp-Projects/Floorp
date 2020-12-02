@@ -695,35 +695,42 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
       continue;
     }
 
-    WidgetQueryContentEvent event(true, eQueryTextContent, widget);
+    nsString insertedString;
+    WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
+                                                  widget);
 
     if (change.mNewEnd != change.mStart) {
-      event.InitForQueryTextContent(change.mStart,
-                                    change.mNewEnd - change.mStart);
-      widget->DispatchEvent(&event, status);
+      queryTextContentEvent.InitForQueryTextContent(
+          change.mStart, change.mNewEnd - change.mStart);
+      widget->DispatchEvent(&queryTextContentEvent, status);
 
-      if (shouldAbort(NS_WARN_IF(!event.mSucceeded))) {
+      if (shouldAbort(NS_WARN_IF(queryTextContentEvent.Failed()))) {
         return;
       }
+
+      insertedString = queryTextContentEvent.mReply->DataRef();
     }
 
-    textTransaction.AppendElement(TextRecord{
-        event.mReply.mString, change.mStart, change.mOldEnd, change.mNewEnd});
+    textTransaction.AppendElement(TextRecord{insertedString, change.mStart,
+                                             change.mOldEnd, change.mNewEnd});
   }
 
   int32_t selStart = -1;
   int32_t selEnd = -1;
 
   if (mIMESelectionChanged) {
-    WidgetQueryContentEvent event(true, eQuerySelectedText, widget);
-    widget->DispatchEvent(&event, status);
+    WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                   widget);
+    widget->DispatchEvent(&querySelectedTextEvent, status);
 
-    if (shouldAbort(NS_WARN_IF(!event.mSucceeded))) {
+    if (shouldAbort(NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection()))) {
       return;
     }
 
-    selStart = int32_t(event.GetSelectionStart());
-    selEnd = int32_t(event.GetSelectionEnd());
+    selStart = static_cast<int32_t>(
+        querySelectedTextEvent.mReply->SelectionStartOffset());
+    selEnd = static_cast<int32_t>(
+        querySelectedTextEvent.mReply->SelectionEndOffset());
 
     if (aFlags == FLUSH_FLAG_RECOVER) {
       // Sometimes we get out-of-bounds selection during recovery.
@@ -816,12 +823,17 @@ void GeckoEditableSupport::UpdateCompositionRects() {
 
   nsEventStatus status = nsEventStatus_eIgnore;
   uint32_t offset = composition->NativeOffsetOfStartComposition();
-  WidgetQueryContentEvent textRects(true, eQueryTextRectArray, widget);
-  textRects.InitForQueryTextRectArray(offset, composition->String().Length());
-  widget->DispatchEvent(&textRects, status);
+  WidgetQueryContentEvent queryTextRectsEvent(true, eQueryTextRectArray,
+                                              widget);
+  queryTextRectsEvent.InitForQueryTextRectArray(offset,
+                                                composition->String().Length());
+  widget->DispatchEvent(&queryTextRectsEvent, status);
 
-  auto rects = ConvertRectArrayToJavaRectFArray(textRects.mReply.mRectArray,
-                                                widget->GetDefaultScale());
+  auto rects = ConvertRectArrayToJavaRectFArray(
+      queryTextRectsEvent.Succeeded()
+          ? queryTextRectsEvent.mReply->mRectArray
+          : CopyableTArray<mozilla::LayoutDeviceIntRect>(),
+      widget->GetDefaultScale());
 
   mEditable->UpdateCompositionRects(rects);
 }
@@ -894,11 +906,13 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
 #ifdef NIGHTLY_BUILD
     {
       nsEventStatus status = nsEventStatus_eIgnore;
-      WidgetQueryContentEvent selection(true, eQuerySelectedText, widget);
-      widget->DispatchEvent(&selection, status);
-      if (selection.mSucceeded) {
-        ALOGIME("IME: Current selection: { Offset=%u, Length=%u }",
-                selection.mReply.mOffset, selection.mReply.mString.Length());
+      WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                     widget);
+      widget->DispatchEvent(&querySelectedTextEvent, status);
+      if (querySelectedTextEvent.Succeeded()) {
+        ALOGIME(
+            "IME: Current selection: %s",
+            ToString(querySelectedTextEvent.mReply->mOffsetAndData).c_str());
       }
     }
 #endif
@@ -1112,10 +1126,13 @@ bool GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
     }
 
     {
-      WidgetQueryContentEvent event(true, eQuerySelectedText, widget);
-      widget->DispatchEvent(&event, status);
-      MOZ_ASSERT(event.mSucceeded);
-      string = event.mReply.mString;
+      WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                     widget);
+      widget->DispatchEvent(&querySelectedTextEvent, status);
+      MOZ_ASSERT(querySelectedTextEvent.Succeeded());
+      if (querySelectedTextEvent.FoundSelection()) {
+        string = querySelectedTextEvent.mReply->DataRef();
+      }
     }
   } else {
     // If the new composition matches the existing composition,
@@ -1158,17 +1175,18 @@ class MOZ_STACK_CLASS AutoSelectionRestore final {
       mLength = UINT32_MAX;
       return;
     }
-    WidgetQueryContentEvent selection(true, eQuerySelectedText, widget);
+    WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                   widget);
     nsEventStatus status = nsEventStatus_eIgnore;
-    widget->DispatchEvent(&selection, status);
-    if (!selection.mSucceeded) {
+    widget->DispatchEvent(&querySelectedTextEvent, status);
+    if (querySelectedTextEvent.DidNotFindSelection()) {
       mOffset = UINT32_MAX;
       mLength = UINT32_MAX;
       return;
     }
 
-    mOffset = selection.mReply.mOffset;
-    mLength = selection.mReply.mString.Length();
+    mOffset = querySelectedTextEvent.mReply->StartOffset();
+    mLength = querySelectedTextEvent.mReply->DataLength();
   }
 
   ~AutoSelectionRestore() {

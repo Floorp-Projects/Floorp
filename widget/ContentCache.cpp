@@ -126,24 +126,25 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
   mSelection.reset();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent selection(true, eQuerySelectedText, aWidget);
-  aWidget->DispatchEvent(&selection, status);
-  if (NS_WARN_IF(!selection.mSucceeded)) {
-    MOZ_LOG(sContentCacheLog, LogLevel::Error,
-            ("0x%p CacheSelection(), FAILED, "
-             "couldn't retrieve the selected text",
-             this));
+  WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                 aWidget);
+  aWidget->DispatchEvent(&querySelectedTextEvent, status);
+  if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection())) {
+    MOZ_LOG(
+        sContentCacheLog, LogLevel::Error,
+        ("0x%p CacheSelection(), FAILED, couldn't retrieve the selected text",
+         this));
     return false;
   }
-  if (selection.mReply.mReversed) {
-    mSelection.emplace(
-        selection.mReply.mOffset + selection.mReply.mString.Length(),
-        selection.mReply.mOffset, selection.GetWritingMode());
+  MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
+  if (querySelectedTextEvent.mReply->mReversed) {
+    mSelection.emplace(querySelectedTextEvent.mReply->EndOffset(),
+                       querySelectedTextEvent.mReply->StartOffset(),
+                       querySelectedTextEvent.mReply->WritingModeRef());
   } else {
-    mSelection.emplace(
-        selection.mReply.mOffset,
-        selection.mReply.mOffset + selection.mReply.mString.Length(),
-        selection.GetWritingMode());
+    mSelection.emplace(querySelectedTextEvent.mReply->StartOffset(),
+                       querySelectedTextEvent.mReply->EndOffset(),
+                       querySelectedTextEvent.mReply->WritingModeRef());
   }
 
   return CacheCaret(aWidget, aNotification) &&
@@ -166,17 +167,17 @@ bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
   uint32_t offset = mSelection->StartOffset();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent caretRect(true, eQueryCaretRect, aWidget);
-  caretRect.InitForQueryCaretRect(offset);
-  aWidget->DispatchEvent(&caretRect, status);
-  if (NS_WARN_IF(!caretRect.mSucceeded)) {
+  WidgetQueryContentEvent queryCaretRectEvet(true, eQueryCaretRect, aWidget);
+  queryCaretRectEvet.InitForQueryCaretRect(offset);
+  aWidget->DispatchEvent(&queryCaretRectEvet, status);
+  if (NS_WARN_IF(queryCaretRectEvet.Failed())) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
-            ("0x%p CacheCaret(), FAILED, "
-             "couldn't retrieve the caret rect at offset=%u",
+            ("0x%p CacheCaret(), FAILED, couldn't retrieve the caret rect at "
+             "offset=%u",
              this, offset));
     return false;
   }
-  mCaret.emplace(offset, caretRect.mReply.mRect);
+  mCaret.emplace(offset, queryCaretRectEvet.mReply->mRect);
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p CacheCaret(), Succeeded, "
            "mSelection=%s, mCaret=%s",
@@ -191,16 +192,16 @@ bool ContentCacheInChild::CacheEditorRect(
            aWidget, GetNotificationName(aNotification)));
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent editorRectEvent(true, eQueryEditorRect, aWidget);
-  aWidget->DispatchEvent(&editorRectEvent, status);
-  if (NS_WARN_IF(!editorRectEvent.mSucceeded)) {
+  WidgetQueryContentEvent queryEditorRectEvent(true, eQueryEditorRect, aWidget);
+  aWidget->DispatchEvent(&queryEditorRectEvent, status);
+  if (NS_WARN_IF(queryEditorRectEvent.Failed())) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
             ("0x%p CacheEditorRect(), FAILED, "
              "couldn't retrieve the editor rect",
              this));
     return false;
   }
-  mEditorRect = editorRectEvent.mReply.mRect;
+  mEditorRect = queryEditorRectEvent.mReply->mRect;
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p CacheEditorRect(), Succeeded, "
            "mEditorRect=%s",
@@ -215,16 +216,17 @@ bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
            GetNotificationName(aNotification)));
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent queryText(true, eQueryTextContent, aWidget);
-  queryText.InitForQueryTextContent(0, UINT32_MAX);
-  aWidget->DispatchEvent(&queryText, status);
-  if (NS_WARN_IF(!queryText.mSucceeded)) {
+  WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
+                                                aWidget);
+  queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
+  aWidget->DispatchEvent(&queryTextContentEvent, status);
+  if (NS_WARN_IF(queryTextContentEvent.Failed())) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
             ("0x%p CacheText(), FAILED, couldn't retrieve whole text", this));
     mText.Truncate();
     return false;
   }
-  mText = queryText.mReply.mString;
+  mText = queryTextContentEvent.mReply->DataRef();
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
       ("0x%p CacheText(), Succeeded, mText.Length()=%u", this, mText.Length()));
@@ -254,13 +256,13 @@ bool ContentCacheInChild::QueryCharRect(nsIWidget* aWidget, uint32_t aOffset,
   aCharRect.SetEmpty();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent textRect(true, eQueryTextRect, aWidget);
-  textRect.InitForQueryTextRect(aOffset, 1);
-  aWidget->DispatchEvent(&textRect, status);
-  if (NS_WARN_IF(!textRect.mSucceeded)) {
+  WidgetQueryContentEvent queryTextRectEvent(true, eQueryTextRect, aWidget);
+  queryTextRectEvent.InitForQueryTextRect(aOffset, 1);
+  aWidget->DispatchEvent(&queryTextRectEvent, status);
+  if (NS_WARN_IF(queryTextRectEvent.Failed())) {
     return false;
   }
-  aCharRect = textRect.mReply.mRect;
+  aCharRect = queryTextRectEvent.mReply->mRect;
 
   // Guarantee the rect is not empty.
   if (NS_WARN_IF(!aCharRect.Height())) {
@@ -276,14 +278,15 @@ bool ContentCacheInChild::QueryCharRectArray(nsIWidget* aWidget,
                                              uint32_t aOffset, uint32_t aLength,
                                              RectArray& aCharRectArray) const {
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent textRects(true, eQueryTextRectArray, aWidget);
-  textRects.InitForQueryTextRectArray(aOffset, aLength);
-  aWidget->DispatchEvent(&textRects, status);
-  if (NS_WARN_IF(!textRects.mSucceeded)) {
+  WidgetQueryContentEvent queryTextRectsEvent(true, eQueryTextRectArray,
+                                              aWidget);
+  queryTextRectsEvent.InitForQueryTextRectArray(aOffset, aLength);
+  aWidget->DispatchEvent(&queryTextRectsEvent, status);
+  if (NS_WARN_IF(queryTextRectsEvent.Failed())) {
     aCharRectArray.Clear();
     return false;
   }
-  aCharRectArray = std::move(textRects.mReply.mRectArray);
+  aCharRectArray = std::move(queryTextRectsEvent.mReply->mRectArray);
   return true;
 }
 
@@ -401,17 +404,17 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
 
   if (!mSelection->Collapsed()) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetQueryContentEvent textRect(true, eQueryTextRect, aWidget);
-    textRect.InitForQueryTextRect(mSelection->StartOffset(),
-                                  mSelection->Length());
-    aWidget->DispatchEvent(&textRect, status);
-    if (NS_WARN_IF(!textRect.mSucceeded)) {
+    WidgetQueryContentEvent queryTextRectEvent(true, eQueryTextRect, aWidget);
+    queryTextRectEvent.InitForQueryTextRect(mSelection->StartOffset(),
+                                            mSelection->Length());
+    aWidget->DispatchEvent(&queryTextRectEvent, status);
+    if (NS_WARN_IF(queryTextRectEvent.Failed())) {
       MOZ_LOG(sContentCacheLog, LogLevel::Error,
               ("0x%p CacheTextRects(), FAILED, "
                "couldn't retrieve text rect of whole selected text",
                this));
     } else {
-      mSelection->mRect = textRect.mReply.mRect;
+      mSelection->mRect = queryTextRectEvent.mReply->mRect;
     }
   }
 
@@ -578,9 +581,6 @@ bool ContentCacheInParent::HandleQueryContentEvent(
     WidgetQueryContentEvent& aEvent, nsIWidget* aWidget) const {
   MOZ_ASSERT(aWidget);
 
-  aEvent.mSucceeded = false;
-  aEvent.mReply.mFocusedWidget = aWidget;
-
   // ContentCache doesn't store offset of its start with XP linebreaks.
   // So, we don't support to query contents relative to composition start
   // offset with XP linebreaks.
@@ -673,59 +673,53 @@ bool ContentCacheInParent::HandleQueryContentEvent(
   switch (aEvent.mMessage) {
     case eQuerySelectedText:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
-              ("0x%p HandleQueryContentEvent("
-               "aEvent={ mMessage=eQuerySelectedText }, aWidget=0x%p)",
+              ("0x%p HandleQueryContentEvent(aEvent={ "
+               "mMessage=eQuerySelectedText }, aWidget=0x%p)",
                this, aWidget));
       if (aWidget->PluginHasFocus()) {
         MOZ_LOG(sContentCacheLog, LogLevel::Info,
-                ("0x%p HandleQueryContentEvent(), "
-                 "return emtpy selection becasue plugin has focus",
+                ("0x%p HandleQueryContentEvent(), return emtpy selection "
+                 "because plugin has focus",
                  this));
-        aEvent.mSucceeded = true;
-        aEvent.mReply.mOffset = 0;
-        aEvent.mReply.mReversed = false;
-        aEvent.mReply.mHasSelection = false;
+        aEvent.EmplaceReply();
+        aEvent.mReply->mFocusedWidget = aWidget;
+        aEvent.mReply->mOffsetAndData.emplace(0, EmptyString(),
+                                              OffsetAndDataFor::SelectedString);
+        aEvent.mReply->mReversed = false;
+        aEvent.mReply->mHasSelection = false;
         return true;
       }
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query
         // failed.
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                ("0x%p HandleQueryContentEvent(), "
-                 "FAILED because mSelection is not valid",
+                ("0x%p HandleQueryContentEvent(), FAILED because mSelection is "
+                 "not valid",
                  this));
-        return true;
+        return false;
       }
-      aEvent.mReply.mOffset = mSelection->StartOffset();
-      if (mSelection->Collapsed()) {
-        aEvent.mReply.mString.Truncate(0);
-      } else {
-        if (NS_WARN_IF(mSelection->EndOffset() > mText.Length())) {
-          MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                  ("0x%p HandleQueryContentEvent(), "
-                   "FAILED because mSelection->EndOffset()=%u is larger than "
-                   "mText.Length()=%u",
-                   this, mSelection->EndOffset(), mText.Length()));
-          return false;
-        }
-        aEvent.mReply.mString =
-            Substring(mText, aEvent.mReply.mOffset, mSelection->Length());
+      if (!mSelection->Collapsed() &&
+          NS_WARN_IF(mSelection->EndOffset() > mText.Length())) {
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+                ("0x%p HandleQueryContentEvent(), FAILED because "
+                 "mSelection->EndOffset()=%u is larger than mText.Length()=%u",
+                 this, mSelection->EndOffset(), mText.Length()));
+        return false;
       }
-      aEvent.mReply.mReversed = mSelection->Reversed();
-      aEvent.mReply.mHasSelection = true;
-      aEvent.mReply.mWritingMode = mSelection->mWritingMode;
+      aEvent.EmplaceReply();
+      aEvent.mReply->mFocusedWidget = aWidget;
+      aEvent.mReply->mOffsetAndData.emplace(
+          mSelection->StartOffset(),
+          Substring(mText, mSelection->StartOffset(), mSelection->Length()),
+          OffsetAndDataFor::SelectedString);
+      aEvent.mReply->mReversed = mSelection->Reversed();
+      aEvent.mReply->mHasSelection = true;
+      aEvent.mReply->mWritingMode = mSelection->mWritingMode;
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent(), "
-               "Succeeded, aEvent={ mReply={ mOffset=%u, mString=\"%s\", "
-               "mReversed=%s, mHasSelection=%s, mWritingMode=%s } }",
-               this, aEvent.mReply.mOffset,
-               PrintStringDetail(aEvent.mReply.mString,
-                                 PrintStringDetail::kMaxLengthForSelectedString)
-                   .get(),
-               GetBoolName(aEvent.mReply.mReversed),
-               GetBoolName(aEvent.mReply.mHasSelection),
-               ToString(aEvent.mReply.mWritingMode).c_str()));
-      break;
+               "Succeeded, aEvent={ mMessage=eQuerySelectedText, mReply=%s }",
+               this, ToString(aEvent.mReply).c_str()));
+      return true;
     case eQueryTextContent: {
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent("
@@ -737,24 +731,26 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       uint32_t inputEndOffset =
           std::min(aEvent.mInput.EndOffset(), mText.Length());
       if (NS_WARN_IF(inputEndOffset < inputOffset)) {
-        MOZ_LOG(
-            sContentCacheLog, LogLevel::Error,
-            ("0x%p HandleQueryContentEvent(), "
-             "FAILED because inputOffset=%u is larger than inputEndOffset=%u",
-             this, inputOffset, inputEndOffset));
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+                ("0x%p HandleQueryContentEvent(), FAILED because "
+                 "inputOffset=%u is larger than inputEndOffset=%u",
+                 this, inputOffset, inputEndOffset));
         return false;
       }
-      aEvent.mReply.mOffset = inputOffset;
-      aEvent.mReply.mString =
-          Substring(mText, inputOffset, inputEndOffset - inputOffset);
-      MOZ_LOG(
-          sContentCacheLog, LogLevel::Info,
-          ("0x%p HandleQueryContentEvent(), "
-           "Succeeded, aEvent={ mReply={ mOffset=%u, mString.Length()=%u } }",
-           this, aEvent.mReply.mOffset, aEvent.mReply.mString.Length()));
-      break;
+      aEvent.EmplaceReply();
+      aEvent.mReply->mFocusedWidget = aWidget;
+      aEvent.mReply->mOffsetAndData.emplace(
+          inputOffset,
+          Substring(mText, inputOffset, inputEndOffset - inputOffset),
+          OffsetAndDataFor::EditorString);
+      // TODO: Support font ranges
+      MOZ_LOG(sContentCacheLog, LogLevel::Info,
+              ("0x%p HandleQueryContentEvent(), Succeeded, aEvent={ "
+               "mMessage=eQueryTextContent, mReply=%s }",
+               this, ToString(aEvent.mReply).c_str()));
+      return true;
     }
-    case eQueryTextRect:
+    case eQueryTextRect: {
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent("
                "aEvent={ mMessage=eQueryTextRect, mInput={ mOffset=%" PRId64
@@ -765,112 +761,127 @@ bool ContentCacheInParent::HandleQueryContentEvent(
         // If content cache hasn't been initialized properly, make the query
         // failed.
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                ("0x%p HandleQueryContentEvent(), "
-                 "FAILED because mSelection is not valid",
+                ("0x%p HandleQueryContentEvent(), FAILED because mSelection is "
+                 "not valid",
                  this));
-        return true;
+        return false;
       }
       // Note that if the query is relative to insertion point, the query was
       // probably requested by native IME.  In such case, we should return
       // non-empty rect since returning failure causes IME showing its window
       // at odd position.
+      LayoutDeviceIntRect textRect;
       if (aEvent.mInput.mLength) {
-        if (NS_WARN_IF(!GetUnionTextRects(
-                aEvent.mInput.mOffset, aEvent.mInput.mLength,
-                isRelativeToInsertionPoint, aEvent.mReply.mRect))) {
+        if (NS_WARN_IF(
+                !GetUnionTextRects(aEvent.mInput.mOffset, aEvent.mInput.mLength,
+                                   isRelativeToInsertionPoint, textRect))) {
           // XXX We don't have cache for this request.
           MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                  ("0x%p HandleQueryContentEvent(), "
-                   "FAILED to get union rect",
+                  ("0x%p HandleQueryContentEvent(), FAILED to get union rect",
                    this));
           return false;
         }
       } else {
         // If the length is 0, we should return caret rect instead.
         if (NS_WARN_IF(!GetCaretRect(aEvent.mInput.mOffset,
-                                     isRelativeToInsertionPoint,
-                                     aEvent.mReply.mRect))) {
+                                     isRelativeToInsertionPoint, textRect))) {
           MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                  ("0x%p HandleQueryContentEvent(), "
-                   "FAILED to get caret rect",
+                  ("0x%p HandleQueryContentEvent(), FAILED to get caret rect",
                    this));
           return false;
         }
       }
-      if (aEvent.mInput.mOffset < mText.Length()) {
-        aEvent.mReply.mString = Substring(
-            mText, aEvent.mInput.mOffset,
-            mText.Length() >= aEvent.mInput.EndOffset() ? aEvent.mInput.mLength
-                                                        : UINT32_MAX);
-      } else {
-        aEvent.mReply.mString.Truncate(0);
-      }
-      aEvent.mReply.mOffset = aEvent.mInput.mOffset;
+      aEvent.EmplaceReply();
+      aEvent.mReply->mFocusedWidget = aWidget;
+      aEvent.mReply->mRect = textRect;
+      aEvent.mReply->mOffsetAndData.emplace(
+          aEvent.mInput.mOffset,
+          aEvent.mInput.mOffset < mText.Length()
+              ? static_cast<const nsAString&>(
+                    Substring(mText, aEvent.mInput.mOffset,
+                              mText.Length() >= aEvent.mInput.EndOffset()
+                                  ? aEvent.mInput.mLength
+                                  : UINT32_MAX))
+              : static_cast<const nsAString&>(EmptyString()),
+          OffsetAndDataFor::EditorString);
       // XXX This may be wrong if storing range isn't in the selection range.
-      aEvent.mReply.mWritingMode = mSelection->mWritingMode;
+      aEvent.mReply->mWritingMode = mSelection->mWritingMode;
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
-              ("0x%p HandleQueryContentEvent(), "
-               "Succeeded, aEvent={ mReply={ mOffset=%u, mString=\"%s\", "
-               "mWritingMode=%s, mRect=%s } }",
-               this, aEvent.mReply.mOffset,
-               PrintStringDetail(aEvent.mReply.mString,
-                                 PrintStringDetail::kMaxLengthForSelectedString)
-                   .get(),
-               ToString(aEvent.mReply.mWritingMode).c_str(),
-               ToString(aEvent.mReply.mRect).c_str()));
-      break;
-    case eQueryCaretRect:
-      MOZ_LOG(sContentCacheLog, LogLevel::Info,
-              ("0x%p HandleQueryContentEvent("
-               "aEvent={ mMessage=eQueryCaretRect, mInput={ mOffset=%" PRId64
-               " } }, "
-               "aWidget=0x%p), mText.Length()=%u",
-               this, aEvent.mInput.mOffset, aWidget, mText.Length()));
+              ("0x%p HandleQueryContentEvent(), Succeeded, aEvent={ "
+               "mMessage=eQueryTextRect mReply=%s }",
+               this, ToString(aEvent.mReply).c_str()));
+      return true;
+    }
+    case eQueryCaretRect: {
+      MOZ_LOG(
+          sContentCacheLog, LogLevel::Info,
+          ("0x%p HandleQueryContentEvent(aEvent={ mMessage=eQueryCaretRect, "
+           "mInput={ mOffset=%" PRId64 " } }, aWidget=0x%p), mText.Length()=%u",
+           this, aEvent.mInput.mOffset, aWidget, mText.Length()));
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query
         // failed.
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                ("0x%p HandleQueryContentEvent(), "
-                 "FAILED because mSelection is not valid",
+                ("0x%p HandleQueryContentEvent(), FAILED because mSelection is "
+                 "not valid",
                  this));
-        return true;
+        return false;
       }
       // Note that if the query is relative to insertion point, the query was
       // probably requested by native IME.  In such case, we should return
       // non-empty rect since returning failure causes IME showing its window
       // at odd position.
+      LayoutDeviceIntRect caretRect;
       if (NS_WARN_IF(!GetCaretRect(aEvent.mInput.mOffset,
-                                   isRelativeToInsertionPoint,
-                                   aEvent.mReply.mRect))) {
-        MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                ("0x%p HandleQueryContentEvent(), "
-                 "FAILED to get caret rect",
-                 this));
+                                   isRelativeToInsertionPoint, caretRect))) {
+        MOZ_LOG(
+            sContentCacheLog, LogLevel::Error,
+            ("0x%p HandleQueryContentEvent(),FAILED to get caret rect", this));
         return false;
       }
-      aEvent.mReply.mOffset = aEvent.mInput.mOffset;
-      MOZ_LOG(
-          sContentCacheLog, LogLevel::Info,
-          ("0x%p HandleQueryContentEvent(), "
-           "Succeeded, aEvent={ mReply={ mOffset=%u, mRect=%s } }",
-           this, aEvent.mReply.mOffset, ToString(aEvent.mReply.mRect).c_str()));
-      break;
+      aEvent.EmplaceReply();
+      aEvent.mReply->mFocusedWidget = aWidget;
+      aEvent.mReply->mRect = caretRect;
+      aEvent.mReply->mOffsetAndData.emplace(aEvent.mInput.mOffset,
+                                            EmptyString(),
+                                            OffsetAndDataFor::SelectedString);
+      // TODO: Set mWritingMode here
+      MOZ_LOG(sContentCacheLog, LogLevel::Info,
+              ("0x%p HandleQueryContentEvent(), Succeeded, aEvent={ "
+               "mMessage=eQueryCaretRect, mReply=%s }",
+               this, ToString(aEvent.mReply).c_str()));
+      return true;
+    }
     case eQueryEditorRect:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
-              ("0x%p HandleQueryContentEvent("
-               "aEvent={ mMessage=eQueryEditorRect }, aWidget=0x%p)",
+              ("0x%p HandleQueryContentEvent(aEvent={ "
+               "mMessage=eQueryEditorRect }, aWidget=0x%p)",
                this, aWidget));
-      aEvent.mReply.mRect = mEditorRect;
+      aEvent.EmplaceReply();
+      aEvent.mReply->mFocusedWidget = aWidget;
+      aEvent.mReply->mRect = mEditorRect;
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
-              ("0x%p HandleQueryContentEvent(), "
-               "Succeeded, aEvent={ mReply={ mRect=%s } }",
-               this, ToString(aEvent.mReply.mRect).c_str()));
-      break;
+              ("0x%p HandleQueryContentEvent(), Succeeded, aEvent={ "
+               "mMessage=eQueryEditorRect, mReply=%s }",
+               this, ToString(aEvent.mReply).c_str()));
+      return true;
     default:
-      break;
+      aEvent.EmplaceReply();
+      aEvent.mReply->mFocusedWidget = aWidget;
+      if (NS_WARN_IF(aEvent.Failed())) {
+        MOZ_LOG(
+            sContentCacheLog, LogLevel::Error,
+            ("0x%p HandleQueryContentEvent(), FAILED due to not set enough "
+             "data, aEvent={ mMessage=%s, mReply=%s }",
+             this, ToChar(aEvent.mMessage), ToString(aEvent.mReply).c_str()));
+        return false;
+      }
+      MOZ_LOG(sContentCacheLog, LogLevel::Info,
+              ("0x%p HandleQueryContentEvent(), Succeeded, aEvent={ "
+               "mMessage=%s, mReply=%s }",
+               this, ToChar(aEvent.mMessage), ToString(aEvent.mReply).c_str()));
+      return true;
   }
-  aEvent.mSucceeded = true;
-  return true;
 }
 
 bool ContentCacheInParent::GetTextRect(uint32_t aOffset,
