@@ -42,6 +42,7 @@ Linux)
         export RUSTFLAGS=-Clinker=clang++
         export CC=clang
         export CXX=clang++
+        export CXXFLAGS=-D_GLIBCXX_USE_CXX11_ABI=0
         export PATH="$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/binutils/bin:$PATH"
         cargo build --verbose --release --features "vendored-openssl"
     fi
