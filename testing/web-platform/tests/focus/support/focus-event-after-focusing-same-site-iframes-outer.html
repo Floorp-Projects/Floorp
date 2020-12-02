@@ -12,13 +12,19 @@ window.onmessage = function(e) {
     document.querySelector("iframe").focus();
     outerlog += "didfocusiframe,";
   } else if (e.data == "getlog") {
-    opener.postMessage(outerlog, "*");
+    iframe.contentWindow.postMessage("getlog", "*");
+  } else {
+    opener.postMessage(outerlog + e.data, "*");
   }
 };
 
 window.onload = function() {
   window.onfocus = function() {
     outerlog += "windowfocus,";
+  };
+
+  window.onblur = function() {
+    outerlog += "windowblur,";
   };
 
   opener.postMessage("ready", "*");
