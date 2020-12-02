@@ -187,11 +187,7 @@ class ObjectElements {
     // non-writable length; never present for non-arrays.
     NONWRITABLE_ARRAY_LENGTH = 0x2,
 
-    // These elements are shared with another object and must be copied
-    // before they can be changed. A pointer to the original owner of the
-    // elements, which is immutable, is stored immediately after the
-    // elements data.
-    COPY_ON_WRITE = 0x4,
+    // (0x4 is unused)
 
     // For TypedArrays only: this TypedArray's storage is mapping shared
     // memory.  This is a static property of the TypedArray, set when it
@@ -275,20 +271,14 @@ class ObjectElements {
     // See ArrayObject::setNonWritableLength.
     MOZ_ASSERT(capacity == initializedLength);
     MOZ_ASSERT(numShiftedElements() == 0);
-    MOZ_ASSERT(!isCopyOnWrite());
     flags |= NONWRITABLE_ARRAY_LENGTH;
-  }
-  bool isCopyOnWrite() const { return flags & COPY_ON_WRITE; }
-  void clearCopyOnWrite() {
-    MOZ_ASSERT(isCopyOnWrite());
-    flags &= ~COPY_ON_WRITE;
   }
 
   void addShiftedElements(uint32_t count) {
     MOZ_ASSERT(count < capacity);
     MOZ_ASSERT(count < initializedLength);
-    MOZ_ASSERT(!(flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE | SEALED |
-                          FROZEN | COPY_ON_WRITE)));
+    MOZ_ASSERT(!(
+        flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE | SEALED | FROZEN)));
     uint32_t numShifted = numShiftedElements() + count;
     MOZ_ASSERT(numShifted <= MaxShiftedElements);
     flags = (numShifted << NumShiftedElementsShift) | (flags & FlagsMask);
@@ -297,8 +287,8 @@ class ObjectElements {
   }
   void unshiftShiftedElements(uint32_t count) {
     MOZ_ASSERT(count > 0);
-    MOZ_ASSERT(!(flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE | SEALED |
-                          FROZEN | COPY_ON_WRITE)));
+    MOZ_ASSERT(!(
+        flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE | SEALED | FROZEN)));
     uint32_t numShifted = numShiftedElements();
     MOZ_ASSERT(count <= numShifted);
     numShifted -= count;
@@ -326,14 +316,12 @@ class ObjectElements {
     MOZ_ASSERT(isNotExtensible());
     MOZ_ASSERT(!isSealed());
     MOZ_ASSERT(!isFrozen());
-    MOZ_ASSERT(!isCopyOnWrite());
     flags |= SEALED;
   }
   void freeze() {
     MOZ_ASSERT(isNotExtensible());
     MOZ_ASSERT(isSealed());
     MOZ_ASSERT(!isFrozen());
-    MOZ_ASSERT(!isCopyOnWrite());
     flags |= FROZEN;
   }
 
@@ -367,11 +355,6 @@ class ObjectElements {
 
   bool isSharedMemory() const { return flags & SHARED_MEMORY; }
 
-  GCPtrNativeObject& ownerObject() const {
-    MOZ_ASSERT(isCopyOnWrite());
-    return *(GCPtrNativeObject*)(&elements()[initializedLength]);
-  }
-
   static int offsetOfFlags() {
     return int(offsetof(ObjectElements, flags)) - int(sizeof(ObjectElements));
   }
@@ -387,10 +370,7 @@ class ObjectElements {
     return int(offsetof(ObjectElements, length)) - int(sizeof(ObjectElements));
   }
 
-  static bool MakeElementsCopyOnWrite(JSContext* cx, NativeObject* obj);
-
-  static MOZ_MUST_USE bool PrepareForPreventExtensions(JSContext* cx,
-                                                       NativeObject* obj);
+  static void PrepareForPreventExtensions(JSContext* cx, NativeObject* obj);
   static void PreventExtensions(NativeObject* obj);
   static MOZ_MUST_USE bool FreezeOrSeal(JSContext* cx, HandleNativeObject obj,
                                         IntegrityLevel level);
@@ -413,7 +393,7 @@ class ObjectElements {
     uint32_t numShifted = flags >> NumShiftedElementsShift;
     MOZ_ASSERT_IF(numShifted > 0,
                   !(flags & (NONWRITABLE_ARRAY_LENGTH | NOT_EXTENSIBLE |
-                             SEALED | FROZEN | COPY_ON_WRITE)));
+                             SEALED | FROZEN)));
     return numShifted;
   }
 
@@ -586,13 +566,8 @@ class NativeObject : public JSObject {
 
   bool hasShapeIC() const { return lastProperty()->hasIC(); }
 
-  HeapSlotArray getDenseElements() {
-    return HeapSlotArray(elements_, !getElementsHeader()->isCopyOnWrite());
-  }
-  HeapSlotArray getDenseElementsAllowCopyOnWrite() {
-    // Backdoor allowing direct access to copy on write elements.
-    return HeapSlotArray(elements_, true);
-  }
+  HeapSlotArray getDenseElements() { return HeapSlotArray(elements_); }
+
   const Value& getDenseElement(uint32_t idx) const {
     MOZ_ASSERT(idx < getDenseInitializedLength());
     return elements_[idx];
@@ -1129,7 +1104,6 @@ class NativeObject : public JSObject {
  private:
   void prepareElementRangeForOverwrite(size_t start, size_t end) {
     MOZ_ASSERT(end <= getDenseInitializedLength());
-    MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     for (size_t i = start; i < end; i++) {
       elements_[i].destroy();
     }
@@ -1252,7 +1226,6 @@ class NativeObject : public JSObject {
 
   /* Accessors for elements. */
   bool ensureElements(JSContext* cx, uint32_t capacity) {
-    MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(isExtensible());
     if (capacity > getDenseCapacity()) {
       return growElements(cx, capacity);
@@ -1284,15 +1257,6 @@ class NativeObject : public JSObject {
     MOZ_ASSERT(hasDynamicElements());
   }
 
-  static bool CopyElementsForWrite(JSContext* cx, NativeObject* obj);
-
-  bool maybeCopyElementsForWrite(JSContext* cx) {
-    if (denseElementsAreCopyOnWrite()) {
-      return CopyElementsForWrite(cx, this);
-    }
-    return true;
-  }
-
  private:
   // Run a post write barrier that encompasses multiple contiguous elements in a
   // single step.
@@ -1304,7 +1268,6 @@ class NativeObject : public JSObject {
  private:
   void setDenseInitializedLengthInternal(uint32_t length) {
     MOZ_ASSERT(length <= getDenseCapacity());
-    MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(!denseElementsAreFrozen());
     prepareElementRangeForOverwrite(length,
                                     getElementsHeader()->initializedLength);
@@ -1337,7 +1300,6 @@ class NativeObject : public JSObject {
   void initDenseElement(uint32_t index, const Value& val) {
     MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
     MOZ_ASSERT(index < getDenseInitializedLength());
-    MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(isExtensible());
     checkStoredValue(val);
     elements_[index].init(this, HeapSlot::Element, unshiftedIndex(index), val);
@@ -1348,7 +1310,6 @@ class NativeObject : public JSObject {
   // MagicValue.
   void setDenseElementUnchecked(uint32_t index, const Value& val) {
     MOZ_ASSERT(index < getDenseInitializedLength());
-    MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(!denseElementsAreFrozen());
     checkStoredValue(val);
     elements_[index].set(this, HeapSlot::Element, unshiftedIndex(index), val);
@@ -1390,10 +1351,6 @@ class NativeObject : public JSObject {
                                                      const Value* vp,
                                                      uint32_t count);
 
-  bool denseElementsAreCopyOnWrite() const {
-    return getElementsHeader()->isCopyOnWrite();
-  }
-
   bool denseElementsAreSealed() const {
     return getElementsHeader()->isSealed();
   }
@@ -1405,12 +1362,8 @@ class NativeObject : public JSObject {
     return getElementsHeader()->isPacked();
   }
 
-  MOZ_MUST_USE bool markDenseElementsMaybeInIteration(JSContext* cx) {
-    if (!maybeCopyElementsForWrite(cx)) {
-      return false;
-    }
+  void markDenseElementsMaybeInIteration() {
     getElementsHeader()->markMaybeInIteration();
-    return true;
   }
 
   // Return whether the object's dense elements might be in the midst of for-in

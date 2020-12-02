@@ -73,8 +73,7 @@ ArrayObject* InterpreterFrame::createRestParameter(JSContext* cx) {
   unsigned nformal = callee().nargs() - 1, nactual = numActualArgs();
   unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
   Value* restvp = argv() + nformal;
-  return ObjectGroup::newArrayObject(cx, restvp, nrest, GenericObject,
-                                     ObjectGroup::NewArrayKind::UnknownIndex);
+  return ObjectGroup::newArrayObject(cx, restvp, nrest, GenericObject);
 }
 
 static inline void AssertScopeMatchesEnvironment(Scope* scope,

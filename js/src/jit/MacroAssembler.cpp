@@ -3810,7 +3810,7 @@ void MacroAssembler::packedArrayPop(Register array, ValueOperand output,
 
   // Check flags.
   static constexpr uint32_t UnhandledFlags =
-      ObjectElements::Flags::NON_PACKED | ObjectElements::Flags::COPY_ON_WRITE |
+      ObjectElements::Flags::NON_PACKED |
       ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH |
       ObjectElements::Flags::NOT_EXTENSIBLE |
       ObjectElements::Flags::MAYBE_IN_ITERATION;
@@ -3857,7 +3857,7 @@ void MacroAssembler::packedArrayShift(Register array, ValueOperand output,
 
   // Check flags.
   static constexpr uint32_t UnhandledFlags =
-      ObjectElements::Flags::NON_PACKED | ObjectElements::Flags::COPY_ON_WRITE |
+      ObjectElements::Flags::NON_PACKED |
       ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH |
       ObjectElements::Flags::NOT_EXTENSIBLE |
       ObjectElements::Flags::MAYBE_IN_ITERATION;

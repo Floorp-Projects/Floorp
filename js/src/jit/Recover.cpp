@@ -1479,35 +1479,19 @@ bool RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const {
   ArrayObject* object = &iter.read().toObject().as<ArrayObject>();
   uint32_t initLength = iter.read().toInt32();
 
-  if (!object->denseElementsAreCopyOnWrite()) {
-    MOZ_ASSERT(object->getDenseInitializedLength() == 0,
-               "initDenseElement call below relies on this");
-    object->setDenseInitializedLength(initLength);
+  MOZ_ASSERT(object->getDenseInitializedLength() == 0,
+             "initDenseElement call below relies on this");
+  object->setDenseInitializedLength(initLength);
 
-    for (size_t index = 0; index < numElements(); index++) {
-      Value val = iter.read();
+  for (size_t index = 0; index < numElements(); index++) {
+    Value val = iter.read();
 
-      if (index >= initLength) {
-        MOZ_ASSERT(val.isUndefined());
-        continue;
-      }
-
-      object->initDenseElement(index, val);
+    if (index >= initLength) {
+      MOZ_ASSERT(val.isUndefined());
+      continue;
     }
-  } else {
-    MOZ_RELEASE_ASSERT(object->getDenseInitializedLength() == numElements());
-    MOZ_RELEASE_ASSERT(initLength == numElements());
 
-    for (size_t index = 0; index < numElements(); index++) {
-      Value val = iter.read();
-      if (object->getDenseElement(index) == val) {
-        continue;
-      }
-      if (!object->maybeCopyElementsForWrite(cx)) {
-        return false;
-      }
-      object->setDenseElement(index, val);
-    }
+    object->initDenseElement(index, val);
   }
 
   result.setObject(*object);

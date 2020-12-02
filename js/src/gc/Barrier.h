@@ -919,26 +919,10 @@ namespace js {
 class HeapSlotArray {
   HeapSlot* array;
 
-  // Whether writes may be performed to the slots in this array. This helps
-  // to control how object elements which may be copy on write are used.
-#ifdef DEBUG
-  bool allowWrite_;
-#endif
-
  public:
-  explicit HeapSlotArray(HeapSlot* array, bool allowWrite)
-      : array(array)
-#ifdef DEBUG
-        ,
-        allowWrite_(allowWrite)
-#endif
-  {
-  }
+  explicit HeapSlotArray(HeapSlot* array) : array(array) {}
 
-  HeapSlot* begin() const {
-    MOZ_ASSERT(allowWrite());
-    return array;
-  }
+  HeapSlot* begin() const { return array; }
 
   operator const Value*() const {
     static_assert(sizeof(GCPtr<Value>) == sizeof(Value));
@@ -948,19 +932,10 @@ class HeapSlotArray {
   operator HeapSlot*() const { return begin(); }
 
   HeapSlotArray operator+(int offset) const {
-    return HeapSlotArray(array + offset, allowWrite());
+    return HeapSlotArray(array + offset);
   }
   HeapSlotArray operator+(uint32_t offset) const {
-    return HeapSlotArray(array + offset, allowWrite());
-  }
-
- private:
-  bool allowWrite() const {
-#ifdef DEBUG
-    return allowWrite_;
-#else
-    return true;
-#endif
+    return HeapSlotArray(array + offset);
   }
 };
 

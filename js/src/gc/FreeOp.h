@@ -38,11 +38,6 @@ class JSFreeOp {
 
   JSRuntime* runtime_;
 
-  // We may accumulate a set of deferred free operations to be performed when
-  // the JSFreeOp is destroyed. This only applies to non-default JSFreeOps that
-  // are stack allocated and used during GC sweeping.
-  js::Vector<void*, 0, js::SystemAllocPolicy> freeLaterList;
-
   js::jit::JitPoisonRangeVector jitPoisonRanges;
 
   const bool isDefault;
@@ -80,22 +75,6 @@ class JSFreeOp {
   // js::InitReservedSlot or js::InitObjectPrivate, or possibly
   // js::AddCellMemory.
   void free_(Cell* cell, void* p, size_t nbytes, MemoryUse use);
-
-  // Deprecated. Where possible, memory should be tracked against the owning GC
-  // thing by calling js::AddCellMemory and the memory freed with freeLater()
-  // below.
-  void freeUntrackedLater(void* p) { queueForFreeLater(p); }
-
-  // Queue memory that was associated with a GC thing using js::AddCellMemory to
-  // be freed when the JSFreeOp is destroyed.
-  //
-  // This should not be called on the default JSFreeOps returned by
-  // JSRuntime/JSContext::defaultFreeOp() since these are not destroyed until
-  // the runtime itself is destroyed.
-  //
-  // This is used to ensure that copy-on-write object elements are not freed
-  // until all objects that refer to them have been finalized.
-  void freeLater(Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
   bool appendJitPoisonRange(const js::jit::JitPoisonRange& range) {
     // JSFreeOps other than the defaultFreeOp() are constructed on the stack,
@@ -169,9 +148,6 @@ class JSFreeOp {
   // Update the memory accounting for a GC for memory freed by some other
   // method.
   void removeCellMemory(Cell* cell, size_t nbytes, MemoryUse use);
-
- private:
-  void queueForFreeLater(void* p);
 };
 
 #endif  // gc_FreeOp_h

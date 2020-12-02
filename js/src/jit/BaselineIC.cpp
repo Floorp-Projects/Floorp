@@ -465,9 +465,8 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::Rest: {
-        ArrayObject* templateObject = ObjectGroup::newArrayObject(
-            cx, nullptr, 0, TenuredObject,
-            ObjectGroup::NewArrayKind::UnknownIndex);
+        ArrayObject* templateObject =
+            ObjectGroup::newArrayObject(cx, nullptr, 0, TenuredObject);
         if (!templateObject) {
           return false;
         }
@@ -2411,8 +2410,7 @@ bool DoRestFallback(JSContext* cx, BaselineFrame* frame, ICRest_Fallback* stub,
   Value* rest = frame->argv() + numFormals;
 
   ArrayObject* obj =
-      ObjectGroup::newArrayObject(cx, rest, numRest, GenericObject,
-                                  ObjectGroup::NewArrayKind::UnknownIndex);
+      ObjectGroup::newArrayObject(cx, rest, numRest, GenericObject);
   if (!obj) {
     return false;
   }

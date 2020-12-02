@@ -4243,8 +4243,6 @@ void MBeta::printOpcode(GenericPrinter& out) const {
 
 bool MCreateThisWithTemplate::canRecoverOnBailout() const {
   MOZ_ASSERT(templateObject()->is<PlainObject>());
-  MOZ_ASSERT(
-      !templateObject()->as<PlainObject>().denseElementsAreCopyOnWrite());
   return true;
 }
 
