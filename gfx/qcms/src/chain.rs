@@ -35,8 +35,7 @@ use crate::{
 };
 use ::libc::{self, free, malloc, memcpy};
 
-#[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct qcms_modular_transform {
     pub matrix: matrix,
     pub tx: f32,
@@ -688,8 +687,8 @@ unsafe extern "C" fn qcms_transform_module_matrix(
         i = i + 1
     }
 }
-unsafe extern "C" fn qcms_modular_transform_alloc() -> Option<Box<qcms_modular_transform>> {
-    return Some(Box::new(std::mem::zeroed()))
+fn qcms_modular_transform_alloc() -> Option<Box<qcms_modular_transform>> {
+    return Some(Box::new(Default::default()))
 }
 fn qcms_modular_transform_release(mut t: Option<Box<qcms_modular_transform>>) {
     // destroy a list of transforms non-recursively
