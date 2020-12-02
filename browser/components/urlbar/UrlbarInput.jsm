@@ -668,6 +668,22 @@ class UrlbarInput {
     element = null,
     browser = this.window.gBrowser.selectedBrowser
   ) {
+    // When a one-off is selected, we restyle heuristic results to look like
+    // search results. In the unlikely event that they are clicked, instead of
+    // picking the results as usual, we confirm search mode, same as if the user
+    // had selected them and pressed the enter key. Restyling results in this
+    // manner was agreed on as a compromise between consistent UX and
+    // engineering effort. See review discussion at bug 1667766.
+    if (
+      result.heuristic &&
+      this.searchMode?.isPreview &&
+      this.view.oneOffSearchButtons.selectedButton
+    ) {
+      this.confirmSearchMode();
+      this.search(this.value);
+      return;
+    }
+
     let originalUntrimmedValue = this.untrimmedValue;
     let isCanonized = this.setValueFromResult(result, event);
     let where = this._whereToOpen(event);
@@ -675,19 +691,8 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
-    // When update2 is enabled and a one-off is selected, we restyle URL
-    // heuristic results to look like search results. In the unlikely event that
-    // they are clicked, we confirm search mode instead of navigating to the
-    // URL. This was agreed on as a compromise between consistent UX and
-    // engineering effort. See review discussion at bug 1667766.
-    let urlResultWillConfirmSearchMode =
-      this.searchMode &&
-      result.heuristic &&
-      result.type == UrlbarUtils.RESULT_TYPE.URL &&
-      this.view.oneOffSearchButtons.selectedButton;
-
     let selIndex = result.rowIndex;
-    if (!result.payload.keywordOffer && !urlResultWillConfirmSearchMode) {
+    if (!result.payload.keywordOffer) {
       this.view.close(/* elementPicked */ true);
     }
 
@@ -709,11 +714,6 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.URL: {
-        if (urlResultWillConfirmSearchMode) {
-          this.confirmSearchMode();
-          this.search(this.value);
-          return;
-        }
         // Bug 1578856: both the provider and the docshell run heuristics to
         // decide how to handle a non-url string, either fixing it to a url, or
         // searching for it.
