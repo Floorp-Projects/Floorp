@@ -608,6 +608,12 @@ class nsFrameSelection final {
                                                      eLogical);
   }
 
+  /**
+   * Select All will generally be called from the nsiselectioncontroller
+   * implementations. it will select the whole doc
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult SelectAll();
+
   /** Sets/Gets The display selection enum.
    */
   void SetDisplaySelection(int16_t aState) { mDisplaySelection = aState; }
