@@ -43,7 +43,7 @@ software = [ "swgl" ]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.11"
-mozangle = { version = "0.3.1", features = ["egl"] }
+mozangle = { version = "0.3.2", features = ["egl"] }
 
 [target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
 font-loader = "0.11"

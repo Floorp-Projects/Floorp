@@ -58,7 +58,7 @@ tracy-rs = "0.1.2"
 derive_more = "0.99"
 
 [dev-dependencies]
-mozangle = "0.3.1"
+mozangle = "0.3.2"
 rand = "0.4"
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
