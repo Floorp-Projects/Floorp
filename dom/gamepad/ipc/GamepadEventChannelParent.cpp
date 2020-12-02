@@ -60,7 +60,7 @@ void GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvVibrateHaptic(
-    const Tainted<uint32_t>& aControllerIdx,
+    const Tainted<GamepadHandle>& aHandle,
     const Tainted<uint32_t>& aHapticIndex, const Tainted<double>& aIntensity,
     const Tainted<double>& aDuration, const Tainted<uint32_t>& aPromiseID) {
   // TODO: Bug 680289, implement for standard gamepads
@@ -76,18 +76,17 @@ mozilla::ipc::IPCResult GamepadEventChannelParent::RecvVibrateHaptic(
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvStopVibrateHaptic(
-    const Tainted<uint32_t>& aControllerIdx) {
+    const Tainted<GamepadHandle>& aHandle) {
   // TODO: Bug 680289, implement for standard gamepads
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvLightIndicatorColor(
-    const Tainted<uint32_t>& aControllerIdx,
+    const Tainted<GamepadHandle>& aHandle,
     const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
     const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue,
     const Tainted<uint32_t>& aPromiseID) {
-  SetGamepadLightIndicatorColor(aControllerIdx, aLightColorIndex, aRed, aGreen,
-                                aBlue);
+  SetGamepadLightIndicatorColor(aHandle, aLightColorIndex, aRed, aGreen, aBlue);
 
   // TODO: simplify tainted validation, see 1610570
   if (SendReplyGamepadPromise(MOZ_NO_VALIDATE(

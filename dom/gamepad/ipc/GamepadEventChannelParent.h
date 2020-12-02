@@ -19,13 +19,13 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvVibrateHaptic(
-      const Tainted<uint32_t>& aControllerIdx,
+      const Tainted<GamepadHandle>& aHandle,
       const Tainted<uint32_t>& aHapticIndex, const Tainted<double>& aIntensity,
       const Tainted<double>& aDuration, const Tainted<uint32_t>& aPromiseID);
   mozilla::ipc::IPCResult RecvStopVibrateHaptic(
-      const Tainted<uint32_t>& aControllerIdx);
+      const Tainted<GamepadHandle>& aHandle);
   mozilla::ipc::IPCResult RecvLightIndicatorColor(
-      const Tainted<uint32_t>& aControllerIdx,
+      const Tainted<GamepadHandle>& aHandle,
       const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
       const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue,
       const Tainted<uint32_t>& aPromiseID);

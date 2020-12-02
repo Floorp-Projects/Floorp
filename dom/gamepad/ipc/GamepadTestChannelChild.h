@@ -33,8 +33,8 @@ class GamepadTestChannelChild final : public PGamepadTestChannelChild {
   explicit GamepadTestChannelChild(GamepadServiceTest* aGamepadServiceTest);
   ~GamepadTestChannelChild() = default;
 
-  mozilla::ipc::IPCResult RecvReplyGamepadIndex(const uint32_t& aID,
-                                                const uint32_t& aIndex);
+  mozilla::ipc::IPCResult RecvReplyGamepadHandle(const uint32_t& aID,
+                                                 const GamepadHandle& aHandle);
 
   WeakPtr<GamepadServiceTest> mGamepadServiceTest;
 

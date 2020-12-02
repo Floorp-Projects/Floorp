@@ -67,13 +67,13 @@ class udev_lib {
   explicit operator bool() { return udev; }
 
  private:
-  bool LoadSymbols() {
 #define DLSYM(s)                       \
   do {                                 \
-    s = (__typeof__(s))dlsym(lib, #s); \
-    if (!s) return false;              \
+    (s) = (decltype(s))dlsym(lib, #s); \
+    if (!(s)) return false;            \
   } while (0)
 
+  bool LoadSymbols() {
     DLSYM(udev_new);
     DLSYM(udev_unref);
     DLSYM(udev_device_unref);
@@ -96,9 +96,11 @@ class udev_lib {
     DLSYM(udev_monitor_get_fd);
     DLSYM(udev_monitor_receive_device);
     DLSYM(udev_monitor_unref);
-#undef DLSYM
+
     return true;
   }
+
+#undef DLSYM
 
   void* lib;
 

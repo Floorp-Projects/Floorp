@@ -10,7 +10,10 @@
 
 #include "mozilla/java/AndroidGamepadManagerNatives.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
+#include "mozilla/dom/GamepadHandle.h"
 #include "nsThreadUtils.h"
+
+using mozilla::dom::GamepadHandle;
 
 namespace mozilla {
 namespace dom {
@@ -20,43 +23,49 @@ class AndroidGamepadManager final
   AndroidGamepadManager() = delete;
 
  public:
-  static int32_t NativeAddGamepad() {
+  static jni::ByteArray::LocalRef NativeAddGamepad() {
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     MOZ_RELEASE_ASSERT(service);
 
-    const uint32_t gamepadId = service->AddGamepad(
+    const GamepadHandle gamepadHandle = service->AddGamepad(
         "android", GamepadMappingType::Standard, GamepadHand::_empty,
         kStandardGamepadButtons, kStandardGamepadAxes, 0, 0, 0);
 
-    MOZ_RELEASE_ASSERT(gamepadId <= INT32_MAX);
-
-    return static_cast<int32_t>(gamepadId);
+    return mozilla::jni::ByteArray::New(
+        reinterpret_cast<const int8_t*>(&gamepadHandle), sizeof(gamepadHandle));
   }
 
-  static void NativeRemoveGamepad(int32_t aGamepadId) {
+  static void NativeRemoveGamepad(jni::ByteArray::Param aGamepadHandleBytes) {
+    GamepadHandle handle = JNIByteArrayToGamepadHandle(aGamepadHandleBytes);
+
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
       return;
     }
 
-    service->RemoveGamepad(aGamepadId);
+    service->RemoveGamepad(handle);
   }
 
-  static void OnButtonChange(int32_t aGamepadId, int32_t aButton, bool aPressed,
-                             float aValue) {
+  static void OnButtonChange(jni::ByteArray::Param aGamepadHandleBytes,
+                             int32_t aButton, bool aPressed, float aValue) {
+    GamepadHandle handle = JNIByteArrayToGamepadHandle(aGamepadHandleBytes);
+
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
       return;
     }
 
-    service->NewButtonEvent(aGamepadId, aButton, aPressed, aValue);
+    service->NewButtonEvent(handle, aButton, aPressed, aValue);
   }
 
-  static void OnAxisChange(int32_t aGamepadId, jni::BooleanArray::Param aValid,
+  static void OnAxisChange(jni::ByteArray::Param aGamepadHandleBytes,
+                           jni::BooleanArray::Param aValid,
                            jni::FloatArray::Param aValues) {
+    GamepadHandle handle = JNIByteArrayToGamepadHandle(aGamepadHandleBytes);
+
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
     if (!service) {
@@ -69,9 +78,21 @@ class AndroidGamepadManager final
 
     for (size_t i = 0; i < values.Length(); i++) {
       if (valid[i]) {
-        service->NewAxisMoveEvent(aGamepadId, i, values[i]);
+        service->NewAxisMoveEvent(handle, i, values[i]);
       }
     }
+  }
+
+ private:
+  static GamepadHandle JNIByteArrayToGamepadHandle(
+      jni::ByteArray::Param aGamepadHandleBytes) {
+    MOZ_ASSERT(aGamepadHandleBytes->Length() == sizeof(GamepadHandle));
+
+    GamepadHandle gamepadHandle;
+    aGamepadHandleBytes->CopyTo(reinterpret_cast<int8_t*>(&gamepadHandle),
+                                sizeof(gamepadHandle));
+
+    return gamepadHandle;
   }
 };
 
@@ -86,7 +107,7 @@ void StopGamepadMonitoring() {
       java::GeckoAppShell::GetApplicationContext());
 }
 
-void SetGamepadLightIndicatorColor(const Tainted<uint32_t>& aControllerIdx,
+void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
                                    const Tainted<uint32_t>& aLightColorIndex,
                                    const Tainted<uint8_t>& aRed,
                                    const Tainted<uint8_t>& aGreen,
