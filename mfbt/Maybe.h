@@ -471,7 +471,9 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
 
   /* Returns the contents of this Maybe<T> by value. Unsafe unless |isSome()|.
    */
-  constexpr T value() const;
+  constexpr T value() const&;
+  constexpr T value() &&;
+  constexpr T value() const&&;
 
   /**
    * Move the contents of this Maybe<T> out of internal storage and return it
@@ -562,8 +564,10 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   constexpr const T* operator->() const;
 
   /* Returns the contents of this Maybe<T> by ref. Unsafe unless |isSome()|. */
-  constexpr T& ref();
-  constexpr const T& ref() const;
+  constexpr T& ref() &;
+  constexpr const T& ref() const&;
+  constexpr T&& ref() &&;
+  constexpr const T&& ref() const&&;
 
   /*
    * Returns the contents of this Maybe<T> by ref. If |isNothing()|, returns
@@ -603,8 +607,10 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
     return aFunc();
   }
 
-  constexpr T& operator*();
-  constexpr const T& operator*() const;
+  constexpr T& operator*() &;
+  constexpr const T& operator*() const&;
+  constexpr T&& operator*() &&;
+  constexpr const T&& operator*() const&&;
 
   /* If |isSome()|, runs the provided function or functor on the contents of
    * this Maybe. */
@@ -755,9 +761,21 @@ class Maybe<T&> {
 };
 
 template <typename T>
-constexpr T Maybe<T>::value() const {
+constexpr T Maybe<T>::value() const& {
   MOZ_DIAGNOSTIC_ASSERT(isSome());
   return ref();
+}
+
+template <typename T>
+constexpr T Maybe<T>::value() && {
+  MOZ_DIAGNOSTIC_ASSERT(isSome());
+  return std::move(ref());
+}
+
+template <typename T>
+constexpr T Maybe<T>::value() const&& {
+  MOZ_DIAGNOSTIC_ASSERT(isSome());
+  return std::move(ref());
 }
 
 template <typename T>
@@ -785,27 +803,51 @@ constexpr const T* Maybe<T>::operator->() const {
 }
 
 template <typename T>
-constexpr T& Maybe<T>::ref() {
+constexpr T& Maybe<T>::ref() & {
   MOZ_DIAGNOSTIC_ASSERT(isSome());
   return mStorage.val;
 }
 
 template <typename T>
-constexpr const T& Maybe<T>::ref() const {
+constexpr const T& Maybe<T>::ref() const& {
   MOZ_DIAGNOSTIC_ASSERT(isSome());
   return mStorage.val;
 }
 
 template <typename T>
-constexpr T& Maybe<T>::operator*() {
+constexpr T&& Maybe<T>::ref() && {
+  MOZ_DIAGNOSTIC_ASSERT(isSome());
+  return std::move(mStorage.val);
+}
+
+template <typename T>
+constexpr const T&& Maybe<T>::ref() const&& {
+  MOZ_DIAGNOSTIC_ASSERT(isSome());
+  return std::move(mStorage.val);
+}
+
+template <typename T>
+constexpr T& Maybe<T>::operator*() & {
   MOZ_DIAGNOSTIC_ASSERT(isSome());
   return ref();
 }
 
 template <typename T>
-constexpr const T& Maybe<T>::operator*() const {
+constexpr const T& Maybe<T>::operator*() const& {
   MOZ_DIAGNOSTIC_ASSERT(isSome());
   return ref();
+}
+
+template <typename T>
+constexpr T&& Maybe<T>::operator*() && {
+  MOZ_DIAGNOSTIC_ASSERT(isSome());
+  return std::move(ref());
+}
+
+template <typename T>
+constexpr const T&& Maybe<T>::operator*() const&& {
+  MOZ_DIAGNOSTIC_ASSERT(isSome());
+  return std::move(ref());
 }
 
 template <typename T>

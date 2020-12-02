@@ -34,11 +34,13 @@ enum Status {
   eWasConstructed,
   eWasCopyConstructed,
   eWasMoveConstructed,
+  eWasConstMoveConstructed,
   eWasAssigned,
   eWasCopyAssigned,
   eWasMoveAssigned,
   eWasCopiedFrom,
   eWasMovedFrom,
+  eWasConstMovedFrom,
 };
 
 static size_t sUndestroyedObjects = 0;
@@ -64,6 +66,12 @@ struct BasicValue {
     ++sUndestroyedObjects;
     aOther.mStatus = eWasMovedFrom;
     aOther.mTag = 0;
+  }
+
+  BasicValue(const BasicValue&& aOther)
+      : mStatus(eWasConstMoveConstructed), mTag(aOther.mTag) {
+    ++sUndestroyedObjects;
+    aOther.mStatus = eWasConstMovedFrom;
   }
 
   ~BasicValue() { --sUndestroyedObjects; }
@@ -93,7 +101,7 @@ struct BasicValue {
   int GetTag() const { return mTag; }
 
  private:
-  Status mStatus;
+  mutable Status mStatus;
   int mTag;
 };
 
@@ -240,6 +248,8 @@ static bool TestBasicFeatures() {
   MOZ_RELEASE_ASSERT(mayValue.isSome());
   MOZ_RELEASE_ASSERT(!mayValue.isNothing());
   MOZ_RELEASE_ASSERT(*mayValue == BasicValue());
+  static_assert(std::is_same_v<BasicValue&, decltype(*mayValue)>,
+                "operator*() should return a BasicValue&");
   MOZ_RELEASE_ASSERT(mayValue.value() == BasicValue());
   static_assert(std::is_same_v<BasicValue, decltype(mayValue.value())>,
                 "value() should return a BasicValue");
@@ -288,6 +298,8 @@ static bool TestBasicFeatures() {
   MOZ_RELEASE_ASSERT(mayValueCRef.isSome());
   MOZ_RELEASE_ASSERT(!mayValueCRef.isNothing());
   MOZ_RELEASE_ASSERT(*mayValueCRef == BasicValue());
+  static_assert(std::is_same_v<const BasicValue&, decltype(*mayValueCRef)>,
+                "operator*() should return a BasicValue");
   MOZ_RELEASE_ASSERT(mayValueCRef.value() == BasicValue());
   static_assert(std::is_same_v<BasicValue, decltype(mayValueCRef.value())>,
                 "value() should return a BasicValue");
@@ -313,6 +325,51 @@ static bool TestBasicFeatures() {
   MOZ_RELEASE_ASSERT(mayCValue2);
   MOZ_RELEASE_ASSERT(mayCValue2.isSome());
   MOZ_RELEASE_ASSERT(*mayCValue2 == BasicValue(6));
+
+  // Check that accessors work through rvalue-references.
+  MOZ_RELEASE_ASSERT(Some(BasicValue()));
+  MOZ_RELEASE_ASSERT(Some(BasicValue()).isSome());
+  MOZ_RELEASE_ASSERT(!Some(BasicValue()).isNothing());
+  MOZ_RELEASE_ASSERT(*Some(BasicValue()) == BasicValue());
+  static_assert(std::is_same_v<BasicValue&&, decltype(*Some(BasicValue()))>,
+                "operator*() should return a BasicValue&&");
+  MOZ_RELEASE_ASSERT(Some(BasicValue()).value() == BasicValue());
+  static_assert(
+      std::is_same_v<BasicValue, decltype(Some(BasicValue()).value())>,
+      "value() should return a BasicValue");
+  MOZ_RELEASE_ASSERT(Some(BasicValue()).ref() == BasicValue());
+  static_assert(
+      std::is_same_v<BasicValue&&, decltype(Some(BasicValue()).ref())>,
+      "ref() should return a BasicValue&&");
+  MOZ_RELEASE_ASSERT(Some(BasicValue()).ptr() != nullptr);
+  static_assert(std::is_same_v<BasicValue*, decltype(Some(BasicValue()).ptr())>,
+                "ptr() should return a BasicValue*");
+  MOZ_RELEASE_ASSERT(Some(BasicValue())->GetStatus() == eWasMoveConstructed);
+
+  // Check that accessors work through const-rvalue-references.
+  auto MakeConstMaybe = []() -> const Maybe<BasicValue> {
+    return Some(BasicValue());
+  };
+  MOZ_RELEASE_ASSERT(MakeConstMaybe());
+  MOZ_RELEASE_ASSERT(MakeConstMaybe().isSome());
+  MOZ_RELEASE_ASSERT(!MakeConstMaybe().isNothing());
+  MOZ_RELEASE_ASSERT(*MakeConstMaybe() == BasicValue());
+  static_assert(std::is_same_v<const BasicValue&&, decltype(*MakeConstMaybe())>,
+                "operator*() should return a const BasicValue&&");
+  MOZ_RELEASE_ASSERT(MakeConstMaybe().value() == BasicValue());
+  static_assert(std::is_same_v<BasicValue, decltype(MakeConstMaybe().value())>,
+                "value() should return a BasicValue");
+  MOZ_RELEASE_ASSERT(MakeConstMaybe().ref() == BasicValue());
+  static_assert(
+      std::is_same_v<const BasicValue&&, decltype(MakeConstMaybe().ref())>,
+      "ref() should return a const BasicValue&&");
+  MOZ_RELEASE_ASSERT(MakeConstMaybe().ptr() != nullptr);
+  static_assert(
+      std::is_same_v<const BasicValue*, decltype(MakeConstMaybe().ptr())>,
+      "ptr() should return a const BasicValue*");
+  MOZ_RELEASE_ASSERT(MakeConstMaybe()->GetStatus() == eWasMoveConstructed);
+  MOZ_RELEASE_ASSERT(BasicValue(*MakeConstMaybe()).GetStatus() ==
+                     eWasConstMoveConstructed);
 
   // Check that take works
   mayValue = Some(BasicValue(6));
