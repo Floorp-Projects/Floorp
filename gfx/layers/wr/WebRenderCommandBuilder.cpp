@@ -1692,6 +1692,24 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
     DisplayItemType itemType = item->GetType();
 
+    // If this is an unscrolled background color item, in the root display list
+    // for the parent process, consider doing opaque checks.
+    if (XRE_IsParentProcess() && !aWrappingItem &&
+        itemType == DisplayItemType::TYPE_BACKGROUND_COLOR &&
+        !item->GetActiveScrolledRoot() &&
+        item->GetClip().GetRoundedRectCount() == 0) {
+      bool snap;
+      nsRegion opaque = item->GetOpaqueRegion(aDisplayListBuilder, &snap);
+      if (opaque.GetNumRects() == 1) {
+        nsRect clippedOpaque =
+            item->GetClip().ApplyNonRoundedIntersection(opaque.GetBounds());
+        if (!clippedOpaque.IsEmpty()) {
+          aDisplayListBuilder->AddWindowOpaqueRegion(item->Frame(),
+                                                     clippedOpaque);
+        }
+      }
+    }
+
     bool forceNewLayerData = false;
     size_t layerCountBeforeRecursing = mLayerScrollData.size();
     if (apzEnabled) {
