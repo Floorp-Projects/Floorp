@@ -82,8 +82,10 @@ struct Dav1dContext {
     int n_tile_data_alloc;
     int n_tile_data;
     int n_tiles;
+    Dav1dMemPool seq_hdr_pool;
     Dav1dRef *seq_hdr_ref;
     Dav1dSequenceHeader *seq_hdr;
+    Dav1dMemPool frame_hdr_pool;
     Dav1dRef *frame_hdr_ref;
     Dav1dFrameHeader *frame_hdr;
 
@@ -107,12 +109,15 @@ struct Dav1dContext {
     } frame_thread;
 
     // reference/entropy state
+    Dav1dMemPool segmap_pool;
+    Dav1dMemPool refmvs_pool;
     struct {
         Dav1dThreadPicture p;
         Dav1dRef *segmap;
         Dav1dRef *refmvs;
         unsigned refpoc[7];
     } refs[8];
+    Dav1dMemPool cdf_pool;
     CdfThreadContext cdf[8];
 
     Dav1dDSPContext dsp[3 /* 8, 10, 12 bits/component */];
@@ -135,6 +140,9 @@ struct Dav1dContext {
     int drain;
 
     Dav1dLogger logger;
+
+    Dav1dMemPool picture_pool;
+    int mem_pools_inited;
 };
 
 struct Dav1dFrameContext {

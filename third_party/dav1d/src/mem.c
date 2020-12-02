@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2020, VideoLAN and dav1d authors
+ * Copyright © 2020, Two Orioles, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,60 +25,50 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_COMMON_MEM_H
-#define DAV1D_COMMON_MEM_H
+#include "config.h"
 
-#include <stdlib.h>
+#include <stdint.h>
 
-#if defined(HAVE_ALIGNED_MALLOC) || defined(HAVE_MEMALIGN)
-#include <malloc.h>
-#endif
+#include "src/mem.h"
+#include "src/thread.h"
 
-#include "common/attributes.h"
-
-/*
- * Allocate align-byte aligned memory. The return value can be released
- * by calling the dav1d_free_aligned() function.
- */
-static inline void *dav1d_alloc_aligned(size_t sz, size_t align) {
-    assert(!(align & (align - 1)));
-#ifdef HAVE_POSIX_MEMALIGN
-    void *ptr;
-    if (posix_memalign(&ptr, align, sz)) return NULL;
-    return ptr;
-#elif defined(HAVE_ALIGNED_MALLOC)
-    return _aligned_malloc(sz, align);
-#elif defined(HAVE_MEMALIGN)
-    return memalign(align, sz);
-#else
-#error Missing aligned alloc implementation
-#endif
+void dav1d_mem_pool_push(Dav1dMemPool *const pool, Dav1dMemPoolBuffer *const buf) {
+    pthread_mutex_lock(&pool->lock);
+    buf->next = pool->buf;
+    pool->buf = buf;
+    pthread_mutex_unlock(&pool->lock);
 }
 
-static inline void dav1d_free_aligned(void* ptr) {
-#ifdef HAVE_POSIX_MEMALIGN
-    free(ptr);
-#elif defined(HAVE_ALIGNED_MALLOC)
-    _aligned_free(ptr);
-#elif defined(HAVE_MEMALIGN)
-    free(ptr);
-#endif
+Dav1dMemPoolBuffer *dav1d_mem_pool_pop(Dav1dMemPool *const pool, const size_t size) {
+    pthread_mutex_lock(&pool->lock);
+    Dav1dMemPoolBuffer *buf = pool->buf;
+    uint8_t *data;
+    if (buf) {
+        pool->buf = buf->next;
+        pthread_mutex_unlock(&pool->lock);
+        data = buf->data;
+        if ((uintptr_t)buf - (uintptr_t)data != size) {
+            dav1d_free_aligned(data);
+            goto alloc;
+        }
+    } else {
+        pthread_mutex_unlock(&pool->lock);
+alloc:
+        data = dav1d_alloc_aligned(size + sizeof(Dav1dMemPoolBuffer), 64);
+        if (!data) return NULL;
+        buf = (Dav1dMemPoolBuffer*)(data + size);
+        buf->data = data;
+    }
+
+    return buf;
 }
 
-static inline void dav1d_freep_aligned(void* ptr) {
-    void **mem = (void **) ptr;
-    if (*mem) {
-        dav1d_free_aligned(*mem);
-        *mem = NULL;
+COLD void dav1d_mem_pool_destroy(Dav1dMemPool *const pool) {
+    pthread_mutex_destroy(&pool->lock);
+    Dav1dMemPoolBuffer *buf = pool->buf;
+    while (buf) {
+        void *const data = buf->data;
+        buf = buf->next;
+        dav1d_free_aligned(data);
     }
 }
-
-static inline void freep(void *ptr) {
-    void **mem = (void **) ptr;
-    if (*mem) {
-        free(*mem);
-        *mem = NULL;
-    }
-}
-
-#endif /* DAV1D_COMMON_MEM_H */

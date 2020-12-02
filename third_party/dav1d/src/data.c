@@ -43,6 +43,7 @@
 uint8_t *dav1d_data_create_internal(Dav1dData *const buf, const size_t sz) {
     validate_input_or_ret(buf != NULL, NULL);
 
+    if (sz > SIZE_MAX / 2) return NULL;
     buf->ref = dav1d_ref_create(sz);
     if (!buf->ref) return NULL;
     buf->data = buf->ref->const_data;

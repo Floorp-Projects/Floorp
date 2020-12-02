@@ -9,6 +9,7 @@ sources = [
     '../../third_party/dav1d/src/itx_1d.c',
     '../../third_party/dav1d/src/lf_mask.c',
     '../../third_party/dav1d/src/log.c',
+    '../../third_party/dav1d/src/mem.c',
     '../../third_party/dav1d/src/msac.c',
     '../../third_party/dav1d/src/obu.c',
     '../../third_party/dav1d/src/picture.c',

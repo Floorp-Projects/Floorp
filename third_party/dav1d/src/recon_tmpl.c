@@ -34,7 +34,6 @@
 #include "common/bitdepth.h"
 #include "common/dump.h"
 #include "common/intops.h"
-#include "common/mem.h"
 
 #include "src/cdef_apply.h"
 #include "src/ctx.h"

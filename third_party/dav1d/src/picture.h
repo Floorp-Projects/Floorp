@@ -52,6 +52,11 @@ typedef struct Dav1dThreadPicture {
     atomic_uint *progress;
 } Dav1dThreadPicture;
 
+typedef struct Dav1dPictureBuffer {
+    void *data;
+    struct Dav1dPictureBuffer *next;
+} Dav1dPictureBuffer;
+
 /*
  * Allocate a picture with custom border size.
  */

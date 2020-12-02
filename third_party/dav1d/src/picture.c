@@ -34,7 +34,6 @@
 #include <string.h>
 
 #include "common/intops.h"
-#include "common/mem.h"
 #include "common/validate.h"
 
 #include "src/internal.h"
@@ -45,7 +44,7 @@
 #include "src/thread_task.h"
 
 int dav1d_default_picture_alloc(Dav1dPicture *const p, void *const cookie) {
-    assert(cookie == NULL);
+    assert(sizeof(Dav1dMemPoolBuffer) <= DAV1D_PICTURE_ALIGNMENT);
     const int hbd = p->p.bpc > 8;
     const int aligned_w = (p->p.w + 127) & ~127;
     const int aligned_h = (p->p.h + 127) & ~127;
@@ -67,27 +66,24 @@ int dav1d_default_picture_alloc(Dav1dPicture *const p, void *const cookie) {
     p->stride[1] = uv_stride;
     const size_t y_sz = y_stride * aligned_h;
     const size_t uv_sz = uv_stride * (aligned_h >> ss_ver);
-    const size_t pic_size = y_sz + 2 * uv_sz + DAV1D_PICTURE_ALIGNMENT;
-    uint8_t *const data = dav1d_alloc_aligned(pic_size, DAV1D_PICTURE_ALIGNMENT);
-    if (!data) return DAV1D_ERR(ENOMEM);
+    const size_t pic_size = y_sz + 2 * uv_sz;
 
+    Dav1dMemPoolBuffer *const buf = dav1d_mem_pool_pop(cookie, pic_size +
+                                                       DAV1D_PICTURE_ALIGNMENT -
+                                                       sizeof(Dav1dMemPoolBuffer));
+    if (!buf) return DAV1D_ERR(ENOMEM);
+    p->allocator_data = buf;
+
+    uint8_t *const data = buf->data;
     p->data[0] = data;
     p->data[1] = has_chroma ? data + y_sz : NULL;
     p->data[2] = has_chroma ? data + y_sz + uv_sz : NULL;
-
-#ifndef NDEBUG /* safety check */
-    p->allocator_data = data;
-#endif
 
     return 0;
 }
 
 void dav1d_default_picture_release(Dav1dPicture *const p, void *const cookie) {
-    assert(cookie == NULL);
-#ifndef NDEBUG /* safety check */
-    assert(p->allocator_data == p->data[0]);
-#endif
-    dav1d_free_aligned(p->data[0]);
+    dav1d_mem_pool_push(cookie, p->allocator_data);
 }
 
 struct pic_ctx_context {

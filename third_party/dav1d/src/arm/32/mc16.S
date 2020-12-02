@@ -2427,3 +2427,308 @@ endfunc
 
 filter_fn put,  r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10
 filter_fn prep, r0, r8, r1, r2, r3, r4, r5, r6, r7, r9, r10
+
+.macro load_filter_ptr src
+        asr             r12, \src, #10
+        add             r12, r11, r12, lsl #3
+.endm
+
+.macro load_filter_coef dst, src, inc
+        vld1.8          {\dst}, [r12, :64]
+        add             \src, \src, \inc
+.endm
+
+.macro load_filter_row dst, src, inc
+        load_filter_ptr \src
+        load_filter_coef \dst, \src, \inc
+.endm
+
+function warp_filter_horz_neon
+        load_filter_ptr r5                  // filter 0
+        vld1.16         {q6,q7}, [r2], r3
+
+        load_filter_coef d0, r5,  r7        // filter 0
+        load_filter_row d2,  r5,  r7        // filter 1
+        vmovl.s8        q0,  d0             // filter 0
+        vext.8          q3,  q6,  q7,  #2*1 // filter 1 pixels
+        vmovl.s8        q1,  d2             // filter 1
+
+        vmull.s16       q4,  d12, d0        // filter 0 output (0-3)
+        vmull.s16       q5,  d13, d1        // filter 0 output (4-7)
+
+        load_filter_ptr r5                  // filter 2
+
+        vmull.s16       q2,  d6,  d2        // filter 1 output (0-3)
+        vmull.s16       q3,  d7,  d3        // filter 1 output (4-7)
+
+        load_filter_coef d0, r5,  r7        // filter 2
+
+        vpadd.i32       d8,  d8,  d9        // half pixel 0 (2x32)
+        vpadd.i32       d9,  d10, d11       // half pixel 0 (2x32)
+
+        load_filter_ptr r5                  // filter 3
+
+        vpadd.i32       d4,  d4,  d5        // half pixel 1 (2x32)
+        vpadd.i32       d5,  d6,  d7        // half pixel 1 (2x32)
+
+        vmovl.s8        q0,  d0             // filter 2
+        vext.8          q3,  q6,  q7,  #2*2 // filter 2 pixels
+
+        vpadd.i32       d8,  d8,  d9        // pixel 0 (2x32)
+        vpadd.i32       d9,  d4,  d5        // pixel 1 (2x32)
+
+        load_filter_coef d2, r5,  r7        // filter 3
+
+        vmull.s16       q2,  d6,  d0        // filter 2 output (0-3)
+        vmull.s16       q3,  d7,  d1        // filter 2 output (4-7)
+
+        load_filter_ptr r5                  // filter 4
+
+        vpadd.i32       d8,  d8,  d9        // pixel 0,1
+
+        vpadd.i32       d9,  d4,  d5        // half pixel 2 (2x32)
+        vpadd.i32       d10, d6,  d7        // half pixel 2 (2x32)
+
+        vmovl.s8        q1,  d2             // filter 3
+        vext.8          q3,  q6,  q7,  #2*3 // filter 3 pixels
+
+        load_filter_coef d0, r5,  r7        // filter 4
+
+        vpadd.i32       d9,  d9,  d10       // pixel 2 (2x32)
+
+        vmull.s16       q2,  d6,  d2        // filter 3 output (0-3)
+        vmull.s16       q3,  d7,  d3        // filter 3 output (4-7)
+
+        vmovl.s8        q0,  d0             // filter 4
+        load_filter_ptr r5                  // filter 5
+
+        vpadd.i32       d10, d4,  d5        // half pixel 3 (2x32)
+        vpadd.i32       d11, d6,  d7        // half pixel 3 (2x32)
+
+        vext.8          q3,  q6,  q7,  #2*4 // filter 4 pixels
+        load_filter_coef d2, r5,  r7        // filter 5
+
+        vpadd.i32       d10, d10, d11       // pixel 3 (2x32)
+
+        vpadd.i32       d9,  d9,  d10       // pixel 2,3
+
+        vmull.s16       q2,  d6,  d0        // filter 4 output (0-3)
+        vmull.s16       q3,  d7,  d1        // filter 4 output (4-7)
+
+        vmovl.s8        q1,  d2             // filter 5
+        load_filter_ptr r5                  // filter 6
+
+        vpadd.i32       d10, d4,  d5        // half pixel 4 (2x32)
+        vpadd.i32       d11, d6,  d7        // half pixel 4 (2x32)
+
+        vext.8          q3,  q6,  q7,  #2*5 // filter 5 pixels
+        load_filter_coef d0, r5,  r7        // filter 6
+
+        vpadd.i32       d10, d10, d11       // pixel 4 (2x32)
+
+        vmull.s16       q2,  d6,  d2        // filter 5 output (0-3)
+        vmull.s16       q3,  d7,  d3        // filter 5 output (4-7)
+
+        vmovl.s8        q0,  d0             // filter 6
+        load_filter_ptr r5                  // filter 7
+
+        vpadd.i32       d4,  d4,  d5        // half pixel 5 (2x32)
+        vpadd.i32       d5,  d6,  d7        // half pixel 5 (2x32)
+
+        vext.8          q3,  q6,  q7,  #2*6 // filter 6 pixels
+        load_filter_coef d2, r5,  r7        // filter 7
+
+        vpadd.i32       d11, d4,  d5        // pixel 5 (2x32)
+
+        vmull.s16       q2,  d6,  d0        // filter 6 output (0-3)
+        vmull.s16       q3,  d7,  d1        // filter 6 output (4-7)
+
+        vmovl.s8        q1,  d2             // filter 7
+
+        vpadd.i32       d10, d10, d11       // pixel 4,5
+
+        vpadd.i32       d4,  d4,  d5        // half pixel 6 (2x32)
+        vpadd.i32       d5,  d6,  d7        // half pixel 6 (2x32)
+
+        vext.8          q3,  q6,  q7,  #2*7 // filter 7 pixels
+
+        vpadd.i32       d11, d4,  d5        // pixel 6 (2x32)
+
+        vmull.s16       q2,  d6,  d2        // filter 7 output (0-3)
+        vmull.s16       q3,  d7,  d3        // filter 7 output (4-7)
+
+        vld1.32         {d14[],d15[]}, [sp] // -(7 - intermediate_bits)
+
+        vpadd.i32       d4,  d4,  d5        // half pixel 7 (2x32)
+        vpadd.i32       d5,  d6,  d7        // half pixel 7 (2x32)
+
+        sub             r5,  r5,  r7, lsl #3
+
+        vpadd.i32       d4,  d4,  d5        // pixel 7 (2x32)
+
+        add             r5,  r5,  r8
+
+        vpadd.i32       d11, d11, d4        // pixel 6,7
+
+        vrshl.s32       q4,  q4,  q7        // -(7 - intermediate_bits)
+        vrshl.s32       q5,  q5,  q7        // -(7 - intermediate_bits)
+
+        bx              lr
+endfunc
+
+// void dav1d_warp_affine_8x8_16bpc_neon(
+//         pixel *dst, const ptrdiff_t dst_stride,
+//         const pixel *src, const ptrdiff_t src_stride,
+//         const int16_t *const abcd, int mx, int my,
+//         const int bitdepth_max)
+.macro warp t
+function warp_affine_8x8\t\()_16bpc_neon, export=1
+        push            {r4-r11,lr}
+        vpush           {q4-q7}
+        ldrd            r4,  r5,  [sp, #100]
+        ldrd            r6,  r7,  [sp, #108]
+        sub             sp,  sp,  #8
+
+        clz             r7,  r7
+                                      // intermediate_bits = clz(bitdepth_max) - 18
+.ifb \t
+        sub             r8,  r7,  #11 // 7 + intermediate_bits = clz(bitdepth_max) - 18 + 7
+.endif
+        sub             r7,  r7,  #25 // -(7 - intermediate_bits)
+.ifb \t
+        neg             r8,  r8       // -(7 + intermediate_bits)
+.endif
+        str             r7,  [sp]     // spill -(7 - intermediate_bits) on stack
+.ifb \t
+        str             r8,  [sp, #4] // spill -(7 + intermediate_bits) on stack
+.endif
+
+        ldrd            r8,  r9,  [r4]
+        sxth            r7,  r8
+        asr             r8,  r8, #16
+        asr             r4,  r9, #16
+        sxth            r9,  r9
+        mov             r10, #8
+        sub             r2,  r2,  r3, lsl #1
+        sub             r2,  r2,  r3
+        sub             r2,  r2,  #6
+        movrel          r11, X(mc_warp_filter), 64*8
+.ifnb \t
+        lsl             r1,  r1,  #1
+.endif
+        add             r5,  r5,  #512
+        add             r6,  r6,  #512
+
+        bl              warp_filter_horz_neon
+        vmovn.i32       d16, q4
+        vmovn.i32       d17, q5
+        bl              warp_filter_horz_neon
+        vmovn.i32       d18, q4
+        vmovn.i32       d19, q5
+        bl              warp_filter_horz_neon
+        vmovn.i32       d20, q4
+        vmovn.i32       d21, q5
+        bl              warp_filter_horz_neon
+        vmovn.i32       d22, q4
+        vmovn.i32       d23, q5
+        bl              warp_filter_horz_neon
+        vmovn.i32       d24, q4
+        vmovn.i32       d25, q5
+        bl              warp_filter_horz_neon
+        vmovn.i32       d26, q4
+        vmovn.i32       d27, q5
+        bl              warp_filter_horz_neon
+        vmovn.i32       d28, q4
+        vmovn.i32       d29, q5
+
+1:
+        bl              warp_filter_horz_neon
+        vmovn.i32       d30, q4
+        vmovn.i32       d31, q5
+
+        load_filter_row d8,  r6,  r9
+        load_filter_row d9,  r6,  r9
+        load_filter_row d10, r6,  r9
+        load_filter_row d11, r6,  r9
+        load_filter_row d12, r6,  r9
+        load_filter_row d13, r6,  r9
+        load_filter_row d14, r6,  r9
+        load_filter_row d15, r6,  r9
+        transpose_8x8b  q4,  q5,  q6,  q7,  d8,  d9,  d10, d11, d12, d13, d14, d15
+        vmovl.s8        q1,  d8
+        vmovl.s8        q2,  d9
+        vmovl.s8        q3,  d10
+        vmovl.s8        q4,  d11
+        vmovl.s8        q5,  d12
+        vmovl.s8        q6,  d13
+
+        sub             r6,  r6,  r9, lsl #3
+
+        // This ordering of vmull/vmlal is highly beneficial for
+        // Cortex A8/A9/A53 here, but harmful for Cortex A7.
+        vmull.s16       q0,  d16,  d2
+        vmlal.s16       q0,  d18,  d4
+        vmlal.s16       q0,  d20,  d6
+        vmlal.s16       q0,  d22,  d8
+        vmlal.s16       q0,  d24,  d10
+        vmlal.s16       q0,  d26,  d12
+        vmull.s16       q1,  d17,  d3
+        vmlal.s16       q1,  d19,  d5
+        vmlal.s16       q1,  d21,  d7
+        vmlal.s16       q1,  d23,  d9
+        vmlal.s16       q1,  d25,  d11
+        vmlal.s16       q1,  d27,  d13
+
+        vmovl.s8        q2,  d14
+        vmovl.s8        q3,  d15
+
+        vmlal.s16       q0,  d28,  d4
+        vmlal.s16       q0,  d30,  d6
+        vmlal.s16       q1,  d29,  d5
+        vmlal.s16       q1,  d31,  d7
+
+.ifb \t
+        ldr             lr,  [sp, #4]   // -(7 + intermediate_bits)
+        ldr             r12, [sp, #120] // bitdepth_max
+        vdup.32         q2,  lr         // -(7 + intermediate_bits)
+        vdup.16         q3,  r12        // bitdepth_max
+.endif
+
+        vmov            q8,  q9
+        vmov            q9,  q10
+.ifb \t
+        vrshl.s32       q0,  q0,  q2    // -(7 + intermediate_bits)
+        vrshl.s32       q1,  q1,  q2    // -(7 + intermediate_bits)
+.else
+        vrshrn.s32      d0,  q0,  #7
+        vrshrn.s32      d1,  q1,  #7
+        vmov.i16        q3,  #PREP_BIAS
+.endif
+        vmov            q10, q11
+.ifb \t
+        vqmovun.s32     d0,  q0
+        vqmovun.s32     d1,  q1
+.else
+        vsub.i16        q0,  q0,  q3    // PREP_BIAS
+.endif
+        vmov            q11, q12
+        vmov            q12, q13
+.ifb \t
+        vmin.u16        q0,  q0,  q3    // bitdepth_max
+.endif
+        vmov            q13, q14
+        vmov            q14, q15
+        subs            r10, r10, #1
+        vst1.16         {q0}, [r0, :128], r1
+
+        add             r6,  r6,  r4
+        bgt             1b
+
+        add             sp,  sp,  #8
+        vpop            {q4-q7}
+        pop             {r4-r11,pc}
+endfunc
+.endm
+
+warp
+warp t

@@ -140,7 +140,8 @@ typedef struct CdfThreadContext {
 } CdfThreadContext;
 
 void dav1d_cdf_thread_init_static(CdfThreadContext *cdf, int qidx);
-int dav1d_cdf_thread_alloc(CdfThreadContext *cdf, struct thread_data *t);
+int dav1d_cdf_thread_alloc(Dav1dContext *c, CdfThreadContext *cdf,
+                           struct thread_data *t);
 void dav1d_cdf_thread_copy(CdfContext *dst, const CdfThreadContext *src);
 void dav1d_cdf_thread_ref(CdfThreadContext *dst, CdfThreadContext *src);
 void dav1d_cdf_thread_unref(CdfThreadContext *cdf);
