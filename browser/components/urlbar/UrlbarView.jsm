@@ -1995,18 +1995,14 @@ class UrlbarView {
         continue;
       }
 
-      // Update heuristic URL result titles to reflect the search string. This
-      // means we restyle a URL result to look like a search result. We override
-      // result-picking behaviour in UrlbarInput.pickResult.
-      if (
-        this.oneOffsRefresh &&
-        result.heuristic &&
-        result.type == UrlbarUtils.RESULT_TYPE.URL
-      ) {
+      // If the result is the heuristic, update its title to reflect the search
+      // string. This means we restyle it to look like a search result. We
+      // override the usual result-picking behaviour in UrlbarInput.pickResult.
+      if (this.oneOffsRefresh && result.heuristic) {
         title.textContent =
           localSearchMode || engine
             ? this._queryContext.searchString
-            : result.payload.title;
+            : result.title;
       }
 
       // Update result action text.
@@ -2043,11 +2039,7 @@ class UrlbarView {
 
       // Update result favicons.
       let iconOverride = localSearchMode?.icon || engine?.iconURI?.spec;
-      if (
-        !iconOverride &&
-        (localSearchMode || engine) &&
-        result.type == UrlbarUtils.RESULT_TYPE.URL
-      ) {
+      if (!iconOverride && (localSearchMode || engine)) {
         // For one-offs without an icon, do not allow restyled URL results to
         // use their own icons.
         iconOverride = UrlbarUtils.ICON.SEARCH_GLASS;
