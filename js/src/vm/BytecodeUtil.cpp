@@ -38,7 +38,6 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"
 #include "js/Symbol.h"
-#include "util/DifferentialTesting.h"
 #include "util/Memory.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
@@ -2364,14 +2363,14 @@ static bool DecompileExpressionFromStack(JSContext* cx, int spindex,
 
   *res = nullptr;
 
+#ifdef JS_MORE_DETERMINISTIC
   /*
    * Give up if we need deterministic behavior for differential testing.
    * IonMonkey doesn't use InterpreterFrames and this ensures we get the same
    * error messages.
    */
-  if (js::SupportDifferentialTesting()) {
-    return true;
-  }
+  return true;
+#endif
 
   if (spindex == JSDVG_IGNORE_STACK) {
     return true;
@@ -2462,10 +2461,10 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
   *res = nullptr;
 
+#ifdef JS_MORE_DETERMINISTIC
   /* See note in DecompileExpressionFromStack. */
-  if (js::SupportDifferentialTesting()) {
-    return true;
-  }
+  return true;
+#endif
 
   /*
    * Settle on the nearest script frame, which should be the builtin that

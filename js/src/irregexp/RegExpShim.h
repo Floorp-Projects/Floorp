@@ -33,7 +33,6 @@
 #include "js/RegExpFlags.h"
 #include "js/Value.h"
 #include "threading/ExclusiveData.h"
-#include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
 #include "vm/NativeObject.h"
@@ -1095,12 +1094,14 @@ class StackLimitCheck {
   // Use this to check for stack-overflows in C++ code.
   bool HasOverflowed() {
     bool overflowed = !js::CheckRecursionLimitDontReport(cx_);
-    if (overflowed && js::SupportDifferentialTesting()) {
+#ifdef JS_MORE_DETERMINISTIC
+    if (overflowed) {
       // We don't report overrecursion here, but we throw an exception later
       // and this still affects differential testing. Mimic ReportOverRecursed
       // (the fuzzers check for this particular string).
       fprintf(stderr, "ReportOverRecursed called\n");
     }
+#endif
     return overflowed;
   }
 

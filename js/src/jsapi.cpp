@@ -76,7 +76,6 @@
 #include "js/Wrapper.h"
 #include "proxy/DOMProxy.h"
 #include "util/CompleteFile.h"
-#include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/AsyncFunction.h"
@@ -5956,16 +5955,4 @@ JS_PUBLIC_API void NoteIntentionalCrash() {
 #endif
 }
 
-#ifdef DEBUG
-bool gSupportDifferentialTesting = false;
-#endif  // DEBUG
-
 }  // namespace js
-
-#ifdef DEBUG
-
-JS_PUBLIC_API void JS::SetSupportDifferentialTesting(bool value) {
-  js::gSupportDifferentialTesting = value;
-}
-
-#endif  // DEBUG

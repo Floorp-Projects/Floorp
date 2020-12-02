@@ -29,7 +29,6 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
-#include "util/DifferentialTesting.h"
 #include "util/Poison.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
@@ -376,12 +375,12 @@ static bool EnumerateProxyProperties(JSContext* cx, HandleObject pobj,
   return true;
 }
 
-#ifdef DEBUG
+#ifdef JS_MORE_DETERMINISTIC
 
 struct SortComparatorIds {
   JSContext* const cx;
 
-  explicit SortComparatorIds(JSContext* cx) : cx(cx) {}
+  SortComparatorIds(JSContext* cx) : cx(cx) {}
 
   bool operator()(jsid a, jsid b, bool* lessOrEqualp) {
     // Pick an arbitrary order on jsids that is as stable as possible
@@ -445,7 +444,7 @@ struct SortComparatorIds {
   }
 };
 
-#endif /* DEBUG */
+#endif /* JS_MORE_DETERMINISTIC */
 
 static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
                      MutableHandleIdVector props) {
@@ -515,37 +514,37 @@ static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
     }
   } while (pobj != nullptr);
 
-#ifdef DEBUG
-  if (js::SupportDifferentialTesting()) {
-    /*
-     * In some cases the enumeration order for an object depends on the
-     * execution mode (interpreter vs. JIT), especially for native objects
-     * with a class enumerate hook (where resolving a property changes the
-     * resulting enumeration order). These aren't really bugs, but the
-     * differences can change the generated output and confuse correctness
-     * fuzzers, so we sort the ids if such a fuzzer is running.
-     *
-     * We don't do this in the general case because (a) doing so is slow,
-     * and (b) it also breaks the web, which expects enumeration order to
-     * follow the order in which properties are added, in certain cases.
-     * Since ECMA does not specify an enumeration order for objects, both
-     * behaviors are technically correct to do.
-     */
+#ifdef JS_MORE_DETERMINISTIC
 
-    jsid* ids = props.begin();
-    size_t n = props.length();
+  /*
+   * In some cases the enumeration order for an object depends on the
+   * execution mode (interpreter vs. JIT), especially for native objects
+   * with a class enumerate hook (where resolving a property changes the
+   * resulting enumeration order). These aren't really bugs, but the
+   * differences can change the generated output and confuse correctness
+   * fuzzers, so we sort the ids if such a fuzzer is running.
+   *
+   * We don't do this in the general case because (a) doing so is slow,
+   * and (b) it also breaks the web, which expects enumeration order to
+   * follow the order in which properties are added, in certain cases.
+   * Since ECMA does not specify an enumeration order for objects, both
+   * behaviors are technically correct to do.
+   */
 
-    RootedIdVector tmp(cx);
-    if (!tmp.resize(n)) {
-      return false;
-    }
-    PodCopy(tmp.begin(), ids, n);
+  jsid* ids = props.begin();
+  size_t n = props.length();
 
-    if (!MergeSort(ids, n, tmp.begin(), SortComparatorIds(cx))) {
-      return false;
-    }
+  RootedIdVector tmp(cx);
+  if (!tmp.resize(n)) {
+    return false;
   }
-#endif
+  PodCopy(tmp.begin(), ids, n);
+
+  if (!MergeSort(ids, n, tmp.begin(), SortComparatorIds(cx))) {
+    return false;
+  }
+
+#endif /* JS_MORE_DETERMINISTIC */
 
   return true;
 }

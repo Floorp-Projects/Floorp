@@ -37,7 +37,6 @@
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/Value.h"
 #include "js/Vector.h"
-#include "util/DifferentialTesting.h"
 #include "vm/ArrayObject.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/EnvironmentObject.h"
@@ -5419,7 +5418,11 @@ class MRandom : public MNullaryInstruction {
       CompactBufferWriter& writer) const override;
 
   bool canRecoverOnBailout() const override {
-    return !js::SupportDifferentialTesting();
+#ifdef JS_MORE_DETERMINISTIC
+    return false;
+#else
+    return true;
+#endif
   }
 
   ALLOW_CLONE(MRandom)

@@ -26,7 +26,6 @@
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
-#include "util/DifferentialTesting.h"
 #include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
@@ -456,10 +455,12 @@ bool DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj,
     return false;
   }
 
+#ifdef JS_MORE_DETERMINISTIC
   // See the comment in ElementSpecific::doubleToNative.
-  if (js::SupportDifferentialTesting() && TypeIsFloatingPoint<NativeType>()) {
+  if (TypeIsFloatingPoint<NativeType>()) {
     value = JS::CanonicalizeNaN(value);
   }
+#endif
 
   // Step 6.
   bool isLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
