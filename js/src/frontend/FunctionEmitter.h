@@ -11,12 +11,12 @@
 
 #include <stdint.h>  // uint16_t, uint32_t
 
-#include "frontend/AsyncEmitter.h"        // AsyncEmitter
 #include "frontend/DefaultEmitter.h"      // DefaultEmitter
 #include "frontend/EmitterScope.h"        // EmitterScope
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/SharedContext.h"       // FunctionBox, TopLevelFunction
 #include "frontend/TDZCheckCache.h"       // TDZCheckCache
+#include "frontend/TryEmitter.h"          // TryEmitter
 #include "gc/Rooting.h"                   // JS::Rooted, JS::Handle
 #include "vm/BytecodeUtil.h"              // JSOp
 #include "vm/JSAtom.h"                    // JSAtom
@@ -185,7 +185,7 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
   mozilla::Maybe<TDZCheckCache> tdzCache_;
 
   // try-catch block for async function parameter and body.
-  mozilla::Maybe<AsyncEmitter> asyncEmitter_;
+  mozilla::Maybe<TryEmitter> rejectTryCatch_;
 
   // See the comment for constructor.
   mozilla::Maybe<uint32_t> paramStart_;
@@ -254,6 +254,11 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
 
  private:
   MOZ_MUST_USE bool emitExtraBodyVarScope();
+
+  // Async functions have implicit try-catch blocks to convert exceptions
+  // into promise rejections.
+  MOZ_MUST_USE bool emitAsyncFunctionRejectPrologue();
+  MOZ_MUST_USE bool emitAsyncFunctionRejectEpilogue();
 };
 
 // Class for emitting function parameters.
@@ -316,7 +321,7 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
   //              |                                             |
   // +------------+                                             |
   // |                                                          |
-  // | [single binding, without default]                        |
+  // | [single binding, wihtout default]                        |
   // |   emitSimple                                             |
   // +--------------------------------------------------------->+
   // |                                                          ^

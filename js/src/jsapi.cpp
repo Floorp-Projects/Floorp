@@ -523,7 +523,7 @@ JS_PUBLIC_API JSErrorInterceptor* JS_GetErrorInterceptorCallback(
     JSRuntime* rt) {
 #if defined(NIGHTLY_BUILD)
   return rt->errorInterception.interceptor;
-#else  // !NIGHTLY_BUILD
+#else   // !NIGHTLY_BUILD
   return nullptr;
 #endif  // defined(NIGHTLY_BUILD)
 }
@@ -3461,7 +3461,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   nonSyntacticScope = rhs.nonSyntacticScope;
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
-  topLevelAwait = rhs.topLevelAwait;
   useStencilXDR = rhs.useStencilXDR;
   useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
 };
@@ -3557,7 +3556,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       cx->options().throwOnAsmJSValidationFailure();
   privateClassFields = cx->options().privateClassFields();
   privateClassMethods = cx->options().privateClassMethods();
-  topLevelAwait = cx->options().topLevelAwait();
 
   useStencilXDR = !UseOffThreadParseGlobal();
   useOffThreadParseGlobal = UseOffThreadParseGlobal();
