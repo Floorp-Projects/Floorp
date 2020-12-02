@@ -73,15 +73,15 @@ JS_PUBLIC_API void JS::SetModuleDynamicImportHook(
 }
 
 JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
-    JSContext* cx, JS::DynamicImportStatus status,
+    JSContext* cx, Handle<JSObject*> evaluationPromise,
     Handle<Value> referencingPrivate, Handle<JSString*> specifier,
     Handle<JSObject*> promise) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(referencingPrivate, promise);
 
-  return js::FinishDynamicModuleImport(cx, status, referencingPrivate,
-                                       specifier, promise);
+  return js::FinishDynamicModuleImport(cx, evaluationPromise,
+                                       referencingPrivate, specifier, promise);
 }
 
 template <typename Unit>
@@ -125,13 +125,22 @@ JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
   return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
 }
 
-JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
-                                      Handle<JSObject*> moduleArg) {
+JS_PUBLIC_API JSObject* JS::ModuleEvaluate(JSContext* cx,
+                                           Handle<JSObject*> moduleRecord) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->releaseCheck(moduleArg);
+  cx->releaseCheck(moduleRecord);
 
-  return ModuleObject::Evaluate(cx, moduleArg.as<ModuleObject>());
+  return ModuleObject::Evaluate(cx, moduleRecord.as<ModuleObject>());
+}
+
+JS_PUBLIC_API bool JS::ThrowOnModuleEvaluationFailure(
+    JSContext* cx, Handle<JSObject*> evaluationPromise) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->releaseCheck(evaluationPromise);
+
+  return js::OnModuleEvaluationFailure(cx, evaluationPromise);
 }
 
 JS_PUBLIC_API JSObject* JS::GetRequestedModules(JSContext* cx,
