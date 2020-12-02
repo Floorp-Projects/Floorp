@@ -210,7 +210,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             searchUseCases.defaultSearch.invoke(
                 searchTerms = searchTerms,
                 searchEngine = null,
-                parentSession = null
+                parentSessionId = null
             )
         }
     }
