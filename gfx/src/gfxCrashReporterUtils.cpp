@@ -78,11 +78,10 @@ class RegisterObserverRunnable : public Runnable {
   }
 };
 
-class AppendAppNotesRunnable : public CancelableRunnable {
+class AppendAppNotesRunnable : public Runnable {
  public:
   explicit AppendAppNotesRunnable(const nsACString& aFeatureStr)
-      : CancelableRunnable("AppendAppNotesRunnable"),
-        mFeatureString(aFeatureStr) {}
+      : Runnable("AppendAppNotesRunnable"), mFeatureString(aFeatureStr) {}
 
   NS_IMETHOD Run() override {
     CrashReporter::AppendAppNotesToCrashReport(mFeatureString);

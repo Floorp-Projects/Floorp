@@ -99,11 +99,6 @@ void CancelableRunnable::OnDiscard() {
   (void)NS_WARN_IF(NS_FAILED(Cancel()));
 }
 
-nsresult CancelableRunnable::Cancel() {
-  // Do nothing
-  return NS_OK;
-}
-
 NS_IMPL_ISUPPORTS_INHERITED(IdleRunnable, DiscardableRunnable, nsIIdleRunnable)
 
 NS_IMPL_ISUPPORTS_INHERITED(CancelableIdleRunnable, CancelableRunnable,

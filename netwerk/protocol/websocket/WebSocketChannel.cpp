@@ -640,10 +640,10 @@ class CallOnServerClose final : public Runnable {
 // CallAcknowledge
 //-----------------------------------------------------------------------------
 
-class CallAcknowledge final : public CancelableRunnable {
+class CallAcknowledge final : public Runnable {
  public:
   CallAcknowledge(WebSocketChannel* aChannel, uint32_t aSize)
-      : CancelableRunnable("net::CallAcknowledge"),
+      : Runnable("net::CallAcknowledge"),
         mChannel(aChannel),
         mListenerMT(mChannel->mListenerMT),
         mSize(aSize) {}
