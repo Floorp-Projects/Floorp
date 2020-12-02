@@ -10,27 +10,6 @@ Data collected from Activity Stream is retained on Mozilla secured servers for a
 
 The following is a detailed overview of the different kinds of data we collect in the Activity Stream. See [data_dictionary.md](data_dictionary.md) for more details for each field.
 
-## Health ping
-
-This is a heartbeat ping indicating whether Activity Stream is currently being used or not, it's submitted once upon the browser initialization.
-
-```js
-{
-  "client_id": "374dc4d8-0cb2-4ac5-a3cf-c5a9bc3c602e",
-  "locale": "en-US",
-  "version": "62.0a1",
-  "release_channel": "nightly",
-  "event": "AS_ENABLED",
-  "value": 10
-}
-```
-where the "value" is encoded as:
-  * Value 0: default
-  * Value 1: about:blank
-  * Value 2: web extension
-  * Value 3: other custom URL(s)
-Two encoded integers for about:newtab and about:home are combined in a bitwise fashion. For instance, if both about:home and about:newtab were set to about:blank, then `value = 5 = (1 | (1 << 2))`, i.e `value = (bitfield of about:newtab) | (bitfield of about:newhome << 2)`.
-
 ## Page takeover ping
 
 This ping is submitted once upon Activity Stream initialization if either about:home or about:newtab are set to a custom URL. It sends the category of the custom URL. It also includes the web extension id of the extension controlling the home and/or newtab page.
@@ -1144,83 +1123,6 @@ CFR impression ping has two forms, in which the message_id could be of different
 }
 ```
 
-#### Onboarding Simplified Welcome impression
-```js
-{
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "version": "76.0a1",
-  "locale": "en-US",
-  "experiments": {},
-  "release_channel": "default",
-  "addon_version": "20200330194034"
-  "message_id": "ABOUT_WELCOME",
-  "event": "IMPRESSION",
-  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "event_context": { "page": "about:welcome" },
-  "attribution": {
-    "source": "mozilla.org",
-    "medium": "referral",
-    "campaign": "Firefox-Brand-US-Mozilla-Org",
-    "content": "test-addon@github.io",
-    "experiment": "ua-onboarding",
-    "variation": "chrome",
-    "ua": "firefox"
-  }
-}
-```
-
-#### Onboarding Simplified Welcome click button ping
-```js
-{
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "version": "76.0a1",
-  "locale": "en-US",
-  "experiments": {},
-  "release_channel": "default",
-  "addon_version": "20200330194034"
-  "message_id": "ABOUT_WELCOME",
-  "event": "CLICK_BUTTION",
-  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "event_context": { "page": "about:welcome", "source": ["primary_button", "secondary_button" },
-  "attribution": {
-    "source": "mozilla.org",
-    "medium": "referral",
-    "campaign": "Firefox-Brand-US-Mozilla-Org",
-    "content": "test-addon@github.io",
-    "experiment": "ua-onboarding",
-    "variation": "chrome",
-    "ua": "firefox"
-  }
-}
-```
-
-#### Onboarding Simplified Welcome Session End ping
-```js
-{
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "version": "76.0a1",
-  "locale": "en-US",
-  "experiments": {},
-  "release_channel": "default",
-  "addon_version": "20200330194034"
-  "message_id": "ABOUT_WELCOME",
-  "id": "ABOUT_WELCOME",
-  "event": "SESSION_END",
-  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "event_context": { "page": "about:welcome", "reason":
-    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated" | "unknown"]},
-  "attribution": {
-    "source": "mozilla.org",
-    "medium": "referral",
-    "campaign": "Firefox-Brand-US-Mozilla-Org",
-    "content": "test-addon@github.io",
-    "experiment": "ua-onboarding",
-    "variation": "chrome",
-    "ua": "firefox"
-  }
-}
-```
-
 ### User interaction pings
 
 This reports the user's interaction with Activity Stream Router.
@@ -1470,4 +1372,109 @@ Two different types of events are sent: `attribute_error` and `attribute_timeout
   "attribute_timeout", // event
   "bar" // attribute
 ]
+```
+
+## Firefox Onboarding (about:welcome) pings
+
+These record the telemetry metrics during the Firefox onboarding experience.
+
+### Onboarding impressions
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034"
+  "message_id": ["DEFAULT_ABOUTWELCOME" | "DEFAULT_ABOUTWELCOME_AW_GET_STARTED" | "DEFAULT_ABOUTWELCOME_SITES" | "DEFAULT_ABOUTWELCOME_AW_IMPORT_SETTINGS" | "DEFAULT_ABOUTWELCOME_AW_CHOOSE_THEME", "RTAMO_DEFAULT_WELCOME"],
+  "event": "IMPRESSION",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": { "page": "about:welcome" },
+  "attribution": {
+    "source": "mozilla.org",
+    "medium": "referral",
+    "campaign": "Firefox-Brand-US-Mozilla-Org",
+    "content": "test-addon@github.io",
+    "experiment": "ua-onboarding",
+    "variation": "chrome",
+    "ua": "firefox"
+  }
+}
+```
+
+### Onboarding button clicks
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034"
+  "message_id": ["DEFAULT_ABOUTWELCOME_AW_GET_STARTED" | "DEFAULT_ABOUTWELCOME_AW_IMPORT_SETTINGS" | "DEFAULT_ABOUTWELCOME_AW_CHOOSE_THEME" | "RTAMO_DEFAULT_WELCOME"],
+  "event": "CLICK_BUTTION",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": { "page": "about:welcome", "source": ["primary_button", "secondary_button"] },
+  "attribution": {
+    "source": "mozilla.org",
+    "medium": "referral",
+    "campaign": "Firefox-Brand-US-Mozilla-Org",
+    "content": "test-addon@github.io",
+    "experiment": "ua-onboarding",
+    "variation": "chrome",
+    "ua": "firefox"
+  }
+}
+```
+
+### Onboarding Return-To-AMO install ping
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034"
+  "message_id": "RTAMO_DEFAULT_WELCOME",
+  "event": "INSTALL",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": { "page": "about:welcome", "source": "ADD_EXTENSION_BUTTON" },
+  "attribution": {
+    "source": "mozilla.org",
+    "medium": "referral",
+    "campaign": "Firefox-Brand-US-Mozilla-Org",
+    "content": "test-addon@github.io",
+    "experiment": "ua-onboarding",
+    "variation": "chrome",
+    "ua": "firefox"
+  }
+}
+```
+
+### Onboarding session end ping
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034"
+  "message_id": "DEFAULT_ABOUTWELCOME",
+  "event": "SESSION_END",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": { "page": "about:welcome", "reason":
+    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated" | "unknown"]},
+  "attribution": {
+    "source": "mozilla.org",
+    "medium": "referral",
+    "campaign": "Firefox-Brand-US-Mozilla-Org",
+    "content": "test-addon@github.io",
+    "experiment": "ua-onboarding",
+    "variation": "chrome",
+    "ua": "firefox"
+  }
+}
 ```
