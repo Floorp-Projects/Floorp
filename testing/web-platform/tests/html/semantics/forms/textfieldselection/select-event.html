@@ -92,6 +92,17 @@ els.forEach((el) => {
       // step_wait properly timeouts before the whole test collapses
       await t.step_wait(() => !element.onselect, "event didn't fire", 200, 10);
     }, `${elLabel}: ${action.label} disconnected node`);
+
+    // Intentionally still using promise_test, as assert_unreachable does not
+    // make the test fail inside a listener while t.unreached_func() does.
+    promise_test(async t => {
+      const element = el.cloneNode(true);
+      const listener = t.unreached_func("the select event must not fire synchronously");
+
+      element.onselect = listener;
+      action.action(element);
+      element.onselect = null;
+    }, `${elLabel}: ${action.label} event queue`);
   });
 });
 </script>
