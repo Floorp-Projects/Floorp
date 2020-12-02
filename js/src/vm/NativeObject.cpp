@@ -1313,31 +1313,6 @@ static bool WouldDefinePastNonwritableLength(ArrayObject* arr, uint32_t index) {
   return !arr->lengthIsWritable() && index >= arr->length();
 }
 
-static MOZ_ALWAYS_INLINE void UpdateShapeTypeAndValue(JSContext* cx,
-                                                      NativeObject* obj,
-                                                      Shape* shape, jsid id,
-                                                      const Value& value) {
-  MOZ_ASSERT(id == shape->propid());
-
-  if (shape->isDataProperty()) {
-    obj->setSlotWithType(cx, shape, value, /* overwriting = */ false);
-  }
-}
-
-// Version of UpdateShapeTypeAndValue optimized for plain data properties.
-static MOZ_ALWAYS_INLINE void UpdateShapeTypeAndValueForWritableDataProp(
-    JSContext* cx, NativeObject* obj, Shape* shape, jsid id,
-    const Value& value) {
-  MOZ_ASSERT(id == shape->propid());
-
-  MOZ_ASSERT(shape->isDataProperty());
-  MOZ_ASSERT(shape->hasDefaultGetter());
-  MOZ_ASSERT(shape->hasDefaultSetter());
-  MOZ_ASSERT(shape->writable());
-
-  obj->setSlotWithType(cx, shape, value, /* overwriting = */ false);
-}
-
 static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
                                        HandleId id) {
   MOZ_ASSERT(obj->isDelegate());
@@ -1426,30 +1401,37 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
 
   // If we know this is a new property we can call addProperty instead of
   // the slower putProperty.
-  Shape* shape;
-  if (AddOrChange == IsAddOrChange::Add) {
+  if constexpr (AddOrChange == IsAddOrChange::Add) {
     if (Shape::isDataProperty(desc.attributes(), desc.getter(),
                               desc.setter())) {
-      shape = NativeObject::addDataProperty(cx, obj, id, SHAPE_INVALID_SLOT,
-                                            desc.attributes());
+      Shape* shape = NativeObject::addDataProperty(
+          cx, obj, id, SHAPE_INVALID_SLOT, desc.attributes());
+      if (!shape) {
+        return false;
+      }
+      obj->initSlot(shape->slot(), desc.value());
     } else {
-      shape = NativeObject::addAccessorProperty(
-          cx, obj, id, desc.getter(), desc.setter(), desc.attributes());
+      if (!NativeObject::addAccessorProperty(
+              cx, obj, id, desc.getter(), desc.setter(), desc.attributes())) {
+        return false;
+      }
     }
   } else {
     if (Shape::isDataProperty(desc.attributes(), desc.getter(),
                               desc.setter())) {
-      shape = NativeObject::putDataProperty(cx, obj, id, desc.attributes());
+      Shape* shape =
+          NativeObject::putDataProperty(cx, obj, id, desc.attributes());
+      if (!shape) {
+        return false;
+      }
+      obj->setSlot(shape->slot(), desc.value());
     } else {
-      shape = NativeObject::putAccessorProperty(
-          cx, obj, id, desc.getter(), desc.setter(), desc.attributes());
+      if (!NativeObject::putAccessorProperty(
+              cx, obj, id, desc.getter(), desc.setter(), desc.attributes())) {
+        return false;
+      }
     }
   }
-  if (!shape) {
-    return false;
-  }
-
-  UpdateShapeTypeAndValue(cx, obj, shape, id, desc.value());
 
   // Clear any existing dense index after adding a sparse indexed property,
   // and investigate converting the object to dense indexes.
@@ -1491,7 +1473,7 @@ static MOZ_ALWAYS_INLINE bool AddDataProperty(JSContext* cx,
     return false;
   }
 
-  UpdateShapeTypeAndValueForWritableDataProp(cx, obj, shape, id, v);
+  obj->setSlot(shape->slot(), v);
 
   return CallAddPropertyHook(cx, obj, id, v);
 }
@@ -1510,7 +1492,7 @@ static MOZ_ALWAYS_INLINE bool AddDataPropertyNonDelegate(JSContext* cx,
     return false;
   }
 
-  UpdateShapeTypeAndValueForWritableDataProp(cx, obj, shape, id, v);
+  obj->setSlot(shape->slot(), v);
 
   MOZ_ASSERT(!obj->getClass()->getAddProperty());
   return true;
@@ -1761,13 +1743,6 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     return false;
   }
   if (redundant) {
-    // In cases involving JSOp::NewObject and JSOp::InitProp, obj can have a
-    // type for this property that doesn't match the value in the slot.
-    // Update the type here, even though this DefineProperty call is
-    // otherwise a no-op. (See bug 1125624 comment 13.)
-    if (prop.isNativeProperty() && desc.hasValue()) {
-      UpdateShapeTypeAndValue(cx, obj, prop.shape(), id, desc.value());
-    }
     return result.succeed();
   }
 
@@ -2108,10 +2083,7 @@ bool js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
 
   // At this point we're updating a property: See SetExistingProperty
   if (shape->writable() && shape->isDataProperty()) {
-    // While all JSID_INT properties use a single TI entry,
-    // nothing yet has inspected the updated value so we *must* use
-    // setSlotWithType().
-    obj->setSlotWithType(cx, shape, v, /* overwriting = */ true);
+    obj->setSlot(shape->slot(), v);
     return true;
   }
 
@@ -2554,13 +2526,7 @@ static bool NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj,
   if (shape->hasDefaultSetter()) {
     if (shape->isDataProperty()) {
       // The common path. Standard data property.
-
-      // Global properties declared with 'var' will be initially
-      // defined with an undefined value, so don't treat the initial
-      // assignments to such properties as overwrites.
-      bool overwriting = !obj->is<GlobalObject>() ||
-                         !obj->getSlot(shape->slot()).isUndefined();
-      obj->setSlotWithType(cx, shape, v, overwriting);
+      obj->setSlot(shape->slot(), v);
       return result.succeed();
     }
 

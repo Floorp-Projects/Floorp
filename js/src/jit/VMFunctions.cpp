@@ -1012,20 +1012,10 @@ bool SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name,
                  HandleValue value, bool strict, jsbytecode* pc) {
   RootedId id(cx, NameToId(name));
 
-  JSOp op = JSOp(*pc);
-
-  if (op == JSOp::SetAliasedVar || op == JSOp::InitAliasedLexical) {
-    // Aliased var assigns ignore readonly attributes on the property, as
-    // required for initializing 'const' closure variables.
-    Shape* shape = obj->as<NativeObject>().lookup(cx, name);
-    MOZ_ASSERT(shape && shape->isDataProperty());
-    obj->as<NativeObject>().setSlotWithType(cx, shape, value);
-    return true;
-  }
-
   RootedValue receiver(cx, ObjectValue(*obj));
   ObjectOpResult result;
   if (MOZ_LIKELY(!obj->getOpsSetProperty())) {
+    JSOp op = JSOp(*pc);
     if (op == JSOp::SetName || op == JSOp::StrictSetName ||
         op == JSOp::SetGName || op == JSOp::StrictSetGName) {
       if (!NativeSetProperty<Unqualified>(cx, obj.as<NativeObject>(), id, value,

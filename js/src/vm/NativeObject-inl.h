@@ -444,14 +444,6 @@ inline DenseElementResult NativeObject::setOrExtendDenseElements(
   return DenseElementResult::Success;
 }
 
-// TODO(no-TI): remove.
-MOZ_ALWAYS_INLINE void NativeObject::setSlotWithType(JSContext* cx,
-                                                     Shape* shape,
-                                                     const Value& value,
-                                                     bool overwriting) {
-  setSlot(shape->slot(), value);
-}
-
 inline bool NativeObject::isInWholeCellBuffer() const {
   const gc::TenuredCell* cell = &asTenured();
   gc::ArenaCellSet* cells = cell->arena()->bufferedCells();
