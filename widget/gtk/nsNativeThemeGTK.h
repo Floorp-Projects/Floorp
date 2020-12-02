@@ -37,13 +37,13 @@ class nsNativeThemeGTK final : private nsNativeTheme,
       mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
       StyleAppearance aAppearance, const nsRect& aRect) override;
 
-  [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
+  [[nodiscard]] LayoutDeviceMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
-                        LayoutDeviceIntMargin* aResult) override;
+                        LayoutDeviceMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                  StyleAppearance aAppearance,
@@ -51,7 +51,7 @@ class nsNativeThemeGTK final : private nsNativeTheme,
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  mozilla::LayoutDeviceSize* aResult,
                                   bool* aIsOverridable) override;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppearance,
@@ -108,9 +108,9 @@ class nsNativeThemeGTK final : private nsNativeTheme,
   // corresponding entry in mBorderCache is valid.
   void GetCachedWidgetBorder(nsIFrame* aFrame, StyleAppearance aAppearance,
                              GtkTextDirection aDirection,
-                             LayoutDeviceIntMargin* aResult);
+                             LayoutDeviceMargin* aResult);
   uint8_t mBorderCacheValid[(MOZ_GTK_WIDGET_NODE_COUNT + 7) / 8];
-  LayoutDeviceIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
+  LayoutDeviceMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
 };
 
 #endif

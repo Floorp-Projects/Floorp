@@ -27,18 +27,18 @@ class nsNativeThemeAndroid : private nsNativeTheme, public nsITheme {
                                         mozilla::layers::RenderRootStateManager*
      aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect&
      aRect) override;*/
-  [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
+  [[nodiscard]] LayoutDeviceMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
   bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
-                        LayoutDeviceIntMargin* aResult) override;
+                        LayoutDeviceMargin* aResult) override;
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                  StyleAppearance aAppearance,
                                  nsRect* aOverflowRect) override;
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  LayoutDeviceSize* aResult,
                                   bool* aIsOverridable) override;
   virtual Transparency GetWidgetTransparency(
       nsIFrame* aFrame, StyleAppearance aAppearance) override;

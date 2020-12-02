@@ -249,7 +249,7 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   nscoord MainComponent(const LogicalSize& aSize) const {
     return IsRowOriented() ? aSize.ISize(mWM) : aSize.BSize(mWM);
   }
-  int32_t MainComponent(const LayoutDeviceIntSize& aIntSize) const {
+  LayoutDeviceCoord MainComponent(const LayoutDeviceSize& aIntSize) const {
     return IsMainAxisHorizontal() ? aIntSize.width : aIntSize.height;
   }
 
@@ -257,7 +257,7 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   nscoord CrossComponent(const LogicalSize& aSize) const {
     return IsRowOriented() ? aSize.BSize(mWM) : aSize.ISize(mWM);
   }
-  int32_t CrossComponent(const LayoutDeviceIntSize& aIntSize) const {
+  LayoutDeviceCoord CrossComponent(const LayoutDeviceSize& aIntSize) const {
     return IsMainAxisHorizontal() ? aIntSize.height : aIntSize.width;
   }
 
@@ -1340,7 +1340,7 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
   bool isFixedSizeWidget = false;
   const nsStyleDisplay* disp = aChildFrame->StyleDisplay();
   if (aChildFrame->IsThemed(disp)) {
-    LayoutDeviceIntSize widgetMinSize;
+    LayoutDeviceSize widgetMinSize;
     bool canOverride = true;
     PresContext()->Theme()->GetMinimumWidgetSize(PresContext(), aChildFrame,
                                                  disp->EffectiveAppearance(),
