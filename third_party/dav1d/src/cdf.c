@@ -29,10 +29,7 @@
 
 #include <string.h>
 
-#include "src/thread.h"
-#include "common/intops.h"
-
-#include "src/cdf.h"
+#include "src/internal.h"
 #include "src/tables.h"
 
 #define CDF1(x) (32768-(x))
@@ -4096,11 +4093,11 @@ void dav1d_cdf_thread_copy(CdfContext *const dst, const CdfThreadContext *const 
     }
 }
 
-int dav1d_cdf_thread_alloc(CdfThreadContext *const cdf,
+int dav1d_cdf_thread_alloc(Dav1dContext *const c, CdfThreadContext *const cdf,
                            struct thread_data *const t)
 {
-    cdf->ref = dav1d_ref_create(sizeof(CdfContext) +
-                                (t != NULL) * sizeof(atomic_uint));
+    cdf->ref = dav1d_ref_create_using_pool(&c->cdf_pool,
+                                           sizeof(CdfContext) + sizeof(atomic_uint));
     if (!cdf->ref) return DAV1D_ERR(ENOMEM);
     cdf->data.cdf = cdf->ref->data;
     if (t) {

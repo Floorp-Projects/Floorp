@@ -87,6 +87,7 @@ EXPORTS.dav1d.src += [
     '../../third_party/dav1d/src/intra_edge.h',
     '../../third_party/dav1d/src/lf_mask.h',
     '../../third_party/dav1d/src/log.h',
+    '../../third_party/dav1d/src/mem.h',
     '../../third_party/dav1d/src/msac.h',
     '../../third_party/dav1d/src/obu.h',
     '../../third_party/dav1d/src/picture.h',
@@ -163,7 +164,6 @@ EXPORTS.dav1d += [
     '../../third_party/dav1d/include/common/bitdepth.h',
     '../../third_party/dav1d/include/common/dump.h',
     '../../third_party/dav1d/include/common/intops.h',
-    '../../third_party/dav1d/include/common/mem.h',
     '../../third_party/dav1d/include/common/validate.h',
 ]
 

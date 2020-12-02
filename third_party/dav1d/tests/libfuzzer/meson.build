@@ -72,8 +72,15 @@ dav1d_fuzzer_mt = executable('dav1d_fuzzer_mt',
 
 objcopy = find_program('objcopy',
                        required: false)
+
+if meson.version().version_compare('<0.56.99')
+    lto = get_option('b_lto') ? 'true' : 'false'
+else
+    lto = get_option('b_lto')
+endif
+
 if (objcopy.found() and
-    not get_option('b_lto') and
+    lto == 'false' and
     get_option('default_library') == 'static' and
     cc.has_function('posix_memalign', prefix : '#include <stdlib.h>', args : test_args))
 

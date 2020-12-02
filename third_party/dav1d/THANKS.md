@@ -16,13 +16,16 @@ The Alliance for Open Media (AOM) for funding this project.
 
 And all the dav1d Authors (git shortlog -sn), including:
 
-Janne Grunau, Ronald S. Bultje, Martin Storsjö, Henrik Gramner, James Almer,
-Marvin Scholz, Luc Trudeau, Jean-Baptiste Kempf, Victorien Le Couviour--Tuffet,
-David Michael Barr, Hugo Beauzée-Luyssen, Steve Lhomme, Nathan E. Egge,
-Francois Cartegnie, Konstantin Pavlov, Liwei Wang, Xuefeng Jiang,
-Derek Buitenhuis, Raphaël Zumer, Niklas Haas, Michael Bradshaw, Kyle Siefring,
-Raphael Zumer, Boyuan Xiao, Thierry Foucu, Matthias Dressel, Thomas Daede,
-Rupert Swarbrick, Jan Beich, Dale Curtis, SmilingWolf, Tristan Laurent,
-Vittorio Giovara, Rostislav Pehlivanov, Shiz, skal, Steinar Midtskogen,
-Luca Barbato, Justin Bull, Jean-Yves Avenard, Timo Gurr, Fred Barbier,
-Anisse Astier, Pablo Stebler, Nicolas Frattaroli, Mark Shuttleworth.
+Martin Storsjö, Janne Grunau, Henrik Gramner, Ronald S. Bultje, James Almer,
+Marvin Scholz, Luc Trudeau, Victorien Le Couviour--Tuffet, Jean-Baptiste Kempf,
+Hugo Beauzée-Luyssen, Matthias Dressel, Konstantin Pavlov, David Michael Barr,
+Steve Lhomme, Niklas Haas, B Krishnan Iyer, Francois Cartegnie, Liwei Wang,
+Nathan E. Egge, Derek Buitenhuis, Michael Bradshaw, Raphaël Zumer,
+Xuefeng Jiang, Luca Barbato, Jan Beich, Wan-Teh Chang, Justin Bull, Boyuan Xiao,
+Dale Curtis, Kyle Siefring, Raphael Zumer, Rupert Swarbrick, Thierry Foucu,
+Thomas Daede, Colin Lee, Emmanuel Gil Peyrot, Lynne, Michail Alvanos,
+Nico Weber, SmilingWolf, Tristan Laurent, Vittorio Giovara, Anisse Astier,
+Dmitriy Sychov, Ewout ter Hoeven, Fred Barbier, Jean-Yves Avenard,
+Mark Shuttleworth, Matthieu Bouron, Nicolas Frattaroli, Pablo Stebler,
+Rostislav Pehlivanov, Shiz, Steinar Midtskogen, Sylvestre Ledru, Timo Gurr,
+Tristan Matthews, Xavier Claessens, Xu Guangxin, kossh1 and skal.

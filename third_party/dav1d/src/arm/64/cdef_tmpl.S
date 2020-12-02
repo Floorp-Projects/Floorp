@@ -107,7 +107,7 @@ endconst
 .macro filter_func w, bpc, pri, sec, min, suffix
 function cdef_filter\w\suffix\()_\bpc\()bpc_neon
 .if \bpc == 8
-        ldr             w8,  [sp]                   // bitdepth_max
+        ldr             w8,  [sp]                   // edges
         cmp             w8,  #0xf
         b.eq            cdef_filter\w\suffix\()_edged_8bpc_neon
 .endif

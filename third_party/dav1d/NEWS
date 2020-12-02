@@ -1,3 +1,18 @@
+Changes for 0.8.0 'Eurasian hobby":
+-----------------------------------
+
+0.8.0 is a major update for dav1d:
+ - Improve the performance by using a picture buffer pool;
+   The improvements can reach 10% on some cases on Windows.
+ - Support for Apple ARM Silicon
+ - ARM32 optimizations for 8bit bitdepth for ipred paeth, smooth, cfl
+ - ARM32 optimizations for 10/12/16bit bitdepth for mc_avg/mask/w_avg,
+   put/prep 8tap/bilin, wiener and CDEF filters
+ - ARM64 optimizations for cfl_ac 444 for all bitdepths
+ - x86 optimizations for MC 8-tap, mc_scaled in AVX2
+ - x86 optimizations for CDEF in SSE and {put/prep}_{8tap/bilin} in SSSE3
+
+
 Changes for 0.7.1 'Frigatebird':
 ------------------------------
 

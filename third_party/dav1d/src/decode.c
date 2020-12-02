@@ -36,7 +36,6 @@
 #include "dav1d/data.h"
 
 #include "common/intops.h"
-#include "common/mem.h"
 
 #include "src/ctx.h"
 #include "src/decode.h"
@@ -2678,17 +2677,17 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
                    sizeof(*f->tile_thread.titsati_index_rows) *
                        (f->frame_hdr->tiling.rows + 1)))
         {
-            for (int tile_row = 0, tile_idx = 0;
+            for (int tile_row = 0, task_idx = 0;
                  tile_row < f->frame_hdr->tiling.rows; tile_row++)
             {
                 for (int sby = f->frame_hdr->tiling.row_start_sb[tile_row];
                      sby < f->frame_hdr->tiling.row_start_sb[tile_row + 1]; sby++)
                 {
                     for (int tile_col = 0; tile_col < f->frame_hdr->tiling.cols;
-                         tile_col++, tile_idx++)
+                         tile_col++, task_idx++)
                     {
-                        f->tile_thread.task_idx_to_sby_and_tile_idx[tile_idx][0] = sby;
-                        f->tile_thread.task_idx_to_sby_and_tile_idx[tile_idx][1] =
+                        f->tile_thread.task_idx_to_sby_and_tile_idx[task_idx][0] = sby;
+                        f->tile_thread.task_idx_to_sby_and_tile_idx[task_idx][1] =
                             tile_row * f->frame_hdr->tiling.cols + tile_col;
                     }
                 }
@@ -3102,7 +3101,7 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
                                                           4 * (t->by + f->sb_step),
                                                           PLANE_TYPE_BLOCK))
                             {
-                                return 1;
+                                goto error;
                             }
                         dav1d_refmvs_load_tmvs(&f->rf, tile_row,
                                                0, f->bw >> 1, t->by >> 1, by_end);
@@ -3398,7 +3397,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         dav1d_cdf_thread_ref(&f->in_cdf, &c->cdf[pri_ref]);
     }
     if (f->frame_hdr->refresh_context) {
-        res = dav1d_cdf_thread_alloc(&f->out_cdf, c->n_fc > 1 ? &f->frame_thread.td : NULL);
+        res = dav1d_cdf_thread_alloc(c, &f->out_cdf, c->n_fc > 1 ? &f->frame_thread.td : NULL);
         if (res < 0) goto error;
     }
 
@@ -3463,8 +3462,8 @@ int dav1d_submit_frame(Dav1dContext *const c) {
 
     // ref_mvs
     if ((f->frame_hdr->frame_type & 1) || f->frame_hdr->allow_intrabc) {
-        f->mvs_ref = dav1d_ref_create(f->sb128h * 16 * (f->b4_stride >> 1) *
-                                      sizeof(*f->mvs));
+        f->mvs_ref = dav1d_ref_create_using_pool(&c->refmvs_pool,
+            sizeof(*f->mvs) * f->sb128h * 16 * (f->b4_stride >> 1));
         if (!f->mvs_ref) {
             res = DAV1D_ERR(ENOMEM);
             goto error;
@@ -3527,7 +3526,8 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             // We're updating an existing map, but need somewhere to
             // put the new values. Allocate them here (the data
             // actually gets set elsewhere)
-            f->cur_segmap_ref = dav1d_ref_create(f->b4_stride * 32 * f->sb128h);
+            f->cur_segmap_ref = dav1d_ref_create_using_pool(&c->segmap_pool,
+                sizeof(*f->cur_segmap) * f->b4_stride * 32 * f->sb128h);
             if (!f->cur_segmap_ref) {
                 dav1d_ref_dec(&f->prev_segmap_ref);
                 res = DAV1D_ERR(ENOMEM);
@@ -3542,13 +3542,14 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             f->cur_segmap = f->prev_segmap_ref->data;
         } else {
             // We need to make a new map. Allocate one here and zero it out.
-            f->cur_segmap_ref = dav1d_ref_create(f->b4_stride * 32 * f->sb128h);
+            const size_t segmap_size = sizeof(*f->cur_segmap) * f->b4_stride * 32 * f->sb128h;
+            f->cur_segmap_ref = dav1d_ref_create_using_pool(&c->segmap_pool, segmap_size);
             if (!f->cur_segmap_ref) {
                 res = DAV1D_ERR(ENOMEM);
                 goto error;
             }
             f->cur_segmap = f->cur_segmap_ref->data;
-            memset(f->cur_segmap_ref->data, 0, f->b4_stride * 32 * f->sb128h);
+            memset(f->cur_segmap, 0, segmap_size);
         }
     } else {
         f->cur_segmap = NULL;
