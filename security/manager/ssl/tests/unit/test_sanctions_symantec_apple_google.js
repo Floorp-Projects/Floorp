@@ -132,16 +132,16 @@ add_connection_test(
   null
 );
 
-// Load the wildcard *.google.com cert and its intermediate, then verify
+// Load the Apple EE cert and its intermediate, then verify
 // it at a reasonable time and make sure the whitelists work
 add_task(async function() {
   addCertFromFile(
     certDB,
-    "test_sanctions/symantec-real-google-g2-intermediate.pem",
+    "test_sanctions/apple-ist-ca-8-g1-intermediate.pem",
     ",,"
   );
   let whitelistedCert = constructCertFromFile(
-    "test_sanctions/symantec-real-googlecom.pem"
+    "test_sanctions/gspe72-4-ssl-ls-apple-com.pem"
   );
 
   // Since we don't want to actually try to fetch OCSP for this certificate,
@@ -154,8 +154,8 @@ add_task(async function() {
     /* DistrustedCAPolicy::DistrustSymantecRoots */ 0b01
   );
 
-  // (new Date("2018-02-16")).getTime() / 1000
-  const VALIDATION_TIME = 1518739200;
+  // (new Date("2020-01-01")).getTime() / 1000
+  const VALIDATION_TIME = 1577836800;
 
   await checkCertErrorGenericAtTime(
     certDB,
