@@ -97,6 +97,30 @@ jobs:
                 - linux64-cctools-port
                 - linux64-clang
                 - linux64-dump-syms
+    macosx64-aarch64/opt:
+        attributes:
+            build_platform: macosx64-aarch64
+            build_type: opt
+        treeherder:
+            platform: macosx64-aarch64/opt
+        worker-type: b-linux
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/macosx64-aarch64.py
+        fetches:
+            toolchain:
+                - linux64-cctools-port
+                - linux64-clang
+                - linux64-dump-syms
+                - macosx64-sdk-11.0
     win32/opt:
         attributes:
             build_platform: win32
