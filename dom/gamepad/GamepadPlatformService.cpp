@@ -28,33 +28,44 @@ StaticRefPtr<GamepadPlatformService> gGamepadPlatformServiceSingleton;
 
 }  // namespace
 
-GamepadPlatformService::MonitoringState::~MonitoringState() {
-  AssertIsOnBackgroundThread();
-  MOZ_RELEASE_ASSERT(mObservers.IsEmpty());
+// static
+GamepadMonitoringState& GamepadMonitoringState::GetSingleton() {
+  static GamepadMonitoringState sInstance{};
+  return sInstance;
 }
 
-void GamepadPlatformService::MonitoringState::AddObserver(
-    WeakPtr<GamepadTestChannelParent> aParent) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParent);
-  MOZ_ASSERT(!mObservers.Contains(aParent));
-  mObservers.AppendElement(std::move(aParent));
-}
-
-void GamepadPlatformService::MonitoringState::RemoveObserver(
-    GamepadTestChannelParent* aParent) {
+void GamepadMonitoringState::AddObserver(GamepadTestChannelParent* aParent) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
-  MOZ_ASSERT(mObservers.Contains(aParent));
-  mObservers.RemoveElement(aParent);
+  MOZ_ALWAYS_TRUE(mObservers.append(aParent));
 }
 
-bool GamepadPlatformService::MonitoringState::IsMonitoring() const {
+void GamepadMonitoringState::RemoveObserver(GamepadTestChannelParent* aParent) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParent);
+
+  WeakPtr<GamepadTestChannelParent>* observer = nullptr;
+
+  for (auto& item : mObservers) {
+    if (item == aParent) {
+      observer = &item;
+    }
+  }
+
+  MOZ_ASSERT(
+      observer,
+      "Attempted to remove a GamepadTestChannelParent that was never added");
+
+  std::swap(*observer, mObservers.back());
+  mObservers.popBack();
+}
+
+bool GamepadMonitoringState::IsMonitoring() const {
   AssertIsOnBackgroundThread();
   return mIsMonitoring;
 }
 
-void GamepadPlatformService::MonitoringState::Set(bool aIsMonitoring) {
+void GamepadMonitoringState::Set(bool aIsMonitoring) {
   AssertIsOnBackgroundThread();
 
   if (mIsMonitoring != aIsMonitoring) {
@@ -258,7 +269,7 @@ void GamepadPlatformService::AddChannelParent(
 
   StartGamepadMonitoring();
 
-  mMonitoringState.Set(true);
+  GamepadMonitoringState::GetSingleton().Set(true);
 }
 
 void GamepadPlatformService::RemoveChannelParent(
@@ -278,7 +289,7 @@ void GamepadPlatformService::RemoveChannelParent(
     }
   }
 
-  mMonitoringState.Set(false);
+  GamepadMonitoringState::GetSingleton().Set(false);
 
   StopGamepadMonitoring();
   ResetGamepadIndexes();
