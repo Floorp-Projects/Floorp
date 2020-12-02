@@ -969,6 +969,14 @@ bool MWasmBinarySimd128::specializeForConstantRhs() {
     case wasm::SimdOp::I32x4Ne:
     case wasm::SimdOp::I32x4GtS:
     case wasm::SimdOp::I32x4LeS:
+    case wasm::SimdOp::F32x4Eq:
+    case wasm::SimdOp::F32x4Ne:
+    case wasm::SimdOp::F32x4Lt:
+    case wasm::SimdOp::F32x4Le:
+    case wasm::SimdOp::F64x2Eq:
+    case wasm::SimdOp::F64x2Ne:
+    case wasm::SimdOp::F64x2Lt:
+    case wasm::SimdOp::F64x2Le:
     case wasm::SimdOp::I32x4DotSI16x8:
     case wasm::SimdOp::F32x4Add:
     case wasm::SimdOp::F64x2Add:

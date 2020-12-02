@@ -349,6 +349,46 @@ void MacroAssemblerX64::vpcmpgtdSimd128(const SimdConstant& v,
   vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vpcmpgtd_ripr);
 }
 
+void MacroAssemblerX64::vcmpeqpsSimd128(const SimdConstant& v,
+                                        FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpeqps_ripr);
+}
+
+void MacroAssemblerX64::vcmpneqpsSimd128(const SimdConstant& v,
+                                         FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpneqps_ripr);
+}
+
+void MacroAssemblerX64::vcmpltpsSimd128(const SimdConstant& v,
+                                        FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpltps_ripr);
+}
+
+void MacroAssemblerX64::vcmplepsSimd128(const SimdConstant& v,
+                                        FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpleps_ripr);
+}
+
+void MacroAssemblerX64::vcmpeqpdSimd128(const SimdConstant& v,
+                                        FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpeqpd_ripr);
+}
+
+void MacroAssemblerX64::vcmpneqpdSimd128(const SimdConstant& v,
+                                         FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpneqpd_ripr);
+}
+
+void MacroAssemblerX64::vcmpltpdSimd128(const SimdConstant& v,
+                                        FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmpltpd_ripr);
+}
+
+void MacroAssemblerX64::vcmplepdSimd128(const SimdConstant& v,
+                                        FloatRegister src) {
+  vpRiprOpSimd128(v, src, &X86Encoding::BaseAssemblerX64::vcmplepd_ripr);
+}
+
 void MacroAssemblerX64::bindOffsets(
     const MacroAssemblerX86Shared::UsesVector& uses) {
   for (JmpSrc src : uses) {
