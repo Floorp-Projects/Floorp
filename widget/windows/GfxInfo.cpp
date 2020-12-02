@@ -1761,6 +1761,15 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
         "FEATURE_UNQUALIFIED_WEBRENDER_NVIDIA_BLOCKED");
 
+#ifndef EARLY_BETA_OR_EARLIER
+    // Bug 1680063
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Windows7, DeviceFamily::IntelSandybridge,
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
+        "SLOW_GEN6_ON_WIN7_BUG_1680063");
+#endif
+
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
 #ifdef EARLY_BETA_OR_EARLIER
