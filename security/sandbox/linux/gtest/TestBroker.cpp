@@ -217,6 +217,14 @@ TEST_F(SandboxBrokerTest, Stat) {
   EXPECT_EQ(realStat.st_ino, brokeredStat.st_ino);
   EXPECT_EQ(realStat.st_rdev, brokeredStat.st_rdev);
 
+  // Add some indirection to avoid -Wnonnull warnings.
+  [&](const char* aPath) {
+    EXPECT_EQ(-1, statsyscall(aPath, &realStat));
+    EXPECT_EQ(errno, EFAULT);
+
+    EXPECT_EQ(-EFAULT, Stat(aPath, &brokeredStat));
+  }(nullptr);
+
   EXPECT_EQ(-ENOENT, Stat("/var/empty/qwertyuiop", &brokeredStat));
   EXPECT_EQ(-EACCES, Stat("/dev", &brokeredStat));
 

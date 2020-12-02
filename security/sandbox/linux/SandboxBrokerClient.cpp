@@ -159,11 +159,19 @@ int SandboxBrokerClient::Access(const char* aPath, int aMode) {
 }
 
 int SandboxBrokerClient::Stat(const char* aPath, statstruct* aStat) {
+  if (!aPath || !aStat) {
+    return -EFAULT;
+  }
+
   Request req = {SANDBOX_FILE_STAT, 0, sizeof(statstruct)};
   return DoCall(&req, aPath, nullptr, (void*)aStat, false);
 }
 
 int SandboxBrokerClient::LStat(const char* aPath, statstruct* aStat) {
+  if (!aPath || !aStat) {
+    return -EFAULT;
+  }
+
   Request req = {SANDBOX_FILE_STAT, O_NOFOLLOW, sizeof(statstruct)};
   return DoCall(&req, aPath, nullptr, (void*)aStat, false);
 }
