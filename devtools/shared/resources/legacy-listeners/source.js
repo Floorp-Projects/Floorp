@@ -67,7 +67,7 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
   // So ignore any error if this request failed on destruction.
   let sources;
   try {
-    ({ sources } = await threadFront.sources());
+    sources = await threadFront.sources();
   } catch (e) {
     if (threadFront.isDestroyed()) {
       return;
