@@ -61,16 +61,18 @@ struct SortedArenaListSegment {
 };
 
 /*
- * Arena lists have a head and a cursor. The cursor conceptually lies on arena
- * boundaries, i.e. before the first arena, between two arenas, or after the
- * last arena.
+ * Arena lists contain a singly linked lists of arenas starting from a head
+ * pointer.
+ *
+ * They also have a cursor, which conceptually lies on arena boundaries,
+ * i.e. before the first arena, between two arenas, or after the last arena.
  *
  * Arenas are usually sorted in order of increasing free space, with the cursor
  * following the Arena currently being allocated from. This ordering should not
  * be treated as an invariant, however, as the free lists may be cleared,
  * leaving arenas previously used for allocation partially full. Sorting order
  * is restored during sweeping.
-
+ *
  * Arenas following the cursor should not be full.
  */
 class ArenaList {
@@ -99,20 +101,26 @@ class ArenaList {
   Arena* head_;
   Arena** cursorp_;
 
-  inline void copy(const ArenaList& other);
+  // Transfers the contents of |other| to this list and clears |other|.
+  inline void moveFrom(ArenaList& other);
 
  public:
   inline ArenaList();
-  inline ArenaList(const ArenaList& other);
+  inline ArenaList(ArenaList&& other);
+  inline ~ArenaList();
 
-  inline ArenaList& operator=(const ArenaList& other);
+  inline ArenaList& operator=(ArenaList&& other);
+
+  // It doesn't make sense for arenas to be present in more than one list, so
+  // list copy operations are not provided.
+  ArenaList(const ArenaList& other) = delete;
+  ArenaList& operator=(const ArenaList& other) = delete;
 
   inline explicit ArenaList(const SortedArenaListSegment& segment);
 
   inline void check() const;
 
   inline void clear();
-  inline ArenaList copyAndClear();
   inline bool isEmpty() const;
 
   // This returns nullptr if the list is empty.
@@ -120,8 +128,6 @@ class ArenaList {
 
   inline bool isCursorAtHead() const;
   inline bool isCursorAtEnd() const;
-
-  inline void moveCursorToEnd();
 
   // This can return nullptr.
   inline Arena* arenaAfterCursor() const;
@@ -138,8 +144,9 @@ class ArenaList {
   // Inserts |a| at the cursor, then moves the cursor past it.
   inline void insertBeforeCursor(Arena* a);
 
-  // This inserts |other|, which must be full, at the cursor of |this|.
-  inline ArenaList& insertListWithCursorAtEnd(const ArenaList& other);
+  // This inserts the contents of |other|, which must be full, at the cursor of
+  // |this| and clears |other|.
+  inline ArenaList& insertListWithCursorAtEnd(ArenaList& other);
 
   Arena* removeRemainingArenas(Arena** arenap);
   Arena** pickArenasToRelocate(size_t& arenaTotalOut, size_t& relocTotalOut);
