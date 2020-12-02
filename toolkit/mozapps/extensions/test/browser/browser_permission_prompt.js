@@ -9,6 +9,8 @@ const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
 const ADDON_ID = "addon1@test.mozilla.org";
+const CUSTOM_THEME_ID = "theme1@test.mozilla.org";
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
 AddonTestUtils.initMochitest(this);
 
@@ -41,6 +43,53 @@ function assertEnabledSideloadedExtensionElement(managerWindow, addonElement) {
 function clickEnableExtension(managerWindow, addonElement) {
   addonElement.querySelector('[action="toggle-disabled"]').click();
 }
+
+// Test for bug 1647931
+// Install a theme, enable it and then enable the default theme again
+add_task(async function test_theme_enable() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["xpinstall.signatures.required", false],
+      ["extensions.autoDisableScopes", 15],
+      ["extensions.ui.ignoreUnsigned", true],
+    ],
+  });
+
+  let theme = {
+    manifest: {
+      applications: { gecko: { id: CUSTOM_THEME_ID } },
+      name: "Theme 1",
+      theme: {
+        colors: {
+          frame: "#000000",
+          tab_background_text: "#ffffff",
+        },
+      },
+    },
+  };
+
+  let xpi = AddonTestUtils.createTempWebExtensionFile(theme);
+  await AddonTestUtils.manuallyInstall(xpi);
+
+  let changePromise = new Promise(resolve =>
+    ExtensionsUI.once("change", resolve)
+  );
+  ExtensionsUI._checkForSideloaded();
+  await changePromise;
+
+  // enable fresh installed theme
+  let manager = await open_manager("addons://list/theme");
+  let customTheme = get_addon_element(manager, CUSTOM_THEME_ID);
+  clickEnableExtension(manager, customTheme);
+
+  // enable default theme again
+  let defaultTheme = get_addon_element(manager, DEFAULT_THEME_ID);
+  clickEnableExtension(manager, defaultTheme);
+
+  let addon = await AddonManager.getAddonByID(CUSTOM_THEME_ID);
+  await close_manager(manager);
+  await addon.uninstall();
+});
 
 // Loading extension by sideloading method
 add_task(async function test_sideloaded_extension_permissions_prompt() {
