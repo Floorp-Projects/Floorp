@@ -628,67 +628,6 @@ struct ParamTraits<mozilla::FontRange> {
 };
 
 template <>
-struct ParamTraits<mozilla::WidgetQueryContentEvent::Input> {
-  typedef mozilla::WidgetQueryContentEvent::Input paramType;
-  typedef mozilla::WidgetQueryContentEvent event;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mOffset);
-    WriteParam(aMsg, aParam.mLength);
-    WriteParam(aMsg, mozilla::ToRawSelectionType(aParam.mSelectionType));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    mozilla::RawSelectionType rawSelectionType = 0;
-    bool ok = ReadParam(aMsg, aIter, &aResult->mOffset) &&
-              ReadParam(aMsg, aIter, &aResult->mLength) &&
-              ReadParam(aMsg, aIter, &rawSelectionType);
-    aResult->mSelectionType = mozilla::ToSelectionType(rawSelectionType);
-    return ok;
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::WidgetQueryContentEvent> {
-  typedef mozilla::WidgetQueryContentEvent paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
-    WriteParam(aMsg, aParam.mSucceeded);
-    WriteParam(aMsg, aParam.mUseNativeLineBreak);
-    WriteParam(aMsg, aParam.mWithFontRanges);
-    WriteParam(aMsg, aParam.mInput);
-    WriteParam(aMsg, aParam.mReply.mOffset);
-    WriteParam(aMsg, aParam.mReply.mTentativeCaretOffset);
-    WriteParam(aMsg, aParam.mReply.mString);
-    WriteParam(aMsg, aParam.mReply.mRect);
-    WriteParam(aMsg, aParam.mReply.mReversed);
-    WriteParam(aMsg, aParam.mReply.mHasSelection);
-    WriteParam(aMsg, aParam.mReply.mWidgetIsHit);
-    WriteParam(aMsg, aParam.mReply.mFontRanges);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter,
-                     static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
-           ReadParam(aMsg, aIter, &aResult->mUseNativeLineBreak) &&
-           ReadParam(aMsg, aIter, &aResult->mWithFontRanges) &&
-           ReadParam(aMsg, aIter, &aResult->mInput) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mTentativeCaretOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mString) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mRect) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mReversed) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mHasSelection) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mWidgetIsHit) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mFontRanges);
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::WidgetSelectionEvent> {
   typedef mozilla::WidgetSelectionEvent paramType;
 

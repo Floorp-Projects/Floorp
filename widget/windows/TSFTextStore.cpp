@@ -2894,11 +2894,12 @@ bool TSFTextStore::GetCurrentText(nsAString& aTextContent) {
            "retrieving text from the content...",
            this));
 
-  WidgetQueryContentEvent queryText(true, eQueryTextContent, mWidget);
-  queryText.InitForQueryTextContent(0, UINT32_MAX);
-  mWidget->InitEvent(queryText);
-  DispatchEvent(queryText);
-  if (NS_WARN_IF(!queryText.mSucceeded)) {
+  WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
+                                                mWidget);
+  queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
+  mWidget->InitEvent(queryTextContentEvent);
+  DispatchEvent(queryTextContentEvent);
+  if (NS_WARN_IF(queryTextContentEvent.Failed())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetCurrentText(), FAILED, due to "
              "eQueryTextContent failure",
@@ -2907,7 +2908,7 @@ bool TSFTextStore::GetCurrentText(nsAString& aTextContent) {
     return false;
   }
 
-  aTextContent = queryText.mReply.mString;
+  aTextContent = queryTextContentEvent.mReply->DataRef();
   return true;
 }
 
@@ -2920,16 +2921,19 @@ Maybe<TSFTextStore::Selection>& TSFTextStore::SelectionForTSF() {
       MOZ_ASSERT_UNREACHABLE("There should be non-destroyed widget");
     }
 
-    WidgetQueryContentEvent querySelection(true, eQuerySelectedText, mWidget);
-    mWidget->InitEvent(querySelection);
-    DispatchEvent(querySelection);
-    if (NS_WARN_IF(!querySelection.mSucceeded)) {
+    WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                   mWidget);
+    mWidget->InitEvent(querySelectedTextEvent);
+    DispatchEvent(querySelectedTextEvent);
+    if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection())) {
       return mSelectionForTSF;
     }
-
-    mSelectionForTSF = Some(Selection(
-        querySelection.mReply.mOffset, querySelection.mReply.mString.Length(),
-        querySelection.mReply.mReversed, querySelection.GetWritingMode()));
+    MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
+    mSelectionForTSF =
+        Some(Selection(querySelectedTextEvent.mReply->StartOffset(),
+                       querySelectedTextEvent.mReply->DataLength(),
+                       querySelectedTextEvent.mReply->mReversed,
+                       querySelectedTextEvent.mReply->WritingModeRef()));
   }
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -4257,13 +4261,14 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView, const POINT* pt,
   // NOTE: Don't check if the point is in the widget since the point can be
   //       outside of the widget if focused editor is in a XUL <panel>.
 
-  WidgetQueryContentEvent charAtPt(true, eQueryCharacterAtPoint, mWidget);
-  mWidget->InitEvent(charAtPt, &ourPt);
+  WidgetQueryContentEvent queryCharAtPointEvent(true, eQueryCharacterAtPoint,
+                                                mWidget);
+  mWidget->InitEvent(queryCharAtPointEvent, &ourPt);
 
   // FYI: WidgetQueryContentEvent may cause flushing pending layout and it
   //      may cause focus change or something.
   RefPtr<TSFTextStore> kungFuDeathGrip(this);
-  DispatchEvent(charAtPt);
+  DispatchEvent(queryCharAtPointEvent);
   if (!mWidget || mWidget->Destroyed()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
@@ -4273,12 +4278,11 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView, const POINT* pt,
   }
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::GetACPFromPoint(), charAtPt={ "
-           "mSucceeded=%s, mReply={ mOffset=%u, mTentativeCaretOffset=%u }}",
-           this, GetBoolName(charAtPt.mSucceeded), charAtPt.mReply.mOffset,
-           charAtPt.mReply.mTentativeCaretOffset));
+          ("0x%p   TSFTextStore::GetACPFromPoint(), queryCharAtPointEvent={ "
+           "mReply=%s }",
+           this, ToString(queryCharAtPointEvent.mReply).c_str()));
 
-  if (NS_WARN_IF(!charAtPt.mSucceeded)) {
+  if (NS_WARN_IF(queryCharAtPointEvent.Failed())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
              "eQueryCharacterAtPoint failure",
@@ -4288,8 +4292,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView, const POINT* pt,
 
   // If dwFlags isn't set and the point isn't in any character's bounding box,
   // we should return TS_E_INVALIDPOINT.
-  if (!(dwFlags & GXFPF_NEAREST) &&
-      charAtPt.mReply.mOffset == WidgetQueryContentEvent::NOT_FOUND) {
+  if (!(dwFlags & GXFPF_NEAREST) && queryCharAtPointEvent.DidNotFindChar()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetACPFromPoint() FAILED due to the "
              "point contained by no bounding box",
@@ -4299,21 +4302,19 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView, const POINT* pt,
 
   // Although, we're not sure if mTentativeCaretOffset becomes NOT_FOUND,
   // let's assume that there is no content in such case.
-  if (NS_WARN_IF(charAtPt.mReply.mTentativeCaretOffset ==
-                 WidgetQueryContentEvent::NOT_FOUND)) {
-    charAtPt.mReply.mTentativeCaretOffset = 0;
-  }
+  NS_WARNING_ASSERTION(queryCharAtPointEvent.DidNotFindTentativeCaretOffset(),
+                       "Tentative caret offset was not found");
 
   uint32_t offset;
 
   // If dwFlags includes GXFPF_ROUND_NEAREST, we should return tentative
   // caret offset (MSDN calls it "range position").
   if (dwFlags & GXFPF_ROUND_NEAREST) {
-    offset = charAtPt.mReply.mTentativeCaretOffset;
-  } else if (charAtPt.mReply.mOffset != WidgetQueryContentEvent::NOT_FOUND) {
+    offset = queryCharAtPointEvent.mReply->mTentativeCaretOffset.valueOr(0);
+  } else if (queryCharAtPointEvent.FoundChar()) {
     // Otherwise, we should return character offset whose bounding box contains
     // the point.
-    offset = charAtPt.mReply.mOffset;
+    offset = queryCharAtPointEvent.mReply->StartOffset();
   } else {
     // If the point isn't in any character's bounding box but we need to return
     // the nearest character from the point, we should *guess* the character
@@ -4323,7 +4324,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView, const POINT* pt,
     //     However, dispatching 2 eQueryTextRect may be expensive.
 
     // So, use tentative offset for now.
-    offset = charAtPt.mReply.mTentativeCaretOffset;
+    offset = queryCharAtPointEvent.mReply->mTentativeCaretOffset.valueOr(0);
 
     // However, if it's after the last character, we need to decrement the
     // offset.
@@ -4457,8 +4458,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   }
 
   // use eQueryTextRect to get rect in system, screen coordinates
-  WidgetQueryContentEvent event(true, eQueryTextRect, mWidget);
-  mWidget->InitEvent(event);
+  WidgetQueryContentEvent queryTextRectEvent(true, eQueryTextRect, mWidget);
+  mWidget->InitEvent(queryTextRectEvent);
 
   WidgetQueryContentEvent::Options options;
   int64_t startOffset = acpStart;
@@ -4491,10 +4492,10 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   // case, users see "dancing" of candidate or suggest window of TIP.
   // For preventing it, we should query text rect with at least 1 length.
   uint32_t length = std::max(static_cast<int32_t>(acpEnd - acpStart), 1);
-  event.InitForQueryTextRect(startOffset, length, options);
+  queryTextRectEvent.InitForQueryTextRect(startOffset, length, options);
 
-  DispatchEvent(event);
-  if (NS_WARN_IF(!event.mSucceeded)) {
+  DispatchEvent(queryTextRectEvent);
+  if (NS_WARN_IF(queryTextRectEvent.Failed())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetTextExt() FAILED due to "
              "eQueryTextRect failure",
@@ -4503,12 +4504,18 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   }
 
   // IMEs don't like empty rects, fix here
-  if (event.mReply.mRect.Width() <= 0) event.mReply.mRect.SetWidth(1);
-  if (event.mReply.mRect.Height() <= 0) event.mReply.mRect.SetHeight(1);
+  if (queryTextRectEvent.mReply->mRect.Width() <= 0) {
+    queryTextRectEvent.mReply->mRect.SetWidth(1);
+  }
+  if (queryTextRectEvent.mReply->mRect.Height() <= 0) {
+    queryTextRectEvent.mReply->mRect.SetHeight(1);
+  }
 
   // convert to unclipped screen rect
-  nsWindow* refWindow = static_cast<nsWindow*>(
-      event.mReply.mFocusedWidget ? event.mReply.mFocusedWidget : mWidget);
+  nsWindow* refWindow =
+      static_cast<nsWindow*>(!!queryTextRectEvent.mReply->mFocusedWidget
+                                 ? queryTextRectEvent.mReply->mFocusedWidget
+                                 : static_cast<nsIWidget*>(mWidget.get()));
   // Result rect is in top level widget coordinates
   refWindow = refWindow->GetTopLevelWindow(false);
   if (!refWindow) {
@@ -4519,7 +4526,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
     return E_FAIL;
   }
 
-  event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffset());
+  queryTextRectEvent.mReply->mRect.MoveBy(refWindow->WidgetToScreenOffset());
 
   // get bounding screen rect to test for clipping
   if (!GetScreenExtInternal(*prc)) {
@@ -4532,8 +4539,10 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
 
   // clip text rect to bounding rect
   RECT textRect;
-  ::SetRect(&textRect, event.mReply.mRect.X(), event.mReply.mRect.Y(),
-            event.mReply.mRect.XMost(), event.mReply.mRect.YMost());
+  ::SetRect(&textRect, queryTextRectEvent.mReply->mRect.X(),
+            queryTextRectEvent.mReply->mRect.Y(),
+            queryTextRectEvent.mReply->mRect.XMost(),
+            queryTextRectEvent.mReply->mRect.YMost());
   if (!::IntersectRect(prc, prc, &textRect))
     // Text is not visible
     ::SetRectEmpty(prc);
@@ -4906,10 +4915,10 @@ bool TSFTextStore::GetScreenExtInternal(RECT& aScreenExt) {
   MOZ_ASSERT(!mDestroyed);
 
   // use NS_QUERY_EDITOR_RECT to get rect in system, screen coordinates
-  WidgetQueryContentEvent event(true, eQueryEditorRect, mWidget);
-  mWidget->InitEvent(event);
-  DispatchEvent(event);
-  if (!event.mSucceeded) {
+  WidgetQueryContentEvent queryEditorRectEvent(true, eQueryEditorRect, mWidget);
+  mWidget->InitEvent(queryEditorRectEvent);
+  DispatchEvent(queryEditorRectEvent);
+  if (queryEditorRectEvent.Failed()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::GetScreenExtInternal() FAILED due to "
              "eQueryEditorRect failure",
@@ -4917,8 +4926,10 @@ bool TSFTextStore::GetScreenExtInternal(RECT& aScreenExt) {
     return false;
   }
 
-  nsWindow* refWindow = static_cast<nsWindow*>(
-      event.mReply.mFocusedWidget ? event.mReply.mFocusedWidget : mWidget);
+  nsWindow* refWindow =
+      static_cast<nsWindow*>(!!queryEditorRectEvent.mReply->mFocusedWidget
+                                 ? queryEditorRectEvent.mReply->mFocusedWidget
+                                 : static_cast<nsIWidget*>(mWidget.get()));
   // Result rect is in top level widget coordinates
   refWindow = refWindow->GetTopLevelWindow(false);
   if (!refWindow) {
@@ -4933,7 +4944,7 @@ bool TSFTextStore::GetScreenExtInternal(RECT& aScreenExt) {
   boundRect.MoveTo(0, 0);
 
   // Clip frame rect to window rect
-  boundRect.IntersectRect(event.mReply.mRect, boundRect);
+  boundRect.IntersectRect(queryEditorRectEvent.mReply->mRect, boundRect);
   if (!boundRect.IsEmpty()) {
     boundRect.MoveBy(refWindow->WidgetToScreenOffset());
     ::SetRect(&aScreenExt, boundRect.X(), boundRect.Y(), boundRect.XMost(),
@@ -6384,8 +6395,8 @@ void TSFTextStore::CreateNativeCaret() {
     return;
   }
 
-  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, mWidget);
-  mWidget->InitEvent(queryCaretRect);
+  WidgetQueryContentEvent queryCaretRectEvent(true, eQueryCaretRect, mWidget);
+  mWidget->InitEvent(queryCaretRectEvent);
 
   WidgetQueryContentEvent::Options options;
   // XXX If this is called without composition and the selection isn't
@@ -6405,10 +6416,10 @@ void TSFTextStore::CreateNativeCaret() {
     options.mRelativeToInsertionPoint = true;
     caretOffset -= selectionForTSF->StartOffset();
   }
-  queryCaretRect.InitForQueryCaretRect(caretOffset, options);
+  queryCaretRectEvent.InitForQueryCaretRect(caretOffset, options);
 
-  DispatchEvent(queryCaretRect);
-  if (NS_WARN_IF(!queryCaretRect.mSucceeded)) {
+  DispatchEvent(queryCaretRectEvent);
+  if (NS_WARN_IF(queryCaretRectEvent.Failed())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
              "eQueryCaretRect failure (offset=%d)",
@@ -6417,7 +6428,7 @@ void TSFTextStore::CreateNativeCaret() {
   }
 
   if (!IMEHandler::CreateNativeCaret(static_cast<nsWindow*>(mWidget.get()),
-                                     queryCaretRect.mReply.mRect)) {
+                                     queryCaretRectEvent.mReply->mRect)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
              "IMEHandler::CreateNativeCaret() failure",

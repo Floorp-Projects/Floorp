@@ -10,6 +10,7 @@
 #include "nsIQueryContentEventResult.h"
 #include "nsString.h"
 #include "nsRect.h"
+#include "nsTArray.h"
 #include "Units.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
@@ -18,7 +19,7 @@ class nsIWidget;
 
 class nsQueryContentEventResult final : public nsIQueryContentEventResult {
  public:
-  explicit nsQueryContentEventResult(mozilla::WidgetQueryContentEvent& aEvent);
+  explicit nsQueryContentEventResult(mozilla::WidgetQueryContentEvent&& aEvent);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUERYCONTENTEVENTRESULT
 
@@ -33,7 +34,7 @@ class nsQueryContentEventResult final : public nsIQueryContentEventResult {
   uint32_t mTentativeCaretOffset;
   nsString mString;
   mozilla::LayoutDeviceIntRect mRect;
-  nsTArray<mozilla::LayoutDeviceIntRect> mRectArray;
+  CopyableTArray<mozilla::LayoutDeviceIntRect> mRectArray;
 
   bool mSucceeded;
   bool mReversed;

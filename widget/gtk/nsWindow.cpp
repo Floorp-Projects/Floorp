@@ -7200,16 +7200,18 @@ bool nsWindow::GetEditCommands(NativeKeyBindingsType aType,
     // Check if we're targeting content with vertical writing mode,
     // and if so remap the arrow keys.
     // XXX This may be expensive.
-    WidgetQueryContentEvent query(true, eQuerySelectedText, this);
+    WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                   this);
     nsEventStatus status;
-    DispatchEvent(&query, status);
+    DispatchEvent(&querySelectedTextEvent, status);
 
-    if (query.mSucceeded && query.mReply.mWritingMode.IsVertical()) {
+    if (querySelectedTextEvent.FoundSelection() &&
+        querySelectedTextEvent.mReply->mWritingMode.IsVertical()) {
       uint32_t geckoCode = 0;
       uint32_t gdkCode = 0;
       switch (aEvent.mKeyCode) {
         case NS_VK_LEFT:
-          if (query.mReply.mWritingMode.IsVerticalLR()) {
+          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
             geckoCode = NS_VK_UP;
             gdkCode = GDK_Up;
           } else {
@@ -7219,7 +7221,7 @@ bool nsWindow::GetEditCommands(NativeKeyBindingsType aType,
           break;
 
         case NS_VK_RIGHT:
-          if (query.mReply.mWritingMode.IsVerticalLR()) {
+          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
             geckoCode = NS_VK_DOWN;
             gdkCode = GDK_Down;
           } else {

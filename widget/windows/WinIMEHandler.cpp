@@ -1164,19 +1164,19 @@ bool IMEHandler::MaybeCreateNativeCaret(nsWindow* aWindow) {
     return false;
   }
 
-  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, aWindow);
-  aWindow->InitEvent(queryCaretRect);
+  WidgetQueryContentEvent queryCaretRectEvent(true, eQueryCaretRect, aWindow);
+  aWindow->InitEvent(queryCaretRectEvent);
 
   WidgetQueryContentEvent::Options options;
   options.mRelativeToInsertionPoint = true;
-  queryCaretRect.InitForQueryCaretRect(0, options);
+  queryCaretRectEvent.InitForQueryCaretRect(0, options);
 
-  aWindow->DispatchWindowEvent(&queryCaretRect);
-  if (NS_WARN_IF(!queryCaretRect.mSucceeded)) {
+  aWindow->DispatchWindowEvent(&queryCaretRectEvent);
+  if (NS_WARN_IF(queryCaretRectEvent.Failed())) {
     return false;
   }
 
-  return CreateNativeCaret(aWindow, queryCaretRect.mReply.mRect);
+  return CreateNativeCaret(aWindow, queryCaretRectEvent.mReply->mRect);
 }
 
 bool IMEHandler::CreateNativeCaret(nsWindow* aWindow,

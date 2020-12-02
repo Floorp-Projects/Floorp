@@ -1554,19 +1554,19 @@ bool IMMHandler::HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
 
   pCharPosition->cLineHeight = r.Height();
 
-  WidgetQueryContentEvent editorRect(true, eQueryEditorRect, aWindow);
-  aWindow->InitEvent(editorRect);
-  DispatchEvent(aWindow, editorRect);
-  if (NS_WARN_IF(!editorRect.mSucceeded)) {
+  WidgetQueryContentEvent queryEditorRectEvent(true, eQueryEditorRect, aWindow);
+  aWindow->InitEvent(queryEditorRectEvent);
+  DispatchEvent(aWindow, queryEditorRectEvent);
+  if (NS_WARN_IF(queryEditorRectEvent.Failed())) {
     MOZ_LOG(gIMMLog, LogLevel::Error,
             ("HandleQueryCharPosition, eQueryEditorRect failed"));
     ::GetWindowRect(aWindow->GetWindowHandle(), &pCharPosition->rcDocument);
   } else {
-    LayoutDeviceIntRect editorRectInWindow = editorRect.mReply.mRect;
-    nsWindow* window =
-        editorRect.mReply.mFocusedWidget
-            ? static_cast<nsWindow*>(editorRect.mReply.mFocusedWidget)
-            : aWindow;
+    LayoutDeviceIntRect editorRectInWindow = queryEditorRectEvent.mReply->mRect;
+    nsWindow* window = !!queryEditorRectEvent.mReply->mFocusedWidget
+                           ? static_cast<nsWindow*>(
+                                 queryEditorRectEvent.mReply->mFocusedWidget)
+                           : aWindow;
     LayoutDeviceIntRect editorRectInScreen;
     ResolveIMECaretPos(window, editorRectInWindow, nullptr, editorRectInScreen);
     ::SetRect(&pCharPosition->rcDocument, editorRectInScreen.X(),
@@ -1623,18 +1623,19 @@ bool IMMHandler::HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam,
   }
 
   // Get all contents of the focused editor.
-  WidgetQueryContentEvent textContent(true, eQueryTextContent, aWindow);
-  textContent.InitForQueryTextContent(0, UINT32_MAX);
-  aWindow->InitEvent(textContent, &point);
-  DispatchEvent(aWindow, textContent);
-  if (!textContent.mSucceeded) {
+  WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
+                                                aWindow);
+  queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
+  aWindow->InitEvent(queryTextContentEvent, &point);
+  DispatchEvent(aWindow, queryTextContentEvent);
+  if (NS_WARN_IF(queryTextContentEvent.Failed())) {
     MOZ_LOG(gIMMLog, LogLevel::Error,
             ("HandleDocumentFeed, FAILED, due to eQueryTextContent failure"));
     return false;
   }
 
-  nsAutoString str(textContent.mReply.mString);
-  if (targetOffset > int32_t(str.Length())) {
+  nsAutoString str(queryTextContentEvent.mReply->DataRef());
+  if (targetOffset > static_cast<int32_t>(str.Length())) {
     MOZ_LOG(gIMMLog, LogLevel::Error,
             ("HandleDocumentFeed, FAILED, due to the caret offset is invalid"));
     return false;
@@ -2037,24 +2038,24 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
   // If there is a caret and retrieving offset is same as the caret offset,
   // we should use the caret rect.
   if (aOffset != caretOffset) {
-    WidgetQueryContentEvent charRect(true, eQueryTextRect, aWindow);
+    WidgetQueryContentEvent queryTextRectEvent(true, eQueryTextRect, aWindow);
     WidgetQueryContentEvent::Options options;
     options.mRelativeToInsertionPoint = true;
-    charRect.InitForQueryTextRect(aOffset, 1, options);
-    aWindow->InitEvent(charRect, &point);
-    DispatchEvent(aWindow, charRect);
-    if (charRect.mSucceeded) {
-      aCharRect = charRect.mReply.mRect;
+    queryTextRectEvent.InitForQueryTextRect(aOffset, 1, options);
+    aWindow->InitEvent(queryTextRectEvent, &point);
+    DispatchEvent(aWindow, queryTextRectEvent);
+    if (queryTextRectEvent.Succeeded()) {
+      aCharRect = queryTextRectEvent.mReply->mRect;
       if (aWritingMode) {
-        *aWritingMode = charRect.GetWritingMode();
+        *aWritingMode = queryTextRectEvent.mReply->WritingModeRef();
       }
-      MOZ_LOG(gIMMLog, LogLevel::Debug,
-              ("GetCharacterRectOfSelectedTextAt, Succeeded, aOffset=%u, "
-               "aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
-               "charRect.GetWritingMode()=%s",
-               aOffset, aCharRect.X(), aCharRect.Y(), aCharRect.Width(),
-               aCharRect.Height(),
-               GetWritingModeName(charRect.GetWritingMode()).get()));
+      MOZ_LOG(
+          gIMMLog, LogLevel::Debug,
+          ("GetCharacterRectOfSelectedTextAt, Succeeded, aOffset=%u, "
+           "aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+           "queryTextRectEvent={ mReply=%s }",
+           aOffset, aCharRect.X(), aCharRect.Y(), aCharRect.Width(),
+           aCharRect.Height(), ToString(queryTextRectEvent.mReply).c_str()));
       return true;
     }
   }
@@ -2067,28 +2068,27 @@ bool IMMHandler::GetCaretRect(nsWindow* aWindow,
                               WritingMode* aWritingMode) {
   LayoutDeviceIntPoint point(0, 0);
 
-  WidgetQueryContentEvent caretRect(true, eQueryCaretRect, aWindow);
+  WidgetQueryContentEvent queryCaretRectEvent(true, eQueryCaretRect, aWindow);
   WidgetQueryContentEvent::Options options;
   options.mRelativeToInsertionPoint = true;
-  caretRect.InitForQueryCaretRect(0, options);
-  aWindow->InitEvent(caretRect, &point);
-  DispatchEvent(aWindow, caretRect);
-  if (!caretRect.mSucceeded) {
+  queryCaretRectEvent.InitForQueryCaretRect(0, options);
+  aWindow->InitEvent(queryCaretRectEvent, &point);
+  DispatchEvent(aWindow, queryCaretRectEvent);
+  if (queryCaretRectEvent.Failed()) {
     MOZ_LOG(gIMMLog, LogLevel::Info,
             ("GetCaretRect, FAILED, due to eQueryCaretRect failure"));
     return false;
   }
-  aCaretRect = caretRect.mReply.mRect;
+  aCaretRect = queryCaretRectEvent.mReply->mRect;
   if (aWritingMode) {
-    *aWritingMode = caretRect.GetWritingMode();
+    *aWritingMode = queryCaretRectEvent.mReply->WritingModeRef();
   }
-  MOZ_LOG(
-      gIMMLog, LogLevel::Info,
-      ("GetCaretRect, SUCCEEDED, "
-       "aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
-       "caretRect.GetWritingMode()=%s",
-       aCaretRect.X(), aCaretRect.Y(), aCaretRect.Width(), aCaretRect.Height(),
-       GetWritingModeName(caretRect.GetWritingMode()).get()));
+  MOZ_LOG(gIMMLog, LogLevel::Info,
+          ("GetCaretRect, SUCCEEDED, "
+           "aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+           "queryCaretRectEvent={ mReply=%s }",
+           aCaretRect.X(), aCaretRect.Y(), aCaretRect.Width(),
+           aCaretRect.Height(), ToString(queryCaretRectEvent.mReply).c_str()));
   return true;
 }
 
@@ -2239,10 +2239,10 @@ bool IMMHandler::SetIMERelatedWindowsPos(nsWindow* aWindow,
 
 void IMMHandler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
                                                  const IMEContext& aContext) {
-  WidgetQueryContentEvent editorRectEvent(true, eQueryEditorRect, aWindow);
-  aWindow->InitEvent(editorRectEvent);
-  DispatchEvent(aWindow, editorRectEvent);
-  if (!editorRectEvent.mSucceeded) {
+  WidgetQueryContentEvent queryEditorRectEvent(true, eQueryEditorRect, aWindow);
+  aWindow->InitEvent(queryEditorRectEvent);
+  DispatchEvent(aWindow, queryEditorRectEvent);
+  if (queryEditorRectEvent.Failed()) {
     MOZ_LOG(gIMMLog, LogLevel::Info,
             ("SetIMERelatedWindowsPosOnPlugin, "
              "FAILED, due to eQueryEditorRect failure"));
@@ -2253,7 +2253,8 @@ void IMMHandler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   // window needs to be specified the position in the client area.
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
   LayoutDeviceIntRect pluginRectInScreen =
-      editorRectEvent.mReply.mRect + toplevelWindow->WidgetToScreenOffset();
+      queryEditorRectEvent.mReply->mRect +
+      toplevelWindow->WidgetToScreenOffset();
   LayoutDeviceIntRect winRectInScreen = aWindow->GetClientBounds();
   // composition window cannot be positioned on the edge of client area.
   winRectInScreen.SizeTo(winRectInScreen.Width() - 1,
@@ -2646,11 +2647,12 @@ bool IMMHandler::Selection::Update(const IMENotification& aIMENotification) {
 bool IMMHandler::Selection::Init(nsWindow* aWindow) {
   Clear();
 
-  WidgetQueryContentEvent selection(true, eQuerySelectedText, aWindow);
+  WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                 aWindow);
   LayoutDeviceIntPoint point(0, 0);
-  aWindow->InitEvent(selection, &point);
-  DispatchEvent(aWindow, selection);
-  if (NS_WARN_IF(!selection.mSucceeded)) {
+  aWindow->InitEvent(querySelectedTextEvent, &point);
+  DispatchEvent(aWindow, querySelectedTextEvent);
+  if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection())) {
     MOZ_LOG(gIMMLog, LogLevel::Error,
             ("Selection::Init, FAILED, due to eQuerySelectedText failure"));
     return false;
@@ -2663,15 +2665,15 @@ bool IMMHandler::Selection::Init(nsWindow* aWindow) {
     return false;
   }
 
-  mOffset = selection.mReply.mOffset;
-  mString = selection.mReply.mString;
-  mWritingMode = selection.GetWritingMode();
+  MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
+  mOffset = querySelectedTextEvent.mReply->StartOffset();
+  mString = querySelectedTextEvent.mReply->DataRef();
+  mWritingMode = querySelectedTextEvent.mReply->WritingModeRef();
   mIsValid = true;
 
   MOZ_LOG(gIMMLog, LogLevel::Info,
-          ("Selection::Init, selection={ mReply={ mOffset=%u, "
-           "mString.Length()=%u, mWritingMode=%s } }",
-           mOffset, mString.Length(), GetWritingModeName(mWritingMode).get()));
+          ("Selection::Init, querySelectedTextEvent={ mReply=%s }",
+           ToString(querySelectedTextEvent.mReply).c_str()));
 
   if (!IsValid()) {
     MOZ_LOG(gIMMLog, LogLevel::Error,

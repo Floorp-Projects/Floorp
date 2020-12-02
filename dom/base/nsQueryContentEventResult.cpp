@@ -48,18 +48,29 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsQueryContentEventResult)
 NS_IMPL_RELEASE(nsQueryContentEventResult)
 
+#define NOT_FOUND UINT32_MAX
+
 nsQueryContentEventResult::nsQueryContentEventResult(
-    mozilla::WidgetQueryContentEvent& aEvent)
+    mozilla::WidgetQueryContentEvent&& aEvent)
     : mEventMessage(aEvent.mMessage),
-      mOffset(aEvent.mReply.mOffset),
-      mTentativeCaretOffset(aEvent.mReply.mTentativeCaretOffset),
-      mString(aEvent.mReply.mString),
-      mRect(aEvent.mReply.mRect),
-      mRectArray(std::move(aEvent.mReply.mRectArray)),
-      mSucceeded(aEvent.mSucceeded),
-      mReversed(aEvent.mReply.mReversed) {
+      mOffset(NOT_FOUND),
+      mTentativeCaretOffset(NOT_FOUND),
+      mSucceeded(aEvent.Succeeded()),
+      mReversed(false) {
+  if (mSucceeded) {
+    if (aEvent.mReply->mOffsetAndData.isSome()) {
+      mOffset = aEvent.mReply->StartOffset();
+      mString = aEvent.mReply->DataRef();
+    }
+    if (aEvent.mReply->mTentativeCaretOffset.isSome()) {
+      mTentativeCaretOffset = aEvent.mReply->mTentativeCaretOffset.value();
+    }
+    mRect = std::move(aEvent.mReply->mRect);
+    mRectArray = std::move(aEvent.mReply->mRectArray);
+    mReversed = aEvent.mReply->mReversed;
+  }
   // Mark as result that is longer used.
-  aEvent.mSucceeded = false;
+  aEvent.mReply.reset();
 }
 
 nsQueryContentEventResult::~nsQueryContentEventResult() = default;
@@ -177,7 +188,7 @@ nsQueryContentEventResult::GetNotFound(bool* aNotFound) {
       NS_WARN_IF(!IsNotFoundPropertyAvailable(mEventMessage))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  *aNotFound = (mOffset == WidgetQueryContentEvent::NOT_FOUND);
+  *aNotFound = mOffset == NOT_FOUND;
   return NS_OK;
 }
 
@@ -189,7 +200,7 @@ nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound) {
   if (NS_WARN_IF(mEventMessage != eQueryCharacterAtPoint)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  *aNotFound = (mTentativeCaretOffset == WidgetQueryContentEvent::NOT_FOUND);
+  *aNotFound = mTentativeCaretOffset == NOT_FOUND;
   return NS_OK;
 }
 
@@ -231,3 +242,5 @@ void nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget) {
     mRectArray[i].MoveBy(-offset);
   }
 }
+
+#undef NOT_FOUND
