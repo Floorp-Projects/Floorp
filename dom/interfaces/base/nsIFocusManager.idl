@@ -71,6 +71,13 @@ interface nsIFocusManager : nsISupports
   attribute mozIDOMWindowProxy focusedWindow;
 
   /**
+   * Parent-process only: The content BrowsingContext that currently has focus,
+   * if any. Note this can be different from activeBrowsingContext in the case
+   * of subframes.
+   */
+  readonly attribute BrowsingContext focusedContentBrowsingContext;
+
+  /**
    * The element that is currently focused. This will always be an element
    * within the document loaded in focusedWindow or null if no element in that
    * document is focused.
