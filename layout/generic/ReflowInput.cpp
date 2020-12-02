@@ -2503,7 +2503,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
   const nsStyleDisplay* disp = mFrame->StyleDisplayWithOptionalParam(aDisplay);
   bool isThemed = mFrame->IsThemed(disp);
   bool needPaddingProp;
-  LayoutDeviceMargin widgetPadding;
+  LayoutDeviceIntMargin widgetPadding;
   if (isThemed && presContext->Theme()->GetWidgetPadding(
                       presContext->DeviceContext(), mFrame,
                       disp->EffectiveAppearance(), &widgetPadding)) {
@@ -2556,7 +2556,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
 
   LogicalMargin border(wm);
   if (isThemed) {
-    const LayoutDeviceMargin widgetBorder =
+    const LayoutDeviceIntMargin widgetBorder =
         presContext->Theme()->GetWidgetBorder(
             presContext->DeviceContext(), mFrame, disp->EffectiveAppearance());
     border = LogicalMargin(

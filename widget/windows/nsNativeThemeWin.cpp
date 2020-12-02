@@ -335,7 +335,7 @@ static CaptionButtonPadding buttonData[3] = {
     {{{0, 2, 0, 2}, {0, 2, 1, 2}, {1, 2, 2, 2}}}};
 
 // Adds "hot" caption button padding to minimum widget size.
-static void AddPaddingRect(LayoutDeviceSize* aSize, CaptionButton button) {
+static void AddPaddingRect(LayoutDeviceIntSize* aSize, CaptionButton button) {
   if (!aSize) return;
   RECT offset;
   if (!nsUXThemeData::IsAppThemed())
@@ -571,7 +571,7 @@ void nsNativeThemeWin::DrawThemedProgressMeter(
   }
 }
 
-LayoutDeviceMargin nsNativeThemeWin::GetCachedWidgetBorder(
+LayoutDeviceIntMargin nsNativeThemeWin::GetCachedWidgetBorder(
     HTHEME aTheme, nsUXThemeClass aThemeClass, StyleAppearance aAppearance,
     int32_t aPart, int32_t aState) {
   int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + aPart;
@@ -591,12 +591,12 @@ LayoutDeviceMargin nsNativeThemeWin::GetCachedWidgetBorder(
                                               &outerRect, &contentRect);
 
   if (FAILED(res)) {
-    return {};
+    return LayoutDeviceIntMargin();
   }
 
   // Now compute the delta in each direction and place it in our
   // nsIntMargin struct.
-  LayoutDeviceMargin result;
+  LayoutDeviceIntMargin result;
   result.top = contentRect.top - outerRect.top;
   result.bottom = outerRect.bottom - contentRect.bottom;
   result.left = contentRect.left - outerRect.left;
@@ -611,7 +611,7 @@ LayoutDeviceMargin nsNativeThemeWin::GetCachedWidgetBorder(
 nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(
     nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
     StyleAppearance aAppearance, int32_t aPart, int32_t aState,
-    THEMESIZE aSizeReq, LayoutDeviceSize* aResult) {
+    THEMESIZE aSizeReq, mozilla::LayoutDeviceIntSize* aResult) {
   int32_t cachePart = aPart;
 
   if (aAppearance == StyleAppearance::Button && aSizeReq == TS_MIN) {
@@ -646,7 +646,7 @@ nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(
   switch (aAppearance) {
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
-      aResult->width += 1.0f;
+      aResult->width++;
       aResult->height = aResult->height / 2 + 1;
       break;
 
@@ -1816,10 +1816,8 @@ RENDER_AGAIN:
                             &widgetRect, &clipRect);
   } else if (aAppearance == StyleAppearance::FocusOutline) {
     // Inflate 'widgetRect' with the focus outline size.
-    LayoutDeviceIntMargin border =
-        GetWidgetBorder(aFrame->PresContext()->DeviceContext(), aFrame,
-                        aAppearance)
-            .Rounded();
+    LayoutDeviceIntMargin border = GetWidgetBorder(
+        aFrame->PresContext()->DeviceContext(), aFrame, aAppearance);
     widgetRect.left -= border.left;
     widgetRect.right += border.right;
     widgetRect.top -= border.top;
@@ -1898,10 +1896,9 @@ RENDER_AGAIN:
   return NS_OK;
 }
 
-static void ScaleForFrameDPI(LayoutDeviceMargin* aMargin, nsIFrame* aFrame) {
+static void ScaleForFrameDPI(LayoutDeviceIntMargin* aMargin, nsIFrame* aFrame) {
   double themeScale = GetThemeDpiScaleFactor(aFrame);
   if (themeScale != 1.0) {
-    // TODO(emilio): This should probably not round anymore.
     aMargin->top = NSToIntRound(aMargin->top * themeScale);
     aMargin->left = NSToIntRound(aMargin->left * themeScale);
     aMargin->bottom = NSToIntRound(aMargin->bottom * themeScale);
@@ -1909,18 +1906,17 @@ static void ScaleForFrameDPI(LayoutDeviceMargin* aMargin, nsIFrame* aFrame) {
   }
 }
 
-static void ScaleForFrameDPI(LayoutDeviceSize* aSize, nsIFrame* aFrame) {
+static void ScaleForFrameDPI(LayoutDeviceIntSize* aSize, nsIFrame* aFrame) {
   double themeScale = GetThemeDpiScaleFactor(aFrame);
   if (themeScale != 1.0) {
-    // TODO(emilio): This should probably not round anymore.
     aSize->width = NSToIntRound(aSize->width * themeScale);
     aSize->height = NSToIntRound(aSize->height * themeScale);
   }
 }
 
-LayoutDeviceMargin nsNativeThemeWin::GetWidgetBorder(
+LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  LayoutDeviceMargin result;
+  LayoutDeviceIntMargin result;
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
   HTHEME theme = NULL;
   if (!themeClass.isNothing()) {
@@ -2000,7 +1996,7 @@ LayoutDeviceMargin nsNativeThemeWin::GetWidgetBorder(
 bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
                                         nsIFrame* aFrame,
                                         StyleAppearance aAppearance,
-                                        LayoutDeviceMargin* aResult) {
+                                        LayoutDeviceIntMargin* aResult) {
   switch (aAppearance) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
     // and have a meaningful baseline, so they can't have
@@ -2185,12 +2181,13 @@ bool nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
 #endif
 
   if (aAppearance == StyleAppearance::FocusOutline) {
-    LayoutDeviceMargin border = GetWidgetBorder(aContext, aFrame, aAppearance);
+    LayoutDeviceIntMargin border =
+        GetWidgetBorder(aContext, aFrame, aAppearance);
     int32_t p2a = aContext->AppUnitsPerDevPixel();
-    nsMargin m(NSFloatPixelsToAppUnits(border.top, p2a),
-               NSFloatPixelsToAppUnits(border.right, p2a),
-               NSFloatPixelsToAppUnits(border.bottom, p2a),
-               NSFloatPixelsToAppUnits(border.left, p2a));
+    nsMargin m(NSIntPixelsToAppUnits(border.top, p2a),
+               NSIntPixelsToAppUnits(border.right, p2a),
+               NSIntPixelsToAppUnits(border.bottom, p2a),
+               NSIntPixelsToAppUnits(border.left, p2a));
     aOverflowRect->Inflate(m);
     return true;
   }
@@ -2202,7 +2199,7 @@ NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
-                                       LayoutDeviceSize* aResult,
+                                       LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
@@ -2739,9 +2736,9 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
   }
 }
 
-LayoutDeviceMargin nsNativeThemeWin::ClassicGetWidgetBorder(
+LayoutDeviceIntMargin nsNativeThemeWin::ClassicGetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
-  LayoutDeviceMargin result;
+  LayoutDeviceIntMargin result;
   switch (aAppearance) {
     case StyleAppearance::Groupbox:
     case StyleAppearance::Button:
@@ -2792,7 +2789,7 @@ LayoutDeviceMargin nsNativeThemeWin::ClassicGetWidgetBorder(
 bool nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
                                                nsIFrame* aFrame,
                                                StyleAppearance aAppearance,
-                                               LayoutDeviceMargin* aResult) {
+                                               LayoutDeviceIntMargin* aResult) {
   switch (aAppearance) {
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
@@ -2829,7 +2826,7 @@ bool nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
 }
 
 nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
-    nsIFrame* aFrame, StyleAppearance aAppearance, LayoutDeviceSize* aResult,
+    nsIFrame* aFrame, StyleAppearance aAppearance, LayoutDeviceIntSize* aResult,
     bool* aIsOverridable) {
   (*aResult).width = (*aResult).height = 0;
   *aIsOverridable = true;
@@ -2931,12 +2928,12 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       // Without theming, divide the thumb size by two in order to look more
       // native
       if (!GetTheme(aAppearance)) {
-        (*aResult).height /= 2.0f;
+        (*aResult).height >>= 1;
       }
       // If scrollbar-width is thin, divide the thickness by two to make
       // it look more compact.
       if (IsScrollbarWidthThin(aFrame)) {
-        aResult->width /= 2.0f;
+        aResult->width >>= 1;
       }
       *aIsOverridable = false;
       break;
@@ -2946,12 +2943,12 @@ nsresult nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       // Without theming, divide the thumb size by two in order to look more
       // native
       if (!GetTheme(aAppearance)) {
-        (*aResult).width /= 2.0f;
+        (*aResult).width >>= 1;
       }
       // If scrollbar-width is thin, divide the thickness by two to make
       // it look more compact.
       if (IsScrollbarWidthThin(aFrame)) {
-        aResult->height /= 2.0f;
+        aResult->height >>= 1;
       }
       *aIsOverridable = false;
       break;
