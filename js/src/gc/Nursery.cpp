@@ -25,6 +25,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
+#include "util/DifferentialTesting.h"
 #include "util/Poison.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSONPrinter.h"
@@ -219,9 +220,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateBigInts_(true),
       reportTenurings_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
-#ifndef JS_MORE_DETERMINISTIC
       smoothedGrowthFactor(1.0),
-#endif
       decommitTask(gc)
 #ifdef JS_GC_ZEAL
       ,
@@ -1552,13 +1551,11 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
 
   // Calculate the fraction of time spent collecting the nursery.
   double timeFraction = 0.0;
-#ifndef JS_MORE_DETERMINISTIC
-  if (lastResizeTime) {
+  if (lastResizeTime && !js::SupportDifferentialTesting()) {
     TimeDuration collectorTime = now - collectionStartTime();
     TimeDuration totalTime = now - lastResizeTime;
     timeFraction = collectorTime.ToSeconds() / totalTime.ToSeconds();
   }
-#endif
 
   // Adjust the nursery size to try to achieve a target promotion rate and
   // collector time goals.
@@ -1572,17 +1569,16 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
   static const double GrowthRange = 2.0;
   growthFactor = ClampDouble(growthFactor, 1.0 / GrowthRange, GrowthRange);
 
-#ifndef JS_MORE_DETERMINISTIC
   // Use exponential smoothing on the desired growth rate to take into account
   // the promotion rate from recent previous collections.
   if (lastResizeTime &&
-      now - lastResizeTime < TimeDuration::FromMilliseconds(200)) {
+      now - lastResizeTime < TimeDuration::FromMilliseconds(200) &&
+      !js::SupportDifferentialTesting()) {
     growthFactor = 0.75 * smoothedGrowthFactor + 0.25 * growthFactor;
   }
 
   lastResizeTime = now;
   smoothedGrowthFactor = growthFactor;
-#endif
 
   // Leave size untouched if we are close to the promotion goal.
   static const double GoalWidth = 1.5;
@@ -1599,10 +1595,12 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
 }
 
 void js::Nursery::clearRecentGrowthData() {
-#ifndef JS_MORE_DETERMINISTIC
+  if (js::SupportDifferentialTesting()) {
+    return;
+  }
+
   lastResizeTime = TimeStamp();
   smoothedGrowthFactor = 1.0;
-#endif
 }
 
 /* static */

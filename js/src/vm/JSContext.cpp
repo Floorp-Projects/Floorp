@@ -47,6 +47,7 @@
 #include "js/friend/StackLimits.h"    // js::ReportOverRecursed
 #include "js/Printf.h"
 #include "util/DiagnosticAssertions.h"
+#include "util/DifferentialTesting.h"
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
 #include "util/Windows.h"
@@ -246,14 +247,14 @@ bool AutoResolving::alreadyStartedSlow() const {
  * not occur, so GC must be avoided or suppressed.
  */
 JS_FRIEND_API void js::ReportOutOfMemory(JSContext* cx) {
-#ifdef JS_MORE_DETERMINISTIC
   /*
    * OOMs are non-deterministic, especially across different execution modes
-   * (e.g. interpreter vs JIT). In more-deterministic builds, print to stderr
+   * (e.g. interpreter vs JIT). When doing differential testing, print to stderr
    * so that the fuzzers can detect this.
    */
-  fprintf(stderr, "ReportOutOfMemory called\n");
-#endif
+  if (js::SupportDifferentialTesting()) {
+    fprintf(stderr, "ReportOutOfMemory called\n");
+  }
 
   if (cx->isHelperThreadContext()) {
     return cx->addPendingOutOfMemory();
@@ -283,7 +284,6 @@ mozilla::GenericErrorResult<OOM> js::ReportOutOfMemoryResult(JSContext* cx) {
 }
 
 void js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber) {
-#ifdef JS_MORE_DETERMINISTIC
   /*
    * We cannot make stack depth deterministic across different
    * implementations (e.g. JIT vs. interpreter will differ in
@@ -292,8 +292,10 @@ void js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber) {
    * stack depth which is useful for external testing programs
    * like fuzzers.
    */
-  fprintf(stderr, "ReportOverRecursed called\n");
-#endif
+  if (js::SupportDifferentialTesting()) {
+    fprintf(stderr, "ReportOverRecursed called\n");
+  }
+
   if (maybecx) {
     if (!maybecx->isHelperThreadContext()) {
       JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr, errorNumber);

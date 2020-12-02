@@ -3019,4 +3019,12 @@ enum class CompletionKind { Normal, Return, Throw };
 
 } /* namespace js */
 
+#ifdef DEBUG
+namespace JS {
+
+extern JS_PUBLIC_API void SetSupportDifferentialTesting(bool value);
+
+}
+#endif /* DEBUG */
+
 #endif /* jsapi_h */
