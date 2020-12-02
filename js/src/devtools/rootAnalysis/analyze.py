@@ -362,28 +362,10 @@ else:
 if "ANALYZED_OBJDIR" in os.environ:
     data["objdir"] = os.environ["ANALYZED_OBJDIR"]
 
+if "GECKO_PATH" in os.environ:
+    data["source"] = os.environ["GECKO_PATH"]
 if "SOURCE" in os.environ:
     data["source"] = os.environ["SOURCE"]
-
-if data.get("sixgill_bin"):
-    if not data.get("source"):
-        path = subprocess.check_output(
-            [
-                "sh",
-                "-c",
-                data["sixgill_bin"] + "/xdbkeys file_source.xdb | grep jsapi.cpp",
-            ]
-        ).decode()
-        data["source"] = path.replace("\n", "").replace("/js/src/jsapi.cpp", "")
-    if not data.get("objdir"):
-        path = subprocess.check_output(
-            [
-                "sh",
-                "-c",
-                data["sixgill_bin"] + "/xdbkeys file_source.xdb | grep jsapi.h",
-            ]
-        ).decode()
-        data["objdir"] = path.replace("\n", "").replace("/jsapi.h", "")
 
 steps = [
     "dbs",

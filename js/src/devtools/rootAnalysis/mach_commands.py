@@ -318,6 +318,9 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         # hazard mozconfigs need to find binaries in .mozbuild
         env["MOZBUILD_STATE_PATH"] = self.state_dir
 
+        # Suppress the gathering of sources, to save disk space and memory.
+        env["XGILL_NO_SOURCE"] = "1"
+
         self.setup_env_for_tools(env)
 
         if "haz_objdir" in kwargs:
