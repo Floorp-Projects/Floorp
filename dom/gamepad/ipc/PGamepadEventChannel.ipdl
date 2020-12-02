@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 include protocol PBackground;
+include "mozilla/dom/GamepadMessageUtils.h";
 include GamepadEventTypes;
+
+using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
 
 namespace mozilla {
 namespace dom {
@@ -12,10 +15,10 @@ refcounted protocol PGamepadEventChannel {
   parent:
     async __delete__();
 
-    async VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+    async VibrateHaptic(GamepadHandle aHandle, uint32_t aHapticIndex,
                         double aIntensity, double aDuration, uint32_t aPromiseID) tainted;
-    async StopVibrateHaptic(uint32_t aControllerIdx) tainted;
-    async LightIndicatorColor(uint32_t aControllerIdx, uint32_t aLightColorIndex,
+    async StopVibrateHaptic(GamepadHandle aHandle) tainted;
+    async LightIndicatorColor(GamepadHandle aHandle, uint32_t aLightColorIndex,
                               uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint32_t aPromiseID) tainted;
 
   child:

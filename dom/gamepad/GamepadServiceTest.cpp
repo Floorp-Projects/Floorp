@@ -81,14 +81,16 @@ void GamepadServiceTest::InitPBackgroundActor() {
   }
 }
 
-void GamepadServiceTest::ReplyGamepadIndex(uint32_t aPromiseId,
-                                           uint32_t aIndex) {
+void GamepadServiceTest::ReplyGamepadHandle(uint32_t aPromiseId,
+                                            const GamepadHandle& aHandle) {
+  uint32_t handleSlot = AddGamepadHandle(aHandle);
+
   RefPtr<Promise> p;
   if (!mPromiseList.Get(aPromiseId, getter_AddRefs(p))) {
     MOZ_CRASH("We should always have a promise.");
   }
 
-  p->MaybeResolve(aIndex);
+  p->MaybeResolve(handleSlot);
   mPromiseList.Remove(aPromiseId);
 }
 
@@ -106,11 +108,15 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
     return nullptr;
   }
 
+  // The values here are ignored, the value just can't be zero to avoid an
+  // assertion
+  GamepadHandle gamepadHandle{1, GamepadHandleKind::GamepadPlatformManager};
+
   // Only VR controllers has displayID, we give 0 to the general gamepads.
   GamepadAdded a(nsString(aID), aMapping, aHand, 0, aNumButtons, aNumAxes,
                  aNumHaptics, aNumLightIndicator, aNumTouchEvents);
   GamepadChangeEventBody body(a);
-  GamepadChangeEvent e(0, GamepadServiceType::Standard, body);
+  GamepadChangeEvent e(gamepadHandle, body);
 
   RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
   if (aRv.Failed()) {
@@ -127,64 +133,72 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
   return p.forget();
 }
 
-void GamepadServiceTest::RemoveGamepad(uint32_t aIndex) {
+void GamepadServiceTest::RemoveGamepad(uint32_t aHandleSlot) {
   if (mShuttingDown) {
     return;
   }
+
+  GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
 
   GamepadRemoved a;
   GamepadChangeEventBody body(a);
-  GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
+  GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
   mChild->SendGamepadTestEvent(id, e);
 }
 
-void GamepadServiceTest::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
-                                        bool aTouched, bool aPressed) {
+void GamepadServiceTest::NewButtonEvent(uint32_t aHandleSlot, uint32_t aButton,
+                                        bool aPressed, bool aTouched) {
   if (mShuttingDown) {
     return;
   }
+
+  GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
 
   GamepadButtonInformation a(aButton, aPressed ? 1.0 : 0, aPressed, aTouched);
   GamepadChangeEventBody body(a);
-  GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
+  GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
   mChild->SendGamepadTestEvent(id, e);
 }
 
-void GamepadServiceTest::NewButtonValueEvent(uint32_t aIndex, uint32_t aButton,
-                                             bool aPressed, bool aTouched,
-                                             double aValue) {
+void GamepadServiceTest::NewButtonValueEvent(uint32_t aHandleSlot,
+                                             uint32_t aButton, bool aPressed,
+                                             bool aTouched, double aValue) {
   if (mShuttingDown) {
     return;
   }
 
+  GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
+
   GamepadButtonInformation a(aButton, aValue, aPressed, aTouched);
   GamepadChangeEventBody body(a);
-  GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
+  GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
   mChild->SendGamepadTestEvent(id, e);
 }
 
-void GamepadServiceTest::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
+void GamepadServiceTest::NewAxisMoveEvent(uint32_t aHandleSlot, uint32_t aAxis,
                                           double aValue) {
   if (mShuttingDown) {
     return;
   }
 
+  GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
+
   GamepadAxisInformation a(aAxis, aValue);
   GamepadChangeEventBody body(a);
-  GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
+  GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
   mChild->SendGamepadTestEvent(id, e);
 }
 
 void GamepadServiceTest::NewPoseMove(
-    uint32_t aIndex, const Nullable<Float32Array>& aOrient,
+    uint32_t aHandleSlot, const Nullable<Float32Array>& aOrient,
     const Nullable<Float32Array>& aPos,
     const Nullable<Float32Array>& aAngVelocity,
     const Nullable<Float32Array>& aAngAcceleration,
@@ -193,6 +207,8 @@ void GamepadServiceTest::NewPoseMove(
   if (mShuttingDown) {
     return;
   }
+
+  GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
 
   GamepadPoseState poseState;
   poseState.flags = GamepadCapabilityFlags::Cap_Orientation |
@@ -253,19 +269,21 @@ void GamepadServiceTest::NewPoseMove(
 
   GamepadPoseInformation a(poseState);
   GamepadChangeEventBody body(a);
-  GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
+  GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
   mChild->SendGamepadTestEvent(id, e);
 }
 
-void GamepadServiceTest::NewTouch(uint32_t aIndex, uint32_t aTouchArrayIndex,
-                                  uint32_t aTouchId, uint8_t aSurfaceId,
-                                  const Float32Array& aPos,
+void GamepadServiceTest::NewTouch(uint32_t aHandleSlot,
+                                  uint32_t aTouchArrayIndex, uint32_t aTouchId,
+                                  uint8_t aSurfaceId, const Float32Array& aPos,
                                   const Nullable<Float32Array>& aSurfDim) {
   if (mShuttingDown) {
     return;
   }
+
+  GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
 
   GamepadTouchState touchState;
   touchState.touchId = aTouchId;
@@ -287,7 +305,7 @@ void GamepadServiceTest::NewTouch(uint32_t aIndex, uint32_t aTouchArrayIndex,
 
   GamepadTouchInformation a(aTouchArrayIndex, touchState);
   GamepadChangeEventBody body(a);
-  GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
+  GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
   mChild->SendGamepadTestEvent(id, e);
@@ -296,6 +314,22 @@ void GamepadServiceTest::NewTouch(uint32_t aIndex, uint32_t aTouchArrayIndex,
 JSObject* GamepadServiceTest::WrapObject(JSContext* aCx,
                                          JS::HandleObject aGivenProto) {
   return GamepadServiceTest_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+uint32_t GamepadServiceTest::AddGamepadHandle(GamepadHandle aHandle) {
+  uint32_t handleSlot = mGamepadHandles.Length();
+  mGamepadHandles.AppendElement(aHandle);
+  return handleSlot;
+}
+
+void GamepadServiceTest::RemoveGamepadHandle(uint32_t aHandleSlot) {
+  MOZ_ASSERT(aHandleSlot < mGamepadHandles.Length());
+  return mGamepadHandles.RemoveElementAt(aHandleSlot);
+}
+
+GamepadHandle GamepadServiceTest::GetHandleInSlot(uint32_t aHandleSlot) const {
+  MOZ_ASSERT(aHandleSlot < mGamepadHandles.Length());
+  return mGamepadHandles.ElementAt(aHandleSlot);
 }
 
 }  // namespace mozilla::dom

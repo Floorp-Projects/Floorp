@@ -8,6 +8,7 @@
 #define mozilla_dom_GamepadPlatformService_h_
 
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/dom/GamepadHandle.h"
 
 #include <map>
 #include "mozilla/Mutex.h"
@@ -70,43 +71,44 @@ class GamepadPlatformService final {
   // Get the singleton service
   static already_AddRefed<GamepadPlatformService> GetParentService();
 
-  // Add a gamepad to the list of known gamepads, and return its serviceId.
-  uint32_t AddGamepad(const char* aID, GamepadMappingType aMapping,
-                      GamepadHand aHand, uint32_t aNumButtons,
-                      uint32_t aNumAxes, uint32_t aNumHaptics,
-                      uint32_t aNumLightIndicator, uint32_t aNumTouchEvents);
-  // Remove the gamepad with |aServiceId| from the list of known gamepads.
-  void RemoveGamepad(uint32_t aServiceId);
+  // Add a gamepad to the list of known gamepads, and return its handle.
+  GamepadHandle AddGamepad(const char* aID, GamepadMappingType aMapping,
+                           GamepadHand aHand, uint32_t aNumButtons,
+                           uint32_t aNumAxes, uint32_t aNumHaptics,
+                           uint32_t aNumLightIndicator,
+                           uint32_t aNumTouchEvents);
+  // Remove the gamepad at |aHandle| from the list of known gamepads.
+  void RemoveGamepad(GamepadHandle aHandle);
 
-  // Update the state of |aButton| for the gamepad at |aServiceId| for all
+  // Update the state of |aButton| for the gamepad at |aHandle| for all
   // windows that are listening and visible, and fire one of
   // a gamepadbutton{up,down} event at them as well.
   // aPressed is used for digital buttons, aTouched is for detecting touched
   // events, aValue is for analog buttons.
-  void NewButtonEvent(uint32_t aServiceId, uint32_t aButton, bool aPressed,
+  void NewButtonEvent(GamepadHandle aHandle, uint32_t aButton, bool aPressed,
                       bool aTouched, double aValue);
   // When only a digital button is available the value will be synthesized.
-  void NewButtonEvent(uint32_t aServiceId, uint32_t aButton, bool aPressed);
+  void NewButtonEvent(GamepadHandle aHandle, uint32_t aButton, bool aPressed);
   // When only a digital button are available the value will be synthesized.
-  void NewButtonEvent(uint32_t aServiceId, uint32_t aButton, bool aPressed,
+  void NewButtonEvent(GamepadHandle aHandle, uint32_t aButton, bool aPressed,
                       bool aTouched);
   // When only a digital button are available the value will be synthesized.
-  void NewButtonEvent(uint32_t aServiceId, uint32_t aButton, bool aPressed,
+  void NewButtonEvent(GamepadHandle aHandle, uint32_t aButton, bool aPressed,
                       double aValue);
-  // Update the state of |aAxis| for the gamepad at |aServiceId| for all
+  // Update the state of |aAxis| for the gamepad at |aHandle| for all
   // windows that are listening and visible, and fire a gamepadaxismove
   // event at them as well.
-  void NewAxisMoveEvent(uint32_t aServiceId, uint32_t aAxis, double aValue);
-  // Update the state of |aState| for the gamepad at |aServiceId| for all
+  void NewAxisMoveEvent(GamepadHandle aHandle, uint32_t aAxis, double aValue);
+  // Update the state of |aState| for the gamepad at |aHandle| for all
   // windows that are listening and visible.
-  void NewPoseEvent(uint32_t aServiceId, const GamepadPoseState& aState);
-  // Update the type of |aType| for the gamepad at |aServiceId| for all
+  void NewPoseEvent(GamepadHandle aHandle, const GamepadPoseState& aState);
+  // Update the type of |aType| for the gamepad at |aHandle| for all
   // windows that are listening and visible.
-  void NewLightIndicatorTypeEvent(uint32_t aServiceId, uint32_t aLight,
+  void NewLightIndicatorTypeEvent(GamepadHandle aHandle, uint32_t aLight,
                                   GamepadLightIndicatorType aType);
-  // Update the state of |aState| for the gamepad at |aServiceId| with
+  // Update the state of |aState| for the gamepad at |aHandle| with
   // |aTouchArrayIndex| for all windows that are listening and visible.
-  void NewMultiTouchEvent(uint32_t aServiceId, uint32_t aTouchArrayIndex,
+  void NewMultiTouchEvent(GamepadHandle aHandle, uint32_t aTouchArrayIndex,
                           const GamepadTouchState& aState);
 
   // Add IPDL parent instance
@@ -125,21 +127,23 @@ class GamepadPlatformService final {
   bool RemoveChannelParentInternal(GamepadEventChannelParent* aParent);
 
   template <class T>
-  void NotifyGamepadChange(uint32_t aServiceId, const T& aInfo,
+  void NotifyGamepadChange(GamepadHandle aHandle, const T& aInfo,
                            const MutexAutoLock& aProofOfLock);
 
-  // mNextGamepadServiceId can only be accessed by monitor thread
-  uint32_t mNextGamepadServiceId;
+  // mNextGamepadHandleValue can only be accessed by monitor thread
+  uint32_t mNextGamepadHandleValue;
 
   // This mutex protects mChannelParents and mGamepadAdded from race condition
   // between background and monitor thread
   Mutex mMutex;
 
-  // mChannelParents stores all the GamepadEventChannelParent instances
-  // which may be accessed by both background thread and monitor thread
-  // simultaneously, so we have a mutex to prevent race condition
+  // mChannelParents stores all the
+  // GamepadEventChannelParent instances which may be
+  // accessed by both background thread and monitor
+  // thread simultaneously, so we have a mutex to
+  // prevent race condition
   nsTArray<RefPtr<GamepadEventChannelParent>> mChannelParents;
-  std::map<uint32_t, GamepadAdded> mGamepadAdded;
+  std::map<GamepadHandle, GamepadAdded> mGamepadAdded;
 };
 
 }  // namespace dom

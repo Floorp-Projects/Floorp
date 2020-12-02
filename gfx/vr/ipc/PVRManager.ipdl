@@ -21,6 +21,7 @@ using struct mozilla::gfx::VRSubmitFrameResultInfo from "gfxVR.h";
 using mozilla::gfx::VRDisplayCapabilityFlags from "moz_external_vr.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
 
 
 namespace mozilla {
@@ -51,9 +52,9 @@ parent:
 
   async ControllerListenerAdded();
   async ControllerListenerRemoved();
-  async VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+  async VibrateHaptic(GamepadHandle aGamepadHandle, uint32_t aHapticIndex,
                       double aIntensity, double aDuration, uint32_t aPromiseID);
-  async StopVibrateHaptic(uint32_t aControllerIdx);
+  async StopVibrateHaptic(GamepadHandle aGamepadHandle);
   async StartVRNavigation(uint32_t aDeviceID);
   async StopVRNavigation(uint32_t aDeviceID, TimeDuration aDuration);
   async StartActivity();

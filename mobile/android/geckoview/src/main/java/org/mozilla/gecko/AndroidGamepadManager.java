@@ -97,15 +97,15 @@ public class AndroidGamepadManager {
 
     private static class Gamepad {
         // ID from GamepadService
-        public int id;
+        public byte[] handle;
         // Retain axis state so we can determine changes.
         public float axes[];
         public boolean dpad[];
         public int triggerAxes[];
         public float triggers[];
 
-        public Gamepad(final int serviceId, final int deviceId) {
-            id = serviceId;
+        public Gamepad(final byte[] handle, final int deviceId) {
+            this.handle = handle;
             axes = new float[Axis.values().length];
             dpad = new boolean[4];
             triggers = new float[2];
@@ -128,13 +128,13 @@ public class AndroidGamepadManager {
     }
 
     @WrapForJNI(calledFrom = "ui")
-    private static native int nativeAddGamepad();
+    private static native byte[] nativeAddGamepad();
     @WrapForJNI(calledFrom = "ui")
-    private static native void nativeRemoveGamepad(int aGamepadId);
+    private static native void nativeRemoveGamepad(byte[] aGamepadHandle);
     @WrapForJNI(calledFrom = "ui")
-    private static native void onButtonChange(int aGamepadId, int aButton, boolean aPressed, float aValue);
+    private static native void onButtonChange(byte[] aGamepadHandle, int aButton, boolean aPressed, float aValue);
     @WrapForJNI(calledFrom = "ui")
-    private static native void onAxisChange(int aGamepadId, boolean[] aValid, float[] aValues);
+    private static native void onAxisChange(byte[] aGamepadHandle, boolean[] aValid, float[] aValues);
 
     private static boolean sStarted;
     private static final SparseArray<Gamepad> sGamepads = new SparseArray<>();
@@ -184,7 +184,7 @@ public class AndroidGamepadManager {
         }
     }
 
-    /* package */ static void handleGamepadAdded(final int deviceId, final int serviceId) {
+    /* package */ static void handleGamepadAdded(final int deviceId, final byte[] gamepadHandle) {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             return;
@@ -197,7 +197,7 @@ public class AndroidGamepadManager {
         }
 
         sPendingGamepads.remove(deviceId);
-        sGamepads.put(deviceId, new Gamepad(serviceId, deviceId));
+        sGamepads.put(deviceId, new Gamepad(gamepadHandle, deviceId));
         // Handle queued KeyEvents
         for (KeyEvent ev : pending) {
             handleKeyEvent(ev);
@@ -217,7 +217,7 @@ public class AndroidGamepadManager {
                                     final int which) {
         if (pressed != gamepad.dpad[which]) {
             gamepad.dpad[which] = pressed;
-            onButtonChange(gamepad.id, FIRST_DPAD_BUTTON + which, pressed, Math.abs(value));
+            onButtonChange(gamepad.handle, FIRST_DPAD_BUTTON + which, pressed, Math.abs(value));
         }
     }
 
@@ -249,7 +249,7 @@ public class AndroidGamepadManager {
         }
         if (anyValidAxes) {
             // Send an axismove event.
-            onAxisChange(gamepad.id, valid, axes);
+            onAxisChange(gamepad.handle, valid, axes);
         }
 
         // Map triggers to buttons.
@@ -261,7 +261,7 @@ public class AndroidGamepadManager {
                 if (value != gamepad.triggers[i]) {
                     gamepad.triggers[i] = value;
                     boolean pressed = value > TRIGGER_PRESSED_THRESHOLD;
-                    onButtonChange(gamepad.id, trigger.button, pressed, value);
+                    onButtonChange(gamepad.handle, trigger.button, pressed, value);
                 }
             }
         }
@@ -320,7 +320,7 @@ public class AndroidGamepadManager {
 
         Gamepad gamepad = sGamepads.get(deviceId);
         boolean pressed = ev.getAction() == KeyEvent.ACTION_DOWN;
-        onButtonChange(gamepad.id, key, pressed, pressed ? 1.0f : 0.0f);
+        onButtonChange(gamepad.handle, key, pressed, pressed ? 1.0f : 0.0f);
         return true;
     }
 
@@ -343,7 +343,7 @@ public class AndroidGamepadManager {
 
     private static void addGamepad(final InputDevice device) {
         sPendingGamepads.put(device.getId(), new ArrayList<KeyEvent>());
-        final int gamepadId = nativeAddGamepad();
+        final byte[] gamepadId = nativeAddGamepad();
         ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -354,7 +354,7 @@ public class AndroidGamepadManager {
 
     private static void removeGamepad(final int deviceId) {
         Gamepad gamepad = sGamepads.get(deviceId);
-        nativeRemoveGamepad(gamepad.id);
+        nativeRemoveGamepad(gamepad.handle);
         sGamepads.remove(deviceId);
     }
 

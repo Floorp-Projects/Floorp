@@ -36,14 +36,14 @@ void Gamepad::UpdateTimestamp() {
 }
 
 Gamepad::Gamepad(nsISupports* aParent, const nsAString& aID, int32_t aIndex,
-                 uint32_t aHashKey, GamepadMappingType aMapping,
+                 GamepadHandle aHandle, GamepadMappingType aMapping,
                  GamepadHand aHand, uint32_t aDisplayID, uint32_t aNumButtons,
                  uint32_t aNumAxes, uint32_t aNumHaptics,
                  uint32_t aNumLightIndicator, uint32_t aNumTouchEvents)
     : mParent(aParent),
       mID(aID),
       mIndex(aIndex),
-      mHashKey(aHashKey),
+      mHandle(aHandle),
       mDisplayId(aDisplayID),
       mTouchIdHashValue(0),
       mMapping(aMapping),
@@ -59,11 +59,11 @@ Gamepad::Gamepad(nsISupports* aParent, const nsAString& aID, int32_t aIndex,
   mPose = new GamepadPose(aParent);
   for (uint32_t i = 0; i < aNumHaptics; ++i) {
     mHapticActuators.AppendElement(
-        new GamepadHapticActuator(mParent, mHashKey, i));
+        new GamepadHapticActuator(mParent, mHandle, i));
   }
   for (uint32_t i = 0; i < aNumLightIndicator; ++i) {
     mLightIndicators.AppendElement(
-        new GamepadLightIndicator(mParent, mHashKey, i));
+        new GamepadLightIndicator(mParent, mHandle, i));
   }
   for (uint32_t i = 0; i < aNumTouchEvents; ++i) {
     mTouchEvents.AppendElement(new GamepadTouch(mParent));
@@ -177,7 +177,7 @@ void Gamepad::SyncState(Gamepad* aOther) {
 
 already_AddRefed<Gamepad> Gamepad::Clone(nsISupports* aParent) {
   RefPtr<Gamepad> out =
-      new Gamepad(aParent, mID, mIndex, mHashKey, mMapping, mHand, mDisplayId,
+      new Gamepad(aParent, mID, mIndex, mHandle, mMapping, mHand, mDisplayId,
                   mButtons.Length(), mAxes.Length(), mHapticActuators.Length(),
                   mLightIndicators.Length(), mTouchEvents.Length());
   out->SyncState(this);

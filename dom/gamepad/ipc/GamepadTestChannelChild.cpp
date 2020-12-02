@@ -21,13 +21,13 @@ GamepadTestChannelChild::GamepadTestChannelChild(
     GamepadServiceTest* aGamepadServiceTest)
     : mGamepadServiceTest(aGamepadServiceTest) {}
 
-mozilla::ipc::IPCResult GamepadTestChannelChild::RecvReplyGamepadIndex(
-    const uint32_t& aID, const uint32_t& aIndex) {
+mozilla::ipc::IPCResult GamepadTestChannelChild::RecvReplyGamepadHandle(
+    const uint32_t& aID, const GamepadHandle& aHandle) {
   MOZ_RELEASE_ASSERT(
       mGamepadServiceTest,
       "Test channel should never outlive the owning GamepadServiceTest");
 
-  mGamepadServiceTest->ReplyGamepadIndex(aID, aIndex);
+  mGamepadServiceTest->ReplyGamepadHandle(aID, aHandle);
   return IPC_OK();
 }
 

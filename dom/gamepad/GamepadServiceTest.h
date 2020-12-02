@@ -9,6 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/WeakPtr.h"
 
@@ -40,22 +41,22 @@ class GamepadServiceTest final : public DOMEventTargetHelper,
       const nsAString& aID, GamepadMappingType aMapping, GamepadHand aHand,
       uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
       uint32_t aNumLightIndicator, uint32_t aNumTouchEvents, ErrorResult& aRv);
-  void ReplyGamepadIndex(uint32_t aPromiseId, uint32_t aIndex);
+  void ReplyGamepadHandle(uint32_t aPromiseId, const GamepadHandle& aHandle);
 
-  void RemoveGamepad(uint32_t aIndex);
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
+  void RemoveGamepad(uint32_t aHandleSlot);
+  void NewButtonEvent(uint32_t aHandleSlot, uint32_t aButton, bool aPressed,
                       bool aTouched);
-  void NewButtonValueEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
-                           bool aTouched, double aValue);
-  void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
-  void NewPoseMove(uint32_t aIndex, const Nullable<Float32Array>& aOrient,
+  void NewButtonValueEvent(uint32_t aHandleSlot, uint32_t aButton,
+                           bool aPressed, bool aTouched, double aValue);
+  void NewAxisMoveEvent(uint32_t aHandleSlot, uint32_t aAxis, double aValue);
+  void NewPoseMove(uint32_t aHandleSlot, const Nullable<Float32Array>& aOrient,
                    const Nullable<Float32Array>& aPos,
                    const Nullable<Float32Array>& aAngVelocity,
                    const Nullable<Float32Array>& aAngAcceleration,
                    const Nullable<Float32Array>& aLinVelocity,
                    const Nullable<Float32Array>& aLinAcceleration);
-  void NewTouch(uint32_t aIndex, uint32_t aTouchArrayIndex, uint32_t aTouchId,
-                uint8_t aSurfaceId, const Float32Array& aPos,
+  void NewTouch(uint32_t aHandleSlot, uint32_t aTouchArrayIndex,
+                uint32_t aTouchId, uint8_t aSurfaceId, const Float32Array& aPos,
                 const Nullable<Float32Array>& aSurfDim);
   void Shutdown();
 
@@ -76,6 +77,7 @@ class GamepadServiceTest final : public DOMEventTargetHelper,
   // will only be used in this singleton class and deleted during the IPDL
   // shutdown chain
   RefPtr<GamepadTestChannelChild> mChild;
+  nsTArray<GamepadHandle> mGamepadHandles;
 
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
 
@@ -83,6 +85,10 @@ class GamepadServiceTest final : public DOMEventTargetHelper,
   ~GamepadServiceTest();
   void InitPBackgroundActor();
   void DestroyPBackgroundActor();
+
+  uint32_t AddGamepadHandle(GamepadHandle aHandle);
+  void RemoveGamepadHandle(uint32_t aHandleSlot);
+  GamepadHandle GetHandleInSlot(uint32_t aHandleSlot) const;
 };
 
 }  // namespace dom

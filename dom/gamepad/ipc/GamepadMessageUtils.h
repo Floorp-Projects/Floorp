@@ -9,9 +9,9 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/GamepadLightIndicatorBinding.h"
 #include "mozilla/dom/GamepadPoseState.h"
-#include "mozilla/dom/GamepadServiceType.h"
 #include "mozilla/dom/GamepadTouchState.h"
 
 namespace IPC {
@@ -36,13 +36,6 @@ struct ParamTraits<mozilla::dom::GamepadHand>
     : public ContiguousEnumSerializer<
           mozilla::dom::GamepadHand, mozilla::dom::GamepadHand(0),
           mozilla::dom::GamepadHand(mozilla::dom::GamepadHand::EndGuard_)> {};
-
-template <>
-struct ParamTraits<mozilla::dom::GamepadServiceType>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::GamepadServiceType, mozilla::dom::GamepadServiceType(0),
-          mozilla::dom::GamepadServiceType(
-              mozilla::dom::GamepadServiceType::NumGamepadServiceType)> {};
 
 template <>
 struct ParamTraits<mozilla::dom::GamepadCapabilityFlags>
@@ -135,6 +128,27 @@ struct ParamTraits<mozilla::dom::GamepadTouchState> {
       return false;
     }
     return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::GamepadHandleKind>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::GamepadHandleKind,
+          mozilla::dom::GamepadHandleKind::GamepadPlatformManager,
+          mozilla::dom::GamepadHandleKind::VR> {};
+
+template <>
+struct ParamTraits<mozilla::dom::GamepadHandle> {
+  typedef mozilla::dom::GamepadHandle paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mValue);
+    WriteParam(aMsg, aParam.mKind);
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aParam) {
+    return ReadParam(aMsg, aIter, &aParam->mValue) &&
+           ReadParam(aMsg, aIter, &aParam->mKind);
   }
 };
 

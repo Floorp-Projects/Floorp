@@ -198,12 +198,13 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
   mTargetRaySpace = new XRInputSpace(aSession->GetParentObject(), aSession,
                                      nativeOriginTargetRay, aIndex);
 
-  const uint32_t gamepadId =
+  const uint32_t gamepadHandleValue =
       displayInfo.mDisplayID * gfx::kVRControllerMaxCount + aIndex;
-  const uint32_t hashKey = GamepadManager::GetGamepadIndexWithServiceType(
-      gamepadId, GamepadServiceType::VR);
+
+  const GamepadHandle gamepadHandle{gamepadHandleValue, GamepadHandleKind::VR};
+
   mGamepad =
-      new Gamepad(mParent, NS_ConvertASCIItoUTF16(""), -1, hashKey,
+      new Gamepad(mParent, NS_ConvertASCIItoUTF16(""), -1, gamepadHandle,
                   GamepadMappingType::Xr_standard, controllerState.hand,
                   displayInfo.mDisplayID, controllerState.numButtons,
                   controllerState.numAxes, controllerState.numHaptics, 0, 0);
