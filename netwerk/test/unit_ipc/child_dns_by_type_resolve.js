@@ -32,7 +32,7 @@ DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIDNSListener",
 ]);
 
-add_task(async function testEsniRequest() {
+add_task(async function testTXTResolve() {
   // use the h2 server as DOH provider
   let listenerEsni = new DNSListener();
   let request = dns.asyncResolve(
@@ -54,7 +54,7 @@ add_task(async function testEsniRequest() {
   Assert.equal(answer, test_answer, "got correct answer");
 });
 
-add_task(async function testEsniHTTPSSVC() {
+add_task(async function testHTTPSSVCResolve() {
   // use the h2 server as DOH provider
   let listenerEsni = new DNSListener();
   let request = dns.asyncResolve(
