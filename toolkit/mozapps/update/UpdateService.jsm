@@ -3994,7 +3994,7 @@ UpdateManager.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  refreshUpdateStatus: function UM_refreshUpdateStatus() {
+  refreshUpdateStatus: async function UM_refreshUpdateStatus() {
     var update = this._readyUpdate;
     if (!update) {
       return;
@@ -5693,7 +5693,7 @@ Downloader.prototype = {
       let update = this._update;
       promiseLangPacksUpdated(update).then(() => {
         LOG(
-          "UpdateManager:refreshUpdateStatus - Notifying observers that " +
+          "Downloader:onStopRequest - Notifying observers that " +
             "an update was downloaded. topic: update-downloaded, status: " +
             update.state
         );

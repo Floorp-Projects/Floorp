@@ -330,7 +330,18 @@ class AppUpdater {
       case Cr.NS_OK:
         this.aus.removeDownloadListener(this);
         if (this.updateStagingEnabled) {
-          this._setStatus(AppUpdater.STATUS.STAGING);
+          // It could be that another instance was started during the download,
+          // and if that happened, then we actually should not advance to the
+          // STAGING status because the staging process isn't really happening
+          // until that instance exits (or we time out waiting).
+          if (this.aus.isOtherInstanceHandlingUpdates) {
+            this._setStatus(AppUpdater.OTHER_INSTANCE_HANDLING_UPDATES);
+          } else {
+            this._setStatus(AppUpdater.STATUS.STAGING);
+          }
+          // But we should register the staging observer in either case, because
+          // if we do time out waiting for the other instance to exit, then
+          // staging really will start at that point.
           this._awaitStagingComplete();
         } else {
           this._awaitDownloadComplete();
