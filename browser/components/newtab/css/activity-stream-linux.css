@@ -46,6 +46,10 @@ body {
   --newtab-textbox-border: rgba(12, 12, 13, 0.2);
   --newtab-textbox-focus-color: #0060DF;
   --newtab-textbox-focus-boxshadow: 0 0 0 1px #0060DF, 0 0 0 4px rgba(0, 96, 223, 0.3);
+  --newtab-background-button-color: rgba(223, 223, 223, 0.5);
+  --newtab-background-button-text-color: #484848;
+  --newtab-background-button-hover-color: rgba(151, 151, 151, 0.5);
+  --newtab-background-button-active-color: rgba(196, 196, 196, 0.5);
   --newtab-button-primary-color: #0060DF;
   --newtab-button-secondary-color: inherit;
   --newtab-feed-button-background: #EDEDF0;
@@ -102,6 +106,10 @@ body {
     --newtab-textbox-border: rgba(249, 249, 250, 0.2);
     --newtab-textbox-focus-color: #45A1FF;
     --newtab-textbox-focus-boxshadow: 0 0 0 1px #45A1FF, 0 0 0 4px rgba(69, 161, 255, 0.3);
+    --newtab-background-button-color: rgba(80, 80, 80, 0.5);
+    --newtab-background-button-text-color: #CDCDD4;
+    --newtab-background-button-hover-color: rgba(173, 173, 173, 0.5);
+    --newtab-background-button-active-color: rgba(114, 114, 114, 0.5);
     --newtab-feed-button-background: #38383D;
     --newtab-feed-button-text: #F9F9FA;
     --newtab-feed-button-background-faded: rgba(56, 56, 61, 0.6);
@@ -452,6 +460,31 @@ main {
     background-color: var(--newtab-element-hover-color); }
   .prefs-button button:active {
     background-color: var(--newtab-element-active-color); }
+
+.button-wrapper {
+  padding-inline-end: 16px;
+  padding-block: 16px 0;
+  text-align: end; }
+
+.personalize-button {
+  font-size: 12px;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--newtab-background-button-color);
+  color: var(--newtab-background-button-text-color);
+  padding: 0 10px;
+  min-height: 32px;
+  max-width: 150px;
+  cursor: pointer; }
+  .personalize-button:hover {
+    background-color: var(--newtab-background-button-hover-color); }
+  .personalize-button:active {
+    background-color: var(--newtab-background-button-active-color); }
+  .personalize-button:focus-visible {
+    border: 1px solid #0060DF;
+    border-radius: 4px;
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(0, 96, 223, 0.25); }
 
 .as-error-fallback {
   align-items: center;
@@ -1367,7 +1400,7 @@ main {
   width: 432px;
   height: 100%;
   position: fixed;
-  right: 0;
+  inset-inline-end: 0;
   top: 0;
   bottom: 0;
   z-index: 1001;
@@ -1695,8 +1728,8 @@ main {
 
 .asrouter-toggle {
   position: fixed;
-  top: 15px;
-  inset-inline-end: 48px;
+  top: 50px;
+  inset-inline-end: 15px;
   border: 0;
   background: none;
   z-index: 1;

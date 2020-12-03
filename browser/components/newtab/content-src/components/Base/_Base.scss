@@ -136,3 +136,36 @@ main {
     }
   }
 }
+
+.button-wrapper {
+  padding-inline-end: 16px;
+  padding-block: 16px 0;
+  text-align: end;
+}
+
+.personalize-button {
+  font-size: 12px;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--newtab-background-button-color);
+  color: var(--newtab-background-button-text-color);
+  padding: 0 10px;
+  min-height: 32px;
+  max-width: 150px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--newtab-background-button-hover-color);
+  }
+
+  &:active {
+    background-color: var(--newtab-background-button-active-color);
+  }
+
+  &:focus-visible {
+    border: 1px solid $blue-60;
+    border-radius: 4px;
+    outline: 0;
+    box-shadow: 0 0 0 2px $newtab-background-button-focus-boxshadow-color;
+  }
+}

@@ -94,6 +94,17 @@ $trailhead-purple-80: #36296D;
 $trailhead-blue-60: #0250BB;
 $trailhead-blue-70: #054096;
 
+// New new tab experience colors.
+$newtab-background-button-default-color: rgba(223, 223, 223, 0.5);
+$newtab-background-button-darktheme-color: rgba(80, 80, 80, 0.5);
+$newtab-background-button-default-text-color: #484848;
+$newtab-background-button-darktheme-text-color: #CDCDD4;
+$newtab-background-button-default-hover-color: rgba(151, 151, 151, 0.5);
+$newtab-background-button-darktheme-hover-color: rgba(173, 173, 173, 0.5);
+$newtab-background-button-default-active-color: rgba(196, 196, 196, 0.5);
+$newtab-background-button-darktheme-active-color: rgba(114, 114, 114, 0.5);
+$newtab-background-button-focus-boxshadow-color: rgba(0, 96, 223, 0.25);
+
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);
 

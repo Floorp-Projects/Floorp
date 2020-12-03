@@ -24,6 +24,16 @@ export const PrefsButton = ({ onClick, icon }) => (
   </div>
 );
 
+export const PersonalizeButton = ({ onClick }) => (
+  <div className="button-wrapper">
+    <button
+      className="personalize-button"
+      onClick={onClick}
+      data-l10n-id="newtab-personalize-button-label"
+    />
+  </div>
+);
+
 // Returns a function will not be continuously triggered when called. The
 // function will be triggered if called again after `wait` milliseconds.
 function debounce(func, wait) {
@@ -192,6 +202,11 @@ export class BaseContent extends React.PureComponent {
 
     return (
       <div>
+        {canShowCustomizationMenu ? (
+          <PersonalizeButton onClick={this.openCustomizationMenu} />
+        ) : (
+          <PrefsButton onClick={this.openPreferences} icon={prefsButtonIcon} />
+        )}
         <div className={outerClassName}>
           <main>
             {prefs.showSearch && (
@@ -223,15 +238,6 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
-        <PrefsButton
-          onClick={
-            canShowCustomizationMenu
-              ? this.openCustomizationMenu
-              : this.openPreferences
-          }
-          icon={prefsButtonIcon}
-        />
-
         {canShowCustomizationMenu && this.state.customizeMenuVisible && (
           <CustomizeMenu onClose={this.closeCustomizationMenu} />
         )}
