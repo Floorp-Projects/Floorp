@@ -387,10 +387,7 @@ const tests = [
   async function(win) {
     info("Type something and canonize");
     win.gURLBar.select();
-    const promise = BrowserTestUtils.waitForDocLoadAndStopIt(
-      "https://www.example.com/",
-      gBrowser.selectedBrowser
-    );
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
       value: "example",

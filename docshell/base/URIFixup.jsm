@@ -67,12 +67,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.fixup.alternate.enabled",
   true
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "alternateProtocol",
-  "browser.fixup.alternate.protocol",
-  "https"
-);
 
 const {
   FIXUP_FLAG_NONE,
@@ -786,7 +780,6 @@ function maybeSetAlternateFixedURI(info, fixupFlags) {
   try {
     info.fixedURI = uri
       .mutate()
-      .setScheme(alternateProtocol)
       .setHost(newHost)
       .finalize();
   } catch (ex) {
