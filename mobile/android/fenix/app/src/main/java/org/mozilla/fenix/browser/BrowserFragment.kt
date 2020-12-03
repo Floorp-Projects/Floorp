@@ -247,7 +247,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
-        override fun onCollectionCreated(title: String, sessions: List<Session>) {
+        override fun onCollectionCreated(title: String, sessions: List<Session>, id: Long?) {
             showTabSavedToCollectionSnackbar(sessions.size, true)
         }
 

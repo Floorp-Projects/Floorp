@@ -39,6 +39,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.privateBrowsingButton
 import kotlinx.android.synthetic.main.fragment_home.search_engine_icon
@@ -62,10 +63,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
@@ -137,14 +136,6 @@ class HomeFragment : Fragment() {
     private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
-        override fun onCollectionCreated(title: String, sessions: List<Session>) {
-            scrollAndAnimateCollection()
-        }
-
-        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
-            scrollAndAnimateCollection(tabCollection)
-        }
-
         override fun onCollectionRenamed(tabCollection: TabCollection, title: String) {
             lifecycleScope.launch(Main) {
                 view?.sessionControlRecyclerView?.adapter?.notifyDataSetChanged()
@@ -170,6 +161,7 @@ class HomeFragment : Fragment() {
         get() = _sessionControlInteractor!!
 
     private var sessionControlView: SessionControlView? = null
+    private var appBarLayout: AppBarLayout? = null
     private lateinit var currentMode: CurrentMode
 
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
@@ -266,6 +258,8 @@ class HomeFragment : Fragment() {
         )
 
         updateSessionControlView(view)
+
+        appBarLayout = view.homeAppBar
 
         activity.themeManager.applyStatusBarTheme(activity)
         return view
@@ -442,6 +436,12 @@ class HomeFragment : Fragment() {
 
         if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
             navigateToSearch()
+        } else if (bundleArgs.getLong(FOCUS_ON_COLLECTION, -1) >= 0) {
+            // No need to scroll to async'd loaded TopSites if we want to scroll to collections.
+            homeViewModel.shouldScrollToTopSites = false
+            /* Triggered when the user has added a tab to a collection and has tapped
+            * the View action on the [TabsTrayDialogFragment] snackbar.*/
+            scrollAndAnimateCollection(bundleArgs.getLong(FOCUS_ON_COLLECTION, -1))
         }
     }
 
@@ -848,31 +848,23 @@ class HomeFragment : Fragment() {
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 
+    /**
+     * This method will find and scroll to the row of the specified collection Id.
+     * */
     private fun scrollAndAnimateCollection(
-        changedCollection: TabCollection? = null
+        collectionIdToSelect: Long = -1
     ) {
-        if (view != null) {
+        if (view != null && collectionIdToSelect >= 0) {
             viewLifecycleOwner.lifecycleScope.launch {
                 val recyclerView = sessionControlView!!.view
                 delay(ANIM_SCROLL_DELAY)
-                val tabsSize = store.state
-                    .getNormalOrPrivateTabs(browsingModeManager.mode.isPrivate)
-                    .size
+                val indexOfCollection =
+                    NON_COLLECTION_ITEM_NUM + findIndexOfSpecificCollection(collectionIdToSelect)
 
-                var indexOfCollection = tabsSize + NON_TAB_ITEM_NUM
-                changedCollection?.let { changedCollection ->
-                    requireComponents.core.tabCollectionStorage.cachedTabCollections
-                        .filterIndexed { index, tabCollection ->
-                            if (tabCollection.id == changedCollection.id) {
-                                indexOfCollection = tabsSize + NON_TAB_ITEM_NUM + index
-                                return@filterIndexed true
-                            }
-                            false
-                        }
-                }
                 val lastVisiblePosition =
                     (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
                         ?: 0
+
                 if (lastVisiblePosition < indexOfCollection) {
                     val onScrollListener = object : RecyclerView.OnScrollListener() {
                         override fun onScrollStateChanged(
@@ -881,6 +873,7 @@ class HomeFragment : Fragment() {
                         ) {
                             super.onScrollStateChanged(recyclerView, newState)
                             if (newState == SCROLL_STATE_IDLE) {
+                                appBarLayout?.setExpanded(false)
                                 animateCollection(indexOfCollection)
                                 recyclerView.removeOnScrollListener(this)
                             }
@@ -889,12 +882,34 @@ class HomeFragment : Fragment() {
                     recyclerView.addOnScrollListener(onScrollListener)
                     recyclerView.smoothScrollToPosition(indexOfCollection)
                 } else {
+                    appBarLayout?.setExpanded(false)
                     animateCollection(indexOfCollection)
                 }
             }
         }
     }
 
+    /**
+     * Returns index of the collection with the specified id.
+     * */
+    private fun findIndexOfSpecificCollection(
+        changedCollectionId: Long
+    ): Int {
+        var result = 0
+        requireComponents.core.tabCollectionStorage.cachedTabCollections
+            .filterIndexed { index, tabCollection ->
+                if (tabCollection.id == changedCollectionId) {
+                    result = index
+                    return@filterIndexed true
+                }
+                false
+            }
+        return result
+    }
+
+    /**
+     * Will highlight the border of the collection with the specified index.
+     * */
     private fun animateCollection(indexOfCollection: Int) {
         viewLifecycleOwner.lifecycleScope.launch {
             val viewHolder =
@@ -921,24 +936,6 @@ class HomeFragment : Fragment() {
             border?.animate()?.alpha(1.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
                 ?.setDuration(FADE_ANIM_DURATION)
                 ?.setListener(listener)?.start()
-        }.invokeOnCompletion {
-            showSavedSnackbar()
-        }
-    }
-
-    private fun showSavedSnackbar() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            delay(ANIM_SNACKBAR_DELAY)
-            view?.let { view ->
-                FenixSnackbar.make(
-                    view = view,
-                    duration = Snackbar.LENGTH_LONG,
-                    isDisplayedWithBrowserToolbar = false
-                )
-                    .setText(view.context.getString(R.string.create_collection_tabs_saved_new_collection))
-                    .setAnchorView(snackbarAnchorView)
-                    .show()
-            }
         }
     }
 
@@ -983,13 +980,18 @@ class HomeFragment : Fragment() {
         const val ALL_PRIVATE_TABS = "all_private"
 
         private const val FOCUS_ON_ADDRESS_BAR = "focusOnAddressBar"
+        private const val FOCUS_ON_COLLECTION = "focusOnCollection"
         private const val ANIMATION_DELAY = 100L
 
-        private const val NON_TAB_ITEM_NUM = 3
+        /**
+         * Represents the number of items in [sessionControlView] that are NOT part of
+         * the list of collections. At the moment these are topSites pager, collections header.
+         * */
+        private const val NON_COLLECTION_ITEM_NUM = 2
+
         private const val ANIM_SCROLL_DELAY = 100L
         private const val ANIM_ON_SCREEN_DELAY = 200L
         private const val FADE_ANIM_DURATION = 150L
-        private const val ANIM_SNACKBAR_DELAY = 100L
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
     }

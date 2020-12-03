@@ -86,12 +86,15 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             else null
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
-        override fun onCollectionCreated(title: String, sessions: List<Session>) {
-            showCollectionSnackbar(sessions.size, true)
+        override fun onCollectionCreated(title: String, sessions: List<Session>, id: Long?) {
+            showCollectionSnackbar(sessions.size, true, collectionToSelect = id)
         }
 
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
-            showCollectionSnackbar(sessions.size)
+            showCollectionSnackbar(
+                sessions.size,
+                collectionToSelect = tabCollection.id
+            )
         }
     }
 
@@ -354,7 +357,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 
-    private fun showCollectionSnackbar(tabSize: Int, isNewCollection: Boolean = false) {
+    private fun showCollectionSnackbar(
+        tabSize: Int,
+        isNewCollection: Boolean = false,
+        collectionToSelect: Long?
+    ) {
         view.let {
             val messageStringRes = when {
                 isNewCollection -> {
@@ -378,7 +385,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                 .setAction(requireContext().getString(R.string.create_collection_view)) {
                     dismissAllowingStateLoss()
                     findNavController().navigate(
-                        TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = false)
+                        TabTrayDialogFragmentDirections.actionGlobalHome(
+                            focusOnAddressBar = false,
+                            focusOnCollection = collectionToSelect ?: -1L
+                        )
                     )
                 }
 

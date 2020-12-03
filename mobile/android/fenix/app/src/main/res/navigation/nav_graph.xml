@@ -138,6 +138,10 @@
             android:name="focusOnAddressBar"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="focusOnCollection"
+            android:defaultValue="-1L"
+            app:argType="long" />
     </fragment>
 
     <dialog
