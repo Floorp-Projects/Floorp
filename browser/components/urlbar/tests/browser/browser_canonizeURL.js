@@ -15,15 +15,15 @@ add_task(async function checkCtrlWorks() {
 
   let defaultEngine = await Services.search.getDefault();
   let testcases = [
-    ["example", "http://www.example.com/", { ctrlKey: true }],
+    ["example", "https://www.example.com/", { ctrlKey: true }],
     // Check that a direct load is not overwritten by a previous canonization.
     ["http://example.com/test/", "http://example.com/test/", {}],
-    ["ex-ample", "http://www.ex-ample.com/", { ctrlKey: true }],
-    ["  example ", "http://www.example.com/", { ctrlKey: true }],
-    [" example/foo ", "http://www.example.com/foo", { ctrlKey: true }],
+    ["ex-ample", "https://www.ex-ample.com/", { ctrlKey: true }],
+    ["  example ", "https://www.example.com/", { ctrlKey: true }],
+    [" example/foo ", "https://www.example.com/foo", { ctrlKey: true }],
     [
       " example/foo bar ",
-      "http://www.example.com/foo%20bar",
+      "https://www.example.com/foo%20bar",
       { ctrlKey: true },
     ],
     ["example.net", "http://example.net/", { ctrlKey: true }],
@@ -158,11 +158,11 @@ add_task(async function autofill() {
   ]);
 
   let testcases = [
-    ["ex", "http://www.ex.com/", { ctrlKey: true }],
+    ["ex", "https://www.ex.com/", { ctrlKey: true }],
     // Check that a direct load is not overwritten by a previous canonization.
     ["ex", "http://example.com/", {}],
     // search alias
-    ["@goo", "http://www%2E@goo.com/", { ctrlKey: true }],
+    ["@goo", "https://www.goo.com/", { ctrlKey: true }],
   ];
 
   function promiseAutofill() {
@@ -232,13 +232,13 @@ add_task(async function() {
   EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
 
   info("Send enter key with the ctrl");
-  EventUtils.synthesizeKey("VK_RETURN", { type: "keydown", ctrlKey: true });
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  is(
-    gBrowser.selectedBrowser.documentURI.spec,
-    `http://www.${testWord}.com/`,
-    "The loaded url is canonized"
+  const onLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
+    `https://www.${testWord}.com/`,
+    gBrowser.selectedBrowser
   );
+  EventUtils.synthesizeKey("VK_RETURN", { type: "keydown", ctrlKey: true });
+  await onLoad;
+  info("The loaded url is canonized");
 });
 
 function simulatePastingToUrlbar(text) {
