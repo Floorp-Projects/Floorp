@@ -1000,8 +1000,8 @@ inline JSProtoKey StandardProtoKeyOrNull(const JSObject* obj) {
   return JSCLASS_CACHED_PROTO_KEY(obj->getClass());
 }
 
-JSObject* NewSingletonObjectWithFunctionPrototype(JSContext* cx,
-                                                  Handle<GlobalObject*> global);
+JSObject* NewTenuredObjectWithFunctionPrototype(JSContext* cx,
+                                                Handle<GlobalObject*> global);
 
 }  // namespace js
 

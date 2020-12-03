@@ -387,7 +387,6 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS_NewObject",
     "JS_NewObjectWithGivenProto",
     "JS_NewObjectWithoutMetadata",
-    "JS_NewObjectWithUniqueType",
     "JS_NewPlainObject",
     "JS::NewPromiseObject",
     "JS_NewStringCopyN",

@@ -1042,7 +1042,7 @@ static JSObject* CreateMathObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewSingletonObjectWithGivenProto(cx, &MathClass, proto);
+  return NewTenuredObjectWithGivenProto(cx, &MathClass, proto);
 }
 
 static const ClassSpec MathClassSpec = {CreateMathObject,

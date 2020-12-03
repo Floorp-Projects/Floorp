@@ -1121,7 +1121,7 @@ static JSObject* CreateJSONObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewSingletonObjectWithGivenProto(cx, &JSONClass, proto);
+  return NewTenuredObjectWithGivenProto(cx, &JSONClass, proto);
 }
 
 static const ClassSpec JSONClassSpec = {

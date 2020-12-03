@@ -65,8 +65,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     // calling watchRootNode, so we keep this assignment as a fallback.
     this.rootNode = types.getType("domnode").read(json.root, this);
 
-    // @backward-compat { version 42 } Actor on older server does not expose traits.
-    this.traits = json.traits || {};
+    this.traits = json.traits;
   }
 
   /**

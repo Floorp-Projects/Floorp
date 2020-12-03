@@ -132,25 +132,6 @@ JS_FRIEND_API bool JS_SplicePrototype(JSContext* cx, HandleObject obj,
   return JSObject::splicePrototype(cx, obj, tagged);
 }
 
-JS_FRIEND_API JSObject* JS_NewObjectWithUniqueType(JSContext* cx,
-                                                   const JSClass* clasp,
-                                                   HandleObject proto) {
-  /*
-   * Create our object with a null proto and then splice in the correct proto
-   * after we setSingleton, so that we don't pollute the default
-   * ObjectGroup attached to our proto with information about our object, since
-   * we're not going to be using that ObjectGroup anyway.
-   */
-  RootedObject obj(cx, NewSingletonObjectWithGivenProto(cx, clasp, nullptr));
-  if (!obj) {
-    return nullptr;
-  }
-  if (!JS_SplicePrototype(cx, obj, proto)) {
-    return nullptr;
-  }
-  return obj;
-}
-
 JS_FRIEND_API JSObject* JS_NewObjectWithoutMetadata(
     JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto) {
   cx->check(proto);

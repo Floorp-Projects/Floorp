@@ -991,7 +991,7 @@ PlainObject* js::ObjectWithProtoOperation(JSContext* cx, HandleValue val) {
 
 JSObject* js::FunWithProtoOperation(JSContext* cx, HandleFunction fun,
                                     HandleObject parent, HandleObject proto) {
-  return CloneFunctionObjectIfNotSingleton(cx, fun, parent, proto);
+  return CloneFunctionObject(cx, fun, parent, proto);
 }
 
 /*
@@ -4655,7 +4655,7 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
     MOZ_ASSERT(IsAsmJSModule(fun));
     clone = CloneAsmJSModuleFunction(cx, fun);
   } else {
-    clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
+    clone = CloneFunctionObject(cx, fun, parent);
   }
   if (!clone) {
     return nullptr;
@@ -4669,7 +4669,7 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
                           HandleObject parent, HandleValue newTargetv) {
   MOZ_ASSERT(fun->isArrow());
 
-  JSFunction* clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
+  JSFunction* clone = CloneFunctionObject(cx, fun, parent);
   if (!clone) {
     return nullptr;
   }
@@ -5147,6 +5147,8 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   return NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
 }
 
+// TODO(no-TI): try to merge with NewObjectOperation. We can't remove the
+// setGroup call yet because CreateThisWithTemplate also calls this.
 JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
                                              HandleObject templateObject) {
   // This is an optimized version of NewObjectOperation for use when the
@@ -5186,21 +5188,14 @@ ArrayObject* js::NewArrayOperation(
   return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
 }
 
+// TODO(no-TI): try to merge with NewArrayOperation.
 ArrayObject* js::NewArrayOperationWithTemplate(JSContext* cx,
                                                HandleObject templateObject) {
   MOZ_ASSERT(!templateObject->isSingleton());
 
   NewObjectKind newKind = GenericObject;
-  ArrayObject* obj = NewDenseFullyAllocatedArray(
+  return NewDenseFullyAllocatedArray(
       cx, templateObject->as<ArrayObject>().length(), nullptr, newKind);
-  if (!obj) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(obj->lastProperty() ==
-             templateObject->as<ArrayObject>().lastProperty());
-  obj->setGroup(templateObject->group());
-  return obj;
 }
 
 ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,

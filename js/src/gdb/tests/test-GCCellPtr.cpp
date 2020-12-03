@@ -24,7 +24,7 @@ FRAGMENT(GCCellPtr, simple) {
   JS::Rooted<JSString*> empty(cx, JS_NewStringCopyN(cx, nullptr, 0));
   JS::Rooted<JS::Symbol*> unique(cx, JS::NewSymbol(cx, nullptr));
   JS::Rooted<JS::BigInt*> zeroBigInt(cx, JS::BigInt::zero(cx));
-  JS::Rooted<js::ObjectGroup*> rootedObjGroup(cx, JSObject::getGroup(cx, glob));
+  JS::Rooted<js::ObjectGroup*> rootedObjGroup(cx, glob->group());
   JS::Rooted<js::RegExpObject*> regExp(
       cx, js::RegExpObject::create(cx, u"", 0, JS::RegExpFlags{},
                                    js::GenericObject));
