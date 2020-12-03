@@ -22,6 +22,8 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
+import org.mozilla.fenix.experiments.ExperimentBranch
+import org.mozilla.fenix.experiments.Experiments
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
@@ -96,17 +98,41 @@ class HomeMenu(
             onItemTapped.invoke(Item.WhatsNew)
         }
 
+        val experiments = context.components.analytics.experiments
+        val bookmarksIcon = experiments.getExperimentBranch(Experiments.BOOKMARK_ICON)
+            .let {
+                when (it) {
+                    ExperimentBranch.TREATMENT -> R.drawable.ic_bookmark_list
+                    else -> R.drawable.ic_bookmark_filled
+                }
+            }
+
         val bookmarksItem = BrowserMenuImageText(
             context.getString(R.string.library_bookmarks),
-            R.drawable.ic_bookmark_filled,
+            bookmarksIcon,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Bookmarks)
         }
 
+        // We want to validate that the Nimbus experiments library is working, from the android UI
+        // all the way back to the data science backend. We're not testing the user's preference
+        // or response, we're end-to-end testing the experiments platform.
+        // So here, we're running multiple identical branches with the same treatment, and if the
+        // user isn't targeted, then we get still get the same treatment.
+        // The `let` block is degenerate here, but left here so as to document the form of how experiments
+        // are implemented here.
+        val historyIcon = experiments.getExperimentBranch(Experiments.A_A_NIMBUS_VALIDATION)
+            .let {
+                when (it) {
+                    ExperimentBranch.A1 -> R.drawable.ic_history
+                    ExperimentBranch.A2 -> R.drawable.ic_history
+                    else -> R.drawable.ic_history
+                }
+            }
         val historyItem = BrowserMenuImageText(
             context.getString(R.string.library_history),
-            R.drawable.ic_history,
+            historyIcon,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.History)
