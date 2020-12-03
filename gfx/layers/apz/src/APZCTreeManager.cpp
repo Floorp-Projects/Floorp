@@ -572,12 +572,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
                 *mAsyncZoomContainerSubtree),
         "If there is an async zoom container, all scroll nodes with root "
         "content scroll metadata should be inside it");
-    // TODO(bug 1534459): Avoid nested async zoom containers. They
-    // can't currently occur in production code, but that will become
-    // possible with either OOP iframes or desktop zooming (due to
-    // RDM), and will need to be guarded against.
-    // MOZ_ASSERT(!haveNestedAsyncZoomContainers,
-    //           "Should not have nested async zoom container");
+    MOZ_ASSERT(!haveNestedAsyncZoomContainers,
+               "Should not have nested async zoom container");
 
     // If we have perspective transforms deferred to children, do another
     // walk of the tree and actually apply them to the children.
