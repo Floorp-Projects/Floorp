@@ -59,7 +59,7 @@ class nsWebBrowserFind : public nsIWebBrowserFind,
       nsPIDOMWindowOuter* aWindow);
   nsresult ClearFrameSelection(nsPIDOMWindowOuter* aWindow);
 
-  nsresult OnFind(nsPIDOMWindowOuter* aFoundWindow);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult OnFind(nsPIDOMWindowOuter* aFoundWindow);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetSelectionAndScroll(
       nsPIDOMWindowOuter* aWindow, nsRange* aRange);
