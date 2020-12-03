@@ -1148,78 +1148,63 @@ unsafe extern "C" fn qcms_modular_transform_create(
     mut in_0: &qcms_profile,
     mut out: &qcms_profile,
 ) -> Option<Box<qcms_modular_transform>> {
-    let mut current_block: u64;
     let mut first_transform= None;
     let mut next_transform = &mut first_transform;
     if (*in_0).color_space == RGB_SIGNATURE {
         let mut rgb_to_pcs = qcms_modular_transform_create_input(in_0);
-        if !rgb_to_pcs.is_none() {
-            next_transform = append_transform(rgb_to_pcs, next_transform);
-            if (*in_0).pcs == LAB_SIGNATURE && (*out).pcs == XYZ_SIGNATURE {
-                let mut lab_to_pcs= qcms_modular_transform_alloc();
-                if lab_to_pcs.is_none() {
-                    current_block = 8418824557173580938;
-                } else {
-                    lab_to_pcs.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_LAB_to_XYZ);
-                    next_transform = append_transform(lab_to_pcs, next_transform);
-                    current_block = 10599921512955367680;
-                }
-            } else {
-                current_block = 10599921512955367680;
-            }
-            match current_block {
-                8418824557173580938 => {}
-                _ =>
-                // This does not improve accuracy in practice, something is wrong here.
-                //if (in->chromaticAdaption.invalid == false) {
-                //	struct qcms_modular_transform* chromaticAdaption;
-                //	chromaticAdaption = qcms_modular_transform_alloc();
-                //	if (!chromaticAdaption)
-                //		goto fail;
-                //	append_transform(chromaticAdaption, &next_transform);
-                //	chromaticAdaption->matrix = matrix_invert(in->chromaticAdaption);
-                //	chromaticAdaption->transform_module_fn = qcms_transform_module_matrix;
-                //}
-                {
-                    if (*in_0).pcs == XYZ_SIGNATURE && (*out).pcs == LAB_SIGNATURE {
-                        let mut pcs_to_lab =
-                            qcms_modular_transform_alloc();
-                        if pcs_to_lab.is_none() {
-                            current_block = 8418824557173580938;
-                        } else {
-                            pcs_to_lab.as_mut().unwrap().transform_module_fn =
-                                Some(qcms_transform_module_XYZ_to_LAB);
-                            next_transform = append_transform(pcs_to_lab, next_transform);
-                            current_block = 7175849428784450219;
-                        }
-                    } else {
-                        current_block = 7175849428784450219;
-                    }
-                    match current_block {
-                        8418824557173580938 => {}
-                        _ => {
-                            if (*out).color_space == RGB_SIGNATURE {
-                                let mut pcs_to_rgb =
-                                    qcms_modular_transform_create_output(out);
-                                if !pcs_to_rgb.is_none() {
-                                    append_transform(pcs_to_rgb, next_transform);
-                                    // Not Completed
-                                    //return qcms_modular_transform_reduce(first_transform);
-                                    return first_transform;
-                                }
-                            } else {
-                                debug_assert!(false, "output color space not supported");
-                            }
-                        }
-                    }
-                }
-            }
+        if rgb_to_pcs.is_none() {
+            return None;
         }
+        next_transform = append_transform(rgb_to_pcs, next_transform);
     } else {
         debug_assert!(false, "input color space not supported");
+        return None;
     }
-    qcms_modular_transform_release(first_transform);
-    return None;
+
+    if (*in_0).pcs == LAB_SIGNATURE && (*out).pcs == XYZ_SIGNATURE {
+        let mut lab_to_pcs= qcms_modular_transform_alloc();
+        if lab_to_pcs.is_none() {
+            return None;
+        }
+        lab_to_pcs.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_LAB_to_XYZ);
+        next_transform = append_transform(lab_to_pcs, next_transform);
+    }
+
+    // This does not improve accuracy in practice, something is wrong here.
+    //if (in->chromaticAdaption.invalid == false) {
+    //	struct qcms_modular_transform* chromaticAdaption;
+    //	chromaticAdaption = qcms_modular_transform_alloc();
+    //	if (!chromaticAdaption)
+    //		goto fail;
+    //	append_transform(chromaticAdaption, &next_transform);
+    //	chromaticAdaption->matrix = matrix_invert(in->chromaticAdaption);
+    //	chromaticAdaption->transform_module_fn = qcms_transform_module_matrix;
+    //}
+
+    if (*in_0).pcs == XYZ_SIGNATURE && (*out).pcs == LAB_SIGNATURE {
+        let mut pcs_to_lab = qcms_modular_transform_alloc();
+        if pcs_to_lab.is_none() {
+            return None;
+        }
+        pcs_to_lab.as_mut().unwrap().transform_module_fn =
+            Some(qcms_transform_module_XYZ_to_LAB);
+        next_transform = append_transform(pcs_to_lab, next_transform);
+    }
+
+    if (*out).color_space == RGB_SIGNATURE {
+        let mut pcs_to_rgb =
+            qcms_modular_transform_create_output(out);
+        if pcs_to_rgb.is_none() {
+            return None;
+        }
+        append_transform(pcs_to_rgb, next_transform);
+    } else {
+        debug_assert!(false, "output color space not supported");
+    }
+
+    // Not Completed
+    //return qcms_modular_transform_reduce(first_transform);
+    return first_transform;
 }
 unsafe fn qcms_modular_transform_data(
     mut transform: Option<&qcms_modular_transform>,
