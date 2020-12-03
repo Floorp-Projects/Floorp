@@ -75,9 +75,9 @@ inline void JS::PersistentRooted<T>::trace(JSTracer* trc, const char* name) {
 }
 
 template <typename T>
-static inline void TraceExactStackRootList(JSTracer* trc,
-                                           JS::Rooted<void*>* listHead,
-                                           const char* name) {
+static inline void TraceExactStackRootList(
+    JSTracer* trc, JS::Rooted<JS::detail::RootListEntry*>* listHead,
+    const char* name) {
   auto* typedList = reinterpret_cast<JS::Rooted<T>*>(listHead);
   for (JS::Rooted<T>* root = typedList; root; root = root->previous()) {
     root->trace(trc, name);
@@ -112,7 +112,8 @@ static void TraceExactStackRoots(JSContext* cx, JSTracer* trc) {
 
 template <typename T>
 static inline void TracePersistentRootedList(
-    JSTracer* trc, LinkedList<PersistentRooted<void*>>& list,
+    JSTracer* trc,
+    LinkedList<PersistentRooted<JS::detail::RootListEntry*>>& list,
     const char* name) {
   auto& typedList = reinterpret_cast<LinkedList<PersistentRooted<T>>&>(list);
   for (PersistentRooted<T>* root : typedList) {
@@ -144,7 +145,7 @@ static void TracePersistentRooted(JSRuntime* rt, JSTracer* trc) {
 
 template <typename T>
 static void FinishPersistentRootedChain(
-    LinkedList<PersistentRooted<void*>>& listArg) {
+    LinkedList<PersistentRooted<JS::detail::RootListEntry*>>& listArg) {
   auto& list = reinterpret_cast<LinkedList<PersistentRooted<T>>&>(listArg);
   while (!list.isEmpty()) {
     list.getFirst()->reset();
@@ -634,13 +635,15 @@ void GCRuntime::resetBufferedGrayRoots() {
   }
 }
 
-JS_PUBLIC_API void JS::AddPersistentRoot(JS::RootingContext* cx, RootKind kind,
-                                         PersistentRooted<void*>* root) {
+JS_PUBLIC_API void JS::AddPersistentRoot(
+    JS::RootingContext* cx, RootKind kind,
+    PersistentRooted<JS::detail::RootListEntry*>* root) {
   static_cast<JSContext*>(cx)->runtime()->heapRoots.ref()[kind].insertBack(
       root);
 }
 
-JS_PUBLIC_API void JS::AddPersistentRoot(JSRuntime* rt, RootKind kind,
-                                         PersistentRooted<void*>* root) {
+JS_PUBLIC_API void JS::AddPersistentRoot(
+    JSRuntime* rt, RootKind kind,
+    PersistentRooted<JS::detail::RootListEntry*>* root) {
   rt->heapRoots.ref()[kind].insertBack(root);
 }
