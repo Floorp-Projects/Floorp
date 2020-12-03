@@ -7,6 +7,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
@@ -316,6 +317,36 @@ void BrowsingContextGroup::FlushPostMessageEvents() {
         NS_DispatchToMainThread(event.forget());
       }
     }
+  }
+}
+
+void BrowsingContextGroup::IncInputEventSuspensionLevel() {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  if (!mInputEventSuspensionLevel && !InputTaskManager::Get()->IsSuspended()) {
+    InputTaskManager::Get()->SetIsSuspended(true);
+  }
+  ++mInputEventSuspensionLevel;
+}
+
+void BrowsingContextGroup::DecInputEventSuspensionLevel() {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  --mInputEventSuspensionLevel;
+  if (!mInputEventSuspensionLevel && InputTaskManager::Get()->IsSuspended()) {
+    InputTaskManager::Get()->SetIsSuspended(false);
+  }
+}
+
+void BrowsingContextGroup::UpdateInputTaskManagerIfNeeded() {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  InputTaskManager* inputManager = InputTaskManager::Get();
+
+  if (mInputEventSuspensionLevel && !inputManager->IsSuspended()) {
+    inputManager->SetIsSuspended(true);
+    return;
+  }
+
+  if (!mInputEventSuspensionLevel && inputManager->IsSuspended()) {
+    inputManager->SetIsSuspended(false);
   }
 }
 
