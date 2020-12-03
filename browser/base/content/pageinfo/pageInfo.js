@@ -720,6 +720,7 @@ function saveMedia() {
         false,
         referrerInfo,
         null,
+        null,
         gDocInfo.isContentWindowPrivate,
         gDocInfo.principal
       );

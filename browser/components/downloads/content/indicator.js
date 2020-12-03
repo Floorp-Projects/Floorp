@@ -606,7 +606,7 @@ const DownloadsIndicatorView = {
       if (link.url.startsWith("about:")) {
         continue;
       }
-      saveURL(link.url, link.name, null, true, true, null, sourceDoc);
+      saveURL(link.url, link.name, null, true, true, null, null, sourceDoc);
       handled = true;
     }
     if (handled) {
