@@ -521,7 +521,7 @@ class Accessible : public nsISupports {
   /**
    * Focus the accessible.
    */
-  virtual void TakeFocus() const;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void TakeFocus() const;
 
   /**
    * Scroll the accessible into view.
