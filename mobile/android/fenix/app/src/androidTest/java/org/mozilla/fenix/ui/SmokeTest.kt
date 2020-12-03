@@ -35,6 +35,15 @@ class SmokeTest {
     private var awesomeBar: ViewVisibilityIdlingResource? = null
     private var searchSuggestionsIdlingResource: RecyclerViewIdlingResource? = null
 
+    // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
+    private fun getAwesomebarView(): View? {
+        val homeFragment = activityTestRule.activity.supportFragmentManager.primaryNavigationFragment
+        val searchDialogFragment = homeFragment?.childFragmentManager?.fragments?.first {
+            it.javaClass.simpleName == "SearchDialogFragment"
+        }
+        return searchDialogFragment?.view?.findViewById(R.id.awesome_bar)
+    }
+
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
 
@@ -393,12 +402,20 @@ class SmokeTest {
         }
     }
 
-    // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
-    private fun getAwesomebarView(): View? {
-        val homeFragment = activityTestRule.activity.supportFragmentManager.primaryNavigationFragment
-        val searchDialogFragment = homeFragment?.childFragmentManager?.fragments?.first {
-            it.javaClass.simpleName == "SearchDialogFragment"
+    @Test
+    fun swipeToSwitchTabTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+        }.openTabDrawer {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+            swipeNavBarRight(secondWebPage.url.toString())
+            verifyPageContent(firstWebPage.content)
+            swipeNavBarLeft(firstWebPage.url.toString())
+            verifyPageContent(secondWebPage.content)
         }
-        return searchDialogFragment?.view?.findViewById(R.id.awesome_bar)
     }
 }

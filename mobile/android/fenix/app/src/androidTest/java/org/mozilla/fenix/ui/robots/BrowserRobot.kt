@@ -338,6 +338,28 @@ class BrowserRobot {
         assertTrue(pausedStateMessage.waitForExists(waitingTime))
     }
 
+    fun swipeNavBarRight(tabUrl: String) {
+        // failing to swipe on Firebase sometimes, so it tries again
+        try {
+            navURLBar().perform(ViewActions.swipeRight())
+            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+        } catch (e: AssertionError) {
+            navURLBar().perform(ViewActions.swipeRight())
+            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+        }
+    }
+
+    fun swipeNavBarLeft(tabUrl: String) {
+        // failing to swipe on Firebase sometimes, so it tries again
+        try {
+            navURLBar().perform(ViewActions.swipeLeft())
+            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+        } catch (e: AssertionError) {
+            navURLBar().perform(ViewActions.swipeLeft())
+            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+        }
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(
