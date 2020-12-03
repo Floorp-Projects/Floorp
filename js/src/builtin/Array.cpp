@@ -3986,9 +3986,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
     EmptyShape::insertInitialShape(cx, shape, proto);
   }
 
-  if (newKind == SingletonObject && !JSObject::setSingleton(cx, arr)) {
-    return nullptr;
-  }
+  MOZ_ASSERT(newKind != SingletonObject);
 
   if (isCachable) {
     NewObjectCache& cache = cx->caches().newObjectCache;
