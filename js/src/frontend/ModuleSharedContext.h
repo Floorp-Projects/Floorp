@@ -23,7 +23,7 @@ namespace frontend {
 
 struct CompilationInfo;
 
-class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
+class MOZ_STACK_CLASS ModuleSharedContext : public SuspendableContext {
  public:
   ParserModuleScopeData* bindings;
   ModuleBuilder& builder;
