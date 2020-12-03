@@ -155,6 +155,22 @@ namespace IOUtils {
    *         DOMException.
    */
   Promise<sequence<DOMString>> getChildren(DOMString path);
+  /**
+   * Set the permissions of the file at |path|.
+   *
+   * Windows does not make a distinction between user, group, and other
+   * permissions like UNICES do. If a permission flag is set for any of user,
+   * group, or other has a permission, then all users will have that
+   * permission. Additionally, Windows does not support setting the
+   * "executable" permission.
+   *
+   * @param path        An absolute file path
+   * @param permissions The UNIX file mode representing the permissions.
+   *
+   * @return Resolves if the permissions were set successfully, otherwise
+   *         rejects with a DOMException.
+   */
+  Promise<void> setPermissions(DOMString path, unsigned long permissions);
 };
 
 /**
@@ -305,4 +321,12 @@ dictionary FileInfo {
    * This is only available on MacOS and Windows.
    */
   long long creationTime;
+  /**
+   * The permissions of the file, expressed as a UNIX file mode.
+   *
+   * NB: Windows does not make a distinction between user, group, and other
+   * permissions like UNICES do. The user, group, and other parts will always
+   * be identical on Windows.
+   */
+  unsigned long permissions;
 };

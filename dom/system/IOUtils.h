@@ -99,6 +99,10 @@ class IOUtils final {
   static already_AddRefed<Promise> GetChildren(GlobalObject& aGlobal,
                                                const nsAString& aPath);
 
+  static already_AddRefed<Promise> SetPermissions(GlobalObject& aGlobal,
+                                                  const nsAString& aPath,
+                                                  const uint32_t aPermissions);
+
   static bool IsAbsolutePath(const nsAString& aPath);
 
  private:
@@ -326,6 +330,22 @@ class IOUtils final {
    *         If there are no children, an empty array. Otherwise, an error.
    */
   static Result<nsTArray<nsString>, IOError> GetChildrenSync(nsIFile* aFile);
+
+  /**
+   * Set the permissions of the given file.
+   *
+   * Windows does not make a distinction between user, group, and other
+   * permissions like UNICES do. If a permission flag is set for any of user,
+   * group, or other has a permission, then all users will have that
+   * permission.
+   *
+   * @param aFile        The location of the file.
+   * @param aPermissions The permissions to set, as a UNIX file mode.
+   *
+   * @return |Ok| if the permissions were successfully set, or an error.
+   */
+  static Result<Ok, IOError> SetPermissionsSync(nsIFile* aFile,
+                                                const uint32_t aPermissions);
 };
 
 /**
@@ -382,6 +402,7 @@ struct IOUtils::InternalFileInfo {
   uint64_t mSize;
   uint64_t mLastModified;
   Maybe<uint64_t> mCreationTime;
+  uint32_t mPermissions;
 };
 
 /**
