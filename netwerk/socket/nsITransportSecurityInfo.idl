@@ -67,6 +67,8 @@ interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned short certificateTransparencyStatus;
 
     [must_use]
+    readonly attribute boolean isAcceptedEch;
+    [must_use]
     readonly attribute boolean isDelegatedCredential;
     [must_use]
     readonly attribute boolean isDomainMismatch;

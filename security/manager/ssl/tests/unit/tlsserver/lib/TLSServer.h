@@ -30,6 +30,8 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRDir, PRDir, PR_CloseDir);
 namespace mozilla {
 namespace test {
 
+typedef SECStatus (*ServerConfigFunc)(PRFileDesc* fd);
+
 enum DebugLevel { DEBUG_ERRORS = 1, DEBUG_WARNINGS = 2, DEBUG_VERBOSE = 3 };
 
 extern DebugLevel gDebugLevel;
@@ -52,8 +54,13 @@ SECStatus ConfigSecureServerWithNamedCert(
 
 SECStatus InitializeNSS(const char* nssCertDBDir);
 
+// StartServer initializes NSS, sockets, the SNI callback, and a default
+// certificate. configFunc (optional) is a pointer to an implementation-
+// defined configuration function, which is called on the model socket
+// prior to handling any connections.
 int StartServer(int argc, char* argv[], SSLSNISocketConfig sniSocketConfig,
-                void* sniSocketConfigArg);
+                void* sniSocketConfigArg,
+                ServerConfigFunc configFunc = nullptr);
 
 template <typename Host>
 inline const Host* GetHostForSNI(const SECItem* aSrvNameArr,
