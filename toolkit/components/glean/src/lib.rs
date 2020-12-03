@@ -36,13 +36,14 @@ use xpcom::interfaces::{
 };
 use xpcom::{RefPtr, XpCom};
 
-//use client_info::ClientInfo;
-//use glean_core::Configuration;
 use glean::{Configuration, ClientInfoMetrics};
 
 mod api;
 mod client_info;
 mod core_metrics;
+mod viaduct_uploader;
+
+use crate::viaduct_uploader::ViaductUploader;
 
 /// Project FOG's entry point.
 ///
@@ -84,6 +85,14 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         return e;
     }
 
+    const SERVER: &str = "https://incoming.telemetry.mozilla.org";
+    let localhost_port = static_prefs::pref!("telemetry.fog.test.localhost_port");
+    let server = if localhost_port > 0 {
+        format!("http://localhost:{}", localhost_port)
+    } else {
+        String::from(SERVER)
+    };
+
     let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
     let data_path = data_path.to_string();
     let configuration = Configuration {
@@ -93,8 +102,8 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         max_events: None,
         delay_ping_lifetime_io: false,
         channel: Some(channel),
-        server_endpoint: None,
-        uploader: None,
+        server_endpoint: Some(server),
+        uploader: Some(Box::new(crate::ViaductUploader) as Box<dyn glean::net::PingUploader>),
     };
 
     log::debug!("Configuration: {:#?}", configuration);
@@ -113,21 +122,9 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
     }
 
     if configuration.data_path.len() > 0 {
-        /*std::thread::spawn(move || {
-            if let Err(e) = api::initialize(configuration, client_info) {
-                log::error!("Failed to init FOG due to {:?}", e);
-                return;
-            }
-
-            if let Err(e) = fog::flush_init() {
-                log::error!("Failed to flush pre-init buffer due to {:?}", e);
-                return;
-            }
-
-            fog::metrics::fog::initialization.stop();
-            schedule_fog_validation_ping();
-        });*/
         glean::initialize(configuration, client_info);
+        fog::metrics::fog::initialization.stop();
+        schedule_fog_validation_ping();
     }
 
     NS_OK
