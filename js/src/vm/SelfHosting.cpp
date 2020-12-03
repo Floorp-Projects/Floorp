@@ -1998,6 +1998,15 @@ static bool intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp) {
   return ModuleObject::execute(cx, module, args.rval());
 }
 
+static bool intrinsic_IsTopLevelAwaitEnabled(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 0);
+  bool topLevelAwait = cx->options().topLevelAwait();
+  args.rval().setBoolean(topLevelAwait);
+  return true;
+}
+
 static bool intrinsic_GetAsyncCycleRoot(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2639,6 +2648,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("InstantiateModuleFunctionDeclarations",
           intrinsic_InstantiateModuleFunctionDeclarations, 1, 0),
     JS_FN("ExecuteModule", intrinsic_ExecuteModule, 1, 0),
+    JS_FN("IsTopLevelAwaitEnabled", intrinsic_IsTopLevelAwaitEnabled, 0, 0),
     JS_FN("GetAsyncCycleRoot", intrinsic_GetAsyncCycleRoot, 1, 0),
     JS_FN("AppendAsyncParentModule", intrinsic_AppendAsyncParentModule, 2, 0),
     JS_FN("CreateTopLevelCapability", intrinsic_CreateTopLevelCapability, 1, 0),
