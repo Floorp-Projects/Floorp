@@ -212,8 +212,7 @@ exports.getProfileAndStopProfiler = () => {
 
     const getSymbolTable = selectors.getSymbolTableGetter(getState())(profile);
     const receiveProfile = selectors.getReceiveProfileFn(getState());
-    const profilerViewMode = selectors.getProfilerViewMode(getState());
-    receiveProfile(profile, profilerViewMode, getSymbolTable);
+    receiveProfile(profile, getSymbolTable);
     dispatch(changeRecordingState("available-to-record"));
   };
 };
