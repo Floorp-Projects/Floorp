@@ -41,20 +41,6 @@ function test_constructors() {
     let obj2 = new Services.intl[constructor]();
 
     equal(typeof obj, typeof obj2);
-
-    Assert.throws(() => {
-      // This is an observable difference between Intl and mozIntl.
-      //
-      // Old ECMA402 APIs (edition 1 and 2) allowed for constructors to be called
-      // as functions.
-      // Starting from ed.3 all new constructors are throwing when called without |new|.
-      //
-      // All MozIntl APIs do not implement the legacy behavior and throw
-      // when called without |new|.
-      //
-      // For more information see https://github.com/tc39/ecma402/pull/84 .
-      Services.intl[constructor]();
-    }, /class constructors must be invoked with |new|/);
   });
 }
 

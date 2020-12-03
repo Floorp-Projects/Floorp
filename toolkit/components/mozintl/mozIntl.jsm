@@ -16,18 +16,6 @@ const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].getService(
  */
 const languageTagMatch = /^([a-z]{2,3}|[a-z]{4}|[a-z]{5,8})(?:[-_]([a-z]{4}))?(?:[-_]([A-Z]{2}|[0-9]{3}))?((?:[-_](?:[a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*)(?:[-_][a-wy-z0-9](?:[-_][a-z0-9]{2,8})+)*(?:[-_]x(?:[-_][a-z0-9]{1,8})+)?$/i;
 
-/**
- * This helper function retrives currently used app locales, allowing
- * all mozIntl APIs to use the current regional prefs locales unless
- * called with explicitly listed locales.
- */
-function getLocales(locales) {
-  if (!locales) {
-    return Services.locale.regionalPrefsLocales;
-  }
-  return locales;
-}
-
 function getDateTimePatternStyle(option) {
   switch (option) {
     case "full":
@@ -656,24 +644,6 @@ const availableLocaleDisplayNames = {
   ]),
 };
 
-class MozNumberFormat extends Intl.NumberFormat {
-  constructor(locales, options, ...args) {
-    super(getLocales(locales), options, ...args);
-  }
-}
-
-class MozCollator extends Intl.Collator {
-  constructor(locales, options, ...args) {
-    super(getLocales(locales), options, ...args);
-  }
-}
-
-class MozPluralRules extends Intl.PluralRules {
-  constructor(locales, options, ...args) {
-    super(getLocales(locales), options, ...args);
-  }
-}
-
 class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
   constructor(locales, options = {}, ...args) {
     // If someone is asking for MozRelativeTimeFormat, it's likely they'll want
@@ -681,7 +651,7 @@ class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
     if (options.numeric === undefined) {
       options.numeric = "auto";
     }
-    super(getLocales(locales), options, ...args);
+    super(locales, options, ...args);
   }
 
   formatBestUnit(date, { now = new Date() } = {}) {
@@ -757,9 +727,9 @@ class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
 }
 
 class MozIntl {
-  NumberFormat = MozNumberFormat;
-  Collator = MozCollator;
-  PluralRules = MozPluralRules;
+  NumberFormat = Intl.NumberFormat;
+  Collator = Intl.Collator;
+  PluralRules = Intl.PluralRules;
   RelativeTimeFormat = MozRelativeTimeFormat;
 
   constructor() {
@@ -777,7 +747,7 @@ class MozIntl {
       mozIntlHelper.addGetCalendarInfo(this._cache);
     }
 
-    return this._cache.getCalendarInfo(getLocales(locales), ...args);
+    return this._cache.getCalendarInfo(locales, ...args);
   }
 
   getDisplayNames(locales, ...args) {
@@ -785,7 +755,7 @@ class MozIntl {
       mozIntlHelper.addGetDisplayNames(this._cache);
     }
 
-    return this._cache.getDisplayNames(getLocales(locales), ...args);
+    return this._cache.getDisplayNames(locales, ...args);
   }
 
   getLocaleInfo(locales, ...args) {
@@ -793,7 +763,7 @@ class MozIntl {
       mozIntlHelper.addGetLocaleInfo(this._cache);
     }
 
-    return this._cache.getLocaleInfo(getLocales(locales), ...args);
+    return this._cache.getLocaleInfo(locales, ...args);
   }
 
   getAvailableLocaleDisplayNames(type) {
@@ -927,9 +897,7 @@ class MozIntl {
 
       class MozDateTimeFormat extends DateTimeFormat {
         constructor(locales, options, ...args) {
-          let resolvedLocales = DateTimeFormat.supportedLocalesOf(
-            getLocales(locales)
-          );
+          let resolvedLocales = DateTimeFormat.supportedLocalesOf(locales);
           if (options) {
             if (options.dateStyle || options.timeStyle) {
               options.pattern = osPrefs.getDateTimePattern(
