@@ -171,6 +171,14 @@ namespace IOUtils {
    *         rejects with a DOMException.
    */
   Promise<void> setPermissions(DOMString path, unsigned long permissions);
+  /**
+   * Return whether or not the file exists at the given path.
+   *
+   * @param path An absolute file path.
+   *
+   * @return A promise that resolves to whether or not the given file exists.
+   */
+  Promise<boolean> exists(DOMString path);
 };
 
 /**

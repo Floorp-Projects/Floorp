@@ -92,7 +92,7 @@
       const dest = OS.Path.join(destDir, "dest.tmp");
       await createFile(tmpFileName);
       // Test.
-      ok(!await fileOrDirExists(destDir), "Expected path not to exist");
+      ok(!await IOUtils.exists(destDir), "Expected path not to exist");
       await IOUtils.move(tmpFileName, dest);
       ok(
         !await fileExists(tmpFileName) && await fileExists(dest),
@@ -136,7 +136,7 @@
       // Test.
       await IOUtils.move(srcDir, destDir);
       ok(
-        !await fileOrDirExists(srcDir) && await dirExists(destDir),
+        !await IOUtils.exists(srcDir) && await dirExists(destDir),
         "IOUtils::move can rename directories"
       );
 
@@ -148,7 +148,7 @@
       await IOUtils.move(srcDir, destDir);
       const destFile = OS.Path.join(destDir, OS.Path.basename(srcDir), "file.tmp");
       ok(
-        !await fileOrDirExists(srcDir)
+        !await IOUtils.exists(srcDir)
         && await dirExists(destDir)
         && await dirExists(OS.Path.join(destDir, OS.Path.basename(srcDir)))
         && await fileHasTextContents(destFile, "foo"),
@@ -242,7 +242,7 @@
       const dest = OS.Path.join(destDir, "dest.tmp");
       await createFile(tmpFileName);
       // Test.
-      ok(!await fileOrDirExists(destDir), "Expected path not to exist");
+      ok(!await IOUtils.exists(destDir), "Expected path not to exist");
       await IOUtils.copy(tmpFileName, dest);
       ok(
         await fileExists(tmpFileName) && await fileExists(dest),
@@ -348,8 +348,8 @@
         /Refused to copy source directory\(.*\) to the destination\(.*\)/,
         "IOUtils::copy throws if try to copy a directory with { recursive: false }"
       );
-      console.log(`${notExistsDest} exists?`, await fileOrDirExists(notExistsDest))
-      ok(!await fileOrDirExists(notExistsDest), "IOUtils::copy failure does not affect destination");
+      console.log(`${notExistsDest} exists?`, await IOUtils.exists(notExistsDest))
+      ok(!await IOUtils.exists(notExistsDest), "IOUtils::copy failure does not affect destination");
 
       // Clean up.
       await cleanup(destFile, srcDir);

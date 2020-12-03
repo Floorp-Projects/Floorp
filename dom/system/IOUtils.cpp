@@ -479,6 +479,22 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
 }
 
 /* static */
+already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
+                                          const nsAString& aPath) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  NS_ENSURE_TRUE(!!promise, nullptr);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThread<bool>(
+      promise, [file = std::move(file)]() { return ExistsSync(file); });
+
+  return promise.forget();
+}
+
+/* static */
 already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
   if (sShutdownStarted) {
     return nullptr;
@@ -1236,6 +1252,16 @@ Result<Ok, IOUtils::IOError> IOUtils::SetPermissionsSync(
 
   MOZ_TRY(aFile->SetPermissions(aPermissions));
   return Ok{};
+}
+
+/* static */
+Result<bool, IOUtils::IOError> IOUtils::ExistsSync(nsIFile* aFile) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  bool exists = false;
+  MOZ_TRY(aFile->Exists(&exists));
+
+  return exists;
 }
 
 /* static */
