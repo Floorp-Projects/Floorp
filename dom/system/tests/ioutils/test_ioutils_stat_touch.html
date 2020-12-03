@@ -14,17 +14,14 @@
 
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
     const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-
-    // TODO: Remove this import for OS.File. It is currently being used as a
-    //       stop gap for missing IOUtils functionality.
-    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
-
-    const tmpDir = OS.Constants.Path.tmpDir;
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     add_task(async function test_stat() {
       info("Test attempt to stat a regular empty file");
-      const emptyFileName = OS.Path.join(tmpDir, "test_stat_empty.tmp");
+
+      const tmpDir = await PathUtils.getTempDir();
+
+      const emptyFileName = PathUtils.join(tmpDir, "test_stat_empty.tmp");
       await createFile(emptyFileName);
 
       const emptyFileInfo = await IOUtils.stat(emptyFileName);
@@ -38,7 +35,7 @@
       );
 
       info("Test attempt to stat a regular binary file");
-      const tempFileName = OS.Path.join(tmpDir, "test_stat_binary.tmp");
+      const tempFileName = PathUtils.join(tmpDir, "test_stat_binary.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
       await createFile(tempFileName, bytes);
 
@@ -53,8 +50,8 @@
       );
 
       info("Test attempt to stat a directory");
-      const tempDirName = OS.Path.join(tmpDir, "test_stat_dir.tmp.d");
-      await OS.File.makeDir(tempDirName);
+      const tempDirName = PathUtils.join(tmpDir, "test_stat_dir.tmp.d");
+      await IOUtils.makeDirectory(tempDirName);
 
       const dirInfo = await IOUtils.stat(tempDirName);
       is(dirInfo.size, -1, "IOUtils::stat reports -1 size for directories")
@@ -71,7 +68,10 @@
 
     add_task(async function test_stat_failures() {
       info("Test attempt to stat a non-existing file");
-      const notExistsFile = OS.Path.join(tmpDir, "test_stat_not_exists.tmp");
+
+      const tmpDir = await PathUtils.getTempDir();
+
+      const notExistsFile = PathUtils.join(tmpDir, "test_stat_not_exists.tmp");
 
       await Assert.rejects(
         IOUtils.stat(notExistsFile),
@@ -82,7 +82,10 @@
 
     add_task(async function test_touch_and_stat() {
       info("Test attempt to touch a file");
-      const tmpFileName = OS.Path.join(tmpDir, "test_touch_and_stat.tmp");
+
+      const tmpDir = await PathUtils.getTempDir();
+
+      const tmpFileName = PathUtils.join(tmpDir, "test_touch_and_stat.tmp");
       await createFile(tmpFileName);
 
       const oldFileInfo = await IOUtils.stat(tmpFileName);
@@ -103,14 +106,16 @@
       );
 
       info("Test attempt to touch a directory");
-      const tmpDirName = OS.Path.join(tmpDir, "test_touch_and_stat.tmp.d");
+      const tmpDirName = PathUtils.join(tmpDir, "test_touch_and_stat.tmp.d");
       await createDir(tmpDirName);
 
       await cleanup(tmpFileName, tmpDirName);
     });
 
     add_task(async function test_touch_custom_mod_time() {
-      const tempFileName = OS.Path.join(tmpDir, "test_touch_custom_mod_time.tmp");
+      const tmpDir = await PathUtils.getTempDir();
+
+      const tempFileName = PathUtils.join(tmpDir, "test_touch_custom_mod_time.tmp");
       await createFile(tempFileName);
       const originalInfo = await IOUtils.stat(tempFileName);
       const now = originalInfo.lastModified;
@@ -138,9 +143,36 @@
       await cleanup(tempFileName);
     });
 
+    add_task(async function test_stat_btime() {
+      if (["Darwin", "WINNT"].includes(Services.appinfo.OS)) {
+        const tmpDir = await PathUtils.getTempDir();
+
+        const tempFileName = PathUtils.join(tmpDir, "test_stat_btime.tmp");
+        await createFile(tempFileName);
+        const originalInfo = await IOUtils.stat(tempFileName);
+
+        const future = originalInfo.lastModified + 6000;
+        await IOUtils.touch(tempFileName, future);
+        const futureInfo = await IOUtils.stat(tempFileName);
+
+        ok(originalInfo.hasOwnProperty("creationTime"), "originalInfo has creationTime field");
+        ok(originalInfo.creationTime !== undefined && originalInfo.creationTime !== null, "originalInfo has non-null creationTime");
+
+        ok(futureInfo.hasOwnProperty("creationTime"), "futureInfo has creationTime field");
+        ok(futureInfo.creationTime !== undefined && futureInfo.creationTime !== null, "futureInfo has non-null creationTime");
+
+        is(originalInfo.creationTime, futureInfo.creationTime, "creationTime matches");
+
+        await cleanup(tempFileName);
+      } else {
+        ok(true, `skipping test_stat_btime() on unsupported platform ${Services.appinfo.OS}`);
+      }
+    });
+
     add_task(async function test_touch_failures() {
       info("Test attempt to touch a non-existing file");
-      const notExistsFile = OS.Path.join(tmpDir, "test_touch_not_exists.tmp");
+      const tmpDir = await PathUtils.getTempDir();
+      const notExistsFile = PathUtils.join(tmpDir, "test_touch_not_exists.tmp");
 
       await Assert.rejects(
         IOUtils.touch(notExistsFile),
@@ -149,7 +181,7 @@
       );
 
       info("Test attempt to set modification time to Epoch");
-      const tempFileName = OS.Path.join(tmpDir, "test_touch_epoch.tmp");
+      const tempFileName = PathUtils.join(tmpDir, "test_touch_epoch.tmp");
       await createFile(tempFileName);
 
       await Assert.rejects(

@@ -297,4 +297,12 @@ dictionary FileInfo {
    * since Epoch (1970-01-01T00:00:00.000Z).
    */
   long long lastModified;
+
+  /**
+   * The timestamp of file creation, represented in milliseconds since Epoch
+   * (1970-01-01T00:00:00.000Z).
+   *
+   * This is only available on MacOS and Windows.
+   */
+  long long creationTime;
 };

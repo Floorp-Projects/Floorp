@@ -381,6 +381,7 @@ struct IOUtils::InternalFileInfo {
   FileType mType;
   uint64_t mSize;
   uint64_t mLastModified;
+  Maybe<uint64_t> mCreationTime;
 };
 
 /**

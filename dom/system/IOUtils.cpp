@@ -127,6 +127,10 @@ MOZ_MUST_USE inline bool ToJSValue(
   info.mType.Construct(aInternalFileInfo.mType);
   info.mSize.Construct(aInternalFileInfo.mSize);
   info.mLastModified.Construct(aInternalFileInfo.mLastModified);
+
+  if (aInternalFileInfo.mCreationTime.isSome()) {
+    info.mCreationTime.Construct(aInternalFileInfo.mCreationTime.ref());
+  }
   return ToJSValue(aCx, info, aValue);
 }
 
@@ -1104,6 +1108,14 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   PRTime lastModified = 0;
   MOZ_TRY(aFile->GetLastModifiedTime(&lastModified));
   info.mLastModified = static_cast<int64_t>(lastModified);
+
+  PRTime creationTime = 0;
+  if (nsresult rv = aFile->GetCreationTime(&creationTime); NS_SUCCEEDED(rv)) {
+    info.mCreationTime.emplace(static_cast<int64_t>(creationTime));
+  } else if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
+    // This field is only supported on some platforms.
+    return Err(IOError(rv));
+  }
 
   return info;
 }
