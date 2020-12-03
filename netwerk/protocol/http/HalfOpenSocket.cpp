@@ -168,7 +168,7 @@ nsresult HalfOpenSocket::SetupStreams(nsISocketTransport** transport,
   }
 
   if (ci->GetLessThanTls13()) {
-    tmpFlags |= nsISocketTransport::DONT_TRY_ESNI_OR_ECH;
+    tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
   }
 
   if (((mCaps & NS_HTTP_BE_CONSERVATIVE) || ci->GetBeConservative()) &&
