@@ -7111,7 +7111,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-11-21T18:09:21Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-11-30T20:26:10Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9755,9 +9755,6 @@ show
 
 // showtime : 2015-08-06 CBS Domains Inc.
 showtime
-
-// shriram : 2014-01-23 Shriram Capital Ltd.
-shriram
 
 // silk : 2015-06-25 Amazon Registry Services, Inc.
 silk
