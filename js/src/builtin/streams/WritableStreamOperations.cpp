@@ -30,8 +30,8 @@
 #include "vm/List.h"         // js::ListObject
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 
-#include "builtin/Promise-inl.h"  // js::SetSettledPromiseIsHandled
-#include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
+#include "builtin/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
+#include "builtin/Promise-inl.h"          // js::SetSettledPromiseIsHandled
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined, js::RejectUnwrappedPromiseWithError
 #include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::WritableStreamDefaultWriter::closedPromise
