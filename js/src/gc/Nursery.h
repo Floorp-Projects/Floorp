@@ -518,10 +518,8 @@ class Nursery {
   };
   PreviousGC previousGC;
 
-#ifndef JS_MORE_DETERMINISTIC
   mozilla::TimeStamp lastResizeTime;
   double smoothedGrowthFactor;
-#endif
 
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
