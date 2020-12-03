@@ -29,18 +29,15 @@ extern crate xpcom;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
-use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_CONTENT, NS_OK};
+use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
 use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsStr, nsString};
 use xpcom::interfaces::{
     mozIViaduct, nsIFile, nsIObserver, nsIPrefBranch, nsIPropertyBag2, nsISupports, nsIXULAppInfo,
 };
 use xpcom::{RefPtr, XpCom};
 
-use glean::{Configuration, ClientInfoMetrics};
+use glean::{ClientInfoMetrics, Configuration};
 
-mod api;
-mod client_info;
-mod core_metrics;
 mod viaduct_uploader;
 
 use crate::viaduct_uploader::ViaductUploader;
@@ -65,7 +62,8 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
         Err(e) => return e,
     };
 
-    let (os_version, architecture) = match get_system_info() {
+    // TODO: os_version will be sent as a new metric in bug 1679835.
+    let (_os_version, _architecture) = match get_system_info() {
         Ok(si) => si,
         Err(e) => return e,
     };
@@ -132,7 +130,7 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
 
 #[no_mangle]
 pub unsafe extern "C" fn fog_shutdown() {
-    fog::shutdown();
+    glean::shutdown();
 }
 
 /// Construct and return the data_path from the profile dir, or return an error.
@@ -327,7 +325,7 @@ pub unsafe extern "C" fn fog_use_ipc_buf(buf: *const u8, buf_len: usize) {
 /// Sets the debug tag for pings assembled in the future.
 /// Returns an error result if the provided value is not a valid tag.
 pub unsafe extern "C" fn fog_set_debug_view_tag(value: &nsACString) -> nsresult {
-    let result = api::set_debug_view_tag(&value.to_string());
+    let result = glean::set_debug_view_tag(&value.to_string());
     if result {
         return NS_OK;
     } else {
@@ -337,26 +335,17 @@ pub unsafe extern "C" fn fog_set_debug_view_tag(value: &nsACString) -> nsresult 
 
 #[no_mangle]
 /// Submits a ping by name.
-/// Returns NS_OK if the ping was successfully submitted, NS_ERROR_NO_CONTENT
-/// if the ping wasn't sent, or NS_ERROR_FAILURE if some part of the ping
-/// submission mechanism failed.
 pub unsafe extern "C" fn fog_submit_ping(ping_name: &nsACString) -> nsresult {
-    match api::submit_ping(&ping_name.to_string()) {
-        Ok(true) => NS_OK,
-        Ok(false) => NS_ERROR_NO_CONTENT,
-        _ => NS_ERROR_FAILURE,
-    }
+    glean::submit_ping_by_name(&ping_name.to_string(), None);
+    NS_OK
 }
 
 #[no_mangle]
 /// Turns ping logging on or off.
 /// Returns an error if the logging failed to be configured.
 pub unsafe extern "C" fn fog_set_log_pings(value: bool) -> nsresult {
-    if api::set_log_pings(value) {
-        return NS_OK;
-    } else {
-        return NS_ERROR_FAILURE;
-    }
+    glean::set_log_pings(value);
+    NS_OK
 }
 
 fn schedule_fog_validation_ping() {
