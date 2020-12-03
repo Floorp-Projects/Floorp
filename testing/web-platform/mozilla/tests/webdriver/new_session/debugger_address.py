@@ -1,38 +1,29 @@
 import json
 
-from tests.support.asserts import assert_success
+import pytest
+
 from tests.support.http_request import HTTPRequest
 
 
-def test_debugger_address_not_set(new_session, configuration):
-    capabilities = dict(configuration["capabilities"])
+def set_context(session, context):
+    body = {"context": context}
+    session.send_session_command("POST", "moz/context", body)
 
-    response, _ = new_session({"capabilities": {"alwaysMatch": capabilities}})
-    result = assert_success(response)
 
-    debugger_address = result["capabilities"].get("moz:debuggerAddress")
+def test_debugger_address_not_set(session):
+    debugger_address = session.capabilities.get("moz:debuggerAddress")
     assert debugger_address is None
 
 
-def test_debugger_address_false(new_session, configuration):
-    capabilities = dict(configuration["capabilities"])
-    capabilities["moz:debuggerAddress"] = False
-
-    response, _ = new_session({"capabilities": {"alwaysMatch": capabilities}})
-    result = assert_success(response)
-
-    debugger_address = result["capabilities"].get("moz:debuggerAddress")
+@pytest.mark.capabilities({"moz:debuggerAddress": False})
+def test_debugger_address_false(session):
+    debugger_address = session.capabilities.get("moz:debuggerAddress")
     assert debugger_address is None
 
 
-def test_debugger_address_true(new_session, configuration):
-    capabilities = dict(configuration["capabilities"])
-    capabilities["moz:debuggerAddress"] = True
-
-    response, _ = new_session({"capabilities": {"alwaysMatch": capabilities}})
-    result = assert_success(response)
-
-    debugger_address = result["capabilities"].get("moz:debuggerAddress")
+@pytest.mark.capabilities({"moz:debuggerAddress": True})
+def test_debugger_address_true(session):
+    debugger_address = session.capabilities.get("moz:debuggerAddress")
     assert debugger_address is not None
 
     host, port = debugger_address.split(":")
@@ -43,4 +34,41 @@ def test_debugger_address_true(new_session, configuration):
     http = HTTPRequest(host, int(port))
     with http.get("/json/version") as response:
         data = json.loads(response.read())
-        assert result["capabilities"]["browserVersion"] in data["Browser"]
+        assert session.capabilities["browserVersion"] in data["Browser"]
+
+    # Force disabling Fission until Remote Agent is compatible
+    set_context(session, "chrome")
+    assert (
+        session.execute_script("""return Services.appinfo.fissionAutostart""") is False
+    )
+
+
+@pytest.mark.capabilities(
+    {
+        "moz:debuggerAddress": True,
+        "moz:firefoxOptions": {
+            "prefs": {
+                "fission.autostart": True,
+            }
+        },
+    }
+)
+def test_debugger_address_true_fission_override(session):
+    debugger_address = session.capabilities.get("moz:debuggerAddress")
+    assert debugger_address is not None
+
+    host, port = debugger_address.split(":")
+    assert host == "localhost"
+    assert port.isnumeric()
+
+    # Fetch the browser version via the debugger address
+    http = HTTPRequest(host, int(port))
+    with http.get("/json/version") as response:
+        data = json.loads(response.read())
+        assert session.capabilities["browserVersion"] in data["Browser"]
+
+    # Allow Fission to be enabled when setting the preference
+    set_context(session, "chrome")
+    assert (
+        session.execute_script("""return Services.appinfo.fissionAutostart""") is True
+    )
