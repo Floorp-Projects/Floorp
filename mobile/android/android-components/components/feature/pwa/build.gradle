@@ -42,6 +42,7 @@ android {
 dependencies {
     implementation project(':browser-icons')
     implementation project(':browser-session')
+    implementation project(':browser-state')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
     implementation project(':feature-customtabs')

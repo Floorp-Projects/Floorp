@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.pwa.ext
 
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifest.DisplayMode.BROWSER
 
@@ -18,9 +18,9 @@ import mozilla.components.concept.engine.manifest.WebAppManifest.DisplayMode.BRO
  * - The manifest display mode is standalone, fullscreen, or minimal-ui
  * - The icons array in the manifest contains an icon of at least 192x192
  */
-fun Session.installableManifest(): WebAppManifest? {
-    val manifest = webAppManifest ?: return null
-    return if (securityInfo.secure && manifest.display != BROWSER && manifest.hasLargeIcons()) {
+fun SessionState.installableManifest(): WebAppManifest? {
+    val manifest = content.webAppManifest ?: return null
+    return if (content.securityInfo.secure && manifest.display != BROWSER && manifest.hasLargeIcons()) {
         manifest
     } else {
         null

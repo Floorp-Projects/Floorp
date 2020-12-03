@@ -234,7 +234,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val webAppManifestStorage by lazy { ManifestStorage(applicationContext) }
     val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
-    val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager, webAppShortcutManager) }
+    val webAppUseCases by lazy { WebAppUseCases(applicationContext, store, webAppShortcutManager) }
 
     // P2P communication
     val nearbyConnection by lazy {

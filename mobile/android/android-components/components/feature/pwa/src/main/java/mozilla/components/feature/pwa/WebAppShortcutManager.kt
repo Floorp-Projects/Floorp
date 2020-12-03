@@ -34,7 +34,7 @@ import mozilla.components.browser.icons.processor.ColorProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
 import mozilla.components.browser.icons.processor.ResizingProcessor
 import mozilla.components.browser.icons.utils.IconMemoryCache
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
@@ -73,7 +73,7 @@ class WebAppShortcutManager(
      */
     suspend fun requestPinShortcut(
         context: Context,
-        session: Session,
+        session: SessionState,
         overrideShortcutName: String? = null
     ) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
@@ -119,28 +119,31 @@ class WebAppShortcutManager(
      */
     suspend fun buildBasicShortcut(
         context: Context,
-        session: Session,
+        session: SessionState,
         overrideShortcutName: String? = null
     ): ShortcutInfoCompat {
-        val shortcutIntent = Intent(Intent.ACTION_VIEW, session.url.toUri()).apply {
+        val shortcutIntent = Intent(Intent.ACTION_VIEW, session.content.url.toUri()).apply {
             addCategory(SHORTCUT_CATEGORY)
             `package` = context.packageName
         }
 
-        val manifest = session.webAppManifest
+        val manifest = session.content.webAppManifest
         val shortLabel = overrideShortcutName
             ?: manifest?.shortName
             ?: manifest?.name
-            ?: session.title
+            ?: session.content.title
 
-        val builder = ShortcutInfoCompat.Builder(context, session.url)
-            .setShortLabel(shortLabel.ifBlank { fallbackLabel })
+        val fallback = fallbackLabel
+        val fixedLabel = shortLabel.ifBlank { fallback }
+
+        val builder = ShortcutInfoCompat.Builder(context, session.content.url)
+            .setShortLabel(fixedLabel)
             .setIntent(shortcutIntent)
 
         val icon = if (manifest != null && manifest.hasLargeIcons()) {
             buildIconFromManifest(manifest)
         } else {
-            session.icon?.let { IconCompat.createWithBitmap(it) }
+            session.content.icon?.let { IconCompat.createWithBitmap(it) }
         }
         icon?.let {
             builder.setIcon(it)

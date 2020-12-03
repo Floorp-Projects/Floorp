@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState
@@ -32,8 +31,8 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 /**
  * Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities.
  *
- * When the [Session] is inside a trusted scope, the toolbar will be hidden.
- * Once the [Session] navigates to another scope, the toolbar will be revealed.
+ * When the tab with [tabId] is inside a trusted scope, the toolbar will be hidden.
+ * Once the tab with [tabId] navigates to another scope, the toolbar will be revealed.
  * The toolbar is also hidden in fullscreen mode or picture in picture mode.
  *
  * In standard custom tabs, no scopes are trusted.

@@ -7,8 +7,11 @@ package mozilla.components.feature.pwa
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SecurityInfoState
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
@@ -24,17 +27,19 @@ import org.mockito.Mockito.`when`
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class WebAppUseCasesTest {
-
     @Test
     fun `isInstallable returns false if currentSession has no manifest`() {
-        val session: Session = mock()
-        `when`(session.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
-        `when`(session.webAppManifest).thenReturn(null)
+        val session = createTestSession(
+            secure = true,
+            manifest = null
+        )
 
-        val sessionManager: SessionManager = mock()
-        `when`(sessionManager.selectedSession).thenReturn(session)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(session),
+            selectedTabId = session.id
+        ))
 
-        val webAppUseCases = WebAppUseCases(testContext, sessionManager, mock<WebAppShortcutManager>())
+        val webAppUseCases = WebAppUseCases(testContext, store, mock<WebAppShortcutManager>())
         assertFalse(webAppUseCases.isInstallable())
     }
 
@@ -50,17 +55,17 @@ class WebAppUseCasesTest {
             ))
         )
 
-        val session: Session = mock()
-        `when`(session.webAppManifest).thenReturn(manifest)
-        `when`(session.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
+        val session = createTestSession(secure = true, manifest = manifest)
 
-        val sessionManager: SessionManager = mock()
-        `when`(sessionManager.selectedSession).thenReturn(session)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(session),
+            selectedTabId = session.id
+        ))
 
         val shortcutManager: WebAppShortcutManager = mock()
         `when`(shortcutManager.supportWebApps).thenReturn(true)
 
-        val webAppUseCases = WebAppUseCases(testContext, sessionManager, shortcutManager)
+        val webAppUseCases = WebAppUseCases(testContext, store, shortcutManager)
         assertTrue(webAppUseCases.isInstallable())
     }
 
@@ -77,34 +82,56 @@ class WebAppUseCasesTest {
             ))
         )
 
-        val session: Session = mock()
-        `when`(session.webAppManifest).thenReturn(manifest)
-        `when`(session.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
+        val session = createTestSession(
+            secure = true,
+            manifest = manifest
+        )
 
-        val sessionManager: SessionManager = mock()
-        `when`(sessionManager.selectedSession).thenReturn(session)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(session),
+            selectedTabId = session.id
+        ))
 
         val shortcutManager: WebAppShortcutManager = mock()
         `when`(shortcutManager.supportWebApps).thenReturn(false)
 
-        assertFalse(WebAppUseCases(testContext, sessionManager, shortcutManager).isInstallable())
-        assertFalse(WebAppUseCases(testContext, sessionManager, mock(), supportWebApps = false).isInstallable())
+        assertFalse(WebAppUseCases(testContext, store, shortcutManager).isInstallable())
     }
 
     @Test
     fun `getInstallState returns Installed if manifest exists`() = runBlockingTest {
-        val url = "https://mozilla.org"
-        val sessionManager: SessionManager = mock()
         val httpClient: Client = mock()
         val storage: ManifestStorage = mock()
         val shortcutManager = WebAppShortcutManager(testContext, httpClient, storage)
-        val session: Session = mock()
         val currentTime = System.currentTimeMillis()
 
-        `when`(session.url).thenReturn(url)
-        `when`(sessionManager.selectedSession).thenReturn(session)
-        `when`(storage.hasRecentManifest(url, currentTime)).thenReturn(true)
+        val session = createTestSession(secure = true)
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(session),
+            selectedTabId = session.id
+        ))
 
-        assertEquals(WebAppShortcutManager.WebAppInstallState.Installed, WebAppUseCases(testContext, sessionManager, shortcutManager).getInstallState(currentTime))
+        `when`(storage.hasRecentManifest("https://www.mozilla.org", currentTime)).thenReturn(true)
+
+        assertEquals(WebAppShortcutManager.WebAppInstallState.Installed, WebAppUseCases(testContext, store, shortcutManager).getInstallState(currentTime))
     }
+}
+
+private fun createTestSession(
+    secure: Boolean,
+    manifest: WebAppManifest? = null
+): TabSessionState {
+    val protocol = if (secure) {
+        "https"
+    } else {
+        "http"
+    }
+    val tab = createTab("$protocol://www.mozilla.org")
+
+    return tab.copy(
+        content = tab.content.copy(
+            securityInfo = SecurityInfoState(secure = secure),
+            webAppManifest = manifest
+        )
+    )
 }
