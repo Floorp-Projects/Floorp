@@ -427,14 +427,6 @@ impl FirefoxOptions {
                 } else {
                     rv.args = Some(remote_args);
                 }
-
-                // Force Fission disabled until Remote Agent is compatible,
-                // and preference hasn't been already set
-                let has_fission_pref = rv.prefs.iter().find(|&x| x.0 == "fission.autostart");
-                if has_fission_pref.is_none() {
-                    rv.prefs
-                        .push(("fission.autostart".to_owned(), Pref::new(false)));
-                }
             }
         }
 
@@ -839,11 +831,6 @@ mod tests {
         } else {
             assert!(false, "CLI arguments for remote protocol not found");
         }
-
-        assert!(opts
-            .prefs
-            .iter()
-            .any(|pref| pref == &("fission.autostart".to_owned(), Pref::new(false))));
     }
 
     #[test]
