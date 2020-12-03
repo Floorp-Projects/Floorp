@@ -1229,9 +1229,10 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
     }
   }
 
-  NewObjectKind newKind = obj->isSingleton() ? SingletonObject : TenuredObject;
+  MOZ_ASSERT(!obj->isSingleton());
+
   return NewPlainObjectWithProperties(cx, properties.begin(),
-                                      properties.length(), newKind);
+                                      properties.length(), TenuredObject);
 }
 
 static bool InitializePropertiesFromCompatibleNativeObject(
@@ -1387,17 +1388,13 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
     }
   }
 
-  // Code whether the object is a singleton.
-  uint32_t isSingleton;
   if (mode == XDR_ENCODE) {
-    isSingleton = obj->isSingleton() ? 1 : 0;
+    MOZ_ASSERT(!obj->isSingleton());
   }
-  MOZ_TRY(xdr->codeUint32(&isSingleton));
 
   if (mode == XDR_DECODE) {
-    NewObjectKind newKind = isSingleton ? SingletonObject : TenuredObject;
     obj.set(NewPlainObjectWithProperties(cx, properties.begin(),
-                                         properties.length(), newKind));
+                                         properties.length(), TenuredObject));
     if (!obj) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }

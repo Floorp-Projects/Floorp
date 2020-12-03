@@ -727,11 +727,11 @@ extern JSFunction* NewFunctionWithProto(
     NewObjectKind newKind = GenericObject);
 
 // Allocate a new function backed by a JSNative.  Note that by default this
-// creates a singleton object.
+// creates a tenured object.
 inline JSFunction* NewNativeFunction(
     JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-    NewObjectKind newKind = SingletonObject,
+    NewObjectKind newKind = TenuredObject,
     FunctionFlags flags = FunctionFlags::NATIVE_FUN) {
   MOZ_ASSERT(native);
   return NewFunctionWithProto(cx, native, nargs, flags, nullptr, atom, nullptr,
@@ -739,11 +739,11 @@ inline JSFunction* NewNativeFunction(
 }
 
 // Allocate a new constructor backed by a JSNative.  Note that by default this
-// creates a singleton object.
+// creates a tenured object.
 inline JSFunction* NewNativeConstructor(
     JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-    NewObjectKind newKind = SingletonObject,
+    NewObjectKind newKind = TenuredObject,
     FunctionFlags flags = FunctionFlags::NATIVE_CTOR) {
   MOZ_ASSERT(native);
   MOZ_ASSERT(flags.isNativeConstructor());
@@ -856,7 +856,6 @@ extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                             gc::AllocKind kind,
                                             HandleObject proto);
 
-// Functions whose scripts are cloned are always given singleton types.
 extern JSFunction* CloneFunctionAndScript(
     JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
     HandleScope newScope, Handle<ScriptSourceObject*> sourceObject,

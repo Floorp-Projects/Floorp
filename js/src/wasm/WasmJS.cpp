@@ -1992,7 +1992,7 @@ bool WasmInstanceObject::getExportedFunction(
     }
     fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name,
                                  gc::AllocKind::FUNCTION_EXTENDED,
-                                 SingletonObject, FunctionFlags::ASMJS_CTOR));
+                                 TenuredObject, FunctionFlags::ASMJS_CTOR));
     if (!fun) {
       return false;
     }
@@ -2006,7 +2006,7 @@ bool WasmInstanceObject::getExportedFunction(
     }
 
     fun.set(NewNativeFunction(cx, WasmCall, numArgs, name,
-                              gc::AllocKind::FUNCTION_EXTENDED, SingletonObject,
+                              gc::AllocKind::FUNCTION_EXTENDED, TenuredObject,
                               FunctionFlags::WASM));
     if (!fun) {
       return false;

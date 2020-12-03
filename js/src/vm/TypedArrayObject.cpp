@@ -362,8 +362,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
     JSFunction* fun = NewFunctionWithProto(
         cx, class_constructor, 3, FunctionFlags::NATIVE_CTOR, nullptr,
-        ClassName(key, cx), ctorProto, gc::AllocKind::FUNCTION,
-        SingletonObject);
+        ClassName(key, cx), ctorProto, gc::AllocKind::FUNCTION, TenuredObject);
 
     if (fun) {
       fun->setJitInfo(&jit::JitInfo_TypedArrayConstructor);
@@ -400,14 +399,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   }
 
   static TypedArrayObject* makeTypedInstance(JSContext* cx,
-                                             CreateSingleton createSingleton,
                                              HandleObjectGroup group,
                                              gc::AllocKind allocKind) {
-    if (createSingleton == CreateSingleton::Yes) {
-      MOZ_ASSERT(!group);
-      return newBuiltinClassInstance(cx, allocKind, SingletonObject);
-    }
-
     if (group) {
       MOZ_ASSERT(group->clasp() == instanceClass());
       NewObjectKind newKind = GenericObject;
@@ -420,8 +413,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* makeInstance(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
-      CreateSingleton createSingleton, BufferSize byteOffset, BufferSize len,
-      HandleObject proto, HandleObjectGroup group = nullptr) {
+      BufferSize byteOffset, BufferSize len, HandleObject proto,
+      HandleObjectGroup group = nullptr) {
     MOZ_ASSERT(len.get() < maxByteLength() / BYTES_PER_ELEMENT);
 
     gc::AllocKind allocKind =
@@ -445,7 +438,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       MOZ_ASSERT(!group);
       obj = makeProtoInstance(cx, proto, allocKind);
     } else {
-      obj = makeTypedInstance(cx, createSingleton, group, allocKind);
+      obj = makeTypedInstance(cx, group, allocKind);
     }
     if (!obj || !obj->init(cx, buffer, byteOffset, len, BYTES_PER_ELEMENT)) {
       return nullptr;
@@ -458,7 +451,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     MOZ_ASSERT(len >= 0);
     size_t nbytes;
     MOZ_ALWAYS_TRUE(CalculateAllocSize<NativeType>(len, &nbytes));
-    MOZ_ASSERT(nbytes < TypedArrayObject::SINGLETON_BYTE_LENGTH);
     bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
     gc::AllocKind allocKind = !fitsInline ? gc::GetGCObjectKind(instanceClass())
                                           : AllocKindForLazyBuffer(nbytes);
@@ -780,15 +772,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       return nullptr;
     }
 
-    CreateSingleton createSingleton = CreateSingleton::No;
-    if (!group && length.get() * BYTES_PER_ELEMENT >=
-                      TypedArrayObject::SINGLETON_BYTE_LENGTH) {
-      createSingleton = CreateSingleton::Yes;
-    }
-
     // Steps 13-17.
-    return makeInstance(cx, buffer, createSingleton, BufferSize(byteOffset),
-                        length, proto, group);
+    return makeInstance(cx, buffer, BufferSize(byteOffset), length, proto,
+                        group);
   }
 
   // Create a TypedArray object in another compartment.
@@ -848,8 +834,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
         return nullptr;
       }
 
-      typedArray = makeInstance(cx, unwrappedBuffer, CreateSingleton::No,
-                                BufferSize(byteOffset), length, wrappedProto);
+      typedArray = makeInstance(cx, unwrappedBuffer, BufferSize(byteOffset),
+                                length, wrappedProto);
       if (!typedArray) {
         return nullptr;
       }
@@ -923,8 +909,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       return nullptr;
     }
 
-    return makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
-                        BufferSize(nelements), proto);
+    return makeInstance(cx, buffer, BufferSize(0), BufferSize(nelements),
+                        proto);
   }
 
   static bool AllocateArrayBuffer(JSContext* cx, HandleObject ctor,
@@ -1340,8 +1326,7 @@ template <typename T>
 
   // Steps 3-4 (remaining part), 20-23.
   Rooted<TypedArrayObject*> obj(
-      cx, makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
-                       elementLength, proto, group));
+      cx, makeInstance(cx, buffer, BufferSize(0), elementLength, proto, group));
   if (!obj) {
     return nullptr;
   }
@@ -1409,8 +1394,8 @@ template <typename T>
     }
 
     Rooted<TypedArrayObject*> obj(
-        cx, makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
-                         BufferSize(len), proto, group));
+        cx,
+        makeInstance(cx, buffer, BufferSize(0), BufferSize(len), proto, group));
     if (!obj) {
       return nullptr;
     }
@@ -1485,8 +1470,8 @@ template <typename T>
   }
 
   Rooted<TypedArrayObject*> obj(
-      cx, makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
-                       BufferSize(len), proto, group));
+      cx,
+      makeInstance(cx, buffer, BufferSize(0), BufferSize(len), proto, group));
   if (!obj) {
     return nullptr;
   }
@@ -1527,10 +1512,6 @@ static bool GetTemplateObjectForNative(JSContext* cx,
 
     size_t nbytes;
     if (!js::CalculateAllocSize<T>(len, &nbytes)) {
-      return true;
-    }
-
-    if (nbytes >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
       return true;
     }
 

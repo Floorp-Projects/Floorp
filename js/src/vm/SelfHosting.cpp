@@ -3087,7 +3087,7 @@ static JSObject* CloneObject(JSContext* cx,
     MOZ_ASSERT(selfHostedObject->isNative());
     clone = NewObjectWithGivenProto(
         cx, selfHostedObject->getClass(), nullptr,
-        selfHostedObject->asTenured().getAllocKind(), SingletonObject);
+        selfHostedObject->asTenured().getAllocKind(), TenuredObject);
   }
   if (!clone) {
     return nullptr;
