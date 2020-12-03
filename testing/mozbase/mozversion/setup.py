@@ -26,7 +26,7 @@ setup(
     packages=["mozversion"],
     include_package_data=True,
     zip_safe=False,
-    install_requires=["mozlog >= 6.0", "six >= 1.10.0"],
+    install_requires=["mozlog >= 6.0", "six >= 1.13.0"],
     entry_points="""
       # -*- Entry points: -*-
       [console_scripts]
