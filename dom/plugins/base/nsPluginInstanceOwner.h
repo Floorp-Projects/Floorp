@@ -102,7 +102,8 @@ class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
   // nsIDOMEventListener interfaces
   NS_DECL_NSIDOMEVENTLISTENER
 
-  nsresult ProcessMouseDown(mozilla::dom::Event* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  ProcessMouseDown(mozilla::dom::Event* aMouseEvent);
   nsresult ProcessKeyPress(mozilla::dom::Event* aKeyEvent);
   nsresult Destroy();
 
