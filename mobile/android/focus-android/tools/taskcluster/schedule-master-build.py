@@ -45,7 +45,7 @@ def generate_code_quality_task(buildTaskId):
     return taskcluster.slugId(), generate_task(
         name="(Focus for Android) Code quality",
         description="Run code quality tools on Focus/Klar for Android code base.",
-        command='echo "--" > .adjust_token && ./gradlew --no-daemon clean detektCheck ktlint lint pmd checkstyle spotbugs',
+        command='echo "--" > .adjust_token && ./gradlew --no-daemon clean detektCheck ktlint lint',
         dependencies=[buildTaskId])
 
 
