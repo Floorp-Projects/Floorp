@@ -79,6 +79,9 @@ addAccessibleTask(
   <!-- A button morphed into a toggle via ARIA -->
   <button id="toggle" aria-pressed="false"></button>
 
+  <!-- A button with a 'banana' role description -->
+  <button id="banana" aria-roledescription="banana"></button>
+
   <!-- Other elements -->
   <del id="deletion">Deleted text</del>
   <dl id="dl"><dt id="dt">term</dt><dd id="dd">definition</dd></dl>
@@ -177,6 +180,9 @@ addAccessibleTask(
 
     // A button morphed into a toggle by ARIA
     testRoleAndSubRole(accDoc, "toggle", "AXCheckBox", "AXToggle");
+
+    // A banana button
+    testRoleAndSubRole(accDoc, "banana", "AXButton", null, "banana");
 
     // Other elements
     testRoleAndSubRole(accDoc, "deletion", "AXGroup", "AXDeleteStyleGroup");
