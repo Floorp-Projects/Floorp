@@ -883,7 +883,7 @@ bool nsPrintJob::GetIsEmpty() const {
   if (numSheets > 1) {
     return false;
   }
-  return seqFrame->GetPagesInFirstSheet() > 0;
+  return !seqFrame->GetPagesInFirstSheet();
 }
 
 int32_t nsPrintJob::GetPrintPreviewNumSheets() const {
