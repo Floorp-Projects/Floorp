@@ -295,7 +295,7 @@ static JSObject* CreateGeneratorFunction(JSContext* cx, JSProtoKey key) {
   HandlePropertyName name = cx->names().GeneratorFunction;
   return NewFunctionWithProto(cx, Generator, 1, FunctionFlags::NATIVE_CTOR,
                               nullptr, name, proto, gc::AllocKind::FUNCTION,
-                              SingletonObject);
+                              TenuredObject);
 }
 
 static JSObject* CreateGeneratorFunctionPrototype(JSContext* cx,

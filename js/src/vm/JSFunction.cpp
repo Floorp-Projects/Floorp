@@ -812,7 +812,7 @@ static JSObject* CreateFunctionConstructor(JSContext* cx, JSProtoKey key) {
       cx, NewFunctionWithProto(
               cx, Function, 1, FunctionFlags::NATIVE_CTOR, nullptr,
               HandlePropertyName(cx->names().Function), functionProto,
-              gc::AllocKind::FUNCTION, SingletonObject));
+              gc::AllocKind::FUNCTION, TenuredObject));
   if (!functionCtor) {
     return nullptr;
   }
@@ -834,7 +834,7 @@ static JSObject* CreateFunctionPrototype(JSContext* cx, JSProtoKey key) {
   return NewFunctionWithProto(
       cx, FunctionPrototype, 0, FunctionFlags::NATIVE_FUN, nullptr,
       HandlePropertyName(cx->names().empty), objectProto,
-      gc::AllocKind::FUNCTION, SingletonObject);
+      gc::AllocKind::FUNCTION, TenuredObject);
 }
 
 JSString* js::FunctionToStringCache::lookup(BaseScript* script) const {
@@ -2240,7 +2240,7 @@ JSFunction* js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun,
   }
 
   RootedFunction clone(
-      cx, NewFunctionClone(cx, fun, SingletonObject, allocKind, proto));
+      cx, NewFunctionClone(cx, fun, TenuredObject, allocKind, proto));
   if (!clone) {
     return nullptr;
   }
@@ -2307,7 +2307,7 @@ JSFunction* js::CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(cx->compartment() != fun->compartment());
 
   JSFunction* clone =
-      NewFunctionClone(cx, fun, SingletonObject, gc::AllocKind::FUNCTION,
+      NewFunctionClone(cx, fun, TenuredObject, gc::AllocKind::FUNCTION,
                        /* proto = */ nullptr);
   if (!clone) {
     return nullptr;
