@@ -16,7 +16,6 @@
  * @typedef {import("../@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("../@types/perf").PageContext} PageContext
  * @typedef {import("../@types/perf").Presets} Presets
- * @typedef {import("../@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 /**
  * @template S
@@ -56,9 +55,6 @@ const getPresets = state => getInitializedValues(state).presets;
 
 /** @type {Selector<string>} */
 const getPresetName = state => state.presetName;
-
-/** @type {Selector<ProfilerViewMode | undefined>} */
-const getProfilerViewMode = state => state.profilerViewMode;
 
 /**
  * When remote profiling, there will be a back button to the settings.
@@ -164,7 +160,6 @@ module.exports = {
   getObjdirs,
   getPresets,
   getPresetName,
-  getProfilerViewMode,
   getOpenRemoteDevTools,
   getOpenAboutProfiling,
   getRecordingSettings,

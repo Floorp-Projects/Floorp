@@ -366,40 +366,6 @@ async function checkTabLoadedProfile({
 }
 
 /**
- * This function checks the url of a tab so we can assert the frontend's url
- * with our expected url. This function runs in a loop every
- * requestAnimationFrame, and checks for a initialTitle. Asserts as soon as it
- * finds that title. We don't have to look for success title or error title
- * since we only care about the url.
- * @param {{
- *     initialTitle: string,
- *     expectedUrl: string
- *   }}
- */
-async function waitForTabUrl({ initialTitle, expectedUrl }) {
-  const logPeriodically = createPeriodicLogger();
-
-  info(`Waiting for the selected tab to have the url "${expectedUrl}".`);
-
-  return waitUntil(() => {
-    switch (gBrowser.selectedTab.textContent) {
-      case initialTitle:
-        if (gBrowser.currentURI.spec === expectedUrl) {
-          ok(true, `The selected tab has the url ${expectedUrl}`);
-          BrowserTestUtils.removeTab(gBrowser.selectedTab);
-          return true;
-        }
-        throw new Error(
-          `Found a different url on the fake frontend: ${gBrowser.currentURI.spec}`
-        );
-      default:
-        logPeriodically(`> Waiting for the fake frontend tab to be loaded.`);
-        return false;
-    }
-  });
-}
-
-/**
  * This function checks the document title of a tab as an easy way to pass
  * messages from a content page to the mochitest.
  * @param {string} title
