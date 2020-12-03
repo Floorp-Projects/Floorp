@@ -9,7 +9,7 @@
 #include "chrome/common/child_process.h"
 
 ChildThread::ChildThread(Thread::Options options)
-    : Thread("Chrome_ChildThread"),
+    : Thread("IPC I/O Child"),
       owner_loop_(MessageLoop::current()),
       options_(options) {
   DCHECK(owner_loop_);

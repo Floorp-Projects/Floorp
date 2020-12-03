@@ -19,7 +19,7 @@ namespace ipc {
 
 // Friendly names for the well-known threads.
 static const char* kBrowserThreadNames[BrowserProcessSubThread::ID_COUNT] = {
-    "Gecko_IOThread",  // IO
+    "IPC I/O Parent",  // IO
 };
 
 /* static */
