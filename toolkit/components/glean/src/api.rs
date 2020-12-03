@@ -69,7 +69,7 @@ where
 /// Glean will only be initialized exactly once with the configuration and client info obtained
 /// from the first call.
 /// Subsequent calls have no effect.
-pub fn initialize(cfg: Configuration, client_info: ClientInfo) -> Result<()> {
+/*pub fn initialize(cfg: Configuration, client_info: ClientInfo) -> Result<()> {
     STATE
         .get_or_try_init(|| {
             let mut glean = Glean::new(cfg)?;
@@ -127,32 +127,7 @@ fn initialize_core_metrics(glean: &Glean, client_info: &ClientInfo) {
     core_metrics
         .architecture
         .set(glean, &client_info.architecture);
-}
-
-/// Set whether upload is enabled or not.
-///
-/// See `glean_core::Glean.set_upload_enabled`.
-pub fn set_upload_enabled(enabled: bool) {
-    dispatcher::launch(move || {
-        with_glean_mut(|glean| {
-            let state = global_state();
-            let old_enabled = glean.is_upload_enabled();
-            glean.set_upload_enabled(enabled);
-
-            if !old_enabled && enabled {
-                // If uploading is being re-enabled, we have to restore the
-                // application-lifetime metrics.
-                initialize_core_metrics(&glean, &state.client_info);
-            } else if old_enabled && !enabled {
-                // If upload is being disabled, check for pings to send.
-                ping_upload::check_for_uploads();
-            }
-
-            enabled
-        })
-        .expect("Setting upload enabled failed!");
-    });
-}
+}*/
 
 fn register_uploader() {
     let result = ping_upload::register_uploader(Box::new(|ping_request| {
