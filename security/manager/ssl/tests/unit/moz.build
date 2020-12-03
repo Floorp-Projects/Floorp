@@ -25,6 +25,7 @@ TEST_DIRS += [
     "test_content_signing",
     "test_ct",
     "test_delegated_credentials",
+    "test_encrypted_client_hello",
     "test_ev_certs",
     "test_intermediate_basic_usage_constraints",
     "test_intermediate_preloads",

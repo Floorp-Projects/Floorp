@@ -144,6 +144,13 @@ FuzzySecurityInfo::GetIsDelegatedCredential(bool* aIsDelegCred) {
 }
 
 NS_IMETHODIMP
+FuzzySecurityInfo::GetIsAcceptedEch(bool* aIsAcceptedEch) {
+  NS_ENSURE_ARG_POINTER(aIsAcceptedEch);
+  *aIsAcceptedEch = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 FuzzySecurityInfo::GetInterface(const nsIID& uuid, void** result) {
   if (!NS_IsMainThread()) {
     MOZ_CRASH("FuzzySecurityInfo::GetInterface called off the main thread");

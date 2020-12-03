@@ -722,6 +722,7 @@ static void PreliminaryHandshakeDone(PRFileDesc* fd) {
       infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
       infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
       infoObject->mIsDelegatedCredential = channelInfo.peerDelegCred;
+      infoObject->mIsAcceptedEch = channelInfo.echAccepted;
 
       if (infoObject->mIsDelegatedCredential) {
         Telemetry::ScalarAdd(
