@@ -220,14 +220,18 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   mozilla::Maybe<NameLocation> locationOfNameBoundInScope(
       const ParserAtom* name, EmitterScope* target);
 
+  // Get the location of a name known to be bound in a given scope,
+  // starting at the source scope.
+  template <typename T>
+  mozilla::Maybe<NameLocation> locationOfNameBoundInScopeType(
+      const ParserAtom* name, EmitterScope* source);
+
   // Get the location of a name known to be bound in the function scope,
   // starting at the source scope.
   mozilla::Maybe<NameLocation> locationOfNameBoundInFunctionScope(
-      const ParserAtom* name, EmitterScope* source);
-
-  mozilla::Maybe<NameLocation> locationOfNameBoundInFunctionScope(
       const ParserAtom* name) {
-    return locationOfNameBoundInFunctionScope(name, innermostEmitterScope());
+    return locationOfNameBoundInScopeType<FunctionScope>(
+        name, innermostEmitterScope());
   }
 
   void setVarEmitterScope(EmitterScope* emitterScope) {
