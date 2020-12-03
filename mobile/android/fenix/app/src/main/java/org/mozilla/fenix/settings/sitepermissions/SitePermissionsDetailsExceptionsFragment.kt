@@ -26,6 +26,7 @@ import org.mozilla.fenix.settings.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
 import org.mozilla.fenix.settings.PhoneFeature.PERSISTENT_STORAGE
+import org.mozilla.fenix.settings.PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS
 import org.mozilla.fenix.settings.requirePreference
 
 class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
@@ -59,6 +60,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         initPhoneFeature(MICROPHONE)
         initPhoneFeature(NOTIFICATION)
         initPhoneFeature(PERSISTENT_STORAGE)
+        initPhoneFeature(MEDIA_KEY_SYSTEM_ACCESS)
         bindClearPermissionsButton()
     }
 

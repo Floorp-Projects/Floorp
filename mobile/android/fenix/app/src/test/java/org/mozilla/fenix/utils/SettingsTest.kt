@@ -32,7 +32,8 @@ class SettingsTest {
         notification = ASK_TO_ALLOW,
         autoplayAudible = AutoplayAction.BLOCKED,
         autoplayInaudible = AutoplayAction.BLOCKED,
-        persistentStorage = ASK_TO_ALLOW
+        persistentStorage = ASK_TO_ALLOW,
+        mediaKeySystemAccess = ASK_TO_ALLOW
     )
 
     @Before
@@ -604,6 +605,23 @@ class SettingsTest {
 
         assertEquals(
             defaultPermissions.copy(persistentStorage = BLOCKED),
+            settings.getSitePermissionsCustomSettingsRules()
+        )
+    }
+
+    @Test
+    fun getSitePermissionsCustomSettingsRules_mediaKeySystemAccess() {
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS, ALLOWED)
+
+        assertEquals(
+            defaultPermissions.copy(mediaKeySystemAccess = ALLOWED),
+            settings.getSitePermissionsCustomSettingsRules()
+        )
+
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS, BLOCKED)
+
+        assertEquals(
+            defaultPermissions.copy(mediaKeySystemAccess = BLOCKED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }

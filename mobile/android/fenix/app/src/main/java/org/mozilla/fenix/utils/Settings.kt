@@ -746,7 +746,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             camera = getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA),
             autoplayAudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_AUDIBLE),
             autoplayInaudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_INAUDIBLE),
-            persistentStorage = getSitePermissionsPhoneFeatureAction(PhoneFeature.PERSISTENT_STORAGE)
+            persistentStorage = getSitePermissionsPhoneFeatureAction(PhoneFeature.PERSISTENT_STORAGE),
+            mediaKeySystemAccess = getSitePermissionsPhoneFeatureAction(PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS)
         )
     }
 
@@ -757,7 +758,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             PhoneFeature.LOCATION,
             PhoneFeature.CAMERA,
             PhoneFeature.AUTOPLAY_AUDIBLE,
-            PhoneFeature.AUTOPLAY_INAUDIBLE
+            PhoneFeature.AUTOPLAY_INAUDIBLE,
+            PhoneFeature.PERSISTENT_STORAGE,
+            PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS
         ).map { it.getPreferenceKey(appContext) }
 
         preferences.registerOnSharedPreferenceChangeListener(lifecycleOwner) { _, key ->

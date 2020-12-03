@@ -67,6 +67,10 @@ class WebsitePermissionsView(
             PhoneFeature.PERSISTENT_STORAGE to PermissionViewHolder(
                 view.persistentStorageLabel,
                 view.persistentStorageStatus
+            ),
+            PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS to PermissionViewHolder(
+                view.mediaKeySystemAccessLabel,
+                view.mediaKeySystemAccessStatus
             )
         )
     )

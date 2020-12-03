@@ -33,6 +33,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_AUDIBLE
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_INAUDIBLE
+import org.mozilla.fenix.settings.PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS
 import org.mozilla.fenix.settings.setStartCheckedIndicator
 import org.mozilla.fenix.utils.Settings
 
@@ -132,6 +133,13 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
                     saveActionInSettings(AUTOPLAY_BLOCK_AUDIBLE)
                 }
                 restoreState(AUTOPLAY_BLOCK_AUDIBLE)
+            } else if (args.phoneFeature == MEDIA_KEY_SYSTEM_ACCESS) {
+                visibility = View.VISIBLE
+                text = getString(R.string.preference_option_phone_feature_allowed)
+                setOnClickListener {
+                    saveActionInSettings(ALLOWED)
+                }
+                restoreState(ALLOWED)
             } else {
                 visibility = View.GONE
             }
