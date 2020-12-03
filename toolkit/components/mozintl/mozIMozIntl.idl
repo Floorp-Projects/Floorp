@@ -81,6 +81,7 @@ interface mozIMozIntl : nsISupports
   readonly attribute jsval Collator;
   readonly attribute jsval DateTimeFormat;
   readonly attribute jsval ListFormat;
+  readonly attribute jsval Locale;
   readonly attribute jsval NumberFormat;
   readonly attribute jsval PluralRules;
   readonly attribute jsval RelativeTimeFormat;
