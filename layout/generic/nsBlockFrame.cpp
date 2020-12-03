@@ -1352,8 +1352,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // Drain & handle pushed floats
   DrainPushedFloats();
   OverflowAreas fcBounds;
-  nsReflowStatus fcStatus;
-  ReflowPushedFloats(state, fcBounds, fcStatus);
+  ReflowPushedFloats(state, fcBounds);
 
   // If we're not dirty (which means we'll mark everything dirty later)
   // and our inline-size has changed, mark the lines dirty that we need to
@@ -1401,7 +1400,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 
   state.mReflowStatus.MergeCompletionStatusFrom(ocStatus);
-  state.mReflowStatus.MergeCompletionStatusFrom(fcStatus);
 
   // If we end in a BR with clear and affected floats continue,
   // we need to continue, too.
@@ -6684,8 +6682,7 @@ StyleClear nsBlockFrame::FindTrailingClear() {
 }
 
 void nsBlockFrame::ReflowPushedFloats(BlockReflowInput& aState,
-                                      OverflowAreas& aOverflowAreas,
-                                      nsReflowStatus& aStatus) {
+                                      OverflowAreas& aOverflowAreas) {
   // Pushed floats live at the start of our float list; see comment
   // above nsBlockFrame::DrainPushedFloats.
   nsIFrame* f = mFloats.FirstChild();
