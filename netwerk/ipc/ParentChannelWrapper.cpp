@@ -21,16 +21,7 @@ void ParentChannelWrapper::Register(uint64_t aRegistrarId) {
   nsCOMPtr<nsIChannel> dummy;
   MOZ_ALWAYS_SUCCEEDS(
       NS_LinkRedirectChannels(aRegistrarId, this, getter_AddRefs(dummy)));
-
-#ifdef DEBUG
-  // The channel registered with the RedirectChannelRegistrar will be the inner
-  // channel when dealing with view-source loads.
-  if (nsCOMPtr<nsIViewSourceChannel> viewSource = do_QueryInterface(mChannel)) {
-    MOZ_ASSERT(dummy == viewSource->GetInnerChannel());
-  } else {
-    MOZ_ASSERT(dummy == mChannel);
-  }
-#endif
+  MOZ_ASSERT(dummy == mChannel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
