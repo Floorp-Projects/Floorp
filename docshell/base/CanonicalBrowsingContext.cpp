@@ -158,6 +158,7 @@ void CanonicalBrowsingContext::MaybeAddAsProgressListener(
 void CanonicalBrowsingContext::ReplacedBy(
     CanonicalBrowsingContext* aNewContext) {
   MOZ_ASSERT(!aNewContext->EverAttached());
+  MOZ_ASSERT(IsTop() && aNewContext->IsTop());
   if (mStatusFilter) {
     mStatusFilter->RemoveProgressListener(mWebProgress);
     mStatusFilter = nullptr;
@@ -171,6 +172,10 @@ void CanonicalBrowsingContext::ReplacedBy(
     mSessionHistory.swap(aNewContext->mSessionHistory);
     RefPtr<ChildSHistory> childSHistory = ForgetChildSHistory();
     aNewContext->SetChildSHistory(childSHistory);
+  }
+
+  if (mozilla::SessionHistoryInParent()) {
+    BackgroundSessionStorageManager::PropagateManager(Id(), aNewContext->Id());
   }
 
   MOZ_ASSERT(aNewContext->mLoadingEntries.IsEmpty());

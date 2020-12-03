@@ -203,6 +203,8 @@ parent:
 
   async ShutdownBackgroundSessionStorageManagers();
 
+  async PropagateBackgroundSessionStorageManager(uint64_t currentTopContextId, uint64_t targetTopContextId);
+
   async RemoveBackgroundSessionStorageManager(uint64_t topContextId);
 
   async PFileSystemRequest(FileSystemParams params);

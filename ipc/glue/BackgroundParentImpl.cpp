@@ -1108,6 +1108,22 @@ BackgroundParentImpl::RecvShutdownBackgroundSessionStorageManagers() {
 }
 
 mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPropagateBackgroundSessionStorageManager(
+    const uint64_t& aCurrentTopContextId, const uint64_t& aTargetTopContextId) {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+
+  if (BackgroundParent::IsOtherProcessActor(this)) {
+    return IPC_FAIL(this, "Wrong actor");
+  }
+
+  mozilla::dom::RecvPropagateBackgroundSessionStorageManager(
+      aCurrentTopContextId, aTargetTopContextId);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvRemoveBackgroundSessionStorageManager(
     const uint64_t& aTopContextId) {
   AssertIsInMainOrSocketProcess();

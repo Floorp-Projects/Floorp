@@ -41,6 +41,21 @@ bool RecvShutdownBackgroundSessionStorageManagers() {
   return true;
 }
 
+void RecvPropagateBackgroundSessionStorageManager(
+    uint64_t aCurrentTopContextId, uint64_t aTargetTopContextId) {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+  if (sManagers) {
+    if (RefPtr<BackgroundSessionStorageManager> mgr =
+            sManagers->Get(aCurrentTopContextId)) {
+      // Assuming the target top browsing context should haven't been
+      // registered yet.
+      MOZ_DIAGNOSTIC_ASSERT(!sManagers->GetWeak(aTargetTopContextId));
+      sManagers->Put(aTargetTopContextId, std::move(mgr));
+    }
+  }
+}
+
 bool RecvRemoveBackgroundSessionStorageManager(uint64_t aTopContextId) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
@@ -565,6 +580,25 @@ void BackgroundSessionStorageManager::RemoveManager(uint64_t aTopContextId) {
 
   if (NS_WARN_IF(!backgroundActor->SendRemoveBackgroundSessionStorageManager(
           aTopContextId))) {
+    return;
+  }
+}
+
+// static
+void BackgroundSessionStorageManager::PropagateManager(
+    uint64_t aCurrentTopContextId, uint64_t aTargetTopContextId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aCurrentTopContextId != aTargetTopContextId);
+
+  ::mozilla::ipc::PBackgroundChild* backgroundActor =
+      ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!backgroundActor)) {
+    return;
+  }
+
+  if (NS_WARN_IF(!backgroundActor->SendPropagateBackgroundSessionStorageManager(
+          aCurrentTopContextId, aTargetTopContextId))) {
     return;
   }
 }
