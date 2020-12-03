@@ -468,15 +468,18 @@ nsresult Http3Stream::Finish0RTT(bool aRestart) {
     mSendState = PREPARING_HEADERS;
     mRecvState = BEFORE_HEADERS;
     mStreamId = UINT64_MAX;
+    mFlatHttpRequestHeaders = "";
     mQueued = false;
     mDataReceived = false;
     mResetRecv = false;
+    mFlatResponseHeaders.TruncateLength(0);
     mRequestBodyLenRemaining = 0;
     mTotalSent = 0;
     mTotalRead = 0;
     mFin = false;
     mSendingBlockedByFlowControlCount = 0;
-    mFlatResponseHeaders.TruncateLength(0);
+    mSocketInCondition = NS_ERROR_NOT_INITIALIZED;
+    mSocketOutCondition = NS_ERROR_NOT_INITIALIZED;
   }
 
   return rv;
