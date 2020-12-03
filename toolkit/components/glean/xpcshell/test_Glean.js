@@ -72,3 +72,9 @@ add_task({ skip_if: () => true }, function test_fog_datetime_works() {
   const received = Glean.test_only.what_a_date.testGetValue("test-ping");
   Assert.ok(received.startsWith("2020-06-11T12:00:00"));
 });
+
+add_task(function test_fog_boolean_works() {
+  Glean.test_only.can_we_flag_it.set(false);
+  Assert.ok(Glean.test_only.can_we_flag_it.testHasValue("test-ping"));
+  Assert.equal(false, Glean.test_only.can_we_flag_it.testGetValue("test-ping"));
+});
