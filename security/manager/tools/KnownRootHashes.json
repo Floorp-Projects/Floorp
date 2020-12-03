@@ -1097,7 +1097,12 @@
       "label": "Trustwave_Global_ECC_P384_Certification_Authority",
       "binNumber": 218,
       "sha256Fingerprint": "VZA4WcjAw+u4dZ7OTiVXIl/1dYu9OOvUgnZgHhvVgJc="
+    },
+    {
+      "label": "NAVER_Global_Root_Certification_Authority",
+      "binNumber": 219,
+      "sha256Fingerprint": "iPQ43Pj/0fqPQpEV/+X4KuHgbgxww3X6rXF7NKSecmU="
     }
   ],
-  "maxBin": 218
+  "maxBin": 219
 }

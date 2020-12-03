@@ -47,7 +47,7 @@
         }
       ],
       'variables': {
-        'mapfile': '../nssckbi.def',
+        'mapfile': 'nssckbi-testlib.def',
         'certdata-testlib_c': '<(INTERMEDIATE_DIR)/certdata-testlib.c',
       }
     }

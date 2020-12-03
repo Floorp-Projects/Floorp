@@ -314,5 +314,16 @@
         },
       ],
     }],
+    [ 'mozilla_central==1', {
+      'targets': [
+        {
+          'target_name': 'test_nssckbi',
+          'type': 'none',
+          'dependencies': [
+            'lib/ckfw/builtins/testlib/builtins-testlib.gyp:nssckbi-testlib',
+          ],
+        },
+      ],
+    }],
   ],
 }

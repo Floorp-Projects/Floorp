@@ -917,6 +917,13 @@ ssl_ParseSessionTicket(sslSocket *ss, const SECItem *decryptedTicket,
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
+
+#ifndef UNSAFE_FUZZER_MODE
+    PORT_Assert(temp < ssl_auth_size);
+#else
+    temp %= (8 * sizeof(SSLAuthType));
+#endif
+
     parsedTicket->authType = (SSLAuthType)temp;
     rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 4, &buffer, &len);
     if (rv != SECSuccess) {
