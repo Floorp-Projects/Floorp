@@ -618,6 +618,11 @@ struct nsGridContainerFrame::GridItemInfo {
                                     uint32_t aGridAxisTrackCount);
 
   /**
+   * Inhibit subgridding in aAxis for this item.
+   */
+  void InhibitSubgrid(nsGridContainerFrame* aParent, LogicalAxis aAxis);
+
+  /**
    * Return a copy of this item with its row/column data swapped.
    */
   GridItemInfo Transpose() const {
@@ -817,28 +822,31 @@ void GridItemInfo::ReverseDirection(LogicalAxis aAxis, uint32_t aGridEnd) {
   state = newState;
 }
 
+void GridItemInfo::InhibitSubgrid(nsGridContainerFrame* aParent,
+                                  LogicalAxis aAxis) {
+  MOZ_ASSERT(IsSubgrid(aAxis));
+  auto bit = NS_STATE_GRID_IS_COL_SUBGRID;
+  if (aParent->GetWritingMode().IsOrthogonalTo(mFrame->GetWritingMode()) !=
+      (aAxis == eLogicalAxisBlock)) {
+    bit = NS_STATE_GRID_IS_ROW_SUBGRID;
+  }
+  MOZ_ASSERT(SubgridFrame()->HasAnyStateBits(bit));
+  SubgridFrame()->RemoveStateBits(bit);
+  mState[aAxis] &= StateBits(~StateBits::eIsSubgrid);
+}
+
 void GridItemInfo::MaybeInhibitSubgridInMasonry(nsGridContainerFrame* aParent,
                                                 uint32_t aGridAxisTrackCount) {
   if (IsSubgrid(eLogicalAxisInline) && aParent->IsMasonry(eLogicalAxisBlock) &&
       mArea.mRows.mStart != 0 && mArea.mCols.Extent() != aGridAxisTrackCount &&
       (mState[eLogicalAxisInline] & eAutoPlacement)) {
-    mState[eLogicalAxisInline] &= StateBits(~StateBits::eIsSubgrid);
-    if (aParent->GetWritingMode().IsOrthogonalTo(mFrame->GetWritingMode())) {
-      mFrame->RemoveStateBits(NS_STATE_GRID_IS_ROW_SUBGRID);
-    } else {
-      mFrame->RemoveStateBits(NS_STATE_GRID_IS_COL_SUBGRID);
-    }
+    InhibitSubgrid(aParent, eLogicalAxisInline);
     return;
   }
   if (IsSubgrid(eLogicalAxisBlock) && aParent->IsMasonry(eLogicalAxisInline) &&
       mArea.mCols.mStart != 0 && mArea.mRows.Extent() != aGridAxisTrackCount &&
       (mState[eLogicalAxisBlock] & eAutoPlacement)) {
-    mState[eLogicalAxisBlock] &= StateBits(~StateBits::eIsSubgrid);
-    if (aParent->GetWritingMode().IsOrthogonalTo(mFrame->GetWritingMode())) {
-      mFrame->RemoveStateBits(NS_STATE_GRID_IS_COL_SUBGRID);
-    } else {
-      mFrame->RemoveStateBits(NS_STATE_GRID_IS_ROW_SUBGRID);
-    }
+    InhibitSubgrid(aParent, eLogicalAxisBlock);
   }
 }
 
@@ -4411,22 +4419,24 @@ void nsGridContainerFrame::Grid::SubgridPlaceGridItems(
   }
 
   // Abs.pos. subgrids may have kAutoLine in their area.  Map those to the edge
-  // line in the parent's explicit grid (zero-based line numbers).  This is ok
-  // because it's only used for translating lines and such, not for layout.
+  // line in the parent's grid (zero-based line numbers).
   if (MOZ_UNLIKELY(subgrid->mArea.mCols.mStart == kAutoLine)) {
     subgrid->mArea.mCols.mStart = 0;
   }
   if (MOZ_UNLIKELY(subgrid->mArea.mCols.mEnd == kAutoLine)) {
-    subgrid->mArea.mCols.mEnd = aParentGrid->mExplicitGridOffsetCol +
-                                aParentGrid->mExplicitGridColEnd - 1;
+    subgrid->mArea.mCols.mEnd = aParentGrid->mGridColEnd - 1;
   }
   if (MOZ_UNLIKELY(subgrid->mArea.mRows.mStart == kAutoLine)) {
     subgrid->mArea.mRows.mStart = 0;
   }
   if (MOZ_UNLIKELY(subgrid->mArea.mRows.mEnd == kAutoLine)) {
-    subgrid->mArea.mRows.mEnd = aParentGrid->mExplicitGridOffsetRow +
-                                aParentGrid->mExplicitGridRowEnd - 1;
+    subgrid->mArea.mRows.mEnd = aParentGrid->mGridRowEnd - 1;
   }
+
+  MOZ_ASSERT((subgrid->mArea.mCols.Extent() > 0 &&
+              subgrid->mArea.mRows.Extent() > 0) ||
+                 state.mGridItems.IsEmpty(),
+             "subgrid needs at least one track for its items");
 
   // The min/sz/max sizes are the input to the "repeat-to-fill" algorithm:
   // https://drafts.csswg.org/css-grid/#auto-repeat
@@ -4760,8 +4770,8 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     const int32_t offsetToColZero = int32_t(mExplicitGridOffsetCol) - 1;
     const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
     // Untranslate the grid again temporarily while resolving abs.pos. lines.
-    AutoRestore<uint32_t> save1(mGridColEnd);
-    AutoRestore<uint32_t> save2(mGridRowEnd);
+    AutoRestore<uint32_t> zeroOffsetGridColEnd(mGridColEnd);
+    AutoRestore<uint32_t> zeroOffsetGridRowEnd(mGridRowEnd);
     mGridColEnd -= offsetToColZero;
     mGridRowEnd -= offsetToRowZero;
     aState.mAbsPosItems.ClearAndRetainStorage();
@@ -4807,6 +4817,22 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
       if (isMasonry) {
         info->MaybeInhibitSubgridInMasonry(aState.mFrame, gridAxisTrackCount);
       }
+
+      // An abs.pos. subgrid with placement auto/1 or -1/auto technically
+      // doesn't span any parent tracks.  Inhibit subgridding in this case.
+      if (info->IsSubgrid(eLogicalAxisInline)) {
+        if (info->mArea.mCols.mStart == zeroOffsetGridColEnd.SavedValue() ||
+            info->mArea.mCols.mEnd == 0) {
+          info->InhibitSubgrid(aState.mFrame, eLogicalAxisInline);
+        }
+      }
+      if (info->IsSubgrid(eLogicalAxisBlock)) {
+        if (info->mArea.mRows.mStart == zeroOffsetGridRowEnd.SavedValue() ||
+            info->mArea.mRows.mEnd == 0) {
+          info->InhibitSubgrid(aState.mFrame, eLogicalAxisBlock);
+        }
+      }
+
       if (info->IsSubgrid()) {
         Grid grid(this);
         grid.SubgridPlaceGridItems(aState, this, *info);
