@@ -203,14 +203,14 @@ function requestExtensions() {
       const addons = await clientWrapper.listAddons({
         iconDataURL: isIconDataURLRequired,
       });
-      let extensions = addons.filter(a => a.debuggable);
 
-      // Filter out hidden & system addons unless the dedicated preference is set to true.
-      if (!getState().ui.showHiddenAddons) {
-        // @backward-compat { version 67 } Older servers don't return the `hidden` property
-        // for System addons.
-        extensions = extensions.filter(e => !e.isSystem && !e.hidden);
-      }
+      const showHiddenAddons = getState().ui.showHiddenAddons;
+
+      // Filter out non-debuggable addons as well as hidden ones, unless the dedicated
+      // preference is set to true.
+      const extensions = addons.filter(
+        a => a.debuggable && (!a.hidden || showHiddenAddons)
+      );
 
       const installedExtensions = extensions.filter(
         e => !e.temporarilyInstalled
