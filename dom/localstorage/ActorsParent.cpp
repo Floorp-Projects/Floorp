@@ -3149,52 +3149,51 @@ void ClientValidationPrefChangedCallback(const char* aPrefName,
   gClientValidation = Preferences::GetBool(aPrefName, kDefaultClientValidation);
 }
 
-template <typename P>
-void CollectDatabases(P aPredicate, nsTArray<RefPtr<Database>>& aDatabases) {
+template <typename Condition>
+nsTArray<RefPtr<Database>> CollectDatabasesMatching(Condition aCondition) {
   AssertIsOnBackgroundThread();
 
   if (!gLiveDatabases) {
-    return;
+    return nsTArray<RefPtr<Database>>{};
   }
-
-  for (const auto& database : *gLiveDatabases) {
-    if (aPredicate(database)) {
-      aDatabases.AppendElement(database);
-    }
-  }
-}
-
-template <typename P>
-void RequestAllowToCloseIf(P aPredicate) {
-  AssertIsOnBackgroundThread();
 
   nsTArray<RefPtr<Database>> databases;
 
-  CollectDatabases(aPredicate, databases);
+  for (const auto& database : *gLiveDatabases) {
+    MOZ_ASSERT(database);
+
+    if (aCondition(*database)) {
+      databases.AppendElement(database);
+    }
+  }
+
+  return databases;
+}
+
+template <typename Condition>
+void RequestAllowToCloseDatabasesMatching(Condition aCondition) {
+  AssertIsOnBackgroundThread();
+
+  nsTArray<RefPtr<Database>> databases = CollectDatabasesMatching(aCondition);
 
   for (const auto& database : databases) {
     MOZ_ASSERT(database);
 
     database->RequestAllowToClose();
   }
-
-  databases.Clear();
 }
 
-void ForceKillDatabases() {
+void ForceKillAllDatabases() {
   AssertIsOnBackgroundThread();
 
-  nsTArray<RefPtr<Database>> databases;
-
-  CollectDatabases([](const Database* const) { return true; }, databases);
+  nsTArray<RefPtr<Database>> databases =
+      CollectDatabasesMatching([](const auto&) { return true; });
 
   for (const auto& database : databases) {
     MOZ_ASSERT(database);
 
     database->ForceKill();
   }
-
-  databases.Clear();
 }
 
 bool VerifyPrincipalInfo(const PrincipalInfo& aPrincipalInfo,
@@ -9147,13 +9146,13 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
         // And it also ensures that the ordering is right. Without the check we
         // could invalidate ops whose directory locks were requested after we
         // requested a directory lock for origin clearing.
-        if (!prepareDatastoreOp->RequestedDirectoryLock()) {
+        if (!prepareDatastoreOp.RequestedDirectoryLock()) {
           return false;
         }
 
-        MOZ_ASSERT(prepareDatastoreOp->OriginIsKnown());
+        MOZ_ASSERT(prepareDatastoreOp.OriginIsKnown());
 
-        return prepareDatastoreOp->Origin() == aOrigin;
+        return prepareDatastoreOp.Origin() == aOrigin;
       });
 
   if (gPrivateDatastores && gPrivateDatastores->Remove(aOrigin) &&
@@ -9163,27 +9162,28 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
 
   InvalidatePreparedDatastoresMatching(
       [&aOrigin](const auto& preparedDatastore) {
-        return preparedDatastore->Origin() == aOrigin;
+        return preparedDatastore.Origin() == aOrigin;
       });
 
-  RequestAllowToCloseIf([&aOrigin](const Database* const aDatabase) {
-    return aDatabase->Origin() == aOrigin;
+  RequestAllowToCloseDatabasesMatching([&aOrigin](const auto& database) {
+    return database.Origin() == aOrigin;
   });
 }
 
 void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
   AssertIsOnBackgroundThread();
 
-  RequestAllowToCloseIf([aContentParentId](const Database* const aDatabase) {
-    return aDatabase->IsOwnedByProcess(aContentParentId);
-  });
+  RequestAllowToCloseDatabasesMatching(
+      [&aContentParentId](const auto& database) {
+        return database.IsOwnedByProcess(aContentParentId);
+      });
 }
 
 void QuotaClient::AbortAllOperations() {
   AssertIsOnBackgroundThread();
 
   InvalidatePrepareDatastoreOpsMatching([](const auto& prepareDatastoreOp) {
-    return prepareDatastoreOp->RequestedDirectoryLock();
+    return prepareDatastoreOp.RequestedDirectoryLock();
   });
 
   if (gPrivateDatastores) {
@@ -9192,7 +9192,7 @@ void QuotaClient::AbortAllOperations() {
 
   InvalidatePreparedDatastoresMatching([](const auto&) { return true; });
 
-  RequestAllowToCloseIf([](const auto&) { return true; });
+  RequestAllowToCloseDatabasesMatching([](const auto&) { return true; });
 }
 
 void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
@@ -9206,10 +9206,10 @@ void QuotaClient::InvalidatePrepareDatastoreOpsMatching(
     return;
   }
 
-  for (PrepareDatastoreOp* prepareDatastoreOp : *gPrepareDatastoreOps) {
+  for (const auto& prepareDatastoreOp : *gPrepareDatastoreOps) {
     MOZ_ASSERT(prepareDatastoreOp);
 
-    if (aCondition(prepareDatastoreOp)) {
+    if (aCondition(*prepareDatastoreOp)) {
       prepareDatastoreOp->Invalidate();
     }
   }
@@ -9222,12 +9222,11 @@ void QuotaClient::InvalidatePreparedDatastoresMatching(
     return;
   }
 
-  for (auto iter = gPreparedDatastores->ConstIter(); !iter.Done();
-       iter.Next()) {
-    const auto& preparedDatastore = iter.Data();
+  for (const auto& preparedDatastoreEntry : *gPreparedDatastores) {
+    const auto& preparedDatastore = preparedDatastoreEntry.GetData();
     MOZ_ASSERT(preparedDatastore);
 
-    if (aCondition(preparedDatastore)) {
+    if (aCondition(*preparedDatastore)) {
       preparedDatastore->Invalidate();
     }
   }
@@ -9255,7 +9254,7 @@ void QuotaClient::InitiateShutdown() {
     gPreparedDatastores = nullptr;
   }
 
-  RequestAllowToCloseIf([](const Database* const) { return true; });
+  RequestAllowToCloseDatabasesMatching([](const auto&) { return true; });
 
   if (gPreparedObsevers) {
     gPreparedObsevers->Clear();
@@ -9269,7 +9268,7 @@ bool QuotaClient::IsShutdownCompleted() const {
   return !gPrepareDatastoreOps && !gDatastores && !gLiveDatabases;
 }
 
-void QuotaClient::ForceKillActors() { ForceKillDatabases(); }
+void QuotaClient::ForceKillActors() { ForceKillAllDatabases(); }
 
 nsCString QuotaClient::GetShutdownStatus() const {
   AssertIsOnBackgroundThread();
