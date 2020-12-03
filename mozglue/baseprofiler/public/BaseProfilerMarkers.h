@@ -143,7 +143,7 @@ struct TextMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::markerChart, MS::Location::markerTable};
-    schema.SetChartLabel("{marker.name} - {marker.data.name}");
+    schema.SetChartLabel("{marker.data.name}");
     schema.SetTableLabel("{marker.name} - {marker.data.name}");
     schema.AddKeyLabelFormat("name", "Details", MarkerSchema::Format::string);
     return schema;
