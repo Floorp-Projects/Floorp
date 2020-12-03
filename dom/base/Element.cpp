@@ -439,7 +439,7 @@ int32_t Element::TabIndex() {
 
 void Element::Focus(const FocusOptions& aOptions, CallerType aCallerType,
                     ErrorResult& aError) {
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return;
   }
@@ -3045,7 +3045,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
         aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
 
         if (IsInComposedDoc()) {
-          if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+          if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
             RefPtr<Element> kungFuDeathGrip(this);
             fm->SetFocus(kungFuDeathGrip, nsIFocusManager::FLAG_BYMOUSE |
                                               nsIFocusManager::FLAG_NOSCROLL);
