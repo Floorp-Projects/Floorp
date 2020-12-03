@@ -539,6 +539,15 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     }
   }
 
+  // nsViewSourceChannel normally replaces the nsIRequest passed to
+  // OnStart/StopRequest with itself. We don't need this, and instead
+  // we want the original request so that we get different ones for
+  // each part of a multipart channel.
+  nsCOMPtr<nsIViewSourceChannel> viewSourceChannel;
+  if (aPid && (viewSourceChannel = do_QueryInterface(mChannel))) {
+    viewSourceChannel->SetReplaceRequest(false);
+  }
+
   // Setup a ClientChannelHelper to watch for redirects, and copy
   // across any serviceworker related data between channels as needed.
   AddClientChannelHelperInParent(mChannel, std::move(aInfo));
@@ -1786,12 +1795,8 @@ DocumentLoadListener::RedirectToRealChannel(
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
   MOZ_ASSERT(registrar);
-  nsCOMPtr<nsIChannel> chan = mChannel;
-  if (nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(chan)) {
-    chan = vsc->GetInnerChannel();
-  }
   mRedirectChannelId = nsContentUtils::GenerateLoadIdentifier();
-  MOZ_ALWAYS_SUCCEEDS(registrar->RegisterChannel(chan, mRedirectChannelId));
+  MOZ_ALWAYS_SUCCEEDS(registrar->RegisterChannel(mChannel, mRedirectChannelId));
 
   if (aDestinationProcess) {
     if (!*aDestinationProcess) {
