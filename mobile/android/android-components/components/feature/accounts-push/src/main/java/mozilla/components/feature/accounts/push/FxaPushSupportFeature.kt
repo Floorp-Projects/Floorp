@@ -189,7 +189,9 @@ internal class ConstellationObserver(
 
     override fun onDevicesUpdate(constellation: ConstellationState) {
         logger.info("onDevicesUpdate triggered.")
-        val updateSubscription = constellation.currentDevice?.subscriptionExpired ?: false
+        val updateSubscription = constellation.currentDevice?.let {
+            it.subscription == null || it.subscriptionExpired
+        } ?: false
 
         // If our subscription has not expired, we do nothing.
         // If our last check was recent (see: PERIODIC_INTERVAL_MILLISECONDS), we do nothing.
@@ -204,7 +206,7 @@ internal class ConstellationObserver(
             logger.info("Proceeding to renew registration")
         }
 
-        logger.info("We have been notified that our push subscription has expired; re-subscribing.")
+        logger.info("Our push subscription either doesn't exist or is expired; re-subscribing.")
         push.unsubscribe(
             scope = scope,
             onUnsubscribeError = ::onUnsubscribeError,

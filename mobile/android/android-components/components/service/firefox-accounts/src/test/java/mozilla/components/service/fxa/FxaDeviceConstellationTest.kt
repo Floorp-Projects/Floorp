@@ -275,10 +275,31 @@ class FxaDeviceConstellationTest {
         `when`(account.getDevices()).thenReturn(arrayOf(
             currentDeviceExpired, testDevice2
         ))
+
+        `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
+        `when`(account.gatherTelemetry()).thenReturn("{}")
+
         constellation.refreshDevices()
+
+        verify(account, times(1)).pollDeviceCommands()
 
         assertEquals(ConstellationState(currentDeviceExpired.into(), listOf(testDevice2.into())), observer.state)
         assertEquals(ConstellationState(currentDeviceExpired.into(), listOf(testDevice2.into())), constellation.state())
+
+        // Current device with no subscription.
+        val currentDeviceNoSub = testDevice("currentNoSub", true, expired = false, subscribed = false)
+
+        `when`(account.getDevices()).thenReturn(arrayOf(
+            currentDeviceNoSub, testDevice2
+        ))
+
+        `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
+        `when`(account.gatherTelemetry()).thenReturn("{}")
+
+        constellation.refreshDevices()
+
+        verify(account, times(2)).pollDeviceCommands()
+        assertEquals(ConstellationState(currentDeviceNoSub.into(), listOf(testDevice2.into())), constellation.state())
     }
 
     @Test
@@ -405,7 +426,7 @@ class FxaDeviceConstellationTest {
 //        assertEquals(authErrorObserver.latestException!!.cause, authException)
     }
 
-    private fun testDevice(id: String, current: Boolean, expired: Boolean = false): NativeDevice {
+    private fun testDevice(id: String, current: Boolean, expired: Boolean = false, subscribed: Boolean = true): NativeDevice {
         return NativeDevice(
             id = id,
             displayName = "testName",
@@ -414,7 +435,7 @@ class FxaDeviceConstellationTest {
             lastAccessTime = 123L,
             capabilities = listOf(),
             pushEndpointExpired = expired,
-            pushSubscription = null
+            pushSubscription = if (subscribed) NativeDevice.PushSubscription("http://endpoint.com", "pk", "auth key") else null
         )
     }
 

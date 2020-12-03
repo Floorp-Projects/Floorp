@@ -200,8 +200,9 @@ class FxaDeviceConstellation(
             // Find the current device.
             val currentDevice = allDevices.find { it.isCurrentDevice }?.also {
                 // Check if our current device's push subscription needs to be renewed.
-                if (it.subscriptionExpired) {
-                    logger.info("Current device needs push endpoint registration")
+                if (it.subscription == null || it.subscriptionExpired) {
+                    logger.info("Current device needs push endpoint registration, so checking for missed commands")
+                    pollForCommands()
                 }
             }
 
