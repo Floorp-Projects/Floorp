@@ -312,6 +312,16 @@ FileDescriptorFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink) {
 }
 
 NS_IMETHODIMP
+FileDescriptorFile::GetCreationTime(PRTime* aCreationTime) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileDescriptorFile::GetCreationTimeOfLink(PRTime* aCreationTime) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 FileDescriptorFile::GetFileSize(int64_t* aFileSize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

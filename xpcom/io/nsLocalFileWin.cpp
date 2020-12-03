@@ -2225,6 +2225,39 @@ nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModifiedTime) {
   return SetLastModifiedTime(aLastModifiedTime);
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetCreationTime(PRTime* aCreationTime) {
+  CHECK_mWorkingPath();
+
+  if (NS_WARN_IF(!aCreationTime)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv = ResolveAndStat();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCreationTime = mFileInfo64.creationTime / PR_USEC_PER_MSEC;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetCreationTimeOfLink(PRTime* aCreationTime) {
+  CHECK_mWorkingPath();
+
+  if (NS_WARN_IF(!aCreationTime)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  PRFileInfo64 info;
+  nsresult rv = GetFileInfo(mWorkingPath, &info);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCreationTime = info.creationTime / PR_USEC_PER_MSEC;
+
+  return NS_OK;
+}
+
 nsresult nsLocalFile::SetModDate(PRTime aLastModifiedTime,
                                  const wchar_t* aFilePath) {
   // The FILE_FLAG_BACKUP_SEMANTICS is required in order to change the

@@ -126,6 +126,11 @@ using namespace mozilla;
       return NS_ERROR_FILE_ACCESS_DENIED;                 \
   } while (0)
 
+static PRTime TimespecToMillis(const struct timespec& aTimeSpec) {
+  return PRTime(aTimeSpec.tv_sec) * PR_MSEC_PER_SEC +
+         PRTime(aTimeSpec.tv_nsec) / PR_NSEC_PER_MSEC;
+}
+
 /* directory enumerator */
 class nsDirEnumeratorUnix final : public nsSimpleEnumerator,
                                   public nsIDirectoryEnumerator {
@@ -1134,17 +1139,11 @@ nsresult nsLocalFile::GetLastModifiedTimeImpl(PRTime* aLastModTime,
     return NSRESULT_FOR_ERRNO();
   }
 
-  int64_t modSec = 0;
-  int64_t modNSec = 0;
 #if (defined(__APPLE__) && defined(__MACH__))
-  modSec = fileStats.st_mtimespec.tv_sec;
-  modNSec = fileStats.st_mtimespec.tv_nsec;
+  *aLastModTime = TimespecToMillis(fileStats.st_mtimespec);
 #else
-  modSec = fileStats.st_mtim.tv_sec;
-  modNSec = fileStats.st_mtim.tv_nsec;
+  *aLastModTime = TimespecToMillis(fileStats.st_mtim);
 #endif
-  *aLastModTime =
-      PRTime(modSec * PR_MSEC_PER_SEC) + PRTime(modNSec / PR_NSEC_PER_MSEC);
 
   return NS_OK;
 }
@@ -1205,6 +1204,39 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRTime* aLastModTimeOfLink) {
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink) {
   return SetLastModifiedTimeImpl(aLastModTimeOfLink, /* follow links? */ false);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetCreationTime(PRTime* aCreationTime) {
+  return GetCreationTimeImpl(aCreationTime, false);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetCreationTimeOfLink(PRTime* aCreationTimeOfLink) {
+  return GetCreationTimeImpl(aCreationTimeOfLink, /* aFollowLinks = */ true);
+}
+
+nsresult nsLocalFile::GetCreationTimeImpl(PRTime* aCreationTime,
+                                          bool aFollowLinks) {
+  CHECK_mPath();
+  if (NS_WARN_IF(!aCreationTime)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+#if defined(_DARWIN_FEATURE_64_BIT_INODE)
+  using StatFn = int (*)(const char*, struct STAT*);
+  StatFn statFn = aFollowLinks ? &STAT : &LSTAT;
+
+  struct STAT fileStats {};
+  if (statFn(mPath.get(), &fileStats) < 0) {
+    return NSRESULT_FOR_ERRNO();
+  }
+
+  *aCreationTime = TimespecToMillis(fileStats.st_birthtimespec);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 /*
@@ -1600,7 +1632,8 @@ nsLocalFile::IsExecutable(bool* aResult) {
     static const char* const executableExts[] = {
         "air",  // Adobe AIR installer
 #ifdef MOZ_WIDGET_COCOA
-        "fileloc",  // File location files can be used to point to other files.
+        "fileloc",  // File location files can be used to point to other
+                    // files.
 #endif
         "jar"  // java application bundle
     };
@@ -2238,7 +2271,8 @@ static nsresult MacErrorMapper(OSErr inErr) {
 }
 
 static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr) {
-  // first see if the conversion would succeed and find the length of the result
+  // first see if the conversion would succeed and find the length of the
+  // result
   CFIndex usedBufLen, inStrLen = ::CFStringGetLength(aInStrRef);
   CFIndex charsConverted = ::CFStringGetBytes(
       aInStrRef, CFRangeMake(0, inStrLen), kCFStringEncodingUTF8, 0, false,
