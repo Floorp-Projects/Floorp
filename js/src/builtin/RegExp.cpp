@@ -85,7 +85,6 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
     RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
     if (groupsTemplate->inDictionaryMode()) {
       groups = NewObjectWithGivenProto<PlainObject>(cx, nullptr);
-      groups->setGroup(groupsTemplate->group());
       groupsInDictionaryMode = true;
     } else {
       JS_TRY_VAR_OR_RETURN_FALSE(

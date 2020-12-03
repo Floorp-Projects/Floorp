@@ -1456,12 +1456,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
     return arrRes;
   }
 
-  NewObjectKind newKind = GenericObject;
-  ArrayObject* arrRes = NewDenseCopiedArray(cx, length, rest, nullptr, newKind);
-  if (arrRes) {
-    arrRes->setGroup(templateObj->group());
-  }
-  return arrRes;
+  return NewDenseCopiedArray(cx, length, rest);
 }
 
 bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr) {
