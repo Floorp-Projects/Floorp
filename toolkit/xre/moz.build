@@ -38,7 +38,6 @@ EXPORTS.mozilla += [
     "AutoSQLiteLifetime.h",
     "Bootstrap.h",
     "CmdLineAndEnvUtils.h",
-    "GlobalSemaphore.h",
     "SafeMode.h",
     "UntrustedModulesData.h",
 ]
@@ -132,7 +131,6 @@ UNIFIED_SOURCES += [
     "Bootstrap.cpp",
     "CmdLineAndEnvUtils.cpp",
     "CreateAppData.cpp",
-    "GlobalSemaphore.cpp",
     "nsAppStartupNotifier.cpp",
     "nsConsoleWriter.cpp",
     "nsEmbeddingModule.cpp",
@@ -165,7 +163,6 @@ if CONFIG["MOZ_UPDATER"]:
     if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
         UNIFIED_SOURCES += [
             "nsUpdateDriver.cpp",
-            "nsUpdateSyncManager.cpp",
         ]
 
 if CONFIG["MOZ_PDF_PRINTING"]:
