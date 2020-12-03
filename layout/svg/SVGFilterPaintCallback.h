@@ -7,12 +7,17 @@
 #ifndef LAYOUT_SVG_SVGFILTERPAINTCALLBACK_H_
 #define LAYOUT_SVG_SVGFILTERPAINTCALLBACK_H_
 
+#include "gfxMatrix.h"
 #include "nsRect.h"
 
 class nsIFrame;
 class gfxContext;
 
 namespace mozilla {
+
+namespace image {
+struct imgDrawingParams;
+}
 
 class SVGFilterPaintCallback {
  public:

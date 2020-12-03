@@ -19,8 +19,10 @@
 #include "nsTArray.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/ServoStyleConsts.h"
 
 class gfxContext;
+class nsIContent;
 class nsIFrame;
 struct WrFiltersHolder;
 
@@ -30,6 +32,10 @@ class SVGFilterPaintCallback;
 namespace dom {
 class UserSpaceMetrics;
 }  // namespace dom
+
+namespace image {
+struct imgDrawingParams;
+}
 
 /**
  * This class performs all filter processing.
