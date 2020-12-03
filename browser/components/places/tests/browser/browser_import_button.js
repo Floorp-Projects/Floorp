@@ -186,3 +186,45 @@ add_task(async function test_bookmark_import_button_errors() {
     "Button should have been removed."
   );
 });
+
+add_task(async function test_bookmark_import_button_experiment_pref_flip() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.bookmarks.2h2020", false]],
+  });
+  let bookmarkCount = PlacesUtils.getChildCountForFolder(
+    PlacesUtils.bookmarks.toolbarGuid
+  );
+  Assert.less(bookmarkCount, 3, "we should start with less than 3 bookmarks");
+
+  ok(
+    !document.getElementById("import-button"),
+    "Shouldn't have button to start with."
+  );
+  await PlacesUIUtils.maybeAddImportButton();
+  ok(
+    !document.getElementById("import-button"),
+    "Still shouldn't have a button."
+  );
+
+  // Now flip the pref.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.bookmarks.2h2020", true]],
+  });
+
+  await TestUtils.waitForCondition(
+    () => document.getElementById("import-button"),
+    "Button should be added when experiment pref is flipped."
+  );
+
+  ok(document.getElementById("import-button"), "Button should be added.");
+  is(Services.prefs.getBoolPref(kPref), true, "Pref should be set.");
+
+  // Simulate the user removing the item.
+  CustomizableUI.removeWidgetFromArea("import-button");
+
+  // We'll call this next startup:
+  PlacesUIUtils.removeImportButtonWhenImportSucceeds();
+
+  // And it should clean up the pref:
+  is(Services.prefs.prefHasUserValue(kPref), false, "Pref should be removed.");
+});

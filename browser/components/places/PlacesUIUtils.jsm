@@ -1411,6 +1411,17 @@ var PlacesUIUtils = {
     if (!Services.policies.isAllowed("profileImport")) {
       return;
     }
+    // Check if the experiment is running. If not, wait for it to run.
+    const kPref = "browser.toolbars.bookmarks.2h2020";
+    if (!Services.prefs.getBoolPref(kPref, false)) {
+      Services.prefs.addObserver(kPref, function obs() {
+        Services.prefs.removeObserver(kPref, obs);
+        Services.tm.dispatchToMainThread(() =>
+          PlacesUIUtils.maybeAddImportButton()
+        );
+      });
+      return;
+    }
     let numberOfBookmarks = await PlacesUtils.withConnectionWrapper(
       "PlacesUIUtils: maybeAddImportButton",
       async db => {
@@ -1434,6 +1445,7 @@ var PlacesUIUtils = {
         0
       );
       Services.prefs.setBoolPref("browser.bookmarks.addedImportButton", true);
+      this.removeImportButtonWhenImportSucceeds();
     }
   },
 
