@@ -184,7 +184,8 @@ class AccessibleCaretManager {
 
   // Change focus to aFrame if it isn't nullptr. Otherwise, clear the old focus
   // then re-focus the window.
-  void ChangeFocusToOrClearOldFocus(nsIFrame* aFrame) const;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ChangeFocusToOrClearOldFocus(
+      nsIFrame* aFrame) const;
 
   MOZ_CAN_RUN_SCRIPT
   nsresult SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const;
