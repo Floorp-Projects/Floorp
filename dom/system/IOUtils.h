@@ -120,9 +120,8 @@ class IOUtils final {
 
   static void SetShutdownHooks();
 
-  template <typename OkT, typename Fn, typename... Args>
-  static already_AddRefed<Promise> RunOnBackgroundThread(
-      RefPtr<Promise>& aPromise, Fn aFunc, Args... aArgs);
+  template <typename OkT, typename Fn>
+  static void RunOnBackgroundThread(Promise* aPromise, Fn aFunc);
 
   /**
    * Creates a new JS Promise.
@@ -155,8 +154,7 @@ class IOUtils final {
    *         error.
    */
   static Result<nsTArray<uint8_t>, IOError> ReadSync(
-      already_AddRefed<nsIFile> aFile, const Maybe<uint32_t>& aMaxBytes,
-      const bool aDecompress);
+      nsIFile* aFile, const Maybe<uint32_t>& aMaxBytes, const bool aDecompress);
 
   /**
    * Attempts to read the entire file at |aPath| as a UTF-8 string.
@@ -168,7 +166,7 @@ class IOUtils final {
    * @return The (decompressed) contents of the file re-encoded as a UTF-16
    *         string.
    */
-  static Result<nsString, IOError> ReadUTF8Sync(already_AddRefed<nsIFile> aFile,
+  static Result<nsString, IOError> ReadUTF8Sync(nsIFile* aFile,
                                                 const bool aDecompress);
 
   /**
@@ -184,8 +182,8 @@ class IOUtils final {
    *         failed or was incomplete.
    */
   static Result<uint32_t, IOError> WriteAtomicSync(
-      already_AddRefed<nsIFile> aFile, const Span<const uint8_t>& aByteArray,
-      InternalWriteAtomicOpts aOptions);
+      nsIFile* aFile, const Span<const uint8_t>& aByteArray,
+      const InternalWriteAtomicOpts& aOptions);
 
   /**
    * Attempt to write the entirety of |aUTF8String| to the file at |aFile|.
@@ -200,8 +198,8 @@ class IOUtils final {
    *         failed or was incomplete.
    */
   static Result<uint32_t, IOError> WriteAtomicUTF8Sync(
-      already_AddRefed<nsIFile> aFile, const nsCString& aUTF8String,
-      InternalWriteAtomicOpts aOptions);
+      nsIFile* aFile, const nsCString& aUTF8String,
+      const InternalWriteAtomicOpts& aOptions);
 
   /**
    * Attempts to write |aBytes| to the file pointed by |aFd|.
@@ -228,8 +226,7 @@ class IOUtils final {
    *
    * @return Ok if the file was moved successfully, or an error.
    */
-  static Result<Ok, IOError> MoveSync(already_AddRefed<nsIFile> aSourceFile,
-                                      already_AddRefed<nsIFile> aDestFile,
+  static Result<Ok, IOError> MoveSync(nsIFile* aSourceFile, nsIFile* aDestFile,
                                       bool aNoOverwrite);
 
   /**
@@ -240,8 +237,7 @@ class IOUtils final {
    *
    * @return Ok if the operation was successful, or an error.
    */
-  static Result<Ok, IOError> CopySync(already_AddRefed<nsIFile> aSourceFile,
-                                      already_AddRefed<nsIFile> aDestFile,
+  static Result<Ok, IOError> CopySync(nsIFile* aSourceFile, nsIFile* aDestFile,
                                       bool aNoOverWrite, bool aRecursive);
 
   /**
@@ -276,8 +272,8 @@ class IOUtils final {
    *
    * @return Ok if the file was removed successfully, or an error.
    */
-  static Result<Ok, IOError> RemoveSync(already_AddRefed<nsIFile> aFile,
-                                        bool aIgnoreAbsent, bool aRecursive);
+  static Result<Ok, IOError> RemoveSync(nsIFile* aFile, bool aIgnoreAbsent,
+                                        bool aRecursive);
 
   /**
    * Attempts to create a new directory at |aFile|.
@@ -295,7 +291,7 @@ class IOUtils final {
    *
    * @return Ok if the directory was created successfully, or an error.
    */
-  static Result<Ok, IOError> MakeDirectorySync(already_AddRefed<nsIFile> aFile,
+  static Result<Ok, IOError> MakeDirectorySync(nsIFile* aFile,
                                                bool aCreateAncestors,
                                                bool aIgnoreExisting,
                                                int32_t aMode = 0777);
@@ -307,8 +303,7 @@ class IOUtils final {
    *
    * @return An |InternalFileInfo| struct if successful, or an error.
    */
-  static Result<IOUtils::InternalFileInfo, IOError> StatSync(
-      already_AddRefed<nsIFile> aFile);
+  static Result<IOUtils::InternalFileInfo, IOError> StatSync(nsIFile* aFile);
 
   /**
    * Attempts to update the last modification time of the file at |aFile|.
@@ -319,7 +314,7 @@ class IOUtils final {
    *
    * @return Timestamp of the file if the operation was successful, or an error.
    */
-  static Result<int64_t, IOError> TouchSync(already_AddRefed<nsIFile> aFile,
+  static Result<int64_t, IOError> TouchSync(nsIFile* aFile,
                                             const Maybe<int64_t>& aNewModTime);
 
   /**
@@ -330,8 +325,7 @@ class IOUtils final {
    * @return An array of absolute paths identifying the children of |aFile|.
    *         If there are no children, an empty array. Otherwise, an error.
    */
-  static Result<nsTArray<nsString>, IOError> GetChildrenSync(
-      already_AddRefed<nsIFile> aFile);
+  static Result<nsTArray<nsString>, IOError> GetChildrenSync(nsIFile* aFile);
 };
 
 /**
