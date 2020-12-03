@@ -3403,6 +3403,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     CheckForApzAwareEventHandlers(aBuilder, this);
 
+    // If we have a mask, compute a clip to bound the masked content.
+    // This is necessary in case the content moves with an ancestor
+    // ASR of the mask.
     if (usingMask) {
       clipForMask = ComputeClipForMaskItem(aBuilder, this);
       if (clipForMask) {
