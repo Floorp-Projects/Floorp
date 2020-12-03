@@ -16,16 +16,14 @@ test_newtab({
   },
   test: async function test_render_customizeMenu() {
     await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector(".prefs-button button"),
+      () => content.document.querySelector(".personalize-button"),
       "Wait for prefs button to load on the newtab page"
     );
 
     let customizeMenu = content.document.querySelector(".customize-menu");
     ok(!customizeMenu, "Customize Menu should not be rendered yet");
 
-    let customizeButton = content.document.querySelector(
-      ".prefs-button button"
-    );
+    let customizeButton = content.document.querySelector(".personalize-button");
     customizeButton.click();
 
     await ContentTaskUtils.waitForCondition(
@@ -59,16 +57,14 @@ test_newtab({
   },
   test: async function test_render_customizeMenu() {
     await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector(".prefs-button button"),
+      () => content.document.querySelector(".personalize-button"),
       "Wait for prefs button to load on the newtab page"
     );
 
     let customizeMenu = content.document.querySelector(".customize-menu");
     ok(!customizeMenu, "Customize Menu should not be rendered yet");
 
-    let customizeButton = content.document.querySelector(
-      ".prefs-button button"
-    );
+    let customizeButton = content.document.querySelector(".personalize-button");
     customizeButton.click();
 
     await ContentTaskUtils.waitForCondition(
@@ -101,16 +97,14 @@ test_newtab({
   },
   test: async function test_render_customizeMenu() {
     await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector(".prefs-button button"),
+      () => content.document.querySelector(".personalize-button"),
       "Wait for prefs button to load on the newtab page"
     );
 
     let customizeMenu = content.document.querySelector(".customize-menu");
     ok(!customizeMenu, "Customize Menu should not be rendered yet");
 
-    let customizeButton = content.document.querySelector(
-      ".prefs-button button"
-    );
+    let customizeButton = content.document.querySelector(".personalize-button");
     customizeButton.click();
 
     await ContentTaskUtils.waitForCondition(

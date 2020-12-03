@@ -560,6 +560,7 @@ var actionUtils = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PrefsButton", function() { return PrefsButton; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PersonalizeButton", function() { return PersonalizeButton; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Base", function() { return _Base; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BaseContent", function() { return BaseContent; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Base", function() { return Base; });
@@ -601,6 +602,15 @@ const PrefsButton = ({
   className: `icon ${icon || "icon-settings"}`,
   onClick: onClick,
   "data-l10n-id": "newtab-settings-button"
+}));
+const PersonalizeButton = ({
+  onClick
+}) => react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
+  className: "button-wrapper"
+}, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("button", {
+  className: "personalize-button",
+  onClick: onClick,
+  "data-l10n-id": "newtab-personalize-button-label"
 })); // Returns a function will not be continuously triggered when called. The
 // function will be triggered if called again after `wait` milliseconds.
 
@@ -755,7 +765,12 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
     const canShowCustomizationMenu = customizationMenuEnabled || newNewtabExperienceEnabled;
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", showLogo && "visible-logo"].filter(v => v).join(" ");
-    return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
+    return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", null, canShowCustomizationMenu ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PersonalizeButton, {
+      onClick: this.openCustomizationMenu
+    }) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
+      onClick: this.openPreferences,
+      icon: prefsButtonIcon
+    }), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
       className: outerClassName
     }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("main", null, prefs.showSearch && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
       className: "non-collapsible-section"
@@ -773,10 +788,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
       className: "borderless-error"
     }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_DiscoveryStreamBase_DiscoveryStreamBase__WEBPACK_IMPORTED_MODULE_5__["DiscoveryStreamBase"], {
       locale: props.App.locale
-    })) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__["Sections"], null)), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialog"], null))), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(PrefsButton, {
-      onClick: canShowCustomizationMenu ? this.openCustomizationMenu : this.openPreferences,
-      icon: prefsButtonIcon
-    }), canShowCustomizationMenu && this.state.customizeMenuVisible && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__["CustomizeMenu"], {
+    })) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Sections_Sections__WEBPACK_IMPORTED_MODULE_10__["Sections"], null)), react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ConfirmDialog_ConfirmDialog__WEBPACK_IMPORTED_MODULE_3__["ConfirmDialog"], null))), canShowCustomizationMenu && this.state.customizeMenuVisible && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_CustomizeMenu_CustomizeMenu__WEBPACK_IMPORTED_MODULE_7__["CustomizeMenu"], {
       onClose: this.closeCustomizationMenu
     }));
   }
