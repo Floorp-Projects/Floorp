@@ -1619,7 +1619,15 @@ function getSpecialFolderDir(aCSIDL) {
   );
 
   let aryPath = ctypes.char16_t.array()(260);
-  SHGetSpecialFolderPath(0, aryPath, aCSIDL, false);
+  let rv = SHGetSpecialFolderPath(0, aryPath, aCSIDL, false);
+  if (!rv) {
+    do_throw(
+      "SHGetSpecialFolderPath failed to retrieve " +
+        aCSIDL +
+        " with Win32 error " +
+        ctypes.winLastError
+    );
+  }
   lib.close();
 
   let path = aryPath.readString(); // Convert the c-string to js-string
@@ -4346,6 +4354,7 @@ function adjustGeneralPaths() {
   let ds = Services.dirsvc.QueryInterface(Ci.nsIDirectoryService);
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_DIR);
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_BIN_DIR);
+  ds.QueryInterface(Ci.nsIProperties).undefine(XRE_EXECUTABLE_FILE);
   ds.registerProvider(dirProvider);
   registerCleanupFunction(function AGP_cleanup() {
     debugDump("start - unregistering directory provider");
@@ -4403,8 +4412,25 @@ function adjustGeneralPaths() {
     ds.unregisterProvider(dirProvider);
     cleanupTestCommon();
 
+    // Now that our provided is unregistered, reset the semaphore a second time
+    // so that we know the semaphore we're interested in gets unlocked (xpcshell
+    // doesn't always run a proper XPCOM shutdown sequence, which is where that
+    // would normally be happening).
+    let syncManager = Cc[
+      "@mozilla.org/updates/update-sync-manager;1"
+    ].getService(Ci.nsIUpdateSyncManager);
+    syncManager.resetSemaphore();
+
     debugDump("finish - unregistering directory provider");
   });
+
+  // Now that we've overridden the directory provider, the name of the update
+  // semaphore needs to be changed to match the overridden path.
+  debugDump("resetting update semaphore");
+  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
+    Ci.nsIUpdateSyncManager
+  );
+  syncManager.resetSemaphore();
 }
 
 /**
