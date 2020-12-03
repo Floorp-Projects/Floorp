@@ -29,7 +29,7 @@ class RemoteLazyInputStream;
 
 namespace {
 
-class InputStreamCallbackRunnable final : public CancelableRunnable {
+class InputStreamCallbackRunnable final : public DiscardableRunnable {
  public:
   // Note that the execution can be synchronous in case the event target is
   // null.
@@ -60,7 +60,7 @@ class InputStreamCallbackRunnable final : public CancelableRunnable {
  private:
   InputStreamCallbackRunnable(nsIInputStreamCallback* aCallback,
                               RemoteLazyInputStream* aStream)
-      : CancelableRunnable("dom::InputStreamCallbackRunnable"),
+      : DiscardableRunnable("dom::InputStreamCallbackRunnable"),
         mCallback(aCallback),
         mStream(aStream) {
     MOZ_ASSERT(mCallback);
@@ -71,7 +71,7 @@ class InputStreamCallbackRunnable final : public CancelableRunnable {
   RefPtr<RemoteLazyInputStream> mStream;
 };
 
-class FileMetadataCallbackRunnable final : public CancelableRunnable {
+class FileMetadataCallbackRunnable final : public DiscardableRunnable {
  public:
   static void Execute(nsIFileMetadataCallback* aCallback,
                       nsIEventTarget* aEventTarget,
@@ -97,7 +97,7 @@ class FileMetadataCallbackRunnable final : public CancelableRunnable {
  private:
   FileMetadataCallbackRunnable(nsIFileMetadataCallback* aCallback,
                                RemoteLazyInputStream* aStream)
-      : CancelableRunnable("dom::FileMetadataCallbackRunnable"),
+      : DiscardableRunnable("dom::FileMetadataCallbackRunnable"),
         mCallback(aCallback),
         mStream(aStream) {
     MOZ_ASSERT(mCallback);
@@ -849,7 +849,7 @@ RemoteLazyInputStream::Length(int64_t* aLength) {
 
 namespace {
 
-class InputStreamLengthCallbackRunnable final : public CancelableRunnable {
+class InputStreamLengthCallbackRunnable final : public DiscardableRunnable {
  public:
   static void Execute(nsIInputStreamLengthCallback* aCallback,
                       nsIEventTarget* aEventTarget,
@@ -876,7 +876,7 @@ class InputStreamLengthCallbackRunnable final : public CancelableRunnable {
   InputStreamLengthCallbackRunnable(nsIInputStreamLengthCallback* aCallback,
                                     RemoteLazyInputStream* aStream,
                                     int64_t aLength)
-      : CancelableRunnable("dom::InputStreamLengthCallbackRunnable"),
+      : DiscardableRunnable("dom::InputStreamLengthCallbackRunnable"),
         mCallback(aCallback),
         mStream(aStream),
         mLength(aLength) {
