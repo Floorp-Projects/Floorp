@@ -15,6 +15,7 @@ function setup() {
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
+  prefs.setBoolPref("network.security.esni.enabled", false);
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
@@ -43,6 +44,7 @@ function setup() {
 
 setup();
 registerCleanupFunction(() => {
+  prefs.clearUserPref("network.security.esni.enabled");
   prefs.clearUserPref("network.http.spdy.enabled");
   prefs.clearUserPref("network.http.spdy.enabled.http2");
   prefs.clearUserPref("network.dns.localDomains");
@@ -65,5 +67,5 @@ function run_test() {
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/doh"
   );
-  run_test_in_child("child_dns_by_type_resolve.js");
+  run_test_in_child("child_esni_dns_fetch1.js");
 }

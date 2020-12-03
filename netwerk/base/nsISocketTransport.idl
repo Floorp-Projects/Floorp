@@ -255,9 +255,9 @@ interface nsISocketTransport : nsITransport
 
     /**
      * If we know that a server speaks only tls <1.3 there is no need to try
-     * to use ech.
+     * to use esni/ech and query dns for esni/echconfig.
      */
-    const unsigned long DONT_TRY_ECH = (1 << 10);
+    const unsigned long DONT_TRY_ESNI_OR_ECH = (1 << 10);
 
     /**
      * These two bits encode the TRR mode of the request.
@@ -326,13 +326,15 @@ interface nsISocketTransport : nsITransport
     readonly attribute boolean resetIPFamilyPreference;
 
     /**
-     * This attribute holds information whether echConfig has been used.
+     * This attribute holds information whether esni has been used.
      * The value is set after PR_Connect is called.
      */
-   readonly attribute boolean echConfigUsed;
+   readonly attribute boolean esniUsed;
 
     /**
      * Called to set the echConfig to the securityInfo object.
+     * Note that echConfig taks priority over esni, so when this function is
+     * called esni will not be used.
      */
     void setEchConfig(in ACString echConfig);
 

@@ -722,7 +722,7 @@ function handleRequest(req, res) {
         });
       }
 
-      // for use with test_dns_by_type_resolve.js
+      // for use with test_esni_dns_fetch.js
       if (packet.questions[0].type == "TXT") {
         answers.push({
           name: packet.questions[0].name,
@@ -1036,8 +1036,8 @@ function handleRequest(req, res) {
     // it's just meant to be this slow - the test doesn't care about the actual response
     return;
   }
-  // for use with test_dns_by_type_resolve.js
-  else if (u.pathname === "/txt-dns-push") {
+  // for use with test_esni_dns_fetch.js
+  else if (u.pathname === "/esni-dns-push") {
     // _esni_push.example.com has A entry 127.0.0.1
     let rContent = Buffer.from(
       "0000010000010001000000000A5F65736E695F70757368076578616D706C6503636F6D0000010001C00C000100010000003700047F000001",
