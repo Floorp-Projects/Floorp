@@ -600,12 +600,6 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     flags = FunctionFlags::clearMutableflags(fun->flags()).toRaw();
 
     atom = fun->displayAtom();
-
-    // The environment of any function which is not reused will always be
-    // null, it is later defined when a function is cloned or reused to
-    // mirror the scope chain.
-    MOZ_ASSERT_IF(fun->isSingleton() && !fun->baseScript()->hasBeenCloned(),
-                  fun->environment() == nullptr);
   }
 
   // Everything added below can substituted by the non-lazy-script version of
@@ -2110,7 +2104,7 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
                                 HandleObject newEnclosingEnv) {
   MOZ_ASSERT(fun->isInterpreted());
 
-  if (realm != fun->realm() || fun->isSingleton()) {
+  if (realm != fun->realm()) {
     return false;
   }
 
@@ -2154,12 +2148,6 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
     return nullptr;
   }
 
-  // FunctionFlags::HAS_INFERRED_NAME can be set at compile-time and at
-  // runtime. In the latter case we should actually clear the flag before
-  // cloning the function, but since we can't differentiate between both
-  // cases here, we'll end up with a momentarily incorrect function name.
-  // This will be fixed up in SetFunctionName(), which should happen through
-  // JSOp::SetFunName directly after JSOp::Lambda.
   constexpr uint16_t NonCloneableFlags = FunctionFlags::EXTENDED |
                                          FunctionFlags::RESOLVED_LENGTH |
                                          FunctionFlags::RESOLVED_NAME;
@@ -2425,14 +2413,9 @@ bool js::SetFunctionName(JSContext* cx, HandleFunction fun, HandleValue name,
                          FunctionPrefixKind prefixKind) {
   MOZ_ASSERT(name.isString() || name.isSymbol() || name.isNumeric());
 
-  // `fun` is a newly created function, so normally it can't already have an
-  // inferred name. The rare exception is when `fun` was created by cloning
-  // a singleton function; see the comment in NewFunctionClone. In that case,
-  // the inferred name is bogus, so clear it out.
-  if (fun->hasInferredName()) {
-    MOZ_ASSERT(fun->isSingleton());
-    fun->clearInferredName();
-  }
+  // `fun` is a newly created function, so it can't already have an inferred
+  // name.
+  MOZ_ASSERT(!fun->hasInferredName());
 
   // Anonymous functions should neither have an own 'name' property nor a
   // resolved name at this point.

@@ -991,7 +991,7 @@ PlainObject* js::ObjectWithProtoOperation(JSContext* cx, HandleValue val) {
 
 JSObject* js::FunWithProtoOperation(JSContext* cx, HandleFunction fun,
                                     HandleObject parent, HandleObject proto) {
-  return CloneFunctionObjectIfNotSingleton(cx, fun, parent, proto);
+  return CloneFunctionObject(cx, fun, parent, proto);
 }
 
 /*
@@ -4655,7 +4655,7 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
     MOZ_ASSERT(IsAsmJSModule(fun));
     clone = CloneAsmJSModuleFunction(cx, fun);
   } else {
-    clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
+    clone = CloneFunctionObject(cx, fun, parent);
   }
   if (!clone) {
     return nullptr;
@@ -4669,7 +4669,7 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
                           HandleObject parent, HandleValue newTargetv) {
   MOZ_ASSERT(fun->isArrow());
 
-  JSFunction* clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
+  JSFunction* clone = CloneFunctionObject(cx, fun, parent);
   if (!clone) {
     return nullptr;
   }
