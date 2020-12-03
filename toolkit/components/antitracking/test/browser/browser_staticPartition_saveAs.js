@@ -13,6 +13,7 @@ Services.scriptloader.loadSubScript(
 );
 
 const TEST_IMAGE_URL = TEST_DOMAIN + TEST_PATH + "file_saveAsImage.sjs";
+const TEST_VIDEO_URL = TEST_DOMAIN + TEST_PATH + "file_saveAsVideo.sjs";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
@@ -27,7 +28,7 @@ function createTemporarySaveDirectory() {
   return saveDir;
 }
 
-function createPromiseForTransferComplete() {
+function createPromiseForTransferComplete(aDesirableFileName) {
   return new Promise(resolve => {
     MockFilePicker.showCallback = fp => {
       info("MockFilePicker showCallback");
@@ -35,6 +36,10 @@ function createPromiseForTransferComplete() {
       let fileName = fp.defaultString;
       let destFile = tempDir.clone();
       destFile.append(fileName);
+
+      if (aDesirableFileName) {
+        is(fileName, aDesirableFileName, "The default file name is correct.");
+      }
 
       MockFilePicker.setFiles([destFile]);
       MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
@@ -179,6 +184,106 @@ add_task(async function testContextMenuSaveImage() {
       let res = await fetch(`${TEST_IMAGE_URL}?token=${token}&result`);
       let res_text = await res.text();
       is(res_text, "1", "The image should be loaded only once.");
+
+      BrowserTestUtils.removeTab(tab);
+    }
+  }
+});
+
+add_task(async function testContextMenuSaveVideo() {
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
+
+  for (let networkIsolation of [true, false]) {
+    for (let partitionPerSite of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["privacy.partition.network_state", networkIsolation],
+          ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+        ],
+      });
+
+      // We use token to separate the caches.
+      let token = uuidGenerator.generateUUID().toString();
+      const testVideoURL = `${TEST_VIDEO_URL}?token=${token}`;
+
+      info(`Open a new tab for testing "Save Video as" in context menu.`);
+      let tab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        TEST_TOP_PAGE
+      );
+
+      info(`Insert the testing video into the tab.`);
+      await SpecialPowers.spawn(
+        tab.linkedBrowser,
+        [testVideoURL],
+        async url => {
+          let video = content.document.createElement("video");
+          let loaded = new content.Promise(resolve => {
+            video.onloadeddata = resolve;
+          });
+          content.document.body.appendChild(video);
+          video.setAttribute("id", "video1");
+          video.src = url;
+          await loaded;
+        }
+      );
+
+      info("Open the context menu.");
+      let popupShownPromise = BrowserTestUtils.waitForEvent(
+        document,
+        "popupshown"
+      );
+
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#video1",
+        {
+          type: "contextmenu",
+          button: 2,
+        },
+        tab.linkedBrowser
+      );
+
+      await popupShownPromise;
+
+      let partitionKey = partitionPerSite
+        ? "(http,example.net)"
+        : "example.net";
+
+      // We also check the default file name, see Bug 1679325.
+      let transferCompletePromise = createPromiseForTransferComplete(
+        "file_saveAsVideo.webm"
+      );
+      let observerPromise = createPromiseForObservingChannel(
+        testVideoURL,
+        partitionKey
+      );
+
+      let saveElement = document.getElementById("context-savevideo");
+      info("Triggering the save process.");
+      saveElement.doCommand();
+
+      info("Waiting for the channel.");
+      await observerPromise;
+
+      info("Wait until the save is finished.");
+      await transferCompletePromise;
+
+      info("Close the context menu.");
+      let contextMenu = document.getElementById("contentAreaContextMenu");
+      let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+        contextMenu,
+        "popuphidden"
+      );
+      contextMenu.hidePopup();
+      await popupHiddenPromise;
+
+      // Check if there will be only one network request. The another one should
+      // be from cache.
+      let res = await fetch(`${TEST_VIDEO_URL}?token=${token}&result`);
+      let res_text = await res.text();
+      is(res_text, "1", "The video should be loaded only once.");
 
       BrowserTestUtils.removeTab(tab);
     }
