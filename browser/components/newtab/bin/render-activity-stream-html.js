@@ -65,7 +65,6 @@ function templateHTML(options) {
     <link rel="stylesheet" href="chrome://activity-stream/content/css/activity-stream.css" />
   </head>
   <body class="activity-stream">
-    <div id="header-asrouter-container" role="presentation"></div>
     <div id="root"></div>
     <div id="footer-asrouter-container" role="presentation"></div>${
       options.noscripts ? "" : scriptRender
