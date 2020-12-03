@@ -12,6 +12,10 @@
     var lastPointerCoord = -1;
     var apzFlushed = false;
     var endEventReceived = false;
+    var testEndResolveFunc = null;
+    var testEndPromise = new Promise(resolve => {
+      testEndResolveFunc = resolve;
+    });
 
     function checkForTestEnd() {
         if (apzFlushed && endEventReceived) {
@@ -22,7 +26,7 @@
             is(document.scrollingElement.scrollTop, 0, "Document didn't y-scroll");
             is(document.scrollingElement.scrollLeft, 0, "Document didn't x-scroll");
 
-            subtestDone();
+            testEndResolveFunc();
         }
     }
 
@@ -32,7 +36,7 @@
         pointerMoveCount++;
     }
 
-    function* test(testDriver) {
+    async function test() {
         var target = document.getElementById("carousel");
         target.addEventListener("pointercancel", (event) => {
             ok(false, "Received pointercancel, uh-oh!");
@@ -50,14 +54,18 @@
         // Drag mostly horizontally but also slightly vertically. If the
         // touch-action were not respected due to a bug this might result
         // in vertical scrolling instead of pointermove events.
-        yield synthesizeNativeTouchDrag(target, 10, 10, 200, -10, testDriver);
-        yield flushApzRepaints(testDriver);
+        await new Promise(resolve => {
+            synthesizeNativeTouchDrag(target, 10, 10, 200, -10, resolve);
+        });
+        await promiseApzRepaintsFlushed();
         apzFlushed = true;
 
         setTimeout(checkForTestEnd, 0);
+
+        await testEndPromise;
     }
 
-    waitUntilApzStable().then(runContinuation(test));
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
 
   </script>
 </head>
