@@ -250,7 +250,8 @@ class PluginInstanceParent : public PPluginInstanceParent {
 
   void GetSrcAttribute(nsACString& aOutput) const { aOutput = mSrcAttribute; }
 
-  mozilla::ipc::IPCResult AnswerPluginFocusChange(const bool& gotFocus);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult AnswerPluginFocusChange(
+      const bool& gotFocus);
 
   nsresult AsyncSetWindow(NPWindow* window);
   nsresult GetImageContainer(mozilla::layers::ImageContainer** aContainer);

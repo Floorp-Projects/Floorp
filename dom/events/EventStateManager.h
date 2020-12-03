@@ -568,9 +568,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *                    false.  I.e., when this returns true and aExecute
    *                    is true, a target is executed or focused.
    */
-  bool LookForAccessKeyAndExecute(nsTArray<uint32_t>& aAccessCharCodes,
-                                  bool aIsTrustedEvent, bool aIsRepeat,
-                                  bool aExecute);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool LookForAccessKeyAndExecute(
+      nsTArray<uint32_t>& aAccessCharCodes, bool aIsTrustedEvent,
+      bool aIsRepeat, bool aExecute);
 
   //---------------------------------------------
   // DocShell Focus Traversal Methods
