@@ -98,16 +98,6 @@ TEST(FOG, TestCppUuidWorks)
                test_only::what_id_it.TestGetValue("test-ping").value().get());
 }
 
-TEST(FOG, TestCppBooleanWorks)
-{
-  mozilla::glean::test_only::can_we_flag_it.Set(false);
-
-  ASSERT_TRUE(
-      mozilla::glean::test_only::can_we_flag_it.TestHasValue("test-ping"));
-  ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it.TestGetValue(
-                       "test-ping"));
-}
-
 // TODO: to be enabled after changes from bug 1677448 are vendored.
 // TEST(FOG, TestCppDatetimeWorks)
 // {
