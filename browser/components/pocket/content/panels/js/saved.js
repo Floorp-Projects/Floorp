@@ -21,6 +21,7 @@ var PKT_SAVED_OVERLAY = function(options) {
   this.autocloseTimer = null;
   this.inoverflowmenu = false;
   this.dictJSON = {};
+  this.autocloseTimerEnabled = false;
   this.autocloseTiming = 4500;
   this.autocloseTimingFinalState = 2000;
   this.mouseInside = false;
@@ -115,6 +116,10 @@ var PKT_SAVED_OVERLAY = function(options) {
     });
   };
   this.startCloseTimer = function(manualtime) {
+    if (!myself.autocloseTimerEnabled) {
+      return;
+    }
+
     var settime = manualtime ? manualtime : myself.autocloseTiming;
     if (typeof myself.autocloseTimer == "number") {
       clearTimeout(myself.autocloseTimer);
