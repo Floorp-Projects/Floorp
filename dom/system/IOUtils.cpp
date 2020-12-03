@@ -131,6 +131,9 @@ MOZ_MUST_USE inline bool ToJSValue(
   if (aInternalFileInfo.mCreationTime.isSome()) {
     info.mCreationTime.Construct(aInternalFileInfo.mCreationTime.ref());
   }
+
+  info.mPermissions.Construct(aInternalFileInfo.mPermissions);
+
   return ToJSValue(aCx, info, aValue);
 }
 
@@ -452,6 +455,25 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
 
   RunOnBackgroundThread<nsTArray<nsString>>(
       promise, [file = std::move(file)]() { return GetChildrenSync(file); });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
+                                                  const nsAString& aPath,
+                                                  const uint32_t aPermissions) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  NS_ENSURE_TRUE(!!promise, nullptr);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThread<Ok>(
+      promise, [file = std::move(file), permissions = aPermissions]() {
+        return SetPermissionsSync(file, permissions);
+      });
 
   return promise.forget();
 }
@@ -1117,6 +1139,8 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
     return Err(IOError(rv));
   }
 
+  MOZ_TRY(aFile->GetPermissions(&info.mPermissions));
+
   return info;
 }
 
@@ -1203,6 +1227,15 @@ Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
   }
 
   return children;
+}
+
+/* static */
+Result<Ok, IOUtils::IOError> IOUtils::SetPermissionsSync(
+    nsIFile* aFile, const uint32_t aPermissions) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  MOZ_TRY(aFile->SetPermissions(aPermissions));
+  return Ok{};
 }
 
 /* static */
