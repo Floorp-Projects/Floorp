@@ -2665,18 +2665,8 @@ BrowserGlue.prototype = {
       // Add the import button if this is the first startup.
       {
         task: async () => {
-          if (
-            this._isNewProfile &&
-            Services.prefs.getBoolPref(
-              "browser.toolbars.bookmarks.2h2020",
-              false
-            ) &&
-            // Not in automation: the button changes CUI state, breaking tests
-            !Cu.isInAutomation
-          ) {
-            await PlacesUIUtils.maybeAddImportButton();
-          }
-
+          // First check if we've already added the import button, in which
+          // case we should check for events indicating we can remove it.
           if (
             Services.prefs.getBoolPref(
               "browser.bookmarks.addedImportButton",
@@ -2684,6 +2674,20 @@ BrowserGlue.prototype = {
             )
           ) {
             PlacesUIUtils.removeImportButtonWhenImportSucceeds();
+            return;
+          }
+
+          // Otherwise, check if this is a new profile where we need to add it.
+          // `maybeAddImportButton` will call
+          // `removeImportButtonWhenImportSucceeds`itself if/when it adds the
+          // button. Doing things in this order avoids listening for removal
+          // more than once.
+          if (
+            this._isNewProfile &&
+            // Not in automation: the button changes CUI state, breaking tests
+            !Cu.isInAutomation
+          ) {
+            await PlacesUIUtils.maybeAddImportButton();
           }
         },
       },
