@@ -658,20 +658,7 @@ class Rule {
     const textProps = [];
     const store = this.elementStyle.store;
 
-    // @backward-compat { version 49 } StyleRuleActors now provides parsed declarations.
-    let props = this.domRule.declarations;
-    if (!props.length) {
-      // If the authored text has an invalid property, it will show up
-      // as nameless.  Skip these as we don't currently have a good
-      // way to display them.
-      props = parseNamedDeclarations(
-        this.cssProperties.isKnown,
-        this.domRule.authoredText,
-        true
-      );
-    }
-
-    for (const prop of props) {
+    for (const prop of this.domRule.declarations) {
       const name = prop.name;
       // In an inherited rule, we only show inherited properties.
       // However, we must keep all properties in order for rule
