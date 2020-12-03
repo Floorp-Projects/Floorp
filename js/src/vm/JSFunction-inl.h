@@ -28,42 +28,9 @@ inline const char* GetFunctionNameBytes(JSContext* cx, JSFunction* fun,
   return js_anonymous_str;
 }
 
-inline bool CanReuseFunctionForClone(JSContext* cx, HandleFunction fun) {
-  if (!fun->isSingleton()) {
-    return false;
-  }
-
-  if (fun->baseScript()->hasBeenCloned()) {
-    return false;
-  }
-  fun->baseScript()->setHasBeenCloned();
-
-  return true;
-}
-
-inline JSFunction* CloneFunctionObjectIfNotSingleton(
-    JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
-    HandleObject proto = nullptr) {
-  /*
-   * For attempts to clone functions at a function definition opcode,
-   * try to avoid the the clone if the function has singleton type. This
-   * was called pessimistically, and we need to preserve the type's
-   * property that if it is singleton there is only a single object
-   * with its type in existence.
-   *
-   * For functions inner to run once lambda, it may be possible that
-   * the lambda runs multiple times and we repeatedly clone it. In these
-   * cases, fall through to CloneFunctionObject, which will deep clone
-   * the function's script.
-   */
-  if (CanReuseFunctionForClone(cx, fun)) {
-    if (proto && !SetPrototypeForClonedFunction(cx, fun, proto)) {
-      return nullptr;
-    }
-    fun->setEnvironment(enclosingEnv);
-    return fun;
-  }
-
+inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
+                                       HandleObject enclosingEnv,
+                                       HandleObject proto = nullptr) {
   // These intermediate variables are needed to avoid link errors on some
   // platforms.  Sigh.
   gc::AllocKind finalizeKind = gc::AllocKind::FUNCTION;
