@@ -63,6 +63,7 @@ browser/chrome/browser/res/payments/formautofill/autofillEditForms.js
 browser/defaults/settings/pinning/pins.json
 browser/defaults/settings/main/example.json
 browser/defaults/settings/main/search-default-override-allowlist.json
+browser/defaults/settings/main/url-classifier-skip-urls.json
 
 #ifdef MOZ_EME_WIN32_ARTIFACT
 gmp-clearkey/0.1/manifest.json
