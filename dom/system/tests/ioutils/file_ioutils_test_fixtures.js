@@ -21,7 +21,7 @@ async function createDir(location) {
     ignoreExisting: true,
     createAncestors: true,
   });
-  const exists = await OS.File.exists(location);
+  const exists = await dirExists(location);
   ok(exists, `Created temporary directory at: ${location}`);
 }
 
@@ -62,22 +62,13 @@ async function dirExists(dir) {
   }
 }
 
-async function fileOrDirExists(location) {
-  try {
-    await IOUtils.stat(location);
-    return true;
-  } catch (ex) {
-    return false;
-  }
-}
-
 async function cleanup(...files) {
   for (const file of files) {
     await IOUtils.remove(file, {
       ignoreAbsent: true,
       recursive: true,
     });
-    const exists = await fileOrDirExists(file);
+    const exists = await IOUtils.exists(file);
     ok(!exists, `Removed temporary file: ${file}`);
   }
 }
