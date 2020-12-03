@@ -362,7 +362,7 @@ const previewers = {
 
   Promise: [
     function({ obj, hooks }, grip, rawObj) {
-      const {state, value, reason} = ObjectUtils.getPromiseState(obj);
+      const { state, value, reason } = ObjectUtils.getPromiseState(obj);
       const ownProperties = Object.create(null);
       ownProperties["<state>"] = { value: state };
       let ownPropertiesLength = 1;
@@ -593,6 +593,12 @@ previewers.Object = [
       case "SyntaxError":
       case "TypeError":
       case "URIError":
+      case "InternalError":
+      case "AggregateError":
+      case "CompileError":
+      case "DebuggeeWouldRun":
+      case "LinkError":
+      case "RuntimeError":
         const name = DevToolsUtils.getProperty(obj, "name");
         const msg = DevToolsUtils.getProperty(obj, "message");
         const stack = DevToolsUtils.getProperty(obj, "stack");
