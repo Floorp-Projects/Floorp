@@ -31,8 +31,7 @@ class WorkerDescriptorFront extends TargetMixin(
 
   form(json) {
     this.actorID = json.actor;
-    // @backward-compat { version 68 } On older server, we fall back to actorID.
-    this.id = json.id || this.actorID;
+    this.id = json.id;
 
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
