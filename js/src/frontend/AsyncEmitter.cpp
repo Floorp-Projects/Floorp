@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
 #include "frontend/BytecodeEmitter.h"     // BytecodeEmitter
+#include "frontend/NameOpEmitter.h"       // NameOpEmitter
 #include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
 #include "vm/Opcodes.h"                   // JSOp
 
@@ -55,8 +56,44 @@ bool AsyncEmitter::emitParamsEpilogue() {
   return true;
 }
 
+bool AsyncEmitter::prepareForModule() {
+  // Unlike functions, modules do not have params that we need to worry about.
+  // Instead, this code is for setting up the required generator that will be
+  // used for top level await. Before we can start using top-level await in
+  // modules, we need to emit a
+  // |.generator| which we can use to pause and resume execution.
+  MOZ_ASSERT(state_ == State::Start);
+  MOZ_ASSERT(
+      bce_->lookupName(bce_->cx->parserNames().dotGenerator).hasKnownSlot());
+
+  NameOpEmitter noe(bce_, bce_->cx->parserNames().dotGenerator,
+                    NameOpEmitter::Kind::Initialize);
+  if (!noe.prepareForRhs()) {
+    //        [stack]
+    return false;
+  }
+  if (!bce_->emit1(JSOp::Generator)) {
+    //        [stack] GEN
+    return false;
+  }
+  if (!noe.emitAssignment()) {
+    //        [stack] GEN
+    return false;
+  }
+  if (!bce_->emit1(JSOp::Pop)) {
+    //        [stack]
+    return false;
+  }
+
+#ifdef DEBUG
+  state_ = State::ModulePrologue;
+#endif
+
+  return true;
+}
+
 bool AsyncEmitter::prepareForBody() {
-  MOZ_ASSERT(state_ == State::PostParams);
+  MOZ_ASSERT(state_ == State::PostParams || state_ == State::ModulePrologue);
 
   rejectTryCatch_.emplace(bce_, TryEmitter::Kind::TryCatch,
                           TryEmitter::ControlKind::NonSyntactic);
