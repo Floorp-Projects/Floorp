@@ -532,7 +532,6 @@ bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
 bool shell::enablePrivateClassFields = false;
 bool shell::enablePrivateClassMethods = false;
-bool shell::enableTopLevelAwait = false;
 bool shell::useOffThreadParseGlobal = true;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
@@ -10428,7 +10427,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enablePrivateClassFields = op.getBoolOption("enable-private-fields") ||
                              op.getBoolOption("enable-private-methods");
   enablePrivateClassMethods = op.getBoolOption("enable-private-methods");
-  enableTopLevelAwait = op.getBoolOption("enable-top-level-await");
   useOffThreadParseGlobal = !op.getBoolOption("no-off-thread-parse-global");
 
   JS::ContextOptionsRef(cx)
@@ -10460,8 +10458,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
       .setPrivateClassFields(enablePrivateClassFields)
-      .setPrivateClassMethods(enablePrivateClassMethods)
-      .setTopLevelAwait(enableTopLevelAwait);
+      .setPrivateClassMethods(enablePrivateClassMethods);
 
   JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
 
@@ -11329,8 +11326,6 @@ int main(int argc, char** argv, char** envp) {
                         "Enable private class fields") ||
       !op.addBoolOption('\0', "enable-private-methods",
                         "Enable private class methods") ||
-      !op.addBoolOption('\0', "enable-top-level-await",
-                        "Enable top-level await") ||
       !op.addBoolOption('\0', "no-off-thread-parse-global",
                         "Do not use parseGlobal in off-thread compilation and "
                         "instead instantiate stencil in main-thread") ||

@@ -46,8 +46,7 @@ class JS_PUBLIC_API ContextOptions {
 #endif
         fuzzing_(false),
         privateClassFields_(false),
-        privateClassMethods_(false),
-        topLevelAwait_(false) {
+        privateClassMethods_(false) {
   }
 
   bool asmJS() const { return asmJS_; }
@@ -156,12 +155,6 @@ class JS_PUBLIC_API ContextOptions {
   bool privateClassMethods() const { return privateClassMethods_; }
   ContextOptions& setPrivateClassMethods(bool enabled) {
     privateClassMethods_ = enabled;
-    return *this;
-  }
-
-  bool topLevelAwait() const { return topLevelAwait_; }
-  ContextOptions& setTopLevelAwait(bool enabled) {
-    topLevelAwait_ = enabled;
     return *this;
   }
 
@@ -275,7 +268,6 @@ class JS_PUBLIC_API ContextOptions {
   bool fuzzing_ : 1;
   bool privateClassFields_ : 1;
   bool privateClassMethods_ : 1;
-  bool topLevelAwait_ : 1;
 };
 
 JS_PUBLIC_API ContextOptions& ContextOptionsRef(JSContext* cx);

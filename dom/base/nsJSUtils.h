@@ -80,21 +80,7 @@ class nsJSUtils {
   static nsresult ModuleInstantiate(JSContext* aCx,
                                     JS::Handle<JSObject*> aModule);
 
-  /*
-   * Wrapper for JSAPI ModuleEvaluate function.
-   *
-   * @param JSContext aCx
-   *        The JSContext where this is executed.
-   * @param JS::Handle<JSObject*> aModule
-   *        The module to be evaluated.
-   * @param JS::Handle<Value*> aResult
-   *        If Top level await is enabled:
-   *          The evaluation promise returned from evaluating the module.
-   *        Otherwise:
-   *          Undefined
-   */
-  static nsresult ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule,
-                                 JS::MutableHandle<JS::Value> aResult);
+  static nsresult ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule);
 
   // Returns false if an exception got thrown on aCx.  Passing a null
   // aElement is allowed; that wil produce an empty aScopeChain.

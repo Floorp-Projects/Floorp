@@ -5702,13 +5702,7 @@ static MOZ_MUST_USE bool IsTopMostAsyncFunctionCall(JSContext* cx) {
   if (iter.done()) {
     return false;
   }
-
-  if (!iter.isFunctionFrame() && iter.isModuleFrame()) {
-    // The iterator is not a function frame, it is a module frame.
-    // Ignore this optimization for now.
-    return true;
-  }
-
+  MOZ_ASSERT(iter.isFunctionFrame());
   MOZ_ASSERT(iter.calleeTemplate()->isAsync());
 
 #ifdef DEBUG

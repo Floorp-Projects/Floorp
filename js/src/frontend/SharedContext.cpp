@@ -224,24 +224,12 @@ EvalSharedContext::EvalSharedContext(JSContext* cx,
   inWith_ = compilationState.scopeContext.inWith;
 }
 
-SuspendableContext::SuspendableContext(JSContext* cx, Kind kind,
-                                       CompilationInfo& compilationInfo,
-                                       Directives directives,
-                                       SourceExtent extent, bool isGenerator,
-                                       bool isAsync)
-    : SharedContext(cx, kind, compilationInfo, directives, extent) {
-  setFlag(ImmutableFlags::IsGenerator, isGenerator);
-  setFlag(ImmutableFlags::IsAsync, isAsync);
-}
-
 FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
                          CompilationInfo& compilationInfo,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, const ParserAtom* atom,
                          FunctionFlags flags, FunctionIndex index)
-    : SuspendableContext(cx, Kind::FunctionBox, compilationInfo, directives,
-                         extent, generatorKind == GeneratorKind::Generator,
-                         asyncKind == FunctionAsyncKind::AsyncFunction),
+    : SharedContext(cx, Kind::FunctionBox, compilationInfo, directives, extent),
       atom_(atom),
       funcDataIndex_(index),
       flags_(FunctionFlags::clearMutableflags(flags)),
@@ -253,7 +241,12 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       hasDestructuringArgs(false),
       hasDuplicateParameters(false),
       hasExprBody_(false),
-      isFunctionFieldCopiedToStencil(false) {}
+      isFunctionFieldCopiedToStencil(false) {
+  setFlag(ImmutableFlags::IsGenerator,
+          generatorKind == GeneratorKind::Generator);
+  setFlag(ImmutableFlags::IsAsync,
+          asyncKind == FunctionAsyncKind::AsyncFunction);
+}
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
@@ -386,9 +379,8 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx,
                                          CompilationInfo& compilationInfo,
                                          ModuleBuilder& builder,
                                          SourceExtent extent)
-    : SuspendableContext(cx, Kind::Module, compilationInfo, Directives(true),
-                         extent, /* isGenerator = */ false,
-                         /* isAsync = */ false),
+    : SharedContext(cx, Kind::Module, compilationInfo, Directives(true),
+                    extent),
       bindings(nullptr),
       builder(builder) {
   thisBinding_ = ThisBinding::Module;

@@ -1260,8 +1260,6 @@ void StencilModuleMetadata::dumpFields(js::JSONPrinter& json,
     json.value("FunctionIndex(%zu)", size_t(index));
   }
   json.endList();
-
-  json.boolProperty("isAsync", isAsync);
 }
 
 static void DumpImmutableScriptFlags(js::JSONPrinter& json,

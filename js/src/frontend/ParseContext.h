@@ -11,7 +11,6 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/CompilationInfo.h"
 #include "frontend/ErrorReporter.h"
-#include "frontend/ModuleSharedContext.h"
 #include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
@@ -478,27 +477,6 @@ class ParseContext : public Nestable<ParseContext> {
   // be at top level.
   bool atTopLevel() { return atBodyLevel() && sc_->isTopLevelContext(); }
 
-  bool atModuleTopLevel() {
-    // True if we are at the topmost level of an entire module.
-    //
-    // For example, this is used to determine if an await statement should
-    // mark a module as an async module during parsing.
-    //
-    // Example module:
-    //   import x from "y";
-    //
-    //   await x.foo(); // mark as Top level await.
-    //
-    //   if (cond) {
-    //     await x.bar(); // mark as Top level await.
-    //   }
-    //
-    //   async function z() {
-    //     await x.baz(); // do not mark as Top level await.
-    //   }
-    return sc_->isModuleContext() && sc_->isTopLevelContext();
-  }
-
   void setSuperScopeNeedsHomeObject() {
     MOZ_ASSERT(sc_->allowSuperProperty());
     superScopeNeedsHomeObject_ = true;
@@ -521,8 +499,7 @@ class ParseContext : public Nestable<ParseContext> {
   }
 
   bool isAsync() const {
-    return sc_->isSuspendableContext() &&
-           sc_->asSuspendableContext()->isAsync();
+    return sc_->isFunctionBox() && sc_->asFunctionBox()->isAsync();
   }
 
   bool isGeneratorOrAsync() const { return isGenerator() || isAsync(); }
@@ -566,7 +543,6 @@ class ParseContext : public Nestable<ParseContext> {
   bool declareFunctionArgumentsObject(const UsedNameTracker& usedNames,
                                       bool canSkipLazyClosedOverBindings);
   bool declareDotGeneratorName();
-  bool declareTopLevelDotGeneratorName();
 
  private:
   MOZ_MUST_USE bool isVarRedeclaredInInnermostScope(
