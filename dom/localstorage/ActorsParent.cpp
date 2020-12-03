@@ -2799,13 +2799,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
  private:
   ~QuotaClient() override;
 
-  template <typename Condition>
-  static void InvalidatePrepareDatastoreOpsMatching(
-      const Condition& aCondition);
-
-  template <typename Condition>
-  static void InvalidatePreparedDatastoresMatching(const Condition& aCondition);
-
   void InitiateShutdown() override;
   bool IsShutdownCompleted() const override;
   nsCString GetShutdownStatus() const override;
@@ -3147,6 +3140,37 @@ void ClientValidationPrefChangedCallback(const char* aPrefName,
   MOZ_ASSERT(!aClosure);
 
   gClientValidation = Preferences::GetBool(aPrefName, kDefaultClientValidation);
+}
+
+template <typename Condition>
+void InvalidatePrepareDatastoreOpsMatching(const Condition& aCondition) {
+  if (!gPrepareDatastoreOps) {
+    return;
+  }
+
+  for (const auto& prepareDatastoreOp : *gPrepareDatastoreOps) {
+    MOZ_ASSERT(prepareDatastoreOp);
+
+    if (aCondition(*prepareDatastoreOp)) {
+      prepareDatastoreOp->Invalidate();
+    }
+  }
+}
+
+template <typename Condition>
+void InvalidatePreparedDatastoresMatching(const Condition& aCondition) {
+  if (!gPreparedDatastores) {
+    return;
+  }
+
+  for (const auto& preparedDatastoreEntry : *gPreparedDatastores) {
+    const auto& preparedDatastore = preparedDatastoreEntry.GetData();
+    MOZ_ASSERT(preparedDatastore);
+
+    if (aCondition(*preparedDatastore)) {
+      preparedDatastore->Invalidate();
+    }
+  }
 }
 
 template <typename Condition>
@@ -9198,39 +9222,6 @@ void QuotaClient::AbortAllOperations() {
 void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
 void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
-
-template <typename Condition>
-void QuotaClient::InvalidatePrepareDatastoreOpsMatching(
-    const Condition& aCondition) {
-  if (!gPrepareDatastoreOps) {
-    return;
-  }
-
-  for (const auto& prepareDatastoreOp : *gPrepareDatastoreOps) {
-    MOZ_ASSERT(prepareDatastoreOp);
-
-    if (aCondition(*prepareDatastoreOp)) {
-      prepareDatastoreOp->Invalidate();
-    }
-  }
-}
-
-template <typename Condition>
-void QuotaClient::InvalidatePreparedDatastoresMatching(
-    const Condition& aCondition) {
-  if (!gPreparedDatastores) {
-    return;
-  }
-
-  for (const auto& preparedDatastoreEntry : *gPreparedDatastores) {
-    const auto& preparedDatastore = preparedDatastoreEntry.GetData();
-    MOZ_ASSERT(preparedDatastore);
-
-    if (aCondition(*preparedDatastore)) {
-      preparedDatastore->Invalidate();
-    }
-  }
-}
 
 void QuotaClient::InitiateShutdown() {
   MOZ_ASSERT(!mShutdownRequested);
