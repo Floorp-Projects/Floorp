@@ -1742,6 +1742,12 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     return null();
   }
 
+  // Set the module to async if an await keyword was found at the top level.
+  if (pc_->isAsync()) {
+    pc_->sc()->asModuleContext()->builder.noteAsync(
+        this->compilationInfo_.stencil.moduleMetadata);
+  }
+
   // Generate the Import/Export tables and store in CompilationInfo.
   if (!modulesc->builder.buildTables(
           this->compilationInfo_.stencil.moduleMetadata)) {
