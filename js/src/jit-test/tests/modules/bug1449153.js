@@ -2,11 +2,11 @@
 
 class MyError {}
 
-function assertThrowsMyError(f)
+async function assertThrowsMyError(f)
 {
     let caught = false;
     try {
-        f();
+        await f();
     } catch (e) {
         caught = true;
         assertEq(e.constructor, MyError);
@@ -29,3 +29,5 @@ let b = registerModule('b', parseModule(`
 `));
 b.declarationInstantiation();
 assertThrowsMyError(() => b.evaluation(b));
+
+drainJobQueue();
