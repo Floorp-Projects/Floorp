@@ -484,6 +484,9 @@ nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
 void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
   if (mRoutedHost.IsEmpty()) {
     RefPtr<nsHttpConnectionInfo> clone = Clone();
+    // Explicitly set mIsHttp3 to false, since CloneAsDirectRoute() is used to
+    // create a non-http3 connection info.
+    clone->mIsHttp3 = false;
     clone.forget(outCI);
     return;
   }
