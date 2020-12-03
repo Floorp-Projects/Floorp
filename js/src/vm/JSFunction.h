@@ -817,6 +817,9 @@ class FunctionExtended : public JSFunction {
   // asm.js module functions store their WasmModuleObject in the first slot.
   static const unsigned ASMJS_MODULE_SLOT = 0;
 
+  // Async module callback handlers store their ModuleObject in the first slot.
+  static const unsigned MODULE_SLOT = 0;
+
   static inline size_t offsetOfExtendedSlot(unsigned which) {
     MOZ_ASSERT(which < NUM_EXTENDED_SLOTS);
     return offsetof(FunctionExtended, extendedSlots) +
