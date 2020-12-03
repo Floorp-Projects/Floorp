@@ -105,6 +105,7 @@ class PdfjsParent extends JSWindowActorParent {
       true /* aShouldBypassCache */,
       false /* aSkipPrompt */,
       null /* aReferrerInfo */,
+      null /* aCookieJarSettings*/,
       null /* aSourceDocument */,
       PrivateBrowsingUtils.isBrowserPrivate(
         this.browser
