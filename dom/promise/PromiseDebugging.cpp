@@ -23,9 +23,9 @@
 namespace mozilla {
 namespace dom {
 
-class FlushRejections : public CancelableRunnable {
+class FlushRejections : public DiscardableRunnable {
  public:
-  FlushRejections() : CancelableRunnable("dom::FlushRejections") {}
+  FlushRejections() : DiscardableRunnable("dom::FlushRejections") {}
 
   static void Init() {
     if (!sDispatched.init()) {
