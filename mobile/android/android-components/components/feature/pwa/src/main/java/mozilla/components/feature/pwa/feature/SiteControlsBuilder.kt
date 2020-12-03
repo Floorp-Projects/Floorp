@@ -16,7 +16,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.widget.Toast
 import androidx.core.content.getSystemService
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.feature.pwa.R
 import mozilla.components.feature.session.SessionUseCases
 
@@ -40,7 +40,7 @@ interface SiteControlsBuilder {
     /**
      * Handle actions the user selected in the site controls notification.
      */
-    fun onReceiveBroadcast(context: Context, session: Session, intent: Intent)
+    fun onReceiveBroadcast(context: Context, tab: CustomTabSessionState, intent: Intent)
 
     /**
      * Default implementation of [SiteControlsBuilder] that copies the URL of the site when tapped.
@@ -58,11 +58,11 @@ interface SiteControlsBuilder {
             builder.setContentIntent(copyIntent)
         }
 
-        override fun onReceiveBroadcast(context: Context, session: Session, intent: Intent) {
+        override fun onReceiveBroadcast(context: Context, tab: CustomTabSessionState, intent: Intent) {
             when (intent.action) {
                 ACTION_COPY -> {
                     context.getSystemService<ClipboardManager>()?.let { clipboardManager ->
-                        clipboardManager.setPrimaryClip(ClipData.newPlainText(session.url, session.url))
+                        clipboardManager.setPrimaryClip(ClipData.newPlainText(tab.content.url, tab.content.url))
                         Toast.makeText(
                             context,
                             context.getString(R.string.mozac_feature_pwa_copy_success),
@@ -115,10 +115,10 @@ interface SiteControlsBuilder {
             builder.addAction(refreshAction)
         }
 
-        override fun onReceiveBroadcast(context: Context, session: Session, intent: Intent) {
+        override fun onReceiveBroadcast(context: Context, tab: CustomTabSessionState, intent: Intent) {
             when (intent.action) {
-                ACTION_REFRESH -> reloadUrlUseCase(session)
-                else -> super.onReceiveBroadcast(context, session, intent)
+                ACTION_REFRESH -> reloadUrlUseCase(tab.id)
+                else -> super.onReceiveBroadcast(context, tab, intent)
             }
         }
 

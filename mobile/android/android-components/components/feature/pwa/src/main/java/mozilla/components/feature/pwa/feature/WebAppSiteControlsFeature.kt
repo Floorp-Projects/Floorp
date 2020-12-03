@@ -28,7 +28,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.extension.toMonochromeIconRequest
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.R
 import mozilla.components.feature.session.SessionUseCases
@@ -42,7 +43,7 @@ import mozilla.components.feature.session.SessionUseCases
 @Suppress("LongParameterList")
 class WebAppSiteControlsFeature(
     private val applicationContext: Context,
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionId: String,
     private val manifest: WebAppManifest? = null,
     private val controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.Default(),
@@ -51,7 +52,7 @@ class WebAppSiteControlsFeature(
 
     constructor(
         applicationContext: Context,
-        sessionManager: SessionManager,
+        store: BrowserStore,
         reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
         sessionId: String,
         manifest: WebAppManifest? = null,
@@ -59,7 +60,7 @@ class WebAppSiteControlsFeature(
         icons: BrowserIcons? = null
     ) : this(
         applicationContext,
-        sessionManager,
+        store,
         sessionId,
         manifest,
         controlsBuilder,
@@ -126,8 +127,8 @@ class WebAppSiteControlsFeature(
      * Responds to [PendingIntent]s fired by the site controls notification.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        sessionManager.findSessionById(sessionId)?.also { session ->
-            controlsBuilder.onReceiveBroadcast(context, session, intent)
+        store.state.findCustomTab(sessionId)?.also { tab ->
+            controlsBuilder.onReceiveBroadcast(context, tab, intent)
         }
     }
 

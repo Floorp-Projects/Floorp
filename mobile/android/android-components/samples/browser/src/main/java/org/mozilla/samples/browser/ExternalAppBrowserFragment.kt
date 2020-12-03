@@ -90,7 +90,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
             viewLifecycleOwner.lifecycle.addObserver(
                 WebAppSiteControlsFeature(
                     context?.applicationContext!!,
-                    components.sessionManager,
+                    components.store,
                     components.sessionUseCases.reload,
                     sessionId!!,
                     manifest,

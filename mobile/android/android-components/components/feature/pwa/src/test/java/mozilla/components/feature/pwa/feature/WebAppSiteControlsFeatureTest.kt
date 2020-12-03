@@ -9,8 +9,9 @@ import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createCustomTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.session.SessionUseCases
@@ -21,7 +22,6 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -52,22 +52,22 @@ class WebAppSiteControlsFeatureTest {
 
     @Test
     fun `reload page when reload action is activated`() {
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
         val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase = mock()
 
-        doReturn(session).`when`(sessionManager).findSessionById("session-id")
+        val store = BrowserStore(BrowserState(
+            customTabs = listOf(
+                createCustomTab("https://www.mozilla.org", id = "session-id")
+            )
+        ))
 
-        val feature = WebAppSiteControlsFeature(testContext, sessionManager, reloadUrlUseCase, "session-id", mock())
+        val feature = WebAppSiteControlsFeature(testContext, store, reloadUrlUseCase, "session-id", mock())
         feature.onReceive(testContext, Intent("mozilla.components.feature.pwa.REFRESH"))
 
-        verify(reloadUrlUseCase).invoke(session)
+        verify(reloadUrlUseCase).invoke("session-id")
     }
 
     @Test
     fun `load monochrome icon if defined in manifest`() {
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
         val icons: BrowserIcons = mock()
         val manifest = WebAppManifest(
             name = "Mozilla",
@@ -89,9 +89,12 @@ class WebAppSiteControlsFeatureTest {
             )
         )
 
-        doReturn(session).`when`(sessionManager).findSessionById("session-id")
+        val session = createCustomTab("https://www.mozilla.org", id = "session-id")
+        val store = BrowserStore(BrowserState(
+            customTabs = listOf(session)
+        ))
 
-        val feature = WebAppSiteControlsFeature(testContext, sessionManager, "session-id", manifest, icons = icons)
+        val feature = WebAppSiteControlsFeature(testContext, store, "session-id", manifest, icons = icons)
         feature.onCreate()
 
         verify(icons).loadIcon(IconRequest(
