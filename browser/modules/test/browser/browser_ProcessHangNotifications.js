@@ -120,7 +120,7 @@ TestHangReport.prototype = {
 };
 
 // on dev edition we add a button for js debugging of hung scripts.
-let buttonCount = UpdateUtils.UpdateChannel == "aurora" ? 3 : 2;
+let buttonCount = AppConstants.MOZ_DEV_EDITION ? 3 : 2;
 
 add_task(async function setup() {
   // Create a fake WebExtensionPolicy that we can use for
@@ -155,8 +155,7 @@ add_task(async function terminateScriptTest() {
   let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
-  // Fails on aurora on-push builds, bug 1232204
-  // is(buttons.length, buttonCount, "proper number of buttons");
+  is(buttons.length, buttonCount, "proper number of buttons");
 
   // Click the "Stop It" button, we should get a terminate script callback
   buttons[0].click();
@@ -179,8 +178,7 @@ add_task(async function waitForScriptTest() {
   let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
-  // Fails on aurora on-push builds, bug 1232204
-  // is(buttons.length, buttonCount, "proper number of buttons");
+  is(buttons.length, buttonCount, "proper number of buttons");
 
   await pushPrefs(["browser.hangNotification.waitPeriod", 1000]);
 
@@ -253,8 +251,7 @@ add_task(async function terminatePluginTest() {
   let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
-  // Fails on aurora on-push builds, bug 1232204
-  // is(buttons.length, buttonCount, "proper number of buttons");
+  is(buttons.length, buttonCount, "proper number of buttons");
 
   // Click the "Stop It" button, we should get a terminate script callback
   buttons[0].click();
