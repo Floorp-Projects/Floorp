@@ -366,7 +366,7 @@ impl<T> JS::Rooted<T> {
 
     unsafe fn get_root_stack(
         cx: *mut JSContext,
-    ) -> *mut *mut JS::Rooted<*mut ::std::os::raw::c_void>
+    ) -> *mut *mut JS::Rooted<*mut JS::detail::RootListEntry>
     where
         T: RootKind,
     {
