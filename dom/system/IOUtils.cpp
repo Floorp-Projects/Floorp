@@ -371,8 +371,10 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   RunOnBackgroundThread<Ok>(
       promise,
       [file = std::move(file), createAncestors = aOptions.mCreateAncestors,
-       ignoreExisting = aOptions.mIgnoreExisting]() {
-        return MakeDirectorySync(file, createAncestors, ignoreExisting, 0777);
+       ignoreExisting = aOptions.mIgnoreExisting,
+       permissions = aOptions.mPermissions]() {
+        return MakeDirectorySync(file, createAncestors, ignoreExisting,
+                                 permissions);
       });
 
   return promise.forget();

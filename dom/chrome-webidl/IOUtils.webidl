@@ -276,6 +276,13 @@ dictionary MakeDirectoryOptions {
    * Otherwise, fail if the directory already exists.
    */
   boolean ignoreExisting = true;
+  /**
+   * The file mode to create the directory with.
+   *
+   * This is ignored on Windows.
+   */
+  unsigned long permissions = 0755;
+
 };
 
 /**
