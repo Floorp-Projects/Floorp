@@ -34,7 +34,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/SelfHosting.h"
 
-#include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
+#include "builtin/HandlerFunction-inl.h"  // js::TargetFromHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::PromiseCall
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAnd{DowncastObject,TypeCheckThis}
