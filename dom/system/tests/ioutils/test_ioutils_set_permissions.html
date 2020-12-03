@@ -35,11 +35,14 @@
 
       if (Services.appinfo.OS === "WINNT") {
         is(stat.permissions, 0o444, "Permissions munged on Windows");
+
+        // We need to make the file writable to delete it on Windows.
+        await IOUtils.setPermissions(tempFile, 0o600);
       } else {
         is(stat.permissions, 0o400, "Permissions match");
-
-        await cleanup(tempFile);
       }
+
+      await cleanup(tempFile);
     });
   </script>
 </head>
