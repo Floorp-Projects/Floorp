@@ -362,7 +362,9 @@ class BaselineFrame {
   bool isGlobalFrame() const { return script()->isGlobalCode(); }
   bool isModuleFrame() const { return script()->isModule(); }
   bool isEvalFrame() const { return script()->isForEval(); }
-  bool isFunctionFrame() const { return CalleeTokenIsFunction(calleeToken()); }
+  bool isFunctionFrame() const {
+    return CalleeTokenIsFunction(calleeToken()) && !isModuleFrame();
+  }
   bool isDebuggerEvalFrame() const { return false; }
 
   JitFrameLayout* framePrefix() const {

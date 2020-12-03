@@ -312,6 +312,9 @@ class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
   static AsyncFunctionGeneratorObject* create(JSContext* cx,
                                               HandleFunction asyncGen);
 
+  static AsyncFunctionGeneratorObject* create(JSContext* cx,
+                                              HandleModuleObject module);
+
   PromiseObject* promise() {
     return &getFixedSlot(PROMISE_SLOT).toObject().as<PromiseObject>();
   }
