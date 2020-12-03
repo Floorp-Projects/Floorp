@@ -329,8 +329,8 @@ class nsIContent : public nsINode {
    *                          execution is trusted.
    * @return true if the focus was changed.
    */
-  virtual bool PerformAccesskey(bool aKeyCausesActivation,
-                                bool aIsTrustedEvent) {
+  MOZ_CAN_RUN_SCRIPT virtual bool PerformAccesskey(bool aKeyCausesActivation,
+                                                   bool aIsTrustedEvent) {
     return false;
   }
 
