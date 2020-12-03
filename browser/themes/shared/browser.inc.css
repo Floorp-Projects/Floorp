@@ -42,6 +42,16 @@
   color: @lwtPopupBrighttextLinkColor@;
 }
 
+#PersonalToolbar:-moz-lwtheme .text-link,
+#nav-bar:-moz-lwtheme .text-link {
+  color: #0060df;
+}
+
+#PersonalToolbar[brighttext]:-moz-lwtheme .text-link,
+#nav-bar[brighttext]:-moz-lwtheme .text-link {
+  color: #45a1ff;
+}
+
 /* Toolbar / content area border */
 
 #navigator-toolbox {
