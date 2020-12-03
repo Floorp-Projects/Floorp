@@ -1082,7 +1082,9 @@ void BrowserParent::UpdateDimensions(const nsIntRect& rect,
   hal::GetCurrentScreenConfiguration(&config);
   hal::ScreenOrientation orientation = config.orientation();
   LayoutDeviceIntPoint clientOffset = GetClientOffset();
-  LayoutDeviceIntPoint chromeOffset = -GetChildProcessOffset();
+  LayoutDeviceIntPoint chromeOffset = !GetBrowserBridgeParent()
+                                          ? -GetChildProcessOffset()
+                                          : LayoutDeviceIntPoint();
 
   if (!mUpdatedDimensions || mOrientation != orientation ||
       mDimensions != size || !mRect.IsEqualEdges(rect) ||
