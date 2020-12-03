@@ -35,12 +35,9 @@ interface nsIViewSourceChannel : nsIChannel
     [must_use] attribute nsIURI baseURI;
 
     /**
-     * If true (default), then replaces the nsIRequest* passed to
-     * nsIStreamListener callback functions with itself, so that
-     * nsIViewSourceChannel is available.
-     * Otherwise passes through the the nsIRequest* from the inner channel.
+     * Get the inner channel wrapped by this nsIViewSourceChannel.
      */
-    attribute boolean replaceRequest;
+    [notxpcom, nostdcall] nsIChannel getInnerChannel();
 };
 
 
