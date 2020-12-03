@@ -390,7 +390,9 @@ static void get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test) {
     return;
   }
 
-  get_gles_status(dpy, eglGetProcAddress);
+  if (gles_test) {
+    get_gles_status(dpy, eglGetProcAddress);
+  }
 
   typedef const char* (*PFNEGLGETDISPLAYDRIVERNAMEPROC)(EGLDisplay dpy);
   PFNEGLGETDISPLAYDRIVERNAMEPROC eglGetDisplayDriverName =
