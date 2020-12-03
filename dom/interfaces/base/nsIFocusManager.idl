@@ -99,6 +99,7 @@ interface nsIFocusManager : nsISupports
    * descendant of it (e.g., for `<input type="number">` the focus is redirected
    * to its descendant `<input type="text">`).
    */
+  [can_run_script]
   void setFocus(in Element aElement, in unsigned long aFlags);
 
   /**
