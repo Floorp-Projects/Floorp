@@ -18,7 +18,7 @@ deps = [
     "mozlog>=6.0",
     "mozprocess>=1.2.0,<2",
     "mozprofile~=2.3",
-    "six>=1.10.0,<2",
+    "six>=1.13.0,<2",
 ]
 
 EXTRAS_REQUIRE = {"crash": ["mozcrash >= 2.0"]}

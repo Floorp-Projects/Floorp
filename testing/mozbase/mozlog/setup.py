@@ -12,7 +12,7 @@ DEPS = [
     "blessings>=1.3",
     "mozterm",
     "mozfile",
-    "six >= 1.10.0",
+    "six >= 1.13.0",
 ]
 
 

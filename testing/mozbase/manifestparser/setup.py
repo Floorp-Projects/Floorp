@@ -11,7 +11,7 @@ PACKAGE_VERSION = "2.1.0"
 
 DEPS = [
     "mozlog >= 6.0",
-    "six >= 1.10.0",
+    "six >= 1.13.0",
 ]
 setup(
     name=PACKAGE_NAME,
