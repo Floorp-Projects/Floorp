@@ -518,9 +518,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
  private:
   ~QuotaClient() override;
 
-  template <typename Condition>
-  static void AllowToCloseConnectionsMatching(const Condition& aCondition);
-
   void InitiateShutdown() override;
   bool IsShutdownCompleted() const override;
   nsCString GetShutdownStatus() const override;
@@ -535,6 +532,21 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 typedef nsTArray<RefPtr<Connection>> ConnectionArray;
 
 StaticAutoPtr<ConnectionArray> gOpenConnections;
+
+template <typename Condition>
+void AllowToCloseConnectionsMatching(const Condition& aCondition) {
+  AssertIsOnBackgroundThread();
+
+  if (gOpenConnections) {
+    for (const auto& connection : *gOpenConnections) {
+      MOZ_ASSERT(connection);
+
+      if (aCondition(*connection)) {
+        connection->AllowToClose();
+      }
+    }
+  }
+}
 
 }  // namespace
 
@@ -1803,21 +1815,6 @@ void QuotaClient::AbortAllOperations() {
 void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
 void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
-
-template <typename Condition>
-void QuotaClient::AllowToCloseConnectionsMatching(const Condition& aCondition) {
-  AssertIsOnBackgroundThread();
-
-  if (gOpenConnections) {
-    for (const auto& connection : *gOpenConnections) {
-      MOZ_ASSERT(connection);
-
-      if (aCondition(*connection)) {
-        connection->AllowToClose();
-      }
-    }
-  }
-}
 
 void QuotaClient::InitiateShutdown() {
   AssertIsOnBackgroundThread();
