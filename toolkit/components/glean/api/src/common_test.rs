@@ -29,20 +29,23 @@ fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
     };
     let tmpname = dir.path().display().to_string();
 
-    let cfg = glean_core::Configuration {
+    let cfg = glean::Configuration {
+        upload_enabled: true,
         data_path: tmpname,
         application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
         max_events: None,
         delay_ping_lifetime_io: false,
-        language_binding_name: "Rust".into(),
+        channel: None,
+        server_endpoint: None,
+        uploader: None,
     };
-    let glean = glean_core::Glean::new(cfg).unwrap();
-    glean_core::setup_glean(glean).expect("can't set up global Glean object");
 
-    // This might have been flushed by other tests already, so we ignore the return value.
-    // The dispatch queue is definitely unblocked after this, no matter what.
-    let _ = super::flush_init();
+    let client_info = glean::ClientInfoMetrics {
+        app_build: "test-build".into(),
+        app_display_version: "1.2.3".into(),
+    };
+
+    glean::test_reset_glean(cfg, client_info, true);
 
     dir
 }
