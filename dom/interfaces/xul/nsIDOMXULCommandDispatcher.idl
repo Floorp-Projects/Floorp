@@ -14,8 +14,10 @@ webidl Element;
 [scriptable, uuid(a9fa9fd3-8d62-4f94-9ed8-3ea9c3cf0773)]
 interface nsIDOMXULCommandDispatcher : nsISupports
 {
-            attribute Element focusedElement;
-            attribute mozIDOMWindowProxy focusedWindow;
+  [setter_can_run_script]
+  attribute Element focusedElement;
+  [setter_can_run_script]
+  attribute mozIDOMWindowProxy focusedWindow;
 
   void                      addCommandUpdater(in Element updater,
                                               in AString events,
