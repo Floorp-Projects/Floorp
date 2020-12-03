@@ -3070,7 +3070,7 @@ void Selection::StyledRanges::MaybeFocusCommonEditingHost(
   if (window && !document->HasFlag(NODE_IS_EDITABLE) &&
       nsContentUtils::GetHTMLEditor(presContext)) {
     RefPtr<Element> newEditingHost = GetCommonEditingHost();
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
     nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
     nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
         window, nsFocusManager::eOnlyCurrentWindow,

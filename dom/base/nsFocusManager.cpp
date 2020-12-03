@@ -491,7 +491,7 @@ nsFocusManager::ElementIsFocusable(Element* aElement, uint32_t aFlags,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, Element* aStartElement,
                           uint32_t aType, uint32_t aFlags, Element** aElement) {
   *aElement = nullptr;

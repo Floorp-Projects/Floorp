@@ -7399,14 +7399,11 @@ nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
 
   // if a link is focused, refocus with the FLAG_SHOWRING flag set. This makes
   // it easy to tell which link was last clicked when going back a page.
-  Element* focusedElement = inner->GetFocusedElement();
+  RefPtr<Element> focusedElement = inner->GetFocusedElement();
   if (nsContentUtils::ContentIsLink(focusedElement)) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (fm) {
-      // XXXbz Do we need the stack strong ref here?
-      RefPtr<Element> kungFuDeathGrip(focusedElement);
-      fm->SetFocus(kungFuDeathGrip, nsIFocusManager::FLAG_NOSCROLL |
-                                        nsIFocusManager::FLAG_SHOWRING);
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+      fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL |
+                                       nsIFocusManager::FLAG_SHOWRING);
     }
   }
 
