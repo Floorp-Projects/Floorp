@@ -48,6 +48,7 @@ def add_shippable_secrets(config, tasks):
                 ('leanplum', '.leanplum_token'),
                 ('sentry_dsn', '.sentry_token'),
                 ('mls', '.mls_token'),
+                ('nimbus_url', '.nimbus'),
             )])
         else:
             dummy_secrets.extend([{

@@ -331,6 +331,30 @@ android.applicationVariants.all { variant ->
         buildConfigField 'String', 'MLS_TOKEN', '""'
         println("X_X")
     }
+
+// -------------------------------------------------------------------------------------------------
+// Nimbus: Read endpoint from local.properties of a local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Nimbus endpoint: ")
+
+    if (!isDebug) {
+        try {
+            def url = new File("${rootDir}/.nimbus").text.trim()
+            buildConfigField 'String', 'NIMBUS_ENDPOINT', '"' + url + '"'
+            println "(Added from .nimbus file)"
+        } catch (FileNotFoundException ignored) {
+            buildConfigField 'String', 'NIMBUS_ENDPOINT', 'null'
+            println("X_X")
+        }
+    } else if (gradle.hasProperty("localProperties.nimbus.remote-settings.url")) {
+        def url=gradle.getProperty("localProperties.nimbus.remote-settings.url")
+        buildConfigField 'String', 'NIMBUS_ENDPOINT', '"' + url + '"'
+        println "(Added from local.properties file)"
+    } else {
+        buildConfigField 'String', 'NIMBUS_ENDPOINT', 'null'
+        println("--")
+    }
 }
 
 androidExtensions {

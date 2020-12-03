@@ -79,12 +79,12 @@ gen-external-apklibs
 # macOS
 .DS_Store
 
-# Token files
+# Secrets files, e.g. tokens
 .leanplum_token
 .adjust_token
 .sentry_token
 .mls_token
-
+.nimbus
 
 # Python Byte-compiled / optimized / DLL files
 __pycache__/
