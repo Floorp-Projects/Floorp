@@ -10,6 +10,7 @@
 #include "mozilla/Unused.h"
 
 #include "builtin/ModuleObject.h"          // ModuleObject
+#include "frontend/AsyncEmitter.h"         // AsyncEmitter
 #include "frontend/BytecodeEmitter.h"      // BytecodeEmitter
 #include "frontend/FunctionSyntaxKind.h"   // FunctionSyntaxKind
 #include "frontend/ModuleSharedContext.h"  // ModuleSharedContext
@@ -355,6 +356,10 @@ bool FunctionScriptEmitter::prepareForParameters() {
     }
   }
 
+  if (funbox_->needsPromiseResult()) {
+    asyncEmitter_.emplace(bce_);
+  }
+
   if (bodyEnd_) {
     bce_->setFunctionBodyEndPos(*bodyEnd_);
   }
@@ -396,14 +401,15 @@ bool FunctionScriptEmitter::prepareForParameters() {
     }
   }
 
-  // Parameters can't reuse the reject try-catch block from the function body,
-  // because the body may have pushed an additional var-environment. This
-  // messes up scope resolution for the |.generator| variable, because we'd
-  // need different hops to reach |.generator| depending on whether the error
-  // was thrown from the parameters or the function body.
-  if (funbox_->hasParameterExprs && funbox_->needsPromiseResult()) {
-    if (!emitAsyncFunctionRejectPrologue()) {
-      return false;
+  if (funbox_->needsPromiseResult()) {
+    if (funbox_->hasParameterExprs) {
+      if (!asyncEmitter_->prepareForParamsWithExpression()) {
+        return false;
+      }
+    } else {
+      if (!asyncEmitter_->prepareForParamsWithoutExpression()) {
+        return false;
+      }
     }
   }
 
@@ -418,8 +424,8 @@ bool FunctionScriptEmitter::prepareForBody() {
 
   //                [stack]
 
-  if (rejectTryCatch_) {
-    if (!emitAsyncFunctionRejectEpilogue()) {
+  if (funbox_->needsPromiseResult()) {
+    if (!asyncEmitter_->emitParamsEpilogue()) {
       return false;
     }
   }
@@ -430,7 +436,7 @@ bool FunctionScriptEmitter::prepareForBody() {
   }
 
   if (funbox_->needsPromiseResult()) {
-    if (!emitAsyncFunctionRejectPrologue()) {
+    if (!asyncEmitter_->prepareForBody()) {
       return false;
     }
   }
@@ -447,47 +453,6 @@ bool FunctionScriptEmitter::prepareForBody() {
 #ifdef DEBUG
   state_ = State::Body;
 #endif
-  return true;
-}
-
-bool FunctionScriptEmitter::emitAsyncFunctionRejectPrologue() {
-  rejectTryCatch_.emplace(bce_, TryEmitter::Kind::TryCatch,
-                          TryEmitter::ControlKind::NonSyntactic);
-  return rejectTryCatch_->emitTry();
-}
-
-bool FunctionScriptEmitter::emitAsyncFunctionRejectEpilogue() {
-  if (!rejectTryCatch_->emitCatch()) {
-    //              [stack] EXC
-    return false;
-  }
-
-  if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-    //              [stack] EXC GEN
-    return false;
-  }
-  if (!bce_->emit2(JSOp::AsyncResolve,
-                   uint8_t(AsyncFunctionResolveKind::Reject))) {
-    //              [stack] PROMISE
-    return false;
-  }
-  if (!bce_->emit1(JSOp::SetRval)) {
-    //              [stack]
-    return false;
-  }
-  if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-    //              [stack] GEN
-    return false;
-  }
-  if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
-    //              [stack]
-    return false;
-  }
-
-  if (!rejectTryCatch_->emitEnd()) {
-    return false;
-  }
-  rejectTryCatch_.reset();
   return true;
 }
 
@@ -559,58 +524,73 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
 
 bool FunctionScriptEmitter::emitEndBody() {
   MOZ_ASSERT(state_ == State::Body);
-
   //                [stack]
 
   if (funbox_->needsFinalYield()) {
     // If we fall off the end of a generator, do a final yield.
-    bool needsIteratorResult = funbox_->needsIteratorResult();
-    if (needsIteratorResult) {
+    if (funbox_->needsIteratorResult()) {
+      MOZ_ASSERT(!funbox_->needsPromiseResult());
+      // Emit final yield bytecode for generators, for example:
+      // function gen * () { ... }
       if (!bce_->emitPrepareIteratorResult()) {
         //          [stack] RESULT
         return false;
       }
-    }
 
-    if (!bce_->emit1(JSOp::Undefined)) {
-      //            [stack] RESULT? UNDEF
-      return false;
-    }
+      if (!bce_->emit1(JSOp::Undefined)) {
+        //            [stack] RESULT? UNDEF
+        return false;
+      }
 
-    if (needsIteratorResult) {
       if (!bce_->emitFinishIteratorResult(true)) {
         //          [stack] RESULT
         return false;
       }
-    }
 
-    if (funbox_->needsPromiseResult()) {
+      if (!bce_->emit1(JSOp::SetRval)) {
+        //            [stack]
+        return false;
+      }
+
       if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-        //          [stack] RVAL GEN
+        //            [stack] GEN
         return false;
       }
 
-      if (!bce_->emit2(JSOp::AsyncResolve,
-                       uint8_t(AsyncFunctionResolveKind::Fulfill))) {
-        //          [stack] PROMISE
+      // No need to check for finally blocks, etc as in EmitReturn.
+      if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
+        //            [stack]
         return false;
       }
-    }
+    } else if (funbox_->needsPromiseResult()) {
+      // Emit final yield bytecode for async functions, for example:
+      // async function deferred() { ... }
+      if (!asyncEmitter_->emitEnd()) {
+        return false;
+      }
+    } else {
+      // Emit final yield bytecode for async generators, for example:
+      // async function asyncgen * () { ... }
+      if (!bce_->emit1(JSOp::Undefined)) {
+        //            [stack] RESULT? UNDEF
+        return false;
+      }
 
-    if (!bce_->emit1(JSOp::SetRval)) {
-      //            [stack]
-      return false;
-    }
+      if (!bce_->emit1(JSOp::SetRval)) {
+        //            [stack]
+        return false;
+      }
 
-    if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-      //            [stack] GEN
-      return false;
-    }
+      if (!bce_->emitGetDotGeneratorInInnermostScope()) {
+        //            [stack] GEN
+        return false;
+      }
 
-    // No need to check for finally blocks, etc as in EmitReturn.
-    if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
-      //            [stack]
-      return false;
+      // No need to check for finally blocks, etc as in EmitReturn.
+      if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
+        //            [stack]
+        return false;
+      }
     }
   } else {
     // Non-generator functions just return |undefined|. The
@@ -633,12 +613,6 @@ bool FunctionScriptEmitter::emitEndBody() {
   if (funbox_->isDerivedClassConstructor()) {
     if (!bce_->emitCheckDerivedClassConstructorReturn()) {
       //            [stack]
-      return false;
-    }
-  }
-
-  if (rejectTryCatch_) {
-    if (!emitAsyncFunctionRejectEpilogue()) {
       return false;
     }
   }
