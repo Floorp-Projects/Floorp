@@ -624,7 +624,6 @@ class TaskClusterImagesProvider(MachCommandBase):
         "or mozilla-inbound)",
     )
     def load_image(self, image_name, task_id, tag):
-        self._ensure_zstd()
         from taskgraph.docker import load_image_by_name, load_image_by_task_id
 
         if not image_name and not task_id:
