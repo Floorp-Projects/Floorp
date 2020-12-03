@@ -701,6 +701,21 @@ bool ParseContext::declareDotGeneratorName() {
   return true;
 }
 
+bool ParseContext::declareTopLevelDotGeneratorName() {
+  // Provide a .generator binding on the module scope for compatibility with
+  // generator code, which expect to find it on the CallObject for normal
+  // generators.
+  MOZ_ASSERT(
+      sc()->isModuleContext(),
+      "Tried to declare top level dot generator in a non-module context.");
+  ParseContext::Scope& modScope = varScope();
+  const ParserName* dotGenerator = sc()->cx_->parserNames().dotGenerator;
+  AddDeclaredNamePtr p = modScope.lookupDeclaredNameForAdd(dotGenerator);
+  return p ||
+         modScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,
+                                  DeclaredNameInfo::npos);
+}
+
 }  // namespace frontend
 
 }  // namespace js
