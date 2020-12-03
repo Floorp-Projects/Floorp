@@ -646,8 +646,7 @@ class nsBlockFrame : public nsContainerFrame {
   /** Reflow pushed floats
    */
   void ReflowPushedFloats(BlockReflowInput& aState,
-                          mozilla::OverflowAreas& aOverflowAreas,
-                          nsReflowStatus& aStatus);
+                          mozilla::OverflowAreas& aOverflowAreas);
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)
    */
