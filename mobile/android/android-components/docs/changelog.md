@@ -28,6 +28,10 @@ permalink: /changelog/
 * **browser-menu**:
   * 🚒 Bug fixed [issue #9101](https://github.com/mozilla-mobile/android-components/issues/9101) - Fix BrowserMenu position after rotating the screen on Android <=23
 
+* **feature-sitepermissions**
+  * ⚠️ **This is a breaking change**: The `SitePermissionsRules` constructor, now requires a new parameter `mediaKeySystemAccess`.
+  * 🌟 Added support for EME permission prompts, see [#7121](https://github.com/mozilla-mobile/android-components/issues/7121).
+
 # 68.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v67.0.0...v68.0.0)

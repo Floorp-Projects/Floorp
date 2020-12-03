@@ -162,6 +162,7 @@ class SitePermissionsStorageTest {
                 bluetooth = ALLOWED,
                 autoplayAudible = BLOCKED,
                 autoplayInaudible = NO_DECISION,
+                mediaKeySystemAccess = NO_DECISION,
                 savedAt = 0
             ),
             SitePermissionsEntity(
@@ -174,6 +175,7 @@ class SitePermissionsStorageTest {
                 bluetooth = ALLOWED,
                 autoplayAudible = BLOCKED,
                 autoplayInaudible = NO_DECISION,
+                mediaKeySystemAccess = NO_DECISION,
                 savedAt = 0
             )
         )

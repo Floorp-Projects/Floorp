@@ -23,6 +23,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permiss
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.NOTIFICATION
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MEDIA_KEY_SYSTEM_ACCESS
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.toSitePermissionsEntity
 
@@ -116,6 +117,7 @@ class SitePermissionsStorage(
                 map.putIfAllowed(LOCATION, location, permission)
                 map.putIfAllowed(AUTOPLAY_AUDIBLE, autoplayAudible, permission)
                 map.putIfAllowed(AUTOPLAY_INAUDIBLE, autoplayInaudible, permission)
+                map.putIfAllowed(MEDIA_KEY_SYSTEM_ACCESS, mediaKeySystemAccess, permission)
             }
         }
         return map
@@ -173,6 +175,6 @@ class SitePermissionsStorage(
 
     enum class Permission {
         MICROPHONE, BLUETOOTH, CAMERA, LOCAL_STORAGE, NOTIFICATION, LOCATION, AUTOPLAY_AUDIBLE,
-        AUTOPLAY_INAUDIBLE
+        AUTOPLAY_INAUDIBLE, MEDIA_KEY_SYSTEM_ACCESS
     }
 }

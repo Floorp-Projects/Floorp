@@ -25,6 +25,7 @@ class SitePermissionEntityTest {
             bluetooth = ALLOWED,
             autoplayInaudible = BLOCKED,
             autoplayAudible = NO_DECISION,
+            mediaKeySystemAccess = NO_DECISION,
             savedAt = 0
         )
 
@@ -40,6 +41,7 @@ class SitePermissionEntityTest {
             assertEquals(bluetooth, domainClass.bluetooth)
             assertEquals(autoplayAudible, domainClass.autoplayAudible)
             assertEquals(autoplayInaudible, domainClass.autoplayInaudible)
+            assertEquals(mediaKeySystemAccess, domainClass.mediaKeySystemAccess)
             assertEquals(savedAt, domainClass.savedAt)
         }
     }
@@ -54,6 +56,9 @@ class SitePermissionEntityTest {
             microphone = NO_DECISION,
             camera = NO_DECISION,
             bluetooth = ALLOWED,
+            autoplayInaudible = BLOCKED,
+            autoplayAudible = NO_DECISION,
+            mediaKeySystemAccess = NO_DECISION,
             savedAt = 0
         )
 
@@ -67,6 +72,9 @@ class SitePermissionEntityTest {
             assertEquals(microphone, domainClass.microphone)
             assertEquals(camera, domainClass.camera)
             assertEquals(bluetooth, domainClass.bluetooth)
+            assertEquals(autoplayAudible, domainClass.autoplayAudible)
+            assertEquals(autoplayInaudible, domainClass.autoplayInaudible)
+            assertEquals(mediaKeySystemAccess, domainClass.mediaKeySystemAccess)
             assertEquals(savedAt, domainClass.savedAt)
         }
     }

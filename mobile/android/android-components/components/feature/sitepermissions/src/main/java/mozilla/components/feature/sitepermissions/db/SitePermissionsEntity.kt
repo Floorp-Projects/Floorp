@@ -43,6 +43,9 @@ internal data class SitePermissionsEntity(
     @ColumnInfo(name = "autoplay_inaudible")
     var autoplayInaudible: SitePermissions.Status,
 
+    @ColumnInfo(name = "media_key_system_access")
+    var mediaKeySystemAccess: SitePermissions.Status,
+
     @ColumnInfo(name = "saved_at")
     var savedAt: Long
 ) {
@@ -58,6 +61,7 @@ internal data class SitePermissionsEntity(
             localStorage,
             autoplayAudible,
             autoplayInaudible,
+            mediaKeySystemAccess,
             savedAt
         )
     }
@@ -74,6 +78,7 @@ internal fun SitePermissions.toSitePermissionsEntity(): SitePermissionsEntity {
         localStorage,
         autoplayAudible,
         autoplayInaudible,
+        mediaKeySystemAccess,
         savedAt
     )
 }

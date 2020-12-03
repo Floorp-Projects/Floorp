@@ -19,7 +19,8 @@ data class SitePermissionsRules internal constructor(
     val microphone: Action,
     val autoplayAudible: Action,
     val autoplayInaudible: Action,
-    val persistentStorage: Action
+    val persistentStorage: Action,
+    val mediaKeySystemAccess: Action
 ) {
 
     constructor(
@@ -29,7 +30,8 @@ data class SitePermissionsRules internal constructor(
         microphone: Action,
         autoplayAudible: AutoplayAction,
         autoplayInaudible: AutoplayAction,
-        persistentStorage: Action
+        persistentStorage: Action,
+        mediaKeySystemAccess: Action
     ) : this(
         camera = camera,
         location = location,
@@ -37,7 +39,8 @@ data class SitePermissionsRules internal constructor(
         microphone = microphone,
         autoplayAudible = autoplayAudible.toAction(),
         autoplayInaudible = autoplayInaudible.toAction(),
-        persistentStorage = persistentStorage
+        persistentStorage = persistentStorage,
+        mediaKeySystemAccess = mediaKeySystemAccess
     )
 
     enum class Action {
@@ -93,6 +96,9 @@ data class SitePermissionsRules internal constructor(
             is Permission.ContentAutoPlayInaudible -> {
                 autoplayInaudible
             }
+            is Permission.ContentMediaKeySystemAccess -> {
+                mediaKeySystemAccess
+            }
             else -> ASK_TO_ALLOW
         }
     }
@@ -118,6 +124,7 @@ data class SitePermissionsRules internal constructor(
                 autoplayAudible = autoplayAudible.toStatus(),
                 autoplayInaudible = autoplayInaudible.toStatus(),
                 localStorage = persistentStorage.toStatus(),
+                mediaKeySystemAccess = mediaKeySystemAccess.toStatus(),
                 savedAt = savedAt
         )
     }

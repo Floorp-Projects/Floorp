@@ -17,7 +17,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 /**
  * Internal database for saving site permissions.
  */
-@Database(entities = [SitePermissionsEntity::class], version = 3)
+@Database(entities = [SitePermissionsEntity::class], version = 4)
 @TypeConverters(StatusConverter::class)
 internal abstract class SitePermissionsDatabase : RoomDatabase() {
     abstract fun sitePermissionsDao(): SitePermissionsDao
@@ -38,6 +38,8 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
                 Migrations.migration_1_2
             ).addMigrations(
                 Migrations.migration_2_3
+            ).addMigrations(
+                Migrations.migration_3_4
             ).build().also { instance = it }
         }
     }
@@ -95,6 +97,19 @@ internal object Migrations {
                         " SET autoplay_audible = -1, " + // BLOCKED by default
                         " `autoplay_inaudible` = 1" // ALLOWED by default
                 )
+            }
+        }
+    }
+
+    @Suppress("MagicNumber")
+    val migration_3_4 = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            val hasEmeColumn = database.query("SELECT * FROM site_permissions").columnCount == 11
+            if (!hasEmeColumn) {
+                database.execSQL(
+                        "ALTER TABLE site_permissions ADD COLUMN media_key_system_access INTEGER NOT NULL DEFAULT 0")
+                // default is NO_DECISION
+                database.execSQL("UPDATE site_permissions SET media_key_system_access = 0")
             }
         }
     }

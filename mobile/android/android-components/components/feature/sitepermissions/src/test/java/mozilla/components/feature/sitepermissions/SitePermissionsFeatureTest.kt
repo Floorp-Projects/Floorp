@@ -772,7 +772,8 @@ class SitePermissionsFeatureTest {
                 microphone = SitePermissionsRules.Action.BLOCKED,
                 autoplayAudible = SitePermissionsRules.Action.BLOCKED,
                 autoplayInaudible = SitePermissionsRules.Action.ALLOWED,
-                persistentStorage = SitePermissionsRules.Action.BLOCKED
+                persistentStorage = SitePermissionsRules.Action.BLOCKED,
+                mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
         )
 
         sitePermissionFeature.sitePermissionsRules = rules
@@ -787,6 +788,7 @@ class SitePermissionsFeatureTest {
         assertEquals(BLOCKED, sitePermissions.autoplayAudible)
         assertEquals(ALLOWED, sitePermissions.autoplayInaudible)
         assertEquals(BLOCKED, sitePermissions.localStorage)
+        assertEquals(NO_DECISION, sitePermissions.mediaKeySystemAccess)
     }
 
     @Test

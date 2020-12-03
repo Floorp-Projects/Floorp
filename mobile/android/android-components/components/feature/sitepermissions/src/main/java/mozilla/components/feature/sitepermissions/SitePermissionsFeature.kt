@@ -35,6 +35,7 @@ import mozilla.components.concept.engine.permission.Permission.ContentNotificati
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
+import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.AppLocationCoarse
 import mozilla.components.concept.engine.permission.Permission.AppLocationFine
 import mozilla.components.concept.engine.permission.Permission.AppAudio
@@ -438,6 +439,9 @@ class SitePermissionsFeature(
                 is ContentPersistentStorage -> {
                     permissionFromStore.localStorage.doNotAskAgain()
                 }
+                is ContentMediaKeySystemAccess -> {
+                    permissionFromStore.mediaKeySystemAccess.doNotAskAgain()
+                }
                 else -> false
             }
         }
@@ -499,6 +503,9 @@ class SitePermissionsFeature(
             is ContentPersistentStorage -> {
                 sitePermissions.copy(localStorage = status)
             }
+            is ContentMediaKeySystemAccess -> {
+                sitePermissions.copy(mediaKeySystemAccess = status)
+            }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
         }
@@ -526,6 +533,7 @@ class SitePermissionsFeature(
         }
     }
 
+    @Suppress("LongMethod")
     @VisibleForTesting
     internal fun handlingSingleContentPermissions(
         permissionRequest: PermissionRequest,
@@ -588,6 +596,17 @@ class SitePermissionsFeature(
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_persistent_storage_title,
                     R.drawable.mozac_ic_storage,
+                    showDoNotAskAgainCheckBox = false,
+                    shouldSelectRememberChoice = true
+                )
+            }
+            is ContentMediaKeySystemAccess -> {
+                createSinglePermissionPrompt(
+                    context,
+                    host,
+                    permissionRequest,
+                    R.string.mozac_feature_sitepermissions_media_key_system_access_title,
+                    R.drawable.mozac_ic_link,
                     showDoNotAskAgainCheckBox = false,
                     shouldSelectRememberChoice = true
                 )
@@ -727,6 +746,9 @@ internal fun isPermissionGranted(
         is ContentPersistentStorage -> {
             permissionFromStorage.localStorage.isAllowed()
         }
+        is ContentMediaKeySystemAccess -> {
+            permissionFromStorage.mediaKeySystemAccess.isAllowed()
+        }
         else ->
             throw InvalidParameterException("$permission is not a valid permission.")
     }
@@ -739,7 +761,8 @@ private fun Permission.isSupported(): Boolean {
         is ContentPersistentStorage,
         is ContentAudioCapture, is ContentAudioMicrophone,
         is ContentVideoCamera, is ContentVideoCapture,
-        is ContentAutoPlayAudible, is ContentAutoPlayInaudible -> true
+        is ContentAutoPlayAudible, is ContentAutoPlayInaudible,
+        is ContentMediaKeySystemAccess -> true
         else -> false
     }
 }

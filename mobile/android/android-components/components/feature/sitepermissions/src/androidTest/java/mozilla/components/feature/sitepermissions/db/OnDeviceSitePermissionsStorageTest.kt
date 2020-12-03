@@ -127,4 +127,29 @@ class OnDeviceSitePermissionsStorageTest {
             assertEquals(Status.ALLOWED.id, cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_inaudible")))
         }
     }
+
+    @Test
+    fun migrate3to4() {
+        helper.createDatabase(MIGRATION_TEST_DB, 3).apply {
+            query("SELECT * FROM site_permissions").use { cursor ->
+                assertEquals(10, cursor.columnCount)
+            }
+            execSQL(
+                    "INSERT INTO " +
+                            "site_permissions " +
+                            "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,saved_at) " +
+                            "VALUES " +
+                            "('mozilla.org',1,1,1,1,1,1,1,1,1)"
+            )
+        }
+
+        val dbVersion3 = helper.runMigrationsAndValidate(MIGRATION_TEST_DB, 4, true, Migrations.migration_3_4)
+
+        dbVersion3.query("SELECT * FROM site_permissions").use { cursor ->
+            assertEquals(11, cursor.columnCount)
+
+            cursor.moveToFirst()
+            assertEquals(Status.NO_DECISION.id, cursor.getInt(cursor.getColumnIndexOrThrow("media_key_system_access")))
+        }
+    }
 }

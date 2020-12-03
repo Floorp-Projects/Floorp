@@ -23,6 +23,7 @@ data class SitePermissions(
     val localStorage: Status = NO_DECISION,
     val autoplayAudible: Status = NO_DECISION,
     val autoplayInaudible: Status = NO_DECISION,
+    val mediaKeySystemAccess: Status = NO_DECISION,
     val savedAt: Long
 ) : Parcelable {
     enum class Status(
@@ -53,6 +54,7 @@ data class SitePermissions(
             Permission.LOCATION -> location
             Permission.AUTOPLAY_AUDIBLE -> autoplayAudible
             Permission.AUTOPLAY_INAUDIBLE -> autoplayInaudible
+            Permission.MEDIA_KEY_SYSTEM_ACCESS -> mediaKeySystemAccess
         }
     }
 }
