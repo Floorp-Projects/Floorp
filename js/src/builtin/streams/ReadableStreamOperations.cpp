@@ -29,7 +29,7 @@
 #include "vm/ObjectOperations.h"  // js::GetProperty
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 
-#include "builtin/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
+#include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithValue
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::Unwrap{Callee,Internal}Slot

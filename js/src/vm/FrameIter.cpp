@@ -532,15 +532,6 @@ bool FrameIter::isEvalFrame() const {
   MOZ_CRASH("Unexpected state");
 }
 
-bool FrameIter::isModuleFrame() const {
-  MOZ_ASSERT(!done());
-
-  if (hasScript()) {
-    return script()->isModule();
-  }
-  MOZ_CRASH("Unexpected state");
-}
-
 bool FrameIter::isFunctionFrame() const {
   MOZ_ASSERT(!done());
   switch (data_.state_) {

@@ -1998,72 +1998,6 @@ static bool intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp) {
   return ModuleObject::execute(cx, module, args.rval());
 }
 
-static bool intrinsic_IsTopLevelAwaitEnabled(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-  bool topLevelAwait = cx->options().topLevelAwait();
-  args.rval().setBoolean(topLevelAwait);
-  return true;
-}
-
-static bool intrinsic_GetAsyncCycleRoot(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  JSObject* result = js::GetAsyncCycleRoot(module);
-  if (!result) {
-    return false;
-  }
-  args.rval().setObject(*result);
-  return true;
-}
-
-static bool intrinsic_AppendAsyncParentModule(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject self(cx, &args[0].toObject().as<ModuleObject>());
-  RootedModuleObject parent(cx, &args[1].toObject().as<ModuleObject>());
-  return ModuleObject::appendAsyncParentModule(cx, self, parent);
-}
-
-static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
-                                               Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject self(cx, &args[0].toObject().as<ModuleObject>());
-  PromiseObject* result = ModuleObject::createTopLevelCapability(cx, self);
-  if (!result) {
-    return false;
-  }
-  args.rval().setObject(*result);
-  return true;
-}
-
-static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
-                                                      unsigned argc,
-                                                      Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  ModuleObject::topLevelCapabilityResolve(cx, module);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_ModuleTopLevelCapabilityReject(JSContext* cx,
-                                                     unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  HandleValue error = args[1];
-  ModuleObject::topLevelCapabilityReject(cx, module, error);
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_NewModuleNamespace(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2648,14 +2582,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("InstantiateModuleFunctionDeclarations",
           intrinsic_InstantiateModuleFunctionDeclarations, 1, 0),
     JS_FN("ExecuteModule", intrinsic_ExecuteModule, 1, 0),
-    JS_FN("IsTopLevelAwaitEnabled", intrinsic_IsTopLevelAwaitEnabled, 0, 0),
-    JS_FN("GetAsyncCycleRoot", intrinsic_GetAsyncCycleRoot, 1, 0),
-    JS_FN("AppendAsyncParentModule", intrinsic_AppendAsyncParentModule, 2, 0),
-    JS_FN("CreateTopLevelCapability", intrinsic_CreateTopLevelCapability, 1, 0),
-    JS_FN("ModuleTopLevelCapabilityResolve",
-          intrinsic_ModuleTopLevelCapabilityResolve, 1, 0),
-    JS_FN("ModuleTopLevelCapabilityReject",
-          intrinsic_ModuleTopLevelCapabilityReject, 2, 0),
     JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
     JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4,
           0),

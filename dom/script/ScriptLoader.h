@@ -411,60 +411,9 @@ class ScriptLoader final : public nsISupports {
                                     JS::MutableHandle<JSObject*> aModuleOut);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
-
-  /**
-   * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
-   * case where we do not have `aEvaluationPromise`. As there is no evaluation
-   * Promise, JS::FinishDynamicImport will always reject.
-   *
-   * @param aRequest
-   *        The module load request for the dynamic module.
-   * @param aResult
-   *        The result of running ModuleEvaluate -- If this is successful, then
-   *        we can await the associated EvaluationPromise.
-   */
-  void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
-                                    nsresult aResult);
-
-  /**
-   * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
-   * `aEvaluationPromise` which, if null, exits early.
-   *
-   * This is the non-tla version, which works with modules which return
-   * completion records.
-   *
-   * @param aCX
-   *        The JSContext for the module.
-   * @param aRequest
-   *        The module load request for the dynamic module.
-   * @param aResult
-   *        The result of running ModuleEvaluate
-   */
-  void FinishDynamicImport_NoTLA(JSContext* aCx, ModuleLoadRequest* aRequest,
-                                 nsresult aResult);
-
-  /**
-   * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
-   * `aEvaluationPromise` which, if null, exits early.
-   *
-   * This is the Top Level Await version, which works with modules which return
-   * promises.
-   *
-   * @param aCX
-   *        The JSContext for the module.
-   * @param aRequest
-   *        The module load request for the dynamic module.
-   * @param aResult
-   *        The result of running ModuleEvaluate -- If this is successful, then
-   *        we can await the associated EvaluationPromise.
-   * @param aEvaluationPromise
-   *        The evaluation promise returned from evaluating the module. If this
-   *        is null, JS::FinishDynamicImport will reject the dynamic import
-   *        module promise.
-   */
+  void FinishDynamicImport(ModuleLoadRequest* aRequest, nsresult aResult);
   void FinishDynamicImport(JSContext* aCx, ModuleLoadRequest* aRequest,
-                           nsresult aResult,
-                           JS::Handle<JSObject*> aEvaluationPromise);
+                           nsresult aResult);
 
   /*
    * Get the currently active script. This is used as the initiating script when
