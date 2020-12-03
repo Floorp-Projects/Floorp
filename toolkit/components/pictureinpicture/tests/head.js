@@ -103,9 +103,11 @@ async function triggerPictureInPicture(browser, videoID) {
     }, "Video is being cloned visually.");
   });
   let win = await domWindowOpened;
-  await win.promiseDocumentFlushed(() => {});
-  await videoReady;
-  await SimpleTest.promiseFocus(win);
+  await Promise.all([
+    SimpleTest.promiseFocus(win),
+    win.promiseDocumentFlushed(() => {}),
+    videoReady,
+  ]);
   return win;
 }
 
