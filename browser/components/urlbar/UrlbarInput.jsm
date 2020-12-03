@@ -2255,7 +2255,18 @@ class UrlbarInput {
     } else {
       value = value + suffix;
     }
-    value = "http://www." + value;
+
+    try {
+      const info = Services.uriFixup.getFixupURIInfo(
+        value,
+        Ci.nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI
+      );
+      value = info.fixedURI.spec;
+    } catch (ex) {
+      Cu.reportError(
+        `An error occured while trying to fixup "${value}": ${ex}`
+      );
+    }
 
     this.value = value;
     return value;
