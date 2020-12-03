@@ -1,0 +1,24 @@
+<html>
+<body>
+    <style>
+        html {
+            -moz-transform-style: preserve-3d;
+        }
+        div,html {
+            display: inline-grid;
+            grid-template-columns: subgrid;
+        }
+        div {
+            position: fixed;
+        }
+    </style>
+    <script>
+      window.addEventListener('load', () => {
+        const div = document.createElementNS('http://www.w3.org/1999/xhtml', 'div')
+        const text = document.createTextNode('BAR')
+        div.appendChild(text)
+        document.documentElement.appendChild(div)
+      })
+    </script>
+</body>
+</html>
