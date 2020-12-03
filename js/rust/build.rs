@@ -215,6 +215,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::Compartment",
     "JS::Latin1Char",
     "JS::detail::RootedPtr",
+    "JS::detail::RootListEntry",
     "JS::MutableHandle",
     "JS::MutableHandleObject",
     "JS::MutableHandleValue",
