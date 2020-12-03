@@ -17,11 +17,6 @@
 #define TLS_EARLY_DATA_AVAILABLE_BUT_NOT_USED 1
 #define TLS_EARLY_DATA_AVAILABLE_AND_USED 2
 
-#define ESNI_SUCCESSFUL 0
-#define ESNI_FAILED 1
-#define NO_ESNI_SUCCESSFUL 2
-#define NO_ESNI_FAILED 3
-
 #include "ASpdySession.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/Telemetry.h"
@@ -443,8 +438,6 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
   nsCOMPtr<nsITransportSecurityInfo> info;
   nsCOMPtr<nsISSLSocketControl> ssl;
   nsAutoCString negotiatedNPN;
-  // This is neede for telemetry
-  bool handshakeSucceeded = false;
 
   GetSecurityInfo(getter_AddRefs(securityInfo));
   if (!securityInfo) {
@@ -560,8 +553,6 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
     LOG1(("nsHttpConnection::EnsureNPNComplete %p [%s] negotiated to '%s'%s\n",
           this, mConnInfo->HashKey().get(), negotiatedNPN.get(),
           mTLSFilter ? " [Double Tunnel]" : ""));
-
-    handshakeSucceeded = true;
 
     int16_t tlsVersion;
     ssl->GetSSLVersionUsed(&tlsVersion);
@@ -699,18 +690,6 @@ npnComplete:
     // We have to reset this here, just in case we end up starting spdy again,
     // so it can actually do everything it needs to do.
     mDid0RTTSpdy = false;
-  }
-
-  if (ssl) {
-    // Telemetry for tls failure rate with and without esni;
-    bool esni = false;
-    if (NS_SUCCEEDED(mSocketTransport->GetEsniUsed(&esni))) {
-      Telemetry::Accumulate(
-          Telemetry::ESNI_NOESNI_TLS_SUCCESS_RATE,
-          (esni)
-              ? ((handshakeSucceeded) ? ESNI_SUCCESSFUL : ESNI_FAILED)
-              : ((handshakeSucceeded) ? NO_ESNI_SUCCESSFUL : NO_ESNI_FAILED));
-    }
   }
 
   if (rv == psm::GetXPCOMFromNSSError(

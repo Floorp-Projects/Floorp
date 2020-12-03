@@ -8588,12 +8588,6 @@
   value: true
   mirror: always
 
-# Whether to use sni encryption.
-- name: network.security.esni.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Whether to cache SSL resumption tokens in necko.
 - name: network.ssl_tokens_cache_enabled
   type: RelaxedAtomicBool
