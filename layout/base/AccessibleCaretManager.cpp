@@ -884,7 +884,7 @@ nsIFrame* AccessibleCaretManager::GetFocusableFrame(nsIFrame* aFrame) const {
 
 void AccessibleCaretManager::ChangeFocusToOrClearOldFocus(
     nsIFrame* aFrame) const {
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
   MOZ_ASSERT(fm);
 
   if (aFrame) {
