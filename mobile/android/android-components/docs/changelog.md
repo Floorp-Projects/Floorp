@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-search**
+  * ⚠️ **This is a breaking change**: Use cases in `SearchUseCases` now take the ID of s session/tab as parameter instead of a `Session` instance.
+
 # 68.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v67.0.0...v68.0.0)
@@ -33,7 +36,7 @@ permalink: /changelog/
   * Added handling of PackageItemInfo.packageName NullPointerException on some Xiaomi and TCL devices
 
 * **service-glean**
-  * 🆙  Updated Glean to version 33.1.2 ([changelog](https://github.com/mozilla/glean/releases/tag/v33.1.2))
+  * 🆙 Updated Glean to version 33.1.2 ([changelog](https://github.com/mozilla/glean/releases/tag/v33.1.2))
 
 * **feature-tab-collections**:
     * [createCollection] now returns the id of the newly created collection
