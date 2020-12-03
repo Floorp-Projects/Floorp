@@ -9,6 +9,7 @@
 
 #include "TaskController.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {
 
@@ -45,6 +46,34 @@ class InputTaskManager : public TaskManager {
   static void Cleanup() { gInputTaskManager = nullptr; }
   static void Init();
 
+  bool IsSuspended(const MutexAutoLock& aProofOfLock) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mIsSuspended;
+  }
+
+  bool IsSuspended() {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mIsSuspended;
+  }
+
+  void SetIsSuspended(bool aIsSuspended) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mIsSuspended = aIsSuspended;
+  }
+
+  static bool CanSuspendInputEvent() {
+    // Ensure it's content process because InputTaskManager only
+    // works in e10s.
+    //
+    // Input tasks will have nullptr as their task manager when the
+    // event queue state is STATE_DISABLED, so we can't suspend
+    // input events.
+    return XRE_IsContentProcess() &&
+           StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup() &&
+           InputTaskManager::Get()->State() !=
+               InputEventQueueState::STATE_DISABLED;
+  }
+
  private:
   InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
 
@@ -53,6 +82,10 @@ class InputTaskManager : public TaskManager {
   AutoTArray<TimeStamp, 4> mStartTimes;
 
   static StaticRefPtr<InputTaskManager> gInputTaskManager;
+
+  // Unlike mInputQueueState, mIsSuspended is used by TaskController to
+  // indicate its status
+  bool mIsSuspended = false;
 };
 
 }  // namespace mozilla

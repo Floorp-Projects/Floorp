@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+  <body>
+    <script>
+      // Use setTimeout here to let opener's sync XHR to run
+      setTimeout(() => {
+        var utils = SpecialPowers.getDOMWindowUtils(window);
+        const channel = new BroadcastChannel('taskManagerStatus');
+        channel.postMessage(utils.isInputTaskManagerSuspended);
+        window.close();
+      }, 0);
+    </script>
+  </body>
+</html>

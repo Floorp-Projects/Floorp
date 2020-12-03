@@ -28,6 +28,7 @@
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SharedStyleSheetCache.h"
+#include "mozilla/InputTaskManager.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIFrame.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -1417,6 +1418,12 @@ nsDOMWindowUtils::GetIsMozAfterPaintPending(bool* aResult) {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) return NS_OK;
   *aResult = presContext->IsDOMPaintEventPending();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetIsInputTaskManagerSuspended(bool* aResult) {
+  *aResult = InputTaskManager::Get()->IsSuspended();
   return NS_OK;
 }
 

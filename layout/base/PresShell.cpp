@@ -200,6 +200,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsClassHashtable.h"
@@ -7590,6 +7591,10 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayKeyboardEvent(
     return false;
   }
 
+  MOZ_ASSERT_IF(InputTaskManager::CanSuspendInputEvent() &&
+                    aGUIEvent->mMessage != eMouseMove,
+                !InputTaskManager::Get()->IsSuspended());
+
   if (aGUIEvent->mMessage == eKeyDown) {
     mPresShell->mNoDelayedKeyEvents = true;
   } else if (!mPresShell->mNoDelayedKeyEvents) {
@@ -7615,6 +7620,10 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayMouseEvent(
            ->EventHandlingSuppressed()) {
     return false;
   }
+
+  MOZ_ASSERT_IF(InputTaskManager::CanSuspendInputEvent() &&
+                    aGUIEvent->mMessage != eMouseMove,
+                !InputTaskManager::Get()->IsSuspended());
 
   if (aGUIEvent->mMessage == eMouseDown) {
     mPresShell->mNoDelayedMouseEvents = true;

@@ -557,7 +557,8 @@ nsresult txSyncCompileObserver::loadURI(const nsAString& aUri,
   if (mProcessor) {
     source = mProcessor->GetSourceContentModel();
   }
-  dom::nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr);
+  dom::nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr,
+                                dom::SyncOperationBehavior::eSuspendInput);
   nsCOMPtr<Document> document;
 
   rv = nsSyncLoadService::LoadDocument(
