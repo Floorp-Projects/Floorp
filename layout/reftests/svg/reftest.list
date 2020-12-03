@@ -208,6 +208,7 @@ random == dynamic-use-nested-01b.svg dynamic-use-nested-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-2) == fallback-color-04.svg pass.svg
 == fallback-color-05.svg fallback-color-05-ref.svg
 
+== filter-and-clip.svg filter-and-clip-ref.svg
 == filter-basic-01.svg pass.svg
 == filter-basic-02.svg pass.svg
 == filter-basic-03.svg pass.svg
