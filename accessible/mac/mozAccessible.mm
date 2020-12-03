@@ -550,6 +550,13 @@ struct RoleDescrComparator {
 };
 
 - (NSString*)moxRoleDescription {
+  if (NSString* ariaRoleDescription =
+          utils::GetAccAttr(self, "roledescription")) {
+    if ([ariaRoleDescription length]) {
+      return ariaRoleDescription;
+    }
+  }
+
   if (mRole == roles::FIGURE) return utils::LocalizedString(u"figure"_ns);
 
   if (mRole == roles::HEADING) return utils::LocalizedString(u"heading"_ns);
