@@ -107,9 +107,6 @@ class JSFunction : public js::NativeObject {
   //   d. HAS_GUESSED_ATOM and HAS_INFERRED_NAME cannot both be set.
   //   e. `atom_` can be null if neither an explicit, nor inferred, nor a
   //      guessed name was set.
-  //   f. HAS_INFERRED_NAME can be set for cloned singleton function, even
-  //      though the clone shouldn't receive an inferred name. See the
-  //      comments in NewFunctionClone() and SetFunctionName() for details.
   //
   // 2. If the function is a bound function:
   //   a. To store the initial value of the "name" property.
@@ -331,12 +328,6 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(!hasGuessedAtom());
     setAtom(atom);
     flags_.setInferredName();
-  }
-  void clearInferredName() {
-    MOZ_ASSERT(hasInferredName());
-    MOZ_ASSERT(atom_);
-    setAtom(nullptr);
-    flags_.clearInferredName();
   }
   JSAtom* inferredName() const {
     MOZ_ASSERT(hasInferredName());
@@ -864,9 +855,6 @@ extern JSFunction* CloneFunctionAndScript(
 extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
 
 extern JSFunction* CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun);
-
-extern bool SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
-                                          HandleObject proto);
 
 }  // namespace js
 
