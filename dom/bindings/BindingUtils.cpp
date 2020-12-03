@@ -934,7 +934,7 @@ static JSObject* CreateInterfacePrototypeObject(
     const NativeProperties* chromeOnlyProperties,
     const char* const* unscopableNames, bool isGlobal) {
   JS::Rooted<JSObject*> ourProto(
-      cx, JS_NewObjectWithUniqueType(cx, protoClass, parentProto));
+      cx, JS_NewObjectWithGivenProto(cx, protoClass, parentProto));
   if (!ourProto ||
       // We don't try to define properties on the global's prototype; those
       // properties go on the global itself.
