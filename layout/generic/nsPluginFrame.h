@@ -85,9 +85,9 @@ class nsPluginFrame final : public nsIFrame,
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                               mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult HandleEvent(
+      nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
+      nsEventStatus* aEventStatus) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
     return nsIFrame::IsFrameOfType(
