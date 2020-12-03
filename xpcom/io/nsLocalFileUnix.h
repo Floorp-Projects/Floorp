@@ -88,6 +88,7 @@ class nsLocalFile final
 
   nsresult SetLastModifiedTimeImpl(PRTime aLastModTime, bool aFollowLinks);
   nsresult GetLastModifiedTimeImpl(PRTime* aLastModTime, bool aFollowLinks);
+  nsresult GetCreationTimeImpl(PRTime* aCreationTime, bool aFollowLinks);
 };
 
 #endif /* _nsLocalFileUNIX_H_ */
