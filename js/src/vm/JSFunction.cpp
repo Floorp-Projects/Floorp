@@ -2284,7 +2284,6 @@ JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(!fun->hasJitInfo());
   clone->initNative(InstantiateAsmJS, nullptr);
 
-  clone->setGroup(fun->group());
   return clone;
 }
 

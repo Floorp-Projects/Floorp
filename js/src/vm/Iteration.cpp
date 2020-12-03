@@ -1051,16 +1051,6 @@ PlainObject* Realm::createIterResultTemplateObject(
     return nullptr;
   }
 
-  // Create a new group for the template.
-  Rooted<TaggedProto> proto(cx, templateObject->taggedProto());
-  RootedObjectGroup group(
-      cx, ObjectGroupRealm::makeGroup(cx, templateObject->realm(),
-                                      templateObject->getClass(), proto));
-  if (!group) {
-    return nullptr;
-  }
-  templateObject->setGroup(group);
-
   // Set dummy `value` property
   if (!NativeDefineDataProperty(cx, templateObject, cx->names().value,
                                 UndefinedHandleValue, JSPROP_ENUMERATE)) {
