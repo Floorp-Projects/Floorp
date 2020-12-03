@@ -647,11 +647,21 @@ nsViewSourceChannel::SetBaseURI(nsIURI* aBaseURI) {
   return NS_OK;
 }
 
-nsIChannel* nsViewSourceChannel::GetInnerChannel() { return mChannel; }
-
 NS_IMETHODIMP
 nsViewSourceChannel::GetProtocolVersion(nsACString& aProtocolVersion) {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetReplaceRequest(bool* aReplaceRequest) {
+  *aReplaceRequest = mReplaceRequest;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetReplaceRequest(bool aReplaceRequest) {
+  mReplaceRequest = aReplaceRequest;
+  return NS_OK;
 }
 
 // nsIRequestObserver methods
@@ -670,7 +680,10 @@ nsViewSourceChannel::OnStartRequest(nsIRequest* aRequest) {
     Cancel(rv);
   }
 
-  return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>(this));
+  if (mReplaceRequest) {
+    return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>(this));
+  }
+  return mListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
@@ -685,8 +698,13 @@ nsViewSourceChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     }
   }
 
-  nsresult rv = mListener->OnStopRequest(
-      static_cast<nsIViewSourceChannel*>(this), aStatus);
+  nsresult rv;
+  if (mReplaceRequest) {
+    rv = mListener->OnStopRequest(static_cast<nsIViewSourceChannel*>(this),
+                                  aStatus);
+  } else {
+    rv = mListener->OnStopRequest(aRequest, aStatus);
+  }
 
   ReleaseListeners();
 
@@ -699,8 +717,12 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest* aRequest,
                                      nsIInputStream* aInputStream,
                                      uint64_t aSourceOffset, uint32_t aLength) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
-  return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>(this),
-                                    aInputStream, aSourceOffset, aLength);
+  if (mReplaceRequest) {
+    return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>(this),
+                                      aInputStream, aSourceOffset, aLength);
+  }
+  return mListener->OnDataAvailable(aRequest, aInputStream, aSourceOffset,
+                                    aLength);
 }
 
 // nsIHttpChannel methods

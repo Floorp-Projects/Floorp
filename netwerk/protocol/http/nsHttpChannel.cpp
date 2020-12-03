@@ -1663,14 +1663,13 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   // in the pipeline to handle the content and pass it along to our
   // original listener. nsUnknownDecoder doesn't support detecting this type,
   // so we only need to insert this using the response header's mime type.
-  //
-  // We only do this for unwrapped document loads, since we might want to send
-  // parts to the external protocol handler without leaving the parent process.
+  // We only do this for document loads, since we might want to send parts
+  // to the external protocol handler without leaving the parent process.
   bool mustRunStreamFilterInParent = false;
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
   RefPtr<DocumentLoadListener> docListener = do_QueryObject(parentChannel);
-  if (mResponseHead && docListener && docListener->GetChannel() == this) {
+  if (mResponseHead && docListener) {
     nsAutoCString contentType;
     mResponseHead->ContentType(contentType);
 
