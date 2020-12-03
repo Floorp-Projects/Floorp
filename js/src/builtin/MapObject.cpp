@@ -359,14 +359,6 @@ JSObject* MapIteratorObject::createResultPair(JSContext* cx) {
     return nullptr;
   }
 
-  Rooted<TaggedProto> proto(cx, resultPairObj->taggedProto());
-  ObjectGroup* group = ObjectGroupRealm::makeGroup(
-      cx, resultPairObj->realm(), resultPairObj->getClass(), proto);
-  if (!group) {
-    return nullptr;
-  }
-  resultPairObj->setGroup(group);
-
   resultPairObj->setDenseInitializedLength(2);
   resultPairObj->initDenseElement(0, NullValue());
   resultPairObj->initDenseElement(1, NullValue());
@@ -1140,14 +1132,6 @@ JSObject* SetIteratorObject::createResult(JSContext* cx) {
   if (!resultObj) {
     return nullptr;
   }
-
-  Rooted<TaggedProto> proto(cx, resultObj->taggedProto());
-  ObjectGroup* group = ObjectGroupRealm::makeGroup(
-      cx, resultObj->realm(), resultObj->getClass(), proto);
-  if (!group) {
-    return nullptr;
-  }
-  resultObj->setGroup(group);
 
   resultObj->setDenseInitializedLength(1);
   resultObj->initDenseElement(0, NullValue());

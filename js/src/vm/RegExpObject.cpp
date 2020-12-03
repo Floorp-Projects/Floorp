@@ -767,15 +767,6 @@ bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
     return false;
   }
 
-  // Create a new group for the template.
-  Rooted<TaggedProto> proto(cx, templateObject->taggedProto());
-  ObjectGroup* group = ObjectGroupRealm::makeGroup(
-      cx, templateObject->realm(), templateObject->getClass(), proto);
-  if (!group) {
-    return false;
-  }
-  templateObject->setGroup(group);
-
   // Initialize the properties of the template.
   RootedId id(cx);
   RootedValue dummyString(cx, StringValue(cx->runtime()->emptyString));
@@ -907,15 +898,6 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
   if (!templateObject) {
     return nullptr;
   }
-
-  // Create a new group for the template.
-  Rooted<TaggedProto> proto(cx, templateObject->taggedProto());
-  ObjectGroup* group = ObjectGroupRealm::makeGroup(
-      cx, templateObject->realm(), templateObject->getClass(), proto);
-  if (!group) {
-    return nullptr;
-  }
-  templateObject->setGroup(group);
 
   /* Set dummy index property */
   RootedValue index(cx, Int32Value(0));
