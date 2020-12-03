@@ -87,7 +87,7 @@ describe("#CachedTargetingGetter", () => {
       const [
         m1,
         m2,
-        m3,
+        m3 = { id: "m3" },
       ] = await OnboardingMessageProvider.getUntranslatedMessages();
       const checkMessageTargetingStub = sandbox
         .stub(ASRouterTargeting, "checkMessageTargeting")
@@ -118,7 +118,7 @@ describe("#CachedTargetingGetter", () => {
       const [
         m1,
         m2,
-        m3,
+        m3 = { id: "m3" },
       ] = await OnboardingMessageProvider.getUntranslatedMessages();
       const checkMessageTargetingStub = sandbox
         .stub(ASRouterTargeting, "checkMessageTargeting")
@@ -149,7 +149,7 @@ describe("#CachedTargetingGetter", () => {
       const [
         m1,
         m2,
-        m3,
+        m3 = { id: "m3" },
       ] = await OnboardingMessageProvider.getUntranslatedMessages();
       const checkMessageTargetingStub = sandbox
         .stub(ASRouterTargeting, "checkMessageTargeting")

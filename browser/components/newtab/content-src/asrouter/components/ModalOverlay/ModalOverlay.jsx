@@ -21,24 +21,11 @@ export class ModalOverlayWrapper extends React.PureComponent {
   componentWillMount() {
     this.props.document.addEventListener("keydown", this.onKeyDown);
     this.props.document.body.classList.add("modal-open");
-    this.header = this.props.document.getElementById(
-      "header-asrouter-container"
-    );
-
-    if (this.header) {
-      this.props.document.getElementById("root").classList.add("modal-height");
-    }
   }
 
   componentWillUnmount() {
     this.props.document.removeEventListener("keydown", this.onKeyDown);
     this.props.document.body.classList.remove("modal-open");
-
-    if (this.header) {
-      this.props.document
-        .getElementById("root")
-        .classList.remove("modal-height");
-    }
   }
 
   render() {
@@ -59,13 +46,6 @@ export class ModalOverlayWrapper extends React.PureComponent {
           id={props.id}
           role="dialog"
         >
-          {props.hasDismissIcon && (
-            <button
-              className="icon icon-dismiss"
-              onClick={props.onClose}
-              data-l10n-id="onboarding-cards-dismiss"
-            />
-          )}
           {props.children}
         </div>
       </div>
@@ -74,24 +54,3 @@ export class ModalOverlayWrapper extends React.PureComponent {
 }
 
 ModalOverlayWrapper.defaultProps = { document: global.document };
-
-export class ModalOverlay extends React.PureComponent {
-  render() {
-    const { title, button_label } = this.props;
-    return (
-      <ModalOverlayWrapper onClose={this.props.onDismissBundle}>
-        <h2> {title} </h2>
-        {this.props.children}
-        <div className="footer">
-          <button
-            className="button primary modalButton"
-            onClick={this.props.onDismissBundle}
-          >
-            {" "}
-            {button_label}{" "}
-          </button>
-        </div>
-      </ModalOverlayWrapper>
-    );
-  }
-}

@@ -13,14 +13,6 @@ const PROVIDER_PREF_BRANCH =
 const DEVTOOLS_PREF =
   "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
 const FXA_USERNAME_PREF = "services.sync.username";
-const FIRST_RUN_TRIPLET_PREF = "trailhead.firstrun.newtab.triplets";
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "trailheadTripletPref",
-  FIRST_RUN_TRIPLET_PREF,
-  ""
-);
 
 const DEFAULT_STATE = {
   _initialized: false,
@@ -104,11 +96,6 @@ class _ASRouterPreferences {
       }
       return filtered;
     }, []);
-  }
-
-  // istanbul ignore next
-  get trailheadTriplet() {
-    return trailheadTripletPref;
   }
 
   get providers() {

@@ -225,39 +225,6 @@ describe("ASRouterUISurface", () => {
     });
   });
 
-  describe("Triplet bundle Card", () => {
-    it("should send NEW_TAB_MESSAGE_REQUEST if a bundle card id is blocked or cleared", async () => {
-      sandbox.stub(ASRouterUtils, "sendMessage").resolves();
-      const FAKE_TRIPLETS_BUNDLE_1 = [
-        {
-          id: "CARD_1",
-          content: {
-            title: { string_id: "onboarding-private-browsing-title" },
-            text: { string_id: "onboarding-private-browsing-text" },
-            icon: "icon",
-            primary_button: {
-              label: { string_id: "onboarding-button-label-get-started" },
-              action: {
-                type: "OPEN_URL",
-                data: { args: "https://example.com/" },
-              },
-            },
-          },
-        },
-      ];
-      wrapper.setState({
-        message: { bundle: FAKE_TRIPLETS_BUNDLE_1 },
-      });
-
-      wrapper.instance().clearMessage("CARD_1");
-      assert.calledOnce(ASRouterUtils.sendMessage);
-      assert.calledWithExactly(ASRouterUtils.sendMessage, {
-        type: "NEWTAB_MESSAGE_REQUEST",
-        data: { endpoint: undefined },
-      });
-    });
-  });
-
   describe("impressions", () => {
     function simulateVisibilityChange(value) {
       fakeDocument.visibilityState = value;

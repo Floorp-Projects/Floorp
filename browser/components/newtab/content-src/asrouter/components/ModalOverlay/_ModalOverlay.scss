@@ -23,12 +23,6 @@ $modal-scrollbar-z-index: 1100;
   }
 }
 
-.modal-height {
-  // "Welcome header" has 40px of padding and 36px font size that get neglected using position absolute
-  // causing this to visually collide with the newtab searchbar
-  padding-top: 80px;
-}
-
 .modalOverlayInner {
   min-width: min-content;
   width: 100%;
@@ -52,23 +46,6 @@ $modal-scrollbar-z-index: 1100;
 
   &.active {
     display: block;
-  }
-
-  .icon-dismiss {
-    border: 0;
-    cursor: pointer;
-    inset-inline-end: 0;
-    padding: 20px;
-    fill: $white;
-    position: absolute;
-
-    &:hover {
-      background-color: $trailhead-purple;
-    }
-
-    &:focus {
-      border: 1px dotted;
-    }
   }
 
   h2 {

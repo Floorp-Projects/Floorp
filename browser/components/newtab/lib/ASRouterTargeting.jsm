@@ -420,9 +420,6 @@ const TargetingGetters = {
   get isFxAEnabled() {
     return isFxAEnabled;
   },
-  get trailheadTriplet() {
-    return ASRouterPreferences.trailheadTriplet;
-  },
   get sync() {
     return {
       desktopDevices: clientsDevicesDesktop,
