@@ -4465,10 +4465,7 @@ static bool GroupOf(JSContext* cx, unsigned argc, JS::Value* vp) {
     return false;
   }
   RootedObject obj(cx, &args[0].toObject());
-  ObjectGroup* group = JSObject::getGroup(cx, obj);
-  if (!group) {
-    return false;
-  }
+  ObjectGroup* group = obj->group();
   args.rval().set(JS_NumberValue(double(uintptr_t(group) >> 3)));
   return true;
 }

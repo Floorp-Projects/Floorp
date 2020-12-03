@@ -1061,10 +1061,9 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   }
 
   RootedShape oldShape(cx, obj->shape());
-  RootedObjectGroup oldGroup(cx, JSObject::getGroup(cx, obj));
-  if (!oldGroup) {
-    return false;
-  }
+
+  // TODO(no-TI): remove.
+  RootedObjectGroup oldGroup(cx, obj->group());
 
   // We cannot attach a stub if the operation executed after the stub
   // is attached may throw.
@@ -1672,10 +1671,9 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
   RootedShape oldShape(cx, obj->shape());
-  RootedObjectGroup oldGroup(cx, JSObject::getGroup(cx, obj));
-  if (!oldGroup) {
-    return false;
-  }
+
+  // TODO(no-TI): remove.
+  RootedObjectGroup oldGroup(cx, obj->group());
 
   DeferType deferType = DeferType::None;
   bool attached = false;

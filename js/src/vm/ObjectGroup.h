@@ -59,37 +59,9 @@ enum NewObjectKind {
 enum : uint32_t {
   /* Whether this group is associated with a single object. */
   OBJECT_FLAG_SINGLETON = 0x2,
-
-  /*
-   * Whether this group is used by objects whose singleton groups have not
-   * been created yet.
-   */
-  OBJECT_FLAG_LAZY_SINGLETON = 0x4,
 };
 using ObjectGroupFlags = uint32_t;
 
-/*
- * [SMDOC] Type-Inference lazy ObjectGroup
- *
- * Object groups which represent at most one JS object are constructed lazily.
- * These include groups for native functions, standard classes, scripted
- * functions defined at the top level of global/eval scripts, objects which
- * dynamically become the prototype of some other object, and in some other
- * cases. Typical web workloads often create many windows (and many copies of
- * standard natives) and many scripts, with comparatively few non-singleton
- * groups.
- *
- * We can recover the type information for the object from examining it,
- * so don't normally track the possible types of its properties as it is
- * updated. Property type sets for the object are only constructed when an
- * analyzed script attaches constraints to it: the script is querying that
- * property off the object or another which delegates to it, and the analysis
- * information is sensitive to changes in the property's type. Future changes
- * to the property (whether those uncovered by analysis or those occurring
- * in the VM) will treat these properties like those of any other object group.
- */
-
-/* Type information about an object accessed by a script. */
 class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
   /* Class shared by objects in this group, stored in the cell header. */
@@ -150,12 +122,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   bool singleton() const { return flags() & OBJECT_FLAG_SINGLETON; }
 
-  bool lazy() const {
-    bool res = flags() & OBJECT_FLAG_LAZY_SINGLETON;
-    MOZ_ASSERT_IF(res, singleton());
-    return res;
-  }
-
   JS::Compartment* compartment() const {
     return JS::GetCompartmentForRealm(realm_);
   }
@@ -203,19 +169,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   static ObjectGroup* defaultNewGroup(JSContext* cx, const JSClass* clasp,
                                       TaggedProto proto,
                                       JSObject* associated = nullptr);
-
-  // For use in creating a singleton group without needing to replace an
-  // existing group.
-  static ObjectGroup* lazySingletonGroup(JSContext* cx, ObjectGroupRealm& realm,
-                                         JS::Realm* objectRealm,
-                                         const JSClass* clasp,
-                                         TaggedProto proto);
-
-  // For use in replacing an already-existing group with a singleton group.
-  static inline ObjectGroup* lazySingletonGroup(JSContext* cx,
-                                                ObjectGroup* oldGroup,
-                                                const JSClass* clasp,
-                                                TaggedProto proto);
 };
 
 // Structure used to manage the groups in a realm.
@@ -224,9 +177,8 @@ class ObjectGroupRealm {
   class NewTable;
 
  private:
-  // Set of default 'new' or lazy groups in the realm.
+  // Set of default 'new' groups in the realm.
   NewTable* defaultNewTable = nullptr;
-  NewTable* lazyTable = nullptr;
 
   // This cache is purged on GC.
   class DefaultNewGroupCache {
@@ -293,13 +245,11 @@ class ObjectGroupRealm {
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkTablesAfterMovingGC() {
     checkNewTableAfterMovingGC(defaultNewTable);
-    checkNewTableAfterMovingGC(lazyTable);
   }
 #endif
 
   void fixupTablesAfterMovingGC() {
     fixupNewTableAfterMovingGC(defaultNewTable);
-    fixupNewTableAfterMovingGC(lazyTable);
   }
 
  private:
