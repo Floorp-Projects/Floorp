@@ -231,6 +231,15 @@ CheckARMSupport()
         arm_sha1_support_ = ID_AA64ISAR0_SHA1_VAL(isar0) >= ID_AA64ISAR0_SHA1_BASE;
         arm_sha2_support_ = ID_AA64ISAR0_SHA2_VAL(isar0) >= ID_AA64ISAR0_SHA2_BASE;
     }
+#elif defined(__ARM_FEATURE_CRYPTO)
+    /*
+     * Although no feature detection, default compiler option allows ARM
+     * Crypto Extension.
+     */
+    arm_aes_support_ = PR_TRUE;
+    arm_pmull_support_ = PR_TRUE;
+    arm_sha1_support_ = PR_TRUE;
+    arm_sha2_support_ = PR_TRUE;
 #endif
     /* aarch64 must support NEON. */
     arm_neon_support_ = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON") == NULL;
