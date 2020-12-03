@@ -188,6 +188,7 @@ nssSlot_IsTokenPresent(
         }
         session = nssToken_GetDefaultSession(slot->token);
         if (session) {
+            nssSlot_ExitMonitor(slot);
             nssSession_EnterMonitor(session);
             /* token is not present */
             if (session->handle != CK_INVALID_HANDLE) {
@@ -197,6 +198,12 @@ nssSlot_IsTokenPresent(
                 session->handle = CK_INVALID_HANDLE;
             }
             nssSession_ExitMonitor(session);
+            nssSlot_EnterMonitor(slot);
+            if (!slot->token) {
+                /* Check token presence after re-acquiring lock */
+                isPresent = PR_FALSE;
+                goto done; /* slot lock held */
+            }
         }
         if (slot->token->base.name[0] != 0) {
             /* notify the high-level cache that the token is removed */
@@ -223,6 +230,7 @@ nssSlot_IsTokenPresent(
     session = nssToken_GetDefaultSession(slot->token);
     if (session) {
         PRBool tokenRemoved;
+        nssSlot_ExitMonitor(slot);
         nssSession_EnterMonitor(session);
         if (session->handle != CK_INVALID_HANDLE) {
             CK_SESSION_INFO sessionInfo;
@@ -236,9 +244,15 @@ nssSlot_IsTokenPresent(
         }
         tokenRemoved = (session->handle == CK_INVALID_HANDLE);
         nssSession_ExitMonitor(session);
+        nssSlot_EnterMonitor(slot);
         /* token not removed, finished */
         if (!tokenRemoved) {
             isPresent = PR_TRUE;
+            goto done; /* slot lock held */
+        }
+        if (!slot->token) {
+            /* Check token presence after re-acquiring lock */
+            isPresent = PR_FALSE;
             goto done; /* slot lock held */
         }
     }

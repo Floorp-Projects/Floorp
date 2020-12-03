@@ -131,6 +131,7 @@ while [ $# -gt 0 ]; do
         --mozpkix-only) gyp_params+=(-Dmozpkix_only=1 -Ddisable_tests=1 -Dsign_libs=0) ;;
         --disable-keylog) sslkeylogfile=0 ;;
         --enable-legacy-db) gyp_params+=(-Ddisable_dbm=0) ;;
+        --mozilla-central) gyp_params+=(-Dmozilla_central=1) ;;
         -D*) gyp_params+=("$1") ;;
         *) show_help; exit 2 ;;
     esac
