@@ -1951,12 +1951,6 @@
   value: true
   mirror: always
 
-# Whether we allow BrowsingContextGroup to suspend input events
-- name: dom.input_events.canSuspendInBCG.enabled
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: once
-
 # Enable not moving the cursor to end when a text input or textarea has .value
 # set to the value it already has.  By default, enabled.
 - name: dom.input.skip_cursor_move_for_same_value_set

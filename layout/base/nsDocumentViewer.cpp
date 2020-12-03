@@ -1261,7 +1261,7 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
     return NS_OK;
   }
 
-  nsAutoSyncOperation sync(mDocument, SyncOperationBehavior::eSuspendInput);
+  nsAutoSyncOperation sync(mDocument);
   AutoSuppressEventHandlingAndSuspend seh(bc->Group());
 
   mInPermitUnloadPrompt = true;
