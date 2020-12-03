@@ -747,10 +747,11 @@ nsresult CycleCollectedJSContext::NotifyUnhandledRejections::Cancel() {
   return NS_OK;
 }
 
-class FinalizationRegistryCleanup::CleanupRunnable : public CancelableRunnable {
+class FinalizationRegistryCleanup::CleanupRunnable
+    : public DiscardableRunnable {
  public:
   explicit CleanupRunnable(FinalizationRegistryCleanup* aCleanupWork)
-      : CancelableRunnable("CleanupRunnable"), mCleanupWork(aCleanupWork) {}
+      : DiscardableRunnable("CleanupRunnable"), mCleanupWork(aCleanupWork) {}
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
   // bug 1535398.

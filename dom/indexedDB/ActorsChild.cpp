@@ -1063,9 +1063,9 @@ class DelayedActionRunnable final : public CancelableRunnable {
  * Actor class declarations
  ******************************************************************************/
 
-// CancelableRunnable is used to make workers happy.
+// DiscardableRunnable is used to make workers happy.
 class BackgroundRequestChild::PreprocessHelper final
-    : public CancelableRunnable,
+    : public DiscardableRunnable,
       public nsIInputStreamCallback,
       public nsIFileMetadataCallback {
   enum class State {
@@ -1096,7 +1096,7 @@ class BackgroundRequestChild::PreprocessHelper final
 
  public:
   PreprocessHelper(uint32_t aCloneDataIndex, BackgroundRequestChild* aActor)
-      : CancelableRunnable(
+      : DiscardableRunnable(
             "indexedDB::BackgroundRequestChild::PreprocessHelper"),
         mOwningEventTarget(aActor->GetActorEventTarget()),
         mActor(aActor),
@@ -2820,7 +2820,7 @@ void BackgroundRequestChild::PreprocessHelper::Finish() {
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(BackgroundRequestChild::PreprocessHelper,
-                            CancelableRunnable, nsIInputStreamCallback,
+                            DiscardableRunnable, nsIInputStreamCallback,
                             nsIFileMetadataCallback)
 
 NS_IMETHODIMP

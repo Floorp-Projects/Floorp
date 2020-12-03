@@ -1060,7 +1060,7 @@ static void AsyncFulfillImageBitmapPromise(Promise* aPromise,
 
 class CreateImageBitmapFromBlobRunnable;
 
-class CreateImageBitmapFromBlob final : public CancelableRunnable,
+class CreateImageBitmapFromBlob final : public DiscardableRunnable,
                                         public imgIContainerCallback,
                                         public nsIInputStreamCallback {
   friend class CreateImageBitmapFromBlobRunnable;
@@ -1093,7 +1093,7 @@ class CreateImageBitmapFromBlob final : public CancelableRunnable,
                             already_AddRefed<nsIInputStream> aInputStream,
                             const Maybe<IntRect>& aCropRect,
                             nsIEventTarget* aMainThreadEventTarget)
-      : CancelableRunnable("dom::CreateImageBitmapFromBlob"),
+      : DiscardableRunnable("dom::CreateImageBitmapFromBlob"),
         mMutex("dom::CreateImageBitmapFromBlob::mMutex"),
         mPromise(aPromise),
         mGlobalObject(aGlobal),
@@ -1153,7 +1153,7 @@ class CreateImageBitmapFromBlob final : public CancelableRunnable,
   void* mThread;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(CreateImageBitmapFromBlob, CancelableRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(CreateImageBitmapFromBlob, DiscardableRunnable,
                             imgIContainerCallback, nsIInputStreamCallback)
 
 class CreateImageBitmapFromBlobRunnable : public WorkerRunnable {

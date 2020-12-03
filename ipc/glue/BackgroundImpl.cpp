@@ -589,7 +589,7 @@ class ChildImpl::ShutdownObserver final : public nsIObserver {
   ~ShutdownObserver() { AssertIsOnMainThread(); }
 };
 
-class ChildImpl::SendInitBackgroundRunnable final : public CancelableRunnable {
+class ChildImpl::SendInitBackgroundRunnable final : public DiscardableRunnable {
   nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
   RefPtr<StrongWorkerRef> mWorkerRef;
   Endpoint<PBackgroundParent> mParent;
@@ -616,7 +616,8 @@ class ChildImpl::SendInitBackgroundRunnable final : public CancelableRunnable {
       Endpoint<PBackgroundParent>&& aParent,
       std::function<void(Endpoint<PBackgroundParent>&& aParent)>&& aFunc,
       unsigned int aThreadLocalIndex)
-      : CancelableRunnable("Background::ChildImpl::SendInitBackgroundRunnable"),
+      : DiscardableRunnable(
+            "Background::ChildImpl::SendInitBackgroundRunnable"),
         mOwningEventTarget(GetCurrentSerialEventTarget()),
         mParent(std::move(aParent)),
         mMutex("SendInitBackgroundRunnable::mMutex"),
