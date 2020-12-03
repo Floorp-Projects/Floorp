@@ -140,18 +140,6 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
   }
 }
 
-/* static */ inline js::ObjectGroup* JSObject::getGroup(JSContext* cx,
-                                                        js::HandleObject obj) {
-  MOZ_ASSERT(cx->compartment() == obj->compartment());
-  if (obj->hasLazyGroup()) {
-    if (cx->compartment() != obj->compartment()) {
-      MOZ_CRASH();
-    }
-    return makeLazyGroup(cx, obj);
-  }
-  return obj->groupRaw();
-}
-
 inline void JSObject::setGroup(js::ObjectGroup* group) {
   MOZ_RELEASE_ASSERT(group);
   MOZ_ASSERT(!isSingleton());
