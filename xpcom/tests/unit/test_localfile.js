@@ -134,3 +134,40 @@ function test_diskSpaceAvailable() {
 
   file.remove(true);
 }
+
+function test_file_creation_time() {
+  const file = do_get_profile();
+  file.append("testfile");
+
+  if (file.exists()) {
+    file.remove(true);
+  }
+
+  const now = Date.now();
+
+  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
+  Assert.ok(file.exists());
+
+  let creationTime;
+  try {
+    creationTime = file.creationTime;
+  } catch (e) {
+    if (e.name === "NS_ERROR_NOT_AVAILABLE") {
+      // Creation time is not supported on this platform.
+      file.remove(true);
+      return;
+    }
+  }
+
+  const diff = Math.abs(creationTime - now);
+  Assert.ok(diff < MAX_TIME_DIFFERENCE);
+
+  Assert.ok(creationTime === file.lastModifiedTime);
+
+  file.lastModifiedTime = now + MILLIS_PER_DAY;
+
+  Assert.ok(creationTime !== file.lastModifiedTime);
+  Assert.ok(creationTime === file.creationTime);
+
+  file.remove(true);
+}

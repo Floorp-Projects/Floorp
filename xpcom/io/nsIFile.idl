@@ -234,6 +234,16 @@ interface nsIFile : nsISupports
     attribute PRTime lastModifiedTimeOfLink;
 
     /**
+     * The creation time of file in milliseconds from midnight, January 1, 1970
+     * GMT, if available.
+     *
+     * This attribute is only implemented on Windows and macOS. Accessing this
+     * on another platform will this will throw NS_ERROR_NOT_IMPLEMENTED.
+     */
+    readonly attribute PRTime creationTime;
+    readonly attribute PRTime creationTimeOfLink;
+
+    /**
      *  WARNING!  On the Mac, getting/setting the file size with nsIFile
      *  only deals with the size of the data fork.  If you need to
      *  know the size of the combined data and resource forks use the
