@@ -3032,8 +3032,7 @@ nsresult XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
     }
 
     if (NS_SUCCEEDED(rv)) {
-      nsAutoSyncOperation sync(mSuspendedDoc,
-                               SyncOperationBehavior::eSuspendInput);
+      nsAutoSyncOperation sync(mSuspendedDoc);
       if (!SpinEventLoopUntil([&]() { return !mFlagSyncLooping; })) {
         rv = NS_ERROR_UNEXPECTED;
       }

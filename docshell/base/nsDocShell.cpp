@@ -4836,18 +4836,6 @@ nsDocShell::SetIsActive(bool aIsActive) {
     }
   }
 
-  // When switching between tabs, there are always docShells that become
-  // active in the same process if they are same process tabs, so we just
-  // let the docShells that are becoming active to update the
-  // InputTaskManager if needed, because it's going to be duplicate works
-  // to ask both active and inactive docShells to do it.
-  //
-  // If the tabs are in different processes, we still don't need to call
-  // UpdateInputTaskManagerIfNeeded because the it's okay to keep
-  // the input events suspended for background tabs.
-  if (aIsActive && InputTaskManager::CanSuspendInputEvent()) {
-    mBrowsingContext->Group()->UpdateInputTaskManagerIfNeeded();
-  }
   return NS_OK;
 }
 
