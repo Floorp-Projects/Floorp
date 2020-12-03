@@ -108,12 +108,9 @@ var DateTimePickerPanel = class {
   }
 
   initPicker(detail) {
-    let locale = new Services.intl.Locale(
-      Services.locale.webExposedLocales[0],
-      {
-        calendar: "gregory",
-      }
-    ).toString();
+    // TODO: When bug 1376616 lands, replace this.setGregorian with
+    //       mozIntl.Locale for setting calendar to Gregorian
+    let locale = this.setGregorian(Services.locale.webExposedLocales[0]);
 
     // Workaround for bug 1418061, while we wait for resolution of
     // http://bugs.icu-project.org/trac/ticket/13592: drop the PT region code,
@@ -293,6 +290,13 @@ var DateTimePickerPanel = class {
   getDisplayNames(locale, keys, style) {
     const displayNames = Services.intl.getDisplayNames(locale, { keys, style });
     return keys.map(key => displayNames.values[key]);
+  }
+
+  setGregorian(locale) {
+    if (locale.match(/u-ca-/)) {
+      return locale.replace(/u-ca-[^-]+/, "u-ca-gregory");
+    }
+    return locale + "-u-ca-gregory";
   }
 
   handleEvent(aEvent) {
