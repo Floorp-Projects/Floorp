@@ -103,6 +103,9 @@ class IOUtils final {
                                                   const nsAString& aPath,
                                                   const uint32_t aPermissions);
 
+  static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
+                                          const nsAString& aPath);
+
   static bool IsAbsolutePath(const nsAString& aPath);
 
  private:
@@ -346,6 +349,15 @@ class IOUtils final {
    */
   static Result<Ok, IOError> SetPermissionsSync(nsIFile* aFile,
                                                 const uint32_t aPermissions);
+
+  /**
+   * Return whether or not the file exists.
+   *
+   * @param aFile The location of the file.
+   *
+   * @return Whether or not the file exists.
+   */
+  static Result<bool, IOError> ExistsSync(nsIFile* aFile);
 };
 
 /**
