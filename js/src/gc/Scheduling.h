@@ -318,6 +318,7 @@
 #include "js/HeapAPI.h"
 #include "js/SliceBudget.h"
 #include "threading/ProtectedData.h"
+#include "util/DifferentialTesting.h"
 
 namespace js {
 
@@ -669,11 +670,13 @@ class GCSchedulingState {
   void updateHighFrequencyMode(const mozilla::TimeStamp& lastGCTime,
                                const mozilla::TimeStamp& currentTime,
                                const GCSchedulingTunables& tunables) {
-#ifndef JS_MORE_DETERMINISTIC
+    if (js::SupportDifferentialTesting()) {
+      return;
+    }
+
     inHighFrequencyGCMode_ =
         !lastGCTime.IsNull() &&
         lastGCTime + tunables.highFrequencyThreshold() > currentTime;
-#endif
   }
 };
 

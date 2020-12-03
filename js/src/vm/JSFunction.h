@@ -107,9 +107,6 @@ class JSFunction : public js::NativeObject {
   //   d. HAS_GUESSED_ATOM and HAS_INFERRED_NAME cannot both be set.
   //   e. `atom_` can be null if neither an explicit, nor inferred, nor a
   //      guessed name was set.
-  //   f. HAS_INFERRED_NAME can be set for cloned singleton function, even
-  //      though the clone shouldn't receive an inferred name. See the
-  //      comments in NewFunctionClone() and SetFunctionName() for details.
   //
   // 2. If the function is a bound function:
   //   a. To store the initial value of the "name" property.
@@ -331,12 +328,6 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(!hasGuessedAtom());
     setAtom(atom);
     flags_.setInferredName();
-  }
-  void clearInferredName() {
-    MOZ_ASSERT(hasInferredName());
-    MOZ_ASSERT(atom_);
-    setAtom(nullptr);
-    flags_.clearInferredName();
   }
   JSAtom* inferredName() const {
     MOZ_ASSERT(hasInferredName());
@@ -727,11 +718,11 @@ extern JSFunction* NewFunctionWithProto(
     NewObjectKind newKind = GenericObject);
 
 // Allocate a new function backed by a JSNative.  Note that by default this
-// creates a singleton object.
+// creates a tenured object.
 inline JSFunction* NewNativeFunction(
     JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-    NewObjectKind newKind = SingletonObject,
+    NewObjectKind newKind = TenuredObject,
     FunctionFlags flags = FunctionFlags::NATIVE_FUN) {
   MOZ_ASSERT(native);
   return NewFunctionWithProto(cx, native, nargs, flags, nullptr, atom, nullptr,
@@ -739,11 +730,11 @@ inline JSFunction* NewNativeFunction(
 }
 
 // Allocate a new constructor backed by a JSNative.  Note that by default this
-// creates a singleton object.
+// creates a tenured object.
 inline JSFunction* NewNativeConstructor(
     JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-    NewObjectKind newKind = SingletonObject,
+    NewObjectKind newKind = TenuredObject,
     FunctionFlags flags = FunctionFlags::NATIVE_CTOR) {
   MOZ_ASSERT(native);
   MOZ_ASSERT(flags.isNativeConstructor());
@@ -856,7 +847,6 @@ extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                             gc::AllocKind kind,
                                             HandleObject proto);
 
-// Functions whose scripts are cloned are always given singleton types.
 extern JSFunction* CloneFunctionAndScript(
     JSContext* cx, HandleFunction fun, HandleObject enclosingEnv,
     HandleScope newScope, Handle<ScriptSourceObject*> sourceObject,
@@ -865,9 +855,6 @@ extern JSFunction* CloneFunctionAndScript(
 extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
 
 extern JSFunction* CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun);
-
-extern bool SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
-                                          HandleObject proto);
 
 }  // namespace js
 

@@ -54,7 +54,6 @@
 #include "vm/IsGivenTypeObject-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/ObjectGroup-inl.h"  // JSObject::setSingleton
 
 using namespace js;
 
@@ -3824,8 +3823,7 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
   RootedArrayObject arrayProto(
       cx, ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
                                    shape, group, 0, metadata));
-  if (!arrayProto || !JSObject::setSingleton(cx, arrayProto) ||
-      !JSObject::setDelegate(cx, arrayProto) ||
+  if (!arrayProto || !JSObject::setDelegate(cx, arrayProto) ||
       !AddLengthProperty(cx, arrayProto)) {
     return nullptr;
   }
@@ -3837,7 +3835,7 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
                                JS::HandleObject proto) {
   // Add Array.prototype[@@unscopables]. ECMA-262 draft (2016 Mar 19) 22.1.3.32.
   RootedObject unscopables(
-      cx, NewSingletonObjectWithGivenProto<PlainObject>(cx, nullptr));
+      cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr));
   if (!unscopables) {
     return false;
   }
@@ -3986,9 +3984,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
     EmptyShape::insertInitialShape(cx, shape, proto);
   }
 
-  if (newKind == SingletonObject && !JSObject::setSingleton(cx, arr)) {
-    return nullptr;
-  }
+  MOZ_ASSERT(newKind != SingletonObject);
 
   if (isCachable) {
     NewObjectCache& cache = cx->caches().newObjectCache;

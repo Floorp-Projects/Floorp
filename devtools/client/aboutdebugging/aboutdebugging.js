@@ -130,9 +130,6 @@ const AboutDebugging = {
     adbProcess.on("adb-ready", this.onAdbProcessReady);
     // get the initial status of adb process, in case it's already started
     this.onAdbProcessReady();
-
-    // Remove deprecated remote debugging extensions.
-    await adbAddon.uninstallUnsupportedExtensions();
   },
 
   onAdbAddonUpdated() {

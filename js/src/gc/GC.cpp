@@ -233,6 +233,7 @@
 #include "js/Object.h"  // JS::GetClass
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
+#include "util/DifferentialTesting.h"
 #include "util/Poison.h"
 #include "util/Windows.h"
 #include "vm/BigIntType.h"
@@ -6941,7 +6942,10 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
 }
 
 void GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
-#ifndef JS_MORE_DETERMINISTIC
+  if (js::SupportDifferentialTesting()) {
+    return;
+  }
+
   // Increase time budget for long-running incremental collections. Enforce a
   // minimum time budget that increases linearly with time/slice count up to a
   // maximum.
@@ -6966,7 +6970,6 @@ void GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
       budget = SliceBudget(TimeBudget(minBudget));
     }
   }
-#endif  // JS_MORE_DETERMINISTIC
 }
 
 static void ScheduleZones(GCRuntime* gc) {
@@ -8524,7 +8527,7 @@ static bool ZoneGCNumberGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#ifdef JS_MORE_DETERMINISTIC
+#ifdef DEBUG
 static bool DummyGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setUndefined();
@@ -8554,11 +8557,14 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
                  {"sliceCount", GCSliceCountGetter}};
 
   for (auto pair : getters) {
-#ifdef JS_MORE_DETERMINISTIC
-    JSNative getter = DummyGetter;
-#else
     JSNative getter = pair.getter;
+
+#ifdef DEBUG
+    if (js::SupportDifferentialTesting()) {
+      getter = DummyGetter;
+    }
 #endif
+
     if (!JS_DefineProperty(cx, obj, pair.name, getter, nullptr,
                            JSPROP_ENUMERATE)) {
       return nullptr;
@@ -8585,11 +8591,14 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
                      {"gcNumber", ZoneGCNumberGetter}};
 
   for (auto pair : zoneGetters) {
-#ifdef JS_MORE_DETERMINISTIC
-    JSNative getter = DummyGetter;
-#else
     JSNative getter = pair.getter;
+
+#ifdef DEBUG
+    if (js::SupportDifferentialTesting()) {
+      getter = DummyGetter;
+    }
 #endif
+
     if (!JS_DefineProperty(cx, zoneObj, pair.name, getter, nullptr,
                            JSPROP_ENUMERATE)) {
       return nullptr;

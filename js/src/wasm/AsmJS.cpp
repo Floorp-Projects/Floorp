@@ -47,6 +47,7 @@
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
+#include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ErrorReporting.h"
@@ -6983,13 +6984,9 @@ static bool NoExceptionPending(JSContext* cx) {
 
 static bool SuccessfulValidation(frontend::ParserBase& parser,
                                  unsigned compilationTime) {
-  constexpr unsigned errNum =
-#ifdef JS_MORE_DETERMINISTIC
-      JSMSG_USE_ASM_TYPE_OK_NO_TIME
-#else
-      JSMSG_USE_ASM_TYPE_OK
-#endif
-      ;
+  unsigned errNum = js::SupportDifferentialTesting()
+                        ? JSMSG_USE_ASM_TYPE_OK_NO_TIME
+                        : JSMSG_USE_ASM_TYPE_OK;
 
   char timeChars[20];
   SprintfLiteral(timeChars, "%u", compilationTime);

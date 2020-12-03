@@ -807,7 +807,7 @@ static JSObject* CreateIntlObject(JSContext* cx, JSProtoKey key) {
 
   // The |Intl| object is just a plain object with some "static" function
   // properties and some constructor properties.
-  return NewSingletonObjectWithGivenProto(cx, &IntlClass, proto);
+  return NewTenuredObjectWithGivenProto(cx, &IntlClass, proto);
 }
 
 /**

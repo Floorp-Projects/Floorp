@@ -1561,11 +1561,9 @@
      */ \
     MACRO(RegExp, reg_exp, NULL, 5, 0, 1, JOF_REGEXP) \
     /*
-     * Push a function object.
+     * Push a new function object.
      *
-     * This clones the function unless it's a singleton; see
-     * `CanReuseFunctionForClone`. The new function inherits the current
-     * environment chain.
+     * The new function inherits the current environment chain.
      *
      * Used to create most JS functions. Notable exceptions are arrow functions
      * and derived or default class constructors.
