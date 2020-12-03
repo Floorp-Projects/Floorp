@@ -469,6 +469,7 @@ class nsWindow final : public nsBaseWidget {
 #endif
   bool mWindowScaleFactorChanged;
   int mWindowScaleFactor;
+  bool mCompositedScreen;
 
  private:
   void DestroyChildWindows();
