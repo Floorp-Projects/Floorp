@@ -398,6 +398,7 @@ function openLinkIn(url, where, params) {
         true,
         aReferrerInfo,
         null,
+        null,
         params.isContentWindowPrivate,
         aPrincipal
       );
@@ -409,7 +410,7 @@ function openLinkIn(url, where, params) {
         );
         return;
       }
-      saveURL(url, null, null, true, true, aReferrerInfo, aInitiatingDoc);
+      saveURL(url, null, null, true, true, aReferrerInfo, null, aInitiatingDoc);
     }
     return;
   }
