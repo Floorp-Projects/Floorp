@@ -513,8 +513,7 @@ bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
   if (elm) {
     // Define behavior for each type of XUL element.
     if (!content->IsXULElement(nsGkAtoms::toolbarbutton)) {
-      nsFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (fm) {
+      if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
         nsCOMPtr<Element> elementToFocus;
         // for radio buttons, focus the radiogroup instead
         if (content->IsXULElement(nsGkAtoms::radio)) {
