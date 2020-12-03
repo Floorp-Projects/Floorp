@@ -433,7 +433,7 @@ function startTest()
   expectFocusShift(() => t19.select(),
                    null, getById("t" + 19), true, "input.select()");
   t19.removeEventListener("select", selectListener, false);
-  ok(selectFired, "select event fires for input");
+  ok(!selectFired, "select event does not fire asynchronously for input");
 
   // mouse clicking
   gLastFocusMethod = fm.FLAG_BYMOUSE;
