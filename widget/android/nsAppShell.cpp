@@ -223,7 +223,7 @@ class GeckoThreadSupport final
 
     if (appStartup) {
       bool userAllowedQuit = true;
-      appStartup->Quit(nsIAppStartup::eForceQuit, &userAllowedQuit);
+      appStartup->Quit(nsIAppStartup::eForceQuit, 0, &userAllowedQuit);
     }
   }
 
