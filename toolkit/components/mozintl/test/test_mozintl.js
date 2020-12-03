@@ -24,16 +24,18 @@ function test_methods_calling() {
   Services.intl.getDisplayNames("ar");
   Services.intl.getLocaleInfo("de");
   new Services.intl.DateTimeFormat("fr");
+  new Services.intl.ListFormat("fr");
   new Services.intl.RelativeTimeFormat("fr");
   ok(true);
 }
 
 function test_constructors() {
   let constructors = [
+    "Collator",
     "DateTimeFormat",
+    "ListFormat",
     "NumberFormat",
     "PluralRules",
-    "Collator",
   ];
 
   constructors.forEach(constructor => {
