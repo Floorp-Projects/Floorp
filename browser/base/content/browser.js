@@ -6969,6 +6969,7 @@ function handleLinkClick(event, href, linkNode) {
       true,
       true,
       referrerInfo,
+      doc.cookieJarSettings,
       doc
     );
     event.preventDefault();
