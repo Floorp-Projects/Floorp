@@ -18,6 +18,7 @@
  * @typedef {import("./@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("./@types/perf").GetActiveBrowsingContextID} GetActiveBrowsingContextID
  * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
+ * * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 
 const ChromeUtils = require("ChromeUtils");
@@ -62,13 +63,16 @@ const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
  * into a new browser tab, and injects the profile via a frame script.
  *
  * @param {MinimallyTypedGeckoProfile} profile - The Gecko profile.
+ * @param {ProfilerViewMode | undefined} profilerViewMode - View mode for the Firefox Profiler
+ *   front-end timeline. While opening the url, we should append a query string
+ *   if a view other than "full" needs to be displayed.
  * @param {GetSymbolTableCallback} getSymbolTableCallback - A callback function with the signature
  *   (debugName, breakpadId) => Promise<SymbolTableAsTuple>, which will be invoked
  *   when profiler.firefox.com sends SYMBOL_TABLE_REQUEST_EVENT messages to us. This
  *   function should obtain a symbol table for the requested binary and resolve the
  *   returned promise with it.
  */
-function receiveProfile(profile, getSymbolTableCallback) {
+function receiveProfile(profile, profilerViewMode, getSymbolTableCallback) {
   const Services = lazy.Services();
   // Find the most recently used window, as the DevTools client could be in a variety
   // of hosts.
@@ -90,11 +94,22 @@ function receiveProfile(profile, getSymbolTableCallback) {
     UI_BASE_URL_PATH_DEFAULT
   );
 
-  const tab = browser.addWebTab(`${baseUrl}${baseUrlPath}`, {
-    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
-      userContextId: browser.contentPrincipal.userContextId,
-    }),
-  });
+  // We automatically open up the "full" mode if no query string is present.
+  // `undefined` also means nothing is specified, and it should open the "full"
+  // timeline view in that case.
+  const viewModeQueryString =
+    profilerViewMode !== undefined && profilerViewMode !== "full"
+      ? `?view=${profilerViewMode}`
+      : "";
+
+  const tab = browser.addWebTab(
+    `${baseUrl}${baseUrlPath}${viewModeQueryString}`,
+    {
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
+        userContextId: browser.contentPrincipal.userContextId,
+      }),
+    }
+  );
   browser.selectedTab = tab;
   const mm = tab.linkedBrowser.messageManager;
   mm.loadFrameScript(

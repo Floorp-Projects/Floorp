@@ -117,6 +117,7 @@ export interface State {
   threads: string[];
   objdirs: string[];
   presetName: string;
+  profilerViewMode: ProfilerViewMode | undefined;
   initializedValues: InitializedValues | null;
   promptEnvRestart: null | string;
 }
@@ -168,6 +169,7 @@ export type GetSymbolTableCallback = (
 
 export type ReceiveProfile = (
   geckoProfile: MinimallyTypedGeckoProfile,
+  profilerViewMode: ProfilerViewMode | undefined,
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
@@ -426,6 +428,12 @@ export interface ScaleFunctions {
   fromFractionToSingleDigitValue: NumberScaler;
 }
 
+/**
+ * View mode for the Firefox Profiler front-end timeline.
+ * `undefined` is defaulted to full automatically.
+ */
+export type ProfilerViewMode = "full" | "active-tab" | "origins";
+
 export interface PresetDefinition {
   label: string;
   description: string;
@@ -434,6 +442,7 @@ export interface PresetDefinition {
   features: string[];
   threads: string[];
   duration: number;
+  profilerViewMode?: ProfilerViewMode;
 }
 
 export interface Presets {
