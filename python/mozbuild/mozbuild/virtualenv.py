@@ -449,7 +449,10 @@ class VirtualenvManager(VirtualenvHelper):
             )
 
             if sysconfig_target is not None:
-                os.environ["MACOSX_DEPLOYMENT_TARGET"] = sysconfig_target
+                # MACOSX_DEPLOYMENT_TARGET is usually a string (e.g.: "10.14.6"), but
+                # in some cases it is an int (e.g.: 11). Since environment variables
+                # must all be str, explicitly convert it.
+                os.environ["MACOSX_DEPLOYMENT_TARGET"] = str(sysconfig_target)
 
             old_env_variables = {}
             for k in IGNORE_ENV_VARIABLES:
