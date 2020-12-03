@@ -2009,7 +2009,7 @@ scan_obj : {
   }
 
   markImplicitEdges(obj);
-  traverseEdge(obj, obj->groupRaw());
+  traverseEdge(obj, obj->group());
 
   CallTraceHook(this, obj);
 
@@ -3570,11 +3570,11 @@ void js::Nursery::collectToFixedPoint(TenuringTracer& mover,
     auto* obj = static_cast<JSObject*>(p->forwardingAddress());
     mover.traceObject(obj);
 
-    TenureCount& entry = tenureCounts.findEntry(obj->groupRaw());
-    if (entry.group == obj->groupRaw()) {
+    TenureCount& entry = tenureCounts.findEntry(obj->group());
+    if (entry.group == obj->group()) {
       entry.count++;
     } else if (!entry.group) {
-      entry.group = obj->groupRaw();
+      entry.group = obj->group();
       entry.count = 1;
     }
   }

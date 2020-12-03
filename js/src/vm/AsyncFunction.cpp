@@ -34,11 +34,11 @@ static JSObject* CreateAsyncFunction(JSContext* cx, JSProtoKey key) {
   HandlePropertyName name = cx->names().AsyncFunction;
   return NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
                               FunctionFlags::NATIVE_CTOR, nullptr, name, proto,
-                              gc::AllocKind::FUNCTION, SingletonObject);
+                              gc::AllocKind::FUNCTION, TenuredObject);
 }
 
 static JSObject* CreateAsyncFunctionPrototype(JSContext* cx, JSProtoKey key) {
-  return NewSingletonObjectWithFunctionPrototype(cx, cx->global());
+  return NewTenuredObjectWithFunctionPrototype(cx, cx->global());
 }
 
 static bool AsyncFunctionClassFinish(JSContext* cx, HandleObject asyncFunction,

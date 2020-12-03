@@ -1456,12 +1456,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
     return arrRes;
   }
 
-  NewObjectKind newKind = GenericObject;
-  ArrayObject* arrRes = NewDenseCopiedArray(cx, length, rest, nullptr, newKind);
-  if (arrRes) {
-    arrRes->setGroup(templateObj->group());
-  }
-  return arrRes;
+  return NewDenseCopiedArray(cx, length, rest);
 }
 
 bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr) {
@@ -1692,9 +1687,7 @@ void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
   MOZ_ASSERT(obj->compartment() == cx->compartment());
   MOZ_ASSERT(obj->zoneFromAnyThread() == cx->zone());
   MOZ_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
-
-  MOZ_ASSERT_IF(!obj->hasLazyGroup(),
-                obj->group()->clasp() == obj->shape()->getObjectClass());
+  MOZ_ASSERT(obj->group()->clasp() == obj->shape()->getObjectClass());
 
   if (obj->isTenured()) {
     MOZ_ASSERT(obj->isAligned());

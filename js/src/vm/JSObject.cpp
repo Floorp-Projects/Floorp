@@ -1229,9 +1229,10 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
     }
   }
 
-  NewObjectKind newKind = obj->isSingleton() ? SingletonObject : TenuredObject;
+  MOZ_ASSERT(!obj->isSingleton());
+
   return NewPlainObjectWithProperties(cx, properties.begin(),
-                                      properties.length(), newKind);
+                                      properties.length(), TenuredObject);
 }
 
 static bool InitializePropertiesFromCompatibleNativeObject(
@@ -1387,17 +1388,13 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
     }
   }
 
-  // Code whether the object is a singleton.
-  uint32_t isSingleton;
   if (mode == XDR_ENCODE) {
-    isSingleton = obj->isSingleton() ? 1 : 0;
+    MOZ_ASSERT(!obj->isSingleton());
   }
-  MOZ_TRY(xdr->codeUint32(&isSingleton));
 
   if (mode == XDR_DECODE) {
-    NewObjectKind newKind = isSingleton ? SingletonObject : TenuredObject;
     obj.set(NewPlainObjectWithProperties(cx, properties.begin(),
-                                         properties.length(), newKind));
+                                         properties.length(), TenuredObject));
     if (!obj) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -1563,13 +1560,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
   MOZ_ASSERT(cx->compartment() == a->compartment());
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
-
-  if (!JSObject::getGroup(cx, a)) {
-    oomUnsafe.crash("JSObject::swap");
-  }
-  if (!JSObject::getGroup(cx, b)) {
-    oomUnsafe.crash("JSObject::swap");
-  }
 
   // Only certain types of objects are allowed to be swapped. This allows the
   // JITs to better optimize objects that can never swap.
@@ -1828,8 +1818,8 @@ NativeObject* js::InitClass(JSContext* cx, HandleObject obj,
 }
 
 void JSObject::fixupAfterMovingGC() {
-  if (IsForwarded(groupRaw())) {
-    setGroupRaw(Forwarded(groupRaw()));
+  if (IsForwarded(group())) {
+    setGroupRaw(Forwarded(group()));
   }
 }
 
@@ -1916,44 +1906,6 @@ static bool SetProto(JSContext* cx, HandleObject obj,
   }
 
   obj->setGroup(newGroup);
-  return true;
-}
-
-bool js::SetPrototypeForClonedFunction(JSContext* cx, HandleFunction fun,
-                                       HandleObject proto) {
-  // This function must only be called from |CloneFunctionObjectIfNotSingleton|!
-
-  // |CanReuseFunctionForClone| ensures |fun| is a singleton function. |fun|
-  // must also be extensible and have a mutable prototype for its prototype
-  // to be modifiable, so assert both conditions, too.
-  MOZ_ASSERT(fun->isSingleton());
-  MOZ_ASSERT(!fun->staticPrototypeIsImmutable());
-  MOZ_ASSERT(fun->isExtensible());
-  MOZ_ASSERT(proto);
-
-  if (proto == fun->staticPrototype()) {
-    return true;
-  }
-
-  // Regenerate object shape (and possibly prototype shape) to invalidate JIT
-  // code that is affected by a prototype mutation.
-  if (!ReshapeForProtoMutation(cx, fun)) {
-    return false;
-  }
-
-  if (!JSObject::setDelegate(cx, proto)) {
-    return false;
-  }
-
-  // Directly splice the prototype instead of calling |js::SetPrototype| to
-  // ensure we don't mark the function as having "unknown properties". This
-  // is safe to do, because the singleton function hasn't yet been exposed
-  // to scripts.
-  Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-  if (!JSObject::splicePrototype(cx, fun, tagged)) {
-    return false;
-  }
-
   return true;
 }
 
@@ -3427,12 +3379,8 @@ void JSObject::dump(js::GenericPrinter& out) const {
   const JSClass* clasp = obj->getClass();
   out.printf("  class %p %s\n", clasp, clasp->name);
 
-  if (obj->hasLazyGroup()) {
-    out.put("  lazy group\n");
-  } else {
-    const ObjectGroup* group = obj->group();
-    out.printf("  group %p\n", group);
-  }
+  const ObjectGroup* group = obj->group();
+  out.printf("  group %p\n", group);
 
   out.put("  flags:");
   if (obj->isDelegate()) out.put(" delegate");
@@ -3855,7 +3803,7 @@ void JSObject::traceChildren(JSTracer* trc) {
 
   traceShape(trc);
 
-  const JSClass* clasp = groupRaw()->clasp();
+  const JSClass* clasp = group()->clasp();
   if (clasp->isNative()) {
     NativeObject* nobj = &as<NativeObject>();
 

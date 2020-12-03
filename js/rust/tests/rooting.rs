@@ -31,7 +31,7 @@ fn rooting() {
                                                        &c_option));
         let _ar = js::ar::AutoRealm::with_obj(cx, global.get());
         rooted!(in(cx) let prototype_proto = JS::GetRealmObjectPrototype(cx));
-        rooted!(in(cx) let proto = JS_NewObjectWithUniqueType(cx,
+        rooted!(in(cx) let proto = JS_NewObjectWithGivenProto(cx,
                                                               &CLASS as *const _,
                                                               prototype_proto.handle()));
         define_methods(cx, proto.handle(), &METHODS[..]).unwrap();

@@ -16,6 +16,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/RangeAnalysis.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
+#include "util/DifferentialTesting.h"
 #include "vm/TraceLogging.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -2152,7 +2153,11 @@ void CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(
 
 void CodeGeneratorX86Shared::canonicalizeIfDeterministic(
     Scalar::Type type, const LAllocation* value) {
-#ifdef JS_MORE_DETERMINISTIC
+#ifdef DEBUG
+  if (!js::SupportDifferentialTesting()) {
+    return;
+  }
+
   switch (type) {
     case Scalar::Float32: {
       FloatRegister in = ToFloatRegister(value);
@@ -2169,7 +2174,7 @@ void CodeGeneratorX86Shared::canonicalizeIfDeterministic(
       break;
     }
   }
-#endif  // JS_MORE_DETERMINISTIC
+#endif  // DEBUG
 }
 
 void CodeGenerator::visitCopySignF(LCopySignF* lir) {

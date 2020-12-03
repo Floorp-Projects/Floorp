@@ -27,7 +27,6 @@ const {
 } = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
 
 const {
-  DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
   REQUEST_EXTENSIONS_FAILURE,
   REQUEST_EXTENSIONS_START,
@@ -52,16 +51,6 @@ const {
 
 const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 
-function isCachedActorNeeded(runtime, type, id) {
-  // @backward-compat { version 68 } Unique ids for workers were introduced in Bug 1539328.
-  // When debugging older browsers, the id falls back to the actor ID. Check if the target
-  // id is a worker actorID (which means getFrontByID() should return an actor with id).
-  return (
-    type === DEBUG_TARGETS.WORKER &&
-    runtime.runtimeDetails.clientWrapper.client.getFrontByID(id)
-  );
-}
-
 function getTabForUrl(url) {
   for (const navigator of Services.wm.getEnumerator("navigator:browser")) {
     for (const browser of navigator.gBrowser.browsers) {
@@ -80,30 +69,22 @@ function getTabForUrl(url) {
 function inspectDebugTarget(type, id) {
   return async ({ dispatch, getState }) => {
     const runtime = getCurrentRuntime(getState().runtimes);
-    id = encodeURIComponent(id);
 
-    let url;
-    if (
-      runtime.id === RUNTIMES.THIS_FIREFOX &&
-      !isCachedActorNeeded(runtime, type, id)
-    ) {
-      // Even when debugging on This Firefox we need to re-use the client since the worker
-      // actor is cached in the client instance. Instead we should pass an id that does
-      // not depend on the client (such as the worker url). This will be fixed in
-      // Bug 1539328.
-      // Once the target is destroyed after closing the toolbox, the front will be gone
-      // and can no longer be used. When debugging This Firefox, workers are regularly
-      // updated so this is not an issue. On remote runtimes however, trying to inspect a
-      // worker a second time after closing the corresponding about:devtools-toolbox tab
-      // will fail. See Bug 1534201.
-      url = `about:devtools-toolbox?type=${type}&id=${id}`;
-    } else {
-      const remoteId = remoteClientManager.getRemoteId(
+    const urlParams = {
+      id,
+      type,
+    };
+
+    if (runtime.id !== RUNTIMES.THIS_FIREFOX) {
+      urlParams.remoteId = remoteClientManager.getRemoteId(
         runtime.id,
         runtime.type
       );
-      url = `about:devtools-toolbox?type=${type}&id=${id}&remoteId=${remoteId}`;
     }
+
+    const url = `about:devtools-toolbox?${new window.URLSearchParams(
+      urlParams
+    )}`;
 
     const existingTab = getTabForUrl(url);
     if (existingTab) {
@@ -222,14 +203,14 @@ function requestExtensions() {
       const addons = await clientWrapper.listAddons({
         iconDataURL: isIconDataURLRequired,
       });
-      let extensions = addons.filter(a => a.debuggable);
 
-      // Filter out hidden & system addons unless the dedicated preference is set to true.
-      if (!getState().ui.showHiddenAddons) {
-        // @backward-compat { version 67 } Older servers don't return the `hidden` property
-        // for System addons.
-        extensions = extensions.filter(e => !e.isSystem && !e.hidden);
-      }
+      const showHiddenAddons = getState().ui.showHiddenAddons;
+
+      // Filter out non-debuggable addons as well as hidden ones, unless the dedicated
+      // preference is set to true.
+      const extensions = addons.filter(
+        a => a.debuggable && (!a.hidden || showHiddenAddons)
+      );
 
       const installedExtensions = extensions.filter(
         e => !e.temporarilyInstalled

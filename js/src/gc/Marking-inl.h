@@ -96,7 +96,7 @@ inline T MaybeForwarded(T t) {
 }
 
 inline const JSClass* MaybeForwardedObjectClass(const JSObject* obj) {
-  return MaybeForwarded(obj->groupRaw())->clasp();
+  return MaybeForwarded(obj->group())->clasp();
 }
 
 template <typename T>

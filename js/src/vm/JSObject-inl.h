@@ -140,18 +140,6 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
   }
 }
 
-/* static */ inline js::ObjectGroup* JSObject::getGroup(JSContext* cx,
-                                                        js::HandleObject obj) {
-  MOZ_ASSERT(cx->compartment() == obj->compartment());
-  if (obj->hasLazyGroup()) {
-    if (cx->compartment() != obj->compartment()) {
-      MOZ_CRASH();
-    }
-    return makeLazyGroup(cx, obj);
-  }
-  return obj->groupRaw();
-}
-
 inline void JSObject::setGroup(js::ObjectGroup* group) {
   MOZ_RELEASE_ASSERT(group);
   MOZ_ASSERT(!isSingleton());
@@ -441,14 +429,6 @@ inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
                                                                         proto);
 }
 
-template <typename T>
-inline T* NewSingletonObjectWithGivenTaggedProtoAndKind(
-    JSContext* cx, Handle<TaggedProto> proto, gc::AllocKind allocKind) {
-  JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto,
-                                                allocKind, SingletonObject, 0);
-  return obj ? &obj->as<T>() : nullptr;
-}
-
 inline JSObject* NewObjectWithGivenProto(
     JSContext* cx, const JSClass* clasp, HandleObject proto,
     gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
@@ -479,12 +459,6 @@ inline JSObject* NewSingletonObjectWithGivenProto(JSContext* cx,
 template <typename T>
 inline T* NewObjectWithGivenProto(JSContext* cx, HandleObject proto) {
   return detail::NewObjectWithGivenTaggedProtoForKind<T, GenericObject>(
-      cx, AsTaggedProto(proto));
-}
-
-template <typename T>
-inline T* NewSingletonObjectWithGivenProto(JSContext* cx, HandleObject proto) {
-  return detail::NewObjectWithGivenTaggedProtoForKind<T, SingletonObject>(
       cx, AsTaggedProto(proto));
 }
 

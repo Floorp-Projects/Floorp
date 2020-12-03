@@ -150,13 +150,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
     return ArrayBufferObject::maxBufferByteLength();
   }
 
-  /*
-   * Byte length above which created typed arrays will have singleton types.
-   * This only applies to typed arrays created with an existing ArrayBuffer and
-   * when not inlined from Ion.
-   */
-  static constexpr uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
-
   static bool isOriginalLengthGetter(Native native);
 
   static bool isOriginalByteOffsetGetter(Native native);

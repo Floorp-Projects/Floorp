@@ -268,15 +268,14 @@ static const JSFunctionSpec generator_methods[] = {
     JS_SELF_HOSTED_FN("throw", "GeneratorThrow", 1, 0),
     JS_SELF_HOSTED_FN("return", "GeneratorReturn", 1, 0), JS_FS_END};
 
-JSObject* js::NewSingletonObjectWithFunctionPrototype(
+JSObject* js::NewTenuredObjectWithFunctionPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   RootedObject proto(cx,
                      GlobalObject::getOrCreateFunctionPrototype(cx, global));
   if (!proto) {
     return nullptr;
   }
-  RootedObject obj(cx,
-                   NewSingletonObjectWithGivenProto<PlainObject>(cx, proto));
+  RootedObject obj(cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, proto));
   if (!obj) {
     return nullptr;
   }
@@ -296,12 +295,12 @@ static JSObject* CreateGeneratorFunction(JSContext* cx, JSProtoKey key) {
   HandlePropertyName name = cx->names().GeneratorFunction;
   return NewFunctionWithProto(cx, Generator, 1, FunctionFlags::NATIVE_CTOR,
                               nullptr, name, proto, gc::AllocKind::FUNCTION,
-                              SingletonObject);
+                              TenuredObject);
 }
 
 static JSObject* CreateGeneratorFunctionPrototype(JSContext* cx,
                                                   JSProtoKey key) {
-  return NewSingletonObjectWithFunctionPrototype(cx, cx->global());
+  return NewTenuredObjectWithFunctionPrototype(cx, cx->global());
 }
 
 static bool GeneratorFunctionClassFinish(JSContext* cx,

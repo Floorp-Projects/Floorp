@@ -403,7 +403,7 @@ JSObject* ErrorObject::createConstructor(JSContext* cx, JSProtoKey key) {
     ctor =
         NewFunctionWithProto(cx, native, nargs, FunctionFlags::NATIVE_CTOR,
                              nullptr, ClassName(key, cx), proto,
-                             gc::AllocKind::FUNCTION_EXTENDED, SingletonObject);
+                             gc::AllocKind::FUNCTION_EXTENDED, TenuredObject);
   }
 
   if (!ctor) {

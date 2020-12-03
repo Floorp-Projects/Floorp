@@ -250,13 +250,9 @@ JSObject* WindowNamedPropertiesHandler::Create(JSContext* aCx,
   js::ProxyOptions options;
   options.setClass(&WindowNamedPropertiesClass.mBase);
 
-  // Note: since the scope polluter proxy lives on the window's prototype
-  // chain, it needs a singleton type to avoid polluting type information
-  // for properties on the window.
   JS::Rooted<JSObject*> gsp(
-      aCx, js::NewSingletonProxyObject(
-               aCx, WindowNamedPropertiesHandler::getInstance(),
-               JS::NullHandleValue, aProto, options));
+      aCx, js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
+                              JS::NullHandleValue, aProto, options));
   if (!gsp) {
     return nullptr;
   }

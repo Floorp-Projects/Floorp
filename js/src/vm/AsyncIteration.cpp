@@ -506,12 +506,12 @@ static JSObject* CreateAsyncGeneratorFunction(JSContext* cx, JSProtoKey key) {
   // 25.3.1 The AsyncGeneratorFunction Constructor
   return NewFunctionWithProto(cx, AsyncGeneratorConstructor, 1,
                               FunctionFlags::NATIVE_CTOR, nullptr, name, proto,
-                              gc::AllocKind::FUNCTION, SingletonObject);
+                              gc::AllocKind::FUNCTION, TenuredObject);
 }
 
 static JSObject* CreateAsyncGeneratorFunctionPrototype(JSContext* cx,
                                                        JSProtoKey key) {
-  return NewSingletonObjectWithFunctionPrototype(cx, cx->global());
+  return NewTenuredObjectWithFunctionPrototype(cx, cx->global());
 }
 
 static bool AsyncGeneratorFunctionClassFinish(JSContext* cx,
