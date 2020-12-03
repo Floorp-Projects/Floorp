@@ -55,8 +55,8 @@ add_task(async function() {
     desc: "CTRL+ENTER on the autofilled part should bypass autofill",
     typed: "exam",
     autofilled: "example.com/",
-    modified: "https://www.exam.com",
-    waitForUrl: "https://www.exam.com/",
+    modified: "www.exam.com",
+    waitForUrl: "http://www.exam.com/",
     keys: [["KEY_Enter", { ctrlKey: true }]],
   });
 });
