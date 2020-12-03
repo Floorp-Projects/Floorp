@@ -60,6 +60,7 @@ function saveURL(
   aShouldBypassCache,
   aSkipPrompt,
   aReferrerInfo,
+  aCookieJarSettings,
   aSourceDocument,
   aIsContentWindowPrivate,
   aPrincipal
@@ -74,7 +75,7 @@ function saveURL(
     aFilePickerTitleKey,
     null,
     aReferrerInfo,
-    null,
+    aCookieJarSettings,
     aSourceDocument,
     aSkipPrompt,
     null,
@@ -394,8 +395,10 @@ function internalSave(
  * @param persistArgs.contentPolicyType
  *        The type of content we're saving. Will be used to determine what
  *        content is accepted, enforce sniffing restrictions, etc.
- * @param persistArgs.cookieJarSettings
- *        The nsICookieJarSettings that we need to use.
+ * @param persistArgs.cookieJarSettings [optional]
+ *        The nsICookieJarSettings that will be used for the saving channel, or
+ *        null that savePrivacyAwareURI will create one based on the current
+ *        state of the prefs/permissions
  * @param persistArgs.targetContentType
  *        Required and used only when persistArgs.sourceDocument is present,
  *        determines the final content type of the saved file, or null to use
