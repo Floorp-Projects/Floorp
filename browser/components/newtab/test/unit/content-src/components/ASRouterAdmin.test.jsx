@@ -75,7 +75,7 @@ describe("ASRouterAdmin", () => {
       assert.equal(
         wrapper
           .find("h2")
-          .at(2)
+          .at(1)
           .text(),
         "Messages"
       );

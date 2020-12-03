@@ -5,7 +5,6 @@
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { ASRouterUtils } from "../../asrouter/asrouter-utils";
 import { connect } from "react-redux";
-import { ModalOverlay } from "../../asrouter/components/ModalOverlay/ModalOverlay";
 import React from "react";
 import { SimpleHashRouter } from "./SimpleHashRouter";
 
@@ -489,9 +488,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(
       this
     );
-    this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(
-      this
-    );
     this.handleExpressionEval = this.handleExpressionEval.bind(this);
     this.onChangeTargetingParameters = this.onChangeTargetingParameters.bind(
       this
@@ -501,7 +497,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
     this.setAttribution = this.setAttribution.bind(this);
     this.onCopyTargetingParams = this.onCopyTargetingParams.bind(this);
-    this.onPasteTargetingParams = this.onPasteTargetingParams.bind(this);
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
     this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
     this.handleForceWNP = this.handleForceWNP.bind(this);
@@ -521,11 +516,9 @@ export class ASRouterAdminInner extends React.PureComponent {
       collapsedMessages: [],
       modifiedMessages: [],
       evaluationStatus: {},
-      trailheadTriplet: "",
       stringTargetingParameters: null,
       newStringTargetingParameters: null,
       copiedToClipboard: false,
-      pasteFromClipboard: false,
       attributionParameters: {
         source: "addons.mozilla.org",
         medium: "referral",
@@ -572,27 +565,11 @@ export class ASRouterAdminInner extends React.PureComponent {
     }).then(this.setStateFromParent);
   }
 
-  findOtherBundledMessagesOfSameTemplate(template) {
-    return this.state.messages.filter(
-      msg => msg.template === template && msg.bundled
-    );
-  }
-
   handleBlock(msg) {
-    if (msg.bundled && msg.template !== "onboarding") {
-      // If we are blocking a message that belongs to a bundle, block all other messages that are bundled of that same template
-      let bundle = this.findOtherBundledMessagesOfSameTemplate(msg.template);
-      return () => ASRouterUtils.blockBundle(bundle);
-    }
     return () => ASRouterUtils.blockById(msg.id);
   }
 
   handleUnblock(msg) {
-    if (msg.bundled && msg.template !== "onboarding") {
-      // If we are unblocking a message that belongs to a bundle, unblock all other messages that are bundled of that same template
-      let bundle = this.findOtherBundledMessagesOfSameTemplate(msg.template);
-      return () => ASRouterUtils.unblockBundle(bundle);
-    }
     return () => ASRouterUtils.unblockById(msg.id);
   }
 
@@ -825,14 +802,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     document.addEventListener("copy", setClipboardData);
 
     document.execCommand("copy");
-  }
-
-  // Copy all clipboard data to targeting parameters
-  onPasteTargetingParams(event) {
-    this.setState(({ pasteFromClipboard }) => ({
-      pasteFromClipboard: !pasteFromClipboard,
-      newStringTargetingParameters: "",
-    }));
   }
 
   onNewTargetingParams(event) {
@@ -1324,35 +1293,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
-  renderPasteModal() {
-    if (!this.state.pasteFromClipboard) {
-      return null;
-    }
-    const errors =
-      this.refs.targetingParamsEval &&
-      this.refs.targetingParamsEval.innerText.length;
-    return (
-      <ModalOverlay
-        innerStyle="pasteModal"
-        title="New targeting parameters"
-        button_label={errors ? "Cancel" : "Done"}
-        onDismissBundle={this.onPasteTargetingParams}
-      >
-        <div className="onboardingMessage">
-          <p>
-            <textarea
-              onChange={this.onNewTargetingParams}
-              value={this.state.newStringTargetingParameters}
-              rows="20"
-              cols="60"
-            />
-          </p>
-          <p ref="targetingParamsEval" />
-        </div>
-      </ModalOverlay>
-    );
-  }
-
   renderTargetingParameters() {
     // There was no error and the result is truthy
     const success =
@@ -1411,13 +1351,6 @@ export class ASRouterAdminInner extends React.PureComponent {
                 {this.state.copiedToClipboard
                   ? "Parameters copied!"
                   : "Copy parameters"}
-              </button>
-              <button
-                className="ASRouterButton secondary"
-                onClick={this.onPasteTargetingParams}
-                disabled={this.state.pasteFromClipboard}
-              >
-                Paste parameters
               </button>
             </td>
           </tr>
@@ -1686,19 +1619,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     return <p>No errors</p>;
   }
 
-  renderTrailheadInfo() {
-    return (
-      <table className="minimal-table">
-        <tbody>
-          <tr>
-            <td>Triplet branch</td>
-            <td>{this.state.trailheadTriplet}</td>
-          </tr>
-        </tbody>
-      </table>
-    );
-  }
-
   renderWNPTests() {
     if (!this.state.messages) {
       return null;
@@ -1858,12 +1778,9 @@ export class ASRouterAdminInner extends React.PureComponent {
               </button>
             </h2>
             {this.state.providers ? this.renderProviders() : null}
-            <h2>Trailhead</h2>
-            {this.renderTrailheadInfo()}
             <h2>Messages</h2>
             {this.renderMessageFilter()}
             {this.renderMessages()}
-            {this.renderPasteModal()}
           </React.Fragment>
         );
     }

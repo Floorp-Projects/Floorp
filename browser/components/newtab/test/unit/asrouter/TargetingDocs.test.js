@@ -4,7 +4,7 @@ import docs from "content-src/asrouter/docs/targeting-attributes.md";
 // The following targeting parameters are either deprecated or should not be included in the docs for some reason.
 const SKIP_DOCS = [];
 // These are extra message context attributes via ASRouter.jsm
-const MESSAGE_CONTEXT_ATTRIBUTES = ["previousSessionEnd", "trailheadTriplet"];
+const MESSAGE_CONTEXT_ATTRIBUTES = ["previousSessionEnd"];
 
 function getHeadingsFromDocs() {
   const re = /### `(\w+)`/g;
