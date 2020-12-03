@@ -160,6 +160,7 @@ mod test {
     use crate::{common_test::*, ipc, metrics};
 
     #[test]
+    #[ignore] // TODO: Enable them back when bug 1677455 lands.
     fn smoke_test_timespan() {
         let _lock = lock_test();
 
@@ -185,6 +186,7 @@ mod test {
     }
 
     #[test]
+    #[ignore] // TODO: Enable them back when bug 1677455 lands.
     fn timespan_ipc() {
         let _lock = lock_test();
         let _raii = ipc::test_set_need_ipc(true);
