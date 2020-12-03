@@ -133,12 +133,11 @@ bool xpc_LocalizeRuntime(JSRuntime* rt) {
   }
 
   // No pref has been found, so get the default locale from the
-  // regional prefs locales.
-  AutoTArray<nsCString, 10> rpLocales;
-  LocaleService::GetInstance()->GetRegionalPrefsLocales(rpLocales);
+  // application's locale.
+  nsAutoCString appLocaleStr;
+  LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocaleStr);
 
-  MOZ_ASSERT(rpLocales.Length() > 0);
-  return JS_SetDefaultLocale(rt, rpLocales[0].get());
+  return JS_SetDefaultLocale(rt, appLocaleStr.get());
 }
 
 void xpc_DelocalizeRuntime(JSRuntime* rt) {

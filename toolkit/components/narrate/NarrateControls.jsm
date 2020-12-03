@@ -308,11 +308,12 @@ NarrateControls.prototype = {
 
   _getLanguageName(lang) {
     try {
-      // This may throw if the lang can't be parsed.
-      let langCode = new Services.intl.Locale(lang).language;
+      // This may throw if the lang doesn't match.
+      // XXX: Replace with Intl.Locale once bug 1433303 lands.
+      let langCode = lang.match(/^[a-z]{2,3}/)[0];
 
       return Services.intl.getLanguageDisplayNames(undefined, [langCode]);
-    } catch {
+    } catch (e) {
       return "";
     }
   },
