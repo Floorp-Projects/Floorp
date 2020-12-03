@@ -6778,10 +6778,10 @@
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505, 1521427],
+    "bug_numbers": [893505, 1521427, 1553982],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the application update doorhanger type that was displayed.",
-    "labels": ["restart", "available", "manual", "unsupported"]
+    "labels": ["restart", "available", "manual", "unsupported", "otherinstance"]
   },
   "UPDATE_NOTIFICATION_BADGE_SHOWN": {
     "record_in_processes": ["main"],
@@ -6789,10 +6789,10 @@
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505, 1365204, 1521427],
+    "bug_numbers": [893505, 1365204, 1521427, 1553982],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the application update badge type that was displayed.",
-    "labels": ["restart", "available", "manual", "unsupported"]
+    "labels": ["restart", "available", "manual", "unsupported", "otherinstance"]
   },
   "UPDATE_NOTIFICATION_DISMISSED": {
     "record_in_processes": ["main"],
@@ -6800,10 +6800,10 @@
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505, 1521427],
+    "bug_numbers": [893505, 1521427, 1553982],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the dismiss action was executed for this application update doorhanger type.",
-    "labels": ["restart", "available", "manual", "unsupported"]
+    "labels": ["restart", "available", "manual", "unsupported", "otherinstance"]
   },
   "UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER": {
     "record_in_processes": ["main"],
@@ -6811,10 +6811,10 @@
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505, 1521427],
+    "bug_numbers": [893505, 1521427, 1553982],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the main update action was initiated for this application update doorhanger type.",
-    "labels": ["restart", "available", "manual", "unsupported"]
+    "labels": ["restart", "available", "manual", "unsupported", "otherinstance"]
   },
   "UPDATE_NOTIFICATION_MAIN_ACTION_MENU": {
     "record_in_processes": ["main"],
@@ -6822,10 +6822,10 @@
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "bytesized@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505, 1521427],
+    "bug_numbers": [893505, 1521427, 1553982],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the update action was initiated from the PanelUI application update menu item.",
-    "labels": ["restart", "available", "manual", "unsupported"]
+    "labels": ["restart", "available", "manual", "unsupported", "otherinstance"]
   },
   "UPDATE_CAN_USE_BITS_EXTERNAL": {
     "record_in_processes": ["main"],
