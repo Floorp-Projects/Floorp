@@ -94,7 +94,6 @@ FINAL_TARGET_FILES += [
     "data/partial_removed-files_mac",
     "data/partial_update_manifest",
     "data/replace_log_success",
-    "data/semaphoreTestChildScript.js",
     "data/simple.mar",
     "TestAUSReadStrings1.ini",
     "TestAUSReadStrings2.ini",
