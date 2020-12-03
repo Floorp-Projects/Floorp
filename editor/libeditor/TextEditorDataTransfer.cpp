@@ -411,8 +411,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // Then, move focus if necessary.  This must cause dispatching "blur" event
   // and "focus" event.
   if (newFocusedElement && focusedElement != newFocusedElement) {
-    DebugOnly<nsresult> rvIgnored =
-        nsFocusManager::GetFocusManager()->SetFocus(newFocusedElement, 0);
+    RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
+    DebugOnly<nsresult> rvIgnored = fm->SetFocus(newFocusedElement, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "nsFocusManager::SetFocus() failed to set focus "
                          "to the element, but ignored");
