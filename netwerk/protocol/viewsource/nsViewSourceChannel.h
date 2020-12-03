@@ -78,6 +78,10 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   // Clones aURI and prefixes it with "view-source:" schema,
   nsresult BuildViewSourceURI(nsIURI* aURI, nsIURI** aResult);
 
+  // Called to update the forwarding channel members after the `mChannel` field
+  // has been changed to reflect the new inner channel.
+  void UpdateChannelInterfaces();
+
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
