@@ -115,7 +115,6 @@ class ThreeDotMenuMainRobot {
     fun verifyAddFirefoxHome() = assertAddToFirefoxHome()
     fun verifyAddToMobileHome() = assertAddToMobileHome()
     fun verifyDesktopSite() = assertDesktopSite()
-    fun verifyOpenInAppButton() = assertOpenInAppButton()
     fun verifyDownloadsButton() = assertDownloadsButton()
 
     fun verifyThreeDotMainMenuItems() {
@@ -517,15 +516,6 @@ private fun desktopSiteButton() =
 private fun assertDesktopSite() {
     onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeUp())
     desktopSiteButton().check(matches(isDisplayed()))
-}
-
-private fun assertOpenInAppButton() {
-    onView(withId(R.id.mozac_browser_menu_recyclerView))
-        .perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(R.string.browser_menu_open_app_link))
-            )
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun downloadsButton() = onView(withText(R.string.library_downloads))

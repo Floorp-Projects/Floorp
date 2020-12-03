@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import android.view.View
-import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
@@ -264,19 +263,6 @@ class SmokeTest {
             verifyRefreshButton()
         }.refreshPage {
             verifyPageContent("REFRESHED")
-        }
-    }
-
-    @Test
-    fun mainMenuOpenInAppTest() {
-        // Using youtube as is a default app available in every Android emulator/device
-        val youtubeUrl = "www.youtube.com"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(youtubeUrl.toUri()) {
-            verifyPageContent("YouTube")
-        }.openThreeDotMenu {
-            verifyOpenInAppButton()
         }
     }
 
