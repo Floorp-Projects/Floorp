@@ -12,7 +12,7 @@ PACKAGE_VERSION = "2.5.0"
 deps = [
     "mozfile>=1.2",
     "mozlog>=6.0",
-    "six>=1.10.0,<2",
+    "six>=1.13.0,<2",
 ]
 
 setup(

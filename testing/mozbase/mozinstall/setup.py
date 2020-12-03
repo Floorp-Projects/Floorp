@@ -19,7 +19,7 @@ deps = [
     "mozinfo >= 0.7",
     "mozfile >= 1.0",
     "requests",
-    "six >= 1.10.0",
+    "six >= 1.13.0",
 ]
 
 setup(
