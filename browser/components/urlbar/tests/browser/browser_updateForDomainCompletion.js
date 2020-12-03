@@ -11,14 +11,14 @@ add_task(async function() {
     async function(browser) {
       gURLBar.value = "example";
       gURLBar.select();
-      const loadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(
-        "https://www.example.com/",
-        gBrowser.selectedBrowser
+      let loadPromise = BrowserTestUtils.browserLoaded(
+        browser,
+        false,
+        url => url == "http://www.example.com/"
       );
-
       EventUtils.sendKey("return");
       await loadPromise;
-      ok(true, "https://www.example.com is loaded correctly");
+      is(gURLBar.value, "www.example.com");
     }
   );
 });
