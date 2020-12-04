@@ -7,6 +7,7 @@ module to handle Gecko profiling.
 """
 from __future__ import absolute_import
 
+import gzip
 import json
 import os
 import tempfile
@@ -96,8 +97,12 @@ class GeckoProfile(object):
     def _save_gecko_profile(self, symbolicator, missing_symbols_zip, profile_path):
         LOG.info("Symbolicating profile at %s" % profile_path)
         try:
-            with open(profile_path, "r") as profile_file:
-                profile = json.load(profile_file)
+            if profile_path.endswith(".gz"):
+                with gzip.open(profile_path, "r") as profile_file:
+                    profile = json.load(profile_file)
+            else:
+                with open(profile_path, "r") as profile_file:
+                    profile = json.load(profile_file)
             symbolicator.dump_and_integrate_missing_symbols(
                 profile, missing_symbols_zip
             )
@@ -120,7 +125,7 @@ class GeckoProfile(object):
         if self.raptor_config.get("browsertime"):
             topdir = self.raptor_config.get("browsertime_result_dir")
             for root, dirnames, filenames in os.walk(topdir):
-                for filename in fnmatch.filter(filenames, "geckoProfile*.json"):
+                for filename in fnmatch.filter(filenames, "geckoProfile*.json*"):
                     res.append(os.path.join(root, filename))
         else:
             # Collect all individual profiles that the test
