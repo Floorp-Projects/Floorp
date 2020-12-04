@@ -3599,6 +3599,10 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("concat", "String_concat", 1, 0),
     JS_SELF_HOSTED_FN("slice", "String_slice", 2, 0),
 
+#ifdef NIGHTLY_BUILD
+    JS_SELF_HOSTED_FN("at", "String_at", 1, 0),
+#endif
+
     /* HTML string methods. */
     JS_SELF_HOSTED_FN("bold", "String_bold", 0, 0),
     JS_SELF_HOSTED_FN("italics", "String_italics", 0, 0),
