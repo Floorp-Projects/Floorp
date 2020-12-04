@@ -21,21 +21,21 @@ import { promisify } from 'util';
 import {
   getTestState,
   itOnlyRegularInstall,
-  itFailsWindowsUntilDate,
-} from './mocha-utils';
-import utils from './utils';
+} from './mocha-utils'; // eslint-disable-line import/extensions
+import utils from './utils.js';
 import expect from 'expect';
 import rimraf from 'rimraf';
-import { Page } from '../src/common/Page';
+import { Page } from '../lib/cjs/puppeteer/common/Page.js';
 
 const rmAsync = promisify(rimraf);
 const mkdtempAsync = promisify(fs.mkdtemp);
 const readFileAsync = promisify(fs.readFile);
 const statAsync = promisify(fs.stat);
 const TMP_FOLDER = path.join(os.tmpdir(), 'pptr_tmp_folder-');
+const FIREFOX_TIMEOUT = 30 * 1000;
 
 describe('Launcher specs', function () {
-  if (getTestState().isFirefox) this.timeout(30 * 1000);
+  if (getTestState().isFirefox) this.timeout(FIREFOX_TIMEOUT);
 
   describe('Puppeteer', function () {
     describe('BrowserFetcher', function () {
@@ -304,7 +304,7 @@ describe('Launcher specs', function () {
             '--headless'
           );
           expect(puppeteer.defaultArgs({ userDataDir: 'foo' })).toContain(
-            '--user-data-dir=foo'
+            `--user-data-dir=${path.resolve('foo')}`
           );
         } else if (isFirefox) {
           expect(puppeteer.defaultArgs()).toContain('--headless');
@@ -328,7 +328,7 @@ describe('Launcher specs', function () {
             '-profile'
           );
           expect(puppeteer.defaultArgs({ userDataDir: 'foo' })).toContain(
-            'foo'
+            path.resolve('foo')
           );
         }
       });
@@ -440,6 +440,8 @@ describe('Launcher specs', function () {
 
       after(async () => {
         const { puppeteer } = getTestState();
+        // @ts-expect-error launcher is a private property that users can't
+        // touch, but for testing purposes we need to reset it.
         puppeteer._lazyLauncher = undefined;
         puppeteer._productName = productName;
       });
@@ -455,6 +457,7 @@ describe('Launcher specs', function () {
       it('falls back to launching chrome if there is an unknown product but logs a warning', async () => {
         const { puppeteer } = getTestState();
         const consoleStub = sinon.stub(console, 'warn');
+        // @ts-expect-error purposeful bad input
         const browser = await puppeteer.launch({ product: 'SO_NOT_A_PRODUCT' });
         const userAgent = await browser.userAgent();
         await browser.close();
@@ -466,19 +469,17 @@ describe('Launcher specs', function () {
       });
 
       /* We think there's a bug in the FF Windows launcher, or some
-       * combo of that plus it running on CI, but we're deferring fixing
-       * this so we can get Windows CI stable and then dig into this
-       * properly with help from the Mozilla folks.
+       * combo of that plus it running on CI, but it's hard to track down.
+       * See comment here: https://github.com/puppeteer/puppeteer/issues/5673#issuecomment-670141377.
        */
-      itOnlyRegularInstall('should be able to launch Firefox',
-        async () => {
-          const { puppeteer } = getTestState();
-          const browser = await puppeteer.launch({ product: 'firefox' });
-          const userAgent = await browser.userAgent();
-          await browser.close();
-          expect(userAgent).toContain('Firefox');
-        }
-      );
+      itOnlyRegularInstall('should be able to launch Firefox', async function () {
+        this.timeout(FIREFOX_TIMEOUT);
+        const { puppeteer } = getTestState();
+        const browser = await puppeteer.launch({ product: 'firefox' });
+        const userAgent = await browser.userAgent();
+        await browser.close();
+        expect(userAgent).toContain('Firefox');
+      });
     });
 
     describe('Puppeteer.connect', function () {

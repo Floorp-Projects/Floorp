@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import { Events } from './Events';
-import { Page } from './Page';
-import { WebWorker } from './WebWorker';
-import { CDPSession } from './Connection';
-import { Browser, BrowserContext } from './Browser';
-import { Viewport } from './PuppeteerViewport';
-import Protocol from '../protocol';
+import { Page, PageEmittedEvents } from './Page.js';
+import { WebWorker } from './WebWorker.js';
+import { CDPSession } from './Connection.js';
+import { Browser, BrowserContext } from './Browser.js';
+import { Viewport } from './PuppeteerViewport.js';
+import { Protocol } from 'devtools-protocol';
 
 /**
  * @public
@@ -45,7 +44,7 @@ export class Target {
   /**
    * @internal
    */
-  _isClosedPromise: Promise<boolean>;
+  _isClosedPromise: Promise<void>;
   /**
    * @internal
    */
@@ -87,12 +86,12 @@ export class Target {
       if (!opener || !opener._pagePromise || this.type() !== 'page')
         return true;
       const openerPage = await opener._pagePromise;
-      if (!openerPage.listenerCount(Events.Page.Popup)) return true;
+      if (!openerPage.listenerCount(PageEmittedEvents.Popup)) return true;
       const popupPage = await this.page();
-      openerPage.emit(Events.Page.Popup, popupPage);
+      openerPage.emit(PageEmittedEvents.Popup, popupPage);
       return true;
     });
-    this._isClosedPromise = new Promise<boolean>(
+    this._isClosedPromise = new Promise<void>(
       (fulfill) => (this._closedCallback = fulfill)
     );
     this._isInitialized =

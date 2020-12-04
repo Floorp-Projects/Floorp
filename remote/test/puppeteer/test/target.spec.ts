@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import utils from './utils';
+import utils from './utils.js';
 const { waitEvent } = utils;
 import expect from 'expect';
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-} from './mocha-utils';
-import { Target } from '../src/common/Target';
+} from './mocha-utils'; // eslint-disable-line import/extensions
+import { Target } from '../lib/cjs/puppeteer/common/Target.js';
 
 describe('Target', function () {
   setupTestBrowserHooks();
@@ -80,7 +80,7 @@ describe('Target', function () {
           )
           .then((target) => target.page()),
         page.evaluate(
-          (url) => window.open(url),
+          (url: string) => window.open(url),
           server.CROSS_PROCESS_PREFIX + '/empty.html'
         ),
       ]);
@@ -214,7 +214,7 @@ describe('Target', function () {
       // Open a new page. Use window.open to connect to the page later.
       await Promise.all([
         page.evaluate(
-          (url) => window.open(url),
+          (url: string) => window.open(url),
           server.PREFIX + '/one-style.html'
         ),
         server.waitForRequest('/one-style.css'),
@@ -259,13 +259,13 @@ describe('Target', function () {
         (target) => target.url() === server.EMPTY_PAGE
       );
       targetPromise
-      .then(() => (resolved = true))
-      .catch((error) => {
-        resolved = true;
-        if (error instanceof puppeteer.errors.TimeoutError) {
-          console.error(error);
-        } else throw error;
-      });
+        .then(() => (resolved = true))
+        .catch((error) => {
+          resolved = true;
+          if (error instanceof puppeteer.errors.TimeoutError) {
+            console.error(error);
+          } else throw error;
+        });
       const page = await browser.newPage();
       expect(resolved).toBe(false);
       await page.goto(server.EMPTY_PAGE);

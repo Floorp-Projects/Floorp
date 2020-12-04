@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { assert } from './assert';
-import { helper } from './helper';
-import { CDPSession } from './Connection';
+import { assert } from './assert.js';
+import { helper } from './helper.js';
+import { CDPSession } from './Connection.js';
 
 /**
  * @public
@@ -101,11 +101,15 @@ export class Tracing {
    */
   async stop(): Promise<Buffer> {
     let fulfill: (value: Buffer) => void;
-    const contentPromise = new Promise<Buffer>((x) => (fulfill = x));
+    let reject: (err: Error) => void;
+    const contentPromise = new Promise<Buffer>((x, y) => {
+      fulfill = x;
+      reject = y;
+    });
     this._client.once('Tracing.tracingComplete', (event) => {
       helper
         .readProtocolStream(this._client, event.stream, this._path)
-        .then(fulfill);
+        .then(fulfill, reject);
     });
     await this._client.send('Tracing.end');
     this._recording = false;

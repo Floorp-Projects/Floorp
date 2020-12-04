@@ -15,7 +15,7 @@
  */
 import fs from 'fs';
 import path from 'path';
-import utils from './utils';
+import utils from './utils.js';
 const { waitEvent } = utils;
 import expect from 'expect';
 import sinon from 'sinon';
@@ -24,8 +24,9 @@ import {
   itFailsFirefox,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-} from './mocha-utils';
-import { Page, Metrics } from '../src/common/Page';
+} from './mocha-utils'; // eslint-disable-line import/extensions
+import { Page, Metrics } from '../lib/cjs/puppeteer/common/Page.js';
+import { JSHandle } from '../lib/cjs/puppeteer/common/JSHandle.js';
 
 describe('Page', function () {
   setupTestBrowserHooks();
@@ -115,21 +116,6 @@ describe('Page', function () {
         page.goto('about:blank'),
         utils.waitEvent(page, 'load'),
       ]);
-    });
-  });
-
-  describe('Async stacks', () => {
-    it('should work', async () => {
-      const { page, server } = getTestState();
-
-      server.setRoute('/empty.html', (req, res) => {
-        res.statusCode = 204;
-        res.end();
-      });
-      let error = null;
-      await page.goto(server.EMPTY_PAGE).catch((error_) => (error = error_));
-      expect(error).not.toBe(null);
-      expect(error.stack).toContain(__filename);
     });
   });
 
@@ -259,7 +245,6 @@ describe('Page', function () {
       await page.goto(server.EMPTY_PAGE);
       let error = null;
       await context
-        // @ts-expect-error
         .overridePermissions(server.EMPTY_PAGE, ['foo'])
         .catch((error_) => (error = error_));
       expect(error.message).toBe('Unknown permission: foo');
@@ -411,7 +396,7 @@ describe('Page', function () {
       const prototypeHandle = await page.evaluateHandle(() => Set.prototype);
       const objectsHandle = await page.queryObjects(prototypeHandle);
       const count = await page.evaluate(
-        (objects) => objects.length,
+        (objects: JSHandle[]) => objects.length,
         objectsHandle
       );
       expect(count).toBe(1);
@@ -430,7 +415,7 @@ describe('Page', function () {
       const prototypeHandle = await page.evaluateHandle(() => Set.prototype);
       const objectsHandle = await page.queryObjects(prototypeHandle);
       const count = await page.evaluate(
-        (objects) => objects.length,
+        (objects: JSHandle[]) => objects.length,
         objectsHandle
       );
       expect(count).toBe(1);
@@ -474,6 +459,13 @@ describe('Page', function () {
       ]);
       expect(message.text()).toEqual('hello 5 JSHandle@object');
       expect(message.type()).toEqual('log');
+      expect(message.args()).toHaveLength(3);
+      expect(message.location()).toEqual({
+        url: expect.any(String),
+        lineNumber: expect.any(Number),
+        columnNumber: expect.any(Number),
+      });
+
       expect(await message.args()[0].jsonValue()).toEqual('hello');
       expect(await message.args()[1].jsonValue()).toEqual(5);
       expect(await message.args()[2].jsonValue()).toEqual({ foo: 'bar' });
@@ -529,7 +521,7 @@ describe('Page', function () {
       const [message] = await Promise.all([
         waitEvent(page, 'console'),
         page.evaluate(
-          async (url) => fetch(url).catch(() => {}),
+          async (url: string) => fetch(url).catch(() => {}),
           server.EMPTY_PAGE
         ),
       ]);
@@ -554,7 +546,7 @@ describe('Page', function () {
         lineNumber: undefined,
       });
     });
-    it('should have location for console API calls', async () => {
+    it('should have location and stack trace for console API calls', async () => {
       const { page, server, isChrome } = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
@@ -566,9 +558,26 @@ describe('Page', function () {
       expect(message.type()).toBe('log');
       expect(message.location()).toEqual({
         url: server.PREFIX + '/consolelog.html',
-        lineNumber: 7,
-        columnNumber: isChrome ? 14 : 6, // console.|log vs |console.log
+        lineNumber: 8,
+        columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
       });
+      expect(message.stackTrace()).toEqual([
+        {
+          url: server.PREFIX + '/consolelog.html',
+          lineNumber: 8,
+          columnNumber: isChrome ? 16 : 8, // console.|log vs |console.log
+        },
+        {
+          url: server.PREFIX + '/consolelog.html',
+          lineNumber: 11,
+          columnNumber: 8,
+        },
+        {
+          url: server.PREFIX + '/consolelog.html',
+          lineNumber: 13,
+          columnNumber: 6,
+        },
+      ]);
     });
     // @see https://github.com/puppeteer/puppeteer/issues/3865
     it('should not throw when there are console messages in detached iframes', async () => {
@@ -901,8 +910,8 @@ describe('Page', function () {
       await page.exposeFunction('complexObject', function (a, b) {
         return { x: a.x + b.x };
       });
-      const result = await page.evaluate<{ x: number }>(async () =>
-        globalThis.complexObject({ x: 5 }, { x: 2 })
+      const result = await page.evaluate<() => Promise<{ x: number }>>(
+        async () => globalThis.complexObject({ x: 5 }, { x: 2 })
       );
       expect(result.x).toBe(7);
     });
@@ -1159,7 +1168,7 @@ describe('Page', function () {
 
       let error = null;
       try {
-        // @ts-expect-error
+        // @ts-expect-error purposefully passing bad options
         await page.addScriptTag('/injectedfile.js');
       } catch (error_) {
         error = error_;
@@ -1288,7 +1297,7 @@ describe('Page', function () {
 
       let error = null;
       try {
-        // @ts-expect-error
+        // @ts-expect-error purposefully passing bad input
         await page.addStyleTag('/injectedstyle.css');
       } catch (error_) {
         error = error_;
@@ -1348,7 +1357,7 @@ describe('Page', function () {
       });
       const styleHandle = await page.$('style');
       const styleContent = await page.evaluate(
-        (style) => style.innerHTML,
+        (style: HTMLStyleElement) => style.innerHTML,
         styleHandle
       );
       expect(styleContent).toContain(path.join('assets', 'injectedstyle.css'));
@@ -1642,7 +1651,7 @@ describe('Page', function () {
       await page.setContent('<select><option value="12"/></select>');
       let error = null;
       try {
-        // @ts-expect-error
+        // @ts-expect-error purposefully passing bad input
         await page.select('select', 12);
       } catch (error_) {
         error = error_;

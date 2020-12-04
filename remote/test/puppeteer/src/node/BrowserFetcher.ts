@@ -22,14 +22,15 @@ import * as childProcess from 'child_process';
 import * as https from 'https';
 import * as http from 'http';
 
+import { Product } from '../common/Product.js';
 import extractZip from 'extract-zip';
-import { debug } from '../common/Debug';
+import { debug } from '../common/Debug.js';
 import { promisify } from 'util';
 import removeRecursive from 'rimraf';
 import * as URL from 'url';
 import ProxyAgent from 'https-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
-import { assert } from '../common/assert';
+import { assert } from '../common/assert.js';
 
 const debugFetcher = debug(`puppeteer:fetcher`);
 
@@ -65,11 +66,6 @@ const browserConfig = {
  * @public
  */
 export type Platform = 'linux' | 'mac' | 'win32' | 'win64';
-/**
- * Supported products.
- * @public
- */
-export type Product = 'chrome' | 'firefox';
 
 function archiveName(
   product: Product,

@@ -35,6 +35,14 @@ async function run() {
   const messages = [];
   let changedFiles = false;
 
+  if (!VERSION.endsWith('-post')) {
+    const versions = await Source.readFile(
+      path.join(PROJECT_DIR, 'versions.js')
+    );
+    versions.setText(versions.text().replace(`, 'NEXT'],`, `, '${VERSION}'],`));
+    await versions.save();
+  }
+
   // Documentation checks.
   const readme = await Source.readFile(path.join(PROJECT_DIR, 'README.md'));
   const contributing = await Source.readFile(
@@ -72,8 +80,12 @@ async function run() {
   const jsSources = [
     ...(await Source.readdir(path.join(PROJECT_DIR, 'lib'))),
     ...(await Source.readdir(path.join(PROJECT_DIR, 'lib', 'cjs'))),
-    ...(await Source.readdir(path.join(PROJECT_DIR, 'lib', 'cjs', 'common'))),
-    ...(await Source.readdir(path.join(PROJECT_DIR, 'lib', 'cjs', 'node'))),
+    ...(await Source.readdir(
+      path.join(PROJECT_DIR, 'lib', 'cjs', 'puppeteer', 'common')
+    )),
+    ...(await Source.readdir(
+      path.join(PROJECT_DIR, 'lib', 'cjs', 'puppeteer', 'node')
+    )),
   ];
   const allSrcCode = [...jsSources, ...tsSourcesNoDefinitions];
   messages.push(...(await checkPublicAPI(page, mdSources, allSrcCode)));
