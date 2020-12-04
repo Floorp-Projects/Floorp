@@ -5001,9 +5001,9 @@
       if (includeLabel) {
         label = tab._fullLabel || tab.getAttribute("label");
       }
-      if (AppConstants.NIGHTLY_BUILD) {
+      if (Services.prefs.getBoolPref("browser.tabs.tooltipsShowPid", false)) {
         if (tab.linkedBrowser) {
-          // On Nightly builds, show the PID of the content process, and if
+          // When enabled, show the PID of the content process, and if
           // we're running with fission enabled, try to include PIDs for
           // every remote subframe.
           let [contentPid, ...framePids] = E10SUtils.getBrowserPids(
