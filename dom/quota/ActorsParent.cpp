@@ -6029,20 +6029,9 @@ nsresult QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore(
 
   if (connection) {
     // Find out the journal mode.
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = connection->CreateStatement("PRAGMA journal_mode;"_ns,
-                                     getter_AddRefs(stmt));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(hasResult);
+    QM_TRY_INSPECT(const auto& stmt,
+                   CreateAndExecuteSingleStepStatement(
+                       *connection, "PRAGMA journal_mode;"_ns));
 
     nsCString journalMode;
     rv = stmt->GetUTF8String(0, journalMode);

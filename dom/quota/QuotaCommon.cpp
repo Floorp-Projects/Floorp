@@ -6,6 +6,8 @@
 
 #include "QuotaCommon.h"
 
+#include "mozIStorageConnection.h"
+#include "mozIStorageStatement.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TextUtils.h"
 #include "nsIConsoleService.h"
@@ -153,6 +155,20 @@ Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
   QM_TRY(resultFile->Append(aPathElement));
 
   return resultFile;
+}
+
+Result<nsCOMPtr<mozIStorageStatement>, nsresult>
+CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
+                                    const nsACString& aStatementString) {
+  QM_TRY_UNWRAP(auto stmt, MOZ_TO_RESULT_INVOKE_TYPED(
+                               nsCOMPtr<mozIStorageStatement>, aConnection,
+                               CreateStatement, aStatementString));
+
+  QM_TRY_UNWRAP(const DebugOnly<bool> hasResult,
+                MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+  MOZ_ASSERT(hasResult);
+
+  return stmt;
 }
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
