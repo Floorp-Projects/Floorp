@@ -119,7 +119,7 @@ interface RTCPeerConnection : EventTarget  {
   Promise<undefined> createOffer(RTCSessionDescriptionCallback successCallback,
                             RTCPeerConnectionErrorCallback failureCallback,
                             optional RTCOfferOptions options = {});
-  Promise<undefined> setLocalDescription(RTCLocalSessionDescriptionInit description,
+  Promise<undefined> setLocalDescription(optional RTCLocalSessionDescriptionInit description = {},
                                     VoidFunction successCallback,
                                     RTCPeerConnectionErrorCallback failureCallback);
   Promise<undefined> createAnswer(RTCSessionDescriptionCallback successCallback,
@@ -373,6 +373,7 @@ dictionary RTCRtpContributingSource {
 };
 
 dictionary RTCRtpSynchronizationSource : RTCRtpContributingSource {
+  boolean voiceActivityFlag;
 };
 
 [Exposed=Window]

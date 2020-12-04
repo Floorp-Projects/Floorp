@@ -17,6 +17,11 @@
 
 test(t => {
   assert_false(isSecureContext);
+  assert_false('NDEFWriter' in window);
+}, 'NDEFWriter requires a secure context');
+
+test(t => {
+  assert_false(isSecureContext);
   assert_false('NDEFReader' in window);
 }, 'NDEFReader requires a secure context');
 
