@@ -39,6 +39,21 @@ using namespace js;
 // ObjectGroup
 /////////////////////////////////////////////////////////////////////
 
+static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
+                              Handle<TaggedProto> proto,
+                              ObjectGroupFlags initialFlags = 0) {
+  MOZ_ASSERT_IF(proto.isObject(),
+                cx->isInsideCurrentCompartment(proto.toObject()));
+
+  ObjectGroup* group = Allocate<ObjectGroup>(cx);
+  if (!group) {
+    return nullptr;
+  }
+  new (group) ObjectGroup(clasp, proto, cx->realm(), initialFlags);
+
+  return group;
+}
+
 ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
                          JS::Realm* realm, ObjectGroupFlags initialFlags)
     : TenuredCellWithNonGCPointer(clasp),
@@ -291,11 +306,8 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
     return group;
   }
 
-  ObjectGroupFlags initialFlags = 0;
-
   Rooted<TaggedProto> protoRoot(cx, proto);
-  ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, cx->realm(), clasp,
-                                                   protoRoot, initialFlags);
+  ObjectGroup* group = MakeGroup(cx, clasp, protoRoot);
   if (!group) {
     return nullptr;
   }
@@ -353,22 +365,6 @@ ObjectGroupRealm::~ObjectGroupRealm() {
 }
 
 /* static */
-ObjectGroup* ObjectGroupRealm::makeGroup(
-    JSContext* cx, Realm* realm, const JSClass* clasp,
-    Handle<TaggedProto> proto, ObjectGroupFlags initialFlags /* = 0 */) {
-  MOZ_ASSERT_IF(proto.isObject(),
-                cx->isInsideCurrentCompartment(proto.toObject()));
-
-  ObjectGroup* group = Allocate<ObjectGroup>(cx);
-  if (!group) {
-    return nullptr;
-  }
-  new (group) ObjectGroup(clasp, proto, realm, initialFlags);
-
-  return group;
-}
-
-/* static */
 ObjectGroup* ObjectGroupRealm::getStringSplitStringGroup(JSContext* cx) {
   ObjectGroupRealm& groups = ObjectGroupRealm::getForNewObject(cx);
 
@@ -386,7 +382,7 @@ ObjectGroup* ObjectGroupRealm::getStringSplitStringGroup(JSContext* cx) {
   }
   Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
 
-  group = makeGroup(cx, cx->realm(), &ArrayObject::class_, tagged);
+  group = MakeGroup(cx, &ArrayObject::class_, tagged);
   if (!group) {
     return nullptr;
   }
@@ -452,6 +448,7 @@ void ObjectGroupRealm::fixupNewTableAfterMovingGC(NewTable* table) {
 bool JSObject::setSingleton(JSContext* cx, js::HandleObject obj) {
   MOZ_ASSERT(!IsInsideNursery(obj));
   MOZ_ASSERT(!obj->isSingleton());
+  MOZ_ASSERT(cx->realm() == obj->nonCCWRealm());
 
   // At this point singleton groups are only used for the global object. We can
   // remove this after replacing JS_SplicePrototype.
@@ -459,8 +456,7 @@ bool JSObject::setSingleton(JSContext* cx, js::HandleObject obj) {
 
   ObjectGroupFlags initialFlags = OBJECT_FLAG_SINGLETON;
   Rooted<TaggedProto> proto(cx, obj->taggedProto());
-  ObjectGroup* group = ObjectGroupRealm::makeGroup(
-      cx, obj->nonCCWRealm(), obj->getClass(), proto, initialFlags);
+  ObjectGroup* group = MakeGroup(cx, obj->getClass(), proto, initialFlags);
   if (!group) {
     return false;
   }
