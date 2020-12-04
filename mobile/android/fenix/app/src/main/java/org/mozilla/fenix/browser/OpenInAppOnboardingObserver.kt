@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -25,8 +26,10 @@ class OpenInAppOnboardingObserver(
     private val container: ViewGroup
 ) : Session.Observer {
 
-    private var sessionDomainForDisplayedBanner: String? = null
-    private var infoBanner: InfoBanner? = null
+    @VisibleForTesting
+    internal var sessionDomainForDisplayedBanner: String? = null
+    @VisibleForTesting
+    internal var infoBanner: InfoBanner? = null
 
     override fun onUrlChanged(session: Session, url: String) {
         sessionDomainForDisplayedBanner?.let {
@@ -36,15 +39,14 @@ class OpenInAppOnboardingObserver(
         }
     }
 
-    @Suppress("ComplexCondition")
     override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+        if (loading || settings.openLinksInExternalApp || !settings.shouldShowOpenInAppCfr) {
+            return
+        }
+
         val appLink = appLinksUseCases.appLinkRedirect
 
-        if (!loading &&
-            !settings.openLinksInExternalApp &&
-            settings.shouldShowOpenInAppCfr &&
-            appLink(session.url).hasExternalApp()
-        ) {
+        if (appLink(session.url).hasExternalApp()) {
             infoBanner = InfoBanner(
                 context = context,
                 message = context.getString(R.string.open_in_app_cfr_info_message),
