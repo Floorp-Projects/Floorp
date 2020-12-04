@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import utils from './utils';
+import utils from './utils.js';
 import expect from 'expect';
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-} from './mocha-utils';
+} from './mocha-utils'; // eslint-disable-line import/extensions
 import os from 'os';
 
 describe('navigation', function () {
@@ -191,7 +191,7 @@ describe('navigation', function () {
 
       let error = null;
       await page
-        // @ts-expect-error
+        // @ts-expect-error purposefully passing an old option
         .goto(server.EMPTY_PAGE, { waitUntil: 'networkidle' })
         .catch((error_) => (error = error_));
       expect(error.message).toContain(
@@ -493,7 +493,7 @@ describe('navigation', function () {
       const [response] = await Promise.all([
         page.waitForNavigation(),
         page.evaluate(
-          (url) => (window.location.href = url),
+          (url: string) => (window.location.href = url),
           server.PREFIX + '/grid.html'
         ),
       ]);
@@ -731,7 +731,7 @@ describe('navigation', function () {
       const [response] = await Promise.all([
         frame.waitForNavigation(),
         frame.evaluate(
-          (url) => (window.location.href = url),
+          (url: string) => (window.location.href = url),
           server.PREFIX + '/grid.html'
         ),
       ]);

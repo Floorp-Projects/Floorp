@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import { assert } from './assert';
-import { helper } from './helper';
-import { Target } from './Target';
-import { EventEmitter } from './EventEmitter';
-import { Events } from './Events';
-import Protocol from '../protocol';
-import { Connection } from './Connection';
-import { Page } from './Page';
+import { assert } from './assert.js';
+import { helper } from './helper.js';
+import { Target } from './Target.js';
+import { EventEmitter } from './EventEmitter.js';
+import { Connection, ConnectionEmittedEvents } from './Connection.js';
+import { Protocol } from 'devtools-protocol';
+import { Page } from './Page.js';
 import { ChildProcess } from 'child_process';
-import { Viewport } from './PuppeteerViewport';
+import { Viewport } from './PuppeteerViewport.js';
 
 type BrowserCloseCallback = () => Promise<void> | void;
 
@@ -39,8 +38,61 @@ export interface WaitForTargetOptions {
 }
 
 /**
+ * All the events a {@link Browser | browser instance} may emit.
+ *
+ * @public
+ */
+export const enum BrowserEmittedEvents {
+  /**
+   * Emitted when Puppeteer gets disconnected from the Chromium instance. This
+   * might happen because of one of the following:
+   *
+   * - Chromium is closed or crashed
+   *
+   * - The {@link Browser.disconnect | browser.disconnect } method was called.
+   */
+  Disconnected = 'disconnected',
+
+  /**
+   * Emitted when the url of a target changes. Contains a {@link Target} instance.
+   *
+   * @remarks
+   *
+   * Note that this includes target changes in incognito browser contexts.
+   */
+  TargetChanged = 'targetchanged',
+
+  /**
+   * Emitted when a target is created, for example when a new page is opened by
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/open | window.open}
+   * or by {@link Browser.newPage | browser.newPage}
+   *
+   * Contains a {@link Target} instance.
+   *
+   * @remarks
+   *
+   * Note that this includes target creations in incognito browser contexts.
+   */
+  TargetCreated = 'targetcreated',
+  /**
+   * Emitted when a target is destroyed, for example when a page is closed.
+   * Contains a {@link Target} instance.
+   *
+   * @remarks
+   *
+   * Note that this includes target destructions in incognito browser contexts.
+   */
+  TargetDestroyed = 'targetdestroyed',
+}
+
+/**
  * A Browser is created when Puppeteer connects to a Chromium instance, either through
- * {@link Puppeteer.launch} or {@link Puppeteer.connect}.
+ * {@link PuppeteerNode.launch} or {@link Puppeteer.connect}.
+ *
+ * @remarks
+ *
+ * The Browser class extends from Puppeteer's {@link EventEmitter} class and will
+ * emit various events which are documented in the {@link BrowserEmittedEvents} enum.
  *
  * @example
  *
@@ -141,8 +193,8 @@ export class Browser extends EventEmitter {
       );
 
     this._targets = new Map();
-    this._connection.on(Events.Connection.Disconnected, () =>
-      this.emit(Events.Browser.Disconnected)
+    this._connection.on(ConnectionEmittedEvents.Disconnected, () =>
+      this.emit(BrowserEmittedEvents.Disconnected)
     );
     this._connection.on('Target.targetCreated', this._targetCreated.bind(this));
     this._connection.on(
@@ -220,7 +272,7 @@ export class Browser extends EventEmitter {
   }
 
   private async _targetCreated(
-    event: Protocol.Target.targetCreatedPayload
+    event: Protocol.Target.TargetCreatedEvent
   ): Promise<void> {
     const targetInfo = event.targetInfo;
     const { browserContextId } = targetInfo;
@@ -243,8 +295,8 @@ export class Browser extends EventEmitter {
     this._targets.set(event.targetInfo.targetId, target);
 
     if (await target._initializedPromise) {
-      this.emit(Events.Browser.TargetCreated, target);
-      context.emit(Events.BrowserContext.TargetCreated, target);
+      this.emit(BrowserEmittedEvents.TargetCreated, target);
+      context.emit(BrowserContextEmittedEvents.TargetCreated, target);
     }
   }
 
@@ -254,15 +306,15 @@ export class Browser extends EventEmitter {
     this._targets.delete(event.targetId);
     target._closedCallback();
     if (await target._initializedPromise) {
-      this.emit(Events.Browser.TargetDestroyed, target);
+      this.emit(BrowserEmittedEvents.TargetDestroyed, target);
       target
         .browserContext()
-        .emit(Events.BrowserContext.TargetDestroyed, target);
+        .emit(BrowserContextEmittedEvents.TargetDestroyed, target);
     }
   }
 
   private _targetInfoChanged(
-    event: Protocol.Target.targetInfoChangedPayload
+    event: Protocol.Target.TargetInfoChangedEvent
   ): void {
     const target = this._targets.get(event.targetInfo.targetId);
     assert(target, 'target should exist before targetInfoChanged');
@@ -270,8 +322,10 @@ export class Browser extends EventEmitter {
     const wasInitialized = target._isInitialized;
     target._targetInfoChanged(event.targetInfo);
     if (wasInitialized && previousURL !== target.url()) {
-      this.emit(Events.Browser.TargetChanged, target);
-      target.browserContext().emit(Events.BrowserContext.TargetChanged, target);
+      this.emit(BrowserEmittedEvents.TargetChanged, target);
+      target
+        .browserContext()
+        .emit(BrowserContextEmittedEvents.TargetChanged, target);
     }
   }
 
@@ -361,8 +415,8 @@ export class Browser extends EventEmitter {
     if (existingTarget) return existingTarget;
     let resolve;
     const targetPromise = new Promise<Target>((x) => (resolve = x));
-    this.on(Events.Browser.TargetCreated, check);
-    this.on(Events.Browser.TargetChanged, check);
+    this.on(BrowserEmittedEvents.TargetCreated, check);
+    this.on(BrowserEmittedEvents.TargetChanged, check);
     try {
       if (!timeout) return await targetPromise;
       return await helper.waitWithTimeout<Target>(
@@ -371,8 +425,8 @@ export class Browser extends EventEmitter {
         timeout
       );
     } finally {
-      this.removeListener(Events.Browser.TargetCreated, check);
-      this.removeListener(Events.Browser.TargetChanged, check);
+      this.removeListener(BrowserEmittedEvents.TargetCreated, check);
+      this.removeListener(BrowserEmittedEvents.TargetChanged, check);
     }
 
     function check(target: Target): void {
@@ -446,21 +500,48 @@ export class Browser extends EventEmitter {
     return !this._connection._closed;
   }
 
-  private _getVersion(): Promise<Protocol.Browser.getVersionReturnValue> {
+  private _getVersion(): Promise<Protocol.Browser.GetVersionResponse> {
     return this._connection.send('Browser.getVersion');
   }
 }
 
+export const enum BrowserContextEmittedEvents {
+  /**
+   * Emitted when the url of a target inside the browser context changes.
+   * Contains a {@link Target} instance.
+   */
+  TargetChanged = 'targetchanged',
+
+  /**
+   * Emitted when a target is created within the browser context, for example
+   * when a new page is opened by
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/open | window.open}
+   * or by {@link BrowserContext.newPage | browserContext.newPage}
+   *
+   * Contains a {@link Target} instance.
+   */
+  TargetCreated = 'targetcreated',
+  /**
+   * Emitted when a target is destroyed within the browser context, for example
+   * when a page is closed. Contains a {@link Target} instance.
+   */
+  TargetDestroyed = 'targetdestroyed',
+}
+
 /**
- * BrowserContexts provide a way to operate multiple independent browser sessions.
- * When a browser is launched, it has a single BrowserContext used by default.
- * The method {@link Browser.newPage | Browser.newPage} creates a page
+ * BrowserContexts provide a way to operate multiple independent browser
+ * sessions. When a browser is launched, it has a single BrowserContext used by
+ * default. The method {@link Browser.newPage | Browser.newPage} creates a page
  * in the default browser context.
  *
  * @remarks
  *
- * If a page opens another page, e.g. with a `window.open` call,
- * the popup will belong to the parent page's browser context.
+ * The Browser class extends from Puppeteer's {@link EventEmitter} class and
+ * will emit various events which are documented in the
+ * {@link BrowserContextEmittedEvents} enum.
+ *
+ * If a page opens another page, e.g. with a `window.open` call, the popup will
+ * belong to the parent page's browser context.
  *
  * Puppeteer allows creation of "incognito" browser contexts with
  * {@link Browser.createIncognitoBrowserContext | Browser.createIncognitoBrowserContext}
@@ -569,7 +650,7 @@ export class BrowserContext extends EventEmitter {
    */
   async overridePermissions(
     origin: string,
-    permissions: Protocol.Browser.PermissionType[]
+    permissions: string[]
   ): Promise<void> {
     const webPermissionToProtocol = new Map<
       string,
@@ -591,10 +672,11 @@ export class BrowserContext extends EventEmitter {
       ['clipboard-read', 'clipboardReadWrite'],
       ['clipboard-write', 'clipboardReadWrite'],
       ['payment-handler', 'paymentHandler'],
+      ['idle-detection', 'idleDetection'],
       // chrome-specific permissions we have.
       ['midi-sysex', 'midiSysex'],
     ]);
-    permissions = permissions.map((permission) => {
+    const protocolPermissions = permissions.map((permission) => {
       const protocolPermission = webPermissionToProtocol.get(permission);
       if (!protocolPermission)
         throw new Error('Unknown permission: ' + permission);
@@ -603,7 +685,7 @@ export class BrowserContext extends EventEmitter {
     await this._connection.send('Browser.grantPermissions', {
       origin,
       browserContextId: this._id || undefined,
-      permissions,
+      permissions: protocolPermissions,
     });
   }
 

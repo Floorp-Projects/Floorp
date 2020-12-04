@@ -15,29 +15,19 @@
  */
 import * as os from 'os';
 import * as path from 'path';
-import * as http from 'http';
-import * as https from 'https';
-import * as URL from 'url';
 import * as fs from 'fs';
 
-import { BrowserFetcher } from './BrowserFetcher';
-import { Connection } from '../common/Connection';
-import { Browser } from '../common/Browser';
-import { assert } from '../common/assert';
-import { debugError } from '../common/helper';
-import { ConnectionTransport } from '../common/ConnectionTransport';
-import { WebSocketTransport } from '../common/WebSocketTransport';
-import { BrowserRunner } from './BrowserRunner';
+import { BrowserFetcher } from './BrowserFetcher.js';
+import { Browser } from '../common/Browser.js';
+import { BrowserRunner } from './BrowserRunner.js';
 import { promisify } from 'util';
 
 const mkdtempAsync = promisify(fs.mkdtemp);
 const writeFileAsync = promisify(fs.writeFile);
 
-import {
-  ChromeArgOptions,
-  LaunchOptions,
-  BrowserOptions,
-} from './LaunchOptions';
+import { ChromeArgOptions, LaunchOptions } from './LaunchOptions.js';
+import { BrowserOptions } from '../common/BrowserConnector.js';
+import { Product } from '../common/Product.js';
 
 /**
  * Describes a launcher - a class that is able to create and launch a browser instance.
@@ -45,10 +35,9 @@ import {
  */
 export interface ProductLauncher {
   launch(object);
-  connect(object);
   executablePath: () => string;
   defaultArgs(object);
-  product: string;
+  product: Product;
 }
 
 /**
@@ -190,6 +179,9 @@ class ChromeLauncher implements ProductLauncher {
       '--enable-automation',
       '--password-store=basic',
       '--use-mock-keychain',
+      // TODO(sadym): remove '--enable-blink-features=IdleDetection'
+      // once IdleDetection is turned on by default.
+      '--enable-blink-features=IdleDetection',
     ];
     const {
       devtools = false,
@@ -197,7 +189,8 @@ class ChromeLauncher implements ProductLauncher {
       args = [],
       userDataDir = null,
     } = options;
-    if (userDataDir) chromeArguments.push(`--user-data-dir=${userDataDir}`);
+    if (userDataDir)
+      chromeArguments.push(`--user-data-dir=${path.resolve(userDataDir)}`);
     if (devtools) chromeArguments.push('--auto-open-devtools-for-tabs');
     if (headless) {
       chromeArguments.push('--headless', '--hide-scrollbars', '--mute-audio');
@@ -212,65 +205,8 @@ class ChromeLauncher implements ProductLauncher {
     return resolveExecutablePath(this).executablePath;
   }
 
-  get product(): string {
+  get product(): Product {
     return 'chrome';
-  }
-
-  async connect(
-    options: BrowserOptions & {
-      browserWSEndpoint?: string;
-      browserURL?: string;
-      transport?: ConnectionTransport;
-    }
-  ): Promise<Browser> {
-    const {
-      browserWSEndpoint,
-      browserURL,
-      ignoreHTTPSErrors = false,
-      defaultViewport = { width: 800, height: 600 },
-      transport,
-      slowMo = 0,
-    } = options;
-
-    assert(
-      Number(!!browserWSEndpoint) +
-        Number(!!browserURL) +
-        Number(!!transport) ===
-        1,
-      'Exactly one of browserWSEndpoint, browserURL or transport must be passed to puppeteer.connect'
-    );
-
-    let connection = null;
-    if (transport) {
-      connection = new Connection('', transport, slowMo);
-    } else if (browserWSEndpoint) {
-      const connectionTransport = await WebSocketTransport.create(
-        browserWSEndpoint
-      );
-      connection = new Connection(
-        browserWSEndpoint,
-        connectionTransport,
-        slowMo
-      );
-    } else if (browserURL) {
-      const connectionURL = await getWSEndpoint(browserURL);
-      const connectionTransport = await WebSocketTransport.create(
-        connectionURL
-      );
-      connection = new Connection(connectionURL, connectionTransport, slowMo);
-    }
-
-    const { browserContextIds } = await connection.send(
-      'Target.getBrowserContexts'
-    );
-    return Browser.create(
-      connection,
-      browserContextIds,
-      ignoreHTTPSErrors,
-      defaultViewport,
-      null,
-      () => connection.send('Browser.close').catch(debugError)
-    );
   }
 }
 
@@ -389,63 +325,6 @@ class FirefoxLauncher implements ProductLauncher {
     }
   }
 
-  async connect(
-    options: BrowserOptions & {
-      browserWSEndpoint?: string;
-      browserURL?: string;
-      transport?: ConnectionTransport;
-    }
-  ): Promise<Browser> {
-    const {
-      browserWSEndpoint,
-      browserURL,
-      ignoreHTTPSErrors = false,
-      defaultViewport = { width: 800, height: 600 },
-      transport,
-      slowMo = 0,
-    } = options;
-
-    assert(
-      Number(!!browserWSEndpoint) +
-        Number(!!browserURL) +
-        Number(!!transport) ===
-        1,
-      'Exactly one of browserWSEndpoint, browserURL or transport must be passed to puppeteer.connect'
-    );
-
-    let connection = null;
-    if (transport) {
-      connection = new Connection('', transport, slowMo);
-    } else if (browserWSEndpoint) {
-      const connectionTransport = await WebSocketTransport.create(
-        browserWSEndpoint
-      );
-      connection = new Connection(
-        browserWSEndpoint,
-        connectionTransport,
-        slowMo
-      );
-    } else if (browserURL) {
-      const connectionURL = await getWSEndpoint(browserURL);
-      const connectionTransport = await WebSocketTransport.create(
-        connectionURL
-      );
-      connection = new Connection(connectionURL, connectionTransport, slowMo);
-    }
-
-    const { browserContextIds } = await connection.send(
-      'Target.getBrowserContexts'
-    );
-    return Browser.create(
-      connection,
-      browserContextIds,
-      ignoreHTTPSErrors,
-      defaultViewport,
-      null,
-      () => connection.send('Browser.close').catch(debugError)
-    );
-  }
-
   executablePath(): string {
     return resolveExecutablePath(this).executablePath;
   }
@@ -461,12 +340,15 @@ class FirefoxLauncher implements ProductLauncher {
     }
   }
 
-  get product(): string {
+  get product(): Product {
     return 'firefox';
   }
 
   defaultArgs(options: ChromeArgOptions = {}): string[] {
     const firefoxArguments = ['--no-remote', '--foreground'];
+    if (os.platform().startsWith('win')) {
+      firefoxArguments.push('--wait-for-browser');
+    }
     const {
       devtools = false,
       headless = !devtools,
@@ -702,45 +584,10 @@ class FirefoxLauncher implements ProductLauncher {
   }
 }
 
-function getWSEndpoint(browserURL: string): Promise<string> {
-  let resolve, reject;
-  const promise = new Promise<string>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-
-  const endpointURL = URL.resolve(browserURL, '/json/version');
-  const protocol = endpointURL.startsWith('https') ? https : http;
-  const requestOptions = Object.assign(URL.parse(endpointURL), {
-    method: 'GET',
-  });
-  const request = protocol.request(requestOptions, (res) => {
-    let data = '';
-    if (res.statusCode !== 200) {
-      // Consume response data to free up memory.
-      res.resume();
-      reject(new Error('HTTP ' + res.statusCode));
-      return;
-    }
-    res.setEncoding('utf8');
-    res.on('data', (chunk) => (data += chunk));
-    res.on('end', () => resolve(JSON.parse(data).webSocketDebuggerUrl));
-  });
-
-  request.on('error', reject);
-  request.end();
-
-  return promise.catch((error) => {
-    error.message =
-      `Failed to fetch browser webSocket url from ${endpointURL}: ` +
-      error.message;
-    throw error;
-  });
-}
-
 function resolveExecutablePath(
   launcher: ChromeLauncher | FirefoxLauncher
 ): { executablePath: string; missingText?: string } {
+  let downloadPath: string;
   // puppeteer-core doesn't take into account PUPPETEER_* env variables.
   if (!launcher._isPuppeteerCore) {
     const executablePath =
@@ -754,9 +601,14 @@ function resolveExecutablePath(
         : null;
       return { executablePath, missingText };
     }
+    downloadPath =
+      process.env.PUPPETEER_DOWNLOAD_PATH ||
+      process.env.npm_config_puppeteer_download_path ||
+      process.env.npm_package_config_puppeteer_download_path;
   }
   const browserFetcher = new BrowserFetcher(launcher._projectRoot, {
     product: launcher.product,
+    path: downloadPath,
   });
   if (!launcher._isPuppeteerCore && launcher.product === 'chrome') {
     const revision = process.env['PUPPETEER_CHROMIUM_REVISION'];
@@ -771,7 +623,7 @@ function resolveExecutablePath(
   }
   const revisionInfo = browserFetcher.revisionInfo(launcher._preferredRevision);
   const missingText = !revisionInfo.local
-    ? `Could not find browser revision ${launcher._preferredRevision}. Run "npm install" or "yarn install" to download a browser binary.`
+    ? `Could not find browser revision ${launcher._preferredRevision}. Run "PUPPETEER_PRODUCT=firefox npm install" or "PUPPETEER_PRODUCT=firefox yarn install" to download a supported Firefox browser binary.`
     : null;
   return { executablePath: revisionInfo.executablePath, missingText };
 }

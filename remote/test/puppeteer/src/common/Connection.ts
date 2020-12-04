@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { assert } from './assert';
-import { Events } from './Events';
-import { debug } from './Debug';
+import { assert } from './assert.js';
+import { debug } from './Debug.js';
 const debugProtocolSend = debug('puppeteer:protocol:SEND ►');
 const debugProtocolReceive = debug('puppeteer:protocol:RECV ◀');
 
-import Protocol from '../protocol';
-import { ConnectionTransport } from './ConnectionTransport';
-import { EventEmitter } from './EventEmitter';
+import { Protocol } from 'devtools-protocol';
+import { ProtocolMapping } from 'devtools-protocol/types/protocol-mapping.js';
+import { ConnectionTransport } from './ConnectionTransport.js';
+import { EventEmitter } from './EventEmitter.js';
 
 interface ConnectionCallback {
   resolve: Function;
@@ -30,6 +30,18 @@ interface ConnectionCallback {
   method: string;
 }
 
+/**
+ * Internal events that the Connection class emits.
+ *
+ * @internal
+ */
+export const ConnectionEmittedEvents = {
+  Disconnected: Symbol('Connection.Disconnected'),
+} as const;
+
+/**
+ * @internal
+ */
 export class Connection extends EventEmitter {
   _url: string;
   _transport: ConnectionTransport;
@@ -66,21 +78,30 @@ export class Connection extends EventEmitter {
     return this._url;
   }
 
-  send<T extends keyof Protocol.CommandParameters>(
+  send<T extends keyof ProtocolMapping.Commands>(
     method: T,
-    params?: Protocol.CommandParameters[T]
-  ): Promise<Protocol.CommandReturnValues[T]> {
+    ...paramArgs: ProtocolMapping.Commands[T]['paramsType']
+  ): Promise<ProtocolMapping.Commands[T]['returnType']> {
+    // There is only ever 1 param arg passed, but the Protocol defines it as an
+    // array of 0 or 1 items See this comment:
+    // https://github.com/ChromeDevTools/devtools-protocol/pull/113#issuecomment-412603285
+    // which explains why the protocol defines the params this way for better
+    // type-inference.
+    // So now we check if there are any params or not and deal with them accordingly.
+    const params = paramArgs.length ? paramArgs[0] : undefined;
     const id = this._rawSend({ method, params });
     return new Promise((resolve, reject) => {
       this._callbacks.set(id, { resolve, reject, error: new Error(), method });
     });
   }
 
-  _rawSend(message: {}): number {
+  _rawSend(message: Record<string, unknown>): number {
     const id = ++this._lastId;
-    message = JSON.stringify(Object.assign({}, message, { id }));
-    debugProtocolSend(message);
-    this._transport.send(message);
+    const stringifiedMessage = JSON.stringify(
+      Object.assign({}, message, { id })
+    );
+    debugProtocolSend(stringifiedMessage);
+    this._transport.send(stringifiedMessage);
     return id;
   }
 
@@ -137,7 +158,7 @@ export class Connection extends EventEmitter {
     this._callbacks.clear();
     for (const session of this._sessions.values()) session._onClosed();
     this._sessions.clear();
-    this.emit(Events.Connection.Disconnected);
+    this.emit(ConnectionEmittedEvents.Disconnected);
   }
 
   dispose(): void {
@@ -163,10 +184,19 @@ export class Connection extends EventEmitter {
 interface CDPSessionOnMessageObject {
   id?: number;
   method: string;
-  params: {};
+  params: Record<string, unknown>;
   error: { message: string; data: any };
   result?: any;
 }
+
+/**
+ * Internal events that the CDPSession class emits.
+ *
+ * @internal
+ */
+export const CDPSessionEmittedEvents = {
+  Disconnected: Symbol('CDPSession.Disconnected'),
+} as const;
 
 /**
  * The `CDPSession` instances are used to talk raw Chrome Devtools Protocol.
@@ -212,16 +242,19 @@ export class CDPSession extends EventEmitter {
     this._sessionId = sessionId;
   }
 
-  send<T extends keyof Protocol.CommandParameters>(
+  send<T extends keyof ProtocolMapping.Commands>(
     method: T,
-    params?: Protocol.CommandParameters[T]
-  ): Promise<Protocol.CommandReturnValues[T]> {
+    ...paramArgs: ProtocolMapping.Commands[T]['paramsType']
+  ): Promise<ProtocolMapping.Commands[T]['returnType']> {
     if (!this._connection)
       return Promise.reject(
         new Error(
           `Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`
         )
       );
+
+    // See the comment in Connection#send explaining why we do this.
+    const params = paramArgs.length ? paramArgs[0] : undefined;
 
     const id = this._connection._rawSend({
       sessionId: this._sessionId,
@@ -283,7 +316,7 @@ export class CDPSession extends EventEmitter {
       );
     this._callbacks.clear();
     this._connection = null;
-    this.emit(Events.CDPSession.Disconnected);
+    this.emit(CDPSessionEmittedEvents.Disconnected);
   }
 }
 

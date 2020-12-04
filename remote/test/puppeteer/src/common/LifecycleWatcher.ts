@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-import { assert } from './assert';
-import { helper, PuppeteerEventListener } from './helper';
-import { Events } from './Events';
-import { TimeoutError } from './Errors';
-import { FrameManager, Frame } from './FrameManager';
-import { HTTPRequest } from './HTTPRequest';
-import { HTTPResponse } from './HTTPResponse';
+import { assert } from './assert.js';
+import { helper, PuppeteerEventListener } from './helper.js';
+import { TimeoutError } from './Errors.js';
+import {
+  FrameManager,
+  Frame,
+  FrameManagerEmittedEvents,
+} from './FrameManager.js';
+import { HTTPRequest } from './HTTPRequest.js';
+import { HTTPResponse } from './HTTPResponse.js';
+import { NetworkManagerEmittedEvents } from './NetworkManager.js';
+import { CDPSessionEmittedEvents } from './Connection.js';
 
 export type PuppeteerLifeCycleEvent =
   | 'load'
@@ -43,6 +48,9 @@ const puppeteerToProtocolLifecycle = new Map<
   ['networkidle2', 'networkAlmostIdle'],
 ]);
 
+/**
+ * @internal
+ */
 export class LifecycleWatcher {
   _expectedLifecycle: ProtocolLifeCycleEvent[];
   _frameManager: FrameManager;
@@ -91,7 +99,7 @@ export class LifecycleWatcher {
     this._eventListeners = [
       helper.addEventListener(
         frameManager._client,
-        Events.CDPSession.Disconnected,
+        CDPSessionEmittedEvents.Disconnected,
         () =>
           this._terminate(
             new Error('Navigation failed because browser has disconnected!')
@@ -99,22 +107,22 @@ export class LifecycleWatcher {
       ),
       helper.addEventListener(
         this._frameManager,
-        Events.FrameManager.LifecycleEvent,
+        FrameManagerEmittedEvents.LifecycleEvent,
         this._checkLifecycleComplete.bind(this)
       ),
       helper.addEventListener(
         this._frameManager,
-        Events.FrameManager.FrameNavigatedWithinDocument,
+        FrameManagerEmittedEvents.FrameNavigatedWithinDocument,
         this._navigatedWithinDocument.bind(this)
       ),
       helper.addEventListener(
         this._frameManager,
-        Events.FrameManager.FrameDetached,
+        FrameManagerEmittedEvents.FrameDetached,
         this._onFrameDetached.bind(this)
       ),
       helper.addEventListener(
         this._frameManager.networkManager(),
-        Events.NetworkManager.Request,
+        NetworkManagerEmittedEvents.Request,
         this._onRequest.bind(this)
       ),
     ];

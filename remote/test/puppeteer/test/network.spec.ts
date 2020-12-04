@@ -16,13 +16,13 @@
 
 import fs from 'fs';
 import path from 'path';
-import utils from './utils';
+import utils from './utils.js';
 import expect from 'expect';
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-} from './mocha-utils';
+} from './mocha-utils'; // eslint-disable-line import/extensions
 
 describe('network', function () {
   setupTestBrowserHooks();
@@ -514,7 +514,7 @@ describe('network', function () {
 
       let error = null;
       try {
-        // @ts-expect-error
+        // @ts-expect-error purposeful bad input
         await page.setExtraHTTPHeaders({ foo: 1 });
       } catch (error_) {
         error = error_;

@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-import { assert } from './assert';
-import { helper, debugError } from './helper';
-import { ExecutionContext } from './ExecutionContext';
-import { Page } from './Page';
-import { CDPSession } from './Connection';
-import { KeyInput } from './USKeyboardLayout';
-import { FrameManager, Frame } from './FrameManager';
-import { getQueryHandlerAndSelector } from './QueryHandler';
-import Protocol from '../protocol';
+import { assert } from './assert.js';
+import { helper, debugError } from './helper.js';
+import { ExecutionContext } from './ExecutionContext.js';
+import { Page } from './Page.js';
+import { CDPSession } from './Connection.js';
+import { KeyInput } from './USKeyboardLayout.js';
+import { FrameManager, Frame } from './FrameManager.js';
+import { getQueryHandlerAndSelector } from './QueryHandler.js';
+import { Protocol } from 'devtools-protocol';
 import {
   EvaluateFn,
   SerializableOrJSHandle,
   EvaluateFnReturnType,
   EvaluateHandleFn,
   WrapElementHandle,
-} from './EvalTypes';
+  UnwrapPromiseLike,
+} from './EvalTypes.js';
+import { isNode } from '../environment.js';
 
 export interface BoxModel {
   content: Array<{ x: number; y: number }>;
@@ -153,12 +155,10 @@ export class JSHandle {
   async evaluate<T extends EvaluateFn>(
     pageFunction: T | string,
     ...args: SerializableOrJSHandle[]
-  ): Promise<EvaluateFnReturnType<T>> {
-    return await this.executionContext().evaluate<EvaluateFnReturnType<T>>(
-      pageFunction,
-      this,
-      ...args
-    );
+  ): Promise<UnwrapPromiseLike<EvaluateFnReturnType<T>>> {
+    return await this.executionContext().evaluate<
+      UnwrapPromiseLike<EvaluateFnReturnType<T>>
+    >(pageFunction, this, ...args);
   }
 
   /**
@@ -243,7 +243,7 @@ export class JSHandle {
    * on the object in page and consequent {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse | JSON.parse} in puppeteer.
    * **NOTE** The method throws if the referenced object is not stringifiable.
    */
-  async jsonValue(): Promise<{}> {
+  async jsonValue(): Promise<Record<string, unknown>> {
     if (this._remoteObject.objectId) {
       const response = await this._client.send('Runtime.callFunctionOn', {
         functionDeclaration: 'function() { return this; }',
@@ -378,10 +378,9 @@ export class ElementHandle<
         element.scrollIntoView({
           block: 'center',
           inline: 'center',
-          // Chrome still supports behavior: instant but it's not in the spec
-          // so TS shouts We don't want to make this breaking change in
-          // Puppeteer yet so we'll ignore the line.
-          // @ts-ignore
+          // @ts-expect-error Chrome still supports behavior: instant but
+          // it's not in the spec so TS shouts We don't want to make this
+          // breaking change in Puppeteer yet so we'll ignore the line.
           behavior: 'instant',
         });
         return false;
@@ -397,10 +396,9 @@ export class ElementHandle<
         element.scrollIntoView({
           block: 'center',
           inline: 'center',
-          // Chrome still supports behavior: instant but it's not in the spec
-          // so TS shouts We don't want to make this breaking change in
-          // Puppeteer yet so we'll ignore the line.
-          // @ts-ignore
+          // @ts-expect-error Chrome still supports behavior: instant but
+          // it's not in the spec so TS shouts We don't want to make this
+          // breaking change in Puppeteer yet so we'll ignore the line.
           behavior: 'instant',
         });
       }
@@ -445,11 +443,12 @@ export class ElementHandle<
     };
   }
 
-  private _getBoxModel(): Promise<void | Protocol.DOM.getBoxModelReturnValue> {
+  private _getBoxModel(): Promise<void | Protocol.DOM.GetBoxModelResponse> {
+    const params: Protocol.DOM.GetBoxModelRequest = {
+      objectId: this._remoteObject.objectId,
+    };
     return this._client
-      .send('DOM.getBoxModel', {
-        objectId: this._remoteObject.objectId,
-      })
+      .send('DOM.getBoxModel', params)
       .catch((error) => debugError(error));
   }
 
@@ -556,22 +555,21 @@ export class ElementHandle<
       'Multiple file uploads only work with <input type=file multiple>'
     );
 
+    if (!isNode) {
+      throw new Error(
+        `JSHandle#uploadFile can only be used in Node environments.`
+      );
+    }
     // This import is only needed for `uploadFile`, so keep it scoped here to avoid paying
     // the cost unnecessarily.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const path = require('path');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const fs = require('fs');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { promisify } = require('util');
-    const access = promisify(fs.access);
-
+    const path = await import('path');
+    const fs = await helper.importFSModule();
     // Locate all files and confirm that they exist.
     const files = await Promise.all(
       filePaths.map(async (filePath) => {
         const resolvedPath: string = path.resolve(filePath);
         try {
-          await access(resolvedPath, fs.constants.R_OK);
+          await fs.promises.access(resolvedPath, fs.constants.R_OK);
         } catch (error) {
           if (error.code === 'ENOENT')
             throw new Error(`${filePath} does not exist or is not readable`);
@@ -619,7 +617,9 @@ export class ElementHandle<
    * Calls {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus | focus} on the element.
    */
   async focus(): Promise<void> {
-    await this.evaluate((element) => element.focus());
+    await this.evaluate<(element: HTMLElement) => void>((element) =>
+      element.focus()
+    );
   }
 
   /**
@@ -772,18 +772,10 @@ export class ElementHandle<
    * the return value resolves to `null`.
    */
   async $(selector: string): Promise<ElementHandle | null> {
-    const defaultHandler = (element: Element, selector: string) =>
-      element.querySelector(selector);
     const { updatedSelector, queryHandler } = getQueryHandlerAndSelector(
-      selector,
-      defaultHandler
+      selector
     );
-
-    const handle = await this.evaluateHandle(queryHandler, updatedSelector);
-    const element = handle.asElement();
-    if (element) return element;
-    await handle.dispose();
-    return null;
+    return queryHandler.queryOne(this, updatedSelector);
   }
 
   /**
@@ -791,25 +783,10 @@ export class ElementHandle<
    * the return value resolves to `[]`.
    */
   async $$(selector: string): Promise<ElementHandle[]> {
-    const defaultHandler = (element: Element, selector: string) =>
-      element.querySelectorAll(selector);
     const { updatedSelector, queryHandler } = getQueryHandlerAndSelector(
-      selector,
-      defaultHandler
+      selector
     );
-
-    const arrayHandle = await this.evaluateHandle(
-      queryHandler,
-      updatedSelector
-    );
-    const properties = await arrayHandle.getProperties();
-    await arrayHandle.dispose();
-    const result = [];
-    for (const property of properties.values()) {
-      const elementHandle = property.asElement();
-      if (elementHandle) result.push(elementHandle);
-    }
-    return result;
+    return queryHandler.queryAll(this, updatedSelector);
   }
 
   /**
@@ -849,8 +826,8 @@ export class ElementHandle<
     await elementHandle.dispose();
 
     /**
-     * This as is a little unfortunate but helps TS understand the behavour of
-     * `elementHandle.evaluate`. If evalute returns an element it will return an
+     * This `as` is a little unfortunate but helps TS understand the behavior of
+     * `elementHandle.evaluate`. If evaluate returns an element it will return an
      * ElementHandle instance, rather than the plain object. All the
      * WrapElementHandle type does is wrap ReturnType into
      * ElementHandle<ReturnType> if it is an ElementHandle, or leave it alone as
@@ -882,28 +859,29 @@ export class ElementHandle<
    *  .toEqual(['Hello!', 'Hi!']);
    * ```
    */
-  async $$eval<ReturnType extends any>(
+  async $$eval<ReturnType>(
     selector: string,
-    pageFunction: EvaluateFn | string,
+    pageFunction: (
+      elements: Element[],
+      ...args: unknown[]
+    ) => ReturnType | Promise<ReturnType>,
     ...args: SerializableOrJSHandle[]
-  ): Promise<ReturnType> {
-    const defaultHandler = (element: Element, selector: string) =>
-      Array.from(element.querySelectorAll(selector));
+  ): Promise<WrapElementHandle<ReturnType>> {
     const { updatedSelector, queryHandler } = getQueryHandlerAndSelector(
-      selector,
-      defaultHandler
+      selector
     );
-
-    const arrayHandle = await this.evaluateHandle(
-      queryHandler,
-      updatedSelector
-    );
-    const result = await arrayHandle.evaluate<(...args: any[]) => ReturnType>(
-      pageFunction,
-      ...args
-    );
+    const arrayHandle = await queryHandler.queryAllArray(this, updatedSelector);
+    const result = await arrayHandle.evaluate<
+      (
+        elements: Element[],
+        ...args: unknown[]
+      ) => ReturnType | Promise<ReturnType>
+    >(pageFunction, ...args);
     await arrayHandle.dispose();
-    return result;
+    /* This `as` exists for the same reason as the `as` in $eval above.
+     * See the comment there for a full explanation.
+     */
+    return result as WrapElementHandle<ReturnType>;
   }
 
   /**

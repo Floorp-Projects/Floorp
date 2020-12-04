@@ -332,6 +332,12 @@
   "ElementHandle specs Custom queries should wait correctly with waitFor (elementhandle.spec.ts)": [
     "PASS"
   ],
+  "ElementHandle specs Custom queries should work when both queryOne and queryAll are registered (elementhandle.spec.ts)": [
+    "PASS"
+  ],
+  "ElementHandle specs Custom queries should eval when both queryOne and queryAll are registered (elementhandle.spec.ts)": [
+    "PASS"
+  ],
   "Emulation Page.viewport should get the proper viewport size (emulation.spec.ts)": [
     "PASS"
   ],
@@ -632,6 +638,12 @@
   "Frame specs Frame Management should report different frame instance when frame re-attaches (frame.spec.ts)": [
     "PASS"
   ],
+  "Frame specs Frame Management should support url fragment (frame.spec.ts)": [
+    "PASS"
+  ],
+  "Emulate idle state changing idle state emulation causes change of the IdleDetector state (idle_override.spec.ts)": [
+    "FAIL"
+  ],
   "ignoreHTTPSErrors should work (ignorehttpserrors.spec.ts)": [
     "PASS"
   ],
@@ -929,6 +941,9 @@
   "Mouse should set modifier keys on click (mouse.spec.ts)": [
     "PASS"
   ],
+  "Mouse should send mouse wheel events (mouse.spec.ts)": [
+    "FAIL"
+  ],
   "Mouse should tween mouse movement (mouse.spec.ts)": [
     "PASS", "FAIL"
   ],
@@ -1211,9 +1226,6 @@
   "Page Page.Events.Load should fire when expected (page.spec.ts)": [
     "PASS"
   ],
-  "Page Async stacks should work (page.spec.ts)": [
-    "TIMEOUT"
-  ],
   "Page removing and adding event handlers should correctly fire event handlers as they are added and then removed (page.spec.ts)": [
     "FAIL"
   ],
@@ -1295,7 +1307,7 @@
   "Page Page.Events.Console should have location when fetch fails (page.spec.ts)": [
     "FAIL"
   ],
-  "Page Page.Events.Console should have location for console API calls (page.spec.ts)": [
+  "Page Page.Events.Console should have location and stack trace for console API calls (page.spec.ts)": [
     "FAIL"
   ],
   "Page Page.Events.Console should not throw when there are console messages in detached iframes (page.spec.ts)": [
@@ -1565,7 +1577,22 @@
   "querySelector Page.$eval should throw error if no element is found (queryselector.spec.ts)": [
     "PASS"
   ],
+  "querySelector pierceHandler should find first element in shadow (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector pierceHandler should find all elements in shadow (queryselector.spec.ts)": [
+    "PASS"
+  ],
   "querySelector Page.$$eval should work (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector Page.$$eval should accept extra arguments (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector Page.$$eval should accept ElementHandles as arguments (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector Page.$$eval should handle many elements (queryselector.spec.ts)": [
     "PASS"
   ],
   "querySelector Page.$ should query existing element (queryselector.spec.ts)": [
@@ -1623,6 +1650,27 @@
     "PASS"
   ],
   "querySelector ElementHandle.$x should return null for non-existing element (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector QueryAll should have registered handler (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$ should query existing elements (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$ should return empty array for non-existing elements (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$eval should work (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$eval should accept extra arguments (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$eval should accept ElementHandles as arguments (queryselector.spec.ts)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$eval should handle many elements (queryselector.spec.ts)": [
     "PASS"
   ],
   "request interception Page.setRequestInterception should intercept (requestinterception.spec.ts)": [
@@ -1685,7 +1733,7 @@
   "request interception Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests (requestinterception.spec.ts)": [
     "FAIL"
   ],
-  "request interception Page.setRequestInterception should navigate to URL with hash and and fire requests without hash (requestinterception.spec.ts)": [
+  "request interception Page.setRequestInterception should navigate to URL with hash and fire requests without hash (requestinterception.spec.ts)": [
     "FAIL"
   ],
   "request interception Page.setRequestInterception should work with encoded server (requestinterception.spec.ts)": [
@@ -1868,6 +1916,9 @@
   "waittask specs Page.waitFor should wait for predicate with arguments (waittask.spec.ts)": [
     "PASS"
   ],
+  "waittask specs Page.waitFor should log a deprecation warning (waittask.spec.ts)": [
+    "PASS"
+  ],
   "waittask specs Frame.waitForFunction should accept a string (waittask.spec.ts)": [
     "PASS"
   ],
@@ -1923,6 +1974,12 @@
     "PASS"
   ],
   "waittask specs Frame.waitForFunction should survive navigations (waittask.spec.ts)": [
+    "PASS"
+  ],
+  "waittask specs Page.waitForTimeout waits for the given timeout before resolving (waittask.spec.ts)": [
+    "PASS"
+  ],
+  "waittask specs Frame.waitForTimeout waits for the given timeout before resolving (waittask.spec.ts)": [
     "PASS"
   ],
   "waittask specs Frame.waitForSelector should immediately resolve promise if node exists (waittask.spec.ts)": [

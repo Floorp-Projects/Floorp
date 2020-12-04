@@ -19,8 +19,8 @@ import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-} from './mocha-utils';
-import { KeyInput } from '../src/common/USKeyboardLayout';
+} from './mocha-utils'; // eslint-disable-line import/extensions
+import { KeyInput } from '../lib/cjs/puppeteer/common/USKeyboardLayout.js';
 
 interface Dimensions {
   x: number;
@@ -60,7 +60,7 @@ describe('Mouse', function () {
       });
     });
     await page.mouse.click(50, 60);
-    const event = await page.evaluate<MouseEvent>(
+    const event = await page.evaluate<() => MouseEvent>(
       () => globalThis.clickPromise
     );
     expect(event.type).toBe('click');
@@ -74,13 +74,15 @@ describe('Mouse', function () {
     const { page, server } = getTestState();
 
     await page.goto(server.PREFIX + '/input/textarea.html');
-    const { x, y, width, height } = await page.evaluate<Dimensions>(dimensions);
+    const { x, y, width, height } = await page.evaluate<() => Dimensions>(
+      dimensions
+    );
     const mouse = page.mouse;
     await mouse.move(x + width - 4, y + height - 4);
     await mouse.down();
     await mouse.move(x + width + 100, y + height + 100);
     await mouse.up();
-    const newDimensions = await page.evaluate<Dimensions>(dimensions);
+    const newDimensions = await page.evaluate<() => Dimensions>(dimensions);
     expect(newDimensions.width).toBe(Math.round(width + 104));
     expect(newDimensions.height).toBe(Math.round(height + 104));
   });
@@ -162,15 +164,40 @@ describe('Mouse', function () {
     for (const [modifier, key] of modifiers) {
       await page.keyboard.down(modifier);
       await page.click('#button-3');
-      if (!(await page.evaluate((mod) => globalThis.lastEvent[mod], key)))
+      if (
+        !(await page.evaluate((mod: string) => globalThis.lastEvent[mod], key))
+      )
         throw new Error(key + ' should be true');
       await page.keyboard.up(modifier);
     }
     await page.click('#button-3');
     for (const [modifier, key] of modifiers) {
-      if (await page.evaluate((mod) => globalThis.lastEvent[mod], key))
+      if (await page.evaluate((mod: string) => globalThis.lastEvent[mod], key))
         throw new Error(modifiers[modifier] + ' should be false');
     }
+  });
+  it('should send mouse wheel events', async () => {
+    const { page, server } = getTestState();
+
+    await page.goto(server.PREFIX + '/input/wheel.html');
+    const elem = await page.$('div');
+    const boundingBoxBefore = await elem.boundingBox();
+    expect(boundingBoxBefore).toMatchObject({
+      width: 115,
+      height: 115,
+    });
+
+    await page.mouse.move(
+      boundingBoxBefore.x + boundingBoxBefore.width / 2,
+      boundingBoxBefore.y + boundingBoxBefore.height / 2
+    );
+
+    await page.mouse.wheel({ deltaY: -100 });
+    const boundingBoxAfter = await elem.boundingBox();
+    expect(boundingBoxAfter).toMatchObject({
+      width: 230,
+      height: 230,
+    });
   });
   it('should tween mouse movement', async () => {
     const { page } = getTestState();
