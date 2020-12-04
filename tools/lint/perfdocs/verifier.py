@@ -163,7 +163,10 @@ class Verifier(object):
             for test_name, manifest_path in test_list.items():
                 tb = os.path.basename(manifest_path)
                 tb = re.sub("\..*", "", tb)
-                if stests.get(tb) or stests.get(test_name):
+                if (
+                    stests.get(tb, None) is not None
+                    or stests.get(test_name, None) is not None
+                ):
                     # Test description exists, continue with the next test
                     tests_found += 1
                     continue

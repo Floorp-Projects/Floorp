@@ -193,3 +193,36 @@ def create_temp_file(tmpdir):
 @pytest.fixture
 def structured_logger():
     return StructuredLogger("logger")
+
+
+@pytest.fixture
+def perfdocs_sample():
+    from test_perfdocs import (
+        SAMPLE_TEST,
+        SAMPLE_CONFIG,
+        temp_dir,
+        temp_file,
+    )
+
+    with temp_dir() as tmpdir:
+        suitedir = os.path.join(tmpdir, "suite")
+        perfdocs_dir = os.path.join(tmpdir, "perfdocs")
+        os.mkdir(perfdocs_dir)
+        os.mkdir(suitedir)
+
+        with temp_file(
+            "perftest.ini", tempdir=suitedir, content="[perftest_sample.js]"
+        ) as tmpmanifest, temp_file(
+            "perftest_sample.js", tempdir=suitedir, content=SAMPLE_TEST
+        ) as tmptest, temp_file(
+            "config.yml", tempdir=perfdocs_dir, content=SAMPLE_CONFIG
+        ) as tmpconfig, temp_file(
+            "index.rst", tempdir=perfdocs_dir, content="{documentation}"
+        ) as tmpindex:
+            yield {
+                "top_dir": tmpdir.replace("\\", "\\\\"),
+                "manifest": tmpmanifest,
+                "test": tmptest,
+                "config": tmpconfig,
+                "index": tmpindex,
+            }
