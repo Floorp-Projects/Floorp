@@ -94,6 +94,7 @@ gyp_vars["ssl_enable_zlib"] = 0
 # System sqlite here is the in-tree mozsqlite.
 gyp_vars["use_system_sqlite"] = 1
 gyp_vars["sqlite_libs"] = "sqlite"
+gyp_vars["enable_draft_hpke"] = 1
 
 
 if CONFIG["MOZ_SYSTEM_NSPR"]:

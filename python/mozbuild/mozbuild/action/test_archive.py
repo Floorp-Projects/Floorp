@@ -34,6 +34,7 @@ STAGE = mozpath.join(buildconfig.topobjdir, "dist", "test-stage")
 TEST_HARNESS_BINS = [
     "BadCertAndPinningServer",
     "DelegatedCredentialsServer",
+    "EncryptedClientHelloServer",
     "GenerateOCSPResponse",
     "OCSPStaplingServer",
     "SanctionsTestServer",
