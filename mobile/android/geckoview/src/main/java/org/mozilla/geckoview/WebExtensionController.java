@@ -1213,9 +1213,7 @@ public class WebExtensionController {
             return;
         }
 
-        response.accept(
-            value -> callback.sendSuccess(value),
-            exception -> callback.sendError(exception));
+        callback.resolveTo(response);
     }
 
     private GeckoResult<WebExtension> extensionFromBundle(final GeckoBundle message) {
