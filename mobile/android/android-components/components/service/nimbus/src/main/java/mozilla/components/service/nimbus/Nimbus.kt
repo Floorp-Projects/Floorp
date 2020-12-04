@@ -15,11 +15,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.Glean
-import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.locale.getLocaleTag
 import org.mozilla.experiments.nimbus.AppContext
 import org.mozilla.experiments.nimbus.AvailableRandomizationUnits
 import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.experiments.nimbus.ErrorException
 import org.mozilla.experiments.nimbus.NimbusClient
 import org.mozilla.experiments.nimbus.NimbusClientInterface
 import org.mozilla.experiments.nimbus.RemoteSettingsConfig
@@ -27,10 +30,15 @@ import java.io.File
 import java.util.Locale
 import java.util.concurrent.Executors
 
+private const val LOG_TAG = "service/Nimbus"
+private const val EXPERIMENT_BUCKET_NAME = "main"
+private const val EXPERIMENT_COLLECTION_NAME = "nimbus-mobile-experiments"
+private const val NIMBUS_DATA_DIR: String = "nimbus_data"
+
 /**
  * This is the main experiments API, which is exposed through the global [Nimbus] object.
  */
-interface NimbusApi {
+interface NimbusApi : Observable<NimbusApi.Observer> {
     /**
      * Get the list of currently enrolled experiments
      *
@@ -48,7 +56,8 @@ interface NimbusApi {
     fun getExperimentBranch(experimentId: String): String?
 
     /**
-     * Refreshes the experiments from the endpoint
+     * Refreshes the experiments from the endpoint. Should be called at least once after
+     * initialization
      */
     fun updateExperiments()
 
@@ -63,12 +72,24 @@ interface NimbusApi {
      * Control the opt out for all experiments at once. This is likely a user action.
      */
     var globalUserParticipation: Boolean
-}
 
-private const val LOG_TAG = "service/Nimbus"
-private const val EXPERIMENT_BUCKET_NAME = "main"
-private const val EXPERIMENT_COLLECTION_NAME = "nimbus-mobile-experiments"
-private const val NIMBUS_DATA_DIR: String = "nimbus_data"
+    /**
+     * Interface to be implemented by classes that want to observe experiment updates
+     */
+    interface Observer {
+        /**
+         * Event to indicate that the experiments have been fetched from the endpoint
+         */
+        fun onExperimentsFetched()
+
+        /**
+         * Event to indicate that the experiment enrollments have been applied. Multiple calls to
+         * get the active experiments will return the same value so this has limited usefulness for
+         * most feature developers
+         */
+        fun onUpdatesApplied(updated: List<EnrolledExperiment>)
+    }
+}
 
 /**
  * This class allows client apps to configure Nimbus to point to your own server.
@@ -84,16 +105,17 @@ data class NimbusServerSettings(
  */
 class Nimbus(
     context: Context,
-    server: NimbusServerSettings?
-) : NimbusApi {
+    server: NimbusServerSettings?,
+    private val delegate: Observable<NimbusApi.Observer> = ObserverRegistry()
+) : NimbusApi, Observable<NimbusApi.Observer> by delegate {
+
     // Using a single threaded executor here to enforce synchronization where needed.
     private val scope: CoroutineScope =
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
-    private val nimbus: NimbusClientInterface
-    private var onExperimentUpdated: ((List<EnrolledExperiment>) -> Unit)? = null
-
-    private var isInitialized = false
+    private var nimbus: NimbusClientInterface
+    private var dataDir: File
+    private val logger = Logger(LOG_TAG)
 
     override var globalUserParticipation: Boolean
         get() = nimbus.getGlobalUserParticipation()
@@ -106,6 +128,8 @@ class Nimbus(
             "uniffi.component.nimbus.libraryOverride",
             System.getProperty("mozilla.appservices.megazord.library", "megazord")
         )
+        // Build a File object to represent the data directory for Nimbus data
+        dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
 
         // Build Nimbus AppContext object to pass into initialize
         val experimentContext = buildExperimentContext(context)
@@ -140,55 +164,37 @@ class Nimbus(
         )
     }
 
-    /**
-     * Initialize the Nimbus SDK library.
-     *
-     * This should only be initialized once by the application.
-     *
-     * @param onExperimentUpdated callback that will be executed when the list of experiments has
-     * been updated from the experiments endpoint and evaluated by the Nimbus-SDK. This is meant to
-     * be used for consuming applications to perform any actions as a result of enrollment in an
-     * experiment so that the application is not required to await the network request. The
-     * callback will be supplied with the list of active experiments (if any) for which the client
-     * is enrolled.
-     */
-    fun initialize(
-        onExperimentUpdated: ((activeExperiments: List<EnrolledExperiment>) -> Unit)? = null
-    ) {
-        this.onExperimentUpdated = onExperimentUpdated
+    override fun getActiveExperiments(): List<EnrolledExperiment> =
+        nimbus.getActiveExperiments()
 
-        // Do initialization off of the main thread
+    override fun getExperimentBranch(experimentId: String): String? =
+        nimbus.getExperimentBranch(experimentId)
+
+    override fun updateExperiments() {
         scope.launch {
-            nimbus.updateExperiments()
+            try {
+                nimbus.updateExperiments()
 
-            // Get experiments
-            val activeExperiments = nimbus.getActiveExperiments()
-
-            // Record enrollments in telemetry
-            recordExperimentTelemetry(activeExperiments)
-
-            isInitialized = true
-
-            // Invoke the callback with the list of active experiments for the consuming app to
-            // process.
-            onExperimentUpdated?.invoke(activeExperiments)
+                // Get the experiments to record in telemetry
+                nimbus.getActiveExperiments().let {
+                    if (it.any()) {
+                        recordExperimentTelemetry(it)
+                        // The current plan is to have the nimbus-sdk updateExperiments() function
+                        // return a diff of the experiments that have been received, at which point we
+                        // can emit the appropriate telemetry events and notify observers of just the
+                        // diff
+                        notifyObservers { onUpdatesApplied(it) }
+                    }
+                }
+            } catch (e: ErrorException.RequestError) {
+                logger.info("Error fetching experiments from endpoint: $e")
+            } catch (e: ErrorException.InvalidExperimentResponse) {
+                logger.info("Invalid experiment response: $e")
+            }
         }
     }
 
-    override fun getActiveExperiments(): List<EnrolledExperiment> =
-        if (isInitialized) { nimbus.getActiveExperiments() } else { emptyList() }
-
-    override fun getExperimentBranch(experimentId: String): String? =
-        if (isInitialized) { nimbus.getExperimentBranch(experimentId) } else { null }
-
-    override fun updateExperiments() {
-        if (!isInitialized) return
-        nimbus.updateExperiments()
-        onExperimentUpdated?.invoke(nimbus.getActiveExperiments())
-    }
-
     override fun optOut(experimentId: String) {
-        if (!isInitialized) return
         nimbus.optOut(experimentId)
     }
 
@@ -196,7 +202,6 @@ class Nimbus(
     // force an experiment/branch enrollment.
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun optInWithBranch(experiment: String, branch: String) {
-        if (!isInitialized) return
         nimbus.optInWithBranch(experiment, branch)
     }
 
@@ -217,24 +222,20 @@ class Nimbus(
                 context.packageName, 0
             )
         } catch (e: PackageManager.NameNotFoundException) {
-            Log.log(Log.Priority.ERROR,
-                LOG_TAG,
-                message = "Could not retrieve package info for appBuild and appVersion"
-            )
             null
         }
 
         return AppContext(
-                appId = context.packageName,
-                androidSdkVersion = Build.VERSION.SDK_INT.toString(),
-                appBuild = packageInfo?.let { PackageInfoCompat.getLongVersionCode(it).toString() },
-                appVersion = packageInfo?.versionName,
-                architecture = Build.SUPPORTED_ABIS[0],
-                debugTag = null,
-                deviceManufacturer = Build.MANUFACTURER,
-                deviceModel = Build.MODEL,
-                locale = Locale.getDefault().getLocaleTag(),
-                os = "Android",
-                osVersion = Build.VERSION.RELEASE)
+            appId = context.packageName,
+            androidSdkVersion = Build.VERSION.SDK_INT.toString(),
+            appBuild = packageInfo?.let { PackageInfoCompat.getLongVersionCode(it).toString() },
+            appVersion = packageInfo?.versionName,
+            architecture = Build.SUPPORTED_ABIS[0],
+            debugTag = null,
+            deviceManufacturer = Build.MANUFACTURER,
+            deviceModel = Build.MODEL,
+            locale = Locale.getDefault().getLocaleTag(),
+            os = "Android",
+            osVersion = Build.VERSION.RELEASE)
     }
 }

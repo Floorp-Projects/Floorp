@@ -5,6 +5,7 @@
 package mozilla.components.service.nimbus
 
 import android.content.Context
+import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
@@ -27,6 +28,8 @@ import org.mozilla.experiments.nimbus.EnrolledExperiment
 class NimbusTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
+
+    private val nimbus = Nimbus(context, NimbusServerSettings(Uri.parse("https://example.com")))
 
     @get:Rule
     val gleanRule = GleanTestRule(context)
@@ -53,10 +56,16 @@ class NimbusTest {
             userFacingDescription = "A test experiment for testing experiments",
             userFacingName = "Test Experiment"))
 
-        val nimbus = Nimbus(context, null)
         nimbus.recordExperimentTelemetry(experiments = enrolledExperiments)
         assertTrue(Glean.testIsExperimentActive("test-experiment"))
         val experimentData = Glean.testGetExperimentData("test-experiment")
         assertEquals("test-branch", experimentData.branch)
+    }
+
+    @Test
+    fun `buildExperimentContext returns a valid context`() {
+        val expContext = nimbus.buildExperimentContext(context)
+        assertEquals("mozilla.components.service.nimbus.test", expContext.appId)
+        // If we could control more of the context here we might be able to better test it
     }
 }

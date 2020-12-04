@@ -5,7 +5,6 @@
 package org.mozilla.samples.glean
 
 import android.app.Application
-import android.content.Intent
 import android.net.Uri
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
@@ -58,9 +57,8 @@ class GleanApplication : Application() {
     }
 
     /**
-     * Initialize the Nimbus experiments library and pass in the callback that will generate a
-     * broadcast Intent to signal the application that experiments have been updated. This is
-     * only relevant to the Nimbus library, aside from recording the experiment in Glean.
+     * Initialize the Nimbus experiments library. This is only relevant to the Nimbus library, aside
+     * from recording the experiment in Glean.
      */
     private fun initNimbus() {
         RustLog.enable()
@@ -69,11 +67,7 @@ class GleanApplication : Application() {
         nimbus = Nimbus(this,
             NimbusServerSettings(url)
         ).also { nimbus ->
-            nimbus.initialize {
-                val intent = Intent()
-                intent.action = "org.mozilla.samples.glean.experiments.updated"
-                sendBroadcast(intent)
-            }
+            nimbus.updateExperiments()
         }
     }
 }
