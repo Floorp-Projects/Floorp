@@ -248,6 +248,7 @@ class ModuleObject : public NativeObject {
     FunctionDeclarationsSlot,
     DFSIndexSlot,
     DFSAncestorIndexSlot,
+    AsyncSlot,
     SlotCount
   };
 
@@ -293,6 +294,7 @@ class ModuleObject : public NativeObject {
   ModuleEnvironmentObject* environment() const;
   ModuleNamespaceObject* namespace_();
   ModuleStatus status() const;
+  bool isAsync() const;
   bool hadEvaluationError() const;
   Value evaluationError() const;
   JSObject* metaObject() const;
@@ -329,6 +331,8 @@ class ModuleObject : public NativeObject {
 
   frontend::FunctionDeclarationVector* functionDeclarations();
   void initFunctionDeclarations(frontend::FunctionDeclarationVector&& decls);
+
+  void initAsyncSlots(JSContext* cx, bool isAsync);
 
  private:
   static const JSClassOps classOps_;

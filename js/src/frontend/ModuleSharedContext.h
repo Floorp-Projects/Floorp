@@ -14,6 +14,7 @@
 #include "frontend/SharedContext.h"  // js::frontend::SharedContext
 #include "js/RootingAPI.h"           // JS::Handle, JS::Rooted
 #include "vm/Scope.h"                // js::{Module,}Scope
+#include "vm/StencilEnums.h"         // ImmutableScriptFlagsEnum
 
 namespace js {
 
