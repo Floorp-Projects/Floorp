@@ -574,6 +574,19 @@ static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
     }
   }
 
+  uint8_t isAsync = 0;
+  if (mode == XDR_ENCODE) {
+    if (stencil.isAsync) {
+      isAsync = stencil.isAsync ? 1 : 0;
+    }
+  }
+
+  MOZ_TRY(xdr->codeUint8(&isAsync));
+
+  if (mode == XDR_DECODE) {
+    stencil.isAsync = isAsync == 1;
+  }
+
   return Ok();
 }
 
