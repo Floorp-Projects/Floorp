@@ -272,7 +272,6 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::NewObject:
-      case JSOp::NewObjectWithGroup:
       case JSOp::NewInit: {
         ICStub* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
         if (!addIC(loc, stub)) {

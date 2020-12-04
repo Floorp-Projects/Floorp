@@ -2291,10 +2291,6 @@ bool WarpBuilder::build_NewObject(BytecodeLocation loc) {
   return resumeAfter(ins, loc);
 }
 
-bool WarpBuilder::build_NewObjectWithGroup(BytecodeLocation loc) {
-  return build_NewObject(loc);
-}
-
 bool WarpBuilder::build_NewInit(BytecodeLocation loc) {
   return build_NewObject(loc);
 }
