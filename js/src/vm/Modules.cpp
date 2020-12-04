@@ -84,6 +84,18 @@ JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
                                        referencingPrivate, specifier, promise);
 }
 
+JS_PUBLIC_API bool JS::FinishDynamicModuleImport_NoTLA(
+    JSContext* cx, JS::DynamicImportStatus status,
+    Handle<Value> referencingPrivate, Handle<JSString*> specifier,
+    Handle<JSObject*> promise) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(referencingPrivate, promise);
+
+  return js::FinishDynamicModuleImport_NoTLA(cx, status, referencingPrivate,
+                                             specifier, promise);
+}
+
 template <typename Unit>
 static JSObject* CompileModuleHelper(JSContext* cx,
                                      const JS::ReadOnlyCompileOptions& options,
@@ -125,13 +137,14 @@ JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
   return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
 }
 
-JS_PUBLIC_API JSObject* JS::ModuleEvaluate(JSContext* cx,
-                                           Handle<JSObject*> moduleRecord) {
+JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
+                                      Handle<JSObject*> moduleRecord,
+                                      MutableHandle<JS::Value> rval) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleRecord);
 
-  return ModuleObject::Evaluate(cx, moduleRecord.as<ModuleObject>());
+  return ModuleObject::Evaluate(cx, moduleRecord.as<ModuleObject>(), rval);
 }
 
 JS_PUBLIC_API bool JS::ThrowOnModuleEvaluationFailure(

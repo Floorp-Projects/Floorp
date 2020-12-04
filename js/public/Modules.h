@@ -90,13 +90,26 @@ enum class DynamicImportStatus { Failed = 0, Ok };
 /**
  * This must be called after a dynamic import operation is complete.
  *
- * If |status| is Failed, any pending exception on the context will be used to
+ * If |evaluationPromise| is rejected, the rejection reason will be used to
  * complete the user's promise.
  */
 extern JS_PUBLIC_API bool FinishDynamicModuleImport(
     JSContext* cx, Handle<JSObject*> evaluationPromise,
     Handle<Value> referencingPrivate, Handle<JSString*> specifier,
     Handle<JSObject*> promise);
+
+/**
+ * This must be called after a dynamic import operation is complete.
+ *
+ * This is used so that Top Level Await functionality can be turned off
+ * entirely. It will be removed in bug#1676612.
+ *
+ * If |status| is Failed, any pending exception on the context will be used to
+ * complete the user's promise.
+ */
+extern JS_PUBLIC_API bool FinishDynamicModuleImport_NoTLA(
+    JSContext* cx, DynamicImportStatus status, Handle<Value> referencingPrivate,
+    Handle<JSString*> specifier, Handle<JSObject*> promise);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global
@@ -139,7 +152,8 @@ extern JS_PUBLIC_API bool ModuleInstantiate(JSContext* cx,
 
 /*
  * Perform the ModuleEvaluate operation on the given source text module record
- * and returns a promise.
+ * and returns a bool. A result value is returned in result and is either
+ * undefined (and ignored) or a promise (if Top Level Await is enabled).
  *
  * If this module has already been evaluated, it returns the evaluation
  * promise. Otherwise, it transitively evaluates all dependences of this module
@@ -147,11 +161,13 @@ extern JS_PUBLIC_API bool ModuleInstantiate(JSContext* cx,
  *
  * ModuleInstantiate must have completed prior to calling this.
  */
-extern JS_PUBLIC_API JSObject* ModuleEvaluate(JSContext* cx,
-                                              Handle<JSObject*> moduleRecord);
+extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
+                                         Handle<JSObject*> moduleRecord,
+                                         MutableHandleValue rval);
 
 /*
- * If a module evaluation fails, unwrap the result and rethrow.
+ * If a module evaluation fails, unwrap the resulting evaluation promise
+ * and rethrow.
  *
  * This does nothing if this module succeeds in evaluation. Otherwise, it
  * takes the reason for the module throwing, unwraps it and throws it as a
