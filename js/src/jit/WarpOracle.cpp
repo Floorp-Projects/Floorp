@@ -496,7 +496,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       }
 
       case JSOp::NewObject:
-      case JSOp::NewObjectWithGroup:
       case JSOp::NewInit: {
         const ICEntry& entry = getICEntry(loc);
         auto* stub = entry.fallbackStub()->toNewObject_Fallback();

@@ -819,18 +819,12 @@
      * must fill in all slots of the new object before it is used in any other
      * way.
      *
-     * For `JSOp::NewObject`, the new object has a group based on the allocation
-     * site (or a new group if the template's group is a singleton). For
-     * `JSOp::NewObjectWithGroup`, the new object has the same group as the
-     * template object.
-     *
      *   Category: Objects
      *   Type: Creating objects
      *   Operands: uint32_t baseobjIndex
      *   Stack: => obj
      */ \
     MACRO(NewObject, new_object, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
-    MACRO(NewObjectWithGroup, new_object_with_group, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
     /*
      * Push a preconstructed object.
      *
@@ -3600,6 +3594,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(233)                                   \
   MACRO(234)                                   \
   MACRO(235)                                   \
   MACRO(236)                                   \

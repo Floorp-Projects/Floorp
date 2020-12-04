@@ -2101,7 +2101,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
       case JSOp::NewInit:
       case JSOp::NewObject:
-      case JSOp::NewObjectWithGroup:
       case JSOp::ObjWithProto:
         return write("OBJ");
 
