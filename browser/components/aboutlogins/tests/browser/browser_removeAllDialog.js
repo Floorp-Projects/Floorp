@@ -3,6 +3,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+const OS_REAUTH_PREF = "signon.management.page.os-auth.enabled";
 
 async function openRemoveAllDialog(browser) {
   await SimpleTest.promiseFocus(browser);
@@ -22,6 +23,20 @@ async function openRemoveAllDialog(browser) {
     browser
   );
   info("remove all dialog should be opened");
+}
+
+async function activateLoginItemEdit(browser) {
+  await SimpleTest.promiseFocus(browser);
+  function getLoginItemEditButton() {
+    let loginItem = window.document.querySelector("login-item");
+    return loginItem.shadowRoot.querySelector(".edit-button");
+  }
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    getLoginItemEditButton,
+    {},
+    browser
+  );
+  info("login-item should be in edit mode");
 }
 
 async function waitForRemoveAllLogins() {
@@ -333,4 +348,34 @@ add_task(async function test_remove_all_dialog_remove_logins() {
       "Remove all logins menu button is disabled if there are no logins"
     );
   });
+  await SpecialPowers.spawn(browser, [], async () => {
+    let menuButton = Cu.waiveXrays(
+      content.document.querySelector("menu-button")
+    );
+    let menu = menuButton.shadowRoot.querySelector("ul.menu");
+    await EventUtils.synthesizeKey("KEY_Escape", {}, content);
+    await ContentTaskUtils.waitForCondition(
+      () => menu.hidden,
+      "Waiting for menu to close"
+    );
+  });
+});
+
+add_task(async function test_ensure_edit_mode_reset_login_item() {
+  // Preferences.set(OS_REAUTH_PREF, false);
+  await SpecialPowers.pushPrefEnv({
+    set: [[OS_REAUTH_PREF, false]],
+  });
+  TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
+  let browser = gBrowser.selectedBrowser;
+  await activateLoginItemEdit(browser);
+  await openRemoveAllDialog(browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    ok(
+      !loginItem.dataset.editing,
+      "Login item is no longer in edit mode due to remove all dialog being present"
+    );
+  });
+  await SpecialPowers.popPrefEnv();
 });
