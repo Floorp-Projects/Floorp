@@ -22,6 +22,9 @@ const { ContextualIdentityService } = ChromeUtils.import(
 const { Domain } = ChromeUtils.import(
   "chrome://remote/content/domains/Domain.jsm"
 );
+const { MainProcessTarget } = ChromeUtils.import(
+  "chrome://remote/content/targets/MainProcessTarget.jsm"
+);
 const { TabManager } = ChromeUtils.import(
   "chrome://remote/content/TabManager.jsm"
 );
@@ -58,6 +61,29 @@ class Target extends Domain {
   disposeBrowserContext({ browserContextId }) {
     ContextualIdentityService.remove(browserContextId);
     ContextualIdentityService.closeContainerTabs(browserContextId);
+  }
+
+  getTargets() {
+    const { targets } = this.session.target;
+
+    const targetInfos = [];
+    for (const target of targets) {
+      if (target instanceof MainProcessTarget) {
+        continue;
+      }
+
+      targetInfos.push({
+        targetId: target.id,
+        type: target.type,
+        title: target.title,
+        url: target.url,
+        // TODO: Correctly determine if target is attached (bug 1680780)
+        attached: target.id == this.session.target.id,
+        browserContextId: target.browserContextId,
+      });
+    }
+
+    return { targetInfos };
   }
 
   setDiscoverTargets({ discover }) {
