@@ -480,6 +480,35 @@ class WasmTableObject : public NativeObject {
   wasm::Table& table() const;
 };
 
+// The class of WebAssembly.Exception. This class is used to track exception
+// types for exports and imports.
+
+class WasmExceptionObject : public NativeObject {
+  static const unsigned TAG_SLOT = 0;
+  static const unsigned TYPE_SLOT = 1;
+
+  static const JSClassOps classOps_;
+  static const ClassSpec classSpec_;
+  static void finalize(JSFreeOp*, JSObject* obj);
+  static void trace(JSTracer* trc, JSObject* obj);
+
+ public:
+  static const unsigned RESERVED_SLOTS = 2;
+  static const JSClass class_;
+  static const JSClass& protoClass_;
+  static const JSPropertySpec properties[];
+  static const JSFunctionSpec methods[];
+  static const JSFunctionSpec static_methods[];
+  static bool construct(JSContext*, unsigned, Value*);
+
+  static WasmExceptionObject* create(JSContext* cx, wasm::ResultType type,
+                                     HandleObject proto);
+  bool isNewborn() const;
+
+  wasm::ValTypeVector& valueTypes() const;
+  wasm::ExceptionTag& tag() const;
+};
+
 // The class of the WebAssembly global namespace object.
 
 class WasmNamespaceObject : public NativeObject {

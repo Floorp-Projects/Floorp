@@ -166,6 +166,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_WasmMemory:
     case JSProto_WasmTable:
     case JSProto_WasmGlobal:
+    case JSProto_WasmException:
       return false;
 
 #ifdef JS_HAS_INTL_API

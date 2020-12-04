@@ -3632,6 +3632,123 @@ WasmGlobalObject::Cell* WasmGlobalObject::cell() const {
 }
 
 // ============================================================================
+// WebAssembly.Exception class and methods
+
+const JSClassOps WasmExceptionObject::classOps_ = {
+    nullptr,                        // addProperty
+    nullptr,                        // delProperty
+    nullptr,                        // enumerate
+    nullptr,                        // newEnumerate
+    nullptr,                        // resolve
+    nullptr,                        // mayResolve
+    WasmExceptionObject::finalize,  // finalize
+    nullptr,                        // call
+    nullptr,                        // hasInstance
+    nullptr,                        // construct
+    nullptr,                        // trace
+};
+
+const JSClass WasmExceptionObject::class_ = {
+    "WebAssembly.Exception",
+    JSCLASS_HAS_RESERVED_SLOTS(WasmExceptionObject::RESERVED_SLOTS) |
+        JSCLASS_FOREGROUND_FINALIZE,
+    &WasmExceptionObject::classOps_, &WasmExceptionObject::classSpec_};
+
+const JSClass& WasmExceptionObject::protoClass_ = PlainObject::class_;
+
+static constexpr char WasmExceptionName[] = "Exception";
+
+const ClassSpec WasmExceptionObject::classSpec_ = {
+    CreateWasmConstructor<WasmExceptionObject, WasmExceptionName>,
+    GenericCreatePrototype<WasmExceptionObject>,
+    WasmExceptionObject::static_methods,
+    nullptr,
+    WasmExceptionObject::methods,
+    WasmExceptionObject::properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
+
+/* static */
+void WasmExceptionObject::finalize(JSFreeOp* fop, JSObject* obj) {
+  WasmExceptionObject& exnObj = obj->as<WasmExceptionObject>();
+  if (!exnObj.isNewborn()) {
+    fop->release(obj, &exnObj.tag(), MemoryUse::WasmExceptionTag);
+    fop->delete_(obj, &exnObj.valueTypes(), MemoryUse::WasmExceptionType);
+  }
+}
+
+bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!ThrowIfNotConstructing(cx, args, "Exception")) {
+    return false;
+  }
+
+  // FIXME: The JS API is not finalized and may specify a different behavior
+  // here.
+  //        For now, we implement the same behavior as V8 and error when called.
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_EXN_CONSTRUCTOR);
+
+  return false;
+}
+
+/* static */
+WasmExceptionObject* WasmExceptionObject::create(JSContext* cx, ResultType type,
+                                                 HandleObject proto) {
+  AutoSetNewObjectMetadata metadata(cx);
+  RootedWasmExceptionObject obj(
+      cx, NewObjectWithGivenProto<WasmExceptionObject>(cx, proto));
+  if (!obj) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(obj->isNewborn());
+
+  SharedExceptionTag tag = SharedExceptionTag(cx->new_<ExceptionTag>());
+  if (!tag) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  InitReservedSlot(obj, TAG_SLOT, tag.forget().take(),
+                   MemoryUse::WasmExceptionTag);
+
+  wasm::ValTypeVector* newValueTypes = js_new<ValTypeVector>();
+  for (uint32_t i = 0; i < type.length(); i++) {
+    if (!newValueTypes->append(type[i])) {
+      return nullptr;
+    }
+  }
+  InitReservedSlot(obj, TYPE_SLOT, newValueTypes, MemoryUse::WasmExceptionType);
+
+  MOZ_ASSERT(!obj->isNewborn());
+
+  return obj;
+}
+
+bool WasmExceptionObject::isNewborn() const {
+  MOZ_ASSERT(is<WasmExceptionObject>());
+  return getReservedSlot(TYPE_SLOT).isUndefined();
+}
+
+const JSPropertySpec WasmExceptionObject::properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "WebAssembly.Exception", JSPROP_READONLY),
+    JS_PS_END};
+
+const JSFunctionSpec WasmExceptionObject::methods[] = {JS_FS_END};
+
+const JSFunctionSpec WasmExceptionObject::static_methods[] = {JS_FS_END};
+
+wasm::ValTypeVector& WasmExceptionObject::valueTypes() const {
+  return *(ValTypeVector*)getFixedSlot(TYPE_SLOT).toPrivate();
+};
+
+ExceptionTag& WasmExceptionObject::tag() const {
+  return *(ExceptionTag*)getReservedSlot(TAG_SLOT).toPrivate();
+}
+
+// ============================================================================
 // WebAssembly class and static methods
 
 static bool WebAssembly_toSource(JSContext* cx, unsigned argc, Value* vp) {
@@ -4608,6 +4725,9 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
       {"Memory", JSProto_WasmMemory},
       {"Table", JSProto_WasmTable},
       {"Global", JSProto_WasmGlobal},
+#ifdef ENABLE_WASM_EXCEPTIONS
+      {"Exception", JSProto_WasmException},
+#endif
       {"CompileError", GetExceptionProtoKey(JSEXN_WASMCOMPILEERROR)},
       {"LinkError", GetExceptionProtoKey(JSEXN_WASMLINKERROR)},
       {"RuntimeError", GetExceptionProtoKey(JSEXN_WASMRUNTIMEERROR)},
