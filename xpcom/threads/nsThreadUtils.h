@@ -1920,6 +1920,8 @@ class FrameRequestCallback;
 template <>
 LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain);
 template <>
+LogTaskBase<Task>::Run::Run(Task* aTask, bool aWillRunAgain);
+template <>
 void LogTaskBase<IPC::Message>::LogDispatchWithPid(IPC::Message* aEvent,
                                                    int32_t aPid);
 template <>
