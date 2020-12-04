@@ -363,6 +363,20 @@ public class TestRunnerActivity extends Activity {
                     }
                 });
 
+                extension.setBrowsingDataDelegate(new WebExtension.BrowsingDataDelegate() {
+                    @Nullable
+                    @Override
+                    public GeckoResult<Settings> onGetSettings() {
+                        final long types =
+                                Type.CACHE |
+                                Type.COOKIES |
+                                Type.HISTORY |
+                                Type.FORM_DATA |
+                                Type.DOWNLOADS;
+                        return GeckoResult.fromValue(new Settings(1234, types, types ));
+                    }
+                });
+
                 for (final GeckoSession session : mOwnedSessions) {
                     final WebExtension.SessionController controller =
                             session.getWebExtensionController();
