@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/SliceBudget.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/MainThreadIdlePeriod.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -85,12 +86,10 @@ class CCGCScheduler {
 
   // State retrieval
 
-  Maybe<TimeDuration> GetCCBlockedTime(TimeStamp now) const {
-    MOZ_ASSERT_IF(mCCBlockStart.IsNull(), !mInIncrementalGC);
-    if (mCCBlockStart.IsNull()) {
-      return {};
-    }
-    return Some(now - mCCBlockStart);
+  TimeDuration GetCCBlockedTime(TimeStamp aNow) const {
+    MOZ_ASSERT(mInIncrementalGC);
+    MOZ_ASSERT(!mCCBlockStart.IsNull());
+    return aNow - mCCBlockStart;
   }
 
   bool InIncrementalGC() const { return mInIncrementalGC; }
@@ -122,6 +121,7 @@ class CCGCScheduler {
   }
 
   void NoteGCEnd() {
+    mInIncrementalGC = false;
     mCCBlockStart = TimeStamp();
     mInIncrementalGC = false;
     mNeedsFullCC = true;
@@ -136,16 +136,10 @@ class CCGCScheduler {
   // When we decide to do a cycle collection but we're in the middle of an
   // incremental GC, the CC is "locked out" until the GC completes -- unless
   // the wait is too long, and we decide to finish the incremental GC early.
-  enum IsStartingCCLockout { StartingLockout = true, AlreadyLockedOut = false };
-  IsStartingCCLockout EnsureCCIsBlocked(TimeStamp aNow) {
+  void BlockCC(TimeStamp aNow) {
     MOZ_ASSERT(mInIncrementalGC);
-
-    if (mCCBlockStart) {
-      return AlreadyLockedOut;
-    }
-
+    MOZ_ASSERT(mCCBlockStart.IsNull());
     mCCBlockStart = aNow;
-    return StartingLockout;
   }
 
   void UnblockCC() { mCCBlockStart = TimeStamp(); }
@@ -307,7 +301,7 @@ class CCGCScheduler {
            mLikelyShortLivingObjectsNeedingGC > 2500 || mNeedsGCAfterCC;
   }
 
-  bool IsLastEarlyCCTimer(int32_t aCurrentFireCount) {
+  bool IsLastEarlyCCTimer(int32_t aCurrentFireCount) const {
     int32_t numEarlyTimerFires =
         std::max(int32_t(mCCDelay / kCCSkippableDelay) - 2, 1);
 
@@ -329,7 +323,8 @@ class CCGCScheduler {
     CleanupChildless,
     CleanupContentUnbinder,
     CleanupDeferred,
-    CycleCollect
+    StartCycleCollection,
+    CycleCollecting
   };
 
   enum CCRunnerYield { Continue, Yield };
@@ -353,11 +348,17 @@ class CCGCScheduler {
     CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
   };
 
-  void ActivateCCRunner() {
+  void InitCCRunnerStateMachine(CCRunnerState initialState) {
     MOZ_ASSERT(mCCRunnerState == CCRunnerState::Inactive);
-    mCCRunnerState = CCRunnerState::ReducePurple;
-    mCCDelay = kCCDelay;
-    mCCRunnerEarlyFireCount = 0;
+    mCCRunnerState = initialState;
+    if (initialState == CCRunnerState::ReducePurple) {
+      mCCDelay = kCCDelay;
+      mCCRunnerEarlyFireCount = 0;
+    } else if (initialState == CCRunnerState::CycleCollecting) {
+      // Nothing needed.
+    } else {
+      MOZ_CRASH("Invalid initial state");
+    }
   }
 
   void DeactivateCCRunner() { mCCRunnerState = CCRunnerState::Inactive; }
@@ -375,18 +376,29 @@ class CCGCScheduler {
     TimeStamp now = TimeStamp::Now();
 
     if (InIncrementalGC()) {
-      if (EnsureCCIsBlocked(now) == StartingLockout) {
-        // Reset our state so that we run forgetSkippable often enough before
-        // CC. Because of reduced mCCDelay forgetSkippable will be called just
-        // a few times. kMaxCCLockedoutTime limit guarantees that we end up
-        // calling forgetSkippable and CycleCollectNow eventually.
-        mCCRunnerState = CCRunnerState::ReducePurple;
-        mCCRunnerEarlyFireCount = 0;
-        mCCDelay = kCCDelay / int64_t(3);
+      if (mCCBlockStart.IsNull()) {
+        BlockCC(now);
+
+        // If we have not yet started cycle collecting, then reset our state so
+        // that we run forgetSkippable often enough before CC. Because of
+        // reduced mCCDelay, forgetSkippable will be called just a few times.
+        // Otherwise if we already made it to the CycleCollecting state, then
+        // just ignore CC timer fires while an incremental GC is running.
+        // (Running ICC during an IGC would cause us to synchronously finish
+        // the GC, which is bad.)
+        //
+        // The kMaxCCLockedoutTime limit guarantees that we end up calling
+        // forgetSkippable and CycleCollectNow eventually.
+
+        if (mCCRunnerState != CCRunnerState::CycleCollecting) {
+          mCCRunnerState = CCRunnerState::ReducePurple;
+          mCCRunnerEarlyFireCount = 0;
+          mCCDelay = kCCDelay / int64_t(3);
+        }
         return {CCRunnerAction::None, Yield};
       }
 
-      if (GetCCBlockedTime(now).value() < kMaxCCLockedoutTime) {
+      if (GetCCBlockedTime(now) < kMaxCCLockedoutTime) {
         return {CCRunnerAction::None, Yield};
       }
 
@@ -400,6 +412,8 @@ class CCGCScheduler {
     switch (mCCRunnerState) {
       case CCRunnerState::ReducePurple:
       case CCRunnerState::CleanupDeferred:
+      case CCRunnerState::StartCycleCollection:
+      case CCRunnerState::CycleCollecting:
         break;
 
       default:
@@ -464,7 +478,7 @@ class CCGCScheduler {
         if (aDeadline.IsNull()) {
           // Non-idle (waiting) callbacks skip the rest of the cleanup, but
           // still wait for another fire before the actual CC.
-          mCCRunnerState = CCRunnerState::CycleCollect;
+          mCCRunnerState = CCRunnerState::StartCycleCollection;
           return {CCRunnerAction::None, Yield};
         }
 
@@ -472,7 +486,7 @@ class CCGCScheduler {
 
         // The deadline passed, so go straight to CC in the next slice.
         if (now >= aDeadline) {
-          mCCRunnerState = CCRunnerState::CycleCollect;
+          mCCRunnerState = CCRunnerState::StartCycleCollection;
           return {CCRunnerAction::None, Yield};
         }
 
@@ -486,7 +500,7 @@ class CCGCScheduler {
 
         // Our efforts to avoid a CC have failed. Let the timer fire once more
         // to trigger a CC.
-        mCCRunnerState = CCRunnerState::CycleCollect;
+        mCCRunnerState = CCRunnerState::StartCycleCollection;
         if (now >= aDeadline) {
           // The deadline passed, go straight to CC in the next slice.
           return {CCRunnerAction::None, Yield};
@@ -494,14 +508,22 @@ class CCGCScheduler {
 
         return {CCRunnerAction::CleanupDeferred, Yield};
 
-      // CycleCollect: the final state where we actually do a slice of cycle
-      // collection and reset the timer.
-      case CCRunnerState::CycleCollect:
+      // StartCycleCollection: start actually doing cycle collection slices.
+      // The difference between this state and CycleCollecting is that
+      // StartCycleCollection will return to ReducePurple if an incremental GC
+      // starts; CycleCollecting will not. (Synchronous CCs go straight to
+      // CycleCollecting without ever passing through StartCycleCollection or
+      // any of the other states.)
+      case CCRunnerState::StartCycleCollection:
         // We are in the final timer fire and still meet the conditions for
         // triggering a CC. Let RunCycleCollectorSlice finish the current IGC
         // if any, because that will allow us to include the GC time in the CC
         // pause.
-        mCCRunnerState = CCRunnerState::Inactive;
+        mCCRunnerState = CCRunnerState::CycleCollecting;
+        [[fallthrough]];
+
+      // CycleCollecting: continue running slices until done.
+      case CCRunnerState::CycleCollecting:
         return {CCRunnerAction::CycleCollect, Yield};
 
       default:
@@ -544,6 +566,7 @@ class CCGCScheduler {
     return BudgetFromDuration(budgetTime);
   }
 
+ private:
   // State
 
   // An incremental GC is in progress, which blocks the CC from running for its
