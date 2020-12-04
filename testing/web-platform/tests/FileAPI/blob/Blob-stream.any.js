@@ -3,25 +3,15 @@
 // META: script=../../streams/resources/test-utils.js
 'use strict';
 
-// Helper function that triggers garbage collection while reading a chunk
-// if perform_gc is true.
-async function read_and_gc(reader, perform_gc) {
-  const read_promise = reader.read();
-  if (perform_gc)
-    garbageCollect();
-  return read_promise;
-}
-
 // Takes in a ReadableStream and reads from it until it is done, returning
-// an array that contains the results of each read operation. If perform_gc
-// is true, garbage collection is triggered while reading every chunk.
-async function read_all_chunks(stream, perform_gc = false) {
+// an array that contains the results of each read operation
+async function read_all_chunks(stream) {
   assert_true(stream instanceof ReadableStream);
   assert_true('getReader' in stream);
   const reader = stream.getReader();
 
   assert_true('read' in reader);
-  let read_value = await read_and_gc(reader, perform_gc);
+  let read_value = await reader.read();
 
   let out = [];
   let i = 0;
@@ -29,7 +19,7 @@ async function read_all_chunks(stream, perform_gc = false) {
     for (let val of read_value.value) {
       out[i++] = val;
     }
-    read_value = await read_and_gc(reader, perform_gc);
+    read_value = await reader.read();
   }
   return out;
 }
@@ -66,7 +56,7 @@ promise_test(async() => {
   const stream = blob.stream();
   blob = null;
   garbageCollect();
-  const chunks = await read_all_chunks(stream, /*perform_gc=*/true);
+  const chunks = await read_all_chunks(stream);
   assert_array_equals(chunks, input_arr);
 }, "Blob.stream() garbage collection of blob shouldn't break stream" +
       "consumption")
