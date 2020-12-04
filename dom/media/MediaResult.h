@@ -55,16 +55,9 @@ class MediaResult {
                            mMessage.IsEmpty() ? "" : " - ", mMessage.get());
   }
 
-  void SetGPUCrashTimeStamp(const TimeStamp& aTime) {
-    mGPUCrashTimeStamp = aTime;
-  }
-  const TimeStamp& GPUCrashTimeStamp() const { return mGPUCrashTimeStamp; }
-
  private:
   nsresult mCode;
   nsCString mMessage;
-  TimeStamp
-      mGPUCrashTimeStamp;  // Used in bug 1393399 for temporary telemetry usage.
 };
 
 #ifdef _MSC_VER

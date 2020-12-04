@@ -29,9 +29,7 @@ void RemoteDecoderChild::HandleRejectionError(
   // thing and we can consider that the parent has crashed. The child can no
   // longer be used.
 
-  // The GPU/RDD process crashed, record the time and send back to MFR for
-  // telemetry.
-  mRemoteProcessCrashTime = TimeStamp::Now();
+  // The GPU/RDD process crashed.
   if (mRecreatedOnCrash) {
     // Defer reporting an error until we've recreated the manager so that
     // it'll be safe for MediaFormatReader to recreate decoders
@@ -40,7 +38,6 @@ void RemoteDecoderChild::HandleRejectionError(
         "RemoteDecoderChild::HandleRejectionError",
         [self, callback = std::move(aCallback)]() {
           MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER, __func__);
-          error.SetGPUCrashTimeStamp(self->mRemoteProcessCrashTime);
           callback(error);
         }));
     return;

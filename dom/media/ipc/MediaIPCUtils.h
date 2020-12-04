@@ -175,18 +175,14 @@ struct ParamTraits<mozilla::MediaResult> {
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.Code());
     WriteParam(aMsg, aParam.Message());
-    WriteParam(aMsg, aParam.GPUCrashTimeStamp());
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     nsresult result;
     nsCString message;
-    mozilla::TimeStamp timeStamp;
-    if (ReadParam(aMsg, aIter, &result) && ReadParam(aMsg, aIter, &message) &&
-        ReadParam(aMsg, aIter, &timeStamp)) {
+    if (ReadParam(aMsg, aIter, &result) && ReadParam(aMsg, aIter, &message)) {
       *aResult = paramType(result, std::move(message));
-      aResult->SetGPUCrashTimeStamp(timeStamp);
       return true;
     }
     return false;
