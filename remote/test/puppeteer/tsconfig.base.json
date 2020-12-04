@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": true,
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "declaration": true,
+    "declarationMap": true,
+    "resolveJsonModule": true
+  }
+}

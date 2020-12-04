@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import utils from './utils';
+import utils from './utils.js';
 import os from 'os';
 import expect from 'expect';
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-} from './mocha-utils';
-import { KeyInput } from '../src/common/USKeyboardLayout';
+} from './mocha-utils'; // eslint-disable-line import/extensions
+import { KeyInput } from '../lib/cjs/puppeteer/common/USKeyboardLayout.js';
 
 describe('Keyboard', function () {
   setupTestBrowserHooks();
@@ -332,16 +332,16 @@ describe('Keyboard', function () {
     const { page } = getTestState();
 
     let error = await page.keyboard
-      // @ts-expect-error
+      // @ts-expect-error bad input
       .press('NotARealKey')
       .catch((error_) => error_);
     expect(error.message).toBe('Unknown key: "NotARealKey"');
 
-    // @ts-expect-error
+    // @ts-expect-error bad input
     error = await page.keyboard.press('ё').catch((error_) => error_);
     expect(error && error.message).toBe('Unknown key: "ё"');
 
-    // @ts-expect-error
+    // @ts-expect-error bad input
     error = await page.keyboard.press('😊').catch((error_) => error_);
     expect(error && error.message).toBe('Unknown key: "😊"');
   });
@@ -386,7 +386,15 @@ describe('Keyboard', function () {
       });
     });
     await page.keyboard.press('Meta');
-    const [key, code, metaKey] = await page.evaluate('result');
+    // Have to do this because we lose a lot of type info when evaluating a
+    // string not a function. This is why functions are recommended rather than
+    // using strings (although we'll leave this test so we have coverage of both
+    // approaches.)
+    const [key, code, metaKey] = (await page.evaluate('result')) as [
+      string,
+      string,
+      boolean
+    ];
     if (isFirefox && os.platform() !== 'darwin') expect(key).toBe('OS');
     else expect(key).toBe('Meta');
 

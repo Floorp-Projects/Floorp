@@ -17,7 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import expect from 'expect';
-import { getTestState, describeChromeOnly } from './mocha-utils';
+import { getTestState, describeChromeOnly } from './mocha-utils'; // eslint-disable-line import/extensions
 
 describeChromeOnly('Tracing', function () {
   let outputFile;
@@ -117,5 +117,17 @@ describeChromeOnly('Tracing', function () {
     await page.goto(server.PREFIX + '/grid.html');
     const trace = await page.tracing.stop();
     expect(trace.toString()).toContain('screenshot');
+  });
+
+  it('should properly fail if readProtocolStream errors out', async () => {
+    await page.tracing.start({ path: __dirname });
+
+    let error: Error = null;
+    try {
+      await page.tracing.stop();
+    } catch (error_) {
+      error = error_;
+    }
+    expect(error).toBeDefined();
   });
 });

@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-import { TestServer } from '../utils/testserver/index';
+import { TestServer } from '../utils/testserver/index.js';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import sinon from 'sinon';
-import puppeteer from '../src/index';
-import { Browser, BrowserContext } from '../src/common/Browser';
-import { Page } from '../src/common/Page';
-import { Puppeteer } from '../src/common/Puppeteer';
-import utils from './utils';
+import puppeteer from '../lib/cjs/puppeteer/node.js';
+import {
+  Browser,
+  BrowserContext,
+} from '../lib/cjs/puppeteer/common/Browser.js';
+import { Page } from '../lib/cjs/puppeteer/common/Page.js';
+import { PuppeteerNode } from '../lib/cjs/puppeteer/node/Puppeteer.js';
+import utils from './utils.js';
 import rimraf from 'rimraf';
 
-import { trackCoverage } from './coverage-utils';
+import { trackCoverage } from './coverage-utils.js';
 
 const setupServer = async () => {
   const assetsPath = path.join(__dirname, 'assets');
@@ -89,8 +92,11 @@ const defaultBrowserOptions = Object.assign(
       `WARN: running ${product} tests with ${defaultBrowserOptions.executablePath}`
     );
   } else {
-    // TODO(jackfranklin): declare updateRevision in some form for the Firefox launcher.
-    // @ts-expect-error
+    // TODO(jackfranklin): declare updateRevision in some form for the Firefox
+    // launcher.
+    // @ts-expect-error _updateRevision is defined on the FF launcher
+    // but not the Chrome one. The types need tidying so that TS can infer that
+    // properly and not error here.
     if (product === 'firefox') await puppeteer._launcher._updateRevision();
     const executablePath = puppeteer.executablePath();
     if (!fs.existsSync(executablePath))
@@ -120,7 +126,7 @@ interface PuppeteerTestState {
   browser: Browser;
   context: BrowserContext;
   page: Page;
-  puppeteer: Puppeteer;
+  puppeteer: PuppeteerNode;
   defaultBrowserOptions: {
     [x: string]: any;
   };

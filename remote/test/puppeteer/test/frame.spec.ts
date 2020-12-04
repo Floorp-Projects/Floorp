@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import utils from './utils';
+import utils from './utils.js';
 import expect from 'expect';
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
-} from './mocha-utils';
+} from './mocha-utils'; // eslint-disable-line import/extensions
 
 describe('Frame specs', function () {
   setupTestBrowserHooks();
@@ -75,7 +75,7 @@ describe('Frame specs', function () {
       let error = null;
       await frame1.evaluate(() => 7 * 8).catch((error_) => (error = error_));
       expect(error.message).toContain(
-        'Execution Context is not available in detached frame'
+        'Execution context is not available in detached frame'
       );
     });
   });
@@ -199,7 +199,7 @@ describe('Frame specs', function () {
       const { page, server } = getTestState();
 
       await page.goto(server.PREFIX + '/shadow.html');
-      await page.evaluate(async (url) => {
+      await page.evaluate(async (url: string) => {
         const frame = document.createElement('iframe');
         frame.src = url;
         document.body.shadowRoot.appendChild(frame);
@@ -212,7 +212,7 @@ describe('Frame specs', function () {
       const { page, server } = getTestState();
 
       await utils.attachFrame(page, 'theFrameId', server.EMPTY_PAGE);
-      await page.evaluate((url) => {
+      await page.evaluate((url: string) => {
         const frame = document.createElement('iframe');
         frame.name = 'theFrameName';
         frame.src = url;
@@ -255,5 +255,15 @@ describe('Frame specs', function () {
         expect(frame1).not.toBe(frame2);
       }
     );
+    it('should support url fragment', async () => {
+      const { page, server } = getTestState();
+
+      await page.goto(server.PREFIX + '/frames/one-frame-url-fragment.html');
+
+      expect(page.frames().length).toBe(2);
+      expect(page.frames()[1].url()).toBe(
+        server.PREFIX + '/frames/frame.html?param=value#fragment'
+      );
+    });
   });
 });
