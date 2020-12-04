@@ -1173,7 +1173,11 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
       LOG(("THRD(%p) running [%p]\n", this, event.get()));
 
-      LogRunnable::Run log(event);
+      Maybe<LogRunnable::Run> log;
+
+      if (!usingTaskController) {
+        log.emplace(event);
+      }
 
       // Delay event processing to encourage whoever dispatched this event
       // to run.
