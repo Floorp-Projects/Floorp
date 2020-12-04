@@ -20,7 +20,6 @@ class PageStyleChild extends JSWindowActorChild {
         if (!window || window.closed) {
           return;
         }
-
         let filteredStyleSheets = this._collectStyleSheets(window);
         this.sendAsyncMessage("PageStyle:Add", {
           filteredStyleSheets,
@@ -52,31 +51,68 @@ class PageStyleChild extends JSWindowActorChild {
   }
 
   /**
+   * Returns links that would represent stylesheets once loaded.
+   */
+  _collectLinks(document) {
+    let result = [];
+    for (let link of document.querySelectorAll("link")) {
+      if (link.namespaceURI !== "http://www.w3.org/1999/xhtml") {
+        continue;
+      }
+      let isStyleSheet = Array.from(link.relList).some(
+        r => r.toLowerCase() == "stylesheet"
+      );
+      if (!isStyleSheet) {
+        continue;
+      }
+      if (!link.href) {
+        continue;
+      }
+      result.push(link);
+    }
+    return result;
+  }
+
+  /**
    * Switch the stylesheet so that only the sheet with the given title is enabled.
    */
   _switchStylesheet(title) {
-    let docStyleSheets = this.document.styleSheets;
+    let document = this.document;
+    let docStyleSheets = Array.from(document.styleSheets);
+    let links;
 
     // Does this doc contain a stylesheet with this title?
     // If not, it's a subframe's stylesheet that's being changed,
     // so no need to disable stylesheets here.
     let docContainsStyleSheet = !title;
     if (title) {
-      for (let docStyleSheet of docStyleSheets) {
-        if (docStyleSheet.title === title) {
-          docContainsStyleSheet = true;
-          break;
+      links = this._collectLinks(document);
+      docContainsStyleSheet =
+        docStyleSheets.some(sheet => sheet.title == title) ||
+        links.some(link => link.title == title);
+    }
+
+    for (let sheet of docStyleSheets) {
+      if (sheet.title) {
+        if (docContainsStyleSheet) {
+          sheet.disabled = sheet.title !== title;
         }
+      } else if (sheet.disabled) {
+        sheet.disabled = false;
       }
     }
 
-    for (let docStyleSheet of docStyleSheets) {
-      if (docStyleSheet.title) {
-        if (docContainsStyleSheet) {
-          docStyleSheet.disabled = docStyleSheet.title !== title;
+    // If there's no title, we just need to disable potentially-enabled
+    // stylesheets via document.styleSheets, so no need to deal with links
+    // there.
+    //
+    // We don't want to enable <link rel="stylesheet" disabled> without title
+    // that were not enabled before.
+    if (title) {
+      for (let link of links) {
+        if (link.title == title && link.disabled) {
+          link.disabled = false;
         }
-      } else if (docStyleSheet.disabled) {
-        docStyleSheet.disabled = false;
       }
     }
   }
@@ -89,10 +125,12 @@ class PageStyleChild extends JSWindowActorChild {
    */
   _collectStyleSheets(content) {
     let result = [];
+    let document = content.document;
 
-    // Only stylesheets with a title can act as an alternative stylesheet.
-    for (let sheet of content.document.styleSheets) {
-      if (!sheet.title) {
+    for (let sheet of document.styleSheets) {
+      let title = sheet.title;
+      if (!title) {
+        // Sheets without a title are not alternates.
         continue;
       }
 
@@ -102,10 +140,37 @@ class PageStyleChild extends JSWindowActorChild {
         continue;
       }
 
-      result.push({
-        title: sheet.title,
-        disabled: sheet.disabled,
-      });
+      // We skip links here, see below.
+      if (
+        sheet.href &&
+        sheet.ownerNode &&
+        sheet.ownerNode.nodeName.toLowerCase() == "link"
+      ) {
+        continue;
+      }
+
+      let disabled = sheet.disabled;
+      result.push({ title, disabled });
+    }
+
+    // This is tricky, because we can't just rely on document.styleSheets, as
+    // `<link disabled>` makes the sheet don't appear there at all.
+    for (let link of this._collectLinks(document)) {
+      let title = link.title;
+      if (!title) {
+        continue;
+      }
+
+      let media = link.media;
+      if (media && !content.matchMedia(media).matches) {
+        continue;
+      }
+
+      let disabled =
+        link.disabled ||
+        !!link.sheet?.disabled ||
+        document.preferredStyleSheetSet != title;
+      result.push({ title, disabled });
     }
 
     return result;

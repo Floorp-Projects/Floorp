@@ -401,6 +401,7 @@ async function promiseStylesheetsLoaded(tab, styleSheetCount) {
 
   await TestUtils.waitForCondition(() => {
     let menu = styleMenu._pageStyleSheets.get(permanentKey);
+    info(`waiting for sheets: ${menu && menu.filteredStyleSheets.length}`);
     return menu && menu.filteredStyleSheets.length >= styleSheetCount;
   }, "waiting for style sheets to load");
 }
