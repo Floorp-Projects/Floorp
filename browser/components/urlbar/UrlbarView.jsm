@@ -1365,12 +1365,14 @@ class UrlbarView {
     if (actionSetter) {
       actionSetter();
       item._originalActionSetter = actionSetter;
+      item.setAttribute("has-action", "true");
     } else {
       item._originalActionSetter = () => {
         action.removeAttribute("data-l10n-id");
         action.textContent = "";
       };
       item._originalActionSetter();
+      item.removeAttribute("has-action");
     }
 
     if (!title.hasAttribute("isurl")) {
@@ -1378,8 +1380,6 @@ class UrlbarView {
     } else {
       title.removeAttribute("dir");
     }
-
-    item._elements.get("titleSeparator").hidden = !actionSetter && !setURL;
   }
 
   /**
@@ -1960,18 +1960,6 @@ class UrlbarView {
       let favicon = item.querySelector(".urlbarView-favicon");
       let title = item.querySelector(".urlbarView-title");
 
-      // If a one-off button is the only selection, force the heuristic result
-      // to show its action text, so the engine name is visible.
-      if (
-        result.heuristic &&
-        !this.selectedElement &&
-        (localSearchMode || engine)
-      ) {
-        item.setAttribute("show-action-text", "true");
-      } else {
-        item.removeAttribute("show-action-text");
-      }
-
       // If an engine is selected, update search results to use that engine.
       // Otherwise, restore their original engines.
       if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
@@ -1995,14 +1983,19 @@ class UrlbarView {
         continue;
       }
 
-      // If the result is the heuristic, update its title to reflect the search
-      // string. This means we restyle it to look like a search result. We
+      // If the result is the heuristic and a one-off is selected (i.e.,
+      // localSearchMode || engine), then restyle it to look like a search
+      // result; otherwise, remove such styling. For restyled results, we
       // override the usual result-picking behaviour in UrlbarInput.pickResult.
       if (this.oneOffsRefresh && result.heuristic) {
         title.textContent =
           localSearchMode || engine
             ? this._queryContext.searchString
             : result.title;
+
+        // Set the restyled-search attribute so the action text and title
+        // separator are shown or hidden via CSS as appropriate.
+        item.toggleAttribute("restyled-search", localSearchMode || engine);
       }
 
       // Update result action text.
