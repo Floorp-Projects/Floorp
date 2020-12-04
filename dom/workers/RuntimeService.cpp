@@ -297,7 +297,8 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setPrivateClassFields(
           GetWorkerPref<bool>("experimental.private_fields"_ns))
       .setPrivateClassMethods(
-          GetWorkerPref<bool>("experimental.private_methods"_ns));
+          GetWorkerPref<bool>("experimental.private_methods"_ns))
+      .setTopLevelAwait(GetWorkerPref<bool>("experimental.top_level_await"_ns));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
