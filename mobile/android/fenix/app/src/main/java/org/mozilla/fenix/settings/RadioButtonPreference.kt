@@ -19,7 +19,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.view.GroupableRadioButton
 import org.mozilla.fenix.utils.view.uncheckAll
 
-@Suppress("RestrictedApi", "PrivateResource")
+@Suppress("RestrictedApi")
 open class RadioButtonPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -37,7 +37,7 @@ open class RadioButtonPreference @JvmOverloads constructor(
 
         context.withStyledAttributes(
             attrs,
-            androidx.preference.R.styleable.Preference,
+            R.styleable.RadioButtonPreference,
             getAttr(
                 context,
                 androidx.preference.R.attr.preferenceStyle,
@@ -46,13 +46,10 @@ open class RadioButtonPreference @JvmOverloads constructor(
             0
         ) {
             defaultValue = when {
-                hasValue(androidx.preference.R.styleable.Preference_defaultValue) ->
-                    getBoolean(androidx.preference.R.styleable.Preference_defaultValue, false)
-                hasValue(androidx.preference.R.styleable.Preference_android_defaultValue) ->
-                    getBoolean(
-                        androidx.preference.R.styleable.Preference_android_defaultValue,
-                        false
-                    )
+                hasValue(R.styleable.RadioButtonPreference_defaultValue) ->
+                    getBoolean(R.styleable.RadioButtonPreference_defaultValue, false)
+                hasValue(R.styleable.RadioButtonPreference_android_defaultValue) ->
+                    getBoolean(R.styleable.RadioButtonPreference_android_defaultValue, false)
                 else -> false
             }
         }
