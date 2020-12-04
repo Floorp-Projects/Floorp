@@ -77,6 +77,24 @@ def build_gradle_command(config, tasks):
 
         yield task
 
+@transforms.add
+def add_test_build_type(config, tasks):
+    for task in tasks:
+        test_build_type = task["run"].pop("test-build-type", "")
+        if test_build_type:
+            task["run"]["gradlew"].append(
+                "-PtestBuildType={}".format(test_build_type)
+            )
+        yield task
+
+
+@transforms.add
+def add_disable_optimization(config, tasks):
+    for task in tasks:
+        if task.pop("disable-optimization", False):
+            task["run"]["gradlew"].append("-PdisableOptimization")
+        yield task
+
 
 @transforms.add
 def add_nightly_version(config, tasks):

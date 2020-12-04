@@ -28,16 +28,12 @@ job-template:
     worker:
         signing-type:
             by-build-type:
-                (beta|release):
+                (beta|release|android-test-beta):
                     by-level:
                         '3': fennec-production-signing
                         default: dep-signing
-                android-test-nightly:
-                    by-level:
-                        '3': production-signing
-                        default: dep-signing
                 performance-test: dep-signing
-                nightly:
+                (nightly|android-test-nightly):
                     by-level:
                         '3': production-signing
                         default: dep-signing
@@ -52,12 +48,14 @@ job-template:
         by-build-type:
             # No test job runs on push against this build type. Although we do want nightly-simulation
             # signed to use it in the gecko trees.
-            nightly-simulation: [github-push]
+            # We want beta on push so that we detect problem before shipping it
+            (nightly-simulation|beta-firebase|android-test-beta): [github-push]
             default: []
     treeherder:
         job-symbol:
             by-build-type:
                 android-test.+: Bats
+                beta-firebase: Bfs
                 default: Bs
         kind: build
         platform: android-all/opt
