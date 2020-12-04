@@ -576,6 +576,12 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // browser.tabs.remote.separatedMozillaDomains).
 pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
 
+#ifdef NIGHTLY_BUILD
+pref("browser.tabs.tooltipsShowPid", true);
+#else
+pref("browser.tabs.tooltipsShowPid", false);
+#endif
+
 // allow_eval_* is enabled on Firefox Desktop only at this
 // point in time
 pref("security.allow_eval_with_system_principal", false);
