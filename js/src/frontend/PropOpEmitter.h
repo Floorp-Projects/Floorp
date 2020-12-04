@@ -128,9 +128,6 @@ class MOZ_STACK_CLASS PropOpEmitter {
   // The index for the property name's atom.
   GCThingIndex propAtomIndex_;
 
-  // Whether the property name is `length` or not.
-  bool isLength_ = false;
-
 #ifdef DEBUG
   // The state of this emitter.
   //
