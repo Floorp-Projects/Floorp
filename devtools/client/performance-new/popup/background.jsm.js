@@ -33,6 +33,7 @@ const AppConstants = ChromeUtils.import(
  * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
  * @typedef {import("../@types/perf").PageContext} PageContext
  * @typedef {import("../@types/perf").Presets} Presets
+ * @typedef {import("../@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 
 /** @type {PerformancePref["Entries"]} */
@@ -93,6 +94,7 @@ const presets = {
     features: ["screenshots", "js"],
     threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
     duration: 0,
+    profilerViewMode: "active-tab",
   },
   "firefox-platform": {
     label: "Firefox Platform",
@@ -193,6 +195,29 @@ async function getSymbolsFromThisBrowser(pageContext, debugName, breakpadId) {
 }
 
 /**
+ * Return the proper view mode for the Firefox Profiler front-end timeline by
+ * looking at the proper preset that is selected.
+ * Return value can be undefined when the preset is unknown or custom.
+ * @param {PageContext} pageContext
+ * @return {ProfilerViewMode | undefined}
+ */
+function getProfilerViewModeForCurrentPreset(pageContext) {
+  const postfix = getPrefPostfix(pageContext);
+  const presetName = Services.prefs.getCharPref(PRESET_PREF + postfix);
+
+  if (presetName === "custom") {
+    return undefined;
+  }
+
+  const preset = presets[presetName];
+  if (!preset) {
+    console.error(`Unknown profiler preset was encountered: "${presetName}"`);
+    return undefined;
+  }
+  return preset.profilerViewMode;
+}
+
+/**
  * This function is called directly by devtools/startup/DevToolsStartup.jsm when
  * using the shortcut keys to capture a profile.
  * @param {PageContext} pageContext
@@ -221,8 +246,9 @@ async function captureProfile(pageContext) {
       }
     );
 
+  const profilerViewMode = getProfilerViewModeForCurrentPreset(pageContext);
   const receiveProfile = lazy.BrowserModule().receiveProfile;
-  receiveProfile(profile, (debugName, breakpadId) => {
+  receiveProfile(profile, profilerViewMode, (debugName, breakpadId) => {
     return getSymbolsFromThisBrowser(pageContext, debugName, breakpadId);
   });
 
