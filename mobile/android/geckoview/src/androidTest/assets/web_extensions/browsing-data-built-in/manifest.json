@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+  "name": "BrowsingData",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "browsing-data-settings@tests.mozilla.org"
+    }
+  },
+  "version": "1.0",
+  "description": "Tests the browsingData API",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": ["browsingData", "geckoViewAddons", "nativeMessaging"]
+}
