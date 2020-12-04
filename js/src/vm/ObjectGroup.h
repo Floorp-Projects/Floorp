@@ -224,10 +224,6 @@ class ObjectGroupRealm {
   static ObjectGroupRealm& get(const ObjectGroup* group);
   static ObjectGroupRealm& getForNewObject(JSContext* cx);
 
-  static ObjectGroup* makeGroup(JSContext* cx, JS::Realm* realm,
-                                const JSClass* clasp, Handle<TaggedProto> proto,
-                                ObjectGroupFlags initialFlags = 0);
-
   static ObjectGroup* getStringSplitStringGroup(JSContext* cx);
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
