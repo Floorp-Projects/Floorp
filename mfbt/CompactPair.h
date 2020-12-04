@@ -222,6 +222,14 @@ MakeCompactPair(A&& aA, B&& aB) {
       std::forward<A>(aA), std::forward<B>(aB));
 }
 
+/**
+ * CompactPair equality comparison
+ */
+template <typename A, typename B>
+bool operator==(const CompactPair<A, B>& aLhs, const CompactPair<A, B>& aRhs) {
+  return aLhs.first() == aRhs.first() && aLhs.second() == aRhs.second();
+}
+
 }  // namespace mozilla
 
 namespace std {
