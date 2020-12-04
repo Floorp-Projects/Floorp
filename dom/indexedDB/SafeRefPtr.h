@@ -305,6 +305,13 @@ template <typename T>
 SafeRefPtr(already_AddRefed<T>&&) -> SafeRefPtr<T>;
 
 template <typename T>
+class CheckedUnsafePtr;
+
+template <typename T>
+SafeRefPtr(const CheckedUnsafePtr<T>&, const AcquireStrongRefFromRawPtr&)
+    -> SafeRefPtr<T>;
+
+template <typename T>
 SafeRefPtr<T>::SafeRefPtr(T* aRawPtr, detail::InitialConstructionTag)
     : mRawPtr(aRawPtr) {
   if (!std::is_base_of_v<detail::SafeRefCountedBase, T> && mRawPtr) {
