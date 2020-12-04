@@ -73,12 +73,12 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
             ref token => {
                 let token = token.clone();
                 Err(input.new_basic_unexpected_token_error(token))
-            },
+            }
         },
         ref token => {
             let token = token.clone();
             Err(input.new_basic_unexpected_token_error(token))
-        },
+        }
     }
 }
 
