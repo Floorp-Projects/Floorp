@@ -1683,9 +1683,9 @@ var BookmarkingUI = {
       bookmarksToolbarItemsPlacement?.area == CustomizableUI.AREA_BOOKMARKS &&
       (this._isCustomizing || !!toolbarBookmarkCount);
 
-    let emptyMsg = document.getElementById("personal-toolbar-empty");
-    emptyMsg.hidden = hasVisibleChildren;
-    emptyMsg.toggleAttribute("nowidth", !hasVisibleChildren);
+    document.getElementById(
+      "personal-toolbar-empty"
+    ).hidden = hasVisibleChildren;
   },
 
   openLibraryIfLinkClicked(event) {
