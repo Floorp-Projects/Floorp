@@ -940,6 +940,9 @@ bool MetadataTier::clone(const MetadataTier& src) {
 size_t Metadata::serializedSize() const {
   return sizeof(pod()) + SerializedVectorSize(funcTypeIds) +
          SerializedPodVectorSize(globals) + SerializedPodVectorSize(tables) +
+#ifdef ENABLE_WASM_EXCEPTIONS
+         SerializedPodVectorSize(events) +
+#endif
          sizeof(moduleName) + SerializedPodVectorSize(funcNames) +
          filename.serializedSize() + sourceMapURL.serializedSize();
 }
@@ -951,6 +954,9 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
   cursor = SerializeVector(cursor, funcTypeIds);
   cursor = SerializePodVector(cursor, globals);
   cursor = SerializePodVector(cursor, tables);
+#ifdef ENABLE_WASM_EXCEPTIONS
+  cursor = SerializePodVector(cursor, events);
+#endif
   cursor = WriteBytes(cursor, &moduleName, sizeof(moduleName));
   cursor = SerializePodVector(cursor, funcNames);
   cursor = filename.serialize(cursor);
@@ -963,6 +969,9 @@ uint8_t* Metadata::serialize(uint8_t* cursor) const {
       (cursor = DeserializeVector(cursor, &funcTypeIds)) &&
       (cursor = DeserializePodVector(cursor, &globals)) &&
       (cursor = DeserializePodVector(cursor, &tables)) &&
+#ifdef ENABLE_WASM_EXCEPTIONS
+      (cursor = DeserializePodVector(cursor, &events)) &&
+#endif
       (cursor = ReadBytes(cursor, &moduleName, sizeof(moduleName))) &&
       (cursor = DeserializePodVector(cursor, &funcNames)) &&
       (cursor = filename.deserialize(cursor)) &&
@@ -977,6 +986,9 @@ size_t Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return SizeOfVectorExcludingThis(funcTypeIds, mallocSizeOf) +
          globals.sizeOfExcludingThis(mallocSizeOf) +
          tables.sizeOfExcludingThis(mallocSizeOf) +
+#ifdef ENABLE_WASM_EXCEPTIONS
+         events.sizeOfExcludingThis(mallocSizeOf) +
+#endif
          funcNames.sizeOfExcludingThis(mallocSizeOf) +
          filename.sizeOfExcludingThis(mallocSizeOf) +
          sourceMapURL.sizeOfExcludingThis(mallocSizeOf);

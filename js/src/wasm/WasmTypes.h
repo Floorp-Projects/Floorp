@@ -1859,6 +1859,9 @@ class Export {
 
   DefinitionKind kind() const { return pod.kind_; }
   uint32_t funcIndex() const;
+#ifdef ENABLE_WASM_EXCEPTIONS
+  uint32_t eventIndex() const;
+#endif
   uint32_t globalIndex() const;
   uint32_t tableIndex() const;
 
@@ -2005,8 +2008,10 @@ typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 struct EventDesc {
   EventKind kind;
   ResultType type;
+  bool isExport;
 
-  EventDesc(EventKind kind, ResultType type) : kind(kind), type(type) {}
+  EventDesc(EventKind kind, ResultType type, bool isExport = false)
+      : kind(kind), type(type), isExport(isExport) {}
 };
 
 typedef Vector<EventDesc, 0, SystemAllocPolicy> EventDescVector;

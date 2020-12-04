@@ -337,6 +337,9 @@ function exportSection(exports) {
         } else if (exp.hasOwnProperty("memIndex")) {
             body.push(...varU32(MemoryCode));
             body.push(...varU32(exp.memIndex));
+        } else if (exp.hasOwnProperty("eventIndex")) {
+            body.push(...varU32(EventCode));
+            body.push(...varU32(exp.eventIndex));
         } else {
             throw "Bad export " + exp;
         }

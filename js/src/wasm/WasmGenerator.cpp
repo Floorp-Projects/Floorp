@@ -1125,6 +1125,9 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
   metadata_->startFuncIndex = moduleEnv_->startFuncIndex;
   metadata_->tables = std::move(moduleEnv_->tables);
   metadata_->globals = std::move(moduleEnv_->globals);
+#ifdef ENABLE_WASM_EXCEPTIONS
+  metadata_->events = std::move(moduleEnv_->events);
+#endif
   metadata_->nameCustomSectionIndex = moduleEnv_->nameCustomSectionIndex;
   metadata_->moduleName = moduleEnv_->moduleName;
   metadata_->funcNames = std::move(moduleEnv_->funcNames);
