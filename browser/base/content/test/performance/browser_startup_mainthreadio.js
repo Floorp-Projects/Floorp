@@ -559,7 +559,13 @@ const startupPhases = {
   ],
 };
 
-for (let name of ["d3d11layers", "glcontext", "wmfvpxvideo"]) {
+for (let name of [
+  "d3d11layers",
+  "d3d9video",
+  "glcontext",
+  "d3d11video",
+  "wmfvpxvideo",
+]) {
   startupPhases["before first paint"].push({
     path: `ProfD:${name}.guard`,
     ignoreIfUnused: true,
