@@ -33,6 +33,10 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   MOZ_ASSERT(frame.isGeneratorFrame());
   MOZ_ASSERT(!frame.isConstructing());
 
+  if (frame.isModuleFrame()) {
+    return createModuleGenerator(cx, frame);
+  }
+
   RootedFunction fun(cx, frame.callee());
 
   Rooted<AbstractGeneratorObject*> genObj(cx);
@@ -52,6 +56,39 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   if (frame.script()->needsArgsObj()) {
     genObj->setArgsObj(frame.argsObj());
   }
+  genObj->clearStackStorage();
+
+  if (!DebugAPI::onNewGenerator(cx, frame, genObj)) {
+    return nullptr;
+  }
+
+  return genObj;
+}
+
+JSObject* AbstractGeneratorObject::createModuleGenerator(
+    JSContext* cx, AbstractFramePtr frame) {
+  Rooted<ModuleObject*> module(cx, frame.script()->module());
+  Rooted<AbstractGeneratorObject*> genObj(cx);
+  genObj = AsyncFunctionGeneratorObject::create(cx, module);
+  if (!genObj) {
+    return nullptr;
+  }
+
+  // Create a handler function to wrap the module's script. This way
+  // we can access it later and restore the state.
+  HandlePropertyName funName = cx->names().empty;
+  RootedFunction handlerFun(
+      cx, NewFunctionWithProto(cx, nullptr, 0,
+                               FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC,
+                               nullptr, funName, nullptr,
+                               gc::AllocKind::FUNCTION, GenericObject));
+  if (!handlerFun) {
+    return nullptr;
+  }
+  handlerFun->initScript(module->script());
+
+  genObj->setCallee(*handlerFun);
+  genObj->setEnvironmentChain(*frame.environmentChain());
   genObj->clearStackStorage();
 
   if (!DebugAPI::onNewGenerator(cx, frame, genObj)) {
