@@ -772,9 +772,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result = _new_standard_result(
                         new_result, subtest_unit=test.get("subtest_unit", "ms")
                     )
-                    # XXX Is this still needed?
-                    if self.app != "firefox":
-                        new_result["extra_options"].append(self.app)
 
                     LOG.info("parsed new benchmark result: %s" % str(new_result))
                     return new_result
