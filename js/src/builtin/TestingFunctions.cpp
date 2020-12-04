@@ -852,6 +852,12 @@ static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmExceptionsEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(wasm::ExceptionsAvailable(cx));
+  return true;
+}
+
 static bool WasmMultiValueEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::MultiValuesAvailable(cx));
@@ -6773,6 +6779,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmMultiValueEnabled", WasmMultiValueEnabled, 1, 0,
 "wasmMultiValueEnabled()",
 "  Returns a boolean indicating whether the WebAssembly multi-value proposal is enabled."),
+
+    JS_FN_HELP("wasmExceptionsEnabled", WasmExceptionsEnabled, 1, 0,
+"wasmExceptionsEnabled()",
+"  Returns a boolean indicating whether the WebAssembly exceptions proposal is enabled."),
 
 #if defined(ENABLE_WASM_SIMD) && defined(DEBUG)
     JS_FN_HELP("wasmSimdAnalysis", WasmSimdAnalysis, 1, 0,

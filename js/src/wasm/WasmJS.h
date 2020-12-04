@@ -129,6 +129,10 @@ bool SimdAvailable(JSContext* cx);
 void ReportSimdAnalysis(const char* data);
 #endif
 
+// Returns true if WebAssembly as configured by compile-time flags and run-time
+// options can support try/catch, throw, rethrow, and branch_on_exn (evolving).
+bool ExceptionsAvailable(JSContext* cx);
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 

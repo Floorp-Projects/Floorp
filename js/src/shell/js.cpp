@@ -519,6 +519,9 @@ bool shell::enableWasmSimd = true;
 bool shell::enableWasmVerbose = false;
 bool shell::enableTestWasmAwaitTier2 = false;
 bool shell::enableSourcePragmas = true;
+#ifdef ENABLE_WASM_EXCEPTIONS
+bool shell::enableWasmExceptions = false;
+#endif
 bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableStreams = false;
@@ -10409,6 +10412,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_SIMD
   enableWasmSimd = !op.getBoolOption("no-wasm-simd");
 #endif
+#ifdef ENABLE_WASM_EXCEPTIONS
+  enableWasmExceptions = op.getBoolOption("wasm-exceptions");
+#endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
   enableSourcePragmas = !op.getBoolOption("no-source-pragmas");
@@ -10453,6 +10459,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
+#endif
+#ifdef ENABLE_WASM_EXCEPTIONS
+      .setWasmExceptions(enableWasmExceptions)
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
@@ -10842,6 +10851,9 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
+#endif
+#ifdef ENABLE_WASM_EXCEPTIONS
+      .setWasmExceptions(enableWasmExceptions)
 #endif
       .setWasmReftypes(enableWasmReftypes)
       .setWasmVerbose(enableWasmVerbose)
@@ -11288,6 +11300,13 @@ int main(int argc, char** argv, char** envp) {
 #else
       !op.addBoolOption('\0', "no-wasm-simd", "No-op") ||
 #endif
+#ifdef ENABLE_WASM_EXCEPTIONS
+      !op.addBoolOption('\0', "wasm-exceptions",
+                        "Enable wasm exceptions features") ||
+#else
+      !op.addBoolOption('\0', "wasm-exceptions", "No-op") ||
+#endif
+
       !op.addBoolOption('\0', "no-native-regexp",
                         "Disable native regexp compilation") ||
       !op.addIntOption(

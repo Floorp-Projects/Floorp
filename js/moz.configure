@@ -958,3 +958,26 @@ set_define(
     "ENABLE_WASM_TYPE_REFLECTIONS",
     depends_if("--enable-wasm-type-reflections")(lambda x: True),
 )
+
+# Support for WebAssembly exceptions
+# ==================================
+
+
+@depends(milestone.is_nightly, "--enable-wasm-multi-value")
+def default_wasm_exceptions(is_nightly, multi_value):
+    if multi_value and is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-exceptions",
+    default=default_wasm_exceptions,
+    help="{Enable|Disable} WebAssembly exceptions",
+)
+
+set_config(
+    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
+)
+set_define(
+    "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
+)
