@@ -3431,15 +3431,20 @@ gfx.omtp:
     bug_numbers:
       - 1386968
       - 1518669
+      - 1673949
+      - 1674950
     description: >
       Ratio (in units of 1/100th of a percent) of how many times OMTP waited
       for a paint for more than 200us, versus the total number of paints.
     keyed: false
     kind: uint
-    expires: "never"
+    expires: "never" # 2021-10-01 this will move back to non-release collection.
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - rhunt@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+      - barret@mozilla.com
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'
