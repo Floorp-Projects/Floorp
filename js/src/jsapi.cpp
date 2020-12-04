@@ -459,6 +459,13 @@ JS::ContextOptions& JS::ContextOptions::setWasmSimd(bool flag) {
   return *this;
 }
 
+JS::ContextOptions& JS::ContextOptions::setWasmExceptions(bool flag) {
+#ifdef ENABLE_WASM_EXCEPTIONS
+  wasmExceptions_ = flag;
+#endif
+  return *this;
+}
+
 JS::ContextOptions& JS::ContextOptions::setFuzzing(bool flag) {
 #ifdef FUZZING
   fuzzing_ = flag;
