@@ -9060,6 +9060,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   if (isCow) {
+    // TODO(no-TI): remove.
     flags += ObjLiteralFlag::ArrayCOW;
   }
   data.writer().beginObject(flags);
@@ -9076,8 +9077,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
     return false;
   }
 
-  JSOp op = isCow ? JSOp::NewArrayCopyOnWrite : JSOp::Object;
-  if (!emitGCIndexOp(op, index)) {
+  if (!emitGCIndexOp(JSOp::Object, index)) {
     //              [stack] OBJ
     return false;
   }

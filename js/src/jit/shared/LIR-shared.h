@@ -295,20 +295,6 @@ class LNewArray : public LInstructionHelper<1, 0, 1> {
   MNewArray* mir() const { return mir_->toNewArray(); }
 };
 
-class LNewArrayCopyOnWrite : public LInstructionHelper<1, 0, 1> {
- public:
-  LIR_HEADER(NewArrayCopyOnWrite)
-
-  explicit LNewArrayCopyOnWrite(const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setTemp(0, temp);
-  }
-
-  const LDefinition* temp() { return getTemp(0); }
-
-  MNewArrayCopyOnWrite* mir() const { return mir_->toNewArrayCopyOnWrite(); }
-};
-
 class LNewArrayDynamicLength : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(NewArrayDynamicLength)

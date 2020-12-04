@@ -386,11 +386,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
       }
 
-      case JSOp::NewArrayCopyOnWrite: {
-        MOZ_CRASH("Bug 1626854: COW arrays disabled without TI for now");
-        break;
-      }
-
       case JSOp::GetImport: {
         PropertyName* name = loc.getPropertyName(script_);
         if (!AddWarpGetImport(alloc_, opSnapshots, offset, script_, name)) {

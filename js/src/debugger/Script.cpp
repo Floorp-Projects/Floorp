@@ -1456,7 +1456,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::PopN:
     case JSOp::DupAt:
     case JSOp::NewArray:
-    case JSOp::NewArrayCopyOnWrite:
     case JSOp::NewInit:
     case JSOp::NewObject:
     case JSOp::NewObjectWithGroup:

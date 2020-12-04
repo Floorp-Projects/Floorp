@@ -3910,16 +3910,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(NewArray)
 
-    CASE(NewArrayCopyOnWrite) {
-      JSObject* obj = NewArrayCopyOnWriteOperation(cx, script, REGS.pc);
-      if (!obj) {
-        goto error;
-      }
-
-      PUSH_OBJECT(*obj);
-    }
-    END_CASE(NewArrayCopyOnWrite)
-
     CASE(NewObject)
     CASE(NewObjectWithGroup) {
       JSObject* obj = NewObjectOperation(cx, script, REGS.pc);
@@ -5202,12 +5192,6 @@ ArrayObject* js::NewArrayOperationWithTemplate(JSContext* cx,
   NewObjectKind newKind = GenericObject;
   return NewDenseFullyAllocatedArray(
       cx, templateObject->as<ArrayObject>().length(), nullptr, newKind);
-}
-
-ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
-                                              HandleScript script,
-                                              jsbytecode* pc) {
-  MOZ_CRASH("TODO(no-TI): remove");
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,

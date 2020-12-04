@@ -1919,27 +1919,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       }
       return write(str);
     }
-    case JSOp::NewArrayCopyOnWrite: {
-      RootedObject obj(cx, script->getObject(pc));
-      Handle<ArrayObject*> aobj = obj.as<ArrayObject>();
-      if (!write("[")) {
-        return false;
-      }
-      for (size_t i = 0; i < aobj->getDenseInitializedLength(); i++) {
-        if (i > 0 && !write(", ")) {
-          return false;
-        }
-
-        RootedValue v(cx, aobj->getDenseElement(i));
-        MOZ_RELEASE_ASSERT(v.isPrimitive() && !v.isMagic());
-
-        JSString* str = ValueToSource(cx, v);
-        if (!str || !write(str)) {
-          return false;
-        }
-      }
-      return write("]");
-    }
     case JSOp::Object: {
       JSObject* obj = script->getObject(pc);
       RootedValue objv(cx, ObjectValue(*obj));

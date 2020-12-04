@@ -431,13 +431,6 @@ void MacroAssembler::createGCObject(Register obj, Register temp,
     const NativeTemplateObject& ntemplate =
         templateObj.asNativeTemplateObject();
     nDynamicSlots = ntemplate.numDynamicSlots();
-
-    // Arrays with copy on write elements do not need fixed space for an
-    // elements header. The template object, which owns the original
-    // elements, might have another allocation kind.
-    if (ntemplate.denseElementsAreCopyOnWrite()) {
-      allocKind = gc::AllocKind::OBJECT0_BACKGROUND;
-    }
   }
 
   allocateObject(obj, temp, allocKind, nDynamicSlots, initialHeap, fail);
@@ -836,8 +829,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
   if (templateObj.isNative()) {
     const NativeTemplateObject& ntemplate =
         templateObj.asNativeTemplateObject();
-    MOZ_ASSERT_IF(!ntemplate.denseElementsAreCopyOnWrite(),
-                  !ntemplate.hasDynamicElements());
+    MOZ_ASSERT(!ntemplate.hasDynamicElements());
 
     // If the object has dynamic slots, the slots member has already been
     // filled in.
@@ -846,10 +838,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
                Address(obj, NativeObject::offsetOfSlots()));
     }
 
-    if (ntemplate.denseElementsAreCopyOnWrite()) {
-      storePtr(ImmPtr(ntemplate.getDenseElements()),
-               Address(obj, NativeObject::offsetOfElements()));
-    } else if (ntemplate.isArrayObject()) {
+    if (ntemplate.isArrayObject()) {
       int elementsOffset = NativeObject::offsetOfFixedElements();
 
       computeEffectiveAddress(Address(obj, elementsOffset), temp);

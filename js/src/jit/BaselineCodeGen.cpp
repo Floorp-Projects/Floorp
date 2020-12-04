@@ -2857,29 +2857,6 @@ bool BaselineCodeGen<Handler>::emit_NewArray() {
   return true;
 }
 
-template <>
-bool BaselineCompilerCodeGen::emit_NewArrayCopyOnWrite() {
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emit_NewArrayCopyOnWrite() {
-  prepareVMCall();
-
-  pushBytecodePCArg();
-  pushScriptArg();
-
-  using Fn = ArrayObject* (*)(JSContext*, HandleScript, jsbytecode*);
-  if (!callVM<Fn, NewArrayCopyOnWriteOperation>()) {
-    return false;
-  }
-
-  // Box and push return value.
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.push(R0);
-  return true;
-}
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_InitElemArray() {
   // Keep the object and rhs on the stack.
