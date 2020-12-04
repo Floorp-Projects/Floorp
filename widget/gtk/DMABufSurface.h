@@ -8,10 +8,9 @@
 #define DMABufSurface_h__
 
 #include <stdint.h>
-#include "GLContext.h"
-#include "GLContextTypes.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
 #include "mozilla/widget/va_drmcommon.h"
+#include "GLTypes.h"
 
 typedef void* EGLImageKHR;
 typedef void* EGLSyncKHR;
@@ -23,6 +22,9 @@ namespace layers {
 class SurfaceDescriptor;
 class SurfaceDescriptorDMABuf;
 }  // namespace layers
+namespace gl {
+class GLContext;
+}
 }  // namespace mozilla
 
 typedef enum {

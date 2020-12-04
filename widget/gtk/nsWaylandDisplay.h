@@ -10,10 +10,6 @@
 
 #include "DMABufLibWrapper.h"
 
-#include "base/message_loop.h"  // for MessageLoop
-#include "base/task.h"          // for NewRunnableMethod, etc
-#include "mozilla/StaticMutex.h"
-
 #include "mozilla/widget/mozwayland.h"
 #include "mozilla/widget/gbm.h"
 #include "mozilla/widget/gtk-primary-selection-client-protocol.h"
