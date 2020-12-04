@@ -227,9 +227,6 @@ class ObjectGroupRealm {
   static ObjectGroup* getStringSplitStringGroup(JSContext* cx);
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                              size_t* allocationSiteTables,
-                              size_t* arrayGroupTables,
-                              size_t* plainObjectGroupTables,
                               size_t* realmTables);
 
   void clearTables();

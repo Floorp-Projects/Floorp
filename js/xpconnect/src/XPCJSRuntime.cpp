@@ -1423,9 +1423,6 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
                  zStats.regExpSharedsMallocHeap,
                  "Shared compiled regexp data.");
 
-  ZRREPORT_BYTES(pathPrefix + "type-pool"_ns, zStats.typePool,
-                 "Type sets and related data.");
-
   ZRREPORT_BYTES(pathPrefix + "regexp-zone"_ns, zStats.regexpZone,
                  "The regexp zone and regexp data.");
 
@@ -1785,19 +1782,7 @@ static void ReportRealmStats(const JS::RealmStats& realmStats,
                  "The IonMonkey JIT's compilation data (IonScripts).");
 
   ZRREPORT_BYTES(realmJSPathPrefix + "jit-scripts"_ns, realmStats.jitScripts,
-                 "JIT and Type Inference data associated with scripts.");
-
-  ZRREPORT_BYTES(realmJSPathPrefix + "type-inference/allocation-site-tables"_ns,
-                 realmStats.typeInferenceAllocationSiteTables,
-                 "Tables of type objects associated with allocation sites.");
-
-  ZRREPORT_BYTES(realmJSPathPrefix + "type-inference/array-type-tables"_ns,
-                 realmStats.typeInferenceArrayTypeTables,
-                 "Tables of type objects associated with array literals.");
-
-  ZRREPORT_BYTES(realmJSPathPrefix + "type-inference/object-type-tables"_ns,
-                 realmStats.typeInferenceObjectTypeTables,
-                 "Tables of type objects associated with object literals.");
+                 "JIT data associated with scripts.");
 
   ZRREPORT_BYTES(realmJSPathPrefix + "realm-object"_ns, realmStats.realmObject,
                  "The JS::Realm object itself.");

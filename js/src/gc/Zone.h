@@ -396,7 +396,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
       ShouldDiscardJitScripts discardJitScripts = KeepJitScripts);
 
   void addSizeOfIncludingThis(
-      mozilla::MallocSizeOf mallocSizeOf, JS::CodeSizes* code, size_t* typePool,
+      mozilla::MallocSizeOf mallocSizeOf, JS::CodeSizes* code,
       size_t* regexpZone, size_t* jitZone, size_t* baselineStubsOptimized,
       size_t* uniqueIdMap, size_t* shapeCaches, size_t* atomsMarkBitmaps,
       size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
