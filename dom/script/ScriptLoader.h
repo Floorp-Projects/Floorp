@@ -411,9 +411,40 @@ class ScriptLoader final : public nsISupports {
                                     JS::MutableHandle<JSObject*> aModuleOut);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
-  void FinishDynamicImport(ModuleLoadRequest* aRequest, nsresult aResult);
+
+  /**
+   * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
+   * case where we do not have `aEvaluationPromise`. As there is no evaluation
+   * Promise, JS::FinishDynamicImport will always reject.
+   *
+   * @param aRequest
+   *        The module load request for the dynamic module.
+   * @param aResult
+   *        The result of running ModuleEvaluate -- If this is successful, then
+   *        we can await the associated EvaluationPromise.
+   */
+  void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
+                                    nsresult aResult);
+
+  /**
+   * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
+   * `aEvaluationPromise` which, if null, exits early.
+   *
+   * @param aCX
+   *        The JSContext for the module.
+   * @param aRequest
+   *        The module load request for the dynamic module.
+   * @param aResult
+   *        The result of running ModuleEvaluate -- If this is successful, then
+   *        we can await the associated EvaluationPromise.
+   * @param aEvaluationPromise
+   *        The evaluation promise returned from evaluating the module. If this
+   *        is null, JS::FinishDynamicImport will reject the dynamic import
+   *        module promise.
+   */
   void FinishDynamicImport(JSContext* aCx, ModuleLoadRequest* aRequest,
-                           nsresult aResult);
+                           nsresult aResult,
+                           JS::Handle<JSObject*> aEvaluationPromise);
 
   /*
    * Get the currently active script. This is used as the initiating script when
