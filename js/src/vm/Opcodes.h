@@ -1340,16 +1340,6 @@
      */ \
     MACRO(IsNoIter, is_no_iter, NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * No-op instruction to hint to IonBuilder that the value on top of the
-     * stack is the string key in a for-in loop.
-     *
-     *   Category: Objects
-     *   Type: Enumeration
-     *   Operands:
-     *   Stack: val => val
-     */ \
-    MACRO(IterNext, iter_next, NULL, 1, 1, 1, JOF_BYTE) \
-    /*
      * Exit a for-in loop, closing the iterator.
      *
      * `iter` must be a `PropertyIteratorObject` pushed by `JSOp::Iter`.
@@ -3574,6 +3564,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(229)                                   \
   MACRO(230)                                   \
   MACRO(231)                                   \
   MACRO(232)                                   \
