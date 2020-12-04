@@ -2145,9 +2145,13 @@ def rustc_opt_level(opt_level_option, moz_optimize):
 
 
 @depends(
-    rustc_opt_level, debug_rust, "--enable-debug-symbols", "--enable-frame-pointers"
+    rustc_opt_level,
+    debug_rust,
+    target,
+    "--enable-debug-symbols",
+    "--enable-frame-pointers",
 )
-def rust_compile_flags(opt_level, debug_rust, debug_symbols, frame_pointers):
+def rust_compile_flags(opt_level, debug_rust, target, debug_symbols, frame_pointers):
     # Cargo currently supports only two interesting profiles for building:
     # development and release. Those map (roughly) to --enable-debug and
     # --disable-debug in Gecko, respectively.
@@ -2181,6 +2185,8 @@ def rust_compile_flags(opt_level, debug_rust, debug_symbols, frame_pointers):
         opts.append("debuginfo=%s" % debug_info)
     if frame_pointers:
         opts.append("force-frame-pointers=yes")
+    if target.kernel == "WINNT":
+        opts.append("control-flow-guard=yes")
 
     flags = []
     for opt in opts:
