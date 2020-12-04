@@ -3020,11 +3020,6 @@ bool BaselineCodeGen<Handler>::emit_GetElemSuper() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_CallElem() {
-  return emit_GetElem();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SetElem() {
   // Store RHS in the scratch slot.
   frame.storeStackValue(-1, frame.addressOfScratchValue(), R2);

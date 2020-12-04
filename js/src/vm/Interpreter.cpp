@@ -3092,8 +3092,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(SetPropSuper)
 
-    CASE(GetElem)
-    CASE(CallElem) {
+    CASE(GetElem) {
       int lvalIndex = -2;
       MutableHandleValue lval = REGS.stackHandleAt(lvalIndex);
       HandleValue rval = REGS.stackHandleAt(-1);
@@ -3105,8 +3104,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       if (!done) {
-        if (!GetElementOperationWithStackIndex(cx, JSOp(*REGS.pc), lval,
-                                               lvalIndex, rval, res)) {
+        if (!GetElementOperationWithStackIndex(cx, lval, lvalIndex, rval,
+                                               res)) {
           goto error;
         }
       }

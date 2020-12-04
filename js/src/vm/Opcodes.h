@@ -1022,9 +1022,6 @@
     /*
      * Get the value of the property `obj[key]`.
      *
-     * `JSOp::CallElem` is exactly like `JSOp::GetElem` but hints to the VM that
-     * we're getting a method in order to call it.
-     *
      * Implements: [GetV][1], [GetValue][2] step 5.
      *
      * [1]: https://tc39.es/ecma262/#sec-getv
@@ -1036,7 +1033,6 @@
      *   Stack: obj, key => obj[key]
      */ \
     MACRO(GetElem, get_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_IC) \
-    MACRO(CallElem, call_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_IC) \
     /*
      * Push the value of `obj.length`.
      *
@@ -3594,6 +3590,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(232)                                   \
   MACRO(233)                                   \
   MACRO(234)                                   \
   MACRO(235)                                   \

@@ -1855,8 +1855,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
     case JSOp::DelElem:
     case JSOp::StrictDelElem:
-    case JSOp::GetElem:
-    case JSOp::CallElem: {
+    case JSOp::GetElem: {
       bool hasDelete = (op == JSOp::DelElem || op == JSOp::StrictDelElem);
       return (hasDelete ? write("(delete ") : true) &&
              decompilePCForStackOperand(pc, -2) && write("[") &&

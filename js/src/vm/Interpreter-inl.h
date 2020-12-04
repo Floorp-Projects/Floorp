@@ -411,10 +411,8 @@ static MOZ_ALWAYS_INLINE bool ToPropertyKeyOperation(JSContext* cx,
 static MOZ_ALWAYS_INLINE bool GetObjectElementOperation(
     JSContext* cx, JSOp op, JS::HandleObject obj, JS::HandleValue receiver,
     HandleValue key, MutableHandleValue res) {
-  MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::CallElem ||
-             op == JSOp::GetElemSuper);
-  MOZ_ASSERT_IF(op == JSOp::GetElem || op == JSOp::CallElem,
-                obj == &receiver.toObject());
+  MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::GetElemSuper);
+  MOZ_ASSERT_IF(op == JSOp::GetElem, obj == &receiver.toObject());
 
   do {
     uint32_t index;
@@ -461,10 +459,8 @@ static MOZ_ALWAYS_INLINE bool GetObjectElementOperation(
 }
 
 static MOZ_ALWAYS_INLINE bool GetPrimitiveElementOperation(
-    JSContext* cx, JSOp op, JS::HandleValue receiver, int receiverIndex,
-    HandleValue key, MutableHandleValue res) {
-  MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::CallElem);
-
+    JSContext* cx, JS::HandleValue receiver, int receiverIndex, HandleValue key,
+    MutableHandleValue res) {
   // FIXME: Bug 1234324 We shouldn't be boxing here.
   RootedObject boxed(
       cx, ToObjectFromStackForPropertyAccess(cx, receiver, receiverIndex, key));
@@ -541,10 +537,8 @@ static MOZ_ALWAYS_INLINE bool GetElemOptimizedArguments(
 }
 
 static MOZ_ALWAYS_INLINE bool GetElementOperationWithStackIndex(
-    JSContext* cx, JSOp op, HandleValue lref, int lrefIndex, HandleValue rref,
+    JSContext* cx, HandleValue lref, int lrefIndex, HandleValue rref,
     MutableHandleValue res) {
-  MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::CallElem);
-
   uint32_t index;
   if (lref.isString() && IsDefinitelyIndex(rref, &index)) {
     JSString* str = lref.toString();
@@ -560,21 +554,21 @@ static MOZ_ALWAYS_INLINE bool GetElementOperationWithStackIndex(
 
   if (lref.isPrimitive()) {
     RootedValue thisv(cx, lref);
-    return GetPrimitiveElementOperation(cx, op, thisv, lrefIndex, rref, res);
+    return GetPrimitiveElementOperation(cx, thisv, lrefIndex, rref, res);
   }
 
   RootedObject obj(cx, &lref.toObject());
   RootedValue thisv(cx, lref);
-  return GetObjectElementOperation(cx, op, obj, thisv, rref, res);
+  return GetObjectElementOperation(cx, JSOp::GetElem, obj, thisv, rref, res);
 }
 
 // Wrapper for callVM from JIT.
-static MOZ_ALWAYS_INLINE bool GetElementOperation(JSContext* cx, JSOp op,
+static MOZ_ALWAYS_INLINE bool GetElementOperation(JSContext* cx,
                                                   HandleValue lref,
                                                   HandleValue rref,
                                                   MutableHandleValue res) {
-  return GetElementOperationWithStackIndex(cx, op, lref, JSDVG_SEARCH_STACK,
-                                           rref, res);
+  return GetElementOperationWithStackIndex(cx, lref, JSDVG_SEARCH_STACK, rref,
+                                           res);
 }
 
 static MOZ_ALWAYS_INLINE JSString* TypeOfOperation(const Value& v,
