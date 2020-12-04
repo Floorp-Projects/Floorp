@@ -4419,8 +4419,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // Don't use transparency for PictureInPicture windows.
       bool toplevelNeedsAlphaVisual = false;
       if (mWindowType == eWindowType_toplevel && !mIsPIPWindow) {
-        toplevelNeedsAlphaVisual = IsToplevelWindowTransparent() ||
-                                   mCSDSupportLevel != CSD_SUPPORT_NONE;
+        toplevelNeedsAlphaVisual = IsToplevelWindowTransparent();
       }
 
       bool isGLVisualSet = false;
@@ -4442,14 +4441,17 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
             gtk_widget_set_visual(mShell, visual);
             mHasAlphaVisual = true;
           }
-        } else if (toplevelNeedsAlphaVisual) {
-          MOZ_ASSERT(mIsX11Display, "Wayland without compositing?");
-          mTransparencyBitmapForTitlebar = TitlebarCanUseShapeMask();
-        } else /* popupNeedsAlphaVisual */ {
-          // X11 popup shape masks are configured later at
-          // WindowSurfaceProvider but for SW rendering only (Bug 1479135).
         }
       }
+
+      // Use X shape mask to draw round corners of Firefox titlebar.
+      // We don't use shape masks any more as we switched to ARGB visual
+      // by default and non-compositing screens use solid-csd decorations
+      // without round corners.
+      // Leave the shape mask code here as it can be used to draw round
+      // corners on EGL (https://gitlab.freedesktop.org/mesa/mesa/-/issues/149)
+      // or when custom titlebar theme is used.
+      mTransparencyBitmapForTitlebar = TitlebarUseShapeMask();
 
       // We have a toplevel window with transparency.
       // Calls to UpdateTitlebarTransparencyBitmap() from OnExposeEvent()
@@ -7898,69 +7900,49 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
   return sCSDSupportLevel;
 }
 
-// Check for Mutter regression on X.org (Bug 1530252). In that case we
-// don't hide system titlebar by default as we can't draw transparent
-// corners reliably.
-bool nsWindow::TitlebarCanUseShapeMask() {
-  static int canUseShapeMask = -1;
-  if (canUseShapeMask != -1) {
-    return canUseShapeMask;
-  }
-  canUseShapeMask = gfxPlatformGtk::GetPlatform()->IsX11Display();
+bool nsWindow::TitlebarUseShapeMask() {
+  static int useShapeMask = []() {
+    // Don't use titlebar shape mask on Wayland
+    if (!gfxPlatformGtk::GetPlatform()->IsX11Display()) {
+      return false;
+    }
 
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  if (!currentDesktop) {
-    return canUseShapeMask;
-  }
+    // We use shape masks on Mutter/X.org as we can't resize Firefox window
+    // there (Bug 1530252).
+    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+    if (currentDesktop) {
+      if (strstr(currentDesktop, "GNOME") != nullptr) {
+        const char* sessionType = getenv("XDG_SESSION_TYPE");
+        if (sessionType) {
+          return (strstr(sessionType, "x11") == nullptr);
+        }
+      }
+    }
 
-  if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
-      strstr(currentDesktop, "GNOME") != nullptr) {
-    const char* sessionType = getenv("XDG_SESSION_TYPE");
-    canUseShapeMask = (sessionType && strstr(sessionType, "x11") == nullptr);
-  }
-
-  return canUseShapeMask;
+    return Preferences::GetBool("widget.titlebar-x11-use-shape-mask", false);
+  }();
+  return useShapeMask;
 }
 
 bool nsWindow::HideTitlebarByDefault() {
-  static int hideTitlebar = -1;
-  if (hideTitlebar != -1) {
-    return hideTitlebar;
-  }
+  static int hideTitlebar = []() {
+    // When user defined widget.default-hidden-titlebar don't do any
+    // heuristics and just follow it.
+    if (Preferences::HasUserValue("widget.default-hidden-titlebar")) {
+      return Preferences::GetBool("widget.default-hidden-titlebar", false);
+    }
 
-  // When user defined widget.default-hidden-titlebar don't do any
-  // heuristics and just follow it.
-  if (Preferences::HasUserValue("widget.default-hidden-titlebar")) {
-    hideTitlebar =
-        Preferences::GetBool("widget.default-hidden-titlebar", false);
-    return hideTitlebar;
-  }
+    // Don't hide titlebar when it's disabled on current desktop.
+    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+    if (!currentDesktop || GetSystemCSDSupportLevel() == CSD_SUPPORT_NONE) {
+      return false;
+    }
 
-  // We want to hide the system titlebar by default.
-  hideTitlebar = true;
-
-  // Don't hide titlebar when we can't draw round corners.
-  if (gdk_screen_is_composited(gdk_screen_get_default()) &&
-      !TitlebarCanUseShapeMask()) {
-    hideTitlebar = false;
-    return hideTitlebar;
-  }
-  // Don't hide titlebar when it's disabled on current desktop.
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  if (!currentDesktop || GetSystemCSDSupportLevel() == CSD_SUPPORT_NONE) {
-    hideTitlebar = false;
-    return hideTitlebar;
-  }
-
-  // We hide system titlebar on Gnome/ElementaryOS without any restriction.
-  if ((strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
-       strstr(currentDesktop, "GNOME") != nullptr ||
-       strstr(currentDesktop, "Pantheon") != nullptr)) {
-    return hideTitlebar;
-  }
-
-  // Don't hide system titlebar by default for other desktops.
-  hideTitlebar = false;
+    // We hide system titlebar on Gnome/ElementaryOS without any restriction.
+    return ((strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
+             strstr(currentDesktop, "GNOME") != nullptr ||
+             strstr(currentDesktop, "Pantheon") != nullptr));
+  }();
   return hideTitlebar;
 }
 
