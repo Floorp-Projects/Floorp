@@ -56,7 +56,6 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
 #ifdef MOZ_WAYLAND
   // Check if mVALib are available and we can use HW decode.
   bool IsVAAPIAvailable();
-  void LinkVAAPILibs();
 #endif
 
   // indicate the version of libavcodec linked to.
