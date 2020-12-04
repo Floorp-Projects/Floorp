@@ -143,7 +143,8 @@ class DocumentOrShadowRoot {
   void NodesFromRect(float aX, float aY, float aTopSize, float aRightSize,
                      float aBottomSize, float aLeftSize,
                      bool aIgnoreRootScrollFrame, bool aFlushLayout,
-                     bool aOnlyVisible, nsTArray<RefPtr<nsINode>>&);
+                     bool aOnlyVisible, float aVisibleThreshold,
+                     nsTArray<RefPtr<nsINode>>&);
 
   /**
    * This gets fired when the element that an id refers to changes.

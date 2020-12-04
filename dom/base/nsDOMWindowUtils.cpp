@@ -1238,15 +1238,23 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY, float aTopSize,
                                 float aRightSize, float aBottomSize,
                                 float aLeftSize, bool aIgnoreRootScrollFrame,
                                 bool aFlushLayout, bool aOnlyVisible,
+                                float aVisibleThreshold,
                                 nsINodeList** aReturn) {
   RefPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   auto list = MakeRefPtr<nsSimpleContentList>(doc);
 
+  // The visible threshold was omitted or given a zero value (which makes no
+  // sense), so give a reasonable default.
+  if (aVisibleThreshold == 0.0f) {
+    aVisibleThreshold = 1.0f;
+  }
+
   AutoTArray<RefPtr<nsINode>, 8> nodes;
   doc->NodesFromRect(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize,
-                     aIgnoreRootScrollFrame, aFlushLayout, aOnlyVisible, nodes);
+                     aIgnoreRootScrollFrame, aFlushLayout, aOnlyVisible,
+                     aVisibleThreshold, nodes);
   list->SetCapacity(nodes.Length());
   for (auto& node : nodes) {
     list->AppendElement(node->AsContent());

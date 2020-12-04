@@ -332,6 +332,7 @@ Element* DocumentOrShadowRoot::GetFullscreenElement() {
 namespace {
 
 using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+using FrameForPointOptions = nsLayoutUtils::FrameForPointOptions;
 
 // Whether only one node or multiple nodes is requested.
 enum class Multiple {
@@ -360,7 +361,7 @@ nsINode* CastTo<nsINode>(nsIContent* aContent) {
 
 template <typename NodeOrElement>
 static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
-                               EnumSet<FrameForPointOption> aOptions,
+                               FrameForPointOptions aOptions,
                                FlushLayout aShouldFlushLayout,
                                Multiple aMultiple, ViewportType aViewportType,
                                nsTArray<RefPtr<NodeOrElement>>& aNodes) {
@@ -390,8 +391,8 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
     return;  // return null to premature XUL callers as a reminder to wait
   }
 
-  aOptions += FrameForPointOption::IgnorePaintSuppression;
-  aOptions += FrameForPointOption::IgnoreCrossDoc;
+  aOptions.mBits += FrameForPointOption::IgnorePaintSuppression;
+  aOptions.mBits += FrameForPointOption::IgnoreCrossDoc;
 
   AutoTArray<nsIFrame*, 8> frames;
   nsLayoutUtils::GetFramesForArea({rootFrame, aViewportType}, aRect, frames,
@@ -436,12 +437,12 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
 
 template <typename NodeOrElement>
 static void QueryNodesFromPoint(DocumentOrShadowRoot& aRoot, float aX, float aY,
-                                EnumSet<FrameForPointOption> aOptions,
+                                FrameForPointOptions aOptions,
                                 FlushLayout aShouldFlushLayout,
                                 Multiple aMultiple, ViewportType aViewportType,
                                 nsTArray<RefPtr<NodeOrElement>>& aNodes) {
   // As per the spec, we return null if either coord is negative.
-  if (!aOptions.contains(FrameForPointOption::IgnoreRootScrollFrame) &&
+  if (!aOptions.mBits.contains(FrameForPointOption::IgnoreRootScrollFrame) &&
       (aX < 0 || aY < 0)) {
     return;
   }
@@ -499,6 +500,7 @@ void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
                                          float aLeftSize,
                                          bool aIgnoreRootScrollFrame,
                                          bool aFlushLayout, bool aOnlyVisible,
+                                         float aVisibleThreshold,
                                          nsTArray<RefPtr<nsINode>>& aReturn) {
   // Following the same behavior of elementFromPoint,
   // we don't return anything if either coord is negative
@@ -513,12 +515,13 @@ void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
 
   nsRect rect(x, y, w, h);
 
-  EnumSet<FrameForPointOption> options;
+  FrameForPointOptions options;
   if (aIgnoreRootScrollFrame) {
-    options += FrameForPointOption::IgnoreRootScrollFrame;
+    options.mBits += FrameForPointOption::IgnoreRootScrollFrame;
   }
   if (aOnlyVisible) {
-    options += FrameForPointOption::OnlyVisible;
+    options.mBits += FrameForPointOption::OnlyVisible;
+    options.mVisibleThreshold = aVisibleThreshold;
   }
 
   auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;

@@ -13,8 +13,8 @@
 
   let dwu = window.windowUtils;
 
-  function check(x, y, top, right, bottom, left, onlyVisible, list, aListIsComplete) {
-    let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false, onlyVisible);
+  function check(x, y, top, right, bottom, left, onlyVisible, list, aListIsComplete = false, aOpacityThreshold = 1.0) {
+    let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, /* aIgnoreRootScrollFrame = */ true, /* aFlushLayout = */ true, onlyVisible, aOpacityThreshold);
 
     if (!aListIsComplete) {
       list.push(e.body);
@@ -118,7 +118,23 @@
 
       let [x, y] = getCenterFor(container);
       check(x, y, 1, 1, 1, 1, false, [fg, bg, container]);
-      check(x, y, 1, 1, 1, 1, true, [fg], true);
+
+      const kListIsComplete = true;
+
+      check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete);
+      check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete, 0.5);
+
+      // Occluded with different opacity thresholds, with background colors and
+      // opacity.
+      fg.style.backgroundColor = "rgba(0, 255, 0, 0.5)";
+      check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete, 0.4);
+      check(x, y, 1, 1, 1, 1, true, [fg, bg], kListIsComplete, 0.6);
+
+      fg.style.backgroundColor = "";
+      fg.style.opacity = "0.5";
+
+      check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete, 0.4);
+      check(x, y, 1, 1, 1, 1, true, [fg, bg], kListIsComplete, 0.6);
     }
 
     done();
