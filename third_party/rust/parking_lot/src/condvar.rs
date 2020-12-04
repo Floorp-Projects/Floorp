@@ -663,6 +663,9 @@ mod tests {
         while !c.notify_one() {
             // Wait for the thread to get into wait()
             MutexGuard::bump(&mut g);
+            // Yield, so the other thread gets a chance to do something.
+            // (At least Miri needs this, because it doesn't preempt threads.)
+            thread::yield_now();
         }
         // The thread should have been requeued to the mutex, which we wake up now.
         drop(g);
