@@ -22,6 +22,128 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+/**
+ * All supported locales for remote l10n
+ *
+ * This is used by ASRouter.jsm to check if the locale is supported before
+ * issuing the request for remote fluent files to RemoteSettings.
+ *
+ * Note:
+ *   * this is generated based on "browser/locales/all-locales" as l10n doesn't
+ *     provide an API to fetch that list
+ *
+ *   * this list doesn't include "en-US", though "en-US" is well supported and
+ *     `_RemoteL10n.isLocaleSupported()` will handle it properly
+ */
+const ALL_LOCALES = new Set([
+  "ach",
+  "af",
+  "an",
+  "ar",
+  "ast",
+  "az",
+  "be",
+  "bg",
+  "bn",
+  "bo",
+  "br",
+  "brx",
+  "bs",
+  "ca",
+  "ca-valencia",
+  "cak",
+  "ckb",
+  "cs",
+  "cy",
+  "da",
+  "de",
+  "dsb",
+  "el",
+  "en-CA",
+  "en-GB",
+  "eo",
+  "es-AR",
+  "es-CL",
+  "es-ES",
+  "es-MX",
+  "et",
+  "eu",
+  "fa",
+  "ff",
+  "fi",
+  "fr",
+  "fy-NL",
+  "ga-IE",
+  "gd",
+  "gl",
+  "gn",
+  "gu-IN",
+  "he",
+  "hi-IN",
+  "hr",
+  "hsb",
+  "hu",
+  "hy-AM",
+  "hye",
+  "ia",
+  "id",
+  "is",
+  "it",
+  "ja",
+  "ja-JP-mac",
+  "ka",
+  "kab",
+  "kk",
+  "km",
+  "kn",
+  "ko",
+  "lij",
+  "lo",
+  "lt",
+  "ltg",
+  "lv",
+  "meh",
+  "mk",
+  "mr",
+  "ms",
+  "my",
+  "nb-NO",
+  "ne-NP",
+  "nl",
+  "nn-NO",
+  "oc",
+  "pa-IN",
+  "pl",
+  "pt-BR",
+  "pt-PT",
+  "rm",
+  "ro",
+  "ru",
+  "scn",
+  "si",
+  "sk",
+  "sl",
+  "son",
+  "sq",
+  "sr",
+  "sv-SE",
+  "szl",
+  "ta",
+  "te",
+  "th",
+  "tl",
+  "tr",
+  "trs",
+  "uk",
+  "ur",
+  "uz",
+  "vi",
+  "wo",
+  "xh",
+  "zh-CN",
+  "zh-TW",
+]);
+
 class _RemoteL10n {
   constructor() {
     this._l10n = null;
@@ -113,6 +235,10 @@ class _RemoteL10n {
 
   reloadL10n() {
     this._l10n = null;
+  }
+
+  isLocaleSupported(locale) {
+    return locale === "en-US" || ALL_LOCALES.has(locale);
   }
 }
 

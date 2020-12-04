@@ -287,8 +287,19 @@ const MessageLoaderUtils = {
             provider.id,
             options.dispatchCFRAction
           );
-        } else if (RS_PROVIDERS_WITH_L10N.includes(provider.id)) {
-          const locale = Services.locale.appLocaleAsBCP47;
+        } else if (
+          RS_PROVIDERS_WITH_L10N.includes(provider.id) &&
+          (RemoteL10n.isLocaleSupported(Services.locale.appLocaleAsBCP47) ||
+            // While it's not a valid locale, "und" is commonly observed on
+            // Linux platforms. Per l10n team, it's reasonable to fallback to
+            // "en-US", therefore, we should allow the fetch for it.
+            Services.locale.appLocaleAsBCP47 === "und")
+        ) {
+          let locale = Services.locale.appLocaleAsBCP47;
+          // Fallback to "en-US" if locale is "und"
+          if (locale === "und") {
+            locale = "en-US";
+          }
           const recordId = `${RS_FLUENT_RECORD_PREFIX}-${locale}`;
           const kinto = new KintoHttpClient(
             Services.prefs.getStringPref(RS_SERVER_PREF)
