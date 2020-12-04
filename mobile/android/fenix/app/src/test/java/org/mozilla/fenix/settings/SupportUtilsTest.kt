@@ -22,7 +22,7 @@ class SupportUtilsTest {
             SupportUtils.getSumoURLForTopic(mockContext("1.6"), SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS, Locale("en", "US"))
         )
         assertEquals(
-            "https://support.mozilla.org/1/mobile/20/Android/fr/tracking-protection-firefox-preview",
+            "https://support.mozilla.org/1/mobile/20/Android/fr/tracking-protection-firefox-android",
             SupportUtils.getSumoURLForTopic(mockContext("2 0"), SupportUtils.SumoTopic.TRACKING_PROTECTION, Locale("fr"))
         )
         assertEquals(

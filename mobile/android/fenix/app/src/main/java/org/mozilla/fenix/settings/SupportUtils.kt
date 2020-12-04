@@ -37,13 +37,13 @@ object SupportUtils {
         HELP("faq-android"),
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
         YOUR_RIGHTS("your-rights"),
-        TRACKING_PROTECTION("tracking-protection-firefox-preview"),
+        TRACKING_PROTECTION("tracking-protection-firefox-android"),
         WHATS_NEW("whats-new-firefox-preview"),
         SEND_TABS("send-tab-preview"),
         SET_AS_DEFAULT_BROWSER("set-firefox-preview-default"),
         SEARCH_SUGGESTION("how-search-firefox-preview"),
         CUSTOM_SEARCH_ENGINES("custom-search-engines"),
-        SYNC_SETUP("how-set-firefox-sync-firefox-preview"),
+        SYNC_SETUP("how-set-firefox-sync-firefox-android"),
         QR_CAMERA_ACCESS("qr-camera-access")
     }
 
