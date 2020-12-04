@@ -970,11 +970,11 @@ impl RawRwLock {
         // At this point WRITER_BIT is already set, we just need to wait for the
         // remaining readers to exit the lock.
         let mut spinwait = SpinWait::new();
-        let mut state = self.state.load(Ordering::Relaxed);
+        let mut state = self.state.load(Ordering::Acquire);
         while state & READERS_MASK != 0 {
             // Spin a few times to wait for readers to exit
             if spinwait.spin() {
-                state = self.state.load(Ordering::Relaxed);
+                state = self.state.load(Ordering::Acquire);
                 continue;
             }
 
@@ -1019,7 +1019,7 @@ impl RawRwLock {
                 // since a previous writer timing-out could have allowed
                 // another reader to sneak in before we parked.
                 ParkResult::Unparked(_) | ParkResult::Invalid => {
-                    state = self.state.load(Ordering::Relaxed);
+                    state = self.state.load(Ordering::Acquire);
                     continue;
                 }
 
