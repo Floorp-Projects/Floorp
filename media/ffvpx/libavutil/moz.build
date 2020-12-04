@@ -45,6 +45,11 @@ SOURCES += [
     'time.c',
     'utils.c'
 ]
+if CONFIG['MOZ_WAYLAND']:
+    SOURCES += [
+        'hwcontext_vaapi.c',
+    ]
+    USE_LIBS += ['mozva']
 
 if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
