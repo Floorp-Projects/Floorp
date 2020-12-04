@@ -254,10 +254,11 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         // this is false.
         isTrackingVideos: false,
         togglePolicy: TOGGLE_POLICIES.DEFAULT,
-        // The documentURI that has been checked with toggle policies for this
-        // document. Note that the documentURI might change for a document via
-        // the history API, so we remember the last checked documentURI to
-        // determine if we need to check again.
+        toggleVisibilityThreshold: 1.0,
+        // The documentURI that has been checked with toggle policies and
+        // visibility thresholds for this document. Note that the documentURI
+        // might change for a document via the history API, so we remember
+        // the last checked documentURI to determine if we need to check again.
         checkedPolicyDocumentURI: null,
       };
       this.weakDocStates.set(this.document, state);
@@ -638,6 +639,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       return;
     }
 
+    let state = this.docState;
     let { clientX, clientY } = event;
     let winUtils = this.contentWindow.windowUtils;
     // We use winUtils.nodesFromRect instead of document.elementsFromPoint,
@@ -656,7 +658,8 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       1,
       true,
       false,
-      true /* aOnlyVisible */
+      true /* aOnlyVisible */,
+      state.toggleVisibilityThreshold
     );
     if (!Array.from(elements).includes(video)) {
       return;
@@ -664,7 +667,6 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
     let toggle = this.getToggleElement(shadowRoot);
     if (this.isMouseOverToggle(toggle, event)) {
-      let state = this.docState;
       state.isClickingToggle = true;
       state.clickedElement = Cu.getWeakReference(event.originalTarget);
       event.stopImmediatePropagation();
@@ -853,9 +855,13 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         : gSiteOverrides;
 
       // Do we have any toggle overrides? If so, try to apply them.
-      for (let [override, { policy }] of siteOverrides) {
-        if (policy && override.matches(this.document.documentURI)) {
-          state.togglePolicy = policy;
+      for (let [override, { policy, visibilityThreshold }] of siteOverrides) {
+        if (
+          (policy || visibilityThreshold) &&
+          override.matches(this.document.documentURI)
+        ) {
+          state.togglePolicy = policy || TOGGLE_POLICIES.DEFAULT;
+          state.toggleVisibilityThreshold = visibilityThreshold || 1.0;
           break;
         }
       }
