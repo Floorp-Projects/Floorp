@@ -28,7 +28,7 @@ job-template:
     worker:
         signing-type:
             by-build-type:
-                (beta|release|android-test-beta):
+                (beta|release):
                     by-level:
                         '3': fennec-production-signing
                         default: dep-signing
