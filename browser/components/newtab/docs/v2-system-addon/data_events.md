@@ -448,6 +448,23 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 }
 ```
 
+#### Changing preferences from about:preferences#home
+
+```js
+{
+  "event": "PREF_CHANGED",
+  "source": "TOP_STORIES|POCKET_SPOCS|HIGHLIGHTS",
+  "value": "{\"status\":true|false}"
+  "release_channel": "default",
+  "experiments": {},
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7
+}
+```
+
 #### Pinning a tab
 
 ```js

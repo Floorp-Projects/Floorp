@@ -3,7 +3,7 @@ import {
   AboutPreferences,
   PREFERENCES_LOADED_EVENT,
 } from "lib/AboutPreferences.jsm";
-import { actionTypes as at } from "common/Actions.jsm";
+import { actionTypes as at, actionCreators as ac } from "common/Actions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("AboutPreferences Feed", () => {
@@ -261,17 +261,69 @@ describe("AboutPreferences Feed", () => {
 
         assert.calledWith(node.setAttribute, "data-l10n-id", titleString);
       });
-      it("should add a link for top stories", () => {
-        const href = "https://disclaimer/";
+    });
+    describe("top stories", () => {
+      const href = "https://disclaimer/";
+      const eventSource = "https://disclaimer/";
+      beforeEach(() => {
         prefStructure = [
           {
             id: "topstories",
             pref: { feed: "feed", learnMore: { link: { href } } },
+            eventSource,
           },
         ];
-
+      });
+      it("should add a link for top stories", () => {
         testRender();
         assert.calledWith(node.setAttribute, "href", href);
+      });
+      it("should setup a user event for top stories eventSource", () => {
+        sinon.spy(instance, "setupUserEvent");
+        testRender();
+        assert.calledWith(node.addEventListener, "command");
+        assert.calledWith(instance.setupUserEvent, node, eventSource);
+      });
+      it("should setup a user event for top stories nested pref eventSource", () => {
+        sinon.spy(instance, "setupUserEvent");
+        prefStructure = [
+          {
+            id: "topstories",
+            pref: {
+              feed: "feed",
+              learnMore: { link: { href } },
+              nestedPrefs: [
+                {
+                  name: "showSponsored",
+                  titleString:
+                    "home-prefs-recommended-by-option-sponsored-stories",
+                  icon: "icon-info",
+                  eventSource: "POCKET_SPOCS",
+                },
+              ],
+            },
+          },
+        ];
+        testRender();
+        assert.calledWith(node.addEventListener, "command");
+        assert.calledWith(instance.setupUserEvent, node, "POCKET_SPOCS");
+      });
+      it("should fire store dispatch with onCommand", () => {
+        const element = {
+          addEventListener: (command, action) => {
+            // Trigger the action right away because we only care about testing the action here.
+            action({ target: { checked: true } });
+          },
+        };
+        instance.setupUserEvent(element, eventSource);
+        assert.calledWith(
+          instance.store.dispatch,
+          ac.UserEvent({
+            event: "PREF_CHANGED",
+            source: eventSource,
+            value: { status: true },
+          })
+        );
       });
     });
     describe("description line", () => {
