@@ -229,19 +229,19 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
 
     init {
         val a = context.obtainStyledAttributes(
-            attrs, R.styleable.SeekBarPreference, defStyleAttr, defStyleRes
+            attrs, R.styleable.TextPercentageSeekBarPreference, defStyleAttr, defStyleRes
         )
 
         // The ordering of these two statements are important. If we want to set max first, we need
         // to perform the same steps by changing min/max to max/min as following:
         // mMax = a.getInt(...) and setMin(...).
-        mMin = a.getInt(R.styleable.SeekBarPreference_min, 0)
-        max = a.getInt(R.styleable.SeekBarPreference_android_max, SEEK_BAR_MAX)
-        seekBarIncrement = a.getInt(R.styleable.SeekBarPreference_seekBarIncrement, 0)
-        isAdjustable = a.getBoolean(R.styleable.SeekBarPreference_adjustable, true)
-        mShowSeekBarValue = a.getBoolean(R.styleable.SeekBarPreference_showSeekBarValue, false)
+        mMin = a.getInt(R.styleable.TextPercentageSeekBarPreference_min, 0)
+        max = a.getInt(R.styleable.TextPercentageSeekBarPreference_android_max, SEEK_BAR_MAX)
+        seekBarIncrement = a.getInt(R.styleable.TextPercentageSeekBarPreference_seekBarIncrement, 0)
+        isAdjustable = a.getBoolean(R.styleable.TextPercentageSeekBarPreference_adjustable, true)
+        mShowSeekBarValue = a.getBoolean(R.styleable.TextPercentageSeekBarPreference_showSeekBarValue, false)
         updatesContinuously = a.getBoolean(
-            R.styleable.SeekBarPreference_updatesContinuously,
+            R.styleable.TextPercentageSeekBarPreference_updatesContinuously,
             false
         )
         a.recycle()

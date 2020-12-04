@@ -93,4 +93,14 @@
     </declare-styleable>
 
     <attr name="selectLoginHeaderTextColor" format="reference"/>
+
+    <declare-styleable name="TextPercentageSeekBarPreference">
+        <attr format="integer" name="min"/>
+        <attr name="android:max"/>
+        <attr name="android:layout"/>
+        <attr format="integer" name="seekBarIncrement"/>
+        <attr format="boolean" name="adjustable"/>
+        <attr format="boolean" name="showSeekBarValue"/>
+        <attr format="boolean" name="updatesContinuously"/>
+    </declare-styleable>
 </resources>
