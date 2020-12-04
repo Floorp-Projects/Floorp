@@ -12,6 +12,7 @@ suites:
             youtube-scroll: ""
             facebook-scroll: ""
             cloudflare: ""
+            controlled: ""
             g-search: ""
             g-image: ""
             lq-fetch: ""
