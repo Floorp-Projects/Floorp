@@ -214,9 +214,8 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone,
   rtStats->currZoneStats = &zStats;
 
   zone->addSizeOfIncludingThis(
-      rtStats->mallocSizeOf_, &zStats.code, &zStats.typePool,
-      &zStats.regexpZone, &zStats.jitZone, &zStats.baselineStubsOptimized,
-      &zStats.uniqueIdMap, &zStats.shapeTables,
+      rtStats->mallocSizeOf_, &zStats.code, &zStats.regexpZone, &zStats.jitZone,
+      &zStats.baselineStubsOptimized, &zStats.uniqueIdMap, &zStats.shapeTables,
       &rtStats->runtime.atomsMarkBitmaps, &zStats.compartmentObjects,
       &zStats.crossCompartmentWrappersTables, &zStats.compartmentsPrivateData,
       &zStats.scriptCountsMap);
@@ -237,13 +236,10 @@ static void StatsRealmCallback(JSContext* cx, void* data, Realm* realm,
 
   // Measure the realm object itself, and things hanging off it.
   realm->addSizeOfIncludingThis(
-      rtStats->mallocSizeOf_, &realmStats.typeInferenceAllocationSiteTables,
-      &realmStats.typeInferenceArrayTypeTables,
-      &realmStats.typeInferenceObjectTypeTables, &realmStats.realmObject,
-      &realmStats.realmTables, &realmStats.innerViewsTable,
-      &realmStats.objectMetadataTable, &realmStats.savedStacksSet,
-      &realmStats.varNamesSet, &realmStats.nonSyntacticLexicalScopesTable,
-      &realmStats.jitRealm);
+      rtStats->mallocSizeOf_, &realmStats.realmObject, &realmStats.realmTables,
+      &realmStats.innerViewsTable, &realmStats.objectMetadataTable,
+      &realmStats.savedStacksSet, &realmStats.varNamesSet,
+      &realmStats.nonSyntacticLexicalScopesTable, &realmStats.jitRealm);
 }
 
 static void StatsArenaCallback(JSRuntime* rt, void* data, gc::Arena* arena,

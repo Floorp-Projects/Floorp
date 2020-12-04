@@ -475,10 +475,8 @@ class JS::Realm : public JS::shadow::Realm {
   void clearTables();
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                              size_t* tiAllocationSiteTables,
-                              size_t* tiArrayTypeTables,
-                              size_t* tiObjectTypeTables, size_t* realmObject,
-                              size_t* realmTables, size_t* innerViewsArg,
+                              size_t* realmObject, size_t* realmTables,
+                              size_t* innerViewsArg,
                               size_t* objectMetadataTablesArg,
                               size_t* savedStacksSet, size_t* varNamesSet,
                               size_t* nonSyntacticLexicalEnvironmentsArg,
