@@ -18,8 +18,8 @@
     ]
   },
   "browsingData": {
-    "url": "chrome://browser/content/parent/ext-browsingData.js",
-    "schema": "chrome://browser/content/schemas/browsing_data.json",
+    "url": "chrome://extensions/content/parent/ext-browsingData.js",
+    "schema": "chrome://extensions/content/schemas/browsing_data.json",
     "scopes": ["addon_parent"],
     "paths": [
       ["browsingData"]
