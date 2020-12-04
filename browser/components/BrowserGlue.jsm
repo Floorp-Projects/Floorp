@@ -5063,7 +5063,31 @@ var AboutHomeStartupCache = {
     if (this._cacheTask.isArmed) {
       this.log.trace("Finalizing cache task on shutdown");
       this._finalized = true;
-      await this._cacheTask.finalize();
+
+      // To avoid hanging shutdowns, we'll ensure that we wait a maximum of
+      // SHUTDOWN_CACHE_WRITE_TIMEOUT_MS millseconds before giving up.
+      let { setTimeout, clearTimeout } = ChromeUtils.import(
+        "resource://gre/modules/Timer.jsm"
+      );
+
+      const TIMED_OUT = Symbol();
+      let timeoutID = 0;
+
+      let timeoutPromise = new Promise(resolve => {
+        timeoutID = setTimeout(
+          () => resolve(TIMED_OUT),
+          this.SHUTDOWN_CACHE_WRITE_TIMEOUT_MS
+        );
+      });
+
+      let result = await Promise.race([
+        timeoutPromise,
+        this._cacheTask.finalize(),
+      ]);
+      clearTimeout(timeoutID);
+      if (result === TIMED_OUT) {
+        this.log.error("Timed out getting cache streams. Skipping cache task.");
+      }
     }
   },
 
@@ -5079,40 +5103,7 @@ var AboutHomeStartupCache = {
     this.log.trace("Caching now.");
     this._cacheProgress = "Getting cache streams";
 
-    let requestCachePromise = this.requestCache();
-    let pageInputStream;
-    let scriptInputStream;
-
-    if (this._finalized) {
-      // If we're finalized, that means we're entering a cache task within the
-      // AsyncShutdown blocker. To avoid hanging shutdowns, we'll ensure that
-      // we wait a maximum of SHUTDOWN_CACHE_WRITE_TIMEOUT_MS millseconds before
-      // giving up.
-      let { setTimeout, clearTimeout } = ChromeUtils.import(
-        "resource://gre/modules/Timer.jsm"
-      );
-
-      const TIMED_OUT = Symbol();
-      let timeoutID = 0;
-
-      let timeoutPromise = new Promise(resolve => {
-        timeoutID = setTimeout(
-          () => resolve(TIMED_OUT),
-          this.SHUTDOWN_CACHE_WRITE_TIMEOUT_MS
-        );
-      });
-
-      let result = await Promise.race([timeoutPromise, requestCachePromise]);
-      clearTimeout(timeoutID);
-
-      if (result === TIMED_OUT) {
-        this.log.error("Timed out getting cache streams. Skipping cache task.");
-      } else {
-        ({ pageInputStream, scriptInputStream } = result);
-      }
-    } else {
-      ({ pageInputStream, scriptInputStream } = await requestCachePromise);
-    }
+    let { pageInputStream, scriptInputStream } = await this.requestCache();
 
     if (!pageInputStream || !scriptInputStream) {
       this._cacheProgress = "Failed to get streams";
