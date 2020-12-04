@@ -29,7 +29,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/Runtime.h"        // JSAtomState
 
-#include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
+#include "builtin/HandlerFunction-inl.h"  // js::TargetFromHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::PromiseCall
 #include "builtin/streams/QueueWithSizes-inl.h"           // js::PeekQueueValue
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
