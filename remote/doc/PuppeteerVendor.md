@@ -11,10 +11,10 @@ process interspersed with some tips.
 1. Clone the Puppeteer git repository and checkout the release tag you want
    to vendor into mozilla-central.
 
-	 % git checkout tags/v10.0 -b sync-v10.0
+    	% git checkout tags/v10.0 -b sync-v10.0
 
-
-2. Apply any recent changes in `remote/test/puppeteer` to your Puppeteer branch.
+2. Apply any recent changes in `remote/test/puppeteer` to the Puppeteer branch
+   created above.
 
 	 You might want to [install the project] at this point and make sure unit
 	 tests pass. Check the project's `package.json` for relevant testing commands.
@@ -30,13 +30,19 @@ process interspersed with some tips.
 	 Be sure to [run tests against both Chromium and Firefox] in the Puppeteer
 	 repo. You can specify your local Firefox build when you do so:
 
-	 % BINARY=<path-to-objdir-binary> npm run funit
+		% BINARY=<path-to-objdir-binary> npm run funit
 
 3. Now back in mozilla-central, you can run the following mach command to
 	 copy over the Puppeteer branch you just prepared. The mach command has
 	 flags to specify a local or remote repository as well as a commit.
 
-	 % ./mach remote vendor-puppeteer
+		% ./mach remote vendor-puppeteer
+
+	 By default, this command also installs the newly-pulled Puppeteer package
+	 in order to generate a new `package-lock.json` file for the purpose of
+	 pinning Puppeteer dependencies for our CI. There is a `--no-install` option
+	 if you want to skip this step; for example, if you want to run installation
+	 separately at a later point.
 
 4. Go through the changes under `remote/test/puppeteer/test` and [unskip] any
 	 newly-skipped tests (e.g. change `itFailsFirefox` to `it`).
@@ -62,7 +68,7 @@ process interspersed with some tips.
 	 by a crash or a hang, especially if you see a lot of
 	 `TEST-UNEXPECTED-MISSING` in the Treeherder Failure Summary. You might need
 	 to add new test skips or fix some new bug in the unit tests. This is the
-	 fun part. 
+	 fun part.
 
 7. Once you are happy with the metadata and are ready to submit the sync patch
    up for review, run the Puppeteer test job on try again with `--rebuild 10`
@@ -71,7 +77,7 @@ process interspersed with some tips.
 [Testing]: ./Testing.html
 [Puppeteer test suite]: https://github.com/GoogleChrome/puppeteer/tree/master/test
 [re-install the project]: https://github.com/puppeteer/puppeteer/blob/main/CONTRIBUTING.md#getting-code
-[run tests against both Chromium and Firefox]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md
+[run tests against both Chromium and Firefox]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#running-tests
 [puppeteer-expected.json]: https://searchfox.org/mozilla-central/source/remote/puppeteer-expected.json
 [CONTRIBUTING.md]: https://github.com/puppeteer/puppeteer/blob/main/CONTRIBUTING.md
 [unskip]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#skipping-tests-in-specific-conditions
