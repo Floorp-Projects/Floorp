@@ -440,6 +440,10 @@
     <string name="preferences_marketing_data">Маълумоти маркетингӣ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Маълумот дар бораи хусусиятҳое, ки шумо дар %1$s истифода мебаред бо Leanplum, яъне фурӯшандаи маркетинги мобилии мо, мубодила карда шавад</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Таҳқиқҳо</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Ба Mozilla иҷозат медиҳад, ки таҳқиқҳоро насб ва иҷро кунад</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Таҷрибаҳо</string>
     <!-- Summary for experiments preferences -->
@@ -591,6 +595,8 @@
     <string name="tab_tray_title">Варақаҳои кушодашуда</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Нигоҳ доштан дар маҷмӯа</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Интихоб кардан</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Мубодила кардани ҳамаи варақаҳо</string>
     <!-- Text shown in the menu to view recently closed tabs -->
