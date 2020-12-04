@@ -5,7 +5,7 @@
 // https://drafts.csswg.org/css-syntax/#parsing
 
 use super::{BasicParseError, BasicParseErrorKind, Delimiter};
-use super::{ParseError, Parser, Token};
+use super::{ParseError, Parser, SourceLocation, Token};
 use crate::cow_rc_str::CowRcStr;
 use crate::parser::{parse_nested_block, parse_until_after, parse_until_before, ParserState};
 
@@ -130,10 +130,10 @@ pub trait AtRuleParser<'i> {
     fn rule_without_block(
         &mut self,
         prelude: Self::PreludeNoBlock,
-        start: &ParserState,
+        location: SourceLocation,
     ) -> Self::AtRule {
         let _ = prelude;
-        let _ = start;
+        let _ = location;
         panic!(
             "The `AtRuleParser::rule_without_block` method must be overriden \
              if `AtRuleParser::parse_prelude` ever returns `AtRuleType::WithoutBlock`."
@@ -153,11 +153,11 @@ pub trait AtRuleParser<'i> {
     fn parse_block<'t>(
         &mut self,
         prelude: Self::PreludeBlock,
-        start: &ParserState,
+        location: SourceLocation,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::AtRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
-        let _ = start;
+        let _ = location;
         let _ = input;
         Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid))
     }
@@ -210,11 +210,11 @@ pub trait QualifiedRuleParser<'i> {
     fn parse_block<'t>(
         &mut self,
         prelude: Self::Prelude,
-        start: &ParserState,
+        location: SourceLocation,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
-        let _ = start;
+        let _ = location;
         let _ = input;
         Err(input.new_error(BasicParseErrorKind::QualifiedRuleInvalid))
     }
@@ -267,9 +267,7 @@ where
         loop {
             let start = self.input.state();
             match self.input.next_including_whitespace_and_comments() {
-                Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) | Ok(&Token::Semicolon) => {
-                    continue
-                }
+                Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) | Ok(&Token::Semicolon) => continue,
                 Ok(&Token::Ident(ref name)) => {
                     let name = name.clone();
                     let result = {
@@ -290,7 +288,9 @@ where
                 Ok(token) => {
                     let token = token.clone();
                     let result = self.input.parse_until_after(Delimiter::Semicolon, |_| {
-                        Err(start.source_location().new_unexpected_token_error(token))
+                        Err(start
+                            .source_location()
+                            .new_unexpected_token_error(token))
                     });
                     return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
                 }
@@ -370,13 +370,15 @@ where
             let start = self.input.state();
 
             let at_keyword = match self.input.next_byte()? {
-                b'@' => match self.input.next_including_whitespace_and_comments() {
-                    Ok(&Token::AtKeyword(ref name)) => Some(name.clone()),
-                    _ => {
-                        self.input.reset(&start);
-                        None
+                b'@' => {
+                    match self.input.next_including_whitespace_and_comments() {
+                        Ok(&Token::AtKeyword(ref name)) => Some(name.clone()),
+                        _ => {
+                            self.input.reset(&start);
+                            None
+                        },
                     }
-                },
+                }
                 _ => None,
             };
 
@@ -463,13 +465,14 @@ fn parse_at_rule<'i, 't, P, E>(
 where
     P: AtRuleParser<'i, Error = E>,
 {
+    let location = input.current_source_location();
     let delimiters = Delimiter::Semicolon | Delimiter::CurlyBracketBlock;
     // FIXME: https://github.com/servo/rust-cssparser/issues/254
     let callback = |input: &mut Parser<'i, '_>| parser.parse_prelude(name, input);
     let result = parse_until_before(input, delimiters, callback);
     match result {
         Ok(AtRuleType::WithoutBlock(prelude)) => match input.next() {
-            Ok(&Token::Semicolon) | Err(_) => Ok(parser.rule_without_block(prelude, start)),
+            Ok(&Token::Semicolon) | Err(_) => Ok(parser.rule_without_block(prelude, location)),
             Ok(&Token::CurlyBracketBlock) => Err((
                 input.new_unexpected_token_error(Token::CurlyBracketBlock),
                 input.slice_from(start.position()),
@@ -481,7 +484,7 @@ where
                 Ok(&Token::CurlyBracketBlock) => {
                     // FIXME: https://github.com/servo/rust-cssparser/issues/254
                     let callback =
-                        |input: &mut Parser<'i, '_>| parser.parse_block(prelude, start, input);
+                        |input: &mut Parser<'i, '_>| parser.parse_block(prelude, location, input);
                     parse_nested_block(input, callback)
                         .map_err(|e| (e, input.slice_from(start.position())))
                 }
@@ -511,7 +514,7 @@ fn parse_qualified_rule<'i, 't, P, E>(
 where
     P: QualifiedRuleParser<'i, Error = E>,
 {
-    let start = input.state();
+    let location = input.current_source_location();
     // FIXME: https://github.com/servo/rust-cssparser/issues/254
     let callback = |input: &mut Parser<'i, '_>| parser.parse_prelude(input);
     let prelude = parse_until_before(input, Delimiter::CurlyBracketBlock, callback);
@@ -520,7 +523,8 @@ where
             // Do this here so that we consume the `{` even if the prelude is `Err`.
             let prelude = prelude?;
             // FIXME: https://github.com/servo/rust-cssparser/issues/254
-            let callback = |input: &mut Parser<'i, '_>| parser.parse_block(prelude, &start, input);
+            let callback =
+                |input: &mut Parser<'i, '_>| parser.parse_block(prelude, location, input);
             parse_nested_block(input, callback)
         }
         _ => unreachable!(),
