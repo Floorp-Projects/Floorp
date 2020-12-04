@@ -93,11 +93,6 @@ bool ForInEmitter::emitInitialize() {
 #endif
   MOZ_ASSERT(loopDepth_ >= 2);
 
-  if (!bce_->emit1(JSOp::IterNext)) {
-    //              [stack] ITER ITERVAL
-    return false;
-  }
-
 #ifdef DEBUG
   state_ = State::Initialize;
 #endif

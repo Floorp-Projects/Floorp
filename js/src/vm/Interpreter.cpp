@@ -2510,12 +2510,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(IsGenClosing)
 
-    CASE(IterNext) {
-      // Ion relies on this.
-      MOZ_ASSERT(REGS.sp[-1].isString());
-    }
-    END_CASE(IterNext)
-
     CASE(Dup) {
       MOZ_ASSERT(REGS.stackDepth() >= 1);
       const Value& rref = REGS.sp[-1];
