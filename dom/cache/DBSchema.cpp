@@ -1589,45 +1589,33 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
   // value first and then the full data.  SQLite is smart enough to use
   // the index on the hash to search the table before doing the expensive
   // comparison of the large data column.  (This was verified with EXPLAIN.)
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn.CreateStatement(
-      nsLiteralCString(
+  CACHE_TRY_INSPECT(
+      const auto& selectStmt,
+      quota::CreateAndExecuteSingleStepStatement<
+          quota::SingleStepResult::ReturnNullIfNoResult>(
+          aConn,
           // Note that hash and data are blobs, but we can use = here since the
           // columns are NOT NULL.
           "SELECT id, refcount FROM security_info WHERE hash=:hash AND "
-          "data=:data;"),
-      getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+          "data=:data;"_ns,
+          [&hash, &aData](auto& state) -> Result<Ok, nsresult> {
+            CACHE_TRY(state.BindUTF8StringAsBlobByName("hash"_ns, hash));
+            CACHE_TRY(state.BindUTF8StringAsBlobByName("data"_ns, aData));
 
-  rv = state->BindUTF8StringAsBlobByName("hash"_ns, hash);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  rv = state->BindUTF8StringAsBlobByName("data"_ns, aData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+            return Ok{};
+          }));
 
   // This security info blob is already in the database
-  if (hasMoreData) {
+  if (selectStmt) {
     int32_t id;
     // get the existing security blob id to return
-    rv = state->GetInt32(0, &id);
+    nsresult rv = selectStmt->GetInt32(0, &id);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
 
     int32_t refcount = -1;
-    rv = state->GetInt32(1, &refcount);
+    rv = selectStmt->GetInt32(1, &refcount);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
@@ -1635,6 +1623,7 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
     // But first, update the refcount in the database.
     refcount += 1;
 
+    nsCOMPtr<mozIStorageStatement> state;
     rv = aConn.CreateStatement(
         nsLiteralCString(
             "UPDATE security_info SET refcount=:refcount WHERE id=:id;"),
@@ -1663,7 +1652,8 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
 
   // This is a new security info blob.  Create a new row in the security table
   // with an initial refcount of 1.
-  rv = aConn.CreateStatement(
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn.CreateStatement(
       "INSERT INTO security_info (hash, data, refcount) "
       "VALUES (:hash, :data, 1);"_ns,
       getter_AddRefs(state));
@@ -1704,30 +1694,19 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
 nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
                             int32_t aCount) {
   // First, we need to determine the current refcount for this security blob.
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn.CreateStatement(
-      "SELECT refcount FROM security_info WHERE id=:id;"_ns,
-      getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(
+      const int32_t& refcount, ([&aConn, aId]() -> Result<int32_t, nsresult> {
+        CACHE_TRY_INSPECT(
+            const auto& state,
+            quota::CreateAndExecuteSingleStepStatement(
+                aConn, "SELECT refcount FROM security_info WHERE id=:id;"_ns,
+                [aId](auto& state) -> Result<Ok, nsresult> {
+                  CACHE_TRY(state.BindInt32ByName("id"_ns, aId));
+                  return Ok{};
+                }));
 
-  rv = state->BindInt32ByName("id"_ns, aId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  int32_t refcount = -1;
-  rv = state->GetInt32(0, &refcount);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0));
+      }()));
 
   MOZ_DIAGNOSTIC_ASSERT(refcount >= aCount);
 
@@ -1737,8 +1716,9 @@ nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
   // If the last reference to this security blob was removed we can
   // just remove the entire row.
   if (newCount == 0) {
-    rv = aConn.CreateStatement("DELETE FROM security_info WHERE id=:id;"_ns,
-                               getter_AddRefs(state));
+    nsCOMPtr<mozIStorageStatement> state;
+    nsresult rv = aConn.CreateStatement(
+        "DELETE FROM security_info WHERE id=:id;"_ns, getter_AddRefs(state));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1758,7 +1738,8 @@ nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
 
   // Otherwise update the refcount in the table to reflect the reduced
   // number of references to the security blob.
-  rv = aConn.CreateStatement(
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn.CreateStatement(
       nsLiteralCString(
           "UPDATE security_info SET refcount=:refcount WHERE id=:id;"),
       getter_AddRefs(state));
@@ -2161,39 +2142,30 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
 
   SavedResponse savedResponse;
 
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn.CreateStatement(
-      nsLiteralCString("SELECT "
-                       "entries.response_type, "
-                       "entries.response_status, "
-                       "entries.response_status_text, "
-                       "entries.response_headers_guard, "
-                       "entries.response_body_id, "
-                       "entries.response_principal_info, "
-                       "entries.response_padding_size, "
-                       "security_info.data "
-                       "FROM entries "
-                       "LEFT OUTER JOIN security_info "
-                       "ON entries.response_security_info_id=security_info.id "
-                       "WHERE entries.id=:id;"),
-      getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY_INSPECT(const auto& state,
+                    quota::CreateAndExecuteSingleStepStatement(
+                        aConn,
+                        "SELECT "
+                        "entries.response_type, "
+                        "entries.response_status, "
+                        "entries.response_status_text, "
+                        "entries.response_headers_guard, "
+                        "entries.response_body_id, "
+                        "entries.response_principal_info, "
+                        "entries.response_padding_size, "
+                        "security_info.data "
+                        "FROM entries "
+                        "LEFT OUTER JOIN security_info "
+                        "ON entries.response_security_info_id=security_info.id "
+                        "WHERE entries.id=:id;"_ns,
+                        [aEntryId](auto& state) -> Result<Ok, nsresult> {
+                          CACHE_TRY(state.BindInt32ByName("id"_ns, aEntryId));
 
-  rv = state->BindInt32ByName("id"_ns, aEntryId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+                          return Ok{};
+                        }));
 
   int32_t type;
-  rv = state->GetInt32(0, &type);
+  nsresult rv = state->GetInt32(0, &type);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }
@@ -2299,60 +2271,68 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
     return Err(rv);
   }
 
-  rv = aConn.CreateStatement(nsLiteralCString("SELECT "
-                                              "name, "
-                                              "value "
-                                              "FROM response_headers "
-                                              "WHERE entry_id=:entry_id;"),
-                             getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  rv = state->BindInt32ByName("entry_id"_ns, aEntryId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    HeadersEntry header;
-
-    rv = state->GetUTF8String(0, header.name());
+  {
+    nsCOMPtr<mozIStorageStatement> state;
+    rv = aConn.CreateStatement(nsLiteralCString("SELECT "
+                                                "name, "
+                                                "value "
+                                                "FROM response_headers "
+                                                "WHERE entry_id=:entry_id;"),
+                               getter_AddRefs(state));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
 
-    rv = state->GetUTF8String(1, header.value());
+    rv = state->BindInt32ByName("entry_id"_ns, aEntryId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
 
-    savedResponse.mValue.headers().AppendElement(header);
+    bool hasMoreData;
+    while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+      HeadersEntry header;
+
+      rv = state->GetUTF8String(0, header.name());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      rv = state->GetUTF8String(1, header.value());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      savedResponse.mValue.headers().AppendElement(header);
+    }
   }
 
-  rv = aConn.CreateStatement(nsLiteralCString("SELECT "
-                                              "url "
-                                              "FROM response_url_list "
-                                              "WHERE entry_id=:entry_id;"),
-                             getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  rv = state->BindInt32ByName("entry_id"_ns, aEntryId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    nsCString url;
-
-    rv = state->GetUTF8String(0, url);
+  {
+    nsCOMPtr<mozIStorageStatement> state;
+    rv = aConn.CreateStatement(nsLiteralCString("SELECT "
+                                                "url "
+                                                "FROM response_url_list "
+                                                "WHERE entry_id=:entry_id;"),
+                               getter_AddRefs(state));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
 
-    savedResponse.mValue.urlList().AppendElement(url);
+    rv = state->BindInt32ByName("entry_id"_ns, aEntryId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
+
+    bool hasMoreData;
+    while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+      nsCString url;
+
+      rv = state->GetUTF8String(0, url);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      savedResponse.mValue.urlList().AppendElement(url);
+    }
   }
 
   return savedResponse;
@@ -2364,42 +2344,34 @@ Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
 
   SavedRequest savedRequest;
 
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv =
-      aConn.CreateStatement(nsLiteralCString("SELECT "
-                                             "request_method, "
-                                             "request_url_no_query, "
-                                             "request_url_query, "
-                                             "request_url_fragment, "
-                                             "request_referrer, "
-                                             "request_referrer_policy, "
-                                             "request_headers_guard, "
-                                             "request_mode, "
-                                             "request_credentials, "
-                                             "request_contentpolicytype, "
-                                             "request_cache, "
-                                             "request_redirect, "
-                                             "request_integrity, "
-                                             "request_body_id "
-                                             "FROM entries "
-                                             "WHERE id=:id;"),
-                            getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY_INSPECT(const auto& state,
+                    quota::CreateAndExecuteSingleStepStatement<
+                        quota::SingleStepResult::ReturnNullIfNoResult>(
+                        aConn,
+                        "SELECT "
+                        "request_method, "
+                        "request_url_no_query, "
+                        "request_url_query, "
+                        "request_url_fragment, "
+                        "request_referrer, "
+                        "request_referrer_policy, "
+                        "request_headers_guard, "
+                        "request_mode, "
+                        "request_credentials, "
+                        "request_contentpolicytype, "
+                        "request_cache, "
+                        "request_redirect, "
+                        "request_integrity, "
+                        "request_body_id "
+                        "FROM entries "
+                        "WHERE id=:id;"_ns,
+                        [aEntryId](auto& state) -> Result<Ok, nsresult> {
+                          CACHE_TRY(state.BindInt32ByName("id"_ns, aEntryId));
 
-  rv = state->BindInt32ByName("id"_ns, aEntryId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+                          return Ok{};
+                        }));
 
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  rv = state->GetUTF8String(0, savedRequest.mValue.method());
+  nsresult rv = state->GetUTF8String(0, savedRequest.mValue.method());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }
@@ -2479,35 +2451,40 @@ Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
   if (savedRequest.mHasBodyId) {
     CACHE_TRY_UNWRAP(savedRequest.mBodyId, ExtractId(*state, 13));
   }
-  rv = aConn.CreateStatement(nsLiteralCString("SELECT "
-                                              "name, "
-                                              "value "
-                                              "FROM request_headers "
-                                              "WHERE entry_id=:entry_id;"),
-                             getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
 
-  rv = state->BindInt32ByName("entry_id"_ns, aEntryId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    HeadersEntry header;
-
-    rv = state->GetUTF8String(0, header.name());
+  {
+    nsCOMPtr<mozIStorageStatement> state;
+    rv = aConn.CreateStatement(nsLiteralCString("SELECT "
+                                                "name, "
+                                                "value "
+                                                "FROM request_headers "
+                                                "WHERE entry_id=:entry_id;"),
+                               getter_AddRefs(state));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
 
-    rv = state->GetUTF8String(1, header.value());
+    rv = state->BindInt32ByName("entry_id"_ns, aEntryId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Err(rv);
     }
 
-    savedRequest.mValue.headers().AppendElement(header);
+    bool hasMoreData;
+    while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+      HeadersEntry header;
+
+      rv = state->GetUTF8String(0, header.name());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      rv = state->GetUTF8String(1, header.value());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      savedRequest.mValue.headers().AppendElement(header);
+    }
   }
 
   return savedRequest;

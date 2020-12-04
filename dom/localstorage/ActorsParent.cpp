@@ -3036,36 +3036,31 @@ Result<int64_t, nsresult> GetUsage(mozIStorageConnection& aConnection,
                                    ArchivedOriginScope* aArchivedOriginScope) {
   AssertIsOnIOThread();
 
-  // XXX This could use CreateAndExecuteSingleStepStatement from dom/indexedDB
   LS_TRY_INSPECT(
       const auto& stmt,
       ([aArchivedOriginScope,
         &aConnection]() -> Result<nsCOMPtr<mozIStorageStatement>, nsresult> {
         if (aArchivedOriginScope) {
-          LS_TRY_UNWRAP(
-              const auto stmt,
-              MOZ_TO_RESULT_INVOKE_TYPED(
-                  nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
-                  "SELECT "
-                  "total(utf16Length(key) + utf16Length(value)) "
-                  "FROM webappsstore2 "
-                  "WHERE originKey = :originKey "
-                  "AND originAttributes = :originAttributes;"_ns));
-
-          LS_TRY(aArchivedOriginScope->BindToStatement(stmt));
-
-          return stmt;
+          LS_TRY_RETURN(CreateAndExecuteSingleStepStatement<
+                        SingleStepResult::ReturnNullIfNoResult>(
+              aConnection,
+              "SELECT "
+              "total(utf16Length(key) + utf16Length(value)) "
+              "FROM webappsstore2 "
+              "WHERE originKey = :originKey "
+              "AND originAttributes = :originAttributes;"_ns,
+              [aArchivedOriginScope](auto& stmt) -> Result<Ok, nsresult> {
+                LS_TRY(aArchivedOriginScope->BindToStatement(&stmt));
+                return Ok{};
+              }));
         }
 
-        LS_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
-            nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
-            "SELECT usage FROM database"_ns));
+        LS_TRY_RETURN(CreateAndExecuteSingleStepStatement<
+                      SingleStepResult::ReturnNullIfNoResult>(
+            aConnection, "SELECT usage FROM database"_ns));
       }()));
 
-  LS_TRY_INSPECT(const bool& hasResult,
-                 MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-
-  LS_TRY(OkIf(hasResult), Err(NS_ERROR_FAILURE));
+  LS_TRY(OkIf(stmt), Err(NS_ERROR_FAILURE));
 
   LS_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 }
