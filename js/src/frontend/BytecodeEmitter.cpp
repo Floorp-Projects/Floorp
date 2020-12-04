@@ -8967,14 +8967,12 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     return false;
   }
 
-  bool isInnerSingleton = flags.contains(ObjLiteralFlag::IsInnerSingleton);
+  // TODO(no-TI): remove IsInnerSingleton flag.
 
   // JSOp::Object may only be used by (top-level) run-once scripts.
   MOZ_ASSERT_IF(singleton, compilationInfo.input.options.isRunOnce);
 
-  JSOp op = singleton          ? JSOp::Object
-            : isInnerSingleton ? JSOp::NewObjectWithGroup
-                               : JSOp::NewObject;
+  JSOp op = singleton ? JSOp::Object : JSOp::NewObject;
   if (!emitGCIndexOp(op, index)) {
     //              [stack] OBJ
     return false;

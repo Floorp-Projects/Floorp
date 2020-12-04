@@ -2882,11 +2882,6 @@ bool BaselineCodeGen<Handler>::emit_NewObject() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_NewObjectWithGroup() {
-  return emitNewObject();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_NewInit() {
   return emitNewObject();
 }
