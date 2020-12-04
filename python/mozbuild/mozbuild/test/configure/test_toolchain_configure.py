@@ -2057,7 +2057,7 @@ def gen_invoke_rustc(version, rustup_wrapper=False):
 
 class RustTest(BaseConfigureTest):
     def get_rust_target(
-        self, target, compiler_type="gcc", version="1.39.0", arm_target=None
+        self, target, compiler_type="gcc", version="1.47.0", arm_target=None
     ):
         environ = {
             "PATH": os.pathsep.join(mozpath.abspath(p) for p in ("/bin", "/usr/bin")),
