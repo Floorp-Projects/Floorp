@@ -28,6 +28,7 @@ if CONFIG["MOZ_GLEAN"]:
         "bindings/Category.h",
         "bindings/Glean.h",
         "bindings/MetricTypes.h",
+        "bindings/private/Boolean.h",
         "bindings/private/Counter.h",
         "bindings/private/Datetime.h",
         "bindings/private/String.h",
@@ -38,6 +39,7 @@ if CONFIG["MOZ_GLEAN"]:
     UNIFIED_SOURCES += [
         "bindings/Category.cpp",
         "bindings/Glean.cpp",
+        "bindings/private/Boolean.cpp",
         "bindings/private/Counter.cpp",
         "bindings/private/Datetime.cpp",
         "bindings/private/String.cpp",
