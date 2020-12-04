@@ -1,0 +1,161 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test browsingData.remove indexedDB</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function testIndexedDB() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
+
+  async function background() {
+    const PAGE =
+      "/tests/toolkit/components/extensions/test/mochitest/file_indexedDB.html";
+
+    let tabs = [];
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg == "cleanup") {
+        await Promise.all(tabs.map(tabId => browser.tabs.remove(tabId)));
+        browser.test.sendMessage("done");
+        return;
+      }
+
+      await browser.browsingData.remove(msg, { indexedDB: true });
+      browser.test.sendMessage("indexedDBRemoved");
+    });
+
+    // Create two tabs.
+    let tab = await browser.tabs.create({ url: `http://mochi.test:8888${PAGE}` });
+    tabs.push(tab.id);
+
+    tab = await browser.tabs.create({ url: `http://example.com${PAGE}` });
+    tabs.push(tab.id);
+
+    // Create tab with cookieStoreId "firefox-container-1"
+    tab = await browser.tabs.create({ url: `http://example.net${PAGE}`, cookieStoreId: 'firefox-container-1' });
+    tabs.push(tab.id);
+  }
+
+  function contentScript() {
+    // eslint-disable-next-line mozilla/balanced-listeners
+    window.addEventListener(
+      "message",
+      msg => {
+        browser.test.sendMessage("indexedDBCreated");
+      },
+      true
+    );
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    background,
+    manifest: {
+      applications: { gecko: { id: "indexedDb@tests.mozilla.org" } },
+      permissions: ["browsingData", "tabs", "cookies"],
+      content_scripts: [
+        {
+          matches: [
+            "http://mochi.test/*/file_indexedDB.html",
+            "http://example.com/*/file_indexedDB.html",
+            "http://example.net/*/file_indexedDB.html",
+          ],
+          js: ["script.js"],
+          run_at: "document_start",
+        },
+      ],
+    },
+    files: {
+      "script.js": contentScript,
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("indexedDBCreated");
+  await extension.awaitMessage("indexedDBCreated");
+  await extension.awaitMessage("indexedDBCreated");
+
+  function getUsage() {
+    return new Promise(resolve => {
+      let qms = SpecialPowers.Services.qms;
+      let cb = SpecialPowers.wrapCallback(request => resolve(request.result));
+      qms.getUsage(cb);
+    });
+  }
+
+  async function getOrigins() {
+    let origins = [];
+    let result = await getUsage();
+    for (let i = 0; i < result.length; ++i) {
+      if (result[i].usage === 0) {
+        continue;
+      }
+      if (
+        result[i].origin.startsWith("http://mochi.test") ||
+        result[i].origin.startsWith("http://example.com") ||
+        result[i].origin.startsWith("http://example.net")
+      ) {
+        origins.push(result[i].origin);
+      }
+    }
+    return origins.sort();
+  }
+
+  let origins = await getOrigins();
+  is(origins.length, 3, "IndexedDB databases have been populated.");
+
+  // Deleting private browsing mode data is silently ignored.
+  extension.sendMessage({ cookieStoreId: "firefox-private" });
+  await extension.awaitMessage("indexedDBRemoved");
+
+  origins = await getOrigins();
+  is(origins.length, 3, "All indexedDB remains after clearing firefox-private");
+
+  // Delete by hostname
+  extension.sendMessage({ hostnames: ["example.com"] });
+  await extension.awaitMessage("indexedDBRemoved");
+
+  origins = await getOrigins();
+  is(origins.length, 2, "IndexedDB data only for only two domains left");
+  ok(origins[0].startsWith("http://example.net"), "example.net not deleted");
+  ok(origins[1].startsWith("http://mochi.test"), "mochi.test not deleted");
+
+  // TODO: Bug 1643740
+  if (AppConstants.platform != "android") {
+    // Delete by cookieStoreId
+    extension.sendMessage({ cookieStoreId: "firefox-container-1" });
+    await extension.awaitMessage("indexedDBRemoved");
+
+    origins = await getOrigins();
+    is(origins.length, 1, "IndexedDB data only for only one domain");
+    ok(origins[0].startsWith("http://mochi.test"), "mochi.test not deleted");
+  }
+
+  // Delete all
+  extension.sendMessage({});
+  await extension.awaitMessage("indexedDBRemoved");
+
+  origins = await getOrigins();
+  is(origins.length, 0, "All IndexedDB data has been removed.");
+
+  await extension.sendMessage("cleanup");
+  await extension.awaitMessage("done");
+
+  await extension.unload();
+});
+</script>
+</body>
+</html>
