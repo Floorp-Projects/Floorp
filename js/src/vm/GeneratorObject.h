@@ -49,6 +49,9 @@ class AbstractGeneratorObject : public NativeObject {
   // plenty for typical human-authored code.
   static constexpr uint32_t FixedSlotLimit = 256;
 
+ private:
+  static JSObject* createModuleGenerator(JSContext* cx, AbstractFramePtr frame);
+
  public:
   static JSObject* create(JSContext* cx, AbstractFramePtr frame);
 
