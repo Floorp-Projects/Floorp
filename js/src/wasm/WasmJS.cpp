@@ -803,6 +803,11 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
         break;
       }
+#ifdef ENABLE_WASM_EXCEPTIONS
+      case DefinitionKind::Event: {
+        MOZ_CRASH("NYI");
+      }
+#endif
     }
   }
 
@@ -1271,6 +1276,10 @@ static JSString* KindToString(JSContext* cx, const KindNames& names,
       return names.memory;
     case DefinitionKind::Global:
       return cx->names().global;
+#ifdef ENABLE_WASM_EXCEPTIONS
+    case DefinitionKind::Event:
+      MOZ_CRASH("NYI");
+#endif
   }
 
   MOZ_CRASH("invalid kind");

@@ -39,6 +39,9 @@ enum class SectionId {
   Code = 10,
   Data = 11,
   DataCount = 12,
+#ifdef ENABLE_WASM_EXCEPTIONS
+  Event = 13,
+#endif
   GcFeatureOptIn = 42  // Arbitrary, but fits in 7 bits
 };
 
@@ -153,7 +156,10 @@ enum class DefinitionKind {
   Function = 0x00,
   Table = 0x01,
   Memory = 0x02,
-  Global = 0x03
+  Global = 0x03,
+#ifdef ENABLE_WASM_EXCEPTIONS
+  Event = 0x04,
+#endif
 };
 
 enum class GlobalTypeImmediate { IsMutable = 0x1, AllowedMask = 0x1 };
@@ -183,6 +189,12 @@ enum class ElemSegmentPayload : uint32_t {
   ExternIndex = 0x0,
   ElemExpression = 0x4,
 };
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+enum class EventKind {
+  Exception = 0x0,
+};
+#endif
 
 enum class Op {
   // Control flow operators
@@ -879,6 +891,10 @@ static const unsigned MaxTables = 100000;
 static const unsigned MaxImports = 100000;
 static const unsigned MaxExports = 100000;
 static const unsigned MaxGlobals = 1000000;
+#ifdef ENABLE_WASM_EXCEPTIONS
+static const unsigned MaxEvents =
+    1000000;  // TODO: get this into the shared limits spec
+#endif
 static const unsigned MaxDataSegments = 100000;
 static const unsigned MaxDataSegmentLengthPages = 16384;
 static const unsigned MaxElemSegments = 10000000;

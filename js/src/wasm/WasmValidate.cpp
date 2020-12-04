@@ -2031,6 +2031,35 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
   return true;
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+static bool DecodeEvent(Decoder& d, ModuleEnvironment* env,
+                        EventKind* eventKind, uint32_t* funcTypeIndex) {
+  uint32_t eventCode;
+  if (!d.readVarU32(&eventCode)) {
+    return d.fail("expected event kind");
+  }
+
+  if (EventKind(eventCode) != EventKind::Exception) {
+    return d.fail("illegal event kind");
+  }
+  *eventKind = EventKind(eventCode);
+
+  if (!d.readVarU32(funcTypeIndex)) {
+    return d.fail("expected function index in event");
+  }
+  if (*funcTypeIndex >= env->numTypes()) {
+    return d.fail("function type index in event out of bounds");
+  }
+  if (!env->types[*funcTypeIndex].isFuncType()) {
+    return d.fail("function type index must index a function type");
+  }
+  if (env->types[*funcTypeIndex].funcType().results().length() != 0) {
+    return d.fail("exception function types must not return anything");
+  }
+  return true;
+}
+#endif
+
 static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
   UniqueChars moduleName = DecodeName(d);
   if (!moduleName) {
@@ -2420,6 +2449,46 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
 
   return d.finishSection(*range, "global");
 }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+static bool DecodeEventSection(Decoder& d, ModuleEnvironment* env) {
+  MaybeSectionRange range;
+  if (!d.startSection(SectionId::Event, env, &range, "event")) {
+    return false;
+  }
+  if (!range) {
+    return true;
+  }
+
+  uint32_t numDefs;
+  if (!d.readVarU32(&numDefs)) {
+    return d.fail("expected number of events");
+  }
+
+  CheckedInt<uint32_t> numEvents = env->events.length();
+  numEvents += numDefs;
+  if (!numEvents.isValid() || numEvents.value() > MaxEvents) {
+    return d.fail("too many events");
+  }
+
+  if (!env->events.reserve(numEvents.value())) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < numDefs; i++) {
+    EventKind eventKind;
+    uint32_t funcTypeIndex;
+    if (!DecodeEvent(d, env, &eventKind, &funcTypeIndex)) {
+      return false;
+    }
+    ResultType args =
+        ResultType::Vector(env->types[funcTypeIndex].funcType().args());
+    env->events.infallibleAppend(EventDesc(eventKind, args));
+  }
+
+  return d.finishSection(*range, "event");
+}
+#endif
 
 typedef HashSet<const char*, mozilla::CStringHasher, SystemAllocPolicy>
     CStringSet;
@@ -2891,6 +2960,12 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
   if (!DecodeMemorySection(d, env)) {
     return false;
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  if (!DecodeEventSection(d, env)) {
+    return false;
+  }
+#endif
 
   if (!DecodeGlobalSection(d, env)) {
     return false;
