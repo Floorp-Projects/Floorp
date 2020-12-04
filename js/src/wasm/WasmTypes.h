@@ -85,6 +85,11 @@ typedef GCVector<WasmGlobalObject*, 0, SystemAllocPolicy>
     WasmGlobalObjectVector;
 using RootedWasmGlobalObject = Rooted<WasmGlobalObject*>;
 
+class WasmExceptionObject;
+typedef GCVector<WasmExceptionObject*, 0, SystemAllocPolicy>
+    WasmExceptionObjectVector;
+using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
+
 class StructTypeDescr;
 typedef GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>
     StructTypeDescrVector;
@@ -960,6 +965,21 @@ using MutableHandleFuncRef = MutableHandle<FuncRef>;
 // Given any FuncRef, unbox it as a JS Value -- always a JSFunction*.
 
 Value UnboxFuncRef(FuncRef val);
+
+// Exception tags are used to uniquely identify exceptions. They are stored
+// in a vector in Instances and used by both WebAssembly.Exception for import
+// and export, and by the representation of thrown exceptions.
+//
+// Since an exception tag is a (trivial) substructure of AtomicRefCounted, the
+// RefPtr SharedExceptionTag can have many instances/modules referencing a
+// single constant exception tag.
+
+struct ExceptionTag : AtomicRefCounted<ExceptionTag> {
+  ExceptionTag() = default;
+};
+using SharedExceptionTag = RefPtr<ExceptionTag>;
+typedef Vector<SharedExceptionTag, 0, SystemAllocPolicy>
+    SharedExceptionTagVector;
 
 // Code can be compiled either with the Baseline compiler or the Ion compiler,
 // and tier-variant data are tagged with the Tier value.
