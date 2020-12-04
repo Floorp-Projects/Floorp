@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Play mp3 file with multiple ID3v2 tags</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+
+add_task(async function testPlayMP3WithMultipleID3Tags() {
+  info(`adjust cache size`);
+  await SpecialPowers.pushPrefEnv(
+    // The second ID3v2 header is huge (4622361 bytes) so the first audio samle
+    // in this file is in the position 4945370, so we have to extend the size of
+    // the cache.
+    {"set": [["media.cache_size", 5000000]]}
+  );
+
+  info(`create audio and wait its loading`);
+  let audio = document.createElement('audio');
+  audio.src = "multi_id3v2.mp3";
+  document.body.appendChild(audio);
+  await new Promise(r => audio.onloadeddata = r);
+  ok(true, `finishing loading data.`)
+});
+
+</script>
+</head>
+<body>
+</body>
+</html>
