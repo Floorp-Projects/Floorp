@@ -298,7 +298,6 @@ AddrHostRecord::AddrHostRecord(const nsHostKey& key)
       mNativeSuccess(0),
       mNative(false),
       mNativeUsed(false),
-      onQueue(false),
       usingAnyThread(false),
       mGetTtl(false),
       mResolveAgain(false) {}
@@ -389,7 +388,7 @@ bool AddrHostRecord::RemoveOrRefresh(bool aTrrToo) {
     return false;
   }
   if (mNative) {
-    if (!onQueue) {
+    if (!onQueue()) {
       // The request has been passed to the OS resolver. The resultant DNS
       // record should be considered stale and not trusted; set a flag to
       // ensure it is called again.
@@ -1237,7 +1236,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
       // Only A/AAAA records are place in a queue. The queues are for
       // the native resolver, therefore by-type request are never put
       // into a queue.
-      if (addrRec && addrRec->onQueue) {
+      if (addrRec && addrRec->onQueue()) {
         Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2,
                               METHOD_NETWORK_SHARED);
 
@@ -1247,16 +1246,12 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
 
         if (IsHighPriority(flags) && !IsHighPriority(rec->flags)) {
           // Move from (low|med) to high.
-          NS_ASSERTION(addrRec->onQueue,
-                       "Moving Host Record Not Currently Queued");
           rec->remove();
           mHighQ.insertBack(rec);
           rec->flags = flags;
           ConditionallyCreateThread(rec);
         } else if (IsMediumPriority(flags) && IsLowPriority(rec->flags)) {
           // Move from low to med.
-          NS_ASSERTION(addrRec->onQueue,
-                       "Moving Host Record Not Currently Queued");
           rec->remove();
           mMediumQ.insertBack(rec);
           rec->flags = flags;
@@ -1459,7 +1454,6 @@ nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec) {
 
   addrRec->mNative = true;
   addrRec->mNativeUsed = true;
-  addrRec->onQueue = true;
   addrRec->mResolving++;
 
   nsresult rv = ConditionallyCreateThread(rec);
@@ -1655,7 +1649,6 @@ void nsHostResolver::DeQueue(LinkedList<RefPtr<nsHostRecord>>& aQ,
   MOZ_ASSERT(rec->IsAddrRecord());
   RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
   MOZ_ASSERT(addrRec);
-  addrRec->onQueue = false;
   addrRec.forget(aResult);
 }
 
@@ -1908,12 +1901,14 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       addrRec->usingAnyThread = false;
     }
 
-    addrRec->mNative = false;
     addrRec->mNativeSuccess = static_cast<bool>(newRRSet);
     if (addrRec->mNativeSuccess) {
       addrRec->mNativeDuration = TimeStamp::Now() - addrRec->mNativeStart;
     }
   }
+
+  // This should always be cleared when a request is completed.
+  addrRec->mNative = false;
 
   // update record fields.  We might have a addrRec->addr_info already if a
   // previous lookup result expired and we're reresolving it or we get
