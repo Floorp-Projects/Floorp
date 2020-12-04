@@ -68,3 +68,23 @@ fog_validation:
     expires: "89"
     send_in_pings:
       - fog-validation
+
+  os_version:
+    type: string
+    description:
+      The version of the OS running Firefox, as detected by Gecko.
+      To be sent only in the "fog-validation" ping.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1679835
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1679835#c3
+    data_sensitivity:
+      - technical
+    lifetime: application
+    notification_emails:
+      - aplacitelli@mozilla.com
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: "89"
+    send_in_pings:
+      - fog-validation
