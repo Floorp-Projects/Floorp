@@ -60,5 +60,7 @@
     <issue id="TooDeepLayout" severity="warning" /> <!-- depth can be customized -->
     <issue id="TooManyViews" severity="warning" /> <!-- view count can be customized -->
 
+    <!-- Correctness: checks with increased severity -->
+    <issue id="PrivateResource" severity="error" />
 </lint>
 
