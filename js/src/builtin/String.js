@@ -937,6 +937,39 @@ function String_static_raw(callSite/*, ...substitutions*/) {
     return resultString;
 }
 
+// https://github.com/tc39/proposal-relative-indexing-method
+// String.prototype.at ( index )
+function String_at(index) {
+    // Step 1.
+    if (this === undefined || this === null)
+        ThrowIncompatibleMethod("at", this);
+
+    // Step 2.
+    var string = ToString(this);
+
+    // Step 3.
+    var len = string.length;
+
+    // Step 4.
+    var relativeIndex = ToInteger(index);
+
+    // Steps 5-6.
+    var k;
+    if (relativeIndex >= 0) {
+        k = relativeIndex;
+    } else {
+        k = len + relativeIndex;
+    }
+
+    // Step 7.
+    if (k < 0 || k >= len) {
+        return undefined;
+    }
+
+    // Step 8.
+    return string[k];
+}
+
 // ES6 draft 2014-04-27 B.2.3.3
 function String_big() {
     if (this === undefined || this === null)
