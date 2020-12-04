@@ -80,19 +80,31 @@ class ID3Parser {
     int mPos;
   };
 
+  // Check if the buffer is starting with ID3v2 tag.
+  static bool IsBufferStartingWithID3Tag(BufferReader* aReader);
+
   // Returns the parsed ID3 header. Note: check for validity.
   const ID3Header& Header() const;
 
+  // Returns the size of all parsed ID3 headers.
+  uint32_t TotalHeadersSize() const;
+
   // Parses contents of given BufferReader for a valid ID3v2 header.
-  // Returns the total ID3v2 tag size if successful and zero otherwise.
-  Result<uint32_t, nsresult> Parse(BufferReader* aReader);
+  // Returns the parsed ID3v2 tag size if successful and zero otherwise.
+  uint32_t Parse(BufferReader* aReader);
 
   // Resets the state to allow for a new parsing session.
   void Reset();
 
  private:
+  uint32_t ParseInternal(BufferReader* aReader);
+
   // The currently parsed ID3 header. Reset via Reset, updated via Parse.
   ID3Header mHeader;
+  // If a file contains multiple ID3 headers, then we would only select the
+  // latest one, but keep the size of former abandoned in order to return the
+  // correct size offset.
+  uint32_t mFormerID3Size = 0;
 };
 
 // MPEG audio frame parser.
@@ -297,6 +309,9 @@ class FrameParser {
 
   // Returns the parsed ID3 header. Note: check for validity.
   const ID3Parser::ID3Header& ID3Header() const;
+
+  // Returns the size of all parsed ID3 headers.
+  uint32_t TotalID3HeaderSize() const;
 
   // Returns the parsed VBR header info. Note: check for validity by type.
   const VBRHeader& VBRInfo() const;
