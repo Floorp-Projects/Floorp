@@ -38,7 +38,7 @@ class MacosDevice(Layer):
             universal_newlines=True,
         )
 
-        stdout, stderr = p.communicate(timeout=15)
+        stdout, stderr = p.communicate(timeout=45)
         if p.returncode != 0:
             raise subprocess.CalledProcessError(
                 stdout=stdout, stderr=stderr, returncode=p.returncode
@@ -48,6 +48,9 @@ class MacosDevice(Layer):
 
     def extract_app(self, dmg, target):
         mount = Path(tempfile.mkdtemp())
+
+        if not Path(dmg).exists():
+            raise FileNotFoundError(dmg)
 
         # mounting the DMG with hdiutil
         cmd = f"hdiutil attach -nobrowse -mountpoint {str(mount)} {dmg}"

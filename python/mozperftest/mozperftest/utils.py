@@ -14,6 +14,7 @@ import shutil
 import importlib
 import subprocess
 import shlex
+import functools
 
 from redo import retry
 from requests.packages.urllib3.util.retry import Retry
@@ -412,6 +413,7 @@ _URL = (
 _DEFAULT_SERVER = "https://firefox-ci-tc.services.mozilla.com"
 
 
+@functools.lru_cache()
 def get_tc_secret():
     """Returns the Taskcluster secret.
 
