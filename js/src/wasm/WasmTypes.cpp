@@ -437,6 +437,13 @@ uint32_t Export::globalIndex() const {
   return pod.index_;
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+uint32_t Export::eventIndex() const {
+  MOZ_ASSERT(pod.kind_ == DefinitionKind::Event);
+  return pod.index_;
+}
+#endif
+
 uint32_t Export::tableIndex() const {
   MOZ_ASSERT(pod.kind_ == DefinitionKind::Table);
   return pod.index_;

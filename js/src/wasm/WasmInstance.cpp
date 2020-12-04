@@ -1365,7 +1365,9 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    SharedCode code, UniqueTlsData tlsDataIn,
-                   HandleWasmMemoryObject memory, SharedTableVector&& tables,
+                   HandleWasmMemoryObject memory,
+                   SharedExceptionTagVector&& exceptionTags,
+                   SharedTableVector&& tables,
                    StructTypeDescrVector&& structTypeDescrs,
                    UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
@@ -1379,6 +1381,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       code_(code),
       tlsData_(std::move(tlsDataIn)),
       memory_(memory),
+      exceptionTags_(std::move(exceptionTags)),
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug)),
       structTypeDescrs_(std::move(structTypeDescrs)) {}
@@ -1389,6 +1392,12 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
                     const DataSegmentVector& dataSegments,
                     const ElemSegmentVector& elemSegments) {
   MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
+#ifdef ENABLE_WASM_EXCEPTIONS
+  // Currently the only events are exceptions.
+  MOZ_ASSERT(exceptionTags_.length() == metadata().events.length());
+#else
+  MOZ_ASSERT(exceptionTags_.length() == 0);
+#endif
   MOZ_ASSERT(structTypeDescrs_.length() == structTypes().length());
 
 #ifdef DEBUG

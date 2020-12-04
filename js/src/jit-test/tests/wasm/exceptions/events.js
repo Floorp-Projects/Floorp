@@ -86,3 +86,75 @@ wasmError(
   WebAssembly.CompileError,
   /expected custom section/
 );
+
+(() => {
+  const body = [1];
+  body.push(...string("mod"));
+  body.push(...string("exn"));
+  body.push(...varU32(EventCode));
+
+  wasmError(
+    moduleWithSections([
+      sigSection([emptyType]),
+      { name: importId, body: body },
+    ]),
+    WebAssembly.CompileError,
+    /expected event kind/
+  );
+
+  body.push(...varU32(0));
+  wasmError(
+    moduleWithSections([
+      sigSection([emptyType]),
+      { name: importId, body: body },
+    ]),
+    WebAssembly.CompileError,
+    /expected function index in event/
+  );
+
+  body.push(...varU32(1));
+  wasmError(
+    moduleWithSections([
+      sigSection([emptyType]),
+      { name: importId, body: body },
+    ]),
+    WebAssembly.CompileError,
+    /function type index in event out of bounds/
+  );
+})();
+
+wasmEval(
+  moduleWithSections([
+    sigSection([emptyType]),
+    memorySection(0),
+    eventSection([{ type: 0 }]),
+    exportSection([{ eventIndex: 0, name: "exn" }]),
+  ])
+);
+
+wasmError(
+  moduleWithSections([
+    sigSection([emptyType]),
+    memorySection(0),
+    eventSection([{ type: 0 }]),
+    exportSection([{ eventIndex: 1, name: "exn" }]),
+  ]),
+  WebAssembly.CompileError,
+  /exported event index out of bounds/
+);
+
+(() => {
+  const body = [1];
+  body.push(...string("exn"));
+  body.push(...varU32(EventCode));
+  wasmError(
+    moduleWithSections([
+      sigSection([emptyType]),
+      memorySection(0),
+      eventSection([{ type: 0 }]),
+      { name: exportId, body: body },
+    ]),
+    WebAssembly.CompileError,
+    /expected event index/
+  );
+})();

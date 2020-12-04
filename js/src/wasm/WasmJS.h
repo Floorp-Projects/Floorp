@@ -344,6 +344,7 @@ class WasmInstanceObject : public NativeObject {
       const wasm::DataSegmentVector& dataSegments,
       const wasm::ElemSegmentVector& elemSegments, wasm::UniqueTlsData tlsData,
       HandleWasmMemoryObject memory,
+      Vector<RefPtr<wasm::ExceptionTag>, 0, SystemAllocPolicy>&& exceptionTags,
       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
       GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>&&
           structTypeDescrs,
