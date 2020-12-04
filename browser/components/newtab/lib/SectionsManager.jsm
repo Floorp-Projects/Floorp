@@ -43,6 +43,7 @@ const BUILT_IN_SECTIONS = {
               name: "showSponsored",
               titleString: "home-prefs-recommended-by-option-sponsored-stories",
               icon: "icon-info",
+              eventSource: "POCKET_SPOCS",
             },
           ]
         : [],

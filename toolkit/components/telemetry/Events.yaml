@@ -51,6 +51,7 @@ activity_stream:
       "OPEN_NEW_WINDOW",
       "OPEN_PRIVATE_WINDOW",
       "PIN",
+      "PREF_CHANGED",
       "PREVIEW_REQUEST",
       "SAVE_TO_POCKET",
       "SEARCH",
