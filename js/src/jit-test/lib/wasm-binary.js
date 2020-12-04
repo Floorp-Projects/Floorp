@@ -25,14 +25,16 @@ const elemId           = 9;
 const codeId           = 10;
 const dataId           = 11;
 const dataCountId      = 12;
+const eventId          = 13;
 
 // User-defined section names
 const nameName         = "name";
 
 // Name section name types
-const nameTypeModule   = 0;
-const nameTypeFunction = 1;
-const nameTypeLocal    = 2;
+const nameTypeModule    = 0;
+const nameTypeFunction  = 1;
+const nameTypeLocal     = 2;
+const nameTypeEvent     = 3;
 
 // Type codes
 const I32Code          = 0x7f;
@@ -50,7 +52,10 @@ const VoidCode         = 0x40;
 // Opcodes
 const UnreachableCode  = 0x00
 const BlockCode        = 0x02;
+const TryCode          = 0x06;
+const CatchCode        = 0x07;
 const EndCode          = 0x0b;
+const ReturnCode       = 0x0f;
 const CallCode         = 0x10;
 const CallIndirectCode = 0x11;
 const DropCode         = 0x1a;
@@ -139,6 +144,7 @@ const MozPrefix = 0xff;
 
 const definedOpcodes =
     [0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+     0x06, 0x07, 0x08, 0x09, 0x0a, // Exception handling opcodes
      0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
      0x10, 0x11,
      0x1a, 0x1b, 0x1c,
@@ -201,6 +207,7 @@ const FunctionCode     = 0x00;
 const TableCode        = 0x01;
 const MemoryCode       = 0x02;
 const GlobalCode       = 0x03;
+const EventCode        = 0x04;
 
 // ResizableFlags
 const HasMaximumFlag   = 0x1;
@@ -352,6 +359,16 @@ function memorySection(initialSize) {
     body.push(...varU32(0x0));         // for now, no maximum
     body.push(...varU32(initialSize));
     return { name: memoryId, body };
+}
+
+function eventSection(events) {
+    var body = [];
+    body.push(...varU32(events.length));
+    for (let event of events) {
+        body.push(...varU32(0)); // exception attribute
+        body.push(...varU32(event.type));
+    }
+    return { name: eventId, body };
 }
 
 function dataSection(segmentArrays) {

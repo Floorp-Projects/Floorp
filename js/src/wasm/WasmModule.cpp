@@ -1136,6 +1136,10 @@ static bool CreateExportObject(
         }
         break;
       }
+#ifdef ENABLE_WASM_EXCEPTIONS
+      case DefinitionKind::Event:
+        MOZ_CRASH("NYI");
+#endif
     }
 
     if (!JS_DefinePropertyById(cx, exportObj, id, val, propertyAttr)) {

@@ -252,6 +252,9 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     size_t currentTableExportId = 0;
     size_t currentMemoryExportId = 0;
     size_t currentGlobalExportId = 0;
+#ifdef ENABLE_WASM_EXCEPTIONS
+    size_t currentEventExportId = 0;
+#endif
 
     for (const Import& import : importVec) {
       // First try to get the namespace object, create one if this is the
@@ -321,6 +324,17 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
               return 0;
             }
             break;
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+          case DefinitionKind::Event:
+            // TODO: Pass a dummy defaultValue
+            if (!assignImportKind<WasmExceptionObject>(
+                    import, obj, lastExportsObj, lastExportIds,
+                    &currentEventExportId, exportsLength, nullValue)) {
+              return 0;
+            }
+            break;
+#endif
         }
       }
     }
