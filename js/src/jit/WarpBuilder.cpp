@@ -2272,22 +2272,6 @@ bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
   return true;
 }
 
-bool WarpBuilder::build_NewArrayCopyOnWrite(BytecodeLocation loc) {
-  MOZ_CRASH("Bug 1626854: COW arrays disabled without TI for now");
-
-  ArrayObject* templateObject = &loc.getObject(script_)->as<ArrayObject>();
-
-  // TODO: pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
-  MConstant* templateConst = MConstant::NewObject(alloc(), templateObject);
-  current->add(templateConst);
-
-  auto* ins = MNewArrayCopyOnWrite::New(alloc(), templateConst, heap);
-  current->add(ins);
-  current->push(ins);
-  return true;
-}
-
 bool WarpBuilder::build_NewObject(BytecodeLocation loc) {
   // TODO: support pre-tenuring.
   gc::InitialHeap heap = gc::DefaultHeap;

@@ -20,12 +20,9 @@ class NativeTemplateObject;
 class TemplateObject {
  protected:
   JSObject* obj_;
-  bool denseElementsAreCopyOnWrite_;
 
  public:
-  explicit TemplateObject(JSObject* obj)
-      : obj_(obj), denseElementsAreCopyOnWrite_(false) {}
-  void setDenseElementsAreCopyOnWrite() { denseElementsAreCopyOnWrite_ = true; }
+  explicit TemplateObject(JSObject* obj) : obj_(obj) {}
 
   inline gc::AllocKind getAllocKind() const;
 
@@ -62,9 +59,6 @@ class NativeTemplateObject : public TemplateObject {
 
   // Reading ObjectElements fields is safe, except for the flags.
   // isSharedMemory is an exception: it's debug-only and not called on arrays.
-  bool denseElementsAreCopyOnWrite() const {
-    return denseElementsAreCopyOnWrite_;
-  }
 #ifdef DEBUG
   inline bool isSharedMemory() const;
 #endif

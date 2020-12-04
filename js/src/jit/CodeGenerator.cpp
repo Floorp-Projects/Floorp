@@ -7083,24 +7083,6 @@ void CodeGenerator::visitOutOfLineNewArray(OutOfLineNewArray* ool) {
   masm.jump(ool->rejoin());
 }
 
-void CodeGenerator::visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir) {
-  Register objReg = ToRegister(lir->output());
-  Register tempReg = ToRegister(lir->temp());
-  ArrayObject* templateObject = lir->mir()->templateObject();
-  gc::InitialHeap initialHeap = lir->mir()->initialHeap();
-
-  // If we have a template object, we can inline call object creation.
-  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject);
-  OutOfLineCode* ool = oolCallVM<Fn, js::NewDenseCopyOnWriteArray>(
-      lir, ArgList(ImmGCPtr(templateObject)), StoreRegisterTo(objReg));
-
-  TemplateObject templateObj(templateObject);
-  templateObj.setDenseElementsAreCopyOnWrite();
-  masm.createGCObject(objReg, tempReg, templateObj, initialHeap, ool->entry());
-
-  masm.bind(ool->rejoin());
-}
-
 void CodeGenerator::visitNewArrayDynamicLength(LNewArrayDynamicLength* lir) {
   Register lengthReg = ToRegister(lir->length());
   Register objReg = ToRegister(lir->output());

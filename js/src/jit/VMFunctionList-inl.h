@@ -182,12 +182,10 @@ namespace jit {
     js::NamedLambdaObject::createTemplateObject)                               \
   _(NativeGetElement, js::NativeGetElement)                                    \
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
-  _(NewArrayCopyOnWriteOperation, js::NewArrayCopyOnWriteOperation)            \
   _(NewArrayIterator, js::NewArrayIterator)                                    \
   _(NewArrayOperation, js::NewArrayOperation)                                  \
   _(NewArrayWithGroup, js::NewArrayWithGroup)                                  \
   _(NewCallObject, js::jit::NewCallObject)                                     \
-  _(NewDenseCopyOnWriteArray, js::NewDenseCopyOnWriteArray)                    \
   _(NewObjectOperation, js::NewObjectOperation)                                \
   _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \
   _(NewRegExpStringIterator, js::NewRegExpStringIterator)                      \
