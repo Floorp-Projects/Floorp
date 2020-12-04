@@ -253,7 +253,15 @@ void vprintf_stderr(const char* aFmt, va_list aArgs) {
     }
   }
 
-  vfprintf(stderr, aFmt, aArgs);
+  FILE* fp = _fdopen(_dup(2), "a");
+  if (!fp) {
+    return;
+  }
+
+  vfprintf(fp, aFmt, aArgs);
+
+  AutoSuspendLateWriteChecks suspend;
+  fclose(fp);
 }
 
 #elif defined(ANDROID)
