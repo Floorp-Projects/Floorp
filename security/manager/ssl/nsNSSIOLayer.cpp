@@ -737,33 +737,45 @@ NS_IMETHODIMP
 nsNSSSocketInfo::SetEchConfig(const nsACString& aEchConfig) {
   mEchConfig = aEchConfig;
 
+#if 0
   if (mEchConfig.Length()) {
-    if (SECSuccess !=
-        SSL_SetClientEchConfigs(
-            mFd, reinterpret_cast<const PRUint8*>(aEchConfig.BeginReading()),
-            aEchConfig.Length())) {
+    nsAutoCString echBin;
+    if (NS_OK != Base64Decode(mEchConfig, echBin)) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+              ("[%p] Invalid EchConfig record. Couldn't base64 decode\n",
+               (void*)mFd));
+      return NS_OK;
+    }
+
+    if (SECSuccess != SSL_SetClientEchConfigs(
+                          mFd, reinterpret_cast<const PRUint8*>(echBin.get()),
+                          echBin.Length())) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error,
               ("[%p] Invalid EchConfig record %s\n", (void*)mFd,
                PR_ErrorToName(PR_GetError())));
       return NS_OK;
     }
   }
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetRetryEchConfig(nsACString& aEchConfig) {
+#if 0
   if (!mFd) {
     return NS_ERROR_FAILURE;
   }
 
-  ScopedAutoSECItem retryConfigItem;
-  SECStatus rv = SSL_GetEchRetryConfigs(mFd, &retryConfigItem);
+  SECItem* item = nullptr;
+  SECStatus rv = SSL_GetEchRetryConfigs(mFd, &item);
   if (rv != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
-  aEchConfig = nsCString(reinterpret_cast<const char*>(retryConfigItem.data),
-                         retryConfigItem.len);
+
+  UniqueSECItem retryConfigItem(item);
+  memcpy(aEchConfig.BeginWriting(), retryConfigItem->data, retryConfigItem->len);
+#endif
   return NS_OK;
 }
 
