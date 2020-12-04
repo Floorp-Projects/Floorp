@@ -39,6 +39,7 @@ public class WebExtensionController {
     // Map [ (extensionId, nativeApp, session) -> message ]
     private final MultiMap<MessageRecipient, Message> mPendingMessages;
     private final MultiMap<String, Message> mPendingNewTab;
+    private final MultiMap<String, Message> mPendingBrowsingData;
 
     private static class Message {
         final GeckoBundle bundle;
@@ -167,6 +168,23 @@ public class WebExtensionController {
         @Override
         public WebExtension.ActionDelegate getActionDelegate() {
             return mListener.getActionDelegate(mExtension);
+        }
+
+        @Override
+        public void onBrowsingDataDelegate(final WebExtension.BrowsingDataDelegate delegate) {
+            mListener.setBrowsingDataDelegate(mExtension, delegate);
+
+            for (final Message message : mPendingBrowsingData.get(mExtension.id)) {
+                WebExtensionController.this.handleMessage(message.event,
+                        message.bundle, message.callback, message.session);
+            }
+
+            mPendingBrowsingData.remove(mExtension.id);
+        }
+
+        @Override
+        public WebExtension.BrowsingDataDelegate getBrowsingDataDelegate() {
+            return mListener.getBrowsingDataDelegate(mExtension);
         }
 
         @Override
@@ -770,6 +788,7 @@ public class WebExtensionController {
         mListener = new WebExtension.Listener<>(runtime);
         mPendingMessages = new MultiMap<>();
         mPendingNewTab = new MultiMap<>();
+        mPendingBrowsingData = new MultiMap<>();
         mExtensions.setObserver(mInternals);
     }
 
@@ -829,6 +848,12 @@ public class WebExtensionController {
                 return;
             } else if ("GeckoView:WebExtension:OpenOptionsPage".equals(event)) {
                 openOptionsPage(message, extension);
+                return;
+            } else if ("GeckoView:BrowsingData:GetSettings".equals(event)) {
+                getSettings(message, extension);
+                return;
+            } else if ("GeckoView:BrowsingData:Clear".equals(event)) {
+                browsingDataClear(message, extension);
                 return;
             }
             final String nativeApp = bundle.getString("nativeApp");
@@ -933,6 +958,55 @@ public class WebExtensionController {
             callback.sendSuccess(response);
         });
     }
+
+    private void getSettings(final Message message, final WebExtension extension) {
+        final WebExtension.BrowsingDataDelegate delegate =
+                mListener.getBrowsingDataDelegate(extension);
+        if (delegate == null) {
+            mPendingBrowsingData.add(extension.id, message);
+            return;
+        }
+
+        final GeckoResult<WebExtension.BrowsingDataDelegate.Settings> settingsResult =
+                delegate.onGetSettings();
+        if (settingsResult == null) {
+            message.callback.sendError("browsingData.settings is not supported");
+            return;
+        }
+        settingsResult.accept(
+                settings -> {
+                    message.callback.sendSuccess(settings.toGeckoBundle());
+                },
+                message.callback::sendError);
+    }
+
+    private void browsingDataClear(final Message message, final WebExtension extension) {
+        final WebExtension.BrowsingDataDelegate delegate =
+                mListener.getBrowsingDataDelegate(extension);
+        if (delegate == null) {
+            mPendingBrowsingData.add(extension.id, message);
+            return;
+        }
+
+        final long unixTimestamp = message.bundle.getLong("since");
+        final String dataType = message.bundle.getString("dataType");
+
+        final GeckoResult<Void> response;
+        if ("downloads".equals(dataType)) {
+            response = delegate.onClearDownloads(unixTimestamp);
+        } else if ("formData".equals(dataType)) {
+            response = delegate.onClearFormData(unixTimestamp);
+        } else if ("history".equals(dataType)) {
+            response = delegate.onClearHistory(unixTimestamp);
+        } else if ("passwords".equals(dataType)) {
+            response = delegate.onClearPasswords(unixTimestamp);
+        } else {
+            throw new IllegalStateException("Illegal clear data type: " + dataType);
+        }
+
+        message.callback.resolveTo(response);
+    }
+
 
     /* package */ void openOptionsPage(
             final Message message,

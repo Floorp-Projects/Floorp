@@ -63,8 +63,10 @@ public class WebExtension {
     /* package */ interface DelegateController {
         void onMessageDelegate(final String nativeApp, final MessageDelegate delegate);
         void onActionDelegate(final ActionDelegate delegate);
+        void onBrowsingDataDelegate(final BrowsingDataDelegate delegate);
         void onTabDelegate(final TabDelegate delegate);
         ActionDelegate getActionDelegate();
+        BrowsingDataDelegate getBrowsingDataDelegate();
         TabDelegate getTabDelegate();
     }
 
@@ -171,6 +173,173 @@ public class WebExtension {
                                    final @NonNull String nativeApp) {
         if (mDelegateController != null) {
             mDelegateController.onMessageDelegate(nativeApp, messageDelegate);
+        }
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @LongDef(value = {
+            BrowsingDataDelegate.Type.CACHE,
+            BrowsingDataDelegate.Type.COOKIES,
+            BrowsingDataDelegate.Type.DOWNLOADS,
+            BrowsingDataDelegate.Type.FORM_DATA,
+            BrowsingDataDelegate.Type.HISTORY,
+            BrowsingDataDelegate.Type.LOCAL_STORAGE,
+            BrowsingDataDelegate.Type.PASSWORDS
+    }, flag = true)
+    @interface BrowsingDataTypes {}
+
+    /**
+     * This delegate is used to handle calls from the |browsingData| WebExtension API.
+     *
+     * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/browsingData">
+     *     WebExtensions/API/browsingData
+     * </a>
+     */
+    @UiThread
+    public interface BrowsingDataDelegate {
+        /**
+         * This class represents the current default settings for the "Clear Data"
+         * functionality in the browser.
+         *
+         * See also: <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/browsingData/settings">
+         *     WebExtensions/API/browsingData/settings
+         * </a>
+         */
+        @UiThread
+        class Settings {
+            /**
+             * Currently selected setting in the browser's "Clear Data" UI for
+             * how far back in time to remove data given in milliseconds
+             * since the UNIX epoch.
+             */
+            final public int sinceUnixTimestamp;
+            /**
+             * Data types that can be toggled in the browser's "Clear Data" UI.
+             * One or more flags from {@link Type}.
+             */
+            final public @BrowsingDataTypes long toggleableTypes;
+
+            /**
+             * Data types currently selected in the browser's "Clear Data" UI.
+             * One or more flags from {@link Type}.
+             */
+            final public @BrowsingDataTypes long selectedTypes;
+
+            /**
+             * Creates an instance of Settings.
+             *
+             * This class represents the current default settings for the "Clear Data"
+             * functionality in the browser.
+             *
+             * @param since Currently selected setting in the browser's "Clear Data" UI for
+             *              how far back in time to remove data given in milliseconds
+             *              since the UNIX epoch.
+             * @param toggleableTypes Data types that can be toggled in the browser's
+             *                        "Clear Data" UI. One or more flags from {@link Type}.
+             * @param selectedTypes   Data types currently selected in the browser's
+             *                        "Clear Data" UI. One or more flags from {@link Type}.
+             */
+            @UiThread
+            public Settings(final int since,
+                            final @BrowsingDataTypes long toggleableTypes,
+                            final @BrowsingDataTypes long selectedTypes) {
+                this.toggleableTypes = toggleableTypes;
+                this.selectedTypes = selectedTypes;
+                this.sinceUnixTimestamp = since;
+            }
+
+            private GeckoBundle fromBrowsingDataType(final @BrowsingDataTypes long types) {
+                final GeckoBundle result = new GeckoBundle(7);
+                result.putBoolean("cache", (types & Type.CACHE) != 0);
+                result.putBoolean("cookies", (types & Type.COOKIES) != 0);
+                result.putBoolean("downloads", (types & Type.DOWNLOADS) != 0);
+                result.putBoolean("formData", (types & Type.FORM_DATA) != 0);
+                result.putBoolean("history", (types & Type.HISTORY) != 0);
+                result.putBoolean("localStorage", (types & Type.LOCAL_STORAGE) != 0);
+                result.putBoolean("passwords", (types & Type.PASSWORDS) != 0);
+                return result;
+            }
+
+            /* package */ GeckoBundle toGeckoBundle() {
+                final GeckoBundle options = new GeckoBundle(1);
+                options.putLong("since", sinceUnixTimestamp);
+
+                final GeckoBundle result = new GeckoBundle(3);
+                result.putBundle("options", options);
+                result.putBundle("dataToRemove", fromBrowsingDataType(selectedTypes));
+                result.putBundle("dataRemovalPermitted", fromBrowsingDataType(toggleableTypes));
+                return result;
+            }
+        }
+
+        /**
+         * Types of data that a browser "Clear Data" UI might have access to.
+         */
+        class Type {
+            protected Type() {}
+            final public static long CACHE = 1 << 0;
+            final public static long COOKIES = 1 << 1;
+            final public static long DOWNLOADS = 1 << 2;
+            final public static long FORM_DATA = 1 << 3;
+            final public static long HISTORY = 1 << 4;
+            final public static long LOCAL_STORAGE = 1 << 5;
+            final public static long PASSWORDS = 1 << 6;
+        }
+
+        /**
+         * Gets current settings for the browser's "Clear Data" UI.
+         *
+         * @return a {@link GeckoResult} that resolves to an instance of {@link Settings} that
+         *         represents the current state for the browser's "Clear Data" UI.
+         * @see Settings
+         */
+        @Nullable
+        default GeckoResult<Settings> onGetSettings() {
+            return null;
+        }
+
+        /**
+         * Clear form data created after the given timestamp.
+         *
+         * @param sinceUnixTimestamp timestamp in seconds since the UNIX Epoch.
+         * @return a {@link GeckoResult} that resolves when data has been cleared.
+         */
+        @Nullable
+        default GeckoResult<Void> onClearFormData(final long sinceUnixTimestamp) {
+            return null;
+        }
+
+        /**
+         * Clear passwords saved after the given timestamp.
+         *
+         * @param sinceUnixTimestamp timestamp in seconds since the UNIX Epoch.
+         * @return a {@link GeckoResult} that resolves when data has been cleared.
+         */
+        @Nullable
+        default GeckoResult<Void> onClearPasswords(final long sinceUnixTimestamp) {
+            return null;
+        }
+
+        /**
+         * Clear history saved after the given timestamp.
+         *
+         * @param sinceUnixTimestamp timestamp in seconds since the UNIX Epoch.
+         * @return a {@link GeckoResult} that resolves when data has been cleared.
+         */
+        @Nullable
+        default GeckoResult<Void> onClearHistory(final long sinceUnixTimestamp) {
+            return null;
+        }
+
+        /**
+         * Clear downloads created after the given timestamp.
+         *
+         * @param sinceUnixTimestamp timestamp in seconds since the UNIX Epoch.
+         * @return a {@link GeckoResult} that resolves when data has been cleared.
+         */
+        @Nullable
+        default GeckoResult<Void> onClearDownloads(final long sinceUnixTimestamp) {
+            return null;
         }
     }
 
@@ -651,6 +820,18 @@ public class WebExtension {
         }
     }
 
+    @UiThread
+    @Nullable
+    public BrowsingDataDelegate getBrowsingDataDelegate() {
+        return mDelegateController.getBrowsingDataDelegate();
+    }
+
+    @UiThread
+    public void setBrowsingDataDelegate(final @Nullable BrowsingDataDelegate delegate) {
+        if (mDelegateController != null) {
+            mDelegateController.onBrowsingDataDelegate(delegate);
+        }
+    }
 
     private static class Sender {
         public String webExtensionId;
@@ -803,14 +984,16 @@ public class WebExtension {
     }
 
     /* package */ final static class Listener<TabDelegate> implements BundleEventListener {
-        final private HashMap<Sender, WebExtension.MessageDelegate> mMessageDelegates;
-        final private HashMap<String, WebExtension.ActionDelegate> mActionDelegates;
+        final private HashMap<Sender, MessageDelegate> mMessageDelegates;
+        final private HashMap<String, ActionDelegate> mActionDelegates;
+        final private HashMap<String, BrowsingDataDelegate> mBrowsingDataDelegates;
         final private HashMap<String, TabDelegate> mTabDelegates;
 
         final private GeckoSession mSession;
         final private EventDispatcher mEventDispatcher;
 
         private boolean mActionDelegateRegistered = false;
+        private boolean mBrowsingDataDelegateRegistered = false;
         private boolean mTabDelegateRegistered = false;
 
         public GeckoRuntime runtime;
@@ -837,6 +1020,7 @@ public class WebExtension {
         private Listener(final GeckoSession session, final GeckoRuntime runtime) {
             mMessageDelegates = new HashMap<>();
             mActionDelegates = new HashMap<>();
+            mBrowsingDataDelegates = new HashMap<>();
             mTabDelegates = new HashMap<>();
             mEventDispatcher = session != null
                     ? session.getEventDispatcher()
@@ -850,12 +1034,15 @@ public class WebExtension {
                     "GeckoView:WebExtension:Message",
                     "GeckoView:WebExtension:PortMessage",
                     "GeckoView:WebExtension:Connect",
-                    "GeckoView:WebExtension:Disconnect");
+                    "GeckoView:WebExtension:Disconnect",
+                    "GeckoView:BrowsingData:GetSettings",
+                    "GeckoView:BrowsingData:Clear");
         }
 
         public void unregisterWebExtension(final WebExtension extension) {
             mMessageDelegates.remove(extension.id);
             mActionDelegates.remove(extension.id);
+            mBrowsingDataDelegates.remove(extension.id);
             mTabDelegates.remove(extension.id);
         }
 
@@ -877,6 +1064,15 @@ public class WebExtension {
 
         public TabDelegate getTabDelegate(final WebExtension webExtension) {
             return mTabDelegates.get(webExtension.id);
+        }
+
+        public void setBrowsingDataDelegate(final WebExtension webExtension,
+                                            final BrowsingDataDelegate delegate) {
+            mBrowsingDataDelegates.put(webExtension.id, delegate);
+        }
+
+        public BrowsingDataDelegate getBrowsingDataDelegate(final WebExtension webExtension) {
+            return mBrowsingDataDelegates.get(webExtension.id);
         }
 
         public void setActionDelegate(final WebExtension webExtension,

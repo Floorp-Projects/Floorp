@@ -6,6 +6,12 @@
     "manifest": ["browser_action"],
     "paths": [["browserAction"]]
   },
+  "browsingData": {
+    "url": "chrome://extensions/content/parent/ext-browsingData.js",
+    "schema": "chrome://extensions/content/schemas/browsing_data.json",
+    "scopes": ["addon_parent"],
+    "paths": [["browsingData"]]
+  },
   "pageAction": {
     "url": "chrome://geckoview/content/ext-pageAction.js",
     "schema": "chrome://extensions/content/schemas/page_action.json",
