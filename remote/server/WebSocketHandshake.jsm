@@ -82,8 +82,10 @@ function processRequest({ requestLine, headers }) {
   }
 
   const upgrade = headers.get("upgrade");
-  if (!upgrade || upgrade !== "websocket") {
-    throw new Error("The handshake request has incorrect Upgrade header");
+  if (!upgrade || upgrade.toLowerCase() !== "websocket") {
+    throw new Error(
+      `The handshake request has incorrect Upgrade header: ${upgrade}`
+    );
   }
 
   const connection = headers.get("connection");
