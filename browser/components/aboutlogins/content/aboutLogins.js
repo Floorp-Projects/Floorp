@@ -129,6 +129,10 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
 });
 
 window.addEventListener("AboutLoginsRemoveAllLoginsDialog", () => {
+  let loginItem = document.querySelector("login-item");
+  if (loginItem.dataset.editing) {
+    loginItem._toggleEditing();
+  }
   let options = {};
   if (fxaLoggedIn && passwordSyncEnabled) {
     options.title = "about-logins-confirm-remove-all-sync-dialog-title";
