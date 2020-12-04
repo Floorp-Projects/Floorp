@@ -2032,6 +2032,16 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
+static bool EventIsJSCompatible(Decoder& d, ResultType type) {
+  for (uint32_t i = 0; i < type.length(); i++) {
+    if (type[i].isTypeIndex()) {
+      return d.fail("cannot expose indexed reference type");
+    }
+  }
+
+  return true;
+}
+
 static bool DecodeEvent(Decoder& d, ModuleEnvironment* env,
                         EventKind* eventKind, uint32_t* funcTypeIndex) {
   uint32_t eventCode;
@@ -2132,6 +2142,29 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       }
       break;
     }
+#ifdef ENABLE_WASM_EXCEPTIONS
+    case DefinitionKind::Event: {
+      EventKind eventKind;
+      uint32_t funcTypeIndex;
+      if (!DecodeEvent(d, env, &eventKind, &funcTypeIndex)) {
+        return false;
+      }
+      ResultType args =
+          ResultType::Vector(env->types[funcTypeIndex].funcType().args());
+#  ifdef WASM_PRIVATE_REFTYPES
+      if (!EventIsJSCompatible(d, args)) {
+        return false;
+      }
+#  endif
+      if (!env->events.append(EventDesc(eventKind, args))) {
+        return false;
+      }
+      if (env->events.length() > MaxEvents) {
+        return d.fail("too many events");
+      }
+      break;
+    }
+#endif
     default:
       return d.fail("unsupported import kind");
   }
@@ -2590,6 +2623,27 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
       return env->exports.emplaceBack(std::move(fieldName), globalIndex,
                                       DefinitionKind::Global);
     }
+#ifdef ENABLE_WASM_EXCEPTIONS
+    case DefinitionKind::Event: {
+      uint32_t eventIndex;
+      if (!d.readVarU32(&eventIndex)) {
+        return d.fail("expected event index");
+      }
+      if (eventIndex >= env->events.length()) {
+        return d.fail("exported event index out of bounds");
+      }
+
+#  ifdef WASM_PRIVATE_REFTYPES
+      if (!EventIsJSCompatible(d, env->events[eventIndex].type)) {
+        return false;
+      }
+#  endif
+
+      env->events[eventIndex].isExport = true;
+      return env->exports.emplaceBack(std::move(fieldName), eventIndex,
+                                      DefinitionKind::Event);
+    }
+#endif
     default:
       return d.fail("unexpected export kind");
   }

@@ -52,6 +52,7 @@ class Instance {
   const SharedCode code_;
   const UniqueTlsData tlsData_;
   const GCPtrWasmMemoryObject memory_;
+  const SharedExceptionTagVector exceptionTags_;
   const SharedTableVector tables_;
   DataSegmentVector passiveDataSegments_;
   ElemSegmentVector passiveElemSegments_;
@@ -73,7 +74,8 @@ class Instance {
  public:
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
            UniqueTlsData tlsData, HandleWasmMemoryObject memory,
-           SharedTableVector&& tables, StructTypeDescrVector&& structTypeDescrs,
+           SharedExceptionTagVector&& exceptionTags, SharedTableVector&& tables,
+           StructTypeDescrVector&& structTypeDescrs,
            UniqueDebugState maybeDebug);
   ~Instance();
   bool init(JSContext* cx, const JSFunctionVector& funcImports,
@@ -113,6 +115,9 @@ class Instance {
   SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
   bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
   bool memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const;
+  const SharedExceptionTagVector& exceptionTags() const {
+    return exceptionTags_;
+  }
   const StructTypeVector& structTypes() const { return code_->structTypes(); }
 
   static constexpr size_t offsetOfJSJitArgsRectifier() {

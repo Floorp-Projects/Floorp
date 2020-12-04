@@ -675,6 +675,10 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
   const Metadata& metadata = module.metadata();
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+  uint32_t eventIndex = 0;
+  const EventDescVector& events = metadata.events;
+#endif
   uint32_t globalIndex = 0;
   const GlobalDescVector& globals = metadata.globals;
   uint32_t tableIndex = 0;
@@ -736,6 +740,33 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
         imports->memory = &v.toObject().as<WasmMemoryObject>();
         break;
       }
+#ifdef ENABLE_WASM_EXCEPTIONS
+      case DefinitionKind::Event: {
+        const uint32_t index = eventIndex++;
+        if (!v.isObject() || !v.toObject().is<WasmExceptionObject>()) {
+          return ThrowBadImportType(cx, import.field.get(), "Exception");
+        }
+
+        RootedWasmExceptionObject obj(cx,
+                                      &v.toObject().as<WasmExceptionObject>());
+
+        // Checks whether the signature of the imported exception object matches
+        // the signature declared in the exception import's EventDesc.
+        ResultType args = ResultType::Vector(obj->valueTypes());
+        if (args != events[index].type) {
+          JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                   JSMSG_WASM_BAD_EXN_SIG, import.module.get(),
+                                   import.field.get());
+          return false;
+        }
+
+        if (!imports->exceptionObjs.append(obj)) {
+          ReportOutOfMemory(cx);
+          return false;
+        }
+        break;
+      }
+#endif
       case DefinitionKind::Global: {
         const uint32_t index = globalIndex++;
         const GlobalDesc& global = globals[index];
@@ -803,11 +834,6 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
         break;
       }
-#ifdef ENABLE_WASM_EXCEPTIONS
-      case DefinitionKind::Event: {
-        MOZ_CRASH("NYI");
-      }
-#endif
     }
   }
 
@@ -1231,10 +1257,11 @@ struct KindNames {
   RootedPropertyName kind;
   RootedPropertyName table;
   RootedPropertyName memory;
+  RootedPropertyName event;
   RootedPropertyName signature;
 
   explicit KindNames(JSContext* cx)
-      : kind(cx), table(cx), memory(cx), signature(cx) {}
+      : kind(cx), table(cx), memory(cx), event(cx), signature(cx) {}
 };
 
 static bool InitKindNames(JSContext* cx, KindNames* names) {
@@ -1255,6 +1282,14 @@ static bool InitKindNames(JSContext* cx, KindNames* names) {
     return false;
   }
   names->memory = memory->asPropertyName();
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  JSAtom* event = Atomize(cx, "event", strlen("event"));
+  if (!event) {
+    return false;
+  }
+  names->event = event->asPropertyName();
+#endif
 
   JSAtom* signature = Atomize(cx, "signature", strlen("signature"));
   if (!signature) {
@@ -1278,7 +1313,7 @@ static JSString* KindToString(JSContext* cx, const KindNames& names,
       return cx->names().global;
 #ifdef ENABLE_WASM_EXCEPTIONS
     case DefinitionKind::Event:
-      MOZ_CRASH("NYI");
+      return names.event;
 #endif
   }
 
@@ -1809,8 +1844,8 @@ void WasmInstanceObject::trace(JSTracer* trc, JSObject* obj) {
 WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, SharedCode code, const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, UniqueTlsData tlsData,
-    HandleWasmMemoryObject memory, SharedTableVector&& tables,
-    StructTypeDescrVector&& structTypeDescrs,
+    HandleWasmMemoryObject memory, SharedExceptionTagVector&& exceptionTags,
+    SharedTableVector&& tables, StructTypeDescrVector&& structTypeDescrs,
     const JSFunctionVector& funcImports, const GlobalDescVector& globals,
     const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs, HandleObject proto,
@@ -1884,8 +1919,8 @@ WasmInstanceObject* WasmInstanceObject::create(
 
     // Root the Instance via WasmInstanceObject before any possible GC.
     instance = cx->new_<Instance>(
-        cx, obj, code, std::move(tlsData), memory, std::move(tables),
-        std::move(structTypeDescrs), std::move(maybeDebug));
+        cx, obj, code, std::move(tlsData), memory, std::move(exceptionTags),
+        std::move(tables), std::move(structTypeDescrs), std::move(maybeDebug));
     if (!instance) {
       return nullptr;
     }
