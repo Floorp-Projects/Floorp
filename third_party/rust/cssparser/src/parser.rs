@@ -933,17 +933,15 @@ impl<'i: 't, 't> Parser<'i, 't> {
                 Ok(&Token::Function(_))
                 | Ok(&Token::ParenthesisBlock)
                 | Ok(&Token::SquareBracketBlock)
-                | Ok(&Token::CurlyBracketBlock) => {
-                    self.parse_nested_block(|input| {
-                        input.expect_no_error_token().map_err(Into::into)
-                    }).map_err(ParseError::<()>::basic)?
-                }
+                | Ok(&Token::CurlyBracketBlock) => self
+                    .parse_nested_block(|input| input.expect_no_error_token().map_err(Into::into))
+                    .map_err(ParseError::<()>::basic)?,
                 Ok(t) => {
                     // FIXME: maybe these should be separate variants of
                     // BasicParseError instead?
                     if t.is_parse_error() {
                         let token = t.clone();
-                        return Err(self.new_basic_unexpected_token_error(token))
+                        return Err(self.new_basic_unexpected_token_error(token));
                     }
                 }
                 Err(_) => return Ok(()),
