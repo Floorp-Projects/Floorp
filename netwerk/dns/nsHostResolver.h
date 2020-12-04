@@ -279,6 +279,9 @@ class AddrHostRecord final : public nsHostRecord {
   };
   static DnsPriority GetPriority(uint16_t aFlags);
 
+  // true if pending and on the queue (not yet given to getaddrinfo())
+  bool onQueue() { return mNative && isInList(); }
+
   // When the lookups of this record started and their durations
   mozilla::TimeStamp mTrrStart;
   mozilla::TimeStamp mNativeStart;
@@ -293,8 +296,6 @@ class AddrHostRecord final : public nsHostRecord {
                          // which means that it is either on the pending queue
                          // or owned by one of the worker threads. */
   uint16_t mNativeUsed : 1;
-  uint16_t onQueue : 1;         // true if pending and on the queue (not yet
-                                // given to getaddrinfo())
   uint16_t usingAnyThread : 1;  // true if off queue and contributing to
                                 // mActiveAnyThreadCount
   uint16_t mGetTtl : 1;
