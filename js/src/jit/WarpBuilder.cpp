@@ -1932,10 +1932,6 @@ bool WarpBuilder::build_GetProp(BytecodeLocation loc) {
   return buildIC(loc, CacheKind::GetProp, {val});
 }
 
-bool WarpBuilder::build_CallProp(BytecodeLocation loc) {
-  return build_GetProp(loc);
-}
-
 bool WarpBuilder::build_Length(BytecodeLocation loc) {
   return build_GetProp(loc);
 }

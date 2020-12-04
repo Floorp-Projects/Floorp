@@ -74,8 +74,6 @@ bool PropOpEmitter::emitGet(const ParserAtom* prop) {
   JSOp op;
   if (isSuper()) {
     op = JSOp::GetPropSuper;
-  } else if (isCall()) {
-    op = JSOp::CallProp;
   } else {
     op = isLength_ ? JSOp::Length : JSOp::GetProp;
   }
