@@ -862,7 +862,7 @@ if __name__ == "__main__":
         # Force things on.
         extra_cflags2 = []
         extra_cxxflags2 = [
-            "-fms-compatibility-version=19.13.26128",
+            "-fms-compatibility-version=19.15.26726",
             "-Xclang",
             "-std=c++14",
         ]
