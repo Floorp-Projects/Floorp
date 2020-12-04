@@ -3041,7 +3041,7 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
   // Step 4.
   //
   // Get the "return" method.
-  if (!emitAtomOp(JSOp::CallProp, cx->parserNames().return_)) {
+  if (!emitAtomOp(JSOp::GetProp, cx->parserNames().return_)) {
     //              [stack] ... ITER RET
     return false;
   }
@@ -6480,7 +6480,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
       //            [stack] NEXT ITER RECEIVED ITER ITER
       return false;
     }
-    if (!emitAtomOp(JSOp::CallProp, cx->parserNames().throw_)) {
+    if (!emitAtomOp(JSOp::GetProp, cx->parserNames().throw_)) {
       //            [stack] NEXT ITER RECEIVED ITER THROW
       return false;
     }
@@ -6588,7 +6588,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
       //            [stack] NEXT ITER RECEIVED ITER ITER
       return false;
     }
-    if (!emitAtomOp(JSOp::CallProp, cx->parserNames().return_)) {
+    if (!emitAtomOp(JSOp::GetProp, cx->parserNames().return_)) {
       //            [stack] NEXT ITER RECEIVED ITER RET
       return false;
     }
@@ -7935,11 +7935,6 @@ bool BytecodeEmitter::emitCallOrNew(
    * Emit callable invocation or operator new (constructor call) code.
    * First, emit code for the left operand to evaluate the callable or
    * constructable object expression.
-   *
-   * For operator new, we emit JSOp::GetProp instead of JSOp::CallProp, etc.
-   * This is necessary to interpose the lambda-initialized method read
-   * barrier -- see the code in jsinterp.cpp for JSOp::Lambda followed by
-   * JSOp::{Set,Init}Prop.
    *
    * Then (or in a call case that has no explicit reference-base
    * object) we emit JSOp::Undefined to produce the undefined |this|
@@ -10609,7 +10604,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
 
   switch (op) {
     case JSOp::GetProp:
-    case JSOp::CallProp:
     case JSOp::Length:
       return emitInstrumentationSlow(
           InstrumentationKind::GetProperty, [=](uint32_t pushed) {

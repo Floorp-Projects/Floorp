@@ -309,7 +309,6 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::GetProp:
-      case JSOp::CallProp:
       case JSOp::Length:
       case JSOp::GetBoundName: {
         ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetProp);
@@ -1513,8 +1512,7 @@ static bool ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op,
         return false;
       }
     } else {
-      MOZ_ASSERT(op == JSOp::GetProp || op == JSOp::CallProp ||
-                 op == JSOp::Length);
+      MOZ_ASSERT(op == JSOp::GetProp || op == JSOp::Length);
       if (!GetProperty(cx, val, name, res)) {
         return false;
       }
@@ -1534,8 +1532,8 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetProp(%s)", CodeName(op));
 
-  MOZ_ASSERT(op == JSOp::GetProp || op == JSOp::CallProp ||
-             op == JSOp::Length || op == JSOp::GetBoundName);
+  MOZ_ASSERT(op == JSOp::GetProp || op == JSOp::Length ||
+             op == JSOp::GetBoundName);
 
   RootedPropertyName name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));

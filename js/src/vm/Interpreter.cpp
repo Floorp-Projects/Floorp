@@ -2983,8 +2983,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(CheckReturn)
 
     CASE(GetProp)
-    CASE(Length)
-    CASE(CallProp) {
+    CASE(Length) {
       MutableHandleValue lval = REGS.stackHandleAt(-1);
       if (!GetPropertyOperation(cx, REGS.fp(), script, REGS.pc, lval, lval)) {
         goto error;

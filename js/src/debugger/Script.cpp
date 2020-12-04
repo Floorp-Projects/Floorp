@@ -1514,7 +1514,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::GetPropSuper:
     case JSOp::GetElemSuper:
     case JSOp::GetProp:
-    case JSOp::CallProp:
     case JSOp::RegExp:
     case JSOp::CallSiteObj:
     case JSOp::Object:
