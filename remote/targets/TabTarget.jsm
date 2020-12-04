@@ -107,6 +107,10 @@ class TabTarget extends Target {
     });
   }
 
+  get title() {
+    return this.browsingContext.currentWindowGlobal.documentTitle;
+  }
+
   get type() {
     return "page";
   }
@@ -131,7 +135,8 @@ class TabTarget extends Target {
       // TODO(ato): toJSON cannot be marked async )-:
       faviconUrl: "",
       id: this.id,
-      title: this.title,
+      // Bug 1680817: Fails to encode some UTF-8 characters
+      // title: this.title,
       type: this.type,
       url: this.url,
       browsingContextId: this.browsingContext.id,
