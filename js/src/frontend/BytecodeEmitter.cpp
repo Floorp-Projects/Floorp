@@ -5184,7 +5184,7 @@ bool BytecodeEmitter::emitIterator() {
     //              [stack] OBJ OBJ @@ITERATOR
     return false;
   }
-  if (!emitElemOpBase(JSOp::CallElem)) {
+  if (!emitElemOpBase(JSOp::GetElem)) {
     //              [stack] OBJ ITERFN
     return false;
   }
@@ -5225,7 +5225,7 @@ bool BytecodeEmitter::emitAsyncIterator() {
     //              [stack] OBJ OBJ @@ASYNCITERATOR
     return false;
   }
-  if (!emitElemOpBase(JSOp::CallElem)) {
+  if (!emitElemOpBase(JSOp::GetElem)) {
     //              [stack] OBJ ITERFN
     return false;
   }
@@ -5256,7 +5256,7 @@ bool BytecodeEmitter::emitAsyncIterator() {
     //              [stack] OBJ OBJ @@ITERATOR
     return false;
   }
-  if (!emitElemOpBase(JSOp::CallElem)) {
+  if (!emitElemOpBase(JSOp::GetElem)) {
     //              [stack] OBJ ITERFN
     return false;
   }
@@ -9573,9 +9573,6 @@ bool BytecodeEmitter::emitInitializeInstanceMembers() {
       return false;
     }
 
-    // Don't use CallElem here, because the receiver of the call != the
-    // receiver of this getelem. (Specifically, the call receiver is `this`,
-    // and the receiver of this getelem is `.initializers`)
     if (!emit1(JSOp::GetElem)) {
       //            [stack] ARRAY? FUNC
       return false;
@@ -9635,9 +9632,6 @@ bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
       return false;
     }
 
-    // Don't use CallElem here, because the receiver of the call != the receiver
-    // of this getelem. (Specifically, the call receiver is `ctor`, and the
-    // receiver of this getelem is `.staticInitializers`)
     if (!emit1(JSOp::GetElem)) {
       //            [stack] CTOR ARRAY? FUNC
       return false;
@@ -10629,7 +10623,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
                    emitAtomOp(JSOp::String, atomIndex) && emitDupAt(pushed + 2);
           });
     case JSOp::GetElem:
-    case JSOp::CallElem:
       return emitInstrumentationSlow(
           InstrumentationKind::GetElement,
           [=](uint32_t pushed) { return emitDupAt(pushed + 1, 2); });

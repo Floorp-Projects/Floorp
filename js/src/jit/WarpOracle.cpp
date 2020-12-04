@@ -528,7 +528,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::CallProp:
       case JSOp::Length:
       case JSOp::GetElem:
-      case JSOp::CallElem:
       case JSOp::SetProp:
       case JSOp::StrictSetProp:
       case JSOp::Call:

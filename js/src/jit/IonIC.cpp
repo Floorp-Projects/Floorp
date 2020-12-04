@@ -196,7 +196,7 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     }
   } else {
     MOZ_ASSERT(ic->kind() == CacheKind::GetElem);
-    if (!GetElementOperation(cx, JSOp(*ic->pc()), val, idVal, res)) {
+    if (!GetElementOperation(cx, val, idVal, res)) {
       return false;
     }
   }
