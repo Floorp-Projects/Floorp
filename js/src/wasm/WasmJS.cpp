@@ -156,6 +156,14 @@ static inline bool WasmThreadsFlag(JSContext* cx) {
          cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
 }
 
+static inline bool WasmExceptionsFlag(JSContext* cx) {
+#ifdef ENABLE_WASM_EXCEPTIONS
+  return cx->options().wasmExceptions();
+#else
+  return false;
+#endif
+}
+
 static inline bool WasmDebuggerActive(JSContext* cx) {
   if (IsFuzzingIon(cx) || IsFuzzingCranelift(cx)) {
     return false;
@@ -291,6 +299,7 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
   bool debug = WasmDebuggerActive(cx);
   bool functionReferences = WasmFunctionReferencesFlag(cx);
   bool gc = WasmGcFlag(cx);
+  bool exn = WasmExceptionsFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -302,8 +311,11 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
+    if (exn && !Append(reason, "exceptions", &sep)) {
+      return false;
+    }
   }
-  *isDisabled = debug || functionReferences || gc;
+  *isDisabled = debug || functionReferences || gc || exn;
   return true;
 }
 
@@ -318,7 +330,8 @@ bool wasm::CraneliftAvailable(JSContext* cx) {
 
 bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                        JSStringBuilder* reason) {
-  // Cranelift has no debugging support, no gc support, no simd.
+  // Cranelift has no debugging support, no gc support, no simd, and
+  // no exceptions support.
   bool debug = WasmDebuggerActive(cx);
   bool functionReferences = WasmFunctionReferencesFlag(cx);
   bool gc = WasmGcFlag(cx);
@@ -328,6 +341,7 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
 #else
   bool simdOnNonAarch64 = WasmSimdFlag(cx);
 #endif
+  bool exn = WasmExceptionsFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -342,8 +356,11 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (simdOnNonAarch64 && !Append(reason, "simd", &sep)) {
       return false;
     }
+    if (exn && !Append(reason, "exceptions", &sep)) {
+      return false;
+    }
   }
-  *isDisabled = debug || functionReferences || gc || simdOnNonAarch64;
+  *isDisabled = debug || functionReferences || gc || simdOnNonAarch64 || exn;
   return true;
 }
 
@@ -386,6 +403,13 @@ bool wasm::SimdAvailable(JSContext* cx) {
 
 bool wasm::ThreadsAvailable(JSContext* cx) {
   return WasmThreadsFlag(cx) && AnyCompilerAvailable(cx);
+}
+
+bool wasm::ExceptionsAvailable(JSContext* cx) {
+  // Ion & Cranelift do not support Exceptions (for now).
+  // Exceptions require multi-value.
+  return WasmExceptionsFlag(cx) && MultiValuesAvailable(cx) &&
+         BaselineAvailable(cx);
 }
 
 bool wasm::HasPlatformSupport(JSContext* cx) {
