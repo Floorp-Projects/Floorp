@@ -29,6 +29,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex
 
+#include "builtin/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/List-inl.h"
@@ -1182,22 +1183,28 @@ bool ModuleObject::createEnvironment(JSContext* cx, HandleModuleObject self) {
 }
 
 static bool InvokeSelfHostedMethod(JSContext* cx, HandleModuleObject self,
-                                   HandlePropertyName name) {
+                                   HandlePropertyName name,
+                                   MutableHandleValue rval) {
   RootedValue thisv(cx, ObjectValue(*self));
   FixedInvokeArgs<0> args(cx);
 
-  RootedValue ignored(cx);
-  return CallSelfHostedFunction(cx, name, thisv, args, &ignored);
+  return CallSelfHostedFunction(cx, name, thisv, args, rval);
 }
 
 /* static */
 bool ModuleObject::Instantiate(JSContext* cx, HandleModuleObject self) {
-  return InvokeSelfHostedMethod(cx, self, cx->names().ModuleInstantiate);
+  RootedValue ignored(cx);
+  return InvokeSelfHostedMethod(cx, self, cx->names().ModuleInstantiate,
+                                &ignored);
 }
 
 /* static */
-bool ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self) {
-  return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate);
+JSObject* ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self) {
+  RootedValue rval(cx);
+  if (!InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate, &rval)) {
+    return nullptr;
+  }
+  return &rval.toObject();
 }
 
 /* static */
@@ -2179,25 +2186,54 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
   return promise;
 }
 
-bool js::FinishDynamicModuleImport(JSContext* cx,
-                                   JS::DynamicImportStatus status,
-                                   HandleValue referencingPrivate,
-                                   HandleString specifier,
-                                   HandleObject promiseArg) {
-  MOZ_ASSERT_IF(cx->isExceptionPending(),
-                status == JS::DynamicImportStatus::Failed);
+static bool OnRootModuleRejected(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  HandleValue error = args.get(0);
 
-  Handle<PromiseObject*> promise = promiseArg.as<PromiseObject>();
+  js::ReportExceptionClosure reportExn(error);
+  PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
+
+  args.rval().setUndefined();
+  return true;
+};
+
+bool js::OnModuleEvaluationFailure(JSContext* cx,
+                                   HandleObject evaluationPromise) {
+  if (evaluationPromise == nullptr) {
+    return false;
+  }
+
+  RootedFunction onRejected(
+      cx, NewHandler(cx, OnRootModuleRejected, evaluationPromise));
+  if (!onRejected) {
+    return false;
+  }
+
+  return JS::AddPromiseReactions(cx, evaluationPromise, nullptr, onRejected);
+}
+
+// Adjustment for Top-level await;
+// See: https://github.com/tc39/proposal-dynamic-import/pull/71/files
+static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.get(0).isUndefined());
+
+  // This is a hack to allow us to have the 2 extra variables needed
+  // for FinishDynamicModuleImport in the resolve callback.
+  Rooted<ListObject*> resolvedModuleParams(cx,
+                                           ExtraFromHandler<ListObject>(args));
+  MOZ_ASSERT(resolvedModuleParams->length() == 2);
+  RootedValue referencingPrivate(cx, resolvedModuleParams->get(0));
+  RootedString specifier(cx, resolvedModuleParams->get(1).toString());
+
+  Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
 
   auto releasePrivate = mozilla::MakeScopeExit(
       [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
 
-  if (status == JS::DynamicImportStatus::Failed) {
-    return RejectPromiseWithPendingError(cx, promise);
-  }
-
   RootedObject result(cx,
                       CallModuleResolveHook(cx, referencingPrivate, specifier));
+
   if (!result) {
     return RejectPromiseWithPendingError(cx, promise);
   }
@@ -2209,13 +2245,75 @@ bool js::FinishDynamicModuleImport(JSContext* cx,
     return RejectPromiseWithPendingError(cx, promise);
   }
 
+  MOZ_ASSERT(module->topLevelCapability()->as<PromiseObject>().state() ==
+             JS::PromiseState::Fulfilled);
+
   RootedObject ns(cx, ModuleObject::GetOrCreateModuleNamespace(cx, module));
   if (!ns) {
     return RejectPromiseWithPendingError(cx, promise);
   }
 
+  args.rval().setUndefined();
   RootedValue value(cx, ObjectValue(*ns));
   return PromiseObject::resolve(cx, promise, value);
+};
+
+static bool OnRejectedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  HandleValue error = args.get(0);
+
+  RootedValue referencingPrivate(cx, ExtraValueFromHandler(args));
+  Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
+
+  auto releasePrivate = mozilla::MakeScopeExit(
+      [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
+
+  args.rval().setUndefined();
+  return PromiseObject::reject(cx, promise, error);
+};
+
+bool js::FinishDynamicModuleImport(JSContext* cx,
+                                   HandleObject evaluationPromise,
+                                   HandleValue referencingPrivate,
+                                   HandleString specifier,
+                                   HandleObject promiseArg) {
+  // If we do not have an evaluation promise for the module, we can assume that
+  // evaluation has failed or been interrupted -- we can reject the dynamic
+  // module.
+  if (!evaluationPromise) {
+    auto releasePrivate = mozilla::MakeScopeExit(
+        [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
+    Handle<PromiseObject*> promise = promiseArg.as<PromiseObject>();
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  Rooted<ListObject*> resolutionArgs(cx, ListObject::create(cx));
+  if (!resolutionArgs->append(cx, referencingPrivate)) {
+    return false;
+  }
+  Rooted<Value> stringValue(cx, StringValue(specifier));
+  if (!resolutionArgs->append(cx, stringValue)) {
+    return false;
+  }
+
+  Rooted<Value> resolutionArgsValue(cx, ObjectValue(*resolutionArgs));
+
+  RootedFunction onResolved(
+      cx, NewHandlerWithExtraValue(cx, OnResolvedDynamicModule, promiseArg,
+                                   resolutionArgsValue));
+  if (!onResolved) {
+    return false;
+  }
+
+  RootedFunction onRejected(
+      cx, NewHandlerWithExtraValue(cx, OnRejectedDynamicModule, promiseArg,
+                                   referencingPrivate));
+  if (!onRejected) {
+    return false;
+  }
+
+  return JS::AddPromiseReactionsIgnoringUnhandledRejection(
+      cx, evaluationPromise, onResolved, onRejected);
 }
 
 template <XDRMode mode>

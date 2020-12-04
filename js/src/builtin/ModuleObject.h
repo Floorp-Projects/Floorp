@@ -344,7 +344,9 @@ class ModuleObject : public NativeObject {
                                        HandleValue error);
 
   static bool Instantiate(JSContext* cx, HandleModuleObject self);
-  static bool Evaluate(JSContext* cx, HandleModuleObject self);
+
+  // Start evaluating the module and return a Promise for the evaluation
+  static JSObject* Evaluate(JSContext* cx, HandleModuleObject self);
 
   static ModuleNamespaceObject* GetOrCreateModuleNamespace(
       JSContext* cx, HandleModuleObject self);
@@ -407,7 +409,9 @@ bool AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                    HandleValue specifier);
 
-bool FinishDynamicModuleImport(JSContext* cx, JS::DynamicImportStatus status,
+bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise);
+
+bool FinishDynamicModuleImport(JSContext* cx, HandleObject evaluationPromise,
                                HandleValue referencingPrivate,
                                HandleString specifier, HandleObject promise);
 
