@@ -3574,6 +3574,7 @@ class SystemAddonInstaller extends DirectoryInstaller {
     }
 
     async function postponeAddon(install) {
+      install.ownsTempFile = true;
       let resumeFn;
       if (AddonManagerPrivate.hasUpgradeListener(install.addon.id)) {
         logger.info(
@@ -4073,8 +4074,8 @@ var XPIInstall = {
         if (sourceAddon && sourceAddon.version == item.spec.version) {
           // Copying the file to a temporary location has some benefits. If the
           // file is locked and cannot be read then we'll fall back to
-          // downloading a fresh copy. It also means we don't have to remember
-          // whether to delete the temporary copy later.
+          // downloading a fresh copy. We later mark the install object with
+          // ownsTempFile so that we will cleanup later (see installAddonSet).
           try {
             let path = OS.Path.join(OS.Constants.Path.tmpDir, "tmpaddon");
             let unique = await OS.File.openUnique(path);

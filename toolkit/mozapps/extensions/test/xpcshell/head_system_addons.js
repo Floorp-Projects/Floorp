@@ -178,6 +178,10 @@ function clearSystemAddonUpdatesDir() {
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
 }
 
+registerCleanupFunction(() => {
+  clearSystemAddonUpdatesDir();
+});
+
 /**
  * Installs a known set of add-ons into the system add-on update directory.
  */
