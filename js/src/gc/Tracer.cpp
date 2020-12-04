@@ -23,7 +23,6 @@
 
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
-#include "vm/ObjectGroup-inl.h"
 #include "vm/Realm-inl.h"
 
 using namespace js;
