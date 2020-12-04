@@ -188,33 +188,6 @@ class SessionTest {
     }
 
     @Test
-    fun `observer is notified when search terms are set`() {
-        val observer = mock(Session.Observer::class.java)
-
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-
-        session.searchTerms = "mozilla android"
-
-        assertEquals("mozilla android", session.searchTerms)
-        verify(observer, times(1)).onSearch(eq(session), eq("mozilla android"))
-        verifyNoMoreInteractions(observer)
-    }
-
-    @Test
-    fun `action is dispatched when search terms are set`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-        session.searchTerms = "mozilla android"
-
-        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(session.id, session.searchTerms))
-        verifyNoMoreInteractions(store)
-    }
-
-    @Test
     fun `observer is notified when launch intent request is triggered`() {
         val observer = mock(Session.Observer::class.java)
 

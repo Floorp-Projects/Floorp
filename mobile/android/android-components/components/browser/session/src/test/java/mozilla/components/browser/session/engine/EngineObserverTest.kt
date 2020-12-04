@@ -12,10 +12,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -34,6 +36,7 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -99,7 +102,6 @@ class EngineObserverTest {
         engineSession.loadUrl("http://mozilla.org")
         engineSession.toggleDesktopMode(true)
         assertEquals("http://mozilla.org", session.url)
-        assertEquals("", session.searchTerms)
         assertEquals(100, session.progress)
         assertEquals(true, session.loading)
         assertEquals(true, session.canGoForward)
@@ -1006,37 +1008,61 @@ class EngineObserverTest {
 
     @Test
     fun `onLocationChange does not clear search terms`() {
-        val session = Session("https://www.mozilla.org")
-        session.searchTerms = "Mozilla Foundation"
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware)
+        )
 
-        val observer = EngineObserver(session, mock())
+        val session = Session("https://www.mozilla.org")
+
+        val observer = EngineObserver(session, store)
         observer.onLocationChange("https://www.mozilla.org/en-US/")
 
-        assertEquals("Mozilla Foundation", session.searchTerms)
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
     }
 
     @Test
     fun `onLoadRequest clears search terms for requests triggered by web content`() {
         val url = "https://www.mozilla.org"
-        val session = Session(url)
-        session.searchTerms = "Mozilla Foundation"
+        val session = Session(url, id = "test-id")
 
-        val observer = EngineObserver(session, mock())
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware)
+        )
+
+        val observer = EngineObserver(session, store)
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = true)
 
-        assertEquals("", session.searchTerms)
+        store.waitUntilIdle()
+
+        middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
     }
 
     @Test
     fun `onLoadRequest clears search terms for requests triggered by redirect`() {
         val url = "https://www.mozilla.org"
-        val session = Session(url)
-        session.searchTerms = "Mozilla Foundation"
+        val session = Session(url, id = "test-id")
 
-        val observer = EngineObserver(session, mock())
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware)
+        )
+
+        val observer = EngineObserver(session, store)
         observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false)
 
-        assertEquals("", session.searchTerms)
+        store.waitUntilIdle()
+
+        middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
     }
 
     @Test
@@ -1054,13 +1080,17 @@ class EngineObserverTest {
     @Test
     fun `onLoadRequest does not clear search terms for requests not triggered by user interacting with web content`() {
         val url = "https://www.mozilla.org"
-        val session = Session(url)
-        session.searchTerms = "Mozilla Foundation"
+        val session = Session(url, id = "test-id")
 
-        val observer = EngineObserver(session, mock())
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware)
+        )
+
+        val observer = EngineObserver(session, store)
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = false)
 
-        assertEquals("Mozilla Foundation", session.searchTerms)
+        middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
     }
 
     @Test
@@ -1082,14 +1112,21 @@ class EngineObserverTest {
     @Test
     fun `onNavigateBack clears search terms when navigating back`() {
         val url = "https://www.mozilla.org"
-        val session = Session(url)
-        session.searchTerms = "Mozilla Foundation"
+        val session = Session(url, id = "test-id")
         session.canGoBack = true
 
-        val observer = EngineObserver(session, mock())
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware)
+        )
+
+        val observer = EngineObserver(session, store)
         observer.onNavigateBack()
 
-        assertEquals("", session.searchTerms)
+        middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
     }
 
     @Test

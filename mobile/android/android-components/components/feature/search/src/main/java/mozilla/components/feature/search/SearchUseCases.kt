@@ -6,29 +6,23 @@ package mozilla.components.feature.search
 
 import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine as LegacySearchEngine
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Contains use cases related to the search feature.
- *
- * @param onNoSession When invoking a use case that requires a (selected) [Session] and when no [Session] is available
- * this (optional) lambda will be invoked to create a [Session]. The default implementation creates a [Session] and adds
- * it to the [SessionManager].
  */
 class SearchUseCases(
     store: BrowserStore,
     defaultSearchEngineProvider: DefaultSearchEngineProvider,
-    sessionManager: SessionManager,
-    onNoSession: (String) -> Session = { url ->
-        Session(url).apply { sessionManager.add(this) }
-    }
+    tabsUseCases: TabsUseCases
 ) {
     interface SearchUseCase {
         /**
@@ -43,9 +37,8 @@ class SearchUseCases(
 
     class DefaultSearchUseCase(
         private val store: BrowserStore,
-        private val defaultSearchEngineProvider: DefaultSearchEngineProvider,
-        private val sessionManager: SessionManager,
-        private val onNoSession: (String) -> Session
+        private val tabsUseCases: TabsUseCases,
+        private val defaultSearchEngineProvider: DefaultSearchEngineProvider
     ) : SearchUseCase {
         private val logger = Logger("DefaultSearchUseCase")
 
@@ -57,20 +50,20 @@ class SearchUseCases(
             searchEngine: LegacySearchEngine?,
             parentSessionId: String?
         ) {
-            invoke(searchTerms, sessionManager.selectedSession, searchEngine)
+            invoke(searchTerms, store.state.selectedTabId, searchEngine)
         }
 
         /**
          * Triggers a search using the default search engine for the provided search terms.
          *
          * @param searchTerms the search terms.
-         * @param session the session to use, or the currently selected session if none
-         * is provided.
+         * @param sessionId the ID of the session/tab to use, or null if the currently selected tab
+         * should be used.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
          */
         operator fun invoke(
             searchTerms: String,
-            session: Session? = sessionManager.selectedSession,
+            sessionId: String? = store.state.selectedTabId,
             searchEngine: LegacySearchEngine? = null
         ) {
             val searchUrl = searchEngine?.let {
@@ -82,21 +75,34 @@ class SearchUseCases(
                 return
             }
 
-            val searchSession = session ?: onNoSession.invoke(searchUrl)
+            val id = if (sessionId == null) {
+                // If no `sessionId` was passed in then create a new tab
+                tabsUseCases.addTab(searchUrl)
+            } else {
+                // If we got a `sessionId` then try to find the tab and load the search URL in it
+                val existingTab = store.state.findTabOrCustomTab(sessionId)
+                if (existingTab != null) {
+                    store.dispatch(
+                        EngineAction.LoadUrlAction(
+                            existingTab.id,
+                            searchUrl
+                        )
+                    )
+                    existingTab.id
+                } else {
+                    // If the tab with the provided id was not found then create a new tab
+                    tabsUseCases.addTab(searchUrl)
+                }
+            }
 
-            searchSession.searchTerms = searchTerms
-
-            store.dispatch(EngineAction.LoadUrlAction(
-                searchSession.id,
-                searchUrl
-            ))
+            store.dispatch(ContentAction.UpdateSearchTermsAction(id, searchTerms))
         }
     }
 
     class NewTabSearchUseCase(
         private val store: BrowserStore,
+        private val tabsUseCases: TabsUseCases,
         private val defaultSearchEngineProvider: DefaultSearchEngineProvider,
-        private val sessionManager: SessionManager,
         private val isPrivate: Boolean
     ) : SearchUseCase {
         private val logger = Logger("NewTabSearchUseCase")
@@ -144,17 +150,23 @@ class SearchUseCases(
                 return
             }
 
-            val session = Session(searchUrl, private, source)
-            session.searchTerms = searchTerms
+            val id = if (private) {
+                tabsUseCases.addPrivateTab(
+                    searchUrl,
+                    parentId = parentSessionId,
+                    source = source,
+                    selectTab = selected
+                )
+            } else {
+                tabsUseCases.addTab(
+                    searchUrl,
+                    parentId = parentSessionId,
+                    source = source,
+                    selectTab = selected
+                )
+            }
 
-            val parentSession = parentSessionId?.let { sessionManager.findSessionById(it) }
-
-            sessionManager.add(session, selected, parent = parentSession)
-
-            store.dispatch(EngineAction.LoadUrlAction(
-                session.id,
-                searchUrl
-            ))
+            store.dispatch(ContentAction.UpdateSearchTermsAction(id, searchTerms))
         }
     }
 
@@ -251,15 +263,15 @@ class SearchUseCases(
     }
 
     val defaultSearch: DefaultSearchUseCase by lazy {
-        DefaultSearchUseCase(store, defaultSearchEngineProvider, sessionManager, onNoSession)
+        DefaultSearchUseCase(store, tabsUseCases, defaultSearchEngineProvider)
     }
 
     val newTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(store, defaultSearchEngineProvider, sessionManager, false)
+        NewTabSearchUseCase(store, tabsUseCases, defaultSearchEngineProvider, false)
     }
 
     val newPrivateTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(store, defaultSearchEngineProvider, sessionManager, true)
+        NewTabSearchUseCase(store, tabsUseCases, defaultSearchEngineProvider, true)
     }
 
     val addSearchEngine: AddNewSearchEngineUseCase by lazy {

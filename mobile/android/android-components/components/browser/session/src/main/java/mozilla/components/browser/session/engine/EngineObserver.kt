@@ -53,7 +53,7 @@ internal class EngineObserver(
     private val mediaMap: MutableMap<Media, MediaObserver> = mutableMapOf()
 
     override fun onNavigateBack() {
-        session.searchTerms = ""
+        store?.dispatch(ContentAction.UpdateSearchTermsAction(session.id, ""))
     }
 
     override fun onFirstContentfulPaint() {
@@ -109,7 +109,7 @@ internal class EngineObserver(
         triggeredByWebContent: Boolean
     ) {
         if (triggeredByRedirect || triggeredByWebContent) {
-            session.searchTerms = ""
+            store?.dispatch(ContentAction.UpdateSearchTermsAction(session.id, ""))
         }
 
         session.notifyObservers {

@@ -14,7 +14,6 @@ import mozilla.components.browser.state.action.ContentAction.UpdateBackNavigatio
 import mozilla.components.browser.state.action.ContentAction.UpdateForwardNavigationStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
-import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
@@ -145,14 +144,6 @@ class Session(
     var canGoForward: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onNavigationStateChanged(this@Session, canGoBack, new) }
         store?.syncDispatch(UpdateForwardNavigationStateAction(id, canGoForward))
-    }
-
-    /**
-     * The currently / last used search terms (or an empty string).
-     */
-    var searchTerms: String by Delegates.observable("") { _, _, new ->
-        notifyObservers { onSearch(this@Session, new) }
-        store?.syncDispatch(UpdateSearchTermsAction(id, new))
     }
 
     /**

@@ -21,7 +21,9 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -49,10 +51,12 @@ class TabIntentProcessorTest {
     private val session = mock<Session>()
     private val sessionUseCases = SessionUseCases(store, sessionManager)
     private val searchEngineManager = mock<SearchEngineManager>()
+
+    private val tabsUseCases = TabsUseCases(store, sessionManager)
     private val searchUseCases = SearchUseCases(
         store,
         searchEngineManager.toDefaultSearchEngineProvider(testContext),
-        sessionManager
+        tabsUseCases
     )
 
     @Before
@@ -263,7 +267,7 @@ class TabIntentProcessorTest {
         val searchUseCases = SearchUseCases(
             store,
             searchEngineManager.toDefaultSearchEngineProvider(testContext),
-            sessionManager
+            TabsUseCases(store, sessionManager)
         )
         val sessionUseCases = SessionUseCases(store, sessionManager)
 
@@ -287,7 +291,10 @@ class TabIntentProcessorTest {
             sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
         )
         assertEquals(searchUrl, sessionManager.selectedSession?.url)
-        assertEquals(searchTerms, sessionManager.selectedSession?.searchTerms)
+
+        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(
+            sessionCaptor.value.id, searchTerms
+        ))
     }
 
     @Test
@@ -338,7 +345,7 @@ class TabIntentProcessorTest {
         val searchUseCases = SearchUseCases(
             store,
             searchEngineManager.toDefaultSearchEngineProvider(testContext),
-            sessionManager
+            TabsUseCases(store, sessionManager)
         )
         val sessionUseCases = SessionUseCases(store, sessionManager)
 
@@ -362,7 +369,10 @@ class TabIntentProcessorTest {
             sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
         )
         assertEquals(searchUrl, sessionManager.selectedSession?.url)
-        assertEquals(searchTerms, sessionManager.selectedSession?.searchTerms)
+
+        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(
+            sessionCaptor.value.id, searchTerms
+        ))
     }
 
     @Test
@@ -401,7 +411,7 @@ class TabIntentProcessorTest {
         val searchUseCases = SearchUseCases(
             store,
             searchEngineManager.toDefaultSearchEngineProvider(testContext),
-            sessionManager
+            TabsUseCases(store, sessionManager)
         )
         val sessionUseCases = SessionUseCases(store, sessionManager)
 
@@ -425,6 +435,9 @@ class TabIntentProcessorTest {
             sessionCaptor.value.id, searchUrl, LoadUrlFlags.none())
         )
         assertEquals(searchUrl, sessionManager.selectedSession?.url)
-        assertEquals(searchTerms, sessionManager.selectedSession?.searchTerms)
+
+        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(
+            sessionCaptor.value.id, searchTerms
+        ))
     }
 }

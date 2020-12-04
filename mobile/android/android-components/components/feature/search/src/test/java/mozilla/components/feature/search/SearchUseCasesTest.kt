@@ -5,72 +5,88 @@
 package mozilla.components.feature.search
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.search.SearchEngine as LegacySearchEngine
 import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.availableSearchEngines
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.search.ext.createSearchEngine
-import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.eq
+import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
+import mozilla.components.browser.search.SearchEngine as LegacySearchEngine
 
 @RunWith(AndroidJUnit4::class)
 class SearchUseCasesTest {
 
     private lateinit var searchEngine: LegacySearchEngine
     private lateinit var searchEngineManager: SearchEngineManager
-    private lateinit var sessionManager: SessionManager
     private lateinit var store: BrowserStore
     private lateinit var useCases: SearchUseCases
+    private lateinit var tabsUseCases: TabsUseCases
+
+    private val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
 
     @Before
     fun setup() {
         searchEngine = mock()
         searchEngineManager = mock()
-        sessionManager = mock()
-        store = mock()
+        tabsUseCases = mock()
+
+        store = BrowserStore(middleware = listOf(middleware))
+
         useCases = SearchUseCases(
             store,
             searchEngineManager.toDefaultSearchEngineProvider(testContext),
-            sessionManager
+            tabsUseCases
         )
+    }
+
+    @After
+    fun tearDown() {
+        middleware.reset()
     }
 
     @Test
     fun defaultSearch() {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
-        val session = Session("mozilla.org")
+
+        store.dispatch(TabListAction.AddTabAction(
+            tab = createTab("https://www.mozilla.org", id = "mozilla"),
+            select = true
+        )).joinBlocking()
 
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
 
-        useCases.defaultSearch(searchTerms, session)
-        assertEquals(searchTerms, session.searchTerms)
-        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
-        verify(store).dispatch(actionCaptor.capture())
-        assertEquals(searchUrl, actionCaptor.value.url)
+        useCases.defaultSearch(searchTerms)
+
+        store.waitUntilIdle()
+
+        val loadUrlAction = middleware.findAction(EngineAction.LoadUrlAction::class)
+        assertEquals(searchUrl, loadUrlAction.url)
     }
 
     @Test
@@ -81,34 +97,48 @@ class SearchUseCasesTest {
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
 
+        val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
+        whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
+        whenever(newTabUseCase(searchUrl)).thenReturn("2342")
+
         useCases.newTabSearch(searchTerms, SessionState.Source.NEW_TAB)
-        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
-        verify(store).dispatch(actionCaptor.capture())
-        assertEquals(searchUrl, actionCaptor.value.url)
+
+        verify(newTabUseCase).invoke(
+            searchUrl,
+            parentId = null,
+            selectTab = true,
+            source = SessionState.Source.NEW_TAB
+        )
+
+        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        assertEquals("2342", searchTermsAction.sessionId)
+        assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
 
     @Test
-    fun `DefaultSearchUseCase invokes onNoSession if no session is selected`() {
-        var createdSession: Session? = null
+    fun `DefaultSearchUseCase creates new tab if no session is selected`() {
+        val searchTerms = "mozilla android"
+        val searchUrl = "http://search-url.com?$searchTerms"
 
-        whenever(searchEngine.buildSearchUrl("test")).thenReturn("https://search.example.com")
+        whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
 
-        var sessionCreatedForUrl: String? = null
+        val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
+        whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
+        whenever(newTabUseCase(searchUrl)).thenReturn("2342")
 
-        val searchUseCases = SearchUseCases(
-            store,
-            searchEngineManager.toDefaultSearchEngineProvider(testContext),
-            sessionManager
-        ) { url ->
-            sessionCreatedForUrl = url
-            Session(url).also { createdSession = it }
-        }
+        useCases.defaultSearch(searchTerms)
 
-        searchUseCases.defaultSearch("test")
-        assertEquals("https://search.example.com", sessionCreatedForUrl)
-        assertNotNull(createdSession!!)
-        verify(store).dispatch(EngineAction.LoadUrlAction(createdSession!!.id, sessionCreatedForUrl!!))
+        verify(newTabUseCase).invoke(
+            searchUrl,
+            parentId = null,
+            selectTab = true,
+            source = SessionState.Source.NEW_TAB
+        )
+
+        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        assertEquals("2342", searchTermsAction.sessionId)
+        assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
 
     @Test
@@ -118,14 +148,23 @@ class SearchUseCasesTest {
 
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+
+        val newTabUseCase: TabsUseCases.AddNewPrivateTabUseCase = mock()
+        whenever(tabsUseCases.addPrivateTab).thenReturn(newTabUseCase)
+        whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE)).thenReturn("1177")
+
         useCases.newPrivateTabSearch.invoke(searchTerms)
 
-        val captor = argumentCaptor<Session>()
-        verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null), eq(null))
-        assertTrue(captor.value.private)
-        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
-        verify(store).dispatch(actionCaptor.capture())
-        assertEquals(searchUrl, actionCaptor.value.url)
+        verify(newTabUseCase).invoke(
+            searchUrl,
+            parentId = null,
+            selectTab = true,
+            source = SessionState.Source.NONE
+        )
+
+        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        assertEquals("1177", searchTermsAction.sessionId)
+        assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
 
     @Test
@@ -136,18 +175,22 @@ class SearchUseCasesTest {
         whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
 
-        val parentSession = mock<Session>()
-        whenever(sessionManager.findSessionById("test-parent")).thenReturn(parentSession)
+        val newTabUseCase: TabsUseCases.AddNewPrivateTabUseCase = mock()
+        whenever(tabsUseCases.addPrivateTab).thenReturn(newTabUseCase)
+        whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE, parentId = "test-parent")).thenReturn("1177")
 
         useCases.newPrivateTabSearch.invoke(searchTerms, parentSessionId = "test-parent")
 
-        val captor = argumentCaptor<Session>()
-        verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null), eq(parentSession))
-        assertTrue(captor.value.private)
+        verify(newTabUseCase).invoke(
+            searchUrl,
+            parentId = "test-parent",
+            selectTab = true,
+            source = SessionState.Source.NONE
+        )
 
-        val actionCaptor = argumentCaptor<EngineAction.LoadUrlAction>()
-        verify(store).dispatch(actionCaptor.capture())
-        assertEquals(searchUrl, actionCaptor.value.url)
+        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        assertEquals("1177", searchTermsAction.sessionId)
+        assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
 
     @Test
