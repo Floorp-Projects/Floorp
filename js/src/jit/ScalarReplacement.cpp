@@ -813,7 +813,7 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
 }
 
 static inline bool IsOptimizableArrayInstruction(MInstruction* ins) {
-  return ins->isNewArray() || ins->isNewArrayCopyOnWrite();
+  return ins->isNewArray();
 }
 
 // Returns False if the array is not escaped and if it is optimizable by
@@ -829,17 +829,12 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
   JitSpewDef(JitSpew_Escape, "Check array\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
 
-  uint32_t length;
-  if (newArray->isNewArray()) {
-    if (!newArray->toNewArray()->templateObject()) {
-      JitSpew(JitSpew_Escape, "No template object defined.");
-      return true;
-    }
-
-    length = newArray->toNewArray()->length();
-  } else {
-    length = newArray->toNewArrayCopyOnWrite()->templateObject()->length();
+  if (!newArray->toNewArray()->templateObject()) {
+    JitSpew(JitSpew_Escape, "No template object defined.");
+    return true;
   }
+
+  uint32_t length = newArray->toNewArray()->length();
 
   if (length >= 16) {
     JitSpew(JitSpew_Escape, "Array has too many elements");
@@ -968,10 +963,7 @@ MBasicBlock* ArrayMemoryView::startingBlock() { return startBlock_; }
 bool ArrayMemoryView::initStartingState(BlockState** pState) {
   // Uninitialized elements have an "undefined" value.
   undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
-  MConstant* initLength = MConstant::New(
-      alloc_, Int32Value(arr_->isNewArrayCopyOnWrite()
-                             ? arr_->toNewArrayCopyOnWrite()->length()
-                             : 0));
+  MConstant* initLength = MConstant::New(alloc_, Int32Value(0));
   arr_->block()->insertBefore(arr_, undefinedVal_);
   arr_->block()->insertBefore(arr_, initLength);
 

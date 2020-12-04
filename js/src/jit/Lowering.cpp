@@ -136,12 +136,6 @@ void LIRGenerator::visitNewArray(MNewArray* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitNewArrayCopyOnWrite(MNewArrayCopyOnWrite* ins) {
-  LNewArrayCopyOnWrite* lir = new (alloc()) LNewArrayCopyOnWrite(temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitNewArrayDynamicLength(MNewArrayDynamicLength* ins) {
   MDefinition* length = ins->length();
   MOZ_ASSERT(length->type() == MIRType::Int32);

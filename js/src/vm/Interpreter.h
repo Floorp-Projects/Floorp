@@ -634,9 +634,6 @@ ArrayObject* NewArrayOperation(JSContext* cx, HandleScript script,
 ArrayObject* NewArrayOperationWithTemplate(JSContext* cx,
                                            HandleObject templateObject);
 
-ArrayObject* NewArrayCopyOnWriteOperation(JSContext* cx, HandleScript script,
-                                          jsbytecode* pc);
-
 MOZ_MUST_USE bool GetImportOperation(JSContext* cx, HandleObject envChain,
                                      HandleScript script, jsbytecode* pc,
                                      MutableHandleValue vp);

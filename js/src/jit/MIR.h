@@ -2073,37 +2073,6 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
   }
 };
 
-class MNewArrayCopyOnWrite : public MUnaryInstruction,
-                             public NoTypePolicy::Data {
-  gc::InitialHeap initialHeap_;
-
-  MNewArrayCopyOnWrite(TempAllocator& alloc, MConstant* templateConst,
-                       gc::InitialHeap initialHeap)
-      : MUnaryInstruction(classOpcode, templateConst),
-        initialHeap_(initialHeap) {
-    MOZ_ASSERT(!templateObject()->isSingleton());
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(NewArrayCopyOnWrite)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
-
-  uint32_t length() const { return templateObject()->length(); }
-
-  ArrayObject* templateObject() const {
-    return &getOperand(0)->toConstant()->toObject().as<ArrayObject>();
-  }
-
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
-
-  virtual AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  MOZ_MUST_USE bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-};
-
 class MNewArrayDynamicLength : public MUnaryInstruction,
                                public UnboxedInt32Policy<0>::Data {
   CompilerObject templateObject_;
@@ -2445,7 +2414,6 @@ class MArrayState : public MVariadicInstruction,
                           MDefinition* initLength);
   static MArrayState* Copy(TempAllocator& alloc, MArrayState* state);
 
-  // Initialize values from CopyOnWrite arrays.
   MOZ_MUST_USE bool initFromTemplateObject(TempAllocator& alloc,
                                            MDefinition* undefinedVal);
 

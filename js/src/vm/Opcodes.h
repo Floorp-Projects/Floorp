@@ -1531,23 +1531,6 @@
      */ \
     MACRO(Hole, hole, NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Create and push a new array that shares the elements of a template
-     * object.
-     *
-     * `script->getObject(objectIndex)` must be a copy-on-write array whose
-     * elements are all primitive values.
-     *
-     * This is an optimization. This single instruction implements an entire
-     * array literal, saving run time, code, and memory compared to
-     * `JSOp::NewArray` and a series of `JSOp::InitElem` instructions.
-     *
-     *   Category: Objects
-     *   Type: Array literals
-     *   Operands: uint32_t objectIndex
-     *   Stack: => array
-     */ \
-    MACRO(NewArrayCopyOnWrite, new_array_copy_on_write, NULL, 5, 0, 1, JOF_OBJECT) \
-    /*
      * Clone and push a new RegExp object.
      *
      * Implements: [Evaluation for *RegularExpressionLiteral*][1].
@@ -3617,6 +3600,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(234)                                   \
   MACRO(235)                                   \
   MACRO(236)                                   \
   MACRO(237)                                   \
