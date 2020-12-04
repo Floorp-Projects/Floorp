@@ -157,6 +157,39 @@ Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
   return resultFile;
 }
 
+Result<nsCOMPtr<mozIStorageStatement>, nsresult> CreateStatement(
+    mozIStorageConnection& aConnection, const nsACString& aStatementString) {
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                           aConnection, CreateStatement,
+                                           aStatementString));
+}
+
+template <SingleStepResult ResultHandling>
+Result<SingleStepSuccessType<ResultHandling>, nsresult> ExecuteSingleStep(
+    nsCOMPtr<mozIStorageStatement>&& aStatement) {
+  QM_TRY_INSPECT(const bool& hasResult,
+                 MOZ_TO_RESULT_INVOKE(aStatement, ExecuteStep));
+
+  if constexpr (ResultHandling == SingleStepResult::AssertHasResult) {
+    MOZ_ASSERT(hasResult);
+    (void)hasResult;
+
+    return WrapNotNullUnchecked(std::move(aStatement));
+  } else {
+    return hasResult ? std::move(aStatement) : nullptr;
+  }
+}
+
+template Result<SingleStepSuccessType<SingleStepResult::AssertHasResult>,
+                nsresult>
+ExecuteSingleStep<SingleStepResult::AssertHasResult>(
+    nsCOMPtr<mozIStorageStatement>&&);
+
+template Result<SingleStepSuccessType<SingleStepResult::ReturnNullIfNoResult>,
+                nsresult>
+ExecuteSingleStep<SingleStepResult::ReturnNullIfNoResult>(
+    nsCOMPtr<mozIStorageStatement>&&);
+
 template <SingleStepResult ResultHandling>
 Result<SingleStepSuccessType<ResultHandling>, nsresult>
 CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
@@ -165,16 +198,7 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
                                nsCOMPtr<mozIStorageStatement>, aConnection,
                                CreateStatement, aStatementString));
 
-  QM_TRY_UNWRAP(const DebugOnly<bool> hasResult,
-                MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-
-  if constexpr (ResultHandling == SingleStepResult::AssertHasResult) {
-    MOZ_ASSERT(hasResult);
-
-    return WrapNotNullUnchecked(stmt);
-  } else {
-    return hasResult ? stmt : nullptr;
-  }
+  return ExecuteSingleStep<ResultHandling>(std::move(stmt));
 }
 
 template Result<SingleStepSuccessType<SingleStepResult::AssertHasResult>,
