@@ -157,7 +157,8 @@ Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
   return resultFile;
 }
 
-Result<nsCOMPtr<mozIStorageStatement>, nsresult>
+template <SingleStepResult ResultHandling>
+Result<SingleStepSuccessType<ResultHandling>, nsresult>
 CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
                                     const nsACString& aStatementString) {
   QM_TRY_UNWRAP(auto stmt, MOZ_TO_RESULT_INVOKE_TYPED(
@@ -166,10 +167,25 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
 
   QM_TRY_UNWRAP(const DebugOnly<bool> hasResult,
                 MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-  MOZ_ASSERT(hasResult);
 
-  return stmt;
+  if constexpr (ResultHandling == SingleStepResult::AssertHasResult) {
+    MOZ_ASSERT(hasResult);
+
+    return WrapNotNullUnchecked(stmt);
+  } else {
+    return hasResult ? stmt : nullptr;
+  }
 }
+
+template Result<SingleStepSuccessType<SingleStepResult::AssertHasResult>,
+                nsresult>
+CreateAndExecuteSingleStepStatement<SingleStepResult::AssertHasResult>(
+    mozIStorageConnection& aConnection, const nsACString& aStatementString);
+
+template Result<SingleStepSuccessType<SingleStepResult::ReturnNullIfNoResult>,
+                nsresult>
+CreateAndExecuteSingleStepStatement<SingleStepResult::ReturnNullIfNoResult>(
+    mozIStorageConnection& aConnection, const nsACString& aStatementString);
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
 MOZ_THREAD_LOCAL(const nsACString*) ScopedLogExtraInfo::sQueryValue;
