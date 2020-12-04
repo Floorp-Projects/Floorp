@@ -494,7 +494,7 @@ PidType ConvertPid(const char* pidStr) {
 }
 
 int StartServer(int argc, char* argv[], SSLSNISocketConfig sniSocketConfig,
-                void* sniSocketConfigArg) {
+                void* sniSocketConfigArg, ServerConfigFunc configFunc) {
   if (argc != 3) {
     fprintf(stderr, "usage: %s <NSS DB directory> <ppid>\n", argv[0]);
     return 1;
@@ -611,6 +611,14 @@ int StartServer(int argc, char* argv[], SSLSNISocketConfig sniSocketConfig,
                                       nullptr, nullptr,
                                       &extra_data) != SECSuccess) {
     return 1;
+  }
+
+  // Call back to implementation-defined configuration func, if provided.
+  if (configFunc) {
+    if (((configFunc)(modelSocket.get())) != SECSuccess) {
+      PrintPRError("configFunc failed");
+      return 1;
+    }
   }
 
   if (gCallbackPort != 0) {
