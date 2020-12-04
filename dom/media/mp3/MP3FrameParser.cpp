@@ -68,6 +68,10 @@ const ID3Parser::ID3Header& FrameParser::ID3Header() const {
   return mID3Parser.Header();
 }
 
+uint32_t FrameParser::TotalID3HeaderSize() const {
+  return mID3Parser.TotalHeadersSize();
+}
+
 const FrameParser::VBRHeader& FrameParser::VBRInfo() const {
   return mVBRHeader;
 }
@@ -77,12 +81,12 @@ Result<bool, nsresult> FrameParser::Parse(BufferReader* aReader,
   MOZ_ASSERT(aReader && aBytesToSkip);
   *aBytesToSkip = 0;
 
-  if (!mID3Parser.Header().HasSizeBeenSet() && !mFirstFrame.Length()) {
+  if (ID3Parser::IsBufferStartingWithID3Tag(aReader) && !mFirstFrame.Length()) {
     // No MP3 frames have been parsed yet, look for ID3v2 headers at file begin.
     // ID3v1 tags may only be at file end.
     // TODO: should we try to read ID3 tags at end of file/mid-stream, too?
     const size_t prevReaderOffset = aReader->Offset();
-    const uint32_t tagSize = mID3Parser.Parse(aReader).unwrapOr(0);
+    const uint32_t tagSize = mID3Parser.Parse(aReader);
     if (!!tagSize) {
       // ID3 tag found, skip past it.
       const uint32_t skipSize = tagSize - ID3Parser::ID3Header::SIZE;
@@ -540,18 +544,64 @@ static const uint8_t MIN_MAJOR_VER = 2;
 static const uint8_t MAX_MAJOR_VER = 4;
 }  // namespace id3_header
 
-Result<uint32_t, nsresult> ID3Parser::Parse(BufferReader* aReader) {
-  MOZ_ASSERT(aReader);
+/* static */
+bool ID3Parser::IsBufferStartingWithID3Tag(BufferReader* aReader) {
+  mozilla::Result<uint32_t, nsresult> res = aReader->PeekU24();
+  if (res.isErr()) {
+    return false;
+  }
+  // If buffer starts with ID3v2 tag, `rv` would be reverse and its content
+  // should be '3' 'D' 'I' from the lowest bit.
+  uint32_t rv = res.unwrap();
+  for (int idx = id3_header::ID_LEN - 1; idx >= 0; idx--) {
+    if ((rv & 0xff) != id3_header::ID[idx]) {
+      return false;
+    }
+    rv = rv >> 8;
+  }
+  return true;
+}
 
+uint32_t ID3Parser::Parse(BufferReader* aReader) {
+  MOZ_ASSERT(aReader);
+  MOZ_ASSERT(ID3Parser::IsBufferStartingWithID3Tag(aReader));
+
+  if (!mHeader.HasSizeBeenSet()) {
+    return ParseInternal(aReader);
+  }
+
+  // Encounter another possible ID3 header, if that is valid then we would use
+  // it and save the size of previous one in order to report the size of all ID3
+  // headers together in `TotalHeadersSize()`.
+  ID3Header prevHeader = mHeader;
+  mHeader.Reset();
+  uint32_t size = ParseInternal(aReader);
+  if (!size) {
+    // next ID3 is invalid, so revert the header.
+    mHeader = prevHeader;
+    return size;
+  }
+
+  mFormerID3Size += prevHeader.TotalTagSize();
+  return size;
+}
+
+uint32_t ID3Parser::ParseInternal(BufferReader* aReader) {
   for (auto res = aReader->ReadU8();
        res.isOk() && !mHeader.ParseNext(res.unwrap());
        res = aReader->ReadU8()) {
   }
-
   return mHeader.TotalTagSize();
 }
 
-void ID3Parser::Reset() { mHeader.Reset(); }
+void ID3Parser::Reset() {
+  mHeader.Reset();
+  mFormerID3Size = 0;
+}
+
+uint32_t ID3Parser::TotalHeadersSize() const {
+  return mHeader.TotalTagSize() + mFormerID3Size;
+}
 
 const ID3Parser::ID3Header& ID3Parser::Header() const { return mHeader; }
 

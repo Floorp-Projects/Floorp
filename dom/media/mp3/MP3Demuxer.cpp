@@ -450,7 +450,7 @@ MediaByteRange MP3TrackDemuxer::FindFirstFrame() {
           numSuccFrames);
       mFrameLock = true;
       return candidateFrame;
-    } else if (prevFrame.mStart == mParser.ID3Header().TotalTagSize() &&
+    } else if (prevFrame.mStart == mParser.TotalID3HeaderSize() &&
                currentFrame.mEnd == StreamLength()) {
       // We accept streams with only two frames if both frames are valid. This
       // is to handle very short files and provide parity with Chrome. See
@@ -521,7 +521,7 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
       // this parsing session with, we need to discount the ID3 tag size only
       // if we were looking for one during the current frame parsing session.
       if (searchingForID3) {
-        maxSkippableBytes += mParser.ID3Header().TotalTagSize();
+        maxSkippableBytes += mParser.TotalID3HeaderSize();
       }
     } else if (mFrameLock) {
       // We've found a valid MPEG stream, so don't impose any limits
