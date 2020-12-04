@@ -16,7 +16,7 @@ namespace mozilla {
 // ID3 header parser state machine used by FrameParser.
 // The header contains the following format (one byte per term):
 // 'I' 'D' '3' MajorVersion MinorVersion Flags Size1 Size2 Size3 Size4
-// For more details see http://id3.org/id3v2.3.0.
+// For more details see https://id3.org/id3v2.4.0-structure
 class ID3Parser {
  public:
   // Holds the ID3 header and its parsing state.
