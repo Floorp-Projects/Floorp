@@ -11,6 +11,7 @@ import re
 from manifestparser import TestManifest
 from mozperftest.script import ScriptInfo
 from perfdocs.utils import read_yaml
+from perfdocs.logger import PerfDocLogger
 
 """
 This file is for framework specific gatherers since manifests
@@ -220,13 +221,24 @@ class MozperftestGatherer(FrameworkGatherer):
         for path in pathlib.Path(self.workspace_dir).rglob("perftest.ini"):
             suite_name = re.sub(self.workspace_dir, "", os.path.dirname(path))
 
+            # If the workspace dir doesn't end with a forward-slash,
+            # the substitution above won't work completely
+            if suite_name.startswith("/") or suite_name.startswith("\\"):
+                suite_name = suite_name[1:]
+
+            # We have to add new paths to the logger as we search
+            # because mozperftest tests exist in multiple places in-tree
+            PerfDocLogger.PATHS.append(suite_name)
+
             # Get the tests from perftest.ini
             test_manifest = TestManifest([str(path)], strict=False)
             test_list = test_manifest.active_tests(exists=False, disabled=False)
             for test in test_list:
                 si = ScriptInfo(test["path"])
                 self.script_infos[si["name"]] = si
-                self._test_list.setdefault(suite_name, {}).update({si["name"]: ""})
+                self._test_list.setdefault(suite_name, {}).update(
+                    {si["name"]: str(path)}
+                )
 
         return self._test_list
 
