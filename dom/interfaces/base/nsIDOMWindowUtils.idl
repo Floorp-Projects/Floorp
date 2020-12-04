@@ -783,6 +783,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
    * @param aOnlyVisible Set to true if you only want nodes that pass a visibility
    *        hit test.
+   * @param aTransparencyThreshold Only has an effect if aOnlyVisible is true.
+   *        Returns what amount of transparency is considered "opaque enough"
+   *        to consider elements "not visible". The default is effectively "1"
+   *        (so, only opaque elements will stop an element from being
+   *        "visible").
    */
   NodeList nodesFromRect(in float aX,
                          in float aY,
@@ -792,7 +797,8 @@ interface nsIDOMWindowUtils : nsISupports {
                          in float aLeftSize,
                          in boolean aIgnoreRootScrollFrame,
                          in boolean aFlushLayout,
-                         in boolean aOnlyVisible);
+                         in boolean aOnlyVisible,
+                         [optional] in float aTransparencyThreshold);
 
 
   /**

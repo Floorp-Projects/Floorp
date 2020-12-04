@@ -42,7 +42,7 @@ static already_AddRefed<dom::Element> ElementFromPoint(
   }
   nsIFrame* frame = nsLayoutUtils::GetFrameForPoint(
       RelativeTo{rootFrame, ViewportType::Visual}, CSSPoint::ToAppUnits(aPoint),
-      {FrameForPointOption::IgnorePaintSuppression});
+      {{FrameForPointOption::IgnorePaintSuppression}});
   while (frame && (!frame->GetContent() ||
                    frame->GetContent()->IsInNativeAnonymousSubtree())) {
     frame = nsLayoutUtils::GetParentOrPlaceholderFor(frame);

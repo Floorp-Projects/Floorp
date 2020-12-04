@@ -2641,8 +2641,7 @@ struct AutoNestedPaintCount {
 #endif
 
 nsIFrame* nsLayoutUtils::GetFrameForPoint(
-    RelativeTo aRelativeTo, nsPoint aPt,
-    EnumSet<FrameForPointOption> aOptions) {
+    RelativeTo aRelativeTo, nsPoint aPt, const FrameForPointOptions& aOptions) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::GetFrameForPoint", LAYOUT);
 
   nsresult rv;
@@ -2653,9 +2652,10 @@ nsIFrame* nsLayoutUtils::GetFrameForPoint(
   return outFrames.Length() ? outFrames.ElementAt(0) : nullptr;
 }
 
-nsresult nsLayoutUtils::GetFramesForArea(
-    RelativeTo aRelativeTo, const nsRect& aRect,
-    nsTArray<nsIFrame*>& aOutFrames, EnumSet<FrameForPointOption> aOptions) {
+nsresult nsLayoutUtils::GetFramesForArea(RelativeTo aRelativeTo,
+                                         const nsRect& aRect,
+                                         nsTArray<nsIFrame*>& aOutFrames,
+                                         const FrameForPointOptions& aOptions) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::GetFramesForArea", LAYOUT);
 
   nsIFrame* frame = const_cast<nsIFrame*>(aRelativeTo.mFrame);
@@ -2665,10 +2665,10 @@ nsresult nsLayoutUtils::GetFramesForArea(
   builder.BeginFrame();
   nsDisplayList list;
 
-  if (aOptions.contains(FrameForPointOption::IgnorePaintSuppression)) {
+  if (aOptions.mBits.contains(FrameForPointOption::IgnorePaintSuppression)) {
     builder.IgnorePaintSuppression();
   }
-  if (aOptions.contains(FrameForPointOption::IgnoreRootScrollFrame)) {
+  if (aOptions.mBits.contains(FrameForPointOption::IgnoreRootScrollFrame)) {
     nsIFrame* rootScrollFrame = frame->PresShell()->GetRootScrollFrame();
     if (rootScrollFrame) {
       builder.SetIgnoreScrollFrame(rootScrollFrame);
@@ -2677,12 +2677,13 @@ nsresult nsLayoutUtils::GetFramesForArea(
   if (aRelativeTo.mViewportType == ViewportType::Layout) {
     builder.SetIsRelativeToLayoutViewport();
   }
-  if (aOptions.contains(FrameForPointOption::IgnoreCrossDoc)) {
+  if (aOptions.mBits.contains(FrameForPointOption::IgnoreCrossDoc)) {
     builder.SetDescendIntoSubdocuments(false);
   }
 
-  builder.SetHitTestIsForVisibility(
-      aOptions.contains(FrameForPointOption::OnlyVisible));
+  if (aOptions.mBits.contains(FrameForPointOption::OnlyVisible)) {
+    builder.SetHitTestIsForVisibility(aOptions.mVisibleThreshold);
+  }
 
   builder.EnterPresShell(frame);
 

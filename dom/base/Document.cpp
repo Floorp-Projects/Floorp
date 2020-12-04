@@ -12918,8 +12918,8 @@ already_AddRefed<nsDOMCaretPosition> Document::CaretPositionFromPoint(
 
   nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
       RelativeTo{rootFrame}, pt,
-      {FrameForPointOption::IgnorePaintSuppression,
-       FrameForPointOption::IgnoreCrossDoc});
+      {{FrameForPointOption::IgnorePaintSuppression,
+        FrameForPointOption::IgnoreCrossDoc}});
   if (!ptFrame) {
     return nullptr;
   }

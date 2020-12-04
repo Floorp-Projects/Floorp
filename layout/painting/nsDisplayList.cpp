@@ -608,7 +608,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mForceLayerForScrollParent(false),
       mAsyncPanZoomEnabled(nsLayoutUtils::AsyncPanZoomEnabled(aReferenceFrame)),
       mBuildingInvisibleItems(false),
-      mHitTestIsForVisibility(false),
       mIsBuilding(false),
       mInInvalidSubtree(false),
       mDisablePartialUpdates(false),
@@ -2810,9 +2809,37 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
       }
 
       if (aBuilder->HitTestIsForVisibility()) {
-        if (aState->mHitFullyOpaqueItem ||
-            item->GetOpaqueRegion(aBuilder, &snap).Contains(aRect)) {
-          aState->mHitFullyOpaqueItem = true;
+        aState->mHitOccludingItem = [&] {
+          if (aState->mHitOccludingItem) {
+            // We already hit something before.
+            return true;
+          }
+          if (aState->mCurrentOpacity == 1.0f &&
+              item->GetOpaqueRegion(aBuilder, &snap).Contains(aRect)) {
+            // An opaque item always occludes everything. Note that we need to
+            // check wrapping opacity and such as well.
+            return true;
+          }
+          float threshold = aBuilder->VisibilityThreshold();
+          if (threshold == 1.0f) {
+            return false;
+          }
+          float itemOpacity = [&] {
+            switch (item->GetType()) {
+              case DisplayItemType::TYPE_OPACITY:
+                return static_cast<nsDisplayOpacity*>(item)->GetOpacity();
+              case DisplayItemType::TYPE_BACKGROUND_COLOR:
+                return static_cast<nsDisplayBackgroundColor*>(item)
+                    ->GetOpacity();
+              default:
+                // Be conservative and assume it won't occlude other items.
+                return 0.0f;
+            }
+          }();
+          return itemOpacity * aState->mCurrentOpacity >= threshold;
+        }();
+
+        if (aState->mHitOccludingItem) {
           // We're exiting early, so pop the remaining items off the buffer.
           aState->mItemBuffer.TruncateLength(itemBufferStart);
           break;
@@ -5777,6 +5804,9 @@ void nsDisplayOpacity::HitTest(nsDisplayListBuilder* aBuilder,
                                const nsRect& aRect,
                                nsDisplayItem::HitTestState* aState,
                                nsTArray<nsIFrame*>* aOutFrames) {
+  AutoRestore<float> opacity(aState->mCurrentOpacity);
+  aState->mCurrentOpacity *= mOpacity;
+
   // TODO(emilio): special-casing zero is a bit arbitrary... Maybe we should
   // only consider fully opaque items? Or make this configurable somehow?
   if (aBuilder->HitTestIsForVisibility() && mOpacity == 0.0f) {

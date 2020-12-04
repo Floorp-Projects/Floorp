@@ -747,16 +747,32 @@ class nsLayoutUtils {
     OnlyVisible,
   };
 
+  struct FrameForPointOptions {
+    using Bits = mozilla::EnumSet<FrameForPointOption>;
+
+    Bits mBits;
+    // If mBits contains OnlyVisible, what is the opacity threshold which we
+    // consider "opaque enough" to clobber stuff underneath.
+    float mVisibleThreshold;
+
+    FrameForPointOptions(Bits aBits, float aVisibleThreshold)
+        : mBits(aBits), mVisibleThreshold(aVisibleThreshold){};
+
+    MOZ_IMPLICIT FrameForPointOptions(Bits aBits)
+        : FrameForPointOptions(aBits, 1.0f) {}
+
+    FrameForPointOptions() : FrameForPointOptions(Bits()){};
+  };
+
   /**
    * Given aFrame, the root frame of a stacking context, find its descendant
    * frame under the point aPt that receives a mouse event at that location,
    * or nullptr if there is no such frame.
    * @param aPt the point, relative to the frame origin, in either visual
    *            or layout coordinates depending on aRelativeTo.mViewportType
-   * @param aFlags some combination of FrameForPointOption.
    */
   static nsIFrame* GetFrameForPoint(RelativeTo aRelativeTo, nsPoint aPt,
-                                    mozilla::EnumSet<FrameForPointOption> = {});
+                                    const FrameForPointOptions& = {});
 
   /**
    * Given aFrame, the root frame of a stacking context, find all descendant
@@ -765,11 +781,10 @@ class nsLayoutUtils {
    * @param aRect the rect, relative to the frame origin, in either visual
    *              or layout coordinates depending on aRelativeTo.mViewportType
    * @param aOutFrames an array to add all the frames found
-   * @param aFlags some combination of FrameForPointOption.
    */
   static nsresult GetFramesForArea(RelativeTo aRelativeTo, const nsRect& aRect,
                                    nsTArray<nsIFrame*>& aOutFrames,
-                                   mozilla::EnumSet<FrameForPointOption> = {});
+                                   const FrameForPointOptions& = {});
 
   /**
    * Transform aRect relative to aFrame up to the coordinate system of
