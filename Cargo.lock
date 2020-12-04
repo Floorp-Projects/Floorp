@@ -774,7 +774,7 @@ dependencies = [
 [[package]]
 name = "cranelift-bforest"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=ac58a436ed84d1a88b4ff24367c5972cf8d3d405#ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
 dependencies = [
  "cranelift-entity 0.68.0",
 ]
@@ -782,7 +782,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=ac58a436ed84d1a88b4ff24367c5972cf8d3d405#ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
 dependencies = [
  "byteorder",
  "cranelift-bforest",
@@ -799,7 +799,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen-meta"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=ac58a436ed84d1a88b4ff24367c5972cf8d3d405#ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
 dependencies = [
  "cranelift-codegen-shared",
  "cranelift-entity 0.68.0",
@@ -808,7 +808,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen-shared"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=ac58a436ed84d1a88b4ff24367c5972cf8d3d405#ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
 
 [[package]]
 name = "cranelift-entity"
@@ -818,12 +818,12 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a6
 [[package]]
 name = "cranelift-entity"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=ac58a436ed84d1a88b4ff24367c5972cf8d3d405#ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
 
 [[package]]
 name = "cranelift-frontend"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=ac58a436ed84d1a88b4ff24367c5972cf8d3d405#ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
 dependencies = [
  "cranelift-codegen",
  "log",
@@ -834,7 +834,7 @@ dependencies = [
 [[package]]
 name = "cranelift-wasm"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?branch=firefox85#dcc52ba3f69d3de7cdbd787b936825d9c61e3c27"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=ac58a436ed84d1a88b4ff24367c5972cf8d3d405#ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
 dependencies = [
  "cranelift-codegen",
  "cranelift-entity 0.68.0",
@@ -4197,8 +4197,7 @@ dependencies = [
 [[package]]
 name = "regalloc"
 version = "0.0.31"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "571f7f397d61c4755285cd37853fe8e03271c243424a907415909379659381c5"
+source = "git+https://github.com/mozilla-spidermonkey/regalloc.rs?rev=fc5d1d33317b0fbd36725757f80a95127eff5109#fc5d1d33317b0fbd36725757f80a95127eff5109"
 dependencies = [
  "log",
  "rustc-hash",
@@ -5681,8 +5680,7 @@ checksum = "073da89bf1c84db000dd68ce660c1b4a08e3a2d28fd1e3394ab9e7abdde4a0f8"
 [[package]]
 name = "wasmparser"
 version = "0.67.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f091cf3849e5fe76a60255bff169277459f2201435bc583b6656880553f0ad0"
+source = "git+https://github.com/mozilla-spidermonkey/wasm-tools?rev=1b7763faa484e62752538b78e7a69883f4faceee#1b7763faa484e62752538b78e7a69883f4faceee"
 
 [[package]]
 name = "wast"
