@@ -16,6 +16,14 @@ namespace glean {
 
 namespace test {
     /**
+     * generated from test.boolean_metric
+     *
+     * A multi-line
+     * description
+     */
+    constexpr impl::BooleanMetric boolean_metric(1);
+
+    /**
      * generated from test.counter_metric
      *
      * A multi-line

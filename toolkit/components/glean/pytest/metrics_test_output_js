@@ -37,6 +37,12 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   uint32_t metricId = GLEAN_METRIC_ID(id);
 
   switch (typeId) {
+    case 1: /* Boolean */
+    {
+      RefPtr<nsISupports> metric = new GleanBoolean(metricId);
+      return metric.forget();
+      break;
+    }
     case 3: /* Counter */
     {
       RefPtr<nsISupports> metric = new GleanCounter(metricId);
