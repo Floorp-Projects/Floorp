@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { TOGGLE_POLICIES } = ChromeUtils.import(
+  "resource://gre/modules/PictureInPictureControls.jsm"
+);
+
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
@@ -20,6 +24,7 @@ const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";
 const HAS_USED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.has-used";
+const SHARED_DATA_KEY = "PictureInPicture:SiteOverrides";
 
 /**
  * We currently ship with a few different variations of the
@@ -433,8 +438,8 @@ async function prepareForToggleClick(browser, videoID) {
 }
 
 /**
- * Returns the client rect for the toggle if it's supposed to be visible
- * on hover. Otherwise, returns the client rect for the video with the
+ * Returns client rect info for the toggle if it's supposed to be visible
+ * on hover. Otherwise, returns client rect info for the video with the
  * associated ID.
  *
  * @param {Element} browser The <xul:browser> that has the <video> loaded in it.
@@ -444,9 +449,9 @@ async function prepareForToggleClick(browser, videoID) {
  * @resolves With the following Object structure:
  *   {
  *     top: <Number>,
- *     right: <Number>,
  *     left: <Number>,
- *     bottom: <Number>,
+ *     width: <Number>,
+ *     height: <Number>,
  *   }
  */
 async function getToggleClientRect(
@@ -476,9 +481,9 @@ async function getToggleClientRect(
 
     return {
       top: rect.top,
-      right: rect.right,
       left: rect.left,
-      bottom: rect.bottom,
+      width: rect.width,
+      height: rect.height,
     };
   });
 }
@@ -605,22 +610,20 @@ async function testToggleHelper(
   );
 
   info("Hovering the toggle rect now.");
-  // The toggle center, because of how it slides out, is actually outside
-  // of the bounds of a click event. For now, we move the mouse in by a
-  // hard-coded 2 pixels along the x and y axis to achieve the hover.
-  let toggleLeft = toggleClientRect.left + 2;
-  let toggleTop = toggleClientRect.top + 2;
+  let toggleCenterX = toggleClientRect.left + toggleClientRect.width / 2;
+  let toggleCenterY = toggleClientRect.top + toggleClientRect.height / 2;
+
   await BrowserTestUtils.synthesizeMouseAtPoint(
-    toggleLeft,
-    toggleTop,
+    toggleCenterX,
+    toggleCenterY,
     {
       type: "mousemove",
     },
     browser
   );
   await BrowserTestUtils.synthesizeMouseAtPoint(
-    toggleLeft,
-    toggleTop,
+    toggleCenterX,
+    toggleCenterY,
     {
       type: "mouseover",
     },
@@ -641,8 +644,8 @@ async function testToggleHelper(
   info("Right-clicking on toggle.");
 
   await BrowserTestUtils.synthesizeMouseAtPoint(
-    toggleLeft,
-    toggleTop,
+    toggleCenterX,
+    toggleCenterY,
     { button: 2 },
     browser
   );
@@ -675,8 +678,8 @@ async function testToggleHelper(
     );
     let domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
     await BrowserTestUtils.synthesizeMouseAtPoint(
-      toggleLeft,
-      toggleTop,
+      toggleCenterX,
+      toggleCenterY,
       {},
       browser
     );
@@ -695,8 +698,8 @@ async function testToggleHelper(
       "Clicking on toggle, and expecting no Picture-in-Picture window opens"
     );
     await BrowserTestUtils.synthesizeMouseAtPoint(
-      toggleLeft,
-      toggleTop,
+      toggleCenterX,
+      toggleCenterY,
       {},
       browser
     );

@@ -3,12 +3,6 @@
 
 "use strict";
 
-const SHARED_DATA_KEY = "PictureInPicture:SiteOverrides";
-
-const { TOGGLE_POLICIES } = ChromeUtils.import(
-  "resource://gre/modules/PictureInPictureControls.jsm"
-);
-
 /**
  * Tests that by setting a Picture-in-Picture toggle position policy
  * in the sharedData structure, that the toggle position can be
