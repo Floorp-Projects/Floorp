@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.util.concurrent.CancellationException;
 import org.hamcrest.core.StringEndsWith.endsWith
 import org.hamcrest.core.IsEqual.equalTo
+import org.hamcrest.core.IsNull.nullValue
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Assume.assumeThat
@@ -17,12 +18,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.WebExtension.DisabledFlags
 import org.mozilla.geckoview.WebExtensionController.EnableSource
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 import org.mozilla.geckoview.test.util.RuntimeCreator
+import org.mozilla.geckoview.WebExtension.BrowsingDataDelegate.Type.*
+import java.util.*
+import kotlin.collections.HashMap
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -48,6 +51,8 @@ class WebExtensionTest : BaseSessionTest() {
                 "resource://android/assets/web_extensions/openoptionspage-2/"
         private const val EXTENSION_PAGE_RESTORE: String =
                 "resource://android/assets/web_extensions/extension-page-restore/"
+        private const val BROWSING_DATA: String =
+                "resource://android/assets/web_extensions/browsing-data-built-in/"
     }
 
     private val controller
@@ -676,10 +681,316 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(controller.uninstall(tabsExtension))
     }
 
+    private fun browsingDataMessage(port: WebExtension.Port, type: String,
+                                    since: Long? = null): GeckoResult<JSONObject> {
+        val message = JSONObject("{" +
+                "\"type\": \"$type\"" +
+                "}")
+        if (since != null) {
+            message.put("since", since)
+        }
+        return browsingDataCall(port, message)
+    }
+
+    private fun browsingDataCall(port: WebExtension.Port,
+                                 json: JSONObject): GeckoResult<JSONObject> {
+        val uuid = UUID.randomUUID().toString()
+        json.put("uuid", uuid)
+        port.postMessage(json)
+
+        val response = GeckoResult<JSONObject>()
+        port.setDelegate(object : WebExtension.PortDelegate {
+            override fun onPortMessage(message: Any, port: WebExtension.Port) {
+                assertThat("Response ID Matches.",
+                        (message as JSONObject).getString("uuid"), equalTo(uuid))
+                response.complete(message)
+            }
+        })
+        return response
+    }
+
+    @Test
+    fun testBrowsingDataDelegateBuiltIn() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+
+        val extension = sessionRule.waitForResult(
+                controller.installBuiltIn(BROWSING_DATA))
+
+        val portResult = GeckoResult<WebExtension.Port>()
+        extension.setMessageDelegate(object : WebExtension.MessageDelegate {
+            override fun onConnect(port: WebExtension.Port) {
+                portResult.complete(port)
+            }
+        }, "browser")
+
+        val TEST_SINCE_VALUE = 59294;
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtension.BrowsingDataDelegate::class,
+                { delegate -> extension.browsingDataDelegate = delegate },
+                { extension.browsingDataDelegate = null },
+                object : WebExtension.BrowsingDataDelegate {
+                    override fun onGetSettings(): GeckoResult<WebExtension.BrowsingDataDelegate.Settings>? {
+                        return GeckoResult.fromValue(WebExtension.BrowsingDataDelegate.Settings(
+                                TEST_SINCE_VALUE,
+                                CACHE or COOKIES or DOWNLOADS or HISTORY or LOCAL_STORAGE,
+                                CACHE or COOKIES or HISTORY
+                        ))
+                    }
+                })
+
+        val port = sessionRule.waitForResult(portResult)
+
+        // Test browsingData.removeDownloads
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearDownloads(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(1234L))
+                return null
+            }
+        })
+        sessionRule.waitForResult(browsingDataMessage(port, "clear-downloads", 1234))
+
+        // Test browsingData.removeFormData
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearFormData(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(1234L))
+                return null
+            }
+        })
+        sessionRule.waitForResult(browsingDataMessage(port,"clear-form-data", 1234))
+
+        // Test browsingData.removeHistory
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearHistory(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(1234L))
+                return null
+            }
+        })
+        sessionRule.waitForResult(browsingDataMessage(port, "clear-history", 1234))
+
+        // Test browsingData.removePasswords
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearPasswords(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(1234L))
+                return null
+            }
+        })
+        sessionRule.waitForResult(browsingDataMessage(port, "clear-passwords", 1234))
+
+        // Test browsingData.remove({ indexedDB: true, localStorage: true, passwords: true })
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearPasswords(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(0L))
+                return null
+            }
+        })
+        var response = sessionRule.waitForResult(browsingDataCall(port,
+                JSONObject("{" +
+                "\"type\": \"clear\"," +
+                "\"removalOptions\": {}," +
+                "\"dataTypes\": {\"indexedDB\": true, \"localStorage\": true, \"passwords\": true}" +
+                "}")))
+        assertThat("browsingData.remove should succeed",
+                response.getString("type"),
+                equalTo("response"))
+
+        // Test browsingData.remove({ indexedDB: true, history: true, passwords: true })
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearPasswords(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(0L))
+                return null
+            }
+            @AssertCalled
+            override fun onClearHistory(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(0L))
+                return null
+            }
+        })
+        response = sessionRule.waitForResult(browsingDataCall(port,
+                JSONObject("{" +
+                "\"type\": \"clear\"," +
+                "\"removalOptions\": {}," +
+                "\"dataTypes\": {\"indexedDB\": true, \"history\": true, \"passwords\": true}" +
+                "}")))
+        assertThat("browsingData.remove should succeed",
+            response.getString("type"),
+            equalTo("response"))
+
+        // Test browsingData.remove({ indexedDB: true, history: true, passwords: true })
+        // with failure
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearPasswords(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(0L))
+                return null
+            }
+            @AssertCalled
+            override fun onClearHistory(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(0L))
+                return GeckoResult.fromException(RuntimeException("Not authorized."));
+            }
+        })
+        response = sessionRule.waitForResult(browsingDataCall(port,
+                JSONObject("{" +
+                "\"type\": \"clear\"," +
+                "\"removalOptions\": {}," +
+                "\"dataTypes\": {\"indexedDB\": true, \"history\": true, \"passwords\": true}" +
+                "}")))
+        assertThat("browsingData.remove returns expected error.",
+            response.getString("error"),
+            equalTo("Not authorized."))
+
+        // Test browsingData.remove({ indexedDB: true, history: true, passwords: true })
+        // with multiple failures
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            @AssertCalled
+            override fun onClearPasswords(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(0L))
+                return GeckoResult.fromException(RuntimeException("Not authorized passwords."));
+            }
+            @AssertCalled
+            override fun onClearHistory(sinceUnixTimestamp: Long): GeckoResult<Void>? {
+                assertThat("timestamp should match", sinceUnixTimestamp,
+                        equalTo(0L))
+                return GeckoResult.fromException(RuntimeException("Not authorized history."));
+            }
+        })
+        response = sessionRule.waitForResult(browsingDataCall(port,
+                JSONObject("{" +
+                        "\"type\": \"clear\"," +
+                        "\"removalOptions\": {}," +
+                        "\"dataTypes\": {\"indexedDB\": true, \"history\": true, \"passwords\": true}" +
+                        "}")))
+        val error = response.getString("error")
+        assertThat("browsingData.remove returns expected error.",
+                error == "Not authorized passwords." || error == "Not authorized history.",
+                equalTo(true))
+
+        // Test browsingData.settings()
+        response = sessionRule.waitForResult(
+                browsingDataMessage(port, "get-settings"))
+
+        val settings = response.getJSONObject("result")
+        val dataToRemove = settings.getJSONObject("dataToRemove")
+        val options = settings.getJSONObject("options")
+
+        assertThat("Since should be correct",
+                options.getInt("since"), equalTo(TEST_SINCE_VALUE))
+        for (key in listOf("cache", "cookies", "history")) {
+            assertThat("Data to remove should be correct",
+                    dataToRemove.getBoolean(key), equalTo(true))
+        }
+        for (key in listOf("downloads", "localStorage")) {
+            assertThat("Data to remove should be correct",
+                    dataToRemove.getBoolean(key), equalTo(false))
+        }
+
+        val dataRemovalPermitted = settings.getJSONObject("dataRemovalPermitted")
+        for (key in listOf("cache", "cookies", "downloads", "history", "localStorage")) {
+            assertThat("Data removal permitted should be correct",
+                    dataRemovalPermitted.getBoolean(key), equalTo(true))
+        }
+
+        // Test browsingData.settings() with no delegate
+        sessionRule.delegateDuringNextWait(object : WebExtension.BrowsingDataDelegate {
+            override fun onGetSettings(): GeckoResult<WebExtension.BrowsingDataDelegate.Settings>? {
+                return null
+            }
+        })
+        response = sessionRule.waitForResult(
+                browsingDataMessage(port, "get-settings"))
+        assertThat("browsingData.settings returns expected error.",
+                response.getString("error"),
+                equalTo("browsingData.settings is not supported"))
+
+        sessionRule.waitForResult(controller.uninstall(extension))
+    }
+
+    @Test
+    fun testBrowsingDataDelegate() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val extension = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/browsing-data.xpi"))
+
+        val accumulator = mutableListOf<String>()
+        val result = GeckoResult<List<String>>()
+
+        extension.browsingDataDelegate = object : WebExtension.BrowsingDataDelegate {
+            fun register(type: String, timestamp: Long) {
+                accumulator.add("$type $timestamp")
+                if (accumulator.size >= 5) {
+                    result.complete(accumulator)
+                }
+            }
+
+            override fun onClearDownloads(sinceUnixTimestamp: Long): GeckoResult<Void> {
+                register("downloads", sinceUnixTimestamp)
+                return GeckoResult.fromValue(null);
+            }
+
+            override fun onClearFormData(sinceUnixTimestamp: Long): GeckoResult<Void> {
+                register("formData", sinceUnixTimestamp)
+                return GeckoResult.fromValue(null);
+            }
+
+            override fun onClearHistory(sinceUnixTimestamp: Long): GeckoResult<Void> {
+                register("history", sinceUnixTimestamp)
+                return GeckoResult.fromValue(null);
+            }
+
+            override fun onClearPasswords(sinceUnixTimestamp: Long): GeckoResult<Void> {
+                register("passwords", sinceUnixTimestamp)
+                return GeckoResult.fromValue(null);
+            }
+        }
+
+        val actual = sessionRule.waitForResult(result)
+        assertThat("Delegate methods get called in the right order",
+            actual, equalTo(listOf(
+                "downloads 10001",
+                "formData 10002",
+                "history 10003",
+                "passwords 10004",
+                "downloads 10005"
+        )))
+
+        sessionRule.waitForResult(controller.uninstall(extension))
+    }
+
     // Same as testSetTabActive when the extension is not allowed in private browsing
     @Test
     fun testSetTabActiveNotAllowedInPrivateBrowsing() {
-        // android.os.Debug.waitForDebugger()
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "xpinstall.signatures.required" to false,
                 "extensions.install.requireBuiltInCerts" to false,

@@ -1636,8 +1636,10 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtension {
+    method @Nullable @UiThread public WebExtension.BrowsingDataDelegate getBrowsingDataDelegate();
     method @Nullable @UiThread public WebExtension.TabDelegate getTabDelegate();
     method @AnyThread public void setActionDelegate(@Nullable WebExtension.ActionDelegate);
+    method @UiThread public void setBrowsingDataDelegate(@Nullable WebExtension.BrowsingDataDelegate);
     method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
     method @UiThread public void setTabDelegate(@Nullable WebExtension.TabDelegate);
     field public final long flags;
@@ -1674,6 +1676,32 @@ package org.mozilla.geckoview {
     field public static final int SOFTBLOCKED = 1;
     field public static final int VULNERABLE_NO_UPDATE = 5;
     field public static final int VULNERABLE_UPDATE_AVAILABLE = 4;
+  }
+
+  @UiThread public static interface WebExtension.BrowsingDataDelegate {
+    method @Nullable default public GeckoResult<Void> onClearDownloads(long);
+    method @Nullable default public GeckoResult<Void> onClearFormData(long);
+    method @Nullable default public GeckoResult<Void> onClearHistory(long);
+    method @Nullable default public GeckoResult<Void> onClearPasswords(long);
+    method @Nullable default public GeckoResult<WebExtension.BrowsingDataDelegate.Settings> onGetSettings();
+  }
+
+  @UiThread public static class WebExtension.BrowsingDataDelegate.Settings {
+    ctor @UiThread public Settings(int, long, long);
+    field public final long selectedTypes;
+    field public final int sinceUnixTimestamp;
+    field public final long toggleableTypes;
+  }
+
+  public static class WebExtension.BrowsingDataDelegate.Type {
+    ctor protected Type();
+    field public static final long CACHE = 1L;
+    field public static final long COOKIES = 2L;
+    field public static final long DOWNLOADS = 4L;
+    field public static final long FORM_DATA = 8L;
+    field public static final long HISTORY = 16L;
+    field public static final long LOCAL_STORAGE = 32L;
+    field public static final long PASSWORDS = 64L;
   }
 
   public static class WebExtension.CreateTabDetails {

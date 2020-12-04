@@ -13,6 +13,12 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v85
+- Added [`WebExtension.BrowsingDataDelegate`][85.1] that can be used to
+  implement the WebExtension `browsingData` API.
+
+[85.1]: {{javadoc_uri}}/WebExtension.BrowsingDataDelegate.html
+
 ## v84
 - ⚠️  Removed deprecated [`GeckoRuntimeSettings.Builder.useMultiprocess`] and
   [`GeckoRuntimeSettings.getUseMultiprocess`]. Single-process GeckoView is no
@@ -849,4 +855,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2e4e0b4fb29ca63851687ac1020d9d51589476ce
+[api-version]: e31b1976d9efcce57d7e46996f807b68160a4943
