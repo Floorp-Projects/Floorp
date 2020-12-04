@@ -308,6 +308,9 @@ describe("ASRouter", () => {
           return fakeTargetingContext.evalWithDefault(expr);
         }
       },
+      RemoteL10n: {
+        isLocaleSupported: () => true,
+      },
     });
     await createRouterAndInit();
   });
@@ -2842,6 +2845,54 @@ describe("ASRouter", () => {
 
       assert.property(result, "messages");
       assert.lengthOf(result.messages, 0);
+    });
+  });
+  describe("#_remoteSettingsLoader", () => {
+    let provider;
+    let spy;
+    beforeEach(() => {
+      provider = {
+        id: "cfr",
+        bucket: "cfr",
+      };
+      sandbox
+        .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
+        .resolves([{ id: "message_1" }]);
+      spy = sandbox.spy();
+      global.Downloader.prototype.download = spy;
+    });
+    it("should allow fetch for known locales", async () => {
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsBCP47")
+        .get(() => "en-US");
+      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(true);
+
+      await MessageLoaderUtils._remoteSettingsLoader(provider, {});
+
+      assert.calledOnce(spy);
+    });
+    it("should fallback to 'en-US' for locale 'und' ", async () => {
+      sandbox.stub(global.Services.locale, "appLocaleAsBCP47").get(() => "und");
+      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(false);
+      const getRecordSpy = sandbox.spy(
+        global.KintoHttpClient.prototype,
+        "getRecord"
+      );
+
+      await MessageLoaderUtils._remoteSettingsLoader(provider, {});
+
+      assert.ok(getRecordSpy.args[0][0].includes("en-US"));
+      assert.calledOnce(spy);
+    });
+    it("should not allow fetch for unsupported locales", async () => {
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsBCP47")
+        .get(() => "unkown");
+      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(false);
+
+      await MessageLoaderUtils._remoteSettingsLoader(provider, {});
+
+      assert.notCalled(spy);
     });
   });
 });
