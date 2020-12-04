@@ -6256,7 +6256,7 @@ void InvalidateLiveDatabasesMatching(const Condition& aCondition) {
 
       if (aCondition(*database)) {
         databases.AppendElement(
-            SafeRefPtr{database.get(), AcquireStrongRefFromRawPtr{}});
+            SafeRefPtr{database, AcquireStrongRefFromRawPtr{}});
       }
     }
   }
