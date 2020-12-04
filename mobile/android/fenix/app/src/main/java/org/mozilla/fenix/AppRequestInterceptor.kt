@@ -72,7 +72,7 @@ class AppRequestInterceptor(
             htmlResource = riskLevel.htmlRes
         )
 
-        return RequestInterceptor.ErrorResponse.Uri(errorPageUri)
+        return RequestInterceptor.ErrorResponse(errorPageUri)
     }
 
     /**

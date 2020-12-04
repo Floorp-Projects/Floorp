@@ -200,7 +200,7 @@ class AppRequestInterceptorTest {
 
     private fun createActualErrorPage(error: ErrorType): String {
         val errorPage = interceptor.onErrorRequest(session = mockk(), errorType = error, uri = null)
-                as RequestInterceptor.ErrorResponse.Uri
+                as RequestInterceptor.ErrorResponse
         return errorPage.uri
     }
 

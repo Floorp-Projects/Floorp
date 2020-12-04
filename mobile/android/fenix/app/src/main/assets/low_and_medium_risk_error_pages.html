@@ -8,6 +8,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width; user-scalable=false;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src resource:; object-src 'none'" />
     <link rel="stylesheet" type="text/css" href="shared_error_style.css" />
     <link
       rel="stylesheet"
@@ -33,13 +34,12 @@
       </div>
 
       <!-- Retry Button -->
-      <button id="errorTryAgain" onclick="window.location.reload()"></button>
+      <button id="errorTryAgain"></button>
 
       <!-- Advanced Button -->
       <button
         id="advancedButton"
         class="buttonSecondary hidden"
-        onclick="toggleAdvancedAndScroll()"
       ></button>
 
       <hr id="horizontalLine" hidden />
@@ -52,7 +52,6 @@
           >
             <button
               id="advancedPanelBackButton"
-              onClick="window.history.back()"
             ></button>
           </div>
           <div
@@ -62,7 +61,6 @@
             <button
               id="advancedPanelAcceptButton"
               class="buttonSecondary"
-              onClick="acceptAndContinue(true)"
             ></button>
           </div>
         </div>
@@ -100,5 +98,5 @@
     }
   </script>
 
-  <script src="./errorPageScripts.js"></script>
+    <script src="./lowMediumErrorPages.js"></script>
 </html>
