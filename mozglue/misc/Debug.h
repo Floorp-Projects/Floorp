@@ -45,10 +45,15 @@ inline void printf_stderr(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2) {
   }
 #endif  // defined(XP_WIN)
 
+  FILE* fp = _fdopen(_dup(2), "a");
+  if (!fp) return;
+
   va_list args;
   va_start(args, fmt);
-  vfprintf(stderr, fmt, args);
+  vfprintf(fp, fmt, args);
   va_end(args);
+
+  fclose(fp);
 }
 
 #ifdef __cplusplus
