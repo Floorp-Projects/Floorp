@@ -16,6 +16,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.tabs.R
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -74,6 +75,8 @@ open class TabCounterToolbarButton(
 
                 override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
             })
+
+            contentDescription = parent.context.getString(R.string.mozac_feature_tabs_toolbar_tabs_button)
         }
 
         // Set selectableItemBackgroundBorderless
