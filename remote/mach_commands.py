@@ -109,9 +109,12 @@ class RemoteCommands(MachCommandBase):
         except OSError:
             pass
 
-        experimental_dir = os.path.join(puppeteer_dir, "experimental")
-        if os.path.isdir(experimental_dir):
-            shutil.rmtree(experimental_dir)
+        unwanted_dirs = ["experimental", "docs"]
+
+        for dir in unwanted_dirs:
+            dir_path = os.path.join(puppeteer_dir, dir)
+            if os.path.isdir(dir_path):
+                shutil.rmtree(dir_path)
 
         shutil.move(
             os.path.join(self.remotedir, "json-mocha-reporter.js"), puppeteer_dir
