@@ -71,14 +71,14 @@ const ADDITIONAL_RESOURCE = {
       mediaText: "all",
       matches: true,
       line: 1,
-      column: 7,
+      column: 1,
     },
     {
       conditionText: "print",
       mediaText: "print",
       matches: false,
       line: 1,
-      column: 43,
+      column: 37,
     },
   ],
 };
