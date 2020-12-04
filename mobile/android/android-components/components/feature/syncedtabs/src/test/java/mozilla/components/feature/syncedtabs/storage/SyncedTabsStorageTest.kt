@@ -27,6 +27,7 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -66,8 +67,10 @@ class SyncedTabsStorageTest {
             tabsStorage
         )
         feature.start()
+
         // This action will change the state due to lastUsed timestamp, but will run the flow.
-        store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
         verify(tabsStorage).store(listOf(
             Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
             Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
@@ -84,7 +87,8 @@ class SyncedTabsStorageTest {
         )
         feature.start()
         // Run the flow.
-        store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
         verify(tabsStorage).store(listOf(
             Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
             Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L)
@@ -92,7 +96,8 @@ class SyncedTabsStorageTest {
 
         feature.stop()
         // Run the flow.
-        store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
         verify(tabsStorage, never()).store(listOf() /* any() is not working so we send garbage */)
     }
 

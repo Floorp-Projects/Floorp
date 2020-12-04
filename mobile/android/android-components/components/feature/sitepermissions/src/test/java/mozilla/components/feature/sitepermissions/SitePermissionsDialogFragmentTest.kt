@@ -54,7 +54,7 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
-    fun `display dialog with unselected "don't ask again"`() {
+    fun `display dialog with unselected 'don't ask again'`() {
         val fragment = spy(
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
@@ -79,7 +79,7 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
-    fun `display dialog with preselected "don't ask again"`() {
+    fun `display dialog with preselected 'don't ask again'`() {
         val fragment = spy(
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",

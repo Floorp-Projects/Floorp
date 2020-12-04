@@ -191,7 +191,7 @@ class BrowserToolbarBottomBehaviorTest {
     }
 
     @Test
-    fun `stopNestedScroll will snap toolbar up if toolbar is more than 50% visible`() {
+    fun `stopNestedScroll will snap toolbar up if toolbar is more than 50 percent visible`() {
         val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
         behavior.browserToolbar = mock()
         doReturn(true).`when`(behavior).shouldScroll
@@ -223,7 +223,7 @@ class BrowserToolbarBottomBehaviorTest {
     }
 
     @Test
-    fun `stopNestedScroll will snap toolbar down if toolbar is less than 50% visible`() {
+    fun `stopNestedScroll will snap toolbar down if toolbar is less than 50 percent visible`() {
         val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
         doReturn(true).`when`(behavior).shouldScroll
 

@@ -61,7 +61,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in New Tab" showFor displayed in correct cases`() {
+    fun `Candidate 'Open Link in New Tab' showFor displayed in correct cases`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         val tabsUseCases = TabsUseCases(store, sessionManager)
@@ -91,7 +91,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in New Tab" action properly executes for session with a contextId`() {
+    fun `Candidate 'Open Link in New Tab' action properly executes for session with a contextId`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
@@ -112,7 +112,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in New Tab" action properly executes and shows snackbar`() {
+    fun `Candidate 'Open Link in New Tab' action properly executes and shows snackbar`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org"))
@@ -134,7 +134,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in New Tab" snackbar action works`() {
+    fun `Candidate 'Open Link in New Tab' snackbar action works`() {
         val store = BrowserStore(middleware = EngineMiddleware.create(
             engine = mock(),
             sessionLookup = { null },
@@ -161,7 +161,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in New Tab" action properly handles link with an image`() {
+    fun `Candidate 'Open Link in New Tab' action properly handles link with an image`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org"))
@@ -182,7 +182,7 @@ class ContextMenuCandidateTest {
 
     /* Private */
     @Test
-    fun `Candidate "Open Link in Private Tab" showFor displayed in correct cases`() {
+    fun `Candidate 'Open Link in Private Tab' showFor displayed in correct cases`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org"))
@@ -214,7 +214,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in Private Tab" action properly executes and shows snackbar`() {
+    fun `Candidate 'Open Link in Private Tab' action properly executes and shows snackbar`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org"))
@@ -236,7 +236,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in Private Tab" snackbar action works`() {
+    fun `Candidate 'Open Link in Private Tab' snackbar action works`() {
         val store = BrowserStore(middleware = EngineMiddleware.create(
             engine = mock(),
             sessionLookup = { null },
@@ -262,7 +262,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in Private Tab" action properly handles link with an image`() {
+    fun `Candidate 'Open Link in Private Tab' action properly handles link with an image`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org"))
@@ -280,7 +280,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Image in New Tab"`() {
+    fun `Candidate 'Open Image in New Tab'`() {
         val store = BrowserStore(middleware = EngineMiddleware.create(
             engine = mock(),
             sessionLookup = { null },
@@ -342,7 +342,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Image in New Tab" opens in private tab if session is private`() {
+    fun `Candidate 'Open Image in New Tab' opens in private tab if session is private`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org", private = true))
@@ -365,7 +365,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Image in New Tab" opens with the session's contextId`() {
+    fun `Candidate 'Open Image in New Tab' opens with the session's contextId`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
@@ -389,7 +389,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Save image"`() {
+    fun `Candidate 'Save image'`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org", private = true))
@@ -442,7 +442,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Save video and audio"`() {
+    fun `Candidate 'Save video and audio'`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org", private = true))
@@ -499,7 +499,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "download link"`() {
+    fun `Candidate 'download link'`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
         sessionManager.add(Session("https://www.mozilla.org", private = true))
@@ -626,7 +626,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Get link for image gets "image" title if title is null and URL is longer than 2500 characters`() {
+    fun `Get link for image gets 'image' title if title is null and URL is longer than 2500 characters`() {
         val titleString = null
         val replacementString = "image"
         val url = "1".repeat(ContextMenuCandidate.MAX_TITLE_LENGTH + 1)
@@ -647,7 +647,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Share Link"`() {
+    fun `Candidate 'Share Link'`() {
         val context = spy(testContext)
 
         val shareLink = ContextMenuCandidate.createShareLinkCandidate(context)
@@ -692,7 +692,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Share image"`() {
+    fun `Candidate 'Share image'`() {
         val context = spy(testContext)
 
         val shareImage = ContextMenuCandidate.createShareImageCandidate(context)
@@ -726,7 +726,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Copy Link"`() {
+    fun `Candidate 'Copy Link'`() {
         val parentView = CoordinatorLayout(testContext)
 
         val copyLink = ContextMenuCandidate.createCopyLinkCandidate(
@@ -778,7 +778,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Copy Image Location"`() {
+    fun `Candidate 'Copy Image Location'`() {
         val parentView = CoordinatorLayout(testContext)
 
         val copyImageLocation = ContextMenuCandidate.createCopyImageLocationCandidate(
@@ -826,7 +826,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open in external app"`() {
+    fun `Candidate 'Open in external app'`() {
         val getAppLinkRedirectMock: AppLinksUseCases.GetAppLinkRedirect = mock()
 
         doReturn(
@@ -907,7 +907,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Copy email address"`() {
+    fun `Candidate 'Copy email address'`() {
         val parentView = CoordinatorLayout(testContext)
 
         val copyEmailAddress = ContextMenuCandidate.createCopyEmailAddressCandidate(
@@ -951,7 +951,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Share email address"`() {
+    fun `Candidate 'Share email address'`() {
         val context = spy(testContext)
 
         val shareEmailAddress = ContextMenuCandidate.createShareEmailAddressCandidate(context)
@@ -988,7 +988,7 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Add to contacts"`() {
+    fun `Candidate 'Add to contacts'`() {
         val context = spy(testContext)
 
         val addToContacts = ContextMenuCandidate.createAddContactCandidate(context)

@@ -304,13 +304,13 @@ class EvaluatorTest {
     }
 
     @Test
-    fun `Should apply the "in" operator to strings`() {
+    fun `Should apply the 'in' operator to strings`() {
         assertExpressionYieldsResult(""""bar" in "foobartek"""", true)
         assertExpressionYieldsResult(""""baz" in "foobartek"""", false)
     }
 
     @Test
-    fun `Should apply the "in" operator to arrays`() {
+    fun `Should apply the 'in' operator to arrays`() {
         assertExpressionYieldsResult(""""bar" in ["foo","bar","tek"]""", true)
         assertExpressionYieldsResult(""""baz" in ["foo","bar","tek"]""", false)
     }

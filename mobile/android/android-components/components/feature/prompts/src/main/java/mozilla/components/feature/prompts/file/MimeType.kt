@@ -47,7 +47,7 @@ internal sealed class MimeType(
 
             val photoFile = try {
                 val filename = SimpleDateFormat("yyyy-MM-ddHH.mm.ss", US).format(Date())
-                createTempFile(filename, ".jpg", context.cacheDir)
+                java.io.File.createTempFile(filename, ".jpg", context.cacheDir)
             } catch (e: IOException) {
                 return null
             }

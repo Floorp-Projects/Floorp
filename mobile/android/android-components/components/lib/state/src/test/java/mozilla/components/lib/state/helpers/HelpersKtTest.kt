@@ -15,7 +15,7 @@ import org.junit.Test
 
 class HelpersKtTest {
     @Test
-    fun `onlyIfChanged observer only invokes "then" lambda if value has changed`() {
+    fun `onlyIfChanged observer only invokes 'then' lambda if value has changed`() {
         val store = Store(
             TestState(counter = 23),
             ::reducer
@@ -57,7 +57,7 @@ class HelpersKtTest {
     }
 
     @Test
-    fun `onlyIfChanged observer will not invoke "then" lambda if mapped value is null`() {
+    fun `onlyIfChanged observer will not invoke 'then' lambda if mapped value is null`() {
         val store = Store(
             TestState(counter = 23),
             ::reducer

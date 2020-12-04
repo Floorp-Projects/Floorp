@@ -52,7 +52,7 @@ class TabsToolbarFeatureTest {
     }
 
     @Test
-    fun `feature adds "tabs" button to toolbar`() {
+    fun `feature adds 'tabs' button to toolbar`() {
         val store = BrowserStore()
         val sessionId: String? = null
 
