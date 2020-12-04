@@ -294,7 +294,8 @@ interface nsIGfxInfo : nsISupports
   //
   //   [
   //     {
-  //       // Type is one of "d3d11layers", or "glcontext".
+  //       // Type is one of "d3d11layers", "d3d9video", "glcontext",
+  //       // or "d3d11video".
   //       "type":        "<identifier>",
   //
   //       // Preference that must be deleted/reset to retrigger the guard.
