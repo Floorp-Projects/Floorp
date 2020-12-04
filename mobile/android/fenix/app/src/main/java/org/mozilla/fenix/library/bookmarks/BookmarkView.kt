@@ -13,7 +13,6 @@ import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.UserInteractionHandler
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
@@ -99,16 +98,6 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
      *
      */
     fun onRequestSync()
-
-    /**
-     * Handles the start of a swipe on a bookmark.
-     */
-    fun onStartSwipingItem()
-
-    /**
-     * Handles the end of a swipe on a bookmark.
-     */
-    fun onStopSwipingItem()
 }
 
 class BookmarkView(
@@ -134,10 +123,6 @@ class BookmarkView(
         }
         view.swipe_refresh.setOnRefreshListener {
             interactor.onRequestSync()
-        }
-
-        if (FeatureFlags.bookmarkSwipeToDelete) {
-            BookmarkTouchHelper(interactor).attachToRecyclerView(view.bookmark_list)
         }
     }
 
@@ -166,7 +151,8 @@ class BookmarkView(
             }
         }
         view.bookmarks_progress_bar.isVisible = state.isLoading
-        view.swipe_refresh.isEnabled = state.isSwipeToRefreshEnabled
+        view.swipe_refresh.isEnabled =
+            state.mode is BookmarkFragmentState.Mode.Normal || state.mode is BookmarkFragmentState.Mode.Syncing
         view.swipe_refresh.isRefreshing = state.mode is BookmarkFragmentState.Mode.Syncing
     }
 

@@ -27,11 +27,6 @@ object FeatureFlags {
     const val externalDownloadManager = true
 
     /**
-     * Enables swipe to delete in bookmarks
-     */
-    val bookmarkSwipeToDelete = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables ETP cookie purging
      */
     val etpCookiePurging = Config.channel.isNightlyOrDebug

@@ -45,8 +45,6 @@ interface BookmarkController {
     fun handleBookmarkFolderDeletion(nodes: Set<BookmarkNode>)
     fun handleRequestSync()
     fun handleBackPressed()
-    fun handleStartSwipingItem()
-    fun handleStopSwipingItem()
 }
 
 @Suppress("TooManyFunctions")
@@ -169,14 +167,6 @@ class DefaultBookmarkController(
                 handleBookmarkExpand(parent)
             }
         }
-    }
-
-    override fun handleStartSwipingItem() {
-        store.dispatch(BookmarkFragmentAction.SwipeRefreshAvailabilityChanged(false))
-    }
-
-    override fun handleStopSwipingItem() {
-        store.dispatch(BookmarkFragmentAction.SwipeRefreshAvailabilityChanged(true))
     }
 
     private fun openInNewTab(
