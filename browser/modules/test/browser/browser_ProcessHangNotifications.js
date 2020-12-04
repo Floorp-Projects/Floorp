@@ -251,7 +251,9 @@ add_task(async function terminatePluginTest() {
   let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
-  is(buttons.length, buttonCount, "proper number of buttons");
+  // Plugin hangs only ever show 2 buttons in the notification - even in
+  // DevEdition.
+  is(buttons.length, 2, "proper number of buttons");
 
   // Click the "Stop It" button, we should get a terminate script callback
   buttons[0].click();
