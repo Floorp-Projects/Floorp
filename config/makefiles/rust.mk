@@ -72,11 +72,8 @@ ifndef MOZ_LTO_RUST_CROSS
 ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
 cargo_rustc_flags += -Clto
 endif
-# Versions of rust >= 1.45 need -Cembed-bitcode=yes for all crates when
-# using -Clto.
-ifeq (,$(filter 1.38.% 1.39.% 1.40.% 1.41.% 1.42.% 1.43.% 1.44.%,$(RUSTC_VERSION)))
+# We need -Cembed-bitcode=yes for all crates when using -Clto.
 RUSTFLAGS += -Cembed-bitcode=yes
-endif
 endif
 endif
 endif
