@@ -25,9 +25,8 @@ struct BytecodeEmitter;
 //   the number of hops required to reach the |.generator| variable. In order
 //   to handle this, we can't reuse the same TryCatch emitter.
 //
-//   Simple case - For a function without exprssion parameters:
+//   Simple case - For a function without expression parameters:
 //   `async function f(<params>) {<body>}`,
-//     // First emitter, for the params
 //     AsyncEmitter ae(this);
 //
 //     ae.prepareForParamsWithoutExpression();
@@ -43,9 +42,8 @@ struct BytecodeEmitter;
 //
 //     ae.emitEnd();
 //
-//   Complex case - For a function with exprssion parameters:
+//   Complex case - For a function with expression parameters:
 //   `async function f(<expression>) {<body>}`,
-//     // First emitter, for the params
 //     AsyncEmitter ae(this);
 //
 //     ae.prepareForParamsWithExpression();
@@ -53,13 +51,29 @@ struct BytecodeEmitter;
 //     // Emit Params.
 //     ...
 //     ae.paramsEpilogue(); // We need to emit the epilogue before the extra
-//     VarScope emitExtraBodyVarScope();
+//                          // VarScope
+//     emitExtraBodyVarScope();
 //
 //     // Emit new scope
 //     ae.prepareForBody();
 //
 //     // Emit body of the Function.
 //     ...
+//     ae.emitEnd();
+//
+//
+//   Async Module case - For a module with `await` in the top level:
+//     AsyncEmitter ae(this);
+//     ae.prepareForModule(); // prepareForModule is used to setup the generator
+//                            // for the async module.
+//     switchToMain();
+//     ...
+//
+//     // Emit new scope
+//     ae.prepareForBody();
+//
+//     // Emit body of the Script.
+//
 //     ae.emitEnd();
 //
 
@@ -87,10 +101,17 @@ class MOZ_STACK_CLASS AsyncEmitter {
   //   | [Parameters Without Expression]                      |
   //   |   prepareForParamsWithoutExpression +------------+   |
   //   +-------------------------------------| Parameters |-->+
-  //                                         +------------+   |
-  //                                                          |  <emit
-  //                                                          parameters>
-  //                         +------------+  paramsEpilogue   |
+  //   |                                     +------------+   |
+  //   | [Modules]                                            |
+  //   |   prepareForModule  +----------------+               |
+  //   +-------------------->| ModulePrologue |--+            |
+  //                         +----------------+  |            |
+  //                                             |            |
+  //                                             |            |
+  //   +-----------------------------------------+            |
+  //   |                                                      |
+  //   |                                                      |
+  //   V                     +------------+  paramsEpilogue   |
   //   +<--------------------| PostParams |<------------------+
   //   |                     +------------+
   //   |
@@ -110,6 +131,8 @@ class MOZ_STACK_CLASS AsyncEmitter {
 
     Parameters,
 
+    ModulePrologue,
+
     PostParams,
 
     Body,
@@ -128,6 +151,7 @@ class MOZ_STACK_CLASS AsyncEmitter {
 
   MOZ_MUST_USE bool prepareForParamsWithoutExpression();
   MOZ_MUST_USE bool prepareForParamsWithExpression();
+  MOZ_MUST_USE bool prepareForModule();
   MOZ_MUST_USE bool emitParamsEpilogue();
   MOZ_MUST_USE bool prepareForBody();
   MOZ_MUST_USE bool emitEnd();
