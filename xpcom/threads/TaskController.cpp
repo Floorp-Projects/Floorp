@@ -465,6 +465,16 @@ class RunnableTask : public Task {
     return nsThread::GetPerformanceCounterBase(mRunnable);
   }
 
+  virtual bool GetName(nsACString& aName) override {
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+    nsThread::GetLabeledRunnableName(mRunnable, aName,
+                                     EventQueuePriority(GetPriority()));
+    return true;
+#else
+    return false;
+#endif
+  }
+
  private:
   RefPtr<nsIRunnable> mRunnable;
 };
