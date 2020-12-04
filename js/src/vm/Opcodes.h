@@ -1004,9 +1004,6 @@
      * Get the value of the property `obj.name`. This can call getters and
      * proxy traps.
      *
-     * `JSOp::CallProp` is exactly like `JSOp::GetProp` but hints to the VM that we're
-     * getting a method in order to call it.
-     *
      * Implements: [GetV][1], [GetValue][2] step 5.
      *
      * [1]: https://tc39.es/ecma262/#sec-getv
@@ -1018,7 +1015,6 @@
      *   Stack: obj => obj[name]
      */ \
     MACRO(GetProp, get_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_IC) \
-    MACRO(CallProp, call_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_IC) \
     /*
      * Get the value of the property `obj[key]`.
      *
@@ -3590,6 +3586,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(231)                                   \
   MACRO(232)                                   \
   MACRO(233)                                   \
   MACRO(234)                                   \

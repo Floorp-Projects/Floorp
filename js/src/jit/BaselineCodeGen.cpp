@@ -3360,11 +3360,6 @@ bool BaselineCodeGen<Handler>::emit_GetProp() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_CallProp() {
-  return emit_GetProp();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Length() {
   return emit_GetProp();
 }
