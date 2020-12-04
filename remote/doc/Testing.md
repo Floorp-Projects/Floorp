@@ -112,6 +112,9 @@ In addition to our own Firefox-specific tests, we run the upstream
 towards achieving full [Puppeteer support] in Firefox. The tests are written
 in the behaviour-driven testing framework [Mocha].
 
+Check the upstream [Puppeteer test suite] documentation for instructions on
+how to skip tests, run only one test or a subsuite of tests.
+
 Puppeteer tests are vendored under _remote/test/puppeteer/_ and are
 run locally like this:
 
