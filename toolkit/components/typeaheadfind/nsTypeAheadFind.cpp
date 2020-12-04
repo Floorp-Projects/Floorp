@@ -1174,9 +1174,9 @@ bool nsTypeAheadFind::IsRangeRendered(nsRange* aRange) {
     // Append visible frames to frames array.
     nsLayoutUtils::GetFramesForArea(
         RelativeTo{rootFrame}, r, frames,
-        {FrameForPointOption::IgnorePaintSuppression,
-         FrameForPointOption::IgnoreRootScrollFrame,
-         FrameForPointOption::OnlyVisible});
+        {{FrameForPointOption::IgnorePaintSuppression,
+          FrameForPointOption::IgnoreRootScrollFrame,
+          FrameForPointOption::OnlyVisible}});
 
     // See if any of the frames contain the content. If they do, then the range
     // is visible. We search for the content rather than the original frame,
