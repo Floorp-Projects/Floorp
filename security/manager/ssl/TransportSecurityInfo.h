@@ -103,7 +103,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   nsCString mKeaGroup;
   nsCString mSignatureSchemeName;
 
-  bool mIsAcceptedEch;
   bool mIsDelegatedCredential;
   bool mIsDomainMismatch;
   bool mIsNotValidAtThisTime;
