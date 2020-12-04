@@ -238,12 +238,6 @@ function normalizeCssData(db) {
   // and it is not the client CSS_PROPERTIES_DB object.
   // (prevent comparing to CSS_PROPERTIES_DB to avoid loading client database)
   if (typeof db.from == "string") {
-    // @backward-compat { version 49 } On older server, getCSSDatabase() just returned
-    // the properties object, but now it returns an object with multiple types of CSS information.
-    if (!db.properties) {
-      db = { properties: db };
-    }
-
     const missingSupports = !db.properties.color.supports;
     const missingValues = !db.properties.color.values;
     const missingSubproperties = !db.properties.background.subproperties;
