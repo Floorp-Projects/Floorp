@@ -34,12 +34,17 @@ use crate::{
         LmdbEnvironment,
         SafeModeEnvironment,
     },
-    error::StoreError,
+    error::{
+        CloseError,
+        StoreError,
+    },
     helpers::canonicalize_path,
+    store::CloseOptions,
     Rkv,
 };
 
 type Result<T> = result::Result<T, StoreError>;
+type CloseResult<T> = result::Result<T, CloseError>;
 type SharedRkv<E> = Arc<RwLock<Rkv<E>>>;
 
 lazy_static! {
@@ -146,10 +151,9 @@ where
         })
     }
 
-    /// Tries to close the specified environment and delete all its files from disk.
-    /// Doesn't delete the folder used when opening the environment.
-    /// This will only work if there's no other users of this environment.
-    pub fn try_close_and_delete<'p, P>(&mut self, path: P) -> Result<()>
+    /// Tries to close the specified environment.
+    /// Returns an error when other users of this environment still exist.
+    pub fn try_close<'p, P>(&mut self, path: P, options: CloseOptions) -> CloseResult<()>
     where
         P: Into<&'p Path>,
     {
@@ -159,16 +163,14 @@ where
             canonicalize_path(path)?
         };
         match self.environments.entry(canonical) {
-            Entry::Vacant(_) => {}, // noop
+            Entry::Vacant(_) => Ok(()),
+            Entry::Occupied(e) if Arc::strong_count(e.get()) > 1 => Err(CloseError::EnvironmentStillOpen),
             Entry::Occupied(e) => {
-                if Arc::strong_count(e.get()) == 1 {
-                    if let Ok(env) = Arc::try_unwrap(e.remove()) {
-                        env.into_inner()?.close_and_delete()?;
-                    }
-                }
+                let env = Arc::try_unwrap(e.remove()).map_err(|_| CloseError::UnknownEnvironmentStillOpen)?;
+                env.into_inner()?.close(options)?;
+                Ok(())
             },
         }
-        Ok(())
     }
 }
 
