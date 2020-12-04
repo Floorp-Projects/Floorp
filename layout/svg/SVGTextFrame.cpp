@@ -4661,7 +4661,8 @@ void SVGTextFrame::DoTextPathLayout() {
     }
 
     // Loop for each character in the text path.
-    while (!it.AtEnd() && it.TextPathFrame()) {
+    while (!it.AtEnd() && it.TextPathFrame() &&
+           it.TextPathFrame()->GetContent() == textPath) {
       // The index of the cluster or ligature group's first character.
       uint32_t i = it.TextElementCharIndex();
 
@@ -4693,10 +4694,11 @@ void SVGTextFrame::DoTextPathLayout() {
         // that's OK; we'll consider any complete cluster or ligature
         // group that begins inside the text path as being affected
         // by it.
-        if (it.IsClusterAndLigatureGroupStart()) {
+        if (it.IsOriginalCharSkipped()) {
+          // Leave partialAdvance unchanged.
+        } else if (it.IsClusterAndLigatureGroupStart()) {
           break;
-        }
-        if (!it.IsOriginalCharSkipped()) {
+        } else {
           partialAdvance += it.GetAdvance(context);
         }
         partialAdvances.AppendElement(partialAdvance);
