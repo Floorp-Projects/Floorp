@@ -125,8 +125,6 @@ bool ElemOpEmitter::emitGet() {
   JSOp op;
   if (isSuper()) {
     op = JSOp::GetElemSuper;
-  } else if (isCall()) {
-    op = JSOp::CallElem;
   } else {
     op = JSOp::GetElem;
   }

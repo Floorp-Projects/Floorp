@@ -1504,7 +1504,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::Int32:
     case JSOp::LoopHead:
     case JSOp::GetElem:
-    case JSOp::CallElem:
     case JSOp::Length:
     case JSOp::Not:
     case JSOp::FunctionThis:

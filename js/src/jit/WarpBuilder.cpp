@@ -1946,10 +1946,6 @@ bool WarpBuilder::build_GetElem(BytecodeLocation loc) {
   return buildIC(loc, CacheKind::GetElem, {val, id});
 }
 
-bool WarpBuilder::build_CallElem(BytecodeLocation loc) {
-  return build_GetElem(loc);
-}
-
 bool WarpBuilder::build_SetProp(BytecodeLocation loc) {
   MDefinition* val = current->pop();
   MDefinition* obj = current->pop();

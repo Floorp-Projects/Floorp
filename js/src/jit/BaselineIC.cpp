@@ -325,8 +325,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         }
         break;
       }
-      case JSOp::GetElem:
-      case JSOp::CallElem: {
+      case JSOp::GetElem: {
         ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElem);
         if (!addIC(loc, stub)) {
           return false;
@@ -907,13 +906,12 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
                        HandleValue rhs, MutableHandleValue res) {
   stub->incrementEnteredCount();
 
-  RootedScript script(cx, frame->script());
+  FallbackICSpew(cx, stub, "GetElem");
+
+#ifdef DEBUG
   jsbytecode* pc = stub->icEntry()->pc(frame->script());
-
-  JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "GetElem(%s)", CodeName(op));
-
-  MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::CallElem);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::GetElem);
+#endif
 
   // Don't pass lhs directly, we need it when generating stubs.
   RootedValue lhsCopy(cx, lhs);
@@ -931,7 +929,7 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
                        lhs);
 
   if (!isOptimizedArgs) {
-    if (!GetElementOperation(cx, op, lhsCopy, rhs, res)) {
+    if (!GetElementOperation(cx, lhsCopy, rhs, res)) {
       return false;
     }
   }
