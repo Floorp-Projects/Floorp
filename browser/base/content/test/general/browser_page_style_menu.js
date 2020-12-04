@@ -23,6 +23,8 @@ const WEB_ROOT = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
+const kStyleSheetsInPageStyleSample = 18;
+
 /*
  * Test that the right stylesheets do (and others don't) show up
  * in the page style menu.
@@ -35,7 +37,7 @@ add_task(async function test_menu() {
   );
   let browser = tab.linkedBrowser;
   BrowserTestUtils.loadURI(browser, WEB_ROOT + "page_style_sample.html");
-  await promiseStylesheetsLoaded(tab, 17);
+  await promiseStylesheetsLoaded(tab, kStyleSheetsInPageStyleSample);
 
   let menuitems = fillPopupAndGetItems();
   let items = menuitems.map(el => ({
@@ -96,7 +98,7 @@ add_task(async function test_menu() {
 
   let disableStyles = document.getElementById("menu_pageStyleNoStyle");
   let defaultStyles = document.getElementById("menu_pageStylePersistentOnly");
-  let otherStyles = menuitems[menuitems.length - 1];
+  let otherStyles = menuitems[0].parentNode.querySelector("[label='28']");
 
   // Assert that the menu works as expected.
   disableStyles.click();
@@ -163,8 +165,12 @@ add_task(async function test_page_style_file() {
     new FileUtils.File(getTestFilePath("page_style_sample.html"))
   ).spec;
   await BrowserTestUtils.withNewTab(FILE_PAGE, async function(browser) {
-    await promiseStylesheetsLoaded(browser, 17);
+    await promiseStylesheetsLoaded(browser, kStyleSheetsInPageStyleSample);
     let menuitems = fillPopupAndGetItems();
-    is(menuitems.length, 17, "Should have 17 items even for file: URI.");
+    is(
+      menuitems.length,
+      kStyleSheetsInPageStyleSample,
+      "Should have the right amount of items even for file: URI."
+    );
   });
 });
