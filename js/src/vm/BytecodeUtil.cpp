@@ -691,7 +691,6 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
     case JSOp::SetIntrinsic:
     case JSOp::SetLocal:
     case JSOp::InitAliasedLexical:
-    case JSOp::IterNext:
     case JSOp::CheckLexical:
     case JSOp::CheckAliasedLexical:
       // Keep the top value.

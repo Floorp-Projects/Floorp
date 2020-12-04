@@ -1687,11 +1687,6 @@ bool BaselineCodeGen<Handler>::emit_Nop() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_IterNext() {
-  return true;
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_NopDestructuring() {
   return true;
 }

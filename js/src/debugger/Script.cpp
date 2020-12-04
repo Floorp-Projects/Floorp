@@ -1521,7 +1521,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::TypeofExpr:
     case JSOp::ToAsyncIter:
     case JSOp::ToPropertyKey:
-    case JSOp::IterNext:
     case JSOp::Lambda:
     case JSOp::LambdaArrow:
     case JSOp::PushLexicalEnv:
