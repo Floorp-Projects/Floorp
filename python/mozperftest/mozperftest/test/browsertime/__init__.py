@@ -5,9 +5,12 @@
 from mozperftest.test.browsertime.runner import BrowsertimeRunner  # noqa
 
 
-def add_option(env, name, value):
-    options = env.get_arg("browsertime-extra-options", "")
-    options += ",%s=%s" % (name, value)
+def add_option(env, name, value, overwrite=False):
+    if not overwrite:
+        options = env.get_arg("browsertime-extra-options", "")
+        options += f",{name}={value}"
+    else:
+        options = f"{name}={value}"
     env.set_arg("browsertime-extra-options", options)
 
 
