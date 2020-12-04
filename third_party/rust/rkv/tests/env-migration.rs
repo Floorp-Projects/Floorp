@@ -18,8 +18,11 @@ use tempfile::Builder;
 use rkv::{
     backend::{
         Lmdb,
+        LmdbEnvironment,
         SafeMode,
+        SafeModeEnvironment,
     },
+    Manager,
     Migrator,
     Rkv,
     StoreOptions,
@@ -38,8 +41,8 @@ macro_rules! populate_store {
 }
 
 #[test]
-fn test_simple_migrator_lmdb_to_safe() {
-    let root = Builder::new().prefix("test_simple_migrator_lmdb_to_safe").tempdir().expect("tempdir");
+fn test_open_migrator_lmdb_to_safe() {
+    let root = Builder::new().prefix("test_open_migrator_lmdb_to_safe").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     // Populate source environment and persist to disk.
@@ -92,8 +95,8 @@ fn test_simple_migrator_lmdb_to_safe() {
 }
 
 #[test]
-fn test_simple_migrator_safe_to_lmdb() {
-    let root = Builder::new().prefix("test_simple_migrator_safe_to_lmdb").tempdir().expect("tempdir");
+fn test_open_migrator_safe_to_lmdb() {
+    let root = Builder::new().prefix("test_open_migrator_safe_to_lmdb").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     // Populate source environment and persist to disk.
@@ -140,8 +143,8 @@ fn test_simple_migrator_safe_to_lmdb() {
 }
 
 #[test]
-fn test_migrator_round_trip() {
-    let root = Builder::new().prefix("test_simple_migrator_lmdb_to_safe").tempdir().expect("tempdir");
+fn test_open_migrator_round_trip() {
+    let root = Builder::new().prefix("test_open_migrator_lmdb_to_safe").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     // Populate source environment and persist to disk.
@@ -184,8 +187,8 @@ fn test_migrator_round_trip() {
 }
 
 #[test]
-fn test_migrator_no_dir_1() {
-    let root = Builder::new().prefix("test_migrator_no_dir").tempdir().expect("tempdir");
+fn test_easy_migrator_no_dir_1() {
+    let root = Builder::new().prefix("test_easy_migrator_no_dir").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     // This won't fail with IoError even though the path is a bogus path, because this
@@ -205,8 +208,8 @@ fn test_migrator_no_dir_1() {
 }
 
 #[test]
-fn test_migrator_no_dir_2() {
-    let root = Builder::new().prefix("test_migrator_no_dir").tempdir().expect("tempdir");
+fn test_easy_migrator_no_dir_2() {
+    let root = Builder::new().prefix("test_easy_migrator_no_dir").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     // This won't fail with IoError even though the path is a bogus path, because this
@@ -226,8 +229,8 @@ fn test_migrator_no_dir_2() {
 }
 
 #[test]
-fn test_migrator_invalid_1() {
-    let root = Builder::new().prefix("test_migrator_invalid").tempdir().expect("tempdir");
+fn test_easy_migrator_invalid_1() {
+    let root = Builder::new().prefix("test_easy_migrator_invalid").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let dbfile = root.path().join("data.mdb");
@@ -250,8 +253,8 @@ fn test_migrator_invalid_1() {
 }
 
 #[test]
-fn test_migrator_invalid_2() {
-    let root = Builder::new().prefix("test_migrator_invalid").tempdir().expect("tempdir");
+fn test_easy_migrator_invalid_2() {
+    let root = Builder::new().prefix("test_easy_migrator_invalid").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let dbfile = root.path().join("data.safe.bin");
@@ -353,4 +356,116 @@ fn test_migrator_safe_to_lmdb_3() {
     assert_eq!(store.get(&reader, "foo").expect("read"), Some(Value::I64(1234)));
     assert_eq!(store.get(&reader, "bar").expect("read"), Some(Value::Bool(true)));
     assert_eq!(store.get(&reader, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+}
+
+#[test]
+fn test_easy_migrator_failed_migration_1() {
+    let root = Builder::new().prefix("test_easy_migrator_failed_migration_1").tempdir().expect("tempdir");
+    fs::create_dir_all(root.path()).expect("dir created");
+
+    let dbfile = root.path().join("data.mdb");
+    fs::write(&dbfile, "bogus").expect("bogus dbfile created");
+
+    // This won't fail with FileInvalid even though the database is a bogus file, because this
+    // is the "easy mode" migration which automatically handles (ignores) this error.
+    let dst_env = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
+    Migrator::easy_migrate_lmdb_to_safe_mode(root.path(), &dst_env).expect("migrated");
+
+    // Populate destination environment and persist to disk.
+    populate_store!(&dst_env);
+    dst_env.sync(true).expect("synced");
+
+    // Delete bogus file and create a valid source environment in its place.
+    fs::remove_file(&dbfile).expect("bogus dbfile removed");
+    let src_env = Rkv::new::<Lmdb>(root.path()).expect("new succeeded");
+    populate_store!(&src_env);
+    src_env.sync(true).expect("synced");
+
+    // Attempt to migrate again. This should *NOT* fail with DestinationNotEmpty.
+    Migrator::easy_migrate_lmdb_to_safe_mode(root.path(), &dst_env).expect("migrated");
+}
+
+#[test]
+fn test_easy_migrator_failed_migration_2() {
+    let root = Builder::new().prefix("test_easy_migrator_failed_migration_2").tempdir().expect("tempdir");
+    fs::create_dir_all(root.path()).expect("dir created");
+
+    let dbfile = root.path().join("data.safe.bin");
+    fs::write(&dbfile, "bogus").expect("bogus dbfile created");
+
+    // This won't fail with FileInvalid even though the database is a bogus file, because this
+    // is the "easy mode" migration which automatically handles (ignores) this error.
+    let dst_env = Rkv::new::<Lmdb>(root.path()).expect("new succeeded");
+    Migrator::easy_migrate_safe_mode_to_lmdb(root.path(), &dst_env).expect("migrated");
+
+    // Populate destination environment and persist to disk.
+    populate_store!(&dst_env);
+    dst_env.sync(true).expect("synced");
+
+    // Delete bogus file and create a valid source environment in its place.
+    fs::remove_file(&dbfile).expect("bogus dbfile removed");
+    let src_env = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
+    populate_store!(&src_env);
+    src_env.sync(true).expect("synced");
+
+    // Attempt to migrate again. This should *NOT* fail with DestinationNotEmpty.
+    Migrator::easy_migrate_safe_mode_to_lmdb(root.path(), &dst_env).expect("migrated");
+}
+
+fn test_easy_migrator_from_manager_failed_migration_1() {
+    let root = Builder::new().prefix("test_easy_migrator_from_manager_failed_migration_1").tempdir().expect("tempdir");
+    fs::create_dir_all(root.path()).expect("dir created");
+
+    {
+        let mut src_manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
+        let created_src_arc = src_manager.get_or_create(root.path(), Rkv::new::<Lmdb>).unwrap();
+        let src_env = created_src_arc.read().unwrap();
+        populate_store!(&src_env);
+        src_env.sync(true).expect("synced");
+    }
+    {
+        let mut dst_manager = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
+        let created_dst_arc_1 = dst_manager.get_or_create(root.path(), Rkv::new::<SafeMode>).unwrap();
+        let dst_env_1 = created_dst_arc_1.read().unwrap();
+        populate_store!(&dst_env_1);
+        dst_env_1.sync(true).expect("synced");
+    }
+
+    // Attempt to migrate again in a new env. This should *NOT* fail with DestinationNotEmpty.
+    let dst_manager = Manager::<SafeModeEnvironment>::singleton().read().unwrap();
+    let created_dst_arc_2 = dst_manager.get(root.path()).unwrap().unwrap();
+    let dst_env_2 = created_dst_arc_2.read().unwrap();
+    Migrator::easy_migrate_lmdb_to_safe_mode(root.path(), dst_env_2).expect("migrated");
+}
+
+fn test_easy_migrator_from_manager_failed_migration_2() {
+    let root = Builder::new().prefix("test_easy_migrator_from_manager_failed_migration_2").tempdir().expect("tempdir");
+    fs::create_dir_all(root.path()).expect("dir created");
+
+    {
+        let mut src_manager = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
+        let created_src_arc = src_manager.get_or_create(root.path(), Rkv::new::<SafeMode>).unwrap();
+        let src_env = created_src_arc.read().unwrap();
+        populate_store!(&src_env);
+        src_env.sync(true).expect("synced");
+    }
+    {
+        let mut dst_manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
+        let created_dst_arc_1 = dst_manager.get_or_create(root.path(), Rkv::new::<Lmdb>).unwrap();
+        let dst_env_1 = created_dst_arc_1.read().unwrap();
+        populate_store!(&dst_env_1);
+        dst_env_1.sync(true).expect("synced");
+    }
+
+    // Attempt to migrate again in a new env. This should *NOT* fail with DestinationNotEmpty.
+    let dst_manager = Manager::<LmdbEnvironment>::singleton().read().unwrap();
+    let created_dst_arc_2 = dst_manager.get(root.path()).unwrap().unwrap();
+    let dst_env_2 = created_dst_arc_2.read().unwrap();
+    Migrator::easy_migrate_safe_mode_to_lmdb(root.path(), dst_env_2).expect("migrated");
+}
+
+#[test]
+fn test_easy_migrator_from_manager_failed_migration() {
+    test_easy_migrator_from_manager_failed_migration_1();
+    test_easy_migrator_from_manager_failed_migration_2();
 }

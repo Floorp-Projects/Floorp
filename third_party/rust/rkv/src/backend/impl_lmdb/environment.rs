@@ -44,7 +44,7 @@ pub struct EnvironmentBuilderImpl {
     env_path_type: EnvironmentPathType,
     env_lock_type: EnvironmentLockType,
     env_db_type: EnvironmentDefaultDbType,
-    make_dir: bool,
+    make_dir_if_needed: bool,
 }
 
 impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
@@ -58,7 +58,7 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
             env_path_type: EnvironmentPathType::SubDir,
             env_lock_type: EnvironmentLockType::Lockfile,
             env_db_type: EnvironmentDefaultDbType::SingleDatabase,
-            make_dir: false,
+            make_dir_if_needed: false,
         }
     }
 
@@ -95,9 +95,15 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
         self
     }
 
-    fn set_make_dir_if_needed(&mut self, make_dir: bool) -> &mut Self {
-        self.make_dir = make_dir;
+    fn set_make_dir_if_needed(&mut self, make_dir_if_needed: bool) -> &mut Self {
+        self.make_dir_if_needed = make_dir_if_needed;
         self
+    }
+
+    fn set_discard_if_corrupted(&mut self, _discard_if_corrupted: bool) -> &mut Self {
+        // Unfortunately, when opening a database, LMDB doesn't handle all the ways it could have
+        // been corrupted. Prefer using the `SafeMode` backend if this is important.
+        unimplemented!();
     }
 
     fn open(&self, path: &Path) -> Result<Self::Environment, Self::Error> {
@@ -109,7 +115,7 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
             },
             EnvironmentPathType::SubDir => {
                 if !path.is_dir() {
-                    if !self.make_dir {
+                    if !self.make_dir_if_needed {
                         return Err(ErrorImpl::UnsuitableEnvironmentPath(path.into()));
                     }
                     fs::create_dir_all(path)?;
