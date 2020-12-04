@@ -52,6 +52,8 @@ GtkStyleContext* CreateStyleContextWithStates(
 
 void ResetWidgetCache(void);
 
+bool IsSolidCSDStyleUsed();
+
 void StyleContextSetScale(GtkStyleContext* style, gint aScaleFactor);
 
 #endif  // WidgetStyleCache_h
