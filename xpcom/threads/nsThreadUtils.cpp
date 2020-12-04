@@ -683,6 +683,22 @@ LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain)
 }
 
 template <>
+LogTaskBase<Task>::Run::Run(Task* aTask, bool aWillRunAgain)
+    : mWillRunAgain(aWillRunAgain) {
+  if (!LOG1_ENABLED()) {
+    return;
+  }
+
+  nsAutoCString name;
+  if (!aTask->GetName(name)) {
+    LOG1(("EXEC %p %p", aTask, this));
+    return;
+  }
+
+  LOG1(("EXEC %p %p [%s]", aTask, this, name.BeginReading()));
+}
+
+template <>
 LogTaskBase<IPC::Message>::Run::Run(IPC::Message* aMessage, bool aWillRunAgain)
     : mWillRunAgain(aWillRunAgain) {
   LOG1(("RECV %p %p %d [%s]", aMessage, this, aMessage->seqno(),
