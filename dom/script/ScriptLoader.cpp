@@ -1062,7 +1062,51 @@ void ScriptLoader::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
   AutoJSAPI jsapi;
   MOZ_ASSERT(NS_FAILED(aResult));
   MOZ_ALWAYS_TRUE(jsapi.Init(aRequest->mDynamicPromise));
-  FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
+  if (!JS::ContextOptionsRef(jsapi.cx()).topLevelAwait()) {
+    // This is used so that Top Level Await functionality can be turned off
+    // entirely. It will be removed in bug#1676612.
+    FinishDynamicImport_NoTLA(jsapi.cx(), aRequest, aResult);
+  } else {
+    // Path for when Top Level Await is enabled.
+    FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
+  }
+}
+
+// This is used so that Top Level Await functionality can be turned off
+// entirely. It will be removed in bug#1676612.
+void ScriptLoader::FinishDynamicImport_NoTLA(JSContext* aCx,
+                                             ModuleLoadRequest* aRequest,
+                                             nsresult aResult) {
+  LOG(("ScriptLoadRequest (%p): Finish dynamic import %x %d", aRequest,
+       unsigned(aResult), JS_IsExceptionPending(aCx)));
+
+  // Complete the dynamic import, report failures indicated by aResult or as a
+  // pending exception on the context.
+
+  JS::DynamicImportStatus status =
+      (NS_FAILED(aResult) || JS_IsExceptionPending(aCx))
+          ? JS::DynamicImportStatus::Failed
+          : JS::DynamicImportStatus::Ok;
+
+  if (NS_FAILED(aResult) &&
+      aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
+    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+    JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
+                           JSMSG_DYNAMIC_IMPORT_FAILED);
+  }
+
+  JS::Rooted<JS::Value> referencingScript(aCx,
+                                          aRequest->mDynamicReferencingPrivate);
+  JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
+  JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
+
+  JS::FinishDynamicModuleImport_NoTLA(aCx, status, referencingScript, specifier,
+                                      promise);
+
+  // FinishDynamicModuleImport clears any pending exception.
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+
+  aRequest->ClearDynamicImport();
 }
 
 void ScriptLoader::FinishDynamicImport(
@@ -2937,12 +2981,30 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
         LOG(("ScriptLoadRequest (%p):   module has error to rethrow",
              aRequest));
         JS::Rooted<JS::Value> error(cx, moduleScript->ErrorToRethrow());
-        JS_SetPendingException(cx, error);
-
-        // For a dynamic import, the promise is rejected.  Otherwise an error is
-        // either reported by AutoEntryScript.
-        if (request->IsDynamicImport()) {
-          FinishDynamicImport(cx, request, NS_OK, nullptr);
+        if (!JS::ContextOptionsRef(cx).topLevelAwait()) {
+          JS_SetPendingException(cx, error);
+          // For a dynamic import, the promise is rejected.  Otherwise an error
+          // is either reported by AutoEntryScript.
+          if (request->IsDynamicImport()) {
+            FinishDynamicImport_NoTLA(cx, request, NS_OK);
+          }
+        } else {
+          ErrorResult err;
+          RefPtr<Promise> aPromise = Promise::Create(globalObject, err);
+          if (NS_WARN_IF(err.Failed())) {
+            return err.StealNSResult();
+          }
+          aPromise->MaybeReject(error);
+          JS::Rooted<JSObject*> aEvaluationPromise(cx, aPromise->PromiseObj());
+          if (request->IsDynamicImport()) {
+            FinishDynamicImport(cx, request, NS_OK, aEvaluationPromise);
+          } else {
+            if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
+              LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
+              // For a dynamic import, the promise is rejected.  Otherwise an
+              // error is either reported by AutoEntryScript.
+            }
+          }
         }
         return NS_OK;
       }
@@ -2955,19 +3017,37 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
       TRACE_FOR_TEST(aRequest->GetScriptElement(),
                      "scriptloader_evaluate_module");
-      JS::Rooted<JSObject*> aEvaluationPromise(
-          cx, nsJSUtils::ModuleEvaluate(cx, module));
 
-      if (request->IsDynamicImport()) {
-        FinishDynamicImport(cx, request, rv, aEvaluationPromise);
+      JS::Rooted<JS::Value> rval(cx);
+
+      rv = nsJSUtils::ModuleEvaluate(cx, module, &rval);
+      MOZ_ASSERT(NS_FAILED(rv) == aes.HasException());
+
+      if (NS_FAILED(rv)) {
+        LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
+        // For a dynamic import, the promise is rejected.  Otherwise an error is
+        // either reported by AutoEntryScript.
+        rv = NS_OK;
+      }
+
+      if (!JS::ContextOptionsRef(cx).topLevelAwait()) {
+        if (request->IsDynamicImport()) {
+          FinishDynamicImport_NoTLA(cx, request, rv);
+        }
       } else {
-        // If this is not a dynamic import, and if the promise is rejected, the
-        // value is unwrapped from the promise value.
-        if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
-          LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
-          // For a dynamic import, the promise is rejected.  Otherwise an error
-          // is either reported by AutoEntryScript.
-          rv = NS_OK;
+        // Path for when Top Level Await is enabled
+        JS::Rooted<JSObject*> aEvaluationPromise(cx, &rval.toObject());
+        if (request->IsDynamicImport()) {
+          FinishDynamicImport(cx, request, rv, aEvaluationPromise);
+        } else {
+          // If this is not a dynamic import, and if the promise is rejected,
+          // the value is unwrapped from the promise value.
+          if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
+            LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
+            // For a dynamic import, the promise is rejected.  Otherwise an
+            // error is either reported by AutoEntryScript.
+            rv = NS_OK;
+          }
         }
       }
 
