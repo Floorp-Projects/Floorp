@@ -8,6 +8,7 @@ toolkit.jar:
     content/extensions/schemas/alarms.json
     content/extensions/schemas/browser_action.json
     content/extensions/schemas/browser_settings.json
+    content/extensions/schemas/browsing_data.json
 #ifndef ANDROID
     content/extensions/schemas/captive_portal.json
 #endif
