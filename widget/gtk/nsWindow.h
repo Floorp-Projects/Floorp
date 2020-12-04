@@ -407,7 +407,7 @@ class nsWindow final : public nsBaseWidget {
 
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
-  static bool TitlebarCanUseShapeMask();
+  static bool TitlebarUseShapeMask();
 #ifdef MOZ_WAYLAND
   virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) override;
   virtual nsRect GetPreferredPopupRect() override {

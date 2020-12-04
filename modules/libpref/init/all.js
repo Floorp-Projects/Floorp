@@ -3817,6 +3817,7 @@ pref("network.psl.onUpdate_notify", false);
   pref("gfx.xrender.enabled",false);
   pref("widget.content.gtk-theme-override", "");
   pref("widget.disable-workspace-management", false);
+  pref("widget.titlebar-x11-use-shape-mask", false);
 #endif
 #ifdef MOZ_WAYLAND
   pref("widget.wayland_vsync.enabled", true);
