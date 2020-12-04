@@ -70,7 +70,6 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
   void HandleRejectionError(
       const ipc::ResponseRejectReason& aReason,
       std::function<void(const MediaResult&)>&& aCallback);
-  TimeStamp mRemoteProcessCrashTime;
 
   nsCString mHardwareAcceleratedReason;
   nsCString mDescription;
