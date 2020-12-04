@@ -2127,12 +2127,10 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
 #ifdef DEBUG
   {
     // Make sure there's only one entry in the |database| table.
-    nsCOMPtr<mozIStorageStatement> stmt;
-    MOZ_ASSERT(NS_SUCCEEDED(aConnection.CreateStatement(
-        "SELECT COUNT(*) FROM database;"_ns, getter_AddRefs(stmt))));
-
-    bool hasResult;
-    MOZ_ASSERT(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+    IDB_TRY_INSPECT(const auto& stmt,
+                    quota::CreateAndExecuteSingleStepStatement(
+                        aConnection, "SELECT COUNT(*) FROM database;"_ns),
+                    QM_ASSERT_UNREACHABLE);
 
     int64_t count;
     MOZ_ASSERT(NS_SUCCEEDED(stmt->GetInt64(0, &count)));

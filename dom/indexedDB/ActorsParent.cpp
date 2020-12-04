@@ -685,20 +685,6 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
-Result<nsCOMPtr<mozIStorageStatement>, nsresult>
-CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
-                                    const nsACString& aStatementString) {
-  IDB_TRY_UNWRAP(auto stmt, MOZ_TO_RESULT_INVOKE_TYPED(
-                                nsCOMPtr<mozIStorageStatement>, aConnection,
-                                CreateStatement, aStatementString));
-
-  IDB_TRY_UNWRAP(const DebugOnly<bool> hasResult,
-                 MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-  MOZ_ASSERT(hasResult);
-
-  return stmt;
-}
-
 template <typename StepFunc>
 Result<Ok, nsresult> CollectWhileHasResult(mozIStorageStatement& aStmt,
                                            StepFunc&& aStepFunc) {

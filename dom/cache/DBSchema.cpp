@@ -411,21 +411,13 @@ class MOZ_RAII AutoDisableForeignKeyChecking {
  public:
   explicit AutoDisableForeignKeyChecking(mozIStorageConnection* aConn)
       : mConn(aConn), mForeignKeyCheckingDisabled(false) {
-    nsCOMPtr<mozIStorageStatement> state;
-    nsresult rv = mConn->CreateStatement("PRAGMA foreign_keys;"_ns,
-                                         getter_AddRefs(state));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    bool hasMoreData = false;
-    rv = state->ExecuteStep(&hasMoreData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
+    CACHE_TRY_INSPECT(const auto& state,
+                      quota::CreateAndExecuteSingleStepStatement(
+                          *mConn, "PRAGMA foreign_keys;"_ns),
+                      QM_VOID);
 
     int32_t mode;
-    rv = state->GetInt32(0, &mode);
+    nsresult rv = state->GetInt32(0, &mode);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -624,27 +616,21 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
   // is very easy to put the database in a state where the auto_vacuum
   // pragma above fails silently.
 #ifdef DEBUG
-  nsCOMPtr<mozIStorageStatement> state;
-  rv = aConn.CreateStatement("PRAGMA auto_vacuum;"_ns, getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {
+    CACHE_TRY_INSPECT(const auto& state,
+                      quota::CreateAndExecuteSingleStepStatement(
+                          aConn, "PRAGMA auto_vacuum;"_ns));
 
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    int32_t mode;
+    rv = state->GetInt32(0, &mode);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  int32_t mode;
-  rv = state->GetInt32(0, &mode);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // integer value 2 is incremental mode
-  if (NS_WARN_IF(mode != 2)) {
-    return NS_ERROR_UNEXPECTED;
+    // integer value 2 is incremental mode
+    if (NS_WARN_IF(mode != 2)) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 #endif
 
@@ -1709,25 +1695,19 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
     return Err(rv);
   }
 
-  rv = aConn.CreateStatement("SELECT last_insert_rowid()"_ns,
-                             getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  {
+    CACHE_TRY_INSPECT(const auto& state,
+                      quota::CreateAndExecuteSingleStepStatement(
+                          aConn, "SELECT last_insert_rowid()"_ns));
 
-  hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+    int32_t id;
+    rv = state->GetInt32(0, &id);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
 
-  int32_t id;
-  rv = state->GetInt32(0, &id);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
+    return id;
   }
-
-  return id;
 }
 
 nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
@@ -2080,23 +2060,14 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
     return rv;
   }
 
-  rv = aConn.CreateStatement("SELECT last_insert_rowid()"_ns,
-                             getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(
+      const int32_t& entryId, ([&aConn]() -> Result<int32_t, nsresult> {
+        CACHE_TRY_INSPECT(const auto& state,
+                          quota::CreateAndExecuteSingleStepStatement(
+                              aConn, "SELECT last_insert_rowid()"_ns));
 
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  int32_t entryId;
-  rv = state->GetInt32(0, &entryId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(state, GetInt32, 0));
+      }()));
 
   rv = aConn.CreateStatement(
       nsLiteralCString("INSERT INTO request_headers ("
@@ -2680,21 +2651,12 @@ Result<nsAutoCString, nsresult> HashCString(nsICryptoHash& aCrypto,
 
 nsresult IncrementalVacuum(mozIStorageConnection& aConn) {
   // Determine how much free space is in the database.
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv =
-      aConn.CreateStatement("PRAGMA freelist_count;"_ns, getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_INSPECT(const auto& state,
+                    quota::CreateAndExecuteSingleStepStatement(
+                        aConn, "PRAGMA freelist_count;"_ns));
 
   int32_t freePages = 0;
-  rv = state->GetInt32(0, &freePages);
+  nsresult rv = state->GetInt32(0, &freePages);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2727,25 +2689,19 @@ nsresult IncrementalVacuum(mozIStorageConnection& aConn) {
 
   // Verify that our incremental vacuum actually did something
 #ifdef DEBUG
-  rv =
-      aConn.CreateStatement("PRAGMA freelist_count;"_ns, getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {
+    CACHE_TRY_INSPECT(const auto& state,
+                      quota::CreateAndExecuteSingleStepStatement(
+                          aConn, "PRAGMA freelist_count;"_ns));
 
-  hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    freePages = 0;
+    rv = state->GetInt32(0, &freePages);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  freePages = 0;
-  rv = state->GetInt32(0, &freePages);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    MOZ_ASSERT(freePages <= kMaxFreePages);
   }
-
-  MOZ_ASSERT(freePages <= kMaxFreePages);
 #endif
 
   return NS_OK;
