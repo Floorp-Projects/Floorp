@@ -16,7 +16,6 @@ browser.jar:
     content/browser/parent/ext-bookmarks.js (parent/ext-bookmarks.js)
     content/browser/parent/ext-browser.js (parent/ext-browser.js)
     content/browser/parent/ext-browserAction.js (parent/ext-browserAction.js)
-    content/browser/parent/ext-browsingData.js (parent/ext-browsingData.js)
     content/browser/parent/ext-chrome-settings-overrides.js (parent/ext-chrome-settings-overrides.js)
     content/browser/parent/ext-commands.js (parent/ext-commands.js)
     content/browser/parent/ext-devtools.js (parent/ext-devtools.js)
