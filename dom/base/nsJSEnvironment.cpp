@@ -102,19 +102,11 @@ static TimeStamp sCurrentGCStartTime;
 
 static JS::GCSliceCallback sPrevGCSliceCallback;
 
-static bool sHasRunGC;
-
-static uint32_t sCCollectedWaitingForGC;
-static uint32_t sCCollectedZonesWaitingForGC;
-static uint32_t sLikelyShortLivingObjectsNeedingGC;
-static bool sNeedsFullGC = false;
-static bool sNeedsGCAfterCC = false;
 static bool sIncrementalCC = false;
 
 static TimeStamp sFirstCollectionTime;
 
 static bool sIsInitialized;
-static bool sDidShutdown;
 static bool sShuttingDown;
 
 // nsJSEnvironmentObserver observes the user-interaction-inactive notifications
@@ -298,13 +290,6 @@ static void KillTimers() {
   nsJSContext::KillInterSliceGCRunner();
 }
 
-// If we collected a substantial amount of cycles, poke the GC since more
-// objects might be unreachable now.
-static bool NeedsGCAfterCC() {
-  return sCCollectedWaitingForGC > 250 || sCCollectedZonesWaitingForGC > 0 ||
-         sLikelyShortLivingObjectsNeedingGC > 2500 || sNeedsGCAfterCC;
-}
-
 class nsJSEnvironmentObserver final : public nsIObserver {
   ~nsJSEnvironmentObserver() = default;
 
@@ -337,7 +322,7 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                      nsJSContext::NonIncrementalGC,
                                      nsJSContext::ShrinkingGC);
       nsJSContext::CycleCollectNow();
-      if (NeedsGCAfterCC()) {
+      if (sScheduler.NeedsGCAfterCC()) {
         nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
                                        nsJSContext::NonIncrementalGC,
                                        nsJSContext::ShrinkingGC);
@@ -1113,10 +1098,10 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
 
   if (aIncremental == NonIncrementalGC ||
       aReason == JS::GCReason::FULL_GC_TIMER) {
-    sNeedsFullGC = true;
+    sScheduler.SetNeedsFullGC();
   }
 
-  if (sNeedsFullGC) {
+  if (sScheduler.NeedsFullGC()) {
     JS::PrepareForFullGC(cx);
   }
 
@@ -1330,10 +1315,11 @@ void CycleCollectorStats::MaybeLogStats(const CycleCollectorResults& aResults,
       ProcessNameForCollectorLog(), getpid(), mMaxSliceTime.ToMilliseconds(),
       mTotalSliceTime.ToMilliseconds(), aResults.mNumSlices, mSuspected,
       aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
-      aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
-      sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
-      gcMsg.get(), mForgetSkippableBeforeCC,
-      mMinForgetSkippableTime.ToMilliseconds(),
+      aResults.mFreedRefCounted, aResults.mFreedGCed,
+      sScheduler.mCCollectedWaitingForGC,
+      sScheduler.mCCollectedZonesWaitingForGC,
+      sScheduler.mLikelyShortLivingObjectsNeedingGC, gcMsg.get(),
+      mForgetSkippableBeforeCC, mMinForgetSkippableTime.ToMilliseconds(),
       mMaxForgetSkippableTime.ToMilliseconds(),
       mTotalForgetSkippableTime.ToMilliseconds() / aCleanups,
       mTotalForgetSkippableTime.ToMilliseconds(),
@@ -1390,10 +1376,11 @@ void CycleCollectorStats::MaybeNotifyStats(
       mMaxSliceTime.ToMilliseconds(), mTotalSliceTime.ToMilliseconds(),
       mMaxGCDuration.ToMilliseconds(), mMaxSkippableDuration.ToMilliseconds(),
       mSuspected, aResults.mVisitedRefCounted, aResults.mVisitedGCed,
-      aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
-      sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
-      aResults.mForcedGC, mForgetSkippableBeforeCC,
-      mMinForgetSkippableTime.ToMilliseconds(),
+      aResults.mFreedRefCounted, aResults.mFreedGCed,
+      sScheduler.mCCollectedWaitingForGC,
+      sScheduler.mCCollectedZonesWaitingForGC,
+      sScheduler.mLikelyShortLivingObjectsNeedingGC, aResults.mForcedGC,
+      mForgetSkippableBeforeCC, mMinForgetSkippableTime.ToMilliseconds(),
       mMaxForgetSkippableTime.ToMilliseconds(),
       mTotalForgetSkippableTime.ToMilliseconds() / aCleanups,
       mTotalForgetSkippableTime.ToMilliseconds(), mRemovedPurples);
@@ -1485,7 +1472,7 @@ uint32_t nsJSContext::GetMaxCCSliceTimeSinceClear() {
 }
 
 static bool ICCRunnerFired(TimeStamp aDeadline) {
-  if (sDidShutdown) {
+  if (sScheduler.mDidShutdown) {
     return false;
   }
 
@@ -1551,14 +1538,12 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   // we previously called PrepareForCycleCollectionSlice(). During shutdown
   // CCs, this won't happen.
   sCCStats.AfterCycleCollectionSlice();
-
-  sCCollectedWaitingForGC += aResults.mFreedGCed;
-  sCCollectedZonesWaitingForGC += aResults.mFreedJSZones;
+  sScheduler.NoteCycleCollected(aResults);
 
   TimeStamp endCCTimeStamp = TimeStamp::Now();
   TimeDuration ccNowDuration = TimeBetween(sCCStats.mBeginTime, endCCTimeStamp);
 
-  if (NeedsGCAfterCC()) {
+  if (sScheduler.NeedsGCAfterCC()) {
     MOZ_ASSERT(StaticPrefs::javascript_options_gc_delay() >
                    kMaxICCDuration.ToMilliseconds(),
                "A max duration ICC shouldn't reduce GC delay to 0");
@@ -1580,7 +1565,6 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
 
   // Update global state to indicate we have just run a cycle collection.
   sScheduler.NoteCCEnd(endCCTimeStamp);
-  sNeedsGCAfterCC = false;
   sCCStats.Clear();
 }
 
@@ -1658,7 +1642,7 @@ void ShrinkingGCTimerFired(nsITimer* aTimer, void* aClosure) {
 }
 
 static bool CCRunnerFired(TimeStamp aDeadline) {
-  if (sDidShutdown) {
+  if (sScheduler.mDidShutdown) {
     return false;
   }
 
@@ -1738,7 +1722,7 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
     if (aReason == JS::GCReason::DOM_WINDOW_UTILS) {
       // Force full GCs when called from reftests so that we collect dead zones
       // that have not been scheduled for collection.
-      sNeedsFullGC = true;
+      sScheduler.SetNeedsFullGC();
     }
     GCTimerFired(nullptr, reinterpret_cast<void*>(aReason));
     return;
@@ -1841,7 +1825,7 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
     JS::Zone* zone = JS::GetObjectZone(aObj);
     CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(zone);
   } else if (aReason != JS::GCReason::CC_WAITING) {
-    sNeedsFullGC = true;
+    sScheduler.SetNeedsFullGC();
   }
 
   if (sGCTimer || sInterSliceGCRunner) {
@@ -1850,17 +1834,16 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
   }
 
   if (sCCRunner) {
-    // Make sure CC is called...
-    sScheduler.SetNeedsFullCC();
-    // and GC after it.
-    sNeedsGCAfterCC = true;
+    // Make sure CC is called regardless of the size of the purple buffer, and
+    // GC after it.
+    sScheduler.EnsureCCThenGC();
     return;
   }
 
   if (sICCRunner) {
     // Make sure GC is called after the current CC completes.
     // No need to SetNeedsFullCC because we are currently running a CC.
-    sNeedsGCAfterCC = true;
+    sScheduler.mNeedsGCAfterCC = true;
     return;
   }
 
@@ -1890,7 +1873,7 @@ void nsJSContext::PokeShrinkingGC() {
 
 // static
 void nsJSContext::MaybePokeCC() {
-  if (sCCRunner || sICCRunner || !sHasRunGC || sShuttingDown) {
+  if (sCCRunner || sICCRunner || !sScheduler.mHasRunGC || sShuttingDown) {
     return;
   }
 
@@ -1993,11 +1976,6 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       // May need to kill the inter-slice GC runner
       nsJSContext::KillInterSliceGCRunner();
 
-      sCCollectedWaitingForGC = 0;
-      sCCollectedZonesWaitingForGC = 0;
-      sLikelyShortLivingObjectsNeedingGC = 0;
-      sScheduler.SetNeedsFullCC();
-      sHasRunGC = true;
       nsJSContext::MaybePokeCC();
 
       if (aDesc.isZone_) {
@@ -2016,7 +1994,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       }
 
       if (!aDesc.isZone_) {
-        sNeedsFullGC = false;
+        sScheduler.SetNeedsFullGC(false);
       }
 
       Telemetry::Accumulate(Telemetry::GC_IN_PROGRESS_MS,
@@ -2083,20 +2061,13 @@ void nsJSContext::SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) {
 JSObject* nsJSContext::GetWindowProxy() { return mWindowProxy; }
 
 void nsJSContext::LikelyShortLivingObjectCreated() {
-  ++sLikelyShortLivingObjectsNeedingGC;
+  ++sScheduler.mLikelyShortLivingObjectsNeedingGC;
 }
 
 void mozilla::dom::StartupJSEnvironment() {
   // initialize all our statics, so that we can restart XPCOM
   sGCTimer = sShrinkingGCTimer = sFullGCTimer = nullptr;
-  sHasRunGC = false;
-  sCCollectedWaitingForGC = 0;
-  sCCollectedZonesWaitingForGC = 0;
-  sLikelyShortLivingObjectsNeedingGC = 0;
-  sNeedsFullGC = true;
-  sNeedsGCAfterCC = false;
   sIsInitialized = false;
-  sDidShutdown = false;
   sShuttingDown = false;
   new (&sScheduler) CCGCScheduler();  // Reset the scheduler state.
   sCCStats.Init();
@@ -2392,7 +2363,7 @@ void mozilla::dom::ShutdownJSEnvironment() {
   KillTimers();
 
   sShuttingDown = true;
-  sDidShutdown = true;
+  sScheduler.Shutdown();
 }
 
 AsyncErrorReporter::AsyncErrorReporter(xpc::ErrorReport* aReport)
