@@ -16,8 +16,8 @@ use super::{
     parse_important, parse_nth, parse_one_declaration, parse_one_rule, stylesheet_encoding,
     AtRuleParser, AtRuleType, BasicParseError, BasicParseErrorKind, Color, CowRcStr,
     DeclarationListParser, DeclarationParser, Delimiter, EncodingSupport, ParseError,
-    ParseErrorKind, Parser, ParserInput, QualifiedRuleParser, RuleListParser, SourceLocation,
-    ToCss, Token, TokenSerializationType, UnicodeRange, RGBA,
+    ParseErrorKind, Parser, ParserInput, ParserState, QualifiedRuleParser, RuleListParser,
+    SourceLocation, ToCss, Token, TokenSerializationType, UnicodeRange, RGBA,
 };
 
 macro_rules! JArray {
@@ -469,11 +469,10 @@ fn serializer(preserve_comments: bool) {
                         _ => None,
                     };
                     if let Some(closing_token) = closing_token {
-                        let result: Result<_, ParseError<()>> =
-                            input.parse_nested_block(|input| {
-                                write_to(previous_token, input, string, preserve_comments);
-                                Ok(())
-                            });
+                        let result: Result<_, ParseError<()>> = input.parse_nested_block(|input| {
+                            write_to(previous_token, input, string, preserve_comments);
+                            Ok(())
+                        });
                         result.unwrap();
                         closing_token.to_css(string).unwrap();
                     }
@@ -947,7 +946,7 @@ impl<'i> AtRuleParser<'i> for JsonParser {
         }
     }
 
-    fn rule_without_block(&mut self, mut prelude: Vec<Value>, _location: SourceLocation) -> Value {
+    fn rule_without_block(&mut self, mut prelude: Vec<Value>, _: &ParserState) -> Value {
         prelude.push(Value::Null);
         Value::Array(prelude)
     }
@@ -955,7 +954,7 @@ impl<'i> AtRuleParser<'i> for JsonParser {
     fn parse_block<'t>(
         &mut self,
         mut prelude: Vec<Value>,
-        _location: SourceLocation,
+        _: &ParserState,
         input: &mut Parser<'i, 't>,
     ) -> Result<Value, ParseError<'i, ()>> {
         prelude.push(Value::Array(component_values_to_json(input)));
@@ -978,7 +977,7 @@ impl<'i> QualifiedRuleParser<'i> for JsonParser {
     fn parse_block<'t>(
         &mut self,
         prelude: Vec<Value>,
-        _location: SourceLocation,
+        _: &ParserState,
         input: &mut Parser<'i, 't>,
     ) -> Result<Value, ParseError<'i, ()>> {
         Ok(JArray![

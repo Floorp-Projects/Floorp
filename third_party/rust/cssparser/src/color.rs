@@ -291,7 +291,7 @@ impl Color {
                 let name = name.clone();
                 return input.parse_nested_block(|arguments| {
                     parse_color_function(component_parser, &*name, arguments)
-                })
+                });
             }
             _ => Err(()),
         }
