@@ -182,3 +182,27 @@ livesites:
             --perfherder-simplify-names
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
+
+controlled:
+    description: Controlled performance testing
+    treeherder:
+        symbol: perftest(controlled)
+    attributes:
+        batch: false
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.8 python/mozperftest/mozperftest/runner.py
+            netwerk/test/perf/perftest_http3_controlled.js
+            --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
+            --browsertime-iterations 1
+            --browsertime-cycles 96
+            --hooks netwerk/test/perf/hooks_throttling.py
+            --flavor desktop-browser
+            --perfherder
+            --perfherder-metrics name:navigationTiming,unit:ms name:pageTimings,unit:ms name:resources,unit:ms name:firstPaint,unit:ms name:timeToContentfulPaint,unit:ms
+            --perfherder-simplify-names
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts

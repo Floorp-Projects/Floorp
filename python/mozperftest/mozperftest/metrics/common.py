@@ -248,22 +248,13 @@ class MetricsStorage(object):
 
         # Simplify the filtered metric names
         if simplify_names:
-            previous = []
-            for data_type, data_info in filtered.items():
-                for res in data_info:
-                    if any([met in res["subtest"] for met in simplify_exclude]):
-                        continue
 
-                    new = res["subtest"].split(".")[-1]
-                    if new in previous:
-                        self.logger.warning(
-                            f"Another metric which ends with `{new}` was already found. "
-                            f"{res['subtest']} will not be simplified."
-                        )
-                        continue
+            def _simplify(name):
+                if any([met in name for met in simplify_exclude]):
+                    return None
+                return name.split(".")[-1]
 
-                    res["subtest"] = new
-                    previous.append(new)
+            self._alter_name(filtered, res, filter=_simplify)
 
         # Split the filtered results
         if split_by is not None:
@@ -289,6 +280,22 @@ class MetricsStorage(object):
             filtered = newfilt
 
         return filtered
+
+    def _alter_name(self, filtered, res, filter):
+        previous = []
+        for data_type, data_info in filtered.items():
+            for res in data_info:
+                new = filter(res["subtest"])
+                if new is None:
+                    continue
+                if new in previous:
+                    self.logger.warning(
+                        f"Another metric which ends with `{new}` was already found. "
+                        f"{res['subtest']} will not be simplified."
+                    )
+                    continue
+                res["subtest"] = new
+                previous.append(new)
 
 
 _metrics = {}

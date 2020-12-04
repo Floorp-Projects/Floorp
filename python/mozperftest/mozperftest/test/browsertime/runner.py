@@ -335,11 +335,15 @@ class BrowsertimeRunner(NodeRunner):
             result_dir = result_dir.resolve()
 
             # Run the test cycle
-            metadata.run_hook("before_cycle", cycle=cycle)
+            metadata.run_hook(
+                "before_cycle", metadata, self.env, cycle, self._test_script
+            )
             try:
                 metadata = self._one_cycle(metadata, result_dir)
             finally:
-                metadata.run_hook("after_cycle", cycle=cycle)
+                metadata.run_hook(
+                    "after_cycle", metadata, self.env, cycle, self._test_script
+                )
         return metadata
 
     def _one_cycle(self, metadata, result_dir):
