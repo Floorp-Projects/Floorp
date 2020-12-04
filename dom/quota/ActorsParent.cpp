@@ -344,25 +344,15 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
 Result<int32_t, nsresult> LoadCacheVersion(mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection.CreateStatement(
-      "SELECT cache_version FROM database"_ns, getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  QM_TRY_INSPECT(const auto& stmt,
+                 CreateAndExecuteSingleStepStatement<
+                     SingleStepResult::ReturnNullIfNoResult>(
+                     aConnection, "SELECT cache_version FROM database"_ns));
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  if (NS_WARN_IF(!hasResult)) {
-    return Err(NS_ERROR_FILE_CORRUPTED);
-  }
+  QM_TRY(OkIf(stmt), Err(NS_ERROR_FILE_CORRUPTED));
 
   int32_t version;
-  rv = stmt->GetInt32(0, &version);
+  nsresult rv = stmt->GetInt32(0, &version);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }
@@ -657,25 +647,15 @@ Result<int32_t, nsresult> LoadLocalStorageArchiveVersion(
     mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection.CreateStatement("SELECT version FROM database"_ns,
-                                            getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  QM_TRY_INSPECT(const auto& stmt,
+                 CreateAndExecuteSingleStepStatement<
+                     SingleStepResult::ReturnNullIfNoResult>(
+                     aConnection, "SELECT version FROM database"_ns));
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  if (NS_WARN_IF(!hasResult)) {
-    return Err(NS_ERROR_FILE_CORRUPTED);
-  }
+  QM_TRY(OkIf(stmt), Err(NS_ERROR_FILE_CORRUPTED));
 
   int32_t version;
-  rv = stmt->GetInt32(0, &version);
+  nsresult rv = stmt->GetInt32(0, &version);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }
@@ -4522,24 +4502,13 @@ nsresult QuotaManager::LoadQuota() {
   bool loadQuotaFromCache = false;
 
   if (mCacheUsable) {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mStorageConnection->CreateStatement(
-        nsLiteralCString("SELECT valid, build_id "
-                         "FROM cache"),
-        getter_AddRefs(stmt));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY_INSPECT(
+        const auto& stmt,
+        CreateAndExecuteSingleStepStatement<
+            SingleStepResult::ReturnNullIfNoResult>(
+            *mStorageConnection, "SELECT valid, build_id FROM cache"_ns));
 
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (NS_WARN_IF(!hasResult)) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+    QM_TRY(OkIf(stmt), Err(NS_ERROR_FILE_CORRUPTED));
 
     int32_t valid;
     rv = stmt->GetInt32(0, &valid);

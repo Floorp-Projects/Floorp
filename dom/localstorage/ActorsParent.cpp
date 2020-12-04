@@ -3770,30 +3770,24 @@ nsresult ConnectionWriteOptimizer::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = aConnection->GetCachedStatement(nsLiteralCString("SELECT usage "
-                                                        "FROM database"),
-                                       &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {
+    LS_TRY_INSPECT(const auto& stmt,
+                   CreateAndExecuteSingleStepStatement<
+                       SingleStepResult::ReturnNullIfNoResult>(
+                       *aConnection->StorageConnection(),
+                       "SELECT usage FROM database"_ns));
+
+    LS_TRY(OkIf(stmt), NS_ERROR_FAILURE);
+
+    int64_t usage;
+    rv = stmt->GetInt64(0, &usage);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    aOutUsage = usage;
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (NS_WARN_IF(!hasResult)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  int64_t usage;
-  rv = stmt->GetInt64(0, &usage);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  aOutUsage = usage;
   return NS_OK;
 }
 
@@ -7681,26 +7675,15 @@ nsresult PrepareDatastoreOp::VerifyDatabaseInformation(
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(nsLiteralCString("SELECT origin "
-                                                              "FROM database"),
-                                             getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LS_TRY_INSPECT(const auto& stmt,
+                 CreateAndExecuteSingleStepStatement<
+                     SingleStepResult::ReturnNullIfNoResult>(
+                     *aConnection, "SELECT origin FROM database"_ns));
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (NS_WARN_IF(!hasResult)) {
-    return NS_ERROR_FILE_CORRUPTED;
-  }
+  LS_TRY(OkIf(stmt), NS_ERROR_FILE_CORRUPTED);
 
   nsCString origin;
-  rv = stmt->GetUTF8String(0, origin);
+  nsresult rv = stmt->GetUTF8String(0, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
