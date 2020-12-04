@@ -19,12 +19,7 @@ PropOpEmitter::PropOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind)
     : bce_(bce), kind_(kind), objKind_(objKind) {}
 
 bool PropOpEmitter::prepareAtomIndex(const ParserAtom* prop) {
-  if (!bce_->makeAtomIndex(prop, &propAtomIndex_)) {
-    return false;
-  }
-  isLength_ = prop == bce_->cx->parserNames().length;
-
-  return true;
+  return bce_->makeAtomIndex(prop, &propAtomIndex_);
 }
 
 bool PropOpEmitter::prepareForObj() {
@@ -71,12 +66,7 @@ bool PropOpEmitter::emitGet(const ParserAtom* prop) {
     }
   }
 
-  JSOp op;
-  if (isSuper()) {
-    op = JSOp::GetPropSuper;
-  } else {
-    op = isLength_ ? JSOp::Length : JSOp::GetProp;
-  }
+  JSOp op = isSuper() ? JSOp::GetPropSuper : JSOp::GetProp;
   if (!bce_->emitAtomOp(op, propAtomIndex_, ShouldInstrument::Yes)) {
     //              [stack] # if Get
     //              [stack] PROP

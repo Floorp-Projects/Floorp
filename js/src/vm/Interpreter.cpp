@@ -198,9 +198,9 @@ static inline bool GetPropertyOperation(JSContext* cx, InterpreterFrame* fp,
                                         HandleScript script, jsbytecode* pc,
                                         MutableHandleValue lval,
                                         MutableHandleValue vp) {
-  JSOp op = JSOp(*pc);
+  RootedPropertyName name(cx, script->getName(pc));
 
-  if (op == JSOp::Length) {
+  if (name == cx->names().length) {
     if (IsOptimizedArguments(fp, lval)) {
       vp.setInt32(fp->numActualArgs());
       return true;
@@ -209,11 +209,7 @@ static inline bool GetPropertyOperation(JSContext* cx, InterpreterFrame* fp,
     if (GetLengthProperty(lval, vp)) {
       return true;
     }
-  }
-
-  RootedPropertyName name(cx, script->getName(pc));
-
-  if (name == cx->names().callee && IsOptimizedArguments(fp, lval)) {
+  } else if (name == cx->names().callee && IsOptimizedArguments(fp, lval)) {
     vp.setObject(fp->callee());
     return true;
   }
@@ -2982,8 +2978,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(CheckReturn)
 
-    CASE(GetProp)
-    CASE(Length) {
+    CASE(GetProp) {
       MutableHandleValue lval = REGS.stackHandleAt(-1);
       if (!GetPropertyOperation(cx, REGS.fp(), script, REGS.pc, lval, lval)) {
         goto error;

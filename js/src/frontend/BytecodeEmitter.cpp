@@ -918,11 +918,6 @@ bool BytecodeEmitter::emitAtomOp(JSOp op, const ParserAtom* atom,
   MOZ_ASSERT_IF(op == JSOp::GetName || op == JSOp::GetGName,
                 atom != cx->parserNames().dotGenerator);
 
-  if (op == JSOp::GetProp && atom == cx->parserNames().length) {
-    /* Specialize length accesses for the interpreter. */
-    op = JSOp::Length;
-  }
-
   GCThingIndex index;
   if (!makeAtomIndex(atom, &index)) {
     return false;
@@ -10604,7 +10599,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
 
   switch (op) {
     case JSOp::GetProp:
-    case JSOp::Length:
       return emitInstrumentationSlow(
           InstrumentationKind::GetProperty, [=](uint32_t pushed) {
             return emitDupAt(pushed) && emitAtomOp(JSOp::String, atomIndex);

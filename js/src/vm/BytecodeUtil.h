@@ -536,9 +536,7 @@ inline bool IsCheckSloppyOp(JSOp op) {
 
 inline bool IsAtomOp(JSOp op) { return JOF_OPTYPE(op) == JOF_ATOM; }
 
-inline bool IsGetPropOp(JSOp op) {
-  return op == JSOp::Length || op == JSOp::GetProp;
-}
+inline bool IsGetPropOp(JSOp op) { return op == JSOp::GetProp; }
 
 inline bool IsGetPropPC(const jsbytecode* pc) { return IsGetPropOp(JSOp(*pc)); }
 

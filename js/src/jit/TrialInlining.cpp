@@ -659,7 +659,6 @@ bool TrialInliner::tryInlining() {
         }
         break;
       case JSOp::GetProp:
-      case JSOp::Length:
         if (!maybeInlineGetter(entry, loc)) {
           return false;
         }
