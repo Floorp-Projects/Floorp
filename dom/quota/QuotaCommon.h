@@ -979,10 +979,26 @@ nsDependentCSubstring GetLeafName(const nsACString& aPath);
 Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
     nsIFile& aDirectory, const nsAString& aPathElement);
 
+enum class SingleStepResult { AssertHasResult, ReturnNullIfNoResult };
+
+template <SingleStepResult ResultHandling>
+using SingleStepSuccessType =
+    std::conditional_t<ResultHandling == SingleStepResult::AssertHasResult,
+                       NotNull<nsCOMPtr<mozIStorageStatement>>,
+                       nsCOMPtr<mozIStorageStatement>>;
+
 // Creates a statement with the specified aStatementString, executes a single
-// step, and asserts that it has a result, and returns the statement. Any other
-// errors are propagated.
-Result<nsCOMPtr<mozIStorageStatement>, nsresult>
+// step, and returns the statement.
+// Depending on the value ResultHandling,
+// - it is asserted that there is a result (default resp.
+//   SingleStepResult::AssertHasResult), and the success type is
+//   MovingNotNull<nsCOMPtr<mozIStorageStatement>>
+// - it is asserted that there is no result, and the success type is Ok
+// - in case there is no result, nullptr is returned, and the success type is
+//   nsCOMPtr<mozIStorageStatement>
+// Any other errors are always propagated.
+template <SingleStepResult ResultHandling = SingleStepResult::AssertHasResult>
+Result<SingleStepSuccessType<ResultHandling>, nsresult>
 CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
                                     const nsACString& aStatementString);
 
