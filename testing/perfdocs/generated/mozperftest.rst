@@ -39,6 +39,15 @@ perftest_http3_cloudflareblog.js
 
 **User-journey live site test for cloudflare blog.**
 
+perftest_http3_controlled.js
+============================
+
+:owner: Network Team
+:name: controlled
+:tags: throttlable
+
+**User-journey live site test for controlled server**
+
 perftest_http3_facebook_scroll.js
 =================================
 
