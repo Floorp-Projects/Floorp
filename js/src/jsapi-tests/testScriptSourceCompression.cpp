@@ -507,7 +507,7 @@ BEGIN_TEST(testScriptSourceCompression_offThread) {
 
   js::Monitor monitor(js::mutexid::ShellOffThreadState);
   JS::CompileOptions options(cx);
-  JS::OffThreadToken* token;
+  JS::OffThreadToken* token = nullptr;
 
   // Force off-thread even though if this is a small file.
   options.forceAsync = true;
