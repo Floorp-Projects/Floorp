@@ -42,7 +42,6 @@ android {
 dependencies {
     implementation project(':browser-icons')
     implementation project(':browser-session')
-    implementation project(':browser-state')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
     implementation project(':feature-customtabs')
@@ -64,6 +63,7 @@ dependencies {
     kapt Dependencies.androidx_room_compiler
 
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit

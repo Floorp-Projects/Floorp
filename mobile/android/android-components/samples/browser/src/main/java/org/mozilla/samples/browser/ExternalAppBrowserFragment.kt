@@ -80,7 +80,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 ),
                 ManifestUpdateFeature(
                     requireContext(),
-                    components.sessionManager,
+                    components.store,
                     components.webAppShortcutManager,
                     components.webAppManifestStorage,
                     sessionId!!,
