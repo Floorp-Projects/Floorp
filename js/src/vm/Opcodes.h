@@ -1030,18 +1030,6 @@
      */ \
     MACRO(GetElem, get_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_IC) \
     /*
-     * Push the value of `obj.length`.
-     *
-     * `nameIndex` must be the index of the atom `"length"`. This then behaves
-     * exactly like `JSOp::GetProp`.
-     *
-     *   Category: Objects
-     *   Type: Accessing properties
-     *   Operands: uint32_t nameIndex
-     *   Stack: obj => obj.length
-     */ \
-    MACRO(Length, length, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_IC) \
-    /*
      * Non-strict assignment to a property, `obj.name = val`.
      *
      * This throws a TypeError if `obj` is null or undefined. If it's a
@@ -3586,6 +3574,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(230)                                   \
   MACRO(231)                                   \
   MACRO(232)                                   \
   MACRO(233)                                   \

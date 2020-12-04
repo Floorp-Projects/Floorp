@@ -1825,12 +1825,10 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
     case JSOp::DelProp:
     case JSOp::StrictDelProp:
-    case JSOp::Length:
     case JSOp::GetProp:
     case JSOp::GetBoundName: {
       bool hasDelete = op == JSOp::DelProp || op == JSOp::StrictDelProp;
-      RootedAtom prop(cx,
-                      (op == JSOp::Length) ? cx->names().length : loadAtom(pc));
+      RootedAtom prop(cx, loadAtom(pc));
       MOZ_ASSERT(prop);
       return (hasDelete ? write("(delete ") : true) &&
              decompilePCForStackOperand(pc, -1) &&
