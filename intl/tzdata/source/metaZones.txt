@@ -1,5 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 metaZones:table(nofallback){
     mapTimezones{
         Acre{
@@ -1554,11 +1555,11 @@ metaZones:table(nofallback){
             {
                 "America_Pacific",
                 "1973-10-28 09:00",
-                "2020-03-08 10:00",
+                "2020-11-01 07:00",
             }
             {
                 "America_Mountain",
-                "2020-03-08 10:00",
+                "2020-11-01 07:00",
                 "9999-12-31 23:59",
             }
         }
@@ -2533,11 +2534,11 @@ metaZones:table(nofallback){
             {
                 "America_Pacific",
                 "1970-01-01 00:00",
-                "2020-03-08 10:00",
+                "2020-11-01 07:00",
             }
             {
                 "America_Mountain",
-                "2020-03-08 10:00",
+                "2020-11-01 07:00",
                 "9999-12-31 23:59",
             }
         }
@@ -2597,6 +2598,31 @@ metaZones:table(nofallback){
             {
                 "Australia_Western",
                 "2018-03-10 17:00",
+                "2018-10-06 20:00",
+            }
+            {
+                "Casey",
+                "2018-10-06 20:00",
+                "2019-03-16 16:00",
+            }
+            {
+                "Australia_Western",
+                "2019-03-16 16:00",
+                "2019-10-03 19:00",
+            }
+            {
+                "Casey",
+                "2019-10-03 19:00",
+                "2020-03-07 16:00",
+            }
+            {
+                "Australia_Western",
+                "2020-03-07 16:00",
+                "2020-10-03 16:01",
+            }
+            {
+                "Casey",
+                "2020-10-03 16:01",
                 "9999-12-31 23:59",
             }
         }
@@ -2613,13 +2639,6 @@ metaZones:table(nofallback){
         "Antarctica:Macquarie"{
             {
                 "Australia_Eastern",
-                "1970-01-01 00:00",
-                "2010-04-03 16:00",
-            }
-            {
-                "Macquarie",
-                "2010-04-03 16:00",
-                "9999-12-31 23:59",
             }
         }
         "Antarctica:Mawson"{
