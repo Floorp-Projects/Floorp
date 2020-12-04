@@ -1978,6 +1978,20 @@ class GlobalDesc {
 
 typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
+// An EventDesc describes a single event for non-local control flow, such as
+// for exceptions.
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+struct EventDesc {
+  EventKind kind;
+  ResultType type;
+
+  EventDesc(EventKind kind, ResultType type) : kind(kind), type(type) {}
+};
+
+typedef Vector<EventDesc, 0, SystemAllocPolicy> EventDescVector;
+#endif
+
 // When a ElemSegment is "passive" it is shared between a wasm::Module and its
 // wasm::Instances. To allow each segment to be released as soon as the last
 // Instance elem.drops it and the Module is destroyed, each ElemSegment is

@@ -141,6 +141,9 @@ struct ModuleEnvironment {
   Uint32Vector funcTypeIndices;
   Uint32Vector funcImportGlobalDataOffsets;
   GlobalDescVector globals;
+#ifdef ENABLE_WASM_EXCEPTIONS
+  EventDescVector events;
+#endif
   TableDescVector tables;
   Uint32Vector asmJSSigToTableIndex;
   ImportVector imports;
