@@ -405,10 +405,10 @@ impl OperatorValidator {
 
     fn check_shared_memarg_wo_align(
         &self,
-        _: MemoryImmediate,
+        memarg: MemoryImmediate,
         resources: impl WasmModuleResources,
     ) -> OperatorValidatorResult<Type> {
-        self.check_memory_index(0, resources)
+        self.check_memory_index(memarg.memory, resources)
     }
 
     fn check_simd_lane_index(&self, index: SIMDLaneIndex, max: u8) -> OperatorValidatorResult<()> {
@@ -488,10 +488,19 @@ impl OperatorValidator {
         table_index: u32,
         resources: &impl WasmModuleResources,
     ) -> OperatorValidatorResult<()> {
-        if resources.table_at(table_index).is_none() {
-            return Err(OperatorValidatorError::new(
-                "unknown table: table index out of bounds",
-            ));
+        match resources.table_at(table_index) {
+            None => {
+                return Err(OperatorValidatorError::new(
+                    "unknown table: table index out of bounds",
+                ));
+            }
+            Some(tab) => {
+                if tab.element_type != Type::FuncRef {
+                    return Err(OperatorValidatorError::new(
+                        "indirect calls must go through a table of funcref",
+                    ));
+                }
+            }
         }
         let ty = func_type_at(&resources, index)?;
         self.pop_operand(Some(Type::I32))?;
