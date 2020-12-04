@@ -100,6 +100,8 @@ extern "C" const char* __tsan_default_suppressions() {
          "deadlock:mozilla::camera::LockAndDispatch\n"
          // Bug 1606804 - permanent
          "deadlock:third_party/rust/rkv/src/env.rs\n"
+         // Bug 1680655 - permanent
+         "deadlock:EncryptedClientHelloServer\n"
 
 
 
