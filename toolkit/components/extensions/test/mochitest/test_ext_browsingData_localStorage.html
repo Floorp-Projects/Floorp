@@ -1,5 +1,17 @@
-/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set sts=2 sw=2 et tw=80: */
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test browsingData.remove indexedDB</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
 "use strict";
 
 add_task(async function setup() {
@@ -13,15 +25,15 @@ add_task(async function testLocalStorage() {
   async function background() {
     function waitForTabs() {
       return new Promise(resolve => {
-        let tabs = [];
+        let tabs = {};
 
         let listener = async (msg, { tab }) => {
           if (msg !== "content-script-ready") {
             return;
           }
 
-          tabs.push(tab);
-          if (tabs.length == 3) {
+          tabs[tab.url] = tab;
+          if (Object.keys(tabs).length == 3) {
             browser.runtime.onMessage.removeListener(listener);
             resolve(tabs);
           }
@@ -32,7 +44,7 @@ add_task(async function testLocalStorage() {
 
     function sendMessageToTabs(tabs, message) {
       return Promise.all(
-        tabs.map(tab => {
+        Object.values(tabs).map(tab => {
           return browser.tabs.sendMessage(tab.id, message);
         })
       );
@@ -50,8 +62,8 @@ add_task(async function testLocalStorage() {
     await browser.browsingData.removeLocalStorage({
       hostnames: ["example.com"],
     });
-    await browser.tabs.sendMessage(tabs[0].id, "checkLocalStorageCleared");
-    await browser.tabs.sendMessage(tabs[1].id, "checkLocalStorageSet");
+    await browser.tabs.sendMessage(tabs["http://example.com/"].id, "checkLocalStorageCleared");
+    await browser.tabs.sendMessage(tabs["http://example.net/"].id, "checkLocalStorageSet");
 
     if (
       SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled ===
@@ -61,7 +73,7 @@ add_task(async function testLocalStorage() {
       // implementation (See Bug 1595431).
       browser.test.log("Skipped assertion on nextGenLocalStorageEnabled=false");
     } else {
-      await browser.tabs.sendMessage(tabs[2].id, "checkLocalStorageSet");
+      await browser.tabs.sendMessage(tabs["http://test1.example.com/"].id, "checkLocalStorageSet");
     }
 
     await sendMessageToTabs(tabs, "resetLocalStorage");
@@ -81,9 +93,13 @@ add_task(async function testLocalStorage() {
       await browser.browsingData.removeLocalStorage({
         cookieStoreId: "firefox-container-1",
       });
-      await browser.tabs.sendMessage(tabs[0].id, "checkLocalStorageSet");
-      await browser.tabs.sendMessage(tabs[1].id, "checkLocalStorageSet");
-      await browser.tabs.sendMessage(tabs[2].id, "checkLocalStorageCleared");
+      await browser.tabs.sendMessage(tabs["http://example.com/"].id, "checkLocalStorageSet");
+      await browser.tabs.sendMessage(tabs["http://example.net/"].id, "checkLocalStorageSet");
+
+      // TODO: containers support is lacking on GeckoView (Bug 1643740)
+      if (!navigator.userAgent.includes("Android")) {
+        await browser.tabs.sendMessage(tabs["http://test1.example.com/"].id, "checkLocalStorageCleared");
+      }
 
       await sendMessageToTabs(tabs, "resetLocalStorage");
       await sendMessageToTabs(tabs, "checkLocalStorageSet");
@@ -113,8 +129,6 @@ add_task(async function testLocalStorage() {
     // Cleanup (checkLocalStorageCleared creates empty LS databases).
     await browser.browsingData.removeLocalStorage({});
 
-    await browser.tabs.remove(tabs.map(tab => tab.id));
-
     browser.test.notifyPass("done");
   }
 
@@ -140,11 +154,73 @@ add_task(async function testLocalStorage() {
     browser.runtime.sendMessage("content-script-ready");
   }
 
+  // This extension is responsible for opening tabs with a specified
+  // cookieStoreId, we use a separate extension to make sure that browsingData
+  // works without the cookies permission.
+  let openTabsExtension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      name: "Open tabs",
+      applications: { gecko: { id: "open-tabs@tests.mozilla.org" }, },
+      permissions: ["cookies"],
+    },
+    async background() {
+      const TABS = [
+        { url: "http://example.com" },
+        { url: "http://example.net" },
+        {
+          url: "http://test1.example.com",
+          cookieStoreId: 'firefox-container-1',
+        },
+      ];
+
+      function awaitLoad(tabId) {
+        return new Promise(resolve => {
+          browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+            if (tabId == tabId_ && changed.status == "complete") {
+              browser.tabs.onUpdated.removeListener(listener);
+              resolve();
+            }
+          });
+        });
+      }
+
+      let tabs = [];
+      let loaded = [];
+      for (let options of TABS) {
+        let tab = await browser.tabs.create(options);
+        loaded.push(awaitLoad(tab.id));
+        tabs.push(tab);
+      }
+
+      await Promise.all(loaded);
+
+      browser.test.onMessage.addListener(async msg => {
+        if (msg === "cleanup") {
+          const tabIds = tabs.map(tab => tab.id);
+          let removedTabs = 0;
+          browser.tabs.onRemoved.addListener(tabId => {
+            browser.test.log(`Removing tab ${tabId}.`);
+            if (tabIds.includes(tabId)) {
+              removedTabs++;
+              if (removedTabs == tabIds.length) {
+                browser.test.sendMessage("done");
+              }
+            }
+          });
+          await browser.tabs.remove(tabIds);
+        }
+      });
+    }
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
     background,
     manifest: {
       name: "Test Extension",
-      permissions: ["browsingData"],
+      applications: { gecko: { id: "localStorage@tests.mozilla.org" } },
+      permissions: ["browsingData", "tabs"],
       content_scripts: [
         {
           matches: [
@@ -162,33 +238,22 @@ add_task(async function testLocalStorage() {
     },
   });
 
+  await openTabsExtension.startup();
+
   await extension.startup();
-
-  const TABS = [
-    { url: "http://example.com" },
-    { url: "http://example.net" },
-    {
-      url: "http://test1.example.com",
-      options: {
-        userContextId: 1,
-      },
-    },
-  ];
-
-  for (let info of TABS) {
-    let tab = await BrowserTestUtils.addTab(gBrowser, info.url, info.options);
-    let browser = gBrowser.getBrowserForTab(tab);
-    await BrowserTestUtils.browserLoaded(browser);
-  }
-
   await extension.awaitFinish("done");
   await extension.unload();
+
+  await openTabsExtension.sendMessage("cleanup");
+  await openTabsExtension.awaitMessage("done");
+  await openTabsExtension.unload();
 });
 
 // Verify that browsingData.removeLocalStorage doesn't break on data stored
 // in about:newtab or file principals.
 add_task(async function test_browserData_on_aboutnewtab_and_file_data() {
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
     async background() {
       await browser.browsingData.removeLocalStorage({}).catch(err => {
         browser.test.fail(`${err} :: ${err.stack}`);
@@ -196,16 +261,27 @@ add_task(async function test_browserData_on_aboutnewtab_and_file_data() {
       browser.test.sendMessage("done");
     },
     manifest: {
+      applications: { gecko: { id: "indexed-db-file@test.mozilla.org" } },
       permissions: ["browsingData"],
     },
   });
 
-  // Let's create some data on about:newtab origin.
-  const { SiteDataTestUtils } = ChromeUtils.import(
-    "resource://testing-common/SiteDataTestUtils.jsm"
-  );
-  await SiteDataTestUtils.addToIndexedDB("about:newtab", "foo", "bar", {});
-  await SiteDataTestUtils.addToIndexedDB("file:///fake/file", "foo", "bar", {});
+  await new Promise(resolve => {
+    const chromeScript = SpecialPowers.loadChromeScript(async () => {
+      const { SiteDataTestUtils } = ChromeUtils.import(
+        "resource://testing-common/SiteDataTestUtils.jsm"
+      );
+      await SiteDataTestUtils.addToIndexedDB("about:newtab");
+      await SiteDataTestUtils.addToIndexedDB("file:///fake/file");
+      // eslint-disable-next-line no-undef
+      sendAsyncMessage("done");
+    });
+
+    chromeScript.addMessageListener("done", () => {
+      chromeScript.destroy();
+      resolve();
+    });
+  });
 
   await extension.startup();
   await extension.awaitMessage("done");
@@ -213,7 +289,7 @@ add_task(async function test_browserData_on_aboutnewtab_and_file_data() {
 });
 
 add_task(async function test_browserData_should_not_remove_extension_data() {
-  if (!Services.prefs.getBoolPref("dom.storage.next_gen")) {
+  if (!SpecialPowers.getBoolPref("dom.storage.next_gen")) {
     // When LSNG isn't enabled, the browsingData API does still clear
     // all the extensions localStorage if called without a list of specific
     // origins to clear.
@@ -222,6 +298,7 @@ add_task(async function test_browserData_should_not_remove_extension_data() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
     async background() {
       window.localStorage.setItem("key", "value");
       await browser.browsingData.removeLocalStorage({}).catch(err => {
@@ -230,6 +307,7 @@ add_task(async function test_browserData_should_not_remove_extension_data() {
       browser.test.sendMessage("done", window.localStorage.getItem("key"));
     },
     manifest: {
+      applications: { gecko: { id: "extension-data@tests.mozilla.org" } },
       permissions: ["browsingData"],
     },
   });
@@ -239,3 +317,6 @@ add_task(async function test_browserData_should_not_remove_extension_data() {
   is(lsValue, "value", "Got the expected localStorage data");
   await extension.unload();
 });
+</script>
+</body>
+</html>

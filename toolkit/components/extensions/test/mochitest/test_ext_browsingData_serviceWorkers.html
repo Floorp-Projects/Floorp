@@ -1,7 +1,20 @@
-/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set sts=2 sw=2 et tw=80: */
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test browsingData.remove indexedDB</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
 "use strict";
+
+const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -14,15 +27,23 @@ add_task(async function setup() {
 });
 
 add_task(async function testServiceWorkers() {
-  function background() {
+  async function background() {
     const PAGE =
-      "/browser/browser/components/extensions/test/browser/file_serviceWorker.html";
+      "/tests/toolkit/components/extensions/test/mochitest/file_serviceWorker.html";
 
     browser.runtime.onMessage.addListener(msg => {
       browser.test.sendMessage("serviceWorkerRegistered");
     });
 
+    let tabs = [];
+
     browser.test.onMessage.addListener(async msg => {
+      if (msg == "cleanup") {
+        await browser.tabs.remove(tabs.map(tab => tab.id));
+        browser.test.sendMessage("done");
+        return;
+      }
+
       await browser.browsingData.remove(
         { hostnames: msg.hostnames },
         { serviceWorkers: true }
@@ -31,8 +52,11 @@ add_task(async function testServiceWorkers() {
     });
 
     // Create two serviceWorkers.
-    browser.tabs.create({ url: `http://mochi.test:8888${PAGE}` });
-    browser.tabs.create({ url: `http://example.com${PAGE}` });
+    let tab = await browser.tabs.create({ url: `http://mochi.test:8888${PAGE}` });
+    tabs.push(tab);
+
+    tab = await browser.tabs.create({ url: `http://example.com${PAGE}` });
+    tabs.push(tab);
   }
 
   function contentScript() {
@@ -49,8 +73,10 @@ add_task(async function testServiceWorkers() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
     background,
     manifest: {
+      applications: { gecko: { id: "service-workers@tests.mozilla.org" } },
       permissions: ["browsingData", "tabs"],
       content_scripts: [
         {
@@ -68,13 +94,6 @@ add_task(async function testServiceWorkers() {
     },
   });
 
-  let serviceWorkerManager = SpecialPowers.Cc[
-    "@mozilla.org/serviceworkers/manager;1"
-  ].getService(SpecialPowers.Ci.nsIServiceWorkerManager);
-
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  await focusWindow(win);
-
   await extension.startup();
   await extension.awaitMessage("serviceWorkerRegistered");
   await extension.awaitMessage("serviceWorkerRegistered");
@@ -82,11 +101,11 @@ add_task(async function testServiceWorkers() {
   // Even though we await the registrations by waiting for the messages,
   // sometimes the serviceWorkers are still not registered at this point.
   async function getRegistrations(count) {
-    await BrowserTestUtils.waitForCondition(
-      () => serviceWorkerManager.getAllRegistrations().length === count,
+    await TestUtils.waitForCondition(
+      async () => (await SpecialPowers.registeredServiceWorkers()).length === count,
       `Wait for ${count} service workers to be registered`
     );
-    return serviceWorkerManager.getAllRegistrations();
+    return SpecialPowers.registeredServiceWorkers();
   }
 
   let serviceWorkers = await getRegistrations(2);
@@ -101,11 +120,11 @@ add_task(async function testServiceWorkers() {
     1,
     "ServiceWorkers for example.com have been removed."
   );
-  let host = serviceWorkers.queryElementAt(
-    0,
-    Ci.nsIServiceWorkerRegistrationInfo
-  ).principal.host;
-  is(host, "mochi.test", "ServiceWorkers for example.com have been removed.");
+
+  let { scriptSpec } = serviceWorkers[0];
+  dump(`Service worker spec: ${scriptSpec}`);
+  ok(scriptSpec.startsWith("http://mochi.test:8888/"),
+     "ServiceWorkers for example.com have been removed.");
 
   extension.sendMessage({});
   await extension.awaitMessage("serviceWorkersRemoved");
@@ -113,6 +132,10 @@ add_task(async function testServiceWorkers() {
   serviceWorkers = await getRegistrations(0);
   is(serviceWorkers.length, 0, "All ServiceWorkers have been removed.");
 
+  extension.sendMessage("cleanup");
+  await extension.awaitMessage("done");
   await extension.unload();
-  await BrowserTestUtils.closeWindow(win);
 });
+</script>
+</body>
+</html>
