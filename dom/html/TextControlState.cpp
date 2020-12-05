@@ -2201,7 +2201,7 @@ DirectionStringToSelectionDirection(const nsAString& aDirection) {
     return nsITextControlFrame::eBackward;
   }
 
-  // We don't support directionless selections.
+  // We don't support directionless selections, see bug 1541454.
   return nsITextControlFrame::eForward;
 }
 
