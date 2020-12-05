@@ -366,7 +366,9 @@ bool HttpTransactionParent::DataSentToChildProcess() {
   return mDataSentToChildProcess;
 }
 
-nsISupports* HttpTransactionParent::SecurityInfo() { return mSecurityInfo; }
+already_AddRefed<nsISupports> HttpTransactionParent::SecurityInfo() {
+  return do_AddRef(mSecurityInfo);
+}
 
 bool HttpTransactionParent::ProxyConnectFailed() { return mProxyConnectFailed; }
 
