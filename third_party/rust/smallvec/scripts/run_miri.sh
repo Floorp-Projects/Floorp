@@ -16,6 +16,6 @@ rustup default "$MIRI_NIGHTLY"
 rustup component add miri
 cargo miri setup
 
-cargo miri test --verbose
-cargo miri test --verbose --features union
-cargo miri test --verbose --all-features
+cargo miri test --verbose -- -Zmiri-ignore-leaks
+cargo miri test --verbose --features union -- -Zmiri-ignore-leaks
+cargo miri test --verbose --all-features -- -Zmiri-ignore-leaks
