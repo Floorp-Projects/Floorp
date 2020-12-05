@@ -499,7 +499,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   HttpTrafficCategory mTrafficCategory;
   bool mThroughCaptivePortal;
-  int32_t mProxyConnectResponseCode;
+  Atomic<int32_t> mProxyConnectResponseCode;
 
   OnPushCallback mOnPushCallback;
   nsDataHashtable<nsUint32HashKey, RefPtr<Http2PushedStreamWrapper>>

@@ -104,7 +104,7 @@ class HttpTransactionShell : public nsISupports {
   // Returning null if there is no trailer.
   virtual UniquePtr<nsHttpHeaderArray> TakeResponseTrailers() = 0;
 
-  virtual nsISupports* SecurityInfo() = 0;
+  virtual already_AddRefed<nsISupports> SecurityInfo() = 0;
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) = 0;
 
   virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,
@@ -181,7 +181,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       override;                                                                \
   virtual UniquePtr<nsHttpResponseHead> TakeResponseHead() override;           \
   virtual UniquePtr<nsHttpHeaderArray> TakeResponseTrailers() override;        \
-  virtual nsISupports* SecurityInfo() override;                                \
+  virtual already_AddRefed<nsISupports> SecurityInfo() override;               \
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)         \
       override;                                                                \
   virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,               \
