@@ -6,6 +6,7 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -16,7 +17,8 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import java.io.IOException
 import java.io.OutputStream
 
 @RunWith(AndroidJUnit4::class)
@@ -28,7 +30,7 @@ class ThumbnailDiskCacheTest {
         val request = ImageLoadRequest("123", 100)
 
         val bitmap: Bitmap = mock()
-        Mockito.`when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
+        `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
             Assert.assertEquals(
                 Bitmap.CompressFormat.WEBP,
                 it.arguments[0] as Bitmap.CompressFormat
@@ -75,5 +77,18 @@ class ThumbnailDiskCacheTest {
         cache.clear(testContext)
         data = cache.getThumbnailData(testContext, request)
         assertNull(data)
+    }
+
+    @Test
+    fun `Clearing bitmap from disk catch IOException`() {
+        val cache = ThumbnailDiskCache()
+        val lruCache: DiskLruCache = mock()
+        cache.thumbnailCache = lruCache
+
+        `when`(lruCache.delete()).thenThrow(IOException("test"))
+
+        cache.clear(testContext)
+
+        assertNull(cache.thumbnailCache)
     }
 }

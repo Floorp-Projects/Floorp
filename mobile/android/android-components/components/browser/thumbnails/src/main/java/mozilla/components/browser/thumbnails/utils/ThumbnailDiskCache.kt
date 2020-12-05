@@ -6,6 +6,7 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.annotation.VisibleForTesting
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.concept.base.images.ImageLoadRequest
@@ -22,12 +23,17 @@ private const val WEBP_QUALITY = 90
  */
 class ThumbnailDiskCache {
     private val logger = Logger("ThumbnailDiskCache")
-    private var thumbnailCache: DiskLruCache? = null
+    @VisibleForTesting
+    internal var thumbnailCache: DiskLruCache? = null
     private val thumbnailCacheWriteLock = Any()
 
     internal fun clear(context: Context) {
         synchronized(thumbnailCacheWriteLock) {
-            getThumbnailCache(context).delete()
+            try {
+                getThumbnailCache(context).delete()
+            } catch (e: IOException) {
+                logger.warn("Thumbnail cache could not be cleared. Perhaps there are none?")
+            }
             thumbnailCache = null
         }
     }

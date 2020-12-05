@@ -32,6 +32,9 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: The `SitePermissionsRules` constructor, now requires a new parameter `mediaKeySystemAccess`.
   * 🌟 Added support for EME permission prompts, see [#7121](https://github.com/mozilla-mobile/android-components/issues/7121).
 
+* **browser-thumbnail**
+  * Catch `IOException` that may be thrown when deleting thumbnails.
+
 # 68.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v67.0.0...v68.0.0)
