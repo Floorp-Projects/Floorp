@@ -441,23 +441,59 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       if (mState == JPEG_DECOMPRESS_PROGRESSIVE) {
         LOG_SCOPE((mozilla::LogModule*)sJPEGLog,
                   "nsJPEGDecoder::Write -- JPEG_DECOMPRESS_PROGRESSIVE case");
-
+        auto AllComponentsSeen = [](jpeg_decompress_struct& mInfo) {
+          bool all_components_seen = true;
+          if (mInfo.coef_bits) {
+            for (int c = 0; c < mInfo.num_components; ++c) {
+              bool current_component_seen = mInfo.coef_bits[c][0] != -1;
+              all_components_seen &= current_component_seen;
+            }
+          }
+          return all_components_seen;
+        };
         int status;
+        int scan_to_display_first = 0;
+        bool all_components_seen;
+        all_components_seen = AllComponentsSeen(mInfo);
+        if (all_components_seen) {
+          scan_to_display_first = mInfo.input_scan_number;
+        }
+
         do {
           status = jpeg_consume_input(&mInfo);
+
+          if (status == JPEG_REACHED_SOS || status == JPEG_REACHED_EOI ||
+              status == JPEG_SUSPENDED) {
+            // record the first scan where all components are present
+            all_components_seen = AllComponentsSeen(mInfo);
+            if (!scan_to_display_first && all_components_seen) {
+              scan_to_display_first = mInfo.input_scan_number;
+            }
+          }
         } while ((status != JPEG_SUSPENDED) && (status != JPEG_REACHED_EOI));
 
+        if (!all_components_seen) {
+          return Transition::ContinueUnbuffered(
+              State::JPEG_DATA);  // I/O suspension
+        }
+        // make sure we never try to access the non-exsitent scan 0
+        if (!scan_to_display_first) {
+          scan_to_display_first = 1;
+        }
         while (mState != JPEG_DONE) {
           if (mInfo.output_scanline == 0) {
             int scan = mInfo.input_scan_number;
 
             // if we haven't displayed anything yet (output_scan_number==0)
             // and we have enough data for a complete scan, force output
-            // of the last full scan
-            if ((mInfo.output_scan_number == 0) && (scan > 1) &&
-                (status != JPEG_REACHED_EOI))
+            // of the last full scan,  but only if this last scan has seen
+            // DC data from all components
+            if ((mInfo.output_scan_number == 0) &&
+                (scan > scan_to_display_first) &&
+                (status != JPEG_REACHED_EOI)) {
               scan--;
-
+            }
+            MOZ_ASSERT(scan > 0, "scan number to small!");
             if (!jpeg_start_output(&mInfo, scan)) {
               MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
                       ("} (I/O suspension after jpeg_start_output() -"
