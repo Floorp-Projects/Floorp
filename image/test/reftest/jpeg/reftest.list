@@ -63,3 +63,6 @@ HTTP == webcam-simulacrum.mjpg blue.jpg
 # frames for each part. So we have this testcase to test those different
 # codepaths.
 HTTP == webcam-simulacrum.html blue.html
+
+== non-interleaved_progressive-1.jpg non-interleaved_progressive-1-halfred-ref.png
+== non-interleaved_progressive-2.jpg non-interleaved_progressive-2-white-ref.png
