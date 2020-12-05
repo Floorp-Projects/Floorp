@@ -699,7 +699,7 @@ fn qcms_modular_transform_release(mut t: Option<Box<qcms_modular_transform>>) {
     }
 }
 /* Set transform to be the next element in the linked list. */
-unsafe extern "C" fn append_transform(
+fn append_transform(
     mut transform: Option<Box<qcms_modular_transform>>,
     mut next_transform: &mut Option<Box<qcms_modular_transform>>,
 ) -> &mut Option<Box<qcms_modular_transform>> {
@@ -710,7 +710,7 @@ unsafe extern "C" fn append_transform(
     next_transform
 }
 /* reverse the transformation list (used by mBA) */
-unsafe extern "C" fn reverse_transform(
+fn reverse_transform(
     mut transform: Option<Box<qcms_modular_transform>>,
 ) -> Option<Box<qcms_modular_transform>> {
     let mut prev_transform = None;
@@ -721,10 +721,9 @@ unsafe extern "C" fn reverse_transform(
     }
     return prev_transform;
 }
-unsafe extern "C" fn qcms_modular_transform_create_mAB(
+fn qcms_modular_transform_create_mAB(
     mut lut: &lutmABType,
 ) -> Option<Box<qcms_modular_transform>> {
-    let mut current_block: u64;
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     let mut transform;
@@ -733,131 +732,114 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
         // If the A curve is present this also implies the
         // presence of a CLUT.
         if (*lut).clut_table.is_none() {
-            current_block = 7590209878260659629;
-        } else {
-            // Prepare A curve.
-            transform = qcms_modular_transform_alloc();
-            if transform.is_none() {
-                current_block = 7590209878260659629;
-            } else {
-                transform.as_mut().unwrap().input_clut_table_r =
-                    build_input_gamma_table((*lut).a_curves[0].as_deref());
-                transform.as_mut().unwrap().input_clut_table_g =
-                    build_input_gamma_table((*lut).a_curves[1].as_deref());
-                transform.as_mut().unwrap().input_clut_table_b =
-                    build_input_gamma_table((*lut).a_curves[2].as_deref());
-                transform.as_mut().unwrap().transform_module_fn = Some(
-                    qcms_transform_module_gamma_table,
-                );
-                next_transform = append_transform(transform, next_transform);
+            return None;
+        }
 
-                if (*lut).num_grid_points[0] as i32 != (*lut).num_grid_points[1] as i32
-                    || (*lut).num_grid_points[1] as i32 != (*lut).num_grid_points[2] as i32
-                {
-                    //XXX: We don't currently support clut that are not squared!
-                    current_block = 7590209878260659629;
-                } else {
-                    // Prepare CLUT
-                    transform = qcms_modular_transform_alloc();
-                    if transform.is_none() {
-                        current_block = 7590209878260659629;
-                    } else {
-                        clut_length = ((*lut).num_grid_points[0] as usize).pow(3) * 3;
-                        if false {
-                            current_block = 7590209878260659629;
-                        } else {
-                            assert_eq!(clut_length, lut.clut_table.as_ref().unwrap().len());
-                            transform.as_mut().unwrap().clut = lut.clut_table.clone();
-                            transform.as_mut().unwrap().grid_size = (*lut).num_grid_points[0] as u16;
-                            transform.as_mut().unwrap().transform_module_fn = Some(
-                                qcms_transform_module_clut_only,
-                            );
-                            next_transform = append_transform(transform, next_transform);
-                            current_block = 10652014663920648156;
-                        }
-                    }
-                }
-            }
+        // Prepare A curve.
+        transform = qcms_modular_transform_alloc();
+        if transform.is_none() {
+            return None;
         }
+        transform.as_mut().unwrap().input_clut_table_r =
+            build_input_gamma_table((*lut).a_curves[0].as_deref());
+        transform.as_mut().unwrap().input_clut_table_g =
+            build_input_gamma_table((*lut).a_curves[1].as_deref());
+        transform.as_mut().unwrap().input_clut_table_b =
+            build_input_gamma_table((*lut).a_curves[2].as_deref());
+        transform.as_mut().unwrap().transform_module_fn = Some(
+            qcms_transform_module_gamma_table,
+        );
+        next_transform = append_transform(transform, next_transform);
+
+        if (*lut).num_grid_points[0] as i32 != (*lut).num_grid_points[1] as i32
+            || (*lut).num_grid_points[1] as i32 != (*lut).num_grid_points[2] as i32
+        {
+            //XXX: We don't currently support clut that are not squared!
+            return None;
+        }
+
+        // Prepare CLUT
+        transform = qcms_modular_transform_alloc();
+        if transform.is_none() {
+            return None;
+        }
+
+        clut_length = ((*lut).num_grid_points[0] as usize).pow(3) * 3;
+        assert_eq!(clut_length, lut.clut_table.as_ref().unwrap().len());
+        transform.as_mut().unwrap().clut = lut.clut_table.clone();
+        transform.as_mut().unwrap().grid_size = (*lut).num_grid_points[0] as u16;
+        transform.as_mut().unwrap().transform_module_fn = Some(
+            qcms_transform_module_clut_only,
+        );
+        next_transform = append_transform(transform, next_transform);
+    }
+
+    if !(*lut).m_curves[0].is_none() {
+        // M curve imples the presence of a Matrix
+
+        // Prepare M curve
+        transform = qcms_modular_transform_alloc();
+        if transform.is_none() {
+            return None;
+        }
+        transform.as_mut().unwrap().input_clut_table_r =
+            build_input_gamma_table((*lut).m_curves[0].as_deref());
+        transform.as_mut().unwrap().input_clut_table_g =
+            build_input_gamma_table((*lut).m_curves[1].as_deref());
+        transform.as_mut().unwrap().input_clut_table_b =
+            build_input_gamma_table((*lut).m_curves[2].as_deref());
+        transform.as_mut().unwrap().transform_module_fn = Some(
+            qcms_transform_module_gamma_table,
+        );
+        next_transform = append_transform(transform, next_transform);
+        
+            // Prepare Matrix
+        transform = qcms_modular_transform_alloc();
+        if transform.is_none() {
+            return None;
+        }
+        transform.as_mut().unwrap().matrix = build_mAB_matrix(lut);
+        if transform.as_mut().unwrap().matrix.invalid {
+            return None;
+        }
+        transform.as_mut().unwrap().tx = s15Fixed16Number_to_float((*lut).e03);
+        transform.as_mut().unwrap().ty = s15Fixed16Number_to_float((*lut).e13);
+        transform.as_mut().unwrap().tz = s15Fixed16Number_to_float((*lut).e23);
+        transform.as_mut().unwrap().transform_module_fn = Some(
+            qcms_transform_module_matrix_translate,
+        );
+        next_transform = append_transform(transform, next_transform);
+    }
+
+    if !(*lut).b_curves[0].is_none() {
+        // Prepare B curve
+        transform = qcms_modular_transform_alloc();
+        if transform.is_none() {
+            return None;
+        }
+        transform.as_mut().unwrap().input_clut_table_r =
+            build_input_gamma_table((*lut).b_curves[0].as_deref());
+        transform.as_mut().unwrap().input_clut_table_g =
+            build_input_gamma_table((*lut).b_curves[1].as_deref());
+        transform.as_mut().unwrap().input_clut_table_b =
+            build_input_gamma_table((*lut).b_curves[2].as_deref());
+        transform.as_mut().unwrap().transform_module_fn = Some(
+            qcms_transform_module_gamma_table,
+        );
+        append_transform(transform, next_transform);
     } else {
-        current_block = 10652014663920648156;
+        // B curve is mandatory
+        return None;
     }
-    match current_block {
-        10652014663920648156 => {
-            if !(*lut).m_curves[0].is_none() {
-                // M curve imples the presence of a Matrix
-                // Prepare M curve
-                transform = qcms_modular_transform_alloc();
-                if transform.is_none() {
-                    current_block = 7590209878260659629;
-                } else {
-                    transform.as_mut().unwrap().input_clut_table_r =
-                        build_input_gamma_table((*lut).m_curves[0].as_deref());
-                    transform.as_mut().unwrap().input_clut_table_g =
-                        build_input_gamma_table((*lut).m_curves[1].as_deref());
-                    transform.as_mut().unwrap().input_clut_table_b =
-                        build_input_gamma_table((*lut).m_curves[2].as_deref());
-                    transform.as_mut().unwrap().transform_module_fn = Some(
-                        qcms_transform_module_gamma_table,
-                    );
-                    next_transform = append_transform(transform, next_transform);
-                    // Prepare Matrix
-                    transform = qcms_modular_transform_alloc();
-                    if transform.is_none() {
-                        current_block = 7590209878260659629;
-                    } else {
-                        transform.as_mut().unwrap().matrix = build_mAB_matrix(lut);
-                        if transform.as_mut().unwrap().matrix.invalid {
-                            current_block = 7590209878260659629;
-                        } else {
-                            transform.as_mut().unwrap().tx = s15Fixed16Number_to_float((*lut).e03);
-                            transform.as_mut().unwrap().ty = s15Fixed16Number_to_float((*lut).e13);
-                            transform.as_mut().unwrap().tz = s15Fixed16Number_to_float((*lut).e23);
-                            transform.as_mut().unwrap().transform_module_fn = Some(
-                                qcms_transform_module_matrix_translate,
-                            );
-                            next_transform = append_transform(transform, next_transform);
-                            current_block = 980989089337379490;
-                        }
-                    }
-                }
-            } else {
-                current_block = 980989089337379490;
-            }
-            match current_block {
-                7590209878260659629 => {}
-                _ => {
-                    if !(*lut).b_curves[0].is_none() {
-                        // Prepare B curve
-                        transform = qcms_modular_transform_alloc();
-                        if !transform.is_none() {
-                            transform.as_mut().unwrap().input_clut_table_r =
-                                build_input_gamma_table((*lut).b_curves[0].as_deref());
-                            transform.as_mut().unwrap().input_clut_table_g =
-                                build_input_gamma_table((*lut).b_curves[1].as_deref());
-                            transform.as_mut().unwrap().input_clut_table_b =
-                                build_input_gamma_table((*lut).b_curves[2].as_deref());
-                            transform.as_mut().unwrap().transform_module_fn = Some(
-                                qcms_transform_module_gamma_table,
-                            );
-                            append_transform(transform, next_transform);
-                            if (*lut).reversed {
-                                // mBA are identical to mAB except that the transformation order
-                                // is reversed
-                                first_transform = reverse_transform(first_transform)
-                            }
-                            return first_transform;
-                        }
-                    }
-                }
-            }
-        }
-        _ => {}
+
+    if (*lut).reversed {
+        // mBA are identical to mAB except that the transformation order
+        // is reversed
+        first_transform = reverse_transform(first_transform)
     }
-    // B curve is mandatory
-    qcms_modular_transform_release(first_transform);
-    return None;
+    return first_transform;
 }
+
 unsafe extern "C" fn qcms_modular_transform_create_lut(
     mut lut: &lutType,
 ) -> Option<Box<qcms_modular_transform>> {
