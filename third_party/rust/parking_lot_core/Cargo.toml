@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "parking_lot_core"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "An advanced API for creating custom synchronization primitives."
 keywords = ["mutex", "condvar", "rwlock", "once", "thread"]
@@ -25,7 +25,7 @@ version = "0.3.49"
 optional = true
 
 [dependencies.cfg-if]
-version = "0.1.10"
+version = "1.0.0"
 
 [dependencies.instant]
 version = "0.1.4"
@@ -35,7 +35,7 @@ version = "0.5.1"
 optional = true
 
 [dependencies.smallvec]
-version = "1.4.0"
+version = "1.0"
 
 [dependencies.thread-id]
 version = "3.3.0"
@@ -44,8 +44,6 @@ optional = true
 [features]
 deadlock_detection = ["petgraph", "thread-id", "backtrace"]
 nightly = []
-[target."cfg(target_os = \"cloudabi\")".dependencies.cloudabi]
-version = "0.1.0"
 [target."cfg(target_os = \"redox\")".dependencies.redox_syscall]
 version = "0.1.56"
 [target."cfg(unix)".dependencies.libc]
