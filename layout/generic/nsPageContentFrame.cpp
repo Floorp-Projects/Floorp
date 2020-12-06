@@ -49,6 +49,13 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
   nsSize maxSize(aReflowInput.ComputedWidth(), aReflowInput.ComputedHeight());
   SetSize(maxSize);
 
+  WritingMode wm = aReflowInput.GetWritingMode();
+  aReflowOutput.ISize(wm) = aReflowInput.ComputedISize();
+  if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+    aReflowOutput.BSize(wm) = aReflowInput.ComputedBSize();
+  }
+  aReflowOutput.SetOverflowAreasToDesiredBounds();
+
   // A PageContentFrame must always have one child: the canvas frame.
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
@@ -58,11 +65,8 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
     LogicalSize logicalSize(wm, maxSize);
     ReflowInput kidReflowInput(aPresContext, aReflowInput, frame, logicalSize);
     kidReflowInput.SetComputedBSize(logicalSize.BSize(wm));
-
-    // Reflow the page content area
-    // XXXdholbert It's weird that we're passing down our own aReflowOutput
-    // outparam to be used for the child frame's reflow here. See bug 1655856.
-    ReflowChild(frame, aPresContext, aReflowOutput, kidReflowInput, 0, 0,
+    ReflowOutput kidReflowOutput(kidReflowInput);
+    ReflowChild(frame, aPresContext, kidReflowOutput, kidReflowInput, 0, 0,
                 ReflowChildFlags::Default, aStatus);
 
     // The document element's background should cover the entire canvas, so
@@ -81,8 +85,8 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
     if (frame->HasOverflowAreas()) {
       // The background covers the content area and padding area, so check
       // for children sticking outside the child frame's padding edge
-      nscoord xmost = aReflowOutput.ScrollableOverflow().XMost();
-      if (xmost > aReflowOutput.Width()) {
+      nscoord xmost = kidReflowOutput.ScrollableOverflow().XMost();
+      if (xmost > kidReflowOutput.Width()) {
         nscoord widthToFit =
             xmost + padding.right +
             kidReflowInput.mStyleBorder->GetComputedBorderWidth(eSideRight);
@@ -95,8 +99,8 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
       // so that we don't clip the page in either axis if the aspect ratio of
       // the PDF doesn't match the destination.
       if (nsContentUtils::IsPDFJS(PresContext()->Document()->GetPrincipal())) {
-        nscoord ymost = aReflowOutput.ScrollableOverflow().YMost();
-        if (ymost > aReflowOutput.Height()) {
+        nscoord ymost = kidReflowOutput.ScrollableOverflow().YMost();
+        if (ymost > kidReflowOutput.Height()) {
           nscoord heightToFit =
               ymost + padding.bottom +
               kidReflowInput.mStyleBorder->GetComputedBorderWidth(eSideBottom);
@@ -108,27 +112,23 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
     }
 
     // Place and size the child
-    FinishReflowChild(frame, aPresContext, aReflowOutput, &kidReflowInput, 0, 0,
-                      ReflowChildFlags::Default);
+    FinishReflowChild(frame, aPresContext, kidReflowOutput, &kidReflowInput, 0,
+                      0, ReflowChildFlags::Default);
 
     NS_ASSERTION(aPresContext->IsDynamic() || !aStatus.IsFullyComplete() ||
                      !frame->GetNextInFlow(),
                  "bad child flow list");
+
+    aReflowOutput.mOverflowAreas.UnionWith(kidReflowOutput.mOverflowAreas);
   }
+
+  FinishAndStoreOverflow(&aReflowOutput);
 
   // Reflow our fixed frames
   nsReflowStatus fixedStatus;
   ReflowAbsoluteFrames(aPresContext, aReflowOutput, aReflowInput, fixedStatus);
   NS_ASSERTION(fixedStatus.IsComplete(),
                "fixed frames can be truncated, but not incomplete");
-
-  // Return our desired size
-  WritingMode wm = aReflowInput.GetWritingMode();
-  aReflowOutput.ISize(wm) = aReflowInput.ComputedISize();
-  if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-    aReflowOutput.BSize(wm) = aReflowInput.ComputedBSize();
-  }
-  FinishAndStoreOverflow(&aReflowOutput);
 
   if (StaticPrefs::layout_display_list_improve_fragmentation() &&
       mFrames.NotEmpty()) {
