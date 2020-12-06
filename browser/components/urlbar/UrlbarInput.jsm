@@ -475,6 +475,12 @@ class UrlbarInput {
     let result = this.view.getResultFromElement(element);
     let openParams = oneOffParams?.openParams || {};
 
+    // If the value was submitted during composition, the result may not have
+    // been updated yet, because the input event happens after composition end.
+    // We can't trust element nor _resultForCurrentValue targets in that case,
+    // so we'always generate a new heuristic to load.
+    let isComposing = this.editor.composing;
+
     // Use the selected element if we have one; this is usually the case
     // when the view is open.
     let selectedPrivateResult =
@@ -483,7 +489,11 @@ class UrlbarInput {
       result.payload.inPrivateWindow;
     let selectedPrivateEngineResult =
       selectedPrivateResult && result.payload.isPrivateEngine;
-    if (element && (!oneOffParams?.engine || selectedPrivateEngineResult)) {
+    if (
+      !isComposing &&
+      element &&
+      (!oneOffParams?.engine || selectedPrivateEngineResult)
+    ) {
       this.pickElement(element, event);
       return;
     }
@@ -577,7 +587,7 @@ class UrlbarInput {
     // make a difference if the search string is the same.
 
     // If we have a result for the current value, we can just use it.
-    if (this._resultForCurrentValue) {
+    if (!isComposing && this._resultForCurrentValue) {
       this.pickResult(this._resultForCurrentValue, event);
       return;
     }
@@ -2895,6 +2905,8 @@ class UrlbarInput {
     let value = this.value;
     this.valueIsTyped = true;
     this._untrimmedValue = value;
+    this._resultForCurrentValue = null;
+
     this.window.gBrowser.userTypedValue = value;
     // Unset userSelectionBehavior because the user is modifying the search
     // string, thus there's no valid selection. This is also used by the view
@@ -3129,6 +3141,18 @@ class UrlbarInput {
 
     // Close the view. This will also stop searching.
     if (this.view.isOpen) {
+      // We're closing the view, but we want to retain search mode if the
+      // selected result was previewing it.
+      if (this.searchMode) {
+        // If we entered search mode with an empty string, clear userTypedValue,
+        // otherwise confirmSearchMode may try to set it as value.
+        // This can happen for example if we entered search mode typing a
+        // a partial engine domain and selecting a tab-to-search result.
+        if (!this.value) {
+          this.window.gBrowser.userTypedValue = null;
+        }
+        this.confirmSearchMode();
+      }
       this._compositionClosedPopup = true;
       this.view.close();
     } else {
@@ -3140,6 +3164,12 @@ class UrlbarInput {
     if (this._compositionState != UrlbarUtils.COMPOSITION.COMPOSING) {
       throw new Error("Trying to stop a non existing composition?");
     }
+
+    // Clear the selection and the cached result, since they refer to the
+    // state before this composition. A new input event will be generated after
+    // this.
+    this.view.clearSelection();
+    this._resultForCurrentValue = null;
 
     // We can't yet retrieve the committed value from the editor, since it isn't
     // completely committed yet. We'll handle it at the next input event.
