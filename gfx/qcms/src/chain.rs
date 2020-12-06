@@ -33,7 +33,6 @@ use crate::{
         lut_interp_linear_float,
     },
 };
-use ::libc::{self, free, malloc, memcpy};
 
 #[derive(Clone, Default)]
 pub struct qcms_modular_transform {
@@ -840,7 +839,7 @@ fn qcms_modular_transform_create_mAB(
     return first_transform;
 }
 
-unsafe extern "C" fn qcms_modular_transform_create_lut(
+fn qcms_modular_transform_create_lut(
     mut lut: &lutType,
 ) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
@@ -862,17 +861,7 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
             // Prepare input curves
             transform = qcms_modular_transform_alloc();
             if !transform.is_none() {
-                in_curve_len =
-                    ::std::mem::size_of::<f32>() * (*lut).num_input_table_entries as usize * 3;
-                in_curves = malloc(in_curve_len) as *mut f32;
-                if !in_curves.is_null() {
-                    memcpy(
-                        in_curves as *mut libc::c_void,
-                        (*lut).input_table.as_ptr() as *mut libc::c_void,
-                        in_curve_len,
-                    );
-                    // XXX: in_curves is unused
-                    free(in_curves as *mut libc::c_void);
+                if true {
                     transform.as_mut().unwrap().input_clut_table_r = Some(
                         (*lut).input_table[0..(*lut).num_input_table_entries as usize].to_vec(),
                     );
@@ -914,8 +903,8 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
     qcms_modular_transform_release(first_transform);
     return None;
 }
-#[no_mangle]
-pub unsafe extern "C" fn qcms_modular_transform_create_input(
+
+fn qcms_modular_transform_create_input(
     mut in_0: &qcms_profile,
 ) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform= None;
@@ -992,10 +981,9 @@ pub unsafe extern "C" fn qcms_modular_transform_create_input(
     }
     first_transform
 }
-unsafe extern "C" fn qcms_modular_transform_create_output(
+fn qcms_modular_transform_create_output(
     mut out: &qcms_profile,
 ) -> Option<Box<qcms_modular_transform>> {
-    let mut current_block: u64;
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if !(*out).B2A0.is_none() {
@@ -1126,7 +1114,7 @@ remove_next:
     return transform;
 }
 */
-unsafe extern "C" fn qcms_modular_transform_create(
+fn qcms_modular_transform_create(
     mut in_0: &qcms_profile,
     mut out: &qcms_profile,
 ) -> Option<Box<qcms_modular_transform>> {
