@@ -4,13 +4,15 @@
 
 @import url("chrome://global/skin/in-content/common.css");
 
-html {
-  height: 100%;
-}
-
 body {
   display: flex;
-  height: 100%;
+}
+
+/* This is needed to make the sidebar not hide the last button but breaks printing by hiding overflowing content */
+@media not print {
+  html, body {
+    height: 100%;
+  }
 }
 
 #categories {
