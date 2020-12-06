@@ -243,11 +243,14 @@ class UrlbarEventBufferer {
       return false;
     }
 
-    if (
-      DEFERRED_KEY_CODES.has(event.keyCode) &&
-      this.input.controller.keyEventMovesCaret(event)
-    ) {
-      return false;
+    if (DEFERRED_KEY_CODES.has(event.keyCode)) {
+      // Defer while the user is composing.
+      if (this.input.editor.composing) {
+        return true;
+      }
+      if (this.input.controller.keyEventMovesCaret(event)) {
+        return false;
+      }
     }
 
     // This is an event that we'd defer, but if enough time has passed since the
