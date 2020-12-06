@@ -22,6 +22,11 @@ const TEST_STRINGS = [
 ];
 
 add_task(async function() {
+  // Disable autofill so mozilla.org isn't autofilled below.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.autoFill", false]],
+  });
+
   sandbox = sinon.createSandbox();
   let engine = await Services.search.addEngineWithDetails("MozSearch", {
     alias: "moz",
@@ -66,16 +71,7 @@ add_task(async function() {
   // confirm the same string without a view and without an input event, and
   // compare the arguments.
   for (let value of TEST_STRINGS) {
-    if (
-      UrlbarPrefs.get("update2") &&
-      (await UrlbarSearchUtils.engineForAlias(value))
-    ) {
-      // If update2 is enabled, the heuristic search results shown for
-      // aliases don't trigger a page load, making them irrelevant for this
-      // test. When the update2 pref is removed, these strings can be removed
-      // from TEST_STRINGS.
-      continue;
-    }
+    info("Input the value normally and Enter.");
     let promise = promiseLoadURL();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -84,12 +80,19 @@ add_task(async function() {
     EventUtils.synthesizeKey("KEY_Enter");
     let args = await promise;
     Assert.ok(args.length, "Sanity check");
-    // Close the panel and confirm again.
+    info("Close the panel and confirm again.");
     promise = promiseLoadURL();
     await UrlbarTestUtils.promisePopupClose(window);
     EventUtils.synthesizeKey("KEY_Enter");
     Assert.deepEqual(await promise, args, "Check arguments are coherent");
-    // Set the value directly and Enter.
+
+    info("Set the value directly and Enter.");
+    // To properly testing the original value we must be out of search mode.
+    if (gURLBar.searchMode) {
+      await UrlbarTestUtils.exitSearchMode(window);
+      // Exiting search mode may reopen the panel.
+      await UrlbarTestUtils.promisePopupClose(window);
+    }
     promise = promiseLoadURL();
     gURLBar.value = value;
     let spy = sinon.spy(UrlbarUtils, "getHeuristicResultFor");
@@ -133,12 +136,9 @@ add_task(async function no_heuristic_test() {
   // confirm the same string without a view and without an input event, and
   // compare the arguments.
   for (let value of TEST_STRINGS) {
-    if (
-      UrlbarPrefs.get("update2") &&
-      (await UrlbarSearchUtils.engineForAlias(value))
-    ) {
-      // See comment in identical block in the subtest above.
-      continue;
+    // To properly testing the original value we must be out of search mode.
+    if (gURLBar.searchMode) {
+      await UrlbarTestUtils.exitSearchMode(window);
     }
     let promise = promiseLoadURL();
     gURLBar.value = value;
