@@ -4096,21 +4096,12 @@ impl Renderer {
     }
 
     fn bind_textures(&mut self, textures: &BatchTextures) {
-        let mut swizzles = [Swizzle::default(); 3];
-        for i in 0 .. textures.colors.len() {
-            let swizzle = self.texture_resolver.bind(
-                &textures.colors[i],
+        for i in 0 .. 3 {
+            self.texture_resolver.bind(
+                &textures.input.colors[i],
                 TextureSampler::color(i),
                 &mut self.device,
             );
-            if cfg!(debug_assertions) {
-                swizzles[i] = swizzle;
-                for j in 0 .. i {
-                    if textures.colors[j] == textures.colors[i] && swizzles[j] != swizzle {
-                        error!("Swizzling conflict in {:?}", textures);
-                    }
-                }
-            }
         }
 
         self.texture_resolver.bind(
@@ -4726,9 +4717,9 @@ impl Renderer {
                     // the frame render. To handle this, query the texture resolver for the
                     // UV rect if it's an external texture, otherwise use the default UV rect.
                     let uv_rects = [
-                        self.texture_resolver.get_uv_rect(&textures.colors[0], planes[0].uv_rect),
-                        self.texture_resolver.get_uv_rect(&textures.colors[1], planes[1].uv_rect),
-                        self.texture_resolver.get_uv_rect(&textures.colors[2], planes[2].uv_rect),
+                        self.texture_resolver.get_uv_rect(&textures.input.colors[0], planes[0].uv_rect),
+                        self.texture_resolver.get_uv_rect(&textures.input.colors[1], planes[1].uv_rect),
+                        self.texture_resolver.get_uv_rect(&textures.input.colors[2], planes[2].uv_rect),
                     ];
 
                     let instance = CompositeInstance::new_yuv(
@@ -4751,7 +4742,6 @@ impl Renderer {
                     ( textures, instance )
                 },
                 ResolvedExternalSurfaceColorData::Rgb{ ref plane, flip_y, .. } => {
-
                     self.shaders
                         .borrow_mut()
                         .get_composite_shader(
@@ -4764,7 +4754,7 @@ impl Renderer {
                         );
 
                     let textures = BatchTextures::composite_rgb(plane.texture);
-                    let mut uv_rect = self.texture_resolver.get_uv_rect(&textures.colors[0], plane.uv_rect);
+                    let mut uv_rect = self.texture_resolver.get_uv_rect(&textures.input.colors[0], plane.uv_rect);
                     if flip_y {
                         let y = uv_rect.uv0.y;
                         uv_rect.uv0.y = uv_rect.uv1.y;
@@ -4909,9 +4899,9 @@ impl Renderer {
                             // the frame render. To handle this, query the texture resolver for the
                             // UV rect if it's an external texture, otherwise use the default UV rect.
                             let uv_rects = [
-                                self.texture_resolver.get_uv_rect(&textures.colors[0], planes[0].uv_rect),
-                                self.texture_resolver.get_uv_rect(&textures.colors[1], planes[1].uv_rect),
-                                self.texture_resolver.get_uv_rect(&textures.colors[2], planes[2].uv_rect),
+                                self.texture_resolver.get_uv_rect(&textures.input.colors[0], planes[0].uv_rect),
+                                self.texture_resolver.get_uv_rect(&textures.input.colors[1], planes[1].uv_rect),
+                                self.texture_resolver.get_uv_rect(&textures.input.colors[2], planes[2].uv_rect),
                             ];
 
                             (
