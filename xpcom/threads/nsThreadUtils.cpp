@@ -342,18 +342,36 @@ extern nsresult NS_DispatchToMainThreadQueue(
   return rv;
 }
 
-class IdleRunnableWrapper final : public IdleRunnable {
+class IdleRunnableWrapper final : public Runnable,
+                                  public nsIDiscardableRunnable,
+                                  public nsIIdleRunnable {
  public:
   explicit IdleRunnableWrapper(already_AddRefed<nsIRunnable>&& aEvent)
-      : mRunnable(std::move(aEvent)) {}
+      : Runnable("IdleRunnableWrapper"),
+        mRunnable(std::move(aEvent)),
+        mDiscardable(do_QueryInterface(mRunnable)) {}
+
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD Run() override {
     if (!mRunnable) {
       return NS_OK;
     }
     CancelTimer();
+    // Don't clear mDiscardable because that would cause QueryInterface to
+    // change behavior during the lifetime of an instance.
     nsCOMPtr<nsIRunnable> runnable = std::move(mRunnable);
     return runnable->Run();
+  }
+
+  // nsIDiscardableRunnable
+  void OnDiscard() override {
+    if (!mRunnable) {
+      // Run() was already called from TimedOut().
+      return;
+    }
+    mDiscardable->OnDiscard();
+    mRunnable = nullptr;
   }
 
   static void TimedOut(nsITimer* aTimer, void* aClosure) {
@@ -398,7 +416,16 @@ class IdleRunnableWrapper final : public IdleRunnable {
 
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIRunnable> mRunnable;
+  nsCOMPtr<nsIDiscardableRunnable> mDiscardable;
 };
+
+NS_IMPL_ADDREF_INHERITED(IdleRunnableWrapper, Runnable)
+NS_IMPL_RELEASE_INHERITED(IdleRunnableWrapper, Runnable)
+
+NS_INTERFACE_MAP_BEGIN(IdleRunnableWrapper)
+  NS_INTERFACE_MAP_ENTRY(nsIIdleRunnable)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDiscardableRunnable, mDiscardable)
+NS_INTERFACE_MAP_END_INHERITING(Runnable)
 
 extern nsresult NS_DispatchToThreadQueue(already_AddRefed<nsIRunnable>&& aEvent,
                                          uint32_t aTimeout, nsIThread* aThread,
