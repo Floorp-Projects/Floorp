@@ -629,6 +629,12 @@ xul|*.radio-label-box {
   box-shadow: none;
 }
 
+@media print {
+  #categories {
+    display: none;
+  }
+}
+
 html|*#categories {
   box-sizing: border-box;
   padding: 1px;
