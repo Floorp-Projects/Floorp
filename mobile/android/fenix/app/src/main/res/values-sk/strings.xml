@@ -98,6 +98,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zavrieť</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Zmeňte rozloženie otvorených kariet. Prejdite do nastavení a v zobrazení kariet vyberte mriežku.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Prejsť do nastavení</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -277,6 +279,8 @@
     <string name="preferences_open_links_in_a_private_tab">Otvárať odkazy na súkromných kartách</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Povoliť tvorbu snímok obrazovky v súkromnom prehliadaní</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Ak je to povolené, súkromné karty sa zobrazia aj vtedy, ak je otvorených viac aplikácií</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Pridať odkaz na súkromné prehliadanie</string>
     <!-- Preference for accessibility -->
@@ -498,6 +502,16 @@
     <string name="preference_follow_device_theme">Podľa zariadenia</string>
 
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Potiahnutím aktualizujete</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Skryť panel s nástrojmi posunutím stránky</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Prepínať medzi kartami posunutím panela nástrojov do strán</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Potiahnutím panela nástrojov smerom hore otvoríte karty</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Relácie</string>
@@ -589,6 +603,8 @@
     <string name="tab_tray_title">Otvorené karty</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Uložiť do kolekcie</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Vybrať</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Zobraziť všetky karty</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -609,8 +625,12 @@
     <string name="tab_tray_multiselect_menu_item_close">Zavrieť</string>
     <!-- Content description for tabs tray multiselect share button -->
     <string name="tab_tray_multiselect_share_content_description">Zdieľať vybrané karty</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Ponuka vybratých kariet</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Odstrániť kartu z kolekcie</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Vybrať karty</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Zavrieť kartu</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1342,6 +1362,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS knižnice</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Sledovače presmerovania</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Odstráni cookies nastavené v priebehu presmerovania známymi sledujúcimi stránkami.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Podpora</string>

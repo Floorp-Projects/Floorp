@@ -602,7 +602,7 @@
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Paskiausiai užvertos kortelės</string>
     <!-- Text shown in the menu to view tab settings -->
-    <string name="tab_tray_menu_tab_settings">Kortelės nustatymai</string>
+    <string name="tab_tray_menu_tab_settings">Kortelių nustatymai</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Užverti visas korteles</string>
     <!-- Shortcut action to open new tab -->
