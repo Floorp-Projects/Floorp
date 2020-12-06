@@ -184,3 +184,83 @@ add_task(async function test_composition() {
   });
   Assert.equal(gURLBar.value, "Mozilla.org/", "Check urlbar value");
 });
+
+add_task(async function test_composition_searchMode_preview() {
+  info("Check Search Mode preview is retained by composition");
+
+  let engine = await Services.search.addEngineWithDetails("Test", {
+    alias: "@test",
+    template: `http://example.com/?search={searchTerms}`,
+  });
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+
+  registerCleanupFunction(async () => {
+    await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engine);
+    await PlacesUtils.history.clear();
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "@",
+  });
+
+  while (gURLBar.searchMode?.engineName != "Test") {
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+  }
+  let expectedSearchMode = {
+    engineName: "Test",
+    isPreview: true,
+    entry: "keywordoffer",
+  };
+  await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
+  synthesizeCompositionChange("I");
+  Assert.equal(gURLBar.value, "I", "Check urlbar value");
+  // Test that we are in confirmed search mode.
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: "Test",
+    entry: "keywordoffer",
+  });
+  await UrlbarTestUtils.exitSearchMode(window);
+});
+
+// Note: this is reusing the engine addedby the previous sub-test.
+add_task(async function test_composition_tabToSearch() {
+  info("Check Tab-to-Seatch is retained by composition");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
+  });
+
+  // Add a bookmark to ensure we autofill the engine domain for tab-to-search.
+  let bm = await PlacesUtils.bookmarks.insert({
+    url: "http://example.com/",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+  });
+  registerCleanupFunction(async () => {
+    await PlacesUtils.bookmarks.remove(bm);
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "exa",
+  });
+
+  while (gURLBar.searchMode?.engineName != "Test") {
+    EventUtils.synthesizeKey("KEY_Tab", {}, window);
+  }
+  let expectedSearchMode = {
+    engineName: "Test",
+    isPreview: true,
+    entry: "tabtosearch",
+  };
+  await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
+  synthesizeCompositionChange("I");
+  Assert.equal(gURLBar.value, "I", "Check urlbar value");
+  // Test that we are in confirmed search mode.
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: "Test",
+    entry: "tabtosearch",
+  });
+  await UrlbarTestUtils.exitSearchMode(window);
+});

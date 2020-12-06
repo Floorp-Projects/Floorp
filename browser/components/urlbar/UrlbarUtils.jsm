@@ -852,7 +852,8 @@ var UrlbarUtils = {
     if (!searchString) {
       throw new Error("Must pass a non-null search string");
     }
-    let context = new UrlbarQueryContext({
+
+    let options = {
       allowAutofill: false,
       isPrivate: PrivateBrowsingUtils.isWindowPrivate(window),
       maxResults: 1,
@@ -862,7 +863,15 @@ var UrlbarUtils = {
       ),
       allowSearchSuggestions: false,
       providers: ["UnifiedComplete", "HeuristicFallback"],
-    });
+    };
+    if (window.gURLBar.searchMode) {
+      let searchMode = window.gURLBar.searchMode;
+      options.searchMode = searchMode;
+      if (searchMode.source) {
+        options.sources = [searchMode.source];
+      }
+    }
+    let context = new UrlbarQueryContext(options);
     await UrlbarProvidersManager.startQuery(context);
     if (!context.heuristicResult) {
       throw new Error("There should always be an heuristic result");
