@@ -825,7 +825,11 @@ impl TextureCache {
         let (texture_id, layer_index, uv_rect, swizzle, uv_rect_handle, user_data) = self.get_cache_location(handle);
         CacheItem {
             uv_rect_handle,
-            texture_id: TextureSource::TextureCache(texture_id, swizzle),
+            texture_id: TextureSource::TextureCache(
+                texture_id,
+                ImageBufferKind::Texture2D,
+                swizzle,
+            ),
             uv_rect,
             texture_layer: layer_index as i32,
             user_data,
@@ -1112,6 +1116,41 @@ impl TextureCache {
         }
 
         allowed_in_shared_cache
+    }
+
+    /// Allocate a render target via the pending updates sent to the renderer
+    pub fn alloc_render_target(
+        &mut self,
+        size: DeviceIntSize,
+        num_layers: usize,
+        format: ImageFormat,
+    ) -> CacheTextureId {
+        let texture_id = self.next_id;
+        self.next_id.0 += 1;
+
+        // Push a command to allocate device storage of the right size / format.
+        let info = TextureCacheAllocInfo {
+            target: ImageBufferKind::Texture2DArray,
+            width: size.width,
+            height: size.height,
+            format,
+            filter: TextureFilter::Linear,
+            layer_count: num_layers as i32,
+            is_shared_cache: false,
+            has_depth: false,
+        };
+
+        self.pending_updates.push_alloc(texture_id, info);
+
+        texture_id
+    }
+
+    /// Free an existing render target
+    pub fn free_render_target(
+        &mut self,
+        id: CacheTextureId,
+    ) {
+        self.pending_updates.push_free(id);
     }
 
     /// Allocates a new standalone cache entry.
