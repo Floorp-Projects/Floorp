@@ -72,6 +72,13 @@ spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu4", 
 # failure's backtrace feature might break our builds, see bug 1608157.
 failure = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
 failure_derive = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
+# This is a hack. Smallvec 1.4/1.5 cause a big performance regression,
+# see bug 1671170.
+#
+# Fortunately all the consumers build fine with 1.3. We can remove this hack
+# once https://github.com/rusqlite/rusqlite/pull/855 and
+# https://github.com/Amanieu/parking_lot/pull/266 have been merged.
+smallvec = { git = "https://github.com/emilio/rust-smallvec", branch = "1.3-as-1.5", rev = "7579d2fa282282e4d1d96d0c67fc186314a6b6c0" }
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/bytecodealliance/wasmtime"
