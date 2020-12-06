@@ -1,0 +1,37 @@
+language: rust
+addons:
+  apt:
+    update: true
+    packages:
+      - binutils-dev
+      - libunwind8-dev
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - libiberty-dev
+matrix:
+  include:
+    - rust: 1.36.0
+    - rust: nightly
+    - rust: beta
+      env: DO_FUZZ=true
+    - rust: stable
+      env: DO_FUZZ=true
+script: |
+  cargo build --verbose &&
+  cargo test --verbose &&
+  cargo test --verbose --features serde &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || cargo check --verbose --no-default-features) &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || cargo test --verbose --features union) &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || cargo test --verbose --all-features) &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || cargo bench --verbose bench) &&
+  ([ $TRAVIS_RUST_VERSION != nightly ] || bash ./scripts/run_miri.sh) &&
+  if [ "$DO_FUZZ" = true ]
+  then
+  (
+    cd fuzz
+    ./travis-fuzz.sh
+  )
+  fi
