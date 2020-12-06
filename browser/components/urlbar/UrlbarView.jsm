@@ -223,6 +223,13 @@ class UrlbarView {
   }
 
   /**
+   * Clears selection, regardless of view status.
+   */
+  clearSelection() {
+    this._selectElement(null, { updateInput: false });
+  }
+
+  /**
    * @returns {number}
    *   The number of visible results in the view.  Note that this may be larger
    *   than the number of results in the current query context since the view
@@ -435,7 +442,7 @@ class UrlbarView {
   clear() {
     this._rows.textContent = "";
     this.panel.setAttribute("noresults", "true");
-    this._selectElement(null, { updateInput: false });
+    this.clearSelection();
   }
 
   /**
