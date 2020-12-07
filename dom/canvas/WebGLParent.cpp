@@ -31,8 +31,8 @@ mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
       },
       desc, out);
 
-  if (!mHost) {
-    return IPC_FAIL(this, "Failed to create HostWebGLContext");
+  if (!mHost && !out->error.size()) {
+    return IPC_FAIL(this, "Abnormally failed to create HostWebGLContext.");
   }
 
   return IPC_OK();
