@@ -1353,6 +1353,7 @@ impl TextureUnits {
         for unit in &mut self.units {
             if let Some((alloc_id, rect)) = unit.allocator.allocate(requested_size) {
                 allocation = Some((unit.texture_id, alloc_id, rect));
+                break;
             }
         }
 
