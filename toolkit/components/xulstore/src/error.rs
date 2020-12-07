@@ -5,7 +5,7 @@
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_ILLEGAL_VALUE, NS_ERROR_NOT_AVAILABLE, NS_ERROR_UNEXPECTED,
 };
-use rkv::{MigrateError as RkvMigrateError, StoreError as RkvStoreError};
+use rkv::{migrate::MigrateError as RkvMigrateError, StoreError as RkvStoreError};
 use serde_json::Error as SerdeJsonError;
 use std::{io::Error as IoError, str::Utf8Error, string::FromUtf16Error, sync::PoisonError};
 
