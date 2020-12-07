@@ -3,17 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAppStartupNotifier.h"
-#include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsICategoryManager.h"
-#include "nsIObserver.h"
 #include "nsXPCOM.h"
+#include "nsAppStartupNotifier.h"
 #include "mozilla/SimpleEnumerator.h"
-
-using namespace mozilla;
 
 /* static */
 nsresult nsAppStartupNotifier::NotifyObservers(const char* aCategory) {
