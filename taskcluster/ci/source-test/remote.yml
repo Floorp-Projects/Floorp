@@ -32,6 +32,8 @@ job-defaults:
             - type: file
               name: public/remote/pup_raw.log
               path: /builds/worker/pup_raw.log
+    optimization:
+        skip-unless-expanded: null
 
 puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
