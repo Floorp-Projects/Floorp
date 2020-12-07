@@ -127,7 +127,7 @@ class Connection {
     this.send({
       sessionId, // this will be undefined for the default session
       id,
-      result,
+      result: typeof result != "undefined" ? result : {},
     });
   }
 
