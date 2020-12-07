@@ -1254,8 +1254,7 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvAddCertException(
       const nsACString& aSerializedCert, uint32_t aFlags,
-      const nsACString& aHostName, int32_t aPort,
-      const OriginAttributes& aOriginAttributes, bool aIsTemporary,
+      const nsACString& aHostName, int32_t aPort, bool aIsTemporary,
       AddCertExceptionResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvAutomaticStorageAccessPermissionCanBeGranted(

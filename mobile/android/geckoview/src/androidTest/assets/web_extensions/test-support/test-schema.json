@@ -7,7 +7,7 @@
         "name": "setPrefs",
         "type": "function",
         "async": true,
-        "description": "Set prefs and return a set of saved prefs"s();
+        "description": "Set prefs and return a set of saved prefs",
         "parameters": [
           {
             "name": "oldPrefs",
@@ -90,11 +90,20 @@
         ]
       },
       {
-        "name": "removeAllCertOverrides",
+        "name": "removeCertOverride",
         "type": "function",
         "async": true,
-        "description": "Revokes SSL certificate overrides.",
-        "parameters": []
+        "description": "Revokes SSL certificate overrides for the given host+port.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "host"
+          },
+          {
+            "type": "number",
+            "name": "port"
+          }
+        ]
       },
       {
         "name": "setScalar",
