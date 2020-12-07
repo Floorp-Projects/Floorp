@@ -45,6 +45,7 @@
 #include "nsNetCID.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"

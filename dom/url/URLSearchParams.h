@@ -17,7 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
-#include "nsStringFwd.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 

@@ -20,6 +20,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameSelection.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/DataTransfer.h"
 
 #include "nsIDocShell.h"

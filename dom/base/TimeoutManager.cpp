@@ -8,6 +8,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PerformanceCounter.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Telemetry.h"
