@@ -55,7 +55,7 @@ class UseCases(
         SearchUseCases(
             store,
             store.toDefaultSearchEngineProvider(),
-            sessionManager
+            tabsUseCases
         )
     }
 
@@ -67,7 +67,7 @@ class UseCases(
     val appLinksUseCases by lazyMonitored { AppLinksUseCases(context.applicationContext) }
 
     val webAppUseCases by lazyMonitored {
-        WebAppUseCases(context, sessionManager, shortcutManager)
+        WebAppUseCases(context, store, shortcutManager)
     }
 
     val downloadUseCases by lazyMonitored { DownloadsUseCases(store) }

@@ -125,7 +125,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         ),
                         ManifestUpdateFeature(
                             activity.applicationContext,
-                            requireComponents.core.sessionManager,
+                            requireComponents.core.store,
                             requireComponents.core.webAppShortcutManager,
                             requireComponents.core.webAppManifestStorage,
                             customTabSessionId,
@@ -135,7 +135,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     viewLifecycleOwner.lifecycle.addObserver(
                         WebAppSiteControlsFeature(
                             activity.applicationContext,
-                            requireComponents.core.sessionManager,
+                            requireComponents.core.store,
                             requireComponents.useCases.sessionUseCases.reload,
                             customTabSessionId,
                             manifest,

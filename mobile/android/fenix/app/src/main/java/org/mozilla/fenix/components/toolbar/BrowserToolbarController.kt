@@ -7,6 +7,8 @@ package org.mozilla.fenix.components.toolbar
 import androidx.navigation.NavController
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
@@ -38,6 +40,7 @@ interface BrowserToolbarController {
 }
 
 class DefaultBrowserToolbarController(
+    private val store: BrowserStore,
     private val activity: HomeActivity,
     private val navController: NavController,
     private val metrics: MetricController,
@@ -66,15 +69,15 @@ class DefaultBrowserToolbarController(
 
     override fun handleToolbarPasteAndGo(text: String) {
         if (text.isUrl()) {
-            sessionManager.selectedSession?.searchTerms = ""
+            store.updateSearchTermsOfSelectedSession("")
             activity.components.useCases.sessionUseCases.loadUrl.invoke(text)
             return
         }
 
-        sessionManager.selectedSession?.searchTerms = text
+        store.updateSearchTermsOfSelectedSession(text)
         activity.components.useCases.searchUseCases.defaultSearch.invoke(
             text,
-            session = sessionManager.selectedSession
+            sessionId = sessionManager.selectedSession?.id
         )
     }
 
@@ -156,4 +159,15 @@ class DefaultBrowserToolbarController(
     companion object {
         internal const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
     }
+}
+
+private fun BrowserStore.updateSearchTermsOfSelectedSession(
+    searchTerms: String
+) {
+    val selectedTabId = state.selectedTabId ?: return
+
+    dispatch(ContentAction.UpdateSearchTermsAction(
+        selectedTabId,
+        searchTerms
+    ))
 }

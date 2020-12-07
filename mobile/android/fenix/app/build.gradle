@@ -550,7 +550,9 @@ dependencies {
     androidTestImplementation Deps.androidx_junit
     androidTestImplementation Deps.androidx_work_testing
     androidTestImplementation Deps.mockwebserver
+
     testImplementation Deps.mozilla_support_test
+    testImplementation Deps.mozilla_support_test_libstate
     testImplementation Deps.androidx_junit
     testImplementation Deps.androidx_work_testing
     testImplementation (Deps.robolectric) {

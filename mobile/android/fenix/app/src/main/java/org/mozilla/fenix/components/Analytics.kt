@@ -113,7 +113,6 @@ class Analytics(
         }
         Nimbus(context, serverSettings).apply {
             if (FeatureFlags.nimbusExperiments) {
-                initialize()
                 // Global opt out state is stored in Nimbus, and shouldn't be toggled to `true`
                 // from the app unless the user does so from a UI control.
                 // However, the user may have opt-ed out of mako experiments already, so

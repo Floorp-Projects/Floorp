@@ -266,6 +266,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                 isPrivate = activity.browsingModeManager.mode.isPrivate
             )
             val browserToolbarController = DefaultBrowserToolbarController(
+                store = store,
                 activity = activity,
                 navController = findNavController(),
                 metrics = requireComponents.analytics.metrics,
