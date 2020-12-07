@@ -2030,6 +2030,23 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   com_heap_ptr<WAVEFORMATEX> mix_format(tmp);
 
   mix_format->wBitsPerSample = stm->bytes_per_sample * 8;
+  if (mix_format->wFormatTag == WAVE_FORMAT_PCM ||
+      mix_format->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
+    switch (mix_format->wBitsPerSample) {
+    case 8:
+    case 16:
+      mix_format->wFormatTag = WAVE_FORMAT_PCM;
+      break;
+    case 32:
+      mix_format->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+      break;
+    default:
+      LOG("%u bits per sample is incompatible with PCM wave formats",
+          mix_format->wBitsPerSample);
+      return CUBEB_ERROR;
+    }
+  }
+
   if (mix_format->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
     WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(mix_format.get());
     format_pcm->SubFormat = stm->waveformatextensible_sub_format;
