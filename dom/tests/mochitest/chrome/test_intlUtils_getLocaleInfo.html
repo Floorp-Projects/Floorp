@@ -18,8 +18,7 @@ const localeService =
   Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
 const mozIntl = Cc["@mozilla.org/mozintl;1"].getService(Ci.mozIMozIntl);
 
-let rpLocale = localeService.negotiateLanguages(localeService.regionalPrefsLocales,
-                                                localeService.availableLocales)[0];
+let rpLocale = localeService.regionalPrefsLocales[0];
 
 let testData = [
   {
