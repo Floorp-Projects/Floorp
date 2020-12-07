@@ -582,6 +582,11 @@ static bool IsWebglOutOfProcessEnabled() {
   return useOop;
 }
 
+static inline bool StartsWith(const std::string& haystack,
+                              const std::string& needle) {
+  return haystack.find(needle) == 0;
+}
+
 bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
   const auto pNotLost = std::make_shared<webgl::NotLostData>(*this);
   auto& notLost = *pNotLost;
@@ -692,7 +697,13 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     return Ok();
   }();
   if (!res.isOk()) {
-    notLost.info.error = res.unwrapErr();
+    auto str = res.unwrapErr();
+    if (StartsWith(str, "failIfMajorPerformanceCaveat")) {
+      str +=
+          " (about:config override available:"
+          " webgl.disable-fail-if-major-performance-caveat)";
+    }
+    notLost.info.error = str;
   }
   if (!notLost.info.error.empty()) {
     ThrowEvent_WebGLContextCreationError(notLost.info.error);
