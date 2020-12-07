@@ -173,6 +173,16 @@ namespace WinToastLib {
             SHORTCUT_CREATE_FAILED = -4
         };
 
+        enum ShortcutPolicy {
+            /* Don't check, create, or modify a shortcut. */
+            SHORTCUT_POLICY_IGNORE = 0,
+            /* Require a shortcut with matching AUMI, don't create or modify an existing one. */
+            SHORTCUT_POLICY_REQUIRE_NO_CREATE = 1,
+            /* Require a shortcut with matching AUMI, create if missing, modify if not matching.
+             * This is the default. */
+            SHORTCUT_POLICY_REQUIRE_CREATE = 2,
+        };
+
         WinToast(void);
         virtual ~WinToast();
         static WinToast* instance();
@@ -194,10 +204,12 @@ namespace WinToastLib {
         const std::wstring& appUserModelId() const;
         void setAppUserModelId(_In_ const std::wstring& aumi);
         void setAppName(_In_ const std::wstring& appName);
+        void setShortcutPolicy(_In_ ShortcutPolicy policy);
 
     protected:
         bool											_isInitialized{false};
         bool                                            _hasCoInitialized{false};
+        ShortcutPolicy                                  _shortcutPolicy{SHORTCUT_POLICY_REQUIRE_CREATE};
         std::wstring                                    _appName{};
         std::wstring                                    _aumi{};
         std::map<INT64, ComPtr<IToastNotification>>     _buffer{};
