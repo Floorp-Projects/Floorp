@@ -72,10 +72,12 @@ async function init(aEvent) {
 
   // Show a release notes link if we have a URL.
   let relNotesLink = document.getElementById("releasenotes");
-  let relNotesPrefType = Services.prefs.getPrefType("app.releaseNotesURL");
+  let relNotesPrefType = Services.prefs.getPrefType(
+    "app.releaseNotesURL.aboutDialog"
+  );
   if (relNotesPrefType != Services.prefs.PREF_INVALID) {
     let relNotesURL = Services.urlFormatter.formatURLPref(
-      "app.releaseNotesURL"
+      "app.releaseNotesURL.aboutDialog"
     );
     if (relNotesURL != "about:blank") {
       relNotesLink.href = relNotesURL;
