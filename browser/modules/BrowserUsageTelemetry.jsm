@@ -1131,7 +1131,6 @@ let BrowserUsageTelemetry = {
 
     if (item && source) {
       let scalar = `browser.ui.interaction.${source.replace("-", "_")}`;
-      console.log("UI Interaction", scalar, telemetryId(item));
       Services.telemetry.keyedScalarAdd(scalar, telemetryId(item), 1);
     }
   },
@@ -1232,7 +1231,6 @@ let BrowserUsageTelemetry = {
 
     let key = `${telemetryId(widgetId, false)}_${action}_${oldPos ??
       "na"}_${newPos ?? "na"}_${reason}`;
-    console.log("Browser UI change", key);
     Services.telemetry.keyedScalarAdd("browser.ui.customized_widgets", key, 1);
 
     if (newPos) {
