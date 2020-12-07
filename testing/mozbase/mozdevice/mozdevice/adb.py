@@ -3569,6 +3569,7 @@ class ADBDevice(ADBCommand):
                 "android.permission.ACCESS_FINE_LOCATION",
                 "android.permission.CAMERA",
                 "android.permission.RECORD_AUDIO",
+                "android.permission.ACCESS_WIFI_STATE",
             ]
             self._logger.info("Granting important runtime permissions to %s" % app_name)
             for permission in permissions:
