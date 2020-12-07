@@ -175,6 +175,13 @@ var PrintUtils = {
       true
     ).firstElementChild;
     previewStack.append(browser);
+
+    // show the toolbar after we go into print preview mode so
+    // that we can initialize the toolbar with total num pages
+    let previewPagination = document.createElement("printpreview-pagination");
+    previewPagination.classList.add("printPreviewNavigation");
+    previewStack.append(previewPagination);
+
     aDialogBrowser.parentElement.prepend(previewStack);
     return browser;
   },
