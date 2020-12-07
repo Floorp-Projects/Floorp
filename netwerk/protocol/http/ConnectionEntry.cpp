@@ -936,5 +936,27 @@ bool ConnectionEntry::RemoveTransFromPendingQ(nsHttpTransaction* aTrans) {
   return true;
 }
 
+void ConnectionEntry::MaybeUpdateEchConfig(nsHttpConnectionInfo* aConnInfo) {
+  if (!mConnInfo->HashKey().Equals(aConnInfo->HashKey())) {
+    return;
+  }
+
+  const nsCString& echConfig = aConnInfo->GetEchConfig();
+  if (mConnInfo->GetEchConfig().Equals(echConfig)) {
+    return;
+  }
+
+  LOG(("ConnectionEntry::MaybeUpdateEchConfig [ci=%s]\n",
+       mConnInfo->HashKey().get()));
+
+  mConnInfo->SetEchConfig(echConfig);
+
+  // If echConfig is changed, we should close all half opens and idle
+  // connections. This is to make sure the new echConfig will be used for the
+  // next connection.
+  CloseAllHalfOpens();
+  CloseIdleConnections();
+}
+
 }  // namespace net
 }  // namespace mozilla

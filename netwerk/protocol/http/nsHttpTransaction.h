@@ -228,6 +228,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   already_AddRefed<nsHttpConnectionInfo> PrepareFastFallbackConnInfo(
       bool aEchConfigUsed);
 
+  void MaybeReportFailedSVCDomain(nsresult aReason,
+                                  nsHttpConnectionInfo* aFailedConnInfo);
+
   already_AddRefed<Http2PushedStreamWrapper> TakePushedStreamById(
       uint32_t aStreamId);
 
