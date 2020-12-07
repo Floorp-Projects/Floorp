@@ -1535,13 +1535,6 @@ static nscoord PartiallyResolveAutoMinSize(
   }
 
   if (specifiedSizeSuggestion != nscoord_MAX) {
-    // Clamp specified size suggestion by the max main-size property if it's
-    // definite.
-    if (aFlexItem.MainMaxSize() != NS_UNCONSTRAINEDSIZE) {
-      specifiedSizeSuggestion =
-          std::min(specifiedSizeSuggestion, aFlexItem.MainMaxSize());
-    }
-
     // We have the specified size suggestion. Return it now since we don't need
     // to consider transferred size suggestion.
     FLEX_LOGV(" Specified size suggestion: %d", specifiedSizeSuggestion);
@@ -1589,7 +1582,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
     return;
   }
 
-  FLEX_LOGV("Resolving auto main size or main min size for flex item %p",
+  FLEX_LOGV("Resolving auto main size or auto min main size for flex item %p",
             aFlexItem.Frame());
 
   nscoord resolvedMinSize;  // (only set/used if isMainMinSizeAuto==true)
@@ -1673,14 +1666,15 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
         contentSizeSuggestion = ClampMainSizeViaCrossAxisConstraints(
             contentSizeSuggestion, aFlexItem, aAxisTracker);
       }
-      // Further clamp it by the max main-size property if it's definite.
-      if (aFlexItem.MainMaxSize() != NS_UNCONSTRAINEDSIZE) {
-        contentSizeSuggestion =
-            std::min(contentSizeSuggestion, aFlexItem.MainMaxSize());
-      }
 
       FLEX_LOGV(" Content size suggestion: %d", contentSizeSuggestion);
       resolvedMinSize = std::min(resolvedMinSize, contentSizeSuggestion);
+
+      // Clamp the resolved min main size by the max main size if it's definite.
+      if (aFlexItem.MainMaxSize() != NS_UNCONSTRAINEDSIZE) {
+        resolvedMinSize = std::min(resolvedMinSize, aFlexItem.MainMaxSize());
+      }
+      FLEX_LOGV(" Resolved auto min main size: %d", resolvedMinSize);
     }
   }
 
