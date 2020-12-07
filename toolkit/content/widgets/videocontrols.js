@@ -2781,6 +2781,14 @@ this.VideoControlsImplWidget = class {
       "toolkit/global/videocontrols.ftl",
     ]);
     this.l10n.connectRoot(this.shadowRoot);
+    if (this.prefs["media.videocontrols.keyboard-tab-to-all-controls"]) {
+      // Make all of the individual controls tabbable.
+      for (const el of parserDoc.documentElement.querySelectorAll(
+        '[tabindex="-1"]'
+      )) {
+        el.removeAttribute("tabindex");
+      }
+    }
     this.shadowRoot.importNodeAndAppendChildAt(
       this.shadowRoot,
       parserDoc.documentElement,
