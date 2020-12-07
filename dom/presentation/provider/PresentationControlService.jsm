@@ -205,22 +205,22 @@ PresentationControlService.prototype = {
     let socketTransport;
     try {
       if (aDeviceInfo.certFingerprint) {
-        socketTransport = sts.createTransport(
-          ["ssl"],
-          aDeviceInfo.address,
-          aDeviceInfo.port,
-          null
-        );
         let overrideService = Cc[
           "@mozilla.org/security/certoverride;1"
         ].getService(Ci.nsICertOverrideService);
         overrideService.rememberTemporaryValidityOverrideUsingFingerprint(
           aDeviceInfo.address,
           aDeviceInfo.port,
-          socketTransport.originAttributes,
           aDeviceInfo.certFingerprint,
           Ci.nsICertOverrideService.ERROR_UNTRUSTED |
             Ci.nsICertOverrideService.ERROR_MISMATCH
+        );
+
+        socketTransport = sts.createTransport(
+          ["ssl"],
+          aDeviceInfo.address,
+          aDeviceInfo.port,
+          null
         );
       } else {
         socketTransport = sts.createTransport(

@@ -9,14 +9,8 @@
 interface nsIArray;
 interface nsIX509Cert;
 
-[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
-
 %{C++
 #define NS_CERTOVERRIDE_CONTRACTID "@mozilla.org/security/certoverride;1"
-
-namespace mozilla {
-class OriginAttributes;
-}
 %}
 
 [scriptable, builtinclass, uuid(ed735e24-fa55-4163-906d-17fb78851fe1)]
@@ -49,12 +43,6 @@ interface nsICertOverride : nsISupports {
   *   existing function of nsCertOverrideService to create this property.
   */
   readonly attribute ACString hostPort;
-
-  /**
-  *   The origin attributes associated with this override.
-  */
-  [implicit_jscontext]
-  readonly attribute jsval originAttributes;
 };
 
 /**
@@ -97,17 +85,9 @@ interface nsICertOverrideService : nsISupports {
    *  @param aCert The cert that should always be accepted
    *  @param aOverrideBits The precise set of errors we want to be overriden
    */
-  [binaryname(RememberValidityOverride), noscript, must_use]
-  void rememberValidityOverrideNative(in AUTF8String aHostName,
-                                in int32_t aPort,
-                                in const_OriginAttributesRef aOriginAttributes,
-                                in nsIX509Cert aCert,
-                                in uint32_t aOverrideBits,
-                                in boolean aTemporary);
-  [binaryname(RememberValidityOverrideScriptable), implicit_jscontext, must_use]
+  [must_use]
   void rememberValidityOverride(in AUTF8String aHostName,
                                 in int32_t aPort,
-                                in jsval aOriginAttributes,
                                 in nsIX509Cert aCert,
                                 in uint32_t aOverrideBits,
                                 in boolean aTemporary);
@@ -125,18 +105,10 @@ interface nsICertOverrideService : nsISupports {
    *          the format 'AA:BB:...' (colon-separated upper-case hex bytes).
    *  @param aOverrideBits The errors we want to be overriden
    */
-  [binaryname(RememberTemporaryValidityOverrideUsingFingerprint), noscript, must_use]
-  void rememberTemporaryValidityOverrideUsingFingerprintNative(
-      in AUTF8String aHostName,
-      in int32_t aPort,
-      in const_OriginAttributesRef aOriginAttributes,
-      in AUTF8String aCertFingerprint,
-      in uint32_t aOverrideBits);
-  [binaryname(RememberTemporaryValidityOverrideUsingFingerprintScriptable), implicit_jscontext, must_use]
+  [must_use]
   void rememberTemporaryValidityOverrideUsingFingerprint(
       in AUTF8String aHostName,
       in int32_t aPort,
-      in jsval aOriginAttributes,
       in AUTF8String aCertFingerprint,
       in uint32_t aOverrideBits);
 
@@ -155,17 +127,9 @@ interface nsICertOverrideService : nsISupports {
    *         or permanent
    *  @return Whether an override has been stored for this host+port+cert
    */
-  [binaryname(HasMatchingOverride), noscript, must_use]
-  boolean hasMatchingOverrideNative(in AUTF8String aHostName,
-                              in int32_t aPort,
-                              in const_OriginAttributesRef aOriginAttributes,
-                              in nsIX509Cert aCert,
-                              out uint32_t aOverrideBits,
-                              out boolean aIsTemporary);
-  [binaryname(HasMatchingOverrideScriptable), implicit_jscontext, must_use]
+  [must_use]
   boolean hasMatchingOverride(in AUTF8String aHostName,
                               in int32_t aPort,
-                              in jsval aOriginAttributes,
                               in nsIX509Cert aCert,
                               out uint32_t aOverrideBits,
                               out boolean aIsTemporary);
@@ -179,14 +143,8 @@ interface nsICertOverrideService : nsISupports {
    *               If it is 0 and aHostName is "all:temporary-certificates",
    *               then all temporary certificates should be cleared.
    */
-  [binaryname(ClearValidityOverride), noscript]
-  void clearValidityOverrideNative(in AUTF8String aHostName,
-                             in int32_t aPort,
-                             in const_OriginAttributesRef aOriginAttributes);
-  [binaryname(ClearValidityOverrideScriptable), implicit_jscontext]
   void clearValidityOverride(in AUTF8String aHostName,
-                             in int32_t aPort,
-                             in jsval aOriginAttributes);
+                             in int32_t aPort);
 
   /**
    *  Remove all overrides.

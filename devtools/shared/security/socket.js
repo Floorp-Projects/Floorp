@@ -399,7 +399,6 @@ function _storeCertOverride(s, host, port) {
   certOverrideService.rememberValidityOverride(
     host,
     port,
-    {},
     cert,
     overrideBits,
     true /* temporary */

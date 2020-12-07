@@ -636,10 +636,8 @@ nsCertTree::DeleteEntryObject(uint32_t index) {
         nsCertAddonInfo* addonInfo =
             certdi->mAddonInfo ? certdi->mAddonInfo.get() : nullptr;
         if (certdi->mTypeOfEntry == nsCertTreeDispInfo::host_port_override) {
-          // atm, this never actually runs, using fake origin attributes to
-          // compile until this is cleaned up
-          mOverrideService->ClearValidityOverride(
-              certdi->mAsciiHost, certdi->mPort, OriginAttributes());
+          mOverrideService->ClearValidityOverride(certdi->mAsciiHost,
+                                                  certdi->mPort);
           if (addonInfo) {
             addonInfo->mUsageCount--;
             if (addonInfo->mUsageCount == 0) {
