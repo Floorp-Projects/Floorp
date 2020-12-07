@@ -12,6 +12,8 @@
 #define mozilla_dom_ScriptLoadHandler_h
 
 #include "nsIIncrementalStreamLoader.h"
+#include "nsISupports.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {

@@ -5,20 +5,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoadHandler.h"
+
+#include <stdlib.h>
+#include <utility>
 #include "ScriptLoader.h"
 #include "ScriptTrace.h"
-
-#include "nsContentUtils.h"
-#include "nsICacheInfoChannel.h"
-#include "nsIHttpChannel.h"
-#include "nsJSUtils.h"
-#include "nsMimeTypes.h"
-
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
-#include "mozilla/Telemetry.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Encoding.h"
+#include "mozilla/Logging.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/Tuple.h"
+#include "mozilla/Utf8.h"
+#include "mozilla/Vector.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/SRICheck.h"
+#include "mozilla/dom/ScriptDecoding.h"
+#include "mozilla/dom/ScriptLoadRequest.h"
+#include "nsCOMPtr.h"
+#include "nsContentUtils.h"
+#include "nsDebug.h"
+#include "nsICacheInfoChannel.h"
+#include "nsIChannel.h"
+#include "nsIHttpChannel.h"
+#include "nsIRequest.h"
+#include "nsIScriptElement.h"
+#include "nsIURI.h"
+#include "nsJSUtils.h"
+#include "nsMimeTypes.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
