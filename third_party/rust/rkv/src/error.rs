@@ -132,9 +132,39 @@ impl<T> From<sync::PoisonError<T>> for StoreError {
 }
 
 #[derive(Debug, Fail)]
+pub enum CloseError {
+    #[fail(display = "manager poisoned")]
+    ManagerPoisonError,
+
+    #[fail(display = "close attempted while manager has an environment still open")]
+    EnvironmentStillOpen,
+
+    #[fail(display = "close attempted while an environment not known to the manager is still open")]
+    UnknownEnvironmentStillOpen,
+
+    #[fail(display = "I/O error: {:?}", _0)]
+    IoError(io::Error),
+}
+
+impl<T> From<sync::PoisonError<T>> for CloseError {
+    fn from(_: sync::PoisonError<T>) -> CloseError {
+        CloseError::ManagerPoisonError
+    }
+}
+
+impl From<io::Error> for CloseError {
+    fn from(e: io::Error) -> CloseError {
+        CloseError::IoError(e)
+    }
+}
+
+#[derive(Debug, Fail)]
 pub enum MigrateError {
     #[fail(display = "store error: {}", _0)]
     StoreError(StoreError),
+
+    #[fail(display = "close error: {}", _0)]
+    CloseError(CloseError),
 
     #[fail(display = "manager poisoned")]
     ManagerPoisonError,
@@ -149,6 +179,12 @@ pub enum MigrateError {
 impl From<StoreError> for MigrateError {
     fn from(e: StoreError) -> MigrateError {
         MigrateError::StoreError(e)
+    }
+}
+
+impl From<CloseError> for MigrateError {
+    fn from(e: CloseError) -> MigrateError {
+        MigrateError::CloseError(e)
     }
 }
 

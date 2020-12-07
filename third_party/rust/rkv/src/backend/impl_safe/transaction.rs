@@ -37,7 +37,7 @@ pub struct RoTransactionImpl<'t> {
 
 impl<'t> RoTransactionImpl<'t> {
     pub(crate) fn new(env: &'t EnvironmentImpl, idx: Arc<()>) -> Result<RoTransactionImpl<'t>, ErrorImpl> {
-        let snapshots = env.dbs()?.iter().map(|(id, db)| (DatabaseImpl(id), db.snapshot())).collect();
+        let snapshots = env.dbs()?.arena.iter().map(|(id, db)| (DatabaseImpl(id), db.snapshot())).collect();
         Ok(RoTransactionImpl {
             env,
             snapshots,
@@ -78,7 +78,7 @@ pub struct RwTransactionImpl<'t> {
 
 impl<'t> RwTransactionImpl<'t> {
     pub(crate) fn new(env: &'t EnvironmentImpl, idx: Arc<()>) -> Result<RwTransactionImpl<'t>, ErrorImpl> {
-        let snapshots = env.dbs()?.iter().map(|(id, db)| (DatabaseImpl(id), db.snapshot())).collect();
+        let snapshots = env.dbs()?.arena.iter().map(|(id, db)| (DatabaseImpl(id), db.snapshot())).collect();
         Ok(RwTransactionImpl {
             env,
             snapshots,
@@ -144,7 +144,7 @@ impl<'t> BackendRwTransaction for RwTransactionImpl<'t> {
         let mut dbs = self.env.dbs_mut()?;
 
         for (id, snapshot) in self.snapshots {
-            let db = dbs.get_mut(id.0).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
+            let db = dbs.arena.get_mut(id.0).ok_or_else(|| ErrorImpl::DbIsForeignError)?;
             db.replace(snapshot);
         }
 
