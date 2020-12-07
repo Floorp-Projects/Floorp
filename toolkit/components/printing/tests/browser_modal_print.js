@@ -86,26 +86,10 @@ add_task(async function testTabOrder() {
 
     const previewBrowser = document.querySelector(".printPreviewBrowser");
     ok(previewBrowser, "Got the print preview browser");
-
-    let focused;
-    let navigationShadowRoot = document.querySelector(".printPreviewNavigation")
-      .shadowRoot;
-    for (let buttonId of [
-      "navigateEnd",
-      "navigateNext",
-      "navigatePrevious",
-      "navigateHome",
-    ]) {
-      let button = navigationShadowRoot.getElementById(buttonId);
-      focused = BrowserTestUtils.waitForEvent(button, "focus");
-      await EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
-      await focused;
-    }
-
-    focused = BrowserTestUtils.waitForEvent(previewBrowser, "focus");
-    await EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+    let focused = BrowserTestUtils.waitForEvent(previewBrowser, "focus");
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
     await focused;
-    ok(true, "Print preview focused after shift+tab through the paginator");
+    ok(true, "Print preview focused after shift+tab");
 
     focused = BrowserTestUtils.waitForEvent(gNavToolbox, "focus", true);
     EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
@@ -117,17 +101,6 @@ add_task(async function testTabOrder() {
     await focused;
     ok(true, "Print preview focused after tab");
 
-    for (let buttonId of [
-      "navigateHome",
-      "navigatePrevious",
-      "navigateNext",
-      "navigateEnd",
-    ]) {
-      let button = navigationShadowRoot.getElementById(buttonId);
-      focused = BrowserTestUtils.waitForEvent(button, "focus");
-      await EventUtils.synthesizeKey("KEY_Tab");
-      await focused;
-    }
     focused = BrowserTestUtils.waitForEvent(printerPicker, "focus");
     EventUtils.synthesizeKey("KEY_Tab");
     await focused;
