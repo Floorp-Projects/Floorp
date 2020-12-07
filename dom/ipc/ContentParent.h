@@ -1049,12 +1049,9 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvSetURITitle(nsIURI* uri, const nsString& title);
 
-  bool HasNotificationPermission(const IPC::Principal& aPrincipal);
-
   mozilla::ipc::IPCResult RecvShowAlert(nsIAlertNotification* aAlert);
 
-  mozilla::ipc::IPCResult RecvCloseAlert(const nsString& aName,
-                                         const IPC::Principal& aPrincipal);
+  mozilla::ipc::IPCResult RecvCloseAlert(const nsString& aName);
 
   mozilla::ipc::IPCResult RecvDisableNotifications(
       const IPC::Principal& aPrincipal);
