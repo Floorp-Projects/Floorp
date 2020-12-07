@@ -134,4 +134,15 @@ let WebsiteFilter = {
   createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },
+  isAllowed(url) {
+    if (this._blockPatterns?.matches(url.toLowerCase())) {
+      if (
+        !this._exceptionsPatterns ||
+        !this._exceptionsPatterns.matches(url.toLowerCase())
+      ) {
+        return false;
+      }
+    }
+    return true;
+  },
 };
