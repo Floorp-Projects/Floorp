@@ -25,6 +25,7 @@ function test_methods_calling() {
   Services.intl.getLocaleInfo("de");
   new Services.intl.DateTimeFormat("fr");
   new Services.intl.ListFormat("fr");
+  new Services.intl.Locale("fr");
   new Services.intl.RelativeTimeFormat("fr");
   ok(true);
 }
