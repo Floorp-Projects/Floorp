@@ -2829,6 +2829,17 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
     return;
   }
 
+  if (XRE_IsContentProcess()) {
+    BrowsingContext* bc = aWindow->GetBrowsingContext();
+    if (!bc->IsTop()) {
+      // Assume the raise below will succeed and run the raising synchronously
+      // in this process to make the focus event that is observable in this
+      // process fire in the right order relative to mouseup when we are here
+      // thanks to a mousedown.
+      WindowRaised(aWindow, aActionId);
+    }
+  }
+
 #if defined(XP_WIN)
   // Windows would rather we focus the child widget, otherwise, the toplevel
   // widget will always end up being focused. Fortunately, focusing the child
