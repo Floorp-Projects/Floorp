@@ -59,12 +59,12 @@ var testcases = [
   {
     input: "http://mozilla/",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
   },
   {
     input: "http://test./",
     fixedURI: "http://test./",
-    alternateURI: "http://www.test./",
+    alternateURI: "https://www.test./",
   },
   {
     input: "127.0.0.1",
@@ -234,13 +234,13 @@ var testcases = [
   {
     input: "whitelisted/foo.txt",
     fixedURI: "http://whitelisted/foo.txt",
-    alternateURI: "http://www.whitelisted.com/foo.txt",
+    alternateURI: "https://www.whitelisted.com/foo.txt",
     protocolChange: true,
   },
   {
     input: "mozilla",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -248,7 +248,7 @@ var testcases = [
   {
     input: "test.",
     fixedURI: "http://test./",
-    alternateURI: "http://www.test./",
+    alternateURI: "https://www.test./",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -256,7 +256,7 @@ var testcases = [
   {
     input: ".test",
     fixedURI: "http://.test/",
-    alternateURI: "http://www..test/",
+    alternateURI: "https://www..test/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -284,7 +284,7 @@ var testcases = [
   {
     input: "mozilla ",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -292,7 +292,7 @@ var testcases = [
   {
     input: "   mozilla  ",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -312,7 +312,7 @@ var testcases = [
   {
     input: "mozilla\n",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -320,7 +320,7 @@ var testcases = [
   {
     input: "mozilla \r\n",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -328,7 +328,7 @@ var testcases = [
   {
     input: "moz\r\nfirefox\nos\r",
     fixedURI: "http://mozfirefoxos/",
-    alternateURI: "http://www.mozfirefoxos.com/",
+    alternateURI: "https://www.mozfirefoxos.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -348,27 +348,27 @@ var testcases = [
   {
     input: "http://whitelisted/",
     fixedURI: "http://whitelisted/",
-    alternateURI: "http://www.whitelisted.com/",
+    alternateURI: "https://www.whitelisted.com/",
     inWhitelist: true,
   },
   {
     input: "whitelisted",
     fixedURI: "http://whitelisted/",
-    alternateURI: "http://www.whitelisted.com/",
+    alternateURI: "https://www.whitelisted.com/",
     protocolChange: true,
     inWhitelist: true,
   },
   {
     input: "whitelisted.",
     fixedURI: "http://whitelisted./",
-    alternateURI: "http://www.whitelisted./",
+    alternateURI: "https://www.whitelisted./",
     protocolChange: true,
     inWhitelist: true,
   },
   {
     input: "mochi.test",
     fixedURI: "http://mochi.test/",
-    alternateURI: "http://www.mochi.test/",
+    alternateURI: "https://www.mochi.test/",
     protocolChange: true,
     inWhitelist: true,
   },
@@ -383,7 +383,7 @@ var testcases = [
   {
     input: "some.domain",
     fixedURI: "http://some.domain/",
-    alternateURI: "http://www.some.domain/",
+    alternateURI: "https://www.some.domain/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -391,13 +391,13 @@ var testcases = [
   {
     input: "café.com",
     fixedURI: "http://xn--caf-dma.com/",
-    alternateURI: "http://www.xn--caf-dma.com/",
+    alternateURI: "https://www.xn--caf-dma.com/",
     protocolChange: true,
   },
   {
     input: "mozilla.nonexistent",
     fixedURI: "http://mozilla.nonexistent/",
-    alternateURI: "http://www.mozilla.nonexistent/",
+    alternateURI: "https://www.mozilla.nonexistent/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -405,7 +405,7 @@ var testcases = [
   {
     input: "mochi.ocm",
     fixedURI: "http://mochi.com/",
-    alternateURI: "http://www.mochi.com/",
+    alternateURI: "https://www.mochi.com/",
     protocolChange: true,
   },
   {
@@ -439,7 +439,7 @@ var testcases = [
   {
     input: "5+2",
     fixedURI: "http://5+2/",
-    alternateURI: "http://www.5+2.com/",
+    alternateURI: "https://www.5+2.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -458,13 +458,13 @@ var testcases = [
   {
     input: "mozilla.com/?q=search",
     fixedURI: "http://mozilla.com/?q=search",
-    alternateURI: "http://www.mozilla.com/?q=search",
+    alternateURI: "https://www.mozilla.com/?q=search",
     protocolChange: true,
   },
   {
     input: "mozilla.com?q=search",
     fixedURI: "http://mozilla.com/?q=search",
-    alternateURI: "http://www.mozilla.com/?q=search",
+    alternateURI: "https://www.mozilla.com/?q=search",
     protocolChange: true,
   },
   {
@@ -479,7 +479,7 @@ var testcases = [
   {
     input: "mozilla.com'?q=search",
     fixedURI: "http://mozilla.com/?q=search",
-    alternateURI: "http://www.mozilla.com/?q=search",
+    alternateURI: "https://www.mozilla.com/?q=search",
     protocolChange: true,
   },
   {
@@ -493,7 +493,7 @@ var testcases = [
   {
     input: "':?",
     fixedURI: "http://'/?",
-    alternateURI: "http://www.'.com/?",
+    alternateURI: "https://www.'.com/?",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -501,7 +501,7 @@ var testcases = [
   {
     input: "whitelisted?.com",
     fixedURI: "http://whitelisted/?.com",
-    alternateURI: "http://www.whitelisted.com/?.com",
+    alternateURI: "https://www.whitelisted.com/?.com",
     protocolChange: true,
   },
   {
@@ -523,13 +523,13 @@ var testcases = [
   {
     input: "mozilla/",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     protocolChange: true,
   },
   {
     input: "mozilla",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     protocolChange: true,
     keywordLookup: true,
     affectedByDNSForSingleWordHosts: true,
@@ -537,7 +537,7 @@ var testcases = [
   {
     input: "mozilla5/2",
     fixedURI: "http://mozilla5/2",
-    alternateURI: "http://www.mozilla5.com/2",
+    alternateURI: "https://www.mozilla5.com/2",
     protocolChange: true,
     keywordLookup: true,
     affectedByDNSForSingleWordHosts: true,
@@ -545,7 +545,7 @@ var testcases = [
   {
     input: "mozilla/foo",
     fixedURI: "http://mozilla/foo",
-    alternateURI: "http://www.mozilla.com/foo",
+    alternateURI: "https://www.mozilla.com/foo",
     protocolChange: true,
     keywordLookup: true,
     affectedByDNSForSingleWordHosts: true,
@@ -553,7 +553,7 @@ var testcases = [
   {
     input: "mozilla\\",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -588,7 +588,7 @@ var testcases = [
   {
     input: "plonk/ #",
     fixedURI: "http://plonk/%20#",
-    alternateURI: "http://www.plonk.com/%20#",
+    alternateURI: "https://www.plonk.com/%20#",
     protocolChange: true,
     keywordLookup: false,
   },
@@ -601,13 +601,13 @@ var testcases = [
     input:
       "\u10E0\u10D4\u10D2\u10D8\u10E1\u10E2\u10E0\u10D0\u10EA\u10D8\u10D0.\u10D2\u10D4",
     fixedURI: "http://xn--lodaehvb5cdik4g.xn--node/",
-    alternateURI: "http://www.xn--lodaehvb5cdik4g.xn--node/",
+    alternateURI: "https://www.xn--lodaehvb5cdik4g.xn--node/",
     protocolChange: true,
   },
   {
     input: " \t mozilla.org/\t \t ",
     fixedURI: "http://mozilla.org/",
-    alternateURI: "http://www.mozilla.org/",
+    alternateURI: "https://www.mozilla.org/",
     protocolChange: true,
   },
   {
@@ -617,13 +617,13 @@ var testcases = [
   {
     input: "mozilla/",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     protocolChange: true,
   },
   {
     input: "mozilla/ test /",
     fixedURI: "http://mozilla/%20test%20/",
-    alternateURI: "http://www.mozilla.com/%20test%20/",
+    alternateURI: "https://www.mozilla.com/%20test%20/",
     protocolChange: true,
   },
   {
@@ -638,7 +638,7 @@ var testcases = [
   {
     input: "http;mozilla",
     fixedURI: "http://http;mozilla/",
-    alternateURI: "http://www.http;mozilla.com/",
+    alternateURI: "https://www.http;mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -652,7 +652,7 @@ var testcases = [
   {
     input: "http//mozilla.org",
     fixedURI: "http://http//mozilla.org",
-    alternateURI: "http://www.http.com//mozilla.org",
+    alternateURI: "https://www.http.com//mozilla.org",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
@@ -675,13 +675,13 @@ if (AppConstants.platform == "win") {
   testcases.push({
     input: "//mozilla",
     fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
+    alternateURI: "https://www.mozilla.com/",
     protocolChange: true,
   });
   testcases.push({
     input: "/a",
     fixedURI: "http://a/",
-    alternateURI: "http://www.a.com/",
+    alternateURI: "https://www.a.com/",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
