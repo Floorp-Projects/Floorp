@@ -29,6 +29,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/AtomicBitfields.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
@@ -202,10 +203,10 @@ class WalkCacheRunnable : public Runnable,
         mService(CacheStorageService::Self()),
         mCallback(aVisitor),
         mSize(0),
-        mNotifyStorage(true),
-        mVisitEntries(aVisitEntries),
         mCancel(false) {
     MOZ_ASSERT(NS_IsMainThread());
+    SetNotifyStorage(true);
+    SetVisitEntries(aVisitEntries);
   }
 
   virtual ~WalkCacheRunnable() {
@@ -219,8 +220,12 @@ class WalkCacheRunnable : public Runnable,
 
   uint64_t mSize;
 
-  bool mNotifyStorage : 1;
-  bool mVisitEntries : 1;
+  // clang-format off
+  MOZ_ATOMIC_BITFIELDS(mAtomicBitfields, 8, (
+    (bool, NotifyStorage, 1),
+    (bool, VisitEntries, 1)
+  ))
+  // clang-format on
 
   Atomic<bool> mCancel;
 };
@@ -275,7 +280,7 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
     } else if (NS_IsMainThread()) {
       LOG(("WalkMemoryCacheRunnable::Run - notifying [this=%p]", this));
 
-      if (mNotifyStorage) {
+      if (GetNotifyStorage()) {
         LOG(("  storage"));
 
         uint64_t capacity = CacheObserver::MemoryCacheCapacity();
@@ -284,9 +289,9 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
         // Second, notify overall storage info
         mCallback->OnCacheStorageInfo(mEntryArray.Length(), mSize, capacity,
                                       nullptr);
-        if (!mVisitEntries) return NS_OK;  // done
+        if (!GetVisitEntries()) return NS_OK;  // done
 
-        mNotifyStorage = false;
+        SetNotifyStorage(false);
 
       } else {
         LOG(("  entry [left=%zu, canceled=%d]", mEntryArray.Length(),
@@ -431,7 +436,7 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
           uint32_t size;
           rv = CacheIndex::GetCacheStats(mLoadInfo, &size, &mCount);
           if (NS_FAILED(rv)) {
-            if (mVisitEntries) {
+            if (GetVisitEntries()) {
               // both onStorageInfo and onCompleted are expected
               NS_DispatchToMainThread(this);
             }
@@ -443,7 +448,7 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
           // Invoke onCacheStorageInfo with valid information.
           NS_DispatchToMainThread(this);
 
-          if (!mVisitEntries) {
+          if (!GetVisitEntries()) {
             return NS_OK;  // done
           }
 
@@ -477,13 +482,13 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
           NS_DispatchToMainThread(this);
       }
     } else if (NS_IsMainThread()) {
-      if (mNotifyStorage) {
+      if (GetNotifyStorage()) {
         nsCOMPtr<nsIFile> dir;
         CacheFileIOManager::GetCacheDirectory(getter_AddRefs(dir));
         uint64_t capacity = CacheObserver::DiskCacheCapacity();
         capacity <<= 10;  // kilobytes to bytes
         mCallback->OnCacheStorageInfo(mCount, mSize, capacity, dir);
-        mNotifyStorage = false;
+        SetNotifyStorage(false);
       } else {
         mCallback->OnCacheEntryVisitCompleted();
       }
