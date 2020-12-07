@@ -93,6 +93,7 @@ class UAWidgetsChild extends JSWindowActorChild {
           "media.videocontrols.picture-in-picture.video-toggle.min-video-secs",
           "media.videocontrols.picture-in-picture.video-toggle.position",
           "media.videocontrols.picture-in-picture.video-toggle.has-used",
+          "media.videocontrols.keyboard-tab-to-all-controls",
         ];
         break;
       case "input":
