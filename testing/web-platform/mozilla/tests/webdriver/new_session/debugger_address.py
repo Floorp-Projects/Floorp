@@ -22,7 +22,7 @@ def test_debugger_address_false(session):
 
 
 @pytest.mark.capabilities({"moz:debuggerAddress": True})
-def test_debugger_address_true(session):
+def test_debugger_address_true_fission_disabled(session):
     debugger_address = session.capabilities.get("moz:debuggerAddress")
     assert debugger_address is not None
 
