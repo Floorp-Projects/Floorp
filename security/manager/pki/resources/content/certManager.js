@@ -70,6 +70,7 @@ var serverRichList = {
         dbKey: item.dbKey,
         asciiHost: item.asciiHost,
         port: item.port,
+        originAttributes: item.originAttributes,
         isTemporary: item.isTemporary,
         displayName: cert !== null ? cert.displayName : "",
       };
@@ -106,6 +107,10 @@ var serverRichList = {
     richlistitem.setAttribute("host", item.asciiHost);
     richlistitem.setAttribute("port", item.port);
     richlistitem.setAttribute("hostPort", item.hostPort);
+    richlistitem.setAttribute(
+      "originAttributes",
+      JSON.stringify(item.originAttributes)
+    );
 
     let hbox = document.createXULElement("hbox");
     hbox.setAttribute("flex", "1");
@@ -155,7 +160,8 @@ var serverRichList = {
     if (retVals.deleteConfirmed) {
       overrideService.clearValidityOverride(
         selectedItem.attributes.host.value,
-        selectedItem.attributes.port.value
+        selectedItem.attributes.port.value,
+        JSON.parse(selectedItem.attributes.originAttributes.value)
       );
       this.buildRichList();
     }
