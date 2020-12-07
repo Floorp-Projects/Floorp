@@ -872,7 +872,13 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
     } else if type_0 == LUT16_TYPE {
         num_input_table_entries = read_u16(src, (offset + 48) as usize);
         num_output_table_entries = read_u16(src, (offset + 50) as usize);
-        if num_input_table_entries as i32 == 0 || num_output_table_entries as i32 == 0 {
+
+        // these limits come from the spec
+        if num_input_table_entries < 2
+            || num_input_table_entries > 4096
+            || num_output_table_entries < 2
+            || num_output_table_entries > 4096
+        {
             invalid_source(src, "Bad channel count");
             return None;
         }
