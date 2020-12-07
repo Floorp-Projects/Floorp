@@ -1,0 +1,5 @@
+error: nul byte found in the literal
+ --> $DIR/interior-nul.rs:4:22
+  |
+4 |     let _foo = cstr!("foo\0bar");
+  |                      ^^^^^^^^^^
