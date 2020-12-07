@@ -340,7 +340,9 @@ void KeymapWrapper::Shutdown() {
 KeymapWrapper::KeymapWrapper()
     : mInitialized(false),
       mGdkKeymap(gdk_keymap_get_default()),
-      mXKBBaseEventCode(0) {
+      mXKBBaseEventCode(0),
+      mOnKeysChangedSignalHandle(0),
+      mOnDirectionChangedSignalHandle(0) {
   MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
           ("%p Constructor, mGdkKeymap=%p", this, mGdkKeymap));
 
@@ -452,9 +454,14 @@ void KeymapWrapper::InitBySystemSettingsX11() {
   MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
           ("%p InitBySystemSettingsX11, mGdkKeymap=%p", this, mGdkKeymap));
 
-  g_signal_connect(mGdkKeymap, "keys-changed", (GCallback)OnKeysChanged, this);
-  g_signal_connect(mGdkKeymap, "direction-changed",
-                   (GCallback)OnDirectionChanged, this);
+  if (!mOnKeysChangedSignalHandle) {
+    mOnKeysChangedSignalHandle = g_signal_connect(
+        mGdkKeymap, "keys-changed", (GCallback)OnKeysChanged, this);
+  }
+  if (!mOnDirectionChangedSignalHandle) {
+    mOnDirectionChangedSignalHandle = g_signal_connect(
+        mGdkKeymap, "direction-changed", (GCallback)OnDirectionChanged, this);
+  }
 
   Display* display = gdk_x11_display_get_xdisplay(gdk_display_get_default());
 
@@ -772,11 +779,11 @@ void KeymapWrapper::InitBySystemSettingsWayland() {
 
 KeymapWrapper::~KeymapWrapper() {
   gdk_window_remove_filter(nullptr, FilterEvents, this);
-  if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
-    g_signal_handlers_disconnect_by_func(mGdkKeymap,
-                                         FuncToGpointer(OnKeysChanged), this);
-    g_signal_handlers_disconnect_by_func(
-        mGdkKeymap, FuncToGpointer(OnDirectionChanged), this);
+  if (mOnKeysChangedSignalHandle) {
+    g_signal_handler_disconnect(mGdkKeymap, mOnKeysChangedSignalHandle);
+  }
+  if (mOnDirectionChangedSignalHandle) {
+    g_signal_handler_disconnect(mGdkKeymap, mOnDirectionChangedSignalHandle);
   }
   g_object_unref(mGdkKeymap);
   MOZ_LOG(gKeymapWrapperLog, LogLevel::Info, ("%p Destructor", this));
