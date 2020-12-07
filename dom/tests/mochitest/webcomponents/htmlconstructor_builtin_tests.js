@@ -72,6 +72,7 @@
   ["mark", ""],
   ["marquee", "Marquee"],
   ["menu", "Menu"],
+  ["menuitem", "MenuItem"],
   ["meta", "Meta"],
   ["meter", "Meter"],
   ["nav", ""],
