@@ -12,7 +12,7 @@ doctest = false
 [dependencies]
 atomic_refcell = "0.1"
 cssparser = "0.28"
-cstr = "0.1.2"
+cstr = "0.2"
 env_logger = { version = "0.8", default-features = false }
 geckoservo = {path = "../../../ports/geckolib"}
 libc = "0.2"

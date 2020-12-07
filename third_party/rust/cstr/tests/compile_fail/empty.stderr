@@ -1,0 +1,7 @@
+error: unexpected end of input, expected one of: byte string literal, string literal, identifier
+ --> $DIR/empty.rs:4:16
+  |
+4 |     let _foo = cstr!();
+  |                ^^^^^^^
+  |
+  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

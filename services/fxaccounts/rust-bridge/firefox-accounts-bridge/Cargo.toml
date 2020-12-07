@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 atomic_refcell = "0.1"
-cstr = "0.1"
+cstr = "0.2"
 libc = "0.2"
 once_cell = "1"
 paste = "0.1"

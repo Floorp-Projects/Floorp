@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 atomic_refcell = "0.1"
-cstr = "0.1"
+cstr = "0.2"
 golden_gate = { path = "../../../../../services/sync/golden_gate" }
 moz_task = { path = "../../../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../../../xpcom/rust/nserror" }

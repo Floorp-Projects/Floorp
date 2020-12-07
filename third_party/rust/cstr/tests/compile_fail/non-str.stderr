@@ -1,0 +1,17 @@
+error: expected one of: byte string literal, string literal, identifier
+ --> $DIR/non-str.rs:4:22
+  |
+4 |     let _foo = cstr!(1);
+  |                      ^
+
+error: expected one of: byte string literal, string literal, identifier
+ --> $DIR/non-str.rs:5:22
+  |
+5 |     let _foo = cstr!(("a"));
+  |                      ^^^^^
+
+error: expected one of: byte string literal, string literal, identifier
+ --> $DIR/non-str.rs:6:22
+  |
+6 |     let _foo = cstr!(&1);
+  |                      ^
