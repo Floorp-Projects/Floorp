@@ -1225,6 +1225,15 @@ class StaticAnalysis(MachCommandBase):
                 .strip()
             )
 
+            if "MOZ_AUTOMATION" in os.environ:
+                # Only show it in the CI
+                self.log(
+                    logging.INFO,
+                    "static-analysis",
+                    {},
+                    "{} Version = {} ".format(self._clang_format_path, version_info),
+                )
+
         except subprocess.CalledProcessError as e:
             self.log(
                 logging.ERROR,
