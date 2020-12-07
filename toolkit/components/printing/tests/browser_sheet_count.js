@@ -103,6 +103,10 @@ add_task(async function testSheetCountPageRange() {
     );
 
     let sheetCount = helper.get("sheet-count");
+    await BrowserTestUtils.waitForCondition(
+      () => getSheetCount(sheetCount) != 1,
+      "Wait for sheet count to update"
+    );
     let sheets = getSheetCount(sheetCount);
     ok(sheets >= 3, "There are at least 3 pages");
 
@@ -140,6 +144,10 @@ add_task(async function testPagesPerSheetCount() {
     );
 
     let sheetCount = helper.get("sheet-count");
+    await BrowserTestUtils.waitForCondition(
+      () => getSheetCount(sheetCount) != 1,
+      "Wait for sheet count to update"
+    );
     let sheets = getSheetCount(sheetCount);
 
     ok(sheets > 1, "There are multiple pages");

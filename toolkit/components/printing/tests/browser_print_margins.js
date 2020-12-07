@@ -33,17 +33,19 @@ function changeCustomToNone(helper) {
 }
 
 function assertPendingMarginsUpdate(helper) {
-  let marginsPicker = helper.get("margins-select");
   ok(
-    marginsPicker._updateCustomMarginsTask.isArmed,
+    Object.keys(helper.win.PrintEventHandler._delayedChanges).length,
+    "At least one delayed task is added"
+  );
+  ok(
+    helper.win.PrintEventHandler._delayedSettingsChangeTask.isArmed,
     "The update task is armed"
   );
 }
 
 function assertNoPendingMarginsUpdate(helper) {
-  let marginsPicker = helper.get("margins-select");
   ok(
-    !marginsPicker._updateCustomMarginsTask.isArmed,
+    !helper.win.PrintEventHandler._delayedSettingsChangeTask.isArmed,
     "The update task isn't armed"
   );
 }
@@ -240,7 +242,6 @@ add_task(async function testInvalidMarginsReset() {
       "0.50",
       "Left margin placeholder is correct"
     );
-    assertNoPendingMarginsUpdate(helper);
     await BrowserTestUtils.waitForCondition(
       () => marginError.hidden,
       "Wait for margin error to be hidden"
@@ -656,7 +657,7 @@ add_task(async function testInvalidMarginResetAfterDestinationChange() {
 
     is(destinationPicker.disabled, false, "Destination picker is enabled");
 
-    await helper.dispatchSettingsChange({ printerName: mockPrinterName });
+    helper.dispatchSettingsChange({ printerName: mockPrinterName });
     await BrowserTestUtils.waitForCondition(
       () => marginError.hidden,
       "Wait for margin error to be hidden"
@@ -742,7 +743,7 @@ add_task(async function testRevalidateCustomMarginsAfterOrientationChanges() {
       { marginTop: 5, marginRight: 0.5, marginBottom: 5, marginLeft: 0.5 },
       { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
       async () => {
-        await helper.dispatchSettingsChange({ orientation: 1 });
+        helper.dispatchSettingsChange({ orientation: 1 });
         await helper.waitForSettingsEvent();
         ok(marginError.hidden, "Margin error is hidden");
       }
