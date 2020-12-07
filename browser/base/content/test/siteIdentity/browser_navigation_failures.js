@@ -147,6 +147,7 @@ add_task(async function() {
   certOverrideService.rememberValidityOverride(
     "localhost",
     server.port,
+    {},
     cert,
     overrideBits,
     true
@@ -154,7 +155,7 @@ add_task(async function() {
 
   // Un-do configuration changes we've made when the test is done.
   registerCleanupFunction(() => {
-    certOverrideService.clearValidityOverride("localhost", server.port);
+    certOverrideService.clearValidityOverride("localhost", server.port, {});
     server.close();
   });
 
