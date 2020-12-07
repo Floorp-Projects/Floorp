@@ -1502,12 +1502,17 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     nsSize containerSize = aMetrics.PhysicalSize();
     nscoord deltaX = containerSize.width - state.ContainerSize().width;
     if (deltaX != 0) {
+      // We compute our lines and markers' overflow areas later in
+      // ComputeOverflowAreas(), so we don't need to adjust their overflow areas
+      // here.
       const nsPoint physicalDelta(deltaX, 0);
       for (auto& line : Lines()) {
         UpdateLineContainerSize(&line, containerSize);
       }
+      fcBounds.Clear();
       for (nsIFrame* f : mFloats) {
         f->MovePositionBy(physicalDelta);
+        ConsiderChildOverflow(fcBounds, f);
       }
       nsFrameList* markerList = GetOutsideMarkerList();
       if (markerList) {
