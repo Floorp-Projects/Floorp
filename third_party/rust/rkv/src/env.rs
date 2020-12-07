@@ -30,17 +30,13 @@ use crate::{
         BackendRwCursorTransaction,
         SafeModeError,
     },
-    error::{
-        CloseError,
-        StoreError,
-    },
+    error::StoreError,
     readwrite::{
         Reader,
         Writer,
     },
     store::{
         single::SingleStore,
-        CloseOptions,
         Options as StoreOptions,
     },
 };
@@ -314,16 +310,15 @@ where
         self.env.set_map_size(size).map_err(Into::into)
     }
 
-    /// Closes this environment and optionally deletes all its files from disk. Doesn't
-    /// delete the folder used when opening the environment.
-    pub fn close(self, options: CloseOptions) -> Result<(), CloseError> {
+    /// Closes this environment and deletes all its files from disk. Doesn't delete the
+    /// folder used when opening the environment.
+    pub fn close_and_delete(self) -> Result<(), StoreError> {
         let files = self.env.get_files_on_disk();
+        self.sync(true)?;
         drop(self);
 
-        if options.delete {
-            for file in files {
-                fs::remove_file(file)?;
-            }
+        for file in files {
+            fs::remove_file(file)?;
         }
 
         Ok(())

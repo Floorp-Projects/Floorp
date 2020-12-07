@@ -234,7 +234,6 @@ pub use readwrite::{
 pub use store::{
     keys::EncodableKey,
     single::SingleStore,
-    CloseOptions,
     Options as StoreOptions,
 };
 pub use value::{
