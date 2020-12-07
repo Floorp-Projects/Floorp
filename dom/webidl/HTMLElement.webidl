@@ -46,8 +46,10 @@ interface HTMLElement : Element {
            attribute DOMString contentEditable;
   [Pure]
   readonly attribute boolean isContentEditable;
-  [Pure, Pref="dom.menuitem.enabled"]
+  [Pure]
   readonly attribute HTMLMenuElement? contextMenu;
+  //[SetterThrows]
+  //         attribute HTMLMenuElement? contextMenu;
   [CEReactions, SetterThrows, Pure]
            attribute boolean spellcheck;
   [CEReactions, Pure, SetterThrows, Pref="dom.forms.inputmode"]

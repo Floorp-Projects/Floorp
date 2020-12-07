@@ -12,7 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-menuitem-element
-[Exposed=Window, Pref="dom.menuitem.enabled"]
+[Exposed=Window]
 interface HTMLMenuItemElement : HTMLElement {
   [HTMLConstructor] constructor();
 
