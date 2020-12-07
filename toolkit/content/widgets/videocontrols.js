@@ -1808,7 +1808,7 @@ this.VideoControlsImplWidget = class {
           return;
         }
 
-        var keystroke = "";
+        let keystroke = "";
         if (event.altKey) {
           keystroke += "alt-";
         }
@@ -1830,29 +1830,10 @@ this.VideoControlsImplWidget = class {
             keystroke += "accel-";
           }
         }
-        switch (event.keyCode) {
-          case this.window.KeyEvent.DOM_VK_UP:
-            keystroke += "upArrow";
-            break;
-          case this.window.KeyEvent.DOM_VK_DOWN:
-            keystroke += "downArrow";
-            break;
-          case this.window.KeyEvent.DOM_VK_LEFT:
-            keystroke += "leftArrow";
-            break;
-          case this.window.KeyEvent.DOM_VK_RIGHT:
-            keystroke += "rightArrow";
-            break;
-          case this.window.KeyEvent.DOM_VK_HOME:
-            keystroke += "home";
-            break;
-          case this.window.KeyEvent.DOM_VK_END:
-            keystroke += "end";
-            break;
-        }
-
-        if (String.fromCharCode(event.charCode) == " ") {
-          keystroke += "space";
+        if (event.key == " ") {
+          keystroke += "Space";
+        } else {
+          keystroke += event.key;
         }
 
         this.log("Got keystroke: " + keystroke);
@@ -1860,7 +1841,7 @@ this.VideoControlsImplWidget = class {
 
         try {
           switch (keystroke) {
-            case "space" /* Play */:
+            case "Space" /* Play */:
               let target = event.originalTarget;
               if (target.localName === "button" && !target.disabled) {
                 break;
@@ -1868,24 +1849,24 @@ this.VideoControlsImplWidget = class {
 
               this.togglePause();
               break;
-            case "downArrow" /* Volume decrease */:
+            case "ArrowDown" /* Volume decrease */:
               oldval = this.video.volume;
               this.video.volume = oldval < 0.1 ? 0 : oldval - 0.1;
               this.video.muted = false;
               break;
-            case "upArrow" /* Volume increase */:
+            case "ArrowUp" /* Volume increase */:
               oldval = this.video.volume;
               this.video.volume = oldval > 0.9 ? 1 : oldval + 0.1;
               this.video.muted = false;
               break;
-            case "accel-downArrow" /* Mute */:
+            case "accel-ArrowDown" /* Mute */:
               this.video.muted = true;
               break;
-            case "accel-upArrow" /* Unmute */:
+            case "accel-ArrowUp" /* Unmute */:
               this.video.muted = false;
               break;
-            case "leftArrow": /* Seek back 15 seconds */
-            case "accel-leftArrow" /* Seek back 10% */:
+            case "ArrowLeft" /* Seek back 15 seconds */:
+            case "accel-ArrowLeft" /* Seek back 10% */:
               oldval = this.video.currentTime;
               if (keystroke == "leftArrow") {
                 newval = oldval - 15;
@@ -1896,8 +1877,8 @@ this.VideoControlsImplWidget = class {
               }
               this.video.currentTime = newval >= 0 ? newval : 0;
               break;
-            case "rightArrow": /* Seek forward 15 seconds */
-            case "accel-rightArrow" /* Seek forward 10% */:
+            case "ArrowRight" /* Seek forward 15 seconds */:
+            case "accel-ArrowRight" /* Seek forward 10% */:
               oldval = this.video.currentTime;
               var maxtime =
                 this.video.duration || this.maxCurrentTimeSeen / 1000;
@@ -1908,10 +1889,10 @@ this.VideoControlsImplWidget = class {
               }
               this.video.currentTime = newval <= maxtime ? newval : maxtime;
               break;
-            case "home" /* Seek to beginning */:
+            case "Home" /* Seek to beginning */:
               this.video.currentTime = 0;
               break;
-            case "end" /* Seek to end */:
+            case "End" /* Seek to end */:
               if (this.video.currentTime != this.video.duration) {
                 this.video.currentTime =
                   this.video.duration || this.maxCurrentTimeSeen / 1000;
