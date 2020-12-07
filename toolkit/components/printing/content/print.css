@@ -250,25 +250,8 @@ input[type="text"] {
   margin: 0;
 }
 
-.range-group-input {
-  width: 3em;
-  height: max-content;
-  appearance: textfield !important;
-  margin-inline: 5px;
-}
-
-.range-part-label {
-  height: max-content;
-  margin-top: 8px;
-}
-
-.range-group {
-  align-items: center;
-  display: inline-flex;
-}
-
-#range-picker {
-  margin-bottom: 8px;
+#custom-range {
+  margin-top: 4px;
 }
 
 .vertical-margins,
@@ -288,11 +271,6 @@ input[type="text"] {
   margin-top: 2px;
 }
 
-input[type="number"]:invalid {
-  border: 1px solid #D70022;
-  box-shadow: 0 0 0 1px #D70022, 0 0 0 4px rgba(215, 0, 34, 0.3);
-}
-
 .toggle-group #landscape + .toggle-group-label::before {
   content: url("chrome://global/content/landscape.svg");
 }
@@ -301,6 +279,7 @@ input[type="number"]:invalid {
 }
 
 select:invalid,
+input[type="text"]:invalid,
 input[type="number"]:invalid {
   border: 1px solid #D70022;
   box-shadow: 0 0 0 1px #D70022, 0 0 0 4px rgba(215, 0, 34, 0.3);
