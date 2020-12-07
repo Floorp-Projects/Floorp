@@ -57,13 +57,11 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::Scrollcorner: {
       ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
       if (style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
-        aResult->SizeTo(
-            kGtkMinimumThinScrollbarSize * dpiRatio,
-            kGtkMinimumThinScrollbarSize * dpiRatio);
+        aResult->SizeTo(kGtkMinimumThinScrollbarSize * dpiRatio,
+                        kGtkMinimumThinScrollbarSize * dpiRatio);
       } else {
-        aResult->SizeTo(
-            kGtkMinimumScrollbarSize * dpiRatio,
-            kGtkMinimumScrollbarSize * dpiRatio);
+        aResult->SizeTo(kGtkMinimumScrollbarSize * dpiRatio,
+                        kGtkMinimumScrollbarSize * dpiRatio);
       }
       break;
     }

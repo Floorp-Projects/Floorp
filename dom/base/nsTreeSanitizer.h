@@ -20,7 +20,7 @@ class DeclarationBlock;
 namespace mozilla::dom {
 class DocumentFragment;
 class Element;
-}
+}  // namespace mozilla::dom
 
 /**
  * See the documentation of nsIParserUtils::sanitize for documentation
