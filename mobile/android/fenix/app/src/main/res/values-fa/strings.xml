@@ -19,6 +19,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">زبانه های خصوصی شما در اینجا نشان داده می شود.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">بایدو</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 زبانه باز. برای تغییر زبانه ها ضربه بزنید.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -68,14 +72,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نه، ممنون!</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">سریعتر به Firefox بروید. ویجت را به صفحه اصلی خود اضافه کنید.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">ویجت را اضافه کنید</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">اکنون نه</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">می توانید Firefox را طوری تنظیم کنید تا پیوندها را به صورت خودکار در برنامه ها باز کند.</string>
@@ -98,6 +94,11 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">دیدن گزینه‌ها</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">رد کردن</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">برو به تنظیمات</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">رد کردن</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -143,6 +144,8 @@
     <string name="browser_menu_install_on_homescreen">نصب</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">زبانه‌های همگام‌سازی شده</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">هم‌گام‌سازی مجدد</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">پیدا کردن در صفحه</string>
     <!-- Browser menu button that creates a private tab -->
@@ -210,6 +213,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">بیشتر بدانید</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">بازکردن یک زبانه فایرفاکس جدید</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">جست‌وجو</string>
     <!-- Text preview for larger sized widgets -->
@@ -321,6 +326,8 @@
     <string name="preferences_search_bookmarks">جست‌و‌جو نشانک‌ها</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">تنظیمات حساب</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">تکمیل خودکار نشانی اینترنتی</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">پیوندها را در برنامه ها باز کنید</string>
     <!-- Preference for open download with an external download manager app -->
@@ -501,7 +508,6 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">زبانه‌هایی که اخیرا بسته نشدند</string>
 
-    <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">بستن زبانه‌ها</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -582,7 +588,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">زبانه‌های باز</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">حذف</string>
+	<string name="remove_top_site">حذف</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">حذف از تاریخچه</string>
@@ -630,12 +636,12 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">هیچ تاریخیچه‌ای در اینجا نیست</string>
 
-    <!-- Downloads -->
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">اینجا هیچ بارگیری وجود ندارد</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d انتخاب شد</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -1044,10 +1050,6 @@
     <string name="onboarding_account_sign_in_header">شروع به همگام سازی نشانک‌ها،‌ گذرواژه ها و چیزهای بیشتر با حساب Firefox شما.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">اطلاعات بیشتر</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">شما به عنوان%s در یک مرورگر دیگر Firefox در این تلفن وارد شده اید. آیا می خواهید با این حساب وارد شوید؟</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">بله،‌ من را وارد کن</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1290,9 +1292,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">نام میانبر</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">شما به راحتی می‌توانید این پایگاه اینترنتی را به صفحه خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریعتی را مانند تجربه کردن یک برنامه داشته باشید.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ورودها و گذرواژه‌ها</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1520,7 +1519,7 @@
     <string name="saved_login_duplicate">ورود با آن نام کاربری که قبلا وجود داشته است</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">اتصال به دستگاه دیگر.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">لطفا مجددا تایید کنید.</string>
@@ -1539,8 +1538,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">حد نصاب سایت‌های برتر شما پر شده است</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">برای اضافه کردن یک سایت برتر جدید ، یکی از آنها را حذف کنید.  سایت را کمی طولانی فشار داده و حذف را انتخاب کنید.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">باشه،‌ متوجه شدم</string>
     <!-- Label for the show most visited sites preference -->
@@ -1549,7 +1546,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">حذف</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">نهایت استفاده از %s ببرید.</string>
 
@@ -1557,4 +1554,9 @@
     <string name="no_collections_header1">ذخیره کردن چیزهایی که برای شما اهمیت دارد</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">برای دسترسی سریع در آینده، جستجوها ، سایتها و برگه های مشابه را با هم جمع کنید.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">شما به عنوان%s در یک مرورگر دیگر Firefox در این تلفن وارد شده اید. آیا می خواهید با این حساب وارد شوید؟</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">شما به راحتی می‌توانید این پایگاه اینترنتی را به صفحه خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریعتی را مانند تجربه کردن یک برنامه داشته باشید.</string>
+
     </resources>
