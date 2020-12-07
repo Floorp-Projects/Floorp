@@ -185,6 +185,8 @@ class ConnectionEntry {
 
   bool RemoveTransFromPendingQ(nsHttpTransaction* aTrans);
 
+  void MaybeUpdateEchConfig(nsHttpConnectionInfo* aConnInfo);
+
  private:
   void InsertIntoIdleConnections_internal(nsHttpConnection* conn);
   void RemoveFromIdleConnectionsIndex(size_t inx);

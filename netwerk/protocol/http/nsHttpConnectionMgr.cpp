@@ -1627,6 +1627,10 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
       trans->Caps() & NS_HTTP_DISALLOW_HTTP3);
   MOZ_ASSERT(ent);
 
+  if (gHttpHandler->EchConfigEnabled()) {
+    ent->MaybeUpdateEchConfig(ci);
+  }
+
   ReportProxyTelemetry(ent);
 
   // Check if the transaction already has a sticky reference to a connection.
@@ -3444,36 +3448,25 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
   ent->MoveConnection(proxyConn, wcEnt);
 }
 
-bool nsHttpConnectionMgr::MoveTransToNewConnEntry(nsHttpTransaction* aTrans,
-                                                  nsHttpConnectionInfo* aNewCI,
-                                                  bool aNoHttp3ForNewEntry) {
+bool nsHttpConnectionMgr::MoveTransToNewConnEntry(
+    nsHttpTransaction* aTrans, nsHttpConnectionInfo* aNewCI) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG(
-      ("nsHttpConnectionMgr::MoveTransToNewConnEntry: trans=%p aNewCI=%s "
-       "aNoHttp3ForNewEntry=%d",
-       aTrans, aNewCI->HashKey().get(), aNoHttp3ForNewEntry));
+  LOG(("nsHttpConnectionMgr::MoveTransToNewConnEntry: trans=%p aNewCI=%s",
+       aTrans, aNewCI->HashKey().get()));
 
-  bool prohibitWildCard = !!aTrans->TunnelProvider();
-  bool noHttp3 = aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3;
-  bool noHttp2 = aTrans->Caps() & NS_HTTP_DISALLOW_SPDY;
-  // Step 1: Check if the new entry is the same as the old one.
-  ConnectionEntry* oldEntry = GetOrCreateConnectionEntry(
-      aTrans->ConnectionInfo(), prohibitWildCard, noHttp2, noHttp3);
-
-  ConnectionEntry* newEntry = GetOrCreateConnectionEntry(
-      aNewCI, prohibitWildCard, noHttp2, noHttp3 || aNoHttp3ForNewEntry);
-
-  if (oldEntry == newEntry) {
-    return true;
-  }
-
-  // Step 2: Try to find the undispatched transaction.
-  if (!oldEntry->RemoveTransFromPendingQ(aTrans)) {
+  // Step 1: Get the transaction's connection entry.
+  ConnectionEntry* entry = mCT.GetWeak(aTrans->ConnectionInfo()->HashKey());
+  if (!entry) {
     return false;
   }
 
-  // Step 3: Add the transaction to the new entry.
+  // Step 2: Try to find the undispatched transaction.
+  if (!entry->RemoveTransFromPendingQ(aTrans)) {
+    return false;
+  }
+
+  // Step 3: Add the transaction.
   aTrans->UpdateConnectionInfo(aNewCI);
   Unused << ProcessNewTransaction(aTrans);
   return true;
