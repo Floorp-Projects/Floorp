@@ -10,6 +10,7 @@ add_task(async function setup() {
   const engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
   );
+  engine.alias = "@default";
 
   const defaultEngine = Services.search.defaultEngine;
   Services.search.defaultEngine = engine;
@@ -221,5 +222,47 @@ add_task(async function searchOnEnterSoon() {
 
   // Cleanup.
   await onLoad;
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function searchByMultipleEnters() {
+  info("Search on Enter after selecting the search engine by Enter");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    START_VALUE
+  );
+
+  info("Select a search engine by Enter key");
+  gURLBar.focus();
+  gURLBar.select();
+  EventUtils.sendString("@default");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await TestUtils.waitForCondition(
+    () => gURLBar.searchMode,
+    "Wait until entering search mode"
+  );
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: "browser_searchSuggestionEngine searchSuggestionEngine.xml",
+    entry: "keywordoffer",
+  });
+  const ownerDocument = gBrowser.selectedBrowser.ownerDocument;
+  is(
+    ownerDocument.activeElement,
+    gURLBar.inputField,
+    "The input field in urlbar has focus"
+  );
+
+  info("Search by Enter key");
+  const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  EventUtils.sendString("mozilla");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await onLoad;
+  is(
+    ownerDocument.activeElement,
+    gBrowser.selectedBrowser,
+    "The focus is moved to the browser"
+  );
+
+  // Cleanup.
   BrowserTestUtils.removeTab(tab);
 });

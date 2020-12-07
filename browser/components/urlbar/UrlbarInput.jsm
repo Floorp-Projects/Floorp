@@ -3131,11 +3131,13 @@ class UrlbarInput {
           // Make sure the domain name stays visible for spoof protection and usability.
           this.selectionStart = this.selectionEnd = 0;
         }
+        this._keyDownEnterDeferred = null;
       } catch (ex) {
         // Not all the Enter actions in the urlbar will cause a navigation, then it
         // is normal for this to be rejected.
+        // If _keyDownEnterDeferred was rejected on keydown, we don't nullify it here
+        // to ensure not overwriting the new value created by keydown.
       }
-      this._keyDownEnterDeferred = null;
       return;
     } else if (event.keyCode === KeyEvent.DOM_VK_CONTROL) {
       this._isKeyDownWithCtrl = false;
