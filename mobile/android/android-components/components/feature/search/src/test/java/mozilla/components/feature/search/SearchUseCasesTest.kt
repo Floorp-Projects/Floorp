@@ -82,7 +82,6 @@ class SearchUseCasesTest {
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
 
         useCases.defaultSearch(searchTerms)
-
         store.waitUntilIdle()
 
         val loadUrlAction = middleware.findFirstAction(EngineAction.LoadUrlAction::class)
@@ -102,6 +101,7 @@ class SearchUseCasesTest {
         whenever(newTabUseCase(searchUrl)).thenReturn("2342")
 
         useCases.newTabSearch(searchTerms, SessionState.Source.NEW_TAB)
+        store.waitUntilIdle()
 
         verify(newTabUseCase).invoke(
             searchUrl,
@@ -128,6 +128,7 @@ class SearchUseCasesTest {
         whenever(newTabUseCase(searchUrl)).thenReturn("2342")
 
         useCases.defaultSearch(searchTerms)
+        store.waitUntilIdle()
 
         verify(newTabUseCase).invoke(
             searchUrl,
@@ -154,6 +155,7 @@ class SearchUseCasesTest {
         whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE)).thenReturn("1177")
 
         useCases.newPrivateTabSearch.invoke(searchTerms)
+        store.waitUntilIdle()
 
         verify(newTabUseCase).invoke(
             searchUrl,
@@ -180,6 +182,7 @@ class SearchUseCasesTest {
         whenever(newTabUseCase(searchUrl, source = SessionState.Source.NONE, parentId = "test-parent")).thenReturn("1177")
 
         useCases.newPrivateTabSearch.invoke(searchTerms, parentSessionId = "test-parent")
+        store.waitUntilIdle()
 
         verify(newTabUseCase).invoke(
             searchUrl,
