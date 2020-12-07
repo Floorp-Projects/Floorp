@@ -18,6 +18,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
@@ -57,6 +58,7 @@ class DefaultSessionControlControllerTest {
     private val engine: Engine = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
+    private val reloadUrlUseCase: SessionUseCases = mockk(relaxed = true)
     private val hideOnboarding: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val showTabTray: () -> Unit = mockk(relaxed = true)
@@ -115,6 +117,7 @@ class DefaultSessionControlControllerTest {
             sessionManager = sessionManager,
             tabCollectionStorage = tabCollectionStorage,
             addTabUseCase = tabsUseCases.addTab,
+            reloadUrlUseCase = reloadUrlUseCase.reload,
             fragmentStore = fragmentStore,
             navController = navController,
             viewLifecycleScope = scope,
@@ -142,7 +145,9 @@ class DefaultSessionControlControllerTest {
         verify { metrics.track(Event.CollectionAddTabPressed) }
         verify {
             navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_collectionCreationFragment },
+                match<NavDirections> {
+                    it.actionId == R.id.action_global_collectionCreationFragment
+                },
                 null
             )
         }
@@ -178,6 +183,7 @@ class DefaultSessionControlControllerTest {
 
         verify { metrics.track(Event.CollectionTabRestored) }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { reloadUrlUseCase.reload }
     }
 
     @Test

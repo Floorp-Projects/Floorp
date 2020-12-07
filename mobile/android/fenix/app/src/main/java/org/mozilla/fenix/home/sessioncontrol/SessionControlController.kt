@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.ext.restore
 import mozilla.components.feature.tabs.TabsUseCases
@@ -176,6 +177,7 @@ class DefaultSessionControlController(
     private val store: BrowserStore,
     private val tabCollectionStorage: TabCollectionStorage,
     private val addTabUseCase: TabsUseCases.AddNewTabUseCase,
+    private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val fragmentStore: HomeFragmentStore,
     private val navController: NavController,
     private val viewLifecycleScope: CoroutineScope,
@@ -212,6 +214,7 @@ class DefaultSessionControlController(
             tab,
             onTabRestored = {
                 activity.openToBrowser(BrowserDirection.FromHome)
+                reloadUrlUseCase.invoke(sessionManager.selectedSession)
             },
             onFailure = {
                 activity.openToBrowserAndLoad(
