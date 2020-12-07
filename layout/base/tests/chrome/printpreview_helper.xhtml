@@ -786,7 +786,7 @@ async function checkSupportedPagesPerSheetValue(src1, src2, numPages, fuzz) {
 // And eventually 2 and 6, per bug 1669905.
 async function runTest31() {
   // XXXdholbert On windows, our zero-margin settings aren't reliably respected
-  // for some reason; see bug 1671036. For now, we just account for that with a
+  // for some reason; see bug 1680838. For now, we just account for that with a
   // hefty amount of fuzz, guarded behind a platform-specific check so that we
   // can keep this strict on other platforms.
   let fuzz = navigator.platform.includes("Win") ?
@@ -800,7 +800,7 @@ async function runTest31() {
 }
 async function runTest32() {
   let fuzz = navigator.platform.includes("Win") ?
-      { maxDifferent: 121116, maxDifference: 255 } :
+      { maxDifferent: 130170, maxDifference: 255 } :
       { maxDifferent: 0, maxDifference: 0 };
 
   await checkSupportedPagesPerSheetValue("printpreview_pps9.html",
