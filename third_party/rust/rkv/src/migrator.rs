@@ -28,8 +28,8 @@
 //!   handling all errors.
 //! * `easy_migrate_<src>_to_<dst>` which is similar to the above, but ignores the
 //!   migration and doesn't delete any files if the source environment is invalid
-//!   (corrupted), unavailable (path not found or incompatible with configuration), or
-//!   empty (database has no records).
+//!   (corrupted), unavailable (path not accessible or incompatible with configuration),
+//!   or empty (database has no records).
 //!
 //! The tool currently has these limitations:
 //!
@@ -100,15 +100,18 @@ macro_rules! fn_migrator {
     };
 
     (open $migrate:tt, $name:tt, $builder:tt, $src_env:ty, $dst_env:ty) => {
-        /// Same as the non `open_*` migration method, but automatically attempts to open the
-        /// source environment. Finally, deletes all of its supporting files if there's no other
-        /// environment open at that path.
+        /// Same as the the `migrate_x_to_y` migration method above, but automatically attempts
+        /// to open the source environment. Finally, deletes all of its supporting files if
+        /// there's no other environment open at that path and the migration succeeded.
         pub fn $name<F, D>(path: &std::path::Path, build: F, dst_env: D) -> Result<(), MigrateError>
         where
             F: FnOnce(crate::backend::$builder) -> crate::backend::$builder,
             D: std::ops::Deref<Target = Rkv<$dst_env>>,
         {
-            use crate::backend::*;
+            use crate::{
+                backend::*,
+                CloseOptions,
+            };
 
             let mut manager = crate::Manager::<$src_env>::singleton().write()?;
             let mut builder = Rkv::<$src_env>::environment_builder::<$builder>();
@@ -119,24 +122,37 @@ macro_rules! fn_migrator {
             Migrator::$migrate(src_env.read()?, dst_env)?;
 
             drop(src_env);
-            manager.try_close_and_delete(path)?;
+            manager.try_close(path, CloseOptions::delete_files_on_disk())?;
 
             Ok(())
         }
     };
 
     (easy $migrate:tt, $name:tt, $src_env:ty, $dst_env:ty) => {
-        /// Same as the `open_*` migration method, but ignores the migration and doesn't delete
-        /// any files if the source environment is invalid (corrupted), unavailable, or empty.
+        /// Same as the `open_and_migrate_x_to_y` migration method above, but ignores the
+        /// migration and doesn't delete any files if the following conditions apply:
+        /// - Source environment is invalid (corrupted), unavailable, or empty.
+        /// - Destination environment is not empty.
+        /// Use this instead of the other migration methods if:
+        /// - You're not concerned by throwing away old data and starting fresh with a new store.
+        /// - You'll never want to overwrite data in the new store from the old store.
         pub fn $name<D>(path: &std::path::Path, dst_env: D) -> Result<(), MigrateError>
         where
             D: std::ops::Deref<Target = Rkv<$dst_env>>,
         {
             match Migrator::$migrate(path, |builder| builder, dst_env) {
+                // Source environment is corrupted.
                 Err(crate::MigrateError::StoreError(crate::StoreError::FileInvalid)) => Ok(()),
+                // Path not accessible.
                 Err(crate::MigrateError::StoreError(crate::StoreError::IoError(_))) => Ok(()),
+                // Path accessible but incompatible for configuration.
                 Err(crate::MigrateError::StoreError(crate::StoreError::UnsuitableEnvironmentPath(_))) => Ok(()),
+                // Couldn't close source environment and delete files on disk (e.g. other stores still open).
+                Err(crate::MigrateError::CloseError(_)) => Ok(()),
+                // Nothing to migrate.
                 Err(crate::MigrateError::SourceEmpty) => Ok(()),
+                // Migrating would overwrite.
+                Err(crate::MigrateError::DestinationNotEmpty) => Ok(()),
                 result => result,
             }?;
 
