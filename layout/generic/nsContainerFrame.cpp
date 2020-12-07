@@ -2462,7 +2462,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         // effectively trying to produce the 'auto' sizing behavior).
         static const StyleSize autoSize(StyleSize::Auto());
         mainAxisCoord = &autoSize;
-      } else if (flexBasis->IsSize()) {
+      } else if (flexBasis->IsSize() && !flexBasis->IsAuto()) {
         // For all other non-'auto' flex-basis values, we just swap in the
         // flex-basis itself for the main-size property.
         mainAxisCoord = &flexBasis->AsSize();
