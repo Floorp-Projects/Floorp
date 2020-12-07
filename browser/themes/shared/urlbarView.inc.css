@@ -495,7 +495,8 @@
 }
 
 .urlbarView-row:is([type=remotetab], [sponsored]):not([selected], :hover) > .urlbarView-row-inner > .urlbarView-url,
-.urlbarView-row[type=search]:not([selected], :hover, [show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+.urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+.urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
   /* Use visibility:collapse instead of display:none since the latter can
      confuse the overflow state of title and url elements when their content
@@ -504,7 +505,8 @@
 }
 
 .urlbarView-row:is([type=remotetab], [sponsored]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
-.urlbarView-row[type=search]:not([selected], :hover, [show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   display: none;
 }
