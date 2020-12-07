@@ -107,6 +107,10 @@ add_task(async function test_xul_text_link_label() {
 add_task(async function test_setup_html() {
   let url = example_base + "subtst_contextmenu.html";
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.menuitem.enabled", true]],
+  });
+
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
