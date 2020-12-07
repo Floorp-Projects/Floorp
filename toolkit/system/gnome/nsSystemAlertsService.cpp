@@ -68,8 +68,7 @@ NS_IMETHODIMP nsSystemAlertsService::ShowAlert(nsIAlertNotification* aAlert,
   return alertListener->InitAlertAsync(aAlert, aAlertListener);
 }
 
-NS_IMETHODIMP nsSystemAlertsService::CloseAlert(const nsAString& aAlertName,
-                                                nsIPrincipal* aPrincipal) {
+NS_IMETHODIMP nsSystemAlertsService::CloseAlert(const nsAString& aAlertName) {
   RefPtr<nsAlertsIconListener> listener = mActiveListeners.Get(aAlertName);
   if (!listener) {
     return NS_OK;

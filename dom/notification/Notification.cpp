@@ -1852,7 +1852,7 @@ void Notification::CloseInternal() {
     if (alertService) {
       nsAutoString alertName;
       GetAlertName(alertName);
-      alertService->CloseAlert(alertName, GetPrincipal());
+      alertService->CloseAlert(alertName);
     }
   }
 }

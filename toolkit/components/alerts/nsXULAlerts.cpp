@@ -392,7 +392,7 @@ nsXULAlerts::SetSuppressForScreenSharing(bool aSuppress) {
 }
 
 NS_IMETHODIMP
-nsXULAlerts::CloseAlert(const nsAString& aAlertName, nsIPrincipal* aPrincipal) {
+nsXULAlerts::CloseAlert(const nsAString& aAlertName) {
   mozIDOMWindowProxy* alert = mNamedWindows.GetWeak(aAlertName);
   if (nsCOMPtr<nsPIDOMWindowOuter> domWindow =
           nsPIDOMWindowOuter::From(alert)) {
