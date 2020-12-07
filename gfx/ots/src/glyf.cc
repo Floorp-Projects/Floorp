@@ -236,7 +236,7 @@ bool OpenTypeGLYF::Parse(const uint8_t *data, size_t length) {
   std::vector<uint32_t> &offsets = loca->offsets;
 
   if (offsets.size() != num_glyphs + 1) {
-    return Error("Invalide glyph offsets size %ld != %d", offsets.size(), num_glyphs + 1);
+    return Error("Invalid glyph offsets size %ld != %d", offsets.size(), num_glyphs + 1);
   }
 
   std::vector<uint32_t> resulting_offsets(num_glyphs + 1);
