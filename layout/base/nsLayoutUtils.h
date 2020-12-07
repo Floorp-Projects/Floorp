@@ -2736,6 +2736,12 @@ class nsLayoutUtils {
       const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame);
 
   /**
+   * Similar to GetBoundingContentRect for nsIFrame.
+   */
+  static CSSRect GetBoundingFrameRect(
+      nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame);
+
+  /**
    * Returns the first ancestor who is a float containing block.
    */
   static nsBlockFrame* GetFloatContainingBlock(nsIFrame* aFrame);
