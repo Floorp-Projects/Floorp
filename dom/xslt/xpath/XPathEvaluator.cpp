@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "XPathResult.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/XPathEvaluatorBinding.h"
