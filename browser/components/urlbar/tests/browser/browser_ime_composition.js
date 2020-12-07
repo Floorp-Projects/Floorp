@@ -3,7 +3,7 @@
 
 // Tests ime composition handling.
 
-function synthesizeCompositionChange(string) {
+function composeAndCheckPanel(string, isPopupOpen) {
   EventUtils.synthesizeCompositionChange({
     composition: {
       string,
@@ -17,29 +17,66 @@ function synthesizeCompositionChange(string) {
     caret: { start: string.length, length: 0 },
     key: { key: string ? string[string.length - 1] : "KEY_Backspace" },
   });
-  // Modifying composition should not open the popup.
-  Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "Popup should be closed");
+  Assert.equal(
+    UrlbarTestUtils.isPopupOpen(window),
+    isPopupOpen,
+    "Check panel open state"
+  );
 }
 
-add_task(async function test_composition() {
-  gURLBar.focus();
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
+  });
+
+  await PlacesUtils.history.clear();
   // Add at least one typed entry for the empty results set. Also clear history
   // so that this can be over the autofill threshold.
-  await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits({
     uri: "http://mozilla.org/",
     transition: PlacesUtils.history.TRANSITIONS.TYPED,
   });
+  // Add a bookmark to ensure we autofill the engine domain for tab-to-search.
+  let bm = await PlacesUtils.bookmarks.insert({
+    url: "http://example.com/",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+  });
+  let engine = await Services.search.addEngineWithDetails("Test", {
+    alias: "@test",
+    template: `http://example.com/?search={searchTerms}`,
+  });
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
 
-  info(
-    "The popup should not be shown during composition but, after compositionend, it should be."
-  );
-  Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "Popup should be closed");
-  synthesizeCompositionChange("I");
+  registerCleanupFunction(async () => {
+    await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engine);
+    await PlacesUtils.bookmarks.remove(bm);
+    await PlacesUtils.history.clear();
+  });
+
+  // Test both pref values.
+  for (let val of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.imeCompositionClosesPanel", val]],
+    });
+    await test_composition(val);
+    await test_composition_searchMode_preview(val);
+    await test_composition_tabToSearch(val);
+  }
+});
+
+async function test_composition(compositionClosesPanel) {
+  gURLBar.focus();
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  info("Check the panel state during composition");
+  composeAndCheckPanel("I", false);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
-  synthesizeCompositionChange("In");
+  composeAndCheckPanel("In", false);
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
-  // Committing composition should open the popup.
+
+  info("Committing composition should open the panel.");
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeComposition({
       type: "compositioncommitasis",
@@ -48,14 +85,13 @@ add_task(async function test_composition() {
   });
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
 
-  info(
-    "If composition starts while the popup is shown, the compositionstart event should close the popup."
-  );
+  info("Check the panel state starting from an open panel.");
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
-  synthesizeCompositionChange("t");
+  composeAndCheckPanel("t", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "Int", "Check urlbar value");
-  synthesizeCompositionChange("te");
+  composeAndCheckPanel("te", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "Inte", "Check urlbar value");
+
   // Committing composition should open the popup.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeComposition({
@@ -67,9 +103,9 @@ add_task(async function test_composition() {
 
   info("If composition is cancelled, the value shouldn't be changed.");
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
-  synthesizeCompositionChange("r");
+  composeAndCheckPanel("r", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "Inter", "Check urlbar value");
-  synthesizeCompositionChange("");
+  composeAndCheckPanel("", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "Inte", "Check urlbar value");
   // Canceled compositionend should reopen the popup.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -87,12 +123,13 @@ add_task(async function test_composition() {
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
   EventUtils.synthesizeKey("VK_LEFT", { shiftKey: true });
   EventUtils.synthesizeKey("VK_LEFT", { shiftKey: true });
-  synthesizeCompositionChange("t");
+  composeAndCheckPanel("t", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "Int", "Check urlbar value");
-  synthesizeCompositionChange("te");
+  composeAndCheckPanel("te", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "Inte", "Check urlbar value");
-  synthesizeCompositionChange("");
+  composeAndCheckPanel("", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
+
   // Canceled compositionend should search the result with the latest value.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeComposition({
@@ -112,18 +149,19 @@ add_task(async function test_composition() {
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeKey("KEY_Escape", {});
   });
-
   Assert.equal(gURLBar.value, "", "Check urlbar value");
 
   info("Composition which is canceled shouldn't cause opening the popup.");
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "Popup should be closed");
-  synthesizeCompositionChange("I");
+  composeAndCheckPanel("I", false);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
-  synthesizeCompositionChange("In");
+  composeAndCheckPanel("In", false);
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
-  synthesizeCompositionChange("");
+  composeAndCheckPanel("", false);
   Assert.equal(gURLBar.value, "", "Check urlbar value");
-  // Canceled compositionend shouldn't open the popup if it was closed.
+
+  info("Canceled compositionend shouldn't open the popup if it was closed.");
+  await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeComposition({
     type: "compositioncommitasis",
     key: { key: "KEY_Escape" },
@@ -141,11 +179,11 @@ add_task(async function test_composition() {
     "If popup is open at starting composition, the popup should be reopened after composition anyway."
   );
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open");
-  synthesizeCompositionChange("I");
+  composeAndCheckPanel("I", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
-  synthesizeCompositionChange("In");
+  composeAndCheckPanel("In", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "In", "Check urlbar value");
-  synthesizeCompositionChange("");
+  composeAndCheckPanel("", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "", "Check urlbar value");
   // A canceled compositionend should open the popup if it was open.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -168,12 +206,15 @@ add_task(async function test_composition() {
   EventUtils.synthesizeKey("KEY_Backspace", {});
   EventUtils.synthesizeKey("KEY_Backspace", {});
   Assert.equal(gURLBar.value, "", "Check urlbar value");
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape", {});
+  });
 
   info("With autofill, compositionstart shouldn't open the popup");
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "Popup should be closed");
-  synthesizeCompositionChange("M");
+  composeAndCheckPanel("M", false);
   Assert.equal(gURLBar.value, "M", "Check urlbar value");
-  synthesizeCompositionChange("Mo");
+  composeAndCheckPanel("Mo", false);
   Assert.equal(gURLBar.value, "Mo", "Check urlbar value");
   // Committing composition should open the popup.
   await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -183,23 +224,10 @@ add_task(async function test_composition() {
     });
   });
   Assert.equal(gURLBar.value, "Mozilla.org/", "Check urlbar value");
-});
+}
 
-add_task(async function test_composition_searchMode_preview() {
+async function test_composition_searchMode_preview(compositionClosesPanel) {
   info("Check Search Mode preview is retained by composition");
-
-  let engine = await Services.search.addEngineWithDetails("Test", {
-    alias: "@test",
-    template: `http://example.com/?search={searchTerms}`,
-  });
-  let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
-
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(originalEngine);
-    await Services.search.removeEngine(engine);
-    await PlacesUtils.history.clear();
-  });
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -215,31 +243,21 @@ add_task(async function test_composition_searchMode_preview() {
     entry: "keywordoffer",
   };
   await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
-  synthesizeCompositionChange("I");
+  composeAndCheckPanel("I", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
+  if (!compositionClosesPanel) {
+    await UrlbarTestUtils.promiseSearchComplete(window);
+  }
   // Test that we are in confirmed search mode.
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: "Test",
     entry: "keywordoffer",
   });
   await UrlbarTestUtils.exitSearchMode(window);
-});
+}
 
-// Note: this is reusing the engine addedby the previous sub-test.
-add_task(async function test_composition_tabToSearch() {
-  info("Check Tab-to-Seatch is retained by composition");
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
-  });
-
-  // Add a bookmark to ensure we autofill the engine domain for tab-to-search.
-  let bm = await PlacesUtils.bookmarks.insert({
-    url: "http://example.com/",
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-  });
-  registerCleanupFunction(async () => {
-    await PlacesUtils.bookmarks.remove(bm);
-  });
+async function test_composition_tabToSearch(compositionClosesPanel) {
+  info("Check Tab-to-Search is retained by composition");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -255,12 +273,15 @@ add_task(async function test_composition_tabToSearch() {
     entry: "tabtosearch",
   };
   await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
-  synthesizeCompositionChange("I");
+  composeAndCheckPanel("I", !compositionClosesPanel);
   Assert.equal(gURLBar.value, "I", "Check urlbar value");
+  if (!compositionClosesPanel) {
+    await UrlbarTestUtils.promiseSearchComplete(window);
+  }
   // Test that we are in confirmed search mode.
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: "Test",
     entry: "tabtosearch",
   });
   await UrlbarTestUtils.exitSearchMode(window);
-});
+}

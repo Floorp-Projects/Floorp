@@ -393,6 +393,13 @@ pref("browser.urlbar.eventTelemetry.enabled", false);
 // 0 - never resolve; 1 - use heuristics (default); 2 - always resolve
 pref("browser.urlbar.dnsResolveSingleWordsAfterSearch", 1);
 
+// Whether IME composition should close the results panel.
+// The default value is true because some IME open a picker panel, and we end
+// up with two panels on top of each other. Since for now we can't detect that
+// we leave this choice to the user, hopefully in the future this can be flipped
+// for everyone.
+pref("browser.urlbar.imeCompositionClosesPanel", true);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
