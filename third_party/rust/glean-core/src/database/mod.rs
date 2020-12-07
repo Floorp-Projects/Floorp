@@ -120,6 +120,10 @@ mod backend {
                 // An internal lock was poisoned.
                 // This would only happen if multiple things run concurrently and one crashes.
                 Err(MigrateError::ManagerPoisonError) => false,
+                // Couldn't close source environment and delete files on disk (e.g. other stores still open).
+                // This could only happen if multiple instances are running,
+                // we leave files in place.
+                Err(MigrateError::CloseError(_)) => false,
                 // Other store errors are never returned from the migrator.
                 // We need to handle them to please rustc.
                 Err(MigrateError::StoreError(_)) => false,

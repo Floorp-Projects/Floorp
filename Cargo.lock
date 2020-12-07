@@ -2060,9 +2060,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "33.5.0"
+version = "33.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1d5556ec294a763121f57384cf09be9b7f8eebbfc075040f9120b84f6a1160b"
+checksum = "e0e7205a286c281745f3cdd47142273820705be14bf19b44c6fa2e90871783ba"
 dependencies = [
  "crossbeam-channel",
  "glean-core",
@@ -2072,14 +2072,15 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+ "time",
  "uuid",
 ]
 
 [[package]]
 name = "glean-core"
-version = "33.5.0"
+version = "33.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "657786648aaf8df52b059cb5cedff3be250df149bd8f6364919166e9d02a398d"
+checksum = "6ec2f7fc35371e74c86a91658ea02d44c0d3c069a2ee135cee91576a75db3bd8"
 dependencies = [
  "bincode",
  "chrono",
@@ -2087,7 +2088,7 @@ dependencies = [
  "flate2",
  "log",
  "once_cell",
- "rkv 0.15.0",
+ "rkv 0.16.0",
  "serde",
  "serde_json",
  "uuid",
@@ -2402,9 +2403,9 @@ dependencies = [
 
 [[package]]
 name = "inherent"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2db418475edf9eb55fec92b7527be6d9a7b880bff6651cb0c0345af57f1cadf"
+checksum = "f3a1325a022293a53274277a7c5c3c5bc73405cb443bb96cc2ce20ff4121e995"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4258,29 +4259,6 @@ dependencies = [
  "lazy_static",
  "lmdb-rkv",
  "ordered-float",
- "serde",
- "serde_derive",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "rkv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e97d1b6321740ce36d77d67d22ff84ac8a996cf69dbd0727b8bcae52f1c98aaa"
-dependencies = [
- "arrayref",
- "bincode",
- "bitflags",
- "byteorder",
- "failure",
- "id-arena",
- "lazy_static",
- "lmdb-rkv",
- "log",
- "ordered-float",
- "paste",
  "serde",
  "serde_derive",
  "url",

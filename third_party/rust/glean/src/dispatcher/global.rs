@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use once_cell::sync::Lazy;
-use std::{mem, sync::RwLock};
+use std::sync::RwLock;
 
 use super::{DispatchError, DispatchGuard, Dispatcher};
 
@@ -63,9 +63,19 @@ pub fn flush_init() -> Result<(), DispatchError> {
 ///
 /// This will initiate a shutdown of the worker thread
 /// and no new tasks will be processed after this.
-/// It will not block on the worker thread.
-pub fn try_shutdown() -> Result<(), DispatchError> {
-    guard().shutdown()
+pub fn shutdown() -> Result<(), DispatchError> {
+    guard().shutdown()?;
+
+    // After we issue the shutdown command, make sure to wait for the
+    // worker thread to join.
+    let mut lock = GLOBAL_DISPATCHER.write().unwrap();
+    let dispatcher = lock.as_mut().expect("Global dispatcher has gone missing");
+
+    if let Some(worker) = dispatcher.worker.take() {
+        return worker.join().map_err(|_| DispatchError::WorkerPanic);
+    }
+
+    Ok(())
 }
 
 /// TEST ONLY FUNCTION.
@@ -73,18 +83,16 @@ pub fn try_shutdown() -> Result<(), DispatchError> {
 pub(crate) fn reset_dispatcher() {
     // We don't care about shutdown errors, since they will
     // definitely happen if this
-    let _ = try_shutdown();
+    let _ = shutdown();
 
     // Now that the dispatcher is shut down, replace it.
     // For that we
     // 1. Create a new
     // 2. Replace the global one
-    // 3. Wait for the old one to fully finish
-    // 4. Only then return (and thus release the lock)
+    // 3. Only then return (and thus release the lock)
     let mut lock = GLOBAL_DISPATCHER.write().unwrap();
     let new_dispatcher = Some(Dispatcher::new(GLOBAL_DISPATCHER_LIMIT));
-    let old_dispatcher = mem::replace(&mut *lock, new_dispatcher);
-    old_dispatcher.map(|d| d.join());
+    *lock = new_dispatcher;
 }
 
 #[cfg(test)]
