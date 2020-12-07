@@ -6,9 +6,7 @@ package mozilla.components.feature.sitepermissions
 
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
@@ -26,23 +24,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 
 @RunWith(AndroidJUnit4::class)
 class SitePermissionsRulesTest {
 
     private lateinit var anchorView: View
-    private lateinit var mockSessionManager: SessionManager
     private lateinit var rules: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
     private lateinit var mockStorage: SitePermissionsStorage
 
     @Before
     fun setup() {
-        val engine = mock<Engine>()
         anchorView = View(testContext)
-        mockSessionManager = Mockito.spy(SessionManager(engine))
         mockOnNeedToRequestPermissions = mock()
         mockStorage = mock()
 

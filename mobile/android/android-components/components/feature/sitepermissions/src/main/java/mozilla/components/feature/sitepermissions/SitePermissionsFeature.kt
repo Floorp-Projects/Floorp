@@ -21,8 +21,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.ContentState
@@ -62,8 +60,6 @@ internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
  * Once the dialog is closed the [PermissionRequest] will be consumed.
  *
  * @property context a reference to the context.
- * @property sessionManager the [SessionManager] instance in order to subscribe
- * to the selected [Session].
  * @property sessionId optional sessionId to be observed if null the selected session will be observed.
  * @property storage the object in charge of persisting all the [SitePermissions] objects.
  * @property sitePermissionsRules indicates how permissions should behave per permission category.
