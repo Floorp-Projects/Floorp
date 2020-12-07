@@ -60,11 +60,11 @@ class AppLinksFeature(
                 }
 
                 val doNotOpenApp = {
-                    loadUrlUseCase?.invoke(url, session, EngineSession.LoadUrlFlags.none())
+                    loadUrlUseCase?.invoke(url, session.id, EngineSession.LoadUrlFlags.none())
                 }
 
                 val loadUrlAction = {
-                    loadUrlUseCase?.invoke(url, session, EngineSession.LoadUrlFlags.none())
+                    loadUrlUseCase?.invoke(url, session.id, EngineSession.LoadUrlFlags.none())
                 }
 
                 val doOpenApp = {

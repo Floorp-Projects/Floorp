@@ -10,7 +10,6 @@ import android.os.Bundle
 import androidx.annotation.ColorInt
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsSessionToken
-import java.util.UUID
 
 /**
  * Holds configuration data for a Custom Tab.
@@ -30,7 +29,6 @@ import java.util.UUID
  * @property externalAppType How this custom tab is being displayed.
  */
 data class CustomTabConfig(
-    val id: String = UUID.randomUUID().toString(),
     @ColorInt val toolbarColor: Int? = null,
     val closeButtonIcon: Bitmap? = null,
     val enableUrlbarHiding: Boolean = false,

@@ -252,10 +252,9 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
     val externalAppIntentProcessors by lazy {
         listOf(
-            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, webAppManifestStorage),
+            WebAppIntentProcessor(store, tabsUseCases.addTab, sessionUseCases.loadUrl, webAppManifestStorage),
             TrustedWebActivityIntentProcessor(
-                sessionManager,
-                sessionUseCases.loadUrl,
+                tabsUseCases.addTab,
                 applicationContext.packageManager,
                 relationChecker,
                 customTabsStore

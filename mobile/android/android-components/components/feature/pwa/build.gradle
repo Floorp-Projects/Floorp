@@ -41,10 +41,11 @@ android {
 
 dependencies {
     implementation project(':browser-icons')
-    implementation project(':browser-session')
+    implementation project(':browser-state')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
     implementation project(':feature-customtabs')
+    implementation project(':feature-tabs')
     implementation project(':feature-intent')
     implementation project(':feature-session')
     implementation project(':service-digitalassetlinks')

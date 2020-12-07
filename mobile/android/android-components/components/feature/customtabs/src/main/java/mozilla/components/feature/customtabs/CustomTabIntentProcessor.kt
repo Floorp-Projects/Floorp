@@ -62,7 +62,7 @@ class CustomTabIntentProcessor(
             session.customTabConfig = createCustomTabConfigFromIntent(intent, resources)
 
             sessionManager.add(session)
-            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external(), getAdditionalHeaders(safeIntent))
+            loadUrlUseCase(url, session.id, EngineSession.LoadUrlFlags.external(), getAdditionalHeaders(safeIntent))
             intent.putSessionId(session.id)
 
             true

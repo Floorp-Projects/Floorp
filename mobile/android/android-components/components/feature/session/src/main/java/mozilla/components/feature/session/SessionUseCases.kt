@@ -63,7 +63,7 @@ class SessionUseCases(
             flags: LoadUrlFlags,
             additionalHeaders: Map<String, String>?
         ) {
-            this.invoke(url, sessionManager.selectedSession, flags, additionalHeaders)
+            this.invoke(url, sessionManager.selectedSession?.id, flags, additionalHeaders)
         }
 
         /**
@@ -72,20 +72,22 @@ class SessionUseCases(
          * no selected session a new session will be created using [onNoSession].
          *
          * @param url The URL to be loaded using the provided session.
-         * @param session the session for which the URL should be loaded.
+         * @param sessionId the ID of the session for which the URL should be loaded.
          * @param flags The [LoadUrlFlags] to use when loading the provided url.
          * @param additionalHeaders the extra headers to use when loading the provided url.
          */
         operator fun invoke(
             url: String,
-            session: Session? = sessionManager.selectedSession,
+            sessionId: String? = null,
             flags: LoadUrlFlags = LoadUrlFlags.none(),
             additionalHeaders: Map<String, String>? = null
         ) {
-            val loadSession = session ?: onNoSession.invoke(url)
+            val loadSessionId = sessionId
+                ?: sessionManager.selectedSession?.id
+                ?: onNoSession.invoke(url).id
 
             store.dispatch(EngineAction.LoadUrlAction(
-                loadSession.id,
+                loadSessionId,
                 url,
                 flags,
                 additionalHeaders

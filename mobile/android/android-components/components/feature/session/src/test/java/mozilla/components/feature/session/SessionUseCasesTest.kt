@@ -56,12 +56,12 @@ class SessionUseCasesTest {
             LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
         ))
 
-        useCases.loadUrl("http://getpocket.com", selectedSession)
+        useCases.loadUrl("http://getpocket.com", selectedSession.id)
         verify(store).dispatch(EngineAction.LoadUrlAction(selectedSessionId, "http://getpocket.com"))
 
         useCases.loadUrl.invoke(
             "http://getpocket.com",
-            selectedSession,
+            selectedSession.id,
             LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
         )
         verify(store).dispatch(EngineAction.LoadUrlAction(

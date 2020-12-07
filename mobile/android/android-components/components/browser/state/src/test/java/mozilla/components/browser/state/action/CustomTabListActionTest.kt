@@ -24,7 +24,7 @@ class CustomTabListActionTest {
         assertEquals(0, store.state.tabs.size)
         assertEquals(0, store.state.customTabs.size)
 
-        val config = CustomTabConfig("test")
+        val config = CustomTabConfig()
         val customTab = createCustomTab("https://www.mozilla.org", config = config)
 
         store.dispatch(CustomTabListAction.AddCustomTabAction(customTab)).joinBlocking()

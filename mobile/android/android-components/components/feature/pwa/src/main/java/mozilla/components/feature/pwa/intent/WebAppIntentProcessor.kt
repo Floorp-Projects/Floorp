@@ -7,10 +7,9 @@ package mozilla.components.feature.pwa.intent
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState.Source
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.ExternalAppType
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.ext.getUrlOverride
@@ -20,13 +19,15 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.toCustomTabConfig
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.utils.toSafeIntent
 
 /**
  * Processor for intents which trigger actions related to web apps.
  */
 class WebAppIntentProcessor(
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
+    private val addTabUseCase: TabsUseCases.AddNewTabUseCase,
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     private val storage: ManifestStorage
 ) : IntentProcessor {
@@ -50,14 +51,14 @@ class WebAppIntentProcessor(
             val webAppManifest = runBlocking { storage.loadManifest(url) } ?: return false
             val targetUrl = intent.getUrlOverride() ?: url
 
-            val session = findExistingSession(webAppManifest) ?: createSession(webAppManifest, url)
+            val id = findExistingSession(webAppManifest) ?: createSession(webAppManifest, url)
 
             if (targetUrl !== url) {
-                loadUrlUseCase(targetUrl, session, EngineSession.LoadUrlFlags.external())
+                loadUrlUseCase(targetUrl, id, EngineSession.LoadUrlFlags.external())
             }
 
             intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
-            intent.putSessionId(session.id)
+            intent.putSessionId(id)
             intent.putWebAppManifest(webAppManifest)
 
             true
@@ -69,25 +70,23 @@ class WebAppIntentProcessor(
     /**
      * Returns an existing web app session that matches the manifest.
      */
-    private fun findExistingSession(webAppManifest: WebAppManifest): Session? {
-        return sessionManager.all.find {
-            it.customTabConfig?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP &&
-                    it.webAppManifest?.startUrl == webAppManifest.startUrl
-        }
+    private fun findExistingSession(webAppManifest: WebAppManifest): String? {
+        return store.state.customTabs.find { tab ->
+            tab.config.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP &&
+                tab.content.webAppManifest?.startUrl == webAppManifest.startUrl
+        }?.id
     }
 
     /**
      * Returns a new web app session.
      */
-    private fun createSession(webAppManifest: WebAppManifest, url: String): Session {
-        return Session(url, private = false, source = Source.HOME_SCREEN)
-                .apply {
-                    this.webAppManifest = webAppManifest
-                    this.customTabConfig = webAppManifest.toCustomTabConfig()
-                }.also {
-                    sessionManager.add(it)
-                    loadUrlUseCase(url, it, EngineSession.LoadUrlFlags.external())
-                }
+    private fun createSession(webAppManifest: WebAppManifest, url: String): String {
+        return addTabUseCase.invoke(
+            url = url,
+            source = Source.HOME_SCREEN,
+            webAppManifest = webAppManifest,
+            customTabConfig = webAppManifest.toCustomTabConfig()
+        )
     }
 
     companion object {

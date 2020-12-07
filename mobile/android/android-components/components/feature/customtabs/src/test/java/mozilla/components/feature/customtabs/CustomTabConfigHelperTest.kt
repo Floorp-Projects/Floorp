@@ -62,13 +62,6 @@ class CustomTabConfigHelperTest {
     }
 
     @Test
-    fun createFromIntentAssignsId() {
-        val customTabsIntent = CustomTabsIntent.Builder().build()
-        val customTabConfig = createCustomTabConfigFromIntent(customTabsIntent.intent, testContext.resources)
-        assertTrue(customTabConfig.id.isNotBlank())
-    }
-
-    @Test
     fun createFromIntentWithToolbarColor() {
         val builder = CustomTabsIntent.Builder()
         builder.setToolbarColor(Color.BLACK)

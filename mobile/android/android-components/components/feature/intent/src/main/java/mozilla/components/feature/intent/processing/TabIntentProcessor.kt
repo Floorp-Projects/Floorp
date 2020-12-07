@@ -54,8 +54,12 @@ class TabIntentProcessor(
             if (existingSession != null) {
                 sessionManager.select(existingSession)
             } else {
-                loadUrlUseCase(url, createSession(url, private = isPrivate,
-                        source = Source.ACTION_VIEW), LoadUrlFlags.external())
+                val session = createSession(url, private = isPrivate, source = Source.ACTION_VIEW)
+                loadUrlUseCase(
+                    url,
+                    session.id,
+                    LoadUrlFlags.external()
+                )
             }
             true
         }
@@ -74,7 +78,7 @@ class TabIntentProcessor(
             val url = WebURLFinder(extraText).bestWebURL()
             if (url != null) {
                 val session = createSession(url, private = isPrivate, source = Source.ACTION_SEND)
-                loadUrlUseCase(url, session, LoadUrlFlags.external())
+                loadUrlUseCase(url, session.id, LoadUrlFlags.external())
             } else {
                 newTabSearchUseCase(extraText, Source.ACTION_SEND, openNewTab)
             }
@@ -90,7 +94,7 @@ class TabIntentProcessor(
         } else {
             if (searchQuery.isUrl()) {
                 val session = createSession(searchQuery, private = isPrivate, source = Source.ACTION_SEARCH)
-                loadUrlUseCase(searchQuery, session, LoadUrlFlags.external())
+                loadUrlUseCase(searchQuery, session.id, LoadUrlFlags.external())
             } else {
                 newTabSearchUseCase(searchQuery, Source.ACTION_SEARCH, openNewTab)
             }

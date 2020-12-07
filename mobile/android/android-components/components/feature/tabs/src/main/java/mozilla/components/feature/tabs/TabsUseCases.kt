@@ -8,10 +8,12 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.UndoAction
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
 
 /**
@@ -147,9 +149,14 @@ class TabsUseCases(
             flags: LoadUrlFlags = LoadUrlFlags.none(),
             contextId: String? = null,
             engineSession: EngineSession? = null,
-            source: Source = Source.NEW_TAB
+            source: Source = Source.NEW_TAB,
+            customTabConfig: CustomTabConfig? = null,
+            webAppManifest: WebAppManifest? = null
         ): String {
-            val session = Session(url, false, source, contextId = contextId)
+            val session = Session(url, false, source, contextId = contextId).apply {
+                this.customTabConfig = customTabConfig
+                this.webAppManifest = webAppManifest
+            }
 
             val parent = parentId?.let { sessionManager.findSessionById(parentId) }
             sessionManager.add(session, selected = selectTab, engineSession = engineSession, parent = parent)
