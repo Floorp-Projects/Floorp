@@ -6183,12 +6183,14 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
         mainAxisCoord = &maxContStyleCoord;
         // (Note: if our main axis is the block axis, then this 'max-content'
         // value will be treated like 'auto', via the IsAutoBSize() call below.)
-      } else if (!flexBasis->IsAuto()) {
+      } else if (flexBasis->IsSize() && !flexBasis->IsAuto()) {
         // For all other non-'auto' flex-basis values, we just swap in the
         // flex-basis itself for the main-size property.
         mainAxisCoord = &flexBasis->AsSize();
-      }  // else: flex-basis is 'auto', which is deferring to some explicit
-         // value in mainAxisCoord. So we proceed w/o touching mainAxisCoord.
+      } else {
+        // else: flex-basis is 'auto', or 'content' in a table wrapper frame
+        // which we ignore. So we proceed w/o touching mainAxisCoord.
+      }
     }
   }
 
