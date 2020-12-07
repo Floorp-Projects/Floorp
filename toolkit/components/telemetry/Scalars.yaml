@@ -1891,12 +1891,11 @@ pictureinpicture:
     description: >
       The number of times a Picture-in-Picture window was opened, per trigger
       mechanism (e.g.: the video toggle, the context menu).
-    expires: "87"
+    expires: "92"
     kind: uint
     keyed: true
     notification_emails:
       - mconley@mozilla.com
-      - astevenson@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -1910,12 +1909,11 @@ pictureinpicture:
       The number of times a Picture-in-Picture window was closed, per trigger
       mechanism (e.g.: the close button, the unpip button, originating tab going away,
       process shutdown, etc).
-    expires: "87"
+    expires: "92"
     kind: uint
     keyed: true
     notification_emails:
       - mconley@mozilla.com
-      - astevenson@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -1927,11 +1925,10 @@ pictureinpicture:
     description: >
       The number of times a Picture-in-Picture toggle was presented to the user when
       they hovered the video with the mouse pointer.
-    expires: "87"
+    expires: "92"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
-      - astevenson@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

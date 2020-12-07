@@ -2233,7 +2233,6 @@ pictureinpicture:
       screenY: The screen Y coordinate that the window was created at
     notification_emails:
       - mconley@mozilla.com
-      - astevenson@mozilla.com
     products:
       - "firefox"
       - "fennec"
@@ -2241,7 +2240,8 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "86"
+      - 1678202
+    expiry_version: "92"
     release_channel_collection: opt-out
   resize:
     objects: ["player"]
@@ -2252,7 +2252,6 @@ pictureinpicture:
       height: The height that the window was resize to
     notification_emails:
       - mconley@mozilla.com
-      - astevenson@mozilla.com
     products:
       - "firefox"
       - "fennec"
@@ -2260,7 +2259,8 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "86"
+      - 1678202
+    expiry_version: "92"
     release_channel_collection: opt-out
   move:
     objects: ["player"]
@@ -2271,7 +2271,6 @@ pictureinpicture:
       screenY: The screen Y coordinate that the window was moved to
     notification_emails:
       - mconley@mozilla.com
-      - astevenson@mozilla.com
     products:
       - "firefox"
       - "fennec"
@@ -2279,7 +2278,8 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "86"
+      - 1678202
+    expiry_version: "92"
     release_channel_collection: opt-out
 
 doh:
