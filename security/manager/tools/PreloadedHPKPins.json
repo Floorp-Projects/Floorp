@@ -118,7 +118,7 @@
         "Entrust Root Certification Authority - EC1",
         "Entrust Root Certification Authority - G2",
         "Entrust.net Premium 2048 Secure Server CA",
-        "GeoTrust Global CA",
+        // "GeoTrust Global CA",
         "GlobalSign ECC Root CA - R4",
         "GlobalSign ECC Root CA - R5",
         "GlobalSign Root CA",
