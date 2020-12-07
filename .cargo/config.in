@@ -25,7 +25,7 @@ rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"
 [source."https://github.com/mozilla-spidermonkey/wasmtime"]
 git = "https://github.com/mozilla-spidermonkey/wasmtime"
 replace-with = "vendored-sources"
-rev = "ac58a436ed84d1a88b4ff24367c5972cf8d3d405"
+rev = "3bbadf8a2152984cf3d327d0c5a2677f37a93801"
 
 [source."https://github.com/mozilla-spidermonkey/wasm-tools"]
 git = "https://github.com/mozilla-spidermonkey/wasm-tools"
