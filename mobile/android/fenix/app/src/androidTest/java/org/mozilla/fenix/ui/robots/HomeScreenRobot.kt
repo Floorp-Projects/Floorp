@@ -11,6 +11,7 @@ import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.longClick
@@ -392,6 +393,14 @@ class HomeScreenRobot {
 
         fun dismissOnboarding() {
             openThreeDotMenu { }.openSettings { }.goBack { }
+        }
+
+        fun clickStartBrowsingButton(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            scrollToElementByText("Start browsing")
+            startBrowsingButton().click()
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
         }
 
         fun togglePrivateBrowsingMode() {
@@ -808,3 +817,8 @@ private fun tab(title: String) =
             withText(title)
         )
     )
+
+private fun startBrowsingButton(): ViewInteraction {
+    scrollToElementByText("Start browsing")
+    return onView(allOf(withText("Start browsing")))
+}

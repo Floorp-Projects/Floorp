@@ -111,6 +111,15 @@ class SmokeTest {
     }
 
     @Test
+    fun startBrowsingButtonTest() {
+        homeScreen {
+            verifyStartBrowsingButton()
+        }.clickStartBrowsingButton {
+            verifySearchView()
+        }
+    }
+
+    @Test
     fun verifyBasicNavigationToolbarFunctionality() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
