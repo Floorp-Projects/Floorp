@@ -5041,13 +5041,18 @@ var AboutHomeStartupCache = {
    * never written during the session, one is generated and written
    * before the async function resolves.
    *
+   * @param withTimeout (boolean)
+   *   Whether or not the timeout mechanism should be used. Defaults
+   *   to true.
    * @returns Promise
-   * @resolves undefined
+   * @resolves boolean
    *   If a cache has never been written, or a cache write is in
-   *   progress, resolves when the cache has been written. Otherwise,
-   *   resolves immediately.
+   *   progress, resolves true when the cache has been written. Also
+   *   resolves to true if a cache didn't need to be written.
+   *
+   *   Resolves to false if a cache write unexpectedly timed out.
    */
-  async onShutdown() {
+  async onShutdown(withTimeout = true) {
     // If we never wrote this session, arm the task so that the next
     // step can finalize.
     if (!this._hasWrittenThisSession) {
@@ -5080,15 +5085,24 @@ var AboutHomeStartupCache = {
         );
       });
 
-      let result = await Promise.race([
-        timeoutPromise,
-        this._cacheTask.finalize(),
-      ]);
+      let promises = [this._cacheTask.finalize()];
+      if (withTimeout) {
+        this.log.trace("Using timeout mechanism.");
+        promises.push(timeoutPromise);
+      } else {
+        this.log.trace("Skipping timeout mechanism.");
+      }
+
+      let result = await Promise.race(promises);
+      this.log.trace("Done blocking shutdown.");
       clearTimeout(timeoutID);
       if (result === TIMED_OUT) {
         this.log.error("Timed out getting cache streams. Skipping cache task.");
+        return false;
       }
     }
+    this.log.trace("onShutdown is exiting");
+    return true;
   },
 
   /**
@@ -5106,13 +5120,17 @@ var AboutHomeStartupCache = {
     let { pageInputStream, scriptInputStream } = await this.requestCache();
 
     if (!pageInputStream || !scriptInputStream) {
+      this.log.trace("Failed to get cache streams.");
       this._cacheProgress = "Failed to get streams";
       return;
     }
 
+    this.log.trace("Got cache streams.");
+
     this._cacheProgress = "Writing to cache";
 
     try {
+      this.log.trace("Populating cache.");
       await this.populateCache(pageInputStream, scriptInputStream);
     } catch (e) {
       this._cacheProgress = "Failed to populate cache";
@@ -5369,6 +5387,8 @@ var AboutHomeStartupCache = {
         );
       });
     });
+
+    this.log.trace("populateCache has finished.");
   },
 
   /**

@@ -65,6 +65,11 @@ let { AboutHomeStartupCache } = ChromeUtils.import(
  *       this to avoid the HTTP cache "losing the race" against reading the
  *       about:home document from the omni.ja. This defaults to true.
  *
+ *     expectTimeout (boolean, optional):
+ *       If true, indicates that it's expected that AboutHomeStartupCache will
+ *       timeout when shutting down. If false, such timeouts will result in
+ *       test failures. Defaults to false.
+ *
  * @returns Promise
  * @resolves undefined
  *   Resolves once the restart simulation is complete, and the <xul:browser>
@@ -73,9 +78,10 @@ let { AboutHomeStartupCache } = ChromeUtils.import(
 // eslint-disable-next-line no-unused-vars
 async function simulateRestart(
   browser,
-  { withAutoShutdownWrite, ensureCacheWinsRace } = {
+  { withAutoShutdownWrite, ensureCacheWinsRace, expectTimeout } = {
     withAutoShutdownWrite: true,
     ensureCacheWinsRace: true,
+    expectTimeout: false,
   }
 ) {
   info("Simulating restart of the browser");
@@ -88,7 +94,15 @@ async function simulateRestart(
 
   if (withAutoShutdownWrite && AboutHomeStartupCache.initted) {
     info("Simulating shutdown write");
-    await AboutHomeStartupCache.onShutdown();
+    let timedOut = !(await AboutHomeStartupCache.onShutdown(expectTimeout));
+    if (timedOut && !expectTimeout) {
+      Assert.ok(
+        false,
+        "AboutHomeStartupCache shutdown unexpectedly timed out."
+      );
+    } else if (!timedOut && expectTimeout) {
+      Assert.ok(false, "AboutHomeStartupCache shutdown failed to time out.");
+    }
     info("Shutdown write done");
   } else {
     info("Intentionally skipping shutdown write");
