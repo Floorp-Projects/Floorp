@@ -19,14 +19,9 @@ printui-page-range-custom = Custom
 printui-page-range-label = Pages
 printui-page-range-picker =
   .aria-label = Pick page range
-printui-page-custom-range =
+printui-page-custom-range-input =
   .aria-label = Enter custom page range
-# This label is displayed before the first input field indicating
-# the start of the range to print.
-printui-range-start = From
-# This label is displayed between the input fields indicating
-# the start and end page of the range to print.
-printui-range-end = to
+  .placeholder = e.g. 2-6, 9, 12-16
 
 # Section title for the number of copies to print
 printui-copies-label = Copies

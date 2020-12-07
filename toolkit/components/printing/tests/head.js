@@ -268,6 +268,10 @@ class PrintHelper {
   async waitForSettingsEvent(changeFn) {
     let changed = BrowserTestUtils.waitForEvent(this.doc, "print-settings");
     await changeFn?.();
+    await BrowserTestUtils.waitForCondition(
+      () => !this.win.PrintEventHandler._delayedSettingsChangeTask.isArmed,
+      "Wait for all delayed tasks to execute"
+    );
     await changed;
   }
 
