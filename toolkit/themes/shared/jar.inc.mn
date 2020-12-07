@@ -35,6 +35,7 @@ toolkit.jar:
   skin/classic/global/icons/autoscroll-vertical.svg        (../../shared/icons/autoscroll-vertical.svg)
   skin/classic/global/icons/check.svg                      (../../shared/icons/check.svg)
   skin/classic/global/icons/check-partial.svg              (../../shared/icons/check-partial.svg)
+  skin/classic/global/icons/chevron.svg                    (../../shared/icons/chevron.svg)
   skin/classic/global/icons/close.svg                      (../../shared/icons/close.svg)
   skin/classic/global/icons/searchfield-cancel.svg         (../../shared/icons/searchfield-cancel.svg)
   skin/classic/global/pictureinpicture/close-pip.svg       (../../shared/pictureinpicture/close-pip.svg)
