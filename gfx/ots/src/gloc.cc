@@ -31,7 +31,7 @@ bool OpenTypeGLOC::Parse(const uint8_t* data, size_t length) {
 
   if (this->flags & ATTRIB_IDS && this->numAttribs * sizeof(uint16_t) >
                                   table.remaining()) {
-    return DropGraphite("Failed to calulate length of locations");
+    return DropGraphite("Failed to calculate length of locations");
   }
   size_t locations_len = (table.remaining() -
     (this->flags & ATTRIB_IDS ? this->numAttribs * sizeof(uint16_t) : 0)) /

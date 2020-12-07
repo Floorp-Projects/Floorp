@@ -58,7 +58,7 @@ bool OpenTypeMetricsHeader::Parse(const uint8_t *data, size_t length) {
 
   // skip the reserved bytes
   if (!table.Skip(8)) {
-    return Error("Failed to read reserverd bytes");
+    return Error("Failed to read reserved bytes");
   }
 
   int16_t data_format;

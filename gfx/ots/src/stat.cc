@@ -186,8 +186,7 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
       break;
     case 4:
       if (this->minorVersion < 2) {
-        Warning("Invalid table version for format 4 axis values - updating");
-        this->minorVersion = 2;
+        return Drop("Invalid table minorVersion for format 4 axis values: %d", this->minorVersion);
       }
       if (!table.ReadU16(&axisValue.format4.axisCount) ||
           !table.ReadU16(&axisValue.format4.flags) ||

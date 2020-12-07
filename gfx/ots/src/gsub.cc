@@ -150,7 +150,7 @@ bool ParseSequenceTable(const ots::Font *font,
       return OTS_FAILURE_MSG("Failed to read substitution %d in sequence table", i);
     }
     if (substitute >= num_glyphs) {
-      return OTS_FAILURE_MSG("Bad subsitution (%d) %d > %d", i, substitute, num_glyphs);
+      return OTS_FAILURE_MSG("Bad substitution (%d) %d > %d", i, substitute, num_glyphs);
     }
   }
 
