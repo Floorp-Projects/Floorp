@@ -272,20 +272,6 @@ const AVAILABLE_INJECTIONS = [
     customFunc: "detectSwipeFix",
   },
   {
-    id: "bug1632019",
-    platform: "all",
-    domain: "everyman.co",
-    bug: "1632019",
-    contentScripts: {
-      matches: ["https://everyman.co/*"],
-      css: [
-        {
-          file: "injections/css/bug1632019-everyman.co-gallery-width-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1644830",
     platform: "desktop",
     domain: "usps.com",
@@ -412,6 +398,54 @@ const AVAILABLE_INJECTIONS = [
           file: "injections/css/bug1666771-zilow-map-overdraw.css",
         },
       ],
+    },
+  },
+  {
+    id: "bug1631811",
+    platform: "all",
+    domain: "datastudio.google.com",
+    bug: "1631811",
+    contentScripts: {
+      matches: ["https://datastudio.google.com/embed/reporting/*"],
+      js: [
+        {
+          file: "injections/js/bug1631811-datastudio.google.com-indexedDB.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
+    id: "bug1665035",
+    platform: "desktop",
+    domain: "dckids.com",
+    bug: "1665035",
+    contentScripts: {
+      matches: [
+        "https://d3qlaywcwingl6.cloudfront.net/content/*/Html5Game/*",
+        "https://d3qlaywcwingl6.cloudfront.net/*/game/content/*",
+      ],
+      js: [
+        {
+          file: "injections/js/bug1665035-dckids.com-cookieEnabled.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
+    id: "bug1677442",
+    platform: "desktop",
+    domain: "store.hp.com",
+    bug: "1677442",
+    contentScripts: {
+      matches: ["*://d3nkfb7815bs43.cloudfront.net/*forstore.hp.com*"],
+      js: [
+        {
+          file: "injections/js/bug1677442-store.hp.com-disable-indexeddb.js",
+        },
+      ],
+      allFrames: true,
     },
   },
 ];
