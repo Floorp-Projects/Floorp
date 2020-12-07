@@ -5389,6 +5389,10 @@ static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
 }
 
 void nsWindow::UpdateTopLevelOpaqueRegion(void) {
+  if (!mCompositedScreen) {
+    return;
+  }
+
   GdkWindow* window =
       (mDrawToContainer) ? gtk_widget_get_window(mShell) : mGdkWindow;
   if (!window) {
@@ -5398,9 +5402,9 @@ void nsWindow::UpdateTopLevelOpaqueRegion(void) {
 
   int x = 0;
   int y = 0;
-  if (!mIsX11Display || mDrawInTitlebar) {
-    x = DevicePixelsToGdkCoordRoundDown(mClientOffset.x);
-    y = DevicePixelsToGdkCoordRoundDown(mClientOffset.y);
+
+  if (mDrawToContainer) {
+    gdk_window_get_position(mGdkWindow, &x, &y);
   }
 
   int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
