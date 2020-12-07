@@ -1802,6 +1802,43 @@ this.VideoControlsImplWidget = class {
         this.muteButton.setAttribute("aria-label", value);
       },
 
+      keyboardVolumeDecrease() {
+        const oldval = this.video.volume;
+        this.video.volume = oldval < 0.1 ? 0 : oldval - 0.1;
+        this.video.muted = false;
+      },
+
+      keyboardVolumeIncrease() {
+        const oldval = this.video.volume;
+        this.video.volume = oldval > 0.9 ? 1 : oldval + 0.1;
+        this.video.muted = false;
+      },
+
+      keyboardSeekBack(tenPercent) {
+        const oldval = this.video.currentTime;
+        let newval;
+        if (tenPercent) {
+          newval =
+            oldval -
+            (this.video.duration || this.maxCurrentTimeSeen / 1000) / 10;
+        } else {
+          newval = oldval - 15;
+        }
+        this.video.currentTime = Math.max(0, newval);
+      },
+
+      keyboardSeekForward(tenPercent) {
+        const oldval = this.video.currentTime;
+        const maxtime = this.video.duration || this.maxCurrentTimeSeen / 1000;
+        let newval;
+        if (tenPercent) {
+          newval = oldval + maxtime / 10;
+        } else {
+          newval = oldval + 15;
+        }
+        this.video.currentTime = Math.min(newval, maxtime);
+      },
+
       keyHandler(event) {
         // Ignore keys when content might be providing its own.
         if (!this.video.hasAttribute("controls")) {
@@ -1837,7 +1874,6 @@ this.VideoControlsImplWidget = class {
         }
 
         this.log("Got keystroke: " + keystroke);
-        var oldval, newval;
 
         try {
           switch (keystroke) {
@@ -1846,18 +1882,13 @@ this.VideoControlsImplWidget = class {
               if (target.localName === "button" && !target.disabled) {
                 break;
               }
-
               this.togglePause();
               break;
             case "ArrowDown" /* Volume decrease */:
-              oldval = this.video.volume;
-              this.video.volume = oldval < 0.1 ? 0 : oldval - 0.1;
-              this.video.muted = false;
+              this.keyboardVolumeDecrease();
               break;
             case "ArrowUp" /* Volume increase */:
-              oldval = this.video.volume;
-              this.video.volume = oldval > 0.9 ? 1 : oldval + 0.1;
-              this.video.muted = false;
+              this.keyboardVolumeIncrease();
               break;
             case "accel-ArrowDown" /* Mute */:
               this.video.muted = true;
@@ -1866,28 +1897,16 @@ this.VideoControlsImplWidget = class {
               this.video.muted = false;
               break;
             case "ArrowLeft" /* Seek back 15 seconds */:
+              this.keyboardSeekBack(/* tenPercent */ false);
+              break;
             case "accel-ArrowLeft" /* Seek back 10% */:
-              oldval = this.video.currentTime;
-              if (keystroke == "leftArrow") {
-                newval = oldval - 15;
-              } else {
-                newval =
-                  oldval -
-                  (this.video.duration || this.maxCurrentTimeSeen / 1000) / 10;
-              }
-              this.video.currentTime = newval >= 0 ? newval : 0;
+              this.keyboardSeekBack(/* tenPercent */ true);
               break;
             case "ArrowRight" /* Seek forward 15 seconds */:
+              this.keyboardSeekForward(/* tenPercent */ false);
+              break;
             case "accel-ArrowRight" /* Seek forward 10% */:
-              oldval = this.video.currentTime;
-              var maxtime =
-                this.video.duration || this.maxCurrentTimeSeen / 1000;
-              if (keystroke == "rightArrow") {
-                newval = oldval + 15;
-              } else {
-                newval = oldval + maxtime / 10;
-              }
-              this.video.currentTime = newval <= maxtime ? newval : maxtime;
+              this.keyboardSeekForward(/* tenPercent */ true);
               break;
             case "Home" /* Seek to beginning */:
               this.video.currentTime = 0;
