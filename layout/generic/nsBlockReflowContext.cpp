@@ -313,11 +313,13 @@ void nsBlockReflowContext::ReflowBlock(
   }
 
   if (!aFrameReflowStatus.IsInlineBreakBefore() &&
+      !aFrameRI.WillReflowAgainForClearance() &&
       aFrameReflowStatus.IsFullyComplete()) {
-    // If frame is complete and has a next-in-flow, we need to delete
-    // them now. Do not do this when a break-before is signaled because
-    // the frame is going to get reflowed again (whether the frame is
-    // (in)complete is undefined in that case anyway).
+    // If mFrame is fully-complete and has a next-in-flow, we need to delete
+    // them now. Do not do this when a break-before is signaled or when a
+    // clearance frame is discovered in mFrame's subtree because mFrame is going
+    // to get reflowed again (whether the frame is (in)complete is undefined in
+    // that case anyway).
     if (nsIFrame* kidNextInFlow = mFrame->GetNextInFlow()) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
