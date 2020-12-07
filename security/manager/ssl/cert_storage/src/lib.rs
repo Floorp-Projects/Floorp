@@ -300,7 +300,7 @@ impl SecurityState {
 
     pub fn set_batch_state(
         &mut self,
-        entries: &[(Vec<u8>, i16)],
+        entries: &[EncodedSecurityState],
         typ: u8,
     ) -> Result<(), SecurityStateError> {
         let env_and_store = match self.env_and_store.as_mut() {
@@ -316,9 +316,16 @@ impl SecurityState {
         )?;
 
         for entry in entries {
+            let key = match entry.key() {
+                Ok(key) => key,
+                Err(e) => {
+                    warn!("error base64-decoding key parts - ignoring: {}", e.message);
+                    continue;
+                }
+            };
             env_and_store
                 .store
-                .put(&mut writer, &entry.0, &Value::I64(entry.1 as i64))?;
+                .put(&mut writer, &key, &Value::I64(entry.state() as i64))?;
         }
 
         writer.commit()?;
@@ -631,7 +638,7 @@ impl SecurityState {
     // not a security issue.
     pub fn add_certs(
         &mut self,
-        certs: &[(Vec<u8>, Vec<u8>, i16)],
+        certs: &[(nsCString, nsCString, i16)],
     ) -> Result<(), SecurityStateError> {
         let env_and_store = match self.env_and_store.as_mut() {
             Some(env_and_store) => env_and_store,
@@ -648,16 +655,30 @@ impl SecurityState {
             &Value::Bool(true),
         )?;
 
-        for (cert_der, subject, trust) in certs {
+        for (cert_der_base64, subject_base64, trust) in certs {
+            let cert_der = match base64::decode(&cert_der_base64) {
+                Ok(cert_der) => cert_der,
+                Err(e) => {
+                    warn!("error base64-decoding cert - skipping: {}", e);
+                    continue;
+                }
+            };
+            let subject = match base64::decode(&subject_base64) {
+                Ok(subject) => subject,
+                Err(e) => {
+                    warn!("error base64-decoding subject - skipping: {}", e);
+                    continue;
+                }
+            };
             let mut digest = Sha256::default();
-            digest.input(cert_der);
+            digest.input(&cert_der);
             let cert_hash = digest.result();
             let cert_key = make_key!(PREFIX_CERT, &cert_hash);
-            let cert = Cert::new(cert_der, subject, *trust)?;
+            let cert = Cert::new(&cert_der, &subject, *trust)?;
             env_and_store
                 .store
                 .put(&mut writer, &cert_key, &Value::Blob(&cert.to_bytes()?))?;
-            let subject_key = make_key!(PREFIX_SUBJECT, subject);
+            let subject_key = make_key!(PREFIX_SUBJECT, &subject);
             let empty_vec = Vec::new();
             let old_cert_hash_list = match env_and_store.store.get(&writer, &subject_key)? {
                 Some(Value::Blob(hashes)) => hashes.to_owned(),
@@ -682,7 +703,10 @@ impl SecurityState {
     // We use this to find the corresponding subject so we can look up the CertHashList it should
     // appear in. If that list contains the given hash, we remove it and update the CertHashList.
     // Finally we delete the Cert entry.
-    pub fn remove_certs_by_hashes(&mut self, hashes: &[Vec<u8>]) -> Result<(), SecurityStateError> {
+    pub fn remove_certs_by_hashes(
+        &mut self,
+        hashes_base64: &[nsCString],
+    ) -> Result<(), SecurityStateError> {
         let env_and_store = match self.env_and_store.as_mut() {
             Some(env_and_store) => env_and_store,
             None => return Err(SecurityStateError::from("env and store not initialized?")),
@@ -690,8 +714,15 @@ impl SecurityState {
         let mut writer = env_and_store.env.write()?;
         let reader = env_and_store.env.read()?;
 
-        for hash in hashes {
-            let cert_key = make_key!(PREFIX_CERT, hash);
+        for hash in hashes_base64 {
+            let hash = match base64::decode(&hash) {
+                Ok(hash) => hash,
+                Err(e) => {
+                    warn!("error decoding hash - ignoring: {}", e);
+                    continue;
+                }
+            };
+            let cert_key = make_key!(PREFIX_CERT, &hash);
             if let Some(Value::Blob(cert_bytes)) = env_and_store.store.get(&reader, &cert_key)? {
                 if let Ok(cert) = Cert::from_bytes(cert_bytes) {
                     let subject_key = make_key!(PREFIX_SUBJECT, &cert.subject);
@@ -703,7 +734,7 @@ impl SecurityState {
                         Some(_) => empty_vec,
                         None => empty_vec,
                     };
-                    let new_cert_hash_list = CertHashList::remove(&old_cert_hash_list, hash)?;
+                    let new_cert_hash_list = CertHashList::remove(&old_cert_hash_list, &hash)?;
                     if new_cert_hash_list.len() != old_cert_hash_list.len() {
                         env_and_store.store.put(
                             &mut writer,
@@ -922,6 +953,41 @@ impl<'a> IntoIterator for CertHashList<'a> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.hashes.into_iter()
+    }
+}
+
+// Helper struct for set_batch_state. Takes a prefix, two base64-encoded key
+// parts, and a security state value.
+struct EncodedSecurityState {
+    prefix: &'static str,
+    key_part_1_base64: nsCString,
+    key_part_2_base64: nsCString,
+    state: i16,
+}
+
+impl EncodedSecurityState {
+    fn new(
+        prefix: &'static str,
+        key_part_1_base64: nsCString,
+        key_part_2_base64: nsCString,
+        state: i16,
+    ) -> EncodedSecurityState {
+        EncodedSecurityState {
+            prefix,
+            key_part_1_base64,
+            key_part_2_base64,
+            state,
+        }
+    }
+
+    fn key(&self) -> Result<Vec<u8>, SecurityStateError> {
+        let key_part_1 = base64::decode(&self.key_part_1_base64)?;
+        let key_part_2 = base64::decode(&self.key_part_2_base64)?;
+        Ok(make_key!(self.prefix, &key_part_1, &key_part_2))
+    }
+
+    fn state(&self) -> i16 {
+        self.state
     }
 }
 
@@ -1325,25 +1391,31 @@ impl CertStorage {
             {
                 let mut issuer = nsCString::new();
                 try_ns!(revocation.GetIssuer(&mut *issuer).to_result(), or continue);
-                let issuer = try_ns!(base64::decode(&issuer), or continue);
 
                 let mut serial = nsCString::new();
                 try_ns!(revocation.GetSerial(&mut *serial).to_result(), or continue);
-                let serial = try_ns!(base64::decode(&serial), or continue);
 
-                entries.push((make_key!(PREFIX_REV_IS, &issuer, &serial), state));
+                entries.push(EncodedSecurityState::new(
+                    PREFIX_REV_IS,
+                    issuer,
+                    serial,
+                    state,
+                ));
             } else if let Some(revocation) =
                 (*revocation).query_interface::<nsISubjectAndPubKeyRevocationState>()
             {
                 let mut subject = nsCString::new();
                 try_ns!(revocation.GetSubject(&mut *subject).to_result(), or continue);
-                let subject = try_ns!(base64::decode(&subject), or continue);
 
                 let mut pub_key_hash = nsCString::new();
                 try_ns!(revocation.GetPubKey(&mut *pub_key_hash).to_result(), or continue);
-                let pub_key_hash = try_ns!(base64::decode(&pub_key_hash), or continue);
 
-                entries.push((make_key!(PREFIX_REV_SPK, &subject, &pub_key_hash), state));
+                entries.push(EncodedSecurityState::new(
+                    PREFIX_REV_SPK,
+                    subject,
+                    pub_key_hash,
+                    state,
+                ));
             }
         }
 
@@ -1416,13 +1488,16 @@ impl CertStorage {
 
             let mut subject = nsCString::new();
             try_ns!(crlite_entry.GetSubject(&mut *subject).to_result(), or continue);
-            let subject = try_ns!(base64::decode(&subject), or continue);
 
             let mut pub_key_hash = nsCString::new();
             try_ns!(crlite_entry.GetSpkiHash(&mut *pub_key_hash).to_result(), or continue);
-            let pub_key_hash = try_ns!(base64::decode(&pub_key_hash), or continue);
 
-            crlite_entries.push((make_key!(PREFIX_CRLITE, &subject, &pub_key_hash), state));
+            crlite_entries.push(EncodedSecurityState::new(
+                PREFIX_CRLITE,
+                subject,
+                pub_key_hash,
+                state,
+            ));
         }
 
         let task = Box::new(try_ns!(SecurityStateTask::new(
@@ -1566,10 +1641,8 @@ impl CertStorage {
         for cert in certs {
             let mut der = nsCString::new();
             try_ns!((*cert).GetCert(&mut *der).to_result(), or continue);
-            let der = try_ns!(base64::decode(&der), or continue);
             let mut subject = nsCString::new();
             try_ns!((*cert).GetSubject(&mut *subject).to_result(), or continue);
-            let subject = try_ns!(base64::decode(&subject), or continue);
             let mut trust: i16 = 0;
             try_ns!((*cert).GetTrust(&mut trust).to_result(), or continue);
             cert_entries.push((der, subject, trust));
@@ -1595,16 +1668,11 @@ impl CertStorage {
         if hashes.is_null() || callback.is_null() {
             return NS_ERROR_NULL_POINTER;
         }
-        let hashes = &*hashes;
-        let mut hash_entries = Vec::with_capacity(hashes.len());
-        for hash in hashes {
-            let hash_decoded = try_ns!(base64::decode(&*hash), or continue);
-            hash_entries.push(hash_decoded);
-        }
+        let hashes = (*hashes).to_vec();
         let task = Box::new(try_ns!(SecurityStateTask::new(
             &*callback,
             &self.security_state,
-            move |ss| ss.remove_certs_by_hashes(&hash_entries),
+            move |ss| ss.remove_certs_by_hashes(&hashes),
         )));
         let runnable = try_ns!(TaskRunnable::new("RemoveCertsByHashes", task));
         try_ns!(TaskRunnable::dispatch(runnable, self.queue.coerce()));
