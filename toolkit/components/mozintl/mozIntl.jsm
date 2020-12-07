@@ -727,8 +727,9 @@ class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
 }
 
 class MozIntl {
-  NumberFormat = Intl.NumberFormat;
   Collator = Intl.Collator;
+  ListFormat = Intl.ListFormat;
+  NumberFormat = Intl.NumberFormat;
   PluralRules = Intl.PluralRules;
   RelativeTimeFormat = MozRelativeTimeFormat;
 
