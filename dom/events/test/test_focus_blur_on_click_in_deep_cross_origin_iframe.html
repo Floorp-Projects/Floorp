@@ -72,10 +72,9 @@ add_task(async () => {
     window.addEventListener("message", function listener(event) {
       if (state == "ready") {
         if (event.data == "innerfocus") {
-          // Non-Fission case
           state = "innerfocusbeforeclick";
         } else if (event.data == "innerclick") {
-          // Fission case: https://bugzilla.mozilla.org/show_bug.cgi?id=1660805
+          ok(false, "Focusing failed to complete before mouseup");
           state = "innerclickbeforefocus";
         } else if (event.data == "middlefocus") {
           is(false, "Should not get an extra middlefocus.");

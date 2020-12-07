@@ -67,10 +67,9 @@ add_task(async () => {
     window.addEventListener("message", function listener(event) {
       if (state == "ready") {
         if (event.data == "focus") {
-          // Non-Fission case
           state = "focusbeforeclick";
         } else if (event.data == "click") {
-          // Fission case: https://bugzilla.mozilla.org/show_bug.cgi?id=1660805
+          ok(false, "Focusing failed to complete before mouseup");
           state = "clickbeforefocus";
         } else {
           ok(false, "Unexpected event");
