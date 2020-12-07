@@ -59,7 +59,8 @@ fn sync_persist() -> XULStoreResult<()> {
     let writes = writes.ok_or(XULStoreError::Unavailable)?;
 
     let db = get_database()?;
-    let mut writer = db.env.write()?;
+    let env = db.rkv.read()?;
+    let mut writer = env.write()?;
 
     for (key, value) in writes.iter() {
         match value {
