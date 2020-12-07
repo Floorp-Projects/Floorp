@@ -13,6 +13,8 @@
 #include "js/friend/WindowProxy.h"    // js::IsWindow, js::IsWindowProxy
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
+#include "vm/BytecodeIterator.h"
+#include "vm/BytecodeLocation.h"
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
 #include "vm/JSObject.h"
@@ -22,21 +24,11 @@
 #include "vm/Xdr.h"
 #include "wasm/WasmInstance.h"
 
-#ifdef DEBUG
-#  include "vm/BytecodeIterator.h"
-#  include "vm/BytecodeLocation.h"
-#endif
-
 #include "gc/Marking-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSScript-inl.h"
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
-
-#ifdef DEBUG
-#  include "vm/BytecodeIterator-inl.h"
-#  include "vm/BytecodeLocation-inl.h"
-#endif
 
 using namespace js;
 
@@ -3346,11 +3338,10 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
       // Figure out if we executed JSOp::FunctionThis and set it.
       bool executedInitThisOp = false;
       if (script->functionHasThisBinding()) {
-        for (jsbytecode* it = script->code(); it < script->codeEnd();
-             it = GetNextPc(it)) {
-          if (JSOp(*it) == JSOp::FunctionThis) {
+        for (const BytecodeLocation& loc : js::AllBytecodesIterable(script)) {
+          if (loc.getOp() == JSOp::FunctionThis) {
             // The next op after JSOp::FunctionThis always sets it.
-            executedInitThisOp = pc > GetNextPc(it);
+            executedInitThisOp = pc > GetNextPc(loc.toRawBytecode());
             break;
           }
         }
