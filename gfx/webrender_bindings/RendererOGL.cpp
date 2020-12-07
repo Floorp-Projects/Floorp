@@ -137,11 +137,6 @@ void RendererOGL::Update() {
   }
 }
 
-static void DoNotifyWebRenderContextPurge(
-    layers::CompositorBridgeParent* aBridge) {
-  aBridge->NotifyWebRenderContextPurge();
-}
-
 static void DoWebRenderDisableNativeCompositor(
     layers::CompositorBridgeParent* aBridge) {
   aBridge->NotifyWebRenderDisableNativeCompositor();
@@ -167,9 +162,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
   if (!mCompositor->BeginFrame()) {
-    if (mCompositor->IsContextLost()) {
-      RenderThread::Get()->HandleDeviceReset("BeginFrame", /* aNotify */ true);
-    }
+    CheckGraphicsResetStatus("BeginFrame", /* aForce */ true);
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return RenderedFrameId();
   }
@@ -256,27 +249,18 @@ bool RendererOGL::EnsureAsyncScreenshot() {
   return false;
 }
 
-void RendererOGL::CheckGraphicsResetStatus() {
-  if (!mCompositor || !mCompositor->gl()) {
-    return;
-  }
-
-  gl::GLContext* gl = mCompositor->gl();
-  if (gl->IsSupported(gl::GLFeature::robustness)) {
-    GLenum resetStatus = gl->fGetGraphicsResetStatus();
-    if (resetStatus == LOCAL_GL_PURGED_CONTEXT_RESET_NV) {
-      layers::CompositorThread()->Dispatch(
-          NewRunnableFunction("DoNotifyWebRenderContextPurgeRunnable",
-                              &DoNotifyWebRenderContextPurge, mBridge));
+void RendererOGL::CheckGraphicsResetStatus(const char* aCaller, bool aForce) {
+  if (mCompositor) {
+    auto reason = mCompositor->IsContextLost(aForce);
+    if (reason != LOCAL_GL_NO_ERROR) {
+      RenderThread::Get()->HandleDeviceReset(aCaller, mBridge, reason);
     }
   }
 }
 
 void RendererOGL::WaitForGPU() {
   if (!mCompositor->WaitForGPU()) {
-    if (mCompositor->IsContextLost()) {
-      RenderThread::Get()->HandleDeviceReset("WaitForGPU", /* aNotify */ true);
-    }
+    CheckGraphicsResetStatus("WaitForGPU", /* aForce */ true);
   }
 }
 

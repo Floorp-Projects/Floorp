@@ -153,7 +153,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void SimulateDeviceReset();
   void DisableWebRender(wr::WebRenderError aError, const nsCString& aMsg);
   void NotifyWebRenderError(wr::WebRenderError aError);
-  void OnInProcessDeviceReset();
+  void OnInProcessDeviceReset(bool aTrackThreshold);
   void OnRemoteProcessDeviceReset(GPUProcessHost* aHost) override;
   void NotifyListenersOnCompositeDeviceReset();
 
@@ -217,6 +217,13 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   void RebuildRemoteSessions();
   void RebuildInProcessSessions();
+
+  // Returns true if we crossed the threshold such that we should disable
+  // acceleration.
+  bool OnDeviceReset(bool aTrackThreshold);
+
+  // Returns true if WebRender was enabled and is now disabled.
+  bool DisableWebRenderConfig(wr::WebRenderError aError, const nsCString& aMsg);
 
   void NotifyDisablingWebRender();
 

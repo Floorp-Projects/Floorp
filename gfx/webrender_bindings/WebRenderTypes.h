@@ -761,6 +761,7 @@ enum class WebRenderError : int8_t {
   RENDER,
   NEW_SURFACE,
   VIDEO_OVERLAY,
+  EXCESSIVE_RESETS,
 
   Sentinel /* this must be last for serialization purposes. */
 };

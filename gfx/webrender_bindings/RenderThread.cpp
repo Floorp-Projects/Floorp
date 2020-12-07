@@ -13,6 +13,7 @@
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorManagerParent.h"
@@ -491,7 +492,7 @@ void RenderThread::UpdateAndRender(
     renderer->Update();
   }
   // Check graphics reset status even when rendering is skipped.
-  renderer->CheckGraphicsResetStatus();
+  renderer->CheckGraphicsResetStatus("PostUpdate", /* aForce */ false);
 
   TimeStamp end = TimeStamp::Now();
   RefPtr<const WebRenderPipelineInfo> info = renderer->FlushPipelineInfo();
@@ -787,18 +788,45 @@ void RenderThread::InitDeviceTask() {
   SharedGL();
 }
 
-void RenderThread::HandleDeviceReset(const char* aWhere, bool aNotify) {
+void RenderThread::HandleDeviceReset(const char* aWhere,
+                                     layers::CompositorBridgeParent* aBridge,
+                                     GLenum aReason) {
   MOZ_ASSERT(IsInRenderThread());
 
   if (mHandlingDeviceReset) {
     return;
   }
 
-  if (aNotify) {
+  // On some platforms (i.e. Linux), we may get a device reset just for purging
+  // video memory with NVIDIA devices, because the driver has edge cases it
+  // needs to clear all of it.
+  if (aReason == LOCAL_GL_PURGED_CONTEXT_RESET_NV) {
+    MOZ_ASSERT(aBridge);
+    layers::CompositorThread()->Dispatch(NewRunnableMethod(
+        "CompositorBridgeParent::NotifyWebRenderContextPurge", aBridge,
+        &layers::CompositorBridgeParent::NotifyWebRenderContextPurge));
+    return;
+  }
+
+  mHandlingDeviceReset = aReason != LOCAL_GL_NO_ERROR;
+  if (mHandlingDeviceReset) {
+    // All RenderCompositors will be destroyed by the GPUProcessManager in
+    // either OnRemoteProcessDeviceReset via the GPUChild, or
+    // OnInProcessDeviceReset here directly.
     gfxCriticalNote << "GFX: RenderThread detected a device reset in "
                     << aWhere;
     if (XRE_IsGPUProcess()) {
       gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+    } else {
+#ifndef XP_WIN
+      // FIXME(aosmond): Do we need to do this on Windows? nsWindow::OnPaint
+      // seems to do its own detection for the parent process.
+      bool guilty = aReason == LOCAL_GL_GUILTY_CONTEXT_RESET_ARB;
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "gfx::GPUProcessManager::OnInProcessDeviceReset", [guilty]() -> void {
+            gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(guilty);
+          }));
+#endif
     }
   }
 
@@ -809,10 +837,6 @@ void RenderThread::HandleDeviceReset(const char* aWhere, bool aNotify) {
       entry.second->ClearCachedResources();
     }
   }
-
-  mHandlingDeviceReset = true;
-  // All RenderCompositors will be destroyed by
-  // GPUChild::RecvNotifyDeviceReset()
 }
 
 bool RenderThread::IsHandlingDeviceReset() {
@@ -829,7 +853,7 @@ void RenderThread::SimulateDeviceReset() {
     // When this function is called GPUProcessManager::SimulateDeviceReset()
     // already triggers destroying all CompositorSessions before re-creating
     // them.
-    HandleDeviceReset("SimulateDeviceReset", /* aNotify */ false);
+    HandleDeviceReset("SimulateDeviceReset", nullptr, LOCAL_GL_NO_ERROR);
   }
 }
 

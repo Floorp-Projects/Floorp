@@ -150,7 +150,19 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
 
-    GPUProcessManager::Get()->OnInProcessDeviceReset();
+    bool guilty;
+    switch (resetReason) {
+      case DeviceResetReason::HUNG:
+      case DeviceResetReason::RESET:
+      case DeviceResetReason::INVALID_CALL:
+        guilty = true;
+        break;
+      default:
+        guilty = false;
+        break;
+    }
+
+    GPUProcessManager::Get()->OnInProcessDeviceReset(guilty);
 
     gfxCriticalNote << "(nsWindow) Finished device reset.";
     return false;
