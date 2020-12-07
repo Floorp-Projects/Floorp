@@ -35,7 +35,6 @@ function add_read_only_cert_override(aHost, aExpectedBits, aSecurityInfo) {
   certOverrideService.rememberValidityOverride(
     aHost,
     8443,
-    {},
     cert,
     aExpectedBits,
     false

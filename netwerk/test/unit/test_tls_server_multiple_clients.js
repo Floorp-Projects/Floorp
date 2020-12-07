@@ -85,7 +85,6 @@ function storeCertOverride(port, cert) {
   certOverrideService.rememberValidityOverride(
     "127.0.0.1",
     port,
-    {},
     cert,
     overrideBits,
     true

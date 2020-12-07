@@ -151,7 +151,6 @@ function run_port_equivalency_test(inPort, outPort) {
   certOverrideService.rememberValidityOverride(
     "example.com",
     inPort,
-    {},
     cert,
     expectedBits,
     expectedTemporary
@@ -162,7 +161,6 @@ function run_port_equivalency_test(inPort, outPort) {
     certOverrideService.hasMatchingOverride(
       "example.com",
       outPort,
-      {},
       cert,
       actualBits,
       actualTemporary
@@ -180,22 +178,14 @@ function run_port_equivalency_test(inPort, outPort) {
     "input override temporary value should match output temporary value"
   );
   Assert.ok(
-    !certOverrideService.hasMatchingOverride(
-      "example.com",
-      563,
-      {},
-      cert,
-      {},
-      {}
-    ),
+    !certOverrideService.hasMatchingOverride("example.com", 563, cert, {}, {}),
     `override set on port ${inPort} should not match port 563`
   );
-  certOverrideService.clearValidityOverride("example.com", inPort, {});
+  certOverrideService.clearValidityOverride("example.com", inPort);
   Assert.ok(
     !certOverrideService.hasMatchingOverride(
       "example.com",
       outPort,
-      {},
       cert,
       actualBits,
       {}
@@ -325,7 +315,7 @@ function add_simple_tests() {
     let certOverrideService = Cc[
       "@mozilla.org/security/certoverride;1"
     ].getService(Ci.nsICertOverrideService);
-    certOverrideService.clearValidityOverride("mitm.example.com", 8443, {});
+    certOverrideService.clearValidityOverride("mitm.example.com", 8443);
     run_next_test();
   });
   add_cert_override_test(
@@ -341,7 +331,7 @@ function add_simple_tests() {
     let certOverrideService = Cc[
       "@mozilla.org/security/certoverride;1"
     ].getService(Ci.nsICertOverrideService);
-    certOverrideService.clearValidityOverride("mitm.example.com", 8443, {});
+    certOverrideService.clearValidityOverride("mitm.example.com", 8443);
     run_next_test();
   });
   // If the canary issuer doesn't match the one we see, we exepct and unknown
@@ -361,7 +351,7 @@ function add_simple_tests() {
     let certOverrideService = Cc[
       "@mozilla.org/security/certoverride;1"
     ].getService(Ci.nsICertOverrideService);
-    certOverrideService.clearValidityOverride("mitm.example.com", 8443, {});
+    certOverrideService.clearValidityOverride("mitm.example.com", 8443);
     run_next_test();
   });
   add_cert_override_test(
@@ -423,8 +413,7 @@ function add_simple_tests() {
     ].getService(Ci.nsICertOverrideService);
     certOverrideService.clearValidityOverride(
       "end-entity-issued-by-v1-cert.example.com",
-      8443,
-      {}
+      8443
     );
     let v1Cert = constructCertFromFile("bad_certs/v1Cert.pem");
     setCertTrust(v1Cert, "CTu,,");
@@ -493,7 +482,6 @@ function add_simple_tests() {
       certOverrideService.hasMatchingOverride(
         uri.asciiHost,
         8443,
-        {},
         cert,
         {},
         {}
@@ -505,7 +493,6 @@ function add_simple_tests() {
         !certOverrideService.hasMatchingOverride(
           uri.displayHost,
           8443,
-          {},
           cert,
           {},
           {}
@@ -521,7 +508,6 @@ function add_simple_tests() {
         !certOverrideService.hasMatchingOverride(
           invalidHost,
           8443,
-          {},
           cert,
           {},
           {}
@@ -542,172 +528,48 @@ function add_simple_tests() {
     certOverrideService.rememberValidityOverride(
       "example.com",
       443,
-      {},
       cert,
       expectedBits,
       false
     );
     Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "example.com",
-        443,
-        {},
-        cert,
-        {},
-        {}
-      ),
+      certOverrideService.hasMatchingOverride("example.com", 443, cert, {}, {}),
       "Should have added override for example.com:443"
     );
     certOverrideService.rememberValidityOverride(
       "example.com",
       80,
-      {},
       cert,
       expectedBits,
       false
     );
     Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "example.com",
-        80,
-        {},
-        cert,
-        {},
-        {}
-      ),
+      certOverrideService.hasMatchingOverride("example.com", 80, cert, {}, {}),
       "Should have added override for example.com:80"
     );
     certOverrideService.rememberValidityOverride(
       "example.org",
       443,
-      {},
       cert,
       expectedBits,
       false
     );
     Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "example.org",
-        443,
-        {},
-        cert,
-        {},
-        {}
-      ),
+      certOverrideService.hasMatchingOverride("example.org", 443, cert, {}, {}),
       "Should have added override for example.org:443"
-    );
-    Assert.ok(
-      !certOverrideService.hasMatchingOverride(
-        "example.org",
-        443,
-        { privateBrowsingId: 1 },
-        cert,
-        {},
-        {}
-      ),
-      "Should not have override for example.org:443 with privateBrowsingId 1"
-    );
-    Assert.ok(
-      !certOverrideService.hasMatchingOverride(
-        "example.org",
-        443,
-        { privateBrowsingId: 2 },
-        cert,
-        {},
-        {}
-      ),
-      "Should not have override for example.org:443 with privateBrowsingId 2"
-    );
-    Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "example.org",
-        443,
-        { firstPartyDomain: "example.org", userContextId: 1 },
-        cert,
-        {},
-        {}
-      ),
-      "Should ignore firstPartyDomain and userContextId when checking overrides"
     );
     certOverrideService.rememberValidityOverride(
       "example.org",
       80,
-      {},
       cert,
       expectedBits,
       true
     );
     Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "example.org",
-        80,
-        {},
-        cert,
-        {},
-        {}
-      ),
+      certOverrideService.hasMatchingOverride("example.org", 80, cert, {}, {}),
       "Should have added override for example.org:80"
     );
-    certOverrideService.rememberValidityOverride(
-      "test.example.org",
-      443,
-      { firstPartyDomain: "example.org", userContextId: 1 },
-      cert,
-      expectedBits,
-      false
-    );
-    Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "test.example.org",
-        443,
-        {},
-        cert,
-        {},
-        {}
-      ),
-      "Should ignore firstPartyDomain and userContextId when adding overrides"
-    );
-    Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "test.example.org",
-        443,
-        { firstPartyDomain: "example.com", userContextId: 2 },
-        cert,
-        {},
-        {}
-      ),
-      "Should ignore firstPartyDomain and userContextId when checking overrides"
-    );
-    certOverrideService.rememberValidityOverride(
-      "example.org",
-      443,
-      { privateBrowsingId: 1 },
-      cert,
-      expectedBits,
-      false
-    );
-    Assert.ok(
-      certOverrideService.hasMatchingOverride(
-        "example.org",
-        443,
-        { privateBrowsingId: 1 },
-        cert,
-        {},
-        {}
-      ),
-      "Should have added override for example.org:443 with privateBrowsingId 1"
-    );
-    Assert.ok(
-      !certOverrideService.hasMatchingOverride(
-        "example.org",
-        443,
-        { privateBrowsingId: 2 },
-        cert,
-        {},
-        {}
-      ),
-      "Should not have override for example.org:443 with privateBrowsingId 2"
-    );
+
     // Clear them all...
     certOverrideService.clearAllOverrides();
 
@@ -716,7 +578,6 @@ function add_simple_tests() {
       !certOverrideService.hasMatchingOverride(
         "example.com",
         443,
-        {},
         cert,
         {},
         {}
@@ -724,21 +585,13 @@ function add_simple_tests() {
       "Should have removed override for example.com:443"
     );
     Assert.ok(
-      !certOverrideService.hasMatchingOverride(
-        "example.com",
-        80,
-        {},
-        cert,
-        {},
-        {}
-      ),
+      !certOverrideService.hasMatchingOverride("example.com", 80, cert, {}, {}),
       "Should have removed override for example.com:80"
     );
     Assert.ok(
       !certOverrideService.hasMatchingOverride(
         "example.org",
         443,
-        {},
         cert,
         {},
         {}
@@ -746,26 +599,8 @@ function add_simple_tests() {
       "Should have removed override for example.org:443"
     );
     Assert.ok(
-      !certOverrideService.hasMatchingOverride(
-        "example.org",
-        80,
-        {},
-        cert,
-        {},
-        {}
-      ),
+      !certOverrideService.hasMatchingOverride("example.org", 80, cert, {}, {}),
       "Should have removed override for example.org:80"
-    );
-    Assert.ok(
-      !certOverrideService.hasMatchingOverride(
-        "example.org",
-        443,
-        { privateBrowsingId: 1 },
-        cert,
-        {},
-        {}
-      ),
-      "Should have removed override for example.org:443 with privateBrowsingId 1"
     );
 
     run_next_test();

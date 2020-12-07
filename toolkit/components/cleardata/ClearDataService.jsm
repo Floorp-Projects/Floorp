@@ -107,7 +107,7 @@ const CertCleaner = {
       Ci.nsICertOverrideService
     );
     return new Promise(aResolve => {
-      overrideService.clearValidityOverride(aHost, -1, aOriginAttributes);
+      overrideService.clearValidityOverride(aHost, -1);
       aResolve();
     });
   },
