@@ -6,7 +6,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/mozalloc.h"
-#include "mozilla/ScopeExit.h"
 #include "nsCOMPtr.h"
 #include "nsIMemoryReporter.h"
 #include "nsServiceManagerUtils.h"

@@ -16,6 +16,7 @@
 #include "TCPFastOpenLayer.h"
 #include "TunnelUtils.h"
 #include "base/basictypes.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsCRT.h"

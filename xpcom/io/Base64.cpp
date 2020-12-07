@@ -7,7 +7,6 @@
 #include "Base64.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIInputStream.h"
 #include "nsString.h"

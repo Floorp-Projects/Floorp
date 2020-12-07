@@ -21,7 +21,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/Unused.h"

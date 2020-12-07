@@ -22,6 +22,7 @@
 #include "AudioDestinationNode.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
+#include "mozilla/ScopeExit.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Span.h"
 #include "PlayingRefChangeHandler.h"

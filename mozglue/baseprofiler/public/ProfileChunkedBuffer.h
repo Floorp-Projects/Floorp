@@ -14,6 +14,7 @@
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 
 #include <cstdio>

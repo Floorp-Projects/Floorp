@@ -34,6 +34,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_media.h"
 
 #include "MediaUtils.h"

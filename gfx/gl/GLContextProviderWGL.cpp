@@ -17,6 +17,7 @@
 
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/webrender/RenderThread.h"

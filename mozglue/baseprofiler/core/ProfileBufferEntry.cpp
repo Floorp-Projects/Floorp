@@ -10,6 +10,7 @@
 #include <type_traits>
 
 #include "mozilla/Logging.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk.h"
 

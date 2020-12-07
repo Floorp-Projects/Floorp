@@ -20,6 +20,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcInfo.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ContentParent.h"

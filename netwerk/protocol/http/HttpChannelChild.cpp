@@ -43,6 +43,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/SocketProcessBridgeChild.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "SerializedLoadContext.h"

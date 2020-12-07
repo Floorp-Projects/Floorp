@@ -6,7 +6,6 @@
 
 #include "StreamFilterParent.h"
 
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/net/ChannelEventQueue.h"
