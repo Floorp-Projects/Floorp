@@ -87,6 +87,17 @@ async function heuristicIsNotRestyled(expectedType, resultDetails) {
   );
 
   Assert.equal(
+    BrowserTestUtils.is_visible(resultDetails.element.separator),
+    !!actionText,
+    "The title separator is " + (actionText ? "visible" : "hidden")
+  );
+  Assert.equal(
+    BrowserTestUtils.is_visible(resultDetails.element.action),
+    !!actionText,
+    "The action text is " + (actionText ? "visible" : "hidden")
+  );
+
+  Assert.equal(
     resultDetails.image,
     data.icon,
     "The result has the expected non-styled icon."
@@ -151,6 +162,15 @@ async function heuristicIsRestyled(
     resultDetails.displayed.title,
     searchString,
     "The restyled result's title should be equal to the search string."
+  );
+
+  Assert.ok(
+    BrowserTestUtils.is_visible(resultDetails.element.separator),
+    "The restyled result's title separator should be visible"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_visible(resultDetails.element.action),
+    "The restyled result's action text should be visible"
   );
 
   if (engine) {
