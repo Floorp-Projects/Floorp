@@ -192,13 +192,13 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
 
   nsrefcnt count = --mRefCnt;
   MOZ_ASSERT(int32_t(count) >= 0, "dup release");
-  NS_LOG_RELEASE(this, count, "HttpChannelChild");
 
   // Normally we Send_delete in OnStopRequest, but when we need to retain the
   // remote channel for security info IPDL itself holds 1 reference, so we
   // Send_delete when refCnt==1.  But if !CanSend(), then there's nobody to send
   // to, so we fall through.
   if (mKeptAlive && count == 1 && CanSend()) {
+    NS_LOG_RELEASE(this, 1, "HttpChannelChild");
     mKeptAlive = false;
     // We send a message to the parent, which calls SendDelete, and then the
     // child calling Send__delete__() to finally drop the refcount to 0.
@@ -213,6 +213,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
     // has been sucessfully redirected.
     if (MOZ_LIKELY(mOnStartRequestCalled && mOnStopRequestCalled) ||
         !mListener) {
+      NS_LOG_RELEASE(this, 0, "HttpChannelChild");
       delete this;
       return 0;
     }
@@ -221,22 +222,45 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
     if (NS_SUCCEEDED(mStatus)) {
       mStatus = NS_ERROR_ABORT;
     }
-    nsresult rv = NS_DispatchToMainThread(
-        NewRunnableMethod("~HttpChannelChild>DoNotifyListener", this,
-                          &HttpChannelChild::DoNotifyListener));
-    if (NS_FAILED(rv)) {
-      // Prevent loops.
-      mOnStartRequestCalled = true;
-      mOnStopRequestCalled = true;
-      // This reverts the stabilization we have made above.  Instead of
-      // doing `delete this` it's safer to call Release() again in case the
-      // dispatch somehow leaks and there has been a reference added.
-      return Release();
-    }
 
-    return 0;
+    // Turn the stabilization refcount into a regular strong reference.
+
+    // 1) We tell refcount logging about the "stabilization" AddRef, which
+    // will become the reference for |channel|. We do this first so that we
+    // don't tell refcount logging that the refcount has dropped to zero, which
+    // it will interpret as destroying the object.
+    NS_LOG_ADDREF(this, 2, "HttpChannelChild", sizeof(*this));
+
+    // 2) We tell refcount logging about the original call to Release().
+    NS_LOG_RELEASE(this, 1, "HttpChannelChild");
+
+    // 3) Finally, we turn the reference into a regular smart pointer.
+    RefPtr<HttpChannelChild> channel = dont_AddRef(this);
+
+    // This runnable will create a strong reference to |this|.
+    NS_DispatchToMainThread(
+        NewRunnableMethod("~HttpChannelChild>DoNotifyListener", channel,
+                          &HttpChannelChild::DoNotifyListener));
+
+    // If NS_DispatchToMainThread failed then we're going to leak the runnable,
+    // and thus the channel, so there's no need to do anything else.
+
+    // We should have already done any special handling for the refcount = 1
+    // case when the refcount first went from 2 to 1. We don't want it to happen
+    // when |channel| is destroyed.
+    MOZ_ASSERT(!mKeptAlive || !CanSend());
+
+    // XXX If std::move(channel) is allowed, then we don't have to have extra
+    // checks for the refcount going from 2 to 1. See bug 1680217.
+
+    // This will release the stabilization refcount, which is necessary to avoid
+    // a leak.
+    channel = nullptr;
+
+    return mRefCnt;
   }
 
+  NS_LOG_RELEASE(this, count, "HttpChannelChild");
   return count;
 }
 
