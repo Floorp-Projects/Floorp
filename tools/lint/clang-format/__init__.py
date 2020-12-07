@@ -144,6 +144,11 @@ def lint(paths, config, fix=None, **lintargs):
         return []
 
     cmd_args = [binary]
+
+    base_command = cmd_args + ["--version"]
+    version = run_process(config, base_command)
+    log.debug("Version: {}".format(version))
+
     if fix:
         cmd_args.append("-i")
     else:
