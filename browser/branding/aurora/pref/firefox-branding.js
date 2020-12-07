@@ -18,6 +18,7 @@ pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/aurora/"
 pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/aurora/");
 
 pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%beta/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
+pref("app.releaseNotesURL.aboutDialog", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%beta/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-desktop&utm_campaign=about-dialog");
 
 // The number of days a binary is permitted to be old
 // without checking for an update.  This assumes that
