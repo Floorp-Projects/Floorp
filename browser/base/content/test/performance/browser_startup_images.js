@@ -52,7 +52,7 @@ const knownUnshownImages = [
   },
 
   {
-    file: "chrome://global/skin/icons/chevron.svg",
+    file: "chrome://browser/skin/chevron.svg",
     platforms: ["win", "linux", "macosx"],
     intermittentShown: ["win", "linux"],
   },
