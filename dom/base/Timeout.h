@@ -10,11 +10,14 @@
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/ProfileChunkedBuffer.h"
 #include "mozilla/TimeStamp.h"
 #include "nsGlobalWindowInner.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
+
+#ifdef MOZ_GECKO_PROFILER
+#  include "mozilla/ProfileChunkedBuffer.h"
+#endif
 
 namespace mozilla {
 namespace dom {
