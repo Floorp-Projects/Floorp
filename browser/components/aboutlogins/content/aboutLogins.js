@@ -144,7 +144,7 @@ window.addEventListener("AboutLoginsRemoveAllLoginsDialog", () => {
   options.confirmCheckboxLabel =
     "about-logins-confirm-remove-all-dialog-checkbox-label";
   options.confirmButtonLabel =
-    "about-logins-confirm-remove-all-dialog-confirm-button";
+    "about-logins-confirm-remove-all-dialog-confirm-button-label";
   options.count = numberOfLogins;
 
   let dialog = document.querySelector("remove-logins-dialog");

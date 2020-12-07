@@ -110,7 +110,7 @@ add_task(async function test_remove_all_dialog_l10n() {
     );
     is(
       removeAllButton.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-confirm-button",
+      "about-logins-confirm-remove-all-dialog-confirm-button-label",
       "Remove all button contents should match l10n-id attribute set on outer element"
     );
     is(
@@ -280,7 +280,7 @@ add_task(async function test_remove_all_dialog_remove_logins() {
     );
     is(
       removeAllButton.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-confirm-button",
+      "about-logins-confirm-remove-all-dialog-confirm-button-label",
       "Remove all button contents should match l10n-id attribute set on outer element"
     );
     is(

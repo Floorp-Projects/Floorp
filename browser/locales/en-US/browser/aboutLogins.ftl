@@ -161,7 +161,12 @@ about-logins-confirm-remove-dialog-title = Remove this login?
 confirm-delete-dialog-message = This action cannot be undone.
 about-logins-confirm-remove-dialog-confirm-button = Remove
 
-about-logins-confirm-remove-all-dialog-confirm-button = Remove All
+about-logins-confirm-remove-all-dialog-confirm-button-label =
+  { $count ->
+     [1] Remove
+    *[other] Remove All
+  }
+
 about-logins-confirm-remove-all-dialog-checkbox-label =
   { $count ->
      [1] Yes, remove this login
