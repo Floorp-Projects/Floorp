@@ -755,6 +755,8 @@ template <class ClassType, bool Owning>
 struct nsRunnableMethodReceiver {
   RefPtr<ClassType> mObj;
   explicit nsRunnableMethodReceiver(ClassType* aObj) : mObj(aObj) {}
+  explicit nsRunnableMethodReceiver(RefPtr<ClassType>&& aObj)
+      : mObj(std::move(aObj)) {}
   ~nsRunnableMethodReceiver() { Revoke(); }
   ClassType* Get() const { return mObj.get(); }
   void Revoke() { mObj = nullptr; }
