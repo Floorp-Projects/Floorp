@@ -234,11 +234,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   // Allocated space for fallback IC stubs.
   FallbackICStubSpace fallbackStubSpace_ = {};
 
-  // Like JSScript::jitCodeRaw_ but when the script has an IonScript this can
-  // point to a separate entry point that skips the argument type checks.
-  // TODO(no-TI): remove.
-  uint8_t* jitCodeSkipArgCheck_ = nullptr;
-
   // Profile string used by the profiler for Baseline Interpreter frames.
   const char* profileString_ = nullptr;
 
@@ -342,9 +337,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   static constexpr Offset offsetOfICEntries() { return sizeof(JitScript); }
 
-  static constexpr size_t offsetOfJitCodeSkipArgCheck() {
-    return offsetof(JitScript, jitCodeSkipArgCheck_);
-  }
   static constexpr size_t offsetOfBaselineScript() {
     return offsetof(JitScript, baselineScript_);
   }
