@@ -123,11 +123,12 @@ pub enum PingUploadTask {
     /// * Pending pings queue is empty, no more pings to request;
     /// * Requester has gotten more than MAX_WAIT_ATTEMPTS (3, by default) `PingUploadTask::Wait` responses in a row;
     /// * Requester has reported more than MAX_RECOVERABLE_FAILURES_PER_UPLOADING_WINDOW
-    ///   recoverable upload failures on the same uploading window[1]
+    ///   recoverable upload failures on the same uploading window (see below)
     ///   and should stop requesting at this moment.
     ///
-    /// [1]: An "uploading window" starts when a requester gets a new `PingUploadTask::Upload(PingRequest)`
-    ///      response and finishes when they finally get a `PingUploadTask::Done` or `PingUploadTask::Wait` response.
+    /// An "uploading window" starts when a requester gets a new
+    /// `PingUploadTask::Upload(PingRequest)` response and finishes when they
+    /// finally get a `PingUploadTask::Done` or `PingUploadTask::Wait` response.
     Done,
 }
 

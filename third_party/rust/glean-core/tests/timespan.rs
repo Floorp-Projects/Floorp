@@ -327,3 +327,27 @@ fn timespan_is_not_tracked_across_upload_toggle() {
         test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidState, None)
     );
 }
+
+#[test]
+fn time_cannot_go_backwards() {
+    let (glean, _t) = new_glean(None);
+
+    let mut metric: TimespanMetric = TimespanMetric::new(
+        CommonMetricData {
+            name: "raw_timespan".into(),
+            category: "test".into(),
+            send_in_pings: vec!["test1".into()],
+            ..Default::default()
+        },
+        TimeUnit::Millisecond,
+    );
+
+    // Time cannot go backwards.
+    metric.set_start(&glean, 10);
+    metric.set_stop(&glean, 0);
+    assert!(metric.test_get_value(&glean, "test1").is_none());
+    assert_eq!(
+        Ok(1),
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None),
+    );
+}

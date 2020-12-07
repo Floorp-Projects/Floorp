@@ -12,9 +12,10 @@ use crate::metrics::TimerId;
 pub trait TimingDistribution {
     /// Starts tracking time for the provided metric.
     ///
-    /// This records an error if it’s already tracking time (i.e. start was already
-    /// called with no corresponding [stop]): in that case the original
-    /// start time will be preserved.
+    /// This records an error if it’s already tracking time (i.e.
+    /// [`set_start`](TimingDistribution::set_start) was already called with no corresponding
+    /// [`set_stop_and_accumulate`](TimingDistribution::set_stop_and_accumulate)): in that case the
+    /// original start time will be preserved.
     ///
     /// # Arguments
     ///
@@ -55,11 +56,11 @@ pub trait TimingDistribution {
     /// will take care of filtering and reporting errors for any provided negative
     /// sample.
     ///
-    /// Please note that this assumes that the provided samples are already in the
-    /// "unit" declared by the instance of the implementing metric type (e.g. if the
-    /// implementing class is a [TimingDistributionMetricType] and the instance this
-    /// method was called on is using [TimeUnit.Second], then `samples` are assumed
-    /// to be in that unit).
+    /// Please note that this assumes that the provided samples are already in
+    /// the "unit" declared by the instance of the implementing metric type
+    /// (e.g. if the implementing class is a [TimingDistribution] and the
+    /// instance this method was called on is using second, then `samples` are
+    /// assumed to be in that unit).
     ///
     /// # Arguments
     ///

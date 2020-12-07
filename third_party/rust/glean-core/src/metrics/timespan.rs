@@ -92,7 +92,20 @@ impl TimespanMetric {
             return;
         }
 
-        let duration = stop_time - self.start_time.take().unwrap();
+        let start_time = self.start_time.take().unwrap();
+        let duration = match stop_time.checked_sub(start_time) {
+            Some(duration) => duration,
+            None => {
+                record_error(
+                    glean,
+                    &self.meta,
+                    ErrorType::InvalidValue,
+                    "Timespan was negative",
+                    None,
+                );
+                return;
+            }
+        };
         let duration = Duration::from_nanos(duration);
         self.set_raw(glean, duration, false);
     }

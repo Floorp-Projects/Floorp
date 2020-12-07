@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#![deny(broken_intra_doc_links)]
 #![deny(missing_docs)]
 
 //! Glean is a modern approach for recording and sending Telemetry data.
@@ -46,7 +47,9 @@ pub use configuration::Configuration;
 use configuration::DEFAULT_GLEAN_ENDPOINT;
 pub use core_metrics::ClientInfoMetrics;
 pub use glean_core::{
-    global_glean, setup_glean, CommonMetricData, Error, ErrorType, Glean, Lifetime, Result,
+    global_glean,
+    metrics::{RecordedEvent, TimeUnit},
+    setup_glean, CommonMetricData, Error, ErrorType, Glean, Lifetime, Result,
 };
 use private::RecordedExperimentData;
 
@@ -74,6 +77,9 @@ struct RustBindingsState {
 
     /// Client info metrics set by the application.
     client_info: ClientInfoMetrics,
+
+    /// An instance of the upload manager
+    upload_manager: net::UploadManager,
 }
 
 /// Set when `glean::initialize()` returns.
@@ -124,32 +130,6 @@ fn setup_state(state: RustBindingsState) {
     }
 }
 
-/// An instance of the upload manager.
-///
-/// Requires a Mutex, because in tests we can actual reset this.
-static UPLOAD_MANAGER: OnceCell<Mutex<net::UploadManager>> = OnceCell::new();
-
-/// Get a reference to the global upload manager.
-///
-/// Panics if no global state object was set.
-fn get_upload_manager() -> &'static Mutex<net::UploadManager> {
-    UPLOAD_MANAGER.get().unwrap()
-}
-
-/// Set or replace the global upload object.
-fn setup_upload_manager(upload_manager: net::UploadManager) {
-    if UPLOAD_MANAGER.get().is_none() {
-        if UPLOAD_MANAGER.set(Mutex::new(upload_manager)).is_err() {
-            log::error!(
-                "Global upload state object is initialized already. This probably happened concurrently."
-            );
-        }
-    } else {
-        let mut lock = UPLOAD_MANAGER.get().unwrap().lock().unwrap();
-        *lock = upload_manager;
-    }
-}
-
 fn with_glean<F, R>(f: F) -> R
 where
     F: FnOnce(&Glean) -> R,
@@ -183,139 +163,142 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
         return;
     }
 
-    std::thread::spawn(move || {
-        let core_cfg = glean_core::Configuration {
-            upload_enabled: cfg.upload_enabled,
-            data_path: cfg.data_path.clone(),
-            application_id: cfg.application_id.clone(),
-            language_binding_name: LANGUAGE_BINDING_NAME.into(),
-            max_events: cfg.max_events,
-            delay_ping_lifetime_io: cfg.delay_ping_lifetime_io,
-        };
+    std::thread::Builder::new()
+        .name("glean.init".into())
+        .spawn(move || {
+            let core_cfg = glean_core::Configuration {
+                upload_enabled: cfg.upload_enabled,
+                data_path: cfg.data_path.clone(),
+                application_id: cfg.application_id.clone(),
+                language_binding_name: LANGUAGE_BINDING_NAME.into(),
+                max_events: cfg.max_events,
+                delay_ping_lifetime_io: cfg.delay_ping_lifetime_io,
+            };
 
-        let glean = match Glean::new(core_cfg) {
-            Ok(glean) => glean,
-            Err(err) => {
-                log::error!("Failed to initialize Glean: {}", err);
+            let glean = match Glean::new(core_cfg) {
+                Ok(glean) => glean,
+                Err(err) => {
+                    log::error!("Failed to initialize Glean: {}", err);
+                    return;
+                }
+            };
+
+            // glean-core already takes care of logging errors: other bindings
+            // simply do early returns, as we're doing.
+            if glean_core::setup_glean(glean).is_err() {
                 return;
             }
-        };
 
-        // glean-core already takes care of logging errors: other bindings
-        // simply do early returns, as we're doing.
-        if glean_core::setup_glean(glean).is_err() {
-            return;
-        }
+            log::info!("Glean initialized");
 
-        log::info!("Glean initialized");
+            // Initialize the ping uploader.
+            let upload_manager = net::UploadManager::new(
+                cfg.server_endpoint
+                    .unwrap_or_else(|| DEFAULT_GLEAN_ENDPOINT.to_string()),
+                cfg.uploader
+                    .unwrap_or_else(|| Box::new(net::HttpUploader) as Box<dyn net::PingUploader>),
+            );
 
-        // Now make this the global object available to others.
-        setup_state(RustBindingsState {
-            channel: cfg.channel,
-            client_info,
-        });
+            // Now make this the global object available to others.
+            setup_state(RustBindingsState {
+                channel: cfg.channel,
+                client_info,
+                upload_manager,
+            });
 
-        // Initialize the ping uploader.
-        setup_upload_manager(net::UploadManager::new(
-            cfg.server_endpoint
-                .unwrap_or_else(|| DEFAULT_GLEAN_ENDPOINT.to_string()),
-            cfg.uploader
-                .unwrap_or_else(|| Box::new(net::HttpUploader) as Box<dyn net::PingUploader>),
-        ));
+            let upload_enabled = cfg.upload_enabled;
 
-        let upload_enabled = cfg.upload_enabled;
+            with_glean_mut(|glean| {
+                let state = global_state().lock().unwrap();
 
-        with_glean_mut(|glean| {
-            let state = global_state().lock().unwrap();
-
-            // The debug view tag might have been set before initialize,
-            // get the cached value and set it.
-            if let Some(tag) = PRE_INIT_DEBUG_VIEW_TAG.get() {
-                let lock = tag.try_lock();
-                if let Ok(ref debug_tag) = lock {
-                    glean.set_debug_view_tag(debug_tag);
+                // The debug view tag might have been set before initialize,
+                // get the cached value and set it.
+                if let Some(tag) = PRE_INIT_DEBUG_VIEW_TAG.get() {
+                    let lock = tag.try_lock();
+                    if let Ok(ref debug_tag) = lock {
+                        glean.set_debug_view_tag(debug_tag);
+                    }
                 }
-            }
-            // The log pings debug option might have been set before initialize,
-            // get the cached value and set it.
-            let log_pigs = PRE_INIT_LOG_PINGS.load(Ordering::SeqCst);
-            if log_pigs {
-                glean.set_log_pings(log_pigs);
-            }
-            // The source tags might have been set before initialize,
-            // get the cached value and set them.
-            if let Some(tags) = PRE_INIT_SOURCE_TAGS.get() {
-                let lock = tags.try_lock();
-                if let Ok(ref source_tags) = lock {
-                    glean.set_source_tags(source_tags.to_vec());
+                // The log pings debug option might have been set before initialize,
+                // get the cached value and set it.
+                let log_pigs = PRE_INIT_LOG_PINGS.load(Ordering::SeqCst);
+                if log_pigs {
+                    glean.set_log_pings(log_pigs);
                 }
+                // The source tags might have been set before initialize,
+                // get the cached value and set them.
+                if let Some(tags) = PRE_INIT_SOURCE_TAGS.get() {
+                    let lock = tags.try_lock();
+                    if let Ok(ref source_tags) = lock {
+                        glean.set_source_tags(source_tags.to_vec());
+                    }
+                }
+
+                // Get the current value of the dirty flag so we know whether to
+                // send a dirty startup baseline ping below.  Immediately set it to
+                // `false` so that dirty startup pings won't be sent if Glean
+                // initialization does not complete successfully.
+                // TODO Bug 1672956 will decide where to set this flag again.
+                let dirty_flag = glean.is_dirty_flag_set();
+                glean.set_dirty_flag(false);
+
+                // Register builtin pings.
+                // Unfortunately we need to manually list them here to guarantee
+                // they are registered synchronously before we need them.
+                // We don't need to handle the deletion-request ping. It's never touched
+                // from the language implementation.
+                glean.register_ping_type(&glean_metrics::pings::baseline.ping_type);
+                glean.register_ping_type(&glean_metrics::pings::metrics.ping_type);
+                glean.register_ping_type(&glean_metrics::pings::events.ping_type);
+
+                // TODO: perform registration of pings that were attempted to be
+                // registered before init. See bug 1673850.
+
+                // If this is the first time ever the Glean SDK runs, make sure to set
+                // some initial core metrics in case we need to generate early pings.
+                // The next times we start, we would have them around already.
+                let is_first_run = glean.is_first_run();
+                if is_first_run {
+                    initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
+                }
+
+                // Deal with any pending events so we can start recording new ones
+                let pings_submitted = glean.on_ready_to_submit_pings();
+
+                // We need to kick off upload in these cases:
+                // 1. Pings were submitted through Glean and it is ready to upload those pings;
+                // 2. Upload is disabled, to upload a possible deletion-request ping.
+                if pings_submitted || !upload_enabled {
+                    state.upload_manager.trigger_upload();
+                }
+
+                // Set up information and scheduling for Glean owned pings. Ideally, the "metrics"
+                // ping startup check should be performed before any other ping, since it relies
+                // on being dispatched to the API context before any other metric.
+                // TODO: start the metrics ping scheduler, will happen in bug 1672951.
+
+                // Check if the "dirty flag" is set. That means the product was probably
+                // force-closed. If that's the case, submit a 'baseline' ping with the
+                // reason "dirty_startup". We only do that from the second run.
+                if !is_first_run && dirty_flag {
+                    // TODO: bug 1672956 - submit_ping_by_name_sync("baseline", "dirty_startup");
+                }
+
+                // From the second time we run, after all startup pings are generated,
+                // make sure to clear `lifetime: application` metrics and set them again.
+                // Any new value will be sent in newly generated pings after startup.
+                if !is_first_run {
+                    glean.clear_application_lifetime_metrics();
+                    initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
+                }
+            });
+
+            // Signal Dispatcher that init is complete
+            if let Err(err) = dispatcher::flush_init() {
+                log::error!("Unable to flush the preinit queue: {}", err);
             }
-
-            // Get the current value of the dirty flag so we know whether to
-            // send a dirty startup baseline ping below.  Immediately set it to
-            // `false` so that dirty startup pings won't be sent if Glean
-            // initialization does not complete successfully.
-            // TODO Bug 1672956 will decide where to set this flag again.
-            let dirty_flag = glean.is_dirty_flag_set();
-            glean.set_dirty_flag(false);
-
-            // Register builtin pings.
-            // Unfortunately we need to manually list them here to guarantee
-            // they are registered synchronously before we need them.
-            // We don't need to handle the deletion-request ping. It's never touched
-            // from the language implementation.
-            glean.register_ping_type(&glean_metrics::pings::baseline.ping_type);
-            glean.register_ping_type(&glean_metrics::pings::metrics.ping_type);
-            glean.register_ping_type(&glean_metrics::pings::events.ping_type);
-
-            // TODO: perform registration of pings that were attempted to be
-            // registered before init. See bug 1673850.
-
-            // If this is the first time ever the Glean SDK runs, make sure to set
-            // some initial core metrics in case we need to generate early pings.
-            // The next times we start, we would have them around already.
-            let is_first_run = glean.is_first_run();
-            if is_first_run {
-                initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
-            }
-
-            // Deal with any pending events so we can start recording new ones
-            let pings_submitted = glean.on_ready_to_submit_pings();
-
-            // We need to kick off upload in these cases:
-            // 1. Pings were submitted through Glean and it is ready to upload those pings;
-            // 2. Upload is disabled, to upload a possible deletion-request ping.
-            if pings_submitted || !upload_enabled {
-                let uploader = get_upload_manager().lock().unwrap();
-                uploader.trigger_upload();
-            }
-
-            // Set up information and scheduling for Glean owned pings. Ideally, the "metrics"
-            // ping startup check should be performed before any other ping, since it relies
-            // on being dispatched to the API context before any other metric.
-            // TODO: start the metrics ping scheduler, will happen in bug 1672951.
-
-            // Check if the "dirty flag" is set. That means the product was probably
-            // force-closed. If that's the case, submit a 'baseline' ping with the
-            // reason "dirty_startup". We only do that from the second run.
-            if !is_first_run && dirty_flag {
-                // TODO: bug 1672956 - submit_ping_by_name_sync("baseline", "dirty_startup");
-            }
-
-            // From the second time we run, after all startup pings are generated,
-            // make sure to clear `lifetime: application` metrics and set them again.
-            // Any new value will be sent in newly generated pings after startup.
-            if !is_first_run {
-                glean.clear_application_lifetime_metrics();
-                initialize_core_metrics(&glean, &state.client_info, state.channel.clone());
-            }
-        });
-
-        // Signal Dispatcher that init is complete
-        if let Err(err) = dispatcher::flush_init() {
-            log::error!("Unable to flush the preinit queue: {}", err);
-        }
-    });
+        })
+        .expect("Failed to spawn Glean's init thread");
 
     // Mark the initialization as called: this needs to happen outside of the
     // dispatched block!
@@ -327,7 +310,7 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
 /// This currently only attempts to shut down the
 /// internal dispatcher.
 pub fn shutdown() {
-    if let Err(e) = dispatcher::try_shutdown() {
+    if let Err(e) = dispatcher::shutdown() {
         log::error!("Can't shutdown dispatcher thread: {:?}", e);
     }
 }
@@ -404,8 +387,7 @@ pub fn set_upload_enabled(enabled: bool) {
             if old_enabled && !enabled {
                 // If uploading is disabled, we need to send the deletion-request ping:
                 // note that glean-core takes care of generating it.
-                let uploader = get_upload_manager().lock().unwrap();
-                uploader.trigger_upload();
+                state.upload_manager.trigger_upload();
             }
         });
     });
@@ -484,8 +466,8 @@ pub(crate) fn submit_ping_by_name_sync(ping: &str, reason: Option<&str>) {
     });
 
     if let Some(true) = submitted_ping {
-        let uploader = get_upload_manager().lock().unwrap();
-        uploader.trigger_upload();
+        let state = global_state().lock().unwrap();
+        state.upload_manager.trigger_upload();
     }
 }
 
