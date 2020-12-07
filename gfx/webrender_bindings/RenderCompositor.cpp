@@ -186,16 +186,22 @@ RenderCompositor::~RenderCompositor() = default;
 
 bool RenderCompositor::MakeCurrent() { return gl()->MakeCurrent(); }
 
-bool RenderCompositor::IsContextLost() {
-  if (!gl()) {
-    return false;
+GLenum RenderCompositor::IsContextLost(bool aForce) {
+  auto* glc = gl();
+  // GetGraphicsResetStatus may trigger an implicit MakeCurrent if robustness
+  // is not supported, so unless we are forcing, pass on the check.
+  if (!glc || (!aForce && !glc->IsSupported(gl::GLFeature::robustness))) {
+    return LOCAL_GL_NO_ERROR;
   }
-  auto resetStatus = gl()->fGetGraphicsResetStatus();
+  auto resetStatus = glc->fGetGraphicsResetStatus();
   switch (resetStatus) {
     case LOCAL_GL_NO_ERROR:
-      return false;
+      break;
     case LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB:
+      NS_WARNING("Device reset due to system / different context");
+      break;
     case LOCAL_GL_PURGED_CONTEXT_RESET_NV:
+      NS_WARNING("Device reset due to NV video memory purged");
       break;
     case LOCAL_GL_GUILTY_CONTEXT_RESET_ARB:
       gfxCriticalError() << "Device reset due to WR context";
@@ -208,7 +214,7 @@ bool RenderCompositor::IsContextLost() {
                          << gfx::hexa(resetStatus);
       break;
   }
-  return true;
+  return resetStatus;
 }
 
 }  // namespace wr

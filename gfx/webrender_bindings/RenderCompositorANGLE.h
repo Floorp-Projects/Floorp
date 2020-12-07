@@ -67,7 +67,7 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   LayoutDeviceIntSize GetBufferSize() override;
 
-  bool IsContextLost() override;
+  GLenum IsContextLost(bool aForce) override;
 
   bool SurfaceOriginIsTopLeft() override { return true; }
 

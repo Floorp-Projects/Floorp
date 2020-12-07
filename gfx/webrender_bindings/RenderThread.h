@@ -11,6 +11,7 @@
 #include "base/platform_thread.h"  // for PlatformThreadId
 #include "base/thread.h"           // for Thread
 #include "base/message_loop.h"
+#include "GLTypes.h"  // for GLenum
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/gfx/Point.h"
@@ -33,6 +34,7 @@ namespace gl {
 class GLContext;
 }  // namespace gl
 namespace layers {
+class CompositorBridgeParent;
 class SurfacePool;
 }  // namespace layers
 namespace wr {
@@ -265,7 +267,9 @@ class RenderThread final {
   void ClearSharedSurfacePool();
 
   /// Can only be called from the render thread.
-  void HandleDeviceReset(const char* aWhere, bool aNotify);
+  void HandleDeviceReset(const char* aWhere,
+                         layers::CompositorBridgeParent* aBridge,
+                         GLenum aReason);
   /// Can only be called from the render thread.
   bool IsHandlingDeviceReset();
   /// Can be called from any thread.
