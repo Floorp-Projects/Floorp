@@ -7,14 +7,17 @@
 #ifndef vm_SharedStencil_h
 #define vm_SharedStencil_h
 
-#include "mozilla/HashFunctions.h"    // mozilla::HahNumber, mozilla::HashBytes
-#include "mozilla/HashTable.h"        // mozilla::HashSet
+#include "mozilla/Assertions.h"     // MOZ_ASSERT, MOZ_CRASH
+#include "mozilla/Atomics.h"        // mozilla::{Atomic, SequentiallyConsistent}
+#include "mozilla/Attributes.h"     // MOZ_MUST_USE
+#include "mozilla/HashFunctions.h"  // mozilla::HahNumber, mozilla::HashBytes
+#include "mozilla/HashTable.h"      // mozilla::HashSet
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 #include "mozilla/RefPtr.h"           // RefPtr
 #include "mozilla/Span.h"             // mozilla::Span
 
 #include <stddef.h>  // size_t
-#include <stdint.h>  // uint32_t
+#include <stdint.h>  // uint8_t, uint16_t, uint32_t
 
 #include "frontend/SourceNotes.h"  // js::SrcNote
 #include "frontend/TypedIndex.h"   // js::frontend::TypedIndex
@@ -595,6 +598,31 @@ struct SharedImmutableScriptData::Hasher {
 using SharedImmutableScriptDataTable =
     mozilla::HashSet<SharedImmutableScriptData*,
                      SharedImmutableScriptData::Hasher, SystemAllocPolicy>;
+
+struct MemberInitializers {
+  static constexpr uint32_t MaxInitializers = INT32_MAX;
+
+#ifdef DEBUG
+  bool valid = false;
+#endif
+
+  // This struct will eventually have a vector of constant values for optimizing
+  // field initializers.
+  uint32_t numMemberInitializers = 0;
+
+  explicit MemberInitializers(uint32_t numMemberInitializers)
+      :
+#ifdef DEBUG
+        valid(true),
+#endif
+        numMemberInitializers(numMemberInitializers) {
+  }
+
+  static MemberInitializers Invalid() { return MemberInitializers(); }
+
+ private:
+  MemberInitializers() = default;
+};
 
 }  // namespace js
 
