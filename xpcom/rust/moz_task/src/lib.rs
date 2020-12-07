@@ -7,7 +7,6 @@
 //! It also provides the Task trait and TaskRunnable struct,
 //! which make it easier to dispatch tasks to threads.
 
-#[macro_use]
 extern crate cstr;
 extern crate futures_task;
 extern crate libc;

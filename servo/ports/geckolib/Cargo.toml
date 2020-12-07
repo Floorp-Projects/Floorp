@@ -17,7 +17,7 @@ gecko_refcount_logging = ["style/gecko_refcount_logging", "servo_arc/gecko_refco
 atomic_refcell = "0.1"
 bincode = "1.0"
 cssparser = "0.28"
-cstr = "0.1.2"
+cstr = "0.2"
 libc = "0.2"
 log = {version = "0.4", features = ["release_max_level_info"]}
 malloc_size_of = {path = "../../components/malloc_size_of"}
