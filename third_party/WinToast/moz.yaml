@@ -5,6 +5,8 @@ schema: 1
 # cd third_pary/WinToast
 # wget https://raw.githubusercontent.com/mohabouje/WinToast/master/src/wintoastlib.cpp
 # wget https://raw.githubusercontent.com/mohabouje/WinToast/master/src/wintoastlib.h
+# patch -p2 < moz-check-system-shortcut.patch
+# patch -p2 < moz-disable-create-shortcut.patch
 
 bugzilla:
   # Bugzilla product and component for this directory and subdirectories

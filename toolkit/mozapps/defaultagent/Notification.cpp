@@ -394,9 +394,11 @@ static NotificationActivities ShowNotification(
     return activitiesPerformed;
   }
 
-  WinToast::instance()->setAppName(L"" MOZ_APP_BASENAME);
+  WinToast::instance()->setAppName(L"" MOZ_APP_DISPLAYNAME);
   std::wstring aumiStr = aumi;
   WinToast::instance()->setAppUserModelId(aumiStr);
+  WinToast::instance()->setShortcutPolicy(
+      WinToastLib::WinToast::SHORTCUT_POLICY_REQUIRE_NO_CREATE);
   WinToast::WinToastError error;
   if (!WinToast::instance()->initialize(&error)) {
     LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());

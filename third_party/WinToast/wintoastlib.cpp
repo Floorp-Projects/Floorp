@@ -213,8 +213,8 @@ namespace Util {
     }
 
 
-    inline HRESULT defaultShellLinksDirectory(_In_ WCHAR* path, _In_ DWORD nSize = MAX_PATH) {
-        DWORD written = GetEnvironmentVariableW(L"APPDATA", path, nSize);
+    inline HRESULT commonShellLinksDirectory(_In_ const WCHAR* baseEnv, _In_ WCHAR* path, _In_ DWORD nSize) {
+        DWORD written = GetEnvironmentVariableW(baseEnv, path, nSize);
         HRESULT hr = written > 0 ? S_OK : E_INVALIDARG;
         if (SUCCEEDED(hr)) {
             errno_t result = wcscat_s(path, nSize, DEFAULT_SHELL_LINKS_PATH);
@@ -224,8 +224,8 @@ namespace Util {
         return hr;
     }
 
-    inline HRESULT defaultShellLinkPath(const std::wstring& appname, _In_ WCHAR* path, _In_ DWORD nSize = MAX_PATH) {
-        HRESULT hr = defaultShellLinksDirectory(path, nSize);
+    inline HRESULT commonShellLinkPath(_In_ const WCHAR* baseEnv, const std::wstring& appname, _In_ WCHAR* path, _In_ DWORD nSize) {
+        HRESULT hr = commonShellLinksDirectory(baseEnv, path, nSize);
         if (SUCCEEDED(hr)) {
             const std::wstring appLink(appname + DEFAULT_LINK_FORMAT);
             errno_t result = wcscat_s(path, nSize, appLink.c_str());
@@ -235,6 +235,13 @@ namespace Util {
         return hr;
     }
 
+    inline HRESULT defaultUserShellLinkPath(const std::wstring& appname, _In_ WCHAR* path, _In_ DWORD nSize = MAX_PATH) {
+      return commonShellLinkPath(L"APPDATA", appname, path, nSize);
+    }
+
+    inline HRESULT defaultSystemShellLinkPath(const std::wstring& appname, _In_ WCHAR* path, _In_ DWORD nSize = MAX_PATH) {
+      return commonShellLinkPath(L"PROGRAMDATA", appname, path, nSize);
+    }
 
     inline PCWSTR AsString(ComPtr<IXmlDocument> &xmlDocument) {
         HSTRING xml;
@@ -391,6 +398,10 @@ void WinToast::setAppUserModelId(_In_ const std::wstring& aumi) {
     DEBUG_MSG(L"Default App User Model Id: " << _aumi.c_str());
 }
 
+void WinToast::setShortcutPolicy(_In_ ShortcutPolicy shortcutPolicy) {
+    _shortcutPolicy = shortcutPolicy;
+}
+
 bool WinToast::isCompatible() {
 	DllImporter::initialize();
     return !((DllImporter::SetCurrentProcessExplicitAppUserModelID == nullptr)
@@ -492,10 +503,12 @@ bool WinToast::initialize(_Out_ WinToastError* error) {
         return false;
     }
 
-    if (createShortcut() < 0) {
-        setError(error, WinToastError::ShellLinkNotCreated);
-        DEBUG_MSG(L"Error while attaching the AUMI to the current proccess =(");
-        return false;
+    if (_shortcutPolicy != SHORTCUT_POLICY_IGNORE) {
+        if (createShortcut() < 0) {
+            setError(error, WinToastError::ShellLinkNotCreated);
+            DEBUG_MSG(L"Error while attaching the AUMI to the current proccess =(");
+            return false;
+        }
     }
 
     if (FAILED(DllImporter::SetCurrentProcessExplicitAppUserModelID(_aumi.c_str()))) {
@@ -523,12 +536,19 @@ const std::wstring& WinToast::appUserModelId() const {
 
 HRESULT	WinToast::validateShellLinkHelper(_Out_ bool& wasChanged) {
 	WCHAR	path[MAX_PATH] = { L'\0' };
-    Util::defaultShellLinkPath(_appName, path);
+    Util::defaultUserShellLinkPath(_appName, path);
     // Check if the file exist
     DWORD attr = GetFileAttributesW(path);
     if (attr >= 0xFFFFFFF) {
-        DEBUG_MSG("Error, shell link not found. Try to create a new one in: " << path);
-        return E_FAIL;
+        // The shortcut may be in the system Start Menu.
+        WCHAR   systemPath[MAX_PATH] = { L'\0' };
+        Util::defaultSystemShellLinkPath(_appName, systemPath);
+        attr = GetFileAttributesW(systemPath);
+        if (attr >= 0xFFFFFFF) {
+            DEBUG_MSG("Error, shell link not found. Try to create a new one in: " << path);
+            return E_FAIL;
+        }
+        wcscpy(path, systemPath);
     }
 
     // Let's load the file as shell link to validate.
@@ -543,7 +563,7 @@ HRESULT	WinToast::validateShellLinkHelper(_Out_ bool& wasChanged) {
         ComPtr<IPersistFile> persistFile;
         hr = shellLink.As(&persistFile);
         if (SUCCEEDED(hr)) {
-            hr = persistFile->Load(path, STGM_READWRITE);
+            hr = persistFile->Load(path, STGM_READ);
             if (SUCCEEDED(hr)) {
                 ComPtr<IPropertyStore> propertyStore;
                 hr = shellLink.As(&propertyStore);
@@ -555,18 +575,23 @@ HRESULT	WinToast::validateShellLinkHelper(_Out_ bool& wasChanged) {
                         hr = DllImporter::PropVariantToString(appIdPropVar, AUMI, MAX_PATH);
                         wasChanged = false;
                         if (FAILED(hr) || _aumi != AUMI) {
-                            // AUMI Changed for the same app, let's update the current value! =)
-                            wasChanged = true;
-                            PropVariantClear(&appIdPropVar);
-                            hr = InitPropVariantFromString(_aumi.c_str(), &appIdPropVar);
-                            if (SUCCEEDED(hr)) {
-                                hr = propertyStore->SetValue(PKEY_AppUserModel_ID, appIdPropVar);
+                            if (_shortcutPolicy == SHORTCUT_POLICY_REQUIRE_CREATE) {
+                                // AUMI Changed for the same app, let's update the current value! =)
+                                wasChanged = true;
+                                PropVariantClear(&appIdPropVar);
+                                hr = InitPropVariantFromString(_aumi.c_str(), &appIdPropVar);
                                 if (SUCCEEDED(hr)) {
-                                    hr = propertyStore->Commit();
-                                    if (SUCCEEDED(hr) && SUCCEEDED(persistFile->IsDirty())) {
-                                        hr = persistFile->Save(path, TRUE);
+                                    hr = propertyStore->SetValue(PKEY_AppUserModel_ID, appIdPropVar);
+                                    if (SUCCEEDED(hr)) {
+                                        hr = propertyStore->Commit();
+                                        if (SUCCEEDED(hr) && SUCCEEDED(persistFile->IsDirty())) {
+                                            hr = persistFile->Save(path, TRUE);
+                                        }
                                     }
                                 }
+                            } else {
+                                // Not allowed to touch the shortcut to fix the AUMI
+                                hr = E_FAIL;
                             }
                         }
                         PropVariantClear(&appIdPropVar);
@@ -581,9 +606,13 @@ HRESULT	WinToast::validateShellLinkHelper(_Out_ bool& wasChanged) {
 
 
 HRESULT	WinToast::createShellLinkHelper() {
+    if (_shortcutPolicy != SHORTCUT_POLICY_REQUIRE_CREATE) {
+      return E_FAIL;
+    }
+
 	WCHAR   exePath[MAX_PATH]{L'\0'};
 	WCHAR	slPath[MAX_PATH]{L'\0'};
-    Util::defaultShellLinkPath(_appName, slPath);
+    Util::defaultUserShellLinkPath(_appName, slPath);
     Util::defaultExecutablePath(exePath);
     ComPtr<IShellLinkW> shellLink;
     HRESULT hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&shellLink));
