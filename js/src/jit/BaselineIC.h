@@ -691,35 +691,6 @@ class ICStubCompilerBase {
   }
 };
 
-// TODO(no-TI): remove/cleanup with ICStubCompilerBase.
-class ICStubCompiler : public ICStubCompilerBase {
-  // Prevent GC in the middle of stub compilation.
-  js::gc::AutoSuppressGC suppressGC;
-
- protected:
-  ICStub::Kind kind;
-
-  // By default the stubcode key is just the kind.
-  virtual int32_t getKey() const { return static_cast<int32_t>(kind); }
-
-  virtual MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) = 0;
-
-  ICStubCompiler(JSContext* cx, ICStub::Kind kind)
-      : ICStubCompilerBase(cx), suppressGC(cx), kind(kind) {}
-
- protected:
-  template <typename T, typename... Args>
-  T* newStub(Args&&... args) {
-    return ICStub::New<T>(cx, std::forward<Args>(args)...);
-  }
-
- public:
-  virtual ICStub* getStub(ICStubSpace* space) = 0;
-
-  static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
-                                       ICScript* icScript);
-};
-
 // ToBool
 //      JSOp::IfNe
 

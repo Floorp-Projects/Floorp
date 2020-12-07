@@ -2249,7 +2249,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
   // the stack.
   size_t numInputsInRegs = std::min(numInputs, size_t(2));
   AllocatableGeneralRegisterSet available(
-      ICStubCompiler::availableGeneralRegs(numInputsInRegs));
+      ICStubCompilerBase::availableGeneralRegs(numInputsInRegs));
 
   switch (kind) {
     case CacheKind::NewObject:
@@ -2331,6 +2331,14 @@ static void ResetEnteredCounts(ICFallbackStub* stub) {
     }
   }
   stub->resetEnteredCount();
+}
+
+static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
+                                     ICScript* icScript) {
+  if (makesGCCalls) {
+    return icScript->fallbackStubSpace();
+  }
+  return script->zone()->jitZone()->optimizedStubSpace();
 }
 
 ICStub* js::jit::AttachBaselineCacheIRStub(
@@ -2444,8 +2452,8 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
 
   size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
 
-  ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(
-      stubInfo->makesGCCalls(), outerScript, icScript);
+  ICStubSpace* stubSpace =
+      StubSpaceForStub(stubInfo->makesGCCalls(), outerScript, icScript);
   void* newStubMem = stubSpace->alloc(bytesNeeded);
   if (!newStubMem) {
     return nullptr;
