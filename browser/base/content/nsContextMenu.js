@@ -457,6 +457,16 @@ class nsContextMenu {
       "context-savelink",
       this.onSaveableLink || this.onPlainTextLink
     );
+    if (
+      (this.onSaveableLink || this.onPlainTextLink) &&
+      Services.policies.status === Services.policies.ACTIVE
+    ) {
+      this.setItemAttr(
+        "context-savelink",
+        "disabled",
+        !WebsiteFilter.isAllowed(this.linkURL)
+      );
+    }
 
     // Save image depends on having loaded its content, video and audio don't.
     this.showItem("context-saveimage", this.onLoadedImage || this.onCanvas);
