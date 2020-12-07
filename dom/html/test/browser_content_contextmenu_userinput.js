@@ -4,6 +4,9 @@ const kPage =
   "http://example.org/browser/" + "dom/html/test/file_content_contextmenu.html";
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.menuitem.enabled", true]],
+  });
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,

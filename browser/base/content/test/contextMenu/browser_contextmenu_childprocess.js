@@ -5,6 +5,10 @@ const gBaseURL =
   "https://example.com/browser/browser/base/content/test/contextMenu/";
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.menuitem.enabled", true]],
+  });
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     gBaseURL + "subtst_contextmenu.html"
