@@ -672,6 +672,7 @@ var PrintEventHandler = {
         detail: { sheetCount, totalPages: totalPageCount },
       })
     );
+    this.previewBrowser.setAttribute("sheet-count", sheetCount);
 
     this._hideRenderingIndicator();
 

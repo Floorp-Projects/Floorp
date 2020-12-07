@@ -362,6 +362,7 @@ let JSWINDOWACTORS = {
       events: {
         PrintingError: { capture: true },
         printPreviewUpdate: { capture: true },
+        scroll: {},
       },
     },
   },
