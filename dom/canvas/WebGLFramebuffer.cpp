@@ -1518,8 +1518,9 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint _srcX0,
   // -
   // Mutually constrain src and dst rects for eldritch blits.
 
-  [&]{
-    using fvec2 = avec2<float>; // Switch to float, because there's no perfect solution anyway.
+  [&] {
+    using fvec2 = avec2<float>;  // Switch to float, because there's no perfect
+                                 // solution anyway.
 
     const auto zero2f = fvec2{0, 0};
     const auto srcSizef = AsVec(srcSize).StaticCast<fvec2>();
@@ -1535,7 +1536,7 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint _srcX0,
 
     // Skip if zero-sized.
     if (!srcRectDiff.x || !srcRectDiff.y || !dstRectDiff.x || !dstRectDiff.y) {
-      srcP0 = srcP1 = dstP0 = dstP1 = {0,0};
+      srcP0 = srcP1 = dstP0 = dstP1 = {0, 0};
       return;
     }
 
@@ -1575,12 +1576,13 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint _srcX0,
   }();
 
   bool inBounds = true;
-  inBounds &= ( srcP0 == srcP0.Clamp({0,0}, AsVec(srcSize)) );
-  inBounds &= ( srcP1 == srcP1.Clamp({0,0}, AsVec(srcSize)) );
-  inBounds &= ( dstP0 == dstP0.Clamp({0,0}, AsVec(dstSize)) );
-  inBounds &= ( dstP1 == dstP1.Clamp({0,0}, AsVec(dstSize)) );
+  inBounds &= (srcP0 == srcP0.Clamp({0, 0}, AsVec(srcSize)));
+  inBounds &= (srcP1 == srcP1.Clamp({0, 0}, AsVec(srcSize)));
+  inBounds &= (dstP0 == dstP0.Clamp({0, 0}, AsVec(dstSize)));
+  inBounds &= (dstP1 == dstP1.Clamp({0, 0}, AsVec(dstSize)));
   if (!inBounds) {
-    webgl->ErrorImplementationBug("Subrects still not within src and dst after constraining.");
+    webgl->ErrorImplementationBug(
+        "Subrects still not within src and dst after constraining.");
     return;
   }
 

@@ -588,9 +588,8 @@ static void BuildPreviousPageOverflow(nsDisplayListBuilder* aBuilder,
     // This rect represents the piece of prevPageCF's overflow that ends up on
     // the current pageContentFrame (in prevPageCF's coordinate system).
     // Note that we use InkOverflow here since this is for painting.
-    LogicalRect overflowRect(
-        wm, prevPageCF->InkOverflowRectRelativeToSelf(),
-        prevPageCF->GetSize());
+    LogicalRect overflowRect(wm, prevPageCF->InkOverflowRectRelativeToSelf(),
+                             prevPageCF->GetSize());
     overflowRect.BStart(wm) = offsetToCurrentPageBStart;
     overflowRect.BSize(wm) = std::min(remainingOverflow, prevPageCF->BSize(wm));
 

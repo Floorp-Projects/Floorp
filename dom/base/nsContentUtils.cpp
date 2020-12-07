@@ -327,7 +327,7 @@
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
-#include "nsIURIWithSpecialOrigin.h"
+#  include "nsIURIWithSpecialOrigin.h"
 #endif
 #include "nsIUUIDGenerator.h"
 #include "nsIUserIdleService.h"

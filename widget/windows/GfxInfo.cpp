@@ -1762,10 +1762,11 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         "FEATURE_UNQUALIFIED_WEBRENDER_NVIDIA_BLOCKED");
 
     // Block 8.56.1.15/16
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::AtiAll,
-        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_LESS_THAN_OR_EQUAL, V(8, 56, 1, 16), "CRASHY_DRIVERS_BUG_1678808");
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::AtiAll,
+                                nsIGfxInfo::FEATURE_WEBRENDER,
+                                nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+                                DRIVER_LESS_THAN_OR_EQUAL, V(8, 56, 1, 16),
+                                "CRASHY_DRIVERS_BUG_1678808");
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
