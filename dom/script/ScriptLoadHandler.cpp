@@ -17,6 +17,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
 #include "mozilla/Telemetry.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {

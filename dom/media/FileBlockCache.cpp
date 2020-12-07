@@ -12,6 +12,7 @@
 #include "nsAnonymousTemporaryFile.h"
 #include "nsIThreadManager.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/ScopeExit.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {

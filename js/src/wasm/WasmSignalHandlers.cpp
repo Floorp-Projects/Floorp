@@ -19,7 +19,6 @@
 #include "wasm/WasmSignalHandlers.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/ThreadLocal.h"
 
 #include "threading/Thread.h"

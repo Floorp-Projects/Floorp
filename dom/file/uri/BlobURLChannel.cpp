@@ -8,7 +8,6 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BlobURL.h"
 #include "mozilla/dom/BlobURLInputStream.h"
-#include "mozilla/ScopeExit.h"
 
 using namespace mozilla::dom;
 

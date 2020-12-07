@@ -22,6 +22,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/ScopeExit.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIThreadRetargetableRequest.h"

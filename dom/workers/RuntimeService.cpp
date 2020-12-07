@@ -48,6 +48,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/Monitor.h"
 #include "nsContentUtils.h"

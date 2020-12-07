@@ -9,6 +9,7 @@
 #include "CookiePersistentStorage.h"
 
 #include "mozilla/FileUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 #include "mozIStorageAsyncStatement.h"
 #include "mozIStorageError.h"

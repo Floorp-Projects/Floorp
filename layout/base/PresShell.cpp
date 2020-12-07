@@ -28,6 +28,7 @@
 #include "mozilla/PerfStats.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/RangeUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"

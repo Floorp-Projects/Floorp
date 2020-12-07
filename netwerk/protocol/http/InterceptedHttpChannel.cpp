@@ -8,6 +8,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsEscape.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "nsHttpChannel.h"

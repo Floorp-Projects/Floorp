@@ -9,6 +9,7 @@
 
 #include "HttpLog.h"
 #include "AltServiceChild.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Unused.h"
 #include "nsDNSPrefetch.h"

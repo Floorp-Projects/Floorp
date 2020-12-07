@@ -16,6 +16,7 @@
 #include "nsTArray.h"
 #include "base/message_loop.h"  // for MessageLoop
 #include "base/task.h"          // for NewRunnableMethod, etc
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_widget.h"
 
 #include <sys/mman.h>

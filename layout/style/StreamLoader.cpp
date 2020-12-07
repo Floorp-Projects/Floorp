@@ -7,7 +7,6 @@
 #include "mozilla/css/StreamLoader.h"
 
 #include "mozilla/Encoding.h"
-#include "mozilla/ScopeExit.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"

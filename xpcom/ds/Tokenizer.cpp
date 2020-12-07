@@ -6,7 +6,6 @@
 
 #include "Tokenizer.h"
 
-#include "mozilla/ScopeExit.h"
 #include "nsUnicharUtils.h"
 #include <algorithm>
 

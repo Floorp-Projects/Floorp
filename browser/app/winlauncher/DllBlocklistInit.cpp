@@ -12,6 +12,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ImportDir.h"
 #include "mozilla/NativeNt.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/WinHeaderOnlyUtils.h"

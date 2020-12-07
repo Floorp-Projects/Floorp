@@ -65,6 +65,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/TimeStamp.h"
 

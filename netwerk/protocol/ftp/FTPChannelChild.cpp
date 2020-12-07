@@ -22,6 +22,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsIURIMutator.h"
 #include "nsContentSecurityManager.h"
+#include "mozilla/ScopeExit.h"
 
 using mozilla::dom::ContentChild;
 using namespace mozilla::ipc;

@@ -16,6 +16,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Services.h"
 #include "nsDirectoryServiceDefs.h"

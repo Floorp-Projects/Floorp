@@ -11,7 +11,6 @@
 #endif
 
 #include "nsNetworkInfoService.h"
-#include "mozilla/ScopeExit.h"
 
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
 #  include "NetworkInfoServiceImpl.h"

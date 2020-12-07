@@ -8,7 +8,6 @@
 
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ScopeExit.h"
 
 #include <algorithm>
 #include <string.h>

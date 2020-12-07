@@ -52,6 +52,7 @@
 #include "nsProxyRelease.h"
 #include "nsNetUtil.h"
 #include "nsINode.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"

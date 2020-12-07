@@ -73,6 +73,7 @@
 #include "nsDocShell.h"
 #include "nsISimpleEnumerator.h"
 #include "nsJSEnvironment.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 
 #include "BackgroundChild.h"
@@ -428,9 +429,9 @@ class SimpleTimerBasedRefreshDriverTimer : public RefreshDriverTimer {
 class VsyncRefreshDriverTimer : public RefreshDriverTimer {
  public:
   VsyncRefreshDriverTimer()
-     : mVsyncDispatcher(nullptr),
-       mVsyncChild(nullptr),
-       mVsyncRate(TimeDuration::Forever()) {
+      : mVsyncDispatcher(nullptr),
+        mVsyncChild(nullptr),
+        mVsyncRate(TimeDuration::Forever()) {
     MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(NS_IsMainThread());
     mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();

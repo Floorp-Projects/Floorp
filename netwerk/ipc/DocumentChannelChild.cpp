@@ -10,6 +10,7 @@
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/ScopeExit.h"
 #include "nsHashPropertyBag.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIObjectLoadingContent.h"

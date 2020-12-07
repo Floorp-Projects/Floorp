@@ -28,6 +28,7 @@ WIN_LIBS=                                       \
 #include <commdlg.h>
 
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/ScopeExit.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintSettings.h"

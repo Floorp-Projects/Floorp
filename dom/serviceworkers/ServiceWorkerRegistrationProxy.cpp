@@ -8,6 +8,7 @@
 
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ScopeExit.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistrationParent.h"
 #include "ServiceWorkerUnregisterCallback.h"
