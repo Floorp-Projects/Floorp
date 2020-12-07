@@ -401,6 +401,7 @@ class ArtifactJob(object):
             for filename in reader.entries:
                 yield filename, reader[filename]
         elif filename.endswith(".tar.zst") and self._mozbuild is not None:
+            self._mozbuild._ensure_zstd()
             import zstandard
 
             ctx = zstandard.ZstdDecompressor()
