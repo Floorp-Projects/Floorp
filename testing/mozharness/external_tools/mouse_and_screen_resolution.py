@@ -9,6 +9,7 @@
 # Target:        Python 2.7 or newer
 #
 
+from __future__ import print_function
 import os
 import platform
 import socket
