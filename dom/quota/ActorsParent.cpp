@@ -4078,18 +4078,34 @@ void QuotaManager::Shutdown() {
       &ShutdownTimerCallback, this, DEFAULT_SHUTDOWN_TIMER_MS,
       nsITimer::TYPE_ONE_SHOT, "QuotaManager::ShutdownTimerCallback"));
 
-  // Each client will spin the event loop while we wait on all the threads
-  // to close. Our timer may fire during that loop.
-  for (Client::Type type : AllClientTypes()) {
-    mClients[type]->ShutdownWorkThreads();
+  const auto& allClientTypes = AllClientTypes();
+
+  bool needsToWait = false;
+  for (Client::Type type : allClientTypes) {
+    needsToWait |= mClients[type]->InitiateShutdownWorkThreads();
+  }
+  needsToWait |= static_cast<bool>(gNormalOriginOps);
+
+  // If any client cannot shutdown immediately, spin the event loop while we
+  // wait on all the threads to close. Our timer may fire during that loop.
+  if (needsToWait) {
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([this, &allClientTypes] {
+      return !gNormalOriginOps &&
+             std::all_of(allClientTypes.cbegin(), allClientTypes.cend(),
+                         [&self = *this](const auto type) {
+                           return self.mClients[type]->IsShutdownCompleted();
+                         });
+    }));
+  }
+
+  for (Client::Type type : allClientTypes) {
+    mClients[type]->FinalizeShutdownWorkThreads();
   }
 
   // Cancel the timer regardless of whether it actually fired.
   if (NS_FAILED(mShutdownTimer->Cancel())) {
     NS_WARNING("Failed to cancel shutdown timer!");
   }
-
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return !gNormalOriginOps; }));
 
   // NB: It's very important that runnable is destroyed on this thread
   // (i.e. after we join the IO thread) because we can't release the
