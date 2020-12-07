@@ -135,7 +135,7 @@ must read::
 * When attempting to get your client running, the output of ``sccache -s`` should
   be consulted to confirm compilations are being distributed. To receive helpful
   logging from the local daemon in case they aren't, run
-  ``SCCACHE_NO_DAEMON=1 SCCACHE_LOG=sccache=trace path/to/sccache --start-server``
+  ``SCCACHE_NO_DAEMON=1 SCCACHE_START_SERVER=1 SCCACHE_LOG=sccache=trace path/to/sccache``
   in a terminal window separate from your build prior to building. *NOTE* use
   ``RUST_LOG`` instead of ``SCCACHE_LOG`` if your build of ``sccache`` does not
   include `pull request 822
