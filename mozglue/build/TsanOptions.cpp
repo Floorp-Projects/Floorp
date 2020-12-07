@@ -196,8 +196,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // These should all still be fixed because the compiler is incentivized
          // to combine/cache these accesses without proper atomic annotations.
 
-         // No Bug
-         "race:WalkDiskCacheRunnable::Run\n"
          // Bug 1614697
          "race:nsHttpChannel::OnCacheEntryCheck\n"
          "race:~AutoCacheWaitFlags\n"
