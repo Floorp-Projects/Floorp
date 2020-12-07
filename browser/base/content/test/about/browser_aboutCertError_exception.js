@@ -36,7 +36,7 @@ add_task(async function checkExceptionDialogButton() {
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
-  certOverrideService.clearValidityOverride("expired.example.com", -1);
+  certOverrideService.clearValidityOverride("expired.example.com", -1, {});
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -89,6 +89,7 @@ add_task(async function checkPermanentExceptionPref() {
     let hasException = certOverrideService.hasMatchingOverride(
       "expired.example.com",
       -1,
+      {},
       cert,
       {},
       isTemporary
@@ -102,7 +103,7 @@ add_task(async function checkPermanentExceptionPref() {
       } exception for the page.`
     );
 
-    certOverrideService.clearValidityOverride("expired.example.com", -1);
+    certOverrideService.clearValidityOverride("expired.example.com", -1, {});
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
