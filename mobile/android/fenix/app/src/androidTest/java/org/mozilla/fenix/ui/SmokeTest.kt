@@ -19,6 +19,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.clickUrlbar
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -425,6 +426,37 @@ class SmokeTest {
             verifyPageContent(firstWebPage.content)
             swipeNavBarLeft(firstWebPage.url.toString())
             verifyPageContent(secondWebPage.content)
+        }
+    }
+
+    @Test
+    fun updateSavedLoginTest() {
+        val saveLoginTest =
+            TestAssetHelper.getSaveLoginAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            verifySaveLoginPromptIsShown()
+            // Click Save to save the login
+            saveLoginFromPrompt("Save")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            enterPassword("test")
+            verifyUpdateLoginPromptIsShown()
+            // Click Update to change the saved password
+            saveLoginFromPrompt("Update")
+        }.openThreeDotMenu {
+        }.openSettings {
+            TestHelper.scrollToElementByText("Logins and passwords")
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            verifySecurityPromptForLogins()
+            tapSetupLater()
+            // Verify that the login appears correctly
+            verifySavedLoginFromPrompt()
+            viewSavedLoginDetails()
+            revealPassword()
+            verifyPasswordSaved("test")
         }
     }
 }

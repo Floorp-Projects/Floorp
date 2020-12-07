@@ -174,7 +174,7 @@ class SettingsPrivacyTest {
             verifyDefaultValueAutofillLogins()
             verifyDefaultValueExceptions()
         }.openSavedLogins {
-            verifySavedLoginsView()
+            verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that logins list is empty
             // Issue #7272 nothing is shown
@@ -205,7 +205,7 @@ class SettingsPrivacyTest {
             verifyDefaultView()
             verifyDefaultValueSyncLogins()
         }.openSavedLogins {
-            verifySavedLoginsView()
+            verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that the login appears correctly
             verifySavedLoginFromPrompt()
@@ -230,7 +230,7 @@ class SettingsPrivacyTest {
             verifyDefaultView()
             verifyDefaultValueSyncLogins()
         }.openSavedLogins {
-            verifySavedLoginsView()
+            verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that the login list is empty
             verifyNotSavedLoginFromPrompt()

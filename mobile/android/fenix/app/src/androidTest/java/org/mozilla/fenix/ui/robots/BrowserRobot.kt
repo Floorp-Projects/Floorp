@@ -9,6 +9,7 @@ package org.mozilla.fenix.ui.robots
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions
@@ -312,15 +313,32 @@ class BrowserRobot {
     }
 
     fun verifySaveLoginPromptIsShown() {
-        mDevice.waitNotNull(Until.findObjects(text("test@example.com")), waitingTime)
+        mDevice.findObject(UiSelector().text("test@example.com")).waitForExists(waitingTime)
         val submitButton = mDevice.findObject(By.res("submit"))
         submitButton.clickAndWait(Until.newWindow(), waitingTime)
         // Click save to save the login
         mDevice.waitNotNull(Until.findObjects(text("Save")))
     }
 
+    fun verifyUpdateLoginPromptIsShown() {
+        val submitButton = mDevice.findObject(By.res("submit"))
+        submitButton.clickAndWait(Until.newWindow(), waitingTime)
+
+        mDevice.waitNotNull(Until.findObjects(text("Update")))
+    }
+
     fun saveLoginFromPrompt(optionToSaveLogin: String) {
         mDevice.findObject(text(optionToSaveLogin)).click()
+    }
+
+    fun enterPassword(password: String) {
+        val passwordField = mDevice.findObject(
+            UiSelector()
+                .resourceId("password")
+                .className(EditText::class.java)
+        )
+        passwordField.waitForExists(waitingTime)
+        passwordField.setText(password)
     }
 
     fun clickMediaPlayerPlayButton() {

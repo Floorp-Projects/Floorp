@@ -10,11 +10,15 @@ import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
@@ -22,7 +26,7 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 
 class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
-    fun verifySavedLoginsView() = assertSavedLoginsView()
+    fun verifySecurityPromptForLogins() = assertSavedLoginsView()
 
     fun verifySavedLoginsAfterSync() {
         mDevice.waitNotNull(
@@ -42,6 +46,13 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun verifyLocalhostExceptionAdded() = onView(ViewMatchers.withText(containsString("localhost")))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+    fun viewSavedLoginDetails() = onView(ViewMatchers.withText("test@example.com")).click()
+
+    fun revealPassword() = onView(withId(R.id.revealPasswordButton)).click()
+
+    fun verifyPasswordSaved(password: String) =
+        onView(withId(R.id.passwordText)).check(matches(withText(password)))
 
     class Transition {
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
