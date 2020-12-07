@@ -53,6 +53,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * cancel or abort before a page is refreshed.
  * @property recordingDevices List of recording devices (e.g. camera or microphone) currently in use
  * by web content.
+ * @property desktopMode true if desktop mode is enabled, otherwise false.
  */
 data class ContentState(
     val url: String,
@@ -82,5 +83,6 @@ data class ContentState(
     val pictureInPictureEnabled: Boolean = false,
     val loadRequest: LoadRequestState? = null,
     val refreshCanceled: Boolean = false,
-    val recordingDevices: List<RecordingDevice> = emptyList()
+    val recordingDevices: List<RecordingDevice> = emptyList(),
+    val desktopMode: Boolean = false
 )

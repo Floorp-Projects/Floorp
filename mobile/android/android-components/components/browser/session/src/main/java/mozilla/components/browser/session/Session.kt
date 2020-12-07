@@ -77,7 +77,6 @@ class Session(
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
-        fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
@@ -249,13 +248,6 @@ class Session(
             // an action for the last item in the list.
             store?.syncDispatch(TrackingProtectionAction.TrackerLoadedAction(id, new.last()))
         }
-    }
-
-    /**
-     * Desktop Mode state, true if the desktop mode is requested, otherwise false.
-     */
-    var desktopMode: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onDesktopModeChanged(this@Session, new) }
     }
 
     /**

@@ -28,8 +28,19 @@ class CaptureActionsMiddleware<S : State, A : Action> : Middleware<S, A> {
      */
     @Synchronized
     @Suppress("UNCHECKED_CAST")
-    fun <X : A> findAction(clazz: KClass<X>): X {
+    fun <X : A> findFirstAction(clazz: KClass<X>): X {
         return capturedActions.firstOrNull { it.javaClass == clazz.java } as? X
+            ?: throw AssertionError("No action of type $clazz found")
+    }
+
+    /**
+     * Returns the last action of type [clazz] that was dispatched on the store. Throws
+     * [AssertionError] if no such action was dispatched.
+     */
+    @Synchronized
+    @Suppress("UNCHECKED_CAST")
+    fun <X : A> findLastAction(clazz: KClass<X>): X {
+        return capturedActions.lastOrNull { it.javaClass == clazz.java } as? X
             ?: throw AssertionError("No action of type $clazz found")
     }
 
@@ -38,7 +49,16 @@ class CaptureActionsMiddleware<S : State, A : Action> : Middleware<S, A> {
      * store. Throws [AssertionError] if no such action was dispatched.
      */
     fun <X : A> assertFirstAction(clazz: KClass<X>, block: (X) -> Unit) {
-        val action = findAction(clazz)
+        val action = findFirstAction(clazz)
+        block(action)
+    }
+
+    /**
+     * Executes the given [block] with the last action of type [clazz] that was dispatched on the
+     * store. Throws [AssertionError] if no such action was dispatched.
+     */
+    fun <X : A> assertLastAction(clazz: KClass<X>, block: (X) -> Unit) {
+        val action = findLastAction(clazz)
         block(action)
     }
 
@@ -48,7 +68,7 @@ class CaptureActionsMiddleware<S : State, A : Action> : Middleware<S, A> {
      */
     fun <X : A> assertNotDispatched(clazz: KClass<X>) {
         if (!capturedActions.none { it.javaClass == clazz.java }) {
-            throw AssertionError("Action of type $clazz was dispatched: ${findAction(clazz)}")
+            throw AssertionError("Action of type $clazz was dispatched: ${findFirstAction(clazz)}")
         }
     }
 

@@ -198,6 +198,9 @@ internal object ContentStateReducer {
             is ContentAction.SetRecordingDevices -> updateContentState(state, action.sessionId) {
                 it.copy(recordingDevices = action.devices)
             }
+            is ContentAction.UpdateDesktopModeAction -> updateContentState(state, action.sessionId) {
+                it.copy(desktopMode = action.enabled)
+            }
         }
     }
 }

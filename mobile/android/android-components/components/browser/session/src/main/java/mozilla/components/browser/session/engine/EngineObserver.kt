@@ -223,7 +223,9 @@ internal class EngineObserver(
     }
 
     override fun onDesktopModeChange(enabled: Boolean) {
-        session.desktopMode = enabled
+        store?.dispatch(ContentAction.UpdateDesktopModeAction(
+            session.id, enabled
+        ))
     }
 
     override fun onFullScreenChange(enabled: Boolean) {

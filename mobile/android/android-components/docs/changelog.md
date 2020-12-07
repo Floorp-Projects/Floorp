@@ -14,6 +14,7 @@ permalink: /changelog/
 
 * **browser-session**
   * ⚠️ **This is a breaking change**: `Session.searchTerms` has been removed. Use `ContentState.searchTerms` (`browser-state`) instead.
+  * ⚠️ **This is a breaking change**: `Session.desktopMode` has been removed. Use `ContentState.desktopMode` (`browser-state`) instead.
 
 * **feature-search**
   * ⚠️ **This is a breaking change**: Use cases in `SearchUseCases` now take the ID of s session/tab as parameter instead of a `Session` instance.

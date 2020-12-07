@@ -669,4 +669,20 @@ class ContentActionTest {
         assertTrue(tab.content.loadRequest!!.triggeredByRedirect)
         assertFalse(tab.content.loadRequest!!.triggeredByUser)
     }
+
+    @Test
+    fun `UpdateDesktopModeEnabledAction updates desktopModeEnabled`() {
+        assertFalse(tab.content.desktopMode)
+        assertFalse(otherTab.content.desktopMode)
+
+        store.dispatch(ContentAction.UpdateDesktopModeAction(tab.id, true)).joinBlocking()
+
+        assertTrue(tab.content.desktopMode)
+        assertFalse(otherTab.content.desktopMode)
+
+        store.dispatch(ContentAction.UpdateDesktopModeAction(tab.id, false)).joinBlocking()
+
+        assertFalse(tab.content.desktopMode)
+        assertFalse(otherTab.content.desktopMode)
+    }
 }

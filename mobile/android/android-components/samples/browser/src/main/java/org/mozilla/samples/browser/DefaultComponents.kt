@@ -27,6 +27,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.session.undo.UndoMiddleware
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.thumbnails.ThumbnailsMiddleware
@@ -340,11 +341,11 @@ open class DefaultComponents(private val applicationContext: Context) {
         )
         items.add(
             BrowserMenuCheckbox("Request desktop site", {
-                sessionManager.selectedSessionOrThrow.desktopMode
+                store.state.selectedTab?.content?.desktopMode == true
             }) { checked ->
                 sessionUseCases.requestDesktopSite(checked)
             }.apply {
-                visible = { sessionManager.selectedSession != null }
+                visible = { store.state.selectedTab != null }
             }
         )
         items.add(

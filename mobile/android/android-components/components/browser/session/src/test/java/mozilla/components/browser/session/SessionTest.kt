@@ -512,18 +512,6 @@ class SessionTest {
     }
 
     @Test
-    fun `observer is notified when desktop mode is set`() {
-        val observer = mock(Session.Observer::class.java)
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-        session.desktopMode = true
-        verify(observer).onDesktopModeChanged(
-                eq(session),
-                eq(true))
-        assertTrue(session.desktopMode)
-    }
-
-    @Test
     fun `session observer has default methods`() {
         val session = Session("")
         val defaultObserver = object : Session.Observer {}
@@ -542,7 +530,6 @@ class SessionTest {
         defaultObserver.onCustomTabConfigChanged(session, null)
         defaultObserver.onTrackerBlockingEnabledChanged(session, true)
         defaultObserver.onTrackerBlocked(session, mock(), emptyList())
-        defaultObserver.onDesktopModeChanged(session, true)
         defaultObserver.onContentPermissionRequested(session, contentPermissionRequest)
         defaultObserver.onAppPermissionRequested(session, appPermissionRequest)
         defaultObserver.onWebAppManifestChanged(session, mock())

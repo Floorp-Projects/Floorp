@@ -85,7 +85,7 @@ class SearchUseCasesTest {
 
         store.waitUntilIdle()
 
-        val loadUrlAction = middleware.findAction(EngineAction.LoadUrlAction::class)
+        val loadUrlAction = middleware.findFirstAction(EngineAction.LoadUrlAction::class)
         assertEquals(searchUrl, loadUrlAction.url)
     }
 
@@ -110,7 +110,7 @@ class SearchUseCasesTest {
             source = SessionState.Source.NEW_TAB
         )
 
-        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        val searchTermsAction = middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
         assertEquals("2342", searchTermsAction.sessionId)
         assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
@@ -136,7 +136,7 @@ class SearchUseCasesTest {
             source = SessionState.Source.NEW_TAB
         )
 
-        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        val searchTermsAction = middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
         assertEquals("2342", searchTermsAction.sessionId)
         assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
@@ -162,7 +162,7 @@ class SearchUseCasesTest {
             source = SessionState.Source.NONE
         )
 
-        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        val searchTermsAction = middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
         assertEquals("1177", searchTermsAction.sessionId)
         assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
@@ -188,7 +188,7 @@ class SearchUseCasesTest {
             source = SessionState.Source.NONE
         )
 
-        val searchTermsAction = middleware.findAction(ContentAction.UpdateSearchTermsAction::class)
+        val searchTermsAction = middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
         assertEquals("1177", searchTermsAction.sessionId)
         assertEquals(searchTerms, searchTermsAction.searchTerms)
     }

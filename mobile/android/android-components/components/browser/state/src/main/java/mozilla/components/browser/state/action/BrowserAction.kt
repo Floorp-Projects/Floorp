@@ -509,6 +509,11 @@ sealed class ContentAction : BrowserAction() {
         val sessionId: String,
         val devices: List<RecordingDevice>
     ) : ContentAction()
+
+    /**
+     * Updates the [ContentState] of the given [sessionId] to indicate whether or not desktop mode is enabled.
+     */
+    data class UpdateDesktopModeAction(val sessionId: String, val enabled: Boolean) : ContentAction()
 }
 
 /**

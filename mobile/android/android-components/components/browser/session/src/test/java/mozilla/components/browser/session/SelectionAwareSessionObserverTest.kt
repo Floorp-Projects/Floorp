@@ -146,7 +146,6 @@ class SelectionAwareSessionObserverTest {
         observer.onCustomTabConfigChanged(session, null)
         observer.onTrackerBlockingEnabledChanged(session, true)
         observer.onTrackerBlocked(session, Tracker(""), emptyList())
-        observer.onDesktopModeChanged(session, true)
         observer.onSessionRemoved(session)
         observer.onAllSessionsRemoved()
     }
