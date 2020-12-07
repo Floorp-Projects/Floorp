@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "rkv"
-version = "0.15.0"
+version = "0.16.0"
 authors = ["Richard Newman <rnewman@twinql.com>", "Nan Jiang <najiang@mozilla.com>", "Myk Melez <myk@mykzilla.org>", "Victor Porof <vporof@mozilla.com>"]
 exclude = ["/tests/envs/*"]
 description = "A simple, humane, typed key-value storage solution"
