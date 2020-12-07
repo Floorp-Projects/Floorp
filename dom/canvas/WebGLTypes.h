@@ -445,12 +445,12 @@ struct avec2 {
   }
 };
 
-template<typename T>
+template <typename T>
 avec2<T> MinExtents(const avec2<T>& a, const avec2<T>& b) {
   return {std::min(a.x, b.x), std::min(a.y, b.y)};
 }
 
-template<typename T>
+template <typename T>
 avec2<T> MaxExtents(const avec2<T>& a, const avec2<T>& b) {
   return {std::max(a.x, b.x), std::max(a.y, b.y)};
 }

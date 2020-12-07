@@ -167,8 +167,7 @@ mozilla::ipc::IPCResult RDDParent::RecvNewContentRemoteDecoderManager(
 }
 
 mozilla::ipc::IPCResult RDDParent::RecvInitVideoBridge(
-    Endpoint<PVideoBridgeChild>&& aEndpoint,
-    const bool& aCreateHardwareDevice,
+    Endpoint<PVideoBridgeChild>&& aEndpoint, const bool& aCreateHardwareDevice,
     const ContentDeviceData& aContentDeviceData) {
   if (!RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
           std::move(aEndpoint))) {

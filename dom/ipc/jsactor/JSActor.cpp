@@ -151,7 +151,8 @@ void JSActor::SetName(const nsACString& aName) {
   mName = aName;
 }
 
-void JSActor::ThrowStateErrorForGetter(const char* aName, ErrorResult& aRv) const {
+void JSActor::ThrowStateErrorForGetter(const char* aName,
+                                       ErrorResult& aRv) const {
   if (mName.IsEmpty()) {
     aRv.ThrowInvalidStateError(nsPrintfCString(
         "Cannot access property '%s' before actor is initialized", aName));
