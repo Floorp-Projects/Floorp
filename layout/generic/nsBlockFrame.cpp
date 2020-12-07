@@ -1521,8 +1521,10 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         }
       }
       if (nsFrameList* overflowContainers = GetOverflowContainers()) {
+        ocBounds.Clear();
         for (nsIFrame* f : *overflowContainers) {
           f->MovePositionBy(physicalDelta);
+          ConsiderChildOverflow(ocBounds, f);
         }
       }
     }
