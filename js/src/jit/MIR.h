@@ -2581,7 +2581,6 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
   // True if the caller does not use the return value.
   bool ignoresReturnValue_ : 1;
 
-  bool needsArgCheck_ : 1;
   bool needsClassCheck_ : 1;
   bool maybeCrossRealm_ : 1;
   bool needsThisCheck_ : 1;
@@ -2593,7 +2592,6 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
         numActualArgs_(numActualArgs),
         construct_(construct),
         ignoresReturnValue_(ignoresReturnValue),
-        needsArgCheck_(true),
         needsClassCheck_(true),
         maybeCrossRealm_(true),
         needsThisCheck_(false) {
@@ -2608,9 +2606,6 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
                     DOMObjectKind objectKind);
 
   void initCallee(MDefinition* func) { initOperand(CalleeOperandIndex, func); }
-
-  bool needsArgCheck() const { return needsArgCheck_; }
-  void disableArgCheck() { needsArgCheck_ = false; }
 
   bool needsClassCheck() const { return needsClassCheck_; }
   void disableClassCheck() { needsClassCheck_ = false; }
