@@ -6,10 +6,14 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import androidx.annotation.ColorRes
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
@@ -19,13 +23,15 @@ import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -36,7 +42,7 @@ import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the browser fragment.
- * @param sessionManager Reference to the session manager that contains all tabs.
+ * @param store reference to the application's [BrowserStore].
  * @param hasAccountProblem If true, there was a problem signing into the Firefox account.
  * @param shouldReverseItems If true, reverse the menu items.
  * @param onItemTapped Called when a menu item is tapped.
@@ -44,9 +50,9 @@ import org.mozilla.fenix.theme.ThemeManager
  * @param bookmarksStorage Used to check if a page is bookmarked.
  */
 @Suppress("LargeClass", "LongParameterList")
+@ExperimentalCoroutinesApi
 class DefaultToolbarMenu(
     private val context: Context,
-    private val sessionManager: SessionManager,
     private val store: BrowserStore,
     hasAccountProblem: Boolean = false,
     shouldReverseItems: Boolean,
@@ -59,8 +65,7 @@ class DefaultToolbarMenu(
     private var currentUrlIsBookmarked = false
     private var isBookmarkedJob: Job? = null
 
-    /** Gets the current browser session */
-    private val session: Session? get() = sessionManager.selectedSession
+    private val selectedSession: TabSessionState? get() = store.state.selectedTab
 
     override val menuBuilder by lazy {
         WebExtensionBrowserMenuBuilder(
@@ -81,7 +86,7 @@ class DefaultToolbarMenu(
             primaryContentDescription = context.getString(R.string.browser_menu_back),
             primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {
-                session?.canGoBack ?: true
+                selectedSession?.content?.canGoBack ?: true
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(R.attr.disabled, context),
             disableInSecondaryState = true,
@@ -95,7 +100,7 @@ class DefaultToolbarMenu(
             primaryContentDescription = context.getString(R.string.browser_menu_forward),
             primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {
-                session?.canGoForward ?: true
+                selectedSession?.content?.canGoForward ?: true
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(R.attr.disabled, context),
             disableInSecondaryState = true,
@@ -109,7 +114,7 @@ class DefaultToolbarMenu(
             primaryContentDescription = context.getString(R.string.browser_menu_refresh),
             primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {
-                session?.loading == false
+                selectedSession?.content?.loading == false
             },
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
             secondaryContentDescription = context.getString(R.string.browser_menu_stop),
@@ -117,7 +122,7 @@ class DefaultToolbarMenu(
             disableInSecondaryState = false,
             longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = true)) }
         ) {
-            if (session?.loading == true) {
+            if (selectedSession?.content?.loading == true) {
                 onItemTapped.invoke(ToolbarMenu.Item.Stop)
             } else {
                 onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = false))
@@ -157,19 +162,19 @@ class DefaultToolbarMenu(
 
     // Predicates that need to be repeatedly called as the session changes
     private fun canAddToHomescreen(): Boolean =
-        session != null && isPinningSupported &&
+        selectedSession != null && isPinningSupported &&
                 !context.components.useCases.webAppUseCases.isInstallable()
 
     private fun canInstall(): Boolean =
-        session != null && isPinningSupported &&
+        selectedSession != null && isPinningSupported &&
                 context.components.useCases.webAppUseCases.isInstallable()
 
-    private fun shouldShowOpenInApp(): Boolean = session?.let { session ->
+    private fun shouldShowOpenInApp(): Boolean = selectedSession?.let { session ->
         val appLink = context.components.useCases.appLinksUseCases.appLinkRedirect
-        appLink(session.url).hasExternalApp()
+        appLink(session.content.url).hasExternalApp()
     } ?: false
 
-    private fun shouldShowReaderAppearance(): Boolean = session?.let {
+    private fun shouldShowReaderAppearance(): Boolean = selectedSession?.let {
         store.state.findTab(it.id)?.readerState?.active
     } ?: false
     // End of predicates //
@@ -234,7 +239,7 @@ class DefaultToolbarMenu(
         imageResource = R.drawable.ic_desktop,
         label = context.getString(R.string.browser_menu_desktop_site),
         initialState = {
-            session?.desktopMode ?: false
+            selectedSession?.content?.desktopMode ?: false
         }
     ) { checked ->
         onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
@@ -353,44 +358,28 @@ class DefaultToolbarMenu(
     }
 
     @ColorRes
-    private fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+    @VisibleForTesting
+    internal fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
 
-    private var currentSessionObserver: Pair<Session, Session.Observer>? = null
-
-    private fun registerForIsBookmarkedUpdates() {
-        session?.let {
-            registerForUrlChanges(it)
-        }
-
-        val sessionManagerObserver = object : SessionManager.Observer {
-            override fun onSessionSelected(session: Session) {
-                // Unregister any old session observer before registering a new session observer
-                currentSessionObserver?.let {
-                    it.first.unregister(it.second)
+    @VisibleForTesting
+    internal fun registerForIsBookmarkedUpdates() {
+        store.flowScoped(lifecycleOwner) { flow ->
+            flow.mapNotNull { state -> state.selectedTab }
+                .ifAnyChanged { tab ->
+                    arrayOf(
+                        tab.id,
+                        tab.content.url
+                    )
                 }
-                currentUrlIsBookmarked = false
-                updateCurrentUrlIsBookmarked(session.url)
-                registerForUrlChanges(session)
-            }
+                .collect {
+                    currentUrlIsBookmarked = false
+                    updateCurrentUrlIsBookmarked(it.content.url)
+                }
         }
-
-        sessionManager.register(sessionManagerObserver, lifecycleOwner)
     }
 
-    private fun registerForUrlChanges(session: Session) {
-        val sessionObserver = object : Session.Observer {
-            override fun onUrlChanged(session: Session, url: String) {
-                currentUrlIsBookmarked = false
-                updateCurrentUrlIsBookmarked(url)
-            }
-        }
-
-        currentSessionObserver = Pair(session, sessionObserver)
-        updateCurrentUrlIsBookmarked(session.url)
-        session.register(sessionObserver, lifecycleOwner)
-    }
-
-    private fun updateCurrentUrlIsBookmarked(newUrl: String) {
+    @VisibleForTesting
+    internal fun updateCurrentUrlIsBookmarked(newUrl: String) {
         isBookmarkedJob?.cancel()
         isBookmarkedJob = lifecycleOwner.lifecycleScope.launch {
             currentUrlIsBookmarked = bookmarksStorage

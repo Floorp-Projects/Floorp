@@ -160,9 +160,9 @@ class BrowserToolbarView(
             val menuToolbar: ToolbarMenu
             if (isCustomTabSession) {
                 menuToolbar = CustomTabToolbarMenu(
-                    this,
-                    sessionManager,
-                    customTabSession?.id,
+                    context = this,
+                    store = components.core.store,
+                    sessionId = customTabSession?.id,
                     shouldReverseItems = toolbarPosition == ToolbarPosition.TOP,
                     onItemTapped = {
                         it.performHapticIfNeeded(view)
@@ -179,7 +179,6 @@ class BrowserToolbarView(
                         interactor.onBrowserToolbarMenuItemTapped(it)
                     },
                     lifecycleOwner = lifecycleOwner,
-                    sessionManager = sessionManager,
                     store = components.core.store,
                     bookmarksStorage = bookmarkStorage,
                     isPinningSupported = isPinningSupported

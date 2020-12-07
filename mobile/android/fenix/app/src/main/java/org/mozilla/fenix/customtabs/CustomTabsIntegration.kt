@@ -7,6 +7,7 @@ package org.mozilla.fenix.customtabs
 import android.app.Activity
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
@@ -18,6 +19,7 @@ import org.mozilla.fenix.ext.settings
 
 class CustomTabsIntegration(
     sessionManager: SessionManager,
+    store: BrowserStore,
     toolbar: BrowserToolbar,
     sessionId: String,
     activity: Activity,
@@ -74,7 +76,7 @@ class CustomTabsIntegration(
     private val customTabToolbarMenu by lazy {
         CustomTabToolbarMenu(
             activity,
-            sessionManager,
+            store,
             sessionId,
             shouldReverseItems,
             onItemTapped = onItemTapped
