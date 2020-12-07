@@ -80,7 +80,9 @@ export default class RemoveLoginsDialog extends HTMLElement {
     document.l10n.setAttributes(this._message, message, {
       count,
     });
-    document.l10n.setAttributes(this._confirmButton, confirmButtonLabel);
+    document.l10n.setAttributes(this._confirmButton, confirmButtonLabel, {
+      count,
+    });
     document.l10n.setAttributes(this._checkboxLabel, confirmCheckboxLabel, {
       count,
     });
