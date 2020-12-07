@@ -22,13 +22,14 @@ mod timespan;
 mod timing_distribution;
 mod uuid;
 
-pub use crate::event_database::RecordedEvent;
-
 pub use self::boolean::Boolean;
 pub use self::counter::Counter;
 pub use self::custom_distribution::CustomDistribution;
 pub use self::datetime::Datetime;
 pub use self::event::Event;
+pub use self::event::EventRecordingError;
+pub use self::event::ExtraKeys;
+pub use self::event::NoExtraKeys;
 pub use self::jwe::Jwe;
 pub use self::labeled::Labeled;
 pub use self::memory_distribution::MemoryDistribution;
