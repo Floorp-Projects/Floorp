@@ -280,8 +280,9 @@ void Client::MaybeRecordShutdownStep(const nsACString& aStepDescription) {
 #endif
 }
 
-void Client::ShutdownWorkThreads() {
+bool Client::InitiateShutdownWorkThreads() {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mShutdownTimer);
   MOZ_ASSERT(mShutdownSteps.IsEmpty());
 
   mShutdownStartedAt.init(TimeStamp::NowLoRes());
@@ -291,9 +292,9 @@ void Client::ShutdownWorkThreads() {
   InitiateShutdown();
 
   if (!IsShutdownCompleted()) {
-    nsCOMPtr<nsITimer> timer = NS_NewTimer();
+    mShutdownTimer = NS_NewTimer();
 
-    MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
+    MOZ_ALWAYS_SUCCEEDS(mShutdownTimer->InitWithNamedFuncCallback(
         [](nsITimer* aTimer, void* aClosure) {
           auto* const quotaClient = static_cast<Client*>(aClosure);
 
@@ -323,10 +324,17 @@ void Client::ShutdownWorkThreads() {
         this, SHUTDOWN_FORCE_KILL_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
         "quota::Client::ShutdownWorkThreads::ForceKillTimer"));
 
-    MOZ_ALWAYS_TRUE(
-        SpinEventLoopUntil([this] { return IsShutdownCompleted(); }));
+    return true;
+  }
 
-    MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
+  return false;
+}
+
+void Client::FinalizeShutdownWorkThreads() {
+  MOZ_ASSERT(mShutdownStartedAt);
+
+  if (mShutdownTimer) {
+    MOZ_ALWAYS_SUCCEEDS(mShutdownTimer->Cancel());
   }
 
   MaybeRecordShutdownStep("completed"_ns);
