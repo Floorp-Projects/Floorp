@@ -6,7 +6,6 @@
 
 #include "DebuggerNotificationManager.h"
 
-#include "mozilla/ScopeExit.h"
 #include "nsIGlobalObject.h"
 
 namespace mozilla::dom {

@@ -45,6 +45,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/ViewportUtils.h"

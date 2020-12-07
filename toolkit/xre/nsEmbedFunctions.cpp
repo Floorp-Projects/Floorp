@@ -21,6 +21,7 @@
 #  include <process.h>
 #  include <shobjidl.h>
 #  include "mozilla/ipc/WindowsMessageLoop.h"
+#  include "mozilla/ScopeExit.h"
 #  include "mozilla/WinDllServices.h"
 #endif
 

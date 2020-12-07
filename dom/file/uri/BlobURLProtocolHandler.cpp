@@ -23,6 +23,7 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/ScopeExit.h"
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
 #include "nsError.h"

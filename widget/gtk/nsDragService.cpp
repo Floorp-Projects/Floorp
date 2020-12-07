@@ -29,6 +29,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScopeExit.h"
 #include "GRefPtr.h"
 
 #include "gfxXlibSurface.h"

@@ -12,6 +12,7 @@
 #include "nsContentUtils.h"
 #include "nsSize.h"
 #include "mozilla/ReflowInput.h"
+#include "mozilla/ScopeExit.h"
 #include "nsComponentManagerUtils.h"
 #include "nsString.h"
 #include "nsAtom.h"

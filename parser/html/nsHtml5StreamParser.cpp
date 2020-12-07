@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/ScopeExit.h"
 #include "nsContentUtils.h"
 #include "nsHtml5Tokenizer.h"
 #include "nsIHttpChannel.h"

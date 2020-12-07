@@ -38,6 +38,7 @@
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_dom.h"

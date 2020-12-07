@@ -7,6 +7,7 @@
 #include "CachePushChecker.h"
 
 #include "LoadContextInfo.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "nsICacheEntry.h"
 #include "nsICacheStorageService.h"

@@ -5,7 +5,6 @@
 #include "mozilla/Viaduct.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/ViaductRequest.h"
 
 namespace mozilla {

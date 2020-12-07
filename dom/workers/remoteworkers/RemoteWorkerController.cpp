@@ -15,7 +15,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/dom/FetchEventOpProxyParent.h"
 #include "mozilla/dom/MessagePortParent.h"
