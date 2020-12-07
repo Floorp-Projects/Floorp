@@ -82,6 +82,8 @@ class SearchDialogController(
     }
 
     private fun openSearchOrUrl(url: String) {
+        clearToolbarFocus()
+
         val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
 
         activity.openToBrowserAndLoad(
