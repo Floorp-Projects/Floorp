@@ -210,8 +210,7 @@ interface nsIAlertsService : nsISupports
    *                       is provided then only a notification created with
    *                       no name (if any) will be closed.
    */
-  void closeAlert([optional] in AString aName,
-                  [optional] in nsIPrincipal aPrincipal);
+  void closeAlert([optional] in AString aName);
 
 };
 

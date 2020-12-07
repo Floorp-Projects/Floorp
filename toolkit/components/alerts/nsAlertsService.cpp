@@ -241,18 +241,17 @@ NS_IMETHODIMP nsAlertsService::ShowPersistentNotification(
   return ShowWithBackend(xulBackend, aAlert, aAlertListener, aPersistentData);
 }
 
-NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
-                                          nsIPrincipal* aPrincipal) {
+NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName) {
   if (XRE_IsContentProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
-    cpc->SendCloseAlert(nsAutoString(aAlertName), IPC::Principal(aPrincipal));
+    cpc->SendCloseAlert(nsAutoString(aAlertName));
     return NS_OK;
   }
 
   nsresult rv;
   // Try the system notification service.
   if (ShouldUseSystemBackend()) {
-    rv = mBackend->CloseAlert(aAlertName, aPrincipal);
+    rv = mBackend->CloseAlert(aAlertName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // If the system backend failed to close the alert, fall back to XUL for
       // future alerts.
@@ -261,7 +260,7 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
   } else {
     nsCOMPtr<nsIAlertsService> xulBackend(nsXULAlerts::GetInstance());
     NS_ENSURE_TRUE(xulBackend, NS_ERROR_FAILURE);
-    rv = xulBackend->CloseAlert(aAlertName, aPrincipal);
+    rv = xulBackend->CloseAlert(aAlertName);
   }
   return rv;
 }

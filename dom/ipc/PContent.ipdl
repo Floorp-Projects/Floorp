@@ -1055,7 +1055,7 @@ parent:
 
     async ShowAlert(nsIAlertNotification alert);
 
-    async CloseAlert(nsString name, Principal principal);
+    async CloseAlert(nsString name);
 
     async DisableNotifications(Principal principal);
 

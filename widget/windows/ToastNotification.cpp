@@ -168,8 +168,7 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
 }
 
 NS_IMETHODIMP
-ToastNotification::CloseAlert(const nsAString& aAlertName,
-                              nsIPrincipal* aPrincipal) {
+ToastNotification::CloseAlert(const nsAString& aAlertName) {
   RefPtr<ToastNotificationHandler> handler;
   if (NS_WARN_IF(!mActiveHandlers.Get(aAlertName, getter_AddRefs(handler)))) {
     return NS_OK;
