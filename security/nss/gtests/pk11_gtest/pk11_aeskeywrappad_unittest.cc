@@ -66,6 +66,14 @@ TEST_F(Pkcs11AESKeyWrapPadTest, WrapUnwrapECKey) {
                          true, CKK_EC, usages, usageCount, nullptr));
   ASSERT_EQ(0, PORT_GetError());
   ASSERT_TRUE(!!unwrapped);
+
+  // Try it with internal params allocation.
+  SECKEYPrivateKey* tmp = PK11_UnwrapPrivKey(
+      slot.get(), kek.get(), CKM_NSS_AES_KEY_WRAP_PAD, nullptr, wrapped.get(),
+      nullptr, &pubKey, false, true, CKK_EC, usages, usageCount, nullptr);
+  ASSERT_EQ(0, PORT_GetError());
+  ASSERT_NE(nullptr, tmp);
+  unwrapped.reset(tmp);
 }
 
 // Encrypt an ephemeral RSA key

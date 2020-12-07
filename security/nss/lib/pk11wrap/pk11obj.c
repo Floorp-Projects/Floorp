@@ -1321,23 +1321,23 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
                                                                 NULL, perm, sensitive);
                 SECKEY_DestroyPrivateKey(privKey);
                 PK11_FreeSlot(int_slot);
+                SECITEM_FreeItem(param_free, PR_TRUE);
                 return newPrivKey;
             }
         }
         if (int_slot)
             PK11_FreeSlot(int_slot);
         PORT_SetError(PK11_MapError(crv));
+        SECITEM_FreeItem(param_free, PR_TRUE);
         return NULL;
     }
+    SECITEM_FreeItem(param_free, PR_TRUE);
     return PK11_MakePrivKey(slot, nullKey, PR_FALSE, privKeyID, wincx);
 
 loser:
-    if (newKey) {
-        PK11_FreeSymKey(newKey);
-    }
-    if (ck_id) {
-        SECITEM_FreeItem(ck_id, PR_TRUE);
-    }
+    PK11_FreeSymKey(newKey);
+    SECITEM_FreeItem(ck_id, PR_TRUE);
+    SECITEM_FreeItem(param_free, PR_TRUE);
     return NULL;
 }
 
