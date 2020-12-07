@@ -1392,13 +1392,23 @@ svcparam.encode = function(param, buf, offset) {
       svcparam.encode.bytes += 4;
     }
   } else if (key == 5) { //echconfig
-    // TODO: base64 presentation format
-    buf.writeUInt16BE(param.value.length, offset);
-    offset += 2;
-    svcparam.encode.bytes += 2;
-    buf.write(param.value, offset);
-    offset += param.value.length;
-    svcparam.encode.bytes += param.value.length;
+    if (svcparam.ech) {
+      buf.writeUInt16BE(svcparam.ech.length, offset);
+      offset += 2;
+      svcparam.encode.bytes += 2;
+      for (let i = 0; i < svcparam.ech.length; i++) {
+        buf.writeUInt8(svcparam.ech[i], offset);
+        offset++;
+      }
+      svcparam.encode.bytes += svcparam.ech.length;
+    } else {
+      buf.writeUInt16BE(param.value.length, offset);
+      offset += 2;
+      svcparam.encode.bytes += 2;
+      buf.write(param.value, offset);
+      offset += param.value.length;
+      svcparam.encode.bytes += param.value.length;
+    }
   } else if (key == 6) { //ipv6hint
     let val = param.value;
     if (!Array.isArray(val)) val = [val];
@@ -1458,7 +1468,13 @@ svcparam.encodingLength = function (param) {
     case 'no-default-alpn' : return 4
     case 'port' : return 4 + 2
     case 'ipv4hint' : return 4 + 4 * (Array.isArray(param.value) ? param.value.length : 1)
-    case 'echconfig' : return 4 + param.value.length
+    case 'echconfig' : {
+      if (param.needBase64Decode) {
+        svcparam.ech = Buffer.from(param.value, "base64");
+        return 4 + svcparam.ech.length;
+      }
+      return 4 + param.value.length
+    }
     case 'ipv6hint' : return 4 + 16 * (Array.isArray(param.value) ? param.value.length : 1)
     case 'key65535' : return 4
     default: return 4 // unknown option

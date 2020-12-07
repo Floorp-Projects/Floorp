@@ -378,7 +378,7 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
     clone = new nsHttpConnectionInfo(
         mOrigin, mOriginPort, alpn ? Get<0>(*alpn) : EmptyCString(), mUsername,
         mTopWindowOrigin, mProxyInfo, mOriginAttributes, name,
-        port ? *port : mRoutedPort, mIsolated, isHttp3);
+        port ? *port : mOriginPort, mIsolated, isHttp3);
   }
 
   // Make sure the anonymous, insecure-scheme, and private flags are transferred
