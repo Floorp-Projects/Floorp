@@ -575,8 +575,10 @@ ul, menu, dir {
   padding-inline-start: 40px;
 }
 
-menu[type="context"] {
-  display: none !important;
+@supports -moz-bool-pref("dom.menuitem.enabled") {
+  menu[type="context"] {
+    display: none !important;
+  }
 }
 
 ul, ol, menu {
