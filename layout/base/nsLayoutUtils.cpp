@@ -8868,33 +8868,40 @@ nsBlockFrame* nsLayoutUtils::GetFloatContainingBlock(nsIFrame* aFrame) {
   return static_cast<nsBlockFrame*>(ancestor);
 }
 
-// The implementation of this calculation is adapted from
+// The implementations of this calculation are adapted from
 // Element::GetBoundingClientRect().
 /* static */
 CSSRect nsLayoutUtils::GetBoundingContentRect(
     const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame) {
-  CSSRect result;
   if (nsIFrame* frame = aContent->GetPrimaryFrame()) {
-    nsIFrame* relativeTo = aRootScrollFrame->GetScrolledFrame();
-    result = CSSRect::FromAppUnits(nsLayoutUtils::GetAllInFlowRectsUnion(
-        frame, relativeTo, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS));
+    return GetBoundingFrameRect(frame, aRootScrollFrame);
+  }
+  return CSSRect();
+}
 
-    // If the element is contained in a scrollable frame that is not
-    // the root scroll frame, make sure to clip the result so that it is
-    // not larger than the containing scrollable frame's bounds.
-    nsIScrollableFrame* scrollFrame =
-        nsLayoutUtils::GetNearestScrollableFrame(frame);
-    if (scrollFrame && scrollFrame != aRootScrollFrame) {
-      nsIFrame* subFrame = do_QueryFrame(scrollFrame);
-      MOZ_ASSERT(subFrame);
-      // Get the bounds of the scroll frame in the same coordinate space
-      // as |result|.
-      CSSRect subFrameRect =
-          CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
-              subFrame, subFrame->GetRectRelativeToSelf(), relativeTo));
+/* static */
+CSSRect nsLayoutUtils::GetBoundingFrameRect(
+    nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame) {
+  CSSRect result;
+  nsIFrame* relativeTo = aRootScrollFrame->GetScrolledFrame();
+  result = CSSRect::FromAppUnits(nsLayoutUtils::GetAllInFlowRectsUnion(
+      aFrame, relativeTo, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS));
 
-      result = subFrameRect.Intersect(result);
-    }
+  // If the element is contained in a scrollable frame that is not
+  // the root scroll frame, make sure to clip the result so that it is
+  // not larger than the containing scrollable frame's bounds.
+  nsIScrollableFrame* scrollFrame =
+      nsLayoutUtils::GetNearestScrollableFrame(aFrame);
+  if (scrollFrame && scrollFrame != aRootScrollFrame) {
+    nsIFrame* subFrame = do_QueryFrame(scrollFrame);
+    MOZ_ASSERT(subFrame);
+    // Get the bounds of the scroll frame in the same coordinate space
+    // as |result|.
+    CSSRect subFrameRect =
+        CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
+            subFrame, subFrame->GetRectRelativeToSelf(), relativeTo));
+
+    result = subFrameRect.Intersect(result);
   }
   return result;
 }
