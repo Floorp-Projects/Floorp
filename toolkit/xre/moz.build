@@ -38,7 +38,6 @@ EXPORTS.mozilla += [
     "AutoSQLiteLifetime.h",
     "Bootstrap.h",
     "CmdLineAndEnvUtils.h",
-    "GlobalSemaphore.h",
     "SafeMode.h",
     "UntrustedModulesData.h",
 ]
@@ -126,11 +125,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
         "nsAndroidStartup.cpp",
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
-    UNIFIED_SOURCES += [
-        "GlobalSemaphore.cpp",
-    ]
-
 UNIFIED_SOURCES += [
     "/toolkit/mozapps/update/common/commonupdatedir.cpp",
     "AutoSQLiteLifetime.cpp",
@@ -169,7 +163,6 @@ if CONFIG["MOZ_UPDATER"]:
     if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
         UNIFIED_SOURCES += [
             "nsUpdateDriver.cpp",
-            "nsUpdateSyncManager.cpp",
         ]
 
 if CONFIG["MOZ_PDF_PRINTING"]:
