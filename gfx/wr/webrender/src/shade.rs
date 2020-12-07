@@ -258,8 +258,6 @@ impl LazilyCompiledShader {
                             ("sColor1", TextureSampler::Color1),
                             ("sColor2", TextureSampler::Color2),
                             ("sDither", TextureSampler::Dither),
-                            ("sPrevPassAlpha", TextureSampler::PrevPassAlpha),
-                            ("sPrevPassColor", TextureSampler::PrevPassColor),
                             ("sTransformPalette", TextureSampler::TransformPalette),
                             ("sRenderTasks", TextureSampler::RenderTasks),
                             ("sGpuCache", TextureSampler::GpuCache),
