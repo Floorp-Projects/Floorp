@@ -573,8 +573,8 @@ void SetResultAndDispatchSuccessEvent(
     const NotNull<RefPtr<IDBRequest>>& aRequest,
     const SafeRefPtr<IDBTransaction>& aTransaction, T& aPtr,
     RefPtr<Event> aEvent) {
-  const auto autoTransaction = AutoSetCurrentTransaction{
-      aTransaction ? SomeRef(*aTransaction) : Nothing()};
+  const auto autoTransaction =
+      AutoSetCurrentTransaction{aTransaction.maybeDeref()};
 
   AUTO_PROFILER_LABEL("IndexedDB:SetResultAndDispatchSuccessEvent", DOM);
 
