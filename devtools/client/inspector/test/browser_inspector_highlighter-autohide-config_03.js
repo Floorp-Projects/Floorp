@@ -28,14 +28,14 @@ add_task(async function() {
   );
 
   info("Show Box Model Highlighter, then hide after half a second");
-  inspector.highlighters.showHighlighterTypeForNode(
+  await inspector.highlighters.showHighlighterTypeForNode(
     inspector.highlighters.TYPES.BOXMODEL,
     nodeFront,
     { duration: HALF_SECOND }
   );
 
   info("Show Box Model Highlighter again, then hide after one second");
-  inspector.highlighters.showHighlighterTypeForNode(
+  await inspector.highlighters.showHighlighterTypeForNode(
     inspector.highlighters.TYPES.BOXMODEL,
     nodeFront,
     { duration: ONE_SECOND }
@@ -47,7 +47,9 @@ add_task(async function() {
   /*
   Since the second duration passed is longer than the first and is supposed to overwrite
   the first, it is reasonable to expect that the "highlighter-hidden" event was emitted
-  after the second (longer) duration expired. As an added check, we naively wait for an additional time amounting to the sum of both durations to check if the first timer was somehow not overwritten and fires another "highlighter-hidden" event.
+  after the second (longer) duration expired. As an added check, we naively wait for an
+  additional time amounting to the sum of both durations to check if the first timer was
+  somehow not overwritten and fires another "highlighter-hidden" event.
    */
   let wasEmitted = false;
   const waitForExtraEvent = new Promise((resolve, reject) => {

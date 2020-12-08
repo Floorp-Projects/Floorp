@@ -114,6 +114,10 @@ class HighlightersOverlay {
     // It will fully replace this.highlighters when all highlighter consumers are updated
     // to use it as the single source of truth for which highlighters are visible.
     this._activeHighlighters = new Map();
+    // Map of highlighter types to symbols. Showing highlighters is an async operation,
+    // until it doesn't complete, this map will be populated with the requested type and
+    // a unique symbol identifying that request. Once completed, the entry is removed.
+    this._pendingHighlighters = new Map();
     // Collection of instantiated highlighter actors like FlexboxHighlighter,
     // ShapesHighlighter and GeometryEditorHighlighter.
     this.highlighters = {};
@@ -369,17 +373,35 @@ class HighlightersOverlay {
    * @return {Promise}
    */
   async showHighlighterTypeForNode(type, nodeFront, options) {
-    const skipShow = await this._beforeShowHighlighterTypeForNode(
+    const promise = this._beforeShowHighlighterTypeForNode(
       type,
       nodeFront,
       options
     );
 
-    if (skipShow) {
+    // Set a pending highlighter in order to detect if, while we were awaiting, there was
+    // a more recent request to highlight a node with the same type, or a request to hide
+    // the highlighter. Then we will abort this one in favor of the newer one.
+    // This needs to be done before the 'await' in order to be synchronous, but after
+    // calling _beforeShowHighlighterTypeForNode, since it can call hideHighlighterType.
+    const id = Symbol();
+    this._pendingHighlighters.set(type, id);
+    const skipShow = await promise;
+
+    if (this._pendingHighlighters.get(type) !== id) {
+      return;
+    } else if (skipShow) {
+      this._pendingHighlighters.delete(type);
       return;
     }
 
     const highlighter = await this._getHighlighterTypeForNode(type, nodeFront);
+
+    if (this._pendingHighlighters.get(type) !== id) {
+      return;
+    }
+    this._pendingHighlighters.delete(type);
+
     // Set a timer to automatically hide the highlighter if a duration is provided.
     const timer = this.scheduleAutoHideHighlighterType(type, options?.duration);
     // TODO: support case for multiple highlighter instances (ex: multiple grids)
@@ -431,6 +453,10 @@ class HighlightersOverlay {
    * @return {Promise}
    */
   async hideHighlighterType(type) {
+    if (this._pendingHighlighters.has(type)) {
+      // Abort pending highlighters for the given type.
+      this._pendingHighlighters.delete(type);
+    }
     if (!this._activeHighlighters.has(type)) {
       return;
     }
@@ -1696,6 +1722,7 @@ class HighlightersOverlay {
     }
 
     this._activeHighlighters.clear();
+    this._pendingHighlighters.clear();
     this.gridHighlighters.clear();
     this.parentGridHighlighters.clear();
     this.subgridToParentMap.clear();
@@ -1754,6 +1781,7 @@ class HighlightersOverlay {
     }
 
     this._activeHighlighters.clear();
+    this._pendingHighlighters.clear();
 
     for (const type in this.highlighters) {
       if (this.highlighters[type]) {
