@@ -319,11 +319,7 @@ Tools.memory = {
   tooltip: l10n("memory.tooltip"),
 
   isTargetSupported: function(target) {
-    return (
-      target.getTrait("heapSnapshots") &&
-      !target.isAddon &&
-      !target.isWorkerTarget
-    );
+    return !target.isAddon && !target.isWorkerTarget;
   },
 
   build: function(frame, target) {
