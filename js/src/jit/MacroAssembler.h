@@ -4155,6 +4155,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
  public:
   void loadJitCodeRaw(Register func, Register dest);
+  void loadJitCodeNoArgCheck(Register func, Register dest);
   void loadBaselineJitCodeRaw(Register func, Register dest,
                               Label* failure = nullptr);
   void storeICScriptInJSContext(Register icScript);

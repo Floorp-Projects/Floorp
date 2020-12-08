@@ -69,6 +69,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
       nativeToBytecodeNumRegions_(0),
       nativeToBytecodeScriptList_(nullptr),
       nativeToBytecodeScriptListLength_(0),
+      skipArgCheckEntryOffset_(0),
 #ifdef CHECK_OSIPOINT_REGISTERS
       checkOsiPointRegisters(JitOptions.checkOsiPointRegisters),
 #endif
