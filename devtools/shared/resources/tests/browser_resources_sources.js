@@ -9,7 +9,7 @@ const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
-const TEST_URL = URL_ROOT + "sources.html";
+const TEST_URL = URL_ROOT_SSL + "sources.html";
 
 add_task(async function() {
   const tab = await addTab(TEST_URL);
@@ -23,6 +23,7 @@ add_task(async function() {
 
   // Force the target list to cover workers
   targetList.listenForWorkers = true;
+  targetList.listenForServiceWorkers = true;
   await targetList.startListening();
 
   const targets = [];
@@ -31,7 +32,7 @@ add_task(async function() {
   }) {
     targets.push(targetFront);
   });
-  is(targets.length, 2, "Got expected number of targets");
+  is(targets.length, 3, "Got expected number of targets");
 
   info("Check already available resources");
   const availableResources = [];
@@ -45,9 +46,9 @@ add_task(async function() {
       sourceForm: {
         introductionType: "scriptElement",
         sourceMapBaseURL:
-          "http://example.com/browser/devtools/shared/resources/tests/sources.js",
+          "https://example.com/browser/devtools/shared/resources/tests/sources.js",
         url:
-          "http://example.com/browser/devtools/shared/resources/tests/sources.js",
+          "https://example.com/browser/devtools/shared/resources/tests/sources.js",
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
@@ -62,7 +63,7 @@ add_task(async function() {
       sourceForm: {
         introductionType: "eval",
         sourceMapBaseURL:
-          "http://example.com/browser/devtools/shared/resources/tests/sources.html",
+          "https://example.com/browser/devtools/shared/resources/tests/sources.html",
         url: null,
         isBlackBoxed: false,
         sourceMapURL: null,
@@ -78,9 +79,9 @@ add_task(async function() {
       sourceForm: {
         introductionType: "scriptElement",
         sourceMapBaseURL:
-          "http://example.com/browser/devtools/shared/resources/tests/sources.html",
+          "https://example.com/browser/devtools/shared/resources/tests/sources.html",
         url:
-          "http://example.com/browser/devtools/shared/resources/tests/sources.html",
+          "https://example.com/browser/devtools/shared/resources/tests/sources.html",
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
@@ -95,9 +96,9 @@ add_task(async function() {
       sourceForm: {
         introductionType: undefined,
         sourceMapBaseURL:
-          "http://example.com/browser/devtools/shared/resources/tests/worker-sources.js",
+          "https://example.com/browser/devtools/shared/resources/tests/worker-sources.js",
         url:
-          "http://example.com/browser/devtools/shared/resources/tests/worker-sources.js",
+          "https://example.com/browser/devtools/shared/resources/tests/worker-sources.js",
         isBlackBoxed: false,
         sourceMapURL: null,
         extensionName: null,
@@ -105,6 +106,23 @@ add_task(async function() {
       sourceContent: {
         contentType: "text/javascript",
         source: "/* eslint-disable */\nfunction workerSource() {}\n",
+      },
+    },
+    {
+      description: "service worker script",
+      sourceForm: {
+        introductionType: undefined,
+        sourceMapBaseURL:
+          "https://example.com/browser/devtools/shared/resources/tests/service-worker-sources.js",
+        url:
+          "https://example.com/browser/devtools/shared/resources/tests/service-worker-sources.js",
+        isBlackBoxed: false,
+        sourceMapURL: null,
+        extensionName: null,
+      },
+      sourceContent: {
+        contentType: "text/javascript",
+        source: "/* eslint-disable */\nfunction serviceWorkerSource() {}\n",
       },
     },
   ];

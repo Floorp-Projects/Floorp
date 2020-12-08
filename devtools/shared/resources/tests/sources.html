@@ -15,6 +15,7 @@
       // Assign the worker to a global variable in order to avoid
       // having it be GCed.
       this.worker = new Worker("worker-sources.js");
+      navigator.serviceWorker.register("service-worker-sources.js");
     </script>
      <script src="sources.js"></script>
   </body>
