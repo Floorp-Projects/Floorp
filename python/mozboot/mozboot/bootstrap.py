@@ -404,15 +404,19 @@ class Bootstrapper(object):
         )
         self.instance.validate_environment(checkout_root)
         self._validate_python_environment()
-        self.instance.ensure_mach_environment(checkout_root)
 
         if self.instance.no_system_changes:
+            self.instance.ensure_mach_environment(checkout_root)
             self.check_telemetry_opt_in(state_dir)
             self.maybe_install_private_packages_or_exit(state_dir, checkout_root)
             self._output_mozconfig(application, mozconfig_builder)
             sys.exit(0)
 
         self.instance.install_system_packages()
+        # Install mach environment python packages after system packages.
+        # Some mach packages require building native modules, which require
+        # tools which are installed to the system.
+        self.instance.ensure_mach_environment(checkout_root)
 
         # Like 'install_browser_packages' or 'install_mobile_android_packages'.
         getattr(self.instance, "install_%s_packages" % application)(mozconfig_builder)
