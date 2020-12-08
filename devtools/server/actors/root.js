@@ -142,9 +142,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       get allowChromeProcess() {
         return DevToolsServer.allowChromeProcess;
       },
-      // @backward-compat { version 44 } Whether or not the MemoryActor's heap snapshot
-      // abilities are fully equipped to handle heap snapshots for the memory tool.
-      heapSnapshots: true,
       // @backward-compat { version 65 } Version of perf actor.
       // Version 1 - Firefox 65: Introduces a duration-based buffer. It can be controlled
       // by adding a `duration` property (in seconds) to the options passed to
