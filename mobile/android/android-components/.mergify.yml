@@ -31,7 +31,6 @@ pull_request_rules:
         strict: smart
   - name: Release automation
     conditions:
-      - base~=releases/.*
       - author=github-actions[bot]
       - status-success=complete-pr
       - files~=(.buildconfig.yml|Gecko.kt)
