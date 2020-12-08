@@ -385,6 +385,12 @@ typedef enum JSGCParamKey {
    * nursery.)
    */
   JSGC_PRETENURE_STRING_THRESHOLD = 42,
+
+  /**
+   * If the finalization rate of the tenured strings exceeds this threshold,
+   * string will be allocated in nursery.
+   */
+  JSGC_STOP_PRETENURE_STRING_THRESHOLD = 43,
 } JSGCParamKey;
 
 /*
