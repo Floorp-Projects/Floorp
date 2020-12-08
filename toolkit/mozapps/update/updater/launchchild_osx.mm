@@ -11,7 +11,15 @@
 #include <stdio.h>
 #include <spawn.h>
 #include <SystemConfiguration/SystemConfiguration.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #include "readstrings.h"
+
+#define ARCH_PATH "/usr/bin/arch"
+#if defined(__x86_64__)
+// Work around the fact that this constant is not available in the macOS SDK
+#  define kCFBundleExecutableArchitectureARM64 0x0100000c
+#endif
 
 class MacAutoreleasePool {
  public:
@@ -22,12 +30,122 @@ class MacAutoreleasePool {
   NSAutoreleasePool* mPool;
 };
 
+#if defined(__x86_64__)
+/*
+ * Returns true if the process is running under Rosetta translation. Returns
+ * false if running natively or if an error was encountered. We use the
+ * `sysctl.proc_translated` sysctl which is documented by Apple to be used
+ * for this purpose.
+ */
+bool IsProcessRosettaTranslated() {
+  int ret = 0;
+  size_t size = sizeof(ret);
+  if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
+    if (errno != ENOENT) {
+      fprintf(stderr, "Failed to check for translation environment\n");
+    }
+    return false;
+  }
+  return (ret == 1);
+}
+
+// Returns true if the binary at |executablePath| can be executed natively
+// on an arm64 Mac. Returns false otherwise or if an error occurred.
+bool IsBinaryArmExecutable(const char* executablePath) {
+  bool isArmExecutable = false;
+
+  CFURLRef url = ::CFURLCreateFromFileSystemRepresentation(
+      kCFAllocatorDefault, (const UInt8*)executablePath, strlen(executablePath), false);
+  if (!url) {
+    return false;
+  }
+
+  CFArrayRef archs = ::CFBundleCopyExecutableArchitecturesForURL(url);
+  if (!archs) {
+    CFRelease(url);
+    return false;
+  }
+
+  CFIndex archCount = ::CFArrayGetCount(archs);
+  for (CFIndex i = 0; i < archCount; i++) {
+    CFNumberRef currentArch = static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archs, i));
+    int currentArchInt = 0;
+    if (!::CFNumberGetValue(currentArch, kCFNumberIntType, &currentArchInt)) {
+      continue;
+    }
+    if (currentArchInt == kCFBundleExecutableArchitectureARM64) {
+      isArmExecutable = true;
+      break;
+    }
+  }
+
+  CFRelease(url);
+  CFRelease(archs);
+
+  return isArmExecutable;
+}
+
+// Returns true if the executable provided in |executablePath| should be
+// launched with a preference for arm64. After updating from an x64 version
+// running under Rosetta, if the update is to a universal binary with arm64
+// support we want to switch to arm64 execution mode. Returns true if those
+// conditions are met and the arch(1) utility at |archPath| is executable.
+// It should be safe to always launch with arch and fallback to x64, but we
+// limit its use to the only scenario it is necessary to minimize risk.
+bool ShouldPreferArmLaunch(const char* archPath, const char* executablePath) {
+  // If not running under Rosetta, we are not on arm64 hardware.
+  if (!IsProcessRosettaTranslated()) {
+    return false;
+  }
+
+  // Ensure the arch(1) utility is present and executable.
+  NSFileManager* fileMgr = [NSFileManager defaultManager];
+  NSString* archPathString = [NSString stringWithUTF8String:archPath];
+  if (![fileMgr isExecutableFileAtPath:archPathString]) {
+    return false;
+  }
+
+  // Ensure the binary can be run natively on arm64.
+  return IsBinaryArmExecutable(executablePath);
+}
+#endif  // __x86_64__
+
 void LaunchChild(int argc, const char** argv) {
   MacAutoreleasePool pool;
 
   @try {
-    NSString* launchPath = [NSString stringWithUTF8String:argv[0]];
-    NSMutableArray* arguments = [NSMutableArray arrayWithCapacity:argc - 1];
+    bool preferArmLaunch = false;
+
+#if defined(__x86_64__)
+    // When running under Rosetta, child processes inherit the architecture
+    // preference of their parent and therefore universal binaries launched
+    // by an emulated x64 process will launch in x64 mode. If we are running
+    // under Rosetta, launch the child process with a preference for arm64 so
+    // that we will switch to arm64 execution if we have just updated from
+    // x64 to a universal build. This includes if we were already a universal
+    // build and the user is intentionally running under Rosetta.
+    preferArmLaunch = ShouldPreferArmLaunch(ARCH_PATH, argv[0]);
+#endif  // __x86_64__
+
+    NSString* launchPath;
+    NSMutableArray* arguments;
+
+    if (preferArmLaunch) {
+      launchPath = [NSString stringWithUTF8String:ARCH_PATH];
+
+      // Size the arguments array to include all the arguments
+      // in |argv| plus two arguments to pass to the arch(1) utility.
+      arguments = [NSMutableArray arrayWithCapacity:argc + 2];
+      [arguments addObject:[NSString stringWithUTF8String:"-arm64"]];
+      [arguments addObject:[NSString stringWithUTF8String:"-x86_64"]];
+
+      // Add the first argument from |argv|. The rest are added below.
+      [arguments addObject:[NSString stringWithUTF8String:argv[0]]];
+    } else {
+      launchPath = [NSString stringWithUTF8String:argv[0]];
+      arguments = [NSMutableArray arrayWithCapacity:argc - 1];
+    }
+
     for (int i = 1; i < argc; i++) {
       [arguments addObject:[NSString stringWithUTF8String:argv[i]]];
     }
