@@ -4118,10 +4118,6 @@ inline void* BaseAllocator::realloc(void* aPtr, size_t aSize) {
     auto arena = info.Arena();
     MOZ_RELEASE_ASSERT(!mArena || arena == mArena);
     ret = arena->Ralloc(aPtr, aSize, info.Size());
-
-    if (!ret) {
-      errno = ENOMEM;
-    }
   } else {
     if (!malloc_init()) {
       ret = nullptr;
@@ -4129,12 +4125,11 @@ inline void* BaseAllocator::realloc(void* aPtr, size_t aSize) {
       arena_t* arena = mArena ? mArena : choose_arena(aSize);
       ret = arena->Malloc(aSize, /* zero = */ false);
     }
-
-    if (!ret) {
-      errno = ENOMEM;
-    }
   }
 
+  if (!ret) {
+    errno = ENOMEM;
+  }
   return ret;
 }
 
