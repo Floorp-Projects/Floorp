@@ -80,7 +80,7 @@ class TestRunner(object):
             func()
         except TestAssertion as e:
             status = "FAIL"
-            message = e.message
+            message = str(e)
         except Exception:
             status = "ERROR"
             message = traceback.format_exc()

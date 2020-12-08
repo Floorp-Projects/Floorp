@@ -1930,7 +1930,7 @@ class ScriptMixin(PlatformMixin):
                             os.chmod(fname, mode)
             except zipfile.BadZipfile as e:
                 self.log(
-                    "%s (%s)" % (e.message, filename),
+                    "%s (%s)" % (str(e), filename),
                     level=error_level,
                     exit_code=fatal_exit_code,
                 )
@@ -1948,7 +1948,7 @@ class ScriptMixin(PlatformMixin):
                         bundle.extract(entry, path=extract_to)
             except tarfile.TarError as e:
                 self.log(
-                    "%s (%s)" % (e.message, filename),
+                    "%s (%s)" % (str(e), filename),
                     level=error_level,
                     exit_code=fatal_exit_code,
                 )
