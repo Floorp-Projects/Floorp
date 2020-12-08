@@ -817,6 +817,177 @@ async function runTest33() {
                                          "printpreview_pps16_ref.html", 16,
                                          fuzz);
 
+  requestAnimationFrame(() => setTimeout(runTest34));
+}
+
+// Testcases for pages-per-sheet with nonzero unwriteable margin values:
+// ---------------------------------------------------------------------
+    
+// In this subtest, the vertical scale-factor is more-severe and hence ends up
+// "winning", and we have a bit of extra space in the horizontal axis which we
+// distribute equally on either side (see the _ref.html file used below for
+// more details).
+async function runTest34() {
+  let fuzz = navigator.platform.includes("Win") ?
+      { maxDifferent: 124044, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  let test = "printpreview_pps_uw4.html";
+  let ref = "printpreview_pps_uw4_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 4,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0.6,
+        unwriteableMarginRight: 0.1,
+        unwriteableMarginBottom: 0.4,
+        unwriteableMarginLeft: 0.3,
+        numPagesPerSheet: 4,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 4,
+        paperHeight: 5,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest35));
+}
+
+// In this subtest, the horizontal scale-factor is more-severe and hence ends
+// up "winning", and we have a bit of extra space in the vertical axis which we
+// distribute equally on either side (see the _ref.html file used below for
+// more details).
+async function runTest35() {
+  let fuzz = navigator.platform.includes("Win") ?
+      { maxDifferent: 151350, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  let test = "printpreview_pps_uw9.html";
+  let ref = "printpreview_pps_uw9_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 10,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0.2,
+        unwriteableMarginRight: 0.8,
+        unwriteableMarginBottom: 0.4,
+        unwriteableMarginLeft: 1.2,
+        numPagesPerSheet: 9,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 10,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest36));
+}
+
+// In this subtest, the vertical unwriteable margins exactly consume the full
+// pageHeight, so we don't have any space available for printing and we just
+// print a blank sheet. (This is mostly a stress test to be sure we don't
+// crash, hang, divide-by-zero, etc. in this edge case.)
+async function runTest36() {
+  let fuzz = navigator.platform.includes("Win") ?
+      { maxDifferent: 254, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  let test = "data:text/html,Unwriteable-Margins-Too-Tall-To-See-This";
+  let ref = "about:blank";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 4,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginTop: 3,
+        unwriteableMarginBottom: 2,
+        numPagesPerSheet: 4,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 4,
+        paperHeight: 5,
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest37));
+}
+
+// In this subtest, the horizontal unwriteable margins consume more than the
+// full pageWidth, so we don't have any space available for printing and we
+// just print a blank sheet. (This is mostly a stress test to be sure we don't
+// crash, hang, divide-by-zero, etc. in this edge case.)
+async function runTest37() {
+  let fuzz = navigator.platform.includes("Win") ?
+      { maxDifferent: 172, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  let test = "data:text/html,Unwriteable-Margins-Too-Wide-To-See-This";
+  let ref = "about:blank";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 4,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginRight: 3,
+        unwriteableMarginLeft: 4,
+        numPagesPerSheet: 9,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 4,
+        paperHeight: 5,
+      },
+    },
+  });
+
   finish();
 }
 

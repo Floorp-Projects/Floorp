@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!-- This is a reference case for a "4-pages-per-sheet" scenario. This file is
+     a mockup of a sheet with 4 pages, with the pages all having a 0.4x scale
+     scale factor applied. (We end up with that scale factor by subtracting the
+     requested unwriteable margins from the sheet, and dividing up the
+     remaining space equally among the "virtual pages".)  -->
+<style>
+html {
+  display: flex;
+  height: 100%;
+  margin: 0;
+}
+body {
+  /* As a flex item (a child of the html element), fill the available area. */
+  flex: 1;
+
+  /* We lay out the body as a column-oriented flex container (whose children,
+     in turn, are rows). */
+  display: flex;
+  flex-direction: column;
+
+  /* These margins represent the margins around the pages-per-sheet "page grid"
+     in the testcase.  They represent the unwriteable area, as well as the
+     "centering" area in the axis that has extra space, which in this case is
+     the horizontal axis. These values come directly from the
+     unwriteableMargin{Top,Right,Bottom,Left} values in this testcase's setup
+     code in printpreview_helper.xhtml, with 0.2in added to margin-right and
+     margin-left, to horizontally center the page-grid within the sheet's
+     writeable area. */
+  margin-top: 0.6in;
+  margin-right: 0.3in;  /* 0.1in + 0.2in for centering */
+  margin-bottom: 0.4in;
+  margin-left: 0.5in;   /* 0.3in + 0.2in for centering */
+}
+
+.row {
+  /* Give each row an equal share of the available height: */
+  flex: 1;
+
+  /* ...and render them as row-oriented (by default) flex containers: */
+  display: flex;
+}
+
+.swatch {
+  box-sizing: border-box;
+
+  /* These represent the 120px borders in the testcase, scaled down 0.4x: */
+  border: 48px solid;
+
+  /* Share the width equally among the swatches. (The height will be
+     automatically set to the flex container's row height, via default
+     'align-self' behavior.) */
+  flex: 1;
+
+  /* These values come directly from the unwriteableMargin values in the
+     testcase's configuration code in printpreview_helper.xhtml, with
+     each measurement scaled down by exactly 0.4x. */
+  margin-top: 0.24in;
+  margin-right: 0.04in;
+  margin-bottom: 0.16in;
+  margin-left: 0.12in;
+}
+.row:nth-child(1) > .swatch:nth-child(1) { border-color: cyan; }
+.row:nth-child(1) > .swatch:nth-child(2) { border-color: yellow; }
+.row:nth-child(2) > .swatch:nth-child(1) { border-color: pink; }
+.row:nth-child(2) > .swatch:nth-child(2) { border-color: orange; }
+</style>
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>
