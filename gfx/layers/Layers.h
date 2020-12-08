@@ -2054,6 +2054,7 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, gfx::DrawTarget* aTarget);
 gfx::IntRect ToOutsideIntRect(const gfxRect& aRect);
 
 void RecordCompositionPayloadsPresented(
+    const TimeStamp& aCompositionEndTime,
     const nsTArray<CompositionPayload>& aPayloads);
 
 }  // namespace layers

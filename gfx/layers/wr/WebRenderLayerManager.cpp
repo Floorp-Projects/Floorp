@@ -184,7 +184,7 @@ void WebRenderLayerManager::StopFrameTimeRecording(
   }
 }
 
-void WebRenderLayerManager::PayloadPresented() {
+void WebRenderLayerManager::PayloadPresented(const TimeStamp& aTimeStamp) {
   MOZ_CRASH("WebRenderLayerManager::PayloadPresented should not be called");
 }
 

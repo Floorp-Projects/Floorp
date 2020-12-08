@@ -2375,7 +2375,7 @@ void CompositorBridgeParent::NotifyPipelineRendered(
   nsTArray<CompositionPayload> payload =
       wrBridge->TakePendingScrollPayload(key);
   if (!payload.IsEmpty()) {
-    RecordCompositionPayloadsPresented(payload);
+    RecordCompositionPayloadsPresented(aCompositeEnd, payload);
   }
 
   nsTArray<FrameStats> stats;

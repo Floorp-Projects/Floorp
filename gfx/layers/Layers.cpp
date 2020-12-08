@@ -2210,9 +2210,10 @@ IntRect ToOutsideIntRect(const gfxRect& aRect) {
 }
 
 void RecordCompositionPayloadsPresented(
+    const TimeStamp& aCompositionEndTime,
     const nsTArray<CompositionPayload>& aPayloads) {
   if (aPayloads.Length()) {
-    TimeStamp presented = TimeStamp::Now();
+    TimeStamp presented = aCompositionEndTime;
     for (const CompositionPayload& payload : aPayloads) {
 #if MOZ_GECKO_PROFILER
       if (profiler_can_accept_markers()) {

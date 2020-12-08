@@ -170,8 +170,8 @@ UniquePtr<LayerUserData> LayerManager::RemoveUserData(void* aKey) {
   return d;
 }
 
-void LayerManager::PayloadPresented() {
-  RecordCompositionPayloadsPresented(mPayload);
+void LayerManager::PayloadPresented(const TimeStamp& aTimeStamp) {
+  RecordCompositionPayloadsPresented(aTimeStamp, mPayload);
 }
 
 void LayerManager::AddPartialPrerenderedAnimation(

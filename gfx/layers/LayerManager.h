@@ -709,7 +709,7 @@ class LayerManager : public FrameRecorder {
     MOZ_ASSERT(mPayload.Length() < 10000);
   }
 
-  virtual void PayloadPresented();
+  virtual void PayloadPresented(const TimeStamp& aTimeStamp);
 
   void SetContainsSVG(bool aContainsSVG) { mContainsSVG = aContainsSVG; }
 
