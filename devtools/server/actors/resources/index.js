@@ -18,6 +18,7 @@ const TYPES = {
   SESSION_STORAGE: "session-storage",
   STYLESHEET: "stylesheet",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
+  SOURCE: "source",
 };
 exports.TYPES = TYPES;
 
@@ -61,6 +62,9 @@ const FrameTargetResources = augmentResourceDictionary({
   [TYPES.NETWORK_EVENT_STACKTRACE]: {
     path: "devtools/server/actors/resources/network-events-stacktraces",
   },
+  [TYPES.SOURCE]: {
+    path: "devtools/server/actors/resources/sources",
+  },
 });
 const ProcessTargetResources = augmentResourceDictionary({
   [TYPES.CONSOLE_MESSAGE]: {
@@ -75,6 +79,9 @@ const ProcessTargetResources = augmentResourceDictionary({
   [TYPES.PLATFORM_MESSAGE]: {
     path: "devtools/server/actors/resources/platform-messages",
   },
+  [TYPES.SOURCE]: {
+    path: "devtools/server/actors/resources/sources",
+  },
 });
 
 // We'll only support a few resource types in Workers (console-message, source,
@@ -84,6 +91,9 @@ const ProcessTargetResources = augmentResourceDictionary({
 const WorkerTargetResources = augmentResourceDictionary({
   [TYPES.CONSOLE_MESSAGE]: {
     path: "devtools/server/actors/resources/console-messages",
+  },
+  [TYPES.SOURCE]: {
+    path: "devtools/server/actors/resources/sources",
   },
 });
 
