@@ -262,9 +262,7 @@ class MOZ_IS_REFPTR MOZ_TRIVIAL_ABI SafeRefPtr {
     return mRawPtr;
   }
 
-  Maybe<T&> maybeDeref() const {
-    return mRawPtr ? SomeRef(*mRawPtr) : Nothing();
-  }
+  Maybe<T&> maybeDeref() const { return ToMaybeRef(mRawPtr); }
 
   T* unsafeGetRawPtr() const { return mRawPtr; }
 
