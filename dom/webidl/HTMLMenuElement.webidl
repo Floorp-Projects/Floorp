@@ -4,8 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.whatwg.org/specs/web-apps/current-work/#the-menu-element
- * http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
+ * https://html.spec.whatwg.org/multipage/grouping-content.html#the-menu-element
+ * https://html.spec.whatwg.org/multipage/obsolete.html#HTMLMenuElement-partial
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -14,18 +14,18 @@
 
 interface MenuBuilder;
 
-// http://www.whatwg.org/specs/web-apps/current-work/#the-menu-element
+// https://html.spec.whatwg.org/multipage/grouping-content.html#the-menu-element
 [Exposed=Window]
 interface HTMLMenuElement : HTMLElement {
   [HTMLConstructor] constructor();
 
-           [CEReactions, SetterThrows]
+           [CEReactions, SetterThrows, Pref="dom.menuitem.enabled"]
            attribute DOMString type;
-           [CEReactions, SetterThrows]
+           [CEReactions, SetterThrows, Pref="dom.menuitem.enabled"]
            attribute DOMString label;
 };
 
-// http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
+// https://html.spec.whatwg.org/multipage/obsolete.html#HTMLMenuElement-partial
 partial interface HTMLMenuElement {
            [CEReactions, SetterThrows]
            attribute boolean compact;
