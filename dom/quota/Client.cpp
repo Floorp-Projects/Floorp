@@ -304,7 +304,13 @@ bool Client::InitiateShutdownWorkThreads() {
               [](nsITimer* aTimer, void* aClosure) {
                 auto* const quotaClient = static_cast<Client*>(aClosure);
 
-                MOZ_DIAGNOSTIC_ASSERT(!quotaClient->IsShutdownCompleted());
+                if (quotaClient->IsShutdownCompleted()) {
+                  // Apparently, the shutdown did complete between the timer
+                  // fired and we processed the event. So there's no reason to
+                  // crash, just do nothing.
+
+                  return;
+                }
 
                 const auto type = TypeToText(quotaClient->GetType());
 
