@@ -16,11 +16,6 @@ add_task(async () => {
         return content.document.getElementById(videoID).play();
       });
     };
-    let isVideoPaused = () => {
-      return SpecialPowers.spawn(browser, [videoID], async videoID => {
-        return content.document.getElementById(videoID).paused;
-      });
-    };
 
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
     let browser = tab.linkedBrowser;
@@ -29,24 +24,24 @@ add_task(async () => {
     // Try the unpip button.
     let pipWin = await triggerPictureInPicture(browser, videoID);
     ok(pipWin, "Got Picture-in-Picture window.");
-    ok(!(await isVideoPaused()), "The video is not paused");
+    ok(!(await isVideoPaused(browser, videoID)), "The video is not paused");
 
     let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
     let unpipButton = pipWin.document.getElementById("unpip");
     EventUtils.synthesizeMouseAtCenter(unpipButton, {}, pipWin);
     await pipClosed;
-    ok(!(await isVideoPaused()), "The video is not paused");
+    ok(!(await isVideoPaused(browser, videoID)), "The video is not paused");
 
     // Try the close button.
     pipWin = await triggerPictureInPicture(browser, videoID);
     ok(pipWin, "Got Picture-in-Picture window.");
-    ok(!(await isVideoPaused()), "The video is not paused");
+    ok(!(await isVideoPaused(browser, videoID)), "The video is not paused");
 
     pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
     let closeButton = pipWin.document.getElementById("close");
     EventUtils.synthesizeMouseAtCenter(closeButton, {}, pipWin);
     await pipClosed;
-    ok(await isVideoPaused(), "The video is paused");
+    ok(await isVideoPaused(browser, videoID), "The video is paused");
 
     BrowserTestUtils.removeTab(tab);
   }
