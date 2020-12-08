@@ -4,7 +4,7 @@
 
 
 use api::units::*;
-use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle};
+use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle, ImageBufferKind};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, resolve_image};
 use crate::batch::{ClipBatcher, BatchBuilder};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX};
@@ -15,7 +15,7 @@ use crate::frame_builder::{FrameGlobalResources};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
-use crate::internal_types::{FastHashMap, TextureSource, LayerIndex, Swizzle, SavedTargetIndex};
+use crate::internal_types::{FastHashMap, TextureSource, LayerIndex, Swizzle, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::GRADIENT_FP_STOPS;
@@ -158,7 +158,7 @@ pub trait RenderTarget {
 /// previous pass it depends on.
 ///
 /// Note that in some cases (like drop-shadows), we can depend on the output of
-/// a pass earlier than the immediately-preceding pass. See `SavedTargetIndex`.
+/// a pass earlier than the immediately-preceding pass.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetList<T> {
@@ -173,8 +173,8 @@ pub struct RenderTargetList<T> {
     /// allocator for the next slice to be just large enough to accomodate it.
     pub max_dynamic_size: DeviceIntSize,
     pub targets: Vec<T>,
-    pub saved_index: Option<SavedTargetIndex>,
     pub alloc_tracker: GuillotineAllocator,
+    pub texture_id: Option<CacheTextureId>,
     gpu_supports_fast_clears: bool,
 }
 
@@ -189,8 +189,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
             format,
             max_dynamic_size: DeviceIntSize::new(0, 0),
             targets: Vec::new(),
-            saved_index: None,
             alloc_tracker: GuillotineAllocator::new(None),
+            texture_id: None,
             gpu_supports_fast_clears,
         }
     }
@@ -201,14 +201,20 @@ impl<T: RenderTarget> RenderTargetList<T> {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
-        saved_index: Option<SavedTargetIndex>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
     ) {
-        debug_assert_eq!(None, self.saved_index);
-        self.saved_index = saved_index;
+        if self.targets.is_empty() {
+            return;
+        }
+
+        // Get a bounding rect of all the layers, and round it up to a multiple
+        // of 256. This improves render target reuse when resizing the window,
+        // since we don't need to create a new render target for each slightly-
+        // larger frame.
+        let mut bounding_rect = DeviceIntRect::zero();
 
         for target in &mut self.targets {
             target.build(
@@ -221,7 +227,24 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 z_generator,
                 composite_state,
             );
+
+            bounding_rect = target.used_rect().union(&bounding_rect);
         }
+
+        debug_assert_eq!(bounding_rect.origin, DeviceIntPoint::zero());
+        let dimensions = DeviceIntSize::new(
+            (bounding_rect.size.width + 255) & !255,
+            (bounding_rect.size.height + 255) & !255,
+        );
+
+        let texture_id = ctx.resource_cache.get_or_create_render_target_from_pool(
+            dimensions,
+            self.targets.len(),
+            self.format,
+        );
+
+        assert!(self.texture_id.is_none());
+        self.texture_id = Some(texture_id);
     }
 
     pub fn allocate(
@@ -938,17 +961,31 @@ fn add_svg_filter_instances(
 ) {
     let mut textures = BatchTextures::empty();
 
-    if let Some(saved_index) = input_1_task.map(|id| &render_tasks[id].saved_index) {
-        textures.colors[0] = match saved_index {
-            Some(saved_index) => TextureSource::RenderTaskCache(*saved_index, Swizzle::default()),
-            None => TextureSource::PrevPassColor,
+    if let Some(id) = input_1_task {
+        let task = &render_tasks[id];
+
+        textures.colors[0] = if task.save_target {
+            TextureSource::TextureCache(
+                task.get_target_texture(),
+                ImageBufferKind::Texture2DArray,
+                Swizzle::default(),
+            )
+        } else {
+            TextureSource::PrevPassColor
         };
     }
 
-    if let Some(saved_index) = input_2_task.map(|id| &render_tasks[id].saved_index) {
-        textures.colors[1] = match saved_index {
-            Some(saved_index) => TextureSource::RenderTaskCache(*saved_index, Swizzle::default()),
-            None => TextureSource::PrevPassColor,
+    if let Some(id) = input_2_task {
+        let task = &render_tasks[id];
+
+        textures.colors[1] = if task.save_target {
+            TextureSource::TextureCache(
+                task.get_target_texture(),
+                ImageBufferKind::Texture2DArray,
+                Swizzle::default(),
+            )
+        } else {
+            TextureSource::PrevPassColor
         };
     }
 
