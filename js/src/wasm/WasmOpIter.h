@@ -33,7 +33,17 @@ namespace js {
 namespace wasm {
 
 // The kind of a control-flow stack item.
-enum class LabelKind : uint8_t { Body, Block, Loop, Then, Else };
+enum class LabelKind : uint8_t {
+  Body,
+  Block,
+  Loop,
+  Then,
+  Else,
+#ifdef ENABLE_WASM_EXCEPTIONS
+  Try,
+  Catch,
+#endif
+};
 
 // The type of values on the operand stack during validation.  This is either a
 // ValType or the special type "Bottom".
@@ -175,6 +185,11 @@ enum class OpKind {
   VectorShift,
   VectorSelect,
   VectorShuffle,
+#  endif
+#  ifdef ENABLE_WASM_EXCEPTIONS
+  Catch,
+  Throw,
+  Try,
 #  endif
 };
 
@@ -416,6 +431,13 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readBrTable(Uint32Vector* depths, uint32_t* defaultDepth,
                                 ResultType* defaultBranchValueType,
                                 ValueVector* branchValues, Value* index);
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_MUST_USE bool readTry(ResultType* type);
+  MOZ_MUST_USE bool readCatch(LabelKind* kind, uint32_t* eventIndex,
+                              ResultType* paramType, ResultType* resultType,
+                              ValueVector* tryResults);
+  MOZ_MUST_USE bool readThrow(uint32_t* eventIndex, ValueVector* argValues);
+#endif
   MOZ_MUST_USE bool readUnreachable();
   MOZ_MUST_USE bool readDrop();
   MOZ_MUST_USE bool readUnary(ValType operandType, Value* input);
@@ -1249,6 +1271,30 @@ inline bool OpIter<Policy>::readBrTable(Uint32Vector* depths,
 }
 
 #undef UNKNOWN_ARITY
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+template <typename Policy>
+inline bool OpIter<Policy>::readTry(ResultType* type) {
+  MOZ_ASSERT(Classify(op_) == OpKind::Try);
+  MOZ_CRASH("NYI");
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* eventIndex,
+                                      ResultType* paramType,
+                                      ResultType* resultType,
+                                      ValueVector* tryResults) {
+  MOZ_ASSERT(Classify(op_) == OpKind::Catch);
+  MOZ_CRASH("NYI");
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readThrow(uint32_t* eventIndex,
+                                      ValueVector* argValues) {
+  MOZ_ASSERT(Classify(op_) == OpKind::Throw);
+  MOZ_CRASH("NYI");
+}
+#endif
 
 template <typename Policy>
 inline bool OpIter<Policy>::readUnreachable() {

@@ -204,6 +204,11 @@ enum class Op {
   Loop = 0x03,
   If = 0x04,
   Else = 0x05,
+#ifdef ENABLE_WASM_EXCEPTIONS
+  Try = 0x06,
+  Catch = 0x07,
+  Throw = 0x08,
+#endif
   End = 0x0b,
   Br = 0x0c,
   BrIf = 0x0d,
