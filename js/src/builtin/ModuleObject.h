@@ -7,44 +7,24 @@
 #ifndef builtin_ModuleObject_h
 #define builtin_ModuleObject_h
 
-#include "mozilla/HashTable.h"  // mozilla::{HashMap, DefaultHasher}
-#include "mozilla/Maybe.h"      // mozilla::Maybe
+#include "mozilla/Maybe.h"
 
-#include <stddef.h>  // size_t
-#include <stdint.h>  // int32_t, uint32_t
+#include "jsapi.h"
 
-#include "builtin/SelfHostingDefines.h"  // MODULE_OBJECT_*
-#include "gc/Barrier.h"                  // HeapPtr, PreBarrieredId
-#include "gc/Rooting.h"                  // HandleAtom, HandleArrayObject
-#include "gc/ZoneAllocator.h"            // ZoneAllocPolicy
-#include "js/Class.h"                    // JSClass, ObjectOpResult
-#include "js/GCVector.h"                 // GCVector
-#include "js/Id.h"                       // jsid
-#include "js/Modules.h"                  // JS::DynamicImportStatus
-#include "js/PropertyDescriptor.h"       // PropertyDescriptor
-#include "js/Proxy.h"                    // BaseProxyHandler
-#include "js/RootingAPI.h"               // Rooted, Handle, MutableHandle
-#include "js/TypeDecls.h"  // HandleValue, HandleId, HandleObject, HandleScript, MutableHandleValue, MutableHandleIdVector, MutableHandleObject
-#include "js/UniquePtr.h"  // UniquePtr
-#include "js/Value.h"      // JS::Value
-#include "vm/JSAtom.h"     // JSAtom
-#include "vm/JSObject.h"   // JSObject
-#include "vm/List.h"       // ListObject
-#include "vm/NativeObject.h"   // NativeObject
+#include "builtin/SelfHostingDefines.h"
+#include "frontend/Stencil.h"
+#include "gc/ZoneAllocator.h"
+#include "js/GCVector.h"
+#include "js/Id.h"
+#include "js/Modules.h"
+#include "js/UniquePtr.h"
+#include "vm/JSAtom.h"
+#include "vm/List.h"
+#include "vm/NativeObject.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
-#include "vm/ProxyObject.h"    // ProxyObject
-#include "vm/Xdr.h"            // XDRMode, XDRResult, XDRState
-
-class JSFreeOp;
-class JSScript;
-class JSTracer;
+#include "vm/ProxyObject.h"
 
 namespace js {
-
-class ArrayObject;
-class Shape;
-class Scope;
-class ScriptSourceObject;
 
 class ModuleEnvironmentObject;
 class ModuleObject;
@@ -176,9 +156,8 @@ class IndirectBindingMap {
     HeapPtr<Shape*> shape;
   };
 
-  using Map =
-      mozilla::HashMap<PreBarrieredId, Binding,
-                       mozilla::DefaultHasher<PreBarrieredId>, ZoneAllocPolicy>;
+  using Map = HashMap<PreBarrieredId, Binding, DefaultHasher<PreBarrieredId>,
+                      ZoneAllocPolicy>;
 
   mozilla::Maybe<Map> map_;
 };
@@ -390,11 +369,11 @@ class ModuleObject : public NativeObject {
 
   static bool createEnvironment(JSContext* cx, HandleModuleObject self);
 
+  frontend::FunctionDeclarationVector* functionDeclarations();
+  void initFunctionDeclarations(frontend::FunctionDeclarationVector&& decls);
+
   bool initAsyncSlots(JSContext* cx, bool isAsync,
                       HandleObject asyncParentModulesList);
-
-  // NOTE: accessor for FunctionDeclarationsSlot is defined inside
-  // ModuleObject.cpp as static function.
 
  private:
   static const JSClassOps classOps_;
