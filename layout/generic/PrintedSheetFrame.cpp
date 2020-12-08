@@ -35,24 +35,22 @@ gfx::Matrix4x4 ComputePagesPerSheetTransform(nsIFrame* aFrame,
   MOZ_ASSERT(aFrame->IsPageFrame());
   auto* pageFrame = static_cast<nsPageFrame*>(aFrame);
 
-  // Variables that we use in our transform (initialized with sane defaults):
+  // Variables that we use in our transform (initialized with reasonable
+  // defaults that work for the regular one-page-per-sheet scenario):
   float scale = 1.0f;
+  nsPoint gridOrigin;
   uint32_t rowIdx = 0;
   uint32_t colIdx = 0;
 
   nsSharedPageData* pd = pageFrame->GetSharedPageData();
   if (pd) {
     const auto* ppsInfo = pd->PagesPerSheetInfo();
-
-    // XXXdholbert For now, we just scale down evenly based on the number of
-    // columns (which is the same as the number of rows, for all the values we
-    // currently support). When we support possibly-rotated pages-per-sheet
-    // values (2 & 6), we'll need a more subtle scale factor here, based on the
-    // page's aspect ratio as well as the ppsInfo. (See bug 1669905.)
-    scale = 1.0f / static_cast<float>(ppsInfo->mNumCols);
-
-    std::tie(rowIdx, colIdx) =
-        ppsInfo->GetRowAndColFromIdx(pageFrame->IndexOnSheet());
+    if (ppsInfo->mNumPages > 1) {
+      scale = pd->mPagesPerSheetScale;
+      gridOrigin = pd->mPagesPerSheetGridOrigin;
+      std::tie(rowIdx, colIdx) =
+          ppsInfo->GetRowAndColFromIdx(pageFrame->IndexOnSheet());
+    }
   }
 
   // Scale down the page based on the above-computed scale:
@@ -60,9 +58,18 @@ gfx::Matrix4x4 ComputePagesPerSheetTransform(nsIFrame* aFrame,
 
   // Draw the page at an offset, to get it in its pages-per-sheet "cell":
   nsSize pageSize = pageFrame->PresContext()->GetPageSize();
-  return transform.PreTranslate(
+  transform.PreTranslate(
       NSAppUnitsToFloatPixels(colIdx * pageSize.width, aAppUnitsPerPixel),
       NSAppUnitsToFloatPixels(rowIdx * pageSize.height, aAppUnitsPerPixel), 0);
+
+  // Also add the grid origin as an offset (so that we're not drawing into the
+  // sheet's unwritable area). Note that this is a PostTranslate operation
+  // (vs. PreTranslate above), since gridOrigin is an offset on the sheet
+  // itself, whereas the offset above was in the scaled coordinate space of the
+  // pages.
+  return transform.PostTranslate(
+      NSAppUnitsToFloatPixels(gridOrigin.x, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(gridOrigin.y, aAppUnitsPerPixel), 0);
 }
 
 void PrintedSheetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -132,6 +139,12 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
 
   // Target for numPagesOnThisSheet.
   const uint32_t desiredPagesPerSheet = mPD->PagesPerSheetInfo()->mNumPages;
+
+  // If we're the first continuation and we're doing >1 pages per sheet,
+  // precompute some metrics that we'll use when painting the pages:
+  if (desiredPagesPerSheet > 1 && !GetPrevContinuation()) {
+    ComputePagesPerSheetOriginAndScale();
+  }
 
   // NOTE: I'm intentionally *not* using a range-based 'for' loop here, since
   // we potentially mutate the frame list (appending to the end) during the
@@ -256,6 +269,80 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
 
   FinishAndStoreOverflow(&aReflowOutput);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aReflowOutput);
+}
+
+void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
+  MOZ_ASSERT(mPD->PagesPerSheetInfo()->mNumPages > 1,
+             "Unnecessary to call this in a regular 1-page-per-sheet scenario; "
+             "the computed values won't ever be used in that case");
+  MOZ_ASSERT(!GetPrevContinuation(),
+             "Only needs to be called once, so 1st continuation handles it");
+
+  // The "full-scale" size of a page (if it weren't shrunk down into a grid):
+  const nsSize pageSize = PresContext()->GetPageSize();
+
+  // Compute the space available for the pages-per-sheet "page grid" (just
+  // subtract the sheet's unwriteable margin area):
+  nsSize availSpaceOnSheet = pageSize;
+  nsMargin uwm = nsPresContext::CSSTwipsToAppUnits(
+      mPD->mPrintSettings->GetUnwriteableMarginInTwips());
+  availSpaceOnSheet.width -= uwm.LeftRight();
+  availSpaceOnSheet.height -= uwm.TopBottom();
+  nsPoint pageGridOrigin(uwm.left, uwm.top);
+
+  // Compute the full size of the "page grid" that'll we'll be scaling down &
+  // placing onto a given sheet:
+  const auto* ppsInfo = mPD->PagesPerSheetInfo();
+  nsSize pageGridFullSize(ppsInfo->mNumCols * pageSize.width,
+                          ppsInfo->mNumRows * pageSize.height);
+
+  if (MOZ_UNLIKELY(availSpaceOnSheet.IsEmpty() || pageGridFullSize.IsEmpty())) {
+    // Either we have a 0-sized available area, or we have a 0-sized page-grid
+    // to draw into the available area. This sort of thing should be rare, but
+    // it can happen if there are bizarre page sizes, and/or if there's an
+    // unexpectedly large unwritable margin area. Regardless: if we get here,
+    // we shouldn't be drawing anything onto the sheet; so let's just use a
+    // scale factor of 0, and bail early to avoid division by 0 in hScale &
+    // vScale computations below.
+    NS_WARNING("Zero area for pages-per-sheet grid, or zero-sized grid");
+    mPD->mPagesPerSheetGridOrigin = pageGridOrigin;
+    mPD->mPagesPerSheetScale = 0.0f;
+    return;
+  }
+
+  // Compute the scale factors required in each axis:
+  float hScale =
+      availSpaceOnSheet.width / static_cast<float>(pageGridFullSize.width);
+  float vScale =
+      availSpaceOnSheet.height / static_cast<float>(pageGridFullSize.height);
+
+  // Choose the more restrictive scale factor (so that we don't overflow the
+  // sheet's printable area in either axis). And center the page-grid in the
+  // other axis (since it probably ends up with extra space).
+  float scale = std::min(hScale, vScale);
+  if (hScale < vScale) {
+    // hScale is the more restrictive scale-factor, so we'll be using that.
+    // Nudge the grid in the vertical axis to center it:
+    nscoord extraSpace = availSpaceOnSheet.height -
+                         NSToCoordFloor(scale * pageGridFullSize.height);
+    if (MOZ_LIKELY(extraSpace > 0)) {
+      pageGridOrigin.y += extraSpace / 2;
+    }
+  } else if (vScale < hScale) {
+    // vScale is the more restrictive scale-factor, so we'll be using that.
+    // Nudge the grid in the vertical axis to center it:
+    nscoord extraSpace = availSpaceOnSheet.width -
+                         NSToCoordFloor(scale * pageGridFullSize.width);
+    if (MOZ_LIKELY(extraSpace > 0)) {
+      pageGridOrigin.x += extraSpace / 2;
+    }
+  }
+  // else, we fit exactly in both axes, with the same scale factor, so there's
+  // no extra space in either axis, i.e. no need to center.
+
+  // Update the nsSharedPageData member data:
+  mPD->mPagesPerSheetGridOrigin = pageGridOrigin;
+  mPD->mPagesPerSheetScale = scale;
 }
 
 void PrintedSheetFrame::AppendDirectlyOwnedAnonBoxes(

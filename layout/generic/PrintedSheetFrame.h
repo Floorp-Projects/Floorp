@@ -50,6 +50,10 @@ class PrintedSheetFrame final : public nsContainerFrame {
       : nsContainerFrame(aStyle, aPresContext, kClassID) {}
   ~PrintedSheetFrame() = default;
 
+  // Helper function to populate some pages-per-sheet metrics in our
+  // nsSharedPageData.
+  void ComputePagesPerSheetOriginAndScale();
+
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
   nsSharedPageData* mPD = nullptr;
