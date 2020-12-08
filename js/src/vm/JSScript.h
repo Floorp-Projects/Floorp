@@ -45,7 +45,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
-#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData
+#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
 #include "vm/Time.h"
 
 namespace JS {
@@ -1326,31 +1326,6 @@ class ScriptWarmUpData {
 
 static_assert(sizeof(ScriptWarmUpData) == sizeof(uintptr_t),
               "JIT code depends on ScriptWarmUpData being pointer-sized");
-
-struct MemberInitializers {
-  static constexpr uint32_t MaxInitializers = INT32_MAX;
-
-#ifdef DEBUG
-  bool valid = false;
-#endif
-
-  // This struct will eventually have a vector of constant values for optimizing
-  // field initializers.
-  uint32_t numMemberInitializers = 0;
-
-  explicit MemberInitializers(uint32_t numMemberInitializers)
-      :
-#ifdef DEBUG
-        valid(true),
-#endif
-        numMemberInitializers(numMemberInitializers) {
-  }
-
-  static MemberInitializers Invalid() { return MemberInitializers(); }
-
- private:
-  MemberInitializers() = default;
-};
 
 // [SMDOC] - JSScript data layout (unshared)
 //
