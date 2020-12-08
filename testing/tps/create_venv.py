@@ -17,7 +17,6 @@ import os
 import shutil
 import subprocess
 import sys
-import urllib2
 import zipfile
 
 
@@ -56,7 +55,7 @@ else:
 
 def download(url, target):
     """Downloads the specified url to the given target."""
-    response = urllib2.urlopen(url)
+    response = six.moves.urllib.request.urlopen(url)
     with open(target, "wb") as f:
         f.write(response.read())
 

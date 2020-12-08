@@ -4,7 +4,13 @@
 
 from __future__ import absolute_import
 import six
-import ConfigParser
+
+# pylint --py3k: W1648
+if six.PY2:
+    from ConfigParser import ConfigParser
+else:
+    from configparser import ConfigParser
+
 import json
 import os
 
@@ -209,7 +215,7 @@ the script (--clean-repos --pull --migrate).  The second run will be faster."""
             hg_rc.write(f)
 
     def read_repo_hg_rc(self, cwd):
-        hg_rc = ConfigParser.ConfigParser()
+        hg_rc = ConfigParser()
         hg_rc.read(self._get_hg_rc_path(cwd))
         return hg_rc
 
