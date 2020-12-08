@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchTelemetry"];
+var EXPORTED_SYMBOLS = ["SearchSERPTelemetry"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -34,8 +34,8 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
 });
 
 /**
- * TelemetryHandler is the main class handling search telemetry. It primarily
- * deals with tracking of what pages are loaded into tabs.
+ * TelemetryHandler is the main class handling Search Engine Result Page (SERP)
+ * telemetry. It primarily deals with tracking of what pages are loaded into tabs.
  *
  * It handles the *in-content:sap* keys of the SEARCH_COUNTS histogram.
  */
@@ -760,4 +760,4 @@ class ContentHandler {
   }
 }
 
-var SearchTelemetry = new TelemetryHandler();
+var SearchSERPTelemetry = new TelemetryHandler();

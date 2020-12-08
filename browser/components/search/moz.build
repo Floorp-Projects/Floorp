@@ -7,7 +7,7 @@
 EXTRA_JS_MODULES += [
     "BrowserSearchTelemetry.jsm",
     "SearchOneOffs.jsm",
-    "SearchTelemetry.jsm",
+    "SearchSERPTelemetry.jsm",
     "SearchUIUtils.jsm",
 ]
 
