@@ -17,6 +17,7 @@ $input-error-border: 1px solid $red-60;
 $input-error-boxshadow: textbox-shadow($red-60);
 $shadow-primary: 0 0 0 5px var(--newtab-card-active-outline-color);
 $shadow-secondary: 0 1px 4px 0 $grey-90-20;
+$newtab-focus-outline: 0 0 0 2px var(--newtab-focus-outline);
 
 // Default theme
 body {
@@ -93,6 +94,25 @@ body {
   --newtab-snippets-background-color: #{$white};
   --newtab-snippets-hairline-color: transparent;
 
+  // New New Tab
+  --newtab-focus-outline: rgba(0, 96, 223, 0.25);
+  --newtab-focus-border: #0060DF;
+  --newtab-focus-border-selected: rgba(0, 0, 0, 0.15);
+  --newtab-primary-action-background: #{$blue-60};
+  --newtab-primary-action-background-off: #E9E9E9;
+  --customize-menu-primary-text-color: #20123A;
+  --customize-menu-check-fill: #{$white};
+  --customize-menu-background: #FFFFFF;
+  --customize-menu-secondary-action-background: #{$grey-10};
+  --customize-menu-secondary-action-background-hover: #{$grey-20};
+  --customize-menu-secondary-action-background-active: #E2E2E6;
+  --customize-menu-seperator-line-color: #E1E0E6;
+  --customize-menu-first-shadow: rgba(9, 32, 77, 0.12);
+  --customize-menu-second-shadow: rgba(29, 17, 51, 0.12);
+  --customize-menu-primary-action-text: #FFFFFF;
+  --customize-menu-line-color: #716F87;
+  
+
   &[lwt-newtab-brighttext] {
     // General styles
     --newtab-background-color: #{$grey-80};
@@ -164,5 +184,23 @@ body {
     // Snippets
     --newtab-snippets-background-color: #{$grey-70};
     --newtab-snippets-hairline-color: #{$white-10};
+
+    // New New Tab
+    --newtab-focus-outline: rgba(80, 145, 241, 0.5);
+    --newtab-focus-border: #B5D3FF;
+    --newtab-focus-border-selected: #B5D3FF;
+    --newtab-primary-action-background: #4484E2;
+    --newtab-primary-action-background-off: #6A6A6F;
+    --customize-menu-primary-text-color: #E0E0E6;
+    --customize-menu-check-fill: var(--customize-menu-primary-text-color);
+    --customize-menu-background: #38383D;
+    --customize-menu-secondary-action-background: #515156;
+    --customize-menu-secondary-action-background-hover: #606065;
+    --customize-menu-secondary-action-background-active: #6F6F74;
+    --customize-menu-seperator-line-color: #53515F;
+    --customize-menu-first-shadow: rgba(21, 20, 26, 0.5);
+    --customize-menu-second-shadow: rgba(21, 20, 26, 0.75);
+    --customize-menu-primary-action-text: #E0E0E6;
+    --customize-menu-line-color: #B9B7CC;
   }
 }
