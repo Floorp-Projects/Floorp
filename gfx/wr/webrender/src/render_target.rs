@@ -4,7 +4,7 @@
 
 
 use api::units::*;
-use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle, ImageBufferKind};
+use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, resolve_image};
 use crate::batch::{ClipBatcher, BatchBuilder};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX};
@@ -15,7 +15,7 @@ use crate::frame_builder::{FrameGlobalResources};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
-use crate::internal_types::{FastHashMap, TextureSource, LayerIndex, Swizzle, CacheTextureId};
+use crate::internal_types::{FastHashMap, TextureSource, LayerIndex, Swizzle, SavedTargetIndex};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::GRADIENT_FP_STOPS;
@@ -158,7 +158,7 @@ pub trait RenderTarget {
 /// previous pass it depends on.
 ///
 /// Note that in some cases (like drop-shadows), we can depend on the output of
-/// a pass earlier than the immediately-preceding pass.
+/// a pass earlier than the immediately-preceding pass. See `SavedTargetIndex`.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetList<T> {
@@ -173,8 +173,8 @@ pub struct RenderTargetList<T> {
     /// allocator for the next slice to be just large enough to accomodate it.
     pub max_dynamic_size: DeviceIntSize,
     pub targets: Vec<T>,
+    pub saved_index: Option<SavedTargetIndex>,
     pub alloc_tracker: GuillotineAllocator,
-    pub texture_id: Option<CacheTextureId>,
     gpu_supports_fast_clears: bool,
 }
 
@@ -189,8 +189,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
             format,
             max_dynamic_size: DeviceIntSize::new(0, 0),
             targets: Vec::new(),
+            saved_index: None,
             alloc_tracker: GuillotineAllocator::new(None),
-            texture_id: None,
             gpu_supports_fast_clears,
         }
     }
@@ -201,20 +201,14 @@ impl<T: RenderTarget> RenderTargetList<T> {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
+        saved_index: Option<SavedTargetIndex>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
     ) {
-        if self.targets.is_empty() {
-            return;
-        }
-
-        // Get a bounding rect of all the layers, and round it up to a multiple
-        // of 256. This improves render target reuse when resizing the window,
-        // since we don't need to create a new render target for each slightly-
-        // larger frame.
-        let mut bounding_rect = DeviceIntRect::zero();
+        debug_assert_eq!(None, self.saved_index);
+        self.saved_index = saved_index;
 
         for target in &mut self.targets {
             target.build(
@@ -227,24 +221,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 z_generator,
                 composite_state,
             );
-
-            bounding_rect = target.used_rect().union(&bounding_rect);
         }
-
-        debug_assert_eq!(bounding_rect.origin, DeviceIntPoint::zero());
-        let dimensions = DeviceIntSize::new(
-            (bounding_rect.size.width + 255) & !255,
-            (bounding_rect.size.height + 255) & !255,
-        );
-
-        let texture_id = ctx.resource_cache.get_or_create_render_target_from_pool(
-            dimensions,
-            self.targets.len(),
-            self.format,
-        );
-
-        assert!(self.texture_id.is_none());
-        self.texture_id = Some(texture_id);
     }
 
     pub fn allocate(
@@ -316,8 +293,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
 pub struct ColorRenderTarget {
     pub alpha_batch_containers: Vec<AlphaBatchContainer>,
     // List of blur operations to apply for this render target.
-    pub vertical_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
-    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
+    pub vertical_blurs: Vec<BlurInstance>,
+    pub horizontal_blurs: Vec<BlurInstance>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub svg_filters: Vec<(BatchTextures, Vec<SvgFilterInstance>)>,
     pub blits: Vec<BlitJob>,
@@ -336,8 +313,8 @@ impl RenderTarget for ColorRenderTarget {
     ) -> Self {
         ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
-            vertical_blurs: FastHashMap::default(),
-            horizontal_blurs: FastHashMap::default(),
+            vertical_blurs: Vec::new(),
+            horizontal_blurs: Vec::new(),
             scalings: FastHashMap::default(),
             svg_filters: Vec::new(),
             blits: Vec::new(),
@@ -474,8 +451,7 @@ impl RenderTarget for ColorRenderTarget {
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
                     task_id.into(),
-                    task.children[0],
-                    render_tasks,
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
@@ -483,8 +459,7 @@ impl RenderTarget for ColorRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_id.into(),
-                    task.children[0],
-                    render_tasks,
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::Picture(..) => {
@@ -593,8 +568,8 @@ impl RenderTarget for ColorRenderTarget {
 pub struct AlphaRenderTarget {
     pub clip_batcher: ClipBatcher,
     // List of blur operations to apply for this render target.
-    pub vertical_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
-    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
+    pub vertical_blurs: Vec<BlurInstance>,
+    pub horizontal_blurs: Vec<BlurInstance>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub zero_clears: Vec<RenderTaskId>,
     pub one_clears: Vec<RenderTaskId>,
@@ -611,8 +586,8 @@ impl RenderTarget for AlphaRenderTarget {
     ) -> Self {
         AlphaRenderTarget {
             clip_batcher: ClipBatcher::new(gpu_supports_fast_clears),
-            vertical_blurs: FastHashMap::default(),
-            horizontal_blurs: FastHashMap::default(),
+            vertical_blurs: Vec::new(),
+            horizontal_blurs: Vec::new(),
             scalings: FastHashMap::default(),
             zero_clears: Vec::new(),
             one_clears: Vec::new(),
@@ -650,8 +625,7 @@ impl RenderTarget for AlphaRenderTarget {
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
                     task_id.into(),
-                    task.children[0],
-                    render_tasks,
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
@@ -660,8 +634,7 @@ impl RenderTarget for AlphaRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_id.into(),
-                    task.children[0],
-                    render_tasks,
+                    task.children[0].into(),
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
@@ -744,7 +717,7 @@ pub struct PictureCacheTarget {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCacheRenderTarget {
     pub target_kind: RenderTargetKind,
-    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
+    pub horizontal_blurs: Vec<BlurInstance>,
     pub blits: Vec<BlitJob>,
     pub border_segments_complex: Vec<BorderInstance>,
     pub border_segments_solid: Vec<BorderInstance>,
@@ -757,7 +730,7 @@ impl TextureCacheRenderTarget {
     pub fn new(target_kind: RenderTargetKind) -> Self {
         TextureCacheRenderTarget {
             target_kind,
-            horizontal_blurs: FastHashMap::default(),
+            horizontal_blurs: vec![],
             blits: vec![],
             border_segments_complex: vec![],
             border_segments_solid: vec![],
@@ -774,6 +747,9 @@ impl TextureCacheRenderTarget {
     ) {
         profile_scope!("add_task");
         let task_address = task_id.into();
+        let src_task_address = render_tasks[task_id].children.get(0).map(|&src_task_id| {
+            src_task_id.into()
+        });
 
         let task = &mut render_tasks[task_id];
         let target_rect = task.get_target_rect();
@@ -798,8 +774,7 @@ impl TextureCacheRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_address,
-                    task.children[0],
-                    render_tasks,
+                    src_task_address.unwrap(),
                 );
             }
             RenderTaskKind::Blit(ref task_info) => {
@@ -873,28 +848,18 @@ impl TextureCacheRenderTarget {
 }
 
 fn add_blur_instances(
-    instances: &mut FastHashMap<TextureSource, Vec<BlurInstance>>,
+    instances: &mut Vec<BlurInstance>,
     blur_direction: BlurDirection,
     task_address: RenderTaskAddress,
-    src_task_id: RenderTaskId,
-    render_tasks: &RenderTaskGraph,
+    src_task_address: RenderTaskAddress,
 ) {
-    let source = TextureSource::TextureCache(
-        render_tasks[src_task_id].get_target_texture(),
-        ImageBufferKind::Texture2DArray,
-        Swizzle::default(),
-    );
-
     let instance = BlurInstance {
         task_address,
-        src_task_address: src_task_id.into(),
+        src_task_address,
         blur_direction,
     };
 
-    instances
-        .entry(source)
-        .or_insert(Vec::new())
-        .push(instance);
+    instances.push(instance);
 }
 
 fn add_scaling_instances(
@@ -943,11 +908,10 @@ fn add_scaling_instances(
         }
         None => {
             (
-                TextureSource::TextureCache(
-                    source_task.unwrap().get_target_texture(),
-                    ImageBufferKind::Texture2DArray,
-                    Swizzle::default(),
-                ),
+                match task.target_kind {
+                    RenderTargetKind::Color => TextureSource::PrevPassColor,
+                    RenderTargetKind::Alpha => TextureSource::PrevPassAlpha,
+                },
                 source_task.unwrap().location.to_source_rect(),
             )
         }
@@ -974,24 +938,18 @@ fn add_svg_filter_instances(
 ) {
     let mut textures = BatchTextures::empty();
 
-    if let Some(id) = input_1_task {
-        let task = &render_tasks[id];
-
-        textures.input.colors[0] = TextureSource::TextureCache(
-            task.get_target_texture(),
-            ImageBufferKind::Texture2DArray,
-            Swizzle::default(),
-        );
+    if let Some(saved_index) = input_1_task.map(|id| &render_tasks[id].saved_index) {
+        textures.colors[0] = match saved_index {
+            Some(saved_index) => TextureSource::RenderTaskCache(*saved_index, Swizzle::default()),
+            None => TextureSource::PrevPassColor,
+        };
     }
 
-    if let Some(id) = input_2_task {
-        let task = &render_tasks[id];
-
-        textures.input.colors[1] = TextureSource::TextureCache(
-            task.get_target_texture(),
-            ImageBufferKind::Texture2DArray,
-            Swizzle::default(),
-        );
+    if let Some(saved_index) = input_2_task.map(|id| &render_tasks[id].saved_index) {
+        textures.colors[1] = match saved_index {
+            Some(saved_index) => TextureSource::RenderTaskCache(*saved_index, Swizzle::default()),
+            None => TextureSource::PrevPassColor,
+        };
     }
 
     let kind = match filter {
