@@ -416,6 +416,9 @@ static const double PretenureGroupThreshold = 3000;
 /* JSGC_PRETENURE_STRING_THRESHOLD */
 static const double PretenureStringThreshold = 0.55;
 
+/* JSGC_STOP_PRETENURE_STRING_THRESHOLD */
+static const double StopPretenureStringThreshold = 0.9;
+
 /* JSGC_MIN_LAST_DITCH_GC_PERIOD */
 static const auto MinLastDitchGCPeriod = 60;  // in seconds
 
@@ -563,6 +566,14 @@ class GCSchedulingTunables {
   MainThreadData<double> pretenureStringThreshold_;
 
   /*
+   * JSGC_STOP_PRETENURE_STRING_THRESHOLD
+   *
+   * If the finalization rate of the tenured strings exceeds this threshold,
+   * string will be allocated in nursery.
+   */
+  MainThreadData<double> stopPretenureStringThreshold_;
+
+  /*
    * JSGC_MIN_LAST_DITCH_GC_PERIOD
    *
    * Last ditch GC is skipped if allocation failure occurs less than this many
@@ -625,6 +636,9 @@ class GCSchedulingTunables {
   double pretenureThreshold() const { return pretenureThreshold_; }
   uint32_t pretenureGroupThreshold() const { return pretenureGroupThreshold_; }
   double pretenureStringThreshold() const { return pretenureStringThreshold_; }
+  double stopPretenureStringThreshold() const {
+    return stopPretenureStringThreshold_;
+  }
 
   mozilla::TimeDuration minLastDitchGCPeriod() const {
     return minLastDitchGCPeriod_;
