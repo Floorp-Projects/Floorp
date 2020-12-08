@@ -15,6 +15,8 @@
 #define RASTER_LOCAL            0
 #define RASTER_SCREEN           1
 
+uniform sampler2DArray sPrevPassAlpha;
+uniform sampler2DArray sPrevPassColor;
 uniform sampler2DArray sClipMask;
 
 vec2 clamp_rect(vec2 pt, RectWithSize rect) {

@@ -86,7 +86,7 @@ void main(void) {
 
     gl_Position = uTransform * final_pos;
 
-    vec2 texture_size = vec2(textureSize(sColor0, 0));
+    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
@@ -113,6 +113,6 @@ void main(void) {
     float alpha = do_clip();
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
     vec2 uv = clamp(vUv * perspective_divisor, vUvSampleBounds.xy, vUvSampleBounds.zw);
-    write_output(alpha * textureLod(sColor0, vec3(uv, vLayerAndPerspective.x), 0.0));
+    write_output(alpha * textureLod(sPrevPassColor, vec3(uv, vLayerAndPerspective.x), 0.0));
 }
 #endif
