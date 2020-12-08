@@ -579,9 +579,7 @@ class ICFallbackStub : public ICStub {
   void resetEnteredCount() { enteredCount_ = 0; }
 };
 
-// Shared trait for all CacheIR stubs.
-template <typename Base>
-class ICCacheIR_Trait : public Base {
+class ICCacheIR_Regular : public ICStub {
  protected:
   const CacheIRStubInfo* stubInfo_;
 
@@ -592,9 +590,8 @@ class ICCacheIR_Trait : public Base {
   uint32_t enteredCount_ = 0;
 
  public:
-  template <typename... Args>
-  explicit ICCacheIR_Trait(const CacheIRStubInfo* stubInfo, Args&&... args)
-      : Base(args...), stubInfo_(stubInfo) {}
+  ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
+      : ICStub(ICStub::CacheIR_Regular, stubCode), stubInfo_(stubInfo) {}
 
   const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
   uint8_t* stubDataStart();
@@ -605,19 +602,8 @@ class ICCacheIR_Trait : public Base {
   void resetEnteredCount() { enteredCount_ = 0; }
 
   static constexpr size_t offsetOfEnteredCount() {
-    using T = ICCacheIR_Trait<Base>;
-    return offsetof(T, enteredCount_);
+    return offsetof(ICCacheIR_Regular, enteredCount_);
   }
-};
-
-// Base class for Trait::Regular CacheIR stubs
-// TODO(no-TI): remove trait class.
-class ICCacheIR_Regular : public ICCacheIR_Trait<ICStub> {
-  using Base = ICCacheIR_Trait<ICStub>;
-
- public:
-  ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
-      : Base(stubInfo, ICStub::CacheIR_Regular, stubCode) {}
 };
 
 // Base class for stubcode compilers.
