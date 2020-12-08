@@ -43,10 +43,11 @@ async function testGeoSharingIconVisible(state = true) {
 
 async function checkForDOMElement(state, id) {
   info(`Testing state ${state} of element  ${id}`);
+  let el;
   try {
     await BrowserTestUtils.waitForCondition(
       () => {
-        let el = document.getElementById(id);
+        el = document.getElementById(id);
         return el != null;
       },
       `Waiting for ${id}`,
@@ -54,9 +55,11 @@ async function checkForDOMElement(state, id) {
     );
   } catch (e) {
     ok(!state, `${id} has correct state`);
-    return;
+    return el;
   }
   ok(state, `${id} has correct state`);
+
+  return el;
 }
 
 async function testIdentityPopupGeoContainer(
@@ -71,7 +74,25 @@ async function testIdentityPopupGeoContainer(
   let checkContainer = checkForDOMElement(
     containerVisible,
     "identity-popup-geo-container"
-  );
+  ).then(container => {
+    if (containerVisible && timestampVisible) {
+      is(
+        container.childElementCount,
+        2,
+        "identity-popup-geo-container should have two elements."
+      );
+      is(
+        container.childNodes[0].classList[0],
+        "identity-popup-permission-item",
+        "Geo container should have permission item."
+      );
+      is(
+        container.childNodes[1].id,
+        "geo-access-indicator-item",
+        "Geo container should have indicator item."
+      );
+    }
+  });
   let checkAccessIndicator = checkForDOMElement(
     timestampVisible,
     "geo-access-indicator-item"
@@ -332,5 +353,19 @@ add_task(async function test_identity_popup_permission_clear() {
       );
     }, "Waiting for geo sharing state to reset"),
   ]);
+  await cleanup(tab);
+});
+
+/**
+ * Tests that we only show the last access label once when the sharing
+ * state is updated multiple times while the popup is open.
+ */
+add_task(async function test_identity_no_duplicate_last_access_label() {
+  let tab = await openExamplePage();
+  await setGeoLastAccess(tab.linkedBrowser, true);
+  await openIdentityPopup();
+  gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });
+  gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });
+  await testIdentityPopupGeoContainer(true, true);
   await cleanup(tab);
 });
