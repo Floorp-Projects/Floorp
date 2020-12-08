@@ -7,28 +7,56 @@
 #ifndef vm_Scope_h
 #define vm_Scope_h
 
-#include "mozilla/Maybe.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
+#include "mozilla/Attributes.h"  // MOZ_IMPLICIT, MOZ_INIT_OUTSIDE_CTOR, MOZ_STACK_CLASS
+#include "mozilla/Casting.h"          // mozilla::AssertedCast
+#include "mozilla/Maybe.h"            // mozilla::Maybe
+#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 
-#include <stddef.h>
+#include <stddef.h>     // size_t
+#include <stdint.h>     // uint8_t, uint16_t, uint32_t, uintptr_t
+#include <type_traits>  // std::is_same_v
 
-#include "gc/Policy.h"
-#include "js/UbiNode.h"
-#include "js/UniquePtr.h"
-#include "util/Poison.h"
-#include "vm/BytecodeUtil.h"
-#include "vm/JSObject.h"
-#include "vm/Printer.h"  // GenericPrinter
-#include "vm/ScopeKind.h"
-#include "vm/Xdr.h"
+#include "builtin/ModuleObject.h"  // ModuleObject, HandleModuleObject
+#include "gc/Allocator.h"          // AllowGC
+#include "gc/Barrier.h"            // HeapPtr
+#include "gc/Cell.h"               // TenuredCellWithNonGCPointer
+#include "gc/MaybeRooted.h"        // MaybeRooted
+#include "gc/Rooting.h"      // HandleScope, HandleShape, MutableHandleShape
+#include "js/GCPolicyAPI.h"  // GCPolicy, IgnoreGCPolicy
+#include "js/HeapAPI.h"      // CellFlagBitsReservedForGC
+#include "js/RootingAPI.h"   // Handle, MutableHandle
+#include "js/TraceKind.h"    // JS::TraceKind
+#include "js/TypeDecls.h"    // HandleFunction
+#include "js/UbiNode.h"      // ubi::*
+#include "js/UniquePtr.h"    // UniquePtr
+#include "util/Poison.h"  // AlwaysPoison, JS_SCOPE_DATA_TRAILING_NAMES_PATTERN, MemCheckKind
+#include "vm/BytecodeUtil.h"  // LOCALNO_LIMIT, ENVCOORD_SLOT_LIMIT
+#include "vm/ScopeKind.h"     // ScopeKind
+#include "vm/Shape.h"         // Shape
+#include "vm/Xdr.h"           // XDRResult, XDRState
+
+class JSAtom;
+class JSFreeOp;
+class JSFunction;  // FIXME: include JSFunction.h
+class JSScript;
+class JSTracer;
+struct JSContext;
+
+namespace JS {
+class Zone;
+}  // namespace JS
 
 namespace js {
 
+class GenericPrinter;
+class WasmInstanceObject;  // FIXME: include WasmJS.h
+
 namespace frontend {
 struct CompilationAtomCache;
-class ScriptStencil;
 class ScopeStencil;
 class ParserAtom;
-};  // namespace frontend
+}  // namespace frontend
 
 template <typename NameT>
 class AbstractBaseScopeData;
@@ -41,7 +69,6 @@ class AbstractBindingIter;
 
 using BindingIter = AbstractBindingIter<JSAtom>;
 
-class ModuleObject;
 class AbstractScopePtr;
 
 enum class BindingKind : uint8_t {
