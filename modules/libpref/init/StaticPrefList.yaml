@@ -7201,7 +7201,7 @@
 
 - name: media.rdd-retryonfailure.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: media.rdd-process.startup_timeout_ms
@@ -7220,11 +7220,11 @@
 - name: media.rdd-ffvpx.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #elif defined(XP_MACOSX)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false
 #endif
@@ -7234,29 +7234,25 @@
 #ifdef MOZ_WMF
 - name: media.rdd-wmf.enabled
   type: RelaxedAtomicBool
-#if defined(XP_WIN)
-  value: @IS_NIGHTLY_BUILD@
-#else
-  value: false
-#endif
+  value: true
   mirror: always
 #endif
 
 #ifdef MOZ_APPLEMEDIA
 - name: media.rdd-applemedia.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 #endif
 
 - name: media.rdd-theora.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #elif defined(XP_MACOSX)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false
 #endif
@@ -7278,11 +7274,11 @@
 - name: media.rdd-vpx.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #elif defined(XP_MACOSX)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false
 #endif
