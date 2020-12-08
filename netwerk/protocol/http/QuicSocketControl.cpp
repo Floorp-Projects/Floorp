@@ -86,6 +86,7 @@ void QuicSocketControl::HandshakeCompleted() {
 }
 
 void QuicSocketControl::SetNegotiatedNPN(const nsACString& aValue) {
+  MutexAutoLock lock(mMutex);
   mNegotiatedNPN = aValue;
   mNPNCompleted = true;
 }
@@ -96,6 +97,7 @@ void QuicSocketControl::SetInfo(uint16_t aCipherSuite,
   SSLCipherSuiteInfo cipherInfo;
   if (SSL_GetCipherSuiteInfo(aCipherSuite, &cipherInfo, sizeof cipherInfo) ==
       SECSuccess) {
+    MutexAutoLock lock(mMutex);
     mHaveCipherSuiteAndProtocol = true;
     mCipherSuite = aCipherSuite;
     mProtocolVersion = aProtocolVersion & 0xFF;

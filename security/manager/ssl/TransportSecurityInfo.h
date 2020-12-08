@@ -56,14 +56,21 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
     return result;
   }
 
-  const nsACString& GetHostName() const { return mHostName; }
+  const nsACString& GetHostName() const {
+    MutexAutoLock lock(mMutex);
+    return mHostName;
+  }
 
   void SetHostName(const char* host);
 
-  int32_t GetPort() const { return mPort; }
+  int32_t GetPort() const {
+    MutexAutoLock lock(mMutex);
+    return mPort;
+  }
   void SetPort(int32_t aPort);
 
   const OriginAttributes& GetOriginAttributes() const {
+    MutexAutoLock lock(mMutex);
     return mOriginAttributes;
   }
   void SetOriginAttributes(const OriginAttributes& aOriginAttributes);
@@ -79,7 +86,10 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   nsresult SetSucceededCertChain(nsTArray<nsTArray<uint8_t>>&& certList);
 
-  bool HasServerCert() { return mServerCert != nullptr; }
+  bool HasServerCert() {
+    MutexAutoLock lock(mMutex);
+    return mServerCert != nullptr;
+  }
 
   static uint16_t ConvertCertificateTransparencyInfoToStatus(
       const mozilla::psm::CertificateTransparencyInfo& info);
@@ -92,6 +102,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   void SetCertificateTransparencyStatus(
       uint16_t aCertificateTransparencyStatus) {
+    MutexAutoLock lock(mMutex);
     mCertificateTransparencyStatus = aCertificateTransparencyStatus;
   }
 
@@ -147,15 +158,18 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   /* Peer cert chain for failed connections (for error reporting) */
   nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain;
 
-  nsresult ReadSSLStatus(nsIObjectInputStream* aStream);
+  nsresult ReadSSLStatus(nsIObjectInputStream* aStream,
+                         MutexAutoLock& aProofOfLock);
 
   // This function is used to read the binary that are serialized
   // by using nsIX509CertList
   nsresult ReadCertList(nsIObjectInputStream* aStream,
-                        nsTArray<RefPtr<nsIX509Cert>>& aCertList);
+                        nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+                        MutexAutoLock& aProofOfLock);
   nsresult ReadCertificatesFromStream(nsIObjectInputStream* aStream,
                                       uint32_t aSize,
-                                      nsTArray<RefPtr<nsIX509Cert>>& aCertList);
+                                      nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+                                      MutexAutoLock& aProofOfLock);
 };
 
 class RememberCertErrorsTable {
