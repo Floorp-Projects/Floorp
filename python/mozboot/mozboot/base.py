@@ -175,7 +175,7 @@ class BaseBootstrapper(object):
     def suggest_install_distutils(self):
         """Called if distutils.{sysconfig,spawn} can't be imported."""
         print(
-            "Does your distro require installing another package for " "distutils?",
+            "Does your distro require installing another package for distutils?",
             file=sys.stderr,
         )
 
