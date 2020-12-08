@@ -1491,10 +1491,10 @@ fuzzy-if(Android,0-2,0-48) == 563584-7.html 563584-7-ref.html
 # FIXME: It would be nice to have variants of these -8 tests for the
 # table narrowing quirk causing a change to mIsTopOfPage (though I'm not
 # entirely sure our behavior is the right one, either).
-fuzzy-if(Android,0-2,0-48) == 563584-8a.html 563584-8a-ref.html
-fuzzy-if(Android,0-2,0-48) == 563584-8b.html 563584-8b-ref.html
-fuzzy-if(Android,0-4,0-180) == 563584-8c.html 563584-8c-ref.html
-fuzzy-if(Android,0-4,0-180) == 563584-8d.html 563584-8d-ref.html
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(Android,0-2,0-48) == 563584-8a.html 563584-8a-ref.html
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(Android,0-2,0-48) == 563584-8b.html 563584-8b-ref.html
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(Android,0-4,0-180) == 563584-8c.html 563584-8c-ref.html
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(Android,0-4,0-180) == 563584-8d.html 563584-8d-ref.html
 == 563584-9a.html 563584-9a-ref.html
 == 563584-9b.html 563584-9b-ref.html
 == 563584-9c.html 563584-9cd-ref.html

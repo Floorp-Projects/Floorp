@@ -193,7 +193,7 @@ test-pref(layout.css.serialize-grid-implicit-tracks,false) == grid-repeat-auto-f
 == grid-fragmentation-010.html grid-fragmentation-010-ref.html
 == grid-fragmentation-011.html grid-fragmentation-011-ref.html
 == grid-fragmentation-012.html grid-fragmentation-012-ref.html
-== grid-fragmentation-013.html grid-fragmentation-013-ref.html
+pref(layout.display-list.improve-fragmentation,true) == grid-fragmentation-013.html grid-fragmentation-013-ref.html
 == grid-fragmentation-014.html grid-fragmentation-014-ref.html
 asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # bug 1144852 (due to vertical writing-mode)
 == grid-fragmentation-016.html grid-fragmentation-016-ref.html

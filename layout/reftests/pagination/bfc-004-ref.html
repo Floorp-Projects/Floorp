@@ -7,13 +7,18 @@
   <style>
 @page { size:5in 3in; margin:0.5in; }
 html,body {
-    color:black; background-color:white; font:0.5in/1 monospace; padding:0; margin:0;
+    color:black; background-color:white; font:1px/1 monospace; padding:0; margin:0;
+}
+.before, .after {
+  height: 0.5in;
+  content: "x";
+  background: black;
 }
 </style>
 </head>
 <body>
-  BEFORE
+  <div class="before"></div>
   <div style="height:1in; width:1in; background:black"></div>
-  AFTER
+  <div class="after"></div>
 </body>
 </html>

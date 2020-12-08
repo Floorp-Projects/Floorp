@@ -7,12 +7,17 @@
   <style>
 @page { size:5in 3in; margin:0.5in; }
 html,body {
-    color:black; background-color:white; font:0.5in/1 monospace; padding:0; margin:0;
+    color:black; background-color:white; font:1px/1 monospace; padding:0; margin:0;
+}
+.before, .after {
+  height: 0.5in;
+  content: "x";
+  background: black;
 }
 </style>
 </head>
 <body>
-  BEFORE
+  <div class="before"></div>
   <div style="overflow:hidden; height:1in">
     <div style="overflow:hidden">
       <div style="float: left">
@@ -20,6 +25,6 @@ html,body {
       </div>
     </div>
   </div>
-  AFTER
+  <div class="after"></div>
 </body>
 </html>
