@@ -698,6 +698,8 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
     }
   }
 
+  MOZ_ASSERT(cx->compartment() == obj->compartment());
+
   // Check for a native property. Call Shape::search directly (instead of
   // NativeObject::lookup) because it's inlined.
   if (Shape* shape = obj->lastProperty()->search(cx, id)) {
