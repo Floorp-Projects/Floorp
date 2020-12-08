@@ -34,7 +34,7 @@ native OriginAttributes(mozilla::OriginAttributes);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(79221831-85e2-43a8-8152-05d77d6fde31)]
+[scriptable, builtinclass, uuid(79221831-85e2-43a8-8152-05d77d6fde31)]
 interface nsISocketTransport : nsITransport
 {
     /**
