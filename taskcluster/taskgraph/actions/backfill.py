@@ -8,6 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
+import re
 import sys
 from functools import partial
 
@@ -24,6 +25,8 @@ from .util import (
 )
 
 logger = logging.getLogger(__name__)
+SYMBOL_REGEX = re.compile("^(.*)-[a-z0-9]{11}-bk$")
+GROUP_SYMBOL_REGEX = re.compile("^(.*)-bk$")
 
 
 def input_for_support_action(revision, task, times=1):
@@ -137,6 +140,13 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id):
         sys.exit(1)
 
 
+def add_backfill_suffix(regex, symbol, suffix):
+    m = regex.match(symbol)
+    if m is None:
+        symbol += suffix
+    return symbol
+
+
 def test_manifests_modifier(task, label, symbol, revision, test_manifests):
     """In the case of test tasks we can modify the test paths they execute."""
     if task.label != label:
@@ -150,10 +160,12 @@ def test_manifests_modifier(task, label, symbol, revision, test_manifests):
     task.task["metadata"]["name"] = task.label
     th_info = task.task["extra"]["treeherder"]
     # Use a job symbol of the originating task as defined in the backfill action
-    th_info["symbol"] = "{}-{}-bk".format(symbol, revision[0:11])
+    add_backfill_suffix(
+        SYMBOL_REGEX, th_info["symbol"], "-{}-bk".format(revision[0:11])
+    )
     if th_info.get("groupSymbol"):
         # Group all backfilled tasks together
-        th_info["groupSymbol"] = "{}-bk".format(th_info["groupSymbol"])
+        add_backfill_suffix(GROUP_SYMBOL_REGEX, th_info["groupSymbol"], "-bk")
     task.task["tags"]["action"] = "backfill-task"
     return task
 
