@@ -43,6 +43,7 @@ else:
     def u(s):
         return unicode(s)
 
+    # pylint: disable=W1612
     unicode = unicode
 
 
