@@ -14,9 +14,9 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-#define GET_FUNC(func, lib) func##Fn = (decltype(func##Fn))dlsym(lib, #func)
+#define GET_FUNC(func, lib) (func##Fn = dlsym(lib, #func))
 
-#define IS_FUNC_LOADED(func) (func##Fn != nullptr)
+#define IS_FUNC_LOADED(func) (func##Fn != NULL)
 
 static VAStatus (*vaDestroyBufferFn)(VADisplay dpy, VABufferID buffer_id);
 static VAStatus (*vaBeginPictureFn)(VADisplay dpy, VAContextID context,
@@ -88,11 +88,20 @@ static VAStatus (*vaInitializeFn)(VADisplay dpy, int* major_version, /* out */
                                   int* minor_version /* out */);
 static VAStatus (*vaSetDriverNameFn)(VADisplay dpy, char* driver_name);
 
-bool LoadVALibrary() {
-  static bool vaLibraryLoaded = []() {
-    static void* sVALib = dlopen("libva.so.2", RTLD_LAZY);
+int LoadVALibrary() {
+  static pthread_mutex_t sVALock = PTHREAD_MUTEX_INITIALIZER;
+  static void* sVALib = NULL;
+  static int sVAInitialized = 0;
+  static int sVALoaded = 0;
+
+  pthread_mutex_lock(&sVALock);
+
+  if (!sVAInitialized) {
+    sVAInitialized = 1;
+    sVALib = dlopen("libva.so.2", RTLD_LAZY);
     if (!sVALib) {
-      return false;
+      pthread_mutex_unlock(&sVALock);
+      return 0;
     }
     GET_FUNC(vaDestroyBuffer, sVALib);
     GET_FUNC(vaBeginPicture, sVALib);
@@ -124,26 +133,27 @@ bool LoadVALibrary() {
     GET_FUNC(vaInitialize, sVALib);
     GET_FUNC(vaSetDriverName, sVALib);
 
-    return (
-        IS_FUNC_LOADED(vaDestroyBuffer) && IS_FUNC_LOADED(vaBeginPicture) &&
-        IS_FUNC_LOADED(vaEndPicture) && IS_FUNC_LOADED(vaRenderPicture) &&
-        IS_FUNC_LOADED(vaMaxNumProfiles) && IS_FUNC_LOADED(vaCreateContext) &&
-        IS_FUNC_LOADED(vaDestroyContext) && IS_FUNC_LOADED(vaCreateBuffer) &&
-        IS_FUNC_LOADED(vaQuerySurfaceAttributes) &&
-        IS_FUNC_LOADED(vaQueryConfigProfiles) && IS_FUNC_LOADED(vaErrorStr) &&
-        IS_FUNC_LOADED(vaCreateConfig) && IS_FUNC_LOADED(vaDestroyConfig) &&
-        IS_FUNC_LOADED(vaMaxNumImageFormats) &&
-        IS_FUNC_LOADED(vaQueryImageFormats) &&
-        IS_FUNC_LOADED(vaQueryVendorString) &&
-        IS_FUNC_LOADED(vaDestroySurfaces) && IS_FUNC_LOADED(vaCreateSurfaces) &&
-        IS_FUNC_LOADED(vaDeriveImage) && IS_FUNC_LOADED(vaDestroyImage) &&
-        IS_FUNC_LOADED(vaPutImage) && IS_FUNC_LOADED(vaSyncSurface) &&
-        IS_FUNC_LOADED(vaCreateImage) && IS_FUNC_LOADED(vaGetImage) &&
-        IS_FUNC_LOADED(vaMapBuffer) && IS_FUNC_LOADED(vaUnmapBuffer) &&
-        IS_FUNC_LOADED(vaTerminate) && IS_FUNC_LOADED(vaInitialize) &&
-        IS_FUNC_LOADED(vaSetDriverName));
-  }();
-  return vaLibraryLoaded;
+    sVALoaded =
+        (IS_FUNC_LOADED(vaDestroyBuffer) && IS_FUNC_LOADED(vaBeginPicture) &&
+         IS_FUNC_LOADED(vaEndPicture) && IS_FUNC_LOADED(vaRenderPicture) &&
+         IS_FUNC_LOADED(vaMaxNumProfiles) && IS_FUNC_LOADED(vaCreateContext) &&
+         IS_FUNC_LOADED(vaDestroyContext) && IS_FUNC_LOADED(vaCreateBuffer) &&
+         IS_FUNC_LOADED(vaQuerySurfaceAttributes) &&
+         IS_FUNC_LOADED(vaQueryConfigProfiles) && IS_FUNC_LOADED(vaErrorStr) &&
+         IS_FUNC_LOADED(vaCreateConfig) && IS_FUNC_LOADED(vaDestroyConfig) &&
+         IS_FUNC_LOADED(vaMaxNumImageFormats) &&
+         IS_FUNC_LOADED(vaQueryImageFormats) &&
+         IS_FUNC_LOADED(vaQueryVendorString) &&
+         IS_FUNC_LOADED(vaDestroySurfaces) &&
+         IS_FUNC_LOADED(vaCreateSurfaces) && IS_FUNC_LOADED(vaDeriveImage) &&
+         IS_FUNC_LOADED(vaDestroyImage) && IS_FUNC_LOADED(vaPutImage) &&
+         IS_FUNC_LOADED(vaSyncSurface) && IS_FUNC_LOADED(vaCreateImage) &&
+         IS_FUNC_LOADED(vaGetImage) && IS_FUNC_LOADED(vaMapBuffer) &&
+         IS_FUNC_LOADED(vaUnmapBuffer) && IS_FUNC_LOADED(vaTerminate) &&
+         IS_FUNC_LOADED(vaInitialize) && IS_FUNC_LOADED(vaSetDriverName));
+  }
+  pthread_mutex_unlock(&sVALock);
+  return sVALoaded;
 }
 
 #pragma GCC visibility push(default)
@@ -281,7 +291,7 @@ const char* vaQueryVendorString(VADisplay dpy) {
   if (LoadVALibrary()) {
     return vaQueryVendorStringFn(dpy);
   }
-  return nullptr;
+  return NULL;
 }
 
 VAStatus vaDestroySurfaces(VADisplay dpy, VASurfaceID* surfaces,
