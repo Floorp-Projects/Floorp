@@ -179,6 +179,7 @@ newtab-section-expand-section-label =
 ## Section Headers.
 
 newtab-section-header-topsites = Top Sites
+newtab-section-header-highlights = Highlights
 newtab-section-header-recent-activity = Recent activity
 # Variables:
 #  $provider (String): Name of the corresponding content provider.
