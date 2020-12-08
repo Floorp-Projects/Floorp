@@ -22,11 +22,6 @@ add_task(async () => {
       gBrowser,
     },
     async browser => {
-      let isVideoPaused = () => {
-        return SpecialPowers.spawn(browser, [videoID], async videoID => {
-          return content.document.getElementById(videoID).paused;
-        });
-      };
       let isVideoMuted = () => {
         return SpecialPowers.spawn(browser, [videoID], async videoID => {
           return content.document.getElementById(videoID).muted;
@@ -44,7 +39,7 @@ add_task(async () => {
       // Open the video in PiP
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
-      ok(!(await isVideoPaused()), "The video is not paused.");
+      ok(!(await isVideoPaused(browser, videoID)), "The video is not paused.");
 
       let playPause = pipWin.document.getElementById("playpause");
       let audioButton = pipWin.document.getElementById("audio");
@@ -53,13 +48,13 @@ add_task(async () => {
       let pausedPromise = waitForVideoEvent("pause");
       EventUtils.synthesizeMouseAtCenter(playPause, {}, pipWin);
       await pausedPromise;
-      ok(await isVideoPaused(), "The video is paused.");
+      ok(await isVideoPaused(browser, videoID), "The video is paused.");
 
       // Try the play button
       let playPromise = waitForVideoEvent("play");
       EventUtils.synthesizeMouseAtCenter(playPause, {}, pipWin);
       await playPromise;
-      ok(!(await isVideoPaused()), "The video is playing.");
+      ok(!(await isVideoPaused(browser, videoID)), "The video is playing.");
 
       // Try the mute button
       let mutedPromise = waitForVideoEvent("volumechange");
@@ -79,18 +74,18 @@ add_task(async () => {
       let unpipButton = pipWin.document.getElementById("unpip");
       EventUtils.synthesizeMouseAtCenter(unpipButton, {}, pipWin);
       await pipClosed;
-      ok(!(await isVideoPaused()), "The video is not paused.");
+      ok(!(await isVideoPaused(browser, videoID)), "The video is not paused.");
 
       // Try the close button.
       pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
-      ok(!(await isVideoPaused()), "The video is not paused.");
+      ok(!(await isVideoPaused(browser, videoID)), "The video is not paused.");
 
       pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
       let closeButton = pipWin.document.getElementById("close");
       EventUtils.synthesizeMouseAtCenter(closeButton, {}, pipWin);
       await pipClosed;
-      ok(await isVideoPaused(), "The video is paused.");
+      ok(await isVideoPaused(browser, videoID), "The video is paused.");
     }
   );
 });
