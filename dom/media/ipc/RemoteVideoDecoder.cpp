@@ -55,9 +55,7 @@ KnowsCompositorVideo::TryCreateForIdentifier(
 }
 
 RemoteVideoDecoderChild::RemoteVideoDecoderChild(RemoteDecodeIn aLocation)
-    : RemoteDecoderChild(aLocation == RemoteDecodeIn::GpuProcess),
-      mBufferRecycleBin(new BufferRecycleBin),
-      mLocation(aLocation) {}
+    : RemoteDecoderChild(aLocation), mBufferRecycleBin(new BufferRecycleBin) {}
 
 MediaResult RemoteVideoDecoderChild::ProcessOutput(
     DecodedOutputIPDL&& aDecodedData) {

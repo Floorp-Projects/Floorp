@@ -24,7 +24,7 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderChild);
 
-  explicit RemoteDecoderChild(bool aRecreatedOnCrash = false);
+  explicit RemoteDecoderChild(RemoteDecodeIn aLocation);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -56,6 +56,7 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
 
   RefPtr<RemoteDecoderChild> mIPDLSelfRef;
   MediaDataDecoder::DecodedData mDecodedData;
+  const RemoteDecodeIn mLocation;
 
  private:
   const nsCOMPtr<nsISerialEventTarget> mThread;
@@ -74,7 +75,6 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
   nsCString mHardwareAcceleratedReason;
   nsCString mDescription;
   bool mIsHardwareAccelerated = false;
-  const bool mRecreatedOnCrash;
   MediaDataDecoder::ConversionRequired mConversion =
       MediaDataDecoder::ConversionRequired::kNeedNone;
 };
