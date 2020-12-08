@@ -269,6 +269,7 @@ var PreferenceExperiments = {
           await this.stop(experiment.slug, {
             resetValue: false,
             reason: "user-preference-changed-sideload",
+            changedPref: prefName,
           });
           stopped = true;
           break;
@@ -611,6 +612,7 @@ var PreferenceExperiments = {
           PreferenceExperiments.stop(experimentSlug, {
             resetValue: false,
             reason: "user-preference-changed",
+            changedPref: preferenceName,
           }).catch(Cu.reportError);
         }
       },
@@ -702,7 +704,10 @@ var PreferenceExperiments = {
    *   If there is no stored experiment with the given slug, or if the
    *   experiment has already expired.
    */
-  async stop(experimentSlug, { resetValue = true, reason = "unknown" } = {}) {
+  async stop(
+    experimentSlug,
+    { resetValue = true, reason = "unknown", changedPref } = {}
+  ) {
     log.debug(
       `PreferenceExperiments.stop(${experimentSlug}, {resetValue: ${resetValue}, reason: ${reason}})`
     );
@@ -716,7 +721,11 @@ var PreferenceExperiments = {
         "unenrollFailed",
         "preference_study",
         experimentSlug,
-        { reason: "does-not-exist" }
+        {
+          reason: "does-not-exist",
+
+          ...(changedPref ? { changedPref } : {}),
+        }
       );
       throw new Error(
         `Could not find a preference experiment with the slug "${experimentSlug}"`
@@ -733,6 +742,7 @@ var PreferenceExperiments = {
           reason: "already-unenrolled",
           enrollmentId:
             experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          ...(changedPref ? { changedPref } : {}),
         }
       );
       throw new Error(
@@ -790,6 +800,7 @@ var PreferenceExperiments = {
       reason,
       enrollmentId:
         experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      ...(changedPref ? { changedPref } : {}),
     });
     await this.saveStartupPrefs();
     Services.obs.notifyObservers(

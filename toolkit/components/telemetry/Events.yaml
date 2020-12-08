@@ -685,6 +685,7 @@ normandy:
       addonVersion: For addon_study, the version of the addon for which the recipe ended.
       branch: The branch of the experiment that this client was on.
       enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
+      changedPref: For preference_study, the preference that was detected to change that caused the unenrollment.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
     products:
@@ -702,6 +703,7 @@ normandy:
     extra_keys:
       reason: A code describing the reason the unenroll failed.
       enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
+      changedPref: For preference_study, the preference that was detected to change that caused the attempted unenrollment.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
     products:
