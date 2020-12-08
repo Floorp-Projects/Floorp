@@ -360,6 +360,23 @@ events:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-05-10"
+  copy_url_tapped:
+    type: event
+    description: |
+      An event that indicates that a user has selected
+      copy option when long pressing on url bar.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16827
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16915
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-05-10"
+
 onboarding:
   fxa_auto_signin:
     type: event
