@@ -60,7 +60,12 @@ pub struct qcms_modular_transform {
     pub next_transform: Option<Box<qcms_modular_transform>>,
 }
 pub type transform_module_fn_t = Option<
-    unsafe extern "C" fn(_: *const qcms_modular_transform, _: *mut f32, _: *mut f32, _: usize) -> (),
+    unsafe extern "C" fn(
+        _: *const qcms_modular_transform,
+        _: *mut f32,
+        _: *mut f32,
+        _: usize,
+    ) -> (),
 >;
 
 #[inline]
@@ -230,8 +235,9 @@ unsafe extern "C" fn qcms_transform_module_clut_only(
     let mut b_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(2isize);
 
     let mut i: usize = 0;
-    let CLU =
-        |table: *const f32, x, y, z| *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
+    let CLU = |table: *const f32, x, y, z| {
+        *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize)
+    };
 
     while i < length {
         debug_assert!((*transform).grid_size as i32 >= 1);
@@ -302,8 +308,9 @@ unsafe extern "C" fn qcms_transform_module_clut(
     let mut r_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(0isize);
     let mut g_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(1isize);
     let mut b_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(2isize);
-    let CLU =
-        |table: *const f32, x, y, z| *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
+    let CLU = |table: *const f32, x, y, z| {
+        *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize)
+    };
 
     let mut i: usize = 0;
     let input_clut_table_r = (*transform).input_clut_table_r.as_ref().unwrap();
@@ -356,19 +363,12 @@ unsafe extern "C" fn qcms_transform_module_clut(
         let mut b_x4: f32 = lerp(CLU(b_table, x, y_n, z_n), CLU(b_table, x_n, y_n, z_n), x_d);
         let mut b_y2: f32 = lerp(b_x3, b_x4, y_d);
         let mut clut_b: f32 = lerp(b_y1, b_y2, z_d);
-        let mut pcs_r: f32 = lut_interp_linear_float(
-            clut_r,
-            &(*transform).output_clut_table_r.as_ref().unwrap(),
-        );
-        let mut pcs_g: f32 = lut_interp_linear_float(
-            clut_g,
-            &(*transform).output_clut_table_g.as_ref().unwrap(),
-        );
-        let mut pcs_b: f32 = lut_interp_linear_float(
-            clut_b,
-            &(*transform).output_clut_table_b.as_ref().unwrap(),
-
-        );
+        let mut pcs_r: f32 =
+            lut_interp_linear_float(clut_r, &(*transform).output_clut_table_r.as_ref().unwrap());
+        let mut pcs_g: f32 =
+            lut_interp_linear_float(clut_g, &(*transform).output_clut_table_g.as_ref().unwrap());
+        let mut pcs_b: f32 =
+            lut_interp_linear_float(clut_b, &(*transform).output_clut_table_b.as_ref().unwrap());
         let fresh21 = dest;
         dest = dest.offset(1);
         *fresh21 = clamp_float(pcs_r);
@@ -687,7 +687,7 @@ unsafe extern "C" fn qcms_transform_module_matrix(
     }
 }
 fn qcms_modular_transform_alloc() -> Option<Box<qcms_modular_transform>> {
-    return Some(Box::new(Default::default()))
+    return Some(Box::new(Default::default()));
 }
 fn qcms_modular_transform_release(mut t: Option<Box<qcms_modular_transform>>) {
     // destroy a list of transforms non-recursively
@@ -714,15 +714,16 @@ fn reverse_transform(
 ) -> Option<Box<qcms_modular_transform>> {
     let mut prev_transform = None;
     while !transform.is_none() {
-        let mut next_transform= std::mem::replace(&mut transform.as_mut().unwrap().next_transform, prev_transform);
+        let mut next_transform = std::mem::replace(
+            &mut transform.as_mut().unwrap().next_transform,
+            prev_transform,
+        );
         prev_transform = transform;
         transform = next_transform
     }
     return prev_transform;
 }
-fn qcms_modular_transform_create_mAB(
-    mut lut: &lutmABType,
-) -> Option<Box<qcms_modular_transform>> {
+fn qcms_modular_transform_create_mAB(mut lut: &lutmABType) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     let mut transform;
@@ -745,9 +746,7 @@ fn qcms_modular_transform_create_mAB(
             build_input_gamma_table((*lut).a_curves[1].as_deref());
         transform.as_mut().unwrap().input_clut_table_b =
             build_input_gamma_table((*lut).a_curves[2].as_deref());
-        transform.as_mut().unwrap().transform_module_fn = Some(
-            qcms_transform_module_gamma_table,
-        );
+        transform.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_gamma_table);
         next_transform = append_transform(transform, next_transform);
 
         if (*lut).num_grid_points[0] as i32 != (*lut).num_grid_points[1] as i32
@@ -767,9 +766,7 @@ fn qcms_modular_transform_create_mAB(
         assert_eq!(clut_length, lut.clut_table.as_ref().unwrap().len());
         transform.as_mut().unwrap().clut = lut.clut_table.clone();
         transform.as_mut().unwrap().grid_size = (*lut).num_grid_points[0] as u16;
-        transform.as_mut().unwrap().transform_module_fn = Some(
-            qcms_transform_module_clut_only,
-        );
+        transform.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_clut_only);
         next_transform = append_transform(transform, next_transform);
     }
 
@@ -787,12 +784,10 @@ fn qcms_modular_transform_create_mAB(
             build_input_gamma_table((*lut).m_curves[1].as_deref());
         transform.as_mut().unwrap().input_clut_table_b =
             build_input_gamma_table((*lut).m_curves[2].as_deref());
-        transform.as_mut().unwrap().transform_module_fn = Some(
-            qcms_transform_module_gamma_table,
-        );
+        transform.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_gamma_table);
         next_transform = append_transform(transform, next_transform);
-        
-            // Prepare Matrix
+
+        // Prepare Matrix
         transform = qcms_modular_transform_alloc();
         if transform.is_none() {
             return None;
@@ -804,9 +799,8 @@ fn qcms_modular_transform_create_mAB(
         transform.as_mut().unwrap().tx = s15Fixed16Number_to_float((*lut).e03);
         transform.as_mut().unwrap().ty = s15Fixed16Number_to_float((*lut).e13);
         transform.as_mut().unwrap().tz = s15Fixed16Number_to_float((*lut).e23);
-        transform.as_mut().unwrap().transform_module_fn = Some(
-            qcms_transform_module_matrix_translate,
-        );
+        transform.as_mut().unwrap().transform_module_fn =
+            Some(qcms_transform_module_matrix_translate);
         next_transform = append_transform(transform, next_transform);
     }
 
@@ -822,9 +816,7 @@ fn qcms_modular_transform_create_mAB(
             build_input_gamma_table((*lut).b_curves[1].as_deref());
         transform.as_mut().unwrap().input_clut_table_b =
             build_input_gamma_table((*lut).b_curves[2].as_deref());
-        transform.as_mut().unwrap().transform_module_fn = Some(
-            qcms_transform_module_gamma_table,
-        );
+        transform.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_gamma_table);
         append_transform(transform, next_transform);
     } else {
         // B curve is mandatory
@@ -839,9 +831,7 @@ fn qcms_modular_transform_create_mAB(
     return first_transform;
 }
 
-fn qcms_modular_transform_create_lut(
-    mut lut: &lutType,
-) -> Option<Box<qcms_modular_transform>> {
+fn qcms_modular_transform_create_lut(mut lut: &lutType) -> Option<Box<qcms_modular_transform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
 
@@ -854,9 +844,7 @@ fn qcms_modular_transform_create_lut(
     if !transform.is_none() {
         transform.as_mut().unwrap().matrix = build_lut_matrix(Some(lut));
         if !transform.as_mut().unwrap().matrix.invalid {
-            transform.as_mut().unwrap().transform_module_fn = Some(
-                qcms_transform_module_matrix,
-            );
+            transform.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_matrix);
             next_transform = append_transform(transform, next_transform);
             // Prepare input curves
             transform = qcms_modular_transform_alloc();
@@ -875,7 +863,8 @@ fn qcms_modular_transform_create_lut(
                             ..(*lut).num_input_table_entries as usize * 3]
                             .to_vec(),
                     );
-                    transform.as_mut().unwrap().input_clut_table_length = (*lut).num_input_table_entries;
+                    transform.as_mut().unwrap().input_clut_table_length =
+                        (*lut).num_input_table_entries;
                     // Prepare table
                     clut_length = ((*lut).num_clut_grid_points as usize).pow(3) * 3;
                     if true {
@@ -885,13 +874,24 @@ fn qcms_modular_transform_create_lut(
                         transform.as_mut().unwrap().grid_size = (*lut).num_clut_grid_points as u16;
                         // Prepare output curves
                         if true {
-                            transform.as_mut().unwrap().output_clut_table_r = Some((*lut).output_table[0..(*lut).num_output_table_entries as usize].to_vec());
-                            transform.as_mut().unwrap().output_clut_table_g = Some((*lut).output_table[(*lut).num_output_table_entries as usize..(*lut).num_output_table_entries as usize*2].to_vec());
-                            transform.as_mut().unwrap().output_clut_table_b = Some((*lut).output_table[(*lut).num_output_table_entries as usize*2..(*lut).num_output_table_entries as usize*3].to_vec());
-                            transform.as_mut().unwrap().output_clut_table_length = (*lut).num_output_table_entries;
-                            transform.as_mut().unwrap().transform_module_fn = Some(
-                                qcms_transform_module_clut,
+                            transform.as_mut().unwrap().output_clut_table_r = Some(
+                                (*lut).output_table[0..(*lut).num_output_table_entries as usize]
+                                    .to_vec(),
                             );
+                            transform.as_mut().unwrap().output_clut_table_g = Some(
+                                (*lut).output_table[(*lut).num_output_table_entries as usize
+                                    ..(*lut).num_output_table_entries as usize * 2]
+                                    .to_vec(),
+                            );
+                            transform.as_mut().unwrap().output_clut_table_b = Some(
+                                (*lut).output_table[(*lut).num_output_table_entries as usize * 2
+                                    ..(*lut).num_output_table_entries as usize * 3]
+                                    .to_vec(),
+                            );
+                            transform.as_mut().unwrap().output_clut_table_length =
+                                (*lut).num_output_table_entries;
+                            transform.as_mut().unwrap().transform_module_fn =
+                                Some(qcms_transform_module_clut);
                             append_transform(transform, next_transform);
                             return first_transform;
                         }
@@ -907,11 +907,10 @@ fn qcms_modular_transform_create_lut(
 fn qcms_modular_transform_create_input(
     mut in_0: &qcms_profile,
 ) -> Option<Box<qcms_modular_transform>> {
-    let mut first_transform= None;
+    let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if !(*in_0).A2B0.is_none() {
-        let mut lut_transform =
-            qcms_modular_transform_create_lut((*in_0).A2B0.as_deref().unwrap());
+        let mut lut_transform = qcms_modular_transform_create_lut((*in_0).A2B0.as_deref().unwrap());
         if lut_transform.is_none() {
             return None;
         } else {
@@ -921,8 +920,7 @@ fn qcms_modular_transform_create_input(
         && (*(*in_0).mAB.as_deref().unwrap()).num_in_channels as i32 == 3
         && (*(*in_0).mAB.as_deref().unwrap()).num_out_channels as i32 == 3
     {
-        let mut mAB_transform =
-            qcms_modular_transform_create_mAB((*in_0).mAB.as_deref().unwrap());
+        let mut mAB_transform = qcms_modular_transform_create_mAB((*in_0).mAB.as_deref().unwrap());
         if mAB_transform.is_none() {
             return None;
         } else {
@@ -933,12 +931,14 @@ fn qcms_modular_transform_create_input(
         if transform.is_none() {
             return None;
         } else {
-            transform.as_mut().unwrap().input_clut_table_r = build_input_gamma_table((*in_0).redTRC.as_deref());
-            transform.as_mut().unwrap().input_clut_table_g = build_input_gamma_table((*in_0).greenTRC.as_deref());
-            transform.as_mut().unwrap().input_clut_table_b = build_input_gamma_table((*in_0).blueTRC.as_deref());
-            transform.as_mut().unwrap().transform_module_fn = Some(
-                qcms_transform_module_gamma_table,
-            );
+            transform.as_mut().unwrap().input_clut_table_r =
+                build_input_gamma_table((*in_0).redTRC.as_deref());
+            transform.as_mut().unwrap().input_clut_table_g =
+                build_input_gamma_table((*in_0).greenTRC.as_deref());
+            transform.as_mut().unwrap().input_clut_table_b =
+                build_input_gamma_table((*in_0).blueTRC.as_deref());
+            transform.as_mut().unwrap().transform_module_fn =
+                Some(qcms_transform_module_gamma_table);
             if transform.as_mut().unwrap().input_clut_table_r.is_none()
                 || transform.as_mut().unwrap().input_clut_table_g.is_none()
                 || transform.as_mut().unwrap().input_clut_table_b.is_none()
@@ -961,18 +961,16 @@ fn qcms_modular_transform_create_input(
                     transform.as_mut().unwrap().matrix.m[2][1] = 0.0;
                     transform.as_mut().unwrap().matrix.m[2][2] = 1. / 1.999969482421875;
                     transform.as_mut().unwrap().matrix.invalid = false;
-                    transform.as_mut().unwrap().transform_module_fn = Some(
-                        qcms_transform_module_matrix,
-                    );
+                    transform.as_mut().unwrap().transform_module_fn =
+                        Some(qcms_transform_module_matrix);
                     next_transform = append_transform(transform, next_transform);
                     transform = qcms_modular_transform_alloc();
                     if transform.is_none() {
                         return None;
                     } else {
                         transform.as_mut().unwrap().matrix = build_colorant_matrix(in_0);
-                        transform.as_mut().unwrap().transform_module_fn = Some(
-                            qcms_transform_module_matrix,
-                        );
+                        transform.as_mut().unwrap().transform_module_fn =
+                            Some(qcms_transform_module_matrix);
                         append_transform(transform, next_transform);
                     }
                 }
@@ -987,8 +985,7 @@ fn qcms_modular_transform_create_output(
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if !(*out).B2A0.is_none() {
-        let mut lut_transform =
-            qcms_modular_transform_create_lut((*out).B2A0.as_deref().unwrap());
+        let mut lut_transform = qcms_modular_transform_create_lut((*out).B2A0.as_deref().unwrap());
         if lut_transform.is_none() {
             return None;
         } else {
@@ -998,8 +995,7 @@ fn qcms_modular_transform_create_output(
         && (*(*out).mBA.as_deref().unwrap()).num_in_channels as i32 == 3
         && (*(*out).mBA.as_deref().unwrap()).num_out_channels as i32 == 3
     {
-        let mut lut_transform_0 =
-            qcms_modular_transform_create_mAB((*out).mBA.as_deref().unwrap());
+        let mut lut_transform_0 = qcms_modular_transform_create_mAB((*out).mBA.as_deref().unwrap());
         if lut_transform_0.is_none() {
             return None;
         } else {
@@ -1011,9 +1007,7 @@ fn qcms_modular_transform_create_output(
             return None;
         } else {
             transform.as_mut().unwrap().matrix = matrix_invert(build_colorant_matrix(out));
-            transform.as_mut().unwrap().transform_module_fn = Some(
-                qcms_transform_module_matrix,
-            );
+            transform.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_matrix);
             next_transform = append_transform(transform, next_transform);
             transform = qcms_modular_transform_alloc();
             if transform.is_none() {
@@ -1029,9 +1023,8 @@ fn qcms_modular_transform_create_output(
                 transform.as_mut().unwrap().matrix.m[2][1] = 0.0;
                 transform.as_mut().unwrap().matrix.m[2][2] = 1.999969482421875;
                 transform.as_mut().unwrap().matrix.invalid = false;
-                transform.as_mut().unwrap().transform_module_fn = Some(
-                    qcms_transform_module_matrix,
-                );
+                transform.as_mut().unwrap().transform_module_fn =
+                    Some(qcms_transform_module_matrix);
                 next_transform = append_transform(transform, next_transform);
                 transform = qcms_modular_transform_alloc();
                 if transform.is_none() {
@@ -1043,9 +1036,8 @@ fn qcms_modular_transform_create_output(
                         Some(build_output_lut((*out).greenTRC.as_deref().unwrap()));
                     transform.as_mut().unwrap().output_gamma_lut_b =
                         Some(build_output_lut((*out).blueTRC.as_deref().unwrap()));
-                    transform.as_mut().unwrap().transform_module_fn = Some(
-                        qcms_transform_module_gamma_lut,
-                    );
+                    transform.as_mut().unwrap().transform_module_fn =
+                        Some(qcms_transform_module_gamma_lut);
                     if transform.as_mut().unwrap().output_gamma_lut_r.is_none()
                         || transform.as_mut().unwrap().output_gamma_lut_g.is_none()
                         || transform.as_mut().unwrap().output_gamma_lut_b.is_none()
@@ -1118,7 +1110,7 @@ fn qcms_modular_transform_create(
     mut in_0: &qcms_profile,
     mut out: &qcms_profile,
 ) -> Option<Box<qcms_modular_transform>> {
-    let mut first_transform= None;
+    let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if (*in_0).color_space == RGB_SIGNATURE {
         let mut rgb_to_pcs = qcms_modular_transform_create_input(in_0);
@@ -1132,7 +1124,7 @@ fn qcms_modular_transform_create(
     }
 
     if (*in_0).pcs == LAB_SIGNATURE && (*out).pcs == XYZ_SIGNATURE {
-        let mut lab_to_pcs= qcms_modular_transform_alloc();
+        let mut lab_to_pcs = qcms_modular_transform_alloc();
         if lab_to_pcs.is_none() {
             return None;
         }
@@ -1156,14 +1148,12 @@ fn qcms_modular_transform_create(
         if pcs_to_lab.is_none() {
             return None;
         }
-        pcs_to_lab.as_mut().unwrap().transform_module_fn =
-            Some(qcms_transform_module_XYZ_to_LAB);
+        pcs_to_lab.as_mut().unwrap().transform_module_fn = Some(qcms_transform_module_XYZ_to_LAB);
         next_transform = append_transform(pcs_to_lab, next_transform);
     }
 
     if (*out).color_space == RGB_SIGNATURE {
-        let mut pcs_to_rgb =
-            qcms_modular_transform_create_output(out);
+        let mut pcs_to_rgb = qcms_modular_transform_create_output(out);
         if pcs_to_rgb.is_none() {
             return None;
         }
@@ -1204,7 +1194,8 @@ unsafe fn qcms_modular_transform_data(
             debug_assert!(false, "Invalid transform");
             return None;
         }
-        transform.unwrap()
+        transform
+            .unwrap()
             .transform_module_fn
             .expect("non-null function pointer")(
             transform.unwrap() as *const _ as *mut _,
@@ -1228,7 +1219,8 @@ pub unsafe fn qcms_chain_transform(
 ) -> Option<Vec<f32>> {
     let mut transform_list = qcms_modular_transform_create(in_0, out);
     if !transform_list.is_none() {
-        let mut lut = qcms_modular_transform_data(transform_list.as_deref(), src, dest, lutSize / 3);
+        let mut lut =
+            qcms_modular_transform_data(transform_list.as_deref(), src, dest, lutSize / 3);
         qcms_modular_transform_release(transform_list);
         return lut;
     }
