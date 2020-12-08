@@ -127,8 +127,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     this.traits = {
       sources: true,
       networkMonitor: true,
-      // Whether the storage inspector actor to inspect cookies, etc.
-      storageInspector: true,
       bulk: true,
       // Whether root actor exposes chrome target actors and access to any window.
       // If allowChromeProcess is true, you can:
