@@ -36,6 +36,7 @@ def get_credentials():
             os.remove(CREDENTIALS_PATH)
     else:
         try:
+            # pylint: disable=W1609
             input_method = raw_input
         except NameError:
             input_method = input
