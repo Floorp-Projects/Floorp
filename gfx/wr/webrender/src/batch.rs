@@ -16,7 +16,7 @@ use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance}
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
-use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter, DeferredResolveIndex};
+use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter, DeferredResolveIndex};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, ClusterFlags};
 use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, ClipData};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
@@ -1627,9 +1627,12 @@ impl BatchBuilder {
                                         let secondary_id = picture.secondary_render_task_id.expect("no secondary!?");
                                         let content_source = {
                                             let secondary_task = &render_tasks[secondary_id];
-                                            let saved_index = secondary_task.saved_index.expect("no saved index!?");
-                                            debug_assert_ne!(saved_index, SavedTargetIndex::PENDING);
-                                            TextureSource::RenderTaskCache(saved_index, Swizzle::default())
+                                            let texture_id = secondary_task.get_target_texture();
+                                            TextureSource::TextureCache(
+                                                texture_id,
+                                                ImageBufferKind::Texture2DArray,
+                                                Swizzle::default(),
+                                            )
                                         };
 
                                         // Build BatchTextures for shadow/content
@@ -1966,14 +1969,21 @@ impl BatchBuilder {
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();
-                                let textures = match render_tasks[cache_task_id].saved_index {
-                                    Some(saved_index) => BatchTextures::new(
-                                        TextureSource::RenderTaskCache(saved_index, Swizzle::default()),
+                                let cache_render_task = &render_tasks[cache_task_id];
+                                let textures = if cache_render_task.save_target {
+                                    let texture_id = cache_render_task.get_target_texture();
+                                    BatchTextures::new(
+                                        TextureSource::TextureCache(
+                                            texture_id,
+                                            ImageBufferKind::Texture2DArray,
+                                            Swizzle::default(),
+                                        ),
                                         TextureSource::PrevPassAlpha,
                                         TextureSource::Invalid,
                                         clip_mask_texture_id,
-                                    ),
-                                    None => BatchTextures::render_target_cache(clip_mask_texture_id),
+                                    )
+                                } else {
+                                    BatchTextures::render_target_cache(clip_mask_texture_id)
                                 };
                                 let batch_params = BrushBatchParameters::shared(
                                     BrushBatchKind::Image(ImageBufferKind::Texture2DArray),

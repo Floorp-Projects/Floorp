@@ -235,6 +235,10 @@ pub struct SwizzleSettings {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheTextureId(pub u32);
 
+impl CacheTextureId {
+    pub const INVALID: CacheTextureId = CacheTextureId(!0);
+}
+
 /// Canonical type for texture layer indices.
 ///
 /// WebRender is currently not very consistent about layer index types. Some
@@ -247,21 +251,6 @@ pub struct CacheTextureId(pub u32);
 /// operations like indexing without a cast, and convert to the required type in
 /// the device module when making calls into the platform layer.
 pub type LayerIndex = usize;
-
-/// Identifies a render pass target that is persisted until the end of the frame.
-///
-/// By default, only the targets of the immediately-preceding pass are bound as
-/// inputs to the next pass. However, tasks can opt into having their target
-/// preserved in a list until the end of the frame, and this type specifies the
-/// index in that list.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct SavedTargetIndex(pub u32);
-
-impl SavedTargetIndex {
-    pub const PENDING: Self = SavedTargetIndex(!0);
-}
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -276,17 +265,13 @@ pub enum TextureSource {
     /// Equivalent to `None`, allowing us to avoid using `Option`s everywhere.
     Invalid,
     /// An entry in the texture cache.
-    TextureCache(CacheTextureId, Swizzle),
+    TextureCache(CacheTextureId, ImageBufferKind, Swizzle),
     /// An external image texture, mananged by the embedding.
     External(DeferredResolveIndex, ImageBufferKind),
     /// The alpha target of the immediately-preceding pass.
     PrevPassAlpha,
     /// The color target of the immediately-preceding pass.
     PrevPassColor,
-    /// A render target from an earlier pass. Unlike the immediately-preceding
-    /// passes, these are not made available automatically, but are instead
-    /// opt-in by the `RenderTask` (see `mark_for_saving()`).
-    RenderTaskCache(SavedTargetIndex, Swizzle),
     /// Select a dummy 1x1 white texture. This can be used by image
     /// shaders that want to draw a solid color.
     Dummy,
@@ -295,14 +280,13 @@ pub enum TextureSource {
 impl TextureSource {
     pub fn image_buffer_kind(&self) -> ImageBufferKind {
         match *self {
-            TextureSource::TextureCache(..) => ImageBufferKind::Texture2D,
+            TextureSource::TextureCache(_, image_buffer_kind, _) => image_buffer_kind,
 
             TextureSource::External(_, image_buffer_kind) => image_buffer_kind,
 
             // Render tasks use texture arrays for now.
             TextureSource::PrevPassAlpha
             | TextureSource::PrevPassColor
-            | TextureSource::RenderTaskCache(..)
             | TextureSource::Dummy => ImageBufferKind::Texture2DArray,
 
 
