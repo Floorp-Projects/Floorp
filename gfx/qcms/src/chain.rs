@@ -59,14 +59,8 @@ pub struct qcms_modular_transform {
     pub transform_module_fn: transform_module_fn_t,
     pub next_transform: Option<Box<qcms_modular_transform>>,
 }
-pub type transform_module_fn_t = Option<
-    unsafe extern "C" fn(
-        _: *const qcms_modular_transform,
-        _: *mut f32,
-        _: *mut f32,
-        _: usize,
-    ) -> (),
->;
+pub type transform_module_fn_t =
+    Option<unsafe fn(_: *const qcms_modular_transform, _: *mut f32, _: *mut f32, _: usize) -> ()>;
 
 #[inline]
 fn lerp(mut a: f32, mut b: f32, mut t: f32) -> f32 {
@@ -115,7 +109,7 @@ fn build_mAB_matrix(lut: &lutmABType) -> matrix {
     return result;
 }
 //Based on lcms cmsLab2XYZ
-unsafe extern "C" fn qcms_transform_module_LAB_to_XYZ(
+unsafe fn qcms_transform_module_LAB_to_XYZ(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
@@ -167,7 +161,7 @@ unsafe extern "C" fn qcms_transform_module_LAB_to_XYZ(
     }
 }
 //Based on lcms cmsXYZ2Lab
-unsafe extern "C" fn qcms_transform_module_XYZ_to_LAB(
+unsafe fn qcms_transform_module_XYZ_to_LAB(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
@@ -221,7 +215,7 @@ unsafe extern "C" fn qcms_transform_module_XYZ_to_LAB(
         i = i + 1
     }
 }
-unsafe extern "C" fn qcms_transform_module_clut_only(
+unsafe fn qcms_transform_module_clut_only(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
@@ -296,7 +290,7 @@ unsafe extern "C" fn qcms_transform_module_clut_only(
         i = i + 1
     }
 }
-unsafe extern "C" fn qcms_transform_module_clut(
+unsafe fn qcms_transform_module_clut(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
@@ -506,7 +500,7 @@ static void qcms_transform_module_tetra_clut(struct qcms_modular_transform *tran
     }
 }
 */
-unsafe extern "C" fn qcms_transform_module_gamma_table(
+unsafe fn qcms_transform_module_gamma_table(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
@@ -545,7 +539,7 @@ unsafe extern "C" fn qcms_transform_module_gamma_table(
         i = i + 1
     }
 }
-unsafe extern "C" fn qcms_transform_module_gamma_lut(
+unsafe fn qcms_transform_module_gamma_lut(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
@@ -589,7 +583,7 @@ unsafe extern "C" fn qcms_transform_module_gamma_lut(
         i = i + 1
     }
 }
-unsafe extern "C" fn qcms_transform_module_matrix_translate(
+unsafe fn qcms_transform_module_matrix_translate(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
@@ -639,7 +633,7 @@ unsafe extern "C" fn qcms_transform_module_matrix_translate(
         i = i + 1
     }
 }
-unsafe extern "C" fn qcms_transform_module_matrix(
+unsafe fn qcms_transform_module_matrix(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
     mut dest: *mut f32,
