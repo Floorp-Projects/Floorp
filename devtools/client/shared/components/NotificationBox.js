@@ -240,7 +240,7 @@ class NotificationBox extends Component {
         notification.buttons.map(props =>
           this.renderButton(props, notification)
         ),
-        div({
+        button({
           className: "messageCloseButton",
           title: this.props.closeButtonTooltip,
           onClick: this.close.bind(this, notification),
