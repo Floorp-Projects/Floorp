@@ -36,6 +36,7 @@
 #include "vm/ScopeKind.h"     // ScopeKind
 #include "vm/Shape.h"         // Shape
 #include "vm/Xdr.h"           // XDRResult, XDRState
+#include "wasm/WasmJS.h"      // WasmInstanceObject
 
 class JSAtom;
 class JSFreeOp;
@@ -51,7 +52,6 @@ class Zone;
 namespace js {
 
 class GenericPrinter;
-class WasmInstanceObject;  // FIXME: include WasmJS.h
 
 namespace frontend {
 struct CompilationAtomCache;
