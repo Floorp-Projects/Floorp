@@ -520,6 +520,10 @@ void RasterizeColorRect(const ColorRect& colorRect) {
   }
 
   for (const DrawRect& rect : drawRects) {
+    if (rect.height <= 0 || rect.width <= 0) {
+      continue;
+    }
+
     // For rounded rectangles, the first thing we do is draw the top and
     // bottom of the rectangle, with the more complicated logic below. After
     // that we can just draw the vertically centered part of the rect like
