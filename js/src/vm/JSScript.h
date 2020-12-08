@@ -42,10 +42,10 @@
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
-#include "vm/ScopeKind.h"  // ScopeKind
+#include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
-#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
+#include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData
 #include "vm/Time.h"
 
 namespace JS {
@@ -55,9 +55,6 @@ class SourceText;
 }  // namespace JS
 
 namespace js {
-
-class VarScope;
-class LexicalScope;
 
 namespace coverage {
 class LCovSource;
@@ -1330,6 +1327,31 @@ class ScriptWarmUpData {
 static_assert(sizeof(ScriptWarmUpData) == sizeof(uintptr_t),
               "JIT code depends on ScriptWarmUpData being pointer-sized");
 
+struct MemberInitializers {
+  static constexpr uint32_t MaxInitializers = INT32_MAX;
+
+#ifdef DEBUG
+  bool valid = false;
+#endif
+
+  // This struct will eventually have a vector of constant values for optimizing
+  // field initializers.
+  uint32_t numMemberInitializers = 0;
+
+  explicit MemberInitializers(uint32_t numMemberInitializers)
+      :
+#ifdef DEBUG
+        valid(true),
+#endif
+        numMemberInitializers(numMemberInitializers) {
+  }
+
+  static MemberInitializers Invalid() { return MemberInitializers(); }
+
+ private:
+  MemberInitializers() = default;
+};
+
 // [SMDOC] - JSScript data layout (unshared)
 //
 // PrivateScriptData stores variable-length data associated with a script.
@@ -1728,7 +1750,20 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
     return warmUpData_.isEnclosingScope();
   }
 
-  Scope* enclosingScope() const;
+  Scope* enclosingScope() const {
+    MOZ_ASSERT(!warmUpData_.isEnclosingScript(),
+               "Enclosing scope is not computed yet");
+
+    if (warmUpData_.isEnclosingScope()) {
+      return warmUpData_.toEnclosingScope();
+    }
+
+    MOZ_ASSERT(data_, "Script doesn't seem to be compiled");
+
+    return gcthings()[js::GCThingIndex::outermostScopeIndex()]
+        .as<Scope>()
+        .enclosing();
+  }
   void setEnclosingScope(Scope* enclosingScope);
   Scope* releaseEnclosingScope();
 
@@ -2013,18 +2048,40 @@ class JSScript : public js::BaseScript {
 
   // Number of fixed slots reserved for slots that are always live. Only
   // nonzero for function or module code.
-  size_t numAlwaysLiveFixedSlots() const;
+  size_t numAlwaysLiveFixedSlots() const {
+    if (bodyScope()->is<js::FunctionScope>()) {
+      return bodyScope()->as<js::FunctionScope>().nextFrameSlot();
+    }
+    if (bodyScope()->is<js::ModuleScope>()) {
+      return bodyScope()->as<js::ModuleScope>().nextFrameSlot();
+    }
+    return 0;
+  }
 
   // Calculate the number of fixed slots that are live at a particular bytecode.
   size_t calculateLiveFixed(jsbytecode* pc);
 
   size_t nslots() const { return immutableScriptData()->nslots; }
 
-  unsigned numArgs() const;
+  unsigned numArgs() const {
+    if (bodyScope()->is<js::FunctionScope>()) {
+      return bodyScope()
+          ->as<js::FunctionScope>()
+          .numPositionalFormalParameters();
+    }
+    return 0;
+  }
 
   inline js::Shape* initialEnvironmentShape() const;
 
-  bool functionHasParameterExprs() const;
+  bool functionHasParameterExprs() const {
+    // Only functions have parameters.
+    js::Scope* scope = bodyScope();
+    if (!scope->is<js::FunctionScope>()) {
+      return false;
+    }
+    return scope->as<js::FunctionScope>().hasParameterExprs();
+  }
 
   bool functionAllowsParameterRedeclaration() const {
     // Parameter redeclaration is only allowed for non-strict functions with
@@ -2091,9 +2148,14 @@ class JSScript : public js::BaseScript {
 
   bool isRelazifiable() const { return isRelazifiableImpl(); }
 
-  js::ModuleObject* module() const;
+  js::ModuleObject* module() const {
+    if (bodyScope()->is<js::ModuleScope>()) {
+      return bodyScope()->as<js::ModuleScope>().module();
+    }
+    return nullptr;
+  }
 
-  bool isGlobalCode() const;
+  bool isGlobalCode() const { return bodyScope()->is<js::GlobalScope>(); }
 
   // Returns true if the script may read formal arguments on the stack
   // directly, via lazy arguments or a rest parameter.
@@ -2109,7 +2171,12 @@ class JSScript : public js::BaseScript {
 
  public:
   /* Return whether this is a 'direct eval' script in a function scope. */
-  bool isDirectEvalInFunction() const;
+  bool isDirectEvalInFunction() const {
+    if (!isForEval()) {
+      return false;
+    }
+    return bodyScope()->hasOnChain(js::ScopeKind::Function);
+  }
 
   /*
    * Return whether this script is a top-level script.
@@ -2162,9 +2229,32 @@ class JSScript : public js::BaseScript {
     return res;
   }
 
-  js::VarScope* functionExtraBodyVarScope() const;
+  js::VarScope* functionExtraBodyVarScope() const {
+    MOZ_ASSERT(functionHasExtraBodyVarScope());
+    for (JS::GCCellPtr gcThing : gcthings()) {
+      if (!gcThing.is<js::Scope>()) {
+        continue;
+      }
+      js::Scope* scope = &gcThing.as<js::Scope>();
+      if (scope->kind() == js::ScopeKind::FunctionBodyVar) {
+        return &scope->as<js::VarScope>();
+      }
+    }
+    MOZ_CRASH("Function extra body var scope not found");
+  }
 
-  bool needsBodyEnvironment() const;
+  bool needsBodyEnvironment() const {
+    for (JS::GCCellPtr gcThing : gcthings()) {
+      if (!gcThing.is<js::Scope>()) {
+        continue;
+      }
+      js::Scope* scope = &gcThing.as<js::Scope>();
+      if (ScopeKindIsInBody(scope->kind()) && scope->hasEnvironment()) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   inline js::LexicalScope* maybeNamedLambdaScope() const;
 

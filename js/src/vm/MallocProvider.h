@@ -38,15 +38,11 @@
 #ifndef vm_MallocProvider_h
 #define vm_MallocProvider_h
 
-#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
-#include "mozilla/Likely.h"      // MOZ_LIKELY, MOZ_UNLIKELY
+#include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 
-#include <stddef.h>  // size_t
-#include <stdint.h>  // uint8_t
-
-#include "js/AllocPolicy.h"  // AllocFunction
-#include "js/UniquePtr.h"    // UniquePtr
-#include "js/Utility.h"  // js_malloc, MallocArena, CalculateAllocSize, CalculateAllocSizeWithExtra, JS::FreePolicy
+#include "js/UniquePtr.h"
+#include "js/Utility.h"
 
 namespace js {
 

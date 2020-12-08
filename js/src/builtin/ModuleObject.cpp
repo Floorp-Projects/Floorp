@@ -736,23 +736,6 @@ bool ModuleObject::isInstance(HandleValue value) {
   return value.isObject() && value.toObject().is<ModuleObject>();
 }
 
-// Declared as static function instead of ModuleObject method in order to
-// avoid recursive #include dependency between frontend and VM.
-static frontend::FunctionDeclarationVector* GetFunctionDeclarations(
-    ModuleObject* module) {
-  Value value = module->getReservedSlot(ModuleObject::FunctionDeclarationsSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return static_cast<frontend::FunctionDeclarationVector*>(value.toPrivate());
-}
-
-static void InitFunctionDeclarations(
-    ModuleObject* module, frontend::FunctionDeclarationVector&& decls) {
-  *GetFunctionDeclarations(module) = std::move(decls);
-}
-
 /* static */
 ModuleObject* ModuleObject::create(JSContext* cx) {
   RootedObject proto(
@@ -792,7 +775,7 @@ void ModuleObject::finalize(JSFreeOp* fop, JSObject* obj) {
     fop->delete_(obj, &self->importBindings(), MemoryUse::ModuleBindingMap);
   }
   if (frontend::FunctionDeclarationVector* funDecls =
-          GetFunctionDeclarations(self)) {
+          self->functionDeclarations()) {
     // Not tracked as these may move between zones on merge.
     fop->deleteUntracked(funDecls);
   }
@@ -838,6 +821,20 @@ ScriptSourceObject* ModuleObject::scriptSourceObject() const {
   return &getReservedSlot(ScriptSourceObjectSlot)
               .toObject()
               .as<ScriptSourceObject>();
+}
+
+frontend::FunctionDeclarationVector* ModuleObject::functionDeclarations() {
+  Value value = getReservedSlot(FunctionDeclarationsSlot);
+  if (value.isUndefined()) {
+    return nullptr;
+  }
+
+  return static_cast<frontend::FunctionDeclarationVector*>(value.toPrivate());
+}
+
+void ModuleObject::initFunctionDeclarations(
+    frontend::FunctionDeclarationVector&& decls) {
+  *functionDeclarations() = std::move(decls);
 }
 
 bool ModuleObject::initAsyncSlots(JSContext* cx, bool isAsync,
@@ -1088,8 +1085,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   }
 #endif
   // |self| initially manages this vector.
-  frontend::FunctionDeclarationVector* funDecls =
-      GetFunctionDeclarations(self.get());
+  frontend::FunctionDeclarationVector* funDecls = self->functionDeclarations();
   if (!funDecls) {
     JS_ReportErrorASCII(
         cx, "Module function declarations have already been instantiated");
@@ -1508,7 +1504,7 @@ bool frontend::StencilModuleMetadata::initModule(
     js::ReportOutOfMemory(cx);
     return false;
   }
-  InitFunctionDeclarations(module.get(), std::move(functionDeclsCopy));
+  module->initFunctionDeclarations(std::move(functionDeclsCopy));
 
   Rooted<ListObject*> asyncParentModulesList(cx, ListObject::create(cx));
   if (!asyncParentModulesList) {
@@ -2531,7 +2527,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
     localExportEntries = &module->localExportEntries();
     indirectExportEntries = &module->indirectExportEntries();
     starExportEntries = &module->starExportEntries();
-    funcDecls = GetFunctionDeclarations(module.get());
+    funcDecls = module->functionDeclarations();
 
     requestedModulesLength = requestedModules->length();
     importEntriesLength = importEntries->length();
@@ -2637,7 +2633,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
     MOZ_TRY(xdr->codeUint32(&funIndex));
 
     if (mode == XDR_DECODE) {
-      if (!GetFunctionDeclarations(module.get())->append(funIndex)) {
+      if (!module->functionDeclarations()->append(funIndex)) {
         ReportOutOfMemory(cx);
         return xdr->fail(JS::TranscodeResult_Throw);
       }
