@@ -1392,10 +1392,9 @@ void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
       MutexAutoLock mut(mMutex);
       mInfo = info;
     }
-
-    // We now have a valid init data ; we can store it for later use.
-    mInitData = mParser->InitData();
   }
+  // We now have a valid init data ; we can store it for later use.
+  mInitData = mParser->InitData();
 
   // We have now completed the changeType operation.
   mChangeTypeReceived = false;
