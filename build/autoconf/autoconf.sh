@@ -141,18 +141,17 @@ if grep "^[^#]*${pattern}" $tmpout > /dev/null 2>&1; then
 fi
 
 if test $# -eq 0; then
-  exec 4> configure; chmod +x configure
-else
-  exec 4>&1
+  echo "This case should not be reached."
+  exit 1
 fi
 
-# Put the real line numbers into configure to make config.log more helpful.
+# Put the real line numbers into the output to make config.log more helpful.
 $AWK '
 /__oline__/ { printf "%d:", NR + 1 }
            { print }
 ' $tmpout | sed '
 /__oline__/s/^\([0-9][0-9]*\):\(.*\)__oline__/\2\1/
-' >&4
+'
 
 rm -f $tmpout
 
