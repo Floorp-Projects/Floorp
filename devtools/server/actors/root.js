@@ -138,12 +138,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       get allowChromeProcess() {
         return DevToolsServer.allowChromeProcess;
       },
-      // @backward-compat { version 65 } Version of perf actor.
-      // Version 1 - Firefox 65: Introduces a duration-based buffer. It can be controlled
-      // by adding a `duration` property (in seconds) to the options passed to
-      // `front.startProfiler`. This is an optional parameter but it will throw an error if
-      // the profiled Firefox doesn't accept it.
-      perfActorVersion: 1,
       // @backward-compat { version 71 } Supports watchpoints in the server.
       watchpoints: true,
       // @backward-compat { version 84 } Expose the pref value to the client.
