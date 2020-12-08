@@ -17,7 +17,6 @@ import pprint
 import copy
 import re
 import shutil
-import string
 import subprocess
 import json
 
@@ -349,7 +348,7 @@ class Talos(
                     site_origin_hash = self.make_talos_domain(host)
                     new_url = 'http://%s/%s"' % (
                         site_origin_hash,
-                        string.join(merged, "/"),
+                        "/".join(merged),  # pylint --py3k: W1649
                     )
                     self.info(
                         "Replacing %s with %s in iframe inside %s"
