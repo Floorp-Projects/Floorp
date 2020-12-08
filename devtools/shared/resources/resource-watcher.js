@@ -270,7 +270,11 @@ class ResourceWatcher {
       // Watcher actor, we have to unregister and re-register the resource
       // types. This will force calling `Resources.watchResources` on the new top
       // level target.
-      for (const resourceType of this._listenerCount.keys()) {
+      for (const resourceType of Object.values(ResourceWatcher.TYPES)) {
+        // ...which has at least one listener...
+        if (!this._listenerCount.get(resourceType)) {
+          continue;
+        }
         await this._stopListening(resourceType, { bypassListenerCount: true });
         resources.push(resourceType);
       }
