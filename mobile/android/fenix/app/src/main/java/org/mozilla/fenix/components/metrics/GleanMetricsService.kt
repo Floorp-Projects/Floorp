@@ -673,6 +673,9 @@ private val Event.wrapper: EventWrapper<*>?
             { ProgressiveWebApp.background.record(it) },
             { ProgressiveWebApp.backgroundKeys.valueOf(it) }
         )
+        is Event.CopyUrlUsed -> EventWrapper<NoExtraKeys>(
+            { Events.copyUrlTapped.record(it) }
+        )
 
         is Event.SyncedTabOpened -> EventWrapper<NoExtraKeys>(
             { Events.syncedTabOpened.record(it) }

@@ -20,6 +20,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import java.lang.ref.WeakReference
 
@@ -74,6 +75,7 @@ object ToolbarPopupWindow {
                     .setText(context.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar))
                     .show()
             }
+            context.components.analytics.metrics.track(Event.CopyUrlUsed)
         }
 
         customView.paste.setOnClickListener {
