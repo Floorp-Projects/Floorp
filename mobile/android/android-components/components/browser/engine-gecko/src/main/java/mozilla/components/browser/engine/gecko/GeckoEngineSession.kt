@@ -146,23 +146,30 @@ class GeckoEngineSession(
         if (initialLoad) {
             initialLoadRequest = LoadRequest(url, parent, flags, additionalHeaders)
         }
-        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
-        geckoSession.loadUri(
-            url,
-            (parent as? GeckoEngineSession)?.geckoSession,
-            flags.value,
-            additionalHeaders ?: emptyMap()
-        )
+
+        val loader = GeckoSession.Loader()
+            .uri(url)
+            .flags(flags.value)
+
+        if (additionalHeaders != null) {
+            loader.additionalHeaders(additionalHeaders)
+                .headerFilter(GeckoSession.HEADER_FILTER_CORS_SAFELISTED)
+        }
+
+        if (parent != null) {
+            loader.referrer((parent as GeckoEngineSession).geckoSession)
+        }
+
+        geckoSession.load(loader)
     }
 
     /**
      * See [EngineSession.loadData]
      */
     override fun loadData(data: String, mimeType: String, encoding: String) {
-        @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8710
         when (encoding) {
-            "base64" -> geckoSession.loadData(data.toByteArray(), mimeType)
-            else -> geckoSession.loadString(data, mimeType)
+            "base64" -> geckoSession.load(GeckoSession.Loader().data(data.toByteArray(), mimeType))
+            else -> geckoSession.load(GeckoSession.Loader().data(data, mimeType))
         }
     }
 

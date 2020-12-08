@@ -742,9 +742,6 @@ class GeckoPromptDelegateTest {
         loginSelectRequest.onConfirm(login)
         assertTrue(onLoginSelected)
 
-        loginSelectRequest.onConfirm(login)
-        assertTrue(onLoginSelected)
-
         onLoginSelected = false
         loginSelectRequest.onConfirm(login)
 

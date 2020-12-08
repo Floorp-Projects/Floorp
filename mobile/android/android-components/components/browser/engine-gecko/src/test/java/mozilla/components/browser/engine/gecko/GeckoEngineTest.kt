@@ -14,10 +14,10 @@ import mozilla.components.browser.engine.gecko.util.SpeculativeEngineSession
 import mozilla.components.browser.engine.gecko.util.SpeculativeSessionObserver
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
@@ -1792,7 +1792,6 @@ class GeckoEngineTest {
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.CRYPTOMINING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
-
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.CRYPTOMINING))
@@ -2043,9 +2042,9 @@ class GeckoEngineTest {
         val loadedSocialContent = createBlockingData(Event.LOADED_SOCIALTRACKING_CONTENT)
 
         val contentBlockingList = listOf(
-                loadedTrackingLevel1Content,
-                loadedSocialContent,
-                shimmedContent
+            loadedTrackingLevel1Content,
+            loadedSocialContent,
+            shimmedContent
         )
 
         ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
