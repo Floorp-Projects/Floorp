@@ -134,6 +134,37 @@ class ImageResourceTest : BaseSessionTest() {
     }
 
     @Test
+    fun invalidImageSize() {
+        val invalidImage1 = TestImage(
+            "path.ico", "image/icon", "16x16 32",
+            arrayOf(16),
+            arrayOf(16)
+        )
+        testValidImage(invalidImage1)
+
+        val invalidImage2 = TestImage(
+            "path.ico", "image/icon", "16x16 32xa32",
+            arrayOf(16),
+            arrayOf(16)
+        )
+        testValidImage(invalidImage2)
+
+        val invalidImage3 = TestImage(
+            "path.ico", "image/icon", "",
+            null,
+            null
+        )
+        testValidImage(invalidImage3)
+
+        val invalidImage4 = TestImage(
+            "path.ico", "image/icon", "abxab",
+            null,
+            null
+        )
+        testValidImage(invalidImage4)
+    }
+
+    @Test
     fun getBestRegular() {
         val collection = buildCollection(arrayOf(
             kValidTestImage1, kValidTestImage2, kValidTestImage3,
