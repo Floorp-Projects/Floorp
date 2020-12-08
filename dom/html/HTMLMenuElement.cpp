@@ -86,7 +86,8 @@ nsresult HTMLMenuElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                        const nsAttrValue* aOldValue,
                                        nsIPrincipal* aSubjectPrincipal,
                                        bool aNotify) {
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::type) {
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::type &&
+      StaticPrefs::dom_menuitem_enabled()) {
     if (aValue) {
       mType = aValue->GetEnumValue();
     } else {
@@ -102,7 +103,8 @@ bool HTMLMenuElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                      const nsAString& aValue,
                                      nsIPrincipal* aMaybeScriptedPrincipal,
                                      nsAttrValue& aResult) {
-  if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::type) {
+  if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::type &&
+      StaticPrefs::dom_menuitem_enabled()) {
     return aResult.ParseEnumValue(aValue, kMenuTypeTable, false,
                                   kMenuDefaultType);
   }
