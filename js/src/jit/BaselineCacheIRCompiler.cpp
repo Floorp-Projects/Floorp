@@ -2482,12 +2482,9 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   MOZ_CRASH("Invalid kind");
 }
 
-template <typename Base>
-uint8_t* ICCacheIR_Trait<Base>::stubDataStart() {
+uint8_t* ICCacheIR_Regular::stubDataStart() {
   return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
 }
-
-template uint8_t* ICCacheIR_Trait<ICStub>::stubDataStart();
 
 bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult(
     ValOperandId lhsId, ValOperandId rhsId) {
