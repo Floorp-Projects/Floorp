@@ -102,6 +102,12 @@ async function testTabConsoleMessagesResources(executeInIframe) {
 
   targetList.destroy();
   await client.close();
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // registrationPromise is set by the test page.
+    const registration = await content.wrappedJSObject.registrationPromise;
+    registration.unregister();
+  });
 }
 
 async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
@@ -163,6 +169,12 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
 
   await targetList.destroy();
   await client.close();
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // registrationPromise is set by the test page.
+    const registration = await content.wrappedJSObject.registrationPromise;
+    registration.unregister();
+  });
 }
 
 async function logExistingMessages(browser, executeInIframe) {

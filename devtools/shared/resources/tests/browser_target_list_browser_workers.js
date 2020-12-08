@@ -23,7 +23,7 @@ add_task(async function() {
 
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
-  await addTab(FISSION_TEST_URL);
+  const tab = await addTab(FISSION_TEST_URL);
 
   info("Test TargetList against workers via the parent process target");
 
@@ -182,6 +182,12 @@ add_task(async function() {
   await unregisterAllServiceWorkers(client);
 
   await client.close();
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // registrationPromise is set by the test page.
+    const registration = await content.wrappedJSObject.registrationPromise;
+    registration.unregister();
+  });
 });
 
 function sortFronts(f1, f2) {

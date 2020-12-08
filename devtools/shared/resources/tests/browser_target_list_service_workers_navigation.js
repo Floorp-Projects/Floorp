@@ -348,10 +348,11 @@ async function watchServiceWorkerTargets({
 
 async function unregisterServiceWorker(tab, expectedPageUrl) {
   await waitForRegistrationReady(tab, expectedPageUrl);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () =>
-    // win.registration is set by the test page.
-    content.wrappedJSObject.registration.unregister()
-  );
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // registrationPromise is set by the test page.
+    const registration = await content.wrappedJSObject.registrationPromise;
+    registration.unregister();
+  });
 }
 
 /**
@@ -363,7 +364,7 @@ async function waitForRegistrationReady(tab, expectedPageUrl) {
       try {
         const win = content.wrappedJSObject;
         const isExpectedUrl = win.location.href === _url;
-        const hasRegistration = !!win.registration;
+        const hasRegistration = !!win.registrationPromise;
         return isExpectedUrl && hasRegistration;
       } catch (e) {
         return false;
