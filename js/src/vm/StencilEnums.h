@@ -297,7 +297,7 @@ enum class MutableScriptFlagsEnum : uint32_t {
 
   // An overflow happened where Range Analysis hoped it would not. The next
   // compile should be more conservative.
-  HadOverflowBailout = 1 << 21,
+  HadEagerTruncationBailout = 1 << 21,
 
   // This script should not be inlined into others. This happens after inlining
   // has failed.

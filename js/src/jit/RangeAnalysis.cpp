@@ -3050,10 +3050,10 @@ static void AdjustTruncatedInputs(TempAllocator& alloc,
       MInstruction* op;
       if (kind == MDefinition::TruncateAfterBailouts) {
         op = MToNumberInt32::New(alloc, truncated->getOperand(i));
+        op->setBailoutKind(BailoutKind::EagerTruncation);
       } else {
         op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
       }
-      op->setBailoutKind(input->bailoutKind());
 
       if (truncated->isPhi()) {
         MBasicBlock* pred = block->getPredecessor(i);
@@ -3141,7 +3141,7 @@ bool RangeAnalysis::truncate() {
       // code within the current JSScript, we no longer attempt to make
       // this kind of eager optimizations.
       if (kind <= MDefinition::TruncateAfterBailouts &&
-          block->info().hadOverflowBailout()) {
+          block->info().hadEagerTruncationBailout()) {
         continue;
       }
 
