@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import six
 import os
 from argparse import Namespace
 from collections import defaultdict
@@ -46,7 +47,8 @@ def create_manifest(tmpdir, build_obj):
     def inner(string, name="manifest.ini"):
         manifest = tmpdir.join(name)
         manifest.write(string, ensure=True)
-        path = unicode(manifest)
+        # pylint --py3k: W1612
+        path = six.text_type(manifest)
         return TestManifest(manifests=(path,), strict=False, rootdir=tmpdir.strpath)
 
     return inner
