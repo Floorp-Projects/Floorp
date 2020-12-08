@@ -276,7 +276,7 @@ static bool MaybeInstantiateModule(JSContext* cx,
     }
 
     Rooted<ModuleObject*> module(cx, gcOutput.module);
-    if (!compilationInfo.stencil.moduleMetadata.initModule(
+    if (!compilationInfo.stencil.moduleMetadata->initModule(
             cx, compilationInfo.input.atomCache, module)) {
       return false;
     }
@@ -1593,7 +1593,7 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
   if (scriptData[CompilationInfo::TopLevelIndex].isModule()) {
     json.beginObjectProperty("moduleMetadata");
-    moduleMetadata.dumpFields(json, this);
+    moduleMetadata->dumpFields(json, this);
     json.endObject();
   }
 
