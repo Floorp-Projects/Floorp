@@ -4948,31 +4948,20 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
 
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   MOZ_ASSERT(rt);
-  uint8_t* jitCodeSkipArgCheck;
   if (hasBaselineScript() && baselineScript()->hasPendingIonCompileTask()) {
     MOZ_ASSERT(!isIonCompilingOffThread());
     setJitCodeRaw(rt->jitRuntime()->lazyLinkStub().value);
-    jitCodeSkipArgCheck = jitCodeRaw();
   } else if (hasIonScript()) {
     jit::IonScript* ion = ionScript();
     setJitCodeRaw(ion->method()->raw());
-    jitCodeSkipArgCheck = jitCodeRaw() + ion->getSkipArgCheckEntryOffset();
   } else if (hasBaselineScript()) {
     setJitCodeRaw(baselineScript()->method()->raw());
-    jitCodeSkipArgCheck = jitCodeRaw();
   } else if (hasJitScript() && js::jit::IsBaselineInterpreterEnabled()) {
     setJitCodeRaw(rt->jitRuntime()->baselineInterpreter().codeRaw());
-    jitCodeSkipArgCheck = jitCodeRaw();
   } else {
     setJitCodeRaw(rt->jitRuntime()->interpreterStub().value);
-    jitCodeSkipArgCheck = jitCodeRaw();
   }
   MOZ_ASSERT(jitCodeRaw());
-  MOZ_ASSERT(jitCodeSkipArgCheck);
-
-  if (hasJitScript()) {
-    jitScript()->jitCodeSkipArgCheck_ = jitCodeSkipArgCheck;
-  }
 }
 
 bool JSScript::hasLoops() {

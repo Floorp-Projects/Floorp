@@ -83,9 +83,6 @@ class alignas(8) IonScript final : public TrailingArray {
   // Offset to OSR entrypoint from method_->raw(), or 0.
   uint32_t osrEntryOffset_ = 0;
 
-  // Offset to entrypoint skipping type arg check from method_->raw().
-  uint32_t skipArgCheckEntryOffset_ = 0;
-
   // Offset of the invalidation epilogue (which pushes this IonScript
   // and calls the invalidation thunk).
   uint32_t invalidateEpilogueOffset_ = 0;
@@ -315,13 +312,6 @@ class alignas(8) IonScript final : public TrailingArray {
     osrEntryOffset_ = offset;
   }
   uint32_t osrEntryOffset() const { return osrEntryOffset_; }
-  void setSkipArgCheckEntryOffset(uint32_t offset) {
-    MOZ_ASSERT(!skipArgCheckEntryOffset_);
-    skipArgCheckEntryOffset_ = offset;
-  }
-  uint32_t getSkipArgCheckEntryOffset() const {
-    return skipArgCheckEntryOffset_;
-  }
   bool containsCodeAddress(uint8_t* addr) const {
     return method()->raw() <= addr &&
            addr <= method()->raw() + method()->instructionsSize();
