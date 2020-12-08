@@ -700,17 +700,6 @@ void ICFallbackStub::discardStubs(JSContext* cx, JSScript* script) {
   }
 }
 
-/* static */
-ICStubSpace* ICStubCompiler::StubSpaceForStub(bool makesGCCalls,
-                                              JSScript* script,
-                                              ICScript* icScript) {
-  if (makesGCCalls) {
-    return icScript ? icScript->fallbackStubSpace()
-                    : script->jitScript()->fallbackStubSpace();
-  }
-  return script->zone()->jitZone()->optimizedStubSpace();
-}
-
 static void InitMacroAssemblerForICStub(StackMacroAssembler& masm) {
 #ifndef JS_USE_LINK_REGISTER
   // The first value contains the return addres,
