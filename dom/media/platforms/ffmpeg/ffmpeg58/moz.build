@@ -27,8 +27,6 @@ if CONFIG['CC_TYPE'] == 'gcc':
   ]
 if CONFIG['MOZ_WAYLAND']:
   CXXFLAGS += CONFIG['TK_CFLAGS']
-  CXXFLAGS += CONFIG['MOZ_WAYLAND_CFLAGS']
   DEFINES['MOZ_WAYLAND_USE_VAAPI'] = 1
-  include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
