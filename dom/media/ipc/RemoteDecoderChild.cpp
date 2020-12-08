@@ -9,10 +9,10 @@
 
 namespace mozilla {
 
-RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
+RemoteDecoderChild::RemoteDecoderChild(RemoteDecodeIn aLocation)
     : ShmemRecycleAllocator(this),
-      mThread(GetCurrentSerialEventTarget()),
-      mRecreatedOnCrash(aRecreatedOnCrash) {
+      mLocation(aLocation),
+      mThread(GetCurrentSerialEventTarget()) {
   MOZ_DIAGNOSTIC_ASSERT(
       RemoteDecoderManagerChild::GetManagerThread() &&
           RemoteDecoderManagerChild::GetManagerThread()->IsOnCurrentThread(),
@@ -30,9 +30,12 @@ void RemoteDecoderChild::HandleRejectionError(
   // longer be used.
 
   // The GPU/RDD process crashed.
-  if (mRecreatedOnCrash) {
-    // Defer reporting an error until we've recreated the manager so that
-    // it'll be safe for MediaFormatReader to recreate decoders
+  if (mLocation == RemoteDecodeIn::GpuProcess) {
+    // The GPU process will get automatically restarted by the parent process.
+    // Once it has been restarted the ContentChild will receive the message and
+    // will call GetManager()->InitForGPUProcess.
+    // We defer reporting an error until we've recreated the RemoteDecoder
+    // manager so that it'll be safe for MediaFormatReader to recreate decoders
     RefPtr<RemoteDecoderChild> self = this;
     GetManager()->RunWhenGPUProcessRecreated(NS_NewRunnableFunction(
         "RemoteDecoderChild::HandleRejectionError",
@@ -42,7 +45,10 @@ void RemoteDecoderChild::HandleRejectionError(
         }));
     return;
   }
-  aCallback(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+  // The RDD process is restarted on demand and asynchronously, we can
+  // immediately inform the caller that a new decoder is needed. The RDD will
+  // then be restarted during the new decoder creation.
+  aCallback(MediaResult(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER, __func__));
 }
 
 // ActorDestroy is called if the channel goes down while waiting for a response.

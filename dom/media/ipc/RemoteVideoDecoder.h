@@ -47,9 +47,6 @@ class RemoteVideoDecoderChild : public RemoteDecoderChild {
 
  private:
   RefPtr<mozilla::layers::BufferRecycleBin> mBufferRecycleBin;
-
-  // The location of the RemoteVideoDecoderParent - Gpu or Rdd process.
-  const RemoteDecodeIn mLocation;
 };
 
 class RemoteVideoDecoderParent final : public RemoteDecoderParent {
