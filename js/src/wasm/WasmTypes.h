@@ -39,7 +39,6 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "vm/JSFunction.h"
 #include "vm/MallocProvider.h"
 #include "vm/NativeObject.h"
 #include "wasm/WasmConstants.h"
@@ -934,20 +933,7 @@ class FuncRef {
 
   // Given an AnyRef that represents a possibly-null funcref, turn it into a
   // FuncRef.
-  static FuncRef fromAnyRefUnchecked(AnyRef p) {
-#ifdef DEBUG
-    Value v = UnboxAnyRef(p);
-    if (v.isNull()) {
-      return FuncRef(nullptr);
-    }
-    if (v.toObject().is<JSFunction>()) {
-      return FuncRef(&v.toObject().as<JSFunction>());
-    }
-    MOZ_CRASH("Bad value");
-#else
-    return FuncRef(&p.asJSObject()->as<JSFunction>());
-#endif
-  }
+  static FuncRef fromAnyRefUnchecked(AnyRef p);
 
   AnyRef asAnyRef() { return AnyRef::fromJSObject((JSObject*)value_); }
 

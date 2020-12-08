@@ -19,10 +19,36 @@
 #ifndef wasm_js_h
 #define wasm_js_h
 
-#include "gc/Policy.h"
-#include "gc/ZoneAllocator.h"
-#include "vm/NativeObject.h"
-#include "wasm/WasmTypes.h"
+#include "mozilla/Attributes.h"  // MOZ_MUST_USE
+#include "mozilla/HashTable.h"   // DefaultHasher
+#include "mozilla/Maybe.h"       // mozilla::Maybe
+
+#include <stdint.h>  // int32_t, int64_t, uint32_t
+
+#include "gc/Barrier.h"        // HeapPtr
+#include "gc/ZoneAllocator.h"  // ZoneAllocPolicy
+#include "js/AllocPolicy.h"    // SystemAllocPolicy
+#include "js/Class.h"          // JSClassOps, ClassSpec
+#include "js/GCHashTable.h"    // GCHashMap, GCHashSet
+#include "js/GCVector.h"       // GCVector
+#include "js/PropertySpec.h"   // JSPropertySpec, JSFunctionSpec
+#include "js/RootingAPI.h"     // MovableCellHasher
+#include "js/SweepingAPI.h"    // JS::WeakCache
+#include "js/TypeDecls.h"  // HandleValue, HandleObject, MutableHandleObject, MutableHandleFunction
+#include "js/Vector.h"        // JS::Vector
+#include "vm/JSFunction.h"    // JSFunction
+#include "vm/NativeObject.h"  // NativeObject
+#include "wasm/WasmTypes.h"   // MutableHandleWasmInstanceObject, wasm::*
+
+class JSFreeOp;
+class JSObject;
+class JSTracer;
+struct JSContext;
+
+namespace JS {
+class CallArgs;
+class Value;
+}  // namespace JS
 
 namespace js {
 
@@ -38,6 +64,8 @@ class WasmInstanceScope;
 class SharedArrayRawBuffer;
 
 namespace wasm {
+
+struct ImportValues;
 
 // Return whether WebAssembly can in principle be compiled on this platform (ie
 // combination of hardware and OS), assuming at least one of the compilers that
@@ -322,13 +350,9 @@ class WasmInstanceObject : public NativeObject {
                               DefaultHasher<uint32_t>, ZoneAllocPolicy>;
   ExportMap& exports() const;
 
-  // WeakScopeMap maps from function index to js::Scope. This maps is weak
-  // to avoid holding scope objects alive. The scopes are normally created
-  // during debugging.
-  using ScopeMap =
-      JS::WeakCache<GCHashMap<uint32_t, WeakHeapPtr<WasmFunctionScope*>,
-                              DefaultHasher<uint32_t>, ZoneAllocPolicy>>;
-  ScopeMap& scopes() const;
+  // See the definition inside WasmJS.cpp.
+  class UnspecifiedScopeMap;
+  UnspecifiedScopeMap& scopes() const;
 
  public:
   static const unsigned RESERVED_SLOTS = 6;
