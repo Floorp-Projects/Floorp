@@ -52,42 +52,6 @@ class WebRenderBridgeParentRef;
 class WebRenderImageHost;
 struct WrAnimations;
 
-class PipelineIdAndEpochHashEntry : public PLDHashEntryHdr {
- public:
-  typedef const std::pair<wr::PipelineId, wr::Epoch>& KeyType;
-  typedef const std::pair<wr::PipelineId, wr::Epoch>* KeyTypePointer;
-  enum { ALLOW_MEMMOVE = true };
-
-  explicit PipelineIdAndEpochHashEntry(wr::PipelineId aPipelineId,
-                                       wr::Epoch aEpoch)
-      : mValue(aPipelineId, aEpoch) {}
-
-  PipelineIdAndEpochHashEntry(PipelineIdAndEpochHashEntry&& aOther) = default;
-
-  explicit PipelineIdAndEpochHashEntry(KeyTypePointer aKey)
-      : mValue(aKey->first, aKey->second) {}
-
-  ~PipelineIdAndEpochHashEntry() {}
-
-  KeyType GetKey() const { return mValue; }
-
-  bool KeyEquals(KeyTypePointer aKey) const {
-    return mValue.first.mHandle == aKey->first.mHandle &&
-           mValue.first.mNamespace == aKey->first.mNamespace &&
-           mValue.second.mHandle == aKey->second.mHandle;
-  };
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return mozilla::HashGeneric(aKey->first.mHandle, aKey->first.mNamespace,
-                                aKey->second.mHandle);
-  }
-
- private:
-  std::pair<wr::PipelineId, wr::Epoch> mValue;
-};
-
 struct CompositorAnimationIdsForEpoch {
   CompositorAnimationIdsForEpoch(const wr::Epoch& aEpoch,
                                  nsTArray<uint64_t>&& aIds)
@@ -325,12 +289,11 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   RefPtr<wr::WebRenderAPI::GetCollectedFramesPromise> GetCollectedFrames();
 
   void DisableNativeCompositor();
-  void AddPendingScrollPayload(
-      CompositionPayload& aPayload,
-      const std::pair<wr::PipelineId, wr::Epoch>& aKey);
+  void AddPendingScrollPayload(CompositionPayload& aPayload,
+                               const VsyncId& aCompositeStartId);
 
   nsTArray<CompositionPayload> TakePendingScrollPayload(
-      const std::pair<wr::PipelineId, wr::Epoch>& aKey);
+      const VsyncId& aCompositeStartId);
 
   RefPtr<WebRenderBridgeParentRef> GetWebRenderBridgeParentRef();
 
@@ -525,8 +488,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   bool mSkippedComposite;
   bool mDisablingNativeCompositor;
   // These payloads are being used for SCROLL_PRESENT_LATENCY telemetry
-  DataMutex<nsClassHashtable<PipelineIdAndEpochHashEntry,
-                             nsTArray<CompositionPayload>>>
+  DataMutex<nsClassHashtable<nsUint64HashKey, nsTArray<CompositionPayload>>>
       mPendingScrollPayloads;
 };
 

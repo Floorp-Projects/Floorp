@@ -712,16 +712,17 @@ void APZCTreeManager::SampleForWebRender(
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);
 
+  RefPtr<WebRenderBridgeParent> wrBridgeParent;
+  RefPtr<CompositorController> controller;
+  CompositorBridgeParent::CallWithIndirectShadowTree(
+      mRootLayersId, [&](LayerTreeState& aState) -> void {
+        controller = aState.GetCompositorController();
+        wrBridgeParent = aState.mWrBridge;
+      });
+
   bool activeAnimations = AdvanceAnimationsInternal(lock, aSampleTime);
-  if (activeAnimations) {
-    RefPtr<CompositorController> controller;
-    CompositorBridgeParent::CallWithIndirectShadowTree(
-        mRootLayersId, [&](LayerTreeState& aState) -> void {
-          controller = aState.GetCompositorController();
-        });
-    if (controller) {
-      controller->ScheduleRenderOnCompositorThread();
-    }
+  if (activeAnimations && controller) {
+    controller->ScheduleRenderOnCompositorThread();
   }
 
   nsTArray<wr::WrTransformProperty> transforms;
@@ -740,23 +741,8 @@ void APZCTreeManager::SampleForWebRender(
             .mTranslation;
 
     if (Maybe<CompositionPayload> payload = apzc->NotifyScrollSampling()) {
-      RefPtr<WebRenderBridgeParent> wrBridgeParent;
-      LayersId layersId = apzc->GetGuid().mLayersId;
-      CompositorBridgeParent::CallWithIndirectShadowTree(
-          layersId, [&](LayerTreeState& aState) -> void {
-            wrBridgeParent = aState.mWrBridge;
-          });
-
-      if (wrBridgeParent) {
-        wr::PipelineId pipelineId = wr::AsPipelineId(layersId);
-        for (size_t i = 0; i < aEpochsBeingRendered->Length(); i++) {
-          if ((*aEpochsBeingRendered)[i].pipeline_id == pipelineId) {
-            auto& epoch = (*aEpochsBeingRendered)[i].epoch;
-            wrBridgeParent->AddPendingScrollPayload(
-                *payload, std::make_pair(pipelineId, epoch));
-            break;
-          }
-        }
+      if (wrBridgeParent && aVsyncId) {
+        wrBridgeParent->AddPendingScrollPayload(*payload, *aVsyncId);
       }
     }
 
