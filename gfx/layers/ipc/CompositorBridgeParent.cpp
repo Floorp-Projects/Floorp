@@ -2317,6 +2317,32 @@ void CompositorBridgeParent::NotifyDidSceneBuild(
   }
 }
 
+void CompositorBridgeParent::NotifyDidRender(const VsyncId& aCompositeStartId,
+                                             TimeStamp& aCompositeStart,
+                                             TimeStamp& aRenderStart,
+                                             TimeStamp& aCompositeEnd,
+                                             wr::RendererStats* aStats) {
+  if (!mWrBridge) {
+    return;
+  }
+
+  MOZ_RELEASE_ASSERT(mWrBridge->IsRootWebRenderBridgeParent());
+
+  RefPtr<UiCompositorControllerParent> uiController =
+      UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeID);
+
+  if (mIsForcedFirstPaint) {
+    uiController->NotifyFirstPaint();
+    mIsForcedFirstPaint = false;
+  }
+
+  nsTArray<ImageCompositeNotificationInfo> notifications;
+  mWrBridge->ExtractImageCompositeNotifications(&notifications);
+  if (!notifications.IsEmpty()) {
+    Unused << ImageBridgeParent::NotifyImageComposites(notifications);
+  }
+}
+
 void CompositorBridgeParent::NotifyPipelineRendered(
     const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch,
     const VsyncId& aCompositeStartId, TimeStamp& aCompositeStart,
@@ -2326,58 +2352,44 @@ void CompositorBridgeParent::NotifyPipelineRendered(
     return;
   }
 
+  bool isRoot = mWrBridge->PipelineId() == aPipelineId;
+  RefPtr<WebRenderBridgeParent> wrBridge =
+      isRoot ? mWrBridge
+             : RefPtr<WebRenderBridgeParent>(
+                   mAsyncImageManager->GetWrBridge(aPipelineId));
+  if (!wrBridge) {
+    return;
+  }
+
+  CompositorBridgeParentBase* compBridge =
+      isRoot ? this : wrBridge->GetCompositorBridge();
+  if (!compBridge) {
+    return;
+  }
+
+  MOZ_RELEASE_ASSERT(isRoot == wrBridge->IsRootWebRenderBridgeParent());
+
+  wrBridge->RemoveEpochDataPriorTo(aEpoch);
+
+  std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
+  nsTArray<CompositionPayload> payload =
+      wrBridge->TakePendingScrollPayload(key);
+  if (!payload.IsEmpty()) {
+    RecordCompositionPayloadsPresented(payload);
+  }
+
   nsTArray<FrameStats> stats;
 
   RefPtr<UiCompositorControllerParent> uiController =
       UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeID);
 
-  if (mWrBridge->PipelineId() == aPipelineId) {
-    mWrBridge->RemoveEpochDataPriorTo(aEpoch);
+  TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(
+      aEpoch, aCompositeStartId, aCompositeStart, aRenderStart, aCompositeEnd,
+      uiController, aStats, &stats);
 
-    if (mIsForcedFirstPaint) {
-      uiController->NotifyFirstPaint();
-      mIsForcedFirstPaint = false;
-    }
-
-    std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
-    nsTArray<CompositionPayload> payload =
-        mWrBridge->TakePendingScrollPayload(key);
-    if (!payload.IsEmpty()) {
-      RecordCompositionPayloadsPresented(payload);
-    }
-
-    TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(
-        aEpoch, aCompositeStartId, aCompositeStart, aRenderStart, aCompositeEnd,
-        uiController);
-    Unused << SendDidComposite(LayersId{0}, transactionId, aCompositeStart,
-                               aCompositeEnd);
-
-    nsTArray<ImageCompositeNotificationInfo> notifications;
-    mWrBridge->ExtractImageCompositeNotifications(&notifications);
-    if (!notifications.IsEmpty()) {
-      Unused << ImageBridgeParent::NotifyImageComposites(notifications);
-    }
-    return;
-  }
-
-  auto wrBridge = mAsyncImageManager->GetWrBridge(aPipelineId);
-  if (wrBridge && wrBridge->GetCompositorBridge()) {
-    MOZ_ASSERT(!wrBridge->IsRootWebRenderBridgeParent());
-    wrBridge->RemoveEpochDataPriorTo(aEpoch);
-
-    std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
-    nsTArray<CompositionPayload> payload =
-        wrBridge->TakePendingScrollPayload(key);
-    if (!payload.IsEmpty()) {
-      RecordCompositionPayloadsPresented(payload);
-    }
-
-    TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(
-        aEpoch, aCompositeStartId, aCompositeStart, aRenderStart, aCompositeEnd,
-        uiController, aStats, &stats);
-    Unused << wrBridge->GetCompositorBridge()->SendDidComposite(
-        wrBridge->GetLayersId(), transactionId, aCompositeStart, aCompositeEnd);
-  }
+  LayersId layersId = isRoot ? LayersId{0} : wrBridge->GetLayersId();
+  Unused << compBridge->SendDidComposite(layersId, transactionId,
+                                         aCompositeStart, aCompositeEnd);
 
   if (!stats.IsEmpty()) {
     Unused << SendNotifyFrameStats(stats);
@@ -2393,8 +2405,9 @@ void CompositorBridgeParent::NotifyDidComposite(TransactionId aTransactionId,
                                                 VsyncId aId,
                                                 TimeStamp& aCompositeStart,
                                                 TimeStamp& aCompositeEnd) {
-  MOZ_ASSERT(
-      !mWrBridge);  // We should be going through NotifyPipelineRendered instead
+  MOZ_ASSERT(!mWrBridge,
+             "We should be going through NotifyDidRender and "
+             "NotifyPipelineRendered instead");
 
   Unused << SendDidComposite(LayersId{0}, aTransactionId, aCompositeStart,
                              aCompositeEnd);
