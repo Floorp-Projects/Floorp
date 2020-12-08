@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 function assertSearchTelemetryEmpty(search_hist) {
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);

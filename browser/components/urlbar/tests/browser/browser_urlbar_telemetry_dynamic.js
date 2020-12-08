@@ -17,6 +17,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const DYNAMIC_TYPE_NAME = "test";
 
+/**
+ * A test URLBar provider.
+ */
 class TestProvider extends UrlbarTestUtils.TestProvider {
   constructor() {
     super({
@@ -52,7 +55,8 @@ add_task(async function test() {
   // Add a dynamic result type.
   UrlbarResult.addDynamicResultType(DYNAMIC_TYPE_NAME);
   UrlbarView.addDynamicViewTemplate(DYNAMIC_TYPE_NAME, {
-    stylesheet: getRootDirectory(gTestPath) + "usageTelemetryUrlbarDynamic.css",
+    stylesheet:
+      getRootDirectory(gTestPath) + "urlbarTelemetryUrlbarDynamic.css",
     children: [
       {
         name: "title",

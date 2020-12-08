@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "SearchTestUtils",
+  "resource://testing-common/SearchTestUtils.jsm"
+);
+
+SearchTestUtils.init(this);
+
 const SERVICE_EVENT_TYPE = "ContentSearchService";
 const CLIENT_EVENT_TYPE = "ContentSearchClient";
-
-/* import-globals-from ../../../components/search/test/browser/head.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/search/test/browser/head.js",
-  this
-);
 
 var arrayBufferIconTested = false;
 var plainURIIconTested = false;
@@ -40,22 +42,19 @@ add_task(async function setup() {
     ],
   });
 
-  await promiseNewEngine("testEngine.xml", {
-    setAsCurrent: true,
-    testPath:
-      "chrome://mochitests/content/browser/browser/components/search/test/browser/",
-  });
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml"
+  );
+  await Services.search.setDefault(engine);
 
-  await promiseNewEngine("testEngine_diacritics.xml", {
-    setAsCurrent: false,
-    setAsCurrentPrivate: true,
-    testPath:
-      "chrome://mochitests/content/browser/browser/components/search/test/browser/",
-  });
+  let engine2 = await SearchTestUtils.promiseNewSearchEngine(
+    "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml"
+  );
+  await Services.search.setDefaultPrivate(engine2);
 
-  await promiseNewEngine("testEngine_chromeicon.xml", {
-    setAsCurrent: false,
-  });
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine_chromeicon.xml"
+  );
 
   registerCleanupFunction(async () => {
     await Services.search.setDefault(originalEngine);

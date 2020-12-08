@@ -8,6 +8,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
@@ -126,4 +127,16 @@ function getOneOffs() {
     }
   }
   return oneOffs;
+}
+
+async function typeInSearchField(browser, text, fieldName) {
+  await SpecialPowers.spawn(browser, [[fieldName, text]], async function([
+    contentFieldName,
+    contentText,
+  ]) {
+    // Put the focus on the search box.
+    let searchInput = content.document.getElementById(contentFieldName);
+    searchInput.focus();
+    searchInput.value = contentText;
+  });
 }

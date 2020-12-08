@@ -31,11 +31,11 @@ function searchInAwesomebar(value, win = window) {
 /**
  * Click one of the entries in the urlbar suggestion popup.
  *
- * @param {String} resultTitle
+ * @param {string} resultTitle
  *        The title of the result to click on.
- * @param {Number} button [optional]
+ * @param {number} button [optional]
  *        which button to click.
- * @returns {Number}
+ * @returns {number}
  *          The index of the result that was clicked, or -1 if not found.
  */
 async function clickURLBarSuggestion(resultTitle, button = 1) {
@@ -67,10 +67,13 @@ async function clickURLBarSuggestion(resultTitle, button = 1) {
 /**
  * Create an engine to generate search suggestions and add it as default
  * for this test.
+ *
+ * @param {function} taskFn
+ *   The function to run with the new search engine as default.
  */
 async function withNewSearchEngine(taskFn) {
   const url =
-    getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
+    getRootDirectory(gTestPath) + "urlbarTelemetrySearchSuggestions.xml";
   let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);

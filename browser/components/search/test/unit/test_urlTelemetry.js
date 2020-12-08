@@ -1,17 +1,19 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { SearchTelemetry } = ChromeUtils.import(
-  "resource:///modules/SearchTelemetry.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { SearchUtils } = ChromeUtils.import(
-  "resource://gre/modules/SearchUtils.jsm"
-);
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+});
 
 const TESTS = [
   {
@@ -211,6 +213,7 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
 add_task(async function setup() {
   Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
   await SearchTelemetry.init();
+  sinon.stub(BrowserSearchTelemetry, "shouldRecordSearchCount").returns(true);
 });
 
 add_task(async function test_parsing_search_urls() {
@@ -219,7 +222,12 @@ add_task(async function test_parsing_search_urls() {
     if (test.setUp) {
       test.setUp();
     }
-    SearchTelemetry.updateTrackingStatus({}, test.trackingUrl);
+    SearchTelemetry.updateTrackingStatus(
+      {
+        getTabBrowser: () => {},
+      },
+      test.trackingUrl
+    );
     const hs = Services.telemetry
       .getKeyedHistogramById("SEARCH_COUNTS")
       .snapshot();
