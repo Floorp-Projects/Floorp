@@ -136,6 +136,14 @@ void JitcodeGlobalEntry::IonEntry::destroy() {
   scriptList_ = nullptr;
 }
 
+void JitcodeGlobalEntry::BaselineEntry::trackIonAbort(jsbytecode* pc,
+                                                      const char* message) {
+  MOZ_ASSERT(script_->containsPC(pc));
+  MOZ_ASSERT(message);
+  ionAbortPc_ = pc;
+  ionAbortMessage_ = message;
+}
+
 void* JitcodeGlobalEntry::BaselineEntry::canonicalNativeAddrFor(
     void* ptr) const {
   // TODO: We can't yet normalize Baseline addresses until we unify
