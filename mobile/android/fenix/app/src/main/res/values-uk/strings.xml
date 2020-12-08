@@ -1306,7 +1306,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Куки з невідвіданих сайтів</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Сторонні куки (може пошкодити роботу вебсайтів)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Усі сторонні куки (може пошкодити роботу вебсайтів)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Усі куки (буде пошкоджувати роботу вебсайтів)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
