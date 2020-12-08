@@ -486,10 +486,6 @@ impl Texture {
         self.last_frame_used == frame_id
     }
 
-    pub fn is_render_target(&self) -> bool {
-        !self.fbos.is_empty()
-    }
-
     /// Returns true if this texture was used within `threshold` frames of
     /// the current frame.
     pub fn used_recently(&self, current_frame_id: GpuFrameId, threshold: usize) -> bool {

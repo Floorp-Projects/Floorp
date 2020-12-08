@@ -5,7 +5,7 @@
 
 use api::ImageFormat;
 use api::units::*;
-use crate::internal_types::{CacheTextureId, FastHashMap};
+use crate::internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex};
 use crate::render_backend::FrameId;
 use crate::render_target::{RenderTargetKind, RenderTargetList, ColorRenderTarget};
 use crate::render_target::{PictureCacheTarget, TextureCacheRenderTarget, AlphaRenderTarget};
@@ -24,6 +24,7 @@ pub struct RenderTaskGraph {
     ///
     /// We render these unconditionally before-rendering the rest of the tree.
     pub cacheable_render_tasks: Vec<RenderTaskId>,
+    next_saved: SavedTargetIndex,
     frame_id: FrameId,
 }
 
@@ -54,6 +55,7 @@ impl RenderTaskGraph {
             tasks: Vec::with_capacity(counters.tasks_len + extra_items),
             task_data: Vec::with_capacity(counters.task_data_len + extra_items),
             cacheable_render_tasks: Vec::with_capacity(counters.cacheable_render_tasks_len + extra_items),
+            next_saved: SavedTargetIndex(0),
             frame_id,
         }
     }
@@ -335,6 +337,12 @@ impl RenderTaskGraph {
         }
     }
 
+    pub fn save_target(&mut self) -> SavedTargetIndex {
+        let id = self.next_saved;
+        self.next_saved.0 += 1;
+        id
+    }
+
     #[cfg(debug_assertions)]
     pub fn frame_id(&self) -> FrameId {
         self.frame_id
@@ -400,7 +408,6 @@ pub struct RenderPass {
     /// The set of tasks to be performed in this pass, as indices into the
     /// `RenderTaskGraph`.
     pub tasks: Vec<RenderTaskId>,
-    pub textures_to_invalidate: Vec<CacheTextureId>,
 }
 
 impl RenderPass {
@@ -423,7 +430,6 @@ impl RenderPass {
             texture_cache: FastHashMap::default(),
             picture_cache: Vec::new(),
             tasks: vec![],
-            textures_to_invalidate: Vec::new(),
         }
     }
 
@@ -493,7 +499,7 @@ pub fn dump_render_tasks_as_svg(
             let tx = rect.x + rect.w / 2.0;
             let ty = rect.y + 10.0;
 
-            let saved = if task.save_target { " (Saved)" } else { "" };
+            let saved = if task.saved_index.is_some() { " (Saved)" } else { "" };
             let label = text(tx, ty, format!("{}{}", task.kind.as_str(), saved));
             let size = text(tx, ty + 12.0, format!("{:?}", task.location.size()));
 
@@ -793,7 +799,7 @@ fn blur_task_graph() {
     assert_eq!(passes[7].tasks, vec![main_pic]);
 
     // See vblur4's comment above.
-    assert!(tasks[scale2].save_target);
+    assert!(tasks[scale2].saved_index.is_some());
 }
 
 #[test]
