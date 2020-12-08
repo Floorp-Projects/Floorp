@@ -93,6 +93,7 @@
   background-color: transparent;
   background-repeat: no-repeat;
   border-radius: 2px;
+  border-width: 0;
   -moz-context-properties: fill;
   fill: currentColor;
 }
