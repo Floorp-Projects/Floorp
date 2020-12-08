@@ -138,8 +138,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       get allowChromeProcess() {
         return DevToolsServer.allowChromeProcess;
       },
-      // @backward-compat { version 71 } Supports watchpoints in the server.
-      watchpoints: true,
       // @backward-compat { version 84 } Expose the pref value to the client.
       // Services.prefs is undefined in xpcshell tests.
       workerConsoleApiMessagesDispatchedToMainThread: Services.prefs
