@@ -1255,8 +1255,15 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Hint to the JS engine whether we are currently loading.
   void HintIsLoading(bool aIsLoading);
 
- public:
   mozilla::dom::ContentMediaController* GetContentMediaController();
+
+  bool TryOpenExternalProtocolIframe() {
+    if (mHasOpenedExternalProtocolFrame) {
+      return false;
+    }
+    mHasOpenedExternalProtocolFrame = true;
+    return true;
+  }
 
  private:
   RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
@@ -1324,6 +1331,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   // Whether we told the JS engine that we were in pageload.
   bool mHintedWasLoading : 1;
+
+  // Whether this window has opened an external-protocol iframe without user
+  // activation once already. Only relevant for top windows.
+  bool mHasOpenedExternalProtocolFrame : 1;
 
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsGenericHashKey<mozilla::dom::GamepadHandle>,

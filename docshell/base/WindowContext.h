@@ -112,6 +112,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   WindowContext* GetParentWindowContext();
   WindowContext* TopWindowContext();
 
+  bool SameOriginWithTop() const;
+
   bool IsTop() const;
 
   Span<RefPtr<BrowsingContext>> Children() { return mChildren; }

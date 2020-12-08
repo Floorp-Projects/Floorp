@@ -926,6 +926,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
       mWasCurrentInnerWindow(false),
       mHasSeenGamepadInput(false),
       mHintedWasLoading(false),
+      mHasOpenedExternalProtocolFrame(false),
       mSuspendDepth(0),
       mFreezeDepth(0),
 #ifdef DEBUG
