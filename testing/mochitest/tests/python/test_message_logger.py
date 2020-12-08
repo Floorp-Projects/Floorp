@@ -3,10 +3,10 @@
 
 from __future__ import absolute_import, print_function
 
+import six
 import json
 import time
 import types
-from StringIO import StringIO
 
 import mozunit
 import pytest
@@ -21,7 +21,7 @@ from six import string_types
 def logger():
     logger = StructuredLogger("mochitest_message_logger")
 
-    buf = StringIO()
+    buf = six.StringIO()
     handler = StreamHandler(buf, JSONFormatter())
     logger.add_handler(handler)
     return logger
