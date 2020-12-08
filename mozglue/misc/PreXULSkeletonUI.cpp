@@ -10,9 +10,14 @@
 #include <math.h>
 #include <limits.h>
 #include <cmath>
+#include <locale>
+#include <string>
+#include <objbase.h>
+#include <shlobj.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/glue/Debug.h"
 #include "mozilla/BaseProfilerMarkers.h"
@@ -175,6 +180,29 @@ static const wchar_t* sSearchbarRegSuffix = L"|SearchbarCSSSpan";
 static const wchar_t* sSpringsCSSRegSuffix = L"|SpringsCSSSpan";
 static const wchar_t* sThemeRegSuffix = L"|Theme";
 
+struct LoadedCoTaskMemFreeDeleter {
+  void operator()(void* ptr) {
+    static decltype(CoTaskMemFree)* coTaskMemFree = nullptr;
+    if (!coTaskMemFree) {
+      // Just let this get cleaned up when the process is terminated, because
+      // we're going to load it anyway elsewhere.
+      HMODULE ole32Dll = ::LoadLibraryW(L"ole32");
+      if (!ole32Dll) {
+        printf_stderr(
+            "Could not load ole32 - will not free with CoTaskMemFree");
+        return;
+      }
+      coTaskMemFree = reinterpret_cast<decltype(coTaskMemFree)>(
+          ::GetProcAddress(ole32Dll, "CoTaskMemFree"));
+      if (!coTaskMemFree) {
+        printf_stderr("Could not find CoTaskMemFree");
+        return;
+      }
+    }
+    coTaskMemFree(ptr);
+  }
+};
+
 std::wstring GetRegValueName(const wchar_t* prefix, const wchar_t* suffix) {
   std::wstring result(prefix);
   result.append(suffix);
@@ -204,6 +232,96 @@ UniquePtr<wchar_t[]> GetBinaryPath() {
   }
 
   return buf;
+}
+
+static UniquePtr<wchar_t, LoadedCoTaskMemFreeDeleter> GetKnownFolderPath(
+    REFKNOWNFOLDERID folderId) {
+  static decltype(SHGetKnownFolderPath)* shGetKnownFolderPath = nullptr;
+  if (!shGetKnownFolderPath) {
+    // We could go out of our way to `FreeLibrary` on this, decrementing its
+    // ref count and potentially unloading it. However doing so would be either
+    // effectively a no-op, or counterproductive. Just let it get cleaned up
+    // when the process is terminated, because we're going to load it anyway
+    // elsewhere.
+    HMODULE shell32Dll = ::LoadLibraryW(L"shell32");
+    if (!shell32Dll) {
+      return nullptr;
+    }
+    shGetKnownFolderPath = reinterpret_cast<decltype(shGetKnownFolderPath)>(
+        ::GetProcAddress(shell32Dll, "SHGetKnownFolderPath"));
+    if (!shGetKnownFolderPath) {
+      return nullptr;
+    }
+  }
+  PWSTR path = nullptr;
+  shGetKnownFolderPath(folderId, 0, nullptr, &path);
+  return UniquePtr<wchar_t, LoadedCoTaskMemFreeDeleter>(path);
+}
+
+// Note: this is specifically *not* a robust, multi-locale lowercasing
+// operation. It is not intended to be such. It is simply intended to match the
+// way in which we look for other instances of firefox to remote into.
+// See
+// https://searchfox.org/mozilla-central/rev/71621bfa47a371f2b1ccfd33c704913124afb933/toolkit/components/remote/nsRemoteService.cpp#56
+static void MutateStringToLowercase(wchar_t* ptr) {
+  while (*ptr) {
+    wchar_t ch = *ptr;
+    if (ch >= L'A' && ch <= L'Z') {
+      *ptr = ch + (L'a' - L'A');
+    }
+    ++ptr;
+  }
+}
+
+static bool TryGetSkeletonUILock() {
+  auto localAppDataPath = GetKnownFolderPath(FOLDERID_LocalAppData);
+  if (!localAppDataPath) {
+    return false;
+  }
+
+  // Note: because we're in mozglue, we cannot easily access things from
+  // toolkit, like `GetInstallHash`. We could move `GetInstallHash` into
+  // mozglue, and rip out all of its usage of types defined in toolkit headers.
+  // However, it seems cleaner to just hash the bin path ourselves. We don't
+  // get quite the same robustness that `GetInstallHash` might provide, but
+  // we already don't have that with how we key our registry values, so it
+  // probably makes sense to just match those.
+  UniquePtr<wchar_t[]> binPath = GetBinaryPath();
+  if (!binPath) {
+    return false;
+  }
+
+  // Lowercase the binpath to match how we look for remote instances.
+  MutateStringToLowercase(binPath.get());
+
+  // The number of bytes * 2 characters per byte + 1 for the null terminator
+  uint32_t hexHashSize = sizeof(uint32_t) * 2 + 1;
+  UniquePtr<wchar_t[]> installHash = MakeUnique<wchar_t[]>(hexHashSize);
+  // This isn't perfect - it's a 32-bit hash of the path to our executable. It
+  // could reasonably collide, or casing could potentially affect things, but
+  // the theory is that that should be uncommon enough and the failure case
+  // mild enough that this is fine.
+  uint32_t binPathHash = HashString(binPath.get());
+  swprintf(installHash.get(), hexHashSize, L"%08x", binPathHash);
+
+  std::wstring lockFilePath;
+  lockFilePath.append(localAppDataPath.get());
+  lockFilePath.append(
+      L"\\" MOZ_APP_VENDOR L"\\" MOZ_APP_BASENAME L"\\SkeletonUILock-");
+  lockFilePath.append(installHash.get());
+
+  // We intentionally leak this file - that is okay, and (kind of) the point.
+  // We want to hold onto this handle until the application exits, and hold
+  // onto it with exclusive rights. If this check fails, then we assume that
+  // another instance of the executable is holding it, and thus return false.
+  HANDLE lockFile =
+      ::CreateFileW(lockFilePath.c_str(), GENERIC_READ | GENERIC_WRITE,
+                    0,  // No sharing - this is how the lock works
+                    nullptr, CREATE_ALWAYS,
+                    FILE_FLAG_DELETE_ON_CLOSE,  // Don't leave this lying around
+                    nullptr);
+
+  return lockFile != INVALID_HANDLE_VALUE;
 }
 
 // We could use nsAutoRegKey, but including nsWindowsHelpers.h causes build
@@ -1429,6 +1547,11 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
     return;
   }
 
+  if (!TryGetSkeletonUILock()) {
+    printf_stderr("Error trying to get skeleton UI lock %lu\n", GetLastError());
+    return;
+  }
+
   WNDCLASSW wc;
   wc.style = CS_DBLCLKS;
   wc.lpfnWndProc = PreXULSkeletonUIProc;
@@ -1826,6 +1949,14 @@ MFBT_API void SetPreXULSkeletonUIEnabledIfAllowed(bool value) {
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting enabled to Windows registry\n");
     return;
+  }
+
+  if (!sPreXULSkeletonUIEnabled && value) {
+    // We specifically don't care if we fail to get this lock. We just want to
+    // do our best effort to lock it so that future instances don't create
+    // skeleton UIs while we're still running, since they will immediately exit
+    // and tell us to open a new window.
+    Unused << TryGetSkeletonUILock();
   }
 
   sPreXULSkeletonUIEnabled = value;

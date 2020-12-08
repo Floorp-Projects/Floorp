@@ -82,7 +82,7 @@ add_task(async function testWritesEnabledOnPrefChange() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(async function testWritesSizeValuesOnChange() {
+add_task(async function testPersistsNecessaryValuesOnChange() {
   // Enable the skeleton UI, since if it's disabled we won't persist the size values
   await SpecialPowers.pushPrefEnv({
     set: [["browser.startup.preXulSkeletonUI", true]],
