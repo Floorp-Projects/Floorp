@@ -54,6 +54,7 @@ const UnreachableCode  = 0x00
 const BlockCode        = 0x02;
 const TryCode          = 0x06;
 const CatchCode        = 0x07;
+const ThrowCode        = 0x08;
 const EndCode          = 0x0b;
 const ReturnCode       = 0x0f;
 const CallCode         = 0x10;
