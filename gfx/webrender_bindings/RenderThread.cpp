@@ -440,6 +440,9 @@ static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
     aBridge->GetWrBridge()->RecordFrame();
   }
 
+  aBridge->NotifyDidRender(aCompositeStartId, aCompositeStart, aRenderStart,
+                           aEnd, &aStats);
+
   for (const auto& epoch : aInfo->Raw().epochs) {
     aBridge->NotifyPipelineRendered(epoch.pipeline_id, epoch.epoch,
                                     aCompositeStartId, aCompositeStart,

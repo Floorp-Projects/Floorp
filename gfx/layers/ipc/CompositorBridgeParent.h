@@ -448,6 +448,10 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void NotifyWebRenderContextPurge();
   void NotifyWebRenderDisableNativeCompositor();
 
+  void NotifyDidRender(const VsyncId& aCompositeStartId,
+                       TimeStamp& aCompositeStart, TimeStamp& aRenderStart,
+                       TimeStamp& aCompositeEnd,
+                       wr::RendererStats* aStats = nullptr);
   void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                               const wr::Epoch& aEpoch,
                               const VsyncId& aCompositeStartId,
