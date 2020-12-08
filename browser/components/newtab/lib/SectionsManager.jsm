@@ -94,7 +94,13 @@ const BUILT_IN_SECTIONS = {
   "feeds.section.highlights": options => ({
     id: "highlights",
     pref: {
-      titleString: { id: "home-prefs-recent-activity-header" },
+      titleString: {
+        id: Services.prefs.getBoolPref(
+          "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+        )
+          ? "home-prefs-recent-activity-header"
+          : "home-prefs-highlights-header",
+      },
       descString: { id: "home-prefs-highlights-description" },
       nestedPrefs: [
         {
@@ -122,7 +128,13 @@ const BUILT_IN_SECTIONS = {
     shouldHidePref: false,
     eventSource: "HIGHLIGHTS",
     icon: "highlights",
-    title: { id: "newtab-section-header-recent-activity" },
+    title: {
+      id: Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+      )
+        ? "newtab-section-header-recent-activity"
+        : "newtab-section-header-highlights",
+    },
     compactCards: true,
     rowsPref: "section.highlights.rows",
     maxRows: 4,
