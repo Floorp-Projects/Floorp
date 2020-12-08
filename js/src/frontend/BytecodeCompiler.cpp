@@ -758,8 +758,6 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   }
 
   ModuleBuilder builder(cx, parser.ptr());
-  StencilModuleMetadata& moduleMetadata =
-      compilationInfo.stencil.moduleMetadata;
 
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
@@ -781,6 +779,8 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
     return false;
   }
 
+  StencilModuleMetadata& moduleMetadata =
+      *compilationInfo.stencil.moduleMetadata;
   builder.finishFunctionDecls(moduleMetadata);
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
