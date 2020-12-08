@@ -19,6 +19,7 @@ using mozilla::Nothing;
 using mozilla::Some;
 using mozilla::SomeRef;
 using mozilla::ToMaybe;
+using mozilla::ToMaybeRef;
 
 #define RUN_TEST(t)                                                     \
   do {                                                                  \
@@ -1418,6 +1419,25 @@ static bool TestReference() {
     MOZ_RELEASE_ASSERT(mapped.isNothing());
     MOZ_RELEASE_ASSERT(!mapped.isSome());
     MOZ_RELEASE_ASSERT(!mapped);
+  }
+
+  {
+    int foo = 42;
+    auto someRef = ToMaybeRef(&foo);
+
+    static_assert(std::is_same_v<decltype(someRef), Maybe<int&>>);
+
+    MOZ_RELEASE_ASSERT(someRef.isSome());
+    MOZ_RELEASE_ASSERT(&foo == &someRef.ref());
+  }
+
+  {
+    int* fooPtr = nullptr;
+    auto someRef = ToMaybeRef(fooPtr);
+
+    static_assert(std::is_same_v<decltype(someRef), Maybe<int&>>);
+
+    MOZ_RELEASE_ASSERT(someRef.isNothing());
   }
 
   return true;
