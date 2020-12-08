@@ -7,57 +7,28 @@
 #ifndef vm_Scope_h
 #define vm_Scope_h
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
-#include "mozilla/Attributes.h"  // MOZ_IMPLICIT, MOZ_INIT_OUTSIDE_CTOR, MOZ_STACK_CLASS
-#include "mozilla/Casting.h"          // mozilla::AssertedCast
-#include "mozilla/Maybe.h"            // mozilla::Maybe
-#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
+#include "mozilla/Maybe.h"
 
-#include <stddef.h>     // size_t
-#include <stdint.h>     // uint8_t, uint16_t, uint32_t, uintptr_t
-#include <type_traits>  // std::is_same_v
+#include <stddef.h>
 
-#include "builtin/ModuleObject.h"  // ModuleObject, HandleModuleObject
-#include "gc/Allocator.h"          // AllowGC
-#include "gc/Barrier.h"            // HeapPtr
-#include "gc/Cell.h"               // TenuredCellWithNonGCPointer
-#include "gc/MaybeRooted.h"        // MaybeRooted
-#include "gc/Rooting.h"      // HandleScope, HandleShape, MutableHandleShape
-#include "js/GCPolicyAPI.h"  // GCPolicy, IgnoreGCPolicy
-#include "js/HeapAPI.h"      // CellFlagBitsReservedForGC
-#include "js/RootingAPI.h"   // Handle, MutableHandle
-#include "js/TraceKind.h"    // JS::TraceKind
-#include "js/TypeDecls.h"    // HandleFunction
-#include "js/UbiNode.h"      // ubi::*
-#include "js/UniquePtr.h"    // UniquePtr
-#include "util/Poison.h"  // AlwaysPoison, JS_SCOPE_DATA_TRAILING_NAMES_PATTERN, MemCheckKind
-#include "vm/BytecodeUtil.h"  // LOCALNO_LIMIT, ENVCOORD_SLOT_LIMIT
-#include "vm/JSFunction.h"    // JSFunction
-#include "vm/ScopeKind.h"     // ScopeKind
-#include "vm/Shape.h"         // Shape
-#include "vm/Xdr.h"           // XDRResult, XDRState
-#include "wasm/WasmJS.h"      // WasmInstanceObject
-
-class JSAtom;
-class JSFreeOp;
-class JSFunction;
-class JSScript;
-class JSTracer;
-struct JSContext;
-
-namespace JS {
-class Zone;
-}  // namespace JS
+#include "gc/Policy.h"
+#include "js/UbiNode.h"
+#include "js/UniquePtr.h"
+#include "util/Poison.h"
+#include "vm/BytecodeUtil.h"
+#include "vm/JSObject.h"
+#include "vm/Printer.h"  // GenericPrinter
+#include "vm/ScopeKind.h"
+#include "vm/Xdr.h"
 
 namespace js {
 
-class GenericPrinter;
-
 namespace frontend {
 struct CompilationAtomCache;
+class ScriptStencil;
 class ScopeStencil;
 class ParserAtom;
-}  // namespace frontend
+};  // namespace frontend
 
 template <typename NameT>
 class AbstractBaseScopeData;
@@ -70,7 +41,24 @@ class AbstractBindingIter;
 
 using BindingIter = AbstractBindingIter<JSAtom>;
 
+class ModuleObject;
 class AbstractScopePtr;
+
+enum class BindingKind : uint8_t {
+  Import,
+  FormalParameter,
+  Var,
+  Let,
+  Const,
+
+  // So you think named lambda callee names are consts? Nope! They don't
+  // throw when being assigned to in sloppy mode.
+  NamedLambdaCallee
+};
+
+static inline bool BindingKindIsLexical(BindingKind kind) {
+  return kind == BindingKind::Let || kind == BindingKind::Const;
+}
 
 static inline bool ScopeKindIsCatch(ScopeKind kind) {
   return kind == ScopeKind::SimpleCatch || kind == ScopeKind::Catch;
@@ -218,6 +206,73 @@ class AbstractTrailingNamesArray {
 
   BindingNameT& get(size_t i) { return start()[i]; }
   BindingNameT& operator[](size_t i) { return get(i); }
+};
+
+// typedef AbstractTrailingNamesArray<JSAtom> TrailingNamesArray;
+
+class BindingLocation {
+ public:
+  enum class Kind {
+    Global,
+    Argument,
+    Frame,
+    Environment,
+    Import,
+    NamedLambdaCallee
+  };
+
+ private:
+  Kind kind_;
+  uint32_t slot_;
+
+  BindingLocation(Kind kind, uint32_t slot) : kind_(kind), slot_(slot) {}
+
+ public:
+  static BindingLocation Global() {
+    return BindingLocation(Kind::Global, UINT32_MAX);
+  }
+
+  static BindingLocation Argument(uint16_t slot) {
+    return BindingLocation(Kind::Argument, slot);
+  }
+
+  static BindingLocation Frame(uint32_t slot) {
+    MOZ_ASSERT(slot < LOCALNO_LIMIT);
+    return BindingLocation(Kind::Frame, slot);
+  }
+
+  static BindingLocation Environment(uint32_t slot) {
+    MOZ_ASSERT(slot < ENVCOORD_SLOT_LIMIT);
+    return BindingLocation(Kind::Environment, slot);
+  }
+
+  static BindingLocation Import() {
+    return BindingLocation(Kind::Import, UINT32_MAX);
+  }
+
+  static BindingLocation NamedLambdaCallee() {
+    return BindingLocation(Kind::NamedLambdaCallee, UINT32_MAX);
+  }
+
+  bool operator==(const BindingLocation& other) const {
+    return kind_ == other.kind_ && slot_ == other.slot_;
+  }
+
+  bool operator!=(const BindingLocation& other) const {
+    return !operator==(other);
+  }
+
+  Kind kind() const { return kind_; }
+
+  uint32_t slot() const {
+    MOZ_ASSERT(kind_ == Kind::Frame || kind_ == Kind::Environment);
+    return slot_;
+  }
+
+  uint16_t argumentSlot() const {
+    MOZ_ASSERT(kind_ == Kind::Argument);
+    return mozilla::AssertedCast<uint16_t>(slot_);
+  }
 };
 
 //

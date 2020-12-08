@@ -7,31 +7,12 @@
 #ifndef jit_JitcodeMap_h
 #define jit_JitcodeMap_h
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF, MOZ_CRASH
-
-#include <stddef.h>  // size_t
-#include <stdint.h>  // uint8_t, uint32_t, uint64_t
-
-#include "jit/CompactBuffer.h"  // CompactBufferReader, CompactBufferWriter
-#include "jit/shared/Assembler-shared.h"  // CodeOffset
-#include "js/AllocPolicy.h"               // SystemAllocPolicy
-#include "js/TypeDecls.h"                 // jsbytecode
-#include "js/Vector.h"                    // Vector
-#include "vm/BytecodeLocation.h"          // BytecodeLocation
-
-class JSScript;
-class JSTracer;
-struct JSRuntime;
-class JSScript;
-
-namespace JS {
-class Zone;
-}  // namespace JS
+#include "jit/CompactBuffer.h"
+#include "jit/ExecutableAllocator.h"
+#include "jit/shared/Assembler-shared.h"
+#include "vm/BytecodeLocation.h"  // for BytecodeLocation
 
 namespace js {
-
-class GCMarker;
-
 namespace jit {
 
 class InlineScriptTree;
@@ -328,7 +309,12 @@ class JitcodeGlobalEntry {
 
     const char* str() const { return str_; }
 
-    void trackIonAbort(jsbytecode* pc, const char* message);
+    void trackIonAbort(jsbytecode* pc, const char* message) {
+      MOZ_ASSERT(script_->containsPC(pc));
+      MOZ_ASSERT(message);
+      ionAbortPc_ = pc;
+      ionAbortMessage_ = message;
+    }
 
     bool hadIonAbort() const {
       MOZ_ASSERT(!ionAbortPc_ || ionAbortMessage_);
