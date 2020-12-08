@@ -187,7 +187,7 @@ class WebRenderLayerManager final : public LayerManager {
 
   RenderRootStateManager* GetRenderRootStateManager() { return &mStateManager; }
 
-  virtual void PayloadPresented() override;
+  virtual void PayloadPresented(const TimeStamp& aTimeStamp) override;
 
   void TakeCompositionPayloads(nsTArray<CompositionPayload>& aPayloads);
 
