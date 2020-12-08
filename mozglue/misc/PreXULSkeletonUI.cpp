@@ -35,12 +35,12 @@ namespace mozilla {
 struct ColorRect {
   uint32_t color;
   uint32_t borderColor;
-  uint32_t x;
-  uint32_t y;
-  uint32_t width;
-  uint32_t height;
-  uint32_t borderWidth;
-  uint32_t borderRadius;
+  int x;
+  int y;
+  int width;
+  int height;
+  int borderWidth;
+  int borderRadius;
 };
 
 // DrawRect is mostly the same as ColorRect, but exists as an implementation
@@ -51,12 +51,12 @@ struct ColorRect {
 struct DrawRect {
   uint32_t color;
   uint32_t backgroundColor;
-  uint32_t x;
-  uint32_t y;
-  uint32_t width;
-  uint32_t height;
-  uint32_t borderRadius;
-  uint32_t borderWidth;
+  int x;
+  int y;
+  int width;
+  int height;
+  int borderRadius;
+  int borderWidth;
   bool strokeOnly;
 };
 
@@ -161,12 +161,18 @@ StretchDIBitsProc sStretchDIBits = NULL;
 typedef HBRUSH(WINAPI* CreateSolidBrushProc)(COLORREF);
 CreateSolidBrushProc sCreateSolidBrush = NULL;
 
-static uint32_t sWindowWidth;
-static uint32_t sWindowHeight;
+static int sWindowWidth;
+static int sWindowHeight;
 static double sCSSToDevPixelScaling;
 
 static const int kAnimationCSSPixelsPerFrame = 21;
 static const int kAnimationCSSExtraWindowSize = 300;
+
+// NOTE: these values were pulled out of thin air as round numbers that are
+// likely to be too big to be seen in practice. If we legitimately see windows
+// this big, we probably don't want to be drawing them on the CPU anyway.
+static const uint32_t kMaxWindowWidth = 1 << 16;
+static const uint32_t kMaxWindowHeight = 1 << 16;
 
 static const wchar_t* sEnabledRegSuffix = L"|Enabled";
 static const wchar_t* sScreenXRegSuffix = L"|ScreenX";
@@ -532,10 +538,10 @@ void RasterizeColorRect(const ColorRect& colorRect) {
 
     // We then draw the flat, central portion of the rect (which in the case of
     // non-rounded rects, is just the entire thing.)
-    int solidRectStartY = std::clamp(rect.y + rect.borderRadius, 0u,
-                                     (uint32_t)sTotalChromeHeight);
-    int solidRectEndY = std::clamp(rect.y + rect.height - rect.borderRadius, 0u,
-                                   (uint32_t)sTotalChromeHeight);
+    int solidRectStartY =
+        std::clamp(rect.y + rect.borderRadius, 0, sTotalChromeHeight);
+    int solidRectEndY = std::clamp(rect.y + rect.height - rect.borderRadius, 0,
+                                   sTotalChromeHeight);
     for (int y = solidRectStartY; y < solidRectEndY; ++y) {
       // For strokeOnly rects (used to draw borders), we just draw the left
       // and right side here. Looping down a column of pixels is not the most
@@ -546,11 +552,11 @@ void RasterizeColorRect(const ColorRect& colorRect) {
       // that we're inside the middle range range before excluding pixels.
       if (rect.strokeOnly && y - rect.y > rect.borderWidth &&
           rect.y + rect.height - y > rect.borderWidth) {
-        int startXLeft = std::clamp(rect.x, 0u, sWindowWidth);
-        int endXLeft = std::clamp(rect.x + rect.borderWidth, 0u, sWindowWidth);
-        int startXRight = std::clamp(rect.x + rect.width - rect.borderWidth, 0u,
-                                     sWindowWidth);
-        int endXRight = std::clamp(rect.x + rect.width, 0u, sWindowWidth);
+        int startXLeft = std::clamp(rect.x, 0, sWindowWidth);
+        int endXLeft = std::clamp(rect.x + rect.borderWidth, 0, sWindowWidth);
+        int startXRight =
+            std::clamp(rect.x + rect.width - rect.borderWidth, 0, sWindowWidth);
+        int endXRight = std::clamp(rect.x + rect.width, 0, sWindowWidth);
 
         uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
         uint32_t* dataStartLeft = lineStart + startXLeft;
@@ -560,8 +566,8 @@ void RasterizeColorRect(const ColorRect& colorRect) {
         std::fill(dataStartLeft, dataEndLeft, rect.color);
         std::fill(dataStartRight, dataEndRight, rect.color);
       } else {
-        int startX = std::clamp(rect.x, 0u, sWindowWidth);
-        int endX = std::clamp(rect.x + rect.width, 0u, sWindowWidth);
+        int startX = std::clamp(rect.x, 0, sWindowWidth);
+        int endX = std::clamp(rect.x + rect.width, 0, sWindowWidth);
         uint32_t* lineStart = &sPixelBuffer[y * sWindowWidth];
         uint32_t* dataStart = lineStart + startX;
         uint32_t* dataEnd = lineStart + endX;
@@ -702,7 +708,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   int urlbarTextPlaceholderMarginLeft =
       CSSToDevPixels(10, sCSSToDevPixelScaling);
   int urlbarTextPlaceHolderWidth = CSSToDevPixels(
-      std::min((int)(urlbarCSSSpan.end - urlbarCSSSpan.start) - 10, 260),
+      std::clamp(urlbarCSSSpan.end - urlbarCSSSpan.start - 10.0, 0.0, 260.0),
       sCSSToDevPixelScaling);
   int urlbarTextPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
 
@@ -956,7 +962,18 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   sPixelBuffer =
       (uint32_t*)calloc(sWindowWidth * sTotalChromeHeight, sizeof(uint32_t));
 
-  for (const auto& rect : rects) {
+  for (auto& rect : *sAnimatedRects) {
+    rect.x = std::clamp(rect.x, 0, sWindowWidth);
+    rect.width = std::clamp(rect.width, 0, sWindowWidth - rect.x);
+    rect.y = std::clamp(rect.y, 0, sTotalChromeHeight);
+    rect.height = std::clamp(rect.height, 0, sTotalChromeHeight - rect.y);
+  }
+
+  for (auto& rect : rects) {
+    rect.x = std::clamp(rect.x, 0, sWindowWidth);
+    rect.width = std::clamp(rect.width, 0, sWindowWidth - rect.x);
+    rect.y = std::clamp(rect.y, 0, sTotalChromeHeight);
+    rect.height = std::clamp(rect.height, 0, sTotalChromeHeight - rect.y);
     RasterizeColorRect(rect);
   }
 
@@ -976,7 +993,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
                  DIB_RGB_COLORS, SRCCOPY);
 
   // Then, we just fill the rest with FillRect
-  RECT rect = {0, sTotalChromeHeight, (LONG)sWindowWidth, (LONG)sWindowHeight};
+  RECT rect = {0, sTotalChromeHeight, sWindowWidth, sWindowHeight};
   HBRUSH brush = sCreateSolidBrush(currentTheme.backgroundColor);
   sFillRect(hdc, &rect, brush);
 
@@ -1538,6 +1555,11 @@ bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
   return true;
 }
 
+static bool VerifyWindowDimensions(uint32_t windowWidth,
+                                   uint32_t windowHeight) {
+  return windowWidth <= kMaxWindowWidth && windowHeight <= kMaxWindowHeight;
+}
+
 void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                                     char** argv) {
 #ifdef MOZ_GECKO_PROFILER
@@ -1755,6 +1777,11 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   }
   ThemeColors currentTheme = GetTheme(themeMode);
 
+  if (!VerifyWindowDimensions(windowWidth, windowHeight)) {
+    printf_stderr("Bad window dimensions for skeleton UI.");
+    return;
+  }
+
   sPreXULSkeletonUIWindow =
       sCreateWindowExW(kPreXULSkeletonUIWindowStyleEx, L"MozillaWindowClass",
                        L"", windowStyle, screenX, screenY, windowWidth,
@@ -1788,8 +1815,8 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
     sWindowHeight =
         mi.rcWork.bottom - mi.rcWork.top + sNonClientVerticalMargins * 2;
   } else {
-    sWindowWidth = windowWidth;
-    sWindowHeight = windowHeight;
+    sWindowWidth = static_cast<int>(windowWidth);
+    sWindowHeight = static_cast<int>(windowHeight);
   }
 
   sSetWindowPos(sPreXULSkeletonUIWindow, 0, 0, 0, 0, 0,
