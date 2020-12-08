@@ -152,6 +152,22 @@ Value wasm::UnboxAnyRef(AnyRef val) {
   return result;
 }
 
+/* static */
+wasm::FuncRef wasm::FuncRef::fromAnyRefUnchecked(AnyRef p) {
+#ifdef DEBUG
+  Value v = UnboxAnyRef(p);
+  if (v.isNull()) {
+    return FuncRef(nullptr);
+  }
+  if (v.toObject().is<JSFunction>()) {
+    return FuncRef(&v.toObject().as<JSFunction>());
+  }
+  MOZ_CRASH("Bad value");
+#else
+  return FuncRef(&p.asJSObject()->as<JSFunction>());
+#endif
+}
+
 Value wasm::UnboxFuncRef(FuncRef val) {
   JSFunction* fn = val.asJSFunction();
   Value result;
