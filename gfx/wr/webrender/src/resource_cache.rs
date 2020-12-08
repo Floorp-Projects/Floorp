@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BlobImageResources, BlobImageRequest, RasterizedBlobImage, ImageFormat};
+use api::{BlobImageResources, BlobImageRequest, RasterizedBlobImage};
 use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult, FontInstanceData};
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
@@ -25,7 +25,7 @@ use crate::glyph_cache::GlyphCacheEntry;
 use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
-use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
+use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
 use crate::profiler::{self, TransactionProfile, bytes_to_mb};
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
@@ -422,30 +422,6 @@ pub type GlyphDimensionsCache = FastHashMap<(FontInstanceKey, GlyphIndex), Optio
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct BlobImageRasterizerEpoch(usize);
 
-/// Internal information about allocated render targets in the pool
-struct RenderTarget {
-    size: DeviceIntSize,
-    num_layers: usize,
-    format: ImageFormat,
-    texture_id: CacheTextureId,
-    /// If true, this is currently leant out, and not available to other passes
-    is_active: bool,
-    last_frame_used: FrameId,
-}
-
-impl RenderTarget {
-    fn size_in_bytes(&self) -> usize {
-        let bpp = self.format.bytes_per_pixel() as usize;
-        self.num_layers * (self.size.width * self.size.height) as usize * bpp
-    }
-
-    /// Returns true if this texture was used within `threshold` frames of
-    /// the current frame.
-    pub fn used_recently(&self, current_frame_id: FrameId, threshold: usize) -> bool {
-        self.last_frame_used + threshold >= current_frame_id
-    }
-}
-
 /// High-level container for resources managed by the `RenderBackend`.
 ///
 /// This includes a variety of things, including images, fonts, and glyphs,
@@ -488,9 +464,6 @@ pub struct ResourceCache {
 
     image_templates_memory: usize,
     font_templates_memory: usize,
-
-    /// A pool of render targets for use by the render task graph
-    render_target_pool: Vec<RenderTarget>,
 }
 
 impl ResourceCache {
@@ -524,7 +497,6 @@ impl ResourceCache {
             capture_dirty: true,
             image_templates_memory: 0,
             font_templates_memory: 0,
-            render_target_pool: Vec::new(),
         }
     }
 
@@ -1433,25 +1405,6 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::QueryResources);
         profile_scope!("end_frame");
         self.state = State::Idle;
-
-        // GC the render target pool, if it's currently > 32 MB in size.
-        //
-        // We use a simple scheme whereby we drop any texture that hasn't been used
-        // in the last 60 frames, until we are below the size threshold. This should
-        // generally prevent any sustained build-up of unused textures, unless we don't
-        // generate frames for a long period. This can happen when the window is
-        // minimized, and we probably want to flush all the WebRender caches in that case [1].
-        // There is also a second "red line" memory threshold which prevents
-        // memory exhaustion if many render targets are allocated within a small
-        // number of frames. For now this is set at 320 MB (10x the normal memory threshold).
-        //
-        // [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1494099
-        self.gc_render_targets(
-            32 * 1024 * 1024,
-            32 * 1024 * 1024 * 10,
-            60,
-        );
-
         self.texture_cache.end_frame(profile);
     }
 
@@ -1477,9 +1430,6 @@ impl ResourceCache {
         }
         if what.contains(ClearCache::TEXTURE_CACHE) {
             self.texture_cache.clear_all();
-        }
-        if what.contains(ClearCache::RENDER_TARGETS) {
-            self.clear_render_target_pool();
         }
     }
 
@@ -1571,120 +1521,6 @@ impl ResourceCache {
             assert!(!self.cached_images.resources.keys().any(&f));
             assert!(!self.rasterized_blob_images.keys().any(&blob_f));
         }
-    }
-
-    /// Get a render target from the pool, or allocate a new one if none are
-    /// currently available that match the requested parameters.
-    pub fn get_or_create_render_target_from_pool(
-        &mut self,
-        size: DeviceIntSize,
-        num_layers: usize,
-        format: ImageFormat,
-    ) -> CacheTextureId {
-        for target in &mut self.render_target_pool {
-            if target.size == size &&
-               target.num_layers == num_layers &&
-               target.format == format &&
-               !target.is_active {
-                // Found a target that's not currently in use which matches. Update
-                // the last_frame_used for GC purposes.
-                target.is_active = true;
-                target.last_frame_used = self.current_frame_id;
-                return target.texture_id;
-            }
-        }
-
-        // Need to create a new render target and add it to the pool
-
-        let texture_id = self.texture_cache.alloc_render_target(
-            size,
-            num_layers,
-            format,
-        );
-
-        self.render_target_pool.push(RenderTarget {
-            size,
-            num_layers,
-            format,
-            texture_id,
-            is_active: true,
-            last_frame_used: self.current_frame_id,
-        });
-
-        texture_id
-    }
-
-    /// Return a render target to the pool.
-    pub fn return_render_target_to_pool(
-        &mut self,
-        id: CacheTextureId,
-    ) {
-        let target = self.render_target_pool
-            .iter_mut()
-            .find(|t| t.texture_id == id)
-            .expect("bug: invalid render target id");
-
-        assert!(target.is_active);
-        target.is_active = false;
-    }
-
-    /// Clear all current render targets (e.g. on memory pressure)
-    fn clear_render_target_pool(
-        &mut self,
-    ) {
-        for target in self.render_target_pool.drain(..) {
-            debug_assert!(!target.is_active);
-            self.texture_cache.free_render_target(target.texture_id);
-        }
-    }
-
-    /// Garbage collect and remove old render targets from the pool that haven't
-    /// been used for some time.
-    fn gc_render_targets(
-        &mut self,
-        total_bytes_threshold: usize,
-        total_bytes_red_line_threshold: usize,
-        frames_threshold: usize,
-    ) {
-        // Get the total GPU memory size used by the current render target pool
-        let mut rt_pool_size_in_bytes: usize = self.render_target_pool
-            .iter()
-            .map(|t| t.size_in_bytes())
-            .sum();
-
-        // If the total size of the pool is less than the threshold, don't bother
-        // trying to GC any targets
-        if rt_pool_size_in_bytes <= total_bytes_threshold {
-            return;
-        }
-
-        // Sort the current pool by age, so that we remove oldest textures first
-        self.render_target_pool.sort_by_key(|t| t.last_frame_used);
-
-        // We can't just use retain() because `RenderTarget` requires manual cleanup.
-        let mut retained_targets = SmallVec::<[RenderTarget; 8]>::new();
-
-        for target in self.render_target_pool.drain(..) {
-            debug_assert!(!target.is_active);
-
-            // Drop oldest textures until we are under the allowed size threshold.
-            // However, if it's been used in very recently, it is always kept around,
-            // which ensures we don't thrash texture allocations on pages that do
-            // require a very large render target pool and are regularly changing.
-            let above_red_line = rt_pool_size_in_bytes > total_bytes_red_line_threshold;
-            let above_threshold = rt_pool_size_in_bytes > total_bytes_threshold;
-            let used_recently = target.used_recently(self.current_frame_id, frames_threshold);
-            let used_this_frame = target.last_frame_used == self.current_frame_id;
-
-            if !used_this_frame && (above_red_line || (above_threshold && !used_recently)) {
-                rt_pool_size_in_bytes -= target.size_in_bytes();
-                self.texture_cache.free_render_target(target.texture_id);
-            } else {
-                retained_targets.push(target);
-            }
-        }
-
-        self.render_target_pool.extend(retained_targets);
     }
 }
 
