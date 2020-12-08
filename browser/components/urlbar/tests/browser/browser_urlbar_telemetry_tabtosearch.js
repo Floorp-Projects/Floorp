@@ -66,6 +66,9 @@ function assertTelemetryResults(histograms, type, index, method) {
 /**
  * Checks to see if the second result in the Urlbar is an onboarding result
  * with the correct engine.
+ *
+ * @param {string} engineName
+ *   The expected engine name.
  */
 async function checkForOnboardingResult(engineName) {
   Assert.ok(UrlbarTestUtils.isPopupOpen(window), "Popup should be open.");

@@ -8,12 +8,6 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/UrlbarTestUtils.jsm"
 );
 
-ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm",
-  this
-);
-let gCUITestUtils = new CustomizableUITestUtils(window);
-
 function checkHistogramResults(resultIndexes, expected, histogram) {
   for (let [i, val] of Object.entries(resultIndexes.values)) {
     if (i == expected) {
@@ -54,7 +48,7 @@ let searchInSearchbar = async function(inputText) {
 /**
  * Click one of the entries in the search suggestion popup.
  *
- * @param {String} entryName
+ * @param {string} entryName
  *        The name of the elemet to click on.
  */
 function clickSearchbarSuggestion(entryName) {
@@ -265,8 +259,7 @@ add_task(async function test_oneOff_enterSelection() {
 
   // Create an engine to generate search suggestions and add it as default
   // for this test.
-  const url =
-    getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
+  const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
   let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
@@ -348,8 +341,7 @@ add_task(async function test_suggestion_click() {
 
   // Create an engine to generate search suggestions and add it as default
   // for this test.
-  const url =
-    getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
+  const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
   let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
@@ -426,8 +418,7 @@ add_task(async function test_suggestion_enterSelection() {
 
   // Create an engine to generate search suggestions and add it as default
   // for this test.
-  const url =
-    getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
+  const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
   let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);

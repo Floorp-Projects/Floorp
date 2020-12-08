@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -191,6 +192,11 @@ class TelemetryHandler {
    * @param {string} url The url that was loaded in the browser.
    */
   updateTrackingStatus(browser, url) {
+    if (
+      !BrowserSearchTelemetry.shouldRecordSearchCount(browser.getTabBrowser())
+    ) {
+      return;
+    }
     let info = this._checkURLForSerpMatch(url);
     if (!info) {
       this.stopTrackingBrowser(browser);
