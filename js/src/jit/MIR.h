@@ -3262,8 +3262,6 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
     if (mode_ == TypeBarrier || mode_ == Fallible) {
       setGuard();
     }
-
-    setBailoutKind(BailoutKind::Unbox);
   }
 
  public:
@@ -5567,10 +5565,6 @@ class MMul : public MBinaryArithInstruction {
       setTruncateKind(Truncate);
     }
     MOZ_ASSERT_IF(mode != Integer, mode == Normal);
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for baseline info bailouts.
-      setBailoutKind(BailoutKind::DoubleOutput);
-    }
   }
 
  public:
@@ -5659,12 +5653,7 @@ class MDiv : public MBinaryArithInstruction {
         canBeDivideByZero_(true),
         canBeNegativeDividend_(true),
         unsigned_(false),
-        trapOnError_(false) {
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for baseline info bailouts.
-      setBailoutKind(BailoutKind::DoubleOutput);
-    }
-  }
+        trapOnError_(false) {}
 
  public:
   INSTRUCTION_HEADER(Div)
@@ -5860,12 +5849,7 @@ class MMod : public MBinaryArithInstruction {
         canBeNegativeDividend_(true),
         canBePowerOfTwoDivisor_(true),
         canBeDivideByZero_(true),
-        trapOnError_(false) {
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for baseline info bailouts.
-      setBailoutKind(BailoutKind::DoubleOutput);
-    }
-  }
+        trapOnError_(false) {}
 
  public:
   INSTRUCTION_HEADER(Mod)
@@ -7657,10 +7641,6 @@ class MBoundsCheck
         fallible_(true) {
     setGuard();
     setMovable();
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for non-hoisted bounds checks.
-      setBailoutKind(BailoutKind::BoundsCheck);
-    }
     MOZ_ASSERT(index->type() == MIRType::Int32);
     MOZ_ASSERT(length->type() == MIRType::Int32);
 
@@ -7715,10 +7695,6 @@ class MBoundsCheckLower : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, index), minimum_(0), fallible_(true) {
     setGuard();
     setMovable();
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for non-hoisted bounds checks.
-      setBailoutKind(BailoutKind::BoundsCheck);
-    }
     MOZ_ASSERT(index->type() == MIRType::Int32);
   }
 
@@ -8784,10 +8760,6 @@ class MGetPropertyPolymorphic : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Value);
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for shape guard bailouts.
-      setBailoutKind(BailoutKind::ShapeGuard);
-    }
   }
 
  public:
@@ -8853,12 +8825,7 @@ class MSetPropertyPolymorphic
       : MBinaryInstruction(classOpcode, obj, value),
         receivers_(alloc),
         name_(name),
-        needsBarrier_(false) {
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for shape guard bailouts.
-      setBailoutKind(BailoutKind::ShapeGuard);
-    }
-  }
+        needsBarrier_(false) {}
 
  public:
   INSTRUCTION_HEADER(SetPropertyPolymorphic)
@@ -8942,10 +8909,6 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for shape guard bailouts.
-      setBailoutKind(BailoutKind::ShapeGuard);
-    }
   }
 
  public:
@@ -9693,10 +9656,6 @@ class MGuardReceiverPolymorphic : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for shape guard bailouts.
-      setBailoutKind(BailoutKind::ShapeGuard);
-    }
   }
 
  public:
@@ -9736,10 +9695,6 @@ class MGuardObjectGroup : public MUnaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for object identity bailouts.
-      setBailoutKind(BailoutKind::ObjectIdentityOrTypeGuard);
-    }
   }
 
  public:
@@ -9789,10 +9744,6 @@ class MGuardObjectIdentity : public MBinaryInstruction,
     setGuard();
     setMovable();
     setResultType(MIRType::Object);
-    if (!JitOptions.warpBuilder) {
-      // Ion has special handling for object identity bailouts.
-      setBailoutKind(BailoutKind::ObjectIdentityOrTypeGuard);
-    }
   }
 
  public:
