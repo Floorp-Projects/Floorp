@@ -291,10 +291,14 @@ function createLoginsFragment(url, content) {
   const CHROME_URL = "chrome://mock-chrome/content/";
 
   // Create a mock document.
-  let document = MockDocument.createTestDocument(CHROME_URL, content);
+  let document = MockDocument.createTestDocument(
+    CHROME_URL,
+    content,
+    undefined,
+    true
+  );
 
   // We also need a simple mock Browser object for this test.
-  document.createXULElement = document.createElement.bind(document);
   let browser = {
     ownerDocument: document,
   };
@@ -328,7 +332,11 @@ function checkLoginItems(actualItems, expectedDetails) {
         ) +
         ")";
     }
-    Assert.equal(actualElement.label, expectedLabel, `Check label ${i}`);
+    Assert.equal(
+      actualElement.getAttribute("label"),
+      expectedLabel,
+      `Check label ${i}`
+    );
   }
 
   Assert.equal(
