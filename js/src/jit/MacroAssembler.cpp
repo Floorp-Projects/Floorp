@@ -1754,35 +1754,6 @@ void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
   loadPtr(Address(dest, BaseScript::offsetOfJitCodeRaw()), dest);
 }
 
-void MacroAssembler::loadJitCodeNoArgCheck(Register func, Register dest) {
-#ifdef DEBUG
-  {
-    Label ok;
-    int32_t flags = FunctionFlags::BASESCRIPT;
-    branchTestFunctionFlags(func, flags, Assembler::NonZero, &ok);
-    assumeUnreachable("Function has no BaseScript!");
-    bind(&ok);
-  }
-#endif
-
-  static_assert(ScriptWarmUpData::JitScriptTag == 0,
-                "Code below depends on tag value");
-  Imm32 tagMask(ScriptWarmUpData::TagMask);
-
-  // Read jitCodeSkipArgCheck.
-  loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
-  loadPtr(Address(dest, BaseScript::offsetOfWarmUpData()), dest);
-#ifdef DEBUG
-  {
-    Label ok;
-    branchTestPtr(Assembler::Zero, dest, tagMask, &ok);
-    assumeUnreachable("Function has no JitScript!");
-    bind(&ok);
-  }
-#endif
-  loadPtr(Address(dest, JitScript::offsetOfJitCodeSkipArgCheck()), dest);
-}
-
 void MacroAssembler::loadBaselineJitCodeRaw(Register func, Register dest,
                                             Label* failure) {
   // Load JitScript
