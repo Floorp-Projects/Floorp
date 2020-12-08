@@ -38,8 +38,9 @@ class LocationError(Exception):
 
     def __str__(self):
         s = "Bad location"
-        if self.message:
-            s += ": %s" % self.message
+        m = str(Exception.__str__(self))
+        if m:
+            s += ": %s" % m
         return s
 
 

@@ -265,12 +265,12 @@ def test_load_testvars_throws_expected_errors(mach_parsed_kwargs):
     runner = MarionetteTestRunner(**mach_parsed_kwargs)
     with pytest.raises(IOError) as io_exc:
         runner._load_testvars()
-    assert "does not exist" in io_exc.value.message
+    assert "does not exist" in str(io_exc.value)
     with patch("os.path.exists", return_value=True):
         with patch("__builtin__.open", mock_open(read_data="[not {valid JSON]")):
             with pytest.raises(Exception) as json_exc:
                 runner._load_testvars()
-    assert "not properly formatted" in json_exc.value.message
+    assert "not properly formatted" in str(json_exc.value)
 
 
 def _check_crash_counts(has_crashed, runner, mock_marionette):
@@ -504,7 +504,7 @@ def test_catch_invalid_test_names(runner):
     ]
     with pytest.raises(Exception) as exc:
         runner._add_tests(good_tests + bad_tests)
-    msg = exc.value.message
+    msg = str(exc.value)
     assert "Test file names must be of the form" in msg
     for bad_name in bad_tests:
         assert bad_name in msg
