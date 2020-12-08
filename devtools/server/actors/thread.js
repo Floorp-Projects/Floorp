@@ -2022,6 +2022,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @param {SourceActor} source
    */
   onNewSourceEvent(source) {
+    // When this target is supported by the Watcher Actor,
+    // and we listen to SOURCE, we avoid emitting the newSource RDP event
+    // as it would be duplicated with the Resource/watchResources API.
+    // Could probably be removed once bug 1680280 is fixed.
+    if (!this._shouldEmitNewSource) {
+      return;
+    }
+
     // Bug 1516197: New sources are likely detected due to either user
     // interaction on the page, or devtools requests sent to the server.
     // We use executeSoon because we don't want to block those operations
@@ -2034,6 +2042,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         source: source.form(),
       });
     });
+  },
+
+  // API used by the Watcher Actor to disable the newSource events
+  // Could probably be removed once bug 1680280 is fixed.
+  _shouldEmitNewSource: true,
+  disableNewSourceEvents() {
+    this._shouldEmitNewSource = false;
   },
 
   /**
