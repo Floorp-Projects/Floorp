@@ -98,13 +98,6 @@ const SEARCH_FILTERS = [
   "ask",
   "duckduckgo",
 ];
-let SEARCH_TILE_OVERRIDE_PREFS = new Map();
-for (let searchProvider of ["amazon", "google"]) {
-  SEARCH_TILE_OVERRIDE_PREFS.set(
-    `browser.newtabpage.searchTileOverride.${searchProvider}.url`,
-    searchProvider
-  );
-}
 
 const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
 const REMOTE_SETTING_MIGRATION_ID_PREF =
@@ -147,9 +140,6 @@ this.TopSitesFeed = class TopSitesFeed {
     this._readDefaults({ isStartup: true });
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     Services.obs.addObserver(this, "browser-search-engine-modified");
-    for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
-      Services.prefs.addObserver(pref, this);
-    }
     Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_POLICY_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
@@ -158,9 +148,6 @@ this.TopSitesFeed = class TopSitesFeed {
   uninit() {
     PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
-    for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
-      Services.prefs.removeObserver(pref, this);
-    }
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_POLICY_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
@@ -187,8 +174,6 @@ this.TopSitesFeed = class TopSitesFeed {
           data.startsWith(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH)
         ) {
           this._readDefaults();
-        } else if (SEARCH_TILE_OVERRIDE_PREFS.has(data)) {
-          this.refresh({ broadcast: true });
         }
         break;
     }
@@ -525,11 +510,11 @@ this.TopSitesFeed = class TopSitesFeed {
     // Get defaults.
     let date = new Date();
     let pad = number => number.toString().padStart(2, "0");
-    let yyyymmdd =
+    let yyyymmddhh =
       String(date.getFullYear()) +
       pad(date.getMonth() + 1) +
-      pad(date.getDate());
-    let yyyymmddhh = yyyymmdd + pad(date.getHours());
+      pad(date.getDate()) +
+      pad(date.getHours());
     let notBlockedDefaultSites = [];
     let sponsored = [];
     for (let link of DEFAULT_TOP_SITES) {
@@ -689,19 +674,6 @@ this.TopSitesFeed = class TopSitesFeed {
     // Remove excess items after we inserted sponsored ones.
     withPinned = withPinned.slice(0, numItems);
 
-    let searchTileOverrideURLs = new Map();
-    if (!this._useRemoteSetting) {
-      for (let [pref, hostname] of SEARCH_TILE_OVERRIDE_PREFS) {
-        let url = Services.prefs.getStringPref(pref, "");
-        if (url) {
-          url = url
-            .replace("%YYYYMMDD%", yyyymmdd)
-            .replace("%YYYYMMDDHH%", yyyymmddhh);
-          searchTileOverrideURLs.set(hostname, url);
-        }
-      }
-    }
-
     // Now, get a tippy top icon, a rich icon, or screenshot for every item
     for (const link of withPinned) {
       if (link) {
@@ -722,20 +694,6 @@ this.TopSitesFeed = class TopSitesFeed {
 
         if (ATTRIBUTION_REQUEST_SITES.includes(link.original_url || link.url)) {
           link.sendAttributionRequest = true;
-        }
-
-        for (let [hostname, url] of searchTileOverrideURLs) {
-          // The `searchVendor` property is set if the engine was re-added manually.
-          if (
-            link.searchTopSite &&
-            !link.searchVendor &&
-            link.hostname === hostname
-          ) {
-            delete link.searchTopSite;
-            delete link.label;
-            link.url = url;
-            link.sendAttributionRequest = true;
-          }
         }
       }
     }
