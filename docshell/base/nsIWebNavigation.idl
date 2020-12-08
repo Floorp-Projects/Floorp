@@ -28,8 +28,12 @@ struct LoadURIOptions;
  * It provides methods and attributes to direct an object to navigate to a new
  * location, stop or restart an in process load, or determine where the object
  * has previously gone.
+ *
+ * Even though this is builtinclass, most of the interface is also implemented
+ * in RemoteWebNavigation, so if this interface changes, the implementation
+ * there may also need to change.
  */
-[scriptable, uuid(3ade79d4-8cb9-4952-b18d-4f9b63ca0d31)]
+[scriptable, builtinclass, uuid(3ade79d4-8cb9-4952-b18d-4f9b63ca0d31)]
 interface nsIWebNavigation : nsISupports
 {
   /**
