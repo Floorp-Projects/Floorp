@@ -5687,10 +5687,16 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
 #endif
   }
 
-  // Load jitCodeRaw for callee if it exists.
-  masm.branchIfFunctionHasNoJitEntry(calleereg, call->mir()->isConstructing(),
-                                     &invoke);
-  masm.loadJitCodeRaw(calleereg, objreg);
+  // Load jitCodeRaw for callee if exists. See visitCallKnown.
+  if (call->mir()->needsArgCheck()) {
+    masm.branchIfFunctionHasNoJitEntry(calleereg, call->mir()->isConstructing(),
+                                       &invoke);
+    masm.loadJitCodeRaw(calleereg, objreg);
+  } else {
+    // NOTE: We checked that canonical function script had a valid JitScript.
+    // This will not be tossed without all Ion code being tossed first.
+    masm.loadJitCodeNoArgCheck(calleereg, objreg);
+  }
 
   // Target may be a different realm even if same compartment.
   if (call->mir()->maybeCrossRealm()) {
@@ -5798,7 +5804,13 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
     masm.switchToObjectRealm(calleereg, objreg);
   }
 
-  masm.loadJitCodeRaw(calleereg, objreg);
+  if (call->mir()->needsArgCheck()) {
+    masm.loadJitCodeRaw(calleereg, objreg);
+  } else {
+    // NOTE: We checked that canonical function script had a valid JitScript.
+    // This will not be tossed without all Ion code being tossed first.
+    masm.loadJitCodeNoArgCheck(calleereg, objreg);
+  }
 
   // Nestle the StackPointer up to the argument vector.
   masm.freeStack(unusedStack);
@@ -11185,6 +11197,7 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   }
 
   ionScript->setMethod(code);
+  ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
 
   // If the Gecko Profiler is enabled, mark IonScript as having been
   // instrumented accordingly.

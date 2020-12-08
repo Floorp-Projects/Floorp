@@ -1519,6 +1519,10 @@ bool MCallDOMNative::congruentTo(const MDefinition* ins) const {
     return false;
   }
 
+  if (needsArgCheck() != call->needsArgCheck()) {
+    return false;
+  }
+
   if (!congruentIfOperandsEqual(call)) {
     return false;
   }
