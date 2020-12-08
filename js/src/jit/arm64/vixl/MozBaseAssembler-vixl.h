@@ -27,13 +27,23 @@
 #ifndef jit_arm64_vixl_MozBaseAssembler_vixl_h
 #define jit_arm64_vixl_MozBaseAssembler_vixl_h
 
-#include "jit/arm64/vixl/Constants-vixl.h"
-#include "jit/arm64/vixl/Instructions-vixl.h"
 
-#include "jit/Label.h"
-#include "jit/shared/Assembler-shared.h"
-#include "jit/shared/Disassembler-shared.h"
-#include "jit/shared/IonAssemblerBufferWithConstantPools.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Sprintf.h"     // SprintfLiteral
+
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint8_t, uint32_t
+#include <string.h>  // strstr
+
+#include "jit/arm64/vixl/Constants-vixl.h"     // vixl::{HINT, NOP, ImmHint_offset}
+#include "jit/arm64/vixl/Globals-vixl.h"       // VIXL_ASSERT
+#include "jit/arm64/vixl/Instructions-vixl.h"  // vixl::{Instruction, NumShortBranchRangeTypes, Instr, ImmBranchRangeType}
+
+#include "jit/Label.h"                       // jit::Label
+#include "jit/shared/Assembler-shared.h"     // jit::AssemblerShared
+#include "jit/shared/Disassembler-shared.h"  // jit::DisassemblerSpew
+#include "jit/shared/IonAssemblerBuffer.h"   // jit::BufferOffset
+#include "jit/shared/IonAssemblerBufferWithConstantPools.h"  // jit::AssemblerBufferWithConstantPools
 
 namespace vixl {
 
