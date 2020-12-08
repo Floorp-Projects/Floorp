@@ -487,7 +487,7 @@ auto MatchMetadataNameOrId(const Enumerable& aEnumerable,
                 (aName && *aName == value->mCommonMetadata.name()));
       });
 
-  return it != aEnumerable.cend() ? SomeRef(*it->GetData()) : Nothing();
+  return ToMaybeRef(it != aEnumerable.cend() ? it->GetData().get() : nullptr);
 }
 
 /*******************************************************************************

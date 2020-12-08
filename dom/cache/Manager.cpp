@@ -252,7 +252,7 @@ class Manager::Factory {
       // cleaning up.  We need to tell the new manager about this so
       // that it won't actually start until the old manager is done.
       SafeRefPtr<Manager> oldManager = Acquire(*aManagerId, Closing);
-      ref->Init(oldManager ? SomeRef(*oldManager) : Nothing());
+      ref->Init(oldManager.maybeDeref());
 
       MOZ_ASSERT(!sFactory->mManagerList.Contains(ref));
       sFactory->mManagerList.AppendElement(ref.unsafeGetRawPtr());
