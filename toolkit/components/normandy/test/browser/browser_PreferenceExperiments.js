@@ -1452,6 +1452,7 @@ decorate_task(
         {
           resetValue: false,
           reason: "user-preference-changed-sideload",
+          changedPref: "fake.preference",
         },
       ],
       "Experiment is stopped correctly because value changed"
@@ -1888,6 +1889,7 @@ decorate_task(
           reason: "user-preference-changed",
           branch: "fakebranch",
           enrollmentId: mockExperiments[0].enrollmentId,
+          changedPref: "fake.preference",
         },
       ],
     ]);

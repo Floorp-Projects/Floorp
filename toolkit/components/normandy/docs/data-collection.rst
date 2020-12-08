@@ -204,8 +204,34 @@ Unenrollment
            changed in a profile while Firefox was not running.
          * ``"unknown"``: A reason was not specified. This should be
            considered a bug.
+      changedPref
+         For ``user-preference-changed`` and
+         ``user-preference-changed-sideload``, the preference that was
+         detected to change that caused the unenrollment. Note that there may
+         be multiple preferences changed, this only reports the first found.
       enrollmentId
          The ID that was generated at enrollment.
+
+Unenroll Failed
+   methods
+      The string ``"unenrollFailed"``.
+   object
+      The string ``"preference_study"``.
+   value
+      The name of the study (``recipe.arguments.slug``)
+   extra
+      enrollmentId
+         The ID that was generated at enrollment.
+      reason
+         A code describing the reason the unenroll failed. Possible values are:
+
+         * ``"does-not-exist"``: The system attempted to unenroll a study that
+           does not exist. This is a bug.
+         * ``"already-unenrolled"``: The system attempted to unenroll a study
+           that has already been unenrolled. This is likely a bug.
+      changedPref
+         In some cases, the preference that was detected to change that
+         caused the attempted unenrollment.
 
 
 Add-on Studies
