@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
+  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
@@ -249,7 +249,7 @@ let URICountListener = {
   onLocationChange(browser, webProgress, request, uri, flags) {
     if (!(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
       // By default, assume we no longer need to track this tab.
-      SearchTelemetry.stopTrackingBrowser(browser);
+      SearchSERPTelemetry.stopTrackingBrowser(browser);
     }
 
     // Don't count this URI if it's an error page.
@@ -321,7 +321,7 @@ let URICountListener = {
     }
 
     if (!(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-      SearchTelemetry.updateTrackingStatus(browser, uriSpec);
+      SearchSERPTelemetry.updateTrackingStatus(browser, uriSpec);
     }
 
     // Update total URI count, including when in private mode.

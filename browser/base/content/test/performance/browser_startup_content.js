@@ -40,7 +40,7 @@ const known_scripts = {
     "resource:///actors/BrowserTabChild.jsm",
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/PageStyleChild.jsm",
-    "resource:///actors/SearchTelemetryChild.jsm",
+    "resource:///actors/SearchSERPTelemetryChild.jsm",
     "resource://gre/modules/Readerable.jsm",
 
     // Telemetry

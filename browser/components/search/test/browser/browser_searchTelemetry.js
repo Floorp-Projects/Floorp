@@ -2,16 +2,16 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Main tests for SearchTelemetry - general engine visiting and link clicking.
+ * Main tests for SearchSERPTelemetry - general engine visiting and link clicking.
  */
 
 "use strict";
 
-const { SearchTelemetry } = ChromeUtils.import(
-  "resource:///modules/SearchTelemetry.jsm"
+const { SearchSERPTelemetry } = ChromeUtils.import(
+  "resource:///modules/SearchSERPTelemetry.jsm"
 );
 const { ADLINK_CHECK_TIMEOUT_MS } = ChromeUtils.import(
-  "resource:///actors/SearchTelemetryChild.jsm"
+  "resource:///actors/SearchSERPTelemetryChild.jsm"
 );
 
 const TEST_PROVIDER_INFO = [
@@ -116,7 +116,7 @@ async function waitForIdle() {
 }
 
 add_task(async function setup() {
-  SearchTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -125,7 +125,7 @@ add_task(async function setup() {
 
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.search.log");
-    SearchTelemetry.overrideSearchTelemetryForTests();
+    SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearScalars();
   });
