@@ -4817,11 +4817,7 @@ class MUrsh : public MShiftInstruction {
 
   MUrsh(MDefinition* left, MDefinition* right, MIRType type)
       : MShiftInstruction(classOpcode, left, right, type),
-        bailoutsDisabled_(false) {
-    // If this instruction bails out, we will set the HadOverflowBailout flag
-    // on the script, which will cause RangeAnalysis to be less aggressive.
-    setBailoutKind(BailoutKind::OverflowInvalidate);
-  }
+        bailoutsDisabled_(false) {}
 
  public:
   INSTRUCTION_HEADER(Ursh)
@@ -5476,9 +5472,6 @@ class MAdd : public MBinaryArithInstruction {
   MAdd(MDefinition* left, MDefinition* right, MIRType type)
       : MBinaryArithInstruction(classOpcode, left, right, type) {
     setCommutative();
-    // If this instruction bails out, we will set the HadOverflowBailout flag
-    // on the script, which will cause RangeAnalysis to be less aggressive.
-    setBailoutKind(BailoutKind::OverflowInvalidate);
   }
 
   MAdd(MDefinition* left, MDefinition* right, TruncateKind truncateKind)
