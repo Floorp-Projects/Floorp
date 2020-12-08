@@ -14,7 +14,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -33,7 +32,7 @@ async function limitBackups(aMaxBackups, backupFiles) {
     let numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
     while (numberOfBackupsToDelete--) {
       let oldestBackup = backupFiles.pop();
-      await OS.File.remove(oldestBackup);
+      await IOUtils.remove(oldestBackup);
     }
   }
 }
@@ -81,13 +80,13 @@ function isFilenameWithSameDate(aSourceName, aTargetName) {
 /**
  * Given a filename, searches for another backup with the same date.
  *
- * @return OS.File path string or null.
+ * @return path string or null.
  */
 function getBackupFileForSameDate(aFilename) {
   return (async function() {
     let backupFiles = await PlacesBackups.getBackupFiles();
     for (let backupFile of backupFiles) {
-      if (isFilenameWithSameDate(OS.Path.basename(backupFile), aFilename)) {
+      if (isFilenameWithSameDate(PathUtils.filename(backupFile), aFilename)) {
         return backupFile;
       }
     }
@@ -118,12 +117,12 @@ var PlacesBackups = {
       if (this._backupFolder) {
         return this._backupFolder;
       }
-      let profileDir = OS.Constants.Path.profileDir;
-      let backupsDirPath = OS.Path.join(
+      let profileDir = await PathUtils.getProfileDir();
+      let backupsDirPath = PathUtils.join(
         profileDir,
         this.profileRelativeFolderPath
       );
-      await OS.File.makeDir(backupsDirPath, { ignoreExisting: true });
+      await IOUtils.makeDirectory(backupsDirPath);
       return (this._backupFolder = backupsDirPath);
     })();
   },
@@ -146,27 +145,27 @@ var PlacesBackups = {
       this._backupFiles = [];
 
       let backupFolderPath = await this.getBackupFolder();
-      let iterator = new OS.File.DirectoryIterator(backupFolderPath);
-      await iterator.forEach(aEntry => {
-        // Since this is a lazy getter and OS.File I/O is serialized, we can
-        // safely remove .tmp files without risking to remove ongoing backups.
-        if (aEntry.name.endsWith(".tmp")) {
-          OS.File.remove(aEntry.path);
-          return undefined;
+      let children = await IOUtils.getChildren(backupFolderPath);
+      let list = [];
+      for (const entry of children) {
+        // Since IOUtils I/O is serialized, we can safely remove .tmp files
+        // without risking to remove ongoing backups.
+        let filename = PathUtils.filename(entry);
+        if (filename.endsWith(".tmp")) {
+          list.push(IOUtils.remove(entry));
+          continue;
         }
 
-        if (filenamesRegex.test(aEntry.name)) {
+        if (filenamesRegex.test(filename)) {
           // Remove bogus backups in future dates.
-          let filePath = aEntry.path;
-          if (this.getDateForFile(filePath) > new Date()) {
-            return OS.File.remove(filePath);
+          if (this.getDateForFile(entry) > new Date()) {
+            list.push(IOUtils.remove(entry));
+            continue;
           }
-          this._backupFiles.push(filePath);
+          this._backupFiles.push(entry);
         }
-
-        return undefined;
-      });
-      iterator.close();
+      }
+      await Promise.all(list);
 
       this._backupFiles.sort((a, b) => {
         let aDate = this.getDateForFile(a);
@@ -228,7 +227,7 @@ var PlacesBackups = {
    * @return {Date} A Date object for the backup's creation time.
    */
   getDateForFile: function PB_getDateForFile(aBackupFile) {
-    let filename = OS.Path.basename(aBackupFile);
+    let filename = PathUtils.filename(aBackupFile);
     let matches = filename.match(filenamesRegex);
     if (!matches) {
       throw new Error(`Invalid backup file name: ${filename}`);
@@ -247,7 +246,7 @@ var PlacesBackups = {
       let entries = await this.getBackupFiles();
       for (let entry of entries) {
         let rx = /\.json(lz4)?$/;
-        if (OS.Path.basename(entry).match(rx)) {
+        if (PathUtils.filename(entry).match(rx)) {
           return entry;
         }
       }
@@ -259,7 +258,7 @@ var PlacesBackups = {
    * Serializes bookmarks using JSON, and writes to the supplied file.
    *
    * @param aFilePath
-   *        OS.File path for the "bookmarks.json" file to be created.
+   *        path for the "bookmarks.json" file to be created.
    * @return {Promise}
    * @resolves the number of serialized uri nodes.
    */
@@ -269,7 +268,8 @@ var PlacesBackups = {
     );
 
     let backupFolderPath = await this.getBackupFolder();
-    if (OS.Path.dirname(aFilePath) == backupFolderPath) {
+    let profileDir = await PathUtils.getProfileDir();
+    if (profileDir == backupFolderPath) {
       // We are creating a backup in the default backups folder,
       // so just update the internal cache.
       if (!this._backupFiles) {
@@ -294,18 +294,18 @@ var PlacesBackups = {
       let mostRecentBackupFile = await this.getMostRecentBackup();
       if (
         !mostRecentBackupFile ||
-        hash != getHashFromFilename(OS.Path.basename(mostRecentBackupFile))
+        hash != getHashFromFilename(PathUtils.filename(mostRecentBackupFile))
       ) {
         let name = this.getFilenameForDate(undefined, true);
         let newFilename = appendMetaDataToFilename(name, {
           count: nodeCount,
           hash,
         });
-        let newFilePath = OS.Path.join(backupFolderPath, newFilename);
+        let newFilePath = PathUtils.join(backupFolderPath, newFilename);
         let backupFile = await getBackupFileForSameDate(name);
         if (backupFile) {
           // There is already a backup for today, replace it.
-          await OS.File.remove(backupFile, { ignoreAbsent: true });
+          await IOUtils.remove(backupFile);
           if (!this._backupFiles) {
             await this.getBackupFiles();
           } else {
@@ -319,9 +319,9 @@ var PlacesBackups = {
           }
           this._backupFiles.unshift(newFilePath);
         }
-        let jsonString = await OS.File.read(aFilePath);
-        await OS.File.writeAtomic(newFilePath, jsonString, {
-          compression: "lz4",
+        let jsonString = await IOUtils.read(aFilePath);
+        await IOUtils.writeAtomic(newFilePath, jsonString, {
+          compress: true,
         });
         await limitBackups(aMaxBackup, this._backupFiles);
       }
@@ -368,7 +368,7 @@ var PlacesBackups = {
       if (backupFile) {
         // In case there is a backup for today we should recreate it.
         this._backupFiles.shift();
-        await OS.File.remove(backupFile, { ignoreAbsent: true });
+        await IOUtils.remove(backupFile);
       }
 
       // Now check the hash of the most recent backup, and try to create a new
@@ -376,11 +376,11 @@ var PlacesBackups = {
       let mostRecentBackupFile = await this.getMostRecentBackup();
       let mostRecentHash =
         mostRecentBackupFile &&
-        getHashFromFilename(OS.Path.basename(mostRecentBackupFile));
+        getHashFromFilename(PathUtils.filename(mostRecentBackupFile));
 
       // Save bookmarks to a backup file.
       let backupFolder = await this.getBackupFolder();
-      let newBackupFile = OS.Path.join(backupFolder, newBackupFilename);
+      let newBackupFile = PathUtils.join(backupFolder, newBackupFilename);
       let newFilenameWithMetaData;
       try {
         let {
@@ -404,7 +404,7 @@ var PlacesBackups = {
         newBackupFile = mostRecentBackupFile;
         // Ensure we retain the proper extension when renaming
         // the most recent backup file.
-        if (/\.json$/.test(OS.Path.basename(mostRecentBackupFile))) {
+        if (/\.json$/.test(PathUtils.filename(mostRecentBackupFile))) {
           newBackupFilename = this.getFilenameForDate();
         }
         newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename, {
@@ -414,11 +414,11 @@ var PlacesBackups = {
       }
 
       // Append metadata to the backup filename.
-      let newBackupFileWithMetadata = OS.Path.join(
+      let newBackupFileWithMetadata = PathUtils.join(
         backupFolder,
         newFilenameWithMetaData
       );
-      await OS.File.move(newBackupFile, newBackupFileWithMetadata);
+      await IOUtils.move(newBackupFile, newBackupFileWithMetadata);
       this._backupFiles.unshift(newBackupFileWithMetadata);
 
       // Limit the number of backups.
@@ -436,7 +436,7 @@ var PlacesBackups = {
    */
   getBookmarkCountForFile: function PB_getBookmarkCountForFile(aFilePath) {
     let count = null;
-    let filename = OS.Path.basename(aFilePath);
+    let filename = PathUtils.filename(aFilePath);
     let matches = filename.match(filenamesRegex);
     if (matches && matches[2]) {
       count = matches[2];
