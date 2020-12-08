@@ -670,7 +670,7 @@ std::tuple<SdpRtpmapAttributeList::CodecType, FmtDefaults> strToCodecType(
     defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "H264")) {
     codec = SdpRtpmapAttributeList::kH264;
-    defaults = {0};
+    defaults = {1};
   } else if (!nsCRT::strcasecmp(name.c_str(), "red")) {
     codec = SdpRtpmapAttributeList::kRed;
     defaults = {0};
