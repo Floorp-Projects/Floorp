@@ -89,8 +89,6 @@ class ActorReadyGeckoProfilerInterface {
     // to be tweaked or made configurable as needed.
     const settings = {
       entries: options.entries || 1000000,
-      // Window length should be Infinite if nothing's been passed.
-      // options.duration is supported for `perfActorVersion > 0`.
       duration: options.duration || 0,
       interval: options.interval || 1,
       features: options.features || [
