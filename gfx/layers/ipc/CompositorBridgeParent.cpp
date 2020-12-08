@@ -2336,6 +2336,12 @@ void CompositorBridgeParent::NotifyDidRender(const VsyncId& aCompositeStartId,
     mIsForcedFirstPaint = false;
   }
 
+  nsTArray<CompositionPayload> payload =
+      mWrBridge->TakePendingScrollPayload(aCompositeStartId);
+  if (!payload.IsEmpty()) {
+    RecordCompositionPayloadsPresented(aCompositeEnd, payload);
+  }
+
   nsTArray<ImageCompositeNotificationInfo> notifications;
   mWrBridge->ExtractImageCompositeNotifications(&notifications);
   if (!notifications.IsEmpty()) {
@@ -2370,13 +2376,6 @@ void CompositorBridgeParent::NotifyPipelineRendered(
   MOZ_RELEASE_ASSERT(isRoot == wrBridge->IsRootWebRenderBridgeParent());
 
   wrBridge->RemoveEpochDataPriorTo(aEpoch);
-
-  std::pair<wr::PipelineId, wr::Epoch> key(aPipelineId, aEpoch);
-  nsTArray<CompositionPayload> payload =
-      wrBridge->TakePendingScrollPayload(key);
-  if (!payload.IsEmpty()) {
-    RecordCompositionPayloadsPresented(aCompositeEnd, payload);
-  }
 
   nsTArray<FrameStats> stats;
 
