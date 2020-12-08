@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdint.h>
+#include "mozilla/dom/GamepadHandle.h"
 
 namespace mozilla {
 namespace dom {
@@ -13,7 +14,7 @@ void StartGamepadMonitoring() {}
 
 void StopGamepadMonitoring() {}
 
-void SetGamepadLightIndicatorColor(const Tainted<uint32_t>&,
+void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>&,
                                    const Tainted<uint32_t>&,
                                    const Tainted<uint8_t>&,
                                    const Tainted<uint8_t>&,
