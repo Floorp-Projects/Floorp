@@ -1034,6 +1034,27 @@ SearchService.prototype = {
         continue;
       }
 
+      // Some OpenSearch type engines are now obsolete and no longer supported.
+      // These were application provided engines that used to use the OpenSearch
+      // format before gecko transitioned to WebExtensions.
+      // These will sometimes have been missed in migration due to various
+      // reasons, and due to how the settings saves everything. We therefore
+      // explicitly ignore them here to drop them, and let the rest of the code
+      // fallback to the application/distribution default if necessary.
+      let loadPath = engineJSON._loadPath?.toLowerCase();
+      if (
+        loadPath &&
+        // Replaced by application provided in Firefox 79.
+        (loadPath.startsWith("[distribution]") ||
+          // Langpack engines moved in-app in Firefox 62.
+          // Note: these may be prefixed by jar:,
+          loadPath.includes("[app]/extensions/langpack") ||
+          loadPath.includes("[other]/langpack") ||
+          loadPath.includes("[profile]/extensions/langpack"))
+      ) {
+        continue;
+      }
+
       try {
         let engine = new SearchEngine({
           isAppProvided: false,
