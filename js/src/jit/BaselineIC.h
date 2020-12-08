@@ -25,7 +25,6 @@
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
 #include "jit/shared/Assembler-shared.h"
-#include "jit/SharedICRegisters.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/ArrayObject.h"
@@ -606,90 +605,7 @@ class ICCacheIR_Regular : public ICStub {
   }
 };
 
-// Base class for stubcode compilers.
-class ICStubCompilerBase {
- protected:
-  JSContext* cx;
-  bool inStubFrame_ = false;
-
-#ifdef DEBUG
-  bool entersStubFrame_ = false;
-  uint32_t framePushedAtEnterStubFrame_ = 0;
-#endif
-
-  explicit ICStubCompilerBase(JSContext* cx) : cx(cx) {}
-
-  void pushCallArguments(MacroAssembler& masm,
-                         AllocatableGeneralRegisterSet regs, Register argcReg,
-                         bool isConstructing);
-
-  // Push a payload specialized per compiler needed to execute stubs.
-  void PushStubPayload(MacroAssembler& masm, Register scratch);
-  void pushStubPayload(MacroAssembler& masm, Register scratch);
-
-  // Emits a tail call to a VMFunction wrapper.
-  MOZ_MUST_USE bool tailCallVMInternal(MacroAssembler& masm,
-                                       TailCallVMFunctionId id);
-
-  template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool tailCallVM(MacroAssembler& masm);
-
-  // Emits a normal (non-tail) call to a VMFunction wrapper.
-  MOZ_MUST_USE bool callVMInternal(MacroAssembler& masm, VMFunctionId id);
-
-  template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool callVM(MacroAssembler& masm);
-
-  // A stub frame is used when a stub wants to call into the VM without
-  // performing a tail call. This is required for the return address
-  // to pc mapping to work.
-  void enterStubFrame(MacroAssembler& masm, Register scratch);
-  void assumeStubFrame();
-  void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
-
- public:
-  static inline AllocatableGeneralRegisterSet availableGeneralRegs(
-      size_t numInputs) {
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-#if defined(JS_CODEGEN_ARM)
-    MOZ_ASSERT(!regs.has(BaselineStackReg));
-    MOZ_ASSERT(!regs.has(ICTailCallReg));
-    regs.take(BaselineSecondScratchReg);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    MOZ_ASSERT(!regs.has(BaselineStackReg));
-    MOZ_ASSERT(!regs.has(ICTailCallReg));
-    MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
-#elif defined(JS_CODEGEN_ARM64)
-    MOZ_ASSERT(!regs.has(PseudoStackPointer));
-    MOZ_ASSERT(!regs.has(RealStackPointer));
-    MOZ_ASSERT(!regs.has(ICTailCallReg));
-#else
-    MOZ_ASSERT(!regs.has(BaselineStackReg));
-#endif
-    regs.take(BaselineFrameReg);
-    regs.take(ICStubReg);
-#ifdef JS_CODEGEN_X64
-    regs.take(ExtractTemp0);
-    regs.take(ExtractTemp1);
-#endif
-
-    switch (numInputs) {
-      case 0:
-        break;
-      case 1:
-        regs.take(R0);
-        break;
-      case 2:
-        regs.take(R0);
-        regs.take(R1);
-        break;
-      default:
-        MOZ_CRASH("Invalid numInputs");
-    }
-
-    return regs;
-  }
-};
+AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs);
 
 // ToBool
 //      JSOp::IfNe
