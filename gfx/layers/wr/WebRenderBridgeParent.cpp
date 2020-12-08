@@ -893,23 +893,22 @@ WebRenderBridgeParent::GetCollectedFrames() {
 }
 
 void WebRenderBridgeParent::AddPendingScrollPayload(
-    CompositionPayload& aPayload,
-    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
+    CompositionPayload& aPayload, const VsyncId& aCompositeStartId) {
   auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
   nsTArray<CompositionPayload>* payloads =
-      pendingScrollPayloads->LookupOrAdd(aKey);
+      pendingScrollPayloads->LookupOrAdd(aCompositeStartId.mId);
 
   payloads->AppendElement(aPayload);
 }
 
 nsTArray<CompositionPayload> WebRenderBridgeParent::TakePendingScrollPayload(
-    const std::pair<wr::PipelineId, wr::Epoch>& aKey) {
+    const VsyncId& aCompositeStartId) {
   auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
   nsTArray<CompositionPayload> payload;
   if (nsTArray<CompositionPayload>* storedPayload =
-          pendingScrollPayloads->Get(aKey)) {
+          pendingScrollPayloads->Get(aCompositeStartId.mId)) {
     payload.AppendElements(std::move(*storedPayload));
-    pendingScrollPayloads->Remove(aKey);
+    pendingScrollPayloads->Remove(aCompositeStartId.mId);
   }
   return payload;
 }
