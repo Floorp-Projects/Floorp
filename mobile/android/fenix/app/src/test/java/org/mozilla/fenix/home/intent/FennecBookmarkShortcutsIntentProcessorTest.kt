@@ -66,7 +66,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
         assertEquals(expectedSession.id, fennecShortcutsIntent.getSessionId())
         verifyAll {
             sessionManager.add(expectedSession, true)
-            loadUrlUseCase(testUrl, expectedSession, EngineSession.LoadUrlFlags.external())
+            loadUrlUseCase(testUrl, expectedSession.id, EngineSession.LoadUrlFlags.external())
         }
     }
 }

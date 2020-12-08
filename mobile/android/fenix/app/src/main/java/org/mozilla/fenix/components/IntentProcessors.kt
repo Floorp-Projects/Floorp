@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.intent.processing.TabIntentProcessor
@@ -14,6 +15,7 @@ import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.support.migration.MigrationIntentProcessor
 import mozilla.components.support.migration.state.MigrationStore
@@ -30,7 +32,9 @@ import org.mozilla.fenix.utils.Mockable
 class IntentProcessors(
     private val context: Context,
     private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionUseCases: SessionUseCases,
+    private val tabsUseCases: TabsUseCases,
     private val searchUseCases: SearchUseCases,
     private val relationChecker: RelationChecker,
     private val customTabsStore: CustomTabsServiceStore,
@@ -62,13 +66,12 @@ class IntentProcessors(
     val externalAppIntentProcessors by lazyMonitored {
         listOf(
             TrustedWebActivityIntentProcessor(
-                sessionManager = sessionManager,
-                loadUrlUseCase = sessionUseCases.loadUrl,
+                addNewTabUseCase = tabsUseCases.addTab,
                 packageManager = context.packageManager,
                 relationChecker = relationChecker,
                 store = customTabsStore
             ),
-            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, manifestStorage),
+            WebAppIntentProcessor(store, tabsUseCases.addTab, sessionUseCases.loadUrl, manifestStorage),
             FennecWebAppIntentProcessor(context, sessionManager, sessionUseCases.loadUrl, manifestStorage)
         )
     }

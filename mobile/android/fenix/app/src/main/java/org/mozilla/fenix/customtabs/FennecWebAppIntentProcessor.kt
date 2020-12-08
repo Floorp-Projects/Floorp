@@ -69,7 +69,7 @@ class FennecWebAppIntentProcessor(
                 webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
 
             sessionManager.add(session)
-            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
+            loadUrlUseCase(url, session.id, EngineSession.LoadUrlFlags.external())
 
             intent.putSessionId(session.id)
 

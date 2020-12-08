@@ -68,7 +68,9 @@ class Components(private val context: Context) {
         IntentProcessors(
             context,
             core.sessionManager,
+            core.store,
             useCases.sessionUseCases,
+            useCases.tabsUseCases,
             useCases.searchUseCases,
             core.relationChecker,
             core.customTabsStore,

@@ -44,7 +44,7 @@ class FennecBookmarkShortcutsIntentProcessor(
             val session = Session(url, private = false, source = SessionState.Source.HOME_SCREEN)
 
             sessionManager.add(session, selected = true)
-            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
+            loadUrlUseCase(url, session.id, EngineSession.LoadUrlFlags.external())
             intent.action = ACTION_VIEW
             intent.putSessionId(session.id)
 
