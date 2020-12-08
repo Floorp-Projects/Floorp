@@ -7,7 +7,6 @@ import React, { PureComponent } from "react";
 import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
-import { features } from "../../utils/prefs";
 
 import {
   getSelectedSource,
@@ -126,7 +125,7 @@ class Scopes extends PureComponent<Props, State> {
   onContextMenu = (event: any, item: any) => {
     const { addWatchpoint, removeWatchpoint } = this.props;
 
-    if (!features.watchpoints || !item.parent || !item.contents.configurable) {
+    if (!item.parent || !item.contents.configurable) {
       return;
     }
 
