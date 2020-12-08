@@ -16,6 +16,7 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.menu.MenuButton
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.support.base.Component
@@ -96,6 +97,18 @@ class DisplayToolbarTest {
     }
 
     @Test
+    fun `permissionViewColor will change the color of the permissionIconView`() {
+        val (_, displayToolbar) = createDisplayToolbar()
+
+        assertNull(displayToolbar.views.permissionIndicator.colorFilter)
+
+        displayToolbar.colors = displayToolbar.colors.copy(permissionHighlights = Color.BLUE)
+
+        assertNotNull(displayToolbar.views.permissionIndicator.colorFilter)
+        assertNotNull(displayToolbar.views.permissionIndicator.permissionTint)
+    }
+
+    @Test
     fun `tracking protection and separator views become visible when states ON OR ACTIVE are set to siteTrackingProtection`() {
         val (_, displayToolbar) = createDisplayToolbar()
 
@@ -165,6 +178,33 @@ class DisplayToolbarTest {
         assertEquals(
             drawable1,
             displayToolbar.views.trackingProtectionIndicator.drawable
+        )
+    }
+
+    @Test
+    fun `setPermissionIcons will forward to PermissionHighlightsIconView`() {
+        val (_, displayToolbar) = createDisplayToolbar()
+
+        val oldPermissionIcon = displayToolbar.views.permissionIndicator.drawable
+        assertNotNull(oldPermissionIcon)
+
+        val drawable1 = testContext.getDrawable(PermissionHighlightsIconView.DEFAULT_ICON_AUTOPLAY_BLOCKED)!!
+
+        displayToolbar.indicators = listOf(DisplayToolbar.Indicators.PERMISSION_HIGHLIGHTS)
+        displayToolbar.icons = displayToolbar.icons.copy(
+            permissionHighlights = DisplayToolbar.Icons.PermissionHighlights(drawable1)
+        )
+
+        assertNotEquals(
+            oldPermissionIcon,
+            displayToolbar.views.permissionIndicator.drawable
+        )
+
+        displayToolbar.setPermissionIndicator(Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED)
+
+        assertNotEquals(
+            oldPermissionIcon,
+            displayToolbar.views.permissionIndicator.drawable
         )
     }
 
@@ -662,6 +702,39 @@ class DisplayToolbarTest {
         displayToolbar.setOnSiteSecurityClickedListener(null)
 
         assertNull(displayToolbar.views.securityIndicator.background)
+    }
+
+    @Test
+    fun `clicking on permission indicator invokes listener`() {
+        var listenerInvoked = false
+
+        val (_, displayToolbar) = createDisplayToolbar()
+
+        assertNull(displayToolbar.views.permissionIndicator.background)
+
+        displayToolbar.setOnPermissionIndicatorClickedListener {
+            listenerInvoked = true
+        }
+
+        assertNotNull(displayToolbar.views.permissionIndicator.background)
+
+        displayToolbar.views.permissionIndicator.performClick()
+
+        assertTrue(listenerInvoked)
+
+        listenerInvoked = false
+
+        displayToolbar.setOnPermissionIndicatorClickedListener { }
+
+        assertNotNull(displayToolbar.views.permissionIndicator.background)
+
+        displayToolbar.views.permissionIndicator.performClick()
+
+        assertFalse(listenerInvoked)
+
+        displayToolbar.setOnPermissionIndicatorClickedListener(null)
+
+        assertNull(displayToolbar.views.permissionIndicator.background)
     }
 
     @Test

@@ -19,6 +19,7 @@ import org.mockito.Mockito.spy
 class ToolbarInteractorTest {
 
     class TestToolbar : Toolbar {
+        override var permissionHighlights: Toolbar.PermissionHighlights = Toolbar.PermissionHighlights.NONE
         override var url: CharSequence = ""
         override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
         override var private: Boolean = false

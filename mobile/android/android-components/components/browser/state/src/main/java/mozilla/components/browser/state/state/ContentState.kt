@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.content.HistoryState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.RecordingDevice
@@ -45,7 +46,9 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property firstContentfulPaint whether or not the first contentful paint has happened.
  * @property pictureInPictureEnabled True if the session is being displayed in PIP mode.
  * @property loadRequest last [LoadRequestState] if this session.
- * @property permissionRequestsList Holds unprocessed content requests.
+ * @property permissionIndicator Holds the state of any site permission that was granted/denied
+ * that should be brought to the user's attention, for example when media content is not able to
+ * play because the autoplay settings.
  * @property appPermissionRequestsList Holds unprocessed app requests.
  * @property refreshCanceled Indicates if an intent of refreshing was canceled.
  * True if a page refresh was cancelled by the user, defaults to false. Note that this is not about
@@ -78,6 +81,7 @@ data class ContentState(
     val webAppManifest: WebAppManifest? = null,
     val firstContentfulPaint: Boolean = false,
     val history: HistoryState = HistoryState(),
+    val permissionHighlights: PermissionHighlightsState = PermissionHighlightsState(),
     val permissionRequestsList: List<PermissionRequest> = emptyList(),
     val appPermissionRequestsList: List<PermissionRequest> = emptyList(),
     val pictureInPictureEnabled: Boolean = false,

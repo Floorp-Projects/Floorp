@@ -63,7 +63,7 @@ class CustomTabSessionTitleObserverTest {
 
     private class MockToolbar : Toolbar {
         override var title: String = ""
-
+        override var permissionHighlights: Toolbar.PermissionHighlights = Toolbar.PermissionHighlights.NONE
         override var url: CharSequence by ThrowProperty()
         override var private: Boolean by ThrowProperty()
         override var siteSecure: Toolbar.SiteSecurity by ThrowProperty()

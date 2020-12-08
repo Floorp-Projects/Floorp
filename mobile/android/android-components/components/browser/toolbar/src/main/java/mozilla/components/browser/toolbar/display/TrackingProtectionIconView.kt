@@ -126,7 +126,7 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
     }
 }
 
-private class Update(
+internal class Update(
     val drawable: Drawable?,
     @StringRes val contentDescription: Int?,
     val visible: Boolean

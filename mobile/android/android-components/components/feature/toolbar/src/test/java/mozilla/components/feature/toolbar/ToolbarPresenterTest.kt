@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.BrowserState
@@ -17,6 +18,7 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -30,6 +32,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -161,6 +164,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(60)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.SECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
 
@@ -275,6 +279,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(60)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.SECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
     }
@@ -300,6 +305,7 @@ class ToolbarPresenterTest {
                             url = "https://www.example.org",
                             securityInfo = SecurityInfoState(false, "example.org", "Example"),
                             searchTerms = "Example",
+                            permissionHighlights = PermissionHighlightsState(true),
                             progress = 90
                         ),
                         trackingProtection = TrackingProtectionState(enabled = true)
@@ -320,6 +326,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(60)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.SECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
 
@@ -332,6 +339,7 @@ class ToolbarPresenterTest {
         verify(toolbar).displayProgress(90)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
+        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
     }
@@ -386,6 +394,46 @@ class ToolbarPresenterTest {
     }
 
     @Test
+    fun `displaying different permissions highlights states`() {
+        val toolbar: Toolbar = mock()
+        val store = spy(BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    TabSessionState(
+                        id = "tab",
+                        content = ContentState(
+                            url = "https://www.mozilla.org",
+                            securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
+                            searchTerms = "Hello World",
+                            progress = 60
+                        )
+                    )),
+                selectedTabId = "tab")
+        ))
+
+        val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
+        toolbarPresenter.renderer = mock()
+
+        toolbarPresenter.start()
+
+        testDispatcher.advanceUntilIdle()
+
+        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
+
+        store.dispatch(UpdatePermissionHighlightsStateAction("tab", PermissionHighlightsState(true))).joinBlocking()
+
+        testDispatcher.advanceUntilIdle()
+
+        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.AUTOPLAY_BLOCKED
+
+        store.dispatch(UpdatePermissionHighlightsStateAction("tab", PermissionHighlightsState())).joinBlocking()
+
+        testDispatcher.advanceUntilIdle()
+
+        verify(toolbar, times(2)).permissionHighlights = Toolbar.PermissionHighlights.NONE
+    }
+
+    @Test
     fun `Stopping presenter stops renderer`() {
         val store = BrowserStore()
         val presenter = ToolbarPresenter(mock(), store)
@@ -417,5 +465,7 @@ class ToolbarPresenterTest {
         verify(toolbar).setSearchTerms("")
         verify(toolbar).displayProgress(0)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
+        verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+        verify(toolbar).permissionHighlights = Toolbar.PermissionHighlights.NONE
     }
 }

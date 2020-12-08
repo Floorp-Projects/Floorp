@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.content.HistoryState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -684,5 +685,17 @@ class ContentActionTest {
 
         assertFalse(tab.content.desktopMode)
         assertFalse(otherTab.content.desktopMode)
+    }
+
+    @Test
+    fun `UpdatePermissionHighlightsStateAction updates permissionHighlights state`() {
+
+        assertFalse(tab.content.permissionHighlights.isAutoPlayBlocking)
+
+        store.dispatch(
+                ContentAction.UpdatePermissionHighlightsStateAction(tab.id, PermissionHighlightsState(true))
+        ).joinBlocking()
+
+        assertTrue(tab.content.permissionHighlights.isAutoPlayBlocking)
     }
 }

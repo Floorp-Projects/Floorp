@@ -18,6 +18,7 @@ import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
@@ -276,6 +277,14 @@ sealed class ContentAction : BrowserAction() {
      * Updates the progress of the [ContentState] with the given [sessionId].
      */
     data class UpdateProgressAction(val sessionId: String, val progress: Int) : ContentAction()
+
+    /**
+     * Updates permissions highlights of the [ContentState] with the given [sessionId].
+     */
+    data class UpdatePermissionHighlightsStateAction(
+        val sessionId: String,
+        val highlights: PermissionHighlightsState
+    ) : ContentAction()
 
     /**
      * Updates the title of the [ContentState] with the given [sessionId].

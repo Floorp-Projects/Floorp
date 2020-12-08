@@ -201,6 +201,9 @@ internal object ContentStateReducer {
             is ContentAction.UpdateDesktopModeAction -> updateContentState(state, action.sessionId) {
                 it.copy(desktopMode = action.enabled)
             }
+            is ContentAction.UpdatePermissionHighlightsStateAction -> updateContentState(state, action.sessionId) {
+                it.copy(permissionHighlights = action.highlights)
+            }
         }
     }
 }

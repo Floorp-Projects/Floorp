@@ -48,6 +48,11 @@ interface Toolbar {
     var siteSecure: SiteSecurity
 
     /**
+     * Sets/Gets the site site permission indicator to be displayed on the toolbar.
+     */
+    var permissionHighlights: PermissionHighlights
+
+    /**
      * Sets/Gets the site tracking protection state to be displayed on the toolbar.
      */
     var siteTrackingProtection: SiteTrackingProtection
@@ -407,5 +412,19 @@ interface Toolbar {
          * Tracking protection has been disabled for all sites.
          */
         OFF_GLOBALLY,
+    }
+
+    /**
+     * Indicates which site permission indicator a site should show.
+     */
+    enum class PermissionHighlights {
+        /**
+         * The site has autoplay blocked.
+         */
+        AUTOPLAY_BLOCKED,
+        /**
+         * The site does not have any permission indicator to show.
+         */
+        NONE
     }
 }
