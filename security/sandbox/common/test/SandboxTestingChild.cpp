@@ -13,6 +13,7 @@
 #  include <fcntl.h>
 #  include <sys/stat.h>
 #  include <sys/types.h>
+#  include <time.h>
 #  include <unistd.h>
 #endif
 
@@ -70,16 +71,25 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
     ErrnoTest("fstatat_as_lstat"_ns, true, [&] {
       return fstatat(AT_FDCWD, kAllowedPath, &st, AT_SYMLINK_NOFOLLOW);
     });
+
 #  ifdef XP_LINUX
     ErrnoTest("fstatat_as_fstat"_ns, true,
               [&] { return fstatat(0, "", &st, AT_EMPTY_PATH); });
 #  endif  // XP_LINUX
-#else     // XP_UNIX
+
+    const struct timespec usec = {0, 1000};
+    ErrnoTest("nanosleep"_ns, true, [&] { return nanosleep(&usec, nullptr); });
+
+    struct timespec res = {0, 0};
+    ErrnoTest("clock_getres"_ns, true,
+              [&] { return clock_getres(CLOCK_REALTIME, &res); });
+
+#else   // XP_UNIX
     SendReportTestResults("dummy_test"_ns,
                           /* shouldSucceed */ true,
                           /* didSucceed */ true,
                           "The test framework fails if there are no cases."_ns);
-#endif    // XP_UNIX
+#endif  // XP_UNIX
   }
 
   // Tell SandboxTest that this process is done with all tests.
