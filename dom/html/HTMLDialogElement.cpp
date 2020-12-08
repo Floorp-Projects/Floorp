@@ -52,8 +52,6 @@ void HTMLDialogElement::Close(
 
   RemoveFromTopLayerIfNeeded();
 
-  RemoveStates(NS_EVENT_STATE_MODAL_DIALOG);
-
   RefPtr<AsyncEventDispatcher> eventDispatcher =
       new AsyncEventDispatcher(this, u"close"_ns, CanBubble::eNo);
   eventDispatcher->PostDOMEvent();
@@ -91,6 +89,7 @@ void HTMLDialogElement::RemoveFromTopLayerIfNeeded() {
   Document* doc = OwnerDoc();
   DebugOnly<Element*> removedElement = doc->TopLayerPop(predictFunc);
   MOZ_ASSERT(removedElement == this);
+  RemoveStates(NS_EVENT_STATE_MODAL_DIALOG);
   doc->UnsetBlockedByModalDialog(*this);
 }
 
