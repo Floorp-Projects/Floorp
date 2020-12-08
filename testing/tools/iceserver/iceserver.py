@@ -849,9 +849,9 @@ if __name__ == "__main__":
         lines = f.readlines()
         lines.pop(0)  # Remove BEGIN CERTIFICATE
         lines.pop()  # Remove END CERTIFICATE
-        # pylint --py3k: W1636
-        lines = list(map(string.strip, lines))
-        certbase64 = string.join(lines, "")
+        # pylint --py3k: W1636 W1649
+        lines = list(map(str.strip, lines))
+        certbase64 = "".join(lines)  # pylint --py3k: W1649
 
         turns_url = ', "turns:' + hostname + '"'
         cert_prop = ', "cert":"' + certbase64 + '"'
