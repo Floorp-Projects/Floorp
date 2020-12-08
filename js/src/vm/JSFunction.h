@@ -134,21 +134,7 @@ class JSFunction : public js::NativeObject {
       js::HandleShape shape, js::HandleObjectGroup group);
 
   /* Call objects must be created for each invocation of this function. */
-  bool needsCallObject() const {
-    if (isNative()) {
-      return false;
-    }
-
-    MOZ_ASSERT(hasBytecode());
-
-    // Note: this should be kept in sync with
-    // FunctionBox::needsCallObjectRegardlessOfBindings().
-    MOZ_ASSERT_IF(
-        baseScript()->funHasExtensibleScope() || isGenerator() || isAsync(),
-        nonLazyScript()->bodyScope()->hasEnvironment());
-
-    return nonLazyScript()->bodyScope()->hasEnvironment();
-  }
+  bool needsCallObject() const;
 
   bool needsExtraBodyVarEnvironment() const;
   bool needsNamedLambdaEnvironment() const;

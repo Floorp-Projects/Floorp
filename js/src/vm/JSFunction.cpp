@@ -1990,6 +1990,22 @@ bool JSFunction::needsNamedLambdaEnvironment() const {
   return scope->hasEnvironment();
 }
 
+bool JSFunction::needsCallObject() const {
+  if (isNative()) {
+    return false;
+  }
+
+  MOZ_ASSERT(hasBytecode());
+
+  // Note: this should be kept in sync with
+  // FunctionBox::needsCallObjectRegardlessOfBindings().
+  MOZ_ASSERT_IF(
+      baseScript()->funHasExtensibleScope() || isGenerator() || isAsync(),
+      nonLazyScript()->bodyScope()->hasEnvironment());
+
+  return nonLazyScript()->bodyScope()->hasEnvironment();
+}
+
 JSFunction* js::NewScriptedFunction(
     JSContext* cx, unsigned nargs, FunctionFlags flags, HandleAtom atom,
     HandleObject proto /* = nullptr */,
