@@ -183,6 +183,10 @@ this.PrefsFeed = class PrefsFeed {
       value: searchTopSiteExperimentPrefValue,
     });
 
+    values.mayHaveSponsoredTopSites = Services.prefs.getBoolPref(
+      "browser.topsites.useRemoteSetting"
+    );
+
     // Read the pref for search hand-off from firefox.js and store it
     // in our interal list of prefs to watch
     let handoffToAwesomebarPrefValue = Services.prefs.getBoolPref(
