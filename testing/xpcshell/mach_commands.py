@@ -281,5 +281,5 @@ class MachCommands(MachCommandBase):
         try:
             return xpcshell.run_test(**params)
         except InvalidTestPathError as e:
-            print(e.message)
+            print(str(e))
             return 1

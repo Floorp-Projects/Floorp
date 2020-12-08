@@ -104,7 +104,7 @@ def cli(
         if failed > 0:
             sys.exit(10)
     except Exception as e:
-        logger.error(e.message, exc_info=True)
+        logger.error(str(e), exc_info=True)
         sys.exit(1)
     sys.exit(0)
 
