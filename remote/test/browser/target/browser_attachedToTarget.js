@@ -3,33 +3,42 @@
 
 "use strict";
 
+const PAGE_TEST =
+  "http://example.com/browser/remote/test/browser/target/doc_test.html";
+
 add_task(
   async function attachedPageTarget({ client }) {
     const { Target } = client;
     const { targetInfo } = await openTab(Target);
+
+    await loadURL(PAGE_TEST);
 
     info("Attach new page target");
     const attachedToTarget = Target.attachedToTarget();
     const { sessionId } = await Target.attachToTarget({
       targetId: targetInfo.targetId,
     });
-    const attachedEvent = await attachedToTarget;
+    const {
+      targetInfo: eventTargetInfo,
+      sessionId: eventSessionId,
+      waitingForDebugger: eventWaitingForDebugger,
+    } = await attachedToTarget;
+
+    is(eventTargetInfo.targetId, targetInfo.targetId, "Got expected target id");
+    is(eventTargetInfo.type, "page", "Got expected target type");
+    is(eventTargetInfo.title, "Test Page", "Got expected target title");
+    is(eventTargetInfo.url, PAGE_TEST, "Got expected target URL");
+    todo(eventTargetInfo.attached, "Set correct attached status (bug 1680780)");
 
     is(
-      typeof attachedEvent.sessionId,
-      "string",
-      "attachedToTarget contains the session id as string"
-    );
-    is(
-      attachedEvent.sessionId,
+      eventSessionId,
       sessionId,
       "attachedToTarget and attachToTarget refer to the same session id"
     );
-
     is(
-      attachedEvent.targetInfo.type,
-      "page",
-      "attachedToTarget refers to a tab by default"
+      typeof eventWaitingForDebugger,
+      "boolean",
+      "Got expected type for waitingForDebugger"
     );
   },
   { createTab: false }
