@@ -883,7 +883,11 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   }
 
   if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
-    MOZ_TRY(XDRStencilModuleMetadata(xdr, stencil.moduleMetadata));
+    if (mode == XDR_DECODE) {
+      stencil.moduleMetadata.emplace();
+    }
+
+    MOZ_TRY(XDRStencilModuleMetadata(xdr, *stencil.moduleMetadata));
   }
 
   return Ok();
