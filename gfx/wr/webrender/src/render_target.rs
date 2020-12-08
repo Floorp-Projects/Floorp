@@ -964,7 +964,7 @@ fn add_svg_filter_instances(
     if let Some(id) = input_1_task {
         let task = &render_tasks[id];
 
-        textures.colors[0] = if task.save_target {
+        textures.input.colors[0] = if task.save_target {
             TextureSource::TextureCache(
                 task.get_target_texture(),
                 ImageBufferKind::Texture2DArray,
@@ -978,7 +978,7 @@ fn add_svg_filter_instances(
     if let Some(id) = input_2_task {
         let task = &render_tasks[id];
 
-        textures.colors[1] = if task.save_target {
+        textures.input.colors[1] = if task.save_target {
             TextureSource::TextureCache(
                 task.get_target_texture(),
                 ImageBufferKind::Texture2DArray,
