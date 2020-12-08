@@ -1389,6 +1389,11 @@ const char* NormalizeFlag(const char* arg) {
   return nullptr;
 }
 
+static bool EnvHasValue(const char* name) {
+  const char* val = getenv(name);
+  return (val && *val);
+}
+
 // Ensures that we only see arguments in the command line which are acceptable.
 // This is based on manual inspection of the list of arguments listed in the MDN
 // page for Gecko/Firefox commandline options:
@@ -1535,7 +1540,9 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   const TimeStamp skeletonStart = TimeStamp::NowUnfuzzed();
 #endif
 
-  if (!AreAllCmdlineArgumentsApproved(argc, argv)) {
+  if (!AreAllCmdlineArgumentsApproved(argc, argv) ||
+      EnvHasValue("MOZ_SAFE_MODE_RESTART") || EnvHasValue("XRE_PROFILE_PATH") ||
+      EnvHasValue("MOZ_RESET_PROFILE_RESTART")) {
     sPreXULSkeletonUIDisallowed = true;
     return;
   }
