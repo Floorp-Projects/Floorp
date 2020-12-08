@@ -248,6 +248,14 @@ class ControlStackEntry {
     kind_ = LabelKind::Else;
     polymorphicBase_ = false;
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  void switchToCatch() {
+    MOZ_ASSERT(kind() == LabelKind::Try);
+    kind_ = LabelKind::Catch;
+    polymorphicBase_ = false;
+  }
+#endif
 };
 
 template <typename Value>
@@ -1137,6 +1145,12 @@ inline bool OpIter<Policy>::readEnd(LabelKind* kind, ResultType* type,
     elseParamStack_.shrinkBy(nparams);
   }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+  if (block.kind() == LabelKind::Try) {
+    return fail("try without catch or unwind not allowed");
+  }
+#endif
+
   *kind = block.kind();
   return true;
 }
@@ -1274,9 +1288,16 @@ inline bool OpIter<Policy>::readBrTable(Uint32Vector* depths,
 
 #ifdef ENABLE_WASM_EXCEPTIONS
 template <typename Policy>
-inline bool OpIter<Policy>::readTry(ResultType* type) {
+inline bool OpIter<Policy>::readTry(ResultType* paramType) {
   MOZ_ASSERT(Classify(op_) == OpKind::Try);
-  MOZ_CRASH("NYI");
+
+  BlockType type;
+  if (!readBlockType(&type)) {
+    return false;
+  }
+
+  *paramType = type.params();
+  return pushControl(LabelKind::Try, type);
 }
 
 template <typename Policy>
@@ -1285,14 +1306,51 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* eventIndex,
                                       ResultType* resultType,
                                       ValueVector* tryResults) {
   MOZ_ASSERT(Classify(op_) == OpKind::Catch);
-  MOZ_CRASH("NYI");
+
+  if (!readVarU32(eventIndex)) {
+    return fail("expected event index");
+  }
+  if (*eventIndex >= env_.events.length()) {
+    return fail("event index out of range");
+  }
+
+  Control& block = controlStack_.back();
+  if (block.kind() != LabelKind::Try && block.kind() != LabelKind::Catch) {
+    return fail("catch can only be used within a try");
+  }
+  *kind = block.kind();
+  *paramType = block.type().params();
+
+  if (!checkStackAtEndOfBlock(resultType, tryResults)) {
+    return false;
+  }
+
+  valueStack_.shrinkTo(block.valueStackBase());
+  if (block.kind() == LabelKind::Try) {
+    block.switchToCatch();
+  }
+
+  return push(env_.events[*eventIndex].type);
 }
 
 template <typename Policy>
 inline bool OpIter<Policy>::readThrow(uint32_t* eventIndex,
                                       ValueVector* argValues) {
   MOZ_ASSERT(Classify(op_) == OpKind::Throw);
-  MOZ_CRASH("NYI");
+
+  if (!readVarU32(eventIndex)) {
+    return fail("expected event index");
+  }
+  if (*eventIndex >= env_.events.length()) {
+    return fail("event index out of range");
+  }
+
+  if (!popWithType(env_.events[*eventIndex].type, argValues)) {
+    return false;
+  }
+
+  afterUnconditionalBranch();
+  return true;
 }
 #endif
 
