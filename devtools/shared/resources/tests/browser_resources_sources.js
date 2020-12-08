@@ -130,6 +130,12 @@ add_task(async function() {
 
   await targetList.stopListening();
   await client.close();
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // registrationPromise is set by the test page.
+    const registration = await content.wrappedJSObject.registrationPromise;
+    registration.unregister();
+  });
 });
 
 async function assertResources(resources, expected) {
