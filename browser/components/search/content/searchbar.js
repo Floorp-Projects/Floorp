@@ -348,7 +348,7 @@
       let selection = this.telemetrySearchDetails;
       let oneOffRecorded = false;
 
-      BrowserUsageTelemetry.recordSearchbarSelectedResultMethod(
+      BrowserSearchTelemetry.recordSearchbarSelectedResultMethod(
         aEvent,
         selection ? selection.index : -1
       );

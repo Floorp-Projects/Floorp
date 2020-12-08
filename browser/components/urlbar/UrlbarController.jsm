@@ -12,7 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -518,7 +518,7 @@ class UrlbarController {
       // will happen when you press the Enter key.  Treat it as no selection.
       selectedResult = resultIndex > 0 || !result.heuristic ? resultIndex : -1;
     }
-    BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
+    BrowserSearchTelemetry.recordUrlbarSelectedResultMethod(
       event,
       selectedResult,
       this._userSelectionBehavior
