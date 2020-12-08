@@ -404,7 +404,9 @@ const STATE_NORMAL = Symbol("STATE_NORMAL");
 const STATE_QUOTE = Symbol("STATE_QUOTE");
 const STATE_DQUOTE = Symbol("STATE_DQUOTE");
 const STATE_TEMPLATE_LITERAL = Symbol("STATE_TEMPLATE_LITERAL");
-const STATE_ESCAPE = Symbol("STATE_ESCAPE");
+const STATE_ESCAPE_QUOTE = Symbol("STATE_ESCAPE_QUOTE");
+const STATE_ESCAPE_DQUOTE = Symbol("STATE_ESCAPE_DQUOTE");
+const STATE_ESCAPE_TEMPLATE_LITERAL = Symbol("STATE_ESCAPE_TEMPLATE_LITERAL");
 const STATE_SLASH = Symbol("STATE_SLASH");
 const STATE_INLINE_COMMENT = Symbol("STATE_INLINE_COMMENT");
 const STATE_MULTILINE_COMMENT = Symbol("STATE_MULTILINE_COMMENT");
@@ -557,14 +559,20 @@ function analyzeInputString(str) {
         break;
 
       // Escaped quote
-      case STATE_ESCAPE:
-        state = STATE_NORMAL;
+      case STATE_ESCAPE_QUOTE:
+        state = STATE_QUOTE;
+        break;
+      case STATE_ESCAPE_DQUOTE:
+        state = STATE_DQUOTE;
+        break;
+      case STATE_ESCAPE_TEMPLATE_LITERAL:
+        state = STATE_TEMPLATE_LITERAL;
         break;
 
       // Double quote state > " <
       case STATE_DQUOTE:
         if (c == "\\") {
-          state = STATE_ESCAPE;
+          state = STATE_ESCAPE_DQUOTE;
         } else if (c == "\n") {
           return {
             err: "unterminated string literal",
@@ -577,7 +585,7 @@ function analyzeInputString(str) {
       // Template literal state > ` <
       case STATE_TEMPLATE_LITERAL:
         if (c == "\\") {
-          state = STATE_ESCAPE;
+          state = STATE_ESCAPE_TEMPLATE_LITERAL;
         } else if (c == "`") {
           state = STATE_NORMAL;
         }
@@ -586,7 +594,7 @@ function analyzeInputString(str) {
       // Single quote state > ' <
       case STATE_QUOTE:
         if (c == "\\") {
-          state = STATE_ESCAPE;
+          state = STATE_ESCAPE_QUOTE;
         } else if (c == "\n") {
           return {
             err: "unterminated string literal",
@@ -671,7 +679,9 @@ function analyzeInputString(str) {
       state === STATE_DQUOTE ||
       state === STATE_QUOTE ||
       state === STATE_TEMPLATE_LITERAL ||
-      state === STATE_ESCAPE
+      state === STATE_ESCAPE_QUOTE ||
+      state === STATE_ESCAPE_DQUOTE ||
+      state === STATE_ESCAPE_TEMPLATE_LITERAL
     ) {
       state = STATE_NORMAL;
     }
