@@ -2248,8 +2248,8 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
   // Baseline passes the first 2 inputs in R0/R1, other Values are stored on
   // the stack.
   size_t numInputsInRegs = std::min(numInputs, size_t(2));
-  AllocatableGeneralRegisterSet available =
-      BaselineICAvailableGeneralRegs(numInputsInRegs);
+  AllocatableGeneralRegisterSet available(
+      ICStubCompiler::availableGeneralRegs(numInputsInRegs));
 
   switch (kind) {
     case CacheKind::NewObject:
@@ -2331,14 +2331,6 @@ static void ResetEnteredCounts(ICFallbackStub* stub) {
     }
   }
   stub->resetEnteredCount();
-}
-
-static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
-                                     ICScript* icScript) {
-  if (makesGCCalls) {
-    return icScript->fallbackStubSpace();
-  }
-  return script->zone()->jitZone()->optimizedStubSpace();
 }
 
 ICStub* js::jit::AttachBaselineCacheIRStub(
@@ -2452,8 +2444,8 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
 
   size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
 
-  ICStubSpace* stubSpace =
-      StubSpaceForStub(stubInfo->makesGCCalls(), outerScript, icScript);
+  ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(
+      stubInfo->makesGCCalls(), outerScript, icScript);
   void* newStubMem = stubSpace->alloc(bytesNeeded);
   if (!newStubMem) {
     return nullptr;
@@ -2490,9 +2482,12 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   MOZ_CRASH("Invalid kind");
 }
 
-uint8_t* ICCacheIR_Regular::stubDataStart() {
+template <typename Base>
+uint8_t* ICCacheIR_Trait<Base>::stubDataStart() {
   return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
 }
+
+template uint8_t* ICCacheIR_Trait<ICStub>::stubDataStart();
 
 bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult(
     ValOperandId lhsId, ValOperandId rhsId) {

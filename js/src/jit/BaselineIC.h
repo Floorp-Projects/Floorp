@@ -25,6 +25,7 @@
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
 #include "jit/shared/Assembler-shared.h"
+#include "jit/SharedICRegisters.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/ArrayObject.h"
@@ -578,7 +579,9 @@ class ICFallbackStub : public ICStub {
   void resetEnteredCount() { enteredCount_ = 0; }
 };
 
-class ICCacheIR_Regular : public ICStub {
+// Shared trait for all CacheIR stubs.
+template <typename Base>
+class ICCacheIR_Trait : public Base {
  protected:
   const CacheIRStubInfo* stubInfo_;
 
@@ -589,8 +592,9 @@ class ICCacheIR_Regular : public ICStub {
   uint32_t enteredCount_ = 0;
 
  public:
-  ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
-      : ICStub(ICStub::CacheIR_Regular, stubCode), stubInfo_(stubInfo) {}
+  template <typename... Args>
+  explicit ICCacheIR_Trait(const CacheIRStubInfo* stubInfo, Args&&... args)
+      : Base(args...), stubInfo_(stubInfo) {}
 
   const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
   uint8_t* stubDataStart();
@@ -601,11 +605,134 @@ class ICCacheIR_Regular : public ICStub {
   void resetEnteredCount() { enteredCount_ = 0; }
 
   static constexpr size_t offsetOfEnteredCount() {
-    return offsetof(ICCacheIR_Regular, enteredCount_);
+    using T = ICCacheIR_Trait<Base>;
+    return offsetof(T, enteredCount_);
   }
 };
 
-AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs);
+// Base class for Trait::Regular CacheIR stubs
+// TODO(no-TI): remove trait class.
+class ICCacheIR_Regular : public ICCacheIR_Trait<ICStub> {
+  using Base = ICCacheIR_Trait<ICStub>;
+
+ public:
+  ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
+      : Base(stubInfo, ICStub::CacheIR_Regular, stubCode) {}
+};
+
+// Base class for stubcode compilers.
+class ICStubCompilerBase {
+ protected:
+  JSContext* cx;
+  bool inStubFrame_ = false;
+
+#ifdef DEBUG
+  bool entersStubFrame_ = false;
+  uint32_t framePushedAtEnterStubFrame_ = 0;
+#endif
+
+  explicit ICStubCompilerBase(JSContext* cx) : cx(cx) {}
+
+  void pushCallArguments(MacroAssembler& masm,
+                         AllocatableGeneralRegisterSet regs, Register argcReg,
+                         bool isConstructing);
+
+  // Push a payload specialized per compiler needed to execute stubs.
+  void PushStubPayload(MacroAssembler& masm, Register scratch);
+  void pushStubPayload(MacroAssembler& masm, Register scratch);
+
+  // Emits a tail call to a VMFunction wrapper.
+  MOZ_MUST_USE bool tailCallVMInternal(MacroAssembler& masm,
+                                       TailCallVMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  MOZ_MUST_USE bool tailCallVM(MacroAssembler& masm);
+
+  // Emits a normal (non-tail) call to a VMFunction wrapper.
+  MOZ_MUST_USE bool callVMInternal(MacroAssembler& masm, VMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  MOZ_MUST_USE bool callVM(MacroAssembler& masm);
+
+  // A stub frame is used when a stub wants to call into the VM without
+  // performing a tail call. This is required for the return address
+  // to pc mapping to work.
+  void enterStubFrame(MacroAssembler& masm, Register scratch);
+  void assumeStubFrame();
+  void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
+
+ public:
+  static inline AllocatableGeneralRegisterSet availableGeneralRegs(
+      size_t numInputs) {
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+#if defined(JS_CODEGEN_ARM)
+    MOZ_ASSERT(!regs.has(BaselineStackReg));
+    MOZ_ASSERT(!regs.has(ICTailCallReg));
+    regs.take(BaselineSecondScratchReg);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    MOZ_ASSERT(!regs.has(BaselineStackReg));
+    MOZ_ASSERT(!regs.has(ICTailCallReg));
+    MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
+#elif defined(JS_CODEGEN_ARM64)
+    MOZ_ASSERT(!regs.has(PseudoStackPointer));
+    MOZ_ASSERT(!regs.has(RealStackPointer));
+    MOZ_ASSERT(!regs.has(ICTailCallReg));
+#else
+    MOZ_ASSERT(!regs.has(BaselineStackReg));
+#endif
+    regs.take(BaselineFrameReg);
+    regs.take(ICStubReg);
+#ifdef JS_CODEGEN_X64
+    regs.take(ExtractTemp0);
+    regs.take(ExtractTemp1);
+#endif
+
+    switch (numInputs) {
+      case 0:
+        break;
+      case 1:
+        regs.take(R0);
+        break;
+      case 2:
+        regs.take(R0);
+        regs.take(R1);
+        break;
+      default:
+        MOZ_CRASH("Invalid numInputs");
+    }
+
+    return regs;
+  }
+};
+
+// TODO(no-TI): remove/cleanup with ICStubCompilerBase.
+class ICStubCompiler : public ICStubCompilerBase {
+  // Prevent GC in the middle of stub compilation.
+  js::gc::AutoSuppressGC suppressGC;
+
+ protected:
+  ICStub::Kind kind;
+
+  // By default the stubcode key is just the kind.
+  virtual int32_t getKey() const { return static_cast<int32_t>(kind); }
+
+  virtual MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) = 0;
+
+  ICStubCompiler(JSContext* cx, ICStub::Kind kind)
+      : ICStubCompilerBase(cx), suppressGC(cx), kind(kind) {}
+
+ protected:
+  template <typename T, typename... Args>
+  T* newStub(Args&&... args) {
+    return ICStub::New<T>(cx, std::forward<Args>(args)...);
+  }
+
+ public:
+  virtual ICStub* getStub(ICStubSpace* space) = 0;
+
+  static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
+                                       ICScript* icScript);
+};
 
 // ToBool
 //      JSOp::IfNe
