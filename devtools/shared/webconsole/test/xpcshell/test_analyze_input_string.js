@@ -142,6 +142,68 @@ add_task(() => {
       },
     },
     {
+      desc: "string literal",
+      input: `"abc".`,
+      expected: {
+        isElementAccess: false,
+        isPropertyAccess: true,
+        expressionBeforePropertyAccess: `"abc"`,
+        lastStatement: `"abc".`,
+        mainExpression: `"abc"`,
+        matchProp: ``,
+      },
+    },
+    {
+      desc: "string literal containing backslash",
+      input: `"\\n".`,
+      expected: {
+        isElementAccess: false,
+        isPropertyAccess: true,
+        expressionBeforePropertyAccess: `"\\n"`,
+        lastStatement: `"\\n".`,
+        mainExpression: `"\\n"`,
+        matchProp: ``,
+      },
+    },
+    {
+      desc: "single quote string literal containing backslash",
+      input: `'\\r'.`,
+      expected: {
+        isElementAccess: false,
+        isPropertyAccess: true,
+        expressionBeforePropertyAccess: `'\\r'`,
+        lastStatement: `'\\r'.`,
+        mainExpression: `'\\r'`,
+        matchProp: ``,
+      },
+    },
+    {
+      desc: "template string literal containing backslash",
+      input: "`\\\\`.",
+      expected: {
+        isElementAccess: false,
+        isPropertyAccess: true,
+        expressionBeforePropertyAccess: "`\\\\`",
+        lastStatement: "`\\\\`.",
+        mainExpression: "`\\\\`",
+        matchProp: ``,
+      },
+    },
+    {
+      desc: "unterminated double quote string literal",
+      input: `"\n`,
+      expected: {
+        err: "unterminated string literal",
+      },
+    },
+    {
+      desc: "unterminated single quote string literal",
+      input: `'\n`,
+      expected: {
+        err: "unterminated string literal",
+      },
+    },
+    {
       desc: "optional chaining operator with spaces",
       input: `test  ?.    ["propA"]  ?.   [0]  ?.   ["propB"]  ?.  ['to`,
       expected: {

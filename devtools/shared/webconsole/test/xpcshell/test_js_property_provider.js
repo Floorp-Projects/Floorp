@@ -217,6 +217,12 @@ function runChecks(dbgObject, environment, sandbox) {
   test_has_result(results, "hello");
   results = propertyProvider("'foo'.hello.w");
   test_has_result(results, "world");
+  results = propertyProvider(`"\\n".`);
+  test_has_result(results, "charAt");
+  results = propertyProvider(`'\\r'.`);
+  test_has_result(results, "charAt");
+  results = propertyProvider("`\\\\`.");
+  test_has_result(results, "charAt");
 
   info("Test that suggestions are not given for syntax errors.");
   results = propertyProvider("'foo\"");
