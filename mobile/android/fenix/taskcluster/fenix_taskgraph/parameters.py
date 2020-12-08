@@ -48,6 +48,9 @@ def get_decision_parameters(graph_config, parameters):
         elif version.is_release:
             next_version = version.bump("patch_number")
             release_type = "release"
+        elif version.is_release_candidate:
+            next_version = version.bump("release_candidate_number")
+            release_type = "release"
         else:
             raise ValueError("Unsupported version type: {}".format(version.version_type))
 

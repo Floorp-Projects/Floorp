@@ -155,6 +155,8 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
         release_type = "beta"
     elif version.is_release:
         release_type = "release"
+    elif version.is_release_candidate:
+        release_type = "release"
     else:
         raise ValueError("Unsupported version type: {}".format(version.version_type))
     parameters['release_type'] = release_type
