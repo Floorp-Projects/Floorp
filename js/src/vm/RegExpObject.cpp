@@ -613,22 +613,6 @@ void RegExpShared::finalize(JSFreeOp* fop) {
 }
 
 /* static */
-bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
-                           HandleLinearString input,
-                           RegExpShared::CodeKind codeKind) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  AutoTraceLog logCompile(logger, TraceLogger_IrregexpCompile);
-
-  RootedAtom pattern(cx, re->getSource());
-  return compile(cx, re, pattern, input, codeKind);
-}
-
-bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
-                           HandleAtom pattern, HandleLinearString input,
-                           RegExpShared::CodeKind code) {
-  MOZ_CRASH("TODO");
-}
-/* static */
 bool RegExpShared::compileIfNecessary(JSContext* cx,
                                       MutableHandleRegExpShared re,
                                       HandleLinearString input,
