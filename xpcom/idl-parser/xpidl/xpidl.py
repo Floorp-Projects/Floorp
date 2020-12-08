@@ -1061,11 +1061,8 @@ def ensureInfallibleIsSound(methodOrAttribute):
         )
 
 
-# An interface cannot be implemented by JS if it has a notxpcom
+# An interface cannot be implemented by JS if it has a notxpcom or nostdcall
 # method or attribute, so it must be marked as builtinclass.
-#
-# XXX(nika): Why does nostdcall not imply builtinclass?
-# It could screw up the shims as well...
 def ensureBuiltinClassIfNeeded(methodOrAttribute):
     iface = methodOrAttribute.iface
     if not iface.attributes.scriptable or iface.attributes.builtinclass:
@@ -1077,6 +1074,15 @@ def ensureBuiltinClassIfNeeded(methodOrAttribute):
             (
                 "scriptable interface '%s' must be marked [builtinclass] because it "
                 "contains a [notxpcom] %s '%s'"
+            )
+            % (iface.name, methodOrAttribute.kind, methodOrAttribute.name),
+            methodOrAttribute.location,
+        )
+    if methodOrAttribute.nostdcall:
+        raise IDLError(
+            (
+                "scriptable interface '%s' must be marked [builtinclass] because it "
+                "contains a [nostdcall] %s '%s'"
             )
             % (iface.name, methodOrAttribute.kind, methodOrAttribute.name),
             methodOrAttribute.location,
@@ -1179,7 +1185,7 @@ class Attribute(object):
     def isScriptable(self):
         if not self.iface.attributes.scriptable:
             return False
-        return not (self.noscript or self.notxpcom)
+        return not (self.noscript or self.notxpcom or self.nostdcall)
 
     def __str__(self):
         return "\t%sattribute %s %s\n" % (
@@ -1289,7 +1295,7 @@ class Method(object):
     def isScriptable(self):
         if not self.iface.attributes.scriptable:
             return False
-        return not (self.noscript or self.notxpcom)
+        return not (self.noscript or self.notxpcom or self.nostdcall)
 
     def __str__(self):
         return "\t%s %s(%s)\n" % (
