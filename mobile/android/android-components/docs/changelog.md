@@ -4,13 +4,13 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 69.0.0-SNAPSHOT (In Development)
+# 69.0.0
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v68.0.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v68.0.0...v69.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/130?closed=1)
-* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v69.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v69.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v69.0.0/.config.yml)
 
 * **browser-session**
   * ⚠️ **This is a breaking change**: `Session.searchTerms` has been removed. Use `ContentState.searchTerms` (`browser-state`) instead.
