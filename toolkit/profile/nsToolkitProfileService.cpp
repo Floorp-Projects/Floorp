@@ -1837,7 +1837,14 @@ nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
  * get essentially the same benefits as dedicated profiles provides.
  */
 bool nsToolkitProfileService::IsSnapEnvironment() {
-  return !!PR_GetEnv("SNAP_NAME");
+  // Copied from IsRunningAsASnap() in
+  // browser/components/shell/nsGNOMEShellService.cpp
+  // TODO: factor out this common code in one place.
+  const char* snap_name = PR_GetEnv("SNAP_NAME");
+  if (snap_name == nullptr) {
+    return false;
+  }
+  return (strcmp(snap_name, "firefox") == 0);
 }
 
 /**
