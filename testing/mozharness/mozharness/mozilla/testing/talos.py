@@ -9,6 +9,7 @@ run talos tests in a virtualenv
 """
 
 from __future__ import absolute_import
+import six
 import io
 import os
 import sys
@@ -463,7 +464,7 @@ class Talos(
         kw_options.update(kw)
         # talos expects tests to be in the format (e.g.) 'ts:tp5:tsvg'
         tests = kw_options.get("activeTests")
-        if tests and not isinstance(tests, basestring):
+        if tests and not isinstance(tests, six.string_types):
             tests = ":".join(tests)  # Talos expects this format
             kw_options["activeTests"] = tests
         for key, value in kw_options.items():

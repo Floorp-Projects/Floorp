@@ -29,7 +29,7 @@ def get_active_tests(setup_test_harness, parser):
         opts.update(kwargs)
 
         manifest = opts.get("manifestFile")
-        if isinstance(manifest, basestring):
+        if isinstance(manifest, six.string_types):
             md.testRootAbs = os.path.dirname(manifest)
         elif isinstance(manifest, TestManifest):
             md.testRootAbs = manifest.rootdir
