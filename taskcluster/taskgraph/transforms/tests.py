@@ -922,6 +922,7 @@ def set_tier(config, tasks):
                 "macosx1014-64/debug",
                 "macosx1014-64-shippable/opt",
                 "macosx1014-64-devedition/opt",
+                "macosx1014-64-devedition-qr/opt",
                 "macosx1014-64-qr/opt",
                 "macosx1014-64-shippable-qr/opt",
                 "macosx1014-64-qr/debug",
