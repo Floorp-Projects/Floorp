@@ -94,6 +94,10 @@ WindowContext* WindowContext::TopWindowContext() {
 
 bool WindowContext::IsTop() const { return mBrowsingContext->IsTop(); }
 
+bool WindowContext::SameOriginWithTop() const {
+  return mBrowsingContext->SameOriginWithTop();
+}
+
 nsIGlobalObject* WindowContext::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
