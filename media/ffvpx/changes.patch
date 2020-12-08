@@ -50,3 +50,27 @@ index 9fb8d0a..97ad3b9 100644
          rgba_color[0] = rgba >> 24;
          rgba_color[1] = rgba >> 16;
          rgba_color[2] = rgba >> 8;
+diff --git a/media/ffvpx/libavutil/hwcontext_vaapi.c b/media/ffvpx/libavutil/hwcontext_vaapi.c
+--- a/media/ffvpx/libavutil/hwcontext_vaapi.c
++++ b/media/ffvpx/libavutil/hwcontext_vaapi.c
+@@ -39,17 +39,19 @@
+ #   include <unistd.h>
+ #endif
+ 
+ 
+ #include "avassert.h"
+ #include "buffer.h"
+ #include "common.h"
+ #include "hwcontext.h"
++#if CONFIG_LIBDRM
+ #include "hwcontext_drm.h"
++#endif
+ #include "hwcontext_internal.h"
+ #include "hwcontext_vaapi.h"
+ #include "mem.h"
+ #include "pixdesc.h"
+ #include "pixfmt.h"
+ 
+ 
+ typedef struct VAAPIDevicePriv {
+
