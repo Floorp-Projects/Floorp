@@ -10,6 +10,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.getOrCreateEngineSession
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.selector.allTabs
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -24,6 +25,7 @@ import mozilla.components.support.base.log.logger.Logger
  * [Middleware] responsible for delegating calls to the appropriate [EngineSession] instance for
  * actions like [EngineAction.LoadUrlAction].
  */
+@Suppress("TooManyFunctions")
 internal class EngineDelegateMiddleware(
     private val engine: Engine,
     private val sessionLookup: (String) -> Session?,
@@ -46,6 +48,7 @@ internal class EngineDelegateMiddleware(
             is EngineAction.ToggleDesktopModeAction -> toggleDesktopMode(context.store, action)
             is EngineAction.ExitFullScreenModeAction -> exitFullScreen(context.store, action)
             is EngineAction.ClearDataAction -> clearData(context.store, action)
+            is EngineAction.PurgeHistoryAction -> purgeHistory(context.state)
             else -> next(action)
         }
     }
@@ -194,5 +197,13 @@ internal class EngineDelegateMiddleware(
             tabId = action.sessionId
         )
         engineSession?.clearData(action.data)
+    }
+
+    private fun purgeHistory(
+        state: BrowserState
+    ) = scope.launch {
+        state.allTabs
+            .mapNotNull { tab -> tab.engineState.engineSession }
+            .forEach { engineSession -> engineSession.purgeHistory() }
     }
 }

@@ -352,6 +352,20 @@ class SessionUseCases(
         }
     }
 
+    /**
+     * UseCase for purging the (back and forward) history of all tabs and custom tabs.
+     */
+    class PurgeHistoryUseCase internal constructor(
+        private val store: BrowserStore
+    ) {
+        /**
+         * Purges the (back and forward) history of all tabs and custom tabs.
+         */
+        operator fun invoke() {
+            store.dispatch(EngineAction.PurgeHistoryAction)
+        }
+    }
+
     val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(store, sessionManager, onNoSession) }
     val loadData: LoadDataUseCase by lazy { LoadDataUseCase(store, sessionManager, onNoSession) }
     val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(store, sessionManager) }
@@ -363,4 +377,5 @@ class SessionUseCases(
     val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(store, sessionManager) }
     val clearData: ClearDataUseCase by lazy { ClearDataUseCase(store, sessionManager) }
     val crashRecovery: CrashRecoveryUseCase by lazy { CrashRecoveryUseCase(store) }
+    val purgeHistory: PurgeHistoryUseCase by lazy { PurgeHistoryUseCase(store) }
 }

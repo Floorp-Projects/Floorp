@@ -958,6 +958,17 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun `purgeHistory delegates to clearHistory`() {
+        val engineSession = SystemEngineSession(testContext)
+
+        val webView: WebView = mock()
+        engineSession.webView = webView
+
+        engineSession.purgeHistory()
+        verify(webView).clearHistory()
+    }
+
+    @Test
     fun `GIVEN webView_canGoBack() true WHEN goBack() is called THEN verify EngineObserver onNavigateBack() is triggered`() {
         var observedOnNavigateBack = false
 

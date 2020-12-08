@@ -4,9 +4,12 @@
 
 package mozilla.components.browser.state.action
 
+import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -80,5 +83,37 @@ class EngineActionTest {
         store.dispatch(EngineAction.UpdateEngineSessionObserverAction(tab.id, engineObserver)).joinBlocking()
         assertNotNull(engineState().engineObserver)
         assertEquals(engineObserver, engineState().engineObserver)
+    }
+
+    @Test
+    fun `PurgeHistoryAction - Removes state from sessions without history`() {
+        val tab1 = createTab("https://www.mozilla.org").copy(
+            engineState = EngineState(engineSession = null, engineSessionState = mock())
+        )
+
+        val tab2 = createTab("https://www.firefox.com").copy(
+            engineState = EngineState(engineSession = mock(), engineSessionState = mock())
+        )
+
+        val customTab1 = createCustomTab("http://www.theverge.com").copy(
+            engineState = EngineState(engineSession = null, engineSessionState = mock())
+        )
+
+        val customTab2 = createCustomTab("https://www.google.com").copy(
+            engineState = EngineState(engineSession = mock(), engineSessionState = mock())
+        )
+
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(tab1, tab2),
+            customTabs = listOf(customTab1, customTab2)
+        ))
+
+        store.dispatch(EngineAction.PurgeHistoryAction).joinBlocking()
+
+        assertNull(store.state.findTab(tab1.id)!!.engineState.engineSessionState)
+        assertNotNull(store.state.findTab(tab2.id)!!.engineState.engineSessionState)
+
+        assertNull(store.state.findCustomTab(customTab1.id)!!.engineState.engineSessionState)
+        assertNotNull(store.state.findCustomTab(customTab2.id)!!.engineState.engineSessionState)
     }
 }

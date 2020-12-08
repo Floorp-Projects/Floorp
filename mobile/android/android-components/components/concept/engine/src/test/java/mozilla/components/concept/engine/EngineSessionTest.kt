@@ -985,6 +985,8 @@ open class DummyEngineSession : EngineSession() {
 
     override fun exitFullScreenMode() {}
 
+    override fun purgeHistory() {}
+
     // Helper method to access the protected method from test cases.
     fun notifyInternalObservers(block: Observer.() -> Unit) {
         notifyObservers(block)

@@ -77,7 +77,7 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
-
+            override fun purgeHistory() {}
             override fun loadData(data: String, mimeType: String, encoding: String) {
                 notifyObservers { onLocationChange(data) }
                 notifyObservers { onProgress(100) }
@@ -127,6 +127,7 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
+            override fun purgeHistory() {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun loadUrl(
                 url: String,
@@ -169,7 +170,6 @@ class EngineObserverTest {
             override fun disableTrackingProtection() {
                 notifyObservers { onTrackerBlockingEnabledChange(false) }
             }
-
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun loadUrl(
                 url: String,
@@ -182,6 +182,7 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
+            override fun purgeHistory() {}
         }
         val observer = EngineObserver(session, mock())
         engineSession.register(observer)
@@ -1173,6 +1174,8 @@ class EngineObserverTest {
 
         val observer = EngineObserver(session, store)
         observer.onNavigateBack()
+        store.waitUntilIdle()
+
         store.waitUntilIdle()
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->

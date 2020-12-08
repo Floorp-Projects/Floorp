@@ -660,6 +660,11 @@ abstract class EngineSession(
     open fun markActiveForWebExtensions(active: Boolean) = Unit
 
     /**
+     * Purges the history for the session (back and forward history).
+     */
+    abstract fun purgeHistory()
+
+    /**
      * Close the session. This may free underlying objects. Call this when you are finished using
      * this session.
      */

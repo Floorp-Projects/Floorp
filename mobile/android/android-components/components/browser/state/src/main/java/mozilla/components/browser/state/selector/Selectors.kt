@@ -108,3 +108,6 @@ val BrowserState.privateTabs: List<TabSessionState>
  */
 val BrowserState.normalTabs: List<TabSessionState>
     get() = getNormalOrPrivateTabs(private = false)
+
+val BrowserState.allTabs: List<SessionState>
+    get() = tabs + customTabs

@@ -11,6 +11,7 @@ import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
+import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -774,5 +775,47 @@ class EngineDelegateMiddlewareTest {
         verify(engine).createSession(private = false, contextId = null)
         verify(engineSession, times(1)).clearData(Engine.BrowsingData.allCaches())
         assertEquals(engineSession, store.state.tabs[0].engineState.engineSession)
+    }
+
+    @Test
+    fun `PurgeHistoryAction - calls purgeHistory on engine session instances`() {
+        val engineSession1: EngineSession = mock()
+        val engineSession2: EngineSession = mock()
+
+        val dispatcher = TestCoroutineDispatcher()
+        val scope = CoroutineScope(dispatcher)
+
+        val store = BrowserStore(
+            middleware = EngineMiddleware.create(
+                engine = mock(),
+                sessionLookup = mock(),
+                scope = scope
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org").copy(
+                        engineState = EngineState(engineSession = null, engineSessionState = mock())
+                    ),
+                    createTab("https://www.firefox.com").copy(
+                        engineState = EngineState(engineSession = engineSession1, engineSessionState = mock())
+                    )
+                ),
+                customTabs = listOf(
+                    createCustomTab("http://www.theverge.com").copy(
+                        engineState = EngineState(engineSession = null, engineSessionState = mock())
+                    ),
+                    createCustomTab("https://www.google.com").copy(
+                        engineState = EngineState(engineSession = engineSession2, engineSessionState = mock())
+                    )
+                )
+            )
+        )
+
+        store.dispatch(EngineAction.PurgeHistoryAction).joinBlocking()
+
+        dispatcher.advanceUntilIdle()
+
+        verify(engineSession1).purgeHistory()
+        verify(engineSession2).purgeHistory()
     }
 }

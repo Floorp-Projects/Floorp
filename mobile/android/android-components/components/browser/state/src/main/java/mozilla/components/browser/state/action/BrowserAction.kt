@@ -761,6 +761,11 @@ sealed class EngineAction : BrowserAction() {
         val sessionId: String,
         val engineSessionObserver: EngineSession.Observer
     ) : EngineAction()
+
+    /**
+     * Purges the back/forward history of all tabs and custom tabs.
+     */
+    object PurgeHistoryAction : EngineAction()
 }
 
 /**

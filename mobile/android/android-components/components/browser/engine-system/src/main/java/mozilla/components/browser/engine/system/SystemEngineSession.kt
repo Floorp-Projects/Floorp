@@ -233,6 +233,13 @@ class SystemEngineSession(
     }
 
     /**
+     * Clears the internal back/forward list.
+     */
+    override fun purgeHistory() {
+        webView.clearHistory()
+    }
+
+    /**
      * See [EngineSession.settings]
      */
     override val settings: Settings

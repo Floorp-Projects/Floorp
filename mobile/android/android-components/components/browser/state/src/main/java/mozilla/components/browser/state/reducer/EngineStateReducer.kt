@@ -51,6 +51,12 @@ internal object EngineStateReducer {
         is EngineAction.ClearDataAction -> {
             throw IllegalStateException("You need to add EngineMiddleware to your BrowserStore. ($action)")
         }
+        is EngineAction.PurgeHistoryAction -> {
+            state.copy(
+                tabs = purgeEngineStates(state.tabs),
+                customTabs = purgeEngineStates(state.customTabs)
+            )
+        }
     }
 }
 
@@ -60,5 +66,25 @@ private inline fun BrowserState.copyWithEngineState(
 ): BrowserState {
     return updateTabState(tabId) { current ->
         current.createCopy(engineState = update(current.engineState))
+    }
+}
+
+/**
+ * When `PurgeHistoryAction` gets dispatched `EngineDelegateMiddleware` will take care of calling
+ * `purgeHistory()` on all `EngineSession` instances. However some tabs may not have an `EngineSession`
+ * assigned (yet), instead we keep track of the `EngineSessionState` to restore when needed. Creating
+ * an `EngineSession` for every tab, just to call `purgeHistory()` on them, is wasteful and may cause
+ * problems if there are a lot of tabs. So instead we just remove the EngineSessionState from those
+ * sessions. The next time they get rendered we will only load the assigned URL and since they have
+ * no state to restore, they will have no history.
+ */
+@Suppress("UNCHECKED_CAST")
+private fun <T : SessionState> purgeEngineStates(tabs: List<T>): List<T> {
+    return tabs.map { session ->
+        if (session.engineState.engineSession == null && session.engineState.engineSessionState != null) {
+            session.createCopy(engineState = session.engineState.copy(engineSessionState = null))
+        } else {
+            session
+        } as T
     }
 }
