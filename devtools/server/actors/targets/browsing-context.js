@@ -291,7 +291,9 @@ const browsingContextTargetPrototype = {
       frames: true,
       // Supports the logInPage request.
       logInPage: true,
-      // @backward-compat { version 71 } Supports watchpoints in the server.
+      // Supports watchpoints in the server. We need to keep this trait because target
+      // actors that don't extend BrowsingContextTargetActor (Worker, ContentProcess, …)
+      // might not support watchpoints.
       watchpoints: true,
       // Supports back and forward navigation
       navigation: true,
