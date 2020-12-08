@@ -213,6 +213,10 @@ var SessionStartup = {
         "browser.engagement.restored_pinned_tabs_count",
         pinnedTabCount
       );
+      Services.telemetry.scalarSetMaximum(
+        "browser.engagement.max_concurrent_tab_pinned_count",
+        pinnedTabCount
+      );
     }, 60000);
 
     // If this is a normal restore then throw away any previous session.

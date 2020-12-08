@@ -161,6 +161,8 @@ browser.engagement:
     description: >
       The count of maximum number of pinned tabs open during a subsession. This
       includes private windows and the ones opened when starting the browser.
+      Starting Firefox 85 this includes number of restored pinned tabs at
+      startup.
     expires: never
     kind: uint
     notification_emails:
