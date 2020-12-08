@@ -198,9 +198,6 @@ extern "C" const char* __tsan_default_suppressions() {
 
          // No Bug
          "race:WalkDiskCacheRunnable::Run\n"
-         // No Bug - Modifying `mResolveAgain` while reading `mGetTtl`
-         "race:RemoveOrRefresh\n"
-         "race:nsHostResolver::ThreadFunc\n"
          // Bug 1614697
          "race:nsHttpChannel::OnCacheEntryCheck\n"
          "race:~AutoCacheWaitFlags\n"
