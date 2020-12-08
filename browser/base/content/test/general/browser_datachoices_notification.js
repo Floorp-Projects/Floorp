@@ -143,12 +143,7 @@ function clearAcceptedPolicy() {
   Preferences.reset(PREF_ACCEPTED_POLICY_DATE);
 }
 
-add_task(async function test_single_window() {
-  clearAcceptedPolicy();
-
-  // Close all the notifications, then try to trigger the data choices infobar.
-  await closeAllNotifications();
-
+function assertCoherentInitialState() {
   // Make sure that we have a coherent initial state.
   Assert.equal(
     Preferences.get(PREF_ACCEPTED_POLICY_VERSION, 0),
@@ -164,6 +159,15 @@ add_task(async function test_single_window() {
     !TelemetryReportingPolicy.testIsUserNotified(),
     "User not notified about datareporting policy."
   );
+}
+
+add_task(async function test_single_window() {
+  clearAcceptedPolicy();
+
+  // Close all the notifications, then try to trigger the data choices infobar.
+  await closeAllNotifications();
+
+  assertCoherentInitialState();
 
   let alertShownPromise = promiseWaitForAlertActive(gNotificationBox);
   Assert.ok(
@@ -219,9 +223,11 @@ add_task(async function test_single_window() {
 
 add_task(async function test_multiple_windows() {
   clearAcceptedPolicy();
+  assertCoherentInitialState(); // bug 1571932
 
   // Close all the notifications, then try to trigger the data choices infobar.
   await closeAllNotifications();
+  assertCoherentInitialState(); // bug 1571932
 
   // Ensure we see the notification on all windows and that action on one window
   // results in dismiss on every window.
@@ -232,21 +238,7 @@ add_task(async function test_multiple_windows() {
     "2nd window has a global notification box."
   );
 
-  // Make sure that we have a coherent initial state.
-  Assert.equal(
-    Preferences.get(PREF_ACCEPTED_POLICY_VERSION, 0),
-    0,
-    "No version should be set on init."
-  );
-  Assert.equal(
-    Preferences.get(PREF_ACCEPTED_POLICY_DATE, 0),
-    0,
-    "No date should be set on init."
-  );
-  Assert.ok(
-    !TelemetryReportingPolicy.testIsUserNotified(),
-    "User not notified about datareporting policy."
-  );
+  assertCoherentInitialState();
 
   let showAlertPromises = [
     promiseWaitForAlertActive(gNotificationBox),
