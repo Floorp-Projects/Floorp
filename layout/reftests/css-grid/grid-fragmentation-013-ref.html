@@ -15,39 +15,34 @@ html,body {
 
 .grid {
   display: grid;
-  grid-template-columns: 0.6in 0.6in 0.6in;
-  grid-auto-rows: 1in;
-  grid-gap: 0.1in;
+  height: 1in;
   border: 0.1in solid;
-  align-items: start;
 }
-span { display:block; background:lime; border:0.05in solid black; }
-x { display:block; height:0.2in; }
-.t { border-bottom-width:0; }
-.b { border-top-width:0; }
-br { page-break-after:always; break-after:always; display:block; height:1px; }
-
+.col {
+  height: 0;
+  width: 0.6in;
+}
+.col > div {
+  height: 1in;
+  position: relative;
+  background: lime;
+  border: 0.05in solid black;
+}
 </style>
 </head>
 <body>
 
 <div style="padding-top:1in; background:grey">
-  <div class="grid t">
-    <span class="t" style="align-self:stretch"><x style="height:auto"></x></span>
-  </div>
-  <div class="grid b" style="border-color:transparent; grid-auto-rows: 0;">
-    <span class="b" style="min-height:0"><x style="height:0.04in"></x></span>
+  <div class="grid">
+    <div class="col"><div></div></div>
   </div>
 </div>
 
-<div style="padding-top:0.91in; background:grey;">
-  <div class="grid t" style="height:0.9in">
-    <span class="t" style="height:0.86in"><x></x></span>
+<div style="padding-top:1in; background:grey;">
+  <div class="grid">
+    <div class="col"><div></div></div>
   </div>
 </div>
-  <div class="grid b" style="border-color:transparent; grid-auto-rows: 0;">
-    <span class="b" style="min-height:0"><x style="height:0.04in"></x></span>
-  </div>
 
 </body>
 </html>

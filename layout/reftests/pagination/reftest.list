@@ -73,14 +73,13 @@ fuzzy-if(skiaContent,0-1,0-23) == resize-reflow-001.html resize-reflow-001.ref.h
 == table-cell-breaking-1b.html table-cell-breaking-1-ref.html
 == table-cell-breaking-2a.html table-cell-breaking-2-ref.html
 == table-cell-breaking-2b.html table-cell-breaking-2-ref.html
-# Note: table-cell-breaking-3a.html should match table-cell-breaking-3-ref.html, but
-# currently it renders the same as table-cell-breaking-3a-ref.html.
-== table-cell-breaking-3a.html table-cell-breaking-3a-ref.html
-fails == table-cell-breaking-3a.html table-cell-breaking-3-ref.html
-asserts(1-1) == table-cell-breaking-3b.html table-cell-breaking-3-ref.html
+pref(layout.display-list.improve-fragmentation,false) == table-cell-breaking-3a.html table-cell-breaking-3a-ref.html
+pref(layout.display-list.improve-fragmentation,true) == table-cell-breaking-3a.html table-cell-breaking-3-ref.html
+asserts(1-1) pref(layout.display-list.improve-fragmentation,false) == table-cell-breaking-3b.html table-cell-breaking-3-ref.html # bug 714667
+asserts(1-1) pref(layout.display-list.improve-fragmentation,true) fails == table-cell-breaking-3b.html table-cell-breaking-3-ref.html # assert is bug 714667, fails due to bug 1681063
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
 fuzzy-if(Android,0-4,0-2) fuzzy-if(swgl,0-1,0-35) == combobox-page-break-inside.html combobox-page-break-inside-ref.html
-fuzzy-if(OSX,23-23,1-1) == table-nested-1308876-1.xhtml table-nested-1308876-1-ref.html
+pref(layout.display-list.improve-fragmentation,false) fuzzy-if(OSX,23-23,1-1) == table-nested-1308876-1.xhtml table-nested-1308876-1-ref.html # bug 1681063
 == contain-size-break-001.html contain-size-break-001-ref.html
 == contain-size-break-002.html contain-size-break-002-ref.html
 == contain-size-break-003.html contain-size-break-003-ref.html
