@@ -1180,6 +1180,8 @@ class DatabaseConnection final {
 #endif
   };
 
+  class LazyStatement;
+
  private:
   InitializedOnce<const NotNull<nsCOMPtr<mozIStorageConnection>>>
       mStorageConnection;
@@ -1366,6 +1368,31 @@ class DatabaseConnection::CachedStatement final {
   // No funny business allowed.
   CachedStatement(const CachedStatement&) = delete;
   CachedStatement& operator=(const CachedStatement&) = delete;
+};
+
+class DatabaseConnection::LazyStatement final {
+ public:
+  LazyStatement(DatabaseConnection& aConnection, const nsACString& aQueryString)
+      : mConnection{aConnection}, mQueryString{aQueryString} {}
+
+  Result<DatabaseConnection::BorrowedStatement, nsresult> Borrow() {
+    if (!mCachedStatement) {
+      IDB_TRY(Initialize());
+    }
+
+    return mCachedStatement.Borrow();
+  }
+
+ private:
+  Result<Ok, nsresult> Initialize() {
+    IDB_TRY_UNWRAP(mCachedStatement,
+                   mConnection.GetCachedStatement(mQueryString));
+    return Ok{};
+  }
+
+  DatabaseConnection& mConnection;
+  const nsCString mQueryString;
+  DatabaseConnection::CachedStatement mCachedStatement;
 };
 
 class DatabaseConnection::UpdateRefcountFunction final
@@ -7712,24 +7739,27 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
   AUTO_PROFILER_LABEL("DatabaseConnection::UpdateRefcountFunction::WillCommit",
                       DOM);
 
+  // The parameter names are not used, parameters are bound by index
+  // only locally in the same function.
   auto update =
-      [updateStatement = CachedStatement{}, selectStatement = CachedStatement{},
-       insertStatement = CachedStatement{},
+      [updateStatement = LazyStatement{*mConnection,
+                                       "UPDATE file "
+                                       "SET refcount = refcount + :delta "
+                                       "WHERE id = :id"_ns},
+       selectStatement = LazyStatement{*mConnection,
+                                       "SELECT id "
+                                       "FROM file "
+                                       "WHERE id = :id"_ns},
+       insertStatement =
+           LazyStatement{
+               *mConnection,
+               "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns},
        this](int64_t aId, int32_t aDelta) mutable -> Result<Ok, nsresult> {
     AUTO_PROFILER_LABEL(
         "DatabaseConnection::UpdateRefcountFunction::WillCommit::Update", DOM);
-
-    if (!updateStatement) {
-      // The parameter names are not used, parameters are bound by index
-      // only locally in the same function.
-      IDB_TRY_UNWRAP(updateStatement, mConnection->GetCachedStatement(
-                                          "UPDATE file "
-                                          "SET refcount = refcount + :delta "
-                                          "WHERE id = :id"_ns));
-    }
-
     {
-      const auto borrowedUpdateStatement = updateStatement.Borrow();
+      IDB_TRY_INSPECT(const auto& borrowedUpdateStatement,
+                      updateStatement.Borrow());
 
       IDB_TRY(borrowedUpdateStatement->BindInt32ByIndex(0, aDelta));
       IDB_TRY(borrowedUpdateStatement->BindInt64ByIndex(1, aId));
@@ -7742,16 +7772,8 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
                              GetAffectedRows));
 
     if (rows > 0) {
-      if (!selectStatement) {
-        // The parameter names are not used, parameters are bound by index
-        // only locally in the same function.
-        IDB_TRY_UNWRAP(selectStatement,
-                       mConnection->GetCachedStatement("SELECT id "
-                                                       "FROM file "
-                                                       "WHERE id = :id"_ns));
-      }
-
-      const auto borrowedSelectStatement = selectStatement.Borrow();
+      IDB_TRY_INSPECT(const auto& borrowedSelectStatement,
+                      selectStatement.Borrow());
 
       IDB_TRY(borrowedSelectStatement->BindInt64ByIndex(0, aId));
 
@@ -7768,16 +7790,8 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
       return Ok{};
     }
 
-    if (!insertStatement) {
-      // The parameter names are not used, parameters are bound by index
-      // only locally in the same function.
-      IDB_TRY_UNWRAP(
-          insertStatement,
-          mConnection->GetCachedStatement(
-              "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns));
-    }
-
-    const auto borrowedInsertStatement = insertStatement.Borrow();
+    IDB_TRY_INSPECT(const auto& borrowedInsertStatement,
+                    insertStatement.Borrow());
 
     IDB_TRY(borrowedInsertStatement->BindInt64ByIndex(0, aId));
     IDB_TRY(borrowedInsertStatement->BindInt32ByIndex(1, aDelta));
@@ -14869,39 +14883,31 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     return NS_OK;
   }
 
-  DatabaseConnection::CachedStatement insertUniqueStmt;
-  DatabaseConnection::CachedStatement insertStmt;
+  auto insertUniqueStmt = DatabaseConnection::LazyStatement{
+      *aConnection,
+      "INSERT INTO unique_index_data "
+      "(index_id, value, object_store_id, "
+      "object_data_key, value_locale) "
+      "VALUES (:"_ns +
+          kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue + ", :"_ns +
+          kStmtParamNameObjectStoreId + ", :"_ns + kStmtParamNameObjectDataKey +
+          ", :"_ns + kStmtParamNameValueLocale + ");"_ns};
+  auto insertStmt = DatabaseConnection::LazyStatement{
+      *aConnection,
+      "INSERT OR IGNORE INTO index_data "
+      "(index_id, value, object_data_key, "
+      "object_store_id, value_locale) "
+      "VALUES (:"_ns +
+          kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue + ", :"_ns +
+          kStmtParamNameObjectDataKey + ", :"_ns + kStmtParamNameObjectStoreId +
+          ", :"_ns + kStmtParamNameValueLocale + ");"_ns};
 
   for (uint32_t index = 0; index < count; index++) {
     const IndexDataValue& info = aIndexValues[index];
 
-    DatabaseConnection::CachedStatement& stmt =
-        info.mUnique ? insertUniqueStmt : insertStmt;
+    auto& stmt = info.mUnique ? insertUniqueStmt : insertStmt;
 
-    if (!stmt) {
-      IDB_TRY_UNWRAP(
-          stmt,
-          aConnection->GetCachedStatement(
-              info.mUnique
-                  ? "INSERT INTO unique_index_data "
-                    "(index_id, value, object_store_id, "
-                    "object_data_key, value_locale) "
-                    "VALUES (:"_ns +
-                        kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
-                        ", :"_ns + kStmtParamNameObjectStoreId + ", :"_ns +
-                        kStmtParamNameObjectDataKey + ", :"_ns +
-                        kStmtParamNameValueLocale + ");"_ns
-                  : "INSERT OR IGNORE INTO index_data "
-                    "(index_id, value, object_data_key, "
-                    "object_store_id, value_locale) "
-                    "VALUES (:"_ns +
-                        kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
-                        ", :"_ns + kStmtParamNameObjectDataKey + ", :"_ns +
-                        kStmtParamNameObjectStoreId + ", :"_ns +
-                        kStmtParamNameValueLocale + ");"_ns));
-    }
-
-    const auto borrowedStmt = stmt.Borrow();
+    IDB_TRY_INSPECT(const auto& borrowedStmt, stmt.Borrow());
 
     IDB_TRY(
         borrowedStmt->BindInt64ByName(kStmtParamNameIndexId, info.mIndexId));
@@ -14957,30 +14963,22 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
     return NS_OK;
   }
 
-  DatabaseConnection::CachedStatement deleteUniqueStmt;
-  DatabaseConnection::CachedStatement deleteStmt;
+  auto deleteUniqueStmt = DatabaseConnection::LazyStatement{
+      *aConnection, "DELETE FROM unique_index_data WHERE index_id = :"_ns +
+                        kStmtParamNameIndexId + " AND value = :"_ns +
+                        kStmtParamNameValue + ";"_ns};
+  auto deleteStmt = DatabaseConnection::LazyStatement{
+      *aConnection, "DELETE FROM index_data WHERE index_id = :"_ns +
+                        kStmtParamNameIndexId + " AND value = :"_ns +
+                        kStmtParamNameValue + " AND object_data_key = :"_ns +
+                        kStmtParamNameObjectDataKey + ";"_ns};
 
   for (uint32_t index = 0; index < count; index++) {
     const IndexDataValue& indexValue = aIndexValues[index];
 
-    DatabaseConnection::CachedStatement& stmt =
-        indexValue.mUnique ? deleteUniqueStmt : deleteStmt;
+    auto& stmt = indexValue.mUnique ? deleteUniqueStmt : deleteStmt;
 
-    if (!stmt) {
-      IDB_TRY_UNWRAP(
-          stmt,
-          aConnection->GetCachedStatement(
-              indexValue.mUnique
-                  ? "DELETE FROM unique_index_data WHERE index_id = :"_ns +
-                        kStmtParamNameIndexId + " AND value = :"_ns +
-                        kStmtParamNameValue + ";"_ns
-                  : "DELETE FROM index_data WHERE index_id = :"_ns +
-                        kStmtParamNameIndexId + " AND value = :"_ns +
-                        kStmtParamNameValue + " AND object_data_key = :"_ns +
-                        kStmtParamNameObjectDataKey + ";"_ns));
-    }
-
-    const auto borrowedStmt = stmt.Borrow();
+    IDB_TRY_INSPECT(const auto& borrowedStmt, stmt.Borrow());
 
     IDB_TRY(borrowedStmt->BindInt64ByName(kStmtParamNameIndexId,
                                           indexValue.mIndexId));
@@ -15070,8 +15068,13 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       *selectStmt,
       [singleRowOnly, aObjectStoreId, &objectStoreKey, &aConnection,
        &resultCountDEBUG, indexValues = IndexDataValuesAutoArray{},
-       deleteStmt = DatabaseConnection::CachedStatement{}](
-          auto& selectStmt) mutable -> Result<Ok, nsresult> {
+       deleteStmt = DatabaseConnection::LazyStatement{
+           *aConnection,
+           "DELETE FROM object_data "
+           "WHERE object_store_id = :"_ns +
+               kStmtParamNameObjectStoreId + " AND key = :"_ns +
+               kStmtParamNameKey +
+               ";"_ns}](auto& selectStmt) mutable -> Result<Ok, nsresult> {
         if (!singleRowOnly) {
           IDB_TRY(objectStoreKey.SetFromStatement(&selectStmt, 1));
 
@@ -15082,16 +15085,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
         IDB_TRY(
             DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues));
 
-        if (!deleteStmt) {
-          IDB_TRY_UNWRAP(deleteStmt,
-                         aConnection->GetCachedStatement(
-                             "DELETE FROM object_data "
-                             "WHERE object_store_id = :"_ns +
-                             kStmtParamNameObjectStoreId + " AND key = :"_ns +
-                             kStmtParamNameKey + ";"_ns));
-        }
-
-        const auto borrowedDeleteStmt = deleteStmt.Borrow();
+        IDB_TRY_INSPECT(const auto& borrowedDeleteStmt, deleteStmt.Borrow());
 
         IDB_TRY(borrowedDeleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
                                                     aObjectStoreId));
@@ -18037,24 +18031,20 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
         mTransaction->GetDatabase().GetConnection();
     MOZ_ASSERT(connection);
 
-    DatabaseConnection::CachedStatement stmt;
+    // The parameter names are not used, parameters are bound by index only
+    // locally in the same function.
+    auto stmt = DatabaseConnection::LazyStatement(
+        *connection,
+        "UPDATE object_store "
+        "SET auto_increment = :auto_increment WHERE id "
+        "= :object_store_id;"_ns);
     nsresult rv;
 
     for (const auto& metadata : metadataArray) {
       MOZ_ASSERT(!metadata->mDeleted);
       MOZ_ASSERT(metadata->mNextAutoIncrementId > 1);
 
-      if (!stmt) {
-        // The parameter names are not used, parameters are bound by index only
-        // locally in the same function.
-        IDB_TRY_UNWRAP(stmt,
-                       connection->GetCachedStatement(
-                           "UPDATE object_store "
-                           "SET auto_increment = :auto_increment WHERE id "
-                           "= :object_store_id;"_ns));
-      }
-
-      const auto borrowedStmt = stmt.Borrow();
+      IDB_TRY_INSPECT(const auto& borrowedStmt, stmt.Borrow());
 
       rv = borrowedStmt->BindInt64ByIndex(1, metadata->mCommonMetadata.id());
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -19283,8 +19273,19 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   IDB_TRY(CollectWhileHasResult(
       *selectStmt,
       [this, &aConnection, &lastObjectStoreKey, &lastIndexValues,
-       deleteIndexRowStmt = DatabaseConnection::CachedStatement{},
-       nullIndexDataValuesStmt = DatabaseConnection::CachedStatement{}](
+       deleteIndexRowStmt =
+           DatabaseConnection::LazyStatement{
+               *aConnection,
+               mUnique
+                   ? "DELETE FROM unique_index_data "
+                     "WHERE index_id = :"_ns +
+                         kStmtParamNameIndexId + " AND value = :"_ns +
+                         kStmtParamNameValue + ";"_ns
+                   : "DELETE FROM index_data "
+                     "WHERE index_id = :"_ns +
+                         kStmtParamNameIndexId + " AND value = :"_ns +
+                         kStmtParamNameValue + " AND object_data_key = :"_ns +
+                         kStmtParamNameObjectDataKey + ";"_ns}](
           auto& selectStmt) mutable -> Result<Ok, nsresult> {
         // We always need the index key to delete the index row.
         Key indexKey;
@@ -19331,24 +19332,9 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
         }
 
         // Now delete the index row.
-        if (!deleteIndexRowStmt) {
-          IDB_TRY_UNWRAP(
-              deleteIndexRowStmt,
-              aConnection->GetCachedStatement(
-                  mUnique ? "DELETE FROM unique_index_data "
-                            "WHERE index_id = :"_ns +
-                                kStmtParamNameIndexId + " AND value = :"_ns +
-                                kStmtParamNameValue + ";"_ns
-                          : "DELETE FROM index_data "
-                            "WHERE index_id = :"_ns +
-                                kStmtParamNameIndexId + " AND value = :"_ns +
-                                kStmtParamNameValue +
-                                " AND object_data_key = :"_ns +
-                                kStmtParamNameObjectDataKey + ";"_ns));
-        }
-
         {
-          const auto borrowedDeleteIndexRowStmt = deleteIndexRowStmt.Borrow();
+          IDB_TRY_INSPECT(const auto& borrowedDeleteIndexRowStmt,
+                          deleteIndexRowStmt.Borrow());
 
           IDB_TRY(borrowedDeleteIndexRowStmt->BindInt64ByName(
               kStmtParamNameIndexId, mIndexId));
