@@ -151,6 +151,8 @@ JS::Zone::Zone(JSRuntime* rt)
       tenuredStrings(this, 0),
       tenuredBigInts(this, 0),
       nurseryAllocatedStrings(this, 0),
+      markedStrings(this, 0),
+      finalizedStrings(this, 0),
       allocNurseryStrings(this, true),
       allocNurseryBigInts(this, true),
       suppressAllocationMetadataBuilder(this, false),

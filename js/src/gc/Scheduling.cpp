@@ -64,6 +64,8 @@ GCSchedulingTunables::GCSchedulingTunables()
       pretenureThreshold_(TuningDefaults::PretenureThreshold),
       pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold),
       pretenureStringThreshold_(TuningDefaults::PretenureStringThreshold),
+      stopPretenureStringThreshold_(
+          TuningDefaults::StopPretenureStringThreshold),
       minLastDitchGCPeriod_(
           TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod)),
       mallocThresholdBase_(TuningDefaults::MallocThresholdBase),
@@ -199,6 +201,12 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
         return false;
       }
       pretenureStringThreshold_ = value / 100.0;
+      break;
+    case JSGC_STOP_PRETENURE_STRING_THRESHOLD:
+      if (value == 0 || value > 100) {
+        return false;
+      }
+      stopPretenureStringThreshold_ = value / 100.0;
       break;
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
       minLastDitchGCPeriod_ = TimeDuration::FromSeconds(value);

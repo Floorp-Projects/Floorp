@@ -466,7 +466,7 @@ inline size_t Arena::finalize(JSFreeOp* fop, AllocKind thingKind,
 
   FreeSpan newListHead;
   FreeSpan* newListTail = &newListHead;
-  size_t nmarked = 0;
+  size_t nmarked = 0, nfinalized = 0;
 
   for (ArenaCellIterUnderFinalize cell(this); !cell.done(); cell.next()) {
     T* t = cell.as<T>();
@@ -486,7 +486,14 @@ inline size_t Arena::finalize(JSFreeOp* fop, AllocKind thingKind,
       AlwaysPoison(t, JS_SWEPT_TENURED_PATTERN, thingSize,
                    MemCheckKind::MakeUndefined);
       gcprobes::TenuredFinalize(t);
+      nfinalized++;
     }
+  }
+
+  if (thingKind == AllocKind::STRING ||
+      thingKind == AllocKind::FAT_INLINE_STRING) {
+    zone->markedStrings += nmarked;
+    zone->finalizedStrings += nfinalized;
   }
 
   if (nmarked == 0) {
@@ -1527,6 +1534,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return tunables.pretenureGroupThreshold();
     case JSGC_PRETENURE_STRING_THRESHOLD:
       return uint32_t(tunables.pretenureStringThreshold() * 100);
+    case JSGC_STOP_PRETENURE_STRING_THRESHOLD:
+      return uint32_t(tunables.stopPretenureStringThreshold() * 100);
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
       return tunables.minLastDitchGCPeriod().ToSeconds();
     case JSGC_ZONE_ALLOC_DELAY_KB:
@@ -4093,6 +4102,9 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->arenas.clearFreeLists();
     zone->arenas.checkGCStateNotInUse();
+
+    zone->markedStrings = 0;
+    zone->finalizedStrings = 0;
   }
 
   marker.start();
@@ -6314,6 +6326,8 @@ void GCRuntime::finishCollection() {
   schedulingState.updateHighFrequencyMode(lastGCEndTime_, currentTime,
                                           tunables);
 
+  maybeStopStringPretenuring();
+
   {
     AutoLockGC lock(this);
 
@@ -6343,6 +6357,35 @@ void GCRuntime::finishCollection() {
 #endif
 
   lastGCEndTime_ = currentTime;
+}
+
+void GCRuntime::maybeStopStringPretenuring() {
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+    if (zone->allocNurseryStrings) {
+      continue;
+    }
+
+    // Count the number of strings before the major GC.
+    size_t numStrings = zone->markedStrings + zone->finalizedStrings;
+    double rate = double(zone->finalizedStrings) / double(numStrings);
+    if (rate > tunables.stopPretenureStringThreshold()) {
+      CancelOffThreadIonCompile(zone);
+      bool preserving = zone->isPreservingCode();
+      zone->setPreservingCode(false);
+      zone->discardJitCode(rt->defaultFreeOp());
+      zone->setPreservingCode(preserving);
+      for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
+        if (jit::JitRealm* jitRealm = r->jitRealm()) {
+          jitRealm->discardStubs();
+          jitRealm->setStringsCanBeInNursery(true);
+        }
+      }
+
+      zone->markedStrings = 0;
+      zone->finalizedStrings = 0;
+      zone->allocNurseryStrings = true;
+    }
+  }
 }
 
 void GCRuntime::updateGCThresholdsAfterCollection(const AutoLockGC& lock) {
