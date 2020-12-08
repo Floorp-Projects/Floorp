@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchTelemetryChild", "ADLINK_CHECK_TIMEOUT_MS"];
+var EXPORTED_SYMBOLS = ["SearchSERPTelemetryChild", "ADLINK_CHECK_TIMEOUT_MS"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -95,7 +95,7 @@ const searchProviders = new SearchProviders();
  * page are returned to SearchTelemetry. If no ads are found, no notification is
  * given.
  */
-class SearchTelemetryChild extends JSWindowActorChild {
+class SearchSERPTelemetryChild extends JSWindowActorChild {
   /**
    * Determines if there is a provider that matches the supplied URL and returns
    * the information associated with that provider.

@@ -3,18 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchTelemetryParent"];
+var EXPORTED_SYMBOLS = ["SearchSERPTelemetryParent"];
 
 ChromeUtils.defineModuleGetter(
   this,
-  "SearchTelemetry",
-  "resource:///modules/SearchTelemetry.jsm"
+  "SearchSERPTelemetry",
+  "resource:///modules/SearchSERPTelemetry.jsm"
 );
 
-class SearchTelemetryParent extends JSWindowActorParent {
+class SearchSERPTelemetryParent extends JSWindowActorParent {
   receiveMessage(msg) {
     if (msg.name == "SearchTelemetry:PageInfo") {
-      SearchTelemetry.reportPageWithAds(msg.data);
+      SearchSERPTelemetry.reportPageWithAds(msg.data);
     }
   }
 }

@@ -21,7 +21,6 @@ const SUGGEST_PREF = "browser.search.suggest.enabled";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
   UrlbarProviderTabToSearch:
     "resource:///modules/UrlbarProviderTabToSearch.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",

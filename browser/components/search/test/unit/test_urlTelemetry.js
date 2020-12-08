@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
+  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
@@ -185,7 +185,7 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
     ),
     loadUsingSystemPrincipal: true,
   });
-  SearchTelemetry._contentHandler.observeActivity(
+  SearchSERPTelemetry._contentHandler.observeActivity(
     channel,
     Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION,
     Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
@@ -212,7 +212,7 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
 
 add_task(async function setup() {
   Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
-  await SearchTelemetry.init();
+  await SearchSERPTelemetry.init();
   sinon.stub(BrowserSearchTelemetry, "shouldRecordSearchCount").returns(true);
 });
 
@@ -222,7 +222,7 @@ add_task(async function test_parsing_search_urls() {
     if (test.setUp) {
       test.setUp();
     }
-    SearchTelemetry.updateTrackingStatus(
+    SearchSERPTelemetry.updateTrackingStatus(
       {
         getTabBrowser: () => {},
       },

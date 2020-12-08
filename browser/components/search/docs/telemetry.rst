@@ -15,6 +15,8 @@ page.
 Search probes relevant to front-end searches
 --------------------------------------------
 
+The following probes are all handled by `SearchSERPTelemetry.jsm and the associated parent/child actors`_.
+
 Definitions:
 
   * ``organic`` is a search that a user performs by visiting a search engine
@@ -40,3 +42,4 @@ browser.search.ad_clicks
   ``<provider>:<sap|organic>``.
 
 .. _address bar telemetry: /browser/urlbar/telemetry.html
+.. _SearchSERPTelemetry.jsm and the associated parent/child actors: https://searchfox.org/mozilla-central/search?q=&path=SearchSERPTelemetry*.jsm&case=false&regexp=false
