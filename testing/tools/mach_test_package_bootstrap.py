@@ -90,7 +90,7 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     text_type = str
 else:
-    text_type = unicode  # noqa
+    text_type = unicode  # noqa pylint: disable=W1612
 
 
 def ancestors(path, depth=0):
