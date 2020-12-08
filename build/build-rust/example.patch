@@ -1,0 +1,12 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 2a4c42ea0a4..c94b24e9cb1 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -1,5 +1,7 @@
+ # Contributing to Rust
+ 
++Hello this is a harmless little example patch!
++
+ Thank you for your interest in contributing to Rust!
+ 
+ To get started, read the [Getting Started] guide in the [rustc-dev-guide].
