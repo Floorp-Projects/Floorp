@@ -2063,11 +2063,13 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       // invalidate the script. Otherwise, the next time we reach this
       // point, we will invalidate the script and disable LICM.
       MOZ_ASSERT(!outerScript->hadLICMInvalidation());
-      if (outerScript->ionScript()->hadLICMBailout()) {
-        outerScript->setHadLICMInvalidation();
-        InvalidateAfterBailout(cx, outerScript, "LICM failure");
-      } else {
-        outerScript->ionScript()->setHadLICMBailout();
+      if (outerScript->hasIonScript()) {
+        if (outerScript->ionScript()->hadLICMBailout()) {
+          outerScript->setHadLICMInvalidation();
+          InvalidateAfterBailout(cx, outerScript, "LICM failure");
+        } else {
+          outerScript->ionScript()->setHadLICMBailout();
+        }
       }
       break;
 
