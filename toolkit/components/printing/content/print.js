@@ -20,7 +20,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/DeferredTask.jsm"
 );
 
-const INPUT_DELAY_MS = 500;
+const INPUT_DELAY_MS = Cu.isInAutomation ? 100 : 500;
 const MM_PER_POINT = 25.4 / 72;
 const INCHES_PER_POINT = 1 / 72;
 const ourBrowser = window.docShell.chromeEventHandler;
