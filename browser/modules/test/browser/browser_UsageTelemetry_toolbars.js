@@ -25,9 +25,10 @@ function leaveCustomizationMode(win = window) {
 }
 
 Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
-registerCleanupFunction(() =>
-  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck")
-);
+registerCleanupFunction(() => {
+  CustomizableUI.reset();
+  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
+});
 
 // Stolen from browser/components/customizableui/tests/browser/head.js
 function simulateItemDrag(aToDrag, aTarget, aEvent = {}, aOffset = 2) {
