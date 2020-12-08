@@ -14,6 +14,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
+#include "jit/MacroAssembler.h"  // js::jit::Assembler::GetPointer
 #include "jit/SafepointIndex.h"
 #include "jit/Safepoints.h"
 #include "jit/ScriptFromCalleeToken.h"

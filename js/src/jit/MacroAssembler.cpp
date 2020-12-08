@@ -29,6 +29,7 @@
 #include "jit/MIR.h"
 #include "jit/MoveEmitter.h"
 #include "jit/SharedICHelpers.h"
+#include "jit/SharedICRegisters.h"
 #include "jit/Simulator.h"
 #include "js/Conversions.h"
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration

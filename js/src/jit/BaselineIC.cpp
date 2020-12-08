@@ -34,6 +34,7 @@
 #  include "jit/PerfSpewer.h"
 #endif
 #include "jit/SharedICHelpers.h"
+#include "jit/SharedICRegisters.h"
 #include "jit/VMFunctions.h"
 #include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
@@ -70,9 +71,17 @@ namespace jit {
 
 // Class used to emit all Baseline IC fallback code when initializing the
 // JitRuntime.
-class MOZ_RAII FallbackICCodeCompiler final : public ICStubCompilerBase {
+class MOZ_RAII FallbackICCodeCompiler final {
   BaselineICFallbackCode& code;
   MacroAssembler& masm;
+
+  JSContext* cx;
+  bool inStubFrame_ = false;
+
+#ifdef DEBUG
+  bool entersStubFrame_ = false;
+  uint32_t framePushedAtEnterStubFrame_ = 0;
+#endif
 
   MOZ_MUST_USE bool emitCall(bool isSpread, bool isConstructing);
   MOZ_MUST_USE bool emitGetElem(bool hasReceiver);
@@ -81,12 +90,81 @@ class MOZ_RAII FallbackICCodeCompiler final : public ICStubCompilerBase {
  public:
   FallbackICCodeCompiler(JSContext* cx, BaselineICFallbackCode& code,
                          MacroAssembler& masm)
-      : ICStubCompilerBase(cx), code(code), masm(masm) {}
+      : code(code), masm(masm), cx(cx) {}
 
 #define DEF_METHOD(kind) MOZ_MUST_USE bool emit_##kind();
   IC_BASELINE_FALLBACK_CODE_KIND_LIST(DEF_METHOD)
 #undef DEF_METHOD
+
+  void pushCallArguments(MacroAssembler& masm,
+                         AllocatableGeneralRegisterSet regs, Register argcReg,
+                         bool isConstructing);
+
+  // Push a payload specialized per compiler needed to execute stubs.
+  void PushStubPayload(MacroAssembler& masm, Register scratch);
+  void pushStubPayload(MacroAssembler& masm, Register scratch);
+
+  // Emits a tail call to a VMFunction wrapper.
+  MOZ_MUST_USE bool tailCallVMInternal(MacroAssembler& masm,
+                                       TailCallVMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  MOZ_MUST_USE bool tailCallVM(MacroAssembler& masm);
+
+  // Emits a normal (non-tail) call to a VMFunction wrapper.
+  MOZ_MUST_USE bool callVMInternal(MacroAssembler& masm, VMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  MOZ_MUST_USE bool callVM(MacroAssembler& masm);
+
+  // A stub frame is used when a stub wants to call into the VM without
+  // performing a tail call. This is required for the return address
+  // to pc mapping to work.
+  void enterStubFrame(MacroAssembler& masm, Register scratch);
+  void assumeStubFrame();
+  void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
 };
+
+AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs) {
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+#if defined(JS_CODEGEN_ARM)
+  MOZ_ASSERT(!regs.has(BaselineStackReg));
+  MOZ_ASSERT(!regs.has(ICTailCallReg));
+  regs.take(BaselineSecondScratchReg);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  MOZ_ASSERT(!regs.has(BaselineStackReg));
+  MOZ_ASSERT(!regs.has(ICTailCallReg));
+  MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
+#elif defined(JS_CODEGEN_ARM64)
+  MOZ_ASSERT(!regs.has(PseudoStackPointer));
+  MOZ_ASSERT(!regs.has(RealStackPointer));
+  MOZ_ASSERT(!regs.has(ICTailCallReg));
+#else
+  MOZ_ASSERT(!regs.has(BaselineStackReg));
+#endif
+  regs.take(BaselineFrameReg);
+  regs.take(ICStubReg);
+#ifdef JS_CODEGEN_X64
+  regs.take(ExtractTemp0);
+  regs.take(ExtractTemp1);
+#endif
+
+  switch (numInputs) {
+    case 0:
+      break;
+    case 1:
+      regs.take(R0);
+      break;
+    case 2:
+      regs.take(R0);
+      regs.take(R1);
+      break;
+    default:
+      MOZ_CRASH("Invalid numInputs");
+  }
+
+  return regs;
+}
 
 #ifdef JS_JITSPEW
 void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...) {
@@ -711,8 +789,8 @@ static void InitMacroAssemblerForICStub(StackMacroAssembler& masm) {
 #endif
 }
 
-bool ICStubCompilerBase::tailCallVMInternal(MacroAssembler& masm,
-                                            TailCallVMFunctionId id) {
+bool FallbackICCodeCompiler::tailCallVMInternal(MacroAssembler& masm,
+                                                TailCallVMFunctionId id) {
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
   MOZ_ASSERT(fun.expectTailCall == TailCall);
@@ -721,7 +799,8 @@ bool ICStubCompilerBase::tailCallVMInternal(MacroAssembler& masm,
   return true;
 }
 
-bool ICStubCompilerBase::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
+bool FallbackICCodeCompiler::callVMInternal(MacroAssembler& masm,
+                                            VMFunctionId id) {
   MOZ_ASSERT(inStubFrame_);
 
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
@@ -732,19 +811,19 @@ bool ICStubCompilerBase::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
 }
 
 template <typename Fn, Fn fn>
-bool ICStubCompilerBase::callVM(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
   return callVMInternal(masm, id);
 }
 
 template <typename Fn, Fn fn>
-bool ICStubCompilerBase::tailCallVM(MacroAssembler& masm) {
+bool FallbackICCodeCompiler::tailCallVM(MacroAssembler& masm) {
   TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
   return tailCallVMInternal(masm, id);
 }
 
-void ICStubCompilerBase::enterStubFrame(MacroAssembler& masm,
-                                        Register scratch) {
+void FallbackICCodeCompiler::enterStubFrame(MacroAssembler& masm,
+                                            Register scratch) {
   EmitBaselineEnterStubFrame(masm, scratch);
 #ifdef DEBUG
   framePushedAtEnterStubFrame_ = masm.framePushed();
@@ -758,7 +837,7 @@ void ICStubCompilerBase::enterStubFrame(MacroAssembler& masm,
 #endif
 }
 
-void ICStubCompilerBase::assumeStubFrame() {
+void FallbackICCodeCompiler::assumeStubFrame() {
   MOZ_ASSERT(!inStubFrame_);
   inStubFrame_ = true;
 
@@ -771,8 +850,8 @@ void ICStubCompilerBase::assumeStubFrame() {
 #endif
 }
 
-void ICStubCompilerBase::leaveStubFrame(MacroAssembler& masm,
-                                        bool calledIntoIon) {
+void FallbackICCodeCompiler::leaveStubFrame(MacroAssembler& masm,
+                                            bool calledIntoIon) {
   MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
   inStubFrame_ = false;
 
@@ -785,8 +864,8 @@ void ICStubCompilerBase::leaveStubFrame(MacroAssembler& masm,
   EmitBaselineLeaveStubFrame(masm, calledIntoIon);
 }
 
-void ICStubCompilerBase::pushStubPayload(MacroAssembler& masm,
-                                         Register scratch) {
+void FallbackICCodeCompiler::pushStubPayload(MacroAssembler& masm,
+                                             Register scratch) {
   if (inStubFrame_) {
     masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
     masm.pushBaselineFramePtr(scratch, scratch);
@@ -795,8 +874,8 @@ void ICStubCompilerBase::pushStubPayload(MacroAssembler& masm,
   }
 }
 
-void ICStubCompilerBase::PushStubPayload(MacroAssembler& masm,
-                                         Register scratch) {
+void FallbackICCodeCompiler::PushStubPayload(MacroAssembler& masm,
+                                             Register scratch) {
   pushStubPayload(masm, scratch);
   masm.adjustFrame(sizeof(intptr_t));
 }
@@ -2011,10 +2090,9 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
                              res);
 }
 
-void ICStubCompilerBase::pushCallArguments(MacroAssembler& masm,
-                                           AllocatableGeneralRegisterSet regs,
-                                           Register argcReg,
-                                           bool isConstructing) {
+void FallbackICCodeCompiler::pushCallArguments(
+    MacroAssembler& masm, AllocatableGeneralRegisterSet regs, Register argcReg,
+    bool isConstructing) {
   MOZ_ASSERT(!regs.has(argcReg));
 
   // argPtr initially points to the last argument.
@@ -2060,7 +2138,7 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
   // right-to-left so duplicate them on the stack in reverse order.
   // |this| and callee are pushed last.
 
-  AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
+  AllocatableGeneralRegisterSet regs = BaselineICAvailableGeneralRegs(0);
 
   if (MOZ_UNLIKELY(isSpread)) {
     // Push a stub frame so that we can perform a non-tail call.
