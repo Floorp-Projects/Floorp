@@ -80,6 +80,15 @@ class nsSharedPageData {
   // frames that overflowed.  It's 1.0 if none overflowed horizontally.
   float mShrinkToFitRatio = 1.0f;
 
+  // These are only used if PagesPerSheetInfo()->mNumPages > 1.  They're
+  // initialized with reasonable defaults here (which correspond to what we do
+  // for the regular 1-page-per-sheet scenario, though we don't actually use
+  // these members in that case).  If we're in >1 pages-per-sheet scenario,
+  // then these members will be assigned "real" values during the reflow of the
+  // first PrintedSheetFrame.
+  float mPagesPerSheetScale = 1.0f;
+  nsPoint mPagesPerSheetGridOrigin;
+
   // Lazy getter, to look up our pages-per-sheet info based on mPrintSettings
   // (if it's available).  The result is stored in our mPagesPerSheetInfo
   // member-var to speed up subsequent lookups.
