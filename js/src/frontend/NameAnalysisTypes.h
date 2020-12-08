@@ -7,11 +7,18 @@
 #ifndef frontend_NameAnalysisTypes_h
 #define frontend_NameAnalysisTypes_h
 
+#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_CRASH
+#include "mozilla/Casting.h"     // mozilla::AssertedCast
+
+#include <stdint.h>  // uint8_t, uint16_t, uint32_t
 #include <type_traits>
 
-#include "frontend/ParserAtom.h"
-#include "vm/BytecodeUtil.h"
-#include "vm/Scope.h"
+#include "frontend/ParserAtom.h"     // ParserAtom
+#include "js/AllocPolicy.h"          // SystemAllocPolicy
+#include "js/Vector.h"               // Vector
+#include "vm/BindingKind.h"          // BindingKind, BindingLocation
+#include "vm/BytecodeFormatFlags.h"  // JOF_ENVCOORD
+#include "vm/BytecodeUtil.h"  // ENVCOORD_HOPS_BITS, ENVCOORD_SLOT_BITS, GET_ENVCOORD_HOPS, GET_ENVCOORD_SLOT, ENVCOORD_HOPS_LEN, JOF_OPTYPE, JSOp, LOCALNO_LIMIT
 
 namespace js {
 
