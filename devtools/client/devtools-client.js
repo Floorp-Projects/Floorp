@@ -344,9 +344,6 @@ DevToolsClient.prototype = {
    *                     that is copied.  See stream-utils.js.
    */
   startBulkRequest(request) {
-    if (!this.traits.bulk) {
-      throw Error("Server doesn't support bulk transfers");
-    }
     if (!this.mainRoot) {
       throw Error("Have not yet received a hello packet from the server.");
     }
