@@ -23,7 +23,7 @@ add_task(async function() {
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
 
-  await addTab(FISSION_TEST_URL);
+  const tab = await addTab(FISSION_TEST_URL);
 
   // Instantiate a worker in the parent process
   // eslint-disable-next-line no-unused-vars
@@ -100,4 +100,9 @@ add_task(async function() {
   await waitForAllTargetsToBeAttached(targetList);
 
   await client.close();
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // registrationPromise is set by the test page.
+    const registration = await content.wrappedJSObject.registrationPromise;
+    registration.unregister();
+  });
 });

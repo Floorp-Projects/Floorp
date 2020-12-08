@@ -12,10 +12,8 @@
 <script>
 "use strict";
 
-(async function () {
-  // Expose a reference to the registration so that tests can unregister it.
-  window.registration = await navigator.serviceWorker.register("test_sw_page_worker.js");
-})();
+// Expose a reference to the registration so that tests can unregister it.
+window.registrationPromise = navigator.serviceWorker.register("test_sw_page_worker.js");
 </script>
 </body>
 </html>

@@ -63,10 +63,10 @@ add_task(async function() {
   );
 
   info("Unregister the worker and wait until onDestroyed is called.");
-  SpecialPowers.spawn(tab.linkedBrowser, [], function() {
-    const win = content.wrappedJSObject;
-    // win.registration is set by the test page.
-    win.registration.unregister();
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // registrationPromise is set by the test page.
+    const registration = await content.wrappedJSObject.registrationPromise;
+    registration.unregister();
   });
   await waitUntil(() => targets.length === 0);
 
