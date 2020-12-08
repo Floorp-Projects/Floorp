@@ -1311,6 +1311,20 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readRefIsNull(&nothing));
       }
 #endif
+#ifdef ENABLE_WASM_EXCEPTIONS
+      case uint16_t(Op::Try):
+        CHECK(iter.readTry(&unusedType));
+      case uint16_t(Op::Catch): {
+        LabelKind unusedKind;
+        uint32_t unusedIndex;
+        CHECK(iter.readCatch(&unusedKind, &unusedIndex, &unusedType,
+                             &unusedType, &nothings));
+      }
+      case uint16_t(Op::Throw): {
+        uint32_t unusedIndex;
+        CHECK(iter.readThrow(&unusedIndex, &nothings));
+      }
+#endif
       case uint16_t(Op::ThreadPrefix): {
         if (env.sharedMemoryEnabled() == Shareable::False) {
           return iter.unrecognizedOpcode(&op);

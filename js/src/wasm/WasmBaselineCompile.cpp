@@ -8030,6 +8030,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitLoop();
   MOZ_MUST_USE bool emitIf();
   MOZ_MUST_USE bool emitElse();
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_MUST_USE bool emitTry();
+  MOZ_MUST_USE bool emitCatch();
+  MOZ_MUST_USE bool emitThrow();
+#endif
   MOZ_MUST_USE bool emitEnd();
   MOZ_MUST_USE bool emitBr();
   MOZ_MUST_USE bool emitBrIf();
@@ -9904,6 +9909,14 @@ bool BaseCompiler::emitEnd() {
     case LabelKind::Else:
       endIfThenElse(type);
       break;
+#ifdef ENABLE_WASM_EXCEPTIONS
+    case LabelKind::Try:
+      MOZ_CRASH("NYI");
+      break;
+    case LabelKind::Catch:
+      MOZ_CRASH("NYI");
+      break;
+#endif
   }
 
   iter_.popEnd();
@@ -10083,6 +10096,54 @@ bool BaseCompiler::emitBrTable() {
 
   return true;
 }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+bool BaseCompiler::emitTry() {
+  ResultType params;
+  if (!iter_.readTry(&params)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  MOZ_CRASH("NYI");
+}
+
+bool BaseCompiler::emitCatch() {
+  LabelKind kind;
+  uint32_t eventIndex;
+  ResultType paramType, resultType;
+  NothingVector unused_tryValues;
+
+  if (!iter_.readCatch(&kind, &eventIndex, &paramType, &resultType,
+                       &unused_tryValues)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  MOZ_CRASH("NYI");
+}
+
+bool BaseCompiler::emitThrow() {
+  uint32_t exnIndex;
+  NothingVector unused_argValues;
+
+  if (!iter_.readThrow(&exnIndex, &unused_argValues)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  MOZ_CRASH("NYI");
+}
+#endif
 
 bool BaseCompiler::emitDrop() {
   if (!iter_.readDrop()) {
@@ -14146,6 +14207,14 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitIf());
       case uint16_t(Op::Else):
         CHECK_NEXT(emitElse());
+#ifdef ENABLE_WASM_EXCEPTIONS
+      case uint16_t(Op::Try):
+        CHECK_NEXT(emitTry());
+      case uint16_t(Op::Catch):
+        CHECK_NEXT(emitCatch());
+      case uint16_t(Op::Throw):
+        CHECK_NEXT(emitThrow());
+#endif
       case uint16_t(Op::Br):
         CHECK_NEXT(emitBr());
       case uint16_t(Op::BrIf):
