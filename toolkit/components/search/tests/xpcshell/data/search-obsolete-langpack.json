@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "buildID": "20121106",
+  "locale": "en-US",
+  "metaData": {},
+  "engines": [
+    {
+      "_name": "engine1",
+      "_metaData": {
+        "alias": "testAlias"
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "engine2",
+      "_metaData": {
+        "alias": null,
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Langpack",
+      "_shortName": "langpack-ru",
+      "_loadPath": "jar:[app]/extensions/langpack-ru@firefox.mozilla.org.xpi!browser/langpack.xml",
+      "description": "Langpack search",
+      "__searchForm": null,
+      "_metaData": {},
+      "_urls": [
+        {
+          "template": "https://example.com/search",
+          "rels": [
+            "searchform"
+          ],
+          "resultDomain": "example.com",
+          "params": []
+        }
+      ],
+      "queryCharset": "UTF-8"
+    },
+    {
+      "_name": "Langpack1",
+      "_shortName": "langpack1-ru",
+      "_loadPath": "[app]/extensions/langpack-ru@firefox.mozilla.org.xpi!browser/langpack1.xml",
+      "description": "Langpack1 search",
+      "__searchForm": null,
+      "_metaData": {},
+      "_urls": [
+        {
+          "template": "https://example1.com/search",
+          "rels": [
+            "searchform"
+          ],
+          "resultDomain": "example1.com",
+          "params": []
+        }
+      ],
+      "queryCharset": "UTF-8"
+    },
+    {
+      "_name": "Langpack2",
+      "_shortName": "langpack2-ru",
+      "_loadPath": "jar:[profile]/extensions/langpack-ru@firefox.mozilla.org.xpi!browser/langpack2.xml",
+      "description": "Langpack2 search",
+      "__searchForm": null,
+      "_metaData": {},
+      "_urls": [
+        {
+          "template": "https://example2.com/search",
+          "rels": [
+            "searchform"
+          ],
+          "resultDomain": "example2.com",
+          "params": []
+        }
+      ],
+      "queryCharset": "UTF-8"
+    },
+    {
+      "_name": "Langpack3",
+      "_shortName": "langpack3-ru",
+      "_loadPath": "jar:[other]/langpack-ru@firefox.mozilla.org.xpi!browser/langpack3.xml",
+      "description": "Langpack3 search",
+      "__searchForm": null,
+      "_metaData": {},
+      "_urls": [
+        {
+          "template": "https://example3.com/search",
+          "rels": [
+            "searchform"
+          ],
+          "resultDomain": "example3.com",
+          "params": []
+        }
+      ],
+      "queryCharset": "UTF-8"
+    }
+  ]
+}
