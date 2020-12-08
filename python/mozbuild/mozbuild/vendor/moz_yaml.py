@@ -23,6 +23,7 @@ import voluptuous
 import yaml
 from voluptuous import (
     All,
+    Boolean,
     FqdnUrl,
     Length,
     Match,
@@ -106,6 +107,22 @@ origin:
   # this is the name of the file.
   # optional
   license-file: COPYING
+
+# Configuration for automatic updating system.
+# optional
+updatebot:
+
+  # Whether or not updating this library is enabled
+  # Valid values are 'true', 'false'
+  enabled: false
+
+  # TODO: allow multiple users to be specified
+  # Phabricator username for a maintainer of the library, used for assigning
+  # reviewers
+  maintainer_phab: tjr
+
+  # Bugzilla email address for a maintainer of the library, used for needinfos
+  maintainer_bz: tom@mozilla.com
 
 # Configuration for the automated vendoring system.
 # optional
@@ -323,6 +340,11 @@ def _schema_1():
                 "license-file": All(str, Length(min=1)),
                 Required("release"): All(str, Length(min=1)),
                 Required("revision"): Match(r"^[a-fA-F0-9]{12,40}$"),
+            },
+            "updatebot": {
+                Required("enabled"): Boolean(),
+                Required("maintainer-phab"): All(str, Length(min=1)),
+                Required("maintainer-bz"): All(str, Length(min=1)),
             },
             "vendoring": {
                 Required("url"): FqdnUrl(),
