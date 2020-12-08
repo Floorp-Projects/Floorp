@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Log;
 
-import java.lang.NumberFormatException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -110,31 +109,20 @@ public class ImageResource {
         }
 
         final String[] sizesStrs = sizesStr.toLowerCase().split(" ");
-        final List<Size> sizes = new ArrayList<Size>();
+        final Size[] sizes = new Size[sizesStrs.length];
 
-        for (final String sizeStr: sizesStrs) {
-            if (sizesStr.equals("any")) {
+        for (int i = 0; i < sizesStrs.length; ++i) {
+            if (sizesStrs[i].equals("any")) {
                 // 0-width size will always be favored.
-                sizes.add(new Size(0, 0));
+                sizes[i] = new Size(0, 0);
                 continue;
             }
-            final String[] widthHeight = sizeStr.split("x");
-            if (widthHeight.length != 2) {
-                // Not spec-compliant size.
-                continue;
-            }
-            try {
-                sizes.add(new Size(
-                        Integer.valueOf(widthHeight[0]),
-                        Integer.valueOf(widthHeight[1])));
-            } catch (final NumberFormatException e) {
-                Log.e(LOGTAG, "Invalid image resource size", e);
-            }
+            final String[] widthHeight = sizesStrs[i].split("x");
+            sizes[i] = new Size(
+                    Integer.valueOf(widthHeight[0]),
+                    Integer.valueOf(widthHeight[1]));
         }
-        if (sizes.isEmpty()) {
-            return null;
-        }
-        return sizes.toArray(new Size[0]);
+        return sizes;
     }
 
     public static @NonNull ImageResource fromBundle(
