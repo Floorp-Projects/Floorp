@@ -126,7 +126,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     this.traits = {
       networkMonitor: true,
-      bulk: true,
       // Whether root actor exposes chrome target actors and access to any window.
       // If allowChromeProcess is true, you can:
       // * get a ParentProcessTargetActor instance to debug chrome and any non-content

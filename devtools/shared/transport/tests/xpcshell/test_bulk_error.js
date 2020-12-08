@@ -53,19 +53,12 @@ var test_string_error = async function(transportFactory, onReady) {
   const transport = await transportFactory();
 
   const client = new DevToolsClient(transport);
-  return client
-    .connect()
-    .then(([app, traits]) => {
-      Assert.equal(traits.bulk, true);
-      return client.mainRoot.rootForm;
-    })
-    .then(response => {
-      return onReady(client, response);
-    })
-    .then(() => {
-      client.close();
-      transport.close();
-    });
+  await client.connect();
+  const response = await client.mainRoot.rootForm;
+
+  await onReady(client, response);
+  client.close();
+  transport.close();
 };
 
 /** * Reply Types ***/
