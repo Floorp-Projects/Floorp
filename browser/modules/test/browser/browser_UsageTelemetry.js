@@ -581,3 +581,70 @@ add_task(async function test_loadedTabsHistogram() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_restored_max_pinned_count() {
+  // Following pinned tab testing example from
+  // https://searchfox.org/mozilla-central/rev/1843375acbbca68127713e402be222350ac99301/browser/components/sessionstore/test/browser_pinned_tabs.js
+  Services.telemetry.clearScalars();
+  const { E10SUtils } = ChromeUtils.import(
+    "resource://gre/modules/E10SUtils.jsm"
+  );
+  const BACKUP_STATE = SessionStore.getBrowserState();
+  const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.sessionstore.restore_on_demand", true],
+      ["browser.sessionstore.restore_tabs_lazily", true],
+    ],
+  });
+  let sessionRestoredPromise = new Promise(resolve => {
+    Services.obs.addObserver(resolve, "sessionstore-browser-state-restored");
+  });
+
+  info("Set browser state to 1 pinned tab.");
+  await SessionStore.setBrowserState(
+    JSON.stringify({
+      windows: [
+        {
+          selected: 1,
+          tabs: [
+            {
+              pinned: true,
+              entries: [
+                { url: "https://example.com", triggeringPrincipal_base64 },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+  );
+
+  info("Await `sessionstore-browser-state-restored` promise.");
+  await sessionRestoredPromise;
+
+  const scalars = TelemetryTestUtils.getProcessScalars("parent");
+
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    MAX_TAB_PINNED,
+    1,
+    "The maximum tabs pinned count must match the expected value."
+  );
+
+  gBrowser.unpinTab(gBrowser.selectedTab);
+
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    MAX_TAB_PINNED,
+    1,
+    "The maximum tabs pinned count must match the expected value."
+  );
+
+  sessionRestoredPromise = new Promise(resolve => {
+    Services.obs.addObserver(resolve, "sessionstore-browser-state-restored");
+  });
+  await SessionStore.setBrowserState(BACKUP_STATE);
+  await SpecialPowers.popPrefEnv();
+  await sessionRestoredPromise;
+});
