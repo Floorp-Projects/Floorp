@@ -9943,19 +9943,39 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
             mBrowsingContext->GetParentWindowContext();
         MOZ_ASSERT(parentContext);
         const bool popupBlocked = [&] {
+          const bool active = mBrowsingContext->GetIsActive();
+
+          // For same-origin-with-top windows, we grant a single free popup
+          // without user activation, see bug 1680721.
+          //
+          // We consume the flag now even if there's no user activation.
+          const bool hasFreePass = [&] {
+            if (!active || !parentContext->SameOriginWithTop()) {
+              return false;
+            }
+            nsGlobalWindowInner* win =
+                parentContext->TopWindowContext()->GetInnerWindow();
+            return win && win->TryOpenExternalProtocolIframe();
+          }();
+
           if (parentContext->ConsumeTransientUserGestureActivation()) {
+            // If the user has interacted with the page, consume it.
             return false;
           }
 
           // TODO(emilio): Can we remove this check? It seems like what prompted
           // this code (bug 1514547) should be covered by transient user
           // activation, see bug 1514547.
-          if (mBrowsingContext->GetIsActive() &&
+          if (active &&
               PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe()) {
             return false;
           }
 
           if (parentContext->CanShowPopup()) {
+            return false;
+          }
+
+          if (hasFreePass) {
             return false;
           }
 

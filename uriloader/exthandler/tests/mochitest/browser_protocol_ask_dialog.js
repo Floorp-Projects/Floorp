@@ -3,15 +3,6 @@
 
 "use strict";
 
-ChromeUtils.import(
-  "resource://testing-common/HandlerServiceTestUtils.jsm",
-  this
-);
-
-let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
-  Ci.nsIHandlerService
-);
-
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -20,56 +11,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 const CONTENT_HANDLING_URL =
   "chrome://mozapps/content/handling/appChooser.xhtml";
 
-let gOldMailHandlers = [];
-
-add_task(async function setup() {
-  let mailHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("mailto");
-
-  // Remove extant web handlers because they have icons that
-  // we fetch from the web, which isn't allowed in tests.
-  let handlers = mailHandlerInfo.possibleApplicationHandlers;
-  for (let i = handlers.Count() - 1; i >= 0; i--) {
-    try {
-      let handler = handlers.queryElementAt(i, Ci.nsIWebHandlerApp);
-      gOldMailHandlers.push(handler);
-      // If we get here, this is a web handler app. Remove it:
-      handlers.removeElementAt(i);
-    } catch (ex) {}
-  }
-
-  let previousHandling = mailHandlerInfo.alwaysAskBeforeHandling;
-  mailHandlerInfo.alwaysAskBeforeHandling = true;
-
-  // Create a dummy web mail handler so we always know the mailto: protocol.
-  // Without this, the test fails on VMs without a default mailto: handler,
-  // because no dialog is ever shown, as we ignore subframe navigations to
-  // protocols that cannot be handled.
-  let dummy = Cc["@mozilla.org/uriloader/web-handler-app;1"].createInstance(
-    Ci.nsIWebHandlerApp
-  );
-  dummy.name = "Handler 1";
-  dummy.uriTemplate = "https://example.com/first/%s";
-  mailHandlerInfo.possibleApplicationHandlers.appendElement(dummy);
-
-  gHandlerService.store(mailHandlerInfo);
-  registerCleanupFunction(() => {
-    // Re-add the original protocol handlers:
-    let mailHandlers = mailHandlerInfo.possibleApplicationHandlers;
-    for (let i = handlers.Count() - 1; i >= 0; i--) {
-      try {
-        // See if this is a web handler. If it is, it'll throw, otherwise,
-        // we will remove it.
-        mailHandlers.queryElementAt(i, Ci.nsIWebHandlerApp);
-        mailHandlers.removeElementAt(i);
-      } catch (ex) {}
-    }
-    for (let h of gOldMailHandlers) {
-      mailHandlers.appendElement(h);
-    }
-    mailHandlerInfo.alwaysAskBeforeHandling = previousHandling;
-    gHandlerService.store(mailHandlerInfo);
-  });
-});
+add_task(setupMailHandler);
 
 /**
  * Check that if we open the protocol handler dialog from a subframe, we close
