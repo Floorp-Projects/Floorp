@@ -7,18 +7,35 @@
 #ifndef jit_CompileInfo_h
 #define jit_CompileInfo_h
 
-#include "mozilla/Maybe.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Maybe.h"       // mozilla::Maybe, mozilla::Some
 
-#include <algorithm>
+#include <algorithm>  // std::max
+#include <stdint.h>   // uint32_t
 
-#include "jit/CompileWrappers.h"
-#include "jit/JitAllocPolicy.h"
-#include "jit/JitFrames.h"
-#include "jit/Registers.h"
-#include "vm/JSAtomState.h"
-#include "vm/JSFunction.h"
+#include "jit/CompileWrappers.h"  // CompileRuntime
+#include "jit/JitFrames.h"        // MinJITStackSize
+#include "js/TypeDecls.h"         // jsbytecode
+#include "vm/BindingKind.h"       // BindingLocation
+#include "vm/BytecodeUtil.h"      // JSOp
+#include "vm/JSAtomState.h"       // JSAtomState
+#include "vm/JSFunction.h"        // JSFunction
+#include "vm/JSScript.h"          // JSScript, PCToLineNumber
+#include "vm/Scope.h"             // BindingIter
+
+class JSAtom;
+class JSObject;
+
+namespace JS {
+class BigInt;
+}  // namespace JS
 
 namespace js {
+
+class ModuleObject;
+class PropertyName;
+class RegExpObject;
+
 namespace jit {
 
 class InlineScriptTree;
