@@ -881,6 +881,11 @@ constexpr Maybe<T&> SomeRef(T& aValue) {
 }
 
 template <typename T>
+constexpr Maybe<T&> ToMaybeRef(T* const aPtr) {
+  return aPtr ? SomeRef(*aPtr) : Nothing{};
+}
+
+template <typename T>
 Maybe<std::remove_cv_t<std::remove_reference_t<T>>> ToMaybe(T* aPtr) {
   if (aPtr) {
     return Some(*aPtr);
