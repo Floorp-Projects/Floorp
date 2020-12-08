@@ -117,6 +117,7 @@ def permDB(perms_db_filename):
     permDB.cursor().close()
 
 
+# pylint: disable=W1638
 @pytest.fixture(params=range(2, 6))
 def version(request, perms_db_filename, permDB, locations_file):
     version = request.param
