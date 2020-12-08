@@ -6279,7 +6279,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
   IteratorKind iterKind = IteratorKind::Sync;
   unsigned iflags = 0;
 
-  if (pc_->isAsync() || pc_->sc()->isModuleContext()) {
+  if (pc_->isAsync() ||
+      (options().topLevelAwait && pc_->sc()->isModuleContext())) {
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Await)) {
       return null();
