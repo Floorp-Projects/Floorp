@@ -80,8 +80,8 @@ addAccessibleTask(
     );
     is(
       outRows[0].getAttributeValue("AXDisclosureLevel"),
-      1,
-      "Row is level one"
+      0,
+      "Row is level zero"
     );
 
     is(outRows[1].getAttributeValue("AXDisclosing"), 1, "Row is disclosing");
@@ -97,8 +97,8 @@ addAccessibleTask(
     );
     is(
       outRows[1].getAttributeValue("AXDisclosureLevel"),
-      1,
-      "Row is level one"
+      0,
+      "Row is level zero"
     );
 
     is(
@@ -118,8 +118,8 @@ addAccessibleTask(
     );
     is(
       outRows[2].getAttributeValue("AXDisclosureLevel"),
-      1,
-      "Row is level one"
+      0,
+      "Row is level zero"
     );
 
     is(outRows[3].getAttributeValue("AXDisclosing"), 1, "Row is disclosing");
@@ -137,8 +137,8 @@ addAccessibleTask(
     );
     is(
       outRows[3].getAttributeValue("AXDisclosureLevel"),
-      2,
-      "Row is level two"
+      1,
+      "Row is level one"
     );
   }
 );
@@ -260,8 +260,8 @@ addAccessibleTask(
     );
     is(
       outRows[0].getAttributeValue("AXDisclosureLevel"),
-      1,
-      "Row is level one"
+      0,
+      "Row is level zero"
     );
 
     is(outRows[2].getAttributeValue("AXDisclosing"), 1, "Row is disclosing");
@@ -277,8 +277,8 @@ addAccessibleTask(
     );
     is(
       outRows[2].getAttributeValue("AXDisclosureLevel"),
-      2,
-      "Row is level two"
+      1,
+      "Row is level one"
     );
 
     is(
@@ -301,8 +301,8 @@ addAccessibleTask(
     );
     is(
       outRows[3].getAttributeValue("AXDisclosureLevel"),
-      3,
-      "Row is level three"
+      2,
+      "Row is level two"
     );
 
     is(
@@ -322,8 +322,8 @@ addAccessibleTask(
     );
     is(
       outRows[5].getAttributeValue("AXDisclosureLevel"),
-      1,
-      "Row is level one"
+      0,
+      "Row is level zero"
     );
 
     is(outRows[6].getAttributeValue("AXDisclosing"), 1, "Row is disclosing");
@@ -341,8 +341,8 @@ addAccessibleTask(
     );
     is(
       outRows[6].getAttributeValue("AXDisclosureLevel"),
-      2,
-      "Row is level two"
+      1,
+      "Row is level one"
     );
 
     is(
@@ -364,8 +364,8 @@ addAccessibleTask(
     );
     is(
       outRows[7].getAttributeValue("AXDisclosureLevel"),
-      3,
-      "Row is level three"
+      2,
+      "Row is level two"
     );
   }
 );
