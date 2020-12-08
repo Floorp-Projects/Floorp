@@ -7912,14 +7912,14 @@ bool nsWindow::TitlebarUseShapeMask() {
       return false;
     }
 
-    // We use shape masks on Mutter/X.org as we can't resize Firefox window
-    // there (Bug 1530252).
+    // We can'y use shape masks on Mutter/X.org as we can't resize Firefox
+    // window there (Bug 1530252).
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
     if (currentDesktop) {
       if (strstr(currentDesktop, "GNOME") != nullptr) {
         const char* sessionType = getenv("XDG_SESSION_TYPE");
-        if (sessionType) {
-          return (strstr(sessionType, "x11") == nullptr);
+        if (sessionType && strstr(sessionType, "x11") != nullptr) {
+          return false;
         }
       }
     }
