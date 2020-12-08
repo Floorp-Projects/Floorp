@@ -15,17 +15,23 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.base.images.ImageLoader
+import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -36,6 +42,8 @@ class TabTrayViewHolderTest {
     private lateinit var view: View
     @MockK private lateinit var imageLoader: ImageLoader
     @MockK private lateinit var store: BrowserStore
+    @MockK private lateinit var sessionState: SessionState
+    @MockK private lateinit var mediaSessionState: MediaSessionState
     @MockK private lateinit var metrics: MetricController
     private var state = BrowserState()
 
@@ -74,14 +82,33 @@ class TabTrayViewHolderTest {
             id = "123",
             url = "https://example.com"
         )
-        state = state.copy(
-            media = MediaState(
-                aggregate = MediaState.Aggregate(
-                    activeTabId = "123",
-                    state = MediaState.State.PAUSED
+
+        if (newMediaSessionApi) {
+            state = state.copy(
+                tabs = listOf(
+                    TabSessionState(
+                        id = "123",
+                        content = ContentState(
+                            url = "https://example.com",
+                            searchTerms = "search terms"
+                        ),
+                        mediaSessionState = mediaSessionState
+                    )
                 )
             )
-        )
+
+            every { mediaSessionState.playbackState } answers { MediaSession.PlaybackState.PAUSED }
+        } else {
+            state = state.copy(
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        activeTabId = "123",
+                        state = MediaState.State.PAUSED
+                    )
+                )
+            )
+        }
+
         tabViewHolder.bind(tab, false, mockk(), mockk())
 
         assertEquals("Play", playPauseButtonView.contentDescription)
@@ -96,14 +123,33 @@ class TabTrayViewHolderTest {
             id = "123",
             url = "https://example.com"
         )
-        state = state.copy(
-            media = MediaState(
-                aggregate = MediaState.Aggregate(
-                    activeTabId = "123",
-                    state = MediaState.State.PLAYING
+
+        if (newMediaSessionApi) {
+            state = state.copy(
+                tabs = listOf(
+                    TabSessionState(
+                        id = "123",
+                        content = ContentState(
+                            url = "https://example.com",
+                            searchTerms = "search terms"
+                        ),
+                        mediaSessionState = mediaSessionState
+                    )
                 )
             )
-        )
+
+            every { mediaSessionState.playbackState } answers { MediaSession.PlaybackState.PLAYING }
+        } else {
+            state = state.copy(
+                media = MediaState(
+                    aggregate = MediaState.Aggregate(
+                        activeTabId = "123",
+                        state = MediaState.State.PLAYING
+                    )
+                )
+            )
+        }
+
         tabViewHolder.bind(tab, false, mockk(), mockk())
 
         assertEquals("Pause", playPauseButtonView.contentDescription)

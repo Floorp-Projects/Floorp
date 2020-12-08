@@ -232,6 +232,9 @@
         <service android:name=".media.MediaService"
             android:exported="false" />
 
+        <service android:name=".media.MediaSessionService"
+            android:exported="false" />
+
         <service
             android:name=".customtabs.CustomTabsService"
             android:exported="true"

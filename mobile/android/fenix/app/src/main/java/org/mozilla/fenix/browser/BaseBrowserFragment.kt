@@ -58,7 +58,7 @@ import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.intent.ext.EXTRA_SESSION_ID
-import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
+import mozilla.components.feature.media.fullscreen.MediaSessionFullscreenFeature
 import mozilla.components.feature.privatemode.feature.SecureWindowFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.prompts.share.ShareDelegate
@@ -123,6 +123,8 @@ import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
+import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
+import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -165,6 +167,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     private val secureWindowFeature = ViewBoundFeatureWrapper<SecureWindowFeature>()
     private var fullScreenMediaFeature =
         ViewBoundFeatureWrapper<MediaFullscreenOrientationFeature>()
+    private var fullScreenMediaSessionFeature =
+        ViewBoundFeatureWrapper<MediaSessionFullscreenFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
     private var pipFeature: PictureInPictureFeature? = null
 
@@ -392,14 +396,25 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                 view = view
             )
 
-            fullScreenMediaFeature.set(
-                feature = MediaFullscreenOrientationFeature(
-                    requireActivity(),
-                    context.components.core.store
-                ),
-                owner = this,
-                view = view
-            )
+            if (newMediaSessionApi) {
+                fullScreenMediaSessionFeature.set(
+                    feature = MediaSessionFullscreenFeature(
+                        requireActivity(),
+                        context.components.core.store
+                    ),
+                    owner = this,
+                    view = view
+                )
+            } else {
+                fullScreenMediaFeature.set(
+                    feature = MediaFullscreenOrientationFeature(
+                        requireActivity(),
+                        context.components.core.store
+                    ),
+                    owner = this,
+                    view = view
+                )
+            }
 
             val downloadFeature = DownloadsFeature(
                 context.applicationContext,

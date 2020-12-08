@@ -14,12 +14,14 @@ import io.mockk.verifyOrder
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.media.service.AbstractMediaService
+import mozilla.components.feature.media.service.AbstractMediaSessionService
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -78,8 +80,13 @@ class OpenSpecificTabIntentProcessorTest {
     @Test
     fun `GIVEN an intent with correct action and extra string, WHEN it is processed, THEN session should be selected and openToBrowser should be called`() {
         val intent = Intent().apply {
-            action = AbstractMediaService.Companion.ACTION_SWITCH_TAB
-            putExtra(AbstractMediaService.Companion.EXTRA_TAB_ID, TEST_SESSION_ID)
+            if (newMediaSessionApi) {
+                action = AbstractMediaSessionService.Companion.ACTION_SWITCH_TAB
+                putExtra(AbstractMediaSessionService.Companion.EXTRA_TAB_ID, TEST_SESSION_ID)
+            } else {
+                action = AbstractMediaService.Companion.ACTION_SWITCH_TAB
+                putExtra(AbstractMediaService.Companion.EXTRA_TAB_ID, TEST_SESSION_ID)
+            }
         }
         val sessionManager: SessionManager = mockk(relaxed = true)
         val session: Session = mockk(relaxed = true)

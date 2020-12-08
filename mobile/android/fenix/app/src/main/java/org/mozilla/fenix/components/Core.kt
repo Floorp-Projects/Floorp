@@ -39,7 +39,6 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.logins.exceptions.LoginExceptionStorage
-import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
@@ -74,7 +73,6 @@ import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored
-import org.mozilla.fenix.media.MediaService
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.search.telemetry.incontent.InContentTelemetry
 import org.mozilla.fenix.settings.SupportUtils
@@ -82,6 +80,11 @@ import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.getUndoDelay
 import java.util.concurrent.TimeUnit
+import mozilla.components.feature.media.MediaSessionFeature
+import mozilla.components.feature.media.middleware.MediaMiddleware
+import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
+import org.mozilla.fenix.media.MediaService
+import org.mozilla.fenix.media.MediaSessionService
 
 /**
  * Component group for all core browser functionality.
@@ -179,10 +182,9 @@ class Core(
      * The [BrowserStore] holds the global [BrowserState].
      */
     val store by lazyMonitored {
-        BrowserStore(
-            middleware = listOf(
+        val middlewareList =
+            mutableListOf(
                 RecentlyClosedMiddleware(context, RECENTLY_CLOSED_MAX, engine),
-                MediaMiddleware(context, MediaService::class.java),
                 DownloadMiddleware(context, DownloadService::class.java),
                 ReaderViewMiddleware(),
                 TelemetryMiddleware(
@@ -199,7 +201,14 @@ class Core(
                     migration = SearchMigration(context)
                 ),
                 RecordingDevicesMiddleware(context)
-            ) + EngineMiddleware.create(engine, ::findSessionById)
+            )
+
+        if (!newMediaSessionApi) {
+            middlewareList.add(MediaMiddleware(context, MediaService::class.java))
+        }
+
+        BrowserStore(
+            middleware = middlewareList + EngineMiddleware.create(engine, ::findSessionById)
         )
     }
 
@@ -278,6 +287,10 @@ class Core(
                 context, engine, icons, R.drawable.ic_status_logo,
                 permissionStorage.permissionsStorage, HomeActivity::class.java
             )
+
+            if (newMediaSessionApi) {
+                MediaSessionFeature(context, MediaSessionService::class.java, store).start()
+            }
         }
     }
 

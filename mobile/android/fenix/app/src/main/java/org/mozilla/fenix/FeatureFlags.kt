@@ -36,4 +36,9 @@ object FeatureFlags {
      * all experiments.
      */
     val nimbusExperiments = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables the new MediaSession API.
+     */
+    val newMediaSessionApi = Config.channel.isNightlyOrDebug
 }
