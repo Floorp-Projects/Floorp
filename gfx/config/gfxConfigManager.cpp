@@ -386,6 +386,16 @@ void gfxConfigManager::ConfigureWebRender() {
   if (mWrPartialPresent) {
     if (mFeatureWr->IsEnabled()) {
       mFeatureWrPartial->EnableByDefault();
+
+      nsString adapter;
+      mGfxInfo->GetAdapterDeviceID(adapter);
+      // Block partial present on Mali-Gxx GPUs due to rendering issues.
+      // See bug 1676474.
+      if (adapter.Find("Mali-G", /*ignoreCase*/ true) >= 0) {
+        mFeatureWrPartial->Disable(FeatureStatus::Blocked,
+                                   "Partial present blocked on Mali-Gxx",
+                                   "FEATURE_FAILURE_PARTIAL_PRESENT_MALI"_ns);
+      }
     }
   }
 }
