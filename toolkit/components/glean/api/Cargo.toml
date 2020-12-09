@@ -8,7 +8,6 @@ publish = false
 [dependencies]
 bincode = "1.0"
 chrono = "0.4.10"
-ffi-support = "0.4"
 glean = "33.7.0"
 glean-core = { version = "33.7.0", features = ["rkv-safe-mode"] }
 inherent = "0.1.4"

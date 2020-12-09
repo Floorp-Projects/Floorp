@@ -40,11 +40,11 @@ class CounterMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<int32_t> TestGetValue(const char* aStorageName) const {
-    if (!fog_counter_test_has_value(mId, aStorageName)) {
+  Maybe<int32_t> TestGetValue(const nsACString& aStorageName) const {
+    if (!fog_counter_test_has_value(mId, &aStorageName)) {
       return Nothing();
     }
-    return Some(fog_counter_test_get_value(mId, aStorageName));
+    return Some(fog_counter_test_get_value(mId, &aStorageName));
   }
 
  private:
