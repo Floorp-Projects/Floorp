@@ -525,7 +525,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "rental",
- "rkv 0.16.0",
+ "rkv 0.16.1",
  "rust_cascade",
  "sha2",
  "storage_variant",
@@ -2088,7 +2088,7 @@ dependencies = [
  "flate2",
  "log",
  "once_cell",
- "rkv 0.16.0",
+ "rkv 0.16.1",
  "serde",
  "serde_json",
  "uuid",
@@ -2655,7 +2655,7 @@ dependencies = [
  "moz_task",
  "nserror",
  "nsstring",
- "rkv 0.16.0",
+ "rkv 0.16.1",
  "storage_variant",
  "tempfile",
  "thin-vec",
@@ -4267,9 +4267,9 @@ dependencies = [
 
 [[package]]
 name = "rkv"
-version = "0.16.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7a845aee216ee2be8a02ea265d70563d1ed7bd852c04f709a8f11979079b2ac"
+checksum = "917d7a01f8c1ae46226e9d8dd24314279be7b04dfd0b24340d420e6927c2e687"
 dependencies = [
  "arrayref",
  "bincode",
@@ -6064,7 +6064,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "once_cell",
- "rkv 0.16.0",
+ "rkv 0.16.1",
  "serde_json",
  "tempfile",
  "xpcom",

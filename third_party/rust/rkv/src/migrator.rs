@@ -131,7 +131,7 @@ macro_rules! fn_migrator {
     (easy $migrate:tt, $name:tt, $src_env:ty, $dst_env:ty) => {
         /// Same as the `open_and_migrate_x_to_y` migration method above, but ignores the
         /// migration and doesn't delete any files if the following conditions apply:
-        /// - Source environment is invalid (corrupted), unavailable, or empty.
+        /// - Source environment is invalid/corrupted, unavailable, or empty.
         /// - Destination environment is not empty.
         /// Use this instead of the other migration methods if:
         /// - You're not concerned by throwing away old data and starting fresh with a new store.
@@ -141,8 +141,9 @@ macro_rules! fn_migrator {
             D: std::ops::Deref<Target = Rkv<$dst_env>>,
         {
             match Migrator::$migrate(path, |builder| builder, dst_env) {
-                // Source environment is corrupted.
+                // Source environment is an invalid file or corrupted database.
                 Err(crate::MigrateError::StoreError(crate::StoreError::FileInvalid)) => Ok(()),
+                Err(crate::MigrateError::StoreError(crate::StoreError::DatabaseCorrupted)) => Ok(()),
                 // Path not accessible.
                 Err(crate::MigrateError::StoreError(crate::StoreError::IoError(_))) => Ok(()),
                 // Path accessible but incompatible for configuration.
