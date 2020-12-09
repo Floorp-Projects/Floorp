@@ -469,7 +469,11 @@ var BrowserTestUtils = {
           }
 
           case "unload":
-            reject();
+            reject(
+              new Error(
+                "The window unloaded while we were waiting for the browser to load - this should never happen."
+              )
+            );
             break;
 
           default:
