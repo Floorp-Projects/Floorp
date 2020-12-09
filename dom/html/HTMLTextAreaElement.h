@@ -39,6 +39,8 @@ class HTMLTextAreaElement final : public TextControlElement,
                                   public nsIConstraintValidation {
  public:
   using nsIConstraintValidation::GetValidationMessage;
+  using ValueSetterOption = TextControlState::ValueSetterOption;
+  using ValueSetterOptions = TextControlState::ValueSetterOptions;
 
   explicit HTMLTextAreaElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -335,10 +337,10 @@ class HTMLTextAreaElement final : public TextControlElement,
    * Setting the value.
    *
    * @param aValue      String to set.
-   * @param aFlags      See TextControlState::SetValueFlags.
+   * @param aOptions    See TextControlState::ValueSetterOption.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SetValueInternal(const nsAString& aValue, const ValueSetterOptions& aOptions);
 
   /**
    * Common method to call from the various mutation observer methods.

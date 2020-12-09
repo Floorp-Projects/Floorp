@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "mozilla/Decimal.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TextControlState.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIConstraintValidation.h"
 #include "nsString.h"
@@ -32,6 +33,9 @@ class HTMLInputElement;
  */
 class InputType {
  public:
+  using ValueSetterOption = TextControlState::ValueSetterOption;
+  using ValueSetterOptions = TextControlState::ValueSetterOptions;
+
   // Custom deleter for UniquePtr<InputType> to avoid freeing memory
   // pre-allocated for InputType, but we still need to call the destructor
   // explictly.
@@ -132,10 +136,10 @@ class InputType {
    * Setting the input element's value.
    *
    * @param aValue      String to set.
-   * @param aFlags      See TextControlState::SetValueFlags.
+   * @param aOptions    See TextControlState::ValueSetterOption.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SetValueInternal(const nsAString& aValue, const ValueSetterOptions& aOptions);
 
   /**
    * Return the base used to compute if a value matches step.

@@ -117,9 +117,10 @@ void InputType::GetNonFileValueInternal(nsAString& aValue) const {
   return mInputElement->GetNonFileValueInternal(aValue);
 }
 
-nsresult InputType::SetValueInternal(const nsAString& aValue, uint32_t aFlags) {
+nsresult InputType::SetValueInternal(const nsAString& aValue,
+                                     const ValueSetterOptions& aOptions) {
   RefPtr<HTMLInputElement> inputElement(mInputElement);
-  return inputElement->SetValueInternal(aValue, aFlags);
+  return inputElement->SetValueInternal(aValue, aOptions);
 }
 
 Decimal InputType::GetStepBase() const { return mInputElement->GetStepBase(); }
