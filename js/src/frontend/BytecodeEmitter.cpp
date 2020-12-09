@@ -1660,12 +1660,7 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
   using WellKnownName = js::frontend::WellKnownParserAtoms;
   for (auto name : {&WellKnownName::value, &WellKnownName::done}) {
     const ParserAtom* propName = cx->parserNames().*name;
-
-    uint32_t propNameIndex = 0;
-    if (!data.addAtom(cx, propName, &propNameIndex)) {
-      return false;
-    }
-    data.writer().setPropName(propNameIndex);
+    data.writer().setPropName(propName);
 
     if (!data.writer().propWithUndefinedValue(cx)) {
       return false;
@@ -8934,11 +8929,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     ParseNode* key = prop->left();
 
     if (key->is<NameNode>()) {
-      uint32_t propNameIndex = 0;
-      if (!data.addAtom(cx, key->as<NameNode>().atom(), &propNameIndex)) {
-        return false;
-      }
-      data.writer().setPropName(propNameIndex);
+      data.writer().setPropName(key->as<NameNode>().atom());
     } else {
       double numValue = key->as<NumericLiteral>().value();
       int32_t i = 0;
@@ -9015,11 +9006,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       atom = key->as<NameNode>().atom();
     }
 
-    uint32_t propNameIndex = 0;
-    if (!data.addAtom(cx, atom, &propNameIndex)) {
-      return false;
-    }
-    data.writer().setPropName(propNameIndex);
+    data.writer().setPropName(atom);
 
     if (!data.writer().propWithUndefinedValue(cx)) {
       return false;
@@ -9126,11 +9113,7 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralStencil* data,
     }
   } else if (value->isKind(ParseNodeKind::StringExpr) ||
              value->isKind(ParseNodeKind::TemplateStringExpr)) {
-    uint32_t valueAtomIndex = 0;
-    if (!data->addAtom(cx, value->as<NameNode>().atom(), &valueAtomIndex)) {
-      return false;
-    }
-    if (!data->writer().propWithAtomValue(cx, valueAtomIndex)) {
+    if (!data->writer().propWithAtomValue(cx, value->as<NameNode>().atom())) {
       return false;
     }
   } else {

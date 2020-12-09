@@ -723,11 +723,6 @@ template <XDRMode mode>
                                               ObjLiteralStencil& stencil) {
   MOZ_TRY(XDRObjLiteralWriter(xdr, stencil.writer_));
 
-  MOZ_TRY(XDRVector(xdr, stencil.atoms_));
-  for (auto& entry : stencil.atoms_) {
-    MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &entry));
-  }
-
   return Ok();
 }
 

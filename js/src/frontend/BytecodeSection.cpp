@@ -161,7 +161,7 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
 
 JSObject* ObjLiteralStencil::create(JSContext* cx,
                                     CompilationAtomCache& atomCache) const {
-  return InterpretObjLiteral(cx, atomCache, atoms_, writer_);
+  return InterpretObjLiteral(cx, atomCache, writer_);
 }
 
 BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum,

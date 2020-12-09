@@ -204,7 +204,7 @@ inline bool ObjLiteralOpcodeHasAtomArg(ObjLiteralOpcode op) {
 
 struct ObjLiteralReaderBase;
 
-// Property name (as an atom index) or an integer index.  Only used for
+// Property name (as TaggedParserAtomIndex) or an integer index.  Only used for
 // object-type literals; array literals do not require the index (the sequence
 // is always dense, with no holes, so the index is implicit). For the latter
 // case, we have a `None` placeholder.
@@ -229,8 +229,8 @@ struct ObjLiteralKey {
       : ObjLiteralKey(value, isArrayIndex ? ArrayIndex : AtomIndex) {}
   ObjLiteralKey(const ObjLiteralKey& other) = default;
 
-  static ObjLiteralKey fromPropName(uint32_t atomIndex) {
-    return ObjLiteralKey(atomIndex, false);
+  static ObjLiteralKey fromPropName(frontend::TaggedParserAtomIndex atomIndex) {
+    return ObjLiteralKey(*atomIndex.rawData(), false);
   }
   static ObjLiteralKey fromArrayIndex(uint32_t index) {
     return ObjLiteralKey(index, true);
@@ -241,9 +241,9 @@ struct ObjLiteralKey {
   bool isAtomIndex() const { return type_ == AtomIndex; }
   bool isArrayIndex() const { return type_ == ArrayIndex; }
 
-  uint32_t getAtomIndex() const {
+  frontend::TaggedParserAtomIndex getAtomIndex() const {
     MOZ_ASSERT(isAtomIndex());
-    return value_;
+    return frontend::TaggedParserAtomIndex::fromRaw(value_);
   }
   uint32_t getArrayIndex() const {
     MOZ_ASSERT(isArrayIndex());
@@ -256,10 +256,9 @@ struct ObjLiteralKey {
 struct ObjLiteralWriterBase {
  protected:
   friend struct ObjLiteralReaderBase;  // for access to mask and shift.
-  static const uint32_t ATOM_INDEX_MASK = 0x007fffff;
+  static const uint32_t ATOM_INDEX_MASK = 0x7fffffff;
   // If set, the atom index field is an array index, not an atom index.
-  static const uint32_t INDEXED_PROP = 0x00800000;
-  static const int OP_SHIFT = 24;
+  static const uint32_t INDEXED_PROP = 0x80000000;
 
  public:
   using CodeVector = Vector<uint8_t, 64, js::SystemAllocPolicy>;
@@ -271,6 +270,15 @@ struct ObjLiteralWriterBase {
   ObjLiteralWriterBase() = default;
 
   uint32_t curOffset() const { return code_.length(); }
+
+ private:
+  MOZ_MUST_USE bool pushByte(JSContext* cx, uint8_t data) {
+    if (!code_.append(data)) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
+  }
 
   MOZ_MUST_USE bool prepareBytes(JSContext* cx, size_t len, uint8_t** p) {
     size_t offset = code_.length();
@@ -293,12 +301,12 @@ struct ObjLiteralWriterBase {
     return true;
   }
 
+ public:
   MOZ_MUST_USE bool pushOpAndName(JSContext* cx, ObjLiteralOpcode op,
                                   ObjLiteralKey key) {
-    uint32_t data = (key.rawIndex() & ATOM_INDEX_MASK) |
-                    (key.isArrayIndex() ? INDEXED_PROP : 0) |
-                    (static_cast<uint8_t>(op) << OP_SHIFT);
-    return pushRawData(cx, data);
+    uint8_t opdata = static_cast<uint8_t>(op);
+    uint32_t data = key.rawIndex() | (key.isArrayIndex() ? INDEXED_PROP : 0);
+    return pushByte(cx, opdata) && pushRawData(cx, data);
   }
 
   MOZ_MUST_USE bool pushValueArg(JSContext* cx, const JS::Value& value) {
@@ -308,8 +316,9 @@ struct ObjLiteralWriterBase {
     return pushRawData(cx, data);
   }
 
-  MOZ_MUST_USE bool pushAtomArg(JSContext* cx, uint32_t atomIndex) {
-    return pushRawData(cx, atomIndex);
+  MOZ_MUST_USE bool pushAtomArg(JSContext* cx,
+                                frontend::TaggedParserAtomIndex atomIndex) {
+    return pushRawData(cx, *atomIndex.rawData());
   }
 };
 
@@ -335,11 +344,11 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   ObjLiteralFlags getFlags() const { return flags_; }
 
   void beginObject(ObjLiteralFlags flags) { flags_ = flags; }
-  void setPropName(uint32_t propName) {
+  void setPropName(const frontend::ParserAtom* propName) {
     // Only valid in object-mode.
     MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
-    MOZ_ASSERT(propName <= ATOM_INDEX_MASK);
-    nextKey_ = ObjLiteralKey::fromPropName(propName);
+    propName->markUsedByStencil();
+    nextKey_ = ObjLiteralKey::fromPropName(propName->toIndex());
   }
   void setPropIndex(uint32_t propIndex) {
     // Only valid in object-mode.
@@ -361,9 +370,11 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     return pushOpAndName(cx, ObjLiteralOpcode::ConstValue, nextKey_) &&
            pushValueArg(cx, value);
   }
-  MOZ_MUST_USE bool propWithAtomValue(JSContext* cx, uint32_t value) {
+  MOZ_MUST_USE bool propWithAtomValue(JSContext* cx,
+                                      const frontend::ParserAtom* value) {
+    value->markUsedByStencil();
     return pushOpAndName(cx, ObjLiteralOpcode::ConstAtom, nextKey_) &&
-           pushAtomArg(cx, value);
+           pushAtomArg(cx, value->toIndex());
   }
   MOZ_MUST_USE bool propWithNullValue(JSContext* cx) {
     return pushOpAndName(cx, ObjLiteralOpcode::Null, nextKey_);
@@ -384,8 +395,10 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json);
-  void dumpFields(JSONPrinter& json);
+  void dump(JSONPrinter& json,
+            frontend::CompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json,
+                  frontend::CompilationStencil* compilationStencil);
 #endif
 
  private:
@@ -397,6 +410,15 @@ struct ObjLiteralReaderBase {
  private:
   mozilla::Span<const uint8_t> data_;
   size_t cursor_;
+
+  MOZ_MUST_USE bool readByte(uint8_t* b) {
+    if (cursor_ + 1 > data_.Length()) {
+      return false;
+    }
+    *b = *data_.From(cursor_).data();
+    cursor_ += 1;
+    return true;
+  }
 
   MOZ_MUST_USE bool readBytes(size_t size, const uint8_t** p) {
     if (cursor_ + size > data_.Length()) {
@@ -423,18 +445,21 @@ struct ObjLiteralReaderBase {
       : data_(data), cursor_(0) {}
 
   MOZ_MUST_USE bool readOpAndKey(ObjLiteralOpcode* op, ObjLiteralKey* key) {
-    uint32_t data;
-    if (!readRawData(&data)) {
+    uint8_t opbyte;
+    if (!readByte(&opbyte)) {
       return false;
     }
-    uint8_t opbyte =
-        static_cast<uint8_t>(data >> ObjLiteralWriterBase::OP_SHIFT);
     if (MOZ_UNLIKELY(opbyte > static_cast<uint8_t>(ObjLiteralOpcode::MAX))) {
       return false;
     }
     *op = static_cast<ObjLiteralOpcode>(opbyte);
+
+    uint32_t data;
+    if (!readRawData(&data)) {
+      return false;
+    }
     bool isArray = data & ObjLiteralWriterBase::INDEXED_PROP;
-    uint32_t rawIndex = data & ObjLiteralWriterBase::ATOM_INDEX_MASK;
+    uint32_t rawIndex = data & ~ObjLiteralWriterBase::INDEXED_PROP;
     *key = ObjLiteralKey(rawIndex, isArray);
     return true;
   }
@@ -448,8 +473,8 @@ struct ObjLiteralReaderBase {
     return true;
   }
 
-  MOZ_MUST_USE bool readAtomArg(uint32_t* atomIndex) {
-    return readRawData(atomIndex);
+  MOZ_MUST_USE bool readAtomArg(frontend::TaggedParserAtomIndex* atomIndex) {
+    return readRawData(atomIndex->rawData());
   }
 };
 
@@ -462,7 +487,7 @@ struct ObjLiteralInsn {
     explicit Arg(uint64_t raw_) : raw(raw_) {}
 
     JS::Value constValue;
-    uint32_t atomIndex;
+    frontend::TaggedParserAtomIndex atomIndex;
     uint64_t raw;
   } arg_;
 
@@ -479,7 +504,8 @@ struct ObjLiteralInsn {
     MOZ_ASSERT(!hasAtomIndex());
     arg_.constValue = value;
   }
-  ObjLiteralInsn(ObjLiteralOpcode op, ObjLiteralKey key, uint32_t atomIndex)
+  ObjLiteralInsn(ObjLiteralOpcode op, ObjLiteralKey key,
+                 frontend::TaggedParserAtomIndex atomIndex)
       : op_(op), key_(key), arg_(0) {
     MOZ_ASSERT(!hasConstValue());
     MOZ_ASSERT(hasAtomIndex());
@@ -522,7 +548,7 @@ struct ObjLiteralInsn {
     MOZ_ASSERT(hasConstValue());
     return arg_.constValue;
   }
-  uint32_t getAtomIndex() const {
+  frontend::TaggedParserAtomIndex getAtomIndex() const {
     MOZ_ASSERT(isValid());
     MOZ_ASSERT(hasAtomIndex());
     return arg_.atomIndex;
@@ -551,7 +577,7 @@ struct ObjLiteralReader : private ObjLiteralReaderBase {
       return true;
     }
     if (ObjLiteralOpcodeHasAtomArg(op)) {
-      uint32_t atomIndex;
+      frontend::TaggedParserAtomIndex atomIndex;
       if (!readAtomArg(&atomIndex)) {
         return false;
       }
@@ -563,20 +589,15 @@ struct ObjLiteralReader : private ObjLiteralReaderBase {
   }
 };
 
-using ObjLiteralAtomVector =
-    Vector<frontend::TaggedParserAtomIndex, 4, js::SystemAllocPolicy>;
-
 JSObject* InterpretObjLiteral(JSContext* cx,
                               frontend::CompilationAtomCache& atomCache,
-                              const ObjLiteralAtomVector& atoms,
                               const mozilla::Span<const uint8_t> insns,
                               ObjLiteralFlags flags);
 
 inline JSObject* InterpretObjLiteral(JSContext* cx,
                                      frontend::CompilationAtomCache& atomCache,
-                                     const ObjLiteralAtomVector& atoms,
                                      const ObjLiteralWriter& writer) {
-  return InterpretObjLiteral(cx, atomCache, atoms, writer.getCode(),
+  return InterpretObjLiteral(cx, atomCache, writer.getCode(),
                              writer.getFlags());
 }
 
@@ -584,23 +605,11 @@ class ObjLiteralStencil {
   friend class frontend::StencilXDR;
 
   ObjLiteralWriter writer_;
-  ObjLiteralAtomVector atoms_;
 
  public:
   ObjLiteralStencil() = default;
 
   ObjLiteralWriter& writer() { return writer_; }
-
-  bool addAtom(JSContext* cx, const frontend::ParserAtom* atom,
-               uint32_t* index) {
-    *index = atoms_.length();
-    atom->markUsedByStencil();
-    if (!atoms_.append(atom->toIndex())) {
-      js::ReportOutOfMemory(cx);
-      return false;
-    }
-    return true;
-  }
 
   JSObject* create(JSContext* cx,
                    frontend::CompilationAtomCache& atomCache) const;
