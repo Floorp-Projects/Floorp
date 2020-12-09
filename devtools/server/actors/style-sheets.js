@@ -55,7 +55,12 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 
   getTraits() {
     return {
-      traits: {},
+      traits: {
+        // @backward-compat { version 81 } addStyleSheet now supports file name parameter.
+        isFileNameSupported: true,
+        // @backward-compat { version 81 } resource requesting supports.
+        supportResourceRequests: true,
+      },
     };
   },
 
