@@ -313,7 +313,7 @@ impl Example for App {
         }
 
         if !txn.is_empty() {
-            txn.generate_frame();
+            txn.generate_frame(0);
             api.send_transaction(document_id, txn);
         }
 

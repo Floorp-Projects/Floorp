@@ -252,8 +252,8 @@ void TransactionBuilder::ClearDisplayList(Epoch aEpoch,
   wr_transaction_clear_display_list(mTxn, aEpoch, aPipelineId);
 }
 
-void TransactionBuilder::GenerateFrame() {
-  wr_transaction_generate_frame(mTxn);
+void TransactionBuilder::GenerateFrame(const VsyncId& aVsyncId) {
+  wr_transaction_generate_frame(mTxn, aVsyncId.mId);
 }
 
 void TransactionBuilder::InvalidateRenderedFrame() {

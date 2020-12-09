@@ -107,7 +107,7 @@ impl<'a> RawtestHarness<'a> {
         );
         epoch.0 += 1;
 
-        txn.generate_frame();
+        txn.generate_frame(0);
         self.wrench.api.send_transaction(self.wrench.document_id, txn);
     }
 
@@ -1239,7 +1239,7 @@ impl<'a> RawtestHarness<'a> {
             builder.finalize(),
             false,
         );
-        txn.generate_frame();
+        txn.generate_frame(0);
 
         self.wrench.api.send_transaction(self.wrench.document_id, txn);
 
@@ -1274,7 +1274,7 @@ impl<'a> RawtestHarness<'a> {
         // 6. rebuild the scene and compare again
         let mut txn = Transaction::new();
         txn.set_root_pipeline(captured.root_pipeline_id.unwrap());
-        txn.generate_frame();
+        txn.generate_frame(0);
         self.wrench.api.send_transaction(captured.document_id, txn);
         let pixels2 = self.render_and_get_pixels(window_rect);
         self.compare_pixels(pixels0, pixels2, window_rect.size);
@@ -1305,7 +1305,7 @@ impl<'a> RawtestHarness<'a> {
             builder.finalize(),
             false,
         );
-        txn.generate_frame();
+        txn.generate_frame(0);
         self.wrench.api.send_transaction(doc_id, txn);
 
         // Ensure we get a notification from rendering the above, even though

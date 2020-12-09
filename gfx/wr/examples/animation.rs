@@ -195,7 +195,7 @@ impl Example for App {
                         colors: vec![],
                     },
                 );
-                txn.generate_frame();
+                txn.generate_frame(0);
                 api.send_transaction(document_id, txn);
             }
             _ => (),

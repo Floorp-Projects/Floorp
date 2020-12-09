@@ -66,11 +66,14 @@ void APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId) {
 
 /*static*/
 void APZSampler::SampleForWebRender(
-    const wr::WrWindowId& aWindowId, wr::Transaction* aTransaction,
+    const wr::WrWindowId& aWindowId, const uint64_t* aGeneratedFrameId,
+    wr::Transaction* aTransaction,
     const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
     wr::TransactionWrapper txn(aTransaction);
-    sampler->SampleForWebRender(txn, aEpochsBeingRendered);
+    Maybe<VsyncId> vsyncId =
+        aGeneratedFrameId ? Some(VsyncId{*aGeneratedFrameId}) : Nothing();
+    sampler->SampleForWebRender(vsyncId, txn, aEpochsBeingRendered);
   }
 }
 
@@ -84,7 +87,7 @@ void APZSampler::SetSampleTime(const SampleTime& aSampleTime) {
 }
 
 void APZSampler::SampleForWebRender(
-    wr::TransactionWrapper& aTxn,
+    const Maybe<VsyncId>& aVsyncId, wr::TransactionWrapper& aTxn,
     const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   AssertOnSamplerThread();
   SampleTime sampleTime;
@@ -121,7 +124,7 @@ void APZSampler::SampleForWebRender(
             ? now
             : mSampleTime;
   }
-  mApz->SampleForWebRender(aTxn, sampleTime, aEpochsBeingRendered);
+  mApz->SampleForWebRender(aVsyncId, aTxn, sampleTime, aEpochsBeingRendered);
 }
 
 bool APZSampler::AdvanceAnimations(const SampleTime& aSampleTime) {
@@ -331,10 +334,11 @@ void apz_register_sampler(mozilla::wr::WrWindowId aWindowId) {
 }
 
 void apz_sample_transforms(
-    mozilla::wr::WrWindowId aWindowId, mozilla::wr::Transaction* aTransaction,
+    mozilla::wr::WrWindowId aWindowId, const uint64_t* aGeneratedFrameId,
+    mozilla::wr::Transaction* aTransaction,
     const mozilla::wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
-  mozilla::layers::APZSampler::SampleForWebRender(aWindowId, aTransaction,
-                                                  aEpochsBeingRendered);
+  mozilla::layers::APZSampler::SampleForWebRender(
+      aWindowId, aGeneratedFrameId, aTransaction, aEpochsBeingRendered);
 }
 
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId) {}

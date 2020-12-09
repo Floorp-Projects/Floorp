@@ -215,7 +215,7 @@ pub fn main_wrapper<E: Example>(
         true,
     );
     txn.set_root_pipeline(pipeline_id);
-    txn.generate_frame();
+    txn.generate_frame(0);
     api.send_transaction(document_id, txn);
 
     println!("Entering event loop");
@@ -312,7 +312,7 @@ pub fn main_wrapper<E: Example>(
                 builder.finalize(),
                 true,
             );
-            txn.generate_frame();
+            txn.generate_frame(0);
         }
         api.send_transaction(document_id, txn);
 

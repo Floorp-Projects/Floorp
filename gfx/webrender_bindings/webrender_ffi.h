@@ -92,7 +92,8 @@ void apz_deregister_updater(mozilla::wr::WrWindowId aWindowId);
 
 void apz_register_sampler(mozilla::wr::WrWindowId aWindowId);
 void apz_sample_transforms(
-    mozilla::wr::WrWindowId aWindowId, mozilla::wr::Transaction* aTransaction,
+    mozilla::wr::WrWindowId aWindowId, const uint64_t* aGeneratedFrameId,
+    mozilla::wr::Transaction* aTransaction,
     const mozilla::wr::WrPipelineIdEpochs* aPipelineEpochs);
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 
