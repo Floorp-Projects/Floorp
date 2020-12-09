@@ -59,7 +59,8 @@
     }                                                                    \
   } while (0)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // static helper functions
 
@@ -136,6 +137,12 @@ MOZ_MUST_USE inline bool ToJSValue(
   return ToJSValue(aCx, info, aValue);
 }
 
+#ifdef XP_WIN
+constexpr char PathSeparator = u'\\';
+#else
+constexpr char PathSeparator = u'/';
+#endif
+
 // IOUtils implementation
 
 /* static */
@@ -149,6 +156,8 @@ Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
 /* static */
 template <typename OkT, typename Fn>
 void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
+  using MozPromiseT = MozPromise<OkT, IOError, true>;
+
   nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   if (!bg) {
     aPromise->MaybeRejectWithAbortError(
@@ -156,19 +165,26 @@ void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
     return;
   }
 
-  InvokeAsync(
-      bg, __func__,
-      [func = std::move(aFunc)]() {
-        Result<OkT, IOError> result = func();
-        if (result.isErr()) {
-          return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
-        }
-        return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
-      })
+  InvokeAsync(bg, __func__,
+              [func = std::move(aFunc)]() {
+                Result<OkT, IOError> result = func();
+                if (result.isErr()) {
+                  return MozPromiseT::CreateAndReject(result.unwrapErr(),
+                                                      __func__);
+                }
+                return MozPromiseT::CreateAndResolve(result.unwrap(), __func__);
+              })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(aPromise)](const OkT& ok) {
-            ResolveJSPromise(promise, ok);
+            if constexpr (std::is_same_v<OkT, nsTArray<uint8_t>>) {
+              TypedArrayCreator<Uint8Array> arr(ok);
+              promise->MaybeResolve(arr);
+            } else if constexpr (std::is_same_v<OkT, Ok>) {
+              promise->MaybeResolveWithUndefined();
+            } else {
+              promise->MaybeResolve(ok);
+            }
           },
           [promise = RefPtr(aPromise)](const IOError& err) {
             RejectJSPromise(promise, err);
@@ -203,6 +219,7 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
       [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
         return ReadSync(file, toRead, decompress);
       });
+
   return promise.forget();
 }
 
@@ -225,10 +242,9 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
-                                         const nsAString& aPath,
-                                         const Uint8Array& aData,
-                                         const WriteOptions& aOptions) {
+already_AddRefed<Promise> IOUtils::WriteAtomic(
+    GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
+    const WriteAtomicOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
@@ -245,24 +261,25 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  auto opts = InternalWriteOpts::FromBinding(aOptions);
+  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
   if (opts.isErr()) {
     RejectJSPromise(promise, opts.unwrapErr());
     return promise.forget();
   }
 
   RunOnBackgroundThread<uint32_t>(
-      promise, [file = std::move(file), buf = std::move(*buf),
-                opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
+      promise,
+      [file = std::move(file), buf = std::move(*buf), opts = opts.unwrap()]() {
+        return WriteAtomicSync(file, buf, opts);
+      });
 
   return promise.forget();
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
-                                             const nsAString& aPath,
-                                             const nsAString& aString,
-                                             const WriteOptions& aOptions) {
+already_AddRefed<Promise> IOUtils::WriteAtomicUTF8(
+    GlobalObject& aGlobal, const nsAString& aPath, const nsAString& aString,
+    const WriteAtomicOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   NS_ENSURE_TRUE(!!promise, nullptr);
@@ -278,16 +295,17 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  auto opts = InternalWriteOpts::FromBinding(aOptions);
+  auto opts = InternalWriteAtomicOpts::FromBinding(aOptions);
   if (opts.isErr()) {
     RejectJSPromise(promise, opts.unwrapErr());
     return promise.forget();
   }
 
   RunOnBackgroundThread<uint32_t>(
-      promise,
-      [file = std::move(file), utf8Str = std::move(utf8Str),
-       opts = opts.unwrap()]() { return WriteUTF8Sync(file, utf8Str, opts); });
+      promise, [file = std::move(file), utf8Str = std::move(utf8Str),
+                opts = opts.unwrap()]() {
+        return WriteAtomicUTF8Sync(file, utf8Str, opts);
+      });
 
   return promise.forget();
 }
@@ -551,20 +569,8 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 }
 
 /* static */
-template <typename T>
-void IOUtils::ResolveJSPromise(Promise* aPromise, const T& aValue) {
-  if constexpr (std::is_same_v<T, nsTArray<uint8_t>>) {
-    TypedArrayCreator<Uint8Array> arr(aValue);
-    aPromise->MaybeResolve(arr);
-  } else if constexpr (std::is_same_v<T, Ok>) {
-    aPromise->MaybeResolveWithUndefined();
-  } else {
-    aPromise->MaybeResolve(aValue);
-  }
-}
-
-/* static */
-void IOUtils::RejectJSPromise(Promise* aPromise, const IOError& aError) {
+void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
+                              const IOError& aError) {
   const auto& errMsg = aError.Message();
 
   switch (aError.Code()) {
@@ -736,9 +742,9 @@ Result<nsString, IOUtils::IOError> IOUtils::ReadUTF8Sync(
 }
 
 /* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
+Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicSync(
     nsIFile* aFile, const Span<const uint8_t>& aByteArray,
-    const IOUtils::InternalWriteOpts& aOptions) {
+    const IOUtils::InternalWriteAtomicOpts& aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   nsIFile* backupFile = aOptions.mBackupFile;
@@ -863,15 +869,15 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
 }
 
 /* static */
-Result<uint32_t, IOUtils::IOError> IOUtils::WriteUTF8Sync(
+Result<uint32_t, IOUtils::IOError> IOUtils::WriteAtomicUTF8Sync(
     nsIFile* aFile, const nsCString& aUTF8String,
-    const InternalWriteOpts& aOptions) {
+    const InternalWriteAtomicOpts& aOptions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   Span utf8Bytes(reinterpret_cast<const uint8_t*>(aUTF8String.get()),
                  aUTF8String.Length());
 
-  return WriteSync(aFile, utf8Bytes, aOptions);
+  return WriteAtomicSync(aFile, utf8Bytes, aOptions);
 }
 
 /* static */
@@ -1385,9 +1391,10 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
   return NS_OK;
 }
 
-Result<IOUtils::InternalWriteOpts, IOUtils::IOError>
-IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
-  InternalWriteOpts opts;
+Result<IOUtils::InternalWriteAtomicOpts, IOUtils::IOError>
+IOUtils::InternalWriteAtomicOpts::FromBinding(
+    const WriteAtomicOptions& aOptions) {
+  InternalWriteAtomicOpts opts;
   opts.mFlush = aOptions.mFlush;
   opts.mNoOverwrite = aOptions.mNoOverwrite;
 
@@ -1416,7 +1423,8 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
   return opts;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #undef REJECT_IF_SHUTTING_DOWN
 #undef REJECT_IF_INIT_PATH_FAILED

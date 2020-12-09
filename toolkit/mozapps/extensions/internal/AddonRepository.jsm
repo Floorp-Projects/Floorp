@@ -868,7 +868,7 @@ var AddonDatabase = {
       addons: Array.from(this.DB.addons.values()),
     };
 
-    await IOUtils.writeUTF8(this.jsonFile, JSON.stringify(json), {
+    await IOUtils.writeAtomicUTF8(this.jsonFile, JSON.stringify(json), {
       tmpPath: `${this.jsonFile}.tmp`,
     });
   },
