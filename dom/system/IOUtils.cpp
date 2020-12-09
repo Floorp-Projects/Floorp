@@ -213,7 +213,6 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
       [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
         return ReadSync(file, toRead, decompress);
       });
-
   return promise.forget();
 }
 
@@ -563,8 +562,7 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 }
 
 /* static */
-void IOUtils::RejectJSPromise(const RefPtr<Promise>& aPromise,
-                              const IOError& aError) {
+void IOUtils::RejectJSPromise(Promise* aPromise, const IOError& aError) {
   const auto& errMsg = aError.Message();
 
   switch (aError.Code()) {
