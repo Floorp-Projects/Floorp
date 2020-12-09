@@ -31,22 +31,7 @@ exports.PREFERENCE_TYPES = PREFERENCE_TYPES;
  *   PreferenceFront.
  * - type {String}: the preference type (either BOOL, CHAR or INT).
  */
-const DEFAULT_PREFERENCES = [
-  // @backward-compat { version 82 } Fixed on the server by Bug 1662058.
-  {
-    prefName: "devtools.inspector.compatibility.target-browsers",
-    defaultValue: "",
-    trait: "targetBrowsersPref",
-    type: PREFERENCE_TYPES.CHAR,
-  },
-  // @backward-compat { version 82 } Fixed on the server by Bug 1659866.
-  {
-    prefName: "devtools.overflow.debugging.enabled",
-    defaultValue: false,
-    trait: "overflowDebuggingPref",
-    type: PREFERENCE_TYPES.BOOL,
-  },
-];
+const DEFAULT_PREFERENCES = [];
 exports.DEFAULT_PREFERENCES = DEFAULT_PREFERENCES;
 
 const METHODS = {
@@ -69,15 +54,18 @@ const METHODS = {
  * corresponding to the provided clientWrapper, if needed.
  *
  * Note: prefDescriptors will most likely be DEFAULT_PREFERENCES when
- * used in production code, but can be parametrized for tests.
+ * used in production code, but can be parameterized for tests.
  *
  * @param {ClientWrapper} clientWrapper
  * @param {Array} prefDescriptors
  *        Array of preference descriptors, see DEFAULT_PREFERENCES.
  */
 async function setDefaultPreferencesIfNeeded(clientWrapper, prefDescriptors) {
-  const preferenceFront = await clientWrapper.getFront("preference");
+  if (!prefDescriptors || prefDescriptors.length === 0) {
+    return;
+  }
 
+  const preferenceFront = await clientWrapper.getFront("preference");
   const preferenceTraits = await preferenceFront.getTraits();
 
   // Note: using Promise.all here fails because the request/responses get mixed.
