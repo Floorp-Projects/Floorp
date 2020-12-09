@@ -579,9 +579,9 @@ def get_raptor_test_list(args, oskey):
         # convert 'measure =' test INI line to list
         if next_test.get("measure") is not None:
             _measures = []
-            for m in [m.strip() for m in next_test["measure"].split(",")]:
+            for measure in [m.strip() for m in next_test["measure"].split(",")]:
                 # build the 'measures =' list
-                _measures.append(m)
+                _measures.append(measure)
             next_test["measure"] = _measures
 
             # if using live sites, don't measure hero element as it only exists in recordings
