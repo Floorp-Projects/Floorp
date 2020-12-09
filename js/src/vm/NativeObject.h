@@ -1299,15 +1299,18 @@ class NativeObject : public JSObject {
 
   void initDenseElement(uint32_t index, const Value& val) {
     MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
-    MOZ_ASSERT(index < getDenseInitializedLength());
-    MOZ_ASSERT(isExtensible());
-    checkStoredValue(val);
-    elements_[index].init(this, HeapSlot::Element, unshiftedIndex(index), val);
+    initDenseElementUnchecked(index, val);
   }
 
  private:
   // Note: 'Unchecked' here means we don't assert |val| isn't the hole
   // MagicValue.
+  void initDenseElementUnchecked(uint32_t index, const Value& val) {
+    MOZ_ASSERT(index < getDenseInitializedLength());
+    MOZ_ASSERT(isExtensible());
+    checkStoredValue(val);
+    elements_[index].init(this, HeapSlot::Element, unshiftedIndex(index), val);
+  }
   void setDenseElementUnchecked(uint32_t index, const Value& val) {
     MOZ_ASSERT(index < getDenseInitializedLength());
     MOZ_ASSERT(!denseElementsAreFrozen());
@@ -1319,6 +1322,7 @@ class NativeObject : public JSObject {
   inline void markDenseElementsNotPacked();
 
  public:
+  inline void initDenseElementHole(uint32_t index);
   inline void setDenseElementHole(uint32_t index);
   inline void removeDenseElementForSparseIndex(uint32_t index);
 
