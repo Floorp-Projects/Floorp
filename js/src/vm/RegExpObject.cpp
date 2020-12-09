@@ -448,14 +448,14 @@ static bool EscapeRegExpPattern(StringBuffer& sb, const CharT* oldChars,
 }
 
 // ES6 draft rev32 21.2.3.2.4.
-JSLinearString* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
+JSAtom* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
   // Step 2.
   if (src->length() == 0) {
     return cx->names().emptyRegExp;
   }
 
   // We may never need to use |sb|. Start using it lazily.
-  JSStringBuilder sb(cx);
+  StringBuffer sb(cx);
 
   if (src->hasLatin1Chars()) {
     JS::AutoCheckCannotGC nogc;
@@ -470,7 +470,7 @@ JSLinearString* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
   }
 
   // Step 3.
-  return sb.empty() ? src : sb.finishString();
+  return sb.empty() ? src : sb.finishAtom();
 }
 
 // ES6 draft rev32 21.2.5.14. Optimized for RegExpObject.
@@ -480,7 +480,7 @@ JSLinearString* RegExpObject::toString(JSContext* cx) const {
   if (!src) {
     return nullptr;
   }
-  RootedLinearString escapedSrc(cx, EscapeRegExpPattern(cx, src));
+  RootedAtom escapedSrc(cx, EscapeRegExpPattern(cx, src));
 
   // Step 7.
   JSStringBuilder sb(cx);
@@ -612,6 +612,22 @@ void RegExpShared::finalize(JSFreeOp* fop) {
   tables.~JitCodeTables();
 }
 
+/* static */
+bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
+                           HandleLinearString input,
+                           RegExpShared::CodeKind codeKind) {
+  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+  AutoTraceLog logCompile(logger, TraceLogger_IrregexpCompile);
+
+  RootedAtom pattern(cx, re->getSource());
+  return compile(cx, re, pattern, input, codeKind);
+}
+
+bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
+                           HandleAtom pattern, HandleLinearString input,
+                           RegExpShared::CodeKind code) {
+  MOZ_CRASH("TODO");
+}
 /* static */
 bool RegExpShared::compileIfNecessary(JSContext* cx,
                                       MutableHandleRegExpShared re,
