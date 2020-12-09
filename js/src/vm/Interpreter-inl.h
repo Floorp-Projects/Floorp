@@ -512,17 +512,14 @@ static MOZ_ALWAYS_INLINE bool GetPrimitiveElementOperation(
   return true;
 }
 
-static MOZ_ALWAYS_INLINE bool GetElemOptimizedArguments(
+static MOZ_ALWAYS_INLINE bool MaybeGetElemOptimizedArguments(
     JSContext* cx, AbstractFramePtr frame, MutableHandleValue lref,
-    HandleValue rref, MutableHandleValue res, bool* done) {
-  MOZ_ASSERT(!*done);
-
+    HandleValue rref, MutableHandleValue res) {
   if (IsOptimizedArguments(frame, lref)) {
     if (rref.isInt32()) {
       int32_t i = rref.toInt32();
       if (i >= 0 && uint32_t(i) < frame.numActualArgs()) {
         res.set(frame.unaliasedActual(i));
-        *done = true;
         return true;
       }
     }
@@ -533,7 +530,7 @@ static MOZ_ALWAYS_INLINE bool GetElemOptimizedArguments(
     lref.set(ObjectValue(frame.argsObj()));
   }
 
-  return true;
+  return false;
 }
 
 static MOZ_ALWAYS_INLINE bool GetElementOperationWithStackIndex(
