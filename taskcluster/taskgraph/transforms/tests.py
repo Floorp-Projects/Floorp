@@ -572,6 +572,8 @@ test_description_schema = Schema(
         Optional("fetches"): {
             text_type: optionally_keyed_by("test-platform", [text_type])
         },
+        # Opt-in to Python 3 support
+        Optional("python-3"): bool,
     }
 )
 
