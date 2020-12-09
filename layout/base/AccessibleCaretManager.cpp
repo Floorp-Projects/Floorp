@@ -679,10 +679,6 @@ void AccessibleCaretManager::OnScrollStart() {
 }
 
 void AccessibleCaretManager::OnScrollEnd() {
-  if (mLastUpdateCaretMode != GetCaretMode()) {
-    return;
-  }
-
   AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
   mAllowFlushingLayout = false;
 
@@ -714,10 +710,6 @@ void AccessibleCaretManager::OnScrollEnd() {
 }
 
 void AccessibleCaretManager::OnScrollPositionChanged() {
-  if (mLastUpdateCaretMode != GetCaretMode()) {
-    return;
-  }
-
   AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
   mAllowFlushingLayout = false;
 
@@ -742,10 +734,6 @@ void AccessibleCaretManager::OnScrollPositionChanged() {
 }
 
 void AccessibleCaretManager::OnReflow() {
-  if (mLastUpdateCaretMode != GetCaretMode()) {
-    return;
-  }
-
   AutoRestore<bool> saveAllowFlushingLayout(mAllowFlushingLayout);
   mAllowFlushingLayout = false;
 
