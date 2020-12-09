@@ -499,8 +499,17 @@ OSPreferences::GetDateTimePattern(int32_t aDateFormatStyle,
     return NS_OK;
   }
 
+  // If the locale is not specified, default to first regional prefs locale
+  const nsACString* locale = &aLocale;
+  AutoTArray<nsCString, 10> rpLocales;
+  if (aLocale.IsEmpty()) {
+    LocaleService::GetInstance()->GetRegionalPrefsLocales(rpLocales);
+    MOZ_ASSERT(rpLocales.Length() > 0);
+    locale = &rpLocales[0];
+  }
+
   // Create a cache key from the locale + style options
-  nsAutoCString key(aLocale);
+  nsAutoCString key(*locale);
   key.Append(':');
   key.AppendInt(aDateFormatStyle);
   key.Append(':');
@@ -512,9 +521,9 @@ OSPreferences::GetDateTimePattern(int32_t aDateFormatStyle,
     return NS_OK;
   }
 
-  if (!OverrideDateTimePattern(dateStyle, timeStyle, aLocale, pattern)) {
-    if (!ReadDateTimePattern(dateStyle, timeStyle, aLocale, pattern)) {
-      if (!GetDateTimePatternForStyle(dateStyle, timeStyle, aLocale, pattern)) {
+  if (!OverrideDateTimePattern(dateStyle, timeStyle, *locale, pattern)) {
+    if (!ReadDateTimePattern(dateStyle, timeStyle, *locale, pattern)) {
+      if (!GetDateTimePatternForStyle(dateStyle, timeStyle, *locale, pattern)) {
         return NS_ERROR_FAILURE;
       }
     }
