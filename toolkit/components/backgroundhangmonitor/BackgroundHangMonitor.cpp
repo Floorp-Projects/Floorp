@@ -26,6 +26,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "prinrval.h"

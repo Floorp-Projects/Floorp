@@ -9,6 +9,7 @@
 #include <type_traits>
 
 #include "BackgroundChildImpl.h"
+#include "GeckoProfiler.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
