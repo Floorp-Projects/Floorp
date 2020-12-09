@@ -589,11 +589,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
 
-      case JSOp::InitElemArray:
-        // WarpBuilder does not use an IC for this op.
-        // TODO(post-Warp): do the same in Baseline.
-        break;
-
       case JSOp::Nop:
       case JSOp::NopDestructuring:
       case JSOp::TryDestructuring:
@@ -680,6 +675,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::InitHomeObject:
       case JSOp::SuperBase:
       case JSOp::SuperFun:
+      case JSOp::InitElemArray:
       case JSOp::InitPropGetter:
       case JSOp::InitPropSetter:
       case JSOp::InitHiddenPropGetter:

@@ -1059,23 +1059,6 @@ void BaselineInterpreterCodeGen::loadInt32LengthBytecodeOperand(Register dest) {
   LoadInt32Operand(masm, dest);
 }
 
-template <>
-void BaselineCompilerCodeGen::loadInt32IndexBytecodeOperand(ValueOperand dest) {
-  uint32_t index = GET_UINT32(handler.pc());
-  MOZ_ASSERT(index <= INT32_MAX,
-             "the bytecode emitter must fail to compile code that would "
-             "produce an index exceeding int32_t range");
-  masm.moveValue(Int32Value(AssertedCast<int32_t>(index)), dest);
-}
-
-template <>
-void BaselineInterpreterCodeGen::loadInt32IndexBytecodeOperand(
-    ValueOperand dest) {
-  Register scratch = dest.scratchReg();
-  LoadInt32Operand(masm, scratch);
-  masm.tagValue(JSVAL_TYPE_INT32, scratch, dest);
-}
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDebugPrologue() {
   auto ifDebuggee = [this]() {
@@ -2852,22 +2835,114 @@ bool BaselineCodeGen<Handler>::emit_NewArray() {
   return true;
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_InitElemArray() {
-  // Keep the object and rhs on the stack.
-  frame.syncStack(0);
+static void MarkElementsNonPackedIfHoleValue(MacroAssembler& masm,
+                                             Register elements,
+                                             ValueOperand val) {
+  Label notHole;
+  masm.branchTestMagic(Assembler::NotEqual, val, &notHole);
+  {
+    Address elementsFlags(elements, ObjectElements::offsetOfFlags());
+    masm.or32(Imm32(ObjectElements::NON_PACKED), elementsFlags);
+  }
+  masm.bind(&notHole);
+}
 
-  // Load object in R0, index in R1.
-  masm.loadValue(frame.addressOfStackValue(-2), R0);
-  loadInt32IndexBytecodeOperand(R1);
+template <>
+bool BaselineInterpreterCodeGen::emit_InitElemArray() {
+  // Pop value into R0, keep the object on the stack.
+  frame.popRegsAndSync(1);
 
-  // Call IC.
-  if (!emitNextIC()) {
-    return false;
+  // Load object in R2.
+  Register obj = R2.scratchReg();
+  masm.unboxObject(frame.addressOfStackValue(-1), obj);
+
+  // Load index in R1.
+  Register index = R1.scratchReg();
+  LoadInt32Operand(masm, index);
+
+  // Store the Value. No pre-barrier because this is an initialization.
+  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), obj);
+  masm.storeValue(R0, BaseObjectElementIndex(obj, index));
+
+  // Bump initialized length.
+  Address initLength(obj, ObjectElements::offsetOfInitializedLength());
+  masm.add32(Imm32(1), index);
+  masm.store32(index, initLength);
+
+  // Mark elements as NON_PACKED if we stored the hole value.
+  MarkElementsNonPackedIfHoleValue(masm, obj, R0);
+
+  // Post-barrier.
+  Label skipBarrier;
+  Register scratch = index;
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, scratch, &skipBarrier);
+  {
+    masm.unboxObject(frame.addressOfStackValue(-1), obj);
+    masm.branchPtrInNurseryChunk(Assembler::Equal, obj, scratch, &skipBarrier);
+    MOZ_ASSERT(obj == R2.scratchReg(), "post barrier expects object in R2");
+    masm.call(&postBarrierSlot_);
+  }
+  masm.bind(&skipBarrier);
+  return true;
+}
+
+template <>
+bool BaselineCompilerCodeGen::emit_InitElemArray() {
+  // Pop value into R0, keep the object on the stack.
+  Maybe<Value> knownValue = frame.knownStackValue(-1);
+  frame.popRegsAndSync(1);
+
+  // Load object in R2.
+  Register obj = R2.scratchReg();
+  masm.unboxObject(frame.addressOfStackValue(-1), obj);
+
+  uint32_t index = GET_UINT32(handler.pc());
+  MOZ_ASSERT(index <= INT32_MAX,
+             "the bytecode emitter must fail to compile code that would "
+             "produce an index exceeding int32_t range");
+
+  // Store the Value. No pre-barrier because this is an initialization.
+  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), obj);
+  masm.storeValue(R0, Address(obj, index * sizeof(Value)));
+
+  // Bump initialized length.
+  Address initLength(obj, ObjectElements::offsetOfInitializedLength());
+  masm.store32(Imm32(index + 1), initLength);
+
+  // Mark elements as NON_PACKED if we stored the hole value. We know this
+  // statically except when debugger instrumentation is enabled because that
+  // forces a stack-sync (which discards constants and known types) for each op.
+  if (knownValue && knownValue->isMagic(JS_ELEMENTS_HOLE)) {
+    Address elementsFlags(obj, ObjectElements::offsetOfFlags());
+    masm.or32(Imm32(ObjectElements::NON_PACKED), elementsFlags);
+  } else if (handler.compileDebugInstrumentation()) {
+    MarkElementsNonPackedIfHoleValue(masm, obj, R0);
+  } else {
+#ifdef DEBUG
+    Label notHole;
+    masm.branchTestMagic(Assembler::NotEqual, R0, &notHole);
+    masm.assumeUnreachable("Unexpected hole value");
+    masm.bind(&notHole);
+#endif
   }
 
-  // Pop the rhs, so that the object is on the top of the stack.
-  frame.pop();
+  // Post-barrier.
+  if (knownValue) {
+    MOZ_ASSERT(JS::GCPolicy<Value>::isTenured(*knownValue));
+  } else {
+    Label skipBarrier;
+    Register scratch = R1.scratchReg();
+    masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, scratch,
+                                  &skipBarrier);
+    {
+      masm.unboxObject(frame.addressOfStackValue(-1), obj);
+      masm.branchPtrInNurseryChunk(Assembler::Equal, obj, scratch,
+                                   &skipBarrier);
+      MOZ_ASSERT(obj == R2.scratchReg(), "post barrier expects object in R2");
+      masm.call(&postBarrierSlot_);
+    }
+    masm.bind(&skipBarrier);
+  }
   return true;
 }
 

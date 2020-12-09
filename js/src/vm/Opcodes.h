@@ -1432,7 +1432,7 @@
     /*
      * Initialize an array element `array[index]` with value `val`.
      *
-     * `val` may be `MagicValue(JS_ELEMENTS_HOLE)`. If it is, this does nothing.
+     * `val` may be `MagicValue(JS_ELEMENTS_HOLE)` pushed by `JSOp::Hole`.
      *
      * This never calls setters or proxy traps.
      *
@@ -1449,13 +1449,13 @@
      *   Operands: uint32_t index
      *   Stack: array, val => array
      */ \
-    MACRO(InitElemArray, init_elem_array, NULL, 5, 2, 1, JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
+    MACRO(InitElemArray, init_elem_array, NULL, 5, 2, 1, JOF_UINT32|JOF_ELEM|JOF_PROPINIT) \
     /*
      * Initialize an array element `array[index++]` with value `val`.
      *
-     * `val` may be `MagicValue(JS_ELEMENTS_HOLE)`. If it is, no element is
-     * defined, but the array length and the stack value `index` are still
-     * incremented.
+     * `val` may be `MagicValue(JS_ELEMENTS_HOLE)` pushed by `JSOp::Hole`. If it
+     * is, no element is defined, but the array length and the stack value
+     * `index` are still incremented.
      *
      * This never calls setters or proxy traps.
      *
