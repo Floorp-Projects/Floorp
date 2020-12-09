@@ -37,7 +37,7 @@ struct MyType {
   int32_t aNormalInteger;
 
   explicit MyType(uint32_t aSomeData) : aNormalInteger(7) {
-    SetSomeData(aSomeData);
+    StoreSomeData(aSomeData);
     // Other bitfields were already default initialized to 0/false
   }
 };
@@ -45,9 +45,9 @@ struct MyType {
 void TestDocumentationExample() {
   MyType val(3);
 
-  if (!val.GetIsDownloaded()) {
-    val.SetOtherData(2);
-    val.SetIsDownloaded(true);
+  if (!val.LoadIsDownloaded()) {
+    val.StoreOtherData(2);
+    val.StoreIsDownloaded(true);
   }
 }
 
@@ -65,12 +65,12 @@ void TestDocumentationExample() {
       (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, \
        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32))
 
-#define CHECK_BOOL(aIndex)                    \
-  MOZ_ASSERT(val.GetFlag##aIndex() == false); \
-  val.SetFlag##aIndex(true);                  \
-  MOZ_ASSERT(val.GetFlag##aIndex() == true);  \
-  val.SetFlag##aIndex(false);                 \
-  MOZ_ASSERT(val.GetFlag##aIndex() == false);
+#define CHECK_BOOL(aIndex)                     \
+  MOZ_ASSERT(val.LoadFlag##aIndex() == false); \
+  val.StoreFlag##aIndex(true);                 \
+  MOZ_ASSERT(val.LoadFlag##aIndex() == true);  \
+  val.StoreFlag##aIndex(false);                \
+  MOZ_ASSERT(val.LoadFlag##aIndex() == false);
 
 #define GENERATE_TEST_JAMMED_WITH_FLAGS(aSize) \
   void TestJammedWithFlags##aSize() {          \
@@ -85,28 +85,28 @@ void TestDocumentationExample() {
 #define GENERATE_TEST_LOPSIDED_FUNC(aSide, aSize)          \
   void TestLopsided##aSide##aSize() {                      \
     Lopsided##aSide##aSize val;                            \
-    MOZ_ASSERT(val.GetHappyLittleBit() == false);          \
-    MOZ_ASSERT(val.GetLargeAndInCharge() == 0);            \
-    val.SetHappyLittleBit(true);                           \
-    MOZ_ASSERT(val.GetHappyLittleBit() == true);           \
-    MOZ_ASSERT(val.GetLargeAndInCharge() == 0);            \
-    val.SetLargeAndInCharge(1);                            \
-    MOZ_ASSERT(val.GetHappyLittleBit() == true);           \
-    MOZ_ASSERT(val.GetLargeAndInCharge() == 1);            \
-    val.SetLargeAndInCharge(0);                            \
-    MOZ_ASSERT(val.GetHappyLittleBit() == true);           \
-    MOZ_ASSERT(val.GetLargeAndInCharge() == 0);            \
+    MOZ_ASSERT(val.LoadHappyLittleBit() == false);         \
+    MOZ_ASSERT(val.LoadLargeAndInCharge() == 0);           \
+    val.StoreHappyLittleBit(true);                         \
+    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
+    MOZ_ASSERT(val.LoadLargeAndInCharge() == 0);           \
+    val.StoreLargeAndInCharge(1);                          \
+    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
+    MOZ_ASSERT(val.LoadLargeAndInCharge() == 1);           \
+    val.StoreLargeAndInCharge(0);                          \
+    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
+    MOZ_ASSERT(val.LoadLargeAndInCharge() == 0);           \
     uint##aSize##_t size = aSize;                          \
     uint##aSize##_t int_max = (~(1ull << (size - 1))) - 1; \
-    val.SetLargeAndInCharge(int_max);                      \
-    MOZ_ASSERT(val.GetHappyLittleBit() == true);           \
-    MOZ_ASSERT(val.GetLargeAndInCharge() == int_max);      \
-    val.SetHappyLittleBit(false);                          \
-    MOZ_ASSERT(val.GetHappyLittleBit() == false);          \
-    MOZ_ASSERT(val.GetLargeAndInCharge() == int_max);      \
-    val.SetLargeAndInCharge(int_max);                      \
-    MOZ_ASSERT(val.GetHappyLittleBit() == false);          \
-    MOZ_ASSERT(val.GetLargeAndInCharge() == int_max);      \
+    val.StoreLargeAndInCharge(int_max);                    \
+    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
+    MOZ_ASSERT(val.LoadLargeAndInCharge() == int_max);     \
+    val.StoreHappyLittleBit(false);                        \
+    MOZ_ASSERT(val.LoadHappyLittleBit() == false);         \
+    MOZ_ASSERT(val.LoadLargeAndInCharge() == int_max);     \
+    val.StoreLargeAndInCharge(int_max);                    \
+    MOZ_ASSERT(val.LoadHappyLittleBit() == false);         \
+    MOZ_ASSERT(val.LoadLargeAndInCharge() == int_max);     \
   }
 
 #define GENERATE_TEST_LOPSIDED(aSize)                                        \

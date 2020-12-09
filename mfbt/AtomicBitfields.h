@@ -49,9 +49,9 @@ namespace mozilla {
 // |aBitFieldsSize|, so specifying the size is just to prevent accidentally
 // making the storage bigger.
 //
-// Each field will get a Get$NAME and Set$Name method which will atomically
+// Each field will get a Load$NAME and Store$Name method which will atomically
 // load and store the requested value with a Sequentially Consistent memory
-// order (to be on the safe side). Setting a field requires a compare-exchange,
+// order (to be on the safe side). Storing a field requires a compare-exchange,
 // so a thread may get stalled if there's a lot of contention on the bitfields.
 //
 //
@@ -91,7 +91,7 @@ namespace mozilla {
 //     int32_t aNormalInteger;
 //
 //     explicit MyType(uint32_t aSomeData): aNormalInteger(7) {
-//       SetSomeData(aSomeData);
+//       StoreSomeData(aSomeData);
 //       // Other bitfields were already default initialized to 0/false
 //     }
 //   };
@@ -100,9 +100,9 @@ namespace mozilla {
 //   int main() {
 //     MyType val(3);
 //
-//     if (!val.GetIsDownloaded()) {
-//       val.SetOtherData(2);
-//       val.SetIsDownloaded(true);
+//     if (!val.LoadIsDownloaded()) {
+//       val.StoreOtherData(2);
+//       val.StoreIsDownloaded(true);
 //     }
 //   }
 //
@@ -134,22 +134,22 @@ namespace mozilla {
 //     MOZ_ATOMIC_BITFIELDS doesn't support signed payloads");
 //     // ...and so on
 //
-//     // Getters/Setters for all the fields.
+//     // Load/Store methods for all the fields.
 //
-//     bool GetIsDownloaded() { ... }
-//     void SetIsDownloaded(bool aValue) { ... }
+//     bool LoadIsDownloaded() { ... }
+//     void StoreIsDownloaded(bool aValue) { ... }
 //
-//     uint32_t GetSomeData() { ... }
-//     void SetSomeData(uint32_t aValue) { ... }
+//     uint32_t LoadSomeData() { ... }
+//     void StoreSomeData(uint32_t aValue) { ... }
 //
-//     uint8_t GetOtherData() { ... }
-//     void SetOtherData(uint8_t aValue) { ... }
+//     uint8_t LoadOtherData() { ... }
+//     void StoreOtherData(uint8_t aValue) { ... }
 //
 //
 //     // Remainder of the struct body continues normally.
 //     int32_t aNormalInteger;
 //     explicit MyType(uint32_t aSomeData): aNormalInteger(7) {
-//       SetSomeData(aSomeData);
+//       StoreSomeData(aSomeData);
 //       // Other bitfields were already default initialized to 0/false.
 //     }
 //   }
@@ -161,7 +161,7 @@ namespace mozilla {
 //
 // ==================== FIXMES / FUTURE WORK ==================================
 //
-// * It would be nice if GetField could be IsField for booleans.
+// * It would be nice if LoadField could be IsField for booleans.
 //
 // * For the case of setting something to all 1's or 0's, we can use
 //   |fetch_or| or |fetch_and| instead of |compare_exchange_weak|. Is this
@@ -214,14 +214,14 @@ namespace mozilla {
 // We need to disable this with coverity because it doesn't like checking that
 // booleans are < 2 (because they always are).
 #ifdef __COVERITY__
-#  define MOZ_ATOMIC_BITFIELDS_SET_GUARD(aValue, aFieldSize)
+#  define MOZ_ATOMIC_BITFIELDS_STORE_GUARD(aValue, aFieldSize)
 #else
-#  define MOZ_ATOMIC_BITFIELDS_SET_GUARD(aValue, aFieldSize) \
-    MOZ_ASSERT(((uint64_t)aValue) < (1ull << aFieldSize),    \
+#  define MOZ_ATOMIC_BITFIELDS_STORE_GUARD(aValue, aFieldSize) \
+    MOZ_ASSERT(((uint64_t)aValue) < (1ull << aFieldSize),      \
                "Stored value exceeded capacity of bitfield!")
 #endif
 
-// Generates the Get and Set methods for each field.
+// Generates the Load and Store methods for each field.
 //
 // Some comments here because inline macro comments are a pain in the neck:
 //
@@ -238,7 +238,7 @@ namespace mozilla {
 //
 // BITMATH EXPLAINED:
 //
-// For |Get$Name|:
+// For |Load$Name|:
 //
 //    mask = ((1 << fieldSize) - 1) << offset
 //
@@ -253,7 +253,7 @@ namespace mozilla {
 // up to an integer type.
 //
 //
-// For |Set$Name|:
+// For |Store$Name|:
 //
 //    packedValue = (resizedValue << offset) & mask
 //
@@ -290,7 +290,7 @@ namespace mozilla {
   static_assert(std::is_unsigned<aFieldType>(), #aBitfields                \
                 ": MOZ_ATOMIC_BITFIELDS doesn't support signed payloads"); \
                                                                            \
-  aFieldType MOZ_CONCAT(Get, aFieldName)() const {                         \
+  aFieldType MOZ_CONCAT(Load, aFieldName)() const {                        \
     uint##aBitfieldsSize##_t fieldSize, mask, masked, value;               \
     size_t offset = MOZ_CONCAT(aBitfields, aFieldName);                    \
     fieldSize = aFieldSize;                                                \
@@ -300,8 +300,8 @@ namespace mozilla {
     return value;                                                          \
   }                                                                        \
                                                                            \
-  void MOZ_CONCAT(Set, aFieldName)(aFieldType aValue) {                    \
-    MOZ_ATOMIC_BITFIELDS_SET_GUARD(aValue, aFieldSize);                    \
+  void MOZ_CONCAT(Store, aFieldName)(aFieldType aValue) {                  \
+    MOZ_ATOMIC_BITFIELDS_STORE_GUARD(aValue, aFieldSize);                  \
     uint##aBitfieldsSize##_t fieldSize, mask, resizedValue, packedValue,   \
         oldValue, clearedValue, newValue;                                  \
     size_t offset = MOZ_CONCAT(aBitfields, aFieldName);                    \
