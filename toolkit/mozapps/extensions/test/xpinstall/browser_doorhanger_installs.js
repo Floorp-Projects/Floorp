@@ -131,6 +131,7 @@ function acceptAppMenuNotificationWhenShown(
     dismiss = false,
     checkIncognito = false,
     incognitoChecked = false,
+    privileged = false,
     global = window,
   } = {}
 ) {
@@ -167,7 +168,7 @@ function acceptAppMenuNotificationWhenShown(
       let checkbox = document.getElementById("addon-incognito-checkbox");
       is(
         checkbox.hidden,
-        allowPrivate && !checkIncognito,
+        privileged || (allowPrivate && !checkIncognito),
         "checkbox visibility is correct"
       );
       is(checkbox.checked, incognitoChecked, "checkbox is marked as expected");
@@ -531,6 +532,48 @@ var TESTS = [
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
     await SpecialPowers.popPrefEnv();
+  },
+
+  async function test_priviledgedNo3rdPartyPrompt() {
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.postDownloadThirdPartyPrompt", true]],
+    });
+    AddonManager.checkUpdateSecurity = false;
+    registerCleanupFunction(() => {
+      AddonManager.checkUpdateSecurity = true;
+    });
+
+    let triggers = encodeURIComponent(
+      JSON.stringify({
+        XPI: "privileged.xpi",
+      })
+    );
+
+    let installDialogPromise = waitForInstallDialog();
+
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TESTROOT + "installtrigger.html?" + triggers
+    );
+
+    let notificationPromise = acceptAppMenuNotificationWhenShown(
+      "addon-installed",
+      "test@tests.mozilla.org",
+      { privileged: true }
+    );
+
+    (await installDialogPromise).button.click();
+    await notificationPromise;
+
+    let installs = await AddonManager.getAllInstalls();
+    is(installs.length, 0, "Should be no pending installs");
+
+    let addon = await AddonManager.getAddonByID("test@tests.mozilla.org");
+    await addon.uninstall();
+
+    await BrowserTestUtils.removeTab(tab);
+    await SpecialPowers.popPrefEnv();
+    AddonManager.checkUpdateSecurity = true;
   },
 
   async function test_permaBlockInstall() {
