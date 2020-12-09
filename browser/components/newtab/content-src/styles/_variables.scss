@@ -99,6 +99,28 @@ $newtab-background-button-darktheme-hover-color: rgba(173, 173, 173, 0.5);
 $newtab-background-button-default-active-color: rgba(196, 196, 196, 0.5);
 $newtab-background-button-darktheme-active-color: rgba(114, 114, 114, 0.5);
 $newtab-background-button-focus-boxshadow-color: rgba(0, 96, 223, 0.25);
+$newtab-card-primary-text-color: #20123A;
+$newtab-card-darktheme-primary-text-color: #E0E0E6;
+$newtab-card-line-color: #716F87;
+$newtab-card-darktheme-line-color: #B9B7CC;
+$newtab-card-separator-line-color: #E1E0E6;
+$newtab-card-darktheme-separator-line-color: #53515F;
+$newtab-card-tint: rgba(0, 0, 0, 0.15);
+$newtab-card-firstshadow: rgba(9, 32, 77, 0.12);
+$newtab-card-darktheme-firstshadow: rgba(21, 20, 26, 0.5);
+$newtab-card-secondshadow: rgba(29, 17, 51, 0.12);
+$newtab-darktheme-card-secondshadow: gba(21, 20, 26, 0.75);
+$newtab-focus-outline: rgba(0, 96, 223, 0.25);
+$newtab-darktheme-focus-outline: rgba(80, 145, 241, 0.5);
+$newtab-darktheme-focus-border: #B5D3FF;
+$newtab-darktheme-focus-border-selected: #B5D3FF;
+$newtab-darktheme-primary-action-background: #4484E2;
+$newtab-primary-action-background-off: #E9E9E9;
+$newtab-darktheme-primary-action-background-off: #6A6A6F;
+$newtab-card-darktheme-secondary-action-background: #515156;
+$newtab-card-darktheme-secondary-action-background-hover: #606065;
+$newtab-card-secondary-action-background-active: #E2E2E6;
+$newtab-card-darktheme-secondary-action-background-active: #6F6F74;
 
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);
@@ -170,8 +192,10 @@ $snippets-container-height: 120px;
 
 $textbox-shadow-size: 4px;
 
-$customize-menu-first-shadow: rgba(9, 32, 77, 0.12);
-$customize-menu-second-shadow: rgba(29, 17, 51, 0.12);
+$customize-menu-slide-bezier: cubic-bezier(0.46, 0.03, 0.52, 0.96);
+$customize-menu-expand-bezier: cubic-bezier(0.82, 0.085, 0.395, 0.895);
+$customize-menu-border-tint: 1px solid $newtab-card-tint;
+
 
 @mixin fade-in {
   box-shadow: inset $inner-box-shadow, $shadow-primary;
