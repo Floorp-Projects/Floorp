@@ -477,21 +477,7 @@ StyleEditorUI.prototype = {
           const stylesheetsFront = await this.currentTarget.getFront(
             "stylesheets"
           );
-
-          const traits = await stylesheetsFront.getTraits();
-          if (traits.isFileNameSupported) {
-            // FF81+ addStyleSheet of StyleSheetsFront supports file name parameter.
-            stylesheetsFront.addStyleSheet(source, selectedFile.path);
-          } else {
-            const styleSheet = await stylesheetsFront.addStyleSheet(source);
-            styleSheet.isNew = true;
-            const editor = await this._addStyleSheet({ styleSheet });
-            if (editor) {
-              editor.savedFile = selectedFile;
-            }
-            // Just for testing purposes.
-            this.emit("test:editor-updated", editor);
-          }
+          stylesheetsFront.addStyleSheet(source, selectedFile.path);
         }
       );
     };
