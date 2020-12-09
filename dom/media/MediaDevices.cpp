@@ -10,7 +10,6 @@
 #include "mozilla/dom/MediaDevicesBinding.h"
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/WindowContext.h"
 #include "mozilla/MediaManager.h"
 #include "MediaTrackConstraints.h"
 #include "nsContentUtils.h"
@@ -167,8 +166,12 @@ already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
   /* If the relevant global object of this does not have transient activation,
    * return a promise rejected with a DOMException object whose name attribute
    * has the value InvalidStateError. */
-  WindowContext* wc = owner->GetWindowContext();
-  if (!wc || !wc->HasValidTransientUserGestureActivation()) {
+  Document* doc = owner->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    p->MaybeRejectWithSecurityError("No document.");
+    return p.forget();
+  }
+  if (!doc->HasBeenUserGestureActivated()) {
     p->MaybeRejectWithInvalidStateError(
         "getDisplayMedia must be called from a user gesture handler.");
     return p.forget();
