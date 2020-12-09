@@ -24,14 +24,15 @@ IfEmitter::IfEmitter(BytecodeEmitter* bce, LexicalKind lexicalKind)
 IfEmitter::IfEmitter(BytecodeEmitter* bce)
     : IfEmitter(bce, LexicalKind::MayContainLexicalAccessInBranch) {}
 
-bool BranchEmitterBase::emitThenInternal() {
+bool BranchEmitterBase::emitThenInternal(ConditionKind conditionKind) {
   // The end of TDZCheckCache for cond for else-if.
   if (lexicalKind_ == LexicalKind::MayContainLexicalAccessInBranch) {
     tdzCache_.reset();
   }
 
   // Emit a branch-if-false around the then part.
-  if (!bce_->emitJump(JSOp::IfEq, &jumpAroundThen_)) {
+  JSOp op = conditionKind == ConditionKind::Positive ? JSOp::IfEq : JSOp::IfNe;
+  if (!bce_->emitJump(op, &jumpAroundThen_)) {
     return false;
   }
 
@@ -135,7 +136,8 @@ bool IfEmitter::emitIf(const Maybe<uint32_t>& ifPos) {
   return true;
 }
 
-bool IfEmitter::emitThen() {
+bool IfEmitter::emitThen(
+    ConditionKind conditionKind /* = ConditionKind::Positive */) {
   MOZ_ASSERT(state_ == State::If || state_ == State::ElseIf);
 
   if (lexicalKind_ == LexicalKind::MayContainLexicalAccessInBranch) {
@@ -143,7 +145,7 @@ bool IfEmitter::emitThen() {
     MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
   }
 
-  if (!emitThenInternal()) {
+  if (!emitThenInternal(conditionKind)) {
     return false;
   }
 
@@ -153,7 +155,8 @@ bool IfEmitter::emitThen() {
   return true;
 }
 
-bool IfEmitter::emitThenElse() {
+bool IfEmitter::emitThenElse(
+    ConditionKind conditionKind /* = ConditionKind::Positive */) {
   MOZ_ASSERT(state_ == State::If || state_ == State::ElseIf);
 
   if (lexicalKind_ == LexicalKind::MayContainLexicalAccessInBranch) {
@@ -161,7 +164,7 @@ bool IfEmitter::emitThenElse() {
     MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
   }
 
-  if (!emitThenInternal()) {
+  if (!emitThenInternal(conditionKind)) {
     return false;
   }
 
@@ -241,9 +244,10 @@ bool CondEmitter::emitCond() {
   return true;
 }
 
-bool CondEmitter::emitThenElse() {
+bool CondEmitter::emitThenElse(
+    ConditionKind conditionKind /* = ConditionKind::Positive */) {
   MOZ_ASSERT(state_ == State::Cond);
-  if (!emitThenInternal()) {
+  if (!emitThenInternal(conditionKind)) {
     return false;
   }
 
