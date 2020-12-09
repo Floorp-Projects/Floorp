@@ -137,6 +137,31 @@ TEST(BaseProfiler, BlocksRingBuffer)
     }                                                                         \
   } while (false)
 
+#define EXPECT_JSON_ARRAY_CONTAINS(GETTER, TYPE, VALUE)                       \
+  do {                                                                        \
+    if ((GETTER).isNull()) {                                                  \
+      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
+    } else if (!(GETTER).isArray()) {                                         \
+      EXPECT_TRUE((GETTER).is##TYPE()) << #GETTER " is not an array";         \
+    } else if (const Json::ArrayIndex size = (GETTER).size(); size == 0u) {   \
+      EXPECT_NE(size, 0u) << #GETTER " is an empty array";                    \
+    } else {                                                                  \
+      bool found = false;                                                     \
+      for (Json::ArrayIndex i = 0; i < size; ++i) {                           \
+        if (!(GETTER)[i].is##TYPE()) {                                        \
+          EXPECT_TRUE((GETTER)[i].is##TYPE())                                 \
+              << #GETTER "[" << i << "] is not " #TYPE;                       \
+          break;                                                              \
+        }                                                                     \
+        if ((GETTER)[i].as##TYPE() == (VALUE)) {                              \
+          found = true;                                                       \
+          break;                                                              \
+        }                                                                     \
+      }                                                                       \
+      EXPECT_TRUE(found) << #GETTER " doesn't contain " #VALUE;               \
+    }                                                                         \
+  } while (false)
+
 // Check that the given process root contains all the expected properties.
 static void JSONRootCheck(const Json::Value& aRoot,
                           bool aWithMainThread = true) {
@@ -1819,7 +1844,26 @@ TEST(GeckoProfiler, GetProfile)
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
   UniquePtr<char[]> profile = profiler_get_profile();
-  ASSERT_TRUE(profile && profile[0] == '{');
+  JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
+    GET_JSON(meta, aRoot["meta"], Object);
+    {
+      GET_JSON(configuration, meta["configuration"], Object);
+      {
+        GET_JSON(features, configuration["features"], Array);
+        {
+          EXPECT_EQ(features.size(), 2u);
+          EXPECT_JSON_ARRAY_CONTAINS(features, String, "stackwalk");
+          // "threads" is automatically added when `filters` is not empty.
+          EXPECT_JSON_ARRAY_CONTAINS(features, String, "threads");
+        }
+        GET_JSON(threads, configuration["threads"], Array);
+        {
+          EXPECT_EQ(threads.size(), 1u);
+          EXPECT_JSON_ARRAY_CONTAINS(threads, String, "GeckoMain");
+        }
+      }
+    }
+  });
 
   profiler_stop();
 
@@ -2044,9 +2088,16 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
   }
   UniquePtr<char[]> profileCompleted = profiler_get_profile();
-  ASSERT_TRUE(profileCompleted);
-  ASSERT_TRUE(profileCompleted[0] == '{');
-  ASSERT_TRUE(strstr(profileCompleted.get(), "PostSamplingCallback completed"));
+  JSONOutputCheck(profileCompleted.get(), [](const Json::Value& aRoot) {
+    GET_JSON(threads, aRoot["threads"], Array);
+    {
+      GET_JSON(thread0, threads[0], Object);
+      {
+        EXPECT_JSON_ARRAY_CONTAINS(thread0["stringTable"], String,
+                                   "PostSamplingCallback completed");
+      }
+    }
+  });
 
   profiler_pause();
   {
@@ -2055,8 +2106,8 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingPaused);
   }
   UniquePtr<char[]> profilePaused = profiler_get_profile();
-  ASSERT_TRUE(profilePaused);
-  ASSERT_TRUE(profilePaused[0] == '{');
+  JSONOutputCheck(profilePaused.get(), [](const Json::Value& aRoot) {});
+  // This string shouldn't appear *anywhere* in the profile.
   ASSERT_FALSE(strstr(profilePaused.get(), "PostSamplingCallback paused"));
 
   profiler_resume();
@@ -2066,9 +2117,16 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
   }
   UniquePtr<char[]> profileResumed = profiler_get_profile();
-  ASSERT_TRUE(profileResumed);
-  ASSERT_TRUE(profileResumed[0] == '{');
-  ASSERT_TRUE(strstr(profileResumed.get(), "PostSamplingCallback resumed"));
+  JSONOutputCheck(profileResumed.get(), [](const Json::Value& aRoot) {
+    GET_JSON(threads, aRoot["threads"], Array);
+    {
+      GET_JSON(thread0, threads[0], Object);
+      {
+        EXPECT_JSON_ARRAY_CONTAINS(thread0["stringTable"], String,
+                                   "PostSamplingCallback resumed");
+      }
+    }
+  });
 
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  ProfilerFeature::StackWalk | ProfilerFeature::NoStackSampling,
@@ -2079,8 +2137,8 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::NoStackSamplingCompleted);
   }
   UniquePtr<char[]> profileNoStacks = profiler_get_profile();
-  ASSERT_TRUE(profileNoStacks);
-  ASSERT_TRUE(profileNoStacks[0] == '{');
+  JSONOutputCheck(profileNoStacks.get(), [](const Json::Value& aRoot) {});
+  // This string shouldn't appear *anywhere* in the profile.
   ASSERT_FALSE(strstr(profileNoStacks.get(),
                       "PostSamplingCallback completed (no stacks)"));
 
@@ -2132,10 +2190,23 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   // Check that the Gecko Profiler profile contains at least the Base Profiler
   // main thread samples.
   UniquePtr<char[]> profile = profiler_get_profile();
-  ASSERT_TRUE(profile);
-  ASSERT_TRUE(profile[0] == '{');
-  ASSERT_TRUE(strstr(profile.get(), "GeckoMain (pre-xul)"));
-  ASSERT_TRUE(strstr(profile.get(), "Marker from base profiler"));
+  JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
+    GET_JSON(threads, aRoot["threads"], Array);
+    {
+      bool found = false;
+      for (const Json::Value& thread : threads) {
+        ASSERT_TRUE(thread.isObject());
+        GET_JSON(name, thread["name"], String);
+        if (name.asString() == "GeckoMain (pre-xul)") {
+          found = true;
+          EXPECT_JSON_ARRAY_CONTAINS(thread["stringTable"], String,
+                                     "Marker from base profiler");
+          break;
+        }
+      }
+      EXPECT_TRUE(found);
+    }
+  });
 
   profiler_stop();
   ASSERT_TRUE(!profiler_is_active());
