@@ -750,7 +750,7 @@ static bool regexp_source(JSContext* cx, unsigned argc, JS::Value* vp) {
         cx->markAtom(src);
 
         // Step 7.
-        JSString* escaped = EscapeRegExpPattern(cx, src);
+        JSAtom* escaped = EscapeRegExpPattern(cx, src);
         if (!escaped) {
           return false;
         }
