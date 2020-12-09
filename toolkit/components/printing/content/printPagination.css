@@ -1,0 +1,132 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  /* in-content/common.css variables */
+  --blue-50: #0a84ff;
+  --grey-90-a10: rgba(12, 12, 13, 0.1);
+  --shadow-30: 0 4px 16px var(--grey-90-a10);
+  --border-active-shadow: var(--blue-50);
+  --border-active-color: ButtonShadow;
+}
+
+:host {
+  display: block;
+  position: absolute;
+  bottom: 24px;
+  inset-inline-start: 50%;
+  translate: -50%;
+}
+:host(:-moz-locale-dir(rtl)) {
+  translate: 50%;
+}
+
+.container {
+  margin-inline: auto;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  box-shadow: var(--shadow-30);
+  color: var(--toolbar-color);
+  background-color: var(--toolbar-bgcolor);
+  border-radius: 6px;
+  border-style: none;
+}
+
+.toolbarButton,
+.toolbarCenter {
+  align-self: stretch;
+  flex: 0 0 auto;
+  padding: var(--toolbarbutton-outer-padding);
+  border: none;
+  border-inline-end: 1px solid ThreeDShadow;
+  border-block: 1px solid ThreeDShadow;
+  color: inherit;
+  background-color: transparent;
+}
+.startItem {
+  border-inline-start: 1px solid ThreeDShadow;
+  border-start-start-radius: 6px;
+  border-end-start-radius: 6px;
+}
+.endItem {
+  border-start-end-radius: 6px;
+  border-end-end-radius: 6px;
+}
+
+.toolbarButton {
+  min-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+  min-height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+}
+
+.toolbarButton::after {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
+  text-align: center;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 12px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+}
+
+.toolbarButton:hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+.toolbarButton:hover:active {
+  background-color: var(--toolbarbutton-active-background);
+}
+.toolbarButton::-moz-focus-inner {
+  border: none;
+}
+.toolbarButton:focus {
+  z-index: 1;
+}
+
+.toolbarButton:-moz-focusring {
+  outline: 2px solid var(--border-active-shadow);
+}
+.toolbarButton.startItem:-moz-focusring,
+.toolbarButton.endItem:-moz-locale-dir(rtl):-moz-focusring {
+  -moz-outline-radius: 8px;
+  -moz-outline-radius-topright: 0;
+  -moz-outline-radius-bottomright: 0;
+}
+.toolbarButton.endItem:-moz-focusring,
+.toolbarButton.startItem:-moz-locale-dir(rtl):-moz-focusring {
+  -moz-outline-radius: 8px;
+  -moz-outline-radius-topleft: 0;
+  -moz-outline-radius-bottomleft: 0;
+}
+
+.toolbarCenter {
+  flex-shrink: 0;
+  /* 3 chars + (3px border + 1px padding) on both sides */
+  min-width: calc(8px + 3ch);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#navigateHome::after,
+#navigateEnd::after {
+  background-image: url("chrome://global/skin/icons/chevron.svg");
+}
+
+#navigatePrevious::after,
+#navigateNext::after {
+  background-image: url("chrome://global/skin/icons/arrow-left.svg");
+}
+
+#navigatePrevious:-moz-locale-dir(rtl)::after,
+#navigateEnd:-moz-locale-dir(rtl)::after,
+#navigateHome:-moz-locale-dir(ltr)::after,
+#navigateNext:-moz-locale-dir(ltr)::after {
+  transform: scaleX(-1);
+}
