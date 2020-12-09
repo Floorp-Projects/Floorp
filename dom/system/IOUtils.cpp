@@ -137,12 +137,6 @@ MOZ_MUST_USE inline bool ToJSValue(
   return ToJSValue(aCx, info, aValue);
 }
 
-#ifdef XP_WIN
-constexpr char PathSeparator = u'\\';
-#else
-constexpr char PathSeparator = u'/';
-#endif
-
 // IOUtils implementation
 
 /* static */
