@@ -83,154 +83,6 @@ TEST(BaseProfiler, BlocksRingBuffer)
   }
 }
 
-// Common JSON checks.
-
-// Does the GETTER return a non-null TYPE? (Non-critical)
-#define EXPECT_HAS_JSON(GETTER, TYPE)                                         \
-  do {                                                                        \
-    if ((GETTER).isNull()) {                                                  \
-      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
-    } else if (!(GETTER).is##TYPE()) {                                        \
-      EXPECT_TRUE((GETTER).is##TYPE())                                        \
-          << #GETTER " didn't return type " #TYPE;                            \
-    }                                                                         \
-  } while (false)
-
-// Does the GETTER return a non-null TYPE? (Critical)
-#define ASSERT_HAS_JSON(GETTER, TYPE) \
-  do {                                \
-    ASSERT_FALSE((GETTER).isNull());  \
-    ASSERT_TRUE((GETTER).is##TYPE()); \
-  } while (false)
-
-// Does the GETTER return a non-null TYPE? (Critical)
-// If yes, store the value into VARIABLE.
-#define GET_JSON(VARIABLE, GETTER, TYPE) \
-  ASSERT_HAS_JSON(GETTER, TYPE);         \
-  const Json::Value&(VARIABLE) = (GETTER)
-
-// Checks that the GETTER's value is present, is of the expected TYPE, and has
-// the expected VALUE. (Non-critical)
-#define EXPECT_EQ_JSON(GETTER, TYPE, VALUE)                                   \
-  do {                                                                        \
-    if ((GETTER).isNull()) {                                                  \
-      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
-    } else if (!(GETTER).is##TYPE()) {                                        \
-      EXPECT_TRUE((GETTER).is##TYPE())                                        \
-          << #GETTER " didn't return type " #TYPE;                            \
-    } else {                                                                  \
-      EXPECT_EQ((GETTER).as##TYPE(), (VALUE));                                \
-    }                                                                         \
-  } while (false)
-
-// Checks that the GETTER's value is present, and is a valid index into the
-// STRINGTABLE array, pointing at the expected STRING.
-#define EXPECT_EQ_STRINGTABLE(GETTER, STRINGTABLE, STRING)                    \
-  do {                                                                        \
-    if ((GETTER).isNull()) {                                                  \
-      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
-    } else if (!(GETTER).isUInt()) {                                          \
-      EXPECT_TRUE((GETTER).isUInt()) << #GETTER " didn't return an index";    \
-    } else {                                                                  \
-      EXPECT_LT((GETTER).asUInt(), (STRINGTABLE).size());                     \
-      EXPECT_EQ_JSON((STRINGTABLE)[(GETTER).asUInt()], String, (STRING));     \
-    }                                                                         \
-  } while (false)
-
-#define EXPECT_JSON_ARRAY_CONTAINS(GETTER, TYPE, VALUE)                       \
-  do {                                                                        \
-    if ((GETTER).isNull()) {                                                  \
-      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
-    } else if (!(GETTER).isArray()) {                                         \
-      EXPECT_TRUE((GETTER).is##TYPE()) << #GETTER " is not an array";         \
-    } else if (const Json::ArrayIndex size = (GETTER).size(); size == 0u) {   \
-      EXPECT_NE(size, 0u) << #GETTER " is an empty array";                    \
-    } else {                                                                  \
-      bool found = false;                                                     \
-      for (Json::ArrayIndex i = 0; i < size; ++i) {                           \
-        if (!(GETTER)[i].is##TYPE()) {                                        \
-          EXPECT_TRUE((GETTER)[i].is##TYPE())                                 \
-              << #GETTER "[" << i << "] is not " #TYPE;                       \
-          break;                                                              \
-        }                                                                     \
-        if ((GETTER)[i].as##TYPE() == (VALUE)) {                              \
-          found = true;                                                       \
-          break;                                                              \
-        }                                                                     \
-      }                                                                       \
-      EXPECT_TRUE(found) << #GETTER " doesn't contain " #VALUE;               \
-    }                                                                         \
-  } while (false)
-
-// Check that the given process root contains all the expected properties.
-static void JSONRootCheck(const Json::Value& aRoot,
-                          bool aWithMainThread = true) {
-  ASSERT_TRUE(aRoot.isObject());
-
-  EXPECT_HAS_JSON(aRoot["libs"], Array);
-
-  GET_JSON(meta, aRoot["meta"], Object);
-  EXPECT_HAS_JSON(meta["version"], UInt);
-  EXPECT_HAS_JSON(meta["startTime"], Double);
-
-  EXPECT_HAS_JSON(aRoot["pages"], Array);
-
-  EXPECT_HAS_JSON(aRoot["profilerOverhead"], Object);
-
-  GET_JSON(threads, aRoot["threads"], Array);
-  const Json::ArrayIndex threadCount = threads.size();
-  for (Json::ArrayIndex i = 0; i < threadCount; ++i) {
-    GET_JSON(thread, threads[i], Object);
-    EXPECT_HAS_JSON(thread["processType"], String);
-    EXPECT_HAS_JSON(thread["name"], String);
-    EXPECT_HAS_JSON(thread["registerTime"], Double);
-    EXPECT_HAS_JSON(thread["samples"], Object);
-    EXPECT_HAS_JSON(thread["markers"], Object);
-    EXPECT_HAS_JSON(thread["pid"], UInt);
-    EXPECT_HAS_JSON(thread["tid"], UInt);
-    EXPECT_HAS_JSON(thread["stackTable"], Object);
-    EXPECT_HAS_JSON(thread["frameTable"], Object);
-    EXPECT_HAS_JSON(thread["stringTable"], Array);
-  }
-
-  if (aWithMainThread) {
-    ASSERT_GT(threadCount, 0u);
-    GET_JSON(thread0, threads[0], Object);
-    EXPECT_EQ_JSON(thread0["name"], String, "GeckoMain");
-  }
-
-  EXPECT_HAS_JSON(aRoot["pausedRanges"], Array);
-
-  const Json::Value& processes = aRoot["processes"];
-  if (!processes.isNull()) {
-    ASSERT_TRUE(processes.isArray());
-    const Json::ArrayIndex processCount = processes.size();
-    for (Json::ArrayIndex i = 0; i < processCount; ++i) {
-      GET_JSON(process, processes[i], Object);
-      JSONRootCheck(process, aWithMainThread);
-    }
-  }
-}
-
-// Check that various expected top properties are in the JSON, and then call the
-// provided `aJSONCheckFunction` with the JSON root object.
-template <typename JSONCheckFunction>
-void JSONOutputCheck(const char* aOutput,
-                     JSONCheckFunction&& aJSONCheckFunction) {
-  ASSERT_NE(aOutput, nullptr);
-
-  // Extract JSON.
-  Json::Value parsedRoot;
-  Json::CharReaderBuilder builder;
-  const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-  ASSERT_TRUE(
-      reader->parse(aOutput, strchr(aOutput, '\0'), &parsedRoot, nullptr));
-
-  JSONRootCheck(parsedRoot);
-
-  std::forward<JSONCheckFunction>(aJSONCheckFunction)(parsedRoot);
-}
-
 typedef Vector<const char*> StrVec;
 
 static void InactiveFeaturesAndParamsCheck() {
@@ -1074,90 +926,138 @@ TEST(GeckoProfiler, Markers)
   double ts1Double = 0.0;
   double ts2Double = 0.0;
 
-  JSONOutputCheck(profile.get(), [&](const Json::Value& root) {
+  // Extract JSON.
+  Json::Value parsedRoot;
+  Json::CharReaderBuilder builder;
+  const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+  ASSERT_TRUE(reader->parse(profile.get(), strchr(profile.get(), '\0'),
+                            &parsedRoot, nullptr));
+
+  // Use const root, we only want to test what's in the profile, not change it.
+  const Json::Value& root = parsedRoot;
+  ASSERT_TRUE(root.isObject());
+
+  // We have a root object.
+
+  // Most common test: Checks that the given value is present, is of the
+  // expected type, and has the expected value.
+#define EXPECT_EQ_JSON(GETTER, TYPE, VALUE)  \
+  if ((GETTER).isNull()) {                   \
+    EXPECT_FALSE((GETTER).isNull());         \
+  } else if (!(GETTER).is##TYPE()) {         \
+    EXPECT_TRUE((GETTER).is##TYPE());        \
+  } else {                                   \
+    EXPECT_EQ((GETTER).as##TYPE(), (VALUE)); \
+  }
+
+  // Checks that the given value is present, and is a valid index into the
+  // stringTable, pointing at the expected string.
+#define EXPECT_EQ_STRINGTABLE(GETTER, STRING)                         \
+  if ((GETTER).isNull()) {                                            \
+    EXPECT_FALSE((GETTER).isNull());                                  \
+  } else if (!(GETTER).isUInt()) {                                    \
+    EXPECT_TRUE((GETTER).isUInt());                                   \
+  } else {                                                            \
+    EXPECT_LT((GETTER).asUInt(), stringTable.size());                 \
+    EXPECT_EQ_JSON(stringTable[(GETTER).asUInt()], String, (STRING)); \
+  }
+
+  {
+    const Json::Value& threads = root["threads"];
+    ASSERT_TRUE(!threads.isNull());
+    ASSERT_TRUE(threads.isArray());
+    ASSERT_EQ(threads.size(), 1u);
+
+    // root.threads is a 1-element array.
+
     {
-      GET_JSON(threads, root["threads"], Array);
-      ASSERT_EQ(threads.size(), 1u);
+      const Json::Value& thread0 = threads[0];
+      ASSERT_TRUE(thread0.isObject());
+
+      // root.threads[0] is an object.
+
+      // Keep a reference to the string table in this block, it will be used
+      // below.
+      const Json::Value& stringTable = thread0["stringTable"];
+      ASSERT_TRUE(stringTable.isArray());
+
+      // Test the expected labels in the string table.
+      bool foundEmpty = false;
+      bool foundOkstr1 = false;
+      bool foundOkstr2 = false;
+      const std::string okstr2Label = std::string("okstr2 ") + okstr2.get();
+      bool foundTooLong = false;
+      for (const auto& s : stringTable) {
+        ASSERT_TRUE(s.isString());
+        std::string sString = s.asString();
+        if (sString.empty()) {
+          EXPECT_FALSE(foundEmpty);
+          foundEmpty = true;
+        } else if (sString == okstr1.get()) {
+          EXPECT_FALSE(foundOkstr1);
+          foundOkstr1 = true;
+        } else if (sString == okstr2Label) {
+          EXPECT_FALSE(foundOkstr2);
+          foundOkstr2 = true;
+        } else if (sString == longstrCut.get()) {
+          EXPECT_FALSE(foundTooLong);
+          foundTooLong = true;
+        } else {
+          EXPECT_NE(sString, longstr.get());
+        }
+      }
+      EXPECT_TRUE(foundEmpty);
+      EXPECT_TRUE(foundOkstr1);
+      EXPECT_TRUE(foundOkstr2);
+      EXPECT_TRUE(foundTooLong);
 
       {
-        GET_JSON(thread0, threads[0], Object);
+        const Json::Value& markers = thread0["markers"];
+        ASSERT_TRUE(markers.isObject());
 
-        // Keep a reference to the string table in this block, it will be used
-        // below.
-        GET_JSON(stringTable, thread0["stringTable"], Array);
-        ASSERT_TRUE(stringTable.isArray());
-
-        // Test the expected labels in the string table.
-        bool foundEmpty = false;
-        bool foundOkstr1 = false;
-        bool foundOkstr2 = false;
-        const std::string okstr2Label = std::string("okstr2 ") + okstr2.get();
-        bool foundTooLong = false;
-        for (const auto& s : stringTable) {
-          ASSERT_TRUE(s.isString());
-          std::string sString = s.asString();
-          if (sString.empty()) {
-            EXPECT_FALSE(foundEmpty);
-            foundEmpty = true;
-          } else if (sString == okstr1.get()) {
-            EXPECT_FALSE(foundOkstr1);
-            foundOkstr1 = true;
-          } else if (sString == okstr2Label) {
-            EXPECT_FALSE(foundOkstr2);
-            foundOkstr2 = true;
-          } else if (sString == longstrCut.get()) {
-            EXPECT_FALSE(foundTooLong);
-            foundTooLong = true;
-          } else {
-            EXPECT_NE(sString, longstr.get());
-          }
-        }
-        EXPECT_TRUE(foundEmpty);
-        EXPECT_TRUE(foundOkstr1);
-        EXPECT_TRUE(foundOkstr2);
-        EXPECT_TRUE(foundTooLong);
+        // root.threads[0].markers is an object.
 
         {
-          GET_JSON(markers, thread0["markers"], Object);
+          const Json::Value& data = markers["data"];
+          ASSERT_TRUE(data.isArray());
 
-          {
-            GET_JSON(data, markers["data"], Array);
+          // root.threads[0].markers.data is an array.
 
-            for (const Json::Value& marker : data) {
-              // Name the indexes into the marker tuple:
-              // [name, startTime, endTime, phase, category, payload]
-              const unsigned int NAME = 0u;
-              const unsigned int START_TIME = 1u;
-              const unsigned int END_TIME = 2u;
-              const unsigned int PHASE = 3u;
-              const unsigned int CATEGORY = 4u;
-              const unsigned int PAYLOAD = 5u;
+          for (const Json::Value& marker : data) {
+            // Name the indexes into the marker tuple:
+            // [name, startTime, endTime, phase, category, payload]
+            const unsigned int NAME = 0u;
+            const unsigned int START_TIME = 1u;
+            const unsigned int END_TIME = 2u;
+            const unsigned int PHASE = 3u;
+            const unsigned int CATEGORY = 4u;
+            const unsigned int PAYLOAD = 5u;
 
-              const unsigned int PHASE_INSTANT = 0;
-              const unsigned int PHASE_INTERVAL = 1;
-              const unsigned int PHASE_START = 2;
-              const unsigned int PHASE_END = 3;
+            const unsigned int PHASE_INSTANT = 0;
+            const unsigned int PHASE_INTERVAL = 1;
+            const unsigned int PHASE_START = 2;
+            const unsigned int PHASE_END = 3;
 
-              const unsigned int SIZE_WITHOUT_PAYLOAD = 5u;
-              const unsigned int SIZE_WITH_PAYLOAD = 6u;
+            const unsigned int SIZE_WITHOUT_PAYLOAD = 5u;
+            const unsigned int SIZE_WITH_PAYLOAD = 6u;
 
-              ASSERT_TRUE(marker.isArray());
-              // The payload is optional.
-              ASSERT_GE(marker.size(), SIZE_WITHOUT_PAYLOAD);
-              ASSERT_LE(marker.size(), SIZE_WITH_PAYLOAD);
+            ASSERT_TRUE(marker.isArray());
+            // The payload is optional.
+            ASSERT_GE(marker.size(), SIZE_WITHOUT_PAYLOAD);
+            ASSERT_LE(marker.size(), SIZE_WITH_PAYLOAD);
 
-              // root.threads[0].markers.data[i] is an array with 5 or 6
-              // elements.
+            // root.threads[0].markers.data[i] is an array with 5 or 6 elements.
 
-              ASSERT_TRUE(marker[NAME].isUInt());  // name id
-              GET_JSON(name, stringTable[marker[NAME].asUInt()], String);
-              std::string nameString = name.asString();
+            ASSERT_TRUE(marker[NAME].isUInt());  // name id
+            const Json::Value& name = stringTable[marker[NAME].asUInt()];
+            ASSERT_TRUE(name.isString());
+            std::string nameString = name.asString();
 
-              EXPECT_TRUE(marker[START_TIME].isNumeric());
-              EXPECT_TRUE(marker[END_TIME].isNumeric());
-              EXPECT_TRUE(marker[PHASE].isUInt());
-              EXPECT_TRUE(marker[PHASE].asUInt() < 4);
-              EXPECT_TRUE(marker[CATEGORY].isUInt());
+            EXPECT_TRUE(marker[START_TIME].isNumeric());
+            EXPECT_TRUE(marker[END_TIME].isNumeric());
+            EXPECT_TRUE(marker[PHASE].isUInt());
+            EXPECT_TRUE(marker[PHASE].asUInt() < 4);
+            EXPECT_TRUE(marker[CATEGORY].isUInt());
 
 #define EXPECT_TIMING_INSTANT                  \
   EXPECT_NE(marker[START_TIME].asDouble(), 0); \
@@ -1193,19 +1093,19 @@ TEST(GeckoProfiler, Markers)
   EXPECT_EQ(marker[END_TIME].asDouble(), end); \
   EXPECT_EQ(marker[PHASE].asUInt(), PHASE_END);
 
-              if (marker.size() == SIZE_WITHOUT_PAYLOAD) {
-                // root.threads[0].markers.data[i] is an array with 5 elements,
-                // so there is no payload.
-                if (nameString == "M1") {
-                  ASSERT_EQ(state, S_M1);
-                  state = State(state + 1);
-                } else if (nameString == "M3") {
-                  ASSERT_EQ(state, S_M3);
-                  state = State(state + 1);
-                } else if (nameString ==
-                           "default-templated markers 2.0 with empty options") {
-                  EXPECT_EQ(state, S_Markers2DefaultEmptyOptions);
-                  state = State(S_Markers2DefaultEmptyOptions + 1);
+            if (marker.size() == SIZE_WITHOUT_PAYLOAD) {
+              // root.threads[0].markers.data[i] is an array with 5 elements,
+              // so there is no payload.
+              if (nameString == "M1") {
+                ASSERT_EQ(state, S_M1);
+                state = State(state + 1);
+              } else if (nameString == "M3") {
+                ASSERT_EQ(state, S_M3);
+                state = State(state + 1);
+              } else if (nameString ==
+                         "default-templated markers 2.0 with empty options") {
+                EXPECT_EQ(state, S_Markers2DefaultEmptyOptions);
+                state = State(S_Markers2DefaultEmptyOptions + 1);
 // TODO: Re-enable this when bug 1646714 lands, and check for stack.
 #if 0
               } else if (nameString ==
@@ -1213,465 +1113,474 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(state, S_Markers2DefaultWithOptions);
                 state = State(S_Markers2DefaultWithOptions + 1);
 #endif
-                } else if (nameString ==
-                           "explicitly-default-templated markers 2.0 with "
-                           "empty "
-                           "options") {
-                  EXPECT_EQ(state, S_Markers2ExplicitDefaultEmptyOptions);
-                  state = State(S_Markers2ExplicitDefaultEmptyOptions + 1);
-                } else if (nameString ==
-                           "explicitly-default-templated markers 2.0 with "
-                           "option") {
-                  EXPECT_EQ(state, S_Markers2ExplicitDefaultWithOptions);
-                  state = State(S_Markers2ExplicitDefaultWithOptions + 1);
+              } else if (nameString ==
+                         "explicitly-default-templated markers 2.0 with empty "
+                         "options") {
+                EXPECT_EQ(state, S_Markers2ExplicitDefaultEmptyOptions);
+                state = State(S_Markers2ExplicitDefaultEmptyOptions + 1);
+              } else if (nameString ==
+                         "explicitly-default-templated markers 2.0 with "
+                         "option") {
+                EXPECT_EQ(state, S_Markers2ExplicitDefaultWithOptions);
+                state = State(S_Markers2ExplicitDefaultWithOptions + 1);
+              }
+            } else {
+              // root.threads[0].markers.data[i] is an array with 6 elements,
+              // so there is a payload.
+              const Json::Value& payload = marker[PAYLOAD];
+              ASSERT_TRUE(payload.isObject());
+
+              // root.threads[0].markers.data[i][PAYLOAD] is an object
+              // (payload).
+
+              // It should at least have a "type" string.
+              const Json::Value& type = payload["type"];
+              ASSERT_TRUE(type.isString());
+              std::string typeString = type.asString();
+
+              if (nameString == "tracing event") {
+                EXPECT_EQ(state, S_tracing_event);
+                state = State(S_tracing_event + 1);
+                EXPECT_EQ(typeString, "tracing");
+                EXPECT_TIMING_INSTANT;
+                EXPECT_EQ_JSON(payload["category"], String, "A");
+                EXPECT_TRUE(payload["stack"].isNull());
+
+              } else if (nameString == "tracing start") {
+                EXPECT_EQ(state, S_tracing_start);
+                state = State(S_tracing_start + 1);
+                EXPECT_EQ(typeString, "tracing");
+                EXPECT_TIMING_START;
+                EXPECT_EQ_JSON(payload["category"], String, "A");
+                EXPECT_TRUE(payload["stack"].isNull());
+
+              } else if (nameString == "tracing end") {
+                EXPECT_EQ(state, S_tracing_end);
+                state = State(S_tracing_end + 1);
+                EXPECT_EQ(typeString, "tracing");
+                EXPECT_TIMING_END;
+                EXPECT_EQ_JSON(payload["category"], String, "A");
+                EXPECT_TRUE(payload["stack"].isNull());
+
+              } else if (nameString == "tracing event with stack") {
+                EXPECT_EQ(state, S_tracing_event_with_stack);
+                state = State(S_tracing_event_with_stack + 1);
+                EXPECT_EQ(typeString, "tracing");
+                EXPECT_TIMING_INSTANT;
+                EXPECT_EQ_JSON(payload["category"], String, "B");
+                EXPECT_TRUE(payload["stack"].isObject());
+
+              } else if (nameString == "auto tracing") {
+                switch (state) {
+                  case S_tracing_auto_tracing_start:
+                    state = State(S_tracing_auto_tracing_start + 1);
+                    EXPECT_EQ(typeString, "tracing");
+                    EXPECT_TIMING_START;
+                    EXPECT_EQ_JSON(payload["category"], String, "C");
+                    EXPECT_TRUE(payload["stack"].isNull());
+                    break;
+                  case S_tracing_auto_tracing_end:
+                    state = State(S_tracing_auto_tracing_end + 1);
+                    EXPECT_EQ(typeString, "tracing");
+                    EXPECT_TIMING_END;
+                    EXPECT_EQ_JSON(payload["category"], String, "C");
+                    ASSERT_TRUE(payload["stack"].isNull());
+                    break;
+                  default:
+                    EXPECT_TRUE(state == S_tracing_auto_tracing_start ||
+                                state == S_tracing_auto_tracing_end);
+                    break;
                 }
-              } else {
-                // root.threads[0].markers.data[i] is an array with 6 elements,
-                // so there is a payload.
-                GET_JSON(payload, marker[PAYLOAD], Object);
 
-                // root.threads[0].markers.data[i][PAYLOAD] is an object
-                // (payload).
+              } else if (nameString ==
+                         "default-templated markers 2.0 with option") {
+                // TODO: Remove this when bug 1646714 lands.
+                EXPECT_EQ(state, S_Markers2DefaultWithOptions);
+                state = State(S_Markers2DefaultWithOptions + 1);
+                EXPECT_EQ(typeString, "NoPayloadUserData");
+                EXPECT_FALSE(payload["stack"].isNull());
 
-                // It should at least have a "type" string.
-                GET_JSON(type, payload["type"], String);
-                std::string typeString = type.asString();
+              } else if (nameString == "FirstMarker") {
+                // Record start and end times, to compare with timestamps in
+                // following markers.
+                EXPECT_EQ(state, S_FirstMarker);
+                ts1Double = marker[START_TIME].asDouble();
+                ts2Double = marker[END_TIME].asDouble();
+                state = State(S_FirstMarker + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_EQ_JSON(payload["name"], String, "First Marker");
 
-                if (nameString == "tracing event") {
-                  EXPECT_EQ(state, S_tracing_event);
-                  state = State(S_tracing_event + 1);
-                  EXPECT_EQ(typeString, "tracing");
-                  EXPECT_TIMING_INSTANT;
-                  EXPECT_EQ_JSON(payload["category"], String, "A");
-                  EXPECT_TRUE(payload["stack"].isNull());
+              } else if (nameString == "Gtest custom marker") {
+                EXPECT_EQ(state, S_CustomMarker);
+                state = State(S_CustomMarker + 1);
+                EXPECT_EQ(typeString, "markers-gtest");
+                EXPECT_EQ(payload.size(), 1u + 9u);
+                EXPECT_TRUE(payload["null"].isNull());
+                EXPECT_EQ_JSON(payload["bool-false"], Bool, false);
+                EXPECT_EQ_JSON(payload["bool-true"], Bool, true);
+                EXPECT_EQ_JSON(payload["int"], Int64, 42);
+                EXPECT_EQ_JSON(payload["double"], Double, 43.0);
+                EXPECT_EQ_JSON(payload["text"], String, "gtest text");
+                // Unique strings can be fetched from the string table.
+                ASSERT_TRUE(payload["unique text"].isUInt());
+                auto textIndex = payload["unique text"].asUInt();
+                const Json::Value& uniqueText = stringTable[textIndex];
+                ASSERT_TRUE(uniqueText.isString());
+                ASSERT_EQ(uniqueText.asString(), "gtest unique text");
+                // The duplicate unique text should have the exact same index.
+                EXPECT_EQ_JSON(payload["unique text again"], UInt, textIndex);
+                EXPECT_EQ_JSON(payload["time"], Double, ts1Double);
 
-                } else if (nameString == "tracing start") {
-                  EXPECT_EQ(state, S_tracing_start);
-                  state = State(S_tracing_start + 1);
-                  EXPECT_EQ(typeString, "tracing");
-                  EXPECT_TIMING_START;
-                  EXPECT_EQ_JSON(payload["category"], String, "A");
-                  EXPECT_TRUE(payload["stack"].isNull());
+              } else if (nameString == "Gtest special marker") {
+                EXPECT_EQ(state, S_SpecialMarker);
+                state = State(S_SpecialMarker + 1);
+                EXPECT_EQ(typeString, "markers-gtest-special");
+                EXPECT_EQ(payload.size(), 1u) << "Only 'type' in the payload";
 
-                } else if (nameString == "tracing end") {
-                  EXPECT_EQ(state, S_tracing_end);
-                  state = State(S_tracing_end + 1);
-                  EXPECT_EQ(typeString, "tracing");
-                  EXPECT_TIMING_END;
-                  EXPECT_EQ_JSON(payload["category"], String, "A");
-                  EXPECT_TRUE(payload["stack"].isNull());
+              } else if (nameString == "Load 1: http://mozilla.org/") {
+                EXPECT_EQ(state, S_NetworkMarkerPayload_start);
+                state = State(S_NetworkMarkerPayload_start + 1);
+                EXPECT_EQ(typeString, "Network");
+                EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                EXPECT_EQ_JSON(payload["id"], Int64, 1);
+                EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
+                EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                EXPECT_EQ_JSON(payload["cache"], String, "Hit");
+                EXPECT_TRUE(payload["RedirectURI"].isNull());
+                EXPECT_TRUE(payload["contentType"].isNull());
 
-                } else if (nameString == "tracing event with stack") {
-                  EXPECT_EQ(state, S_tracing_event_with_stack);
-                  state = State(S_tracing_event_with_stack + 1);
-                  EXPECT_EQ(typeString, "tracing");
-                  EXPECT_TIMING_INSTANT;
-                  EXPECT_EQ_JSON(payload["category"], String, "B");
-                  EXPECT_TRUE(payload["stack"].isObject());
+              } else if (nameString == "Load 12: http://mozilla.org/") {
+                EXPECT_EQ(state, S_NetworkMarkerPayload_stop);
+                state = State(S_NetworkMarkerPayload_stop + 1);
+                EXPECT_EQ(typeString, "Network");
+                EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                EXPECT_EQ_JSON(payload["id"], Int64, 12);
+                EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
+                EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                EXPECT_TRUE(payload["RedirectURI"].isNull());
+                EXPECT_EQ_JSON(payload["contentType"], String, "text/html");
 
-                } else if (nameString == "auto tracing") {
-                  switch (state) {
-                    case S_tracing_auto_tracing_start:
-                      state = State(S_tracing_auto_tracing_start + 1);
-                      EXPECT_EQ(typeString, "tracing");
-                      EXPECT_TIMING_START;
-                      EXPECT_EQ_JSON(payload["category"], String, "C");
-                      EXPECT_TRUE(payload["stack"].isNull());
-                      break;
-                    case S_tracing_auto_tracing_end:
-                      state = State(S_tracing_auto_tracing_end + 1);
-                      EXPECT_EQ(typeString, "tracing");
-                      EXPECT_TIMING_END;
-                      EXPECT_EQ_JSON(payload["category"], String, "C");
-                      ASSERT_TRUE(payload["stack"].isNull());
-                      break;
-                    default:
-                      EXPECT_TRUE(state == S_tracing_auto_tracing_start ||
-                                  state == S_tracing_auto_tracing_end);
-                      break;
-                  }
+              } else if (nameString == "Load 123: http://mozilla.org/") {
+                EXPECT_EQ(state, S_NetworkMarkerPayload_redirect);
+                state = State(S_NetworkMarkerPayload_redirect + 1);
+                EXPECT_EQ(typeString, "Network");
+                EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                EXPECT_EQ_JSON(payload["id"], Int64, 123);
+                EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
+                EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                EXPECT_EQ_JSON(payload["RedirectURI"], String,
+                               "http://example.com/");
+                EXPECT_TRUE(payload["contentType"].isNull());
 
-                } else if (nameString ==
-                           "default-templated markers 2.0 with option") {
-                  // TODO: Remove this when bug 1646714 lands.
-                  EXPECT_EQ(state, S_Markers2DefaultWithOptions);
-                  state = State(S_Markers2DefaultWithOptions + 1);
-                  EXPECT_EQ(typeString, "NoPayloadUserData");
-                  EXPECT_FALSE(payload["stack"].isNull());
+              } else if (nameString == "Text in main thread with stack") {
+                EXPECT_EQ(state, S_TextWithStack);
+                state = State(S_TextWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_FALSE(payload["stack"].isNull());
+                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
+                EXPECT_EQ_JSON(payload["name"], String, "");
 
-                } else if (nameString == "FirstMarker") {
-                  // Record start and end times, to compare with timestamps in
-                  // following markers.
-                  EXPECT_EQ(state, S_FirstMarker);
-                  ts1Double = marker[START_TIME].asDouble();
-                  ts2Double = marker[END_TIME].asDouble();
-                  state = State(S_FirstMarker + 1);
-                  EXPECT_EQ(typeString, "Text");
-                  EXPECT_EQ_JSON(payload["name"], String, "First Marker");
+              } else if (nameString == "Text from main thread with stack") {
+                EXPECT_EQ(state, S_TextToMTWithStack);
+                state = State(S_TextToMTWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_FALSE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["name"], String, "");
 
-                } else if (nameString == "Gtest custom marker") {
-                  EXPECT_EQ(state, S_CustomMarker);
-                  state = State(S_CustomMarker + 1);
-                  EXPECT_EQ(typeString, "markers-gtest");
-                  EXPECT_EQ(payload.size(), 1u + 9u);
-                  EXPECT_TRUE(payload["null"].isNull());
-                  EXPECT_EQ_JSON(payload["bool-false"], Bool, false);
-                  EXPECT_EQ_JSON(payload["bool-true"], Bool, true);
-                  EXPECT_EQ_JSON(payload["int"], Int64, 42);
-                  EXPECT_EQ_JSON(payload["double"], Double, 43.0);
-                  EXPECT_EQ_JSON(payload["text"], String, "gtest text");
-                  // Unique strings can be fetched from the string table.
-                  ASSERT_TRUE(payload["unique text"].isUInt());
-                  auto textIndex = payload["unique text"].asUInt();
-                  GET_JSON(uniqueText, stringTable[textIndex], String);
-                  ASSERT_TRUE(uniqueText.isString());
-                  ASSERT_EQ(uniqueText.asString(), "gtest unique text");
-                  // The duplicate unique text should have the exact same index.
-                  EXPECT_EQ_JSON(payload["unique text again"], UInt, textIndex);
-                  EXPECT_EQ_JSON(payload["time"], Double, ts1Double);
+              } else if (nameString == "Text in registered thread with stack") {
+                ADD_FAILURE()
+                    << "Unexpected 'Text in registered thread with stack'";
 
-                } else if (nameString == "Gtest special marker") {
-                  EXPECT_EQ(state, S_SpecialMarker);
-                  state = State(S_SpecialMarker + 1);
-                  EXPECT_EQ(typeString, "markers-gtest-special");
-                  EXPECT_EQ(payload.size(), 1u) << "Only 'type' in the payload";
+              } else if (nameString ==
+                         "Text from registered thread with stack") {
+                EXPECT_EQ(state, S_RegThread_TextToMTWithStack);
+                state = State(S_RegThread_TextToMTWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_FALSE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["name"], String, "");
 
-                } else if (nameString == "Load 1: http://mozilla.org/") {
-                  EXPECT_EQ(state, S_NetworkMarkerPayload_start);
-                  state = State(S_NetworkMarkerPayload_start + 1);
-                  EXPECT_EQ(typeString, "Network");
-                  EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
-                  EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
-                  EXPECT_EQ_JSON(payload["id"], Int64, 1);
-                  EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
-                  EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
-                  EXPECT_EQ_JSON(payload["pri"], Int64, 34);
-                  EXPECT_EQ_JSON(payload["count"], Int64, 56);
-                  EXPECT_EQ_JSON(payload["cache"], String, "Hit");
-                  EXPECT_TRUE(payload["RedirectURI"].isNull());
-                  EXPECT_TRUE(payload["contentType"].isNull());
+              } else if (nameString ==
+                         "Text in unregistered thread with stack") {
+                ADD_FAILURE()
+                    << "Unexpected 'Text in unregistered thread with stack'";
 
-                } else if (nameString == "Load 12: http://mozilla.org/") {
-                  EXPECT_EQ(state, S_NetworkMarkerPayload_stop);
-                  state = State(S_NetworkMarkerPayload_stop + 1);
-                  EXPECT_EQ(typeString, "Network");
-                  EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
-                  EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
-                  EXPECT_EQ_JSON(payload["id"], Int64, 12);
-                  EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
-                  EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
-                  EXPECT_EQ_JSON(payload["pri"], Int64, 34);
-                  EXPECT_EQ_JSON(payload["count"], Int64, 56);
-                  EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
-                  EXPECT_TRUE(payload["RedirectURI"].isNull());
-                  EXPECT_EQ_JSON(payload["contentType"], String, "text/html");
+              } else if (nameString ==
+                         "Text from unregistered thread with stack") {
+                EXPECT_EQ(state, S_UnregThread_TextToMTWithStack);
+                state = State(S_UnregThread_TextToMTWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_TRUE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["name"], String, "");
+              }
+            }  // marker with payload
+          }    // for (marker:data)
+        }      // markers.data
+      }        // markers
+    }          // thread0
+  }            // threads
 
-                } else if (nameString == "Load 123: http://mozilla.org/") {
-                  EXPECT_EQ(state, S_NetworkMarkerPayload_redirect);
-                  state = State(S_NetworkMarkerPayload_redirect + 1);
-                  EXPECT_EQ(typeString, "Network");
-                  EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
-                  EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
-                  EXPECT_EQ_JSON(payload["id"], Int64, 123);
-                  EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
-                  EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
-                  EXPECT_EQ_JSON(payload["pri"], Int64, 34);
-                  EXPECT_EQ_JSON(payload["count"], Int64, 56);
-                  EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
-                  EXPECT_EQ_JSON(payload["RedirectURI"], String,
-                                 "http://example.com/");
-                  EXPECT_TRUE(payload["contentType"].isNull());
+  // We should have read all expected markers.
+  EXPECT_EQ(state, S_LAST);
 
-                } else if (nameString == "Text in main thread with stack") {
-                  EXPECT_EQ(state, S_TextWithStack);
-                  state = State(S_TextWithStack + 1);
-                  EXPECT_EQ(typeString, "Text");
-                  EXPECT_FALSE(payload["stack"].isNull());
-                  EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                  EXPECT_EQ_JSON(payload["name"], String, "");
+  {
+    const Json::Value& meta = root["meta"];
+    ASSERT_TRUE(!meta.isNull());
+    ASSERT_TRUE(meta.isObject());
 
-                } else if (nameString == "Text from main thread with stack") {
-                  EXPECT_EQ(state, S_TextToMTWithStack);
-                  state = State(S_TextToMTWithStack + 1);
-                  EXPECT_EQ(typeString, "Text");
-                  EXPECT_FALSE(payload["stack"].isNull());
-                  EXPECT_EQ_JSON(payload["name"], String, "");
-
-                } else if (nameString ==
-                           "Text in registered thread with stack") {
-                  ADD_FAILURE()
-                      << "Unexpected 'Text in registered thread with stack'";
-
-                } else if (nameString ==
-                           "Text from registered thread with stack") {
-                  EXPECT_EQ(state, S_RegThread_TextToMTWithStack);
-                  state = State(S_RegThread_TextToMTWithStack + 1);
-                  EXPECT_EQ(typeString, "Text");
-                  EXPECT_FALSE(payload["stack"].isNull());
-                  EXPECT_EQ_JSON(payload["name"], String, "");
-
-                } else if (nameString ==
-                           "Text in unregistered thread with stack") {
-                  ADD_FAILURE()
-                      << "Unexpected 'Text in unregistered thread with stack'";
-
-                } else if (nameString ==
-                           "Text from unregistered thread with stack") {
-                  EXPECT_EQ(state, S_UnregThread_TextToMTWithStack);
-                  state = State(S_UnregThread_TextToMTWithStack + 1);
-                  EXPECT_EQ(typeString, "Text");
-                  EXPECT_TRUE(payload["stack"].isNull());
-                  EXPECT_EQ_JSON(payload["name"], String, "");
-                }
-              }  // marker with payload
-            }    // for (marker : data)
-          }      // markers.data
-        }        // markers
-      }          // thread0
-    }            // threads
-    // We should have read all expected markers.
-    EXPECT_EQ(state, S_LAST);
-
+    // root.meta is an object.
     {
-      GET_JSON(meta, root["meta"], Object);
+      const Json::Value& markerSchema = meta["markerSchema"];
+      ASSERT_TRUE(!markerSchema.isNull());
+      ASSERT_TRUE(markerSchema.isArray());
 
-      {
-        GET_JSON(markerSchema, meta["markerSchema"], Array);
+      // root.meta.markerSchema is an array.
 
-        std::set<std::string> testedSchemaNames;
+      std::set<std::string> testedSchemaNames;
 
-        for (const Json::Value& schema : markerSchema) {
-          GET_JSON(name, schema["name"], String);
-          const std::string nameString = name.asString();
+      for (const Json::Value& schema : markerSchema) {
+        const Json::Value& name = schema["name"];
+        ASSERT_TRUE(name.isString());
+        const std::string nameString = name.asString();
 
-          GET_JSON(display, schema["display"], Array);
+        const Json::Value& display = schema["display"];
+        ASSERT_TRUE(display.isArray());
 
-          GET_JSON(data, schema["data"], Array);
+        const Json::Value& data = schema["data"];
+        ASSERT_TRUE(data.isArray());
 
-          EXPECT_TRUE(
-              testedSchemaNames
-                  .insert(std::string(nameString.data(), nameString.size()))
-                  .second)
-              << "Each schema name should be unique (inserted once in the set)";
+        EXPECT_TRUE(
+            testedSchemaNames
+                .insert(std::string(nameString.data(), nameString.size()))
+                .second)
+            << "Each schema name should be unique (inserted once in the set)";
 
-          if (nameString == "Text") {
-            EXPECT_EQ(display.size(), 2u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
+        if (nameString == "Text") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 1u);
+          ASSERT_EQ(data.size(), 1u);
 
-            ASSERT_TRUE(data[0u].isObject());
-            EXPECT_EQ_JSON(data[0u]["key"], String, "name");
-            EXPECT_EQ_JSON(data[0u]["label"], String, "Details");
-            EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "name");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Details");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
 
-          } else if (nameString == "NoPayloadUserData") {
-            // TODO: Remove this when bug 1646714 lands.
-            EXPECT_EQ(display.size(), 2u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
+        } else if (nameString == "NoPayloadUserData") {
+          // TODO: Remove this when bug 1646714 lands.
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 0u);
+          ASSERT_EQ(data.size(), 0u);
 
-          } else if (nameString == "FileIO") {
-            // These are defined in ProfilerIOInterposeObserver.cpp
+        } else if (nameString == "FileIO") {
+          // These are defined in ProfilerIOInterposeObserver.cpp
 
-          } else if (nameString == "tracing") {
-            EXPECT_EQ(display.size(), 3u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
-            EXPECT_EQ(display[2u].asString(), "timeline-overview");
+        } else if (nameString == "tracing") {
+          EXPECT_EQ(display.size(), 3u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+          EXPECT_EQ(display[2u].asString(), "timeline-overview");
 
-            ASSERT_EQ(data.size(), 1u);
+          ASSERT_EQ(data.size(), 1u);
 
-            ASSERT_TRUE(data[0u].isObject());
-            EXPECT_EQ_JSON(data[0u]["key"], String, "category");
-            EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
-            EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "category");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
 
-          } else if (nameString == "BHR-detected hang") {
-            EXPECT_EQ(display.size(), 3u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
-            EXPECT_EQ(display[2u].asString(), "timeline-overview");
+        } else if (nameString == "BHR-detected hang") {
+          EXPECT_EQ(display.size(), 3u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+          EXPECT_EQ(display[2u].asString(), "timeline-overview");
 
-            ASSERT_EQ(data.size(), 0u);
+          ASSERT_EQ(data.size(), 0u);
 
-          } else if (nameString == "MainThreadLongTask") {
-            EXPECT_EQ(display.size(), 2u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
+        } else if (nameString == "MainThreadLongTask") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 1u);
+          ASSERT_EQ(data.size(), 1u);
 
-            ASSERT_TRUE(data[0u].isObject());
-            EXPECT_EQ_JSON(data[0u]["key"], String, "category");
-            EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
-            EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "category");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
 
-          } else if (nameString == "Log") {
-            EXPECT_EQ(display.size(), 1u);
-            EXPECT_EQ(display[0u].asString(), "marker-table");
+        } else if (nameString == "Log") {
+          EXPECT_EQ(display.size(), 1u);
+          EXPECT_EQ(display[0u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 2u);
+          ASSERT_EQ(data.size(), 2u);
 
-            ASSERT_TRUE(data[0u].isObject());
-            EXPECT_EQ_JSON(data[0u]["key"], String, "module");
-            EXPECT_EQ_JSON(data[0u]["label"], String, "Module");
-            EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "module");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Module");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
 
-            ASSERT_TRUE(data[1u].isObject());
-            EXPECT_EQ_JSON(data[1u]["key"], String, "name");
-            EXPECT_EQ_JSON(data[1u]["label"], String, "Name");
-            EXPECT_EQ_JSON(data[1u]["format"], String, "string");
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "name");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "Name");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
 
-          } else if (nameString == "MediaSample") {
-            EXPECT_EQ(display.size(), 2u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
+        } else if (nameString == "MediaSample") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 2u);
+          ASSERT_EQ(data.size(), 2u);
 
-            ASSERT_TRUE(data[0u].isObject());
-            EXPECT_EQ_JSON(data[0u]["key"], String, "sampleStartTimeUs");
-            EXPECT_EQ_JSON(data[0u]["label"], String, "Sample start time");
-            EXPECT_EQ_JSON(data[0u]["format"], String, "microseconds");
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "sampleStartTimeUs");
+          EXPECT_EQ_JSON(data[0u]["label"], String, "Sample start time");
+          EXPECT_EQ_JSON(data[0u]["format"], String, "microseconds");
 
-            ASSERT_TRUE(data[1u].isObject());
-            EXPECT_EQ_JSON(data[1u]["key"], String, "sampleEndTimeUs");
-            EXPECT_EQ_JSON(data[1u]["label"], String, "Sample end time");
-            EXPECT_EQ_JSON(data[1u]["format"], String, "microseconds");
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "sampleEndTimeUs");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "Sample end time");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "microseconds");
 
-          } else if (nameString == "Budget") {
-            EXPECT_EQ(display.size(), 2u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
+        } else if (nameString == "Budget") {
+          EXPECT_EQ(display.size(), 2u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 0u);
+          ASSERT_EQ(data.size(), 0u);
 
-          } else if (nameString == "markers-gtest") {
-            EXPECT_EQ(display.size(), 7u);
-            EXPECT_EQ(display[0u].asString(), "marker-chart");
-            EXPECT_EQ(display[1u].asString(), "marker-table");
-            EXPECT_EQ(display[2u].asString(), "timeline-overview");
-            EXPECT_EQ(display[3u].asString(), "timeline-memory");
-            EXPECT_EQ(display[4u].asString(), "timeline-ipc");
-            EXPECT_EQ(display[5u].asString(), "timeline-fileio");
-            EXPECT_EQ(display[6u].asString(), "stack-chart");
+        } else if (nameString == "markers-gtest") {
+          EXPECT_EQ(display.size(), 7u);
+          EXPECT_EQ(display[0u].asString(), "marker-chart");
+          EXPECT_EQ(display[1u].asString(), "marker-table");
+          EXPECT_EQ(display[2u].asString(), "timeline-overview");
+          EXPECT_EQ(display[3u].asString(), "timeline-memory");
+          EXPECT_EQ(display[4u].asString(), "timeline-ipc");
+          EXPECT_EQ(display[5u].asString(), "timeline-fileio");
+          EXPECT_EQ(display[6u].asString(), "stack-chart");
 
-            EXPECT_EQ_JSON(schema["chartLabel"], String, "chart label");
-            EXPECT_EQ_JSON(schema["tooltipLabel"], String, "tooltip label");
-            EXPECT_EQ_JSON(schema["tableLabel"], String, "table label");
+          EXPECT_EQ_JSON(schema["chartLabel"], String, "chart label");
+          EXPECT_EQ_JSON(schema["tooltipLabel"], String, "tooltip label");
+          EXPECT_EQ_JSON(schema["tableLabel"], String, "table label");
 
-            ASSERT_EQ(data.size(), 14u);
+          ASSERT_EQ(data.size(), 14u);
 
-            ASSERT_TRUE(data[0u].isObject());
-            EXPECT_EQ_JSON(data[0u]["key"], String, "key with url");
-            EXPECT_TRUE(data[0u]["label"].isNull());
-            EXPECT_EQ_JSON(data[0u]["format"], String, "url");
-            EXPECT_TRUE(data[0u]["searchable"].isNull());
+          ASSERT_TRUE(data[0u].isObject());
+          EXPECT_EQ_JSON(data[0u]["key"], String, "key with url");
+          EXPECT_TRUE(data[0u]["label"].isNull());
+          EXPECT_EQ_JSON(data[0u]["format"], String, "url");
+          EXPECT_TRUE(data[0u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[1u].isObject());
-            EXPECT_EQ_JSON(data[1u]["key"], String, "key with label filePath");
-            EXPECT_EQ_JSON(data[1u]["label"], String, "label filePath");
-            EXPECT_EQ_JSON(data[1u]["format"], String, "file-path");
-            EXPECT_TRUE(data[1u]["searchable"].isNull());
+          ASSERT_TRUE(data[1u].isObject());
+          EXPECT_EQ_JSON(data[1u]["key"], String, "key with label filePath");
+          EXPECT_EQ_JSON(data[1u]["label"], String, "label filePath");
+          EXPECT_EQ_JSON(data[1u]["format"], String, "file-path");
+          EXPECT_TRUE(data[1u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[2u].isObject());
-            EXPECT_EQ_JSON(data[2u]["key"], String,
-                           "key with string not-searchable");
-            EXPECT_TRUE(data[2u]["label"].isNull());
-            EXPECT_EQ_JSON(data[2u]["format"], String, "string");
-            EXPECT_EQ_JSON(data[2u]["searchable"], Bool, false);
+          ASSERT_TRUE(data[2u].isObject());
+          EXPECT_EQ_JSON(data[2u]["key"], String,
+                         "key with string not-searchable");
+          EXPECT_TRUE(data[2u]["label"].isNull());
+          EXPECT_EQ_JSON(data[2u]["format"], String, "string");
+          EXPECT_EQ_JSON(data[2u]["searchable"], Bool, false);
 
-            ASSERT_TRUE(data[3u].isObject());
-            EXPECT_EQ_JSON(data[3u]["key"], String,
-                           "key with label duration searchable");
-            EXPECT_TRUE(data[3u]["label duration"].isNull());
-            EXPECT_EQ_JSON(data[3u]["format"], String, "duration");
-            EXPECT_EQ_JSON(data[3u]["searchable"], Bool, true);
+          ASSERT_TRUE(data[3u].isObject());
+          EXPECT_EQ_JSON(data[3u]["key"], String,
+                         "key with label duration searchable");
+          EXPECT_TRUE(data[3u]["label duration"].isNull());
+          EXPECT_EQ_JSON(data[3u]["format"], String, "duration");
+          EXPECT_EQ_JSON(data[3u]["searchable"], Bool, true);
 
-            ASSERT_TRUE(data[4u].isObject());
-            EXPECT_EQ_JSON(data[4u]["key"], String, "key with time");
-            EXPECT_TRUE(data[4u]["label"].isNull());
-            EXPECT_EQ_JSON(data[4u]["format"], String, "time");
-            EXPECT_TRUE(data[4u]["searchable"].isNull());
+          ASSERT_TRUE(data[4u].isObject());
+          EXPECT_EQ_JSON(data[4u]["key"], String, "key with time");
+          EXPECT_TRUE(data[4u]["label"].isNull());
+          EXPECT_EQ_JSON(data[4u]["format"], String, "time");
+          EXPECT_TRUE(data[4u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[5u].isObject());
-            EXPECT_EQ_JSON(data[5u]["key"], String, "key with seconds");
-            EXPECT_TRUE(data[5u]["label"].isNull());
-            EXPECT_EQ_JSON(data[5u]["format"], String, "seconds");
-            EXPECT_TRUE(data[5u]["searchable"].isNull());
+          ASSERT_TRUE(data[5u].isObject());
+          EXPECT_EQ_JSON(data[5u]["key"], String, "key with seconds");
+          EXPECT_TRUE(data[5u]["label"].isNull());
+          EXPECT_EQ_JSON(data[5u]["format"], String, "seconds");
+          EXPECT_TRUE(data[5u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[6u].isObject());
-            EXPECT_EQ_JSON(data[6u]["key"], String, "key with milliseconds");
-            EXPECT_TRUE(data[6u]["label"].isNull());
-            EXPECT_EQ_JSON(data[6u]["format"], String, "milliseconds");
-            EXPECT_TRUE(data[6u]["searchable"].isNull());
+          ASSERT_TRUE(data[6u].isObject());
+          EXPECT_EQ_JSON(data[6u]["key"], String, "key with milliseconds");
+          EXPECT_TRUE(data[6u]["label"].isNull());
+          EXPECT_EQ_JSON(data[6u]["format"], String, "milliseconds");
+          EXPECT_TRUE(data[6u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[7u].isObject());
-            EXPECT_EQ_JSON(data[7u]["key"], String, "key with microseconds");
-            EXPECT_TRUE(data[7u]["label"].isNull());
-            EXPECT_EQ_JSON(data[7u]["format"], String, "microseconds");
-            EXPECT_TRUE(data[7u]["searchable"].isNull());
+          ASSERT_TRUE(data[7u].isObject());
+          EXPECT_EQ_JSON(data[7u]["key"], String, "key with microseconds");
+          EXPECT_TRUE(data[7u]["label"].isNull());
+          EXPECT_EQ_JSON(data[7u]["format"], String, "microseconds");
+          EXPECT_TRUE(data[7u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[8u].isObject());
-            EXPECT_EQ_JSON(data[8u]["key"], String, "key with nanoseconds");
-            EXPECT_TRUE(data[8u]["label"].isNull());
-            EXPECT_EQ_JSON(data[8u]["format"], String, "nanoseconds");
-            EXPECT_TRUE(data[8u]["searchable"].isNull());
+          ASSERT_TRUE(data[8u].isObject());
+          EXPECT_EQ_JSON(data[8u]["key"], String, "key with nanoseconds");
+          EXPECT_TRUE(data[8u]["label"].isNull());
+          EXPECT_EQ_JSON(data[8u]["format"], String, "nanoseconds");
+          EXPECT_TRUE(data[8u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[9u].isObject());
-            EXPECT_EQ_JSON(data[9u]["key"], String, "key with bytes");
-            EXPECT_TRUE(data[9u]["label"].isNull());
-            EXPECT_EQ_JSON(data[9u]["format"], String, "bytes");
-            EXPECT_TRUE(data[9u]["searchable"].isNull());
+          ASSERT_TRUE(data[9u].isObject());
+          EXPECT_EQ_JSON(data[9u]["key"], String, "key with bytes");
+          EXPECT_TRUE(data[9u]["label"].isNull());
+          EXPECT_EQ_JSON(data[9u]["format"], String, "bytes");
+          EXPECT_TRUE(data[9u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[10u].isObject());
-            EXPECT_EQ_JSON(data[10u]["key"], String, "key with percentage");
-            EXPECT_TRUE(data[10u]["label"].isNull());
-            EXPECT_EQ_JSON(data[10u]["format"], String, "percentage");
-            EXPECT_TRUE(data[10u]["searchable"].isNull());
+          ASSERT_TRUE(data[10u].isObject());
+          EXPECT_EQ_JSON(data[10u]["key"], String, "key with percentage");
+          EXPECT_TRUE(data[10u]["label"].isNull());
+          EXPECT_EQ_JSON(data[10u]["format"], String, "percentage");
+          EXPECT_TRUE(data[10u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[11u].isObject());
-            EXPECT_EQ_JSON(data[11u]["key"], String, "key with integer");
-            EXPECT_TRUE(data[11u]["label"].isNull());
-            EXPECT_EQ_JSON(data[11u]["format"], String, "integer");
-            EXPECT_TRUE(data[11u]["searchable"].isNull());
+          ASSERT_TRUE(data[11u].isObject());
+          EXPECT_EQ_JSON(data[11u]["key"], String, "key with integer");
+          EXPECT_TRUE(data[11u]["label"].isNull());
+          EXPECT_EQ_JSON(data[11u]["format"], String, "integer");
+          EXPECT_TRUE(data[11u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[12u].isObject());
-            EXPECT_EQ_JSON(data[12u]["key"], String, "key with decimal");
-            EXPECT_TRUE(data[12u]["label"].isNull());
-            EXPECT_EQ_JSON(data[12u]["format"], String, "decimal");
-            EXPECT_TRUE(data[12u]["searchable"].isNull());
+          ASSERT_TRUE(data[12u].isObject());
+          EXPECT_EQ_JSON(data[12u]["key"], String, "key with decimal");
+          EXPECT_TRUE(data[12u]["label"].isNull());
+          EXPECT_EQ_JSON(data[12u]["format"], String, "decimal");
+          EXPECT_TRUE(data[12u]["searchable"].isNull());
 
-            ASSERT_TRUE(data[13u].isObject());
-            EXPECT_EQ_JSON(data[13u]["label"], String, "static label");
-            EXPECT_EQ_JSON(data[13u]["value"], String, "static value");
+          ASSERT_TRUE(data[13u].isObject());
+          EXPECT_EQ_JSON(data[13u]["label"], String, "static label");
+          EXPECT_EQ_JSON(data[13u]["value"], String, "static value");
 
-          } else if (nameString == "markers-gtest-special") {
-            EXPECT_EQ(display.size(), 0u);
-            ASSERT_EQ(data.size(), 0u);
+        } else if (nameString == "markers-gtest-special") {
+          EXPECT_EQ(display.size(), 0u);
+          ASSERT_EQ(data.size(), 0u);
 
-          } else if (nameString == "markers-gtest-unused") {
-            ADD_FAILURE() << "Schema for GtestUnusedMarker should not be here";
+        } else if (nameString == "markers-gtest-unused") {
+          ADD_FAILURE() << "Schema for GtestUnusedMarker should not be here";
 
-          } else {
-            ADD_FAILURE() << "Unknown marker schema '" << nameString.c_str()
-                          << "'";
-          }
+        } else {
+          ADD_FAILURE() << "Unknown marker schema '" << nameString.c_str()
+                        << "'";
         }
+      }
 
-        // Check that we've got all expected schema.
-        EXPECT_TRUE(testedSchemaNames.find("Text") != testedSchemaNames.end());
-        EXPECT_TRUE(testedSchemaNames.find("tracing") !=
-                    testedSchemaNames.end());
-        EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
-                    testedSchemaNames.end());
-      }  // markerSchema
-    }    // meta
-  });
+      // Check that we've got all expected schema.
+      EXPECT_TRUE(testedSchemaNames.find("Text") != testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("tracing") != testedSchemaNames.end());
+      EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
+                  testedSchemaNames.end());
+    }  // markerSchema
+  }    // meta
 
   Maybe<ProfilerBufferInfo> info = profiler_get_buffer_info();
   MOZ_RELEASE_ASSERT(info.isSome());
@@ -1810,30 +1719,32 @@ TEST(GeckoProfiler, GetProfile)
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
   UniquePtr<char[]> profile = profiler_get_profile();
-  JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
-    GET_JSON(meta, aRoot["meta"], Object);
-    {
-      GET_JSON(configuration, meta["configuration"], Object);
-      {
-        GET_JSON(features, configuration["features"], Array);
-        {
-          EXPECT_EQ(features.size(), 2u);
-          EXPECT_JSON_ARRAY_CONTAINS(features, String, "stackwalk");
-          // "threads" is automatically added when `filters` is not empty.
-          EXPECT_JSON_ARRAY_CONTAINS(features, String, "threads");
-        }
-        GET_JSON(threads, configuration["threads"], Array);
-        {
-          EXPECT_EQ(threads.size(), 1u);
-          EXPECT_JSON_ARRAY_CONTAINS(threads, String, "GeckoMain");
-        }
-      }
-    }
-  });
+  ASSERT_TRUE(profile && profile[0] == '{');
 
   profiler_stop();
 
   ASSERT_TRUE(!profiler_get_profile());
+}
+
+static void JSONOutputCheck(const char* aOutput) {
+  // Check that various expected strings are in the JSON.
+
+  ASSERT_TRUE(aOutput);
+  ASSERT_TRUE(aOutput[0] == '{');
+
+  ASSERT_TRUE(strstr(aOutput, "\"libs\""));
+
+  ASSERT_TRUE(strstr(aOutput, "\"meta\""));
+  ASSERT_TRUE(strstr(aOutput, "\"version\""));
+  ASSERT_TRUE(strstr(aOutput, "\"startTime\""));
+
+  ASSERT_TRUE(strstr(aOutput, "\"threads\""));
+  ASSERT_TRUE(strstr(aOutput, "\"GeckoMain\""));
+  ASSERT_TRUE(strstr(aOutput, "\"samples\""));
+  ASSERT_TRUE(strstr(aOutput, "\"markers\""));
+  ASSERT_TRUE(strstr(aOutput, "\"stackTable\""));
+  ASSERT_TRUE(strstr(aOutput, "\"frameTable\""));
+  ASSERT_TRUE(strstr(aOutput, "\"stringTable\""));
 }
 
 TEST(GeckoProfiler, StreamJSONForThisProcess)
@@ -1853,7 +1764,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
 
   UniquePtr<char[]> profile = w.ChunkedWriteFunc().CopyData();
 
-  JSONOutputCheck(profile.get(), [](const Json::Value&) {});
+  JSONOutputCheck(profile.get());
 
   profiler_stop();
 
@@ -1890,7 +1801,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
 
   UniquePtr<char[]> profile = w.ChunkedWriteFunc().CopyData();
 
-  JSONOutputCheck(profile.get(), [](const Json::Value&) {});
+  JSONOutputCheck(profile.get());
 
   // Stop the profiler and call profiler_stream_json_for_this_process on a
   // background thread.
@@ -2054,16 +1965,9 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
   }
   UniquePtr<char[]> profileCompleted = profiler_get_profile();
-  JSONOutputCheck(profileCompleted.get(), [](const Json::Value& aRoot) {
-    GET_JSON(threads, aRoot["threads"], Array);
-    {
-      GET_JSON(thread0, threads[0], Object);
-      {
-        EXPECT_JSON_ARRAY_CONTAINS(thread0["stringTable"], String,
-                                   "PostSamplingCallback completed");
-      }
-    }
-  });
+  ASSERT_TRUE(profileCompleted);
+  ASSERT_TRUE(profileCompleted[0] == '{');
+  ASSERT_TRUE(strstr(profileCompleted.get(), "PostSamplingCallback completed"));
 
   profiler_pause();
   {
@@ -2072,8 +1976,8 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingPaused);
   }
   UniquePtr<char[]> profilePaused = profiler_get_profile();
-  JSONOutputCheck(profilePaused.get(), [](const Json::Value& aRoot) {});
-  // This string shouldn't appear *anywhere* in the profile.
+  ASSERT_TRUE(profilePaused);
+  ASSERT_TRUE(profilePaused[0] == '{');
   ASSERT_FALSE(strstr(profilePaused.get(), "PostSamplingCallback paused"));
 
   profiler_resume();
@@ -2083,16 +1987,9 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
   }
   UniquePtr<char[]> profileResumed = profiler_get_profile();
-  JSONOutputCheck(profileResumed.get(), [](const Json::Value& aRoot) {
-    GET_JSON(threads, aRoot["threads"], Array);
-    {
-      GET_JSON(thread0, threads[0], Object);
-      {
-        EXPECT_JSON_ARRAY_CONTAINS(thread0["stringTable"], String,
-                                   "PostSamplingCallback resumed");
-      }
-    }
-  });
+  ASSERT_TRUE(profileResumed);
+  ASSERT_TRUE(profileResumed[0] == '{');
+  ASSERT_TRUE(strstr(profileResumed.get(), "PostSamplingCallback resumed"));
 
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  ProfilerFeature::StackWalk | ProfilerFeature::NoStackSampling,
@@ -2103,8 +2000,8 @@ TEST(GeckoProfiler, PostSamplingCallback)
     ASSERT_EQ(WaitForSamplingState(), SamplingState::NoStackSamplingCompleted);
   }
   UniquePtr<char[]> profileNoStacks = profiler_get_profile();
-  JSONOutputCheck(profileNoStacks.get(), [](const Json::Value& aRoot) {});
-  // This string shouldn't appear *anywhere* in the profile.
+  ASSERT_TRUE(profileNoStacks);
+  ASSERT_TRUE(profileNoStacks[0] == '{');
   ASSERT_FALSE(strstr(profileNoStacks.get(),
                       "PostSamplingCallback completed (no stacks)"));
 
@@ -2156,23 +2053,10 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   // Check that the Gecko Profiler profile contains at least the Base Profiler
   // main thread samples.
   UniquePtr<char[]> profile = profiler_get_profile();
-  JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
-    GET_JSON(threads, aRoot["threads"], Array);
-    {
-      bool found = false;
-      for (const Json::Value& thread : threads) {
-        ASSERT_TRUE(thread.isObject());
-        GET_JSON(name, thread["name"], String);
-        if (name.asString() == "GeckoMain (pre-xul)") {
-          found = true;
-          EXPECT_JSON_ARRAY_CONTAINS(thread["stringTable"], String,
-                                     "Marker from base profiler");
-          break;
-        }
-      }
-      EXPECT_TRUE(found);
-    }
-  });
+  ASSERT_TRUE(profile);
+  ASSERT_TRUE(profile[0] == '{');
+  ASSERT_TRUE(strstr(profile.get(), "GeckoMain (pre-xul)"));
+  ASSERT_TRUE(strstr(profile.get(), "Marker from base profiler"));
 
   profiler_stop();
   ASSERT_TRUE(!profiler_is_active());
