@@ -74,15 +74,8 @@ this.RecommendationProviderSwitcher = class RecommendationProviderSwitcher {
       return;
     }
 
-    const start = Cu.now();
     // Otherwise, if we get this far, we fallback to a v1 personalization provider.
     this.affinityProvider = new UserDomainAffinityProvider(...args);
-    this.store.dispatch(
-      ac.PerfEvent({
-        event: "topstories.domain.affinity.calculation.ms",
-        value: Math.round(Cu.now() - start),
-      })
-    );
   }
 
   /*
@@ -138,21 +131,6 @@ this.RecommendationProviderSwitcher = class RecommendationProviderSwitcher {
 
   getAffinities() {
     return this.affinityProvider.getAffinities();
-  }
-
-  dispatchRelevanceScoreDuration(scoreStart) {
-    if (this.affinityProvider) {
-      if (this.affinityProvider.dispatchRelevanceScoreDuration) {
-        this.affinityProvider.dispatchRelevanceScoreDuration(scoreStart);
-      } else {
-        this.store.dispatch(
-          ac.PerfEvent({
-            event: "PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION",
-            value: Math.round(Cu.now() - scoreStart),
-          })
-        );
-      }
-    }
   }
 
   async calculateItemRelevanceScore(item) {

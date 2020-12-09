@@ -913,38 +913,6 @@ describe("Top Stories Feed", () => {
       let rotated = instance.rotate(items);
       assert.deepEqual(items, rotated);
     });
-    it("should not dispatch ITEM_RELEVANCE_SCORE_DURATION metrics for not personalized", () => {
-      instance.personalized = false;
-      instance.dispatchRelevanceScore(50);
-      assert.notCalled(instance.store.dispatch);
-    });
-    it("should not dispatch v2 ITEM_RELEVANCE_SCORE_DURATION until initialized", () => {
-      instance.personalized = true;
-      instance.affinityProviderV2 = { use_v2: true };
-      instance.affinityProvider = {};
-      instance.dispatchRelevanceScore(50);
-      assert.notCalled(instance.store.dispatch);
-      instance.affinityProvider = { initialized: true };
-      instance.dispatchRelevanceScore(50);
-      assert.calledOnce(instance.store.dispatch);
-      const [action] = instance.store.dispatch.firstCall.args;
-      assert.equal(action.type, "TELEMETRY_PERFORMANCE_EVENT");
-      assert.equal(
-        action.data.event,
-        "PERSONALIZATION_V2_ITEM_RELEVANCE_SCORE_DURATION"
-      );
-    });
-    it("should dispatch v1 ITEM_RELEVANCE_SCORE_DURATION", () => {
-      instance.personalized = true;
-      instance.dispatchRelevanceScore(50);
-      assert.calledOnce(instance.store.dispatch);
-      const [action] = instance.store.dispatch.firstCall.args;
-      assert.equal(action.type, "TELEMETRY_PERFORMANCE_EVENT");
-      assert.equal(
-        action.data.event,
-        "PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION"
-      );
-    });
     it("should record top story impressions", async () => {
       instance._prefs = { get: pref => undefined, set: sinon.spy() };
       instance.personalized = true;
@@ -1264,7 +1232,6 @@ describe("Top Stories Feed", () => {
       globals.set("NewTabUtils", {
         blockedLinks: { isBlocked: globals.sandbox.spy() },
       });
-      instance.dispatchRelevanceScore = () => {};
 
       const response = {
         settings: { spocsPerNewTabs: 0.5 },
@@ -1345,7 +1312,6 @@ describe("Top Stories Feed", () => {
     });
     it("should delay inserting spoc if stories haven't been fetched", async () => {
       let fetchStub = globals.sandbox.stub();
-      instance.dispatchRelevanceScore = () => {};
       instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
@@ -1458,7 +1424,6 @@ describe("Top Stories Feed", () => {
     });
     it("should not insert spoc if user opted out", async () => {
       let fetchStub = globals.sandbox.stub();
-      instance.dispatchRelevanceScore = () => {};
       instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
@@ -1730,7 +1695,6 @@ describe("Top Stories Feed", () => {
     });
     it("should maintain frequency caps when inserting spocs", async () => {
       let fetchStub = globals.sandbox.stub();
-      instance.dispatchRelevanceScore = () => {};
       instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
@@ -1834,7 +1798,6 @@ describe("Top Stories Feed", () => {
     });
     it("should maintain client-side MAX_LIFETIME_CAP", async () => {
       let fetchStub = globals.sandbox.stub();
-      instance.dispatchRelevanceScore = () => {};
       instance.dispatchSpocDone = () => {};
       sectionsManagerStub.sections.set("topstories", {
         options: {
@@ -1960,26 +1923,6 @@ describe("Top Stories Feed", () => {
       instance.domainAffinitiesLastUpdated = Date.now();
       instance.observe("", "idle-daily");
       assert.isUndefined(instance.affinityProvider);
-    });
-    it("should send performance telemetry when updating domain affinities", async () => {
-      instance.getPocketState = () => {};
-      instance.dispatchPocketCta = () => {};
-      instance.init();
-      instance.personalized = true;
-      clock.tick(MIN_DOMAIN_AFFINITIES_UPDATE_TIME);
-      instance.updateSettings({
-        timeSegments: {},
-        domainAffinityParameterSets: {},
-      });
-      await instance.observe("", "idle-daily");
-
-      assert.calledOnce(instance.store.dispatch);
-      let [action] = instance.store.dispatch.firstCall.args;
-      assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
-      assert.equal(
-        action.data.event,
-        "topstories.domain.affinity.calculation.ms"
-      );
     });
     it("should add idle-daily observer right away, before waiting on init data", async () => {
       const addObserver = globals.sandbox.stub();

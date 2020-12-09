@@ -578,12 +578,6 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
-  createPerformanceEvent(action) {
-    return Object.assign(this.createPing(), action.data, {
-      action: "activity_stream_performance_event",
-    });
-  }
-
   createSessionEndEvent(session) {
     return Object.assign(this.createPing(), {
       session_id: session.session_id,
@@ -968,9 +962,6 @@ this.TelemetryFeed = class TelemetryFeed {
       // Intentional fall-through
       case at.AS_ROUTER_TELEMETRY_USER_EVENT:
         this.handleASRouterUserEvent(action);
-        break;
-      case at.TELEMETRY_PERFORMANCE_EVENT:
-        this.sendEvent(this.createPerformanceEvent(action));
         break;
       case at.UNINIT:
         this.uninit();
