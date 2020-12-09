@@ -407,11 +407,11 @@ class IOUtils::IOError {
  */
 struct IOUtils::InternalFileInfo {
   nsString mPath;
-  FileType mType;
-  uint64_t mSize;
-  uint64_t mLastModified;
+  FileType mType = FileType::Other;
+  uint64_t mSize = 0;
+  uint64_t mLastModified = 0;
   Maybe<uint64_t> mCreationTime;
-  uint32_t mPermissions;
+  uint32_t mPermissions = 0;
 };
 
 /**
