@@ -365,7 +365,6 @@ ElementEditor.prototype = {
   _createScrollableBadge: function() {
     const isInteractive =
       this.isOverflowDebuggingEnabled &&
-      this.node.walkerFront.traits.supportsOverflowDebugging2 &&
       // Document elements cannot have interative scrollable badges since retrieval of their
       // overflow causing elements is not supported.
       !this.node.isDocumentElement;
@@ -503,10 +502,7 @@ ElementEditor.prototype = {
    * scrollable badge is active/inactive.
    */
   updateOverflowHighlight: async function() {
-    if (
-      !this.isOverflowDebuggingEnabled ||
-      !this.node.walkerFront.traits.supportsOverflowDebugging2
-    ) {
+    if (!this.isOverflowDebuggingEnabled) {
       return;
     }
 
