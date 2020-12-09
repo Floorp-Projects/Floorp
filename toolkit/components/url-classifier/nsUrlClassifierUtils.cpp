@@ -1096,7 +1096,7 @@ bool nsUrlClassifierUtils::SpecialEncode(const nsACString& url,
 }
 
 bool nsUrlClassifierUtils::ShouldURLEscape(const unsigned char c) const {
-  return c <= 32 || c == '%' || c >= 127;
+  return c <= 32 || c == '%' || c == '#' || c >= 127;
 }
 
 // moztest- tables are built-in created in LookupCache, they contain hardcoded
