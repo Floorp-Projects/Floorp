@@ -258,8 +258,7 @@
 //   (operand here)                  # VALUE
 //
 //   TrySkipAwait                    # VALUE_OR_RVAL, CAN_SKIP
-//   Not                             # VALUE_OR_RVAL, !CAN_SKIP
-//   IfEq END                        # VALUE
+//   IfNe END                        # VALUE
 //
 //   JumpTarget                      # VALUE
 //   GetAliasedVar ".generator"      # VALUE .generator
