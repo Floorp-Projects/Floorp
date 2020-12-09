@@ -959,10 +959,12 @@ AddonWrapper = class {
 
   get canBypassThirdParyInstallPrompt() {
     // We only bypass if the extension is signed (to support distributions
-    // that turn off the signing requirement) and has recommendation states.
+    // that turn off the signing requirement) and has recommendation states,
+    // or the extension is signed as privileged.
     return (
-      this.signedState >= AddonManager.SIGNEDSTATE_SIGNED &&
-      this.recommendationStates.length
+      this.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED ||
+      (this.signedState >= AddonManager.SIGNEDSTATE_SIGNED &&
+        this.recommendationStates.length)
     );
   }
 
