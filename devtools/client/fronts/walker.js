@@ -12,12 +12,6 @@ const {
 const { walkerSpec } = require("devtools/shared/specs/walker");
 const { safeAsyncMethod } = require("devtools/shared/async-utils");
 
-loader.lazyRequireGetter(
-  this,
-  "nodeConstants",
-  "devtools/shared/dom-node-constants"
-);
-
 /**
  * Client side of the DOM walker.
  */
@@ -328,33 +322,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
         if ("numChildren" in change) {
           targetFront._form.numChildren = change.numChildren;
         }
-      } else if (change.type === "frameLoad") {
-        // @backward-compat { version 81 } The frameLoad mutation was removed in favor
-        // of the root-node resource.
-
-        // Nothing we need to do here, except verify that we don't have any
-        // document children, because we should have gotten a documentUnload
-        // first.
-        for (const child of targetFront.treeChildren()) {
-          if (child.nodeType === nodeConstants.DOCUMENT_NODE) {
-            console.warn(
-              "Got an unexpected frameLoad in the inspector, " +
-                "please file a bug on bugzilla.mozilla.org!"
-            );
-            console.trace();
-          }
-        }
-      } else if (change.type === "documentUnload") {
-        // @backward-compat { version 81 } The documentUnload mutation was removed in
-        // favor of the root-node resource.
-
-        // We try to give fronts instead of actorIDs, but these fronts need
-        // to be destroyed now.
-        emittedMutation.target = targetFront.actorID;
-        emittedMutation.targetParent = targetFront.parentNode();
-
-        // Release the document node and all of its children, even retained.
-        this._releaseFront(targetFront, true);
       } else if (change.type === "shadowRootAttached") {
         targetFront._form.isShadowHost = true;
       } else if (change.type === "customElementDefined") {
