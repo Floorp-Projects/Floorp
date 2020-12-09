@@ -705,6 +705,13 @@ function synthesizeNativeClickAndWaitForClickEvent(
   return synthesizeNativeClick(aElement, aX, aY);
 }
 
+// Promise-returning variant of synthesizeNativeClickAndWaitForClickEvent
+function promiseNativeClickAndClickEvent(aElement, aX, aY) {
+  return new Promise(resolve => {
+    synthesizeNativeClickAndWaitForClickEvent(aElement, aX, aY, resolve);
+  });
+}
+
 // Move the mouse to (dx, dy) relative to |target|, and scroll the wheel
 // at that location.
 // Moving the mouse is necessary to avoid wheel events from two consecutive
