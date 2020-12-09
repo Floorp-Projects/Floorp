@@ -13,7 +13,6 @@
 #include "ErrorList.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/InitializedOnce.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
@@ -154,8 +153,6 @@ class QuotaManager final : public BackgroundThreadObject {
 
   // Returns a non-owning reference.
   static QuotaManager* Get();
-
-  static QuotaManager& GetRef();
 
   // Returns true if we've begun the shutdown process.
   static bool IsShuttingDown();
@@ -425,9 +422,6 @@ class QuotaManager final : public BackgroundThreadObject {
 
   void NotifyStoragePressure(uint64_t aUsage);
 
-  void MaybeRecordShutdownStep(Client::Type aClientType,
-                               const nsACString& aStepDescription);
-
   static void GetStorageId(PersistenceType aPersistenceType,
                            const nsACString& aOrigin, Client::Type aClientType,
                            nsACString& aDatabaseId);
@@ -573,6 +567,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   int64_t GenerateDirectoryLockId();
 
+  static void ShutdownTimerCallback(nsITimer* aTimer, void* aClosure);
+
   // Thread on which IO is performed.
   nsCOMPtr<nsIThread> mIOThread;
 
@@ -580,9 +576,6 @@ class QuotaManager final : public BackgroundThreadObject {
 
   // A timer that gets activated at shutdown to ensure we close all storages.
   nsCOMPtr<nsITimer> mShutdownTimer;
-
-  EnumeratedArray<Client::Type, Client::TYPE_MAX, nsCString> mShutdownSteps;
-  LazyInitializedOnce<const TimeStamp> mShutdownStartedAt;
 
   mozilla::Mutex mQuotaMutex;
 

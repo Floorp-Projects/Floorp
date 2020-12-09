@@ -10,16 +10,17 @@
 #include <cstdint>
 #include "ErrorList.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/InitializedOnce.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/QuotaInfo.h"
 #include "mozilla/fallible.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
-#include "nsTHashtable.h"
 
 class nsIFile;
 
@@ -41,7 +42,6 @@ BEGIN_QUOTA_NAMESPACE
 class OriginScope;
 class QuotaManager;
 class UsageInfo;
-struct GroupAndOrigin;
 
 // An abstract interface for quota manager clients.
 // Each storage API must provide an implementation of this interface in order
@@ -172,13 +172,21 @@ class Client {
   bool InitiateShutdownWorkThreads();
   void FinalizeShutdownWorkThreads();
 
-  virtual nsCString GetShutdownStatus() const = 0;
   virtual bool IsShutdownCompleted() const = 0;
-  virtual void ForceKillActors() = 0;
+
+  void MaybeRecordShutdownStep(const nsACString& aStepDescription);
 
  private:
   virtual void InitiateShutdown() = 0;
+  virtual nsCString GetShutdownStatus() const = 0;
+  virtual void ForceKillActors() = 0;
   virtual void FinalizeShutdown() = 0;
+
+  // A timer that gets activated at shutdown to ensure we close all storages.
+  nsCOMPtr<nsITimer> mShutdownTimer;
+
+  nsCString mShutdownSteps;
+  LazyInitializedOnce<const TimeStamp> mShutdownStartedAt;
 
  protected:
   virtual ~Client() = default;
