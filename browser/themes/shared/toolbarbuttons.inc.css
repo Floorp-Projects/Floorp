@@ -402,6 +402,15 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   }
 }
 
+/* Add spacing around the separator between the import button and the bookmark
+ * items, such that it matches spacing around bookmark separators. */
+#PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
+#PersonalToolbar > #import-button + #personal-bookmarks {
+  /* space before the separator (added to 2px margin on the import button) */
+  margin-inline-start: 2px;
+  /* space after (same as `padding-inline` for separators above) */
+  padding-inline-start: 4px;
+}
 
 /* The bookmarks toolbar is smaller than the other toolbars, so we
  * need to override the badge position to not be cut off. */
