@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import six
 import argparse
 import sys
 import traceback
@@ -55,7 +56,7 @@ class TestRunner(object):
         self.logger = get_default_logger(component="TestRunner")
 
     def gather_tests(self):
-        for item in globals().itervalues():
+        for item in six.itervalues(globals()):
             if isinstance(item, types.FunctionType) and item.__name__.startswith(
                 "test_"
             ):

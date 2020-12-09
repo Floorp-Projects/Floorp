@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, print_function
 
+import six
 import argparse
 import os
 import platform
@@ -606,7 +607,7 @@ class _PrintTests(_StopAction):
                         test_list[suite]["subtests"].append(subtest)
 
             # print the list in a nice, readable format
-            for key in sorted(test_list.iterkeys()):
+            for key in sorted(six.iterkeys(test_list)):
                 print("\n%s" % key)
                 print("  type: %s" % test_list[key]["type"])
                 if len(test_list[key]["subtests"]) != 0:
