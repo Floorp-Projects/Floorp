@@ -92,9 +92,7 @@ def is_release_promotion_available(parameters):
             },
             "next_version": {
                 "type": "string",
-                "description": (
-                    "Next version.",
-                ),
+                "description": "Next version.",
                 "default": "",
             },
         },
