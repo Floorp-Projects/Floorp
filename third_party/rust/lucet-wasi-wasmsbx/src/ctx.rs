@@ -16,19 +16,19 @@ pub struct WasiCtxBuilder {
     env: HashMap<CString, CString>,
 }
 
+lazy_static! {
+    static ref DEV_NULL_FILE: File = dev_null();
+}
+
 impl WasiCtxBuilder {
     /// Builder for a new `WasiCtx`.
     pub fn new() -> Self {
-        let null = dev_null();
         WasiCtxBuilder {
             fds: HashMap::new(),
             preopens: HashMap::new(),
             args: vec![],
             env: HashMap::new(),
         }
-        .fd_dup_for_io_desc(0, &null, false /* writeable */)
-        .fd_dup_for_io_desc(1, &null, true  /* writeable */)
-        .fd_dup_for_io_desc(2, &null, true  /* writeable */)
     }
 
     pub fn args(mut self, args: &[&str]) -> Self {

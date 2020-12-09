@@ -89,7 +89,7 @@ impl RegionInternal for MmapRegion {
             // make the sigstack read/writable
             (slot.sigstack, limits.signal_stack_size),
         ]
-        .into_iter()
+        .iter()
         {
             // eprintln!("setting r/w {:p}[{:x}]", *ptr, len);
             unsafe { mprotect(*ptr, *len, ProtFlags::PROT_READ | ProtFlags::PROT_WRITE)? };
@@ -138,7 +138,7 @@ impl RegionInternal for MmapRegion {
             (slot.globals, slot.limits.globals_size),
             (slot.sigstack, slot.limits.signal_stack_size),
         ]
-        .into_iter()
+        .iter()
         {
             // eprintln!("setting none {:p}[{:x}]", *ptr, len);
             unsafe {

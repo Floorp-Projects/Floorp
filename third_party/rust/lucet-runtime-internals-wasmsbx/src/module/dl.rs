@@ -4,7 +4,7 @@ use libc::c_void;
 use libloading::Library;
 use lucet_module::{
     FunctionHandle, FunctionIndex, FunctionPointer, FunctionSpec, ModuleData, ModuleFeatures,
-    ModuleSignature, SerializedModule, Signature, LUCET_MODULE_SYM,
+    SerializedModule, Signature, LUCET_MODULE_SYM,
 };
 #[cfg(feature = "signature_checking")]
 use lucet_module::{ModuleSignature, PublicKey};

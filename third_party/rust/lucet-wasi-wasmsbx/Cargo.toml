@@ -32,6 +32,7 @@ lucet-runtime-internals = { path = "../lucet-runtime/lucet-runtime-internals", v
 lucet-module = { path = "../lucet-module", version = "0.1.1", package="lucet-module-wasmsbx" }
 nix = "0.13"
 rand = "0.7"
+lazy_static = ">=1.4.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 mach = "0.3.2"

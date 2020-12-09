@@ -804,7 +804,7 @@ source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850baf
 [[package]]
 name = "cranelift-entity"
 version = "0.41.0"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a64705a9d3fbcce9de92f4988558525#477d8fc53a64705a9d3fbcce9de92f4988558525"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=cd07861d1c92147b35b538e6f94fde7d1986f9ad#cd07861d1c92147b35b538e6f94fde7d1986f9ad"
 
 [[package]]
 name = "cranelift-entity"
@@ -2832,7 +2832,7 @@ dependencies = [
 [[package]]
 name = "lucet-module-wasmsbx"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a64705a9d3fbcce9de92f4988558525#477d8fc53a64705a9d3fbcce9de92f4988558525"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=cd07861d1c92147b35b538e6f94fde7d1986f9ad#cd07861d1c92147b35b538e6f94fde7d1986f9ad"
 dependencies = [
  "bincode",
  "byteorder",
@@ -2848,7 +2848,7 @@ dependencies = [
 [[package]]
 name = "lucet-runtime-internals-wasmsbx"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a64705a9d3fbcce9de92f4988558525#477d8fc53a64705a9d3fbcce9de92f4988558525"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=cd07861d1c92147b35b538e6f94fde7d1986f9ad#cd07861d1c92147b35b538e6f94fde7d1986f9ad"
 dependencies = [
  "bincode",
  "bitflags",
@@ -2870,7 +2870,7 @@ dependencies = [
 [[package]]
 name = "lucet-runtime-wasmsbx"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a64705a9d3fbcce9de92f4988558525#477d8fc53a64705a9d3fbcce9de92f4988558525"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=cd07861d1c92147b35b538e6f94fde7d1986f9ad#cd07861d1c92147b35b538e6f94fde7d1986f9ad"
 dependencies = [
  "cc",
  "libc",
@@ -2883,10 +2883,11 @@ dependencies = [
 [[package]]
 name = "lucet-wasi-wasmsbx"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a64705a9d3fbcce9de92f4988558525#477d8fc53a64705a9d3fbcce9de92f4988558525"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=cd07861d1c92147b35b538e6f94fde7d1986f9ad#cd07861d1c92147b35b538e6f94fde7d1986f9ad"
 dependencies = [
  "cast",
  "failure",
+ "lazy_static",
  "libc",
  "lucet-module-wasmsbx",
  "lucet-runtime-internals-wasmsbx",
@@ -4291,7 +4292,7 @@ dependencies = [
 [[package]]
 name = "rlbox_lucet_sandbox"
 version = "0.1.0"
-source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=ed8bac8812e9f335d5fadd0f4ece96981aba88a3#ed8bac8812e9f335d5fadd0f4ece96981aba88a3"
+source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=f3cace4fb8b53db0849c62af4fa62bade5a620f7#f3cace4fb8b53db0849c62af4fa62bade5a620f7"
 dependencies = [
  "failure",
  "goblin",
