@@ -151,7 +151,7 @@ with only_when(host_is_osx | target_is_osx):
     @imports(_from="os.path", _import="isdir")
     @imports("plistlib")
     def macos_sdk(sdk, host):
-        sdk_min_version = Version("10.11")
+        sdk_min_version = Version("10.12")
         sdk_max_version = Version("11.0")
 
         if sdk:
