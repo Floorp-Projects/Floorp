@@ -6944,9 +6944,9 @@
   "FX_TAB_CLOSE_TIME_NO_ANIM_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
+    "alert_emails": ["mconley@mozilla.com", "esmyth@mozilla.com"],
     "bug_numbers": [1340842],
-    "expires_in_version": "86",
+    "expires_in_version": "92",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -6955,9 +6955,9 @@
   "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
+    "alert_emails": ["mconley@mozilla.com", "esmyth@mozilla.com"],
     "bug_numbers": [1340842],
-    "expires_in_version": "86",
+    "expires_in_version": "92",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
