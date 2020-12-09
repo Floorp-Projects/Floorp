@@ -13,7 +13,6 @@ import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMen
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
-import { CSSTransition } from "react-transition-group";
 
 export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
@@ -117,7 +116,6 @@ export class BaseContent extends React.PureComponent {
     this.openCustomizationMenu = this.openCustomizationMenu.bind(this);
     this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
-    this.setPref = this.setPref.bind(this);
     this.state = { fixedSearch: false, customizeMenuVisible: false };
   }
 
@@ -156,10 +154,6 @@ export class BaseContent extends React.PureComponent {
     this.setState({ customizeMenuVisible: false });
   }
 
-  setPref(pref, value) {
-    this.props.dispatch(ac.SetPref(pref, value));
-  }
-
   render() {
     const { props } = this;
     const { App } = props;
@@ -191,19 +185,6 @@ export class BaseContent extends React.PureComponent {
     const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
     const canShowCustomizationMenu =
       customizationMenuEnabled || newNewtabExperienceEnabled;
-    const showCustomizationMenu =
-      canShowCustomizationMenu && this.state.customizeMenuVisible;
-    const enabledSections = {
-      topSitesEnabled: prefs["feeds.topsites"],
-      pocketEnabled: prefs["feeds.section.topstories"],
-      snippetsEnabled: prefs["feeds.snippets"],
-      highlightsEnabled: prefs["feeds.section.highlights"],
-      showSponsoredTopSitesEnabled: prefs.showSponsoredTopSites,
-      showSponsoredPocketEnabled: prefs.showSponsored,
-      topSitesRowsCount: prefs.topSitesRows,
-    };
-    const pocketRegion = prefs["feeds.system.topstories"];
-    const { mayHaveSponsoredTopSites } = prefs;
 
     const outerClassName = [
       "outer-wrapper",
@@ -257,22 +238,9 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
-        <CSSTransition
-          timeout={250}
-          classNames="customize-animate"
-          in={showCustomizationMenu}
-          appear={true}
-          unmountOnExit={true}
-        >
-          <CustomizeMenu
-            onClose={this.closeCustomizationMenu}
-            openPreferences={this.openPreferences}
-            setPref={this.setPref}
-            enabledSections={enabledSections}
-            pocketRegion={pocketRegion}
-            mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-          />
-        </CSSTransition>
+        {canShowCustomizationMenu && this.state.customizeMenuVisible && (
+          <CustomizeMenu onClose={this.closeCustomizationMenu} />
+        )}
       </div>
     );
   }

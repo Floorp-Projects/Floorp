@@ -14,18 +14,13 @@ export class _CustomizeMenu extends React.PureComponent {
       <div className="customize-menu">
         <button
           onClick={this.props.onClose}
-          className="close-button"
-          data-l10n-id="newtab-custom-close-button"
-        />
+          className="button done close-button"
+        >
+          Done
+        </button>
         <ThemesSection />
         <BackgroundsSection />
-        <ContentSection
-          openPreferences={this.props.openPreferences}
-          setPref={this.props.setPref}
-          enabledSections={this.props.enabledSections}
-          pocketRegion={this.props.pocketRegion}
-          mayHaveSponsoredTopSites={this.props.mayHaveSponsoredTopSites}
-        />
+        <ContentSection />
       </div>
     );
   }
