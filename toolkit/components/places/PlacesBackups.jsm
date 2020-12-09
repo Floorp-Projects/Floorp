@@ -320,7 +320,7 @@ var PlacesBackups = {
           this._backupFiles.unshift(newFilePath);
         }
         let jsonString = await IOUtils.read(aFilePath);
-        await IOUtils.writeAtomic(newFilePath, jsonString, {
+        await IOUtils.write(newFilePath, jsonString, {
           compress: true,
         });
         await limitBackups(aMaxBackup, this._backupFiles);

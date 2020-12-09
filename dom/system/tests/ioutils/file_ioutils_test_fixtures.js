@@ -11,7 +11,7 @@ async function createFile(location, contents = "") {
   if (typeof contents === "string") {
     contents = new TextEncoder().encode(contents);
   }
-  await IOUtils.writeAtomic(location, contents);
+  await IOUtils.write(location, contents);
   const exists = await fileExists(location);
   ok(exists, `Created temporary file at: ${location}`);
 }
