@@ -9,12 +9,17 @@
 
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
 
 namespace impl {
+extern "C" {
+void fog_string_set(uint32_t aId, const nsACString& aValue);
+uint32_t fog_string_test_has_value(uint32_t aId, const char* aStorageName);
+void fog_string_test_get_value(uint32_t aId, const char* aStorageName,
+                               nsACString& aValue);
+}
 
 class StringMetric {
  public:
@@ -28,7 +33,7 @@ class StringMetric {
    *
    * @param aValue The string to set the metric to.
    */
-  void Set(const nsACString& aValue) const { fog_string_set(mId, &aValue); }
+  void Set(const nsACString& aValue) const { fog_string_set(mId, aValue); }
 
   /**
    * **Test-only API**
@@ -44,12 +49,12 @@ class StringMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<nsCString> TestGetValue(const nsACString& aStorageName) const {
-    if (!fog_string_test_has_value(mId, &aStorageName)) {
+  Maybe<nsCString> TestGetValue(const char* aStorageName) const {
+    if (!fog_string_test_has_value(mId, aStorageName)) {
       return Nothing();
     }
     nsCString ret;
-    fog_string_test_get_value(mId, &aStorageName, &ret);
+    fog_string_test_get_value(mId, aStorageName, ret);
     return Some(ret);
   }
 
