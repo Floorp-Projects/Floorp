@@ -8,6 +8,7 @@
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
@@ -271,8 +272,7 @@ class Manager::Factory {
 
     MOZ_ALWAYS_TRUE(sFactory->mManagerList.RemoveElement(&aManager));
 
-    quota::QuotaManager::GetRef().MaybeRecordShutdownStep(
-        quota::Client::DOMCACHE, "Manager removed"_ns);
+    CacheQuotaClient::Get()->MaybeRecordShutdownStep("Manager removed"_ns);
 
     // clean up the factory singleton if there are no more managers
     MaybeDestroyInstance();
