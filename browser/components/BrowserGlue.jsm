@@ -4180,6 +4180,7 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
+        "privacy.annotate_channels.strict_list.enabled": null,
       },
       standard: {
         "network.cookie.cookieBehavior": null,
@@ -4188,6 +4189,7 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
+        "privacy.annotate_channels.strict_list.enabled": null,
       },
     };
     let type = "strict";
@@ -4244,6 +4246,16 @@ var ContentBlockingCategoriesPrefs = {
         case "-stp":
           this.CATEGORY_PREFS[type][
             "privacy.trackingprotection.socialtracking.enabled"
+          ] = false;
+          break;
+        case "lvl2":
+          this.CATEGORY_PREFS[type][
+            "privacy.annotate_channels.strict_list.enabled"
+          ] = true;
+          break;
+        case "-lvl2":
+          this.CATEGORY_PREFS[type][
+            "privacy.annotate_channels.strict_list.enabled"
           ] = false;
           break;
         case "cookieBehavior0":
