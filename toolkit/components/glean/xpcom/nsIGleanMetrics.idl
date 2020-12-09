@@ -31,7 +31,7 @@ interface nsIGleanBoolean : nsISupports
    * @return true if metric value exists, otherwise false
    */
   [implicit_jscontext]
-  bool testHasValue(in ACString aStorageName);
+  bool testHasValue(in AUTF8String aStorageName);
 
   /**
    * **Test-only API**
@@ -48,7 +48,7 @@ interface nsIGleanBoolean : nsISupports
    * @return value of the stored metric.
    */
   [implicit_jscontext]
-  bool testGetValue(in ACString aStorageName);
+  bool testGetValue(in AUTF8String aStorageName);
 };
 
 [scriptable, uuid(aa15fd20-1e8a-11eb-9bec-0800200c9a66)]
@@ -77,7 +77,7 @@ interface nsIGleanDatetime : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in ACString aStorageName);
+  jsval testGetValue(in AUTF8String aStorageName);
 };
 
 [scriptable, uuid(05b89d2a-d57c-11ea-82da-3f63399a6f5a)]
@@ -104,7 +104,7 @@ interface nsIGleanCounter : nsISupports
    *
    * @return value of the stored metric, or undefined if there is no value.
    */
-  jsval testGetValue(in ACString aStorageName);
+  jsval testGetValue(in AUTF8String aStorageName);
 };
 
 [scriptable, uuid(d84a3555-46f1-48c1-9122-e8e88b069d2b)]
@@ -115,7 +115,7 @@ interface nsIGleanString : nsISupports
   *
   * @param value The string to set the metric to.
   */
-  void set(in ACString value);
+  void set(in AUTF8String value);
 
   /**
    * **Test-only API**
@@ -132,7 +132,7 @@ interface nsIGleanString : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in ACString aStorageName);
+  jsval testGetValue(in AUTF8String aStorageName);
 };
 
 [scriptable, uuid(2586530c-030f-11eb-93cb-cbf30d25225a)]
@@ -171,7 +171,7 @@ interface nsIGleanTimespan : nsISupports
    *
    * @return value of the stored metric, or undefined if there is no value.
    */
-  jsval testGetValue(in ACString aStorageName);
+  jsval testGetValue(in AUTF8String aStorageName);
 };
 
 [scriptable, uuid(395700e7-06f6-46be-adcc-ea58977fda6d)]
@@ -182,7 +182,7 @@ interface nsIGleanUuid : nsISupports
    *
    * @param aValue The UUID to set the metric to.
    */
-  void set(in ACString aValue);
+  void set(in AUTF8String aValue);
 
   /**
    * Generate a new random UUID and set the metric to it.
@@ -204,7 +204,7 @@ interface nsIGleanUuid : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in ACString aStorageName);
+  jsval testGetValue(in AUTF8String aStorageName);
 };
 
 [scriptable, uuid(1b01424a-1f55-11eb-92a5-0754f6c3f240)]

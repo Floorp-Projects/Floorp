@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Tuple.h"
 #include "nsTArray.h"
 
@@ -59,7 +60,7 @@ TEST(FOG, TestCppCounterWorks)
 
   ASSERT_EQ(
       42,
-      mozilla::glean::test_only::bad_code.TestGetValue("test-ping").value());
+      mozilla::glean::test_only::bad_code.TestGetValue("test-ping"_ns).value());
 }
 
 TEST(FOG, TestCppStringWorks)
@@ -68,7 +69,7 @@ TEST(FOG, TestCppStringWorks)
   mozilla::glean::test_only::cheesy_string.Set(kValue);
 
   ASSERT_STREQ(kValue.get(), mozilla::glean::test_only::cheesy_string
-                                 .TestGetValue("test-ping")
+                                 .TestGetValue("test-ping"_ns)
                                  .value()
                                  .get());
 }
@@ -81,7 +82,7 @@ TEST(FOG, TestCppStringWorks)
 //   mozilla::glean::test_only::can_we_time_it.Stop();
 //
 //   ASSERT_TRUE(
-//       mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping")
+//       mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping"_ns)
 //           .value() > 0);
 // }
 
@@ -89,14 +90,16 @@ TEST(FOG, TestCppUuidWorks)
 {
   nsCString kTestUuid("decafdec-afde-cafd-ecaf-decafdecafde");
   test_only::what_id_it.Set(kTestUuid);
-  ASSERT_STREQ(kTestUuid.get(),
-               test_only::what_id_it.TestGetValue("test-ping").value().get());
+  ASSERT_STREQ(
+      kTestUuid.get(),
+      test_only::what_id_it.TestGetValue("test-ping"_ns).value().get());
 
   test_only::what_id_it.GenerateAndSet();
   // Since we generate v4 UUIDs, and the first character of the third group
   // isn't 4, this won't ever collide with kTestUuid.
-  ASSERT_STRNE(kTestUuid.get(),
-               test_only::what_id_it.TestGetValue("test-ping").value().get());
+  ASSERT_STRNE(
+      kTestUuid.get(),
+      test_only::what_id_it.TestGetValue("test-ping"_ns).value().get());
 }
 
 TEST(FOG, TestCppBooleanWorks)
@@ -104,9 +107,9 @@ TEST(FOG, TestCppBooleanWorks)
   mozilla::glean::test_only::can_we_flag_it.Set(false);
 
   ASSERT_TRUE(
-      mozilla::glean::test_only::can_we_flag_it.TestHasValue("test-ping"));
+      mozilla::glean::test_only::can_we_flag_it.TestHasValue("test-ping"_ns));
   ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it.TestGetValue(
-                       "test-ping"));
+                       "test-ping"_ns));
 }
 
 // TODO: to be enabled after changes from bug 1677448 are vendored.
