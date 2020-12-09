@@ -18,23 +18,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1509575
   </div>
   <script type="application/javascript">
 
-function* test(testDriver) {
-  // This listener will trigger the test to continue once APZ is done with
-  // processing the scroll.
-  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
-
+async function test() {
+  let transformEndPromise = promiseTransformEnd();
   synthesizeNativeTouchDrag(document.body, 10, 100, -100, 0);
   dump("Finished native drag, waiting for transform-end observer...\n");
 
   // Wait for the APZ:TransformEnd to be fired after touch events are processed.
-  yield true;
-
-  // We get here once the APZ:TransformEnd has fired, so we don't need that
-  // observer any more.
-  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+  await transformEndPromise;
 
   // Flush state.
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   is(window.scrollX, 0, "layout viewport didn't scroll");
   let visualX = window.visualViewport.pageLeft;
@@ -52,26 +45,25 @@ function* test(testDriver) {
   } else {
     topWinUtils = SpecialPowers.getDOMWindowUtils(window);
   }
-  window.addEventListener("MozAfterPaint",
-                          () => setTimeout(testDriver, 0), {once: true});
+  let afterPaintPromise = promiseAfterPaint();
   ok(topWinUtils.isFirstPaint === false, "first paint not set");
   topWinUtils.isFirstPaint = true;
   // do something that forces a paint *and* an APZ update.
   document.getElementById("expand").style.width = "6000px";
 
   // Wait for the event listener to fire.
-  yield true;
+  await afterPaintPromise;
   ok(true, "MozAfterPaint fired");
 
   // Flush state just to be sure.
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   is(window.visualViewport.pageLeft, visualX, "visual viewport remains unchanged");
 }
 
 SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
