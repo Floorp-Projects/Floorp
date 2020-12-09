@@ -122,7 +122,7 @@ add_task(async function test_save_reload() {
 add_task(async function test_save_empty() {
   let [, store] = await promiseNewListAndStore();
 
-  await IOUtils.writeAtomic(store.path, new Uint8Array());
+  await IOUtils.write(store.path, new Uint8Array());
 
   await store.save();
 
@@ -199,7 +199,7 @@ add_task(async function test_load_string_predefined() {
     filePathLiteral +
     "}]}";
 
-  await IOUtils.writeAtomic(store.path, new TextEncoder().encode(string), {
+  await IOUtils.write(store.path, new TextEncoder().encode(string), {
     tmpPath: store.path + ".tmp",
   });
 
@@ -240,7 +240,7 @@ add_task(async function test_load_string_unrecognized() {
     "}," +
     '"saver":{"type":"copy"}}]}';
 
-  await IOUtils.writeAtomic(store.path, new TextEncoder().encode(string), {
+  await IOUtils.write(store.path, new TextEncoder().encode(string), {
     tmpPath: store.path + ".tmp",
   });
 
@@ -264,7 +264,7 @@ add_task(async function test_load_string_malformed() {
     '{"list":[{"source":null,"target":null},' +
     '{"source":{"url":"about:blank"}}}';
 
-  await IOUtils.writeAtomic(store.path, new TextEncoder().encode(string), {
+  await IOUtils.write(store.path, new TextEncoder().encode(string), {
     tmpPath: store.path + ".tmp",
   });
 

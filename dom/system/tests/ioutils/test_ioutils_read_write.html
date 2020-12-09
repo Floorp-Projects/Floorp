@@ -40,25 +40,25 @@
       let exists = await IOUtils.exists(tmpFileName);
       ok(!exists, `File ${tmpFileName} should not exist before writing`);
 
-      await IOUtils.writeAtomic(tmpFileName, untouchableContents);
+      await IOUtils.write(tmpFileName, untouchableContents);
 
       exists = await IOUtils.exists(tmpFileName);
       ok(exists, `File ${tmpFileName} should exist after writing`);
 
       const newContents = new TextEncoder().encode("Nah nah nah!\n");
       await Assert.rejects(
-        IOUtils.writeAtomic(tmpFileName, newContents, {
+        IOUtils.write(tmpFileName, newContents, {
           noOverwrite: true,
         }),
         /Refusing to overwrite the file at */,
-        "IOUtils::writeAtomic rejects writing to existing file if overwrites are disabled"
+        "IOUtils::write rejects writing to existing file if overwrites are disabled"
       );
       ok(
         await fileHasBinaryContents(tmpFileName, untouchableContents),
-        "IOUtils::writeAtomic doesn't change target file when overwrite is refused"
+        "IOUtils::write doesn't change target file when overwrite is refused"
       );
 
-      const bytesWritten = await IOUtils.writeAtomic(
+      const bytesWritten = await IOUtils.write(
         tmpFileName,
         newContents,
         { noOverwrite: false /* Default. */ }
@@ -66,7 +66,7 @@
       is(
         bytesWritten,
         newContents.length,
-        "IOUtils::writeAtomic can overwrite files if specified"
+        "IOUtils::write can overwrite files if specified"
       );
 
       await cleanup(tmpFileName);
@@ -81,42 +81,42 @@
       let destFileName = PathUtils.join(tmpDir, "test_write_with_backup_option.tmp");
       let backupFileName = destFileName + ".backup";
       let bytesWritten =
-        await IOUtils.writeAtomic(destFileName, fileContents, {
+        await IOUtils.write(destFileName, fileContents, {
           backupFile: backupFileName,
         });
       ok(
         await fileHasTextContents(destFileName, "Original file contents"),
-        "IOUtils::writeAtomic creates a new file with the correct contents"
+        "IOUtils::write creates a new file with the correct contents"
       );
       ok(
         !await fileExists(backupFileName),
-        "IOUtils::writeAtomic does not create a backup if the target file does not exist"
+        "IOUtils::write does not create a backup if the target file does not exist"
       );
       is(
         bytesWritten,
         fileContents.length,
-        "IOUtils::writeAtomic correctly writes to a new file without performing a backup"
+        "IOUtils::write correctly writes to a new file without performing a backup"
       );
 
       info("Test backup file option with existing destination");
       let newFileContents = new TextEncoder().encode("New file contents");
       ok(await fileExists(destFileName), `Expected ${destFileName} to exist`);
       bytesWritten =
-        await IOUtils.writeAtomic(destFileName, newFileContents, {
+        await IOUtils.write(destFileName, newFileContents, {
           backupFile: backupFileName,
         });
       ok(
         await fileHasTextContents(backupFileName, "Original file contents"),
-        "IOUtils::writeAtomic can backup an existing file before writing"
+        "IOUtils::write can backup an existing file before writing"
       );
       ok(
         await fileHasTextContents(destFileName, "New file contents"),
-        "IOUtils::writeAtomic can create the target with the correct contents"
+        "IOUtils::write can create the target with the correct contents"
       );
       is(
         bytesWritten,
         newFileContents.length,
-        "IOUtils::writeAtomic correctly writes to the target after taking a backup"
+        "IOUtils::write correctly writes to the target after taking a backup"
       );
 
       await cleanup(destFileName, backupFileName);
@@ -132,46 +132,46 @@
       let backupFileName = destFileName + ".backup";
       let tmpFileName = PathUtils.join(tmpDir, "temp_file.tmp");
       let bytesWritten =
-        await IOUtils.writeAtomic(destFileName, fileContents, {
+        await IOUtils.write(destFileName, fileContents, {
           backupFile: backupFileName,
           tmpPath: tmpFileName,
         });
-      ok(!await fileExists(tmpFileName), "IOUtils::writeAtomic cleans up the tmpFile");
+      ok(!await fileExists(tmpFileName), "IOUtils::write cleans up the tmpFile");
       ok(
         !await fileExists(backupFileName),
-        "IOUtils::writeAtomic does not create a backup if the target file does not exist"
+        "IOUtils::write does not create a backup if the target file does not exist"
       );
       ok(
         await fileHasTextContents(destFileName, "Original file contents"),
-        "IOUtils::writeAtomic can write to the destination when a temporary file is used"
+        "IOUtils::write can write to the destination when a temporary file is used"
       );
       is(
         bytesWritten,
         fileContents.length,
-        "IOUtils::writeAtomic can copy tmp file to destination without performing a backup"
+        "IOUtils::write can copy tmp file to destination without performing a backup"
       );
 
       info("Test backup with tmp and backup file options, existing destination");
       let newFileContents = new TextEncoder().encode("New file contents");
       bytesWritten =
-        await IOUtils.writeAtomic(destFileName, newFileContents, {
+        await IOUtils.write(destFileName, newFileContents, {
           backupFile: backupFileName,
           tmpPath: tmpFileName,
         });
 
-      ok(!await fileExists(tmpFileName), "IOUtils::writeAtomic cleans up the tmpFile");
+      ok(!await fileExists(tmpFileName), "IOUtils::write cleans up the tmpFile");
       ok(
         await fileHasTextContents(backupFileName, "Original file contents"),
-        "IOUtils::writeAtomic can create a backup if the target file exists"
+        "IOUtils::write can create a backup if the target file exists"
       );
       ok(
         await fileHasTextContents(destFileName, "New file contents"),
-        "IOUtils::writeAtomic can write to the destination when a temporary file is used"
+        "IOUtils::write can write to the destination when a temporary file is used"
       );
       is(
         bytesWritten,
         newFileContents.length,
-        "IOUtils::writeAtomic IOUtils::writeAtomic can move tmp file to destination after performing a backup"
+        "IOUtils::write IOUtils::write can move tmp file to destination after performing a backup"
       );
 
       await cleanup(destFileName, backupFileName);
@@ -182,11 +182,11 @@
 
       const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_partial_read.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
-      const bytesWritten = await IOUtils.writeAtomic(tmpFileName, bytes);
+      const bytesWritten = await IOUtils.write(tmpFileName, bytes);
       is(
         bytesWritten,
         50,
-        "IOUtils::writeAtomic can write entire byte array to file"
+        "IOUtils::write can write entire byte array to file"
       );
 
       // Read just the first 10 bytes.
@@ -213,11 +213,11 @@
 
       const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_empty.tmp");
       const emptyByteArray = new Uint8Array(0);
-      const bytesWritten = await IOUtils.writeAtomic(
+      const bytesWritten = await IOUtils.write(
         tmpFileName,
         emptyByteArray
       );
-      is(bytesWritten, 0, "IOUtils::writeAtomic can create an empty file");
+      is(bytesWritten, 0, "IOUtils::write can create an empty file");
 
       // Trying to explicitly read nothing isn't useful, but it should still
       // succeed.
@@ -239,11 +239,11 @@
       info("Test writing to a new binary file");
       const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_numbers.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
-      const bytesWritten = await IOUtils.writeAtomic(tmpFileName, bytes);
+      const bytesWritten = await IOUtils.write(tmpFileName, bytes);
       is(
         bytesWritten,
         50,
-        "IOUtils::writeAtomic can write entire byte array to file"
+        "IOUtils::write can write entire byte array to file"
       );
 
       // Read it back.
@@ -273,9 +273,9 @@
 
       info("Test writing a file at a relative destination");
       await Assert.rejects(
-        IOUtils.writeAtomic(tmpFileName, bytes),
+        IOUtils.write(tmpFileName, bytes),
         /Could not parse path/,
-        "IOUtils::writeAtomic only works with absolute paths"
+        "IOUtils::write only works with absolute paths"
       );
     });
 
@@ -286,7 +286,7 @@
       await Assert.rejects(
         IOUtils.read(tmpFileName),
         /Could not parse path/,
-        "IOUtils::writeAtomic only works with absolute paths"
+        "IOUtils::write only works with absolute paths"
       );
     });
 
@@ -296,7 +296,7 @@
 
       info("Test writing lz4 encoded data");
       const varyingBytes = Uint8Array.of(...new Array(50).keys());
-      let bytesWritten = await IOUtils.writeAtomic(tmpFileName, varyingBytes, { compress: true });
+      let bytesWritten = await IOUtils.write(tmpFileName, varyingBytes, { compress: true });
       is(bytesWritten, 64, "Expected to write 64 bytes");
 
       info("Test reading lz4 encoded data");
@@ -305,7 +305,7 @@
 
       info("Test writing lz4 compressed data");
       const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
-      bytesWritten = await IOUtils.writeAtomic(tmpFileName, repeatedBytes, { compress: true });
+      bytesWritten = await IOUtils.write(tmpFileName, repeatedBytes, { compress: true });
       is(bytesWritten, 23, "Expected 50 bytes to compress to 23 bytes");
 
       info("Test reading lz4 encoded data");
@@ -314,7 +314,7 @@
 
       info("Test writing empty lz4 compressed data")
       const empty = new Uint8Array();
-      bytesWritten = await IOUtils.writeAtomic(tmpFileName, empty, { compress: true });
+      bytesWritten = await IOUtils.write(tmpFileName, empty, { compress: true });
       is(bytesWritten, 12, "Expected to write just the LZ4 header, with a content length of 0");
 
 
@@ -337,7 +337,7 @@
       info("Test OS.File and IOUtils write the same file with LZ4 compression enabled")
       const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
       let expectedBytes = 23;
-      let ioutilsBytes = await IOUtils.writeAtomic(ioutilsTmpFile, repeatedBytes, { compress: true });
+      let ioutilsBytes = await IOUtils.write(ioutilsTmpFile, repeatedBytes, { compress: true });
       let osfileBytes = await OS.File.writeAtomic(osfileTmpFile, repeatedBytes, { compression: "lz4" });
       is(ioutilsBytes, expectedBytes, "IOUtils writes the expected number of bytes for compression");
       is(osfileBytes, ioutilsBytes, "OS.File and IOUtils write the same number of bytes for LZ4 compression");
@@ -361,7 +361,7 @@
 
       info("Test decompression with invalid options");
       const varyingBytes = Uint8Array.of(...new Array(50).keys());
-      let bytesWritten = await IOUtils.writeAtomic(tmpFileName, varyingBytes, { compress: true });
+      let bytesWritten = await IOUtils.write(tmpFileName, varyingBytes, { compress: true });
       is(bytesWritten, 64, "Expected to write 64 bytes");
       await Assert.rejects(
         IOUtils.read(tmpFileName, { maxBytes: 4, decompress: true }),
@@ -378,7 +378,7 @@
 
       info("Test decompression of non-lz4 data");
       const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
-      await IOUtils.writeAtomic(tmpFileName, repeatedBytes, { compress: false });
+      await IOUtils.write(tmpFileName, repeatedBytes, { compress: false });
 
       await Assert.rejects(
         IOUtils.read(tmpFileName, { decompress: true }),
@@ -398,7 +398,7 @@
 
       info("Test decompression of short byte buffer");
       const elevenBytes = Uint8Array.of(...new Array(11).fill(1));
-      await IOUtils.writeAtomic(tmpFileName, elevenBytes, { compress: false });
+      await IOUtils.write(tmpFileName, elevenBytes, { compress: false });
 
       await Assert.rejects(
         IOUtils.read(tmpFileName, { decompress: true }),
@@ -410,7 +410,7 @@
       const headerFor10bytes = [109, 111, 122, 76, 122, 52, 48, 0, 10, 0, 0, 0] // "mozlz40\0" + 4 byte length
       const badContents = new Array(11).fill(255); // Bad leading byte, followed by uncompressed stream.
       const goodHeaderBadContents = Uint8Array.of(...headerFor10bytes, ...badContents);
-      await IOUtils.writeAtomic(tmpFileName, goodHeaderBadContents, { compress: false });
+      await IOUtils.write(tmpFileName, goodHeaderBadContents, { compress: false });
 
       await Assert.rejects(
         IOUtils.read(tmpFileName, { decompress: true }),
