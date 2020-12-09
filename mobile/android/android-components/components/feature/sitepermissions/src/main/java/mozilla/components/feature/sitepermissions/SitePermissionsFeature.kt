@@ -22,8 +22,10 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
@@ -51,6 +53,7 @@ import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.security.InvalidParameterException
 
 internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
@@ -94,6 +97,7 @@ class SitePermissionsFeature(
     }
     private var sitePermissionScope: CoroutineScope? = null
     private var appPermissionScope: CoroutineScope? = null
+    private var loadingScope: CoroutineScope? = null
 
     @ExperimentalCoroutinesApi
     override fun start() {
@@ -107,6 +111,22 @@ class SitePermissionsFeature(
 
         setupPermissionRequestsCollector()
         setupAppPermissionRequestsCollector()
+        setupLoadingCollector()
+    }
+
+    @VisibleForTesting
+    internal fun setupLoadingCollector() {
+        loadingScope = store.flowScoped { flow ->
+            flow.mapNotNull { state ->
+                state.findTabOrCustomTabOrSelectedTab(sessionId)
+            }.ifChanged { it.content.loading }.collect { tab ->
+                if (tab.content.loading) {
+                    // Clears stale permission indicators in the toolbar,
+                    // after the session starts loading.
+                    store.dispatch(UpdatePermissionHighlightsStateAction(tab.id, PermissionHighlightsState()))
+                }
+            }
+        }
     }
 
     @VisibleForTesting
@@ -181,6 +201,7 @@ class SitePermissionsFeature(
     override fun stop() {
         sitePermissionScope?.cancel()
         appPermissionScope?.cancel()
+        loadingScope?.cancel()
     }
 
     /**
@@ -404,6 +425,7 @@ class SitePermissionsFeature(
                 SitePermissionsRules.Action.BLOCKED -> {
                     permissionRequest.reject()
                     consumePermissionRequest(permissionRequest)
+                    updateAutoplayToolbarIndicator(permissionRequest)
                     null
                 }
                 SitePermissionsRules.Action.ASK_TO_ALLOW -> {
@@ -413,6 +435,18 @@ class SitePermissionsFeature(
                     consumePermissionRequest(permissionRequest)
                     null
                 }
+            }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun updateAutoplayToolbarIndicator(permissionRequest: PermissionRequest) {
+        if (permissionRequest.isForAutoplay()) {
+            getCurrentTabState()?.let {
+                store.dispatch(UpdatePermissionHighlightsStateAction(
+                    it.id,
+                    PermissionHighlightsState(true)
+                ))
             }
         }
     }

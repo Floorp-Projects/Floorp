@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.privatemode.feature.SecureWindowFeature
@@ -24,6 +25,7 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ALLOWED
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.support.base.feature.PermissionsFeature
@@ -83,6 +85,20 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 sessionId),
             owner = this,
             view = layout)
+
+        layout.toolbar.display.setOnPermissionIndicatorClickedListener {
+            sitePermissionsFeature.withFeature { feature ->
+                feature.sitePermissionsRules = feature.sitePermissionsRules?.copy(
+                    autoplayAudible = ALLOWED,
+                    autoplayInaudible = ALLOWED
+                )
+                components.sessionUseCases.reload()
+            }
+        }
+
+        layout.toolbar.display.indicators += listOf(
+            DisplayToolbar.Indicators.TRACKING_PROTECTION
+        )
 
         swipeRefreshFeature.set(
             feature = SwipeRefreshFeature(
@@ -148,8 +164,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 storage = components.permissionStorage,
                 fragmentManager = parentFragmentManager,
                 sitePermissionsRules = SitePermissionsRules(
-                    autoplayAudible = SitePermissionsRules.AutoplayAction.ALLOWED,
-                    autoplayInaudible = SitePermissionsRules.AutoplayAction.ALLOWED,
+                    autoplayAudible = SitePermissionsRules.AutoplayAction.BLOCKED,
+                    autoplayInaudible = SitePermissionsRules.AutoplayAction.BLOCKED,
                     camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     location = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     notification = SitePermissionsRules.Action.ASK_TO_ALLOW,

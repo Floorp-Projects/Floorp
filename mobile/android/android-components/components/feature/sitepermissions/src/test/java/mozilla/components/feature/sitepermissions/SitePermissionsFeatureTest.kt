@@ -21,6 +21,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.AppAudio
@@ -38,6 +39,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -118,6 +120,40 @@ class SitePermissionsFeatureTest {
     fun tearDown() {
         Dispatchers.resetMain()
         testCoroutineDispatcher.cleanupTestCoroutines()
+    }
+
+    @Test
+    fun `GIVEN a tab load THEN stale permission indicators should be clear up`() {
+        sitePermissionFeature.start()
+
+        verify(sitePermissionFeature).setupLoadingCollector()
+
+        // when
+        mockStore.dispatch(ContentAction.UpdateLoadingStateAction(SESSION_ID, true)).joinBlocking()
+
+        // then
+        verify(mockStore).dispatch(
+            ContentAction.UpdatePermissionHighlightsStateAction
+            (SESSION_ID, PermissionHighlightsState())
+        )
+    }
+
+    @Test
+    fun `GIVEN a tab load after stop is called THEN none stale permission indicators should be clear up`() {
+        sitePermissionFeature.start()
+
+        verify(sitePermissionFeature).setupLoadingCollector()
+
+        sitePermissionFeature.stop()
+
+        // when
+        mockStore.dispatch(ContentAction.UpdateLoadingStateAction(SESSION_ID, true)).joinBlocking()
+
+        // then
+        verify(mockStore, never()).dispatch(
+            ContentAction.UpdatePermissionHighlightsStateAction
+            (SESSION_ID, PermissionHighlightsState())
+        )
     }
 
     @Test
@@ -535,6 +571,32 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockPermissionRequest).grant()
         verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest with isForAutoplay true and BLOCKED WHEN handleRuledFlow THEN the toolbar permission indicator must be updated`() {
+        // given
+        val mockPermissionsRules: SitePermissionsRules = mock()
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentAutoPlayInaudible(id = "permission")))
+        }
+
+        doReturn(SitePermissionsRules.Action.BLOCKED).`when`(mockPermissionsRules)
+                .getActionFrom(mockPermissionRequest)
+
+        sitePermissionFeature.sitePermissionsRules = mockPermissionsRules
+
+        // when
+        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
+        testCoroutineDispatcher.advanceUntilIdle()
+
+        // then
+        verify(sitePermissionFeature).updateAutoplayToolbarIndicator(any())
+
+        verify(mockStore).dispatch(
+            ContentAction.UpdatePermissionHighlightsStateAction
+            (SESSION_ID, PermissionHighlightsState(true))
+        )
     }
 
     @Test
