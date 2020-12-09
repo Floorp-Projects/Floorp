@@ -139,21 +139,6 @@ enum class CRLiteLookupResult {
   CertRevokedByStash = 7,
 };
 
-class CRLiteTelemetryInfo {
- public:
-  CRLiteTelemetryInfo() : mLookupResult(CRLiteLookupResult::NeverChecked) {}
-
-  void Reset() {
-    mLookupResult = CRLiteLookupResult::NeverChecked;
-    mCRLiteFasterThanOCSPMillis.reset();
-    mOCSPFasterThanCRLiteMillis.reset();
-  }
-
-  CRLiteLookupResult mLookupResult;
-  Maybe<double> mCRLiteFasterThanOCSPMillis;
-  Maybe<double> mOCSPFasterThanCRLiteMillis;
-};
-
 class NSSCertDBTrustDomain;
 
 class CertVerifier {
@@ -194,7 +179,7 @@ class CertVerifier {
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
-      /*optional out*/ CRLiteTelemetryInfo* crliteInfo = nullptr);
+      /*optional out*/ CRLiteLookupResult* crliteLookupResult = nullptr);
 
   mozilla::pkix::Result VerifySSLServerCert(
       const UniqueCERTCertificate& peerCert, mozilla::pkix::Time time,
@@ -216,7 +201,7 @@ class CertVerifier {
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional out*/ CertificateTransparencyInfo* ctInfo = nullptr,
-      /*optional out*/ CRLiteTelemetryInfo* crliteInfo = nullptr,
+      /*optional out*/ CRLiteLookupResult* crliteLookupResult = nullptr,
       /*optional out*/ bool* isBuiltCertChainRootBuiltInRoot = nullptr);
 
   enum PinningMode {

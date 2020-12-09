@@ -1206,13 +1206,13 @@ security:
     bug_numbers:
       - 1519273
       - 1553550
+      - 1678206
     description: >
       Number of intermediate certificates pre-loaded.
-    expires: "86"
+    expires: "92"
     kind: uint
     notification_emails:
       - seceng-telemetry@mozilla.com
-      - jjones@mozilla.com
       - dkeeler@mozilla.com
     products:
       - 'firefox'
@@ -1222,13 +1222,13 @@ security:
     bug_numbers:
       - 1519273
       - 1553550
+      - 1678206
     description: >
       Number of intermediate certificates pending pre-load.
-    expires: "86"
+    expires: "92"
     kind: uint
     notification_emails:
       - seceng-telemetry@mozilla.com
-      - jjones@mozilla.com
       - dkeeler@mozilla.com
     products:
       - 'firefox'
