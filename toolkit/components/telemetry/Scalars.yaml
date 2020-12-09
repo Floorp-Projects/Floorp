@@ -1424,13 +1424,13 @@ contentblocking:
       - 1577030
       - 1610894
       - 1645088
+      - 1678209
     description: >
       A count of the number of tracking events blocked.
-    expires: "86"
+    expires: never
     kind: uint
     notification_emails:
       - ewright@mozilla.com
-      - chsiang@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     products:
