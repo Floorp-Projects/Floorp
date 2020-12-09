@@ -1434,8 +1434,7 @@ impl RenderBackend {
         // async transforms.
         if requested_frame || has_built_scene {
             if let Some(ref sampler) = self.sampler {
-                frame_ops.append(&mut sampler.sample(document_id, generated_frame_id,
-                                                     &doc.scene.pipeline_epochs));
+                frame_ops.append(&mut sampler.sample(document_id, generated_frame_id));
             }
         }
 

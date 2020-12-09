@@ -65,15 +65,14 @@ void APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId) {
 }
 
 /*static*/
-void APZSampler::SampleForWebRender(
-    const wr::WrWindowId& aWindowId, const uint64_t* aGeneratedFrameId,
-    wr::Transaction* aTransaction,
-    const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
+void APZSampler::SampleForWebRender(const wr::WrWindowId& aWindowId,
+                                    const uint64_t* aGeneratedFrameId,
+                                    wr::Transaction* aTransaction) {
   if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
     wr::TransactionWrapper txn(aTransaction);
     Maybe<VsyncId> vsyncId =
         aGeneratedFrameId ? Some(VsyncId{*aGeneratedFrameId}) : Nothing();
-    sampler->SampleForWebRender(vsyncId, txn, aEpochsBeingRendered);
+    sampler->SampleForWebRender(vsyncId, txn);
   }
 }
 
@@ -86,9 +85,8 @@ void APZSampler::SetSampleTime(const SampleTime& aSampleTime) {
   mSampleTime = aSampleTime;
 }
 
-void APZSampler::SampleForWebRender(
-    const Maybe<VsyncId>& aVsyncId, wr::TransactionWrapper& aTxn,
-    const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
+void APZSampler::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
+                                    wr::TransactionWrapper& aTxn) {
   AssertOnSamplerThread();
   SampleTime sampleTime;
   {  // scope lock
@@ -124,7 +122,7 @@ void APZSampler::SampleForWebRender(
             ? now
             : mSampleTime;
   }
-  mApz->SampleForWebRender(aVsyncId, aTxn, sampleTime, aEpochsBeingRendered);
+  mApz->SampleForWebRender(aVsyncId, aTxn, sampleTime);
 }
 
 bool APZSampler::AdvanceAnimations(const SampleTime& aSampleTime) {
@@ -333,12 +331,11 @@ void apz_register_sampler(mozilla::wr::WrWindowId aWindowId) {
   mozilla::layers::APZSampler::SetSamplerThread(aWindowId);
 }
 
-void apz_sample_transforms(
-    mozilla::wr::WrWindowId aWindowId, const uint64_t* aGeneratedFrameId,
-    mozilla::wr::Transaction* aTransaction,
-    const mozilla::wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
-  mozilla::layers::APZSampler::SampleForWebRender(
-      aWindowId, aGeneratedFrameId, aTransaction, aEpochsBeingRendered);
+void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
+                           const uint64_t* aGeneratedFrameId,
+                           mozilla::wr::Transaction* aTransaction) {
+  mozilla::layers::APZSampler::SampleForWebRender(aWindowId, aGeneratedFrameId,
+                                                  aTransaction);
 }
 
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId) {}
