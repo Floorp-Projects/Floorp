@@ -39,39 +39,31 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   switch (typeId) {
     case 1: /* Boolean */
     {
-      RefPtr<nsISupports> metric = new GleanBoolean(metricId);
-      return metric.forget();
-      break;
+      return MakeAndAddRef<GleanBoolean>(metricId);
     }
     case 3: /* Counter */
     {
-      RefPtr<nsISupports> metric = new GleanCounter(metricId);
-      return metric.forget();
-      break;
+      return MakeAndAddRef<GleanCounter>(metricId);
     }
     case 5: /* String */
     {
-      RefPtr<nsISupports> metric = new GleanString(metricId);
-      return metric.forget();
-      break;
+      return MakeAndAddRef<GleanString>(metricId);
     }
     case 8: /* Timespan */
     {
-      RefPtr<nsISupports> metric = new GleanTimespan(metricId);
-      return metric.forget();
-      break;
+      return MakeAndAddRef<GleanTimespan>(metricId);
     }
     case 11: /* Uuid */
     {
-      RefPtr<nsISupports> metric = new GleanUuid(metricId);
-      return metric.forget();
-      break;
+      return MakeAndAddRef<GleanUuid>(metricId);
     }
     case 12: /* Datetime */
     {
-      RefPtr<nsISupports> metric = new GleanDatetime(metricId);
-      return metric.forget();
-      break;
+      return MakeAndAddRef<GleanDatetime>(metricId);
+    }
+    case 13: /* Event */
+    {
+      return MakeAndAddRef<GleanEvent>(metricId);
     }
     default:
     MOZ_ASSERT_UNREACHABLE("Invalid type ID reached when trying to instantiate a new metric");

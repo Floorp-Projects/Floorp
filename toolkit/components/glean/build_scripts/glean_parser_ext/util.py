@@ -29,7 +29,15 @@ def generate_metric_ids(objs):
     return lambda metric: metric_id_mapping[(metric.category, metric.name)]
 
 
-IMPLEMENTED_CPP_TYPES = ["boolean", "counter", "datetime", "string", "timespan", "uuid"]
+IMPLEMENTED_CPP_TYPES = [
+    "boolean",
+    "counter",
+    "datetime",
+    "event",
+    "string",
+    "timespan",
+    "uuid",
+]
 
 
 def is_implemented_metric_type(typ):
