@@ -344,7 +344,10 @@ body.dark blockquote {
   pointer-events: none;
 }
 
-/* Don't show hover styles while dropdowns are open, except in the dropdown. */
+/* Show the hover tooltip on non-dropdown buttons. */
+.button:not(.dropdown-toggle):hover > .hover-label,
+.button:not(.dropdown-toggle):-moz-focusring > .hover-label,
+/* Show the hover tooltip for dropdown buttons unless dropdowns are open. */
 :not(.dropdown-open) > .dropdown > li > .button:hover > .hover-label,
 :not(.dropdown-open) > .dropdown > li > .button:-moz-focusring > .hover-label {
   visibility: visible;
