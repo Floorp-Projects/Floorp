@@ -25,10 +25,9 @@ KNOWN_TEST_MODIFIERS = [
 ]
 
 
+@six.add_metaclass(ABCMeta)
 class PerftestResultsHandler(object):
     """Abstract base class to handle perftest results"""
-
-    __metaclass__ = ABCMeta
 
     def __init__(
         self,

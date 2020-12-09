@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+import six
+
 from abc import ABCMeta, abstractmethod
 
 
 # abstract class for all playback tools
+@six.add_metaclass(ABCMeta)
 class Playback(object):
-    __metaclass__ = ABCMeta
-
     def __init__(self, config):
         self.config = config
         self.host = None

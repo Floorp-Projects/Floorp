@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import six
 import json
 import os
 import re
@@ -25,8 +26,8 @@ with `ac_add_options --enable-js-shell` or specify it with `--binary`.
 """.strip()
 
 
+@six.add_metaclass(ABCMeta)
 class Benchmark(object):
-    __metaclass__ = ABCMeta
     lower_is_better = True
     should_alert = True
 
