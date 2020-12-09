@@ -2418,6 +2418,12 @@ class Database final
 
   const nsCString& Id() const { return mId; }
 
+  Maybe<DirectoryLock&> MaybeDirectoryLockRef() const {
+    AssertIsOnBackgroundThread();
+
+    return ToMaybeRef(mDirectoryLock.get());
+  }
+
   int64_t DirectoryLockId() const { return mDirectoryLockId; }
 
   uint32_t TelemetryId() const { return mTelemetryId; }
@@ -5136,7 +5142,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void ReleaseIOThreadObjects() override;
 
-  void AbortOperations(const nsACString& aOrigin) override;
+  void AbortOperationsForLocks(
+      const DirectoryLockIdTable& aDirectoryLockIds) override;
 
   void AbortOperationsForProcess(ContentParentId aContentParentId) override;
 
@@ -13213,12 +13220,14 @@ void QuotaClient::ReleaseIOThreadObjects() {
   }
 }
 
-void QuotaClient::AbortOperations(const nsACString& aOrigin) {
+void QuotaClient::AbortOperationsForLocks(
+    const DirectoryLockIdTable& aDirectoryLockIds) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!aOrigin.IsEmpty());
 
-  InvalidateLiveDatabasesMatching([&aOrigin](const auto& database) {
-    return database.GroupAndOrigin().mOrigin == aOrigin;
+  InvalidateLiveDatabasesMatching([&aDirectoryLockIds](const auto& database) {
+    // If the database is registered in gLiveDatabaseHashtable then it must have
+    // a directory lock.
+    return IsLockForObjectContainedInLockTable(database, aDirectoryLockIds);
   });
 }
 

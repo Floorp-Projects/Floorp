@@ -43,6 +43,7 @@ class NullAction final : public Action {
 namespace mozilla::dom::cache {
 
 using mozilla::dom::quota::AssertIsOnIOThread;
+using mozilla::dom::quota::DirectoryLock;
 using mozilla::dom::quota::OpenDirectoryListener;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
@@ -108,6 +109,12 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
     MOZ_DIAGNOSTIC_ASSERT(mTarget);
     MOZ_DIAGNOSTIC_ASSERT(mInitiatingEventTarget);
     MOZ_DIAGNOSTIC_ASSERT(mInitAction);
+  }
+
+  Maybe<DirectoryLock&> MaybeDirectoryLockRef() const {
+    NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
+
+    return ToMaybeRef(mDirectoryLock.get());
   }
 
   nsresult Dispatch() {
@@ -817,6 +824,25 @@ void Context::Dispatch(SafeRefPtr<Action> aAction) {
 
   MOZ_DIAGNOSTIC_ASSERT(mState == STATE_CONTEXT_READY);
   DispatchAction(std::move(aAction));
+}
+
+Maybe<DirectoryLock&> Context::MaybeDirectoryLockRef() const {
+  NS_ASSERT_OWNINGTHREAD(Context);
+
+  if (mState == STATE_CONTEXT_PREINIT) {
+    MOZ_DIAGNOSTIC_ASSERT(!mInitRunnable);
+    MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
+
+    return Nothing();
+  }
+
+  if (mState == STATE_CONTEXT_INIT) {
+    MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
+
+    return mInitRunnable->MaybeDirectoryLockRef();
+  }
+
+  return ToMaybeRef(mDirectoryLock.get());
 }
 
 void Context::CancelAll() {

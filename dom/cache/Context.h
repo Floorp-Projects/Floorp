@@ -48,9 +48,9 @@ class Manager;
 //     have removed themselves as listener.  This means an idle context with
 //     no active DOM objects will close gracefully.
 //  2) The QuotaManager aborts all operations so it can delete the files.
-//     In this case the QuotaManager calls Client::AbortOperations() which
-//     in turn cancels all existing Action objects and then marks the Manager
-//     as invalid.
+//     In this case the QuotaManager calls Client::AbortOperationsForLocks()
+//     which in turn cancels all existing Action objects and then marks the
+//     Manager as invalid.
 //  3) Browser shutdown occurs and the Manager calls Context::CancelAll().
 //
 // In either case, though, the Action objects must be destroyed first to
@@ -123,6 +123,8 @@ class Context final : public SafeRefCounted<Context> {
   //
   // Only callable from the thread that created the Context.
   void Dispatch(SafeRefPtr<Action> aAction);
+
+  Maybe<DirectoryLock&> MaybeDirectoryLockRef() const;
 
   // Cancel any Actions running or waiting to run.  This should allow the
   // Context to be released and Listener::RemoveContext() will be called

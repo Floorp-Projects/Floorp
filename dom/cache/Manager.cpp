@@ -21,6 +21,8 @@
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/dom/cache/StreamList.h"
 #include "mozilla/dom/cache/Types.h"
+#include "mozilla/dom/quota/Client.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozStorageHelper.h"
 #include "nsIInputStream.h"
@@ -32,6 +34,9 @@
 #include "QuotaClientImpl.h"
 
 namespace mozilla::dom::cache {
+
+using mozilla::dom::quota::Client;
+using mozilla::dom::quota::DirectoryLock;
 
 namespace {
 
@@ -273,12 +278,16 @@ class Manager::Factory {
     MaybeDestroyInstance();
   }
 
-  static void Abort(const nsACString& aOrigin) {
+  static void Abort(const Client::DirectoryLockIdTable& aDirectoryLockIds) {
     mozilla::ipc::AssertIsOnBackgroundThread();
-    MOZ_ASSERT(!aOrigin.IsEmpty());
 
-    AbortMatching([&aOrigin](const auto& manager) {
-      return manager.mManagerId->QuotaOrigin() == aOrigin;
+    AbortMatching([&aDirectoryLockIds](const auto& manager) {
+      // Check if the Manager holds an acquired DirectoryLock. Origin clearing
+      // can't be blocked by this Manager if there is no acquired DirectoryLock.
+      // If there is an acquired DirectoryLock, check if the table contains the
+      // lock for the Manager.
+      return Client::IsLockForObjectAcquiredAndContainedInLockTable(
+          manager, aDirectoryLockIds);
     });
   }
 
@@ -1623,10 +1632,10 @@ nsCString Manager::GetShutdownStatus() {
 }
 
 // static
-void Manager::Abort(const nsACString& aOrigin) {
+void Manager::Abort(const Client::DirectoryLockIdTable& aDirectoryLockIds) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
-  Factory::Abort(aOrigin);
+  Factory::Abort(aDirectoryLockIds);
 }
 
 // static
@@ -2004,6 +2013,13 @@ void Manager::Shutdown() {
     pinnedContext->CancelAll();
     return;
   }
+}
+
+Maybe<DirectoryLock&> Manager::MaybeDirectoryLockRef() const {
+  NS_ASSERT_OWNINGTHREAD(Manager);
+  MOZ_DIAGNOSTIC_ASSERT(mContext);
+
+  return mContext->MaybeDirectoryLockRef();
 }
 
 void Manager::Abort() {
