@@ -111,9 +111,9 @@ const mockedServerSocket = {
   },
 };
 
-const mockedSocketTransport = Cc[
-  "@mozilla.org/presentation/mockedsockettransport;1"
-].createInstance(Ci.nsISocketTransport);
+const mockedSocketTransport = {
+  QueryInterface: ChromeUtils.generateQI(["nsISocketTransport"]),
+};
 
 const mockedControlChannel = {
   QueryInterface: ChromeUtils.generateQI(["nsIPresentationControlChannel"]),
