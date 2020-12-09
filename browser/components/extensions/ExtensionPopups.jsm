@@ -301,7 +301,6 @@ class BasePopup {
     let browser = document.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("messagemanagergroup", "webext-browsers");
     browser.setAttribute("transparent", "true");
     browser.setAttribute("class", "webextension-popup-browser");
     browser.setAttribute("webextension-view-type", "popup");
