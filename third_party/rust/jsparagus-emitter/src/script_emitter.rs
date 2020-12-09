@@ -20,9 +20,11 @@ where
     pub fn emit(self, emitter: &mut AstEmitter) -> Result<(), EmitError> {
         let scope_data_map = &emitter.compilation_info.scope_data_map;
 
-        emitter
-            .scope_stack
-            .enter_global(&mut emitter.emit, scope_data_map);
+        emitter.scope_stack.enter_global(
+            &mut emitter.emit,
+            scope_data_map,
+            self.top_level_functions.len() as u32,
+        );
 
         for fun in self.top_level_functions {
             (self.top_level_function)(emitter, fun)?;
