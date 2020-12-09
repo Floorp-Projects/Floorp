@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import six
 import os
 import subprocess
 import sys
@@ -25,12 +26,12 @@ from ..application import DefaultContext
 from ..errors import RunnerNotStartedError
 
 
+@six.add_metaclass(ABCMeta)
 class BaseRunner(object):
     """
     The base runner class for all mozrunner objects, both local and remote.
     """
 
-    __metaclass__ = ABCMeta
     last_test = "mozrunner-startup"
     process_handler = None
     timeout = None

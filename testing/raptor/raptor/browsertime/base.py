@@ -29,10 +29,9 @@ BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT = (
 )
 
 
+@six.add_metaclass(ABCMeta)
 class Browsertime(Perftest):
     """Abstract base class for Browsertime"""
-
-    __metaclass__ = ABCMeta
 
     @property
     @abstractmethod
