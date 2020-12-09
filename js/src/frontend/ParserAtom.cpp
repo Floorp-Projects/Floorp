@@ -130,6 +130,25 @@ JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
   return (&cx->names().abort)[int32_t(atomId)];
 }
 
+#ifdef DEBUG
+void TaggedParserAtomIndex::validateRaw() {
+  if (isParserAtomIndex()) {
+    MOZ_ASSERT(toParserAtomIndex().index < IndexLimit);
+  } else if (isWellKnownAtomId()) {
+    MOZ_ASSERT(uint32_t(toWellKnownAtomId()) <
+               uint32_t(WellKnownAtomId::Limit));
+  } else if (isStaticParserString1()) {
+    MOZ_ASSERT(size_t(toStaticParserString1()) <
+               WellKnownParserAtoms_ROM::ASCII_STATIC_LIMIT);
+  } else if (isStaticParserString2()) {
+    MOZ_ASSERT(size_t(toStaticParserString2()) <
+               WellKnownParserAtoms_ROM::NUM_LENGTH2_ENTRIES);
+  } else {
+    MOZ_ASSERT(isNull());
+  }
+}
+#endif
+
 template <typename CharT, typename SeqCharT>
 /* static */ ParserAtomEntry* ParserAtomEntry::allocate(
     JSContext* cx, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,

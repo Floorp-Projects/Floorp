@@ -135,8 +135,16 @@ class TaggedParserAtomIndex {
   }
   static TaggedParserAtomIndex null() { return TaggedParserAtomIndex(); }
 
+#ifdef DEBUG
+  void validateRaw();
+#endif
+
   static TaggedParserAtomIndex fromRaw(uint32_t data) {
-    return TaggedParserAtomIndex(data);
+    auto result = TaggedParserAtomIndex(data);
+#ifdef DEBUG
+    result.validateRaw();
+#endif
+    return result;
   }
 
   bool isParserAtomIndex() const {
