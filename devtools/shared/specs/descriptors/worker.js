@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Arg, RetVal, generateActorSpec } = require("devtools/shared/protocol");
+const { RetVal, generateActorSpec } = require("devtools/shared/protocol");
 
 const workerDescriptorSpec = generateActorSpec({
   typeName: "workerDescriptor",
@@ -15,13 +15,6 @@ const workerDescriptorSpec = generateActorSpec({
     },
     detach: {
       request: {},
-      response: RetVal("json"),
-    },
-    // @backward-compat { version 83 } We don't use `connect` anymore.
-    connect: {
-      request: {
-        options: Arg(0, "json"),
-      },
       response: RetVal("json"),
     },
     getTarget: {
