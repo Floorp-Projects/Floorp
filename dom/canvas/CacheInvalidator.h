@@ -13,24 +13,6 @@
 #include <unordered_set>
 #include <vector>
 
-namespace std {  // You know it's going to be good with this at the top of the
-                 // file.
-
-// The STL is lazy and doesn't provide these:
-template <typename T>
-struct hash<const T*> {
-  auto operator()(const T* const x) const {
-    return hash<T*>()(const_cast<T*>(x));
-  }
-};
-
-template <typename T>
-struct hash<const T> {
-  auto operator()(const T x) const { return hash<T>()(const_cast<T>(x)); }
-};
-
-}  // namespace std
-
 // -
 
 namespace mozilla {
@@ -131,7 +113,7 @@ class CacheWeakMap final {
 
   struct DerefHash final {
     size_t operator()(const KeyT* const a) const {
-      return std::hash<const KeyT>()(*a);
+      return std::hash<KeyT>()(*a);
     }
   };
   struct DerefEqual final {
