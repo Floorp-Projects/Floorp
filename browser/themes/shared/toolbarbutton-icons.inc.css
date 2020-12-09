@@ -328,7 +328,7 @@ toolbar[brighttext] {
 
 #PlacesChevron,
 #nav-bar-overflow-button {
-  list-style-image: url("chrome://browser/skin/chevron.svg");
+  list-style-image: url("chrome://global/skin/icons/chevron.svg");
 }
 
 #nav-bar-overflow-button[animate] > .toolbarbutton-icon {
