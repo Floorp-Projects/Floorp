@@ -3,53 +3,29 @@
 
 "use strict";
 
-// Test that StyleSheetsActor.getText handles empty text correctly.
+// Test that StyleSheetActor.getText handles empty text correctly.
 
-const CSS_CONTENT = "body { background-color: #f06; }";
-const TEST_URI = `data:text/html;charset=utf-8,<style>${encodeURIComponent(
-  CSS_CONTENT
-)}</style>`;
+const CONTENT = "<style>body { background-color: #f06; }</style>";
+const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(CONTENT);
 
 add_task(async function() {
   const target = await addTabTarget(TEST_URI);
+  const front = await target.getFront("stylesheets");
+  ok(front, "The StyleSheetsFront was created.");
 
-  const {
-    ResourceWatcher,
-  } = require("devtools/shared/resources/resource-watcher");
-  const { TargetList } = require("devtools/shared/resources/target-list");
-
-  const targetList = new TargetList(target.client.mainRoot, target);
-  await targetList.startListening();
-  const resourceWatcher = new ResourceWatcher(targetList);
-
-  const styleSheetsFront = await target.getFront("stylesheets");
-  ok(styleSheetsFront, "The StyleSheetsFront was created.");
-
-  const sheets = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
-    onAvailable: resources => sheets.push(...resources),
-  });
-  is(sheets.length, 1, "watchResources returned the correct number of sheets");
-
-  const { resourceId } = sheets[0];
-
+  const sheets = await front.getStyleSheets();
+  ok(sheets, "getStyleSheets() succeeded");
   is(
-    await getStyleSheetText(styleSheetsFront, resourceId),
-    CSS_CONTENT,
-    "The stylesheet has expected initial text"
+    sheets.length,
+    1,
+    "getStyleSheets() returned the correct number of sheets"
   );
-  info("Update stylesheet content via the styleSheetsFront");
-  await styleSheetsFront.update(resourceId, "", false);
-  is(
-    await getStyleSheetText(styleSheetsFront, resourceId),
-    "",
-    "Stylesheet is now empty, as expected"
-  );
+
+  const sheet = sheets[0];
+  await sheet.update("", false);
+  const longStr = await sheet.getText();
+  const source = await longStr.string();
+  is(source, "", "text is empty");
 
   await target.destroy();
 });
-
-async function getStyleSheetText(styleSheetsFront, resourceId) {
-  const longStringFront = await styleSheetsFront.getText(resourceId);
-  return longStringFront.string();
-}

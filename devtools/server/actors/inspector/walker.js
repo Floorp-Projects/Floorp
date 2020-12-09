@@ -320,7 +320,12 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
-      traits: {},
+      traits: {
+        // @backward-compat { version 80 } Walker implements node picker
+        supportsNodePicker: true,
+        // @backward-compat { version 83 } Walker implements overflow debugging support
+        supportsOverflowDebugging2: true,
+      },
     };
   },
 

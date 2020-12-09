@@ -19,10 +19,16 @@ class PreferenceFront extends FrontClassWithSpec(preferenceSpec) {
   }
 
   async getTraits() {
-    if (!this._traits) {
-      this._traits = await super.getTraits();
+    if (this._traits) {
+      return this._traits;
     }
 
+    try {
+      this._traits = await this.getTraits();
+    } catch (e) {
+      // @backward-compat { version 82 } getTraits isn't supported on older server.
+      this._traits = {};
+    }
     return this._traits;
   }
 }
