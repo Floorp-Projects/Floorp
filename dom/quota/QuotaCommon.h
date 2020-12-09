@@ -1024,6 +1024,7 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
 
 struct MOZ_STACK_CLASS ScopedLogExtraInfo {
   static constexpr const char kTagQuery[] = "query";
+  static constexpr const char kTagContext[] = "context";
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
  private:
@@ -1061,6 +1062,7 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
   nsCString mCurrentValue;
 
   static MOZ_THREAD_LOCAL(const nsACString*) sQueryValue;
+  static MOZ_THREAD_LOCAL(const nsACString*) sContextValue;
 
   void AddInfo();
 #else
