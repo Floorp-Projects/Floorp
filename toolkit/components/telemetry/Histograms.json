@@ -15309,20 +15309,6 @@
     "description": "Counts the number of times a user enable or disable the media control feature via UI button, and the total number of times media control feature is enabled and disabled, which allow us to calculate the number of times a user changes setting via modifying the preference directly.",
     "releaseChannelCollection": "opt-out"
   },
-  "MEDIA_CONTROL_PLATFORM_USAGE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": [
-      "alwu@mozilla.com",
-      "cchang@mozilla.com"
-    ],
-    "bug_numbers": [1668139],
-    "expires_in_version": "90",
-    "kind": "categorical",
-    "labels": ["UsedOnWin", "EnabledOnWin", "UsedOnMac", "EnabledOnMac", "UsedOnLinux", "EnabledOnLinux", "UsedOnAndroid", "EnabledOnAndroid"],
-    "description": "Counts the number of times users enable and use media control on different platforms.",
-    "releaseChannelCollection": "opt-out"
-  },
   "MEDIA_CONTROL_HANDLE_PLAY_PAUSE_STOP_ACTIONS": {
     "record_in_processes": ["content"],
     "products": ["firefox"],

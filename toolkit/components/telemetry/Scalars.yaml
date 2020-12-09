@@ -2148,6 +2148,23 @@ media:
     record_in_processes:
       - main
 
+  control_platform_usage:
+    bug_numbers:
+      - 1680856
+    description: >
+      Counts the number of times users enable and use media control on different platforms. 0=EnabledOn, 1=UsedOn.
+    expires: "91"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - alwu@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 avif:
   dav1d_decode_error:
     bug_numbers:
