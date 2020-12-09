@@ -25,7 +25,7 @@
     add_task(async function test_create_and_remove_file() {
       info("Test creating and removing a single file");
       const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_create_and_remove.tmp");
-      await IOUtils.writeAtomic(tmpFileName, new Uint8Array(0));
+      await IOUtils.write(tmpFileName, new Uint8Array(0));
       ok(await fileExists(tmpFileName), `Expected file ${tmpFileName} to exist`);
 
       await IOUtils.remove(tmpFileName);

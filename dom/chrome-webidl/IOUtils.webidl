@@ -59,10 +59,10 @@ namespace IOUtils {
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
    */
-  Promise<unsigned long long> writeAtomic(DOMString path, Uint8Array data, optional WriteAtomicOptions options = {});
+  Promise<unsigned long long> write(DOMString path, Uint8Array data, optional WriteOptions options = {});
   /**
    * Attempts to encode |string| to UTF-8, then safely write the result to a
-   * file at |path|. Works exactly like |writeAtomic|.
+   * file at |path|. Works exactly like |write|.
    *
    * @param path      An absolute file path.
    * @param string    A string to encode to UTF-8 and write to the file at path.
@@ -70,7 +70,7 @@ namespace IOUtils {
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
    */
-  Promise<unsigned long long> writeAtomicUTF8(DOMString path, DOMString string, optional WriteAtomicOptions options = {});
+  Promise<unsigned long long> writeUTF8(DOMString path, DOMString string, optional WriteOptions options = {});
   /**
    * Moves the file from |sourcePath| to |destPath|, creating necessary parents.
    * If |destPath| is a directory, then the source file will be moved into the
@@ -205,10 +205,10 @@ dictionary ReadOptions : ReadUTF8Options {
 };
 
 /**
- * Options to be passed to the |IOUtils.writeAtomic| and |writeAtomicUTF8|
+ * Options to be passed to the |IOUtils.write| and |writeUTF8|
  * methods.
  */
-dictionary WriteAtomicOptions {
+dictionary WriteOptions {
   /**
    * If specified, backup the destination file to this path before writing.
    */

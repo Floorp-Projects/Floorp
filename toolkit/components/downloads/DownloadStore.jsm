@@ -168,7 +168,7 @@ DownloadStore.prototype = {
       if (atLeastOneDownload) {
         // Create or overwrite the file if there are downloads to save.
         let bytes = gTextEncoder.encode(JSON.stringify(storeData));
-        await IOUtils.writeAtomic(this.path, bytes, {
+        await IOUtils.write(this.path, bytes, {
           tmpPath: this.path + ".tmp",
         });
       } else {

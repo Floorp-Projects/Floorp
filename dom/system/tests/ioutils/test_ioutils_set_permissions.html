@@ -18,7 +18,7 @@
       const tempDir = await PathUtils.getTempDir();
       const tempFile = PathUtils.join(tempDir, "setPermissions.tmp");
 
-      await IOUtils.writeAtomicUTF8(tempFile, "");
+      await IOUtils.writeUTF8(tempFile, "");
       await IOUtils.setPermissions(tempFile, 0o421);
 
       let stat = await IOUtils.stat(tempFile);

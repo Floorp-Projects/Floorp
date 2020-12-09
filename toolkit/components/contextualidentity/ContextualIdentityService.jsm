@@ -258,7 +258,7 @@ _ContextualIdentityService.prototype = {
     };
 
     let bytes = gTextEncoder.encode(JSON.stringify(object));
-    return IOUtils.writeAtomic(this._path, bytes, {
+    return IOUtils.write(this._path, bytes, {
       tmpPath: this._path + ".tmp",
     });
   },

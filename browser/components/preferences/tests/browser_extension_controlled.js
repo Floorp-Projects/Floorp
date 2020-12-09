@@ -920,7 +920,7 @@ add_task(async function testExtensionControlledHomepageUninstalledAddon() {
   let jsonFileName = "extension-settings.json";
   let storePath = PathUtils.join(await PathUtils.getProfileDir(), jsonFileName);
 
-  await IOUtils.writeAtomicUTF8(storePath, JSON.stringify(storeData));
+  await IOUtils.writeUTF8(storePath, JSON.stringify(storeData));
 
   // Reload the ExtensionSettingsStore so it will read the file on disk. Don't
   // finalize the current store since it will overwrite our file.
