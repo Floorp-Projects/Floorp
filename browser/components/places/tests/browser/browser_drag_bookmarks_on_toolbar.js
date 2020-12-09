@@ -5,7 +5,7 @@
 const TEST_URL = "http://www.mozilla.org";
 const TEST_TITLE = "example_title";
 
-var gBookmarksToolbar = window.document.getElementById("PlacesToolbar");
+var gBookmarksToolbar = window.document.getElementById("PersonalToolbar");
 var dragDirections = { LEFT: 0, UP: 1, RIGHT: 2, DOWN: 3 };
 
 /**
