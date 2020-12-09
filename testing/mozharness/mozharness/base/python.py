@@ -702,6 +702,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             # being fed into a 'f' formatter. This will help diagnose the
             # issue.
             if cpu_percent:
+                # pylint: disable=W1633
                 cpu_percent_str = str(round(cpu_percent)) + "%"
             else:
                 cpu_percent_str = "Can't collect data"

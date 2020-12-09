@@ -671,7 +671,7 @@ class TestInfoReport(TestInfo):
             if type(new_value) == int:
                 item[label] = new_value
             else:
-                item[label] = round(new_value, 2)
+                item[label] = float(round(new_value, 2))  # pylint: disable=W1633
 
         if "test" in result and "tests" in by_component:
             test = result["test"]
@@ -680,7 +680,8 @@ class TestInfoReport(TestInfo):
             for bc in by_component["tests"]:
                 for item in by_component["tests"][bc]:
                     if test == item["test"]:
-                        seconds = round(result.get("duration", 0), 2)
+                        # pylint: disable=W1633
+                        seconds = float(round(result.get("duration", 0), 2))
                         update_item(item, "total run time, seconds", seconds)
                         update_item(item, "total runs", result.get("count", 0))
                         update_item(item, "skipped runs", result.get("skips", 0))

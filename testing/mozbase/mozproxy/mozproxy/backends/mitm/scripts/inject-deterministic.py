@@ -111,6 +111,7 @@ class AddDeterministic:
 
     def response(self, flow):
 
+        # pylint: disable=W1633
         millis = int(round(time.time() * 1000))
 
         if "content-type" in flow.response.headers:

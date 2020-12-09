@@ -154,8 +154,9 @@ class Wait(object):
             message = " with message: {}".format(message)
 
         raise errors.TimeoutException(
+            # pylint: disable=W1633
             "Timed out after {0:.1f} seconds{1}".format(
-                round((self.clock.now - start), 1), message if message else ""
+                float(round((self.clock.now - start), 1)), message if message else ""
             ),
             cause=last_exc,
         )
