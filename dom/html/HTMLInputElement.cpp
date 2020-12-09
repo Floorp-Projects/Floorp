@@ -3055,11 +3055,8 @@ void HTMLInputElement::Select() {
 
   // Directly call TextControlState::SetSelectionRange because
   // HTMLInputElement::SetSelectionRange only applies to fewer types
-  // TODO(krosylight): This should pass eNone per the spec, but we don't support
-  // it yet. See bug 1541454.
-  state->SetSelectionRange(0, UINT32_MAX,
-                           nsITextControlFrame::SelectionDirection::eForward,
-                           IgnoredErrorResult());
+  state->SetSelectionRange(0, UINT32_MAX, Optional<nsAString>(), IgnoreErrors(),
+                           TextControlState::ScrollAfterSelection::No);
 }
 
 void HTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext) {

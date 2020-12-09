@@ -345,6 +345,8 @@ class TextControlState final : public SupportsWeakPtr {
   nsITextControlFrame::SelectionDirection GetSelectionDirection(
       ErrorResult& aRv);
 
+  enum class ScrollAfterSelection { No, Yes };
+
   // Set the selection range (start, end, direction).  aEnd is allowed to be
   // smaller than aStart; in that case aStart will be reset to the same value as
   // aEnd.  This basically implements
@@ -354,19 +356,18 @@ class TextControlState final : public SupportsWeakPtr {
   // SelectionDirection.
   //
   // If we have a frame, this method will scroll the selection into view.
-  //
-  // XXXbz This should really take uint32_t, but none of our guts (either the
-  // frame or our cached selection state) work with uint32_t at the moment...
   MOZ_CAN_RUN_SCRIPT void SetSelectionRange(
       uint32_t aStart, uint32_t aEnd,
-      nsITextControlFrame::SelectionDirection aDirection, ErrorResult& aRv);
+      nsITextControlFrame::SelectionDirection aDirection, ErrorResult& aRv,
+      ScrollAfterSelection aScroll = ScrollAfterSelection::Yes);
 
   // Set the selection range, but with an optional string for the direction.
   // This will convert aDirection to an nsITextControlFrame::SelectionDirection
   // and then call our other SetSelectionRange overload.
   MOZ_CAN_RUN_SCRIPT void SetSelectionRange(
       uint32_t aSelectionStart, uint32_t aSelectionEnd,
-      const dom::Optional<nsAString>& aDirection, ErrorResult& aRv);
+      const dom::Optional<nsAString>& aDirection, ErrorResult& aRv,
+      ScrollAfterSelection aScroll = ScrollAfterSelection::Yes);
 
   // Set the selection start.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionstart

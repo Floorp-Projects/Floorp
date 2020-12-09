@@ -143,7 +143,7 @@ void HTMLTextAreaElement::Select() {
   }
 
   SetSelectionRange(0, UINT32_MAX, mozilla::dom::Optional<nsAString>(),
-                    IgnoredErrorResult());
+                    IgnoreErrors());
 }
 
 NS_IMETHODIMP
