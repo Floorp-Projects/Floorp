@@ -304,19 +304,26 @@ bool UnscaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback,
     return false;
   }
 
-  uint32_t fileSize = static_cast<uint32_t>(fileSize64);
-  const void* fragmentStart;
-  void* context;
-  hr = stream->ReadFileFragment(&fragmentStart, 0, fileSize, &context);
+  // Try to catch any device memory exceptions that may occur while attempting
+  // to read the file fragment.
+  void* context = nullptr;
+  hr = E_FAIL;
+  MOZ_SEH_TRY {
+    uint32_t fileSize = static_cast<uint32_t>(fileSize64);
+    const void* fragmentStart = nullptr;
+    hr = stream->ReadFileFragment(&fragmentStart, 0, fileSize, &context);
+    if (SUCCEEDED(hr)) {
+      aDataCallback((uint8_t*)fragmentStart, fileSize, mFontFace->GetIndex(),
+                    aBaton);
+    }
+  }
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    gfxCriticalNote << "Exception occurred reading DWrite font file data";
+  }
   if (FAILED(hr)) {
     return false;
   }
-
-  aDataCallback((uint8_t*)fragmentStart, fileSize, mFontFace->GetIndex(),
-                aBaton);
-
   stream->ReleaseFileFragment(context);
-
   return true;
 }
 
