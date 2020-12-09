@@ -80,7 +80,7 @@ class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
       throw new Error("`type` should not be empty");
     }
 
-    if (!this._form.traits.getAttributesInOwnerDocument || !search) {
+    if (!search) {
       return [];
     }
 
