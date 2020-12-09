@@ -9,16 +9,11 @@
 
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 
 namespace mozilla::glean {
 
 namespace impl {
-extern "C" {
-void fog_timespan_start(uint32_t aId);
-void fog_timespan_stop(uint32_t aId);
-uint32_t fog_timespan_test_has_value(uint32_t aId, const char* aStorageName);
-int64_t fog_timespan_test_get_value(uint32_t aId, const char* aStorageName);
-}
 
 class TimespanMetric {
  public:

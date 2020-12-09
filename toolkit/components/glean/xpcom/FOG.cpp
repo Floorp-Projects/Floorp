@@ -6,6 +6,7 @@
 
 #include "nsIFOG.h"
 #include "mozilla/FOG.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 
 #include "mozilla/ClearOnShutdown.h"
 
@@ -27,32 +28,24 @@ already_AddRefed<FOG> FOG::GetSingleton() {
   return do_AddRef(gFOG);
 }
 
-extern "C" {
-nsresult fog_init();
-void fog_shutdown();
-nsresult fog_set_log_pings(bool aEnableLogPings);
-nsresult fog_set_debug_view_tag(const nsACString* aDebugTag);
-nsresult fog_submit_ping(const nsACString* aPingName);
-}
-
-void FOG::Shutdown() { fog_shutdown(); }
+void FOG::Shutdown() { glean::impl::fog_shutdown(); }
 
 NS_IMETHODIMP
-FOG::InitializeFOG() { return fog_init(); }
+FOG::InitializeFOG() { return glean::impl::fog_init(); }
 
 NS_IMETHODIMP
 FOG::SetLogPings(bool aEnableLogPings) {
-  return fog_set_log_pings(aEnableLogPings);
+  return glean::impl::fog_set_log_pings(aEnableLogPings);
 }
 
 NS_IMETHODIMP
 FOG::SetTagPings(const nsACString& aDebugTag) {
-  return fog_set_debug_view_tag(&aDebugTag);
+  return glean::impl::fog_set_debug_view_tag(&aDebugTag);
 }
 
 NS_IMETHODIMP
 FOG::SendPing(const nsACString& aPingName) {
-  return fog_submit_ping(&aPingName);
+  return glean::impl::fog_submit_ping(&aPingName);
 }
 
 NS_IMPL_ISUPPORTS(FOG, nsIFOG)

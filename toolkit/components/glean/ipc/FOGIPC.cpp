@@ -5,6 +5,7 @@
 
 #include "FOGIPC.h"
 
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/MozPromise.h"
@@ -18,12 +19,6 @@ using FlushFOGDataPromise = mozilla::dom::ContentParent::FlushFOGDataPromise;
 namespace mozilla {
 namespace glean {
 
-extern "C" {
-uint32_t fog_serialize_ipc_buf();
-uint32_t fog_give_ipc_buf(uint8_t* buf, uint32_t buf_len);
-void fog_use_ipc_buf(uint8_t* buf, uint32_t buf_len);
-}
-
 /**
  * The parent process is asking you to flush your data ASAP.
  *
@@ -32,12 +27,12 @@ void fog_use_ipc_buf(uint8_t* buf, uint32_t buf_len);
  */
 void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver) {
   ByteBuf buf;
-  uint32_t ipcBufferSize = fog_serialize_ipc_buf();
+  uint32_t ipcBufferSize = impl::fog_serialize_ipc_buf();
   bool ok = buf.Allocate(ipcBufferSize);
   if (!ok) {
     return;
   }
-  uint32_t writtenLen = fog_give_ipc_buf(buf.mData, buf.mLen);
+  uint32_t writtenLen = impl::fog_give_ipc_buf(buf.mData, buf.mLen);
   if (writtenLen != ipcBufferSize) {
     return;
   }
@@ -84,7 +79,7 @@ void FlushAllChildData(
  * A child process has sent you this buf as a treat.
  * @param buf - a bincoded serialized payload that the Rust impl understands.
  */
-void FOGData(ipc::ByteBuf&& buf) { fog_use_ipc_buf(buf.mData, buf.mLen); }
+void FOGData(ipc::ByteBuf&& buf) { impl::fog_use_ipc_buf(buf.mData, buf.mLen); }
 
 /**
  * Called by FOG on a child process when it wants to send a buf to the parent.

@@ -9,15 +9,11 @@
 
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 
 namespace mozilla::glean {
 
 namespace impl {
-extern "C" {
-void fog_counter_add(uint32_t aId, int32_t aAmount);
-uint32_t fog_counter_test_has_value(uint32_t aId, const char* aStorageName);
-int32_t fog_counter_test_get_value(uint32_t aId, const char* aStorageName);
-}
 
 class CounterMetric {
  public:
