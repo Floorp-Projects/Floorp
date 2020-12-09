@@ -11,6 +11,7 @@ all the virtualenv files will show up in e.g. hg status.
 
 from __future__ import absolute_import, print_function
 
+import six
 import optparse
 import os
 import shutil
@@ -97,7 +98,7 @@ def update_configfile(source, target, replacements):
 
     with open(source) as config:
         for line in config:
-            for source_string, target_string in replacements.iteritems():
+            for source_string, target_string in six.iteritems(replacements):
                 if target_string:
                     line = line.replace(source_string, target_string)
             lines.append(line)

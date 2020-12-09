@@ -188,7 +188,7 @@ class MachCommands(MachCommandBase):
             if bin_dir not in sys.path:
                 sys.path.append(bin_dir)
 
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             setattr(args, k, v)
 
         parser.verify_usage(args)

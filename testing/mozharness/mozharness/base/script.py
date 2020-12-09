@@ -1416,7 +1416,7 @@ class ScriptMixin(PlatformMixin):
         if isinstance(exe, dict):
             found = False
             # allow for searchable paths of the exe
-            for name, path in exe.iteritems():
+            for name, path in six.iteritems(exe):
                 if isinstance(path, list) or isinstance(path, tuple):
                     path = [x % repl_dict for x in path]
                     if all([os.path.exists(section) for section in path]):

@@ -6,6 +6,7 @@
 # ***** END LICENSE BLOCK *****
 
 from __future__ import absolute_import
+import six
 import argparse
 import os
 import re
@@ -158,7 +159,7 @@ class TryToolsMixin(TransferMixin):
                 return label_dict[val]
             return "--%s" % val.replace("_", "-")
 
-        for label, (opts, _) in self.known_try_arguments.iteritems():
+        for label, (opts, _) in six.iteritems(self.known_try_arguments):
             if "action" in opts and opts["action"] not in (
                 "append",
                 "store",
@@ -183,7 +184,7 @@ class TryToolsMixin(TransferMixin):
         # This is a pretty hacky way to echo arguments down to the harness.
         # Hopefully this can be improved once we have a configuration system
         # in tree for harnesses that relies less on a command line.
-        for arg, value in vars(args).iteritems():
+        for arg, value in six.iteritems(vars(args)):
             if value:
                 label = label_from_val(arg)
                 _, flavors = self.known_try_arguments[label]

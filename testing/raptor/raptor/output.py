@@ -7,6 +7,7 @@
 """output raptor test results"""
 from __future__ import absolute_import, division, print_function
 
+import six
 import filters
 
 import json
@@ -633,7 +634,7 @@ class PerftestOutput(object):
 
         failed_tests = []
         for pagecycle in data:
-            for _sub, _value in pagecycle[0].iteritems():
+            for _sub, _value in six.iteritems(pagecycle[0]):
                 if _value["decodedFrames"] == 0:
                     failed_tests.append(
                         "%s test Failed. decodedFrames %s droppedFrames %s."

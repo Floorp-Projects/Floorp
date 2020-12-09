@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, unicode_literals
-
+import six
 import json
 import os
 import sys
@@ -32,7 +32,7 @@ def run_test(context, is_junit, **kwargs):
 
     flavor = kwargs.get("flavor") or "mochitest"
     if flavor not in ALL_FLAVORS:
-        for fname, fobj in ALL_FLAVORS.iteritems():
+        for fname, fobj in six.iteritems(ALL_FLAVORS):
             if flavor in fobj["aliases"]:
                 flavor = fname
                 break

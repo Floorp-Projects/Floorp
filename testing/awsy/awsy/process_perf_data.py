@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import six
 import os
 import sys
 import json
@@ -161,7 +162,7 @@ def create_suite(
                 memory_report_path, "resident-unique"
             )
             value = list(totals_rss.values())[0] + sum(
-                [v for k, v in totals_uss.iteritems() if "Main" not in k]
+                [v for k, v in six.iteritems(totals_uss) if "Main" not in k]
             )
 
         subtest = {
