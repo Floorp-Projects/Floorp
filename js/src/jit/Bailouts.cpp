@@ -184,6 +184,9 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
     cx->jitActivation->setLastProfilingFrame(currentFramePtr);
   }
 
+  // Update the bailout kind.
+  (*bailoutInfo)->bailoutKind = mozilla::Some(BailoutKind::OnStackInvalidation);
+
   return success;
 }
 

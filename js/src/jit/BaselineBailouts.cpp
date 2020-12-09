@@ -2062,6 +2062,11 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
       // Return false to resume in HandleException with reconstructed
       // baseline frame.
       return false;
+
+    case BailoutKind::OnStackInvalidation:
+      // The script has already been invalidated. There is nothing left to do.
+      break;
+
     default:
       MOZ_CRASH("Unknown bailout kind!");
   }
