@@ -10453,7 +10453,7 @@
 #ifdef ANDROID
   value: 400
 #else
-  value: 300
+  value: 500
 #endif
   mirror: always
 
