@@ -207,22 +207,6 @@ describe("ActionCreators", () => {
       assert.isFalse(au.isSendToMain(action), "isSendToMain");
     });
   });
-  describe("PerfEvent", () => {
-    it("should include the right data", () => {
-      const data = { action: "foo" };
-      assert.equal(ac.UndesiredEvent(data).data, data);
-    });
-    it("should wrap with AlsoToMain if in UI code", () => {
-      assert.isTrue(
-        au.isSendToMain(ac.PerfEvent({ action: "foo" })),
-        "isSendToMain"
-      );
-    });
-    it("should not wrap with AlsoToMain if not in UI code", () => {
-      const action = ac.PerfEvent({ action: "foo" }, BACKGROUND_PROCESS);
-      assert.isFalse(au.isSendToMain(action), "isSendToMain");
-    });
-  });
   describe("ImpressionStats", () => {
     it("should include the right data", () => {
       const data = { action: "foo" };

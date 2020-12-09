@@ -8,7 +8,6 @@ import {
   ASRouterEventPing,
   BasePing,
   ImpressionStatsPing,
-  PerfPing,
   SessionPing,
   SpocsFillPing,
   UndesiredPing,
@@ -637,20 +636,6 @@ describe("TelemetryFeed", () => {
           assert.propertyVal(ping, "value", data.data.value);
           assert.propertyVal(ping, "event", data.data.event);
         });
-      });
-    });
-    describe("#createPerformanceEvent", () => {
-      it("should create a valid event without a session", async () => {
-        const action = ac.PerfEvent({
-          event: "SCREENSHOT_FINISHED",
-          value: 100,
-        });
-        const ping = await instance.createPerformanceEvent(action);
-
-        // Is it valid?
-        assert.validate(ping, PerfPing);
-        // Does it have the right value?
-        assert.propertyVal(ping, "value", 100);
       });
     });
     describe("#createSessionEndEvent", () => {
@@ -1498,16 +1483,6 @@ describe("TelemetryFeed", () => {
           assert.calledWith(eventHandler, action);
         });
       });
-    });
-    it("should send an event on a TELEMETRY_PERFORMANCE_EVENT action", () => {
-      const sendEvent = sandbox.stub(instance, "sendEvent");
-      const eventCreator = sandbox.stub(instance, "createPerformanceEvent");
-      const action = { type: at.TELEMETRY_PERFORMANCE_EVENT };
-
-      instance.onAction(action);
-
-      assert.calledWith(eventCreator, action);
-      assert.calledWith(sendEvent, eventCreator.returnValue);
     });
     it("should send an event on a TELEMETRY_IMPRESSION_STATS action", () => {
       const sendEvent = sandbox.stub(instance, "sendStructuredIngestionEvent");

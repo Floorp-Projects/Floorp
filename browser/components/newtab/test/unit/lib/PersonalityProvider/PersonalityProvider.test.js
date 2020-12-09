@@ -273,19 +273,13 @@ describe("Personality Provider", () => {
     });
   });
   describe("#init", () => {
-    beforeEach(() => {
-      sandbox.stub(instance, "dispatch").returns();
-    });
     it("should return early if setInterestConfig fails", async () => {
       sandbox.stub(instance, "setBaseAttachmentsURL").returns();
       sandbox.stub(instance, "setInterestConfig").returns();
       instance.interestConfig = null;
-      await instance.init();
-      assert.calledWithMatch(instance.dispatch, {
-        data: {
-          event: "PERSONALIZATION_V2_GET_RECIPE_ERROR",
-        },
-      });
+      const callback = globals.sandbox.stub();
+      await instance.init(callback);
+      assert.notCalled(callback);
     });
     it("should return early if fetchModels fails", async () => {
       sandbox.stub(instance, "setBaseAttachmentsURL").returns();
@@ -293,12 +287,9 @@ describe("Personality Provider", () => {
       sandbox.stub(instance, "fetchModels").resolves({
         ok: false,
       });
-      await instance.init();
-      assert.calledWithMatch(instance.dispatch, {
-        data: {
-          event: "PERSONALIZATION_V2_FETCH_MODELS_ERROR",
-        },
-      });
+      const callback = globals.sandbox.stub();
+      await instance.init(callback);
+      assert.notCalled(callback);
     });
     it("should return early if createInterestVector fails", async () => {
       sandbox.stub(instance, "setBaseAttachmentsURL").returns();
@@ -312,12 +303,9 @@ describe("Personality Provider", () => {
       sandbox.stub(instance, "createInterestVector").resolves({
         ok: false,
       });
-      await instance.init();
-      assert.calledWithMatch(instance.dispatch, {
-        data: {
-          event: "PERSONALIZATION_V2_CREATE_INTEREST_VECTOR_ERROR",
-        },
-      });
+      const callback = globals.sandbox.stub();
+      await instance.init(callback);
+      assert.notCalled(callback);
     });
     it("should call callback on successful init", async () => {
       sandbox.stub(instance, "setBaseAttachmentsURL").returns();
@@ -358,30 +346,6 @@ describe("Personality Provider", () => {
       assert.calledOnce(instance.generateRecipeExecutor);
       assert.calledOnce(instance.createInterestVector);
       assert.calledOnce(instance.setInterestVector);
-    });
-  });
-  describe("#dispatchRelevanceScoreDuration", () => {
-    beforeEach(() => {
-      sandbox.stub(instance, "dispatch").returns();
-    });
-    it("should dispatch PERSONALIZATION_V2_ITEM_RELEVANCE_SCORE_DURATION only if initialized", () => {
-      let dispatch = globals.sandbox.stub();
-      instance.dispatch = dispatch;
-
-      instance.initialized = false;
-      instance.dispatchRelevanceScoreDuration(1000);
-
-      assert.notCalled(dispatch);
-
-      instance.initialized = true;
-      instance.dispatchRelevanceScoreDuration(1000);
-
-      assert.calledOnce(dispatch);
-
-      assert.equal(
-        dispatch.firstCall.args[0].data.event,
-        "PERSONALIZATION_V2_ITEM_RELEVANCE_SCORE_DURATION"
-      );
     });
   });
   describe("#calculateItemRelevanceScore", () => {

@@ -212,15 +212,6 @@ export const SpocsFillPing = Joi.object().keys(
   })
 );
 
-export const PerfPing = Joi.object().keys(
-  Object.assign({}, baseKeys, {
-    source: Joi.string(),
-    event: Joi.string().required(),
-    action: Joi.valid("activity_stream_performance_event").required(),
-    value: Joi.number().required(),
-  })
-);
-
 export const SessionPing = Joi.object().keys(
   Object.assign({}, baseKeys, {
     session_id: baseKeys.session_id.required(),

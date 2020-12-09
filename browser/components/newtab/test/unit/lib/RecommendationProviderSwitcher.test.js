@@ -127,32 +127,6 @@ describe("RecommendationProviderSwitcher", () => {
     });
   });
 
-  describe("#dispatchRelevanceScoreDuration", () => {
-    it("should call dispatchRelevanceScoreDuration if available", () => {
-      feed.affinityProvider = {
-        dispatchRelevanceScoreDuration: sandbox.stub().returns(),
-      };
-      feed.dispatchRelevanceScoreDuration(0);
-      assert.calledWith(
-        feed.affinityProvider.dispatchRelevanceScoreDuration,
-        0
-      );
-    });
-    it("should fire PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION", () => {
-      feed.affinityProvider = {};
-      sandbox.spy(feed.store, "dispatch");
-      feed.dispatchRelevanceScoreDuration(0);
-      assert.calledWithMatch(
-        feed.store.dispatch,
-        ac.PerfEvent({
-          event: "PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION",
-        })
-      );
-
-      assert.calledOnce(feed.store.dispatch);
-    });
-  });
-
   describe("#calculateItemRelevanceScore", () => {
     it("should use personalized score with affinity provider", async () => {
       const item = {};
