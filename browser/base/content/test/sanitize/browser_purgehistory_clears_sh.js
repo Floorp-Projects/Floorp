@@ -33,7 +33,7 @@ add_task(async function purgeHistoryTest() {
         content.history.pushState({}, "");
         content.history.back();
         await new Promise(function(r) {
-          content.setTimeout(r);
+          content.onpopstate = r;
         });
         let newHistory = content.history.length;
         Assert.equal(startHistory, 1, "Initial SHistory size");
