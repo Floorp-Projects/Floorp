@@ -17,22 +17,20 @@ NS_IMPL_CLASSINFO(GleanBoolean, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanBoolean, nsIGleanBoolean)
 
 NS_IMETHODIMP
-GleanBoolean::Set(bool value, JSContext* cx) {
-  mBoolean.Set(value);
+GleanBoolean::Set(bool aValue) {
+  mBoolean.Set(aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanBoolean::TestHasValue(const nsACString& aStorageName, JSContext* cx,
-                           bool* result) {
-  *result = mBoolean.TestHasValue(PromiseFlatCString(aStorageName).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GleanBoolean::TestGetValue(const nsACString& aStorageName, JSContext* cx,
-                           bool* result) {
-  *result = mBoolean.TestGetValue(PromiseFlatCString(aStorageName).get());
+GleanBoolean::TestGetValue(const nsACString& aStorageName,
+                           JS::MutableHandleValue aResult) {
+  auto result = mBoolean.TestGetValue(aStorageName);
+  if (result.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::BooleanValue(result.value()));
+  }
   return NS_OK;
 }
 
