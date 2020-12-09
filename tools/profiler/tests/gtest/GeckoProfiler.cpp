@@ -148,13 +148,21 @@ static void JSONRootCheck(const Json::Value& aRoot,
   EXPECT_HAS_JSON(meta["version"], UInt);
   EXPECT_HAS_JSON(meta["startTime"], Double);
 
+  EXPECT_HAS_JSON(aRoot["pages"], Array);
+
+  EXPECT_HAS_JSON(aRoot["profilerOverhead"], Object);
+
   GET_JSON(threads, aRoot["threads"], Array);
   const Json::ArrayIndex threadCount = threads.size();
   for (Json::ArrayIndex i = 0; i < threadCount; ++i) {
     GET_JSON(thread, threads[i], Object);
+    EXPECT_HAS_JSON(thread["processType"], String);
     EXPECT_HAS_JSON(thread["name"], String);
+    EXPECT_HAS_JSON(thread["registerTime"], Double);
     EXPECT_HAS_JSON(thread["samples"], Object);
     EXPECT_HAS_JSON(thread["markers"], Object);
+    EXPECT_HAS_JSON(thread["pid"], UInt);
+    EXPECT_HAS_JSON(thread["tid"], UInt);
     EXPECT_HAS_JSON(thread["stackTable"], Object);
     EXPECT_HAS_JSON(thread["frameTable"], Object);
     EXPECT_HAS_JSON(thread["stringTable"], Array);
@@ -164,6 +172,18 @@ static void JSONRootCheck(const Json::Value& aRoot,
     ASSERT_GT(threadCount, 0u);
     GET_JSON(thread0, threads[0], Object);
     EXPECT_EQ_JSON(thread0["name"], String, "GeckoMain");
+  }
+
+  EXPECT_HAS_JSON(aRoot["pausedRanges"], Array);
+
+  const Json::Value& processes = aRoot["processes"];
+  if (!processes.isNull()) {
+    ASSERT_TRUE(processes.isArray());
+    const Json::ArrayIndex processCount = processes.size();
+    for (Json::ArrayIndex i = 0; i < processCount; ++i) {
+      GET_JSON(process, processes[i], Object);
+      JSONRootCheck(process, aWithMainThread);
+    }
   }
 }
 
