@@ -86,6 +86,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.OnBackLongPressedListener
+import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
@@ -636,7 +637,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
             context.settings().setSitePermissionSettingListener(viewLifecycleOwner) {
                 // If the user connects to WIFI while on the BrowserFragment, this will update the
                 // SitePermissionsRules (specifically autoplay) accordingly
-                assignSitePermissionsRules()
+                runIfFragmentIsAttached {
+                    assignSitePermissionsRules()
+                }
             }
             assignSitePermissionsRules()
 
