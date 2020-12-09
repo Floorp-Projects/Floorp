@@ -161,8 +161,6 @@
     <string name="browser_menu_find_in_page">페이지에서 찾기</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">사생활 보호 탭</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">새 탭</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">모음집에 저장</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -374,6 +372,12 @@
     <string name="customize_addon_collection_user_hint">모음집 소유자 (사용자 ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">부가 기능 모음집이 변경되었습니다. 변경 사항을 적용하기 위해 응용 프로그램을 종료하는 중…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">부가 기능이 지원되지 않음</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">부가 기능이 이미 설치됨</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

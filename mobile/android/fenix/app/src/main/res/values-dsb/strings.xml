@@ -154,8 +154,6 @@
     <string name="browser_menu_find_in_page">Na boku pytaś</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Priwatny rejtarik</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nowy rejtarik</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Do zběrki składowaś</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -362,6 +360,12 @@
     <string name="customize_addon_collection_user_hint">Wobsejźaŕ zběrki (wužywaŕski ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Dodankowa zběrka jo se změniła. Nałoženje se kóńcy, aby se změny nałožyli…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Dodank se njepódpěra</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Dodank jo južo zainstalowany.</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

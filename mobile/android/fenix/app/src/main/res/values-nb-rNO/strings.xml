@@ -157,8 +157,6 @@
     <string name="browser_menu_find_in_page">Finn på siden</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Privat fane</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Ny fane</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Lagre i samling</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -366,6 +364,12 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Tilleggssamling endret. Avslutter applikasjonen for å bruke endringer…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Tillegget støttes ikke</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Tillegget er allerede installert</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

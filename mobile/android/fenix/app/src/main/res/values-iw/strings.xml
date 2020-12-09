@@ -154,8 +154,6 @@
     <string name="browser_menu_find_in_page">חיפוש בדף</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">לשונית פרטית</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">לשונית חדשה</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">שמירה לאוסף</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -363,6 +361,12 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">אוסף התוספות השתנה. היישום ייסגר לצורך להחלת השינויים…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">התוספת אינה נתמכת</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">התוספת כבר מותקנת</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
