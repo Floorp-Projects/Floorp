@@ -14,7 +14,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-// This object implements the JS parts of nsIWebNavigation.
 class RemoteWebNavigation {
   constructor(aBrowser) {
     this._browser = aBrowser;
@@ -23,6 +22,7 @@ class RemoteWebNavigation {
     this._canGoBack = false;
     this._canGoForward = false;
     this.referringURI = null;
+    this.wrappedJSObject = this;
   }
 
   swapBrowser(aBrowser) {
@@ -178,5 +178,9 @@ class RemoteWebNavigation {
     }
   }
 }
+
+RemoteWebNavigation.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsIWebNavigation",
+]);
 
 var EXPORTED_SYMBOLS = ["RemoteWebNavigation"];
