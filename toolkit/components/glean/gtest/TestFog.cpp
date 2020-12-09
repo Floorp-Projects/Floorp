@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Tuple.h"
 #include "nsTArray.h"
 
@@ -13,6 +14,7 @@
 
 using mozilla::Preferences;
 using namespace mozilla::glean;
+using namespace mozilla::glean::impl;
 
 #define DATA_PREF "datareporting.healthreport.uploadEnabled"
 
@@ -22,9 +24,6 @@ extern "C" {
 void GTest_FOG_ExpectFailure(const char* aMessage) {
   EXPECT_STREQ(aMessage, "");
 }
-
-nsresult fog_init();
-nsresult fog_submit_ping(const nsACString* aPingName);
 }
 
 // Initialize FOG exactly once.
