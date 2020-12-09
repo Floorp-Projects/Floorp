@@ -893,7 +893,10 @@ void IMEStateManager::OnReFocus(nsPresContext* aPresContext,
     return;
   }
 
-  if (!UserActivation::IsHandlingUserInput()) {
+  MOZ_ASSERT(&aContent == sContent.get());
+
+  if (!UserActivation::IsHandlingUserInput() ||
+      UserActivation::IsHandlingKeyboardInput()) {
     return;
   }
 
