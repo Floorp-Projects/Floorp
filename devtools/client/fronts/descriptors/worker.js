@@ -88,19 +88,12 @@ class WorkerDescriptorFront extends TargetMixin(
         return;
       }
 
-      // Immediately retrieve console and thread actors that will be later used by Target.
-      let connectResponse;
-      if (this.actorID.includes("workerDescriptor")) {
-        connectResponse = await super.getTarget();
-      } else {
-        // @backward-compat { version 83 } Older servers don't support worker descriptors.
-        connectResponse = await this.connect({});
-      }
+      const workerTargetForm = await super.getTarget();
 
       // Set the console actor ID on the form to expose it to Target.attachConsole
       // Set the ThreadActor on the target form so it is accessible by getFront
-      this.targetForm.consoleActor = connectResponse.consoleActor;
-      this.targetForm.threadActor = connectResponse.threadActor;
+      this.targetForm.consoleActor = workerTargetForm.consoleActor;
+      this.targetForm.threadActor = workerTargetForm.threadActor;
 
       if (this.isDestroyedOrBeingDestroyed()) {
         return;
