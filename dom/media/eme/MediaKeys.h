@@ -171,6 +171,10 @@ class MediaKeys final : public nsIDocumentActivity,
   // and the MediaKeys destructor clears the proxy's reference to the MediaKeys.
   RefPtr<CDMProxy> mProxy;
 
+  // The HTMLMediaElement the MediaKeys are associated with. Note that a
+  // MediaKeys instance may not be associated with any HTMLMediaElement so
+  // this can be null (we also cannot rely on a media element to drive shutdown
+  // for this reason).
   RefPtr<HTMLMediaElement> mElement;
   RefPtr<Document> mDocument;
 
@@ -181,7 +185,10 @@ class MediaKeys final : public nsIDocumentActivity,
   PendingKeySessionsHashMap mPendingSessions;
   PromiseId mCreatePromiseId;
 
+  // The principal of the relevant settings object.
   RefPtr<nsIPrincipal> mPrincipal;
+  // The principal of the top level page. This can differ from mPrincipal if
+  // we're in an iframe.
   RefPtr<nsIPrincipal> mTopLevelPrincipal;
 
   const MediaKeySystemConfiguration mConfig;
