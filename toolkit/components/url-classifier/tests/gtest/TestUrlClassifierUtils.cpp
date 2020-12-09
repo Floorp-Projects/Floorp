@@ -19,7 +19,8 @@ static char int_to_hex_digit(int32_t i) {
 }
 
 static void CheckEquals(nsCString& expected, nsCString& actual) {
-  ASSERT_TRUE((expected).Equals((actual)));
+  ASSERT_TRUE((expected).Equals((actual)))
+  << "Expected:" << expected.get() << ", Actual:" << actual.get();
 }
 
 static void TestUnescapeHelper(const char* in, const char* expected) {
@@ -107,10 +108,10 @@ TEST(UrlClassifierUtils, Enc)
   // Test empty string
   TestEncodeHelper("", "");
 
-  // Test that all characters we shouldn't encode ([33-36],[38,126]) are not.
+  // Test that all characters we shouldn't encode ([33-34],36,[38,126]) are not.
   nsCString noenc;
   for (int32_t i = 33; i < 127; i++) {
-    if (i != 37) {  // skip %
+    if (i != 35 && i != 37) {  // skip %
       noenc.Append(static_cast<char>(i));
     }
   }
@@ -118,10 +119,10 @@ TEST(UrlClassifierUtils, Enc)
   nsUrlClassifierUtils::GetInstance()->SpecialEncode(noenc, false, out);
   CheckEquals(noenc, out);
 
-  // Test that all the chars that we should encode [0,32],37,[127,255] are
+  // Test that all the chars that we should encode [0,32],35, 37,[127,255] are
   nsCString yesAsString, yesExpectedString;
   for (int32_t i = 1; i < 256; i++) {
-    if (i < 33 || i == 37 || i > 126) {
+    if (i < 33 || i == 35 || i == 37 || i > 126) {
       yesAsString.Append(static_cast<char>(i));
       yesExpectedString.Append('%');
       yesExpectedString.Append(int_to_hex_digit(i / 16));
@@ -148,7 +149,7 @@ TEST(UrlClassifierUtils, Canonicalize)
   TestCanonicalizeHelper(
       "%257Ea%2521b%2540c%2523d%2524e%25f%255E00%252611%252A22%252833%252944_"
       "55%252B",
-      "~a!b@c#d$e%25f^00&11*22(33)44_55+");
+      "~a!b@c%23d$e%25f^00&11*22(33)44_55+");
 
   TestCanonicalizeHelper("", "");
   TestCanonicalizeHelper(
@@ -226,7 +227,6 @@ TEST(UrlClassifierUtils, Hostname)
   TestHostnameHelper("..both..", "both");
   TestHostnameHelper("..a.b.c.d..", "a.b.c.d");
   TestHostnameHelper("..127.0.0.1..", "127.0.0.1");
-  TestHostnameHelper("asdf!@#$a", "asdf!@#$a");
   TestHostnameHelper("AB CD 12354", "ab%20cd%2012354");
   TestHostnameHelper("\1\2\3\4\112\177", "%01%02%03%04j%7F");
   TestHostnameHelper("<>.AS/-+", "<>.as/-+");
