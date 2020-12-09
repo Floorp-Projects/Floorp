@@ -1383,6 +1383,19 @@ class DatabaseConnection::LazyStatement final {
     return mCachedStatement.Borrow();
   }
 
+  template <typename BindFunctor>
+  Result<Maybe<DatabaseConnection::BorrowedStatement>, nsresult>
+  BorrowAndExecuteSingleStep(BindFunctor&& aBindFunctor) {
+    IDB_TRY_UNWRAP(auto borrowedStatement, Borrow());
+
+    IDB_TRY(std::forward<BindFunctor>(aBindFunctor)(*borrowedStatement));
+
+    IDB_TRY_INSPECT(const bool& hasResult,
+                    MOZ_TO_RESULT_INVOKE(&*borrowedStatement, ExecuteStep));
+
+    return hasResult ? Some(std::move(borrowedStatement)) : Nothing{};
+  }
+
  private:
   Result<Ok, nsresult> Initialize() {
     IDB_TRY_UNWRAP(mCachedStatement,
@@ -7779,14 +7792,15 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
                              GetAffectedRows));
 
     if (rows > 0) {
-      IDB_TRY_INSPECT(const auto& borrowedSelectStatement,
-                      selectStatement.Borrow());
-
-      IDB_TRY(borrowedSelectStatement->BindInt64ByIndex(0, aId));
-
       IDB_TRY_INSPECT(
           const bool& hasResult,
-          MOZ_TO_RESULT_INVOKE(&*borrowedSelectStatement, ExecuteStep));
+          selectStatement
+              .BorrowAndExecuteSingleStep(
+                  [aId](auto& stmt) -> Result<Ok, nsresult> {
+                    IDB_TRY(stmt.BindInt64ByIndex(0, aId));
+                    return Ok{};
+                  })
+              .map([](const auto& maybeStmt) { return maybeStmt.isSome(); }));
 
       if (!hasResult) {
         // Don't have to create the journal here, we can create all at once,
