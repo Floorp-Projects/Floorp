@@ -223,11 +223,11 @@ void CacheQuotaClient::ReleaseIOThreadObjects() {
   // automatically.
 }
 
-void CacheQuotaClient::AbortOperations(const nsACString& aOrigin) {
+void CacheQuotaClient::AbortOperationsForLocks(
+    const DirectoryLockIdTable& aDirectoryLockIds) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!aOrigin.IsEmpty());
 
-  Manager::Abort(aOrigin);
+  Manager::Abort(aDirectoryLockIds);
 }
 
 void CacheQuotaClient::AbortOperationsForProcess(
