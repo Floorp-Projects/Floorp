@@ -150,8 +150,6 @@ Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
 /* static */
 template <typename OkT, typename Fn>
 void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
-  using MozPromiseT = MozPromise<OkT, IOError, true>;
-
   nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
   if (!bg) {
     aPromise->MaybeRejectWithAbortError(
@@ -159,15 +157,15 @@ void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
     return;
   }
 
-  InvokeAsync(bg, __func__,
-              [func = std::move(aFunc)]() {
-                Result<OkT, IOError> result = func();
-                if (result.isErr()) {
-                  return MozPromiseT::CreateAndReject(result.unwrapErr(),
-                                                      __func__);
-                }
-                return MozPromiseT::CreateAndResolve(result.unwrap(), __func__);
-              })
+  InvokeAsync(
+      bg, __func__,
+      [func = std::move(aFunc)]() {
+        Result<OkT, IOError> result = func();
+        if (result.isErr()) {
+          return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
+        }
+        return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
+      })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(aPromise)](const OkT& ok) {
