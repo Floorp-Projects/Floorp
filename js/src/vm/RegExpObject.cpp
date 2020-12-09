@@ -448,14 +448,14 @@ static bool EscapeRegExpPattern(StringBuffer& sb, const CharT* oldChars,
 }
 
 // ES6 draft rev32 21.2.3.2.4.
-JSAtom* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
+JSLinearString* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
   // Step 2.
   if (src->length() == 0) {
     return cx->names().emptyRegExp;
   }
 
   // We may never need to use |sb|. Start using it lazily.
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
 
   if (src->hasLatin1Chars()) {
     JS::AutoCheckCannotGC nogc;
@@ -470,7 +470,7 @@ JSAtom* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
   }
 
   // Step 3.
-  return sb.empty() ? src : sb.finishAtom();
+  return sb.empty() ? src : sb.finishString();
 }
 
 // ES6 draft rev32 21.2.5.14. Optimized for RegExpObject.
@@ -480,7 +480,7 @@ JSLinearString* RegExpObject::toString(JSContext* cx) const {
   if (!src) {
     return nullptr;
   }
-  RootedAtom escapedSrc(cx, EscapeRegExpPattern(cx, src));
+  RootedLinearString escapedSrc(cx, EscapeRegExpPattern(cx, src));
 
   // Step 7.
   JSStringBuilder sb(cx);
