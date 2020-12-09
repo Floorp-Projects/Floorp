@@ -5,32 +5,36 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/MediaKeys.h"
+
+#include "ChromiumCDMProxy.h"
 #include "GMPCrashHelper.h"
+#include "mozilla/EMEUtils.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/MediaKeysBinding.h"
-#include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaKeyError.h"
+#include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaKeyStatusMap.h"
-#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/MediaKeySystemAccess.h"
+#include "mozilla/dom/MediaKeysBinding.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "mozilla/Telemetry.h"
+#include "mozilla/dom/WindowContext.h"
+#include "mozilla/dom/WindowGlobalChild.h"
+#include "nsContentCID.h"
+#include "nsContentTypeParser.h"
+#include "nsContentUtils.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsPrintfCString.h"
+#include "nsServiceManagerUtils.h"
+
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/MediaDrmCDMProxy.h"
 #endif
-#include "mozilla/EMEUtils.h"
-#include "nsContentUtils.h"
-#include "nsIScriptObjectPrincipal.h"
-#include "nsContentTypeParser.h"
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
 #endif
-#include "nsContentCID.h"
-#include "nsServiceManagerUtils.h"
-#include "mozilla/dom/MediaKeySystemAccess.h"
-#include "nsPrintfCString.h"
-#include "ChromiumCDMProxy.h"
 
 namespace mozilla::dom {
 
@@ -404,7 +408,20 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   }
   mPrincipal = sop->GetPrincipal();
 
+  // Begin figuring out the top level principal.
   nsCOMPtr<nsPIDOMWindowInner> window = GetParentObject();
+  // If we're in a top level document, getting the top level principal is easy.
+  // However, we're not in a top level doc this becomes more complicated. If
+  // we're not top level we need to get the top level principal, this can be
+  // done by reading the principal of the load info, which we can get of a
+  // document's channel.
+  //
+  // There is an edge case we need to watch out for here where this code can be
+  // run in an about:blank document before it has done its async load. In this
+  // case the document will not yet have a load info. We address this below by
+  // walking up a level in the window context chain. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1675360
+  // for more info.
   mDocument = window->GetExtantDoc();
   if (!mDocument) {
     NS_WARNING("Failed to get document when creating MediaKeys");
@@ -413,22 +430,60 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
     return promise.forget();
   }
 
-  // Get the top-level principal so we can partition the GMP based on
-  // the current + top level principal.
-  nsIChannel* channel = mDocument->GetChannel();
-  if (!channel) {
-    NS_WARNING("Failed to get channel when creating MediaKeys");
+  WindowGlobalChild* windowGlobalChild = window->GetWindowGlobalChild();
+  if (!windowGlobalChild) {
+    NS_WARNING("Failed to get window global child when creating MediaKeys");
     promise->MaybeRejectWithInvalidStateError(
-        "Couldn't get channel in MediaKeys::Init");
+        "Couldn't get window global child in MediaKeys::Init");
     return promise.forget();
   }
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  MOZ_RELEASE_ASSERT(loadInfo, "Channels should always have LoadInfo");
 
-  if (loadInfo->GetIsTopLevelLoad()) {
-    // We're in a top level context so our principal is already top level.
+  if (windowGlobalChild->SameOriginWithTop()) {
+    // We're in the same origin as the top window context, so our principal
+    // is also the top principal.
     mTopLevelPrincipal = mPrincipal;
   } else {
+    // We have a different origin than the top doc, try and find the top level
+    // principal by looking it up via load info, which we read off a channel.
+    nsIChannel* channel = mDocument->GetChannel();
+
+    WindowContext* windowContext = mDocument->GetWindowContext();
+    if (!windowContext) {
+      NS_WARNING("Failed to get window context when creating MediaKeys");
+      promise->MaybeRejectWithInvalidStateError(
+          "Couldn't get window context in MediaKeys::Init");
+      return promise.forget();
+    }
+    while (!channel) {
+      // We don't have a channel, this can happen if we're in an about:blank
+      // page that hasn't yet had its async load performed. Try and get
+      // the channel from our parent doc. We should be able to do this because
+      // an about:blank is considered the same origin as its parent. We do this
+      // recursively to cover pages do silly things like nesting blank iframes
+      // and not waiting for loads.
+
+      // Move our window context up a level.
+      windowContext = windowContext->GetParentWindowContext();
+      if (!windowContext || !windowContext->GetExtantDoc()) {
+        NS_WARNING(
+            "Failed to get parent window context's document when creating "
+            "MediaKeys");
+        promise->MaybeRejectWithInvalidStateError(
+            "Couldn't get parent window context's document in "
+            "MediaKeys::Init (likely due to an nested about about:blank frame "
+            "that hasn't loaded yet)");
+        return promise.forget();
+      }
+
+      Document* parentDoc = windowContext->GetExtantDoc();
+      channel = parentDoc->GetChannel();
+    }
+
+    MOZ_RELEASE_ASSERT(
+        channel, "Should either have a channel or should have returned by now");
+
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    MOZ_RELEASE_ASSERT(loadInfo, "Channels should always have LoadInfo");
     mTopLevelPrincipal = loadInfo->GetTopLevelPrincipal();
     if (!mTopLevelPrincipal) {
       NS_WARNING("Failed to get top level principal when creating MediaKeys");
@@ -438,6 +493,7 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
     }
   }
 
+  // We should have figured out our top level principal.
   if (!mPrincipal || !mTopLevelPrincipal) {
     NS_WARNING("Failed to get principals when creating MediaKeys");
     promise->MaybeRejectWithInvalidStateError(
