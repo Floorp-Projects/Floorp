@@ -5108,8 +5108,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
     mCurrentMaintenance = nullptr;
 
-    QuotaClient::GetInstance()->MaybeRecordShutdownStep(
-        "Maintenance finished"_ns);
+    QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::IDB,
+                                                   "Maintenance finished"_ns);
 
     ProcessMaintenanceQueue();
   }
@@ -10094,16 +10094,16 @@ void Database::CleanupMetadata() {
   MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(Id(), &info));
   MOZ_ALWAYS_TRUE(info->mLiveDatabases.RemoveElement(this));
 
-  QuotaClient::GetInstance()->MaybeRecordShutdownStep(
-      "Live database entry removed"_ns);
+  QuotaManager::GetRef().MaybeRecordShutdownStep(
+      quota::Client::IDB, "Live database entry removed"_ns);
 
   if (info->mLiveDatabases.IsEmpty()) {
     MOZ_ASSERT(!info->mWaitingFactoryOp ||
                !info->mWaitingFactoryOp->HasBlockedDatabases());
     gLiveDatabaseHashtable->Remove(Id());
 
-    QuotaClient::GetInstance()->MaybeRecordShutdownStep(
-        "gLiveDatabaseHashtable entry removed"_ns);
+    QuotaManager::GetRef().MaybeRecordShutdownStep(
+        quota::Client::IDB, "gLiveDatabaseHashtable entry removed"_ns);
   }
 
   // Match the IncreaseBusyCount in OpenDatabaseOp::EnsureDatabaseActor().
@@ -15789,11 +15789,12 @@ void FactoryOp::CleanupMetadata() {
   MOZ_ASSERT(gFactoryOps);
   gFactoryOps->RemoveElement(this);
 
-  if (auto* const quotaClient = QuotaClient::GetInstance()) {
-    quotaClient->MaybeRecordShutdownStep(
-        "An element was removed from gFactoryOps"_ns);
-  } else {
-    NS_WARNING("Cannot record shutdown step because QuotaClient is nullptr");
+  // We might get here even after QuotaManagerOpen failed, so we need to check
+  // if we have a quota manager. If we don't, we obviously are not in quota
+  // manager shutdown.
+  if (auto* const quotaManager = QuotaManager::Get()) {
+    quotaManager->MaybeRecordShutdownStep(
+        quota::Client::IDB, "An element was removed from gFactoryOps"_ns);
   }
 
   // Match the IncreaseBusyCount in AllocPBackgroundIDBFactoryRequestParent().
