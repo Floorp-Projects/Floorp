@@ -205,11 +205,7 @@ bool CallOrNewEmitter::emitSpreadArgumentsTest() {
       //            [stack] CALLEE THIS ARG0 OPTIMIZED
       return false;
     }
-    if (!bce_->emit1(JSOp::Not)) {
-      //            [stack] CALLEE THIS ARG0 !OPTIMIZED
-      return false;
-    }
-    if (!ifNotOptimizable_->emitThen()) {
+    if (!ifNotOptimizable_->emitThen(IfEmitter::ConditionKind::Negative)) {
       //            [stack] CALLEE THIS ARG0
       return false;
     }

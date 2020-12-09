@@ -5239,11 +5239,8 @@ bool BytecodeEmitter::emitAsyncIterator() {
     //              [stack] OBJ ITERFN !UNDEF-OR-NULL
     return false;
   }
-  if (!emit1(JSOp::Not)) {
-    //              [stack] OBJ ITERFN UNDEF-OR-NULL
-    return false;
-  }
-  if (!ifAsyncIterIsUndefined.emitThenElse()) {
+  if (!ifAsyncIterIsUndefined.emitThenElse(
+          IfEmitter::ConditionKind::Negative)) {
     //              [stack] OBJ ITERFN
     return false;
   }
@@ -6292,13 +6289,8 @@ bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
     return false;
   }
 
-  if (!emit1(JSOp::Not)) {
-    //              [stack] VALUE_OR_RESOLVED !CANSKIP
-    return false;
-  }
-
   InternalIfEmitter ifCanSkip(this);
-  if (!ifCanSkip.emitThen()) {
+  if (!ifCanSkip.emitThen(IfEmitter::ConditionKind::Negative)) {
     //              [stack] VALUE_OR_RESOLVED
     return false;
   }
