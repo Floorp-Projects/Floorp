@@ -6,6 +6,7 @@
 
 #include "WindowDestroyedEvent.h"
 
+#include "GeckoProfiler.h"
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "js/Wrapper.h"
