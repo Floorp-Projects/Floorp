@@ -30,16 +30,20 @@ XPCOMUtils.defineLazyGetter(this, "d3", () => {
   return Cu.waiveXrays(d3Scope.d3);
 });
 
+/**
+ * All the CSV column names will be converted to lower case before lookup
+ * so they must be specified here in lower case.
+ */
 const FIELD_TO_CSV_COLUMNS = {
   origin: ["url", "login_uri"],
   username: ["username", "login_username"],
   password: ["password", "login_password"],
-  httpRealm: ["httpRealm"],
-  formActionOrigin: ["formActionOrigin"],
+  httpRealm: ["httprealm"],
+  formActionOrigin: ["formactionorigin"],
   guid: ["guid"],
-  timeCreated: ["timeCreated"],
-  timeLastUsed: ["timeLastUsed"],
-  timePasswordChanged: ["timePasswordChanged"],
+  timeCreated: ["timecreated"],
+  timeLastUsed: ["timelastused"],
+  timePasswordChanged: ["timepasswordchanged"],
 };
 
 /**
@@ -59,7 +63,7 @@ class LoginCSVImport {
     let csvColumnToField = new Map();
     for (let [field, columns] of Object.entries(FIELD_TO_CSV_COLUMNS)) {
       for (let column of columns) {
-        csvColumnToField.set(column, field);
+        csvColumnToField.set(column.toLowerCase(), field);
       }
     }
     return csvColumnToField;
@@ -77,7 +81,7 @@ class LoginCSVImport {
   static _getVanillaLoginFromCSVObject(csvObject, csvColumnToFieldMap) {
     let vanillaLogin = Object.create(null);
     for (let columnName of Object.keys(csvObject)) {
-      let fieldName = csvColumnToFieldMap.get(columnName);
+      let fieldName = csvColumnToFieldMap.get(columnName.toLowerCase());
       if (!fieldName) {
         continue;
       }
@@ -120,7 +124,9 @@ class LoginCSVImport {
     let csvString = await OS.File.read(filePath, { encoding: "utf-8" });
     let parsedLines = d3.csv.parse(csvString);
     let fieldsInFile = new Set(
-      Object.keys(parsedLines[0] || {}).map(col => csvColumnToFieldMap.get(col))
+      Object.keys(parsedLines[0] || {}).map(col => {
+        return csvColumnToFieldMap.get(col.toLowerCase());
+      })
     );
     if (
       parsedLines[0] &&
