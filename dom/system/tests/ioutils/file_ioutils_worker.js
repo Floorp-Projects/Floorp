@@ -37,12 +37,8 @@ self.onmessage = async function(msg) {
     // Write a file.
     const tmpFileName = OS.Path.join(tmpDir, "test_ioutils_numbers.tmp");
     const bytes = Uint8Array.of(...new Array(50).keys());
-    const bytesWritten = await IOUtils.writeAtomic(tmpFileName, bytes);
-    is(
-      bytesWritten,
-      50,
-      "IOUtils::writeAtomic can write entire byte array to file"
-    );
+    const bytesWritten = await IOUtils.write(tmpFileName, bytes);
+    is(bytesWritten, 50, "IOUtils::write can write entire byte array to file");
 
     // Read it back.
     let fileContents = await IOUtils.read(tmpFileName);
@@ -67,7 +63,7 @@ self.onmessage = async function(msg) {
     const src = OS.Path.join(tmpDir, "test_move_file_src.tmp");
     const dest = OS.Path.join(tmpDir, "test_move_file_dest.tmp");
     const bytes = Uint8Array.of(...new Array(50).keys());
-    await IOUtils.writeAtomic(src, bytes);
+    await IOUtils.write(src, bytes);
 
     await IOUtils.move(src, dest);
     ok(
