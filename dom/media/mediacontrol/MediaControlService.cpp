@@ -143,21 +143,22 @@ void MediaControlService::NotifyMediaControlHasEverBeenUsed() {
     return;
   }
   mHasEverUsedMediaControl = true;
+  const uint32_t usedOnMediaControl = 1;
 #ifdef XP_WIN
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::UsedOnWin);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"Windows"_ns, usedOnMediaControl);
 #endif
 #ifdef XP_MACOSX
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::UsedOnMac);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"MacOS"_ns, usedOnMediaControl);
 #endif
 #ifdef MOZ_WIDGET_GTK
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::UsedOnLinux);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"Linux"_ns, usedOnMediaControl);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::UsedOnAndroid);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"Android"_ns, usedOnMediaControl);
 #endif
 }
 
@@ -167,22 +168,22 @@ void MediaControlService::NotifyMediaControlHasEverBeenEnabled() {
     return;
   }
   mHasEverEnabledMediaControl = true;
+  const uint32_t enableOnMediaControl = 0;
 #ifdef XP_WIN
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::EnabledOnWin);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"Windows"_ns, enableOnMediaControl);
 #endif
 #ifdef XP_MACOSX
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::EnabledOnMac);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"MacOS"_ns, enableOnMediaControl);
 #endif
 #ifdef MOZ_WIDGET_GTK
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::EnabledOnLinux);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"Linux"_ns, enableOnMediaControl);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-  AccumulateCategorical(
-      mozilla::Telemetry::LABELS_MEDIA_CONTROL_PLATFORM_USAGE::
-          EnabledOnAndroid);
+  Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_CONTROL_PLATFORM_USAGE,
+                       u"Android"_ns, enableOnMediaControl);
 #endif
 }
 
