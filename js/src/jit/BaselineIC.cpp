@@ -1919,7 +1919,6 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
 
   bool canAttachStub = stub->state().canAttachStub();
   bool handled = false;
-  bool deferred = false;
 
   // Only bother to try optimizing JSOp::Call with CacheIR if the chain is still
   // allowed to attach stubs.
@@ -1944,7 +1943,10 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
         handled = true;
         break;
       case AttachDecision::Deferred:
-        deferred = true;
+        MOZ_CRASH("No deferred Call stubs");
+    }
+    if (!handled) {
+      stub->trackNotAttached(cx, frame->invalidationScript());
     }
   }
 
@@ -1976,39 +1978,6 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
     res.set(callArgs.rval());
   }
 
-  // Try to transition again in case we called this IC recursively.
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
-  canAttachStub = stub->state().canAttachStub();
-
-  if (deferred && canAttachStub) {
-    HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
-    bool isFirstStub = stub->newStubIsFirstStub();
-    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), isFirstStub,
-                        argc, callee, callArgs.thisv(), newTarget, args);
-    switch (gen.tryAttachDeferredStub(res)) {
-      case AttachDecision::Attach: {
-        ICScript* icScript = frame->icScript();
-        ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Regular, script, icScript, stub, &handled);
-        if (newStub) {
-          JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
-        }
-      } break;
-      case AttachDecision::NoAction:
-        break;
-      case AttachDecision::TemporarilyUnoptimizable:
-      case AttachDecision::Deferred:
-        MOZ_ASSERT_UNREACHABLE("Impossible attach decision");
-        break;
-    }
-  }
-
-  if (!handled && canAttachStub) {
-    stub->trackNotAttached(cx, frame->invalidationScript());
-  }
   return true;
 }
 

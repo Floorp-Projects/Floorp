@@ -1761,8 +1761,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                   HandleValue newTarget, HandleValueArray args);
 
   AttachDecision tryAttachStub();
-
-  AttachDecision tryAttachDeferredStub(HandleValue result);
 };
 
 class MOZ_RAII CompareIRGenerator : public IRGenerator {
