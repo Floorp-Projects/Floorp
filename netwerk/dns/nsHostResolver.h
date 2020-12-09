@@ -283,7 +283,7 @@ class AddrHostRecord final : public nsHostRecord {
   static DnsPriority GetPriority(uint16_t aFlags);
 
   // true if pending and on the queue (not yet given to getaddrinfo())
-  bool onQueue() { return GetNative() && isInList(); }
+  bool onQueue() { return LoadNative() && isInList(); }
 
   // When the lookups of this record started and their durations
   mozilla::TimeStamp mTrrStart;

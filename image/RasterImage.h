@@ -398,7 +398,7 @@ class RasterImage final : public ImageResource,
    * Orientation that indicates no transformation is needed.
    */
   Orientation UsedOrientation() const {
-    return GetHandledOrientation() ? mOrientation : Orientation();
+    return LoadHandledOrientation() ? mOrientation : Orientation();
   }
 
   // Functions to convert between oriented and unoriented pixels.

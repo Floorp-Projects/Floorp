@@ -205,8 +205,8 @@ class WalkCacheRunnable : public Runnable,
         mSize(0),
         mCancel(false) {
     MOZ_ASSERT(NS_IsMainThread());
-    SetNotifyStorage(true);
-    SetVisitEntries(aVisitEntries);
+    StoreNotifyStorage(true);
+    StoreVisitEntries(aVisitEntries);
   }
 
   virtual ~WalkCacheRunnable() {
@@ -280,7 +280,7 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
     } else if (NS_IsMainThread()) {
       LOG(("WalkMemoryCacheRunnable::Run - notifying [this=%p]", this));
 
-      if (GetNotifyStorage()) {
+      if (LoadNotifyStorage()) {
         LOG(("  storage"));
 
         uint64_t capacity = CacheObserver::MemoryCacheCapacity();
@@ -289,9 +289,9 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
         // Second, notify overall storage info
         mCallback->OnCacheStorageInfo(mEntryArray.Length(), mSize, capacity,
                                       nullptr);
-        if (!GetVisitEntries()) return NS_OK;  // done
+        if (!LoadVisitEntries()) return NS_OK;  // done
 
-        SetNotifyStorage(false);
+        StoreNotifyStorage(false);
 
       } else {
         LOG(("  entry [left=%zu, canceled=%d]", mEntryArray.Length(),
@@ -436,7 +436,7 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
           uint32_t size;
           rv = CacheIndex::GetCacheStats(mLoadInfo, &size, &mCount);
           if (NS_FAILED(rv)) {
-            if (GetVisitEntries()) {
+            if (LoadVisitEntries()) {
               // both onStorageInfo and onCompleted are expected
               NS_DispatchToMainThread(this);
             }
@@ -448,7 +448,7 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
           // Invoke onCacheStorageInfo with valid information.
           NS_DispatchToMainThread(this);
 
-          if (!GetVisitEntries()) {
+          if (!LoadVisitEntries()) {
             return NS_OK;  // done
           }
 
@@ -482,13 +482,13 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
           NS_DispatchToMainThread(this);
       }
     } else if (NS_IsMainThread()) {
-      if (GetNotifyStorage()) {
+      if (LoadNotifyStorage()) {
         nsCOMPtr<nsIFile> dir;
         CacheFileIOManager::GetCacheDirectory(getter_AddRefs(dir));
         uint64_t capacity = CacheObserver::DiskCacheCapacity();
         capacity <<= 10;  // kilobytes to bytes
         mCallback->OnCacheStorageInfo(mCount, mSize, capacity, dir);
-        SetNotifyStorage(false);
+        StoreNotifyStorage(false);
       } else {
         mCallback->OnCacheEntryVisitCompleted();
       }
