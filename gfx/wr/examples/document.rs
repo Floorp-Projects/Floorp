@@ -129,7 +129,7 @@ impl Example for App {
                 builder.finalize(),
                 true,
             );
-            txn.generate_frame();
+            txn.generate_frame(0);
             api.send_transaction(doc.id, txn);
         }
     }

@@ -169,7 +169,7 @@ impl Rectangle {
             true,
         );
         transaction.set_root_pipeline(pipeline_id);
-        transaction.generate_frame();
+        transaction.generate_frame(0);
         self.api.send_transaction(self.document_id, transaction);
         rx.recv().unwrap();
         let renderer = self.renderer.as_mut().unwrap();

@@ -706,7 +706,8 @@ void APZCTreeManager::UpdateHitTestingTree(
 }
 
 void APZCTreeManager::SampleForWebRender(
-    wr::TransactionWrapper& aTxn, const SampleTime& aSampleTime,
+    const Maybe<VsyncId>& aVsyncId, wr::TransactionWrapper& aTxn,
+    const SampleTime& aSampleTime,
     const wr::WrPipelineIdEpochs* aEpochsBeingRendered) {
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);

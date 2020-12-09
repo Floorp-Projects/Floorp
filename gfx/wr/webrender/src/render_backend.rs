@@ -1010,6 +1010,7 @@ impl RenderBackend {
                 txn.frame_ops.take(),
                 txn.notifications.take(),
                 txn.render_frame,
+                None,
                 txn.invalidate_rendered_frame,
                 frame_counter,
                 has_built_scene,
@@ -1347,7 +1348,7 @@ impl RenderBackend {
 
         let mut built_frame = false;
         for mut txn in txns {
-            if txn.generate_frame {
+            if txn.generate_frame.as_bool() {
                 txn.profile.end_time(profiler::API_SEND_TIME);
             }
 
@@ -1358,7 +1359,8 @@ impl RenderBackend {
                 txn.resource_updates.take(),
                 txn.frame_ops.take(),
                 txn.notifications.take(),
-                txn.generate_frame,
+                txn.generate_frame.as_bool(),
+                txn.generate_frame.id(),
                 txn.invalidate_rendered_frame,
                 frame_counter,
                 false
@@ -1395,6 +1397,7 @@ impl RenderBackend {
                     Vec::default(),
                     Vec::default(),
                     false,
+                    None,
                     false,
                     frame_counter,
                     false);
@@ -1414,6 +1417,7 @@ impl RenderBackend {
         mut frame_ops: Vec<FrameMsg>,
         mut notifications: Vec<NotificationRequest>,
         mut render_frame: bool,
+        generated_frame_id: Option<u64>,
         invalidate_rendered_frame: bool,
         frame_counter: &mut u32,
         has_built_scene: bool,
@@ -1430,7 +1434,7 @@ impl RenderBackend {
         // async transforms.
         if requested_frame || has_built_scene {
             if let Some(ref sampler) = self.sampler {
-                frame_ops.append(&mut sampler.sample(document_id,
+                frame_ops.append(&mut sampler.sample(document_id, generated_frame_id,
                                                      &doc.scene.pipeline_epochs));
             }
         }
