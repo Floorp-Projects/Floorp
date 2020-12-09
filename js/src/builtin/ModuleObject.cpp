@@ -2124,11 +2124,7 @@ bool ModuleObject::topLevelCapabilityReject(JSContext* cx,
                                             HandleValue error) {
   Rooted<PromiseObject*> promise(
       cx, &module->topLevelCapability()->as<PromiseObject>());
-  if (!AsyncFunctionThrown(cx, promise, error)) {
-    return false;
-  }
-  MOZ_ASSERT(promise->state() == JS::PromiseState::Rejected);
-  return true;
+  return AsyncFunctionThrown(cx, promise, error);
 }
 
 JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
