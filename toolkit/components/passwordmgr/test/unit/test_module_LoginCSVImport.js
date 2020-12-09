@@ -437,3 +437,36 @@ add_task(async function test_import_from_chrome_csv() {
       checkLoginNewlyCreated(a)
   );
 });
+
+/**
+ * Imports login data from a KeepassXC CSV file.
+ * `Title` is ignored until bug 1433770.
+ */
+add_task(async function test_import_from_keepassxc_csv() {
+  let csvFilePath = await setupCsv([
+    `"Group","Title","Username","Password","URL","Notes"`,
+    `"NewDatabase/Internet","Amazing","test@example.com","<password>","https://example.org",""`,
+  ]);
+
+  await LoginCSVImport.importFromCSV(csvFilePath);
+
+  LoginTestUtils.checkLogins(
+    [
+      TestData.formLogin({
+        formActionOrigin: "",
+        httpRealm: null,
+        origin: "https://example.org",
+        password: "<password>",
+        passwordField: "",
+        timesUsed: 1,
+        username: "test@example.com",
+        usernameField: "",
+      }),
+    ],
+    "Check that a new KeepassXC login was added with the correct fields",
+    (a, e) =>
+      a.equals(e) &&
+      checkMetaInfo(a, e, ["timesUsed"]) &&
+      checkLoginNewlyCreated(a)
+  );
+});
