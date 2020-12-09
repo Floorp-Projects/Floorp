@@ -1407,21 +1407,8 @@ MarkupView.prototype = {
    */
   _onWalkerMutations: function(mutations) {
     for (const mutation of mutations) {
-      let type = mutation.type;
-      let target = mutation.target;
-
-      if (mutation.type === "documentUnload") {
-        // @backward-compat { version 81 } The documentUnload mutation was removed in
-        // favor of the root-node resource.
-
-        // Treat this as a childList change of the child (maybe the protocol
-        // should do this).
-        type = "childList";
-        target = mutation.targetParent;
-        if (!target) {
-          continue;
-        }
-      }
+      const type = mutation.type;
+      const target = mutation.target;
 
       const container = this.getContainer(target);
       if (!container) {
