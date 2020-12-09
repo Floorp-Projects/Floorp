@@ -321,12 +321,6 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.isTopLevelDocument;
   }
 
-  // @backward-compat { version 81 } On newer server, this is never called; `isTopLevelDocument`
-  // is returned from the server.
-  set isTopLevelDocument(isTopLevelDocument) {
-    this._form.isTopLevelDocument = isTopLevelDocument;
-  }
-
   get isShadowRoot() {
     return this._form.isShadowRoot;
   }
