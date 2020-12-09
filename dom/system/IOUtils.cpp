@@ -59,8 +59,7 @@
     }                                                                    \
   } while (0)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // static helper functions
 
@@ -1417,8 +1416,7 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
   return opts;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #undef REJECT_IF_SHUTTING_DOWN
 #undef REJECT_IF_INIT_PATH_FAILED
