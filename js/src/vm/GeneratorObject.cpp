@@ -185,6 +185,15 @@ AbstractGeneratorObject* js::GetGeneratorObjectForFrame(
   cx->check(frame);
   MOZ_ASSERT(frame.isGeneratorFrame());
 
+  if (frame.isModuleFrame()) {
+    ModuleEnvironmentObject* moduleEnv =
+        frame.script()->module()->environment();
+    Shape* shape = moduleEnv->lookup(cx, cx->names().dotGenerator);
+    Value genValue = moduleEnv->getSlot(shape->slot());
+    return genValue.isObject()
+               ? &genValue.toObject().as<AbstractGeneratorObject>()
+               : nullptr;
+  }
   if (!frame.hasInitialEnvironment()) {
     return nullptr;
   }

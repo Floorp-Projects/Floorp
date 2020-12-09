@@ -713,7 +713,7 @@ bool ParseContext::declareTopLevelDotGeneratorName() {
   AddDeclaredNamePtr p = modScope.lookupDeclaredNameForAdd(dotGenerator);
   return p ||
          modScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,
-                                  DeclaredNameInfo::npos);
+                                  DeclaredNameInfo::npos, ClosedOver::Yes);
 }
 
 }  // namespace frontend
