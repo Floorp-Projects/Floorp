@@ -120,6 +120,9 @@ enum class BailoutKind : uint8_t {
   // A bailout to baseline from Ion on exception to handle Debugger hooks.
   IonExceptionDebugMode,
 
+  // We returned to a stack frame after invalidating its IonScript.
+  OnStackInvalidation,
+
   Limit
 };
 
@@ -155,6 +158,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "UninitializedLexical";
     case BailoutKind::IonExceptionDebugMode:
       return "IonExceptionDebugMode";
+    case BailoutKind::OnStackInvalidation:
+      return "OnStackInvalidation";
 
     case BailoutKind::Limit:
       break;
