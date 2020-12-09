@@ -3039,31 +3039,6 @@ void* arena_t::Palloc(size_t aAlignment, size_t aSize) {
   return ret;
 }
 
-// Return the size of the allocation pointed to by ptr.
-static size_t arena_salloc(const void* ptr) {
-  size_t ret;
-  arena_chunk_t* chunk;
-  size_t pageind, mapbits;
-
-  MOZ_ASSERT(ptr);
-  MOZ_ASSERT(GetChunkOffsetForPtr(ptr) != 0);
-
-  chunk = GetChunkForPtr(ptr);
-  pageind = (((uintptr_t)ptr - (uintptr_t)chunk) >> gPageSize2Pow);
-  mapbits = chunk->map[pageind].bits;
-  MOZ_DIAGNOSTIC_ASSERT((mapbits & CHUNK_MAP_ALLOCATED) != 0);
-  if ((mapbits & CHUNK_MAP_LARGE) == 0) {
-    arena_run_t* run = (arena_run_t*)(mapbits & ~gPageSizeMask);
-    MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
-    ret = run->mBin->mSizeClass;
-  } else {
-    ret = mapbits & ~gPageSizeMask;
-    MOZ_DIAGNOSTIC_ASSERT(ret != 0);
-  }
-
-  return ret;
-}
-
 class AllocInfo {
  public:
   template <bool Validate = false>
@@ -3082,7 +3057,22 @@ class AllocInfo {
 
     if (chunk != aPtr) {
       MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
-      return AllocInfo(arena_salloc(aPtr), chunk);
+
+      size_t pageind = (((uintptr_t)aPtr - (uintptr_t)chunk) >> gPageSize2Pow);
+      size_t mapbits = chunk->map[pageind].bits;
+      MOZ_DIAGNOSTIC_ASSERT((mapbits & CHUNK_MAP_ALLOCATED) != 0);
+
+      size_t size;
+      if ((mapbits & CHUNK_MAP_LARGE) == 0) {
+        arena_run_t* run = (arena_run_t*)(mapbits & ~gPageSizeMask);
+        MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
+        size = run->mBin->mSizeClass;
+      } else {
+        size = mapbits & ~gPageSizeMask;
+        MOZ_DIAGNOSTIC_ASSERT(size != 0);
+      }
+
+      return AllocInfo(size, chunk);
     }
 
     extent_node_t key;
