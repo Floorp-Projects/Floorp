@@ -64,18 +64,13 @@ add_task(async function test_newTabService() {
 async function openNewTab(aWindow, aExpectedURL) {
   // Open a new tab
   aWindow.BrowserOpenTab();
-
   let browser = aWindow.gBrowser.selectedBrowser;
-  let loadPromise = BrowserTestUtils.browserLoaded(
-    browser,
-    false,
-    aExpectedURL
-  );
-  let alreadyLoaded = await ContentTask.spawn(browser, aExpectedURL, url => {
-    let doc = content.document;
-    return doc && doc.readyState === "complete" && doc.location.href == url;
-  });
-  if (!alreadyLoaded) {
-    await loadPromise;
+
+  // We're already loaded.
+  if (browser.currentURI.spec === aExpectedURL) {
+    return;
   }
+
+  // Wait for any location change.
+  await BrowserTestUtils.waitForLocationChange(aWindow.gBrowser);
 }
