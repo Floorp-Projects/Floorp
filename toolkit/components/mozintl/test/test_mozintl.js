@@ -8,6 +8,7 @@ function run_test() {
   test_methods_calling();
   test_constructors();
   test_rtf_formatBestUnit();
+  test_datetimeformat();
 
   ok(true);
 }
@@ -161,4 +162,19 @@ function test_rtf_formatBestUnit() {
 
     testRTFBestUnit(anchor, "2098-01-02 18:30", "in 82 years");
   }
+}
+
+function test_datetimeformat() {
+  Services.prefs.setStringPref(
+    "intl.date_time.pattern_override.date_long",
+    "yyyy年M月d日"
+  );
+
+  let formatted = new Services.intl.DateTimeFormat("ja", {
+    dateStyle: "long",
+  }).format(new Date("2020-12-08 21:00:05"));
+
+  equal(formatted, "2020年12月8日");
+
+  Services.prefs.clearUserPref("intl.date_time.pattern_override.date_long");
 }

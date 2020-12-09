@@ -89,7 +89,7 @@ interface mozIOSPreferences : nsISupports
    * handle all scenarios, including with cases where we fail to retrieve
    * anything from the OS, here.
    */
-  ACString getDateTimePattern(in long timeFormatStyle,
-                              in long dateFormatStyle,
-                              [optional] in ACString locale);
+  AUTF8String getDateTimePattern(in long timeFormatStyle,
+                                 in long dateFormatStyle,
+                                 [optional] in ACString locale);
 };
