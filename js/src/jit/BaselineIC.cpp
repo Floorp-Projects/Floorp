@@ -359,7 +359,6 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::InitElem:
       case JSOp::InitHiddenElem:
       case JSOp::InitLockedElem:
-      case JSOp::InitElemArray:
       case JSOp::InitElemInc:
       case JSOp::SetElem:
       case JSOp::StrictSetElem: {
@@ -1112,8 +1111,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::SetElem || op == JSOp::StrictSetElem ||
              op == JSOp::InitElem || op == JSOp::InitHiddenElem ||
-             op == JSOp::InitLockedElem || op == JSOp::InitElemArray ||
-             op == JSOp::InitElemInc);
+             op == JSOp::InitLockedElem || op == JSOp::InitElemInc);
 
   int objvIndex = -3;
   RootedObject obj(
@@ -1169,13 +1167,6 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     if (!InitElemOperation(cx, pc, obj, index, rhs)) {
       return false;
     }
-  } else if (op == JSOp::InitElemArray) {
-    MOZ_ASSERT(uint32_t(index.toInt32()) <= INT32_MAX,
-               "the bytecode emitter must fail to compile code that would "
-               "produce JSOp::InitElemArray with an index exceeding "
-               "int32_t range");
-    MOZ_ASSERT(uint32_t(index.toInt32()) == GET_UINT32(pc));
-    InitElemArrayOperation(cx, pc, obj.as<ArrayObject>(), rhs);
   } else if (op == JSOp::InitElemInc) {
     if (!InitElemIncOperation(cx, obj.as<ArrayObject>(), index.toInt32(),
                               rhs)) {

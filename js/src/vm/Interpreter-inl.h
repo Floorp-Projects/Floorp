@@ -625,27 +625,6 @@ static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
   return false;
 }
 
-inline void InitElemArrayOperation(JSContext* cx, jsbytecode* pc,
-                                   HandleArrayObject arr, HandleValue val) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::InitElemArray);
-
-  // The dense elements must have been initialized up to this index. The JIT
-  // implementation also depends on this.
-  uint32_t index = GET_UINT32(pc);
-  MOZ_ASSERT(index < arr->getDenseCapacity());
-  MOZ_ASSERT(index == arr->getDenseInitializedLength());
-
-  // Bump the initialized length even for hole values to ensure the
-  // index == initLength invariant holds for later InitElemArray ops.
-  arr->setDenseInitializedLength(index + 1);
-
-  if (val.isMagic(JS_ELEMENTS_HOLE)) {
-    arr->initDenseElementHole(index);
-  } else {
-    arr->initDenseElement(index, val);
-  }
-}
-
 inline bool InitElemIncOperation(JSContext* cx, HandleArrayObject arr,
                                  uint32_t index, HandleValue val) {
   if (index == INT32_MAX) {
