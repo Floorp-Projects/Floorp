@@ -122,6 +122,10 @@ class Analytics(
                     globalUserParticipation = enabled
                 }
                 context.settings().isExperimentationEnabled = globalUserParticipation
+
+                // Nimbus should look after downloading experiment definitions from remote settings
+                // on another thread, and making sure we don't hit the server each time we start.
+                updateExperiments()
             }
         }
     }
