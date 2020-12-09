@@ -819,18 +819,12 @@
      * must fill in all slots of the new object before it is used in any other
      * way.
      *
-     * For `JSOp::NewObject`, the new object has a group based on the allocation
-     * site (or a new group if the template's group is a singleton). For
-     * `JSOp::NewObjectWithGroup`, the new object has the same group as the
-     * template object.
-     *
      *   Category: Objects
      *   Type: Creating objects
      *   Operands: uint32_t baseobjIndex
      *   Stack: => obj
      */ \
     MACRO(NewObject, new_object, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
-    MACRO(NewObjectWithGroup, new_object_with_group, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
     /*
      * Push a preconstructed object.
      *
@@ -1010,9 +1004,6 @@
      * Get the value of the property `obj.name`. This can call getters and
      * proxy traps.
      *
-     * `JSOp::CallProp` is exactly like `JSOp::GetProp` but hints to the VM that we're
-     * getting a method in order to call it.
-     *
      * Implements: [GetV][1], [GetValue][2] step 5.
      *
      * [1]: https://tc39.es/ecma262/#sec-getv
@@ -1023,13 +1014,9 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj[name]
      */ \
-    MACRO(GetProp, get_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
-    MACRO(CallProp, call_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
+    MACRO(GetProp, get_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_IC) \
     /*
      * Get the value of the property `obj[key]`.
-     *
-     * `JSOp::CallElem` is exactly like `JSOp::GetElem` but hints to the VM that
-     * we're getting a method in order to call it.
      *
      * Implements: [GetV][1], [GetValue][2] step 5.
      *
@@ -1041,20 +1028,7 @@
      *   Operands:
      *   Stack: obj, key => obj[key]
      */ \
-    MACRO(GetElem, get_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
-    MACRO(CallElem, call_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
-    /*
-     * Push the value of `obj.length`.
-     *
-     * `nameIndex` must be the index of the atom `"length"`. This then behaves
-     * exactly like `JSOp::GetProp`.
-     *
-     *   Category: Objects
-     *   Type: Accessing properties
-     *   Operands: uint32_t nameIndex
-     *   Stack: obj => obj.length
-     */ \
-    MACRO(Length, length, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
+    MACRO(GetElem, get_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_IC) \
     /*
      * Non-strict assignment to a property, `obj.name = val`.
      *
@@ -1229,7 +1203,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj => super.name
      */ \
-    MACRO(GetPropSuper, get_prop_super, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
+    MACRO(GetPropSuper, get_prop_super, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_IC) \
     /*
      * Get the value of `receiver[key]`, starting the property search at `obj`.
      * In spec terms, `obj.[[Get]](key, receiver)`.
@@ -1247,7 +1221,7 @@
      *   Operands:
      *   Stack: receiver, key, obj => super[key]
      */ \
-    MACRO(GetElemSuper, get_elem_super, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
+    MACRO(GetElemSuper, get_elem_super, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_IC) \
     /*
      * Assign `val` to `receiver.name`, starting the search for an existing
      * property at `obj`. In spec terms, `obj.[[Set]](name, val, receiver)`.
@@ -1365,16 +1339,6 @@
      *   Stack: val => val, done
      */ \
     MACRO(IsNoIter, is_no_iter, NULL, 1, 1, 2, JOF_BYTE) \
-    /*
-     * No-op instruction to hint to IonBuilder that the value on top of the
-     * stack is the string key in a for-in loop.
-     *
-     *   Category: Objects
-     *   Type: Enumeration
-     *   Operands:
-     *   Stack: val => val
-     */ \
-    MACRO(IterNext, iter_next, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Exit a for-in loop, closing the iterator.
      *
@@ -1531,23 +1495,6 @@
      */ \
     MACRO(Hole, hole, NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Create and push a new array that shares the elements of a template
-     * object.
-     *
-     * `script->getObject(objectIndex)` must be a copy-on-write array whose
-     * elements are all primitive values.
-     *
-     * This is an optimization. This single instruction implements an entire
-     * array literal, saving run time, code, and memory compared to
-     * `JSOp::NewArray` and a series of `JSOp::InitElem` instructions.
-     *
-     *   Category: Objects
-     *   Type: Array literals
-     *   Operands: uint32_t objectIndex
-     *   Stack: => array
-     */ \
-    MACRO(NewArrayCopyOnWrite, new_array_copy_on_write, NULL, 5, 0, 1, JOF_OBJECT) \
-    /*
      * Clone and push a new RegExp object.
      *
      * Implements: [Evaluation for *RegularExpressionLiteral*][1].
@@ -1561,11 +1508,9 @@
      */ \
     MACRO(RegExp, reg_exp, NULL, 5, 0, 1, JOF_REGEXP) \
     /*
-     * Push a function object.
+     * Push a new function object.
      *
-     * This clones the function unless it's a singleton; see
-     * `CanReuseFunctionForClone`. The new function inherits the current
-     * environment chain.
+     * The new function inherits the current environment chain.
      *
      * Used to create most JS functions. Notable exceptions are arrow functions
      * and derived or default class constructors.
@@ -1744,11 +1689,11 @@
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      */ \
-    MACRO(Call, call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(CallIter, call_iter, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(FunApply, fun_apply, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(FunCall, fun_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(CallIgnoresRv, call_ignores_rv, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    MACRO(Call, call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
+    MACRO(CallIter, call_iter, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
+    MACRO(FunApply, fun_apply, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
+    MACRO(FunCall, fun_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
+    MACRO(CallIgnoresRv, call_ignores_rv, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_IC) \
     /*
      * Like `JSOp::Call`, but the arguments are provided in an array rather than
      * a span of stack slots. Used to implement spread-call syntax:
@@ -1764,7 +1709,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    MACRO(SpreadCall, spread_call, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
+    MACRO(SpreadCall, spread_call, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_IC) \
     /*
      * Push true if `arr` is an array object that can be passed directly as the
      * `args` argument to `JSOp::SpreadCall`.
@@ -1810,7 +1755,7 @@
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      */ \
-    MACRO(Eval, eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(Eval, eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Spread-call variant of `JSOp::Eval`.
      *
@@ -1821,7 +1766,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    MACRO(SpreadEval, spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SpreadEval, spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::Eval`, but for strict mode code.
      *
@@ -1830,7 +1775,7 @@
      *   Operands: uint16_t argc
      *   Stack: evalFn, this, args[0], ..., args[argc-1] => rval
      */ \
-    MACRO(StrictEval, strict_eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictEval, strict_eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Spread-call variant of `JSOp::StrictEval`.
      *
@@ -1841,7 +1786,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    MACRO(StrictSpreadEval, strict_spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSpreadEval, strict_spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Push the implicit `this` value for an unqualified function call, like
      * `foo()`. `nameIndex` gives the name of the function we're calling.
@@ -1938,8 +1883,8 @@
      *   Operands: uint16_t argc
      *   Stack: callee, isConstructing, args[0], ..., args[argc-1], newTarget => rval
      */ \
-    MACRO(New, new_, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC) \
-    MACRO(SuperCall, super_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC) \
+    MACRO(New, new_, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_IC) \
+    MACRO(SuperCall, super_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_IC) \
     /*
      * Spread-call variant of `JSOp::New`.
      *
@@ -1957,8 +1902,8 @@
      *   Operands:
      *   Stack: callee, isConstructing, args, newTarget => rval
      */ \
-    MACRO(SpreadNew, spread_new, NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
-    MACRO(SpreadSuperCall, spread_super_call, NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
+    MACRO(SpreadNew, spread_new, NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_IC) \
+    MACRO(SpreadSuperCall, spread_super_call, NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_IC) \
     /*
      * Push the prototype of `callee` in preparation for calling `super()`.
      *
@@ -2748,8 +2693,8 @@
     /*
      * Initialize a global lexical binding.
      *
-     * The binding must already have been created by `DefLet` or `DefConst` and
-     * must be uninitialized.
+     * The binding must already have been created by
+     * `GlobalOrEvalDeclInstantiation` and must be uninitialized.
      *
      * Like `JSOp::InitLexical` but for global lexicals. Unlike `InitLexical`
      * this can't be used to mark a binding as uninitialized.
@@ -2870,7 +2815,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    MACRO(GetName, get_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetName, get_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_IC) \
     /*
      * Find a global binding and push its value.
      *
@@ -2894,7 +2839,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    MACRO(GetGName, get_g_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME|JOF_IC) \
+    MACRO(GetGName, get_g_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_GNAME|JOF_IC) \
     /*
      * Push the value of an argument that is stored in the stack frame
      * or in an `ArgumentsObject`.
@@ -2941,7 +2886,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: => aliasedVar
      */ \
-    MACRO(GetAliasedVar, get_aliased_var, NULL, 5, 0, 1, JOF_ENVCOORD|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetAliasedVar, get_aliased_var, NULL, 5, 0, 1, JOF_ENVCOORD|JOF_NAME) \
     /*
      * Get the value of a module import by name and pushes it onto the stack.
      *
@@ -2950,7 +2895,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    MACRO(GetImport, get_import, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetImport, get_import, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME) \
     /*
      * Get the value of a binding from the environment `env`. If the name is
      * not bound in `env`, throw a ReferenceError.
@@ -2975,7 +2920,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env => v
      */ \
-    MACRO(GetBoundName, get_bound_name, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetBoundName, get_bound_name, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_IC) \
     /*
      * Push the value of an intrinsic onto the stack.
      *
@@ -2988,7 +2933,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => intrinsic[name]
      */ \
-    MACRO(GetIntrinsic, get_intrinsic, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetIntrinsic, get_intrinsic, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_IC) \
     /*
      * Pushes the currently executing function onto the stack.
      *
@@ -3327,87 +3272,27 @@
      */ \
     MACRO(BindVar, bind_var, NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Create a new binding on the current VariableEnvironment (the environment
-     * on the environment chain designated to receive new variables).
+     * Check for conflicting bindings and then initialize them in global or
+     * sloppy eval scripts. This is required for global scripts with any
+     * top-level bindings, or any sloppy-eval scripts with any non-lexical
+     * top-level bindings.
      *
-     * `JSOp::Def{Var,Let,Const,Fun}` instructions must appear in the script
-     * before anything else that might add bindings to the environment, and
-     * only once per binding. There must be a correct entry for the new binding
-     * in `script->bodyScope()`. (All this ensures that at run time, there is
-     * no existing conflicting binding. This is checked by the
-     * `JSOp::CheckGlobalOrEvalDecl` bytecode instruction that must appear
-     * before `JSOp::Def{Var,Let,Const,Fun}`.)
+     * Implements: [GlobalDeclarationInstantiation][1] and
+     *             [EvalDeclarationInstantiation][2] (except step 12).
      *
-     * Throw a SyntaxError if the current VariableEnvironment is the global
-     * environment and a binding with the same name exists on the global
-     * lexical environment.
-     *
-     * This is used for global scripts and also in some cases for function
-     * scripts where use of dynamic scoping inhibits optimization.
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands: uint32_t nameIndex
-     *   Stack: =>
-     */ \
-    MACRO(DefVar, def_var, NULL, 5, 0, 0, JOF_ATOM) \
-    /*
-     * Create a new binding for the given function on the current scope.
-     *
-     * `fun` must be a function object with an explicit name. The new
-     * variable's name is `fun->explicitName()`, and its value is `fun`. In
-     * global scope, this creates a new property on the global object.
-     *
-     * Implements: The body of the loop in [GlobalDeclarationInstantiation][1]
-     * step 17 ("For each Parse Node *f* in *functionsToInitialize*...") and
-     * the corresponding loop in [EvalDeclarationInstantiation][2].
+     * The `lastFun` argument is a GCThingIndex of the last hoisted top-level
+     * function that is part of top-level script initialization. The gcthings
+     * from index `0` thru `lastFun` contain only scopes and hoisted functions.
      *
      * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
      * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
      *
      *   Category: Variables and scopes
      *   Type: Creating and deleting bindings
-     *   Operands:
-     *   Stack: fun =>
-     */ \
-    MACRO(DefFun, def_fun, NULL, 1, 1, 0, JOF_BYTE) \
-    /*
-     * Create a new uninitialized mutable binding in the global lexical
-     * environment. Throw a SyntaxError if a binding with the same name already
-     * exists on that environment, or if a var binding with the same name
-     * exists on the global.
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands: uint32_t nameIndex
+     *   Operands: uint32_t lastFun
      *   Stack: =>
      */ \
-    MACRO(DefLet, def_let, NULL, 5, 0, 0, JOF_ATOM) \
-    /*
-     * Like `DefLet`, but create an uninitialized constant binding.
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands: uint32_t nameIndex
-     *   Stack: =>
-     */ \
-    MACRO(DefConst, def_const, NULL, 5, 0, 0, JOF_ATOM) \
-    /*
-     * Check for conflicting bindings before `JSOp::Def{Var,Let,Const,Fun}` in
-     * global or sloppy eval scripts.
-     *
-     * Implements: [GlobalDeclarationInstantiation][1] steps 5, 6, 10 and 12,
-     * and [EvalDeclarationInstantiation][2] steps 5 and 8.
-     *
-     * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
-     * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
-     *
-     *   Category: Variables and scopes
-     *   Type: Creating and deleting bindings
-     *   Operands:
-     *   Stack: =>
-     */ \
-    MACRO(CheckGlobalOrEvalDecl, check_global_or_eval_decl, NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(GlobalOrEvalDeclInstantiation, global_or_eval_decl_instantiation, NULL, 5, 0, 0, JOF_GCTHING) \
     /*
      * Look up a variable on the environment chain and delete it. Push `true`
      * on success (if a binding was deleted, or if no such binding existed in
@@ -3482,7 +3367,7 @@
      *   Operands:
      *   Stack: => rest
      */ \
-    MACRO(Rest, rest, NULL, 1, 0, 1, JOF_BYTE|JOF_TYPESET|JOF_IC) \
+    MACRO(Rest, rest, NULL, 1, 0, 1, JOF_BYTE|JOF_IC) \
     /*
      * Determines the `this` value for current function frame and pushes it
      * onto the stack.
@@ -3679,6 +3564,16 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(229)                                   \
+  MACRO(230)                                   \
+  MACRO(231)                                   \
+  MACRO(232)                                   \
+  MACRO(233)                                   \
+  MACRO(234)                                   \
+  MACRO(235)                                   \
+  MACRO(236)                                   \
+  MACRO(237)                                   \
+  MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \
   MACRO(241)                                   \
