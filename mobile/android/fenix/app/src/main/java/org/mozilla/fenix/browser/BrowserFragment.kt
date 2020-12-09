@@ -156,6 +156,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         ) {
             browserToolbarView.view
         }
+
+        @Suppress("DEPRECATION")
+        // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16945
         session?.register(toolbarSessionObserver, viewLifecycleOwner, autoPause = true)
 
         if (settings.shouldShowOpenInAppCfr && session != null) {
@@ -166,6 +169,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 appLinksUseCases = context.components.useCases.appLinksUseCases,
                 container = browserLayout as ViewGroup
             )
+            @Suppress("DEPRECATION")
+            // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16949
             session.register(
                 openInAppOnboardingObserver!!,
                 owner = this,
@@ -174,6 +179,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
 
         if (!settings.userKnowsAboutPwas) {
+            @Suppress("DEPRECATION")
+            // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16946
             session?.register(
                 PwaOnboardingObserver(
                     navController = findNavController(),
@@ -193,6 +200,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         // This observer initialized in onStart has a reference to fragment's view.
         // Prevent it leaking the view after the latter onDestroyView.
         if (openInAppOnboardingObserver != null) {
+            @Suppress("DEPRECATION")
+            // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16949
             getSessionById()?.unregister(openInAppOnboardingObserver!!)
             openInAppOnboardingObserver = null
         }

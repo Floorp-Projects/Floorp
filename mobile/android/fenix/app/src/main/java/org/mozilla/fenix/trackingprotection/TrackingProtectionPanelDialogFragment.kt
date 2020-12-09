@@ -71,7 +71,11 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     ): View? {
         val view = inflateRootView(container)
         val session = requireComponents.core.sessionManager.findSessionById(args.sessionId)
+
+        @Suppress("DEPRECATION")
+        // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16944
         session?.register(sessionObserver, view = view)
+
         trackingProtectionStore = StoreProvider.get(this) {
             TrackingProtectionStore(
                 TrackingProtectionState(
