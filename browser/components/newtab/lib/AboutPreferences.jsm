@@ -26,14 +26,38 @@ const PREFS_BEFORE_SECTIONS = [
     id: "topsites",
     pref: {
       feed: "feeds.topsites",
-      titleString: "home-prefs-topsites-header",
-      descString: "home-prefs-topsites-description",
+      titleString:
+        Services.prefs.getBoolPref(
+          "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+        ) ||
+        Services.prefs.getBoolPref(
+          "browser.newtabpage.activity-stream.customizationMenu.enabled"
+        )
+          ? "home-prefs-shortcuts-header"
+          : "home-prefs-topsites-header",
+      descString:
+        Services.prefs.getBoolPref(
+          "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+        ) ||
+        Services.prefs.getBoolPref(
+          "browser.newtabpage.activity-stream.customizationMenu.enabled"
+        )
+          ? "home-prefs-shortcuts-description"
+          : "home-prefs-topsites-description",
       get nestedPrefs() {
         return Services.prefs.getBoolPref("browser.topsites.useRemoteSetting")
           ? [
               {
                 name: "showSponsoredTopSites",
-                titleString: "home-prefs-topsites-by-option-sponsored",
+                titleString:
+                  Services.prefs.getBoolPref(
+                    "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+                  ) ||
+                  Services.prefs.getBoolPref(
+                    "browser.newtabpage.activity-stream.customizationMenu.enabled"
+                  )
+                    ? "home-prefs-shortcuts-by-option-sponsored"
+                    : "home-prefs-topsites-by-option-sponsored",
               },
             ]
           : [];
@@ -51,7 +75,15 @@ const PREFS_AFTER_SECTIONS = [
     pref: {
       feed: "feeds.snippets",
       titleString: "home-prefs-snippets-header",
-      descString: "home-prefs-snippets-description",
+      descString:
+        Services.prefs.getBoolPref(
+          "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+        ) ||
+        Services.prefs.getBoolPref(
+          "browser.newtabpage.activity-stream.customizationMenu.enabled"
+        )
+          ? "home-prefs-snippets-description-new"
+          : "home-prefs-snippets-description",
     },
     icon: "info",
   },
