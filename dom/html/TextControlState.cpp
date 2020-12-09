@@ -2064,7 +2064,8 @@ nsITextControlFrame::SelectionDirection TextControlState::GetSelectionDirection(
 
 void TextControlState::SetSelectionRange(
     uint32_t aStart, uint32_t aEnd,
-    nsITextControlFrame::SelectionDirection aDirection, ErrorResult& aRv) {
+    nsITextControlFrame::SelectionDirection aDirection, ErrorResult& aRv,
+    ScrollAfterSelection aScroll) {
   MOZ_ASSERT(IsSelectionCached() || mBoundFrame,
              "How can we have a non-cached selection but no frame?");
 
@@ -2089,7 +2090,7 @@ void TextControlState::SetSelectionRange(
         handlingSetSelectionRange.IsTextControlStateDestroyed()) {
       return;
     }
-    if (mBoundFrame) {
+    if (aScroll == ScrollAfterSelection::Yes) {
       mBoundFrame->ScrollSelectionIntoViewAsync();
     }
     // Press on to firing the event even if that failed, like our old code did.
@@ -2231,11 +2232,12 @@ DirectionStringToSelectionDirection(const Optional<nsAString>& aDirection) {
 void TextControlState::SetSelectionRange(uint32_t aSelectionStart,
                                          uint32_t aSelectionEnd,
                                          const Optional<nsAString>& aDirection,
-                                         ErrorResult& aRv) {
+                                         ErrorResult& aRv,
+                                         ScrollAfterSelection aScroll) {
   nsITextControlFrame::SelectionDirection dir =
       DirectionStringToSelectionDirection(aDirection);
 
-  SetSelectionRange(aSelectionStart, aSelectionEnd, dir, aRv);
+  SetSelectionRange(aSelectionStart, aSelectionEnd, dir, aRv, aScroll);
   // The instance may have already been deleted here.
 }
 
