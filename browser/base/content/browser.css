@@ -1422,6 +1422,19 @@ toolbarpaletteitem > toolbaritem {
   font-size: large;
 }
 
+printpreview-pagination {
+  opacity: 0;
+  transition: opacity 100ms 500ms;
+}
+printpreview-pagination:focus-within,
+.previewStack:hover > printpreview-pagination {
+  opacity: 1;
+  transition: opacity 100ms;
+}
+.previewStack[rendering=true] > printpreview-pagination {
+  opacity: 0;
+}
+
 @media (prefers-color-scheme: dark) {
   .previewStack {
     background-color: #2A2A2E;

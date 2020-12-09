@@ -849,6 +849,10 @@
         "chrome://global/content/printPreviewToolbar.js",
       ],
       [
+        "printpreview-pagination",
+        "chrome://global/content/printPreviewPagination.js",
+      ],
+      [
         "autocomplete-input",
         "chrome://global/content/elements/autocomplete-input.js",
       ],
