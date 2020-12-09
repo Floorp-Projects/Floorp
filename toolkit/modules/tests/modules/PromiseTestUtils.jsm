@@ -160,7 +160,7 @@ var PromiseTestUtils = {
         // Ignore the special promise for ensureDOMPromiseRejectionsProcessed.
         return;
       }
-      message = reason.message || "" + reason;
+      message = reason?.message || "" + reason;
     } catch (ex) {}
 
     // We should convert the rejection stack to a string immediately. This is
