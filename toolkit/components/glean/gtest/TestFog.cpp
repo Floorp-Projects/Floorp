@@ -106,10 +106,9 @@ TEST(FOG, TestCppBooleanWorks)
 {
   mozilla::glean::test_only::can_we_flag_it.Set(false);
 
-  ASSERT_TRUE(
-      mozilla::glean::test_only::can_we_flag_it.TestHasValue("test-ping"_ns));
-  ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it.TestGetValue(
-                       "test-ping"_ns));
+  ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it
+                       .TestGetValue("test-ping"_ns)
+                       .value());
 }
 
 // TODO: to be enabled after changes from bug 1677448 are vendored.
