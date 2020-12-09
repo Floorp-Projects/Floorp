@@ -206,3 +206,32 @@ interface nsIGleanUuid : nsISupports
   [implicit_jscontext]
   jsval testGetValue(in ACString aStorageName);
 };
+
+[scriptable, uuid(1b01424a-1f55-11eb-92a5-0754f6c3f240)]
+interface nsIGleanEvent : nsISupports
+{
+  /*
+   * Record an event.
+   *
+   * @param aExtra An (optional) map of extra values.
+   */
+  [implicit_jscontext]
+  void record([optional] in jsval aExtra);
+
+  /**
+   * **Test-only API**
+   *
+   * Get a list of currently stored events for this event metric.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @return value of the stored metric.
+   */
+  [implicit_jscontext]
+  jsval testGetValue(in AUTF8String aStorageName);
+};

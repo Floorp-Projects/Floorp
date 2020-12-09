@@ -138,3 +138,14 @@ add_task(function test_fog_boolean_works() {
   Assert.ok(Glean.test_only.can_we_flag_it.testHasValue("test-ping"));
   Assert.equal(false, Glean.test_only.can_we_flag_it.testGetValue("test-ping"));
 });
+
+add_task(async function test_fog_event_works() {
+  Glean.test_only_ipc.no_extra_event.record();
+  // FIXME(bug 1678567): Check that the value was recorded when we can.
+  // Assert.ok(Glean.test_only_ipc.no_extra_event.testGetValue("store1"));
+
+  let extra = { extra1: "can set extras", extra2: "passing more data" };
+  Glean.test_only_ipc.an_event.record(extra);
+  // FIXME(bug 1678567): Check that the value was recorded when we can.
+  // Assert.ok(Glean.test_only_ipc.an_event.testGetValue("store1"));
+});

@@ -288,6 +288,32 @@ pub mod test_nested {
         }
     }
 
+    /// Convert from an extra key's index to its variant.
+    impl std::convert::TryFrom<i32> for EventMetricWithExtraKeys {
+        type Error = EventRecordingError;
+
+        fn try_from(value: i32) -> Result<Self, Self::Error> {
+          match value {
+              0 => Ok(Self::AnExtraKey),
+              1 => Ok(Self::AnotherExtraKey),
+              _ => Err(EventRecordingError::InvalidExtraKey),
+          }
+        }
+    }
+
+    /// Convert from an extra key's string representation to its variant.
+    impl std::convert::TryFrom<&str> for EventMetricWithExtraKeys {
+        type Error = EventRecordingError;
+
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+          match value {
+              "an_extra_key" => Ok(Self::AnExtraKey),
+              "another_extra_key" => Ok(Self::AnotherExtraKey),
+              _ => Err(EventRecordingError::InvalidExtraKey),
+          }
+        }
+    }
+
     #[allow(non_upper_case_globals)]
     /// generated from test.nested.event_metric_with_extra
     ///
@@ -309,6 +335,7 @@ pub mod test_nested {
 #[allow(dead_code)]
 pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
+    use std::convert::TryInto;
 
     use crate::private::*;
     use once_cell::sync::Lazy;
@@ -388,5 +415,128 @@ pub(crate) mod __glean_metric_maps {
         map
     });
 
+
+    /// Helper to get the number of allowed extra keys for a given event metric.
+    fn extra_keys_len<K: ExtraKeys>(_event: &EventMetric<K>) -> usize {
+        K::ALLOWED_KEYS.len()
+    }
+
+    /// Wrapper to record an event based on its metric ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `extra`     - An (optional) map of (extra key id, string) pairs.
+    ///                 The map will be decoded into the appropriate `ExtraKeys` type.
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the event was found and `record` was called with the given `extra`,
+    /// or an `EventRecordingError::InvalidId` if no event by that ID exists
+    /// or an `EventRecordingError::InvalidExtraKey` the `extra` map could not be deserialized.
+    pub(crate) fn event_record_wrapper(metric_id: u32, extra: HashMap<i32, String>) -> Result<(), EventRecordingError> {
+        match metric_id {
+          16 => {
+              assert!(
+                  extra_keys_len(&super::test_nested::event_metric) != 0 || extra.is_empty(),
+                  "No extra keys allowed, but some were passed"
+              );
+
+              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
+              #[allow(unused_variables)]
+              let extra: HashMap<_, _> = extra
+                  .into_iter()
+                  .map(|(k, v)| k.try_into().map(|k| (k, v)))
+                  .collect::<Result<HashMap<_, _>, _>>()?;
+              super::test_nested::event_metric.record(Some(extra));
+              Ok(())
+          }
+          17 => {
+              assert!(
+                  extra_keys_len(&super::test_nested::event_metric_with_extra) != 0 || extra.is_empty(),
+                  "No extra keys allowed, but some were passed"
+              );
+
+              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
+              #[allow(unused_variables)]
+              let extra: HashMap<_, _> = extra
+                  .into_iter()
+                  .map(|(k, v)| k.try_into().map(|k| (k, v)))
+                  .collect::<Result<HashMap<_, _>, _>>()?;
+              super::test_nested::event_metric_with_extra.record(Some(extra));
+              Ok(())
+          }
+           _ => Err(EventRecordingError::InvalidId),
+        }
+    }
+
+    /// Wrapper to record an event based on its metric ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `extra`     - An (optional) map of (string, string) pairs.
+    ///                 The map will be decoded into the appropriate `ExtraKeys` types.
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the event was found and `record` was called with the given `extra`,
+    /// or an `EventRecordingError::InvalidId` if no event by that ID exists
+    /// or an `EventRecordingError::InvalidExtraKey` the `extra` map could not be deserialized.
+    pub(crate) fn event_record_wrapper_str(metric_id: u32, extra: HashMap<String, String>) -> Result<(), EventRecordingError> {
+        match metric_id {
+          16 => {
+              assert!(
+                  extra_keys_len(&super::test_nested::event_metric) != 0 || extra.is_empty(),
+                  "No extra keys allowed, but some were passed"
+              );
+
+              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
+              #[allow(unused_variables)]
+              let extra = extra
+                  .into_iter()
+                  .map(|(k, v)| (&*k).try_into().map(|k| (k, v)))
+                  .collect::<Result<HashMap<_, _>, _>>()?;
+              super::test_nested::event_metric.record(Some(extra));
+              Ok(())
+          }
+          17 => {
+              assert!(
+                  extra_keys_len(&super::test_nested::event_metric_with_extra) != 0 || extra.is_empty(),
+                  "No extra keys allowed, but some were passed"
+              );
+
+              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
+              #[allow(unused_variables)]
+              let extra = extra
+                  .into_iter()
+                  .map(|(k, v)| (&*k).try_into().map(|k| (k, v)))
+                  .collect::<Result<HashMap<_, _>, _>>()?;
+              super::test_nested::event_metric_with_extra.record(Some(extra));
+              Ok(())
+          }
+           _ => Err(EventRecordingError::InvalidId),
+        }
+    }
+
+    /// Wrapper to get the currently stored events for event metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `storage_name` - the storage name to look into.
+    ///
+    /// # Returns
+    ///
+    /// Returns the recorded events or `None` if nothing stored.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no event by the given metric ID could be found.
+    pub(crate) fn event_test_get_value_wrapper(metric_id: u32, storage_name: &str) -> Option<Vec<RecordedEvent>> {
+        match metric_id {
+           16 => super::test_nested::event_metric.test_get_value(storage_name),
+           17 => super::test_nested::event_metric_with_extra.test_get_value(storage_name),
+           _ => panic!("No event for metric id {}", metric_id),
+        }
+    }
 }
 
