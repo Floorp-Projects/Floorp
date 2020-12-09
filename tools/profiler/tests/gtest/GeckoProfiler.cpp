@@ -83,6 +83,109 @@ TEST(BaseProfiler, BlocksRingBuffer)
   }
 }
 
+// Common JSON checks.
+
+// Does the GETTER return a non-null TYPE? (Non-critical)
+#define EXPECT_HAS_JSON(GETTER, TYPE)                                         \
+  do {                                                                        \
+    if ((GETTER).isNull()) {                                                  \
+      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
+    } else if (!(GETTER).is##TYPE()) {                                        \
+      EXPECT_TRUE((GETTER).is##TYPE())                                        \
+          << #GETTER " didn't return type " #TYPE;                            \
+    }                                                                         \
+  } while (false)
+
+// Does the GETTER return a non-null TYPE? (Critical)
+#define ASSERT_HAS_JSON(GETTER, TYPE) \
+  do {                                \
+    ASSERT_FALSE((GETTER).isNull());  \
+    ASSERT_TRUE((GETTER).is##TYPE()); \
+  } while (false)
+
+// Does the GETTER return a non-null TYPE? (Critical)
+// If yes, store the value into VARIABLE.
+#define GET_JSON(VARIABLE, GETTER, TYPE) \
+  ASSERT_HAS_JSON(GETTER, TYPE);         \
+  const Json::Value&(VARIABLE) = (GETTER)
+
+// Checks that the GETTER's value is present, is of the expected TYPE, and has
+// the expected VALUE. (Non-critical)
+#define EXPECT_EQ_JSON(GETTER, TYPE, VALUE)                                   \
+  do {                                                                        \
+    if ((GETTER).isNull()) {                                                  \
+      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
+    } else if (!(GETTER).is##TYPE()) {                                        \
+      EXPECT_TRUE((GETTER).is##TYPE())                                        \
+          << #GETTER " didn't return type " #TYPE;                            \
+    } else {                                                                  \
+      EXPECT_EQ((GETTER).as##TYPE(), (VALUE));                                \
+    }                                                                         \
+  } while (false)
+
+// Checks that the GETTER's value is present, and is a valid index into the
+// STRINGTABLE array, pointing at the expected STRING.
+#define EXPECT_EQ_STRINGTABLE(GETTER, STRINGTABLE, STRING)                    \
+  do {                                                                        \
+    if ((GETTER).isNull()) {                                                  \
+      EXPECT_FALSE((GETTER).isNull()) << #GETTER " doesn't exist or is null"; \
+    } else if (!(GETTER).isUInt()) {                                          \
+      EXPECT_TRUE((GETTER).isUInt()) << #GETTER " didn't return an index";    \
+    } else {                                                                  \
+      EXPECT_LT((GETTER).asUInt(), (STRINGTABLE).size());                     \
+      EXPECT_EQ_JSON((STRINGTABLE)[(GETTER).asUInt()], String, (STRING));     \
+    }                                                                         \
+  } while (false)
+
+// Check that the given process root contains all the expected properties.
+static void JSONRootCheck(const Json::Value& aRoot,
+                          bool aWithMainThread = true) {
+  ASSERT_TRUE(aRoot.isObject());
+
+  EXPECT_HAS_JSON(aRoot["libs"], Array);
+
+  GET_JSON(meta, aRoot["meta"], Object);
+  EXPECT_HAS_JSON(meta["version"], UInt);
+  EXPECT_HAS_JSON(meta["startTime"], Double);
+
+  GET_JSON(threads, aRoot["threads"], Array);
+  const Json::ArrayIndex threadCount = threads.size();
+  for (Json::ArrayIndex i = 0; i < threadCount; ++i) {
+    GET_JSON(thread, threads[i], Object);
+    EXPECT_HAS_JSON(thread["name"], String);
+    EXPECT_HAS_JSON(thread["samples"], Object);
+    EXPECT_HAS_JSON(thread["markers"], Object);
+    EXPECT_HAS_JSON(thread["stackTable"], Object);
+    EXPECT_HAS_JSON(thread["frameTable"], Object);
+    EXPECT_HAS_JSON(thread["stringTable"], Array);
+  }
+
+  if (aWithMainThread) {
+    ASSERT_GT(threadCount, 0u);
+    GET_JSON(thread0, threads[0], Object);
+    EXPECT_EQ_JSON(thread0["name"], String, "GeckoMain");
+  }
+}
+
+// Check that various expected top properties are in the JSON, and then call the
+// provided `aJSONCheckFunction` with the JSON root object.
+template <typename JSONCheckFunction>
+void JSONOutputCheck(const char* aOutput,
+                     JSONCheckFunction&& aJSONCheckFunction) {
+  ASSERT_NE(aOutput, nullptr);
+
+  // Extract JSON.
+  Json::Value parsedRoot;
+  Json::CharReaderBuilder builder;
+  const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+  ASSERT_TRUE(
+      reader->parse(aOutput, strchr(aOutput, '\0'), &parsedRoot, nullptr));
+
+  JSONRootCheck(parsedRoot);
+
+  std::forward<JSONCheckFunction>(aJSONCheckFunction)(parsedRoot);
+}
+
 typedef Vector<const char*> StrVec;
 
 static void InactiveFeaturesAndParamsCheck() {
@@ -939,29 +1042,6 @@ TEST(GeckoProfiler, Markers)
 
   // We have a root object.
 
-  // Most common test: Checks that the given value is present, is of the
-  // expected type, and has the expected value.
-#define EXPECT_EQ_JSON(GETTER, TYPE, VALUE)  \
-  if ((GETTER).isNull()) {                   \
-    EXPECT_FALSE((GETTER).isNull());         \
-  } else if (!(GETTER).is##TYPE()) {         \
-    EXPECT_TRUE((GETTER).is##TYPE());        \
-  } else {                                   \
-    EXPECT_EQ((GETTER).as##TYPE(), (VALUE)); \
-  }
-
-  // Checks that the given value is present, and is a valid index into the
-  // stringTable, pointing at the expected string.
-#define EXPECT_EQ_STRINGTABLE(GETTER, STRING)                         \
-  if ((GETTER).isNull()) {                                            \
-    EXPECT_FALSE((GETTER).isNull());                                  \
-  } else if (!(GETTER).isUInt()) {                                    \
-    EXPECT_TRUE((GETTER).isUInt());                                   \
-  } else {                                                            \
-    EXPECT_LT((GETTER).asUInt(), stringTable.size());                 \
-    EXPECT_EQ_JSON(stringTable[(GETTER).asUInt()], String, (STRING)); \
-  }
-
   {
     const Json::Value& threads = root["threads"];
     ASSERT_TRUE(!threads.isNull());
@@ -1726,27 +1806,6 @@ TEST(GeckoProfiler, GetProfile)
   ASSERT_TRUE(!profiler_get_profile());
 }
 
-static void JSONOutputCheck(const char* aOutput) {
-  // Check that various expected strings are in the JSON.
-
-  ASSERT_TRUE(aOutput);
-  ASSERT_TRUE(aOutput[0] == '{');
-
-  ASSERT_TRUE(strstr(aOutput, "\"libs\""));
-
-  ASSERT_TRUE(strstr(aOutput, "\"meta\""));
-  ASSERT_TRUE(strstr(aOutput, "\"version\""));
-  ASSERT_TRUE(strstr(aOutput, "\"startTime\""));
-
-  ASSERT_TRUE(strstr(aOutput, "\"threads\""));
-  ASSERT_TRUE(strstr(aOutput, "\"GeckoMain\""));
-  ASSERT_TRUE(strstr(aOutput, "\"samples\""));
-  ASSERT_TRUE(strstr(aOutput, "\"markers\""));
-  ASSERT_TRUE(strstr(aOutput, "\"stackTable\""));
-  ASSERT_TRUE(strstr(aOutput, "\"frameTable\""));
-  ASSERT_TRUE(strstr(aOutput, "\"stringTable\""));
-}
-
 TEST(GeckoProfiler, StreamJSONForThisProcess)
 {
   uint32_t features = ProfilerFeature::StackWalk;
@@ -1764,7 +1823,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
 
   UniquePtr<char[]> profile = w.ChunkedWriteFunc().CopyData();
 
-  JSONOutputCheck(profile.get());
+  JSONOutputCheck(profile.get(), [](const Json::Value&) {});
 
   profiler_stop();
 
@@ -1801,7 +1860,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
 
   UniquePtr<char[]> profile = w.ChunkedWriteFunc().CopyData();
 
-  JSONOutputCheck(profile.get());
+  JSONOutputCheck(profile.get(), [](const Json::Value&) {});
 
   // Stop the profiler and call profiler_stream_json_for_this_process on a
   // background thread.
