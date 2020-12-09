@@ -8,6 +8,7 @@
 
 #include "jsfriendapi.h"
 
+#include "GeckoProfiler.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsJSNPRuntime.h"

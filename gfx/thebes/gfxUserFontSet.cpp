@@ -5,6 +5,7 @@
 
 #include "mozilla/Logging.h"
 
+#include "GeckoProfiler.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
 #include "gfxFontConstants.h"

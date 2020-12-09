@@ -11,6 +11,7 @@
 #include <algorithm>
 
 // Helper classes
+#include "GeckoProfiler.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsWidgetsCID.h"

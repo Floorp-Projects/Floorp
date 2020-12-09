@@ -9,6 +9,7 @@
 #include <stdint.h>  // for uint8_t, uint32_t, etc
 
 #include "BufferTexture.h"
+#include "GeckoProfiler.h"
 #include "IPDLActor.h"
 #include "ImageContainer.h"  // for PlanarYCbCrData, etc
 #include "Layers.h"          // for Layer, etc

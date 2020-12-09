@@ -15,6 +15,7 @@
 #include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
 #include "js/SourceText.h"
+#include "GeckoProfiler.h"
 #include "MessageEventRunnable.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"

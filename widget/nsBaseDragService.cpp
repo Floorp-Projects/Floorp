@@ -46,6 +46,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsFrameLoader.h"
 #include "BrowserParent.h"
+#include "GeckoProfiler.h"
 #include "nsIMutableArray.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"

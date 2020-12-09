@@ -21,6 +21,7 @@
 #include "DocumentInlines.h"
 #include "EventStateManager.h"
 #include "FrameLayerBuilder.h"
+#include "GeckoProfiler.h"
 #include "Layers.h"
 #include "MMPrinter.h"
 #include "PermissionMessageUtils.h"
