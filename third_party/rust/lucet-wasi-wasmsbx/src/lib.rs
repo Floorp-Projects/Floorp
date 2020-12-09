@@ -11,3 +11,6 @@ pub mod wasm32;
 
 pub use bindings::bindings;
 pub use ctx::{WasiCtx, WasiCtxBuilder};
+
+#[macro_use]
+extern crate lazy_static;
