@@ -70,8 +70,6 @@ pub enum ImmutableScriptFlagsEnum {
     AlwaysNeedsArgsObj = 1 << 26,
     #[allow(dead_code)]
     HasMappedArgsObj = 1 << 27,
-    #[allow(dead_code)]
-    IsLikelyConstructorWrapper = 1 << 28,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -101,7 +99,7 @@ pub enum MutableScriptFlagsEnum {
     #[allow(dead_code)]
     FailedShapeGuard = 1 << 19,
     #[allow(dead_code)]
-    HadFrequentBailouts = 1 << 20,
+    HadLICMInvalidation = 1 << 20,
     #[allow(dead_code)]
     HadOverflowBailout = 1 << 21,
     #[allow(dead_code)]
@@ -110,6 +108,8 @@ pub enum MutableScriptFlagsEnum {
     InvalidatedIdempotentCache = 1 << 23,
     #[allow(dead_code)]
     FailedLexicalCheck = 1 << 24,
+    #[allow(dead_code)]
+    HadSpeculativePhiBailout = 1 << 25,
 }
 
 // @@@@ END TYPES @@@@
@@ -156,7 +156,6 @@ pub struct ImmutableScriptData {
     pub body_scope_index: u32,
     pub num_ic_entries: u32,
     pub fun_length: u16,
-    pub num_bytecode_type_sets: u32,
     pub bytecode: Vec<u8>,
     pub scope_notes: Vec<ScopeNote>,
     // TODO: Add resume_offsets and try_notes.

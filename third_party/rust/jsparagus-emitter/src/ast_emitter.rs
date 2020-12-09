@@ -10,7 +10,6 @@ use crate::emitter_scope::{EmitterScopeStack, NameLocation};
 use crate::expression_emitter::*;
 use crate::function_declaration_emitter::{
     AnnexBFunctionDeclarationEmitter, LazyFunctionEmitter, LexicalFunctionDeclarationEmitter,
-    TopLevelFunctionDeclarationEmitter,
 };
 use crate::object_emitter::*;
 use crate::reference_op_emitter::{
@@ -134,9 +133,10 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             .function_stencil_indices
             .get(fun)
             .expect("ScriptStencil should be created");
-        let fun_index = LazyFunctionEmitter { stencil_index }.emit(self);
 
-        TopLevelFunctionDeclarationEmitter { fun_index }.emit(self);
+        // NOTE: GCIndex for the function is implicitly handled by
+        //       global_or_eval_decl_instantiation.
+        LazyFunctionEmitter { stencil_index }.emit(self);
 
         Ok(())
     }
