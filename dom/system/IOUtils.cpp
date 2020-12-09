@@ -171,14 +171,7 @@ void IOUtils::RunOnBackgroundThread(Promise* aPromise, Fn aFunc) {
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [promise = RefPtr(aPromise)](const OkT& ok) {
-            if constexpr (std::is_same_v<OkT, nsTArray<uint8_t>>) {
-              TypedArrayCreator<Uint8Array> arr(ok);
-              promise->MaybeResolve(arr);
-            } else if constexpr (std::is_same_v<OkT, Ok>) {
-              promise->MaybeResolveWithUndefined();
-            } else {
-              promise->MaybeResolve(ok);
-            }
+            ResolveJSPromise(promise, ok);
           },
           [promise = RefPtr(aPromise)](const IOError& err) {
             RejectJSPromise(promise, err);
@@ -559,6 +552,19 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
   }
   MOZ_ASSERT(promise);
   return do_AddRef(promise);
+}
+
+/* static */
+template <typename T>
+void IOUtils::ResolveJSPromise(Promise* aPromise, const T& aValue) {
+  if constexpr (std::is_same_v<T, nsTArray<uint8_t>>) {
+    TypedArrayCreator<Uint8Array> arr(aValue);
+    aPromise->MaybeResolve(arr);
+  } else if constexpr (std::is_same_v<T, Ok>) {
+    aPromise->MaybeResolveWithUndefined();
+  } else {
+    aPromise->MaybeResolve(aValue);
+  }
 }
 
 /* static */

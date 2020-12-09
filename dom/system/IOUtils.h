@@ -141,6 +141,11 @@ class IOUtils final {
                                      JS::MutableHandle<JS::Value> aValue);
 
   /**
+   * Resolves |aPromise| with an appropriate JS value for |aValue|.
+   */
+  template <typename T>
+  static void ResolveJSPromise(Promise* aPromise, const T& aValue);
+  /**
    * Rejects |aPromise| with an appropriate |DOMException| describing |aError|.
    */
   static void RejectJSPromise(Promise* aPromise, const IOError& aError);
