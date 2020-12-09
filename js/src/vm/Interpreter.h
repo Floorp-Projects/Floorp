@@ -517,9 +517,6 @@ bool SetObjectElementWithReceiver(JSContext* cx, HandleObject obj,
                                   HandleValue index, HandleValue value,
                                   HandleValue receiver, bool strict);
 
-bool InitElementArray(JSContext* cx, jsbytecode* pc, HandleArrayObject arr,
-                      uint32_t index, HandleValue value);
-
 bool AddValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
                MutableHandleValue res);
 

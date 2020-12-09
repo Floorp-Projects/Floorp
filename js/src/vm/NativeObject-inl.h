@@ -68,6 +68,11 @@ inline bool NativeObject::canRemoveLastProperty() {
   return previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 
+inline void NativeObject::initDenseElementHole(uint32_t index) {
+  markDenseElementsNotPacked();
+  initDenseElementUnchecked(index, MagicValue(JS_ELEMENTS_HOLE));
+}
+
 inline void NativeObject::setDenseElementHole(uint32_t index) {
   markDenseElementsNotPacked();
   setDenseElementUnchecked(index, MagicValue(JS_ELEMENTS_HOLE));
