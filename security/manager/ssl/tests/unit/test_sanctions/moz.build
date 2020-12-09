@@ -7,13 +7,13 @@
 # Temporarily disabled. See bug 1256495.
 # test_certificates = (
 #    'default-ee.pem',
-#    'symantec-ee-from-whitelist-after-cutoff.pem',
-#    'symantec-ee-from-whitelist-before-cutoff.pem',
-#    'symantec-ee-not-whitelisted-after-cutoff.pem',
-#    'symantec-ee-not-whitelisted-before-cutoff.pem',
+#    'symantec-ee-from-allowlist-after-cutoff.pem',
+#    'symantec-ee-from-allowlist-before-cutoff.pem',
+#    'symantec-ee-not-allowlisted-after-cutoff.pem',
+#    'symantec-ee-not-allowlisted-before-cutoff.pem',
 #    'symantec-intermediate-other.pem',
 #    'symantec-intermediate-other-crossigned.pem',
-#    'symantec-intermediate-whitelisted.pem',
+#    'symantec-intermediate-allowlisted.pem',
 #    'symantec-test-ca.pem',
 # )
 #

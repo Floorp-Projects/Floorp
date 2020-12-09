@@ -1476,17 +1476,6 @@ void nsNSSComponent::setValidationOptions(
       break;
   }
 
-  DistrustedCAPolicy defaultCAPolicyMode =
-      DistrustedCAPolicy::DistrustSymantecRoots;
-  DistrustedCAPolicy distrustedCAPolicy = static_cast<DistrustedCAPolicy>(
-      Preferences::GetUint("security.pki.distrust_ca_policy",
-                           static_cast<uint32_t>(defaultCAPolicyMode)));
-  // If distrustedCAPolicy sets any bits larger than the maximum mask, fall back
-  // to the default.
-  if (distrustedCAPolicy & ~DistrustedCAPolicyMaxAllowedValueMask) {
-    distrustedCAPolicy = defaultCAPolicyMode;
-  }
-
   CRLiteMode defaultCRLiteMode = CRLiteMode::Disabled;
   CRLiteMode crliteMode = static_cast<CRLiteMode>(Preferences::GetUint(
       "security.pki.crlite_mode", static_cast<uint32_t>(defaultCRLiteMode)));
@@ -1523,8 +1512,7 @@ void nsNSSComponent::setValidationOptions(
       odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays,
       PublicSSLState()->PinningMode(), sha1Mode,
       PublicSSLState()->NameMatchingMode(), netscapeStepUpPolicy, ctMode,
-      distrustedCAPolicy, crliteMode, crliteCTMergeDelaySeconds,
-      mEnterpriseCerts);
+      crliteMode, crliteCTMergeDelaySeconds, mEnterpriseCerts);
 }
 
 void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
@@ -1543,8 +1531,8 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mPinningMode,
       oldCertVerifier->mSHA1Mode, oldCertVerifier->mNameMatchingMode,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
-      oldCertVerifier->mDistrustedCAPolicy, oldCertVerifier->mCRLiteMode,
-      oldCertVerifier->mCRLiteCTMergeDelaySeconds, mEnterpriseCerts);
+      oldCertVerifier->mCRLiteMode, oldCertVerifier->mCRLiteCTMergeDelaySeconds,
+      mEnterpriseCerts);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
@@ -2428,7 +2416,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                    "security.OCSP.timeoutMilliseconds.soft") ||
                prefName.EqualsLiteral(
                    "security.OCSP.timeoutMilliseconds.hard") ||
-               prefName.EqualsLiteral("security.pki.distrust_ca_policy") ||
                prefName.EqualsLiteral("security.pki.crlite_mode") ||
                prefName.EqualsLiteral(
                    "security.pki.crlite_ct_merge_delay_seconds")) {

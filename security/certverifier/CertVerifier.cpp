@@ -91,7 +91,6 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                            BRNameMatchingPolicy::Mode nameMatchingMode,
                            NetscapeStepUpPolicy netscapeStepUpPolicy,
                            CertificateTransparencyMode ctMode,
-                           DistrustedCAPolicy distrustedCAPolicy,
                            CRLiteMode crliteMode,
                            uint64_t crliteCTMergeDelaySeconds,
                            const Vector<EnterpriseCert>& thirdPartyCerts)
@@ -105,7 +104,6 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
       mNameMatchingMode(nameMatchingMode),
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mCTMode(ctMode),
-      mDistrustedCAPolicy(distrustedCAPolicy),
       mCRLiteMode(crliteMode),
       mCRLiteCTMergeDelaySeconds(crliteCTMergeDelaySeconds) {
   LoadKnownCTLogs();
@@ -568,9 +566,8 @@ Result CertVerifier::VerifyCert(
           trustEmail, defaultOCSPFetching, mOCSPCache, pinArg, mOCSPTimeoutSoft,
           mOCSPTimeoutHard, mCertShortLifetimeInDays, pinningDisabled,
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
-          SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch,
-          mDistrustedCAPolicy, mCRLiteMode, mCRLiteCTMergeDelaySeconds,
-          originAttributes, mThirdPartyRootInputs,
+          SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch, mCRLiteMode,
+          mCRLiteCTMergeDelaySeconds, originAttributes, mThirdPartyRootInputs,
           mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
           nullptr);
       rv = BuildCertChain(
@@ -646,9 +643,8 @@ Result CertVerifier::VerifyCert(
             trustSSL, evOCSPFetching, mOCSPCache, pinArg, mOCSPTimeoutSoft,
             mOCSPTimeoutHard, mCertShortLifetimeInDays, mPinningMode,
             MIN_RSA_BITS, ValidityCheckingMode::CheckForEV,
-            sha1ModeConfigurations[i], mNetscapeStepUpPolicy,
-            mDistrustedCAPolicy, mCRLiteMode, mCRLiteCTMergeDelaySeconds,
-            originAttributes, mThirdPartyRootInputs,
+            sha1ModeConfigurations[i], mNetscapeStepUpPolicy, mCRLiteMode,
+            mCRLiteCTMergeDelaySeconds, originAttributes, mThirdPartyRootInputs,
             mThirdPartyIntermediateInputs, extraCertificates, builtChain,
             pinningTelemetryInfo, crliteInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(
@@ -733,11 +729,10 @@ Result CertVerifier::VerifyCert(
               mOCSPTimeoutSoft, mOCSPTimeoutHard, mCertShortLifetimeInDays,
               mPinningMode, keySizeOptions[i],
               ValidityCheckingMode::CheckingOff, sha1ModeConfigurations[j],
-              mNetscapeStepUpPolicy, mDistrustedCAPolicy, mCRLiteMode,
-              mCRLiteCTMergeDelaySeconds, originAttributes,
-              mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
-              extraCertificates, builtChain, pinningTelemetryInfo, crliteInfo,
-              hostname);
+              mNetscapeStepUpPolicy, mCRLiteMode, mCRLiteCTMergeDelaySeconds,
+              originAttributes, mThirdPartyRootInputs,
+              mThirdPartyIntermediateInputs, extraCertificates, builtChain,
+              pinningTelemetryInfo, crliteInfo, hostname);
           rv = BuildCertChainForOneKeyUsage(
               trustDomain, certDER, time,
               KeyUsage::digitalSignature,  //(EC)DHE
@@ -804,10 +799,10 @@ Result CertVerifier::VerifyCert(
           trustSSL, defaultOCSPFetching, mOCSPCache, pinArg, mOCSPTimeoutSoft,
           mOCSPTimeoutHard, mCertShortLifetimeInDays, pinningDisabled,
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
-          SHA1Mode::Allowed, mNetscapeStepUpPolicy, mDistrustedCAPolicy,
-          mCRLiteMode, mCRLiteCTMergeDelaySeconds, originAttributes,
-          mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
-          extraCertificates, builtChain, nullptr, nullptr);
+          SHA1Mode::Allowed, mNetscapeStepUpPolicy, mCRLiteMode,
+          mCRLiteCTMergeDelaySeconds, originAttributes, mThirdPartyRootInputs,
+          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
+          nullptr);
       rv = BuildCertChain(trustDomain, certDER, time, EndEntityOrCA::MustBeCA,
                           KeyUsage::keyCertSign, KeyPurposeId::id_kp_serverAuth,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
@@ -819,9 +814,8 @@ Result CertVerifier::VerifyCert(
           trustEmail, defaultOCSPFetching, mOCSPCache, pinArg, mOCSPTimeoutSoft,
           mOCSPTimeoutHard, mCertShortLifetimeInDays, pinningDisabled,
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
-          SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch,
-          mDistrustedCAPolicy, mCRLiteMode, mCRLiteCTMergeDelaySeconds,
-          originAttributes, mThirdPartyRootInputs,
+          SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch, mCRLiteMode,
+          mCRLiteCTMergeDelaySeconds, originAttributes, mThirdPartyRootInputs,
           mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
           nullptr);
       rv = BuildCertChain(
@@ -845,9 +839,8 @@ Result CertVerifier::VerifyCert(
           trustEmail, defaultOCSPFetching, mOCSPCache, pinArg, mOCSPTimeoutSoft,
           mOCSPTimeoutHard, mCertShortLifetimeInDays, pinningDisabled,
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
-          SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch,
-          mDistrustedCAPolicy, mCRLiteMode, mCRLiteCTMergeDelaySeconds,
-          originAttributes, mThirdPartyRootInputs,
+          SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch, mCRLiteMode,
+          mCRLiteCTMergeDelaySeconds, originAttributes, mThirdPartyRootInputs,
           mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
           nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,

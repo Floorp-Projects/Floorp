@@ -68,54 +68,25 @@ static bool CertMatchesStaticData(const CERTCertificate* cert,
 
 // Implements the graduated Symantec distrust algorithm from Bug 1409257.
 // This accepts a pre-segmented certificate chain (e.g. SegmentCertificateChain)
-// as |intCerts| and |eeCert|, and pre-assumes that the root has been identified
+// as |intCerts|, and pre-assumes that the root has been identified
 // as being affected (this is to avoid duplicate Segment operations in the
-// NSSCertDBTrustDomain). If |permitAfterDate| is non-zero, this algorithm
-// returns "not distrusted" if the NotBefore date of |eeCert| is after
-// the |permitAfterDate|. Then each of the |intCerts| is evaluated against a
-// |whitelist| of SPKI entries, and if a match is found, then this returns
+// NSSCertDBTrustDomain). Each of the |intCerts| is evaluated against a
+// |allowlist| of SPKI entries, and if a match is found, then this returns
 // "not distrusted." Otherwise, due to the precondition holding, the chain is
 // "distrusted."
 template <size_t T>
 static nsresult CheckForSymantecDistrust(
     const nsTArray<RefPtr<nsIX509Cert>>& intCerts,
-    const nsCOMPtr<nsIX509Cert>& eeCert, const PRTime& permitAfterDate,
-    const DataAndLength (&whitelist)[T],
+    const DataAndLength (&allowlist)[T],
     /* out */ bool& isDistrusted) {
   // PRECONDITION: The rootCert is already verified as being one of the
   // affected Symantec roots
 
-  // Check the preference to see if this is enabled before proceeding.
-  // TODO in Bug 1437754
-
   isDistrusted = true;
-
-  // Only check the validity period if we're asked
-  if (permitAfterDate > 0) {
-    // We need to verify the age of the end entity
-    nsCOMPtr<nsIX509CertValidity> validity;
-    nsresult rv = eeCert->GetValidity(getter_AddRefs(validity));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    PRTime notBefore;
-    rv = validity->GetNotBefore(&notBefore);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // If the end entity's notBefore date is after the permitAfter date, this
-    // algorithm doesn't apply, so exit false before we do any iterating.
-    if (notBefore >= permitAfterDate) {
-      isDistrusted = false;
-      return NS_OK;
-    }
-  }
 
   for (const auto& cert : intCerts) {
     UniqueCERTCertificate nssCert(cert->GetCert());
-    if (CertSPKIIsInList(nssCert.get(), whitelist)) {
+    if (CertSPKIIsInList(nssCert.get(), allowlist)) {
       isDistrusted = false;
       break;
     }

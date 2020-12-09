@@ -72,8 +72,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
     CertVerifier::PinningMode pinningMode, unsigned int minRSABits,
     ValidityCheckingMode validityCheckingMode, CertVerifier::SHA1Mode sha1Mode,
-    NetscapeStepUpPolicy netscapeStepUpPolicy,
-    DistrustedCAPolicy distrustedCAPolicy, CRLiteMode crliteMode,
+    NetscapeStepUpPolicy netscapeStepUpPolicy, CRLiteMode crliteMode,
     uint64_t crliteCTMergeDelaySeconds,
     const OriginAttributes& originAttributes,
     const Vector<Input>& thirdPartyRootInputs,
@@ -95,7 +94,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mValidityCheckingMode(validityCheckingMode),
       mSHA1Mode(sha1Mode),
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
-      mDistrustedCAPolicy(distrustedCAPolicy),
       mCRLiteMode(crliteMode),
       mCRLiteCTMergeDelaySeconds(crliteCTMergeDelaySeconds),
       mSawDistrustedCAByPolicyError(false),
@@ -878,7 +876,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_INVALID;
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain: stapled OCSP response: "
-               "failure (whitelisted for compatibility)"));
+               "failure (allowed for compatibility)"));
     } else {
       // stapled OCSP response present but invalid for some reason
       mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_INVALID;
@@ -1369,10 +1367,7 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   // This algorithm only applies if we are verifying in the context of a TLS
   // handshake. To determine this, we check mHostname: If it isn't set, this is
   // not TLS, so don't run the algorithm.
-  if (mHostname && CertDNIsInList(root.get(), RootSymantecDNs) &&
-      ((mDistrustedCAPolicy & DistrustedCAPolicy::DistrustSymantecRoots) ||
-       (mDistrustedCAPolicy &
-        DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate))) {
+  if (mHostname && CertDNIsInList(root.get(), RootSymantecDNs)) {
     rootCert = nullptr;  // Clear the state for Segment...
     nsTArray<RefPtr<nsIX509Cert>> intCerts;
     nsCOMPtr<nsIX509Cert> eeCert;
@@ -1384,19 +1379,9 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
       return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
 
-    // PRTime is microseconds since the epoch, whereas JS time is milliseconds.
-    // (new Date("2016-06-01T00:00:00Z")).getTime() * 1000
-    static const PRTime JUNE_1_2016 = 1464739200000000;
-
-    PRTime permitAfterDate = JUNE_1_2016;
-    if (mDistrustedCAPolicy &
-        DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate) {
-      permitAfterDate = 0;  // 0 indicates there is no permitAfterDate
-    }
-
     bool isDistrusted = false;
-    nsrv = CheckForSymantecDistrust(intCerts, eeCert, permitAfterDate,
-                                    RootAppleAndGoogleSPKIs, isDistrusted);
+    nsrv = CheckForSymantecDistrust(intCerts, RootAppleAndGoogleSPKIs,
+                                    isDistrusted);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }

@@ -4,7 +4,7 @@
 "use strict";
 
 // Tests handling of certificates issued by Symantec. If such certificates were
-// issued by an Apple or Google intermediate, they are whitelisted. Otherwise,
+// issued by an Apple or Google intermediate, they are allowlisted. Otherwise,
 // If they have a notBefore before 1 June 2016, they should be distrusted, while
 // those from that date or later emit a warning to the console.
 
@@ -35,7 +35,7 @@ addCertFromFile(certDB, "test_sanctions/symantec-test-ca.pem", "CTu,u,u");
 add_test(function() {
   addCertFromFile(
     certDB,
-    "test_sanctions/symantec-intermediate-whitelisted.pem",
+    "test_sanctions/symantec-intermediate-allowlisted.pem",
     ",,"
   );
   addCertFromFile(
@@ -43,76 +43,22 @@ add_test(function() {
     "test_sanctions/symantec-intermediate-other.pem",
     ",,"
   );
-  Services.prefs.setIntPref(
-    "security.pki.distrust_ca_policy",
-    /* DistrustedCAPolicy::DistrustSymantecRoots */ 0b01
-  );
-  run_next_test();
-});
-
-// Not-whitelisted certs after the cutoff are to be distrusted
-add_connection_test(
-  "symantec-not-whitelisted-after-cutoff.example.com",
-  PRErrorCodeSuccess,
-  null,
-  shouldBeImminentlyDistrusted
-);
-
-// Not whitelisted certs before the cutoff are to be distrusted
-add_connection_test(
-  "symantec-not-whitelisted-before-cutoff.example.com",
-  MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
-  null,
-  null
-);
-
-// Enable the Firefox 63 total distrust; before or after cutoff should now all
-// behave the same. This will be made the default in Bug 1460062.
-add_test(function() {
-  clearSessionCache();
-  Services.prefs.setIntPref(
-    "security.pki.distrust_ca_policy",
-    /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 0b10
-  );
   run_next_test();
 });
 
 add_connection_test(
-  "symantec-not-whitelisted-before-cutoff.example.com",
+  "symantec-not-allowlisted-before-cutoff.example.com",
   MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
   null,
   null
 );
 
 add_connection_test(
-  "symantec-not-whitelisted-after-cutoff.example.com",
+  "symantec-not-allowlisted-after-cutoff.example.com",
   MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
   null,
   null
 );
-
-// Disable the distrust, should be back to the console warning
-add_test(function() {
-  clearSessionCache();
-  Services.prefs.setIntPref(
-    "security.pki.distrust_ca_policy",
-    /* DistrustedCAPolicy::Permit */ 0b00
-  );
-  run_next_test();
-});
-
-add_connection_test(
-  "symantec-not-whitelisted-before-cutoff.example.com",
-  PRErrorCodeSuccess,
-  null,
-  shouldBeImminentlyDistrusted
-);
-
-add_test(function() {
-  clearSessionCache();
-  Services.prefs.clearUserPref("security.pki.distrust_ca_policy");
-  run_next_test();
-});
 
 // Add a cross-signed intermediate into the database, and ensure we still get
 // the expected error.
@@ -126,21 +72,21 @@ add_test(function() {
 });
 
 add_connection_test(
-  "symantec-not-whitelisted-before-cutoff.example.com",
+  "symantec-not-allowlisted-before-cutoff.example.com",
   MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
   null,
   null
 );
 
 // Load the Apple EE cert and its intermediate, then verify
-// it at a reasonable time and make sure the whitelists work
+// it at a reasonable time and make sure the allowlists work
 add_task(async function() {
   addCertFromFile(
     certDB,
     "test_sanctions/apple-ist-ca-8-g1-intermediate.pem",
     ",,"
   );
-  let whitelistedCert = constructCertFromFile(
+  let allowlistedCert = constructCertFromFile(
     "test_sanctions/gspe72-4-ssl-ls-apple-com.pem"
   );
 
@@ -148,58 +94,14 @@ add_task(async function() {
   // (as an external fetch is bad in the tests), disable OCSP first.
   Services.prefs.setIntPref("security.OCSP.enabled", 0);
 
-  // Try with the policy for 60
-  Services.prefs.setIntPref(
-    "security.pki.distrust_ca_policy",
-    /* DistrustedCAPolicy::DistrustSymantecRoots */ 0b01
-  );
-
   // (new Date("2020-01-01")).getTime() / 1000
   const VALIDATION_TIME = 1577836800;
 
   await checkCertErrorGenericAtTime(
     certDB,
-    whitelistedCert,
-    PRErrorCodeSuccess,
-    certificateUsageSSLServer,
-    VALIDATION_TIME
-  );
-
-  // Try with the policy for 63
-  Services.prefs.setIntPref(
-    "security.pki.distrust_ca_policy",
-    /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 0b10
-  );
-
-  await checkCertErrorGenericAtTime(
-    certDB,
-    whitelistedCert,
+    allowlistedCert,
     PRErrorCodeSuccess,
     certificateUsageSSLServer,
     VALIDATION_TIME
   );
 });
-
-// Check invalid policy values; should default to current default
-add_test(function() {
-  clearSessionCache();
-  Services.prefs.setIntPref(
-    "security.pki.distrust_ca_policy",
-    /* Larger than Max Value */ 0b1111
-  );
-  run_next_test();
-});
-
-add_connection_test(
-  "symantec-not-whitelisted-before-cutoff.example.com",
-  MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
-  null,
-  null
-);
-
-add_connection_test(
-  "symantec-not-whitelisted-after-cutoff.example.com",
-  PRErrorCodeSuccess,
-  null,
-  shouldBeImminentlyDistrusted
-);
