@@ -36,27 +36,10 @@ const styleSheetSpec = generateActorSpec({
   },
 
   methods: {
-    // @backward-compat { version 81 }
-    toggleDisabled: {
-      response: { disabled: RetVal("boolean") },
-    },
-    // @backward-compat { version 81 }
-    getText: {
-      response: {
-        text: RetVal("longstring"),
-      },
-    },
     getMediaRules: {
       request: {},
       response: {
         mediaRules: RetVal("nullable:array:mediarule"),
-      },
-    },
-    // @backward-compat { version 81 }
-    update: {
-      request: {
-        text: Arg(0, "string"),
-        transition: Arg(1, "boolean"),
       },
     },
   },
