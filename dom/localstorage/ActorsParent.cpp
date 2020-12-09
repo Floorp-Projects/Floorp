@@ -46,6 +46,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -4837,8 +4838,14 @@ void Datastore::NoteFinishedPrepareDatastoreOp(
 
   mPrepareDatastoreOps.RemoveEntry(aPrepareDatastoreOp);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
-      quota::Client::LS, "PrepareDatastoreOp finished"_ns);
+  // XXX Can we store a strong reference to the quota client ourselves to avoid
+  // going through mConnection?
+  if (mConnection) {
+    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
+        "PrepareDatastoreOp finished"_ns);
+  } else {
+    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+  }
 
   MaybeClose();
 }
@@ -4860,8 +4867,14 @@ void Datastore::NoteFinishedPrivateDatastore() {
 
   mHasLivePrivateDatastore = false;
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
-      quota::Client::LS, "PrivateDatastore finished"_ns);
+  // XXX Can we store a strong reference to the quota client ourselves to avoid
+  // going through mConnection?
+  if (mConnection) {
+    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
+        "PrivateDatastore finished"_ns);
+  } else {
+    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+  }
 
   MaybeClose();
 }
@@ -4887,8 +4900,14 @@ void Datastore::NoteFinishedPreparedDatastore(
 
   mPreparedDatastores.RemoveEntry(aPreparedDatastore);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
-      quota::Client::LS, "PreparedDatastore finished"_ns);
+  // XXX Can we store a strong reference to the quota client ourselves to avoid
+  // going through mConnection?
+  if (mConnection) {
+    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
+        "PreparedDatastore finished"_ns);
+  } else {
+    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+  }
 
   MaybeClose();
 }
@@ -4913,8 +4932,14 @@ void Datastore::NoteFinishedDatabase(Database* aDatabase) {
 
   mDatabases.RemoveEntry(aDatabase);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
-                                                 "Database finished"_ns);
+  // XXX Can we store a strong reference to the quota client ourselves to avoid
+  // going through mConnection?
+  if (mConnection) {
+    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
+        "Database finished"_ns);
+  } else {
+    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+  }
 
   MaybeClose();
 }
@@ -5575,8 +5600,14 @@ void Datastore::CleanupMetadata() {
   MOZ_ASSERT(gDatastores->Get(mGroupAndOrigin.mOrigin));
   gDatastores->Remove(mGroupAndOrigin.mOrigin);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
-                                                 "Datastore removed"_ns);
+  // XXX Can we store a strong reference to the quota client ourselves to avoid
+  // going through mConnection?
+  if (mConnection) {
+    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
+        "Datastore removed"_ns);
+  } else {
+    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+  }
 
   if (!gDatastores->Count()) {
     gDatastores = nullptr;
@@ -5775,8 +5806,8 @@ void Database::AllowToClose() {
   MOZ_ASSERT(gLiveDatabases);
   gLiveDatabases->RemoveElement(this);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
-                                                 "Live database removed"_ns);
+  // XXX Record removal from gLiveDatabase here as well, once we have an easy
+  // way to record a shutdown step here.
 
   if (gLiveDatabases->IsEmpty()) {
     gLiveDatabases = nullptr;
@@ -8009,8 +8040,14 @@ void PrepareDatastoreOp::CleanupMetadata() {
   MOZ_ASSERT(gPrepareDatastoreOps);
   gPrepareDatastoreOps->RemoveElement(this);
 
-  QuotaManager::GetRef().MaybeRecordShutdownStep(
-      quota::Client::LS, "PrepareDatastoreOp completed"_ns);
+  // XXX Can we store a strong reference to the quota client ourselves to avoid
+  // going through mConnection?
+  if (mConnection) {
+    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
+        "PrepareDatastoreOp completed"_ns);
+  } else {
+    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+  }
 
   if (gPrepareDatastoreOps->IsEmpty()) {
     gPrepareDatastoreOps = nullptr;
