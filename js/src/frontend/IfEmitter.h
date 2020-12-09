@@ -46,7 +46,7 @@ class MOZ_STACK_CLASS BranchEmitterBase {
   // for them.
   //
   // See the comment for TDZCheckCache class for more details.
-  enum class Kind {
+  enum class LexicalKind {
     // For syntactic branches (if, if-else, and conditional expression),
     // which basically may contain declaration or accesses to lexical
     // variables inside then-clause, else-clause, and else-if condition.
@@ -56,7 +56,7 @@ class MOZ_STACK_CLASS BranchEmitterBase {
     // inside then-clause, else-clause, nor else-if condition.
     NoLexicalAccessInBranch
   };
-  Kind kind_;
+  LexicalKind lexicalKind_;
 
   mozilla::Maybe<TDZCheckCache> tdzCache_;
 
@@ -67,7 +67,7 @@ class MOZ_STACK_CLASS BranchEmitterBase {
 #endif
 
  protected:
-  BranchEmitterBase(BytecodeEmitter* bce, Kind kind);
+  BranchEmitterBase(BytecodeEmitter* bce, LexicalKind lexicalKind);
 
   MOZ_MUST_USE bool emitThenInternal();
   void calculateOrCheckPushed();
@@ -184,7 +184,7 @@ class MOZ_STACK_CLASS IfEmitter : public BranchEmitterBase {
 
  protected:
   // For InternalIfEmitter.
-  IfEmitter(BytecodeEmitter* bce, Kind kind);
+  IfEmitter(BytecodeEmitter* bce, LexicalKind lexicalKind);
 
  public:
   explicit IfEmitter(BytecodeEmitter* bce);
