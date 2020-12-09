@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import six
 import logging
 import os
 import sys
@@ -73,7 +74,7 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
 
     args = Namespace()
 
-    for k, v in kwargs.iteritems():
+    for k, v in six.iteritems(kwargs):
         setattr(args, k, v)
 
     parser.verify_usage(args)
