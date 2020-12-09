@@ -2037,11 +2037,6 @@ class Extension extends ExtensionData {
   }
 
   // Some helpful properties added elsewhere:
-  /**
-   * An object used to map between extension-visible tab ids and
-   * native Tab object
-   * @property {TabManager} tabManager
-   */
 
   static getBootstrapScope() {
     return new BootstrapScope();
