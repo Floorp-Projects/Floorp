@@ -141,9 +141,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
         }
     )
 
-    if test.get("python-3"):
-        env["PYTHON"] = "python3"
-
     # Legacy linux64 tests rely on compiz.
     if test.get("docker-image", {}).get("in-tree") == "desktop1604-test":
         env.update({"NEED_COMPIZ": "true"})
@@ -355,41 +352,30 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             "artifact-reference": "<decision/public/tests-by-manifest.json.gz>"
         }
 
-    py_3 = test.get("python-3", False)
-
     if is_windows:
-        py_binary = "c:\\mozilla-build\\{python}\\{python}.exe".format(
-            python="python3" if py_3 else "python"
-        )
         mh_command = [
-            py_binary,
+            "c:\\mozilla-build\\python\\python.exe",
             "-u",
             "mozharness\\scripts\\" + normpath(mozharness["script"]),
         ]
     elif is_bitbar:
-        py_binary = "python3" if py_3 else "python"
         mh_command = ["bash", "./{}".format(bitbar_script)]
     elif is_macosx and "macosx1014-64" in test["test-platform"]:
-        py_binary = "/usr/local/bin/{}".format("python3" if py_3 else "python2")
         mh_command = [
-            py_binary,
+            "/usr/local/bin/python2",
             "-u",
             "mozharness/scripts/" + mozharness["script"],
         ]
     else:
         # is_linux or is_macosx
-        py_binary = "/usr/bin/{}".format("python3" if py_3 else "python2")
         mh_command = [
             # Using /usr/bin/python2.7 rather than python2.7 because
             # /usr/local/bin/python2.7 is broken on the mac workers.
             # See bug #1547903.
-            py_binary,
+            "/usr/bin/python2.7",
             "-u",
             "mozharness/scripts/" + mozharness["script"],
         ]
-
-    if py_3:
-        env["PYTHON"] = py_binary
 
     for mh_config in mozharness["config"]:
         cfg_path = "mozharness/configs/" + mh_config
