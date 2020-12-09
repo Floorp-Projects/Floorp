@@ -3280,19 +3280,9 @@ nsresult nsDocumentViewer::PrintPreviewScrollToPageForOldUI(int16_t aType,
 static const nsIFrame* GetTargetPageFrame(int32_t aTargetPageNum,
                                           nsPageSequenceFrame* aSequenceFrame) {
   MOZ_ASSERT(aTargetPageNum > 0 &&
-             aTargetPageNum < aSequenceFrame->PrincipalChildList().GetLength());
-
-  int32_t pageNum = 1;
-  for (const nsIFrame* sheetFrame : aSequenceFrame->PrincipalChildList()) {
-    if (pageNum == aTargetPageNum) {
-      return sheetFrame;
-    }
-    pageNum++;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Should have found the target frame");
-
-  return nullptr;
+             aTargetPageNum <=
+                 aSequenceFrame->PrincipalChildList().GetLength());
+  return aSequenceFrame->PrincipalChildList().FrameAt(aTargetPageNum - 1);
 }
 
 // Calculate the scroll position where the center of |aFrame| is positioned at
@@ -3363,7 +3353,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
       break;
     }
     case nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM: {
-      if (aPageNum < 0 || aPageNum > sheetCount) {
+      if (aPageNum <= 0 || aPageNum > sheetCount) {
         return NS_ERROR_INVALID_ARG;
       }
 
