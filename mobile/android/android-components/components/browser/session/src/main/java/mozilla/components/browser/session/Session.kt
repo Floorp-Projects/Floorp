@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION")
+
 package mozilla.components.browser.session
 
 import android.content.Intent
@@ -28,8 +30,8 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.base.observer.DeprecatedObservable
+import mozilla.components.support.base.observer.DeprecatedObserverRegistry
 import java.util.UUID
 import kotlin.properties.Delegates
 
@@ -43,8 +45,8 @@ class Session(
     val source: SessionState.Source = SessionState.Source.NONE,
     val id: String = UUID.randomUUID().toString(),
     val contextId: String? = null,
-    delegate: Observable<Observer> = ObserverRegistry()
-) : Observable<Session.Observer> by delegate {
+    delegate: DeprecatedObserverRegistry<Observer> = DeprecatedObserverRegistry()
+) : DeprecatedObservable<Session.Observer> by delegate {
     // For migration purposes every `Session` has a reference to the `BrowserStore` (if used) in order to dispatch
     // actions to it when the `Session` changes.
     internal var store: BrowserStore? = null

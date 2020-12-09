@@ -35,6 +35,8 @@ class CustomTabSessionTitleObserverTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/4257
     fun `Will use URL as title if title was shown once and is now empty`() {
         val toolbar = MockToolbar()
         val session = Session("https://mozilla.org")

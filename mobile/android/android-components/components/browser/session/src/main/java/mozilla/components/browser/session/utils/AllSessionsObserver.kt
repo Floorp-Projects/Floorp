@@ -6,6 +6,7 @@ package mozilla.components.browser.session.utils
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.support.base.observer.OBSERVER_DEPRECATION_MESSAGE
 
 /**
  * This class is a combination of [Session.Observer] and [SessionManager.Observer]. It observers all [Session] instances
@@ -13,6 +14,8 @@ import mozilla.components.browser.session.SessionManager
  *
  * @property sessionManager the application's session manager
  */
+@Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+@Suppress("DEPRECATION") // SessionManager and Session observable are deprecated
 class AllSessionsObserver(
     private val sessionManager: SessionManager,
     private val sessionObserver: Observer
@@ -60,6 +63,7 @@ class AllSessionsObserver(
     }
 }
 
+@Suppress("DEPRECATION") // SessionManager observable is deprecated
 private class Observer(
     val parent: AllSessionsObserver
 ) : SessionManager.Observer {

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION")
+
 package mozilla.components.browser.session
 
 import mozilla.components.browser.session.ext.syncDispatch
@@ -20,7 +22,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.DeprecatedObservable
 
 /**
  * This class provides access to a centralized registry of all active sessions.
@@ -30,7 +32,7 @@ class SessionManager(
     val engine: Engine,
     private val store: BrowserStore? = null,
     private val delegate: LegacySessionManager = LegacySessionManager(engine)
-) : Observable<SessionManager.Observer> by delegate {
+) : DeprecatedObservable<SessionManager.Observer> by delegate {
     /**
      * Returns the number of session including CustomTab sessions.
      */

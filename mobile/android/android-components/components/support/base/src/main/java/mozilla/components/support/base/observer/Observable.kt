@@ -107,3 +107,50 @@ interface Observable<T> {
      */
     fun isObserved(): Boolean
 }
+
+/**
+ * A deprecated version of [Observable] to migrate and deprecate existing
+ * components individually. All components implement [Observable] by delegate
+ * so this makes it easy to deprecate without having to override all methods
+ * in each component separately.
+ */
+@Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+@Suppress("TooManyFunctions")
+interface DeprecatedObservable<T> : Observable<T> {
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun register(observer: T)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun register(observer: T, owner: LifecycleOwner, autoPause: Boolean)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun register(observer: T, view: View)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun unregister(observer: T)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun unregisterObservers()
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun notifyObservers(block: T.() -> Unit)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun notifyAtLeastOneObserver(block: T.() -> Unit)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun pauseObserver(observer: T)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun resumeObserver(observer: T)
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun <R> wrapConsumers(block: T.(R) -> Boolean): List<(R) -> Boolean>
+
+    @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+    override fun isObserved(): Boolean
+}
+
+const val OBSERVER_DEPRECATION_MESSAGE =
+    "Use browser store (browser-state component) for observing state changes instead"

@@ -42,7 +42,9 @@ import mozilla.components.support.utils.ColorUtils.getReadableTextColor
  * @param shareListener Invoked when the share button is pressed.
  * @param closeListener Invoked when the close button is pressed.
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "Deprecation")
+// SessionManager observable is deprecated. This feature needs to be migrated to browser-state:
+// https://github.com/mozilla-mobile/android-components/issues/4257
 class CustomTabsToolbarFeature(
     private val sessionManager: SessionManager,
     private val toolbar: BrowserToolbar,

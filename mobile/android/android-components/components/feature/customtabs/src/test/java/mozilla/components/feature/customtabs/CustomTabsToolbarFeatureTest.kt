@@ -81,6 +81,8 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/4257
     fun `stop calls unregister`() {
         val sessionManager: SessionManager = mock()
         val session: Session = mock()
@@ -592,6 +594,8 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/4257
     fun `show title only if not empty`() {
         val sessionManager: SessionManager = mock()
         val toolbar = BrowserToolbar(testContext)

@@ -233,3 +233,13 @@ open class ObserverRegistry<T> : Observable<T> {
         }
     }
 }
+
+/**
+ * A deprecated version of [ObserverRegistry] to migrate and deprecate existing
+ * components individually. All components implement [ObserverRegistry] by
+ * delegate so this makes it easy to deprecate without having to override
+ * all methods in each component separately.
+ */
+@Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+@Suppress("Deprecation")
+class DeprecatedObserverRegistry<T> : ObserverRegistry<T>(), DeprecatedObservable<T>

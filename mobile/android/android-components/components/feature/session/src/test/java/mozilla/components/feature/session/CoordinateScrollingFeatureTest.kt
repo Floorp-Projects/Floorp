@@ -41,6 +41,8 @@ class CoordinateScrollingFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO Migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/7482
     fun `when session loading StateChanged and engine canScrollVertically is false must remove scrollFlags`() {
 
         val session = getSelectedSession()
@@ -55,6 +57,8 @@ class CoordinateScrollingFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO Migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/7482
     fun `when session loading StateChanged and engine canScrollVertically is true must add DEFAULT_SCROLL_FLAGS `() {
 
         val session = getSelectedSession()
@@ -71,6 +75,8 @@ class CoordinateScrollingFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO Migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/7482
     fun `when session loading StateChanged and engine canScrollVertically is true must add custom scrollFlags`() {
 
         val session = getSelectedSession()

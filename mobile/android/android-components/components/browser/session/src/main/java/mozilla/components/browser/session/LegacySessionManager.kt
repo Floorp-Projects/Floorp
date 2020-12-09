@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION")
+
 package mozilla.components.browser.session
 
 import androidx.annotation.GuardedBy
 import mozilla.components.concept.engine.Engine
-import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.base.observer.DeprecatedObservable
+import mozilla.components.support.base.observer.DeprecatedObserverRegistry
 import kotlin.math.max
 import kotlin.math.min
 
@@ -17,8 +19,8 @@ import kotlin.math.min
 @Suppress("TooManyFunctions", "LargeClass")
 class LegacySessionManager(
     val engine: Engine,
-    delegate: Observable<SessionManager.Observer> = ObserverRegistry()
-) : Observable<SessionManager.Observer> by delegate {
+    delegate: DeprecatedObserverRegistry<SessionManager.Observer> = DeprecatedObserverRegistry()
+) : DeprecatedObservable<SessionManager.Observer> by delegate {
     // It's important that any access to `values` is synchronized;
     @GuardedBy("values")
     private val values = mutableListOf<Session>()

@@ -39,6 +39,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
+@Suppress("DEPRECATION") // Session observable is deprecated
 class SessionTest {
     @Test
     fun `registered observers get notified`() {

@@ -47,7 +47,8 @@ class AppLinksFeature(
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null
 ) : LifecycleAwareFeature {
 
-    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/8913
+    @Suppress("DEPRECATION")
+    // TODO migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/8913
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val observer = object : mozilla.components.browser.session.SelectionAwareSessionObserver(sessionManager) {
             override fun onLaunchIntentRequest(

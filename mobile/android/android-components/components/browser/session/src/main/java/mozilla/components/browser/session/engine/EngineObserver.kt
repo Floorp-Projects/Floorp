@@ -103,6 +103,7 @@ internal class EngineObserver(
         return newUri.isInScope(listOf(scopeUri))
     }
 
+    @Suppress("DEPRECATION") // Session observable is deprecated
     override fun onLoadRequest(
         url: String,
         triggeredByRedirect: Boolean,

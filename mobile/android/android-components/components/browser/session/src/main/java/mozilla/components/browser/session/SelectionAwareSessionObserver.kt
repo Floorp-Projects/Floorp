@@ -5,6 +5,7 @@
 package mozilla.components.browser.session
 
 import androidx.annotation.CallSuper
+import mozilla.components.support.base.observer.OBSERVER_DEPRECATION_MESSAGE
 
 /**
  * This class is a combination of [Session.Observer] and
@@ -16,7 +17,8 @@ import androidx.annotation.CallSuper
  * @property activeSession the currently observed session
  * @property sessionManager the application's session manager
  */
-@Deprecated("Use browser store for observing session state changes instead")
+@Deprecated(OBSERVER_DEPRECATION_MESSAGE)
+@Suppress("DEPRECATION") // SessionManager observable is deprecated
 abstract class SelectionAwareSessionObserver(
     private val sessionManager: SessionManager
 ) : SessionManager.Observer, Session.Observer {

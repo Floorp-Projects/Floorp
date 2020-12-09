@@ -100,6 +100,8 @@ class AppLinksFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO Migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/8913
     fun `when valid sessionId is provided, observe its session`() {
         feature = AppLinksFeature(
             mockContext,
@@ -116,6 +118,8 @@ class AppLinksFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO Migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/8913
     fun `when sessionId is NOT provided, observe selected session`() {
         feature = AppLinksFeature(
             mockContext,
@@ -129,12 +133,16 @@ class AppLinksFeatureTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO Migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/8913
     fun `when start is called must register SessionManager observers`() {
         feature.start()
         verify(mockSessionManager).register(feature.observer)
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // TODO Migrate to browser-state: https://github.com/mozilla-mobile/android-components/issues/8913
     fun `when stop is called must unregister SessionManager observers `() {
         feature.stop()
         verify(mockSessionManager).unregister(feature.observer)

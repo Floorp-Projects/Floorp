@@ -28,6 +28,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
+@Suppress("DEPRECATION") // SessionManager observable is deprecated
 class SessionManagerTest {
     @Test
     fun `session can be added`() {

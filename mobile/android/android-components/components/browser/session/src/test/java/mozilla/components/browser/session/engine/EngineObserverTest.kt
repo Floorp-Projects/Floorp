@@ -1118,6 +1118,7 @@ class EngineObserverTest {
     }
 
     @Test
+    @Suppress("DEPRECATION") // Session observable is deprecated
     fun `onLoadRequest notifies session observers`() {
         val url = "https://www.mozilla.org"
         val sessionObserver: Session.Observer = mock()

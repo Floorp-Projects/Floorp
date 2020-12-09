@@ -15,6 +15,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
+@Suppress("DEPRECATION") // AllSessionsObserver is deprecated
 class AllSessionsObserverTest {
     @Test
     fun `Observer will be registered on all already existing Sessions`() {
