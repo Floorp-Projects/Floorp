@@ -11,6 +11,8 @@ import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.engine.EngineMiddleware
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -29,9 +31,20 @@ import org.mozilla.focus.search.HiddenSearchEngineFilter
  */
 class Components {
     val sessionManager by lazy {
-        SessionManager(DummyEngine()).apply {
+        SessionManager(DummyEngine(), store).apply {
             register(SessionSetupObserver())
         }
+    }
+
+    // This dummy engine solution is not great.
+    val store by lazy {
+        BrowserStore(
+            middleware = EngineMiddleware.create(DummyEngine(), ::findSessionById)
+        )
+    }
+
+    private fun findSessionById(tabId: String): Session? {
+        return sessionManager.findSessionById(tabId)
     }
 
     val searchEngineManager by lazy {

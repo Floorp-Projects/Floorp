@@ -71,6 +71,7 @@ import org.mozilla.focus.biometrics.BiometricAuthenticationHandler
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver
 import org.mozilla.focus.exceptions.ExceptionDomains
+import org.mozilla.focus.ext.contentState
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.shouldRequestDesktopSite
@@ -483,7 +484,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     @Suppress("ComplexMethod")
     override fun createCallback(): IWebView.Callback {
-        return SessionCallbackProxy(session, object : IWebView.Callback {
+        return SessionCallbackProxy(session, requireComponents.store, object : IWebView.Callback {
             override fun onPageStarted(url: String) {}
 
             override fun onPageFinished(isSecure: Boolean) {}
@@ -742,7 +743,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         securityView?.setImageResource(R.drawable.ic_internet)
         menuView?.visibility = View.VISIBLE
         urlView?.text = session.let {
-            if (it.isSearch) it.searchTerms else it.url
+            val contentState = requireComponents.store.contentState(it.id)
+            if (contentState.isSearch) contentState.searchTerms else contentState.url
         }
     }
 

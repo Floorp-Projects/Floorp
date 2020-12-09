@@ -25,7 +25,6 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.handler.CrashHandlerService
-import mozilla.components.support.ktx.android.util.Base64
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedGeckoSession
@@ -525,13 +524,12 @@ class GeckoWebViewProvider : IWebViewProvider {
                     uri: String?,
                     webRequestError: WebRequestError
                 ): GeckoResult<String> {
-                    ErrorPages.createErrorPage(
+                    val errorPage = ErrorPages.createUrlEncodedErrorPage(
                         context,
                         geckoErrorToErrorType(webRequestError.code),
                         uri
-                    ).apply {
-                        return GeckoResult.fromValue(Base64.encodeToUriString(this))
-                    }
+                    )
+                    return GeckoResult.fromValue(errorPage)
                 }
 
                 override fun onNewSession(

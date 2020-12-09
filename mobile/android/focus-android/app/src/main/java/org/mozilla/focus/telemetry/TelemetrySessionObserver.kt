@@ -8,12 +8,17 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
+import org.mozilla.focus.ext.contentState
 
-class TelemetrySessionObserver : SessionManager.Observer {
+class TelemetrySessionObserver(private val store: BrowserStore) : SessionManager.Observer {
     override fun onSessionAdded(session: Session) {
         when (session.source) {
             SessionState.Source.ACTION_VIEW -> TelemetryWrapper.browseIntentEvent()
-            SessionState.Source.ACTION_SEND -> TelemetryWrapper.shareIntentEvent(session.searchTerms.isNotEmpty())
+            SessionState.Source.ACTION_SEND -> {
+                val contentState = store.contentState(session.id)
+                TelemetryWrapper.shareIntentEvent(contentState.searchTerms.isNotEmpty())
+            }
             SessionState.Source.TEXT_SELECTION -> TelemetryWrapper.textSelectionIntentEvent()
             SessionState.Source.HOME_SCREEN -> TelemetryWrapper.openHomescreenShortcutEvent()
             SessionState.Source.CUSTOM_TAB -> TelemetryWrapper.customTabsIntentEvent(

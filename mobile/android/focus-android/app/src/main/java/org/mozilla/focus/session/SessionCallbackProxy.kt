@@ -10,13 +10,20 @@ import org.mozilla.focus.web.Download
 import org.mozilla.focus.web.IWebView
 
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.content.blocking.Tracker
+import org.mozilla.focus.ext.contentState
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.utils.AppConstants
 
 @Suppress("TooManyFunctions")
-class SessionCallbackProxy(private val session: Session, private val delegate: IWebView.Callback) : IWebView.Callback {
+class SessionCallbackProxy(
+    private val session: Session,
+    private val store: BrowserStore,
+    private val delegate: IWebView.Callback
+) : IWebView.Callback {
 
     var isDownload = false
 
@@ -77,10 +84,11 @@ class SessionCallbackProxy(private val session: Session, private val delegate: I
     }
 
     override fun onRequest(isTriggeredByUserGesture: Boolean) {
-        if (isTriggeredByUserGesture && session.isSearch) {
+        val contentState = store.contentState(session.id)
+        if (isTriggeredByUserGesture && contentState.isSearch) {
             // The user actively navigated away (no redirect) from the search page. Clear the
             // search terms.
-            session.searchTerms = ""
+            store.dispatch(ContentAction.UpdateSearchTermsAction(session.id, ""))
         }
     }
 

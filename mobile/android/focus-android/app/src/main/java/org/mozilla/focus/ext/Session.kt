@@ -12,9 +12,6 @@ import java.util.WeakHashMap
 // Extension methods on the Session class. This is used for additional session data that is not part
 // of the upstream browser-session component yet.
 
-val Session.isSearch
-    get() = searchTerms.isNotEmpty()
-
 private val extensions = WeakHashMap<Session, SessionExtension>()
 
 private fun getOrPutExtension(session: Session): SessionExtension {

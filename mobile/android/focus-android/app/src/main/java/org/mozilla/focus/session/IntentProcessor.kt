@@ -10,12 +10,14 @@ import android.os.Bundle
 import android.text.TextUtils
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
 import mozilla.components.feature.customtabs.isCustomTabIntent
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.WebURLFinder
 import org.mozilla.focus.activity.TextActionActivity
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.utils.UrlUtils
@@ -128,7 +130,7 @@ class IntentProcessor(
 
     private fun createSearchSession(source: SessionState.Source, url: String, searchTerms: String): Session {
         return Session(url, source = source).apply {
-            this.searchTerms = searchTerms
+            context.components.store.dispatch(ContentAction.UpdateSearchTermsAction(id, searchTerms))
             sessionManager.add(this, selected = true)
         }
     }

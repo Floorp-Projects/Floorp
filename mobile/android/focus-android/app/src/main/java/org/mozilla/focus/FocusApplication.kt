@@ -80,7 +80,7 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
         components.sessionManager.apply {
             register(NotificationSessionObserver(this@FocusApplication))
-            register(TelemetrySessionObserver())
+            register(TelemetrySessionObserver(components.store))
             register(CleanupSessionObserver(this@FocusApplication))
         }
 
