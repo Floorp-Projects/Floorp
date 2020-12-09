@@ -53,7 +53,8 @@ class TestMemoryUsage(AwsyTestCase):
         tp5n_manifest = self.testvars.get("pageManifest", default_tp5n_manifest)
         with open(tp5n_manifest) as fp:
             urls = fp.readlines()
-        urls = map(lambda x: x.replace("localhost", "localhost:{}"), urls)
+        # pylint --py3k: W1636
+        urls = list(map(lambda x: x.replace("localhost", "localhost:{}"), urls))
 
         # We haven't set self._urls yet, so this value might be zero if
         # 'entities' wasn't specified.
