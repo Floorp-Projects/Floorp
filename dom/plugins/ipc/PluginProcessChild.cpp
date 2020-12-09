@@ -21,13 +21,6 @@
 #  include "mozilla/SandboxSettings.h"
 #endif
 
-#if defined(XP_MACOSX)
-#  include "nsCocoaFeatures.h"
-// An undocumented CoreGraphics framework method, present in the same form
-// since at least OS X 10.5.
-extern "C" CGError CGSSetDebugOptions(int options);
-#endif
-
 #ifdef XP_WIN
 #  if defined(MOZ_SANDBOX)
 #    include "mozilla/sandboxTarget.h"
@@ -166,19 +159,9 @@ bool PluginProcessChild::Init(int aArgc, char* aArgv[]) {
 #  error Sorry
 #endif
 
-  bool retval = mPlugin.InitForChrome(pluginFilename, ParentPid(),
-                                      IOThreadChild::message_loop(),
-                                      IOThreadChild::TakeChannel());
-#if defined(XP_MACOSX)
-  // Explicitly turn off CGEvent logging.  This works around bug 1092855.
-  // If there are already CGEvents in the log, turning off logging also
-  // causes those events to be written to disk.  But at this point no
-  // CGEvents have yet been processed.  CGEvents are events (usually
-  // input events) pulled from the WindowServer.  An option of 0x80000008
-  // turns on CGEvent logging.
-  CGSSetDebugOptions(0x80000007);
-#endif
-  return retval;
+  return mPlugin.InitForChrome(pluginFilename, ParentPid(),
+                               IOThreadChild::message_loop(),
+                               IOThreadChild::TakeChannel());
 }
 
 void PluginProcessChild::CleanUp() {
