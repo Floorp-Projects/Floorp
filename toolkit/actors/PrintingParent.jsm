@@ -33,10 +33,15 @@ class PrintingParent extends JSWindowActorParent {
       return undefined;
     }
 
-    let listener = PrintUtils._webProgressPP.value;
+    let listener = PrintUtils._webProgressPP?.value;
     let data = message.data;
 
     switch (message.name) {
+      case "Printing:Preview:CurrentPage": {
+        browser.setAttribute("current-page", message.data.currentPage);
+        break;
+      }
+
       case "Printing:Preview:Entered": {
         // This message is sent by the content process once it has completed
         // putting the content into print preview mode. We must wait for that to

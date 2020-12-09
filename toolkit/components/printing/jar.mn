@@ -15,6 +15,7 @@ toolkit.jar:
 #endif
    content/global/landscape.svg                     (content/landscape.svg)
    content/global/portrait.svg                      (content/portrait.svg)
+   content/global/printPreviewPagination.js         (content/printPreviewPagination.js)
    content/global/printPreviewToolbar.js            (content/printPreviewToolbar.js)
    content/global/printUtils.js                     (content/printUtils.js)
    content/global/print.js                          (content/print.js)
@@ -22,3 +23,4 @@ toolkit.jar:
    content/global/print.css                         (content/print.css)
    content/global/toggle-group.css                  (content/toggle-group.css)
    content/global/simplifyMode.css                  (content/simplifyMode.css)
+   content/global/printPagination.css               (content/printPagination.css)
