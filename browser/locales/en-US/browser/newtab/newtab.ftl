@@ -218,3 +218,28 @@ newtab-pocket-cta-text = Save the stories you love in { -pocket-brand-name }, an
 
 newtab-error-fallback-info = Oops, something went wrong loading this content.
 newtab-error-fallback-refresh-link = Refresh page to try again.
+
+## Customization Menu
+
+newtab-custom-shortcuts-title = Shortcuts
+newtab-custom-shortcuts-subtitle = Sites you save or visit
+newtab-custom-row-selector =
+        { $num ->
+            [one] { $num } row
+           *[other] { $num } rows
+        }
+newtab-custom-sponsored-sites = Sponsored shortcuts
+newtab-custom-pocket-title = Recommended by { -pocket-brand-name }
+newtab-custom-pocket-subtitle = Exceptional content curated by { -pocket-brand-name }, part of the { -brand-product-name } family
+newtab-custom-pocket-sponsored = Sponsored stories
+newtab-custom-recent-title = Recent activity
+newtab-custom-recent-subtitle = A selection of recent sites and content
+newtab-custom-close-button = Close
+
+# For the "Snippets" feature traditionally on about:home.
+# Alternative translation options: "Small Note" or something that
+# expresses the idea of "a small message, shortened from something else,
+# and non-essential but also not entirely trivial and useless.
+newtab-custom-snippets-title = Snippets
+newtab-custom-snippets-subtitle = Tips and news from { -vendor-short-name } and { -brand-product-name }
+newtab-custom-settings = Manage more settings

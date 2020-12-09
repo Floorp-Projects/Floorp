@@ -49,10 +49,13 @@ module.exports = {
         "content-src/components/CollapsibleSection/CollapsibleSection.jsx",
         "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx",
         "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal.jsx",
+        "content-src/components/CustomizeMenu/**",
       ],
       rules: {
         "jsx-a11y/anchor-has-content": 0,
         "jsx-a11y/heading-has-content": 0,
+        "jsx-a11y/label-has-associated-control": 0,
+        "jsx-a11y/no-onchange": 0,
       },
     },
     {

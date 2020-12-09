@@ -152,7 +152,6 @@ main {
   padding: 0 10px;
   min-height: 32px;
   max-width: 150px;
-  cursor: pointer;
 
   &:hover {
     background-color: var(--newtab-background-button-hover-color);
@@ -163,9 +162,9 @@ main {
   }
 
   &:focus-visible {
-    border: 1px solid $blue-60;
+    border: 1px solid var(--newtab-focus-border);
     border-radius: 4px;
     outline: 0;
-    box-shadow: 0 0 0 2px $newtab-background-button-focus-boxshadow-color;
+    box-shadow: $newtab-focus-outline;
   }
 }
