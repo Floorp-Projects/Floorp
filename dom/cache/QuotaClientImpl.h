@@ -45,7 +45,8 @@ class CacheQuotaClient final : public quota::Client {
 
   virtual void ReleaseIOThreadObjects() override;
 
-  virtual void AbortOperations(const nsACString& aOrigin) override;
+  void AbortOperationsForLocks(
+      const DirectoryLockIdTable& aDirectoryLockIds) override;
 
   virtual void AbortOperationsForProcess(
       ContentParentId aContentParentId) override;

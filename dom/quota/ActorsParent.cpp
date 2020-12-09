@@ -748,6 +748,7 @@ class DirectoryLockImpl final : public DirectoryLock {
   const bool mShouldUpdateLockIdTable;
 
   bool mRegistered;
+  FlippedOnce<true> mPending;
   FlippedOnce<false> mInvalidated;
 
  public:
@@ -781,6 +782,8 @@ class DirectoryLockImpl final : public DirectoryLock {
   bool IsInternal() const { return mInternal; }
 
   void SetRegistered(bool aRegistered) { mRegistered = aRegistered; }
+
+  bool IsPending() const { return mPending; }
 
   // Ideally, we would have just one table (instead of these two:
   // QuotaManager::mDirectoryLocks and QuotaManager::mDirectoryLockIdTable) for
@@ -2947,6 +2950,8 @@ void DirectoryLockImpl::NotifyOpenListener() {
   mOpenListener.destroy();
 
   mQuotaManager->RemovePendingDirectoryLock(*this);
+
+  mPending.Flip();
 }
 
 already_AddRefed<DirectoryLock> DirectoryLockImpl::Specialize(
@@ -6693,9 +6698,8 @@ already_AddRefed<DirectoryLock> QuotaManager::OpenDirectoryInternal(
 
   // All the locks that block this new exclusive lock need to be invalidated.
   // We also need to notify clients to abort operations for them.
-  AutoTArray<UniquePtr<nsTHashtable<nsCStringHashKey>>, Client::TYPE_MAX>
-      origins;
-  origins.SetLength(Client::TypeMax());
+  AutoTArray<Client::DirectoryLockIdTable, Client::TYPE_MAX> lockIds;
+  lockIds.SetLength(Client::TypeMax());
 
   const auto& blockedOnLocks = lock->GetBlockedOnLocks();
 
@@ -6703,21 +6707,20 @@ already_AddRefed<DirectoryLock> QuotaManager::OpenDirectoryInternal(
     if (!blockedOnLock->IsInternal()) {
       blockedOnLock->Invalidate();
 
-      auto& clientOrigins = origins[blockedOnLock->ClientType()];
-      if (!clientOrigins) {
-        clientOrigins = MakeUnique<nsTHashtable<nsCStringHashKey>>();
+      // Clients don't have to handle pending locks. Invalidation is sufficient
+      // in that case (once a lock is ready and the listener needs to be
+      // notified, we will call DirectoryLockFailed instead of
+      // DirectoryLockAcquired which should release any remaining references to
+      // the lock).
+      if (!blockedOnLock->IsPending()) {
+        lockIds[blockedOnLock->ClientType()].Put(blockedOnLock->Id());
       }
-      clientOrigins->PutEntry(blockedOnLock->Origin());
     }
   }
 
   for (Client::Type type : AllClientTypes()) {
-    if (origins[type]) {
-      for (auto iter = origins[type]->Iter(); !iter.Done(); iter.Next()) {
-        MOZ_ASSERT(mClients[type]);
-
-        mClients[type]->AbortOperations(iter.Get()->GetKey());
-      }
+    if (lockIds[type].Filled()) {
+      mClients[type]->AbortOperationsForLocks(lockIds[type]);
     }
   }
 
