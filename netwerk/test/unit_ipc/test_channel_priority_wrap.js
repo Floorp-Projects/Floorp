@@ -1,9 +1,6 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-/* jshint esnext:true, globalstrict:true, moz:true, undef:true, unused:true */
-/* globals Cu, do_register_cleanup, do_test_finished */
-/* globals run_test_in_child, sendCommand, do_await_remote_message */
 
 "use strict";
 
