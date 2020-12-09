@@ -382,7 +382,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 }
 
 /* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
-#PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks,
+#PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
 #PersonalToolbar > #import-button + #personal-bookmarks,
 #PlacesToolbarItems > toolbarseparator::before {
   border-inline-start: 1px solid;
@@ -395,7 +395,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 }
 
 @media (min-resolution: 2dppx) {
-  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks,
+  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
   #PersonalToolbar > #import-button + #personal-bookmarks,
   #PlacesToolbarItems > toolbarseparator::before {
     border-inline-start-width: 0.5px;
