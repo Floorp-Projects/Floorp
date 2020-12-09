@@ -108,19 +108,6 @@ add_task(async function bookmarks_toolbar_not_shown_when_empty() {
           "Toolbar is visible when there are no items in the toolbar area",
       });
       ok(!emptyMessage.hidden, "Empty message is shown with toolbar empty");
-      // Click the link and check we open the library:
-      let winPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-      EventUtils.synthesizeMouseAtCenter(
-        emptyMessage.querySelector(".text-link"),
-        {}
-      );
-      let libraryWin = await winPromise;
-      is(
-        libraryWin.document.location.href,
-        "chrome://browser/content/places/places.xhtml",
-        "Should have opened library."
-      );
-      await BrowserTestUtils.closeWindow(libraryWin);
     }
 
     // 4: Put personal-bookmarks back in the toolbar and confirm the toolbar is visible now

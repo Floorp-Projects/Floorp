@@ -920,10 +920,7 @@ function PlacesToolbar(aPlace) {
 
   this._viewElt._placesView = this;
 
-  this._dragRoot = BookmarkingUI.toolbar.contains(this._viewElt)
-    ? BookmarkingUI.toolbar
-    : this._viewElt;
-  this._addEventListeners(this._dragRoot, this._cbEvents, false);
+  this._addEventListeners(this._viewElt, this._cbEvents, false);
   this._addEventListeners(this._rootElt, ["popupshowing", "popuphidden"], true);
   this._addEventListeners(this._rootElt, ["overflow", "underflow"], true);
   this._addEventListeners(window, ["resize", "unload"], false);
@@ -973,9 +970,7 @@ PlacesToolbar.prototype = {
   ]),
 
   uninit: function PT_uninit() {
-    if (this._dragRoot) {
-      this._removeEventListeners(this._dragRoot, this._cbEvents, false);
-    }
+    this._removeEventListeners(this._viewElt, this._cbEvents, false);
     this._removeEventListeners(
       this._rootElt,
       ["popupshowing", "popuphidden"],
