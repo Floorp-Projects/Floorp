@@ -10,7 +10,7 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var target = document.getElementById("target");
 
   var pointersDown = 0;
@@ -25,22 +25,24 @@ function* test(testDriver) {
     dump(`Got pointermove, pointer id ${e.pointerId}, at ${e.clientX}, ${e.clientY}\n`);
     pointerMoveCount++;
   });
-  target.addEventListener("pointercancel", function(e) {
-    dump(`Got pointercancel, pointer id ${e.pointerId}\n`);
-    ok(false, "Should not have gotten pointercancel");
-    pointersUp++;
-    if (pointersDown == pointersUp) {
-      // All pointers lifted, let's continue the test
-      setTimeout(testDriver, 0);
-    }
-  });
-  target.addEventListener("pointerup", function(e) {
-    dump(`Got pointerup, pointer id ${e.pointerId}\n`);
-    pointersUp++;
-    if (pointersDown == pointersUp) {
-      // All pointers lifted, let's continue the test
-      setTimeout(testDriver, 0);
-    }
+  let pointersUpPromise = new Promise(resolve => {
+    target.addEventListener("pointercancel", function(e) {
+      dump(`Got pointercancel, pointer id ${e.pointerId}\n`);
+      ok(false, "Should not have gotten pointercancel");
+      pointersUp++;
+      if (pointersDown == pointersUp) {
+        // All pointers lifted, let's continue the test
+        resolve();
+      }
+    });
+    target.addEventListener("pointerup", function(e) {
+      dump(`Got pointerup, pointer id ${e.pointerId}\n`);
+      pointersUp++;
+      if (pointersDown == pointersUp) {
+        // All pointers lifted, let's continue the test
+        resolve();
+      }
+    });
   });
 
   var zoom_in = [
@@ -56,7 +58,7 @@ function* test(testDriver) {
   synthesizeNativeTouchSequences(document.getElementById("target"), zoom_in, null, touchIds);
 
   dump("All touch events synthesized, waiting for final pointerup...\n");
-  yield true;
+  await pointersUpPromise;
 
   // Should get at least one pointermove per pointer, even if the events
   // get coalesced somewhere.
@@ -65,7 +67,7 @@ function* test(testDriver) {
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>
