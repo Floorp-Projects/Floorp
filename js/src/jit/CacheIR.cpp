@@ -8731,11 +8731,10 @@ ScriptedThisResult CallIRGenerator::getThisForScripted(
     return ScriptedThisResult::NoAction;
   }
 
-  if (!GetPropertyPure(cx_, newTarget, NameToId(cx_->names().prototype),
-                       protov.address())) {
-    // The lazy prototype property hasn't been resolved yet.
-    MOZ_ASSERT(newTarget->as<JSFunction>().needsPrototypeProperty());
-    return ScriptedThisResult::TemporarilyUnoptimizable;
+  if (!GetProperty(cx_, newTarget, newTarget, cx_->names().prototype,
+                   &protov)) {
+    cx_->clearPendingException();
+    return ScriptedThisResult::NoAction;
   }
 
   if (!protov.isObject()) {
@@ -8805,8 +8804,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
       case ScriptedThisResult::UninitializedThis:
         flags.setNeedsUninitializedThis();
         break;
-      case ScriptedThisResult::TemporarilyUnoptimizable:
-        return AttachDecision::TemporarilyUnoptimizable;
       case ScriptedThisResult::NoAction:
         return AttachDecision::NoAction;
     }

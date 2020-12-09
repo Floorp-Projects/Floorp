@@ -1609,7 +1609,6 @@ class MOZ_RAII OptimizeSpreadCallIRGenerator : public IRGenerator {
 enum class StringChar { CodeAt, At };
 enum class ScriptedThisResult {
   NoAction,
-  TemporarilyUnoptimizable,
   UninitializedThis,
   TemplateObject
 };
