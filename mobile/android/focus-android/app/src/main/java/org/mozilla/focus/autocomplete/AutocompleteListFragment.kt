@@ -166,7 +166,8 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.remove -> {
-            fragmentManager!!
+            @Suppress("DEPRECATION")
+            requireFragmentManager()
                     .beginTransaction()
                     .replace(R.id.container, AutocompleteRemoveFragment())
                     .addToBackStack(null)
@@ -317,7 +318,8 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
     ) : RecyclerView.ViewHolder(itemView) {
         init {
             itemView.setOnClickListener {
-                fragment.fragmentManager!!
+                @Suppress("DEPRECATION")
+                fragment.requireFragmentManager()
                         .beginTransaction()
                         .replace(R.id.container, AutocompleteAddFragment())
                         .addToBackStack(null)

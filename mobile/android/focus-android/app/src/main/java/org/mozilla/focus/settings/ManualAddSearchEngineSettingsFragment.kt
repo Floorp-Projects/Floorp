@@ -235,10 +235,11 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             }
 
             if (isValidSearchQuery) {
-                CustomSearchEngineStore.addSearchEngine(fragment.activity!!, engineName, query)
-                Snackbar.make(fragment.view!!, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
-                Settings.getInstance(fragment.activity!!).setDefaultSearchEngineByName(engineName)
-                fragment.fragmentManager!!.popBackStack()
+                CustomSearchEngineStore.addSearchEngine(fragment.requireActivity(), engineName, query)
+                Snackbar.make(fragment.requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
+                Settings.getInstance(fragment.requireActivity()).setDefaultSearchEngineByName(engineName)
+                @Suppress("DEPRECATION")
+                fragment.requireFragmentManager().popBackStack()
             } else {
                 showServerError(fragment)
             }

@@ -39,7 +39,8 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
                     ExceptionDomains.remove(context, domains)
                 }.await()
 
-                fragmentManager!!.popBackStack()
+                @Suppress("DEPRECATION")
+                requireFragmentManager().popBackStack()
             }
         }
     }

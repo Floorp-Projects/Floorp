@@ -1131,7 +1131,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                     url,
                     store
                 )
-                fragment.show(fragmentManager!!, OpenWithFragment.FRAGMENT_TAG)
+                @Suppress("DEPRECATION")
+                fragment.show(requireFragmentManager(), OpenWithFragment.FRAGMENT_TAG)
 
                 TelemetryWrapper.openSelectionEvent()
             }

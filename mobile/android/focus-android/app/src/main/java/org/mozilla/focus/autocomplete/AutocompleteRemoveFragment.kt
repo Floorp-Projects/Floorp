@@ -48,7 +48,8 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
                     TelemetryWrapper.removeAutocompleteDomainsEvent(domains.size)
                 }.await()
 
-                fragmentManager!!.popBackStack()
+                @Suppress("DEPRECATION")
+                requireFragmentManager().popBackStack()
             }
         }
     }

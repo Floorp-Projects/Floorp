@@ -35,7 +35,8 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
     protected fun getActionBarUpdater() = activity as ActionBarUpdater
 
     protected fun navigateToFragment(fragment: Fragment) {
-        fragmentManager!!.beginTransaction()
+        @Suppress("DEPRECATION")
+        requireFragmentManager().beginTransaction()
             .replace(R.id.container, fragment)
             .addToBackStack(null)
             .commit()

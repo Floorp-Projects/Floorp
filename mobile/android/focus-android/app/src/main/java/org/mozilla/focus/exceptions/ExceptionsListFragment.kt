@@ -118,7 +118,8 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
             val domains = ExceptionDomains.load(context!!)
             TelemetryWrapper.removeAllExceptionDomains(domains.size)
             ExceptionDomains.remove(context!!, domains)
-            fragmentManager!!.popBackStack()
+            @Suppress("DEPRECATION")
+            requireFragmentManager().popBackStack()
         }
     }
 
@@ -134,7 +135,8 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
         (exceptionList.adapter as DomainListAdapter).refresh(activity!!) {
             if ((exceptionList.adapter as DomainListAdapter).itemCount == 0) {
-                fragmentManager!!.popBackStack()
+                @Suppress("DEPRECATION")
+                requireFragmentManager().popBackStack()
             }
             activity?.invalidateOptionsMenu()
         }
@@ -162,7 +164,8 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.remove -> {
-            fragmentManager!!
+            @Suppress("DEPRECATION")
+            requireFragmentManager()
                 .beginTransaction()
                 .replace(R.id.container, ExceptionsRemoveFragment())
                 .addToBackStack(null)

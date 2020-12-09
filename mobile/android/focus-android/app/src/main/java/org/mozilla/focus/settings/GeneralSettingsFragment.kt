@@ -84,15 +84,17 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
 
             // Manually notify SettingsActivity of locale changes (in most other cases activities
             // will detect changes in onActivityResult(), but that doesn't apply to SettingsActivity).
-            activity!!.onConfigurationChanged(activity!!.resources.configuration)
+            requireActivity().onConfigurationChanged(activity!!.resources.configuration)
 
             // And ensure that the calling LocaleAware*Activity knows that the locale changed:
-            activity!!.setResult(SettingsActivity.ACTIVITY_RESULT_LOCALE_CHANGED)
+            requireActivity().setResult(SettingsActivity.ACTIVITY_RESULT_LOCALE_CHANGED)
 
             // The easiest way to ensure we update the language is by replacing the entire fragment
             // We have to pop the main Settings Fragment as well and then navigate here
-            fragmentManager!!.popBackStack()
-            fragmentManager!!.beginTransaction()
+            @Suppress("DEPRECATION")
+            requireFragmentManager().popBackStack()
+            @Suppress("DEPRECATION")
+            requireFragmentManager().beginTransaction()
                 .replace(R.id.container, SettingsFragment.newInstance()).commit()
             navigateToFragment(GeneralSettingsFragment.newInstance())
         }

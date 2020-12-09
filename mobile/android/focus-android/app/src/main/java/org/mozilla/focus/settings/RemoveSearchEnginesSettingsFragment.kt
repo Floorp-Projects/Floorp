@@ -60,8 +60,9 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 val enginesToRemove =
                     (pref as MultiselectSearchEngineListPreference).checkedEngineIds
                 TelemetryWrapper.removeSearchEnginesEvent(enginesToRemove.size)
-                CustomSearchEngineStore.removeSearchEngines(activity!!, enginesToRemove as MutableSet<String>)
-                fragmentManager!!.popBackStack()
+                CustomSearchEngineStore.removeSearchEngines(requireActivity(), enginesToRemove as MutableSet<String>)
+                @Suppress("DEPRECATION")
+                requireFragmentManager().popBackStack()
                 true
             }
             else -> super.onOptionsItemSelected(item)

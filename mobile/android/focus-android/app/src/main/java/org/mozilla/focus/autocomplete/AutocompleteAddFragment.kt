@@ -108,6 +108,7 @@ class AutocompleteAddFragment : Fragment(), CoroutineScope {
 
         ViewUtils.showBrandedSnackbar(view, R.string.preference_autocomplete_add_confirmation, 0)
 
+        @Suppress("DEPRECATION")
         fragmentManager?.popBackStack()
     }
 }
