@@ -652,18 +652,28 @@ impl CompositeState {
             }
 
             // Get a new z_id for each compositor surface, to ensure correct ordering
-            // when drawing with the simple (Draw) compositor.
-            let external_surface_index = self.compute_external_surface_dependencies(
-                &external_surface,
-                &image_dependencies,
-                required_plane_count,
-                resource_cache,
-                gpu_cache,
-                deferred_resolves,
-            );
-            if external_surface_index == ResolvedExternalSurfaceIndex::INVALID {
-                continue;
-            }
+            // when drawing with the simple (Draw) compositor, and to schedule compositing
+            // of any required updates into the surfaces.
+            let needs_external_surface_update = match self.compositor_kind {
+                CompositorKind::Draw { .. } => true,
+                _ => external_surface.update_params.is_some(),
+            };
+            let external_surface_index = if needs_external_surface_update {
+                let external_surface_index = self.compute_external_surface_dependencies(
+                    &external_surface,
+                    &image_dependencies,
+                    required_plane_count,
+                    resource_cache,
+                    gpu_cache,
+                    deferred_resolves,
+                );
+                if external_surface_index == ResolvedExternalSurfaceIndex::INVALID {
+                    continue;
+                }
+                external_surface_index
+            } else {
+                ResolvedExternalSurfaceIndex::INVALID
+            };
 
             let tile = CompositeTile {
                 surface: CompositeTileSurface::ExternalSurface { external_surface_index },
