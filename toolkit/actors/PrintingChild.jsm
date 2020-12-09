@@ -20,6 +20,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ReaderMode.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
+
 let gPrintPreviewInitializingInfo = null;
 
 let gPendingPreviewsMap = new Map();
@@ -32,6 +38,12 @@ class PrintingChild extends JSWindowActorChild {
     if (listener) {
       listener.actor = this;
     }
+    this.contentWindow.addEventListener("scroll", this);
+  }
+
+  didDestroy() {
+    this._scrollTask?.disarm();
+    this.contentWindow?.removeEventListener("scroll", this);
   }
 
   // Bug 1088061: nsPrintJob's DoCommonPrint currently expects the
@@ -87,6 +99,17 @@ class PrintingChild extends JSWindowActorChild {
         this.updatePageCount();
         break;
       }
+
+      case "scroll":
+        if (!this._scrollTask) {
+          this._scrollTask = new DeferredTask(
+            () => this.updateCurrentPage(),
+            16,
+            16
+          );
+        }
+        this._scrollTask.arm();
+        break;
     }
   }
 
@@ -417,6 +440,14 @@ class PrintingChild extends JSWindowActorChild {
     this.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
       numPages: cv.printPreviewNumPages,
       totalPages: cv.rawNumPages,
+    });
+  }
+
+  updateCurrentPage() {
+    let cv = this.docShell.contentViewer;
+    cv.QueryInterface(Ci.nsIWebBrowserPrint);
+    this.sendAsyncMessage("Printing:Preview:CurrentPage", {
+      currentPage: cv.printPreviewCurrentPageNumber,
     });
   }
 
