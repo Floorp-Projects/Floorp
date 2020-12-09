@@ -73,6 +73,7 @@ typealias SearchDialogFragmentStore = SearchFragmentStore
 
 @SuppressWarnings("LargeClass", "TooManyFunctions")
 class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
+    private var voiceSearchButtonAlreadyAdded: Boolean = false
     private lateinit var interactor: SearchDialogInteractor
     private lateinit var store: SearchDialogFragmentStore
     private lateinit var toolbarView: ToolbarView
@@ -160,7 +161,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             isPrivate,
             view.toolbar,
             requireComponents.core.engine
-        ).also(::addSearchButton)
+        )
 
         awesomeBarView = AwesomeBarView(
             activity,
@@ -316,6 +317,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             toolbarView.update(it)
             awesomeBarView.update(it)
             firstUpdate = false
+            addVoiceSearchButton(it)
         }
     }
 
@@ -475,21 +477,26 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
     }
 
-    private fun addSearchButton(toolbarView: ToolbarView) {
-        val searchEngine = store.state.searchEngineSource.searchEngine
+    private fun addVoiceSearchButton(searchFragmentState: SearchFragmentState) {
+        if (voiceSearchButtonAlreadyAdded) return
+        val searchEngine = searchFragmentState.searchEngineSource.searchEngine
 
-        toolbarView.view.addEditAction(
-            BrowserToolbar.Button(
-                AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
-                requireContext().getString(R.string.voice_search_content_description),
-                visible = {
-                    searchEngine?.id?.contains("google") == true &&
-                            isSpeechAvailable() &&
-                            requireContext().settings().shouldShowVoiceSearch
-                },
-                listener = ::launchVoiceSearch
+        val isVisible =
+            searchEngine?.id?.contains("google") == true &&
+                    isSpeechAvailable() &&
+                    requireContext().settings().shouldShowVoiceSearch
+
+        if (isVisible) {
+            toolbarView.view.addEditAction(
+                BrowserToolbar.Button(
+                    AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
+                    requireContext().getString(R.string.voice_search_content_description),
+                    visible = { true },
+                    listener = ::launchVoiceSearch
+                )
             )
-        )
+            voiceSearchButtonAlreadyAdded = true
+        }
     }
 
     private fun launchVoiceSearch() {
