@@ -75,12 +75,6 @@ impl Instant {
     fn as_nanos(&self) -> u64 {
         self.0
     }
-
-    /// Get this instant as a timestamp in milliseconds.
-    fn as_millis(&self) -> u64 {
-        const NANOS_PER_MILLI: u64 = 1_000_000;
-        self.0 / NANOS_PER_MILLI
-    }
 }
 
 /// Uniquely identifies a single metric within its metric type.
