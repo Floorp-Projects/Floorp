@@ -549,29 +549,19 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   }
 
   _onRootNodeAvailable(rootNode) {
-    if (this._isTopLevelRootNode(rootNode)) {
+    if (rootNode.isTopLevelDocument) {
       this.rootNode = rootNode;
       this._rootNodePromiseResolve(this.rootNode);
     }
   }
 
   _onRootNodeDestroyed(rootNode) {
-    if (this._isTopLevelRootNode(rootNode)) {
+    if (rootNode.isTopLevelDocument) {
       this._rootNodePromise = new Promise(
         r => (this._rootNodePromiseResolve = r)
       );
       this.rootNode = null;
     }
-  }
-
-  _isTopLevelRootNode(rootNode) {
-    if (!rootNode.traits.supportsIsTopLevelDocument) {
-      // When `supportsIsTopLevelDocument` is false, a root-node resource is
-      // necessarily top level, so we can fallback to true.
-      return true;
-    }
-
-    return rootNode.isTopLevelDocument;
   }
 
   /**
