@@ -23,7 +23,6 @@
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsObjCExceptions.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsToolkit.h"
@@ -271,10 +270,6 @@ static void RemoveScreenWakeLockListener() {
   }
 }
 
-// An undocumented CoreGraphics framework method, present in the same form
-// since at least OS X 10.5.
-extern "C" CGError CGSSetDebugOptions(int options);
-
 // Init
 //
 // Loads the nib (see bug 316076c21) and sets up the CFRunLoopSource used to
@@ -352,20 +347,6 @@ nsresult nsAppShell::Init() {
                                 @selector(nsAppShell_NSApplication_terminate:));
     }
     gAppShellMethodsSwizzled = true;
-  }
-
-  // The bug that this works around was introduced in OS X 10.10.0
-  // and fixed in OS X 10.10.2. Order these version checks so as
-  // few as possible will actually end up running.
-  if (nsCocoaFeatures::macOSVersionMinor() == 10 && nsCocoaFeatures::macOSVersionBugFix() < 2 &&
-      nsCocoaFeatures::macOSVersionMajor() == 10) {
-    // Explicitly turn off CGEvent logging.  This works around bug 1092855.
-    // If there are already CGEvents in the log, turning off logging also
-    // causes those events to be written to disk.  But at this point no
-    // CGEvents have yet been processed.  CGEvents are events (usually
-    // input events) pulled from the WindowServer.  An option of 0x80000008
-    // turns on CGEvent logging.
-    CGSSetDebugOptions(0x80000007);
   }
 
 #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
