@@ -438,7 +438,11 @@ async function openToolbarContextMenu() {
     "shown"
   );
 
-  EventUtils.synthesizeMouseAtCenter(toolbar, {
+  // Use the end of the toolbar because the beginning (and even middle, on
+  // some resolutions) might be occluded by the empty toolbar message, which
+  // has a different context menu.
+  let bounds = toolbar.getBoundingClientRect();
+  EventUtils.synthesizeMouse(toolbar, bounds.width - 5, 5, {
     type: "contextmenu",
   });
 
