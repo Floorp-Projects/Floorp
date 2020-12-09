@@ -765,7 +765,7 @@ dependencies = [
 [[package]]
 name = "cranelift-bforest"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3bbadf8a2152984cf3d327d0c5a2677f37a93801#3bbadf8a2152984cf3d327d0c5a2677f37a93801"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850bafb981a04383198c0b50d041dc5ef#3b01b4b850bafb981a04383198c0b50d041dc5ef"
 dependencies = [
  "cranelift-entity 0.68.0",
 ]
@@ -773,7 +773,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3bbadf8a2152984cf3d327d0c5a2677f37a93801#3bbadf8a2152984cf3d327d0c5a2677f37a93801"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850bafb981a04383198c0b50d041dc5ef#3b01b4b850bafb981a04383198c0b50d041dc5ef"
 dependencies = [
  "byteorder",
  "cranelift-bforest",
@@ -790,7 +790,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen-meta"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3bbadf8a2152984cf3d327d0c5a2677f37a93801#3bbadf8a2152984cf3d327d0c5a2677f37a93801"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850bafb981a04383198c0b50d041dc5ef#3b01b4b850bafb981a04383198c0b50d041dc5ef"
 dependencies = [
  "cranelift-codegen-shared",
  "cranelift-entity 0.68.0",
@@ -799,7 +799,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen-shared"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3bbadf8a2152984cf3d327d0c5a2677f37a93801#3bbadf8a2152984cf3d327d0c5a2677f37a93801"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850bafb981a04383198c0b50d041dc5ef#3b01b4b850bafb981a04383198c0b50d041dc5ef"
 
 [[package]]
 name = "cranelift-entity"
@@ -809,12 +809,12 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a6
 [[package]]
 name = "cranelift-entity"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3bbadf8a2152984cf3d327d0c5a2677f37a93801#3bbadf8a2152984cf3d327d0c5a2677f37a93801"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850bafb981a04383198c0b50d041dc5ef#3b01b4b850bafb981a04383198c0b50d041dc5ef"
 
 [[package]]
 name = "cranelift-frontend"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3bbadf8a2152984cf3d327d0c5a2677f37a93801#3bbadf8a2152984cf3d327d0c5a2677f37a93801"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850bafb981a04383198c0b50d041dc5ef#3b01b4b850bafb981a04383198c0b50d041dc5ef"
 dependencies = [
  "cranelift-codegen",
  "log",
@@ -825,7 +825,7 @@ dependencies = [
 [[package]]
 name = "cranelift-wasm"
 version = "0.68.0"
-source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3bbadf8a2152984cf3d327d0c5a2677f37a93801#3bbadf8a2152984cf3d327d0c5a2677f37a93801"
+source = "git+https://github.com/mozilla-spidermonkey/wasmtime?rev=3b01b4b850bafb981a04383198c0b50d041dc5ef#3b01b4b850bafb981a04383198c0b50d041dc5ef"
 dependencies = [
  "cranelift-codegen",
  "cranelift-entity 0.68.0",
