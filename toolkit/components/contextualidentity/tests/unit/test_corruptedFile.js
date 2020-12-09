@@ -90,7 +90,7 @@ add_task(async function corruptedFile() {
   );
 
   // Let's create a corrupted file.
-  await IOUtils.writeAtomicUTF8(TEST_STORE_FILE_PATH, "{ vers", {
+  await IOUtils.writeUTF8(TEST_STORE_FILE_PATH, "{ vers", {
     tmpPath: TEST_STORE_FILE_PATH + ".tmp",
   });
 

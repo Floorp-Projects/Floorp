@@ -139,7 +139,7 @@ async function startProfilerAndTriggerFileIO({
   info("Write to the file, but do so using a background thread.");
 
   // IOUtils handles file operations using a background thread.
-  await IOUtils.writeAtomic(path, new TextEncoder().encode("Test data."));
+  await IOUtils.write(path, new TextEncoder().encode("Test data."));
   const exists = await fileExists(path);
   ok(exists, `Created temporary file at: ${path}`);
 
