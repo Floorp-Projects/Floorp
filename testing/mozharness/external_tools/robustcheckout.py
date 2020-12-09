@@ -790,11 +790,14 @@ def _docheckout(
             # revision. This is not desired. But there's not a good API in
             # Mercurial to do this as one operation.
             with repo.wlock(), timeit("sparse_update_config", "sparse-update-config"):
-                fcounts = map(
-                    len,
-                    sparsemod._updateconfigandrefreshwdir(
-                        repo, [], [], [sparse_profile], force=True
-                    ),
+                # pylint --py3k: W1636
+                fcounts = list(
+                    map(
+                        len,
+                        sparsemod._updateconfigandrefreshwdir(
+                            repo, [], [], [sparse_profile], force=True
+                        ),
+                    )
                 )
 
                 repo.ui.status(

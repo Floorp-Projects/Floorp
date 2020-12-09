@@ -78,7 +78,8 @@ def runtests(setup_test_harness, binary, parser, request):
         assert len(tests) > 0
 
         manifest = TestManifest()
-        manifest.tests.extend(map(normalize, tests))
+        # pylint --py3k: W1636
+        manifest.tests.extend(list(map(normalize, tests)))
         options["manifestFile"] = manifest
         options.update(opts)
 

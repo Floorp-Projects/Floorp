@@ -94,7 +94,8 @@ def changelog(args):
         lines = [("* %s" if i == 0 else "  %s") % l for i, l in enumerate(lines)]
         return "\n".join(lines)
 
-    changelog = map(prettify, changelog)
+    # pylint --py3k: W1636
+    changelog = list(map(prettify, changelog))
     print("\n".join(changelog))
 
 
