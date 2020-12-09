@@ -10,15 +10,15 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var utils = SpecialPowers.getDOMWindowUtils(window);
   var subframe = document.getElementById('subframe');
 
   // layerize subframe
-  yield synthesizeNativeClickAndWaitForClickEvent(subframe, 10, 10, testDriver);
+  await promiseNativeClickAndClickEvent(subframe, 10, 10);
 
   // verify layerization
-  yield waitForAllPaints(() => setTimeout(testDriver, 0));
+  await promiseAllPaintsDone();
   ok(isLayerized("subframe"), "subframe should be layerized at this point");
   var subframeScrollId = utils.getViewId(subframe);
   ok(subframeScrollId > 0, "subframe should have a scroll id");
@@ -27,7 +27,7 @@ function* test(testDriver) {
   utils.disableApzForElement(subframe);
 
   // wait for the dust to settle
-  yield waitForAllPaints(() => setTimeout(testDriver, 0));
+  await promiseAllPaintsDone();
 
   // Check that the root element's displayport has at least 500px of vertical
   // displayport margin on either side. This will ensure that we can scroll
@@ -63,13 +63,13 @@ function* test(testDriver) {
   // advanceTimeAndRefresh has the additional advantage of freezing the refresh
   // driver which avoids any additional externally-triggered repaints from
   // erasing the symptoms of the bug.
-  yield waitForAllPaints(() => setTimeout(testDriver, 0));
+  await promiseAllPaintsDone();
   assertNotCheckerboarded(utils, subframeScrollId, "subframe");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
   </script>
   <style>
