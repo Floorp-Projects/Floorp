@@ -182,11 +182,11 @@ impl Example for App {
                         ExternalScrollId(0, PipelineId::dummy()),
                         ScrollClamping::ToContentBounds,
                     );
-                    txn.generate_frame();
+                    txn.generate_frame(0);
                 }
                 if let Some(zoom) = zoom {
                     txn.set_pinch_zoom(ZoomFactor::new(zoom));
-                    txn.generate_frame();
+                    txn.generate_frame(0);
                 }
             }
             winit::WindowEvent::CursorMoved { position: LogicalPosition { x, y }, .. } => {
@@ -207,7 +207,7 @@ impl Example for App {
                     ScrollClamping::ToContentBounds,
                 );
 
-                txn.generate_frame();
+                txn.generate_frame(0);
             }
             winit::WindowEvent::MouseInput { .. } => {
                 let results = api.hit_test(

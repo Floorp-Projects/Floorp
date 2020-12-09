@@ -104,7 +104,7 @@ impl Example for App {
                     &DirtyRect::All,
                 );
                 let mut txn = Transaction::new();
-                txn.generate_frame();
+                txn.generate_frame(0);
                 api.send_transaction(document_id, txn);
             }
             _ => {}

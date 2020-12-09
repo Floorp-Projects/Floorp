@@ -196,7 +196,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * In effect it is the webrender equivalent of (part of) the code in
    * AsyncCompositionManager.
    */
-  void SampleForWebRender(wr::TransactionWrapper& aTxn,
+  void SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
+                          wr::TransactionWrapper& aTxn,
                           const SampleTime& aSampleTime,
                           const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
 

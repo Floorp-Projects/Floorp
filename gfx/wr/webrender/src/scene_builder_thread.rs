@@ -687,7 +687,7 @@ impl SceneBuilderThread {
 
         Box::new(BuiltTransaction {
             document_id: txn.document_id,
-            render_frame: txn.generate_frame,
+            render_frame: txn.generate_frame.as_bool(),
             invalidate_rendered_frame: txn.invalidate_rendered_frame,
             built_scene,
             view: doc.view,
