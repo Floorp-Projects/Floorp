@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { Zap } from "./Zap";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
@@ -53,12 +53,13 @@ export const MultiStageAboutWelcome = props => {
 
   // Transition to next screen, opening about:home on last screen button CTA
   const handleTransition =
-    index < props.screens.length
-      ? useCallback(() => setScreenIndex(prevState => prevState + 1), [])
-      : AboutWelcomeUtils.handleUserAction({
-          type: "OPEN_ABOUT_PAGE",
-          data: { args: "home", where: "current" },
-        });
+    index < props.screens.length - 1
+      ? () => setScreenIndex(prevState => prevState + 1)
+      : () =>
+          AboutWelcomeUtils.handleUserAction({
+            type: "OPEN_ABOUT_PAGE",
+            data: { args: "home", where: "current" },
+          });
 
   // Update top sites with default sites by region when region is available
   const [region, setRegion] = useState(null);

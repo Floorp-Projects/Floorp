@@ -130,6 +130,11 @@ class AboutWelcomeChild extends JSWindowActorChild {
     };
 
     listener.onLocationChange = (aWebProgress, aRequest, aLocation, aFlags) => {
+      // Exit if actor 'AboutWelcome' has already been destroyed or
+      // content window doesn't exist
+      if (!this.manager || !this.contentWindow) {
+        return;
+      }
       log.debug(`onLocationChange handled: ${aWebProgress.DOMWindow}`);
       this.AWSendToParent("LOCATION_CHANGED");
     };

@@ -7,5 +7,6 @@
 module.exports = {
   rules: {
     "import/no-commonjs": 2,
+    "react/jsx-no-bind": 0,
   },
 };

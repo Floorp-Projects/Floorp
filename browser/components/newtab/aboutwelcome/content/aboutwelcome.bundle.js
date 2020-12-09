@@ -377,7 +377,7 @@ const MultiStageAboutWelcome = props => {
     })();
   }, [metricsFlowUri]); // Transition to next screen, opening about:home on last screen button CTA
 
-  const handleTransition = index < props.screens.length ? Object(react__WEBPACK_IMPORTED_MODULE_0__["useCallback"])(() => setScreenIndex(prevState => prevState + 1), []) : _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].handleUserAction({
+  const handleTransition = index < props.screens.length - 1 ? () => setScreenIndex(prevState => prevState + 1) : () => _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].handleUserAction({
     type: "OPEN_ABOUT_PAGE",
     data: {
       args: "home",
