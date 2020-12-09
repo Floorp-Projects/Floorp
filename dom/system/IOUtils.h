@@ -63,15 +63,13 @@ class IOUtils final {
                                             const nsAString& aPath,
                                             const ReadUTF8Options& aOptions);
 
-  static already_AddRefed<Promise> Write(GlobalObject& aGlobal,
-                                         const nsAString& aPath,
-                                         const Uint8Array& aData,
-                                         const WriteOptions& aOptions);
+  static already_AddRefed<Promise> WriteAtomic(
+      GlobalObject& aGlobal, const nsAString& aPath, const Uint8Array& aData,
+      const WriteAtomicOptions& aOptions);
 
-  static already_AddRefed<Promise> WriteUTF8(GlobalObject& aGlobal,
-                                             const nsAString& aPath,
-                                             const nsAString& aString,
-                                             const WriteOptions& aOptions);
+  static already_AddRefed<Promise> WriteAtomicUTF8(
+      GlobalObject& aGlobal, const nsAString& aPath, const nsAString& aString,
+      const WriteAtomicOptions& aOptions);
 
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
@@ -108,25 +106,20 @@ class IOUtils final {
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
 
+  static bool IsAbsolutePath(const nsAString& aPath);
+
  private:
   ~IOUtils() = default;
 
-  template <typename T>
-  using IOPromise = MozPromise<T, IOError, true>;
-
   friend class IOUtilsShutdownBlocker;
   struct InternalFileInfo;
-  struct InternalWriteOpts;
+  struct InternalWriteAtomicOpts;
   class MozLZ4;
 
   static StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
       sBackgroundEventTarget;
   static StaticRefPtr<nsIAsyncShutdownClient> sBarrier;
   static Atomic<bool> sShutdownStarted;
-
-  template <typename OkT, typename Fn, typename... Args>
-  static RefPtr<IOUtils::IOPromise<OkT>> InvokeToIOPromise(Fn aFunc,
-                                                           Args... aArgs);
 
   static already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier();
 
@@ -150,14 +143,10 @@ class IOUtils final {
                                      JS::MutableHandle<JS::Value> aValue);
 
   /**
-   * Resolves |aPromise| with an appropriate JS value for |aValue|.
-   */
-  template <typename T>
-  static void ResolveJSPromise(Promise* aPromise, const T& aValue);
-  /**
    * Rejects |aPromise| with an appropriate |DOMException| describing |aError|.
    */
-  static void RejectJSPromise(Promise* aPromise, const IOError& aError);
+  static void RejectJSPromise(const RefPtr<Promise>& aPromise,
+                              const IOError& aError);
 
   /**
    * Attempts to read the entire file at |aPath| into a buffer.
@@ -199,9 +188,9 @@ class IOUtils final {
    * @return The number of bytes written to the file, or an error if the write
    *         failed or was incomplete.
    */
-  static Result<uint32_t, IOError> WriteSync(
+  static Result<uint32_t, IOError> WriteAtomicSync(
       nsIFile* aFile, const Span<const uint8_t>& aByteArray,
-      const InternalWriteOpts& aOptions);
+      const InternalWriteAtomicOpts& aOptions);
 
   /**
    * Attempt to write the entirety of |aUTF8String| to the file at |aFile|.
@@ -215,9 +204,23 @@ class IOUtils final {
    * @return The number of bytes written to the file, or an error if the write
    *         failed or was incomplete.
    */
-  static Result<uint32_t, IOError> WriteUTF8Sync(
+  static Result<uint32_t, IOError> WriteAtomicUTF8Sync(
       nsIFile* aFile, const nsCString& aUTF8String,
-      const InternalWriteOpts& aOptions);
+      const InternalWriteAtomicOpts& aOptions);
+
+  /**
+   * Attempts to write |aBytes| to the file pointed by |aFd|.
+   *
+   * @param aFd    An open PRFileDesc for the destination file to be
+   *               overwritten.
+   * @param aFile  The location of the file.
+   * @param aBytes The data to write to the file.
+   *
+   * @return The number of bytes written to the file, or an error if the write
+   *         failed or was incomplete.
+   */
+  static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd, nsIFile* aFile,
+                                             const Span<const uint8_t>& aBytes);
 
   /**
    * Attempts to move the file located at |aSourceFile| to |aDestFile|.
@@ -407,30 +410,30 @@ class IOUtils::IOError {
  */
 struct IOUtils::InternalFileInfo {
   nsString mPath;
-  FileType mType = FileType::Other;
-  uint64_t mSize = 0;
-  uint64_t mLastModified = 0;
+  FileType mType;
+  uint64_t mSize;
+  uint64_t mLastModified;
   Maybe<uint64_t> mCreationTime;
-  uint32_t mPermissions = 0;
+  uint32_t mPermissions;
 };
 
 /**
  * This is an easier to work with representation of a
- * |mozilla::dom::WriteOptions| for private use in the |IOUtils|
+ * |mozilla::dom::WriteAtomicOptions| for private use in the |IOUtils|
  * implementation.
  *
  * Because web IDL dictionaries are not easily copy/moveable, this class is
  * used instead.
  */
-struct IOUtils::InternalWriteOpts {
+struct IOUtils::InternalWriteAtomicOpts {
   RefPtr<nsIFile> mBackupFile;
+  bool mFlush;
+  bool mNoOverwrite;
   RefPtr<nsIFile> mTmpFile;
-  bool mFlush = false;
-  bool mNoOverwrite = false;
-  bool mCompress = false;
+  bool mCompress;
 
-  static Result<InternalWriteOpts, IOUtils::IOError> FromBinding(
-      const WriteOptions& aOptions);
+  static Result<InternalWriteAtomicOpts, IOUtils::IOError> FromBinding(
+      const WriteAtomicOptions& aOptions);
 };
 
 /**
