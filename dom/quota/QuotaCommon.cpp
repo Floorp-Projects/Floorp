@@ -9,6 +9,9 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
+#include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TextUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIFile.h"
@@ -27,6 +30,8 @@
 #endif
 
 namespace mozilla::dom::quota {
+
+using namespace mozilla::Telemetry;
 
 namespace {
 
@@ -306,6 +311,30 @@ void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
 
     console->LogStringMessage(message.get());
   }
+
+#  ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+  if (const auto contextIt = extraInfos.find(ScopedLogExtraInfo::kTagContext);
+      contextIt != extraInfos.cend()) {
+    // For now, we don't include aExpr in the telemetry event. It might help to
+    // match locations across versions, but they might be large.
+    auto extra = Some([&] {
+      auto res = CopyableTArray<EventExtraEntry>{};
+      res.SetCapacity(5);
+      res.AppendElement(EventExtraEntry{"module"_ns, aModule});
+      res.AppendElement(EventExtraEntry{"source_file"_ns,
+                                        nsCString(GetLeafName(aSourceFile))});
+      res.AppendElement(
+          EventExtraEntry{"source_line"_ns, IntToCString(aSourceLine)});
+      res.AppendElement(EventExtraEntry{
+          "context"_ns, nsPromiseFlatCString{*contextIt->second}});
+
+      return res;
+    }());
+
+    Telemetry::RecordEvent(Telemetry::EventID::DomQuotaTry_Error_Step,
+                           Nothing(), extra);
+  }
+#  endif
 #endif
 }
 
