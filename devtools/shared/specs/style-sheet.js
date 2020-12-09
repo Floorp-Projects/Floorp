@@ -36,11 +36,10 @@ const styleSheetSpec = generateActorSpec({
   },
 
   methods: {
-    // @backward-compat { version 81 }
-    toggleDisabled: {
-      response: { disabled: RetVal("boolean") },
-    },
-    // @backward-compat { version 81 }
+    // This is only called from StyleSheetFront#guessIndentation, which is only called
+    // from RuleRewriter#getDefaultIndentation when the rule's parent stylesheet isn't
+    // a resource. Once we support StyleSheet resource everywhere, this method can be
+    // removed (See Bug 1672090 for more information).
     getText: {
       response: {
         text: RetVal("longstring"),
@@ -50,13 +49,6 @@ const styleSheetSpec = generateActorSpec({
       request: {},
       response: {
         mediaRules: RetVal("nullable:array:mediarule"),
-      },
-    },
-    // @backward-compat { version 81 }
-    update: {
-      request: {
-        text: Arg(0, "string"),
-        transition: Arg(1, "boolean"),
       },
     },
   },
