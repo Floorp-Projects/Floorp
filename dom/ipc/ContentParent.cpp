@@ -664,6 +664,10 @@ void ContentParent::StartUp() {
     return;
   }
 
+  // From this point on, NS_WARNING, NS_ASSERTION, etc. should print out the
+  // PID along with the warning.
+  nsDebugImpl::SetMultiprocessMode("Parent");
+
   // Note: This reporter measures all ContentParents.
   RegisterStrongMemoryReporter(new ContentParentsMemoryReporter());
 
@@ -2575,10 +2579,6 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
   sContentParents->insertBack(this);
 
   mMessageManager = nsFrameMessageManager::NewProcessMessageManager(true);
-
-  // From this point on, NS_WARNING, NS_ASSERTION, etc. should print out the
-  // PID along with the warning.
-  nsDebugImpl::SetMultiprocessMode("Parent");
 
 #if defined(XP_WIN)
   if (XRE_IsParentProcess()) {
