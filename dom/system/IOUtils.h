@@ -143,8 +143,7 @@ class IOUtils final {
   /**
    * Rejects |aPromise| with an appropriate |DOMException| describing |aError|.
    */
-  static void RejectJSPromise(const RefPtr<Promise>& aPromise,
-                              const IOError& aError);
+  static void RejectJSPromise(Promise* aPromise, const IOError& aError);
 
   /**
    * Attempts to read the entire file at |aPath| into a buffer.
