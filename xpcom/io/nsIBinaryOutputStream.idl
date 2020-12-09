@@ -24,7 +24,7 @@ native Bytes(mozilla::Span<const uint8_t>);
  * @See nsIBinaryInputStream
  */
 
-[scriptable, uuid(204ee610-8765-11d3-90cf-0040056a906e)]
+[scriptable, builtinclass, uuid(204ee610-8765-11d3-90cf-0040056a906e)]
 interface nsIBinaryOutputStream : nsIOutputStream {
     void setOutputStream(in nsIOutputStream aOutputStream);
 
