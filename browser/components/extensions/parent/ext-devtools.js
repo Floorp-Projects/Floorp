@@ -320,10 +320,15 @@ this.devtools = class extends ExtensionAPI {
 
     /* eslint-disable mozilla/balanced-listeners */
     extension.on("add-permissions", (ignoreEvent, permissions) => {
+      Services.prefs.setBoolPref(
+        `${getDevToolsPrefBranchName(extension.id)}.enabled`,
+        true
+      );
       if (permissions.permissions.includes("devtools")) {
         this._initialize();
       }
     });
+
     extension.on("remove-permissions", (ignoreEvent, permissions) => {
       Services.prefs.setBoolPref(
         `${getDevToolsPrefBranchName(extension.id)}.enabled`,
