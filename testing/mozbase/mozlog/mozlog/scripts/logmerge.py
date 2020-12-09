@@ -19,6 +19,7 @@ def dump_entry(entry, output):
 
 
 def fill_process_info(event):
+    # pylint: disable=W1633
     event["time"] = int(round(time.time() * 1000))
     event["thread"] = current_thread().name
     event["pid"] = os.getpid()
