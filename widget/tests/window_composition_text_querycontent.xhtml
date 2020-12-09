@@ -5377,6 +5377,7 @@ function runBug1675313Test()
     count++;
   }
 
+  input.addEventListener("keydown", handler);
   input.addEventListener("keyup", handler);
 
   synthesizeCompositionChange({
@@ -5395,7 +5396,7 @@ function runBug1675313Test()
   });
   synthesizeComposition({type: "compositioncommitasis"});
 
-  is(count, 3, "runBug1675313Test: keyup event is fired correctly");
+  is(count, 6, "runBug1675313Test: keydown event and keyup event are fired correctly");
   is(input.value, "b",
      "runBug1675313Test: re-focus element doesn't commit composition if re-focus isn't click by user");
 
