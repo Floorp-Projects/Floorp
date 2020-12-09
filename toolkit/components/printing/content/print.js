@@ -20,7 +20,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/DeferredTask.jsm"
 );
 
-const PDF_JS_URI = "resource://pdf.js/web/viewer.html";
 const INPUT_DELAY_MS = Cu.isInAutomation ? 100 : 500;
 const MM_PER_POINT = 25.4 / 72;
 const INCHES_PER_POINT = 1 / 72;
@@ -172,19 +171,12 @@ var PrintEventHandler = {
       existingBrowser.remove();
     }
 
-    let sourcePrincipal =
-      sourceBrowsingContext.currentWindowGlobal.documentPrincipal;
-    let sourceIsPdf =
-      !sourcePrincipal.isNullPrincipal && sourcePrincipal.spec == PDF_JS_URI;
     this.originalSourceContentTitle =
       sourceBrowsingContext.currentWindowContext.documentTitle;
     this.originalSourceCurrentURI =
       sourceBrowsingContext.currentWindowContext.documentURI.spec;
 
     this.printForm = document.getElementById("print");
-    if (sourceIsPdf) {
-      this.printForm.removeNonPdfSettings();
-    }
 
     // Let the dialog appear before doing any potential main thread work.
     await ourBrowser._dialogReady;
@@ -1657,17 +1649,6 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
       "print.pages_per_sheet.enabled",
       false
     );
-  }
-
-  removeNonPdfSettings() {
-    let selectors = ["#margins", "#headers-footers", "#backgrounds"];
-    for (let selector of selectors) {
-      this.querySelector(selector).remove();
-    }
-    let moreSettings = this.querySelector("#more-settings-options");
-    if (moreSettings.children.length <= 1) {
-      moreSettings.remove();
-    }
   }
 
   requestPrint() {
