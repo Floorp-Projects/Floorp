@@ -85,7 +85,9 @@ class FunctionFlags {
     RESOLVED_NAME = 1 << 13,
     RESOLVED_LENGTH = 1 << 14,
 
-    // (1 << 15 is unused)
+    // For a function used as an interpreted constructor, whether a 'new' type
+    // had constructor information cleared.
+    NEW_SCRIPT_CLEARED = 1 << 15,
 
     // Shifted form of FunctionKinds.
     NORMAL_KIND = NormalFunction << FUNCTION_KIND_SHIFT,
@@ -114,7 +116,7 @@ class FunctionFlags {
     INTERPRETED_METHOD = BASESCRIPT | METHOD_KIND,
 
     // Flags that XDR ignores. See also: js::BaseScript::MutableFlags.
-    MUTABLE_FLAGS = RESOLVED_NAME | RESOLVED_LENGTH,
+    MUTABLE_FLAGS = RESOLVED_NAME | RESOLVED_LENGTH | NEW_SCRIPT_CLEARED,
 
     // Flags preserved when cloning a function. (Exception:
     // js::MakeDefaultConstructor produces default constructors for ECMAScript
@@ -172,8 +174,8 @@ class FunctionFlags {
   bool isConstructor() const { return hasFlags(CONSTRUCTOR); }
 
   bool isNonBuiltinConstructor() const {
-    // Note: keep this in sync with branchIfNotFunctionIsNonBuiltinCtor in
-    // MacroAssembler.cpp.
+    // Note: keep this in sync with emitGuardFunctionIsNonBuiltinCtor in
+    // {CacheIRCompiler, WarpCacheIRTranspiler}.cpp.
     return hasFlags(BASESCRIPT) && hasFlags(CONSTRUCTOR) &&
            !hasFlags(SELF_HOSTED);
   }
@@ -296,7 +298,12 @@ class FunctionFlags {
   void setResolvedLength() { setFlags(RESOLVED_LENGTH); }
   void setResolvedName() { setFlags(RESOLVED_NAME); }
 
+  // Mark a function as having its 'new' script information cleared.
+  bool wasNewScriptCleared() const { return hasFlags(NEW_SCRIPT_CLEARED); }
+  void setNewScriptCleared() { setFlags(NEW_SCRIPT_CLEARED); }
+
   void setInferredName() { setFlags(HAS_INFERRED_NAME); }
+  void clearInferredName() { clearFlags(HAS_INFERRED_NAME); }
 
   void setGuessedAtom() { setFlags(HAS_GUESSED_ATOM); }
 

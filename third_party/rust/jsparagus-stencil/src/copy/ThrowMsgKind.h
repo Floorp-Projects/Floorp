@@ -9,7 +9,7 @@
 
 #include <stdint.h>  // uint8_t
 
-#include "js/friend/ErrorMessages.h"  // JSErrNum
+#include "jsfriendapi.h"  // JSErrNum
 
 namespace js {
 
