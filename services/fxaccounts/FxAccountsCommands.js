@@ -57,19 +57,6 @@ class FxAccountsCommands {
     const { sessionToken } = await this._fxai.getUserAccountData([
       "sessionToken",
     ]);
-    let pushState;
-    if (!device.pushCallback) {
-      pushState = "noCallback";
-    } else if (device.pushEndpointExpired) {
-      pushState = "expiredCallback";
-    } else {
-      pushState = "ok";
-    }
-    Services.telemetry.keyedScalarAdd(
-      "identity.fxaccounts.push_state_command_target",
-      pushState,
-      1
-    );
     const client = this._fxai.fxAccountsClient;
     const now = Date.now();
     if (now < this._invokeRateLimitExpiry) {
@@ -113,7 +100,6 @@ class FxAccountsCommands {
     // Whether the call to `pollDeviceCommands` was initiated by a Push message from the FxA
     // servers in response to a message being received or simply scheduled in order
     // to fetch missed messages.
-    const scheduledFetch = notifiedIndex == 0;
     if (
       !Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)
     ) {
@@ -140,12 +126,6 @@ class FxAccountsCommands {
           device: { ...device, lastCommandIndex: index },
         });
         log.info(`Handling ${messages.length} messages`);
-        if (scheduledFetch) {
-          Services.telemetry.scalarAdd(
-            "identity.fxaccounts.missed_commands_fetched",
-            messages.length
-          );
-        }
         await this._handleCommands(messages, notifiedIndex);
       }
     });
