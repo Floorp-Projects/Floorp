@@ -6,8 +6,10 @@ package org.mozilla.fenix.home.intent
 
 import android.content.Intent
 import androidx.navigation.NavController
+import androidx.navigation.navOptions
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.nav
@@ -22,25 +24,25 @@ class StartSearchIntentProcessor(
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         val event = intent.extras?.getString(HomeActivity.OPEN_TO_SEARCH)
-        var source: Event.PerformedSearch.SearchAccessPoint? = null
         return if (event != null) {
-            when (event) {
+            val source = when (event) {
                 SEARCH_WIDGET -> {
                     metrics.track(Event.SearchWidgetNewTabPressed)
-                    source = Event.PerformedSearch.SearchAccessPoint.WIDGET
+                    Event.PerformedSearch.SearchAccessPoint.WIDGET
                 }
                 STATIC_SHORTCUT_NEW_TAB -> {
                     metrics.track(Event.PrivateBrowsingStaticShortcutTab)
-                    source = Event.PerformedSearch.SearchAccessPoint.SHORTCUT
+                    Event.PerformedSearch.SearchAccessPoint.SHORTCUT
                 }
                 STATIC_SHORTCUT_NEW_PRIVATE_TAB -> {
                     metrics.track(Event.PrivateBrowsingStaticShortcutPrivateTab)
-                    source = Event.PerformedSearch.SearchAccessPoint.SHORTCUT
+                    Event.PerformedSearch.SearchAccessPoint.SHORTCUT
                 }
                 PRIVATE_BROWSING_PINNED_SHORTCUT -> {
                     metrics.track(Event.PrivateBrowsingPinnedShortcutPrivateTab)
-                    source = Event.PerformedSearch.SearchAccessPoint.SHORTCUT
+                    Event.PerformedSearch.SearchAccessPoint.SHORTCUT
                 }
+                else -> null
             }
 
             out.removeExtra(HomeActivity.OPEN_TO_SEARCH)
@@ -51,7 +53,12 @@ class StartSearchIntentProcessor(
                     searchAccessPoint = it
                 )
             }
-            directions?.let { navController.nav(null, it) }
+            directions?.let {
+                val options = navOptions {
+                    popUpTo = R.id.homeFragment
+                }
+                navController.nav(null, it, options)
+            }
             true
         } else {
             false

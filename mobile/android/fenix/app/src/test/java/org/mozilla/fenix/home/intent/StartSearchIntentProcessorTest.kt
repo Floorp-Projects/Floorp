@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.intent
 
 import android.content.Intent
 import androidx.navigation.NavController
+import androidx.navigation.navOptions
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
@@ -13,8 +14,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -51,15 +54,19 @@ class StartSearchIntentProcessorTest {
             putExtra(HomeActivity.OPEN_TO_SEARCH, StartSearchIntentProcessor.SEARCH_WIDGET)
         }
         StartSearchIntentProcessor(metrics).process(intent, navController, out)
+        val options = navOptions {
+            popUpTo = R.id.homeFragment
+        }
 
         verify { metrics.track(Event.SearchWidgetNewTabPressed) }
         verify {
-            navController.navigate(
+            navController.nav(
+                null,
                 NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
                     searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.WIDGET
                 ),
-                null
+                options
             )
         }
         verify { out.removeExtra(HomeActivity.OPEN_TO_SEARCH) }

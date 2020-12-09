@@ -25,7 +25,9 @@
 
     <action
         android:id="@+id/action_global_search_dialog"
-        app:destination="@id/searchDialogFragment" />
+        app:destination="@id/searchDialogFragment"
+        app:popUpTo="@id/searchDialogFragment"
+        app:popUpToInclusive="true"/>
 
     <action
         android:id="@+id/action_global_recently_closed"
@@ -109,7 +111,9 @@
         app:destination="@id/quickSettingsSheetDialogFragment" />
     <action
         android:id="@+id/action_global_tabTrayDialogFragment"
-        app:destination="@id/tabTrayDialogFragment" />
+        app:destination="@id/tabTrayDialogFragment"
+        app:popUpTo="@id/tabTrayDialogFragment"
+        app:popUpToInclusive="true"/>
     <action
         android:id="@+id/action_global_savedLoginsAuthFragment"
         app:destination="@id/savedLoginsAuthFragment" />
@@ -204,9 +208,6 @@
         <action
             android:id="@+id/action_browserFragment_to_trackingProtectionPanelDialogFragment"
             app:destination="@id/trackingProtectionPanelDialogFragment" />
-        <action
-            android:id="@+id/action_browserFragment_to_tabsTrayFragment"
-            app:destination="@+id/tabTrayFragment" />
     </fragment>
 
     <fragment
