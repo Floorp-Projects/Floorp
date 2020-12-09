@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import
 
+import six
 import json
 import os
 import re
@@ -61,11 +62,10 @@ POST_DELAY_DEBUG = 3000
 POST_DELAY_DEFAULT = 30000
 
 
+@six.add_metaclass(ABCMeta)
 class Perftest(object):
     """Abstract base class for perftests that execute via a subharness,
     either Raptor or browsertime."""
-
-    __metaclass__ = ABCMeta
 
     def __init__(
         self,

@@ -19,10 +19,9 @@ from logger.logger import RaptorLogger
 LOG = RaptorLogger(component="perftest-output")
 
 
+@six.add_metaclass(ABCMeta)
 class PerftestOutput(object):
     """Abstract base class to handle output of perftest results"""
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, results, supporting_data, subtest_alert_on):
         """

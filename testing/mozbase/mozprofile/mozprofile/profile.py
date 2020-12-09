@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import six
 import json
 import os
 import platform
@@ -31,9 +32,8 @@ __all__ = [
 ]
 
 
+@six.add_metaclass(ABCMeta)
 class BaseProfile(object):
-    __metaclass__ = ABCMeta
-
     def __init__(self, profile=None, addons=None, preferences=None, restore=True):
         """Create a new Profile.
 
