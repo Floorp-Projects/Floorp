@@ -83,10 +83,8 @@ class MediaControlService final : public nsIObserver {
 
   // These functions are used to update the variable which would be used for
   // telemetry probe.
-  void NotifyMediaControlHasEverBeenUsed() { mHasEverUsedMediaControl = true; }
-  void NotifyMediaControlHasEverBeenEnabled() {
-    mHasEverEnabledMediaControl = true;
-  }
+  void NotifyMediaControlHasEverBeenUsed();
+  void NotifyMediaControlHasEverBeenEnabled();
 
  private:
   MediaControlService();
