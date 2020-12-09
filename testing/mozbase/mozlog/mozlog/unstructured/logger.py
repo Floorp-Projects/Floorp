@@ -105,6 +105,7 @@ class JSONFormatter(Formatter):
 
     def format(self, record):
         # Default values determined by logger metadata
+        # pylint: disable=W1633
         output = {
             "_time": int(round(record.created * 1000, 0)),
             "_namespace": record.name,

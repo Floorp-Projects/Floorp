@@ -391,6 +391,7 @@ class PerftestOutput(object):
             return filters.mean(_filter(vals, "Geometric Mean"))
 
         if testname.startswith("raptor-assorted-dom"):
+            # pylint: disable=W1633
             return round(filters.geometric_mean(_filter(vals)), 2)
 
         if testname.startswith("raptor-wasm-misc"):
@@ -402,6 +403,7 @@ class PerftestOutput(object):
             return filters.mean(_filter(vals, "first-interactive"))
 
         if testname.startswith("raptor-youtube-playback"):
+            # pylint: disable=W1633
             return round(filters.mean(_filter(vals)), 2)
 
         if testname.startswith("supporting_data"):
@@ -431,8 +433,10 @@ class PerftestOutput(object):
             raise NotImplementedError("Unit %s not suported" % unit)
 
         if len(vals) > 1:
+            # pylint: disable=W1633
             return round(filters.geometric_mean(_filter(vals)), 2)
 
+        # pylint: disable=W1633
         return round(filters.mean(_filter(vals)), 2)
 
     def parseSpeedometerOutput(self, test):
@@ -467,6 +471,7 @@ class PerftestOutput(object):
                         "name": sub,
                         "replicates": [],
                     }
+                # pylint: disable=W1633
                 _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
 
         vals = []
@@ -574,7 +579,10 @@ class PerftestOutput(object):
                         "name": sub,
                         "replicates": [],
                     }
-                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
+                # pylint: disable=W1633
+                _subtests[sub]["replicates"].extend(
+                    [float(round(x, 3)) for x in replicates]
+                )
 
         vals = []
         for name, test in _subtests.items():
@@ -680,8 +688,9 @@ class PerftestOutput(object):
         names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
+            # pylint: disable=W1633
             _subtests[name]["value"] = round(
-                filters.median(_subtests[name]["replicates"]), 2
+                float(filters.median(_subtests[name]["replicates"])), 2
             )
             subtests.append(_subtests[name])
             # only include dropped_frames values, without the %_dropped_frames values
@@ -1051,7 +1060,10 @@ class RaptorOutput(PerftestOutput):
                         "name": sub,
                         "replicates": [],
                     }
-                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
+                # pylint: disable=W1633
+                _subtests[sub]["replicates"].extend(
+                    [float(round(x, 3)) for x in replicates]
+                )
 
         vals = []
         subtests = []
@@ -1180,7 +1192,10 @@ class RaptorOutput(PerftestOutput):
                         "name": sub,
                         "replicates": [],
                     }
-                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
+                # pylint: disable=W1633
+                _subtests[sub]["replicates"].extend(
+                    [float(round(x, 3)) for x in replicates]
+                )
 
         vals = []
         subtests = []
@@ -1227,6 +1242,7 @@ class RaptorOutput(PerftestOutput):
             suite = list(page_cycle_results)[0]
             for sub in page_cycle_results[suite].keys():
                 try:
+                    # pylint: disable=W1633
                     replicate = round(
                         float(page_cycle_results[suite][sub]["frameLength"]["average"]),
                         3,
@@ -1273,7 +1289,10 @@ class RaptorOutput(PerftestOutput):
                         "name": sub,
                         "replicates": [],
                     }
-                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
+                # pylint: disable=W1633
+                _subtests[sub]["replicates"].extend(
+                    [float(round(x, 3)) for x in replicates]
+                )
 
         subtests = []
         vals = []
@@ -1323,8 +1342,9 @@ class RaptorOutput(PerftestOutput):
         names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]["value"] = round(
-                filters.median(_subtests[name]["replicates"]), 2
+            # pylint: disable=W1633
+            _subtests[name]["value"] = float(
+                round(filters.median(_subtests[name]["replicates"]), 2)
             )
             subtests.append(_subtests[name])
             # only use the 'total's to compute the overall result

@@ -457,7 +457,8 @@ def make_comparison_result(base_and_reference_results):
         _index = 0
         for next_ref in comp_results[subtest_index]["ref_runs"]:
             diff = abs(next_ref - comp_results[subtest_index]["base_runs"][_index])
-            comp_results[subtest_index]["runs"].append(round(diff, 3))
+            # pylint: disable=W1633
+            comp_results[subtest_index]["runs"].append(float(round(diff, 3)))
             _index += 1
 
         # increment our base vs reference subtest index

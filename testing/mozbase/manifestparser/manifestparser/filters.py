@@ -206,6 +206,7 @@ class chunk_by_slice(InstanceFilter):
             chunk_tests = [t for t in tests if "disabled" not in t]
 
         tests_per_chunk = float(len(chunk_tests)) / self.total_chunks
+        # pylint: disable=W1633
         start = int(round((self.this_chunk - 1) * tests_per_chunk))
         end = int(round(self.this_chunk * tests_per_chunk))
 
@@ -268,6 +269,7 @@ class chunk_by_dir(InstanceFilter):
                 ordered_dirs.append(path)
             tests_by_dir[path].append(test)
 
+        # pylint: disable=W1633
         tests_per_chunk = float(len(ordered_dirs)) / self.total_chunks
         start = int(round((self.this_chunk - 1) * tests_per_chunk))
         end = int(round(self.this_chunk * tests_per_chunk))
@@ -363,6 +365,7 @@ class chunk_by_runtime(InstanceFilter):
         # Compute the average to use as a default for manifests that don't exist.
         times = [r[0] for r in runtimes]
         # pylint --py3k W1619
+        # pylint: disable=W1633
         avg = round(sum(times) / len(times), 2) if times else 0
         missing = sorted([m for m in manifests if m not in self.runtimes])
         log(
@@ -394,6 +397,7 @@ class chunk_by_runtime(InstanceFilter):
         chunks = self.get_chunked_manifests(manifests)
         runtime, this_manifests = chunks[self.this_chunk - 1]
         # pylint --py3k W1619
+        # pylint: disable=W1633
         log(
             "Cumulative test runtime is around {} minutes (average is {} minutes)".format(
                 round(runtime / 60),
