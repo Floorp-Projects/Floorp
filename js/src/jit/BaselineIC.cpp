@@ -983,10 +983,8 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
   bool isOptimizedArgs = false;
   if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
     // Handle optimized arguments[i] access.
-    if (!GetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res,
-                                   &isOptimizedArgs)) {
-      return false;
-    }
+    isOptimizedArgs =
+        MaybeGetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res);
   }
 
   TryAttachGetPropStub("GetElem", cx, frame, stub, CacheKind::GetElem, lhs, rhs,

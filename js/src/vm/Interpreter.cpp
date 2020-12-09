@@ -3109,10 +3109,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       HandleValue rval = REGS.stackHandleAt(-1);
       MutableHandleValue res = REGS.stackHandleAt(-2);
 
-      bool done = false;
-      if (!GetElemOptimizedArguments(cx, REGS.fp(), lval, rval, res, &done)) {
-        goto error;
-      }
+      bool done =
+          MaybeGetElemOptimizedArguments(cx, REGS.fp(), lval, rval, res);
 
       if (!done) {
         if (!GetElementOperationWithStackIndex(cx, lval, lvalIndex, rval,

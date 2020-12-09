@@ -3339,7 +3339,7 @@
      *
      * Example 1: `arguments[0]` is supported; therefore the interpreter's
      * implementation of `JSOp::GetElem` checks for optimized arguments (see
-     * `GetElemOptimizedArguments`).
+     * `MaybeGetElemOptimizedArguments`).
      *
      * Example 2: `f.apply(this, arguments)` is supported; therefore our
      * implementation of `Function.prototype.apply` checks for optimized
