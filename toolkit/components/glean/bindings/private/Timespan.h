@@ -9,11 +9,16 @@
 
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 
 namespace mozilla::glean {
 
 namespace impl {
+extern "C" {
+void fog_timespan_start(uint32_t aId);
+void fog_timespan_stop(uint32_t aId);
+uint32_t fog_timespan_test_has_value(uint32_t aId, const char* aStorageName);
+int64_t fog_timespan_test_get_value(uint32_t aId, const char* aStorageName);
+}
 
 class TimespanMetric {
  public:
@@ -52,11 +57,11 @@ class TimespanMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<int64_t> TestGetValue(const nsACString& aStorageName) const {
-    if (!fog_timespan_test_has_value(mId, &aStorageName)) {
+  Maybe<int64_t> TestGetValue(const char* aStorageName) const {
+    if (!fog_timespan_test_has_value(mId, aStorageName)) {
       return Nothing();
     }
-    return Some(fog_timespan_test_get_value(mId, &aStorageName));
+    return Some(fog_timespan_test_get_value(mId, aStorageName));
   }
 
  private:

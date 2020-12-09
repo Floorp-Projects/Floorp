@@ -31,27 +31,17 @@ if CONFIG["MOZ_GLEAN"]:
         "bindings/private/Boolean.h",
         "bindings/private/Counter.h",
         "bindings/private/Datetime.h",
-        "bindings/private/Event.h",
         "bindings/private/String.h",
         "bindings/private/Timespan.h",
         "bindings/private/Uuid.h",
     ]
 
-    if CONFIG["COMPILE_ENVIRONMENT"]:
-        EXPORTS.mozilla.glean += [
-            "!fog_ffi_generated.h",
-        ]
-
-        CbindgenHeader("fog_ffi_generated.h", inputs=["/toolkit/components/glean"])
-
     UNIFIED_SOURCES += [
         "bindings/Category.cpp",
         "bindings/Glean.cpp",
         "bindings/private/Boolean.cpp",
-        "bindings/private/Common.cpp",
         "bindings/private/Counter.cpp",
         "bindings/private/Datetime.cpp",
-        "bindings/private/Event.cpp",
         "bindings/private/String.cpp",
         "bindings/private/Timespan.cpp",
         "bindings/private/Uuid.cpp",

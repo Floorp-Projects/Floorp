@@ -8,12 +8,16 @@
 #define mozilla_glean_GleanBoolean_h
 
 #include "nsIGleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 
 namespace mozilla {
 namespace glean {
 
 namespace impl {
+extern "C" {
+void fog_boolean_set(uint32_t id, bool value);
+uint8_t fog_boolean_test_has_value(uint32_t id, const char* storageName);
+uint8_t fog_boolean_test_get_value(uint32_t id, const char* storageName);
+}
 
 class BooleanMetric {
  public:
@@ -29,6 +33,24 @@ class BooleanMetric {
   /**
    * **Test-only API**
    *
+   * Tests whether a value is stored for the metric.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * Parent process only. Panics in child processes.
+   *
+   * @param aStorageName the name of the ping to retrieve the metric for.
+   * @return true if metric value exists, otherwise false
+   */
+  bool TestHasValue(const char* aStorageName) const {
+    return fog_boolean_test_has_value(mId, aStorageName) != 0;
+  }
+
+  /**
+   * **Test-only API**
+   *
    * Gets the currently stored value as a boolean.
    *
    * This function will attempt to await the last parent-process task (if any)
@@ -40,11 +62,8 @@ class BooleanMetric {
    *
    * @return value of the stored metric.
    */
-  Maybe<bool> TestGetValue(const nsACString& aStorageName) const {
-    if (!fog_boolean_test_has_value(mId, &aStorageName)) {
-      return Nothing();
-    }
-    return Some(fog_boolean_test_get_value(mId, &aStorageName));
+  bool TestGetValue(const char* aStorageName) const {
+    return fog_boolean_test_get_value(mId, aStorageName) != 0;
   }
 
  private:

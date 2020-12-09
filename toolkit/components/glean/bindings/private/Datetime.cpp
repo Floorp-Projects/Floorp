@@ -32,7 +32,7 @@ GleanDatetime::Set(PRTime aValue, uint8_t aOptionalArgc) {
 NS_IMETHODIMP
 GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                             JS::MutableHandleValue aResult) {
-  auto result = mDatetime.TestGetValue(aStorageName);
+  auto result = mDatetime.TestGetValue(PromiseFlatCString(aStorageName).get());
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
