@@ -13,6 +13,7 @@ const CAT_PREF = "browser.contentblocking.category";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const STP_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
+const LEVEL2_PREF = "privacy.annotate_channels.strict_list.enabled";
 const PREF_TEST_NOTIFICATIONS =
   "browser.safebrowsing.test-notifications.enabled";
 const STRICT_PREF = "browser.contentblocking.features.strict";
@@ -283,6 +284,7 @@ add_task(async function testContentBlockingStandardCategory() {
     [FP_PREF]: null,
     [STP_PREF]: null,
     [CM_PREF]: null,
+    [LEVEL2_PREF]: null,
   };
 
   for (let pref in prefs) {
@@ -311,6 +313,10 @@ add_task(async function testContentBlockingStandardCategory() {
   Services.prefs.setBoolPref(STP_PREF, !Services.prefs.getBoolPref(STP_PREF));
   Services.prefs.setBoolPref(FP_PREF, !Services.prefs.getBoolPref(FP_PREF));
   Services.prefs.setBoolPref(CM_PREF, !Services.prefs.getBoolPref(CM_PREF));
+  Services.prefs.setBoolPref(
+    LEVEL2_PREF,
+    !Services.prefs.getBoolPref(LEVEL2_PREF)
+  );
 
   for (let pref in prefs) {
     switch (Services.prefs.getPrefType(pref)) {
@@ -371,6 +377,7 @@ add_task(async function testContentBlockingStandardCategory() {
 add_task(async function testContentBlockingStrictCategory() {
   Services.prefs.setBoolPref(TP_PREF, false);
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
+  Services.prefs.setBoolPref(LEVEL2_PREF, false);
   Services.prefs.setIntPref(
     NCB_PREF,
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
@@ -457,6 +464,20 @@ add_task(async function testContentBlockingStrictCategory() {
       case "-cm":
         is(
           Services.prefs.getBoolPref(CM_PREF),
+          false,
+          `${CM_PREF} has been set to false`
+        );
+        break;
+      case "lvl2":
+        is(
+          Services.prefs.getBoolPref(LEVEL2_PREF),
+          true,
+          `${CM_PREF} has been set to true`
+        );
+        break;
+      case "-lvl2":
+        is(
+          Services.prefs.getBoolPref(LEVEL2_PREF),
           false,
           `${CM_PREF} has been set to false`
         );
