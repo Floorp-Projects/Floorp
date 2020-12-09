@@ -107,6 +107,20 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
   checkEnabled(false);
   assertDevToolsExtensionEnabled(extension.uuid, false);
 
+  info("Close the developer toolbox");
+  await closeToolboxForTab(tab);
+
+  extension.sendMessage("request");
+  await extension.awaitMessage("done");
+
+  info("Open the developer toolbox");
+  openToolboxForTab(tab);
+
+  checkEnabled(true);
+
+  info("Wait the devtools page load");
+  await extension.awaitMessage("devtools_page_loaded");
+  assertDevToolsExtensionEnabled(extension.uuid, true);
   await extension.unload();
 
   await closeToolboxForTab(tab);
