@@ -9392,7 +9392,7 @@
 
 - name: privacy.partition.network_state
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 - name: privacy.partition.bloburl_per_agent_cluster
