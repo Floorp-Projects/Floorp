@@ -8,6 +8,7 @@ publish = false
 [dependencies]
 bincode = "1.0"
 chrono = "0.4.10"
+ffi-support = "0.4"
 glean = "33.7.0"
 glean-core = { version = "33.7.0", features = ["rkv-safe-mode"] }
 inherent = "0.1.4"
@@ -19,7 +20,6 @@ uuid = { version = "0.8.1", features = ["v4"] }
 xpcom = { path = "../../../../xpcom/rust/xpcom", optional = true }
 thiserror = "1.0.4"
 crossbeam-channel = "0.4.3"
-thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 
 [dev-dependencies]
 tempfile = "3.1.0"

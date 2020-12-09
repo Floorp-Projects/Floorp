@@ -13,7 +13,25 @@ interface nsIGleanBoolean : nsISupports
    *
    * @param value the value to set.
    */
+  [implicit_jscontext]
   void set(in bool value);
+
+  /**
+   * **Test-only API**
+   *
+   * Tests whether a value is stored for the metric.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * Parent process only. Panics in child processes.
+   *
+   * @param aStorageName the name of the ping to retrieve the metric for.
+   * @return true if metric value exists, otherwise false
+   */
+  [implicit_jscontext]
+  bool testHasValue(in ACString aStorageName);
 
   /**
    * **Test-only API**
@@ -27,9 +45,10 @@ interface nsIGleanBoolean : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric.
    */
-  jsval testGetValue(in AUTF8String aStorageName);
+  [implicit_jscontext]
+  bool testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(aa15fd20-1e8a-11eb-9bec-0800200c9a66)]
@@ -58,7 +77,7 @@ interface nsIGleanDatetime : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(05b89d2a-d57c-11ea-82da-3f63399a6f5a)]
@@ -85,7 +104,7 @@ interface nsIGleanCounter : nsISupports
    *
    * @return value of the stored metric, or undefined if there is no value.
    */
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(d84a3555-46f1-48c1-9122-e8e88b069d2b)]
@@ -96,7 +115,7 @@ interface nsIGleanString : nsISupports
   *
   * @param value The string to set the metric to.
   */
-  void set(in AUTF8String value);
+  void set(in ACString value);
 
   /**
    * **Test-only API**
@@ -113,7 +132,7 @@ interface nsIGleanString : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(2586530c-030f-11eb-93cb-cbf30d25225a)]
@@ -152,7 +171,7 @@ interface nsIGleanTimespan : nsISupports
    *
    * @return value of the stored metric, or undefined if there is no value.
    */
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };
 
 [scriptable, uuid(395700e7-06f6-46be-adcc-ea58977fda6d)]
@@ -163,7 +182,7 @@ interface nsIGleanUuid : nsISupports
    *
    * @param aValue The UUID to set the metric to.
    */
-  void set(in AUTF8String aValue);
+  void set(in ACString aValue);
 
   /**
    * Generate a new random UUID and set the metric to it.
@@ -185,34 +204,5 @@ interface nsIGleanUuid : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
-};
-
-[scriptable, uuid(1b01424a-1f55-11eb-92a5-0754f6c3f240)]
-interface nsIGleanEvent : nsISupports
-{
-  /*
-   * Record an event.
-   *
-   * @param aExtra An (optional) map of extra values.
-   */
-  [implicit_jscontext]
-  void record([optional] in jsval aExtra);
-
-  /**
-   * **Test-only API**
-   *
-   * Get a list of currently stored events for this event metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @return value of the stored metric.
-   */
-  [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue(in ACString aStorageName);
 };

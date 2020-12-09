@@ -17,20 +17,21 @@ NS_IMPL_ISUPPORTS_CI(GleanUuid, nsIGleanUuid)
 
 NS_IMETHODIMP
 GleanUuid::Set(const nsACString& aValue) {
-  mUuid.Set(aValue);
+  this->mUuid.Set(aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanUuid::GenerateAndSet() {
-  mUuid.GenerateAndSet();
+  this->mUuid.GenerateAndSet();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanUuid::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                         JS::MutableHandleValue aResult) {
-  auto result = mUuid.TestGetValue(aStorageName);
+  auto result =
+      this->mUuid.TestGetValue(PromiseFlatCString(aStorageName).get());
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {

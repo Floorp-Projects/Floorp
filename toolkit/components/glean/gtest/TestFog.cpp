@@ -4,10 +4,6 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/glean/GleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Tuple.h"
-#include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
 #include "nsString.h"
@@ -15,7 +11,6 @@
 
 using mozilla::Preferences;
 using namespace mozilla::glean;
-using namespace mozilla::glean::impl;
 
 #define DATA_PREF "datareporting.healthreport.uploadEnabled"
 
@@ -25,6 +20,9 @@ extern "C" {
 void GTest_FOG_ExpectFailure(const char* aMessage) {
   EXPECT_STREQ(aMessage, "");
 }
+
+nsresult fog_init();
+nsresult fog_submit_ping(const nsACString* aPingName);
 }
 
 // Initialize FOG exactly once.
@@ -60,7 +58,7 @@ TEST(FOG, TestCppCounterWorks)
 
   ASSERT_EQ(
       42,
-      mozilla::glean::test_only::bad_code.TestGetValue("test-ping"_ns).value());
+      mozilla::glean::test_only::bad_code.TestGetValue("test-ping").value());
 }
 
 TEST(FOG, TestCppStringWorks)
@@ -69,45 +67,45 @@ TEST(FOG, TestCppStringWorks)
   mozilla::glean::test_only::cheesy_string.Set(kValue);
 
   ASSERT_STREQ(kValue.get(), mozilla::glean::test_only::cheesy_string
-                                 .TestGetValue("test-ping"_ns)
+                                 .TestGetValue("test-ping")
                                  .value()
                                  .get());
 }
 
-TEST(FOG, TestCppTimespanWorks)
-{
-  mozilla::glean::test_only::can_we_time_it.Start();
-  PR_Sleep(PR_MillisecondsToInterval(10));
-  mozilla::glean::test_only::can_we_time_it.Stop();
-
-  ASSERT_TRUE(
-      mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping"_ns)
-          .value() > 0);
-}
+// TODO: to be enabled after changes from bug 1677455 are vendored.
+// TEST(FOG, TestCppTimespanWorks)
+// {
+//   mozilla::glean::test_only::can_we_time_it.Start();
+//   PR_Sleep(PR_MillisecondsToInterval(10));
+//   mozilla::glean::test_only::can_we_time_it.Stop();
+//
+//   ASSERT_TRUE(
+//       mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping")
+//           .value() > 0);
+// }
 
 TEST(FOG, TestCppUuidWorks)
 {
   nsCString kTestUuid("decafdec-afde-cafd-ecaf-decafdecafde");
   test_only::what_id_it.Set(kTestUuid);
-  ASSERT_STREQ(
-      kTestUuid.get(),
-      test_only::what_id_it.TestGetValue("test-ping"_ns).value().get());
+  ASSERT_STREQ(kTestUuid.get(),
+               test_only::what_id_it.TestGetValue("test-ping").value().get());
 
   test_only::what_id_it.GenerateAndSet();
   // Since we generate v4 UUIDs, and the first character of the third group
   // isn't 4, this won't ever collide with kTestUuid.
-  ASSERT_STRNE(
-      kTestUuid.get(),
-      test_only::what_id_it.TestGetValue("test-ping"_ns).value().get());
+  ASSERT_STRNE(kTestUuid.get(),
+               test_only::what_id_it.TestGetValue("test-ping").value().get());
 }
 
 TEST(FOG, TestCppBooleanWorks)
 {
   mozilla::glean::test_only::can_we_flag_it.Set(false);
 
-  ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it
-                       .TestGetValue("test-ping"_ns)
-                       .value());
+  ASSERT_TRUE(
+      mozilla::glean::test_only::can_we_flag_it.TestHasValue("test-ping"));
+  ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it.TestGetValue(
+                       "test-ping"));
 }
 
 // TODO: to be enabled after changes from bug 1677448 are vendored.
@@ -119,21 +117,3 @@ TEST(FOG, TestCppBooleanWorks)
 //   auto received = test_only::what_a_date.TestGetValue("test-ping");
 //   ASSERT_STREQ(received.value().get(), "2020-11-06T12:10:35+05:00");
 // }
-
-using mozilla::MakeTuple;
-using mozilla::Tuple;
-using mozilla::glean::test_only_ipc::AnEventKeys;
-
-TEST(FOG, TestCppEventWorks)
-{
-  test_only_ipc::no_extra_event.Record();
-  ASSERT_TRUE(test_only_ipc::no_extra_event.TestGetValue("store1"_ns).isSome());
-
-  // Ugh, this API...
-  nsTArray<Tuple<test_only_ipc::AnEventKeys, nsCString>> extra;
-  nsCString val = "can set extras"_ns;
-  extra.AppendElement(MakeTuple(AnEventKeys::Extra1, val));
-
-  test_only_ipc::an_event.Record(std::move(extra));
-  ASSERT_TRUE(test_only_ipc::an_event.TestGetValue("store1"_ns).isSome());
-}

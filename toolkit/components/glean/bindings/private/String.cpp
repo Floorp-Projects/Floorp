@@ -17,14 +17,15 @@ NS_IMPL_ISUPPORTS_CI(GleanString, nsIGleanString)
 
 NS_IMETHODIMP
 GleanString::Set(const nsACString& aValue) {
-  mString.Set(aValue);
+  this->mString.Set(aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanString::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                           JS::MutableHandleValue aResult) {
-  auto result = mString.TestGetValue(aStorageName);
+  auto result =
+      this->mString.TestGetValue(PromiseFlatCString(aStorageName).get());
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {

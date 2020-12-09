@@ -11,16 +11,13 @@
 
 #include "mozilla/glean/MetricTypes.h"
 
-namespace mozilla::glean {
-
-enum class NoExtraKeys {};
-
+namespace mozilla {
+namespace glean {
 
 namespace test {
     /**
      * generated from test.boolean_metric
-     */
-    /**
+     *
      * A multi-line
      * description
      */
@@ -28,8 +25,7 @@ namespace test {
 
     /**
      * generated from test.counter_metric
-     */
-    /**
+     *
      * A multi-line
      * description
      */
@@ -37,8 +33,7 @@ namespace test {
 
     /**
      * generated from test.string_metric
-     */
-    /**
+     *
      * A multi-line
      * description
      */
@@ -46,8 +41,7 @@ namespace test {
 
     /**
      * generated from test.timespan_metric
-     */
-    /**
+     *
      * A multi-line
      * description
      */
@@ -57,8 +51,7 @@ namespace test {
 namespace test_nested {
     /**
      * generated from test.nested.uuid_metric
-     */
-    /**
+     *
      * A multi-line
      * description
      */
@@ -66,38 +59,14 @@ namespace test_nested {
 
     /**
      * generated from test.nested.datetime_metric
-     */
-    /**
+     *
      * A multi-line
      * description
      */
     constexpr impl::DatetimeMetric datetime_metric(15);
 
-    /**
-     * generated from test.nested.event_metric
-     */
-    /**
-     * A multi-line
-     * description
-     */
-    constexpr impl::EventMetric<uint32_t> event_metric(16);
-
-    /**
-     * generated from test.nested.event_metric_with_extra
-     */
-    enum class EventMetricWithExtraKeys : int32_t {
-        AnExtraKey,
-        AnotherExtraKey,
-    };
-
-    /**
-     * A multi-line
-     * description
-     */
-    constexpr impl::EventMetric<EventMetricWithExtraKeys> event_metric_with_extra(17);
-
 }
 
-} // namespace mozilla::glean
-
+} // namespace glean
+} // namespace mozilla
 #endif // mozilla_Metrics_h

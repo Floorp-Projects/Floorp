@@ -17,14 +17,15 @@ NS_IMPL_ISUPPORTS_CI(GleanCounter, nsIGleanCounter)
 
 NS_IMETHODIMP
 GleanCounter::Add(uint32_t aAmount) {
-  mCounter.Add(aAmount);
+  this->mCounter.Add(aAmount);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanCounter::TestGetValue(const nsACString& aStorageName,
                            JS::MutableHandleValue aResult) {
-  auto result = mCounter.TestGetValue(aStorageName);
+  auto result =
+      this->mCounter.TestGetValue(PromiseFlatCString(aStorageName).get());
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
