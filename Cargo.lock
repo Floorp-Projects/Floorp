@@ -1532,6 +1532,7 @@ dependencies = [
  "once_cell",
  "serde",
  "tempfile",
+ "thin-vec",
  "thiserror",
  "uuid",
  "xpcom",

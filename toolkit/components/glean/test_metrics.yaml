@@ -245,6 +245,8 @@ test_only.ipc:
     extra_keys:
       extra1:
         description: "Some extra data"
+      extra2:
+        description: "Some extra data again"
     description: |
       This is a test-only metric.
       Just recording some events.
@@ -261,6 +263,22 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+  no_extra_event:
+    type: event
+    description: |
+      This is a test-only metric.
+      Just recording some events without the extra fuss.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
   a_uuid:
     type: uuid
     description: |

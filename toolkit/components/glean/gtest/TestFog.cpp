@@ -4,6 +4,8 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/Tuple.h"
+#include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
 #include "nsString.h"
@@ -117,3 +119,21 @@ TEST(FOG, TestCppBooleanWorks)
 //   auto received = test_only::what_a_date.TestGetValue("test-ping");
 //   ASSERT_STREQ(received.value().get(), "2020-11-06T12:10:35+05:00");
 // }
+
+using mozilla::MakeTuple;
+using mozilla::Tuple;
+using mozilla::glean::test_only_ipc::AnEventKeys;
+
+TEST(FOG, TestCppEventWorks)
+{
+  test_only_ipc::no_extra_event.Record();
+  ASSERT_TRUE(test_only_ipc::no_extra_event.TestGetValue("store1"_ns).isSome());
+
+  // Ugh, this API...
+  nsTArray<Tuple<test_only_ipc::AnEventKeys, nsCString>> extra;
+  nsCString val = "can set extras"_ns;
+  extra.AppendElement(MakeTuple(AnEventKeys::Extra1, val));
+
+  test_only_ipc::an_event.Record(std::move(extra));
+  ASSERT_TRUE(test_only_ipc::an_event.TestGetValue("store1"_ns).isSome());
+}

@@ -8,6 +8,7 @@
 #include "mozilla/glean/Boolean.h"
 #include "mozilla/glean/Counter.h"
 #include "mozilla/glean/Datetime.h"
+#include "mozilla/glean/Event.h"
 #include "mozilla/glean/Timespan.h"
 #include "mozilla/glean/String.h"
 #include "mozilla/glean/Uuid.h"
