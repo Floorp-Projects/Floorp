@@ -88,10 +88,10 @@ int main()
 }
 ```
 
-- To compile the above example, you must include the rlbox header files in `build/_deps/rlbox-src/code/include`, the integration header files in `include/` and the lucet_sandbox library in `build/cargo/{debug or release}/librlbox_lucet_sandbox.a` (make sure to use the whole archive linker option). For instance, you can compile the above with
+- To compile the above example, you must include the rlbox header files in `build/_deps/rlbox-src/code/include`, the integration header files in `include/` and the lucet_sandbox library in `build/cargo/{debug or release}/librlbox_lucet_sandbox.a` (make sure to use the whole archive and the rdynamic linker options). For instance, you can compile the above with
 
 ```bash
-g++ -std=c++17 example.cpp -o example -I build/_deps/rlbox-src/code/include -I include -Wl,--whole-archive -l:build/cargo/debug/librlbox_lucet_sandbox.a -Wl,--no-whole-archive
+g++ -std=c++17 example.cpp -o example -I build/_deps/rlbox-src/code/include -I include -Wl,--whole-archive -l:build/cargo/debug/librlbox_lucet_sandbox.a -Wl,--no-whole-archive -Wl,-rdynamic
 ```
 
 ## Contributing Code

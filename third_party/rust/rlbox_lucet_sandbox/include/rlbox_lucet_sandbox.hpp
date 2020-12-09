@@ -510,7 +510,12 @@ protected:
     impl_create_sandbox(lucet_module_path, external_loads_exist, allow_stdio);
   }
 
-  inline void impl_destroy_sandbox() { lucet_drop_module(sandbox); }
+  inline void impl_destroy_sandbox() {
+    if (return_slot_size) {
+      impl_free_in_sandbox(return_slot);
+    }
+    lucet_drop_module(sandbox);
+  }
 
   template<typename T>
   inline void* impl_get_unsandboxed_pointer(T_PointerType p) const
@@ -713,9 +718,9 @@ protected:
         auto ptr =
           reinterpret_cast<T_Arg*>(impl_get_unsandboxed_pointer<T_Arg*>(slot));
         *ptr = arg;
-        allocations[0] = arg;
+        allocations[0] = slot;
         allocations++;
-        return ptr;
+        return slot;
       } else {
         return arg;
       }
