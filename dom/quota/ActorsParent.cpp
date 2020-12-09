@@ -3185,6 +3185,8 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
+    Telemetry::SetEventRecordingEnabled("dom.quota.try"_ns, true);
+
     gBasePath = new nsString();
 
     nsCOMPtr<nsIFile> baseDir;
@@ -3260,6 +3262,8 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
     gStorageName = nullptr;
 
     gBuildId = nullptr;
+
+    Telemetry::SetEventRecordingEnabled("dom.quota.try"_ns, false);
 
     return NS_OK;
   }
@@ -6468,6 +6472,9 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       Initialization::Storage,
       [&self = *this] { return static_cast<bool>(self.mStorageConnection); });
 
+  const auto contextLogExtraInfo = ScopedLogExtraInfo{
+      ScopedLogExtraInfo::kTagContext, "Initialization::Storage"_ns};
+
   QM_TRY_UNWRAP(auto storageFile, QM_NewLocalFile(mBasePath));
 
   QM_TRY(storageFile->Append(mStorageName + kSQLiteSuffix));
@@ -6934,6 +6941,9 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   const auto autoRecord = mInitializationInfo.RecordFirstInitializationAttempt(
       Initialization::TemporaryStorage,
       [&self = *this] { return self.mTemporaryStorageInitialized; });
+
+  const auto contextLogExtraInfo = ScopedLogExtraInfo{
+      ScopedLogExtraInfo::kTagContext, "Initialization::TemporaryStorage"_ns};
 
   nsresult rv;
 
