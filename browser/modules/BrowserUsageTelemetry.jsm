@@ -409,8 +409,7 @@ let BrowserUsageTelemetry = {
     getTelemetryClientId: async () => ClientID.getClientID(),
     getUpdateDirectory: () => Services.dirsvc.get("UpdRootD", Ci.nsIFile),
     readProfileCountFile: async path => IOUtils.readUTF8(path),
-    writeProfileCountFile: async (path, data) =>
-      IOUtils.writeAtomicUTF8(path, data),
+    writeProfileCountFile: async (path, data) => IOUtils.writeUTF8(path, data),
   },
 
   _inited: false,
