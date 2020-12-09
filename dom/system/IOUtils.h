@@ -106,8 +106,6 @@ class IOUtils final {
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
 
-  static bool IsAbsolutePath(const nsAString& aPath);
-
  private:
   ~IOUtils() = default;
 
