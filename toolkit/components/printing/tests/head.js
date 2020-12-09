@@ -4,17 +4,19 @@ const { MockFilePicker } = SpecialPowers;
 let pickerMocked = false;
 
 class PrintHelper {
-  static async withTestPage(testFn) {
+  static async withTestPage(testFn, pagePathname) {
     await SpecialPowers.pushPrefEnv({
       set: [["print.tab_modal.enabled", true]],
     });
-
-    let taskReturn = await BrowserTestUtils.withNewTab(
-      this.defaultTestPageUrl,
-      async function(browser) {
-        await testFn(new PrintHelper(browser));
-      }
-    );
+    let pageUrl = pagePathname
+      ? this.getTestPageUrl(pagePathname)
+      : this.defaultTestPageUrl;
+    info("withTestPage: " + pageUrl);
+    let taskReturn = await BrowserTestUtils.withNewTab(pageUrl, async function(
+      browser
+    ) {
+      await testFn(new PrintHelper(browser));
+    });
 
     await SpecialPowers.popPrefEnv();
 
@@ -27,12 +29,16 @@ class PrintHelper {
     return taskReturn;
   }
 
-  static get defaultTestPageUrl() {
+  static getTestPageUrl(pathName) {
     const testPath = getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
       "http://example.com"
     );
-    return testPath + "simplifyArticleSample.html";
+    return testPath + pathName;
+  }
+
+  static get defaultTestPageUrl() {
+    return this.getTestPageUrl("simplifyArticleSample.html");
   }
 
   static createMockPaper(paperProperties = {}) {
