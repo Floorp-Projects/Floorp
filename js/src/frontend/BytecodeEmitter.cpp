@@ -4909,22 +4909,31 @@ bool BytecodeEmitter::emitIf(TernaryNode* ifNode) {
   }
 
 if_again:
+  ParseNode* testNode = ifNode->kid1();
+  auto conditionKind = IfEmitter::ConditionKind::Positive;
+  if (testNode->isKind(ParseNodeKind::NotExpr)) {
+    testNode = testNode->as<UnaryNode>().kid();
+    conditionKind = IfEmitter::ConditionKind::Negative;
+  }
+
   if (!markStepBreakpoint()) {
     return false;
   }
 
-  /* Emit code for the condition before pushing stmtInfo. */
-  if (!emitTree(ifNode->kid1())) {
+  // Emit code for the condition before pushing stmtInfo.
+  // NOTE: NotExpr of testNode may be unwrapped, and in that case the negation
+  //       is handled by conditionKind.
+  if (!emitTree(testNode)) {
     return false;
   }
 
   ParseNode* elseNode = ifNode->kid3();
   if (elseNode) {
-    if (!ifThenElse.emitThenElse()) {
+    if (!ifThenElse.emitThenElse(conditionKind)) {
       return false;
     }
   } else {
-    if (!ifThenElse.emitThen()) {
+    if (!ifThenElse.emitThen(conditionKind)) {
       return false;
     }
   }
@@ -8482,11 +8491,20 @@ bool BytecodeEmitter::emitConditionalExpression(
     return false;
   }
 
-  if (!emitTree(&conditional.condition())) {
+  ParseNode* conditionNode = &conditional.condition();
+  auto conditionKind = IfEmitter::ConditionKind::Positive;
+  if (conditionNode->isKind(ParseNodeKind::NotExpr)) {
+    conditionNode = conditionNode->as<UnaryNode>().kid();
+    conditionKind = IfEmitter::ConditionKind::Negative;
+  }
+
+  // NOTE: NotExpr of conditionNode may be unwrapped, and in that case the
+  //       negation is handled by conditionKind.
+  if (!emitTree(conditionNode)) {
     return false;
   }
 
-  if (!cond.emitThenElse()) {
+  if (!cond.emitThenElse(conditionKind)) {
     return false;
   }
 
