@@ -17,6 +17,7 @@ $input-error-border: 1px solid $red-60;
 $input-error-boxshadow: textbox-shadow($red-60);
 $shadow-primary: 0 0 0 5px var(--newtab-card-active-outline-color);
 $shadow-secondary: 0 1px 4px 0 $grey-90-20;
+$newtab-focus-outline: 0 0 0 2px var(--newtab-focus-outline);
 
 // Default theme
 body {
@@ -93,6 +94,24 @@ body {
   --newtab-snippets-background-color: #{$white};
   --newtab-snippets-hairline-color: transparent;
 
+  // New New Tab
+  --newtab-focus-outline: #{$newtab-focus-outline};
+  --newtab-focus-border: #{$blue-60};
+  --newtab-focus-border-selected: #{$newtab-card-tint};
+  --newtab-primary-action-background: #{$blue-60};
+  --newtab-primary-action-background-off: #{$newtab-primary-action-background-off};
+  --customize-menu-primary-text-color: #{$newtab-card-primary-text-color};
+  --customize-menu-check-fill: #{$white};
+  --customize-menu-background: #{$white};
+  --customize-menu-secondary-action-background: #{$grey-10};
+  --customize-menu-secondary-action-background-hover: #{$grey-20};
+  --customize-menu-secondary-action-background-active: #{$newtab-card-secondary-action-background-active};
+  --customize-menu-seperator-line-color: #{$newtab-card-separator-line-color};
+  --customize-menu-first-shadow: #{$newtab-card-firstshadow};
+  --customize-menu-second-shadow: #{$newtab-card-secondshadow};
+  --customize-menu-primary-action-text: #{$white};
+  --customize-menu-line-color: #{$newtab-card-line-color};
+
   &[lwt-newtab-brighttext] {
     // General styles
     --newtab-background-color: #{$grey-80};
@@ -164,5 +183,23 @@ body {
     // Snippets
     --newtab-snippets-background-color: #{$grey-70};
     --newtab-snippets-hairline-color: #{$white-10};
+
+    // New New Tab
+    --newtab-focus-outline: #{$newtab-darktheme-focus-outline};
+    --newtab-focus-border: #{$newtab-darktheme-focus-border};
+    --newtab-focus-border-selected: #{$newtab-darktheme-focus-border-selected};
+    --newtab-primary-action-background: #{$newtab-darktheme-primary-action-background};
+    --newtab-primary-action-background-off: #{$newtab-darktheme-primary-action-background-off};
+    --customize-menu-primary-text-color: #{$newtab-card-darktheme-primary-text-color};
+    --customize-menu-check-fill: #{$newtab-card-darktheme-primary-text-color};
+    --customize-menu-background: #{$grey-70};
+    --customize-menu-secondary-action-background: #{$newtab-card-darktheme-secondary-action-background};
+    --customize-menu-secondary-action-background-hover: #{$newtab-card-darktheme-secondary-action-background-hover};
+    --customize-menu-secondary-action-background-active: #{$newtab-card-darktheme-secondary-action-background-active};
+    --customize-menu-seperator-line-color: #{$newtab-card-darktheme-separator-line-color};
+    --customize-menu-first-shadow: #{$newtab-card-darktheme-firstshadow};
+    --customize-menu-second-shadow: #{$newtab-darktheme-card-secondshadow};
+    --customize-menu-primary-action-text: #{$newtab-card-darktheme-primary-text-color};
+    --customize-menu-line-color: #{$newtab-card-darktheme-line-color};
   }
 }
