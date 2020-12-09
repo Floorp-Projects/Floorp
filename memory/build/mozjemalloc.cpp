@@ -1027,11 +1027,7 @@ struct arena_t {
 
   void* operator new(size_t aCount) = delete;
 
-  void* operator new(size_t aCount, const fallible_t&)
-#if !defined(_MSC_VER) || defined(_CPPUNWIND)
-      noexcept
-#endif
-      ;
+  void* operator new(size_t aCount, const fallible_t&) noexcept;
 
   void operator delete(void*);
 };
@@ -3488,11 +3484,7 @@ void* arena_t::Ralloc(void* aPtr, size_t aSize, size_t aOldSize) {
                                    : RallocHuge(aPtr, aSize, aOldSize);
 }
 
-void* arena_t::operator new(size_t aCount, const fallible_t&)
-#if !defined(_MSC_VER) || defined(_CPPUNWIND)
-    noexcept
-#endif
-{
+void* arena_t::operator new(size_t aCount, const fallible_t&) noexcept {
   MOZ_ASSERT(aCount == sizeof(arena_t));
   return TypedBaseAlloc<arena_t>::alloc();
 }
