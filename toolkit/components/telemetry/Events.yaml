@@ -2572,30 +2572,3 @@ ysod:
       location: Location as Row:Column of where the error happened.
       last_line: The content of the last line that led to the error.
       last_line_len: The length of the last line that led to the error.
-
-dom.quota.try:
-  error:
-    objects: [
-      "step",
-    ]
-    bug_numbers:
-      - 1665088
-    description: >
-      An event recorded on an error of the quota manager or its clients. Since errors are usually
-      propagated up the call chain, all such propagation steps are recorded for an error. This
-      is only active during specific contexts, in particular during storage initialization.
-      No dynamic data is included in the event beyond the error code which will be added through
-      Bug 1670555.
-    notification_emails:
-      - jvarga@mozilla.com
-      - sgiesecke@mozilla.com
-      - storage-telemetry@mozilla.com
-    products:
-      - firefox
-    expiry_version: "never"
-    record_in_processes: ["main", "content"]
-    extra_keys:
-      context: The context in which the error occurred, e.g. during a storage initialization. Telemetry events are only emitted for selected contexts.
-      module: The module (quota manager or one of its clients) where the error occured.
-      source_file: The name of the source code file where the error occured.
-      source_line: The line within source_file where the error occured.
