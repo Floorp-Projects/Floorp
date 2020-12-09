@@ -50,8 +50,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.7.262';
-const pdfjsBuild = '85de01e34';
+const pdfjsVersion = '2.7.345';
+const pdfjsBuild = 'b194c820b';
 
 /***/ }),
 /* 1 */
@@ -145,7 +145,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.7.262';
+    const workerVersion = '2.7.345';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3030,7 +3030,7 @@ function escapePDFName(str) {
   for (let i = 0, ii = str.length; i < ii; i++) {
     const char = str.charCodeAt(i);
 
-    if (char < 0x21 || char > 0x7e || char === 0x23) {
+    if (char < 0x21 || char > 0x7e || char === 0x23 || char === 0x28 || char === 0x29 || char === 0x3c || char === 0x3e || char === 0x5b || char === 0x5d || char === 0x7b || char === 0x7d || char === 0x2f || char === 0x25) {
       if (start < i) {
         buffer.push(str.substring(start, i));
       }
@@ -3332,7 +3332,7 @@ class Page {
       const opListPromises = [];
 
       for (const annotation of annotations) {
-        if (isAnnotationRenderable(annotation, intent)) {
+        if (isAnnotationRenderable(annotation, intent) && !annotation.isHidden(annotationStorage)) {
           opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms, annotationStorage).catch(function (reason) {
             (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
             return null;
@@ -5751,16 +5751,14 @@ var XRef = function XRefClosure() {
         }
       }
 
-      var i, ii;
-
-      for (i = 0, ii = xrefStms.length; i < ii; ++i) {
+      for (let i = 0, ii = xrefStms.length; i < ii; ++i) {
         this.startXRefQueue.push(xrefStms[i]);
         this.readXRef(true);
       }
 
       let trailerDict;
 
-      for (i = 0, ii = trailers.length; i < ii; ++i) {
+      for (let i = 0, ii = trailers.length; i < ii; ++i) {
         stream.pos = trailers[i];
         const parser = new _parser.Parser({
           lexer: new _parser.Lexer(stream),
@@ -5780,19 +5778,29 @@ var XRef = function XRefClosure() {
           continue;
         }
 
-        let rootDict;
-
         try {
-          rootDict = dict.get("Root");
+          const rootDict = dict.get("Root");
+
+          if (!(rootDict instanceof _primitives.Dict)) {
+            continue;
+          }
+
+          const pagesDict = rootDict.get("Pages");
+
+          if (!(pagesDict instanceof _primitives.Dict)) {
+            continue;
+          }
+
+          const pagesCount = pagesDict.get("Count");
+
+          if (!Number.isInteger(pagesCount)) {
+            continue;
+          }
         } catch (ex) {
           if (ex instanceof _core_utils.MissingDataException) {
             throw ex;
           }
 
-          continue;
-        }
-
-        if (!(0, _primitives.isDict)(rootDict) || !rootDict.has("Pages")) {
           continue;
         }
 
@@ -19456,7 +19464,22 @@ function getQuadPoints(dict, rect) {
     }
   }
 
-  return quadPointsLists;
+  return quadPointsLists.map(quadPointsList => {
+    const [minX, maxX, minY, maxY] = quadPointsList.reduce(([mX, MX, mY, MY], quadPoint) => [Math.min(mX, quadPoint.x), Math.max(MX, quadPoint.x), Math.min(mY, quadPoint.y), Math.max(MY, quadPoint.y)], [Number.MAX_VALUE, Number.MIN_VALUE, Number.MAX_VALUE, Number.MIN_VALUE]);
+    return [{
+      x: minX,
+      y: maxY
+    }, {
+      x: maxX,
+      y: maxY
+    }, {
+      x: minX,
+      y: minY
+    }, {
+      x: maxX,
+      y: minY
+    }];
+  });
 }
 
 function getTransformMatrix(rect, bbox, matrix) {
@@ -19506,11 +19529,21 @@ class Annotation {
   }
 
   _isViewable(flags) {
-    return !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE) && !this._hasFlag(flags, _util.AnnotationFlag.HIDDEN) && !this._hasFlag(flags, _util.AnnotationFlag.NOVIEW);
+    return !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE) && !this._hasFlag(flags, _util.AnnotationFlag.NOVIEW);
   }
 
   _isPrintable(flags) {
-    return this._hasFlag(flags, _util.AnnotationFlag.PRINT) && !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE) && !this._hasFlag(flags, _util.AnnotationFlag.HIDDEN);
+    return this._hasFlag(flags, _util.AnnotationFlag.PRINT) && !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE);
+  }
+
+  isHidden(annotationStorage) {
+    const data = annotationStorage && annotationStorage[this.data.id];
+
+    if (data && "hidden" in data) {
+      return data.hidden;
+    }
+
+    return this._hasFlag(this.flags, _util.AnnotationFlag.HIDDEN);
   }
 
   get viewable() {
@@ -19999,7 +20032,7 @@ class WidgetAnnotation extends Annotation {
     }
 
     data.readOnly = this.hasFieldFlag(_util.AnnotationFieldFlag.READONLY);
-    data.hidden = this.hasFieldFlag(_util.AnnotationFieldFlag.HIDDEN);
+    data.hidden = this._hasFlag(data.annotationFlags, _util.AnnotationFlag.HIDDEN);
 
     if (data.fieldType === "Sig") {
       data.fieldValue = null;
@@ -20095,7 +20128,7 @@ class WidgetAnnotation extends Annotation {
   }
 
   async save(evaluator, task, annotationStorage) {
-    const value = annotationStorage[this.data.id];
+    const value = annotationStorage[this.data.id] && annotationStorage[this.data.id].value;
 
     if (value === this.data.fieldValue || value === undefined) {
       return null;
@@ -20169,7 +20202,7 @@ class WidgetAnnotation extends Annotation {
       return null;
     }
 
-    const value = annotationStorage[this.data.id];
+    const value = annotationStorage[this.data.id] && annotationStorage[this.data.id].value;
 
     if (value === undefined) {
       return null;
@@ -20580,7 +20613,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
 
     if (annotationStorage) {
-      const value = annotationStorage[this.data.id];
+      const value = annotationStorage[this.data.id] && annotationStorage[this.data.id].value;
 
       if (value === undefined) {
         return super.getOperatorList(evaluator, task, renderForms, annotationStorage);
@@ -20621,7 +20654,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   }
 
   async _saveCheckbox(evaluator, task, annotationStorage) {
-    const value = annotationStorage[this.data.id];
+    const value = annotationStorage[this.data.id] && annotationStorage[this.data.id].value;
 
     if (value === undefined) {
       return null;
@@ -20667,7 +20700,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   }
 
   async _saveRadioButton(evaluator, task, annotationStorage) {
-    const value = annotationStorage[this.data.id];
+    const value = annotationStorage[this.data.id] && annotationStorage[this.data.id].value;
 
     if (value === undefined) {
       return null;

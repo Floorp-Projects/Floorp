@@ -246,12 +246,12 @@ var _api_compatibility = __w_pdfjs_require__(9);
 
 var _worker_options = __w_pdfjs_require__(12);
 
-var _text_layer = __w_pdfjs_require__(20);
+var _text_layer = __w_pdfjs_require__(21);
 
-var _svg = __w_pdfjs_require__(21);
+var _svg = __w_pdfjs_require__(22);
 
-const pdfjsVersion = '2.7.262';
-const pdfjsBuild = '85de01e34';
+const pdfjsVersion = '2.7.345';
+const pdfjsBuild = 'b194c820b';
 ;
 
 /***/ }),
@@ -1911,7 +1911,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.7.262',
+    apiVersion: '2.7.345',
     source: {
       data: source.data,
       url: source.url,
@@ -3108,7 +3108,9 @@ class WorkerTransport {
     const terminated = this.messageHandler.sendWithPromise("Terminate", null);
     waitOn.push(terminated);
     Promise.all(waitOn).then(() => {
+      this.commonObjs.clear();
       this.fontLoader.clear();
+      this._hasJSActionsPromise = null;
 
       if (this._networkStream) {
         this._networkStream.cancelAllRequests(new _util.AbortException("Worker was terminated."));
@@ -3515,7 +3517,7 @@ class WorkerTransport {
   }
 
   hasJSActions() {
-    return this.messageHandler.sendWithPromise("HasJSActions", null);
+    return this._hasJSActionsPromise || (this._hasJSActionsPromise = this.messageHandler.sendWithPromise("HasJSActions", null));
   }
 
   getCalculationOrderIds() {
@@ -3583,7 +3585,8 @@ class WorkerTransport {
       return {
         info: results[0],
         metadata: results[1] ? new _metadata.Metadata(results[1]) : null,
-        contentDispositionFilename: this._fullReader ? this._fullReader.filename : null
+        contentDispositionFilename: this._fullReader?.filename ?? null,
+        contentLength: this._fullReader?.contentLength ?? null
       };
     });
   }
@@ -3612,6 +3615,7 @@ class WorkerTransport {
 
       this.commonObjs.clear();
       this.fontLoader.clear();
+      this._hasJSActionsPromise = null;
     });
   }
 
@@ -3866,9 +3870,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.7.262';
+const version = '2.7.345';
 exports.version = version;
-const build = '85de01e34';
+const build = 'b194c820b';
 exports.build = build;
 
 /***/ }),
@@ -4188,11 +4192,26 @@ class AnnotationStorage {
   }
 
   setValue(key, value) {
-    if (this._storage.get(key) !== value) {
-      this._setModified();
+    const obj = this._storage.get(key);
+
+    let modified = false;
+
+    if (obj !== undefined) {
+      for (const [entry, val] of Object.entries(value)) {
+        if (obj[entry] !== val) {
+          modified = true;
+          obj[entry] = val;
+        }
+      }
+    } else {
+      this._storage.set(key, value);
+
+      modified = true;
     }
 
-    this._storage.set(key, value);
+    if (modified) {
+      this._setModified();
+    }
   }
 
   getAll() {
@@ -9096,6 +9115,8 @@ var _util = __w_pdfjs_require__(2);
 
 var _annotation_storage = __w_pdfjs_require__(8);
 
+var _scripting_utils = __w_pdfjs_require__(20);
+
 class AnnotationElementFactory {
   static create(parameters) {
     const subtype = parameters.data.annotationType;
@@ -9182,7 +9203,11 @@ class AnnotationElementFactory {
 }
 
 class AnnotationElement {
-  constructor(parameters, isRenderable = false, ignoreBorder = false) {
+  constructor(parameters, {
+    isRenderable = false,
+    ignoreBorder = false,
+    createQuadrilaterals = false
+  } = {}) {
     this.isRenderable = isRenderable;
     this.data = parameters.data;
     this.layer = parameters.layer;
@@ -9199,6 +9224,10 @@ class AnnotationElement {
 
     if (isRenderable) {
       this.container = this._createContainer(ignoreBorder);
+    }
+
+    if (createQuadrilaterals) {
+      this.quadrilaterals = this._createQuadrilaterals(ignoreBorder);
     }
   }
 
@@ -9280,13 +9309,8 @@ class AnnotationElement {
     const savedRect = this.data.rect;
 
     for (const quadPoint of this.data.quadPoints) {
-      const rect = [quadPoint[2].x, quadPoint[2].y, quadPoint[1].x, quadPoint[1].y];
-      this.data.rect = rect;
-
-      const quad = this._createContainer(ignoreBorder);
-
-      quad.className = "highlightAnnotation";
-      quadrilaterals.push(quad);
+      this.data.rect = [quadPoint[2].x, quadPoint[2].y, quadPoint[1].x, quadPoint[1].y];
+      quadrilaterals.push(this._createContainer(ignoreBorder));
     }
 
     this.data.rect = savedRect;
@@ -9322,6 +9346,13 @@ class AnnotationElement {
     container.appendChild(popup);
   }
 
+  _renderQuadrilaterals(className) {
+    this.quadrilaterals.forEach(quadrilateral => {
+      quadrilateral.className = className;
+    });
+    return this.quadrilaterals;
+  }
+
   render() {
     (0, _util.unreachable)("Abstract method `AnnotationElement.render` called");
   }
@@ -9331,11 +9362,13 @@ class AnnotationElement {
 class LinkAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action || parameters.data.isTooltipOnly);
-    super(parameters, isRenderable);
+    super(parameters, {
+      isRenderable,
+      createQuadrilaterals: true
+    });
   }
 
   render() {
-    this.container.className = "linkAnnotation";
     const {
       data,
       linkService
@@ -9357,6 +9390,15 @@ class LinkAnnotationElement extends AnnotationElement {
       this._bindLink(link, "");
     }
 
+    if (this.quadrilaterals) {
+      return this._renderQuadrilaterals("linkAnnotation").map((quadrilateral, index) => {
+        const linkElement = index === 0 ? link : link.cloneNode();
+        quadrilateral.appendChild(linkElement);
+        return quadrilateral;
+      });
+    }
+
+    this.container.className = "linkAnnotation";
     this.container.appendChild(link);
     return this.container;
   }
@@ -9393,7 +9435,9 @@ class LinkAnnotationElement extends AnnotationElement {
 class TextAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable);
+    super(parameters, {
+      isRenderable
+    });
   }
 
   render() {
@@ -9432,7 +9476,9 @@ class WidgetAnnotationElement extends AnnotationElement {
 class TextWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
     const isRenderable = parameters.renderInteractiveForms || !parameters.data.hasAppearance && !!parameters.data.fieldValue;
-    super(parameters, isRenderable);
+    super(parameters, {
+      isRenderable
+    });
   }
 
   render() {
@@ -9443,7 +9489,9 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     let element = null;
 
     if (this.renderInteractiveForms) {
-      const textContent = storage.getOrCreateValue(id, this.data.fieldValue);
+      const textContent = storage.getOrCreateValue(id, {
+        value: this.data.fieldValue
+      }).value;
 
       if (this.data.multiLine) {
         element = document.createElement("textarea");
@@ -9454,37 +9502,104 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
         element.setAttribute("value", textContent);
       }
 
+      element.userValue = textContent;
       element.setAttribute("id", id);
       element.addEventListener("input", function (event) {
-        storage.setValue(id, event.target.value);
+        storage.setValue(id, {
+          value: event.target.value
+        });
       });
       element.addEventListener("blur", function (event) {
         event.target.setSelectionRange(0, 0);
       });
 
       if (this.enableScripting && this.hasJSActions) {
-        element.addEventListener("updateFromSandbox", function (event) {
-          const data = event.detail;
-
-          if ("value" in data) {
-            event.target.value = event.detail.value;
-          } else if ("focus" in data) {
-            event.target.focus({
-              preventScroll: false
-            });
+        element.addEventListener("focus", event => {
+          if (event.target.userValue) {
+            event.target.value = event.target.userValue;
           }
         });
 
-        if (this.data.actions !== null) {
+        if (this.data.actions) {
+          element.addEventListener("updateFromSandbox", function (event) {
+            const detail = event.detail;
+            const actions = {
+              value() {
+                const value = detail.value;
+
+                if (value === undefined || value === null) {
+                  event.target.userValue = "";
+                } else {
+                  event.target.userValue = value;
+                }
+              },
+
+              valueAsString() {
+                const value = detail.valueAsString;
+
+                if (value === undefined || value === null) {
+                  event.target.value = "";
+                } else {
+                  event.target.value = value;
+                }
+
+                storage.setValue(id, event.target.value);
+              },
+
+              focus() {
+                event.target.focus({
+                  preventScroll: false
+                });
+              },
+
+              userName() {
+                const tooltip = detail.userName;
+                event.target.title = tooltip;
+              },
+
+              hidden() {
+                event.target.style.display = detail.hidden ? "none" : "block";
+              },
+
+              editable() {
+                event.target.disabled = !detail.editable;
+              },
+
+              selRange() {
+                const [selStart, selEnd] = detail.selRange;
+
+                if (selStart >= 0 && selEnd < event.target.value.length) {
+                  event.target.setSelectionRange(selStart, selEnd);
+                }
+              },
+
+              strokeColor() {
+                const color = detail.strokeColor;
+                event.target.style.color = _scripting_utils.ColorConverters[`${color[0]}_HTML`](color.slice(1));
+              }
+
+            };
+
+            for (const name of Object.keys(detail)) {
+              if (name in actions) {
+                actions[name]();
+              }
+            }
+          });
+
           for (const eventType of Object.keys(this.data.actions)) {
             switch (eventType) {
               case "Format":
-                element.addEventListener("blur", function (event) {
+                element.addEventListener("change", function (event) {
                   window.dispatchEvent(new CustomEvent("dispatchEventInSandbox", {
                     detail: {
                       id,
-                      name: "Format",
-                      value: event.target.value
+                      name: "Keystroke",
+                      value: event.target.value,
+                      willCommit: true,
+                      commitKey: 1,
+                      selStart: event.target.selectionStart,
+                      selEnd: event.target.selectionEnd
                     }
                   }));
                 });
@@ -9557,14 +9672,18 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
 class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
-    super(parameters, parameters.renderInteractiveForms);
+    super(parameters, {
+      isRenderable: parameters.renderInteractiveForms
+    });
   }
 
   render() {
     const storage = this.annotationStorage;
     const data = this.data;
     const id = data.id;
-    const value = storage.getOrCreateValue(id, data.fieldValue && data.fieldValue !== "Off");
+    const value = storage.getOrCreateValue(id, {
+      value: data.fieldValue && data.fieldValue !== "Off"
+    }).value;
     this.container.className = "buttonWidgetAnnotation checkBox";
     const element = document.createElement("input");
     element.disabled = data.readOnly;
@@ -9576,7 +9695,9 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
     }
 
     element.addEventListener("change", function (event) {
-      storage.setValue(id, event.target.checked);
+      storage.setValue(id, {
+        value: event.target.checked
+      });
     });
     this.container.appendChild(element);
     return this.container;
@@ -9586,7 +9707,9 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 
 class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
-    super(parameters, parameters.renderInteractiveForms);
+    super(parameters, {
+      isRenderable: parameters.renderInteractiveForms
+    });
   }
 
   render() {
@@ -9594,7 +9717,9 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
     const storage = this.annotationStorage;
     const data = this.data;
     const id = data.id;
-    const value = storage.getOrCreateValue(id, data.fieldValue === data.buttonValue);
+    const value = storage.getOrCreateValue(id, {
+      value: data.fieldValue === data.buttonValue
+    }).value;
     const element = document.createElement("input");
     element.disabled = data.readOnly;
     element.type = "radio";
@@ -9609,11 +9734,15 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
 
       for (const radio of document.getElementsByName(name)) {
         if (radio !== event.target) {
-          storage.setValue(radio.parentNode.getAttribute("data-annotation-id"), false);
+          storage.setValue(radio.parentNode.getAttribute("data-annotation-id"), {
+            value: false
+          });
         }
       }
 
-      storage.setValue(id, event.target.checked);
+      storage.setValue(id, {
+        value: event.target.checked
+      });
     });
     this.container.appendChild(element);
     return this.container;
@@ -9637,14 +9766,18 @@ class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
 
 class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
-    super(parameters, parameters.renderInteractiveForms);
+    super(parameters, {
+      isRenderable: parameters.renderInteractiveForms
+    });
   }
 
   render() {
     this.container.className = "choiceWidgetAnnotation";
     const storage = this.annotationStorage;
     const id = this.data.id;
-    storage.getOrCreateValue(id, this.data.fieldValue.length > 0 ? this.data.fieldValue[0] : undefined);
+    storage.getOrCreateValue(id, {
+      value: this.data.fieldValue.length > 0 ? this.data.fieldValue[0] : undefined
+    });
     const selectElement = document.createElement("select");
     selectElement.disabled = this.data.readOnly;
     selectElement.name = this.data.fieldName;
@@ -9672,7 +9805,9 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     selectElement.addEventListener("input", function (event) {
       const options = event.target.options;
       const value = options[options.selectedIndex].value;
-      storage.setValue(id, value);
+      storage.setValue(id, {
+        value
+      });
     });
     this.container.appendChild(selectElement);
     return this.container;
@@ -9683,7 +9818,9 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 class PopupAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable);
+    super(parameters, {
+      isRenderable
+    });
   }
 
   render() {
@@ -9839,7 +9976,10 @@ class PopupElement {
 class FreeTextAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
   }
 
   render() {
@@ -9857,7 +9997,10 @@ class FreeTextAnnotationElement extends AnnotationElement {
 class LineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
   }
 
   render() {
@@ -9886,7 +10029,10 @@ class LineAnnotationElement extends AnnotationElement {
 class SquareAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
   }
 
   render() {
@@ -9917,7 +10063,10 @@ class SquareAnnotationElement extends AnnotationElement {
 class CircleAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
   }
 
   render() {
@@ -9948,7 +10097,10 @@ class CircleAnnotationElement extends AnnotationElement {
 class PolylineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
     this.containerClassName = "polylineAnnotation";
     this.svgElementName = "svg:polyline";
   }
@@ -9995,7 +10147,10 @@ class PolygonAnnotationElement extends PolylineAnnotationElement {
 class CaretAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
   }
 
   render() {
@@ -10013,7 +10168,10 @@ class CaretAnnotationElement extends AnnotationElement {
 class InkAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
     this.containerClassName = "inkAnnotation";
     this.svgElementName = "svg:polyline";
   }
@@ -10055,18 +10213,24 @@ class InkAnnotationElement extends AnnotationElement {
 class HighlightAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
-    this.quadrilaterals = this._createQuadrilaterals(true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true,
+      createQuadrilaterals: true
+    });
   }
 
   render() {
-    this.container.className = "highlightAnnotation";
-
     if (!this.data.hasPopup) {
       this._createPopup(null, this.data);
     }
 
-    return this.quadrilaterals || this.container;
+    if (this.quadrilaterals) {
+      return this._renderQuadrilaterals("highlightAnnotation");
+    }
+
+    this.container.className = "highlightAnnotation";
+    return this.container;
   }
 
 }
@@ -10074,16 +10238,23 @@ class HighlightAnnotationElement extends AnnotationElement {
 class UnderlineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true,
+      createQuadrilaterals: true
+    });
   }
 
   render() {
-    this.container.className = "underlineAnnotation";
-
     if (!this.data.hasPopup) {
       this._createPopup(null, this.data);
     }
 
+    if (this.quadrilaterals) {
+      return this._renderQuadrilaterals("underlineAnnotation");
+    }
+
+    this.container.className = "underlineAnnotation";
     return this.container;
   }
 
@@ -10092,16 +10263,23 @@ class UnderlineAnnotationElement extends AnnotationElement {
 class SquigglyAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true,
+      createQuadrilaterals: true
+    });
   }
 
   render() {
-    this.container.className = "squigglyAnnotation";
-
     if (!this.data.hasPopup) {
       this._createPopup(null, this.data);
     }
 
+    if (this.quadrilaterals) {
+      return this._renderQuadrilaterals("squigglyAnnotation");
+    }
+
+    this.container.className = "squigglyAnnotation";
     return this.container;
   }
 
@@ -10110,16 +10288,23 @@ class SquigglyAnnotationElement extends AnnotationElement {
 class StrikeOutAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true,
+      createQuadrilaterals: true
+    });
   }
 
   render() {
-    this.container.className = "strikeoutAnnotation";
-
     if (!this.data.hasPopup) {
       this._createPopup(null, this.data);
     }
 
+    if (this.quadrilaterals) {
+      return this._renderQuadrilaterals("strikeoutAnnotation");
+    }
+
+    this.container.className = "strikeoutAnnotation";
     return this.container;
   }
 
@@ -10128,7 +10313,10 @@ class StrikeOutAnnotationElement extends AnnotationElement {
 class StampAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
-    super(parameters, isRenderable, true);
+    super(parameters, {
+      isRenderable,
+      ignoreBorder: true
+    });
   }
 
   render() {
@@ -10145,7 +10333,9 @@ class StampAnnotationElement extends AnnotationElement {
 
 class FileAttachmentAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    super(parameters, true);
+    super(parameters, {
+      isRenderable: true
+    });
     const {
       filename,
       content
@@ -10230,6 +10420,10 @@ class AnnotationLayer {
       if (element.isRenderable) {
         const rendered = element.render();
 
+        if (data.hidden) {
+          rendered.style.visibility = "hidden";
+        }
+
         if (Array.isArray(rendered)) {
           for (const renderedElement of rendered) {
             parameters.div.appendChild(renderedElement);
@@ -10267,6 +10461,74 @@ exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
 /* 20 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.ColorConverters = void 0;
+
+function makeColorComp(n) {
+  return Math.floor(Math.max(0, Math.min(1, n)) * 255).toString(16).padStart(2, "0");
+}
+
+class ColorConverters {
+  static CMYK_G([c, y, m, k]) {
+    return ["G", 1 - Math.min(1, 0.3 * c + 0.59 * m + 0.11 * y + k)];
+  }
+
+  static G_CMYK([g]) {
+    return ["CMYK", 0, 0, 0, 1 - g];
+  }
+
+  static G_RGB([g]) {
+    return ["RGB", g, g, g];
+  }
+
+  static G_HTML([g]) {
+    const G = makeColorComp(g);
+    return `#${G}${G}${G}`;
+  }
+
+  static RGB_G([r, g, b]) {
+    return ["G", 0.3 * r + 0.59 * g + 0.11 * b];
+  }
+
+  static RGB_HTML([r, g, b]) {
+    const R = makeColorComp(r);
+    const G = makeColorComp(g);
+    const B = makeColorComp(b);
+    return `#${R}${G}${B}`;
+  }
+
+  static T_HTML() {
+    return "#00000000";
+  }
+
+  static CMYK_RGB([c, y, m, k]) {
+    return ["RGB", 1 - Math.min(1, c + k), 1 - Math.min(1, m + k), 1 - Math.min(1, y + k)];
+  }
+
+  static CMYK_HTML(components) {
+    return this.RGB_HTML(this.CMYK_RGB(components));
+  }
+
+  static RGB_CMYK([r, g, b]) {
+    const c = 1 - r;
+    const m = 1 - g;
+    const y = 1 - b;
+    const k = Math.min(c, m, y);
+    return ["CMYK", c, m, y, k];
+  }
+
+}
+
+exports.ColorConverters = ColorConverters;
+
+/***/ }),
+/* 21 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -10963,7 +11225,7 @@ const renderTextLayer = function renderTextLayerClosure() {
 exports.renderTextLayer = renderTextLayer;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
