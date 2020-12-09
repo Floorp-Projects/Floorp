@@ -90,7 +90,8 @@ def run_test(context, is_junit, **kwargs):
         install_subdir = fobj.get("install_subdir", fobj["suite"])
         test_root = os.path.join(context.package_root, "mochitest", install_subdir)
         normalize = partial(context.normalize_test_path, test_root)
-        args.test_paths = map(normalize, args.test_paths)
+        # pylint --py3k: W1636
+        args.test_paths = list(map(normalize, args.test_paths))
 
     import mozinfo
 
