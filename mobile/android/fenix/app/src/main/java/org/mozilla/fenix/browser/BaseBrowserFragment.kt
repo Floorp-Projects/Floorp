@@ -126,6 +126,8 @@ import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
 import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
+import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragmentDirections
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -365,6 +367,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
 
             browserToolbarView.view.display.setOnSiteSecurityClickedListener {
                 showQuickSettingsDialog()
+            }
+
+            browserToolbarView.view.display.setOnPermissionIndicatorClickedListener {
+                navigateToAutoplaySetting()
             }
 
             browserToolbarView.view.display.setOnTrackingProtectionClickedListener {
@@ -1281,5 +1287,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         if (_browserToolbarView != null) {
             browserToolbarView.setScrollFlags(enabled)
         }
+    }
+
+    private fun navigateToAutoplaySetting() {
+        val directions = QuickSettingsSheetDialogFragmentDirections
+            .actionGlobalSitePermissionsManagePhoneFeature(PhoneFeature.AUTOPLAY_AUDIBLE)
+        findNavController().navigate(directions)
     }
 }

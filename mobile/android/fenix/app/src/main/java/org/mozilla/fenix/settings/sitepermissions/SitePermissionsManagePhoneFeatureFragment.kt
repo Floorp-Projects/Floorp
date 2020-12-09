@@ -28,6 +28,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.AS
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -213,6 +214,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         requireComponents.analytics.metrics.track(Event.AutoPlaySettingChanged(setting))
         settings.setSitePermissionsPhoneFeatureAction(AUTOPLAY_AUDIBLE, audible)
         settings.setSitePermissionsPhoneFeatureAction(AUTOPLAY_INAUDIBLE, inaudible)
+        context?.components?.useCases?.sessionUseCases?.reload?.invoke()
     }
 
     private fun bindBlockedByAndroidContainer(rootView: View) {

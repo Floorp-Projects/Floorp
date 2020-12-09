@@ -151,7 +151,8 @@ class BrowserToolbarView(
                     menu = primaryTextColor,
                     hint = secondaryTextColor,
                     separator = separatorColor,
-                    trackingProtection = primaryTextColor
+                    trackingProtection = primaryTextColor,
+                    permissionHighlights = primaryTextColor
                 )
 
                 display.hint = context.getString(R.string.search_hint)

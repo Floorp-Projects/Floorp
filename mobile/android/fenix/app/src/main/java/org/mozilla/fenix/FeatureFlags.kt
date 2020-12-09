@@ -41,4 +41,9 @@ object FeatureFlags {
      * Enables the new MediaSession API.
      */
     val newMediaSessionApi = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enabled showing site permission indicators in the toolbars.
+     */
+    val permissionIndicatorsToolbar = Config.channel.isNightlyOrDebug
 }
