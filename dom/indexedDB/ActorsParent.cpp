@@ -1232,9 +1232,14 @@ class DatabaseConnection final {
 
   template <typename BindFunctor>
   nsresult ExecuteCachedStatement(const nsACString& aQuery,
-                                  const BindFunctor& aBindFunctor);
+                                  BindFunctor&& aBindFunctor);
 
   nsresult ExecuteCachedStatement(const nsACString& aQuery);
+
+  template <typename BindFunctor>
+  Result<Maybe<BorrowedStatement>, nsresult>
+  BorrowAndExecuteSingleStepStatement(const nsACString& aQuery,
+                                      BindFunctor&& aBindFunctor);
 
   nsresult BeginWriteTransaction();
 
@@ -6894,6 +6899,10 @@ auto DeserializeIndexValueToUpdateInfos(
   return NS_FAILED(rv) ? Err(rv) : ResultType{std::move(updateInfoArray)};
 }
 
+bool IsSome(const Maybe<DatabaseConnection::BorrowedStatement>& aMaybeStmt) {
+  return aMaybeStmt.isSome();
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -7086,9 +7095,9 @@ DatabaseConnection::BorrowCachedStatement(const nsACString& aQuery) {
 
 template <typename BindFunctor>
 nsresult DatabaseConnection::ExecuteCachedStatement(
-    const nsACString& aQuery, const BindFunctor& aBindFunctor) {
+    const nsACString& aQuery, BindFunctor&& aBindFunctor) {
   IDB_TRY_INSPECT(const auto& stmt, BorrowCachedStatement(aQuery));
-  IDB_TRY(aBindFunctor(*stmt));
+  IDB_TRY(std::forward<BindFunctor>(aBindFunctor)(*stmt));
   IDB_TRY(stmt->Execute());
 
   return NS_OK;
@@ -7096,6 +7105,14 @@ nsresult DatabaseConnection::ExecuteCachedStatement(
 
 nsresult DatabaseConnection::ExecuteCachedStatement(const nsACString& aQuery) {
   return ExecuteCachedStatement(aQuery, [](auto&) { return NS_OK; });
+}
+
+template <typename BindFunctor>
+Result<Maybe<DatabaseConnection::BorrowedStatement>, nsresult>
+DatabaseConnection::BorrowAndExecuteSingleStepStatement(
+    const nsACString& aQuery, BindFunctor&& aBindFunctor) {
+  return LazyStatement{*this, aQuery}.BorrowAndExecuteSingleStep(
+      std::forward<BindFunctor>(aBindFunctor));
 }
 
 nsresult DatabaseConnection::BeginWriteTransaction() {
@@ -7792,15 +7809,14 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
                              GetAffectedRows));
 
     if (rows > 0) {
-      IDB_TRY_INSPECT(
-          const bool& hasResult,
-          selectStatement
-              .BorrowAndExecuteSingleStep(
-                  [aId](auto& stmt) -> Result<Ok, nsresult> {
-                    IDB_TRY(stmt.BindInt64ByIndex(0, aId));
-                    return Ok{};
-                  })
-              .map([](const auto& maybeStmt) { return maybeStmt.isSome(); }));
+      IDB_TRY_INSPECT(const bool& hasResult,
+                      selectStatement
+                          .BorrowAndExecuteSingleStep(
+                              [aId](auto& stmt) -> Result<Ok, nsresult> {
+                                IDB_TRY(stmt.BindInt64ByIndex(0, aId));
+                                return Ok{};
+                              })
+                          .map(IsSome));
 
       if (!hasResult) {
         // Don't have to create the journal here, we can create all at once,
@@ -15175,16 +15191,18 @@ Result<bool, nsresult> DatabaseOperationBase::ObjectStoreHasIndexes(
   aConnection.AssertIsOnConnectionThread();
   MOZ_ASSERT(aObjectStoreId);
 
-  IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection.BorrowCachedStatement(
-                      "SELECT id "
-                      "FROM object_store_index "
-                      "WHERE object_store_id = :"_ns +
-                      kStmtParamNameObjectStoreId + kOpenLimit + "1;"_ns));
-
-  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId));
-
-  IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
+  IDB_TRY_RETURN(aConnection
+                     .BorrowAndExecuteSingleStepStatement(
+                         "SELECT id "
+                         "FROM object_store_index "
+                         "WHERE object_store_id = :"_ns +
+                             kStmtParamNameObjectStoreId + kOpenLimit + "1;"_ns,
+                         [aObjectStoreId](auto& stmt) -> Result<Ok, nsresult> {
+                           IDB_TRY(stmt.BindInt64ByName(
+                               kStmtParamNameObjectStoreId, aObjectStoreId));
+                           return Ok{};
+                         })
+                     .map(IsSome));
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(DatabaseOperationBase, Runnable,
@@ -17301,9 +17319,10 @@ nsresult OpenDatabaseOp::VersionChangeOp::DoDatabaseWork(
   // locally in the same function.
   IDB_TRY(aConnection->ExecuteCachedStatement(
       "UPDATE database SET version = :version;"_ns,
-      ([this](
+      ([&self = *this](
            mozIStorageStatement& updateStmt) -> mozilla::Result<Ok, nsresult> {
-        IDB_TRY(updateStmt.BindInt64ByIndex(0, int64_t(mRequestedVersion)));
+        IDB_TRY(
+            updateStmt.BindInt64ByIndex(0, int64_t(self.mRequestedVersion)));
 
         return Ok{};
       })));
@@ -18524,16 +18543,19 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     IDB_TRY_INSPECT(
-        const auto& stmt,
-        aConnection->BorrowCachedStatement("SELECT name "
-                                           "FROM object_store "
-                                           "WHERE name = :name;"_ns),
+        const bool& hasResult,
+        aConnection
+            ->BorrowAndExecuteSingleStepStatement(
+                "SELECT name "
+                "FROM object_store "
+                "WHERE name = :name;"_ns,
+                [&self = *this](auto& stmt) -> Result<Ok, nsresult> {
+                  IDB_TRY(stmt.BindStringByIndex(0, self.mMetadata.name()));
+                  return Ok{};
+                })
+            .map(IsSome),
         QM_ASSERT_UNREACHABLE);
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mMetadata.name()));
-
-    bool hasResult;
-    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
     MOZ_ASSERT(!hasResult);
   }
 #endif
@@ -18551,16 +18573,17 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   IDB_TRY(aConnection->ExecuteCachedStatement(
       "INSERT INTO object_store (id, auto_increment, name, key_path) "
       "VALUES (:id, :auto_increment, :name, :key_path);"_ns,
-      [this](mozIStorageStatement& stmt) -> Result<Ok, nsresult> {
-        IDB_TRY(stmt.BindInt64ByIndex(0, mMetadata.id()));
+      [&metadata =
+           mMetadata](mozIStorageStatement& stmt) -> Result<Ok, nsresult> {
+        IDB_TRY(stmt.BindInt64ByIndex(0, metadata.id()));
 
-        IDB_TRY(stmt.BindInt32ByIndex(1, mMetadata.autoIncrement() ? 1 : 0));
+        IDB_TRY(stmt.BindInt32ByIndex(1, metadata.autoIncrement() ? 1 : 0));
 
-        IDB_TRY(stmt.BindStringByIndex(2, mMetadata.name()));
+        IDB_TRY(stmt.BindStringByIndex(2, metadata.name()));
 
-        if (mMetadata.keyPath().IsValid()) {
+        if (metadata.keyPath().IsValid()) {
           IDB_TRY(stmt.BindStringByIndex(
-              3, mMetadata.keyPath().SerializeToString()));
+              3, metadata.keyPath().SerializeToString()));
         } else {
           IDB_TRY(stmt.BindNullByIndex(3));
         }
@@ -18717,19 +18740,22 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // have thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_TRY_INSPECT(const auto& stmt,
-                    aConnection->BorrowCachedStatement(
-                        "SELECT name "
-                        "FROM object_store "
-                        "WHERE name = :name AND id != :id;"_ns),
-                    QM_ASSERT_UNREACHABLE);
+    IDB_TRY_INSPECT(
+        const bool& hasResult,
+        aConnection
+            ->BorrowAndExecuteSingleStepStatement(
+                "SELECT name "
+                "FROM object_store "
+                "WHERE name = :name AND id != :id;"_ns,
+                [&self = *this](auto& stmt) -> Result<Ok, nsresult> {
+                  IDB_TRY(stmt.BindStringByIndex(0, self.mNewName));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mNewName));
+                  IDB_TRY(stmt.BindInt64ByIndex(1, self.mId));
+                  return Ok{};
+                })
+            .map(IsSome),
+        QM_ASSERT_UNREACHABLE);
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(1, mId));
-
-    bool hasResult;
-    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
     MOZ_ASSERT(!hasResult);
   }
 #endif
@@ -18748,10 +18774,10 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       "UPDATE object_store "
       "SET name = :name "
       "WHERE id = :id;"_ns,
-      [this](mozIStorageStatement& stmt) -> nsresult {
-        IDB_TRY(stmt.BindStringByIndex(0, mNewName));
+      [&self = *this](mozIStorageStatement& stmt) -> nsresult {
+        IDB_TRY(stmt.BindStringByIndex(0, self.mNewName));
 
-        IDB_TRY(stmt.BindInt64ByIndex(1, mId));
+        IDB_TRY(stmt.BindInt64ByIndex(1, self.mId));
 
         return NS_OK;
       }));
@@ -18823,8 +18849,9 @@ nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
       "SET index_data_values = update_index_data_values "
       "(key, index_data_values, file_ids, data) "
       "WHERE object_store_id = :object_store_id;"_ns,
-      [this](mozIStorageStatement& stmt) -> nsresult {
-        IDB_TRY(stmt.BindInt64ByIndex(0, mObjectStoreId));
+      [objectStoredId =
+           mObjectStoreId](mozIStorageStatement& stmt) -> nsresult {
+        IDB_TRY(stmt.BindInt64ByIndex(0, objectStoredId));
 
         return NS_OK;
       }));
@@ -18882,17 +18909,19 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     IDB_TRY_INSPECT(
-        const auto& stmt,
-        aConnection->BorrowCachedStatement(
-            "SELECT name "
-            "FROM object_store_index "
-            "WHERE object_store_id = :object_store_id AND name = :name;"_ns),
+        const bool& hasResult,
+        aConnection
+            ->BorrowAndExecuteSingleStepStatement(
+                "SELECT name "
+                "FROM object_store_index "
+                "WHERE object_store_id = :object_store_id AND name = :name;"_ns,
+                [&self = *this](auto& stmt) -> Result<Ok, nsresult> {
+                  IDB_TRY(stmt.BindInt64ByIndex(0, self.mObjectStoreId));
+                  IDB_TRY(stmt.BindStringByIndex(1, self.mMetadata.name()));
+                  return Ok{};
+                })
+            .map(IsSome),
         QM_ASSERT_UNREACHABLE);
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(1, mMetadata.name()));
-
-    bool hasResult;
-    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
 
     MOZ_ASSERT(!hasResult);
   }
@@ -18914,24 +18943,25 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       "is_auto_locale) "
       "VALUES (:id, :name, :key_path, :unique, :multientry, "
       ":object_store_id, :locale, :is_auto_locale)"_ns,
-      [this](mozIStorageStatement& stmt) -> nsresult {
-        IDB_TRY(stmt.BindInt64ByIndex(0, mMetadata.id()));
+      [&metadata = mMetadata,
+       objectStoreId = mObjectStoreId](mozIStorageStatement& stmt) -> nsresult {
+        IDB_TRY(stmt.BindInt64ByIndex(0, metadata.id()));
 
-        IDB_TRY(stmt.BindStringByIndex(1, mMetadata.name()));
+        IDB_TRY(stmt.BindStringByIndex(1, metadata.name()));
 
         IDB_TRY(
-            stmt.BindStringByIndex(2, mMetadata.keyPath().SerializeToString()));
+            stmt.BindStringByIndex(2, metadata.keyPath().SerializeToString()));
 
-        IDB_TRY(stmt.BindInt32ByIndex(3, mMetadata.unique() ? 1 : 0));
+        IDB_TRY(stmt.BindInt32ByIndex(3, metadata.unique() ? 1 : 0));
 
-        IDB_TRY(stmt.BindInt32ByIndex(4, mMetadata.multiEntry() ? 1 : 0));
-        IDB_TRY(stmt.BindInt64ByIndex(5, mObjectStoreId));
+        IDB_TRY(stmt.BindInt32ByIndex(4, metadata.multiEntry() ? 1 : 0));
+        IDB_TRY(stmt.BindInt64ByIndex(5, objectStoreId));
 
-        IDB_TRY(mMetadata.locale().IsEmpty()
+        IDB_TRY(metadata.locale().IsEmpty()
                     ? stmt.BindNullByIndex(6)
-                    : stmt.BindUTF8StringByIndex(6, mMetadata.locale()));
+                    : stmt.BindUTF8StringByIndex(6, metadata.locale()));
 
-        IDB_TRY(stmt.BindInt32ByIndex(7, mMetadata.autoLocale()));
+        IDB_TRY(stmt.BindInt32ByIndex(7, metadata.autoLocale()));
 
         return NS_OK;
       }));
@@ -19388,8 +19418,8 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   IDB_TRY(aConnection->ExecuteCachedStatement(
       "DELETE FROM object_store_index "
       "WHERE id = :index_id;"_ns,
-      [this](mozIStorageStatement& deleteStmt) -> nsresult {
-        IDB_TRY(deleteStmt.BindInt64ByIndex(0, mIndexId));
+      [indexId = mIndexId](mozIStorageStatement& deleteStmt) -> nsresult {
+        IDB_TRY(deleteStmt.BindInt64ByIndex(0, indexId));
 
         return NS_OK;
       }));
@@ -19421,23 +19451,25 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // thrown an error long before now...
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_TRY_INSPECT(const auto& stmt,
-                    aConnection->BorrowCachedStatement(
-                        "SELECT name "
-                        "FROM object_store_index "
-                        "WHERE object_store_id = :object_store_id "
-                        "AND name = :name "
-                        "AND id != :id;"_ns),
-                    QM_ASSERT_UNREACHABLE);
+    IDB_TRY_INSPECT(
+        const bool& hasResult,
+        aConnection
+            ->BorrowAndExecuteSingleStepStatement(
+                "SELECT name "
+                "FROM object_store_index "
+                "WHERE object_store_id = :object_store_id "
+                "AND name = :name "
+                "AND id != :id;"_ns,
+                [&self = *this](auto& stmt) -> Result<Ok, nsresult> {
+                  IDB_TRY(stmt.BindInt64ByIndex(0, self.mObjectStoreId));
+                  IDB_TRY(stmt.BindStringByIndex(1, self.mNewName));
+                  IDB_TRY(stmt.BindInt64ByIndex(2, self.mIndexId));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
+                  return Ok{};
+                })
+            .map(IsSome),
+        QM_ASSERT_UNREACHABLE);
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(1, mNewName));
-
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(2, mIndexId));
-
-    bool hasResult;
-    MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
     MOZ_ASSERT(!hasResult);
   }
 #else
@@ -19458,10 +19490,10 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       "UPDATE object_store_index "
       "SET name = :name "
       "WHERE id = :id;"_ns,
-      [this](mozIStorageStatement& stmt) -> nsresult {
-        IDB_TRY(stmt.BindStringByIndex(0, mNewName));
+      [&self = *this](mozIStorageStatement& stmt) -> nsresult {
+        IDB_TRY(stmt.BindStringByIndex(0, self.mNewName));
 
-        IDB_TRY(stmt.BindInt64ByIndex(1, mIndexId));
+        IDB_TRY(stmt.BindInt64ByIndex(1, self.mIndexId));
 
         return NS_OK;
       }));
@@ -19678,25 +19710,26 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
   }
 #endif
 
-  IDB_TRY_INSPECT(const auto& indexValuesStmt,
-                  aConnection->BorrowCachedStatement(
-                      "SELECT index_data_values "
-                      "FROM object_data "
-                      "WHERE object_store_id = :"_ns +
-                      kStmtParamNameObjectStoreId + " AND key = :"_ns +
-                      kStmtParamNameKey + ";"_ns));
+  IDB_TRY_INSPECT(
+      const auto& indexValuesStmt,
+      aConnection->BorrowAndExecuteSingleStepStatement(
+          "SELECT index_data_values "
+          "FROM object_data "
+          "WHERE object_store_id = :"_ns +
+              kStmtParamNameObjectStoreId + " AND key = :"_ns +
+              kStmtParamNameKey + ";"_ns,
+          [&self = *this](auto& stmt) -> mozilla::Result<Ok, nsresult> {
+            IDB_TRY(stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
+                                         self.mParams.objectStoreId()));
 
-  IDB_TRY(indexValuesStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                           mParams.objectStoreId()));
+            IDB_TRY(self.mResponse.BindToStatement(&stmt, kStmtParamNameKey));
 
-  IDB_TRY(mResponse.BindToStatement(&*indexValuesStmt, kStmtParamNameKey));
+            return Ok{};
+          }));
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*indexValuesStmt, ExecuteStep));
-
-  if (hasResult) {
+  if (indexValuesStmt) {
     IDB_TRY_INSPECT(const auto& existingIndexValues,
-                    ReadCompressedIndexDataValues(*indexValuesStmt, 0));
+                    ReadCompressedIndexDataValues(**indexValuesStmt, 0));
 
     IDB_TRY(
         DeleteIndexDataTableRows(aConnection, mResponse, existingIndexValues));
@@ -20439,11 +20472,11 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
         "DELETE FROM object_data "
         "WHERE object_store_id = :"_ns +
             kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns,
-        [this](mozIStorageStatement& stmt) -> nsresult {
+        [&params = mParams](mozIStorageStatement& stmt) -> nsresult {
           IDB_TRY(stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
-                                       mParams.objectStoreId()));
+                                       params.objectStoreId()));
 
-          IDB_TRY(BindKeyRangeToStatement(mParams.keyRange(), &stmt));
+          IDB_TRY(BindKeyRangeToStatement(params.keyRange(), &stmt));
 
           return NS_OK;
         }));
@@ -20496,9 +20529,9 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
               : aConnection->ExecuteCachedStatement(
                     "DELETE FROM object_data "
                     "WHERE object_store_id = :object_store_id;"_ns,
-                    [this](mozIStorageStatement& stmt) -> nsresult {
-                      IDB_TRY(
-                          stmt.BindInt64ByIndex(0, mParams.objectStoreId()));
+                    [objectStoreId = mParams.objectStoreId()](
+                        mozIStorageStatement& stmt) -> nsresult {
+                      IDB_TRY(stmt.BindInt64ByIndex(0, objectStoreId));
 
                       return NS_OK;
                     }));
@@ -20518,29 +20551,34 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
   const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
       mParams.optionalKeyRange(), kColumnNameKey);
 
-  IDB_TRY_INSPECT(const auto& stmt,
-                  aConnection->BorrowCachedStatement(
-                      "SELECT count(*) "
-                      "FROM object_data "
-                      "WHERE object_store_id = :"_ns +
-                      kStmtParamNameObjectStoreId + keyRangeClause));
+  IDB_TRY_INSPECT(
+      const auto& maybeStmt,
+      aConnection->BorrowAndExecuteSingleStepStatement(
+          "SELECT count(*) "
+          "FROM object_data "
+          "WHERE object_store_id = :"_ns +
+              kStmtParamNameObjectStoreId + keyRangeClause,
+          [&params = mParams](auto& stmt) -> mozilla::Result<Ok, nsresult> {
+            IDB_TRY(stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
+                                         params.objectStoreId()));
 
-  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                mParams.objectStoreId()));
+            if (params.optionalKeyRange().isSome()) {
+              IDB_TRY(BindKeyRangeToStatement(params.optionalKeyRange().ref(),
+                                              &stmt));
+            }
 
-  if (mParams.optionalKeyRange().isSome()) {
-    IDB_TRY(BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt));
-  }
+            return Ok{};
+          }));
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
+  IDB_TRY(OkIf(maybeStmt.isSome()), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+          [](const auto) {
+            // XXX Why do we have an assertion here, but not at most other
+            // places using IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
+            MOZ_ASSERT(false, "This should never be possible!");
+            IDB_REPORT_INTERNAL_ERR();
+          });
 
-  IDB_TRY(OkIf(hasResult), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
-    // XXX Why do we have an assertion here, but not at most other places using
-    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
-    MOZ_ASSERT(false, "This should never be possible!");
-    IDB_REPORT_INTERNAL_ERR();
-  });
+  const auto& stmt = *maybeStmt;
 
   const int64_t count = stmt->AsInt64(0);
   IDB_TRY(OkIf(count >= 0), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
@@ -20839,8 +20877,6 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   AUTO_PROFILER_LABEL("IndexCountRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mParams.optionalKeyRange().isSome();
-
   const auto indexTable = mMetadata->mCommonMetadata.unique()
                               ? "unique_index_data "_ns
                               : "index_data "_ns;
@@ -20848,30 +20884,34 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
       mParams.optionalKeyRange(), kColumnNameValue);
 
-  const nsCString query =
-      "SELECT count(*) "
-      "FROM "_ns +
-      indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
-      keyRangeClause;
+  IDB_TRY_INSPECT(
+      const auto& maybeStmt,
+      aConnection->BorrowAndExecuteSingleStepStatement(
+          "SELECT count(*) "
+          "FROM "_ns +
+              indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
+              keyRangeClause,
+          [&self = *this](auto& stmt) -> mozilla::Result<Ok, nsresult> {
+            IDB_TRY(stmt.BindInt64ByName(kStmtParamNameIndexId,
+                                         self.mMetadata->mCommonMetadata.id()));
 
-  IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
+            if (self.mParams.optionalKeyRange().isSome()) {
+              IDB_TRY(BindKeyRangeToStatement(
+                  self.mParams.optionalKeyRange().ref(), &stmt));
+            }
 
-  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                mMetadata->mCommonMetadata.id()));
+            return Ok{};
+          }));
 
-  if (hasKeyRange) {
-    IDB_TRY(BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt));
-  }
+  IDB_TRY(OkIf(maybeStmt.isSome()), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+          [](const auto) {
+            // XXX Why do we have an assertion here, but not at most other
+            // places using IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
+            MOZ_ASSERT(false, "This should never be possible!");
+            IDB_REPORT_INTERNAL_ERR();
+          });
 
-  IDB_TRY_INSPECT(const bool& hasResult,
-                  MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
-
-  IDB_TRY(OkIf(hasResult), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
-    // XXX Why do we have an assertion here, but not at most other places using
-    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
-    MOZ_ASSERT(false, "This should never be possible!");
-    IDB_REPORT_INTERNAL_ERR();
-  });
+  const auto& stmt = *maybeStmt;
 
   const int64_t count = stmt->AsInt64(0);
   IDB_TRY(OkIf(count >= 0), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
