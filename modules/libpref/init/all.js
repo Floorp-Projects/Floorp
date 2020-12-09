@@ -172,14 +172,6 @@ pref("security.xfocsp.errorReporting.automatic", false);
 // https://tools.ietf.org/html/rfc7469#section-4.1
 pref("security.cert_pinning.max_max_age_seconds", 5184000);
 
-// security.pki.distrust_ca_policy controls what root program distrust policies
-// are enforced at this time:
-// 0: No distrust policies enforced
-// 1: Symantec roots distrusted for certificates issued after cutoff
-// 2: Symantec roots distrusted regardless of date
-// See https://wiki.mozilla.org/CA/Upcoming_Distrust_Actions for more details.
-pref("security.pki.distrust_ca_policy", 2);
-
 // 0: Disable CRLite entirely
 // 1: Enable and check revocations via CRLite, but only collect telemetry
 // 2: Enable and enforce revocations via CRLite

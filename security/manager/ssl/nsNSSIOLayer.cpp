@@ -1425,7 +1425,7 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
     } else if (prefName.EqualsLiteral("security.tls.version.fallback-limit")) {
       mOwner->loadVersionFallbackLimit();
     } else if (prefName.EqualsLiteral("security.tls.insecure_fallback_hosts")) {
-      // Changes to the whitelist on the public side will update the pref.
+      // Changes to the allowlist on the public side will update the pref.
       // Don't propagate the changes to the private side.
       if (mOwner->isPublic()) {
         mOwner->initInsecureFallbackSites();

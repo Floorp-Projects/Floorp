@@ -25,14 +25,14 @@ struct SanctionsCertHost {
 
 // Hostname, cert nickname pairs.
 const SanctionsCertHost sSanctionsCertHosts[] = {
-    {"symantec-whitelist-after-cutoff.example.com",
-     "symantec-ee-from-whitelist-after-cutoff"},
-    {"symantec-whitelist-before-cutoff.example.com",
-     "symantec-ee-from-whitelist-before-cutoff"},
-    {"symantec-not-whitelisted-after-cutoff.example.com",
-     "symantec-ee-not-whitelisted-after-cutoff"},
-    {"symantec-not-whitelisted-before-cutoff.example.com",
-     "symantec-ee-not-whitelisted-before-cutoff"},
+    {"symantec-allowlist-after-cutoff.example.com",
+     "symantec-ee-from-allowlist-after-cutoff"},
+    {"symantec-allowlist-before-cutoff.example.com",
+     "symantec-ee-from-allowlist-before-cutoff"},
+    {"symantec-not-allowlisted-after-cutoff.example.com",
+     "symantec-ee-not-allowlisted-after-cutoff"},
+    {"symantec-not-allowlisted-before-cutoff.example.com",
+     "symantec-ee-not-allowlisted-before-cutoff"},
     {"symantec-unaffected.example.com", "symantec-ee-unaffected"},
     {nullptr, nullptr}};
 
