@@ -56,15 +56,13 @@ class APZSampler {
    * which thread it is.
    */
   static void SetSamplerThread(const wr::WrWindowId& aWindowId);
-  static void SampleForWebRender(
-      const wr::WrWindowId& aWindowId, const uint64_t* aGeneratedFrameId,
-      wr::Transaction* aTransaction,
-      const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
+  static void SampleForWebRender(const wr::WrWindowId& aWindowId,
+                                 const uint64_t* aGeneratedFrameId,
+                                 wr::Transaction* aTransaction);
 
   void SetSampleTime(const SampleTime& aSampleTime);
   void SampleForWebRender(const Maybe<VsyncId>& aGeneratedFrameId,
-                          wr::TransactionWrapper& aTxn,
-                          const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
+                          wr::TransactionWrapper& aTxn);
 
   bool AdvanceAnimations(const SampleTime& aSampleTime);
 
