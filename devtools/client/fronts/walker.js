@@ -583,16 +583,8 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     if (this._isPicking) {
       return Promise.resolve();
     }
+
     this._isPicking = true;
-
-    // @backward-compat { version 80 } On older server, walker.pick doesn't exist.
-    if (!this.traits.supportsNodePicker) {
-      // parent is InspectorFront
-      return doFocus
-        ? this.parentFront.highlighter.pickAndFocus()
-        : this.parentFront.highlighter.pick();
-    }
-
     return super.pick(doFocus);
   }
 
@@ -603,14 +595,8 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     if (!this._isPicking) {
       return Promise.resolve();
     }
+
     this._isPicking = false;
-
-    // @backward-compat { version 80 } On older server, walker.cancelPick doesn't exist.
-    if (!this.traits.supportsNodePicker) {
-      // parent is InspectorFront
-      return this.parentFront.highlighter.cancelPick();
-    }
-
     return super.cancelPick();
   }
 }
