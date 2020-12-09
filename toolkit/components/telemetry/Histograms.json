@@ -12088,37 +12088,13 @@
   "CRLITE_RESULT": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "expires_in_version": "86",
+    "expires_in_version": "92",
     "kind": "categorical",
     "labels": ["FilterNotAvailable", "IssuerNotEnrolled", "CertificateTooNew", "CertificateValid", "CertificateRevoked", "LibraryFailure", "CertRevokedByStash"],
     "description": "The result of looking up revocation information for a TLS server certificate in CRLite.",
-    "bug_numbers": [1586855, 1607765, 1670984],
+    "bug_numbers": [1586855, 1607765, 1670984, 1678206],
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["dkeeler@mozilla.com", "jcj@mozilla.com", "seceng-telemetry@mozilla.com"]
-  },
-  "CRLITE_FASTER_THAN_OCSP_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "expires_in_version": "86",
-    "kind": "exponential",
-    "high": 20000,
-    "n_buckets": 50,
-    "description": "If both a CRLite lookup and OCSP request are made, how many milliseconds faster was CRLite?",
-    "bug_numbers": [1602641, 1607765],
-    "releaseChannelCollection": "opt-out",
-    "alert_emails": ["dkeeler@mozilla.com", "jcj@mozilla.com", "seceng-telemetry@mozilla.com"]
-  },
-  "OCSP_FASTER_THAN_CRLITE_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "expires_in_version": "86",
-    "kind": "exponential",
-    "high": 20000,
-    "n_buckets": 50,
-    "description": "If both a CRLite lookup and OCSP request are made, how many milliseconds faster was OCSP?",
-    "bug_numbers": [1602641, 1607765],
-    "releaseChannelCollection": "opt-out",
-    "alert_emails": ["dkeeler@mozilla.com", "jcj@mozilla.com", "seceng-telemetry@mozilla.com"]
+    "alert_emails": ["dkeeler@mozilla.com", "seceng-telemetry@mozilla.com"]
   },
   "WEAVE_START_COUNT": {
     "record_in_processes": ["main", "content"],
@@ -14247,8 +14223,8 @@
   "INTERMEDIATE_PRELOADING_ERRORS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com", "dkeeler@mozilla.com"],
-    "expires_in_version": "86",
+    "alert_emails": ["seceng-telemetry@mozilla.com", "dkeeler@mozilla.com"],
+    "expires_in_version": "92",
     "kind": "categorical",
     "labels": ["emptyAttachment",
                "failedToDownloadMisc",
@@ -14259,18 +14235,18 @@
                "failedToUpdateDB",
                "unexpectedHash",
                "unexpectedLength"],
-    "bug_numbers": [1519273, 1553550],
+    "bug_numbers": [1519273, 1553550, 1678206],
     "description": "Errors occurred during intermediate certificate preloading."
   },
   "INTERMEDIATE_PRELOADING_UPDATE_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com", "dkeeler@mozilla.com"],
-    "expires_in_version": "86",
+    "alert_emails": ["seceng-telemetry@mozilla.com", "dkeeler@mozilla.com"],
+    "expires_in_version": "92",
     "kind": "exponential",
     "high": 180000,
     "n_buckets": 50,
-    "bug_numbers": [1519273, 1553550],
+    "bug_numbers": [1519273, 1553550, 1678206],
     "description": "Number of milliseconds to update the pre-loaded data, if updated."
   },
   "IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS": {

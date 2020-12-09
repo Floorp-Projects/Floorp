@@ -754,7 +754,7 @@ static void CollectCertTelemetry(
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const UniqueCERTCertList& aBuiltCertChain,
     const CertificateTransparencyInfo& aCertificateTransparencyInfo,
-    const CRLiteTelemetryInfo& aCRLiteTelemetryInfo) {
+    const CRLiteLookupResult& aCRLiteLookupResult) {
   uint32_t evStatus = (aCertVerificationResult != Success) ? 0  // 0 = Failure
                       : (aEvOidPolicy == SEC_OID_UNKNOWN)  ? 1  // 1 = DV
                                                            : 2;  // 2 = EV
@@ -793,7 +793,7 @@ static void CollectCertTelemetry(
         /*isEV*/ aEvOidPolicy != SEC_OID_UNKNOWN, aCertificateTransparencyInfo);
   }
 
-  switch (aCRLiteTelemetryInfo.mLookupResult) {
+  switch (aCRLiteLookupResult) {
     case CRLiteLookupResult::FilterNotAvailable:
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_CRLITE_RESULT::FilterNotAvailable);
@@ -827,19 +827,6 @@ static void CollectCertTelemetry(
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled CRLiteLookupResult value?");
       break;
-  }
-
-  if (aCRLiteTelemetryInfo.mCRLiteFasterThanOCSPMillis.isSome()) {
-    Telemetry::Accumulate(
-        Telemetry::CRLITE_FASTER_THAN_OCSP_MS,
-        static_cast<uint32_t>(
-            *aCRLiteTelemetryInfo.mCRLiteFasterThanOCSPMillis));
-  }
-  if (aCRLiteTelemetryInfo.mOCSPFasterThanCRLiteMillis.isSome()) {
-    Telemetry::Accumulate(
-        Telemetry::OCSP_FASTER_THAN_CRLITE_MS,
-        static_cast<uint32_t>(
-            *aCRLiteTelemetryInfo.mOCSPFasterThanCRLiteMillis));
   }
 }
 
@@ -899,7 +886,7 @@ Result AuthCertificate(
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
   SHA1ModeResult sha1ModeResult = SHA1ModeResult::NeverChecked;
   PinningTelemetryInfo pinningTelemetryInfo;
-  CRLiteTelemetryInfo crliteTelemetryInfo;
+  CRLiteLookupResult crliteTelemetryInfo;
 
   nsTArray<nsTArray<uint8_t>> peerCertsBytes;
   // Don't include the end-entity certificate.
