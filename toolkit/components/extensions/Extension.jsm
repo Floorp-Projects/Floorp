@@ -618,10 +618,24 @@ class ExtensionData {
     });
   }
 
+  canCheckSignature() {
+    // ExtensionData instances can't check the signature because it is not yet
+    // available when XPIProvider does use it to load the extension manifest.
+    //
+    // This method will return true for the ExtensionData subclasses (like
+    // the Extension class) to enable the additional validation that would require
+    // the signature to be available (e.g. to check if the extension is allowed to
+    // use a privileged permission).
+    return this.constructor != ExtensionData;
+  }
+
   get restrictSchemes() {
-    // ExtensionData can't check the signature (as it is not yet passed to its constructor
-    // as it is for the Extension class, where this getter is overridden to check both the
-    // signature and the permissions).
+    // mozillaAddons permission is only allowed for privileged addons and
+    // filtered out if the extension isn't privileged.
+    // When the manifest is loaded by an explicit ExtensionData class
+    // instance, the signature data isn't available yet and this helper
+    // would always return false, but it will return true when appropriate
+    // (based on the isPrivileged boolean property) for the Extension class.
     return !this.hasPermission("mozillaAddons");
   }
 
@@ -995,6 +1009,18 @@ class ExtensionData {
         } else if (type.api) {
           apiNames.add(type.api);
         } else if (type.invalid) {
+          if (!this.canCheckSignature() && PRIVILEGED_PERMS.has(perm)) {
+            // Do not emit the warning if the invalid permission is a privileged one
+            // and the current instance can't yet check for a valid signature
+            // (see Bug 1675858 and the inline comment inside the canCheckSignature
+            // method for more details).
+            //
+            // This parseManifest method will be called again on the Extension class
+            // instance, which will have the signature available and the invalid
+            // extension permission warnings will be collected and logged if necessary.
+            continue;
+          }
+
           this.manifestWarning(`Invalid extension permission: ${perm}`);
           continue;
         }
@@ -2008,10 +2034,6 @@ class Extension extends ExtensionData {
     } finally {
       this.startupStates.delete(name);
     }
-  }
-
-  get restrictSchemes() {
-    return !(this.isPrivileged && this.hasPermission("mozillaAddons"));
   }
 
   // Some helpful properties added elsewhere:
