@@ -235,6 +235,13 @@ function waitForFrame() {
   });
 }
 
+// Return a promise that is resolved on the next MozAfterPaint event
+function promiseAfterPaint() {
+  return new Promise(resolve => {
+    window.addEventListener("MozAfterPaint", resolve, { once: true });
+  });
+}
+
 function promiseApzRepaintsFlushed(aWindow = window) {
   return new Promise(function(resolve, reject) {
     var repaintDone = function() {
