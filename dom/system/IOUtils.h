@@ -220,20 +220,6 @@ class IOUtils final {
       const InternalWriteOpts& aOptions);
 
   /**
-   * Attempts to write |aBytes| to the file pointed by |aFd|.
-   *
-   * @param aFd    An open PRFileDesc for the destination file to be
-   *               overwritten.
-   * @param aFile  The location of the file.
-   * @param aBytes The data to write to the file.
-   *
-   * @return The number of bytes written to the file, or an error if the write
-   *         failed or was incomplete.
-   */
-  static Result<uint32_t, IOError> WriteSync(PRFileDesc* aFd, nsIFile* aFile,
-                                             const Span<const uint8_t>& aBytes);
-
-  /**
    * Attempts to move the file located at |aSourceFile| to |aDestFile|.
    *
    * @param aSourceFile  The location of the file to move.
