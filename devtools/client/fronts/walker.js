@@ -12,6 +12,12 @@ const {
 const { walkerSpec } = require("devtools/shared/specs/walker");
 const { safeAsyncMethod } = require("devtools/shared/async-utils");
 
+loader.lazyRequireGetter(
+  this,
+  "nodeConstants",
+  "devtools/shared/dom-node-constants"
+);
+
 /**
  * Client side of the DOM walker.
  */
@@ -322,6 +328,33 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
         if ("numChildren" in change) {
           targetFront._form.numChildren = change.numChildren;
         }
+      } else if (change.type === "frameLoad") {
+        // @backward-compat { version 81 } The frameLoad mutation was removed in favor
+        // of the root-node resource.
+
+        // Nothing we need to do here, except verify that we don't have any
+        // document children, because we should have gotten a documentUnload
+        // first.
+        for (const child of targetFront.treeChildren()) {
+          if (child.nodeType === nodeConstants.DOCUMENT_NODE) {
+            console.warn(
+              "Got an unexpected frameLoad in the inspector, " +
+                "please file a bug on bugzilla.mozilla.org!"
+            );
+            console.trace();
+          }
+        }
+      } else if (change.type === "documentUnload") {
+        // @backward-compat { version 81 } The documentUnload mutation was removed in
+        // favor of the root-node resource.
+
+        // We try to give fronts instead of actorIDs, but these fronts need
+        // to be destroyed now.
+        emittedMutation.target = targetFront.actorID;
+        emittedMutation.targetParent = targetFront.parentNode();
+
+        // Release the document node and all of its children, even retained.
+        this._releaseFront(targetFront, true);
       } else if (change.type === "shadowRootAttached") {
         targetFront._form.isShadowHost = true;
       } else if (change.type === "customElementDefined") {
@@ -516,19 +549,29 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   }
 
   _onRootNodeAvailable(rootNode) {
-    if (rootNode.isTopLevelDocument) {
+    if (this._isTopLevelRootNode(rootNode)) {
       this.rootNode = rootNode;
       this._rootNodePromiseResolve(this.rootNode);
     }
   }
 
   _onRootNodeDestroyed(rootNode) {
-    if (rootNode.isTopLevelDocument) {
+    if (this._isTopLevelRootNode(rootNode)) {
       this._rootNodePromise = new Promise(
         r => (this._rootNodePromiseResolve = r)
       );
       this.rootNode = null;
     }
+  }
+
+  _isTopLevelRootNode(rootNode) {
+    if (!rootNode.traits.supportsIsTopLevelDocument) {
+      // When `supportsIsTopLevelDocument` is false, a root-node resource is
+      // necessarily top level, so we can fallback to true.
+      return true;
+    }
+
+    return rootNode.isTopLevelDocument;
   }
 
   /**
@@ -540,8 +583,16 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     if (this._isPicking) {
       return Promise.resolve();
     }
-
     this._isPicking = true;
+
+    // @backward-compat { version 80 } On older server, walker.pick doesn't exist.
+    if (!this.traits.supportsNodePicker) {
+      // parent is InspectorFront
+      return doFocus
+        ? this.parentFront.highlighter.pickAndFocus()
+        : this.parentFront.highlighter.pick();
+    }
+
     return super.pick(doFocus);
   }
 
@@ -552,8 +603,14 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     if (!this._isPicking) {
       return Promise.resolve();
     }
-
     this._isPicking = false;
+
+    // @backward-compat { version 80 } On older server, walker.cancelPick doesn't exist.
+    if (!this.traits.supportsNodePicker) {
+      // parent is InspectorFront
+      return this.parentFront.highlighter.cancelPick();
+    }
+
     return super.cancelPick();
   }
 }

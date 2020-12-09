@@ -205,7 +205,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         this.rawNode.ownerDocument &&
         this.rawNode.ownerDocument.contentType === "text/html",
       hasEventListeners: this._hasEventListeners,
-      traits: {},
+      traits: {
+        supportsIsTopLevelDocument: true,
+      },
     };
 
     if (this.isDocumentElement()) {
