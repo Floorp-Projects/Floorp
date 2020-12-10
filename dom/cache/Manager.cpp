@@ -260,7 +260,8 @@ class Manager::Factory {
       ref->Init(oldManager.maybeDeref());
 
       MOZ_ASSERT(!sFactory->mManagerList.Contains(ref));
-      sFactory->mManagerList.AppendElement(ref.unsafeGetRawPtr());
+      sFactory->mManagerList.AppendElement(
+          WrapNotNullUnchecked(ref.unsafeGetRawPtr()));
     }
 
     return ref;
@@ -313,8 +314,9 @@ class Manager::Factory {
       AutoRestore<bool> restore(sFactory->mInSyncAbortOrShutdown);
       sFactory->mInSyncAbortOrShutdown = true;
 
-      for (auto* manager : sFactory->mManagerList.ForwardRange()) {
-        auto pinnedManager = SafeRefPtr{manager, AcquireStrongRefFromRawPtr{}};
+      for (const auto& manager : sFactory->mManagerList.ForwardRange()) {
+        auto pinnedManager =
+            SafeRefPtr{manager.get(), AcquireStrongRefFromRawPtr{}};
         pinnedManager->Shutdown();
       }
     }
@@ -338,8 +340,7 @@ class Manager::Factory {
           IntToCString(static_cast<uint64_t>(sFactory->mManagerList.Length())) +
           " ("_ns);
 
-      for (const auto* const manager :
-           sFactory->mManagerList.NonObservingRange()) {
+      for (const auto& manager : sFactory->mManagerList.NonObservingRange()) {
         data.Append(quota::AnonymizedOriginString(
             manager->GetManagerId().QuotaOrigin()));
 
@@ -427,12 +428,12 @@ class Manager::Factory {
     // chains to an old Manager we want it to be the most recent one.
     const auto range = Reversed(sFactory->mManagerList.NonObservingRange());
     const auto foundIt = std::find_if(
-        range.begin(), range.end(), [aState, &aManagerId](const auto* manager) {
+        range.begin(), range.end(), [aState, &aManagerId](const auto& manager) {
           return aState == manager->GetState() &&
                  *manager->mManagerId == aManagerId;
         });
     return foundIt != range.end()
-               ? SafeRefPtr{*foundIt, AcquireStrongRefFromRawPtr{}}
+               ? SafeRefPtr{foundIt->get(), AcquireStrongRefFromRawPtr{}}
                : nullptr;
   }
 
@@ -454,11 +455,9 @@ class Manager::Factory {
       sFactory->mInSyncAbortOrShutdown = true;
 
       for (const auto& manager : sFactory->mManagerList.ForwardRange()) {
-        MOZ_DIAGNOSTIC_ASSERT(manager);
-
         if (aCondition(*manager)) {
           auto pinnedManager =
-              SafeRefPtr{manager, AcquireStrongRefFromRawPtr{}};
+              SafeRefPtr{manager.get(), AcquireStrongRefFromRawPtr{}};
           pinnedManager->Abort();
         }
       }
@@ -482,7 +481,7 @@ class Manager::Factory {
   // Weak references as we don't want to keep Manager objects alive forever.
   // When a Manager is destroyed it calls Factory::Remove() to clear itself.
   // PBackground thread only.
-  nsTObserverArray<Manager*> mManagerList;
+  nsTObserverArray<NotNull<Manager*>> mManagerList;
 
   // This flag is set when we are looping through the list and calling Abort()
   // or Shutdown() on each Manager.  We need to be careful not to synchronously
