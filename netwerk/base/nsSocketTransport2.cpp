@@ -3070,8 +3070,12 @@ nsSocketTransport::SetConnectionFlags(uint32_t value) {
       ("nsSocketTransport::SetConnectionFlags %p flags=%u", this, value));
 
   mConnectionFlags = value;
-  mIsPrivate = value & nsISocketTransport::NO_PERMANENT_STORAGE;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsSocketTransport::SetIsPrivate(bool aIsPrivate) {
+  mIsPrivate = aIsPrivate;
   return NS_OK;
 }
 
