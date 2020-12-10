@@ -2185,7 +2185,8 @@ def rust_compile_flags(opt_level, debug_rust, target, debug_symbols, frame_point
         opts.append("debuginfo=%s" % debug_info)
     if frame_pointers:
         opts.append("force-frame-pointers=yes")
-    if target.kernel == "WINNT":
+    # CFG for arm64 is crashy, see `def security_hardening_cflags`.
+    if target.kernel == "WINNT" and target.cpu != "aarch64":
         opts.append("control-flow-guard=yes")
 
     flags = []
