@@ -178,3 +178,34 @@ addAccessibleTask(
     );
   }
 );
+
+/**
+ * test nested content editables and their ancestor getters.
+ */
+addAccessibleTask(
+  `<div id="outer" role="textbox" contenteditable="true">
+     <p id="p">Bob <a href="#" id="link">Loblaw's</a></p>
+     <div id="inner" role="textbox" contenteditable="true">
+       Law <a href="#" id="inner_link">Blog</a>
+     </div>
+   </div>`,
+  (browser, accDoc) => {
+    let link = getNativeInterface(accDoc, "link");
+    let innerLink = getNativeInterface(accDoc, "inner_link");
+
+    let idmatches = (elem, id) => {
+      is(elem.getAttributeValue("AXDOMIdentifier"), id, "Matches ID");
+    };
+
+    idmatches(link.getAttributeValue("AXEditableAncestor"), "outer");
+    idmatches(link.getAttributeValue("AXFocusableAncestor"), "outer");
+    idmatches(link.getAttributeValue("AXHighestEditableAncestor"), "outer");
+
+    idmatches(innerLink.getAttributeValue("AXEditableAncestor"), "inner");
+    idmatches(innerLink.getAttributeValue("AXFocusableAncestor"), "inner");
+    idmatches(
+      innerLink.getAttributeValue("AXHighestEditableAncestor"),
+      "outer"
+    );
+  }
+);
