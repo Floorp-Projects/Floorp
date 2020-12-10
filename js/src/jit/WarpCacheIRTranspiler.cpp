@@ -1981,30 +1981,24 @@ bool WarpCacheIRTranspiler::emitAddAndStoreSlotShared(
   return resumeAfter(addAndStore);
 }
 
-bool WarpCacheIRTranspiler::emitAddAndStoreFixedSlot(
-    ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
-  MOZ_ASSERT(!changeGroup);
-
+bool WarpCacheIRTranspiler::emitAddAndStoreFixedSlot(ObjOperandId objId,
+                                                     uint32_t offsetOffset,
+                                                     ValOperandId rhsId,
+                                                     uint32_t newShapeOffset) {
   return emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind::FixedSlot, objId,
                                    offsetOffset, rhsId, newShapeOffset);
 }
 
 bool WarpCacheIRTranspiler::emitAddAndStoreDynamicSlot(
     ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset) {
-  MOZ_ASSERT(!changeGroup);
-
+    uint32_t newShapeOffset) {
   return emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind::DynamicSlot, objId,
                                    offsetOffset, rhsId, newShapeOffset);
 }
 
 bool WarpCacheIRTranspiler::emitAllocateAndStoreDynamicSlot(
     ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-    bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
-    uint32_t numNewSlotsOffset) {
-  MOZ_ASSERT(!changeGroup);
-
+    uint32_t newShapeOffset, uint32_t numNewSlotsOffset) {
   int32_t offset = int32StubField(offsetOffset);
   Shape* shape = shapeStubField(newShapeOffset);
   uint32_t numNewSlots = uint32StubField(numNewSlotsOffset);

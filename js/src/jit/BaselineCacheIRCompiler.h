@@ -47,8 +47,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                                         ValOperandId rhsId);
   MOZ_MUST_USE bool emitAddAndStoreSlotShared(
       CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
-      bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
-      mozilla::Maybe<uint32_t> numNewSlotsOffset);
+      uint32_t newShapeOffset, mozilla::Maybe<uint32_t> numNewSlotsOffset);
 
   bool updateArgc(CallFlags flags, Register argcReg, Register scratch);
   void loadStackObject(ArgumentKind kind, CallFlags flags, size_t stackPushed,
