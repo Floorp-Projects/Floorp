@@ -685,6 +685,23 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+  distribution_id:
+    type: string
+    lifetime: application
+    description: |
+      A string containing the distribution identifier. This is currently used
+      to identify installs from Mozilla Online.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16075
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/16075
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: never
   top_sites_count:
     type: counter
     lifetime: application
