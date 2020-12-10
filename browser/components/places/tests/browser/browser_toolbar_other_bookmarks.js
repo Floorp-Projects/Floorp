@@ -312,6 +312,54 @@ add_task(async function showOtherBookmarksMenuItemPrefDisabled() {
   await testIsOtherBookmarksMenuItemShown(false);
 });
 
+// Test that node visibility for toolbar overflow is consisten when the "Other Bookmarks"
+// folder is shown/hidden.
+add_task(async function testOtherBookmarksToolbarOverFlow() {
+  await setupBookmarksToolbar();
+  await SpecialPowers.pushPrefEnv({
+    set: [[BOOKMARKS_H2_2020_PREF, true]],
+  });
+
+  info(
+    "Ensure that visible nodes when showing/hiding Other Bookmarks is consistent across separate windows."
+  );
+  // Add bookmarks to other bookmarks
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{ title: "firefox", url: "http://example.com" }],
+  });
+
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
+
+  // Add bookmarks to the toolbar
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: Array(100)
+      .fill("")
+      .map((_, i) => ({ title: `test ${i}`, url: `http:example.com/${i}` })),
+  });
+
+  info("Hide the Other Bookmarks folder from the original window.");
+  await selectShowOtherBookmarksMenuItem("#OtherBookmarks");
+  await BrowserTestUtils.waitForEvent(
+    document.getElementById("PersonalToolbar"),
+    "BookmarksToolbarVisibilityUpdated"
+  );
+  ok(true, "Nodes successfully updated for both windows.");
+  await testUpdatedNodeVisibility(newWin);
+
+  info("Show the Other Bookmarks folder from the original window.");
+  await selectShowOtherBookmarksMenuItem("#PlacesChevron");
+  await BrowserTestUtils.waitForEvent(
+    document.getElementById("PersonalToolbar"),
+    "BookmarksToolbarVisibilityUpdated"
+  );
+  ok(true, "Nodes successfully updated for both windows.");
+  await testUpdatedNodeVisibility(newWin);
+
+  await BrowserTestUtils.closeWindow(newWin);
+});
+
 /**
  * Tests whether or not the "Other Bookmarks" folder is visible.
  */
@@ -429,10 +477,14 @@ async function closeMenuPopup(popupSelector) {
 
 /**
  * Helper for opening the toolbar context menu.
+ *
+ * @param {String}  toolbarSelector
+ *        Optional. The selector for the toolbar context menu.
+ *        Defaults to #PlacesToolbarItems.
  */
-async function openToolbarContextMenu() {
+async function openToolbarContextMenu(toolbarSelector = "#PlacesToolbarItems") {
   let contextMenu = document.getElementById("placesContext");
-  let toolbar = document.getElementById("PlacesToolbarItems");
+  let toolbar = document.querySelector(toolbarSelector);
   let openToolbarContextMenuPromise = BrowserTestUtils.waitForPopupEvent(
     contextMenu,
     "shown"
@@ -482,10 +534,16 @@ async function setupBookmarksToolbar() {
 /**
  * Helper for selecting the "Show Other Bookmarks" menu item from the bookmarks
  * toolbar context menu.
+ *
+ * @param {String}  selector
+ *        Optional. The selector for the node that triggers showing the
+ *        "Show Other Bookmarks" context menu item in the toolbar.
+ *        Defaults to #PlacesToolbarItem when `openToolbarContextMenu` is
+ *        called.
  */
-async function selectShowOtherBookmarksMenuItem() {
+async function selectShowOtherBookmarksMenuItem(selector) {
   info("Select 'Show Other Bookmarks' menu item");
-  await openToolbarContextMenu();
+  await openToolbarContextMenu(selector);
 
   let otherBookmarksMenuItem = document.querySelector(
     "#show-other-bookmarks_PersonalToolbar"
@@ -495,4 +553,42 @@ async function selectShowOtherBookmarksMenuItem() {
   EventUtils.synthesizeMouseAtCenter(otherBookmarksMenuItem, {});
 
   await BrowserTestUtils.waitForPopupEvent(contextMenu, "hidden");
+  await closeToolbarContextMenu();
+}
+
+/**
+ * Test helper for node visibility in the bookmarks toolbar between two windows.
+ *
+ * @param {Window}  otherWin
+ *        The other window whose toolbar items we want to compare with.
+ */
+function testUpdatedNodeVisibility(otherWin) {
+  // Get visible toolbar nodes for both the current and other windows.
+  let toolbarItems = document.getElementById("PlacesToolbarItems");
+  let currentVisibleNodes = [];
+
+  for (let node of toolbarItems.children) {
+    if (node.style.visibility === "visible") {
+      currentVisibleNodes.push(node);
+    }
+  }
+
+  let otherToolbarItems = otherWin.document.getElementById(
+    "PlacesToolbarItems"
+  );
+  let otherVisibleNodes = [];
+
+  for (let node of otherToolbarItems.children) {
+    if (node.style.visibility === "visible") {
+      otherVisibleNodes.push(node);
+    }
+  }
+
+  let lastIdx = otherVisibleNodes.length - 1;
+
+  is(
+    currentVisibleNodes[lastIdx]?.bookmarkGuid,
+    otherVisibleNodes[lastIdx]?.bookmarkGuid,
+    "Last visible toolbar bookmark is the same in both windows."
+  );
 }

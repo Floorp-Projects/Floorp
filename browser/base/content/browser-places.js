@@ -26,6 +26,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true,
   (aPref, aPrevVal, aNewVal) => {
     BookmarkingUI.maybeShowOtherBookmarksFolder();
+    document
+      .getElementById("PlacesToolbar")
+      ?._placesView?.updateNodesVisibility();
   }
 );
 ChromeUtils.defineModuleGetter(
