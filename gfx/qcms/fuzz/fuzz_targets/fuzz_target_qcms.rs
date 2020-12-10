@@ -8,7 +8,9 @@ extern crate libc;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
- use qcms::{iccread::{qcms_profile, qcms_profile_get_color_space}, transform::QCMS_DATA_RGBA_8, transform::QCMS_DATA_RGB_8, transform::QCMS_DATA_GRAYA_8, transform::QCMS_DATA_GRAY_8, iccread::icSigRgbData, iccread::qcms_profile_get_rendering_intent, transform::qcms_profile_precache_output_transform, transform::qcms_transform_create, transform::qcms_transform_data, transform::qcms_transform_release, transform::qcms_enable_iccv4, iccread::qcms_profile_from_memory, iccread::qcms_profile_release, iccread::qcms_profile_sRGB, iccread::qcms_profile_is_bogus, iccread::icSigGrayData};
+ use qcms::iccread::{qcms_profile, icSigRgbData, qcms_profile_is_bogus, icSigGrayData};
+ use qcms::c_bindings::{qcms_profile_get_color_space, qcms_profile_get_rendering_intent, qcms_profile_from_memory, qcms_profile_release, qcms_profile_sRGB};
+ use qcms::transform::{QCMS_DATA_RGBA_8, QCMS_DATA_RGB_8, QCMS_DATA_GRAYA_8, QCMS_DATA_GRAY_8, qcms_profile_precache_output_transform, qcms_transform_create, qcms_transform_data, qcms_transform_release, qcms_enable_iccv4};
 
  unsafe fn transform(src_profile: *mut qcms_profile, dst_profile: *mut qcms_profile, size: usize)
  {
