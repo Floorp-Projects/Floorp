@@ -1112,7 +1112,7 @@ parent:
 
     async PHandlerService();
 
-    async AddGeolocationListener(Principal principal, bool highAccuracy);
+    async AddGeolocationListener(bool highAccuracy);
     async RemoveGeolocationListener();
     async SetGeolocationHigherAccuracy(bool enable);
 
