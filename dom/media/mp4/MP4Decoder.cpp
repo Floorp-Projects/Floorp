@@ -9,6 +9,7 @@
 #include "MP4Demuxer.h"
 #include "MediaContainerType.h"
 #include "PDMFactory.h"
+#include "PlatformDecoderModule.h"
 #include "VideoUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/Tools.h"

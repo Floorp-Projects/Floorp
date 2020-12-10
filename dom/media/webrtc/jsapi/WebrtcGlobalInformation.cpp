@@ -24,6 +24,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ClearOnShutdown.h"
 
+#include "common/browser_logging/WebRtcLog.h"
 #include "transport/runnable_utils.h"
 #include "MediaTransportHandler.h"
 #include "PeerConnectionCtx.h"
