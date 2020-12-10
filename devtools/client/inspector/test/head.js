@@ -814,6 +814,12 @@ function getHighlighterTestHelpers(inspector) {
   }
 
   return {
+    getActiveHighlighter(type) {
+      return inspector.highlighters.getActiveHighlighter(type);
+    },
+    getNodeForActiveHighlighter(type) {
+      return inspector.highlighters.getNodeForActiveHighlighter(type);
+    },
     waitForHighlighterTypeShown(type) {
       return _waitForHighlighterTypeEvent(type, "highlighter-shown");
     },
