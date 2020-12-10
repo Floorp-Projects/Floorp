@@ -33,7 +33,7 @@ add_task(async function setup() {
   Preferences.set("app.update.url", "http://localhost");
 
   let currentPid = Services.appinfo.processID;
-  gCurrentPidStr = "0x" + currentPid.toString(16);
+  gCurrentPidStr = "browser.0x" + currentPid.toString(16);
 
   // Start the local ping server and setup Telemetry to use it during the tests.
   PingServer.start();
