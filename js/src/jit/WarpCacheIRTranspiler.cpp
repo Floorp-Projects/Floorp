@@ -232,6 +232,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitFunApplyArgs(WrappedFunction* wrappedTarget,
                                      CallFlags flags);
 
+  MDefinition* convertWasmArg(MDefinition* arg, wasm::ValType::Kind kind);
+
   WrappedFunction* maybeWrappedFunction(MDefinition* callee, CallKind kind,
                                         uint16_t nargs, FunctionFlags flags);
   WrappedFunction* maybeCallTarget(MDefinition* callee, CallKind kind);
@@ -3593,6 +3595,18 @@ void WarpCacheIRTranspiler::updateArgumentsFromOperands() {
         case ArgumentKind::Arg3:
           callInfo_->setArg(3, getOperand(id));
           break;
+        case ArgumentKind::Arg4:
+          callInfo_->setArg(4, getOperand(id));
+          break;
+        case ArgumentKind::Arg5:
+          callInfo_->setArg(5, getOperand(id));
+          break;
+        case ArgumentKind::Arg6:
+          callInfo_->setArg(6, getOperand(id));
+          break;
+        case ArgumentKind::Arg7:
+          callInfo_->setArg(7, getOperand(id));
+          break;
         case ArgumentKind::Callee:
         case ArgumentKind::NumKinds:
           MOZ_CRASH("Unexpected argument kind");
@@ -3623,7 +3637,7 @@ bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
   // Args..
   if (slotIndex < callInfo_->argc()) {
     uint32_t arg = callInfo_->argc() - 1 - slotIndex;
-    ArgumentKind kind = ArgumentKind(uint32_t(ArgumentKind::Arg0) + arg);
+    ArgumentKind kind = ArgumentKindForArgIndex(arg);
     MOZ_ASSERT(kind < ArgumentKind::NumKinds);
     setArgumentId(kind, resultId);
     return defineOperand(resultId, callInfo_->getArg(arg));
@@ -4036,67 +4050,22 @@ bool WarpCacheIRTranspiler::emitCallWasmFunction(ObjOperandId calleeId,
     return false;
   }
 
-  // An invariant in this loop is that any type conversion operation that has
-  // externally visible effects, such as invoking valueOf on an object argument,
-  // must bailout so that we don't have to worry about replaying effects during
-  // argument conversion.
   mozilla::Maybe<MDefinition*> undefined;
   for (size_t i = 0; i < sig.args().length(); i++) {
     if (!alloc().ensureBallast()) {
       return false;
     }
 
-    // Add undefined if an argument is missing.
-    if (i >= callInfo_->argc() && !undefined) {
-      undefined.emplace(constant(UndefinedValue()));
+    MDefinition* arg;
+    if (i < callInfo_->argc()) {
+      arg = callInfo_->getArg(i);
+    } else {
+      if (!undefined) {
+        undefined.emplace(constant(UndefinedValue()));
+      }
+      arg = convertWasmArg(*undefined, sig.args()[i].kind());
     }
-
-    MDefinition* arg =
-        i >= callInfo_->argc() ? *undefined : callInfo_->getArg(i);
-
-    MInstruction* conversion = nullptr;
-    switch (sig.args()[i].kind()) {
-      case wasm::ValType::I32:
-        conversion = MTruncateToInt32::New(alloc(), arg);
-        break;
-      case wasm::ValType::I64:
-        conversion = MToInt64::New(alloc(), arg);
-        break;
-      case wasm::ValType::F32:
-        conversion = MToFloat32::New(alloc(), arg);
-        break;
-      case wasm::ValType::F64:
-        conversion = MToDouble::New(alloc(), arg);
-        break;
-      case wasm::ValType::V128:
-        MOZ_CRASH("Unexpected type for Wasm JitEntry");
-      case wasm::ValType::Ref:
-        switch (sig.args()[i].refTypeKind()) {
-          case wasm::RefType::Extern:
-            // Transform the JS representation into an AnyRef representation.
-            // The resulting type is MIRType::RefOrNull.  These cases are all
-            // effect-free.
-            switch (arg->type()) {
-              case MIRType::Object:
-              case MIRType::ObjectOrNull:
-                conversion = MWasmAnyRefFromJSObject::New(alloc(), arg);
-                break;
-              case MIRType::Null:
-                conversion = MWasmNullConstant::New(alloc());
-                break;
-              default:
-                conversion = MWasmBoxValue::New(alloc(), arg);
-                break;
-            }
-            break;
-          default:
-            MOZ_CRASH("Unexpected type for Wasm JitEntry");
-        }
-        break;
-    }
-
-    add(conversion);
-    call->initArg(i, conversion);
+    call->initArg(i, arg);
   }
 
   addEffectful(call);
@@ -4133,6 +4102,61 @@ bool WarpCacheIRTranspiler::emitCallWasmFunction(ObjOperandId calleeId,
   // instruction.
   pushResult(postConversion);
   return resumeAfterUnchecked(postConversion);
+}
+
+MDefinition* WarpCacheIRTranspiler::convertWasmArg(MDefinition* arg,
+                                                   wasm::ValType::Kind kind) {
+  // An invariant in this code is that any type conversion operation that has
+  // externally visible effects, such as invoking valueOf on an object argument,
+  // must bailout so that we don't have to worry about replaying effects during
+  // argument conversion.
+  MInstruction* conversion = nullptr;
+  switch (kind) {
+    case wasm::ValType::I32:
+      conversion = MTruncateToInt32::New(alloc(), arg);
+      break;
+    case wasm::ValType::I64:
+      conversion = MToInt64::New(alloc(), arg);
+      break;
+    case wasm::ValType::F32:
+      conversion = MToFloat32::New(alloc(), arg);
+      break;
+    case wasm::ValType::F64:
+      conversion = MToDouble::New(alloc(), arg);
+      break;
+    case wasm::ValType::V128:
+      MOZ_CRASH("Unexpected type for Wasm JitEntry");
+    case wasm::ValType::Ref:
+      // Transform the JS representation into an AnyRef representation.
+      // The resulting type is MIRType::RefOrNull.  These cases are all
+      // effect-free.
+      switch (arg->type()) {
+        case MIRType::Object:
+        case MIRType::ObjectOrNull:
+          conversion = MWasmAnyRefFromJSObject::New(alloc(), arg);
+          break;
+        case MIRType::Null:
+          arg->setImplicitlyUsedUnchecked();
+          conversion = MWasmNullConstant::New(alloc());
+          break;
+        default:
+          conversion = MWasmBoxValue::New(alloc(), arg);
+          break;
+      }
+      break;
+  }
+
+  add(conversion);
+  return conversion;
+}
+
+bool WarpCacheIRTranspiler::emitGuardWasmArg(ValOperandId argId,
+                                             wasm::ValType::Kind kind) {
+  MDefinition* arg = getOperand(argId);
+  MDefinition* conversion = convertWasmArg(arg, kind);
+
+  setOperand(argId, conversion);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitCallGetterResult(CallKind kind,

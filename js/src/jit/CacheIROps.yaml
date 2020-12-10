@@ -1529,6 +1529,14 @@
     funcExport: RawPointerField
     instance: ObjectField
 
+- name: GuardWasmArg
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    arg: ValId
+    type: WasmValTypeImm
+
 - name: CallNativeFunction
   shared: false
   transpile: true
