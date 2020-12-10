@@ -2325,6 +2325,15 @@ UpdateService.prototype = {
    * notify the user of install success.
    */
   _postUpdateProcessing: function AUS__postUpdateProcessing() {
+    if (this.disabledByPolicy) {
+      // This function is a point when we can potentially enter the update
+      // system, even with update disabled. Make sure that we do not continue
+      // because update code can have side effects that are visible to the user
+      // and give the impression that updates are enabled. For example, if we
+      // can't write to the update directory, we might complain to the user that
+      // update is broken and they should reinstall.
+      return;
+    }
     gUpdateFileWriteInfo = { phase: "startup", failure: false };
     if (!this.canCheckForUpdates) {
       LOG(
@@ -2737,6 +2746,16 @@ UpdateService.prototype = {
   _checkForBackgroundUpdates: function AUS__checkForBackgroundUpdates(
     isNotify
   ) {
+    if (this.disabledByPolicy) {
+      // Return immediately if we are disabled by policy. Otherwise, just the
+      // telemetry we try to collect below can potentially trigger a restart
+      // prompt if the update directory isn't writable. And we shouldn't be
+      // telling the user about update failures if update is disabled.
+      // See Bug 1599590.
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
+      return;
+    }
+
     this._isNotify = isNotify;
 
     // Histogram IDs:
@@ -2886,11 +2905,6 @@ UpdateService.prototype = {
           AUSTLMY.pingCheckCode(
             this._pingSuffix,
             AUSTLMY.CHK_INVALID_DEFAULT_URL
-          );
-        } else if (this.disabledByPolicy) {
-          AUSTLMY.pingCheckCode(
-            this._pingSuffix,
-            AUSTLMY.CHK_DISABLED_BY_POLICY
           );
         } else if (!hasUpdateMutex()) {
           AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_MUTEX);
