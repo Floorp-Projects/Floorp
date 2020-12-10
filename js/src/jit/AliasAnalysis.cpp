@@ -76,170 +76,6 @@ void AliasAnalysis::spewDependencyList() {
 #endif
 }
 
-// Unwrap any slot or element to its corresponding object.
-static inline const MDefinition* MaybeUnwrap(const MDefinition* object) {
-  while (object->isSlots() || object->isElements()) {
-    MOZ_ASSERT(object->numOperands() == 1);
-    object = object->getOperand(0);
-  }
-
-  if (object->isArrayBufferViewElements()) {
-    return nullptr;
-  }
-  if (object->isConstantElements()) {
-    return nullptr;
-  }
-
-  return object;
-}
-
-// Get the object of any load/store. Returns nullptr if not tied to
-// an object.
-static inline const MDefinition* GetObject(const MDefinition* ins) {
-  if (ins->getAliasSet().isNone()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(ins->getAliasSet().isStore() || ins->getAliasSet().isLoad());
-
-  // Note: only return the object if that object owns that property.
-  // I.e. the property isn't on the prototype chain.
-  const MDefinition* object = nullptr;
-  switch (ins->op()) {
-    case MDefinition::Opcode::InitializedLength:
-    case MDefinition::Opcode::LoadElement:
-    case MDefinition::Opcode::LoadUnboxedScalar:
-    case MDefinition::Opcode::LoadDataViewElement:
-    case MDefinition::Opcode::StoreElement:
-    case MDefinition::Opcode::StoreHoleValueElement:
-    case MDefinition::Opcode::StoreUnboxedScalar:
-    case MDefinition::Opcode::StoreDataViewElement:
-    case MDefinition::Opcode::SetInitializedLength:
-    case MDefinition::Opcode::AddAndStoreSlot:
-    case MDefinition::Opcode::AllocateAndStoreSlot:
-    case MDefinition::Opcode::ArrayLength:
-    case MDefinition::Opcode::SetArrayLength:
-    case MDefinition::Opcode::Slots:
-    case MDefinition::Opcode::Elements:
-    case MDefinition::Opcode::ArrayBufferByteLengthInt32:
-    case MDefinition::Opcode::ArrayBufferViewLength:
-    case MDefinition::Opcode::ArrayBufferViewByteOffset:
-    case MDefinition::Opcode::ArrayPopShift:
-    case MDefinition::Opcode::ArrayPush:
-    case MDefinition::Opcode::LoadTypedArrayElementHole:
-    case MDefinition::Opcode::StoreTypedArrayElementHole:
-    case MDefinition::Opcode::LoadFixedSlot:
-    case MDefinition::Opcode::LoadFixedSlotAndUnbox:
-    case MDefinition::Opcode::StoreFixedSlot:
-    case MDefinition::Opcode::GetPropertyPolymorphic:
-    case MDefinition::Opcode::SetPropertyPolymorphic:
-    case MDefinition::Opcode::GuardShape:
-    case MDefinition::Opcode::GuardReceiverPolymorphic:
-    case MDefinition::Opcode::GuardObjectGroup:
-    case MDefinition::Opcode::GuardObjectIdentity:
-    case MDefinition::Opcode::GuardProto:
-    case MDefinition::Opcode::GuardNullProto:
-    case MDefinition::Opcode::LoadDynamicSlot:
-    case MDefinition::Opcode::StoreDynamicSlot:
-    case MDefinition::Opcode::InArray:
-    case MDefinition::Opcode::LoadElementHole:
-    case MDefinition::Opcode::ArrayBufferViewElements:
-    case MDefinition::Opcode::CopyLexicalEnvironmentObject:
-    case MDefinition::Opcode::IsPackedArray:
-    case MDefinition::Opcode::SuperFunction:
-    case MDefinition::Opcode::InitHomeObject:
-    case MDefinition::Opcode::HomeObjectSuperBase:
-    case MDefinition::Opcode::ObjectStaticProto:
-    case MDefinition::Opcode::GuardNoDenseElements:
-    case MDefinition::Opcode::GuardElementNotHole:
-    case MDefinition::Opcode::GuardArrayIsPacked:
-    case MDefinition::Opcode::GuardFunctionFlags:
-    case MDefinition::Opcode::GuardFunctionIsNonBuiltinCtor:
-    case MDefinition::Opcode::GuardFunctionKind:
-    case MDefinition::Opcode::ArgumentsObjectLength:
-    case MDefinition::Opcode::FunctionLength:
-    case MDefinition::Opcode::FunctionName:
-    case MDefinition::Opcode::GuardArgumentsObjectNotOverriddenIterator:
-    case MDefinition::Opcode::GuardIsExtensible:
-    case MDefinition::Opcode::GuardIndexGreaterThanDenseInitLength:
-    case MDefinition::Opcode::GuardIndexIsValidUpdateOrAdd:
-    case MDefinition::Opcode::CallObjectHasSparseElement:
-      object = ins->getOperand(0);
-      break;
-    case MDefinition::Opcode::GetPropertyCache:
-    case MDefinition::Opcode::GetDOMProperty:
-    case MDefinition::Opcode::GetDOMMember:
-    case MDefinition::Opcode::LoadDOMExpandoValue:
-    case MDefinition::Opcode::LoadDOMExpandoValueGuardGeneration:
-    case MDefinition::Opcode::LoadDOMExpandoValueIgnoreGeneration:
-    case MDefinition::Opcode::GuardDOMExpandoMissingOrGuardShape:
-    case MDefinition::Opcode::Call:
-    case MDefinition::Opcode::Throw:
-    case MDefinition::Opcode::ThrowRuntimeLexicalError:
-    case MDefinition::Opcode::GetArgumentsObjectArg:
-    case MDefinition::Opcode::SetArgumentsObjectArg:
-    case MDefinition::Opcode::LoadArgumentsObjectArg:
-    case MDefinition::Opcode::CreateThis:
-    case MDefinition::Opcode::NewArrayDynamicLength:
-    case MDefinition::Opcode::NewTypedArrayDynamicLength:
-    case MDefinition::Opcode::CheckObjCoercible:
-    case MDefinition::Opcode::ToObject:
-    case MDefinition::Opcode::MegamorphicLoadSlot:
-    case MDefinition::Opcode::MegamorphicLoadSlotByValue:
-    case MDefinition::Opcode::MegamorphicStoreSlot:
-    case MDefinition::Opcode::MegamorphicHasProp:
-    case MDefinition::Opcode::CompareExchangeTypedArrayElement:
-    case MDefinition::Opcode::AtomicExchangeTypedArrayElement:
-    case MDefinition::Opcode::AtomicTypedArrayElementBinop:
-    case MDefinition::Opcode::LoadWrapperTarget:
-    case MDefinition::Opcode::GuardHasGetterSetter:
-    case MDefinition::Opcode::AsmJSLoadHeap:
-    case MDefinition::Opcode::AsmJSStoreHeap:
-    case MDefinition::Opcode::WasmHeapBase:
-    case MDefinition::Opcode::WasmLoadTls:
-    case MDefinition::Opcode::WasmLoad:
-    case MDefinition::Opcode::WasmStore:
-    case MDefinition::Opcode::WasmCompareExchangeHeap:
-    case MDefinition::Opcode::WasmAtomicBinopHeap:
-    case MDefinition::Opcode::WasmAtomicExchangeHeap:
-    case MDefinition::Opcode::WasmLoadGlobalVar:
-    case MDefinition::Opcode::WasmLoadGlobalCell:
-    case MDefinition::Opcode::WasmStoreGlobalVar:
-    case MDefinition::Opcode::WasmStoreGlobalCell:
-    case MDefinition::Opcode::WasmStoreRef:
-    case MDefinition::Opcode::WasmStoreStackResult:
-      return nullptr;
-    default:
-#ifdef DEBUG
-      // Crash when the default aliasSet is overriden, but when not added in the
-      // list above.
-      if (!ins->hasDefaultAliasSet()) {
-        MOZ_CRASH(
-            "Overridden getAliasSet without updating AliasAnalysis GetObject");
-      }
-#endif
-
-      return nullptr;
-  }
-
-  MOZ_ASSERT(!ins->hasDefaultAliasSet());
-  object = MaybeUnwrap(object);
-  MOZ_ASSERT_IF(object, object->type() == MIRType::Object);
-  return object;
-}
-
-// Generic comparing if a load aliases a store using TI information.
-MDefinition::AliasType AliasAnalysis::genericMightAlias(
-    const MDefinition* load, const MDefinition* store) {
-  const MDefinition* loadObject = GetObject(load);
-  const MDefinition* storeObject = GetObject(store);
-  if (!loadObject || !storeObject) {
-    return MDefinition::AliasType::MayAlias;
-  }
-
-  // TODO(no-TI): remove this function.
-  return MDefinition::AliasType::MayAlias;
-}
-
 // Whether there might be a path from src to dest, excluding loop backedges.
 // This is approximate and really ought to depend on precomputed reachability
 // information.
@@ -391,9 +227,7 @@ bool AliasAnalysis::analyze() {
           MInstructionVector& aliasedStores = stores[*iter];
           for (int i = aliasedStores.length() - 1; i >= 0; i--) {
             MInstruction* store = aliasedStores[i];
-            if (genericMightAlias(*def, store) !=
-                    MDefinition::AliasType::NoAlias &&
-                def->mightAlias(store) != MDefinition::AliasType::NoAlias &&
+            if (def->mightAlias(store) != MDefinition::AliasType::NoAlias &&
                 BlockMightReach(store->block(), *block)) {
               if (lastStore->id() < store->id()) {
                 lastStore = store;
@@ -443,9 +277,7 @@ bool AliasAnalysis::analyze() {
             if (store->id() < firstLoopIns->id()) {
               break;
             }
-            if (genericMightAlias(ins, store) !=
-                    MDefinition::AliasType::NoAlias &&
-                ins->mightAlias(store) != MDefinition::AliasType::NoAlias) {
+            if (ins->mightAlias(store) != MDefinition::AliasType::NoAlias) {
               hasAlias = true;
               IonSpewDependency(ins, store, "aliases", "store in loop body");
               break;
