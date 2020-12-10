@@ -98,8 +98,7 @@ add_task(async function test_fog_string_works() {
   Assert.equal(value, Glean.test_only.cheesy_string.testGetValue("test-ping"));
 });
 
-// Enable test after bug 1677455 is fixed.
-add_task({ skip_if: () => true }, async function test_fog_timespan_works() {
+add_task(async function test_fog_timespan_works() {
   // We start, briefly sleep and then stop.
   // That guarantees some time to measure.
   Glean.test_only.can_we_time_it.start();
