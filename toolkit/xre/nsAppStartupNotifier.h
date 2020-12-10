@@ -7,6 +7,7 @@
 #define nsAppStartupNotifier_h___
 
 #include "nsIAppStartupNotifier.h"
+#include "nsError.h"
 
 class nsAppStartupNotifier final {
  public:
