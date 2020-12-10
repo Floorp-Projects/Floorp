@@ -56,8 +56,6 @@
   skin/classic/browser/fxaSignout.css                          (../shared/fxaSignout.css)
   skin/classic/browser/permissions.svg                         (../shared/identity-block/permissions.svg)
   skin/classic/browser/connection-secure.svg                   (../shared/identity-block/connection-secure.svg)
-  skin/classic/browser/connection-mixed-passive-loaded.svg     (../shared/identity-block/connection-mixed-passive-loaded.svg)
-  skin/classic/browser/connection-mixed-active-loaded.svg      (../shared/identity-block/connection-mixed-active-loaded.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
   skin/classic/browser/newInstall.css                          (../shared/newInstall.css)
   skin/classic/browser/newInstallPage.css                      (../shared/newInstallPage.css)
@@ -107,11 +105,6 @@
   skin/classic/browser/tracking-protection-animation.svg        (../shared/identity-block/tracking-protection-animation.svg)
   skin/classic/browser/tracking-protection-animation-brighttext.svg (../shared/identity-block/tracking-protection-animation-brighttext.svg)
   skin/classic/browser/panel-icon-cancel.svg                   (../shared/panel-icon-cancel.svg)
-#ifndef XP_MACOSX
-  skin/classic/browser/panel-icon-folder.svg                   (../shared/panel-icon-folder.svg)
-#else
-  skin/classic/browser/panel-icon-magnifier.svg                (../shared/panel-icon-magnifier.svg)
-#endif
   skin/classic/browser/panel-icon-retry.svg                    (../shared/panel-icon-retry.svg)
   skin/classic/browser/toolbar-drag-indicator.svg              (../shared/toolbar-drag-indicator.svg)
 

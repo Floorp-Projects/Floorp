@@ -25,7 +25,7 @@ function getIdentityIcon() {
 
 function checkIdentityPopup(icon) {
   gIdentityHandler.refreshIdentityPopup();
-  is(getIdentityIcon(), `url("chrome://browser/skin/${icon}")`);
+  is(getIdentityIcon(), `url("chrome://global/skin/icons/${icon}")`);
   is(getConnectionState(), "secure-cert-user-overridden");
   isnot(
     getPopupContentVerifier().style.display,
