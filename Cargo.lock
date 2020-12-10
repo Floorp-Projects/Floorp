@@ -1523,7 +1523,6 @@ dependencies = [
  "bincode",
  "chrono",
  "crossbeam-channel",
- "ffi-support",
  "glean",
  "glean-core",
  "inherent",

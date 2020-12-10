@@ -44,12 +44,12 @@ class StringMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<nsCString> TestGetValue(const char* aStorageName) const {
-    if (!fog_string_test_has_value(mId, aStorageName)) {
+  Maybe<nsCString> TestGetValue(const nsACString& aStorageName) const {
+    if (!fog_string_test_has_value(mId, &aStorageName)) {
       return Nothing();
     }
     nsCString ret;
-    fog_string_test_get_value(mId, aStorageName, &ret);
+    fog_string_test_get_value(mId, &aStorageName, &ret);
     return Some(ret);
   }
 

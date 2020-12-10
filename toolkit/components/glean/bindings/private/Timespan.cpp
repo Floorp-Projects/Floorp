@@ -17,21 +17,20 @@ NS_IMPL_ISUPPORTS_CI(GleanTimespan, nsIGleanTimespan)
 
 NS_IMETHODIMP
 GleanTimespan::Start() {
-  this->mTimespan.Start();
+  mTimespan.Start();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanTimespan::Stop() {
-  this->mTimespan.Stop();
+  mTimespan.Stop();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanTimespan::TestGetValue(const nsACString& aStorageName,
                             JS::MutableHandleValue aResult) {
-  auto result =
-      this->mTimespan.TestGetValue(PromiseFlatCString(aStorageName).get());
+  auto result = mTimespan.TestGetValue(aStorageName);
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
