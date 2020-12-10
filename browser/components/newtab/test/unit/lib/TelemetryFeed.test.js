@@ -101,16 +101,8 @@ describe("TelemetryFeed", () => {
     ASRouterPreferences.uninit();
   });
   describe("#init", () => {
-    it("should set preferences in parent process", () => {
-      const testInstance = new TelemetryFeed({ isParentProcess: true });
-      // unfortuntely testing gUUIDGenerator.generateUUID is not possible here
-      // but we still need test coverage
-      assert.isDefined(testInstance);
-    });
-    it("should not set preferences in content process", () => {
-      const testInstance = new TelemetryFeed({ isParentProcess: false });
-      // unfortuntely testing gUUIDGenerator.generateUUID is not possible here
-      // but we still need test coverage
+    it("should create an instance", () => {
+      const testInstance = new TelemetryFeed();
       assert.isDefined(testInstance);
     });
     it("should add .pingCentre, a PingCentre instance", () => {
@@ -901,8 +893,7 @@ describe("TelemetryFeed", () => {
       const { ping, pingType } = await instance.applySnippetsPolicy(data);
 
       assert.equal(pingType, "snippets");
-      // XXX Bug 1677723
-      assert.propertyVal(ping, "client_id", FAKE_UUID);
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
       assert.propertyVal(ping, "message_id", "snippets_message_01");
     });
   });

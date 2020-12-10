@@ -4,6 +4,10 @@ const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
+const { TelemetryFeed } = ChromeUtils.import(
+  "resource://activity-stream/lib/TelemetryFeed.jsm"
+);
+
 add_task(async function render_below_search_snippet() {
   ASRouter._validPreviewEndpoint = () => true;
   await BrowserTestUtils.withNewTab(
@@ -124,4 +128,66 @@ add_task(async function render_preview_snippet() {
       );
     }
   );
+});
+
+add_task(async function test_snippets_telemetry() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.asrouter.providers.snippets",
+        `{"id":"snippets","enabled":true,"type":"remote","url":"https://example.com/browser/browser/components/newtab/test/browser/snippet.json","updateCycleInMs":0}`,
+      ],
+      ["browser.newtabpage.activity-stream.feeds.snippets", true],
+    ],
+  });
+  const sendPingStub = sinon.stub(
+    TelemetryFeed.prototype,
+    "sendStructuredIngestionEvent"
+  );
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      // Work around any issues caching might introduce by navigating to
+      // about blank first
+      url: "about:blank",
+    },
+    async browser => {
+      await BrowserTestUtils.loadURI(browser, "about:home");
+      await BrowserTestUtils.browserLoaded(browser);
+      let text = await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(".activity-stream"),
+          `Should render Activity Stream`
+        );
+        await ContentTaskUtils.waitForCondition(
+          () =>
+            content.document.querySelector(
+              "#footer-asrouter-container .SimpleSnippet"
+            ),
+          "Should find the snippet inside the footer container"
+        );
+
+        return content.document.querySelector(
+          "#footer-asrouter-container .SimpleSnippet"
+        ).innerText;
+      });
+
+      Assert.equal(
+        text,
+        "On January 30th Nightly will introduce dedicated profiles, making it simpler to run different installations of Firefox side by side. Learn what this means for you.",
+        "Snippet content match"
+      );
+    }
+  );
+
+  Assert.ok(sendPingStub.callCount >= 1, "We registered some pings");
+  const snippetsPing = sendPingStub.args.find(args => args[2] === "snippets");
+  Assert.ok(snippetsPing, "Found the snippets ping");
+  Assert.equal(
+    snippetsPing[0].event,
+    "IMPRESSION",
+    "It's the correct ping type"
+  );
+
+  sendPingStub.restore();
 });

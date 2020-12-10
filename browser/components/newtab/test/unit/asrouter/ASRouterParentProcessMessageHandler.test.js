@@ -121,7 +121,7 @@ describe("ASRouterParentProcessMessageHandler", () => {
     ].forEach(type => {
       it(`telemetry type "${type}" is sent to telemetry`, () => {
         handler.handleCFRAction({
-          type: msg.AS_ROUTER_TELEMETRY_USER_EVENT,
+          type,
           data: { id: 1 },
         });
         assert.calledOnce(config.sendTelemetry);
@@ -129,7 +129,25 @@ describe("ASRouterParentProcessMessageHandler", () => {
       });
     });
   });
-  describe("handleMessage", () => {
+  describe("#handleMessage", () => {
+    it("#default: should throw for unknown msg types", () => {
+      handler.handleMessage("err").then(
+        () => assert.fail("It should not succeed"),
+        () => assert.ok(true)
+      );
+    });
+    describe("#AS_ROUTER_TELEMETRY_USER_EVENT", () => {
+      it("should route AS_ROUTER_TELEMETRY_USER_EVENT to handleTelemetry", async () => {
+        const data = { data: "foo" };
+        await handler.handleMessage(msg.AS_ROUTER_TELEMETRY_USER_EVENT, data);
+
+        assert.calledOnce(handler.handleTelemetry);
+        assert.calledWithExactly(handler.handleTelemetry, {
+          type: msg.AS_ROUTER_TELEMETRY_USER_EVENT,
+          data,
+        });
+      });
+    });
     describe("BLOCK_MESSAGE_BY_ID action", () => {
       it("with preventDismiss returns false", async () => {
         const result = await handler.handleMessage(msg.BLOCK_MESSAGE_BY_ID, {
