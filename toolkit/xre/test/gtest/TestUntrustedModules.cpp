@@ -360,13 +360,19 @@ TEST_F(UntrustedModulesFixture, Serialize) {
 }
 
 TEST_F(UntrustedModulesFixture, Backup) {
+  using BackupType = UntrustedModulesBackupService::BackupType;
+
   RefPtr<UntrustedModulesBackupService> backupSvc(
       UntrustedModulesBackupService::Get());
   for (int i = 0; i < 5; ++i) {
-    backupSvc->Backup(CollectSingleData());
+    backupSvc->Backup(BackupType::Staging, CollectSingleData());
   }
 
-  for (auto iter = backupSvc->Ref().ConstIter(); !iter.Done(); iter.Next()) {
+  backupSvc->SettleAllStagingData();
+  EXPECT_TRUE(backupSvc->Ref(BackupType::Staging).IsEmpty());
+
+  for (auto iter = backupSvc->Ref(BackupType::Settled).ConstIter();
+       !iter.Done(); iter.Next()) {
     const RefPtr<UntrustedModulesDataContainer>& container = iter.Data();
     EXPECT_TRUE(!!container);
     const UntrustedModulesData& data = container->mData;

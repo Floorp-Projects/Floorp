@@ -56,7 +56,6 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
    * @param  aData [in] The source objects to add.
    * @return nsresult
    */
-  nsresult Add(const Vector<RefPtr<UntrustedModulesDataContainer>>& aData);
   nsresult Add(const UntrustedModulesBackupData& aData);
 };
 

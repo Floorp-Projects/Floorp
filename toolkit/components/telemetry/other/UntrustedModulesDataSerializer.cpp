@@ -458,26 +458,6 @@ void UntrustedModulesDataSerializer::GetObject(JS::MutableHandleValue aRet) {
 }
 
 nsresult UntrustedModulesDataSerializer::Add(
-    const Vector<RefPtr<UntrustedModulesDataContainer>>& aData) {
-  if (NS_FAILED(mCtorResult)) {
-    return mCtorResult;
-  }
-
-  for (const auto& container : aData) {
-    if (!container) {
-      continue;
-    }
-
-    nsresult rv = AddSingleData(container->mData);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult UntrustedModulesDataSerializer::Add(
     const UntrustedModulesBackupData& aData) {
   if (NS_FAILED(mCtorResult)) {
     return mCtorResult;
