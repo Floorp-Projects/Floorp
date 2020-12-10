@@ -466,12 +466,14 @@ browser.Context = class {
    * if it is not already assigned, and if a) we already have a session
    * or b) we're starting a new session and it is the right start frame.
    *
-   * @param {string} uid
-   *     Frame uid for use by Marionette.
    * @param {xul:browser} target
    *     The <xul:browser> that was the target of the originating message.
    */
-  register(uid, target) {
+  register(target) {
+    // Note that browsing contexts can be swapped during navigation in which
+    // case this id would no longer match the target. See Bug 1680479.
+    const uid = target.browsingContext.id;
+
     if (this.tabBrowser) {
       // If we're setting up a new session on Firefox, we only process the
       // registration for this frame if it belongs to the current tab.
