@@ -167,6 +167,8 @@ nsresult HalfOpenSocket::SetupStreams(nsISocketTransport** transport,
     tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
   }
 
+  Unused << socketTransport->SetIsPrivate(ci->GetPrivate());
+
   if (ci->GetLessThanTls13()) {
     tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
   }
