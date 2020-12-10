@@ -25,6 +25,14 @@ import sys
 import textwrap
 import urllib2
 
+import six
+
+
+def decodebytes(s):
+    if six.PY3:
+        return base64.decodebytes(six.ensure_binary(s))
+    return base64.decodestring(s)
+
 
 OUTPUT_TEMPLATE = """\
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
@@ -124,7 +132,7 @@ def get_log_info_structs(json_data):
     )
     initializers = []
     for log in json_data["logs"]:
-        log_key = base64.decodestring(log["key"])
+        log_key = decodebytes(log["key"])
         # "operated_by" is a list, we assume here it always contains one item.
         operated_by = log["operated_by"]
         assert len(operated_by) == 1, "operated_by must contain one item."
