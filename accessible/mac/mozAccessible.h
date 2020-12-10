@@ -111,6 +111,9 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 // Handle a role change
 - (void)handleRoleChanged:(mozilla::a11y::role)newRole;
 
+// Get ARIA role
+- (nsStaticAtom*)ARIARole;
+
 #pragma mark - mozAccessible protocol / widget
 
 // override
