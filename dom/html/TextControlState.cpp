@@ -2079,11 +2079,9 @@ void TextControlState::SetSelectionRange(
   nsresult rv = NS_OK;  // For the ScrollSelectionIntoView() return value.
   if (IsSelectionCached()) {
     SelectionProperties& props = GetSelectionProperties();
-    changed = props.GetStart() != aStart || props.GetEnd() != aEnd ||
-              props.GetDirection() != aDirection;
-    props.SetStart(aStart);
-    props.SetEnd(aEnd);
-    props.SetDirection(aDirection);
+    changed |= props.SetStart(aStart);
+    changed |= props.SetEnd(aEnd);
+    changed |= props.SetDirection(aDirection);
   } else {
     MOZ_ASSERT(mBoundFrame, "Our frame should still be valid");
     aRv = mBoundFrame->SetSelectionRange(aStart, aEnd, aDirection);
