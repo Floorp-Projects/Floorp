@@ -8,6 +8,8 @@
 
 #include "mozilla/PrintedSheetFrame.h"
 
+#include <tuple>
+
 #include "mozilla/StaticPrefs_print.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsPageFrame.h"
@@ -29,6 +31,16 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(PrintedSheetFrame)
 
+std::tuple<uint32_t, uint32_t> GetRowAndColFromIdx(uint32_t aIdxOnSheet,
+                                                   uint32_t aNumCols) {
+  // Compute the row index by *dividing* the item's ordinal position by how
+  // many items fit in each row (i.e. the number of columns), and flooring.
+  // Compute the column index by getting the remainder of that division:
+  // Notably, mNumRows is irrelevant to this computation; that's because
+  // we're adding new items column-by-column rather than row-by-row.
+  return {aIdxOnSheet / aNumCols, aIdxOnSheet % aNumCols};
+}
+
 // Helper for BuildDisplayList:
 gfx::Matrix4x4 ComputePagesPerSheetTransform(nsIFrame* aFrame,
                                              float aAppUnitsPerPixel) {
@@ -48,8 +60,8 @@ gfx::Matrix4x4 ComputePagesPerSheetTransform(nsIFrame* aFrame,
     if (ppsInfo->mNumPages > 1) {
       scale = pd->mPagesPerSheetScale;
       gridOrigin = pd->mPagesPerSheetGridOrigin;
-      std::tie(rowIdx, colIdx) =
-          ppsInfo->GetRowAndColFromIdx(pageFrame->IndexOnSheet());
+      std::tie(rowIdx, colIdx) = GetRowAndColFromIdx(pageFrame->IndexOnSheet(),
+                                                     pd->mPagesPerSheetNumCols);
     }
   }
 
@@ -293,8 +305,16 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
   // Compute the full size of the "page grid" that'll we'll be scaling down &
   // placing onto a given sheet:
   const auto* ppsInfo = mPD->PagesPerSheetInfo();
-  nsSize pageGridFullSize(ppsInfo->mNumCols * pageSize.width,
-                          ppsInfo->mNumRows * pageSize.height);
+
+  // XXXdholbert Bug 1669905 will add a bit more reasoning around here, to
+  // ensure that we use the larger track-count in the sheet's longer axis, to
+  // make the best use of space. (At this point, we don't have to worry about
+  // that, because we only support pages-per-sheet values that have the same
+  // number of rows and columns.)
+  uint32_t numCols = ppsInfo->mLargerNumTracks;
+  uint32_t numRows = ppsInfo->mNumPages / numCols;
+
+  nsSize pageGridFullSize(numCols * pageSize.width, numRows * pageSize.height);
 
   if (MOZ_UNLIKELY(availSpaceOnSheet.IsEmpty() || pageGridFullSize.IsEmpty())) {
     // Either we have a 0-sized available area, or we have a 0-sized page-grid
@@ -306,6 +326,7 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
     // vScale computations below.
     NS_WARNING("Zero area for pages-per-sheet grid, or zero-sized grid");
     mPD->mPagesPerSheetGridOrigin = pageGridOrigin;
+    mPD->mPagesPerSheetNumCols = 1;
     mPD->mPagesPerSheetScale = 0.0f;
     return;
   }
@@ -342,6 +363,7 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
 
   // Update the nsSharedPageData member data:
   mPD->mPagesPerSheetGridOrigin = pageGridOrigin;
+  mPD->mPagesPerSheetNumCols = numCols;
   mPD->mPagesPerSheetScale = scale;
 }
 

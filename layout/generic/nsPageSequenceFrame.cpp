@@ -49,12 +49,12 @@ nsPageSequenceFrame* NS_NewPageSequenceFrame(PresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsPageSequenceFrame)
 
 static const nsPagesPerSheetInfo kSupportedPagesPerSheet[] = {
-    {1, 1, 1},  // Note: we default to this if no match is found.
+    {1, 1},  // Note: we default to this if no match is found.
     // {2, ... }, // XXXdholbert Coming in bug 1669905.
-    {4, 2, 2},
+    {4, 2},
     // {6, ... }, // XXXdholbert Coming in bug 1669905.
-    {9, 3, 3},
-    {16, 4, 4},
+    {9, 3},
+    {16, 4},
 };
 
 inline void SanityCheckPagesPerSheetInfo() {
@@ -68,16 +68,12 @@ inline void SanityCheckPagesPerSheetInfo() {
   uint16_t prevInfoPPS = 0;
   for (const auto& info : kSupportedPagesPerSheet) {
     MOZ_ASSERT(info.mNumPages > prevInfoPPS,
-               "page count field should be nonzero & monotonically increase");
-    // The uint32_t cast here is to ensure this assertion is robust even if the
-    // mNumRows * mNumCols multiplication would overflow past the maximum
-    // representable uint16_t value. That overflow would be bad because it
-    // could result in us incorrectly passing this assertion.  We prevent this
-    // problem by doing the operation in 32-bit number space; that way, the
-    // multiplication (of two known-to-be-16-bit values) can't overflow.
-    MOZ_ASSERT(
-        (uint32_t)info.mNumRows * (uint32_t)info.mNumCols == info.mNumPages,
-        "page count should match rows*cols");
+               "page count field should be positive & monotonically increase");
+    MOZ_ASSERT(info.mLargerNumTracks > 0,
+               "page grid has to have a positive number of tracks");
+    MOZ_ASSERT(info.mNumPages % info.mLargerNumTracks == 0,
+               "page count field should be evenly divisible by "
+               "the given track-count");
     prevInfoPPS = info.mNumPages;
   }
 #endif

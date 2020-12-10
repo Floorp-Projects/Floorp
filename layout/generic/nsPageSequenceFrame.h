@@ -6,8 +6,6 @@
 #ifndef nsPageSequenceFrame_h___
 #define nsPageSequenceFrame_h___
 
-#include <tuple>
-
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
@@ -31,18 +29,11 @@ struct nsPagesPerSheetInfo {
   static const nsPagesPerSheetInfo& LookupInfo(int32_t aPPS);
 
   uint16_t mNumPages;
-  uint16_t mNumRows;
-  uint16_t mNumCols;
 
-  std::tuple<uint16_t, uint16_t> GetRowAndColFromIdx(
-      uint16_t aIdxOnSheet) const {
-    // Compute the row index by *dividing* the item's ordinal position by how
-    // many items fit in each row (i.e. the number of columns), and flooring.
-    // Compute the column index by getting the remainder of that division:
-    // Notably, mNumRows is irrelevant to this computation; that's because
-    // we're adding new items column-by-column rather than row-by-row.
-    return {aIdxOnSheet / mNumCols, aIdxOnSheet % mNumCols};
-  }
+  // This is the larger of the row-count vs. column-count for this layout
+  // (if they aren't the same). We'll aim to stack this number of pages
+  // in the sheet's longer axis.
+  uint16_t mLargerNumTracks;
 };
 
 /**
@@ -80,13 +71,21 @@ class nsSharedPageData {
   // frames that overflowed.  It's 1.0 if none overflowed horizontally.
   float mShrinkToFitRatio = 1.0f;
 
-  // These are only used if PagesPerSheetInfo()->mNumPages > 1.  They're
-  // initialized with reasonable defaults here (which correspond to what we do
-  // for the regular 1-page-per-sheet scenario, though we don't actually use
-  // these members in that case).  If we're in >1 pages-per-sheet scenario,
-  // then these members will be assigned "real" values during the reflow of the
-  // first PrintedSheetFrame.
+  // The mPagesPerSheet{...} members are only used if
+  // PagesPerSheetInfo()->mNumPages > 1.  They're initialized with reasonable
+  // defaults here (which correspond to what we do for the regular
+  // 1-page-per-sheet scenario, though we don't actually use these members in
+  // that case).  If we're in >1 pages-per-sheet scenario, then these members
+  // will be assigned "real" values during the reflow of the first
+  // PrintedSheetFrame.
   float mPagesPerSheetScale = 1.0f;
+  // Number of "columns" in our pages-per-sheet layout. For example: if we're
+  // printing with 6 pages-per-sheet (once we've fixed Bug 1669905), then this
+  // could be either 3 or 2, depending on whether we're printing
+  // portrait-oriented pages onto a landscape-oriented sheet (3 cols) vs. if
+  // we're printing landscape-oriented pages onto a portrait-oriented sheet (2
+  // cols).
+  uint32_t mPagesPerSheetNumCols = 1;
   nsPoint mPagesPerSheetGridOrigin;
 
   // Lazy getter, to look up our pages-per-sheet info based on mPrintSettings
