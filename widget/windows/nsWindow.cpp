@@ -1597,11 +1597,16 @@ already_AddRefed<SourceSurface> nsWindow::GetFallbackScrollSnapshot(
  **************************************************************/
 
 void nsWindow::Show(bool bState) {
-  if (bState) {
+  if (bState && mIsShowingPreXULSkeletonUI) {
     // The first time we decide to actually show the window is when we decide
     // that we've taken over the window from the skeleton UI, and we should
     // no longer treat resizes / moves specially.
     mIsShowingPreXULSkeletonUI = false;
+    // Initialize the UI state - this would normally happen below, but since
+    // we're actually already showing, we won't hit it in the normal way.
+    ::SendMessageW(mWnd, WM_CHANGEUISTATE,
+                   MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS | UISF_HIDEACCEL),
+                   0);
   }
 
   if (mWindowType == eWindowType_popup) {
