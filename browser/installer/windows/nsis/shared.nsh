@@ -202,6 +202,7 @@ ${ElseIf} $TmpVal == "HKLM"
 ${EndIf}
 !endif
 
+${RemoveDefaultBrowserAgentShortcut}
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
 
@@ -424,6 +425,43 @@ ${EndIf}
   ${EndIf}
 !macroend
 !define UpdateOneShortcutBranding "!insertmacro UpdateOneShortcutBranding"
+
+; Remove a shortcut unintentionally added by the default browser agent (bug 1672957, 1681207)
+!macro RemoveDefaultBrowserAgentShortcut
+  Push $0
+  Push $1
+  Push $2
+  Push $3
+
+  ; 2 is CSIDL_PROGRAMS, it's simpler to use this to get the user's Start Menu Programs than
+  ; to use $SMPROGRAMS and rely on SetShellVarContext current.
+  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.r1, i 2, i 0)"
+
+  ; The shortcut would have been named MOZ_BASE_NAME regardless of branding.
+  ; According to defines.nsi.in AppName should match application.ini, and application.ini.in sets
+  ; [App] Name from MOZ_BASE_NAME.
+  StrCpy $1 "$1\${AppName}.lnk"
+  ShellLink::GetShortCutTarget $1
+  Pop $0
+
+  ; ShellLink::GetShortCutTarget, and the underlying IShellLink::GetPath(), have an issue
+  ; where "C:\Program Files" becomes "C:\Program Files (x86)" in some cases.
+  ; It should be OK to remove the shortcut (which matches our app name) even if it isn't from this
+  ; install, as long as the file name portion of the target path matches.
+  StrCpy $2 "\default-browser-agent.exe"
+  StrLen $3 $2
+  ; Select the substring to match from the end of the target path.
+  StrCpy $0 $0 $3 -$3
+  ${If} $0 == $2
+    Delete $1
+  ${EndIf}
+
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
+!macroend
+!define RemoveDefaultBrowserAgentShortcut "!insertmacro RemoveDefaultBrowserAgentShortcut"
 
 !macro AddAssociationIfNoneExist FILE_TYPE KEY
   ClearErrors
