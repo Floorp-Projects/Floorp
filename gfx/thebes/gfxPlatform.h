@@ -146,16 +146,18 @@ inline const char* GetBackendName(mozilla::gfx::BackendType aBackend) {
 }
 
 enum class DeviceResetReason {
-  OK = 0,
-  HUNG,
-  REMOVED,
-  RESET,
-  DRIVER_ERROR,
-  INVALID_CALL,
+  OK = 0,        // No reset.
+  HUNG,          // Windows specific, guilty device reset.
+  REMOVED,       // Windows specific, device removed or driver upgraded.
+  RESET,         // Guilty device reset.
+  DRIVER_ERROR,  // Innocent device reset.
+  INVALID_CALL,  // Windows specific, guilty device reset.
   OUT_OF_MEMORY,
-  FORCED_RESET,
-  UNKNOWN,
-  D3D9_RESET
+  FORCED_RESET,  // Simulated device reset.
+  OTHER,         // Unrecognized reason for device reset.
+  D3D9_RESET,    // Windows specific, not used.
+  NVIDIA_VIDEO,  // Linux specific, NVIDIA video memory was reset.
+  UNKNOWN,       // GL specific, unknown if guilty or innocent.
 };
 
 enum class ForcedDeviceResetReason {

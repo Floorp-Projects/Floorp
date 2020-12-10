@@ -6,6 +6,7 @@
 
 #include "base/task.h"
 #include "GeckoProfiler.h"
+#include "gfxPlatform.h"
 #include "GLContext.h"
 #include "RenderThread.h"
 #include "nsThreadUtils.h"
@@ -791,6 +792,27 @@ void RenderThread::InitDeviceTask() {
   SharedGL();
 }
 
+#ifndef XP_WIN
+static DeviceResetReason GLenumToResetReason(GLenum aReason) {
+  switch (aReason) {
+    case LOCAL_GL_NO_ERROR:
+      return DeviceResetReason::FORCED_RESET;
+    case LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB:
+      return DeviceResetReason::DRIVER_ERROR;
+    case LOCAL_GL_PURGED_CONTEXT_RESET_NV:
+      return DeviceResetReason::NVIDIA_VIDEO;
+    case LOCAL_GL_GUILTY_CONTEXT_RESET_ARB:
+      return DeviceResetReason::RESET;
+    case LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB:
+      return DeviceResetReason::UNKNOWN;
+    case LOCAL_GL_OUT_OF_MEMORY:
+      return DeviceResetReason::OUT_OF_MEMORY;
+    default:
+      return DeviceResetReason::OTHER;
+  }
+}
+#endif
+
 void RenderThread::HandleDeviceReset(const char* aWhere,
                                      layers::CompositorBridgeParent* aBridge,
                                      GLenum aReason) {
@@ -799,6 +821,11 @@ void RenderThread::HandleDeviceReset(const char* aWhere,
   if (mHandlingDeviceReset) {
     return;
   }
+
+#ifndef XP_WIN
+  // On Windows, see DeviceManagerDx::MaybeResetAndReacquireDevices.
+  gfx::GPUProcessManager::RecordDeviceReset(GLenumToResetReason(aReason));
+#endif
 
   // On some platforms (i.e. Linux), we may get a device reset just for purging
   // video memory with NVIDIA devices, because the driver has edge cases it
