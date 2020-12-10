@@ -17,8 +17,13 @@ namespace Telemetry {
  * This function returns a promise that asynchronously processes and gathers
  * untrusted module data. The promise is either resolved with the JS object
  * ping payload, or is rejected upon failure.
+ *
+ * @param aFlags [in] Combinations of the flags defined under nsITelemetry.
+ *               (See "Flags for getUntrustedModuleLoadEvents"
+ *                in nsITelemetry.idl)
  */
-nsresult GetUntrustedModuleLoadEvents(JSContext* cx, dom::Promise** aPromise);
+nsresult GetUntrustedModuleLoadEvents(uint32_t aFlags, JSContext* cx,
+                                      dom::Promise** aPromise);
 
 }  // namespace Telemetry
 }  // namespace mozilla
