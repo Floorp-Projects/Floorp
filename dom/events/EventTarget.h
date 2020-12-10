@@ -8,7 +8,6 @@
 #define mozilla_dom_EventTarget_h_
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/DebuggerNotificationBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
@@ -36,6 +35,7 @@ class EventListenerOptionsOrBoolean;
 class EventHandlerNonNull;
 class GlobalObject;
 class WindowProxyHolder;
+enum class EventCallbackDebuggerNotificationType : uint8_t;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID                           \

@@ -4178,6 +4178,12 @@ bool nsGlobalWindowInner::DispatchEvent(Event& aEvent, CallerType aCallerType,
   return retval;
 }
 
+mozilla::Maybe<mozilla::dom::EventCallbackDebuggerNotificationType>
+nsGlobalWindowInner::GetDebuggerNotificationType() const {
+  return mozilla::Some(
+      mozilla::dom::EventCallbackDebuggerNotificationType::Global);
+}
+
 bool nsGlobalWindowInner::ComputeDefaultWantsUntrusted(ErrorResult& aRv) {
   return !nsContentUtils::IsChromeDoc(mDoc);
 }
