@@ -501,6 +501,16 @@ class HighlightersOverlay {
   }
 
   /**
+   * Returns true when the maximum number of grid highlighter instances is reached.
+   * FIXME: Bug 1572652 should address this constraint.
+   *
+   * @return {Boolean}
+   */
+  isGridHighlighterLimitReached() {
+    return this.gridHighlighters.size === this.maxGridHighlighters;
+  }
+
+  /**
    * Returns whether `node` is somewhere inside the DOM of the rule view.
    *
    * @param {DOMNode} node
@@ -890,6 +900,14 @@ class HighlightersOverlay {
       // Emit the NodeFront of the grid container element that the grid highlighter was
       // shown for, and its options for testing the highlighter setting options.
       this.emit("grid-highlighter-shown", node, options);
+
+      // XXX: Shim to use generic highlighter events until addressing Bug 1572652
+      // Ensures badges in the Markup view reflect the state of the grid highlighter.
+      this.emit("highlighter-shown", {
+        type: TYPES.GRID,
+        nodeFront: node,
+        options,
+      });
     } catch (e) {
       this._handleRejection(e);
     }
@@ -980,6 +998,13 @@ class HighlightersOverlay {
     // Emit the NodeFront of the grid container element that the grid highlighter was
     // hidden for.
     this.emit("grid-highlighter-hidden", node);
+
+    // XXX: Shim to use generic highlighter events until addressing Bug 1572652
+    // Ensures badges in the Markup view reflect the state of the grid highlighter.
+    this.emit("highlighter-hidden", {
+      type: TYPES.GRID,
+      nodeFront: node,
+    });
   }
 
   /**

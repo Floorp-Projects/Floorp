@@ -19,7 +19,11 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   startTelemetry();
   const { inspector } = await openLayoutView();
-  const { highlighters } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#flex", inspector);
   const flexContainer = await getContainerForSelector("#flex", inspector);
@@ -28,12 +32,12 @@ add_task(async function() {
   );
 
   info("Toggling ON the flexbox highlighter from the flex display badge.");
-  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   flexDisplayBadge.click();
   await onHighlighterShown;
 
   info("Toggling OFF the flexbox highlighter from the flex display badge.");
-  const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   flexDisplayBadge.click();
   await onHighlighterHidden;
 
