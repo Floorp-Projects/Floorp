@@ -325,6 +325,17 @@ function MarkupView(inspector, frame, controllerWindow) {
     this._onToolboxPickerHover
   );
 
+  // Event listeners for highlighter events
+  this.onHighlighterShown = data =>
+    this.handleHighlighterEvent("highlighter-shown", data);
+  this.onHighlighterHidden = data =>
+    this.handleHighlighterEvent("highlighter-hidden", data);
+  this.inspector.highlighters.on("highlighter-shown", this.onHighlighterShown);
+  this.inspector.highlighters.on(
+    "highlighter-hidden",
+    this.onHighlighterHidden
+  );
+
   if (flags.testing) {
     // In tests, we start listening immediately to avoid having to simulate a mousemove.
     this._initTooltips();
@@ -721,6 +732,59 @@ MarkupView.prototype = {
     return this.inspector.highlighters.hideHighlighterType(
       this.inspector.highlighters.TYPES.BOXMODEL
     );
+  },
+
+  /**
+   * Delegate handler for highlighter events.
+   *
+   * This is the place to observe for highlighter events, check the highlighter type and
+   * event name, then react for example by modifying the DOM.
+   *
+   * @param {String} eventName
+   *        Highlighter event name. One of: "highlighter-hidden", "highlighter-shown"
+   * @param {Object} data
+   *        Object with data associated with the highlighter event.
+   *        {String} data.type
+   *        Highlighter type
+   *        {NodeFront} data.nodeFront
+   *        NodeFront of the node associated with the highlighter event
+   *        {Object} data.options
+   *        Optional configuration passed to the highlighter when shown
+   *        {CustomHighlighterFront} data.highlighter
+   *        Highlighter instance
+   *
+   */
+  handleHighlighterEvent: function(eventName, data) {
+    switch (data.type) {
+      // Toggle the "active" CSS class name on flex and grid display badges next to
+      // elements in the Markup view when a coresponding flex or grid highlighter is
+      // shown or hidden for a node.
+      case this.inspector.highlighters.TYPES.FLEXBOX:
+      case this.inspector.highlighters.TYPES.GRID:
+        const { nodeFront } = data;
+        if (!nodeFront) {
+          return;
+        }
+
+        // Find the badge corresponding to the node from the highlighter event payload.
+        const container = this.getContainer(nodeFront);
+        const badge = container?.editor?.displayBadge;
+        if (badge) {
+          badge.classList.toggle("active", eventName == "highlighter-shown");
+        }
+
+        // There is a limit to how many grid highlighters can be active at the same time.
+        // If the limit was reached, disable all non-active grid badges.
+        if (data.type === this.inspector.highlighters.TYPES.GRID) {
+          // Matches badges for "grid", "inline-grid" and "subgrid"
+          const selector = "[data-display*='grid']:not(.active)";
+          const isLimited = this.inspector.highlighters.isGridHighlighterLimitReached();
+          Array.from(this._elt.querySelectorAll(selector)).map(el => {
+            el.classList.toggle("interactive", !isLimited);
+          });
+        }
+        break;
+    }
   },
 
   /**
@@ -2318,6 +2382,14 @@ MarkupView.prototype = {
     this.inspector.toolbox.nodePicker.off(
       "picker-node-hovered",
       this._onToolboxPickerHover
+    );
+    this.inspector.highlighters.off(
+      "highlighter-shown",
+      this.onHighlighterShown
+    );
+    this.inspector.highlighters.off(
+      "highlighter-hidden",
+      this.onHighlighterHidden
     );
     this.win.removeEventListener("copy", this._onCopy);
     this.win.removeEventListener("mouseup", this._onMouseUp);

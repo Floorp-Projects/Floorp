@@ -18,6 +18,11 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector } = await openLayoutView();
   const { highlighters, store } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   info("Check the grid display badge is shown and not active.");
   await selectNode("#grid", inspector);
@@ -41,7 +46,7 @@ add_task(async function() {
   );
 
   info("Toggling ON the CSS grid highlighter from the grid display badge.");
-  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   let onCheckboxChange = waitUntilState(
     store,
     state => state.grids.length === 1 && state.grids[0].highlighted
@@ -68,7 +73,7 @@ add_task(async function() {
   );
 
   info("Toggling OFF the CSS grid highlighter from the grid display badge.");
-  const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   onCheckboxChange = waitUntilState(
     store,
     state => state.grids.length == 1 && !state.grids[0].highlighted

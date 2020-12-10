@@ -1676,7 +1676,6 @@ Inspector.prototype = {
 
     if (this._highlighters) {
       this._highlighters.destroy();
-      this._highlighters = null;
     }
 
     if (this._markupFrame) {

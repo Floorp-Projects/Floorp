@@ -47,7 +47,7 @@ add_task(async function() {
  *         mathched by the selector in the markup view.
  */
 async function enableHighlighterByBadge(type, selector, inspector) {
-  const { highlighters } = inspector;
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   info(`Check the ${type} display badge is shown and not active.`);
   const container = await getContainerForSelector(selector, inspector);
@@ -58,17 +58,20 @@ async function enableHighlighterByBadge(type, selector, inspector) {
   ok(badge.classList.contains("interactive"), `${type} badge is interactive.`);
 
   info(`Toggling ON the ${type} highlighter from the ${type} display badge.`);
-  let highlighterShownEvent = "";
+  let onHighlighterShown;
   switch (type) {
     case "grid":
-      highlighterShownEvent = "grid-highlighter-shown";
+      onHighlighterShown = waitForHighlighterTypeShown(
+        inspector.highlighters.TYPES.GRID
+      );
       break;
     case "flex":
-      highlighterShownEvent = "flexbox-highlighter-shown";
+      onHighlighterShown = waitForHighlighterTypeShown(
+        inspector.highlighters.TYPES.FLEXBOX
+      );
       break;
   }
 
-  const onHighlighterShown = highlighters.once(highlighterShownEvent);
   badge.click();
   await onHighlighterShown;
 
