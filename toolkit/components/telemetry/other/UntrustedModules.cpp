@@ -163,13 +163,27 @@ void MultiGetUntrustedModulesData::Serialize(RefPtr<dom::Promise>&& aPromise) {
     if (mFlags & nsITelemetry::KEEP_LOADEVENTS_NEW) {
       // When INCLUDE_OLD_LOADEVENTS and KEEP_LOADEVENTS_NEW are set, we need to
       // return a JS object consisting of all instances from both "Staging" and
-      // "Settled" backups, keeping instances in those backups as is.  It sounds
-      // easy, but it's not supported because the serializer cannot merge
-      // UntrustedModulesData into a serialized JS object, especially merging
-      // CombinedStack will be tricky.
-      // Thus we return an error on this combination.
-      aPromise->MaybeReject(NS_ERROR_INVALID_ARG);
-      return;
+      // "Settled" backups, keeping instances in those backups as is.
+      if (mFlags & nsITelemetry::EXCLUDE_STACKINFO_FROM_LOADEVENTS) {
+        // Without the stack info, we can add multiple UntrustedModulesData to
+        // the serializer directly.
+        rv = serializer.Add(mBackupSvc->Ref(BackupType::Staging));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          aPromise->MaybeReject(rv);
+          return;
+        }
+        rv = serializer.Add(mBackupSvc->Ref(BackupType::Settled));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          aPromise->MaybeReject(rv);
+          return;
+        }
+      } else {
+        // Currently we don't have a method to merge UntrustedModulesData into
+        // a serialized JS object because merging CombinedStack will be tricky.
+        // Thus we return an error on this flag combination.
+        aPromise->MaybeReject(NS_ERROR_INVALID_ARG);
+        return;
+      }
     } else {
       // When KEEP_LOADEVENTS_NEW is not set, we can move data from "Staging"
       // to "Settled" first, then add "Settled" to the serializer.
