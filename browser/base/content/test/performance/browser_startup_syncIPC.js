@@ -10,6 +10,10 @@ const LINUX = AppConstants.platform == "linux";
 const WIN = AppConstants.platform == "win";
 const MAC = AppConstants.platform == "macosx";
 const WEBRENDER = window.windowUtils.layerManagerType == "WebRender";
+const SKELETONUI = Services.prefs.getBoolPref(
+  "browser.startup.preXulSkeletonUI",
+  false
+);
 
 /*
  * Specifying 'ignoreIfUnused: true' will make the test ignore unused entries;
@@ -118,7 +122,10 @@ const startupPhases = {
     },
     {
       name: "PGPU::Msg_GetDeviceStatus",
-      condition: WIN && WEBRENDER, // bug 1553740 might want to drop the WEBRENDER clause here
+      // bug 1553740 might want to drop the WEBRENDER clause here.
+      // Additionally, the skeleton UI causes us to attach "before first paint" to a
+      // later event, which lets this sneak in.
+      condition: WIN && (WEBRENDER || SKELETONUI),
       // If Init() completes before we call EnsureGPUReady we won't send GetDeviceStatus
       // so we can safely ignore if unused.
       ignoreIfUnused: true,
@@ -259,7 +266,7 @@ const startupPhases = {
     },
     {
       name: "PCompositorBridge::Msg_FlushRendering",
-      condition: MAC || LINUX,
+      condition: MAC || LINUX || SKELETONUI,
       ignoreIfUnused: true,
       maxCount: 1,
     },
