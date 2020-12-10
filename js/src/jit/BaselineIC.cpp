@@ -690,8 +690,7 @@ void ICStub::trace(JSTracer* trc) {
 // stubs.
 template <typename IRGenerator, typename... Args>
 static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
-                          ICFallbackStub* stub, BaselineCacheIRStubKind kind,
-                          Args&&... args) {
+                          ICFallbackStub* stub, Args&&... args) {
   if (stub->state().maybeTransition()) {
     stub->discardStubs(cx, frame->invalidationScript());
   }
@@ -708,7 +707,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
       case AttachDecision::Attach: {
         ICStub* newStub =
             AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                      kind, script, icScript, stub, &attached);
+                                      script, icScript, stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached %s CacheIR stub", name);
         }
@@ -880,8 +879,7 @@ bool DoToBoolFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(!arg.isBoolean());
 
-  TryAttachStub<ToBoolIRGenerator>("ToBool", cx, frame, stub,
-                                   BaselineCacheIRStubKind::Regular, arg);
+  TryAttachStub<ToBoolIRGenerator>("ToBool", cx, frame, stub, arg);
 
   bool cond = ToBoolean(arg);
   ret.setBoolean(cond);
@@ -932,7 +930,6 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
   }
 
   TryAttachStub<GetPropIRGenerator>("GetElem", cx, frame, stub,
-                                    BaselineCacheIRStubKind::Regular,
                                     CacheKind::GetElem, lhs, rhs, lhs);
 
   if (!isOptimizedArgs) {
@@ -958,9 +955,9 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::GetElemSuper);
 
-  TryAttachStub<GetPropIRGenerator>(
-      "GetElemSuper", cx, frame, stub, BaselineCacheIRStubKind::Regular,
-      CacheKind::GetElemSuper, lhs, rhs, receiver);
+  TryAttachStub<GetPropIRGenerator>("GetElemSuper", cx, frame, stub,
+                                    CacheKind::GetElemSuper, lhs, rhs,
+                                    receiver);
 
   // |lhs| is [[HomeObject]].[[Prototype]] which must be Object
   RootedObject lhsObj(cx, &lhs.toObject());
@@ -1084,9 +1081,8 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Regular, frame->script(), icScript, stub,
-            &attached);
+            cx, gen.writerRef(), gen.cacheKind(), frame->script(), icScript,
+            stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
         }
@@ -1153,9 +1149,8 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Regular, frame->script(), icScript, stub,
-            &attached);
+            cx, gen.writerRef(), gen.cacheKind(), frame->script(), icScript,
+            stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
         }
@@ -1228,9 +1223,8 @@ bool DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub,
     return false;
   }
 
-  TryAttachStub<HasPropIRGenerator>("In", cx, frame, stub,
-                                    BaselineCacheIRStubKind::Regular,
-                                    CacheKind::In, key, objValue);
+  TryAttachStub<HasPropIRGenerator>("In", cx, frame, stub, CacheKind::In, key,
+                                    objValue);
 
   RootedObject obj(cx, &objValue.toObject());
   bool cond = false;
@@ -1272,7 +1266,6 @@ bool DoHasOwnFallback(JSContext* cx, BaselineFrame* frame,
   FallbackICSpew(cx, stub, "HasOwn");
 
   TryAttachStub<HasPropIRGenerator>("HasOwn", cx, frame, stub,
-                                    BaselineCacheIRStubKind::Regular,
                                     CacheKind::HasOwn, keyValue, objValue);
 
   bool found;
@@ -1318,9 +1311,9 @@ bool DoCheckPrivateFieldFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(keyValue.isSymbol() && keyValue.toSymbol()->isPrivateName());
 
-  TryAttachStub<CheckPrivateFieldIRGenerator>(
-      "CheckPrivate", cx, frame, stub, BaselineCacheIRStubKind::Regular,
-      CacheKind::CheckPrivateField, keyValue, objValue);
+  TryAttachStub<CheckPrivateFieldIRGenerator>("CheckPrivate", cx, frame, stub,
+                                              CacheKind::CheckPrivateField,
+                                              keyValue, objValue);
 
   bool result;
   if (!CheckPrivateFieldOperation(cx, pc, objValue, keyValue, &result)) {
@@ -1367,9 +1360,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedPropertyName name(cx, script->getName(pc));
 
-  TryAttachStub<GetNameIRGenerator>("GetName", cx, frame, stub,
-                                    BaselineCacheIRStubKind::Regular, envChain,
-                                    name);
+  TryAttachStub<GetNameIRGenerator>("GetName", cx, frame, stub, envChain, name);
 
   static_assert(JSOpLength_GetGName == JSOpLength_GetName,
                 "Otherwise our check for JSOp::Typeof isn't ok");
@@ -1417,8 +1408,7 @@ bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedPropertyName name(cx, frame->script()->getName(pc));
 
-  TryAttachStub<BindNameIRGenerator>("BindName", cx, frame, stub,
-                                     BaselineCacheIRStubKind::Regular, envChain,
+  TryAttachStub<BindNameIRGenerator>("BindName", cx, frame, stub, envChain,
                                      name);
 
   RootedObject scope(cx);
@@ -1464,8 +1454,7 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub,
-                                         BaselineCacheIRStubKind::Regular, res);
+  TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub, res);
 
   return true;
 }
@@ -1533,7 +1522,6 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedValue idVal(cx, StringValue(name));
 
   TryAttachStub<GetPropIRGenerator>("GetProp", cx, frame, stub,
-                                    BaselineCacheIRStubKind::Regular,
                                     CacheKind::GetProp, val, idVal, val);
 
   return ComputeGetPropResult(cx, frame, op, name, val, res);
@@ -1553,9 +1541,9 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
   RootedPropertyName name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
 
-  TryAttachStub<GetPropIRGenerator>(
-      "GetPropSuper", cx, frame, stub, BaselineCacheIRStubKind::Regular,
-      CacheKind::GetPropSuper, val, idVal, receiver);
+  TryAttachStub<GetPropIRGenerator>("GetPropSuper", cx, frame, stub,
+                                    CacheKind::GetPropSuper, val, idVal,
+                                    receiver);
 
   // |val| is [[HomeObject]].[[Prototype]] which must be Object
   RootedObject valObj(cx, &val.toObject());
@@ -1673,9 +1661,8 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Regular, frame->script(), icScript, stub,
-            &attached);
+            cx, gen.writerRef(), gen.cacheKind(), frame->script(), icScript,
+            stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
         }
@@ -1750,9 +1737,8 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
         ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Regular, frame->script(), icScript, stub,
-            &attached);
+            cx, gen.writerRef(), gen.cacheKind(), frame->script(), icScript,
+            stub, &attached);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
         }
@@ -1868,9 +1854,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
         break;
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
-        ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Regular, script, icScript, stub, &handled);
+        ICStub* newStub =
+            AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                      script, icScript, stub, &handled);
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
         }
@@ -1959,9 +1945,9 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
         break;
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
-        ICStub* newStub = AttachBaselineCacheIRStub(
-            cx, gen.writerRef(), gen.cacheKind(),
-            BaselineCacheIRStubKind::Regular, script, icScript, stub, &handled);
+        ICStub* newStub =
+            AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                      script, icScript, stub, &handled);
 
         if (newStub) {
           JitSpew(JitSpew_BaselineIC, "  Attached Spread Call CacheIR stub");
@@ -2169,8 +2155,7 @@ bool DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "GetIterator");
 
-  TryAttachStub<GetIteratorIRGenerator>(
-      "GetIterator", cx, frame, stub, BaselineCacheIRStubKind::Regular, value);
+  TryAttachStub<GetIteratorIRGenerator>("GetIterator", cx, frame, stub, value);
 
   JSObject* iterobj = ValueToIterator(cx, value);
   if (!iterobj) {
@@ -2206,9 +2191,8 @@ bool DoOptimizeSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "OptimizeSpreadCall");
 
-  TryAttachStub<OptimizeSpreadCallIRGenerator>(
-      "OptimizeSpreadCall", cx, frame, stub, BaselineCacheIRStubKind::Regular,
-      value);
+  TryAttachStub<OptimizeSpreadCallIRGenerator>("OptimizeSpreadCall", cx, frame,
+                                               stub, value);
 
   bool optimized;
   if (!OptimizeSpreadCall(cx, value, &optimized)) {
@@ -2265,9 +2249,7 @@ bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
     return true;
   }
 
-  TryAttachStub<InstanceOfIRGenerator>("InstanceOf", cx, frame, stub,
-                                       BaselineCacheIRStubKind::Regular, lhs,
-                                       obj);
+  TryAttachStub<InstanceOfIRGenerator>("InstanceOf", cx, frame, stub, lhs, obj);
   return true;
 }
 
@@ -2298,8 +2280,7 @@ bool DoTypeOfFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "TypeOf");
 
-  TryAttachStub<TypeOfIRGenerator>("TypeOf", cx, frame, stub,
-                                   BaselineCacheIRStubKind::Regular, val);
+  TryAttachStub<TypeOfIRGenerator>("TypeOf", cx, frame, stub, val);
 
   JSType type = js::TypeOfValue(val);
   RootedString string(cx, TypeName(type, cx->names()));
@@ -2329,8 +2310,8 @@ bool DoToPropertyKeyFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "ToPropertyKey");
 
-  TryAttachStub<ToPropertyKeyIRGenerator>(
-      "ToPropertyKey", cx, frame, stub, BaselineCacheIRStubKind::Regular, val);
+  TryAttachStub<ToPropertyKeyIRGenerator>("ToPropertyKey", cx, frame, stub,
+                                          val);
 
   return ToPropertyKeyOperation(cx, val, res);
 }
@@ -2437,9 +2418,8 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
   }
   MOZ_ASSERT(res.isNumeric());
 
-  TryAttachStub<UnaryArithIRGenerator>("UnaryArith", cx, frame, stub,
-                                       BaselineCacheIRStubKind::Regular, op,
-                                       val, res);
+  TryAttachStub<UnaryArithIRGenerator>("UnaryArith", cx, frame, stub, op, val,
+                                       res);
   return true;
 }
 
@@ -2557,9 +2537,8 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
       MOZ_CRASH("Unhandled baseline arith op");
   }
 
-  TryAttachStub<BinaryArithIRGenerator>("BinaryArith", cx, frame, stub,
-                                        BaselineCacheIRStubKind::Regular, op,
-                                        lhs, rhs, ret);
+  TryAttachStub<BinaryArithIRGenerator>("BinaryArith", cx, frame, stub, op, lhs,
+                                        rhs, ret);
   return true;
 }
 
@@ -2654,9 +2633,7 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
 
   ret.setBoolean(out);
 
-  TryAttachStub<CompareIRGenerator>("Compare", cx, frame, stub,
-                                    BaselineCacheIRStubKind::Regular, op, lhs,
-                                    rhs);
+  TryAttachStub<CompareIRGenerator>("Compare", cx, frame, stub, op, lhs, rhs);
   return true;
 }
 
@@ -2758,7 +2735,6 @@ bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
       }
 
       TryAttachStub<NewObjectIRGenerator>("NewObject", cx, frame, stub,
-                                          BaselineCacheIRStubKind::Regular,
                                           JSOp(*pc), templateObject);
 
       stub->setTemplateObject(templateObject);

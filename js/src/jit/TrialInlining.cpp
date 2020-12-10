@@ -82,9 +82,8 @@ bool TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
 
   // Note: AttachBaselineCacheIRStub never throws an exception.
   bool attached = false;
-  ICStub* newStub = AttachBaselineCacheIRStub(
-      cx(), writer, kind, BaselineCacheIRStubKind::Regular, script_, icScript_,
-      fallback, &attached);
+  ICStub* newStub = AttachBaselineCacheIRStub(cx(), writer, kind, script_,
+                                              icScript_, fallback, &attached);
   if (!newStub) {
     MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Candidate);
     ReportOutOfMemory(cx());
