@@ -207,9 +207,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // The rest of these suppressions are miscellaneous issues in gecko
          // that should be investigated and ideally fixed.
 
-         // Bug 1619162
-         "race:currentNameHasEscapes\n"
-
          // Bug 1601600
          "race:SkARGB32_Blitter\n"
          "race:SkARGB32_Shader_Blitter\n"
