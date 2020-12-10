@@ -500,7 +500,7 @@ where
         //              [stack] THIS THIS
 
         // FIXME: Support super.
-        emitter.emit.call_prop(key_index);
+        emitter.emit.get_prop(key_index);
         //              [stack] THIS CALLEE
 
         emitter.emit.swap();
@@ -560,7 +560,7 @@ where
         //              [stack] THIS THIS KEY
 
         // FIXME: Support super.
-        emitter.emit.call_elem();
+        emitter.emit.get_elem();
         //              [stack] THIS CALLEE
 
         emitter.emit.swap();

@@ -209,8 +209,6 @@ class SrcNote {
      * (fromOperand).
      */
     static constexpr ptrdiff_t ColSpanSignBit = 1 << (OperandBits - 1);
-    static constexpr ptrdiff_t MinColSpan = -ColSpanSignBit;
-    static constexpr ptrdiff_t MaxColSpan = ColSpanSignBit - 1;
 
     static inline ptrdiff_t fromOperand(ptrdiff_t operand) {
       // There should be no bits set outside the field we're going to
@@ -222,9 +220,8 @@ class SrcNote {
     }
 
    public:
-    static inline bool isRepresentable(ptrdiff_t colspan) {
-      return MinColSpan <= colspan && colspan <= MaxColSpan;
-    }
+    static constexpr ptrdiff_t MinColSpan = -ColSpanSignBit;
+    static constexpr ptrdiff_t MaxColSpan = ColSpanSignBit - 1;
 
     static inline ptrdiff_t toOperand(ptrdiff_t colspan) {
       // Truncate the two's complement colspan, for storage as an operand.
@@ -252,13 +249,20 @@ class SrcNote {
     }
 
    public:
-    static inline unsigned lengthFor(unsigned line) {
-      return 1 /* SetLine */ + (line > SrcNote::FourBytesOperandMask ? 4 : 1);
+    static inline unsigned lengthFor(unsigned line, size_t initialLine) {
+      unsigned operandSize = toOperand(line, initialLine) >
+                                     ptrdiff_t(SrcNote::FourBytesOperandMask)
+                                 ? 4
+                                 : 1;
+      return 1 /* SetLine */ + operandSize;
     }
 
-    static inline ptrdiff_t toOperand(size_t line) { return ptrdiff_t(line); }
+    static inline ptrdiff_t toOperand(size_t line, size_t initialLine) {
+      MOZ_ASSERT(line >= initialLine);
+      return ptrdiff_t(line - initialLine);
+    }
 
-    static inline size_t getLine(const SrcNote* sn);
+    static inline size_t getLine(const SrcNote* sn, size_t initialLine);
   };
 
   friend class SrcNoteWriter;
@@ -366,8 +370,9 @@ inline ptrdiff_t SrcNote::ColSpan::getSpan(const SrcNote* sn) {
 }
 
 /* static */
-inline size_t SrcNote::SetLine::getLine(const SrcNote* sn) {
-  return fromOperand(SrcNoteReader::getOperand(sn, unsigned(Operands::Line)));
+inline size_t SrcNote::SetLine::getLine(const SrcNote* sn, size_t initialLine) {
+  return initialLine +
+         fromOperand(SrcNoteReader::getOperand(sn, unsigned(Operands::Line)));
 }
 
 // Iterate over SrcNote array, until it hits terminator.
