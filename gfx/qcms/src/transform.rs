@@ -27,7 +27,7 @@ use crate::transform_neon::{
     qcms_transform_data_rgba_out_lut_neon,
 };
 use crate::{
-    chain::qcms_chain_transform,
+    chain::chain_transform,
     double_to_s15Fixed16Number,
     iccread::qcms_supports_iccv4,
     matrix::*,
@@ -1190,7 +1190,7 @@ fn qcms_transform_precacheLUT_float(
                 }
             }
         }
-        let lut = unsafe { qcms_chain_transform(in_0, out, src, dest, lutSize as usize) };
+        let lut = unsafe { chain_transform(in_0, out, src, dest, lutSize as usize) };
         if let Some(lut) = lut {
             (*transform).clut = Some(lut);
             (*transform).grid_size = samples as u16;
