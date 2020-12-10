@@ -8,6 +8,8 @@
 #include "GVAutoplayRequestUtils.h"
 #include "nsContentPermissionHelper.h"
 
+class nsGlobalWindowInner;
+
 namespace mozilla {
 namespace dom {
 
