@@ -55,6 +55,10 @@
 using namespace mozilla;
 
 static LazyLogModule sUpdateLog("updatedriver");
+// Some other file in our unified batch might have defined LOG already.
+#ifdef LOG
+#  undef LOG
+#endif
 #define LOG(args) MOZ_LOG(sUpdateLog, mozilla::LogLevel::Debug, args)
 
 #ifdef XP_WIN
