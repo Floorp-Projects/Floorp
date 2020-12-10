@@ -536,7 +536,7 @@ class QuotaClient final : public mozilla::dom::quota::Client {
  * Globals
  ******************************************************************************/
 
-typedef nsTArray<RefPtr<Connection>> ConnectionArray;
+using ConnectionArray = nsTArray<NotNull<RefPtr<Connection>>>;
 
 StaticAutoPtr<ConnectionArray> gOpenConnections;
 
@@ -546,8 +546,6 @@ void AllowToCloseConnectionsMatching(const Condition& aCondition) {
 
   if (gOpenConnections) {
     for (const auto& connection : *gOpenConnections) {
-      MOZ_ASSERT(connection);
-
       if (aCondition(*connection)) {
         connection->AllowToClose();
       }
@@ -748,7 +746,7 @@ void Connection::OnOpen(const nsACString& aOrigin, const nsAString& aName,
     gOpenConnections = new ConnectionArray();
   }
 
-  gOpenConnections->AppendElement(this);
+  gOpenConnections->AppendElement(WrapNotNullUnchecked(this));
 }
 
 void Connection::OnClose() {
@@ -1132,7 +1130,7 @@ nsresult OpenOp::FinishOpen() {
   MOZ_ASSERT(mState == State::FinishOpen);
 
   if (gOpenConnections) {
-    for (Connection* connection : *gOpenConnections) {
+    for (const auto& connection : *gOpenConnections) {
       if (connection->Origin() == mQuotaInfo.mOrigin &&
           connection->Name() == mParams.name()) {
         return NS_ERROR_STORAGE_BUSY;
@@ -1832,7 +1830,7 @@ void QuotaClient::InitiateShutdown() {
   mShutdownRequested = true;
 
   if (gOpenConnections) {
-    for (Connection* connection : *gOpenConnections) {
+    for (const auto& connection : *gOpenConnections) {
       connection->AllowToClose();
     }
   }
