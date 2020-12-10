@@ -45,6 +45,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsQueryObject.h"
 #include "RetainedDisplayListBuilder.h"
+#include "nsObjectLoadingContent.h"
 
 #include "Layers.h"
 #include "BasicLayers.h"
@@ -585,7 +586,10 @@ nscoord nsSubDocumentFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
-  if (mSubdocumentIntrinsicSize) {
+  nsCOMPtr<nsIObjectLoadingContent> iolc = do_QueryInterface(mContent);
+  auto olc = static_cast<nsObjectLoadingContent*>(iolc.get());
+
+  if (olc && olc->GetSubdocumentIntrinsicSize()) {
     // The subdocument is an SVG document, so technically we should call
     // SVGOuterSVGFrame::GetMinISize() on its root frame.  That method always
     // returns 0, though, so we can just do that & don't need to bother with
@@ -621,9 +625,13 @@ IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
     return IntrinsicSize(0, 0);
   }
 
-  if (mSubdocumentIntrinsicSize) {
-    // Use the intrinsic size from the child SVG document, if available.
-    return *mSubdocumentIntrinsicSize;
+  if (nsCOMPtr<nsIObjectLoadingContent> iolc = do_QueryInterface(mContent)) {
+    auto olc = static_cast<nsObjectLoadingContent*>(iolc.get());
+
+    if (auto size = olc->GetSubdocumentIntrinsicSize()) {
+      // Use the intrinsic size from the child SVG document, if available.
+      return *size;
+    }
   }
 
   if (!IsInline()) {
@@ -643,9 +651,15 @@ AspectRatio nsSubDocumentFrame::GetIntrinsicRatio() const {
   // FIXME(emilio): This should probably respect contain: size and return no
   // ratio in the case subDocRoot is non-null. Otherwise we do it by virtue of
   // using a zero-size below and reusing GetIntrinsicSize().
-  if (mSubdocumentIntrinsicRatio && *mSubdocumentIntrinsicRatio) {
-    // Use the intrinsic aspect ratio from the child SVG document, if available.
-    return *mSubdocumentIntrinsicRatio;
+  if (nsCOMPtr<nsIObjectLoadingContent> iolc = do_QueryInterface(mContent)) {
+    auto olc = static_cast<nsObjectLoadingContent*>(iolc.get());
+
+    auto ratio = olc->GetSubdocumentIntrinsicRatio();
+    if (ratio && *ratio) {
+      // Use the intrinsic aspect ratio from the child SVG document, if
+      // available.
+      return *ratio;
+    }
   }
 
   // NOTE(emilio): Even though we have an intrinsic size, we may not have an
@@ -1156,16 +1170,7 @@ nsPoint nsSubDocumentFrame::GetExtraOffset() const {
   return mInnerView->GetPosition();
 }
 
-void nsSubDocumentFrame::SubdocumentIntrinsicSizeOrRatioChanged(
-    const Maybe<IntrinsicSize>& aIntrinsicSize,
-    const Maybe<AspectRatio>& aIntrinsicRatio) {
-  if (mSubdocumentIntrinsicSize == aIntrinsicSize &&
-      mSubdocumentIntrinsicRatio == aIntrinsicRatio) {
-    return;
-  }
-  mSubdocumentIntrinsicSize = aIntrinsicSize;
-  mSubdocumentIntrinsicRatio = aIntrinsicRatio;
-
+void nsSubDocumentFrame::SubdocumentIntrinsicSizeOrRatioChanged() {
   if (MOZ_UNLIKELY(HasAllStateBits(NS_FRAME_IS_DIRTY))) {
     // We will be reflowed soon anyway.
     return;
