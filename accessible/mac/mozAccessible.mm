@@ -41,8 +41,6 @@ using namespace mozilla::a11y;
 @interface mozAccessible ()
 - (BOOL)providesLabelNotTitle;
 
-- (nsStaticAtom*)ARIARole;
-
 - (void)maybePostLiveRegionChanged;
 @end
 
