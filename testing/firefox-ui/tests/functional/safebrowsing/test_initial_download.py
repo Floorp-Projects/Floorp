@@ -3,7 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import os
+
+from functools import reduce
 
 from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
