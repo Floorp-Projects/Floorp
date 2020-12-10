@@ -31,7 +31,9 @@ macro_rules! metric_get {
 macro_rules! test_has {
     ($map:ident, $id:ident, $storage:ident) => {{
         let metric = metric_get!($map, $id);
-        metric.test_get_value($storage.as_str()).is_some()
+        let storage = $storage.to_utf8();
+        let storage = Some(&storage[..]);
+        metric.test_get_value(storage).is_some()
     }};
 }
 
@@ -46,6 +48,8 @@ macro_rules! test_has {
 macro_rules! test_get {
     ($map:ident, $id:ident, $storage:ident) => {{
         let metric = metric_get!($map, $id);
-        metric.test_get_value($storage.as_str()).unwrap()
+        let storage = $storage.to_utf8();
+        let storage = Some(&storage[..]);
+        metric.test_get_value(storage).unwrap()
     }};
 }
