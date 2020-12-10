@@ -2880,7 +2880,8 @@ class MOZ_STACK_CLASS AutoWriteTransaction final {
 bool gLocalStorageInitialized = false;
 #endif
 
-typedef nsTArray<CheckedUnsafePtr<PrepareDatastoreOp>> PrepareDatastoreOpArray;
+using PrepareDatastoreOpArray =
+    nsTArray<NotNull<CheckedUnsafePtr<PrepareDatastoreOp>>>;
 
 StaticAutoPtr<PrepareDatastoreOpArray> gPrepareDatastoreOps;
 
@@ -2933,7 +2934,7 @@ using PrivateDatastoreHashtable =
 // window actually goes away.
 UniquePtr<PrivateDatastoreHashtable> gPrivateDatastores;
 
-typedef nsTArray<CheckedUnsafePtr<Database>> LiveDatabaseArray;
+using LiveDatabaseArray = nsTArray<NotNull<CheckedUnsafePtr<Database>>>;
 
 StaticAutoPtr<LiveDatabaseArray> gLiveDatabases;
 
@@ -3147,8 +3148,6 @@ void InvalidatePrepareDatastoreOpsMatching(const Condition& aCondition) {
   }
 
   for (const auto& prepareDatastoreOp : *gPrepareDatastoreOps) {
-    MOZ_ASSERT(prepareDatastoreOp);
-
     if (aCondition(*prepareDatastoreOp)) {
       prepareDatastoreOp->Invalidate();
     }
@@ -3182,10 +3181,8 @@ nsTArray<RefPtr<Database>> CollectDatabasesMatching(Condition aCondition) {
   nsTArray<RefPtr<Database>> databases;
 
   for (const auto& database : *gLiveDatabases) {
-    MOZ_ASSERT(database);
-
     if (aCondition(*database)) {
-      databases.AppendElement(database);
+      databases.AppendElement(database.get());
     }
   }
 
@@ -3493,7 +3490,8 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
       if (!gPrepareDatastoreOps) {
         gPrepareDatastoreOps = new PrepareDatastoreOpArray();
       }
-      gPrepareDatastoreOps->AppendElement(prepareDatastoreOp);
+      gPrepareDatastoreOps->AppendElement(
+          WrapNotNullUnchecked(prepareDatastoreOp.get()));
 
       actor = std::move(prepareDatastoreOp);
 
@@ -5705,7 +5703,7 @@ void Database::SetActorAlive(Datastore* aDatastore) {
     gLiveDatabases = new LiveDatabaseArray();
   }
 
-  gLiveDatabases->AppendElement(this);
+  gLiveDatabases->AppendElement(WrapNotNullUnchecked(this));
 }
 
 void Database::RegisterSnapshot(Snapshot* aSnapshot) {
@@ -6973,10 +6971,11 @@ void PrepareDatastoreOp::Log() {
     case NestedState::CheckClosingDatastore: {
       for (uint32_t index = gPrepareDatastoreOps->Length(); index > 0;
            index--) {
-        PrepareDatastoreOp* existingOp = (*gPrepareDatastoreOps)[index - 1];
+        const auto& existingOp = (*gPrepareDatastoreOps)[index - 1];
 
         if (existingOp->mDelayedOp == this) {
-          LS_LOG(("  mDelayedBy: [%p]", existingOp));
+          LS_LOG(("  mDelayedBy: [%p]",
+                  static_cast<PrepareDatastoreOp*>(existingOp.get())));
 
           existingOp->Log();
 
@@ -7095,7 +7094,7 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
   // See if this PrepareDatastoreOp needs to wait.
   bool foundThis = false;
   for (uint32_t index = gPrepareDatastoreOps->Length(); index > 0; index--) {
-    PrepareDatastoreOp* existingOp = (*gPrepareDatastoreOps)[index - 1];
+    const auto& existingOp = (*gPrepareDatastoreOps)[index - 1];
 
     if (existingOp == this) {
       foundThis = true;
@@ -9282,8 +9281,6 @@ nsCString QuotaClient::GetShutdownStatus() const {
     nsTHashtable<nsCStringHashKey> ids;
 
     for (const auto& prepareDatastoreOp : *gPrepareDatastoreOps) {
-      MOZ_ASSERT(prepareDatastoreOp);
-
       nsCString id;
       prepareDatastoreOp->Stringify(id);
 
@@ -9324,8 +9321,6 @@ nsCString QuotaClient::GetShutdownStatus() const {
     nsTHashtable<nsCStringHashKey> ids;
 
     for (const auto& database : *gLiveDatabases) {
-      MOZ_ASSERT(database);
-
       nsCString id;
       database->Stringify(id);
 
