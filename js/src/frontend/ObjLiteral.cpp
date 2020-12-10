@@ -162,27 +162,16 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
   }
 }
 
-void ObjLiteralWriter::dump() {
-  js::Fprinter out(stderr);
-  js::JSONPrinter json(out);
-  dump(json, nullptr);
-}
-
-void ObjLiteralWriter::dump(js::JSONPrinter& json,
-                            frontend::CompilationStencil* compilationStencil) {
-  json.beginObject();
-  dumpFields(json, compilationStencil);
-  json.endObject();
-}
-
-void ObjLiteralWriter::dumpFields(
-    js::JSONPrinter& json, frontend::CompilationStencil* compilationStencil) {
+static void DumpObjLiteral(js::JSONPrinter& json,
+                           frontend::CompilationStencil* compilationStencil,
+                           mozilla::Span<const uint8_t> code,
+                           const ObjLiteralFlags& flags) {
   json.beginListProperty("flags");
-  DumpObjLiteralFlagsItems(json, flags_);
+  DumpObjLiteralFlagsItems(json, flags);
   json.endList();
 
   json.beginListProperty("code");
-  ObjLiteralReader reader(getCode());
+  ObjLiteralReader reader(code);
   ObjLiteralInsn insn;
   while (reader.readInsn(&insn)) {
     json.beginObject();
@@ -234,6 +223,24 @@ void ObjLiteralWriter::dumpFields(
   json.endList();
 }
 
+void ObjLiteralWriter::dump() {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  dump(json, nullptr);
+}
+
+void ObjLiteralWriter::dump(js::JSONPrinter& json,
+                            frontend::CompilationStencil* compilationStencil) {
+  json.beginObject();
+  dumpFields(json, compilationStencil);
+  json.endObject();
+}
+
+void ObjLiteralWriter::dumpFields(
+    js::JSONPrinter& json, frontend::CompilationStencil* compilationStencil) {
+  DumpObjLiteral(json, compilationStencil, getCode(), flags_);
+}
+
 void ObjLiteralStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
@@ -249,7 +256,7 @@ void ObjLiteralStencil::dump(js::JSONPrinter& json,
 
 void ObjLiteralStencil::dumpFields(
     js::JSONPrinter& json, frontend::CompilationStencil* compilationStencil) {
-  writer_.dumpFields(json, compilationStencil);
+  DumpObjLiteral(json, compilationStencil, code_, flags_);
 }
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
