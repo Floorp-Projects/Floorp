@@ -1803,6 +1803,16 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
     return NS_OK;
   }
 
+  SkeletonUISettings settings;
+
+  settings.screenX = aRect.X();
+  settings.screenY = aRect.Y();
+  settings.width = aRect.Width();
+  settings.height = aRect.Height();
+
+  settings.maximized = mWindow->SizeMode() == nsSizeMode_Maximized;
+  settings.cssToDevPixelScaling = mWindow->GetDefaultScale().scale;
+
   nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   Document* doc = windowElement->GetComposedDoc();
   Element* urlbarEl = doc->GetElementById(u"urlbar"_ns);
@@ -1842,6 +1852,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
   CSSPixelSpan urlbar;
   urlbar.start = urlbarX;
   urlbar.end = urlbar.start + urlbarWidth;
+  settings.urlbarSpan = urlbar;
 
   Element* navbar = doc->GetElementById(u"nav-bar"_ns);
 
@@ -1861,6 +1872,11 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
     searchbar.start = 0;
     searchbar.end = 0;
   }
+  settings.searchbarSpan = searchbar;
+
+  Element* menubar = doc->GetElementById(u"toolbar-menubar"_ns);
+  menubar->GetAttribute(u"autohide"_ns, attributeValue);
+  settings.menubarShown = attributeValue.EqualsLiteral("false");
 
   ErrorResult err;
   nsCOMPtr<nsIHTMLCollection> toolbarSprings = navbar->GetElementsByTagNameNS(
@@ -1880,15 +1896,12 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
     CSSPixelSpan spring;
     spring.start = springRect->X();
     spring.end = spring.start + springRect->Width();
-    if (!springs.append(spring)) {
+    if (!settings.springs.append(spring)) {
       return NS_ERROR_FAILURE;
     }
   }
 
-  PersistPreXULSkeletonUIValues(
-      aRect.X(), aRect.Y(), aRect.Width(), aRect.Height(),
-      mWindow->SizeMode() == nsSizeMode_Maximized, urlbar, searchbar, springs,
-      mWindow->GetDefaultScale().scale);
+  PersistPreXULSkeletonUIValues(settings);
 #endif
 
   return NS_OK;
