@@ -28,9 +28,7 @@ class XMLHttpRequestEventTarget : public DOMEventTargetHelper {
                                            DOMEventTargetHelper)
 
   mozilla::Maybe<EventCallbackDebuggerNotificationType>
-  GetDebuggerNotificationType() const override {
-    return mozilla::Some(EventCallbackDebuggerNotificationType::Xhr);
-  }
+  GetDebuggerNotificationType() const override;
 
   IMPL_EVENT_HANDLER(loadstart)
   IMPL_EVENT_HANDLER(progress)

@@ -912,6 +912,11 @@ WebSocket::WebSocket(nsIGlobalObject* aGlobal)
 
 WebSocket::~WebSocket() = default;
 
+mozilla::Maybe<EventCallbackDebuggerNotificationType>
+WebSocket::GetDebuggerNotificationType() const {
+  return mozilla::Some(EventCallbackDebuggerNotificationType::Websocket);
+}
+
 JSObject* WebSocket::WrapObject(JSContext* cx,
                                 JS::Handle<JSObject*> aGivenProto) {
   return WebSocket_Binding::Wrap(cx, this, aGivenProto);
