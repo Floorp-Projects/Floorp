@@ -41,6 +41,8 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
                              const IndexMap& aModuleIndices);
   nsresult GetPerProcObject(const UntrustedModulesData& aData,
                             JS::MutableHandleObject aObj);
+  nsresult AddLoadEvents(const Vector<ProcessedModuleLoadEvent>& aEvents,
+                         JS::MutableHandleObject aPerProcObj);
   nsresult AddSingleData(const UntrustedModulesData& aData);
 
  public:
@@ -57,6 +59,12 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
 
   /**
    * Adds data to the JS object.
+   *
+   * When the process of a given UntrustedModulesData collides with a key in
+   * the JS object, the entire UntrustedModulesData instance in the JS object
+   * will be replaced unless EXCLUDE_STACKINFO_FROM_LOADEVENTS is set.
+   * When EXCLUDE_STACKINFO_FROM_LOADEVENTS is set, the given loading events
+   * are appended into the JS object, keeping the existing data as is.
    *
    * @param  aData [in] The source objects to add.
    * @return nsresult
