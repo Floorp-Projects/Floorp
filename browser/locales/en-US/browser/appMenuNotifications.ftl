@@ -32,6 +32,14 @@ appmenu-update-restart =
     .secondarybuttonlabel = Not Now
     .secondarybuttonaccesskey = N
 appmenu-update-restart-message = After a quick restart, { -brand-shorter-name } will restore all your open tabs and windows that are not in Private Browsing mode.
+appmenu-update-other-instance =
+    .label = { -brand-shorter-name } is unable to automatically update to the latest version.
+    .buttonlabel = Update { -brand-shorter-name } anyway
+    .buttonaccesskey = U
+    .secondarybuttonlabel = Not Now
+    .secondarybuttonaccesskey = N
+appmenu-update-other-instance-message = A new { -brand-shorter-name } update is available, but it can’t be installed because another copy of { -brand-shorter-name } is running. Close it to continue the update, or choose to update anyway (the other copy may not work correctly until you restart it).
+
 appmenu-addon-private-browsing-installed =
     .buttonlabel = Okay, Got It
     .buttonaccesskey = O
