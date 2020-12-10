@@ -13,7 +13,7 @@
   },
   {
     "title": "amazon",
-    "urls": ["https://www.amazon.ca/", "https://www.amazon.co.uk/", "https://www.amazon.com/", "https://www.amazon.de/", "https://www.amazon.fr/"],
+    "urls": ["https://www.amazon.ae/", "https://www.amazon.ca/", "https://www.amazon.co.jp/", "https://www.amazon.co.uk/", "https://www.amazon.com/", "https://www.amazon.com.au/", "https://www.amazon.com.br/", "https://www.amazon.com.mx/", "https://www.amazon.de/", "https://www.amazon.es/", "https://www.amazon.fr/", "https://www.amazon.in/", "https://www.amazon.it/", "https://www.amazon.nl/", "https://www.amazon.sa/", "https://www.amazon.se/", "https://www.amazon.sg/", "https://www.amazon.com.tr/"],
     "image_url": "images/amazon@2x.png",
     "favicon_url": "favicons/amazon.ico"
   },
@@ -55,7 +55,7 @@
   },
   {
     "title": "ebay",
-    "urls": ["https://www.ebay.com", "https://www.ebay.co.uk/", "https://ebay.de"],
+    "urls": ["https://mx.ebay.com/", "https://www.benl.ebay.be/", "https://www.befr.ebay.be/", "https://www.ebay.ca/", "https://www.ebay.ch/", "https://www.ebay.co.jp/", "https://www.ebay.co.uk/", "https://www.ebay.com/", "https://www.ebay.com.au/", "https://www.ebay.de", "https://www.ebay.es/", "https://www.ebay.fr/", "https://www.ebay.ie/", "https://www.ebay.in/", "https://www.ebay.it/", "https://www.ebay.nl/"],
     "image_url": "images/ebay@2x.png",
     "favicon_url": "favicons/ebay.ico"
   },
