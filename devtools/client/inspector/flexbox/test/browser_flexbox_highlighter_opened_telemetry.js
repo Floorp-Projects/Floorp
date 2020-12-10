@@ -13,8 +13,6 @@ add_task(async function() {
   startTelemetry();
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
-  const { highlighters, store } = inspector;
-
   const onFlexHighlighterToggleRendered = waitForDOM(
     doc,
     "#flexbox-checkbox-toggle"
@@ -22,8 +20,8 @@ add_task(async function() {
   await selectNode("#container", inspector);
   const [flexHighlighterToggle] = await onFlexHighlighterToggleRendered;
 
-  await toggleHighlighterON(flexHighlighterToggle, highlighters, store);
-  await toggleHighlighterOFF(flexHighlighterToggle, highlighters, store);
+  await toggleHighlighterON(flexHighlighterToggle, inspector);
+  await toggleHighlighterOFF(flexHighlighterToggle, inspector);
 
   checkResults();
 });

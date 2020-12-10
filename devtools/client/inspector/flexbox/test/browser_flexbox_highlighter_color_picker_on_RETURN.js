@@ -17,7 +17,12 @@ add_task(async function() {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector, layoutView } = await openLayoutView();
   const { document: doc } = flexboxInspector;
-  const { highlighters, store } = inspector;
+  const { store } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
   const cPicker = layoutView.swatchColorPickerTooltip;
   const spectrum = cPicker.spectrum;
 
@@ -44,7 +49,7 @@ add_task(async function() {
   );
 
   info("Toggling ON the flexbox highlighter.");
-  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   const onCheckboxChange = waitUntilState(
     store,
     state => state.flexbox.highlighted
@@ -83,7 +88,7 @@ add_task(async function() {
   );
 
   info("Toggling OFF the flexbox highlighter.");
-  const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   checkbox.click();
   await onHighlighterHidden;
 });

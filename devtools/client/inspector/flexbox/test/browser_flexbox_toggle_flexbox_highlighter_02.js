@@ -12,7 +12,12 @@ add_task(async function() {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
-  const { highlighters, store } = inspector;
+  const { store } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const {
+    getActiveHighlighter,
+    getNodeForActiveHighlighter,
+  } = getHighlighterTestHelpers(inspector);
 
   const onFlexHighlighterToggleRendered = waitForDOM(
     doc,
@@ -27,17 +32,20 @@ add_task(async function() {
     !flexHighlighterToggle.checked,
     "The flexbox highlighter toggle is unchecked."
   );
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
 
   info(
     "Toggling ON the flexbox highlighter for #container from the layout panel."
   );
-  await toggleHighlighterON(flexHighlighterToggle, highlighters, store);
+  await toggleHighlighterON(flexHighlighterToggle, inspector);
 
   info("Checking the flexbox highlighter is created for #container.");
   const highlightedNodeFront = store.getState().flexbox.flexContainer.nodeFront;
   is(
-    highlighters.flexboxHighlighterShown,
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
     highlightedNodeFront,
     "Flexbox highlighter is shown for #container."
   );
@@ -60,7 +68,7 @@ add_task(async function() {
     "The flexbox highlighter toggle is unchecked."
   );
   is(
-    highlighters.flexboxHighlighterShown,
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
     highlightedNodeFront,
     "Flexbox highlighter is still shown for #container."
   );
@@ -69,11 +77,11 @@ add_task(async function() {
     "Toggling ON the flexbox highlighter for .container.column from the layout " +
       "panel."
   );
-  await toggleHighlighterON(flexHighlighterToggle, highlighters, store);
+  await toggleHighlighterON(flexHighlighterToggle, inspector);
 
   info("Checking the flexbox highlighter is created for .container.column");
   is(
-    highlighters.flexboxHighlighterShown,
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
     store.getState().flexbox.flexContainer.nodeFront,
     "Flexbox highlighter is shown for .container.column."
   );
@@ -82,10 +90,13 @@ add_task(async function() {
     "The flexbox highlighter toggle is checked."
   );
 
-  await toggleHighlighterOFF(flexHighlighterToggle, highlighters, store);
+  await toggleHighlighterOFF(flexHighlighterToggle, inspector);
 
   info("Checking the flexbox highlighter is not shown.");
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
   ok(
     !flexHighlighterToggle.checked,
     "The flexbox highlighter toggle is unchecked."
