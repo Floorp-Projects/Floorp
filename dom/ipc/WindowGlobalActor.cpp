@@ -142,6 +142,8 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
   }
   init.securityInfo() = securityInfo;
 
+  fields.mIsLocalIP = init.principal()->GetIsLocalIpAddress();
+
   // Most data here is specific to the Document, which can change without
   // creating a new WindowGlobal. Anything new added here which fits that
   // description should also be synchronized in

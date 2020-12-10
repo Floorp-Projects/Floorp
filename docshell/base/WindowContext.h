@@ -78,7 +78,10 @@ class BrowsingContextGroup;
         PermissionDelegateHandler::DelegatedPermissionList)            \
   FIELD(DelegatedExactHostMatchPermissions,                            \
         PermissionDelegateHandler::DelegatedPermissionList)            \
-  FIELD(HasReportedShadowDOMUsage, bool)
+  FIELD(HasReportedShadowDOMUsage, bool)                               \
+  /* Whether the principal of this window is for a local               \
+   * IP address */                                                     \
+  FIELD(IsLocalIP, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -102,6 +105,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool IsInProcess() const { return mInProcess; }
 
   bool HasBeforeUnload() const { return GetHasBeforeUnload(); }
+
+  bool IsLocalIP() const { return GetIsLocalIP(); }
 
   nsGlobalWindowInner* GetInnerWindow() const;
   Document* GetDocument() const;
@@ -250,6 +255,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource) {
     return true;
   }
+
+  bool CanSet(FieldIndex<IDX_IsLocalIP>, const bool& aValue,
+              ContentParent* aSource);
 
   void DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, bool aOldValue);
 

@@ -250,6 +250,9 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
     txn.SetAllowMixedContent(true);
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(mDocumentPrincipal->GetIsLocalIpAddress() ==
+                        mWindowContext->IsLocalIP());
+
   MOZ_ALWAYS_SUCCEEDS(txn.Commit(mWindowContext));
 }
 
