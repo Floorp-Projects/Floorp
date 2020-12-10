@@ -469,7 +469,6 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
       } break;
       case Http3Event::Tag::GoawayReceived:
         LOG(("Http3Session::ProcessEvents - GoawayReceived"));
-        MOZ_ASSERT(!mGoawayReceived);
         mGoawayReceived = true;
         break;
       case Http3Event::Tag::ConnectionClosing:
