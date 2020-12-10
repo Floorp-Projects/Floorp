@@ -4501,7 +4501,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       //   - The image is bad, but it's not in the broken state (i.e., we could
       //     decode the headers and get the size).
       if (!res.mIsStillLoading && !res.mHasSize) {
-        aError.Throw(NS_ERROR_NOT_AVAILABLE);
+        aError.ThrowInvalidStateError("Passed-in image is \"broken\"");
       }
       return;
     }
