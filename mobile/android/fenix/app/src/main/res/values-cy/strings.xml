@@ -154,8 +154,6 @@
     <string name="browser_menu_find_in_page">Canfod yn y dudalen</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Tab preifat</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Tab newydd</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Cadw i gasgliad</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -363,6 +361,12 @@
     <string name="customize_addon_collection_user_hint">Perchennog y casgliad (ID Defnyddiwr)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Mae’r casgliad Ychwanegion wedi’i addasu. Yn gadael y rhaglen i osod y newidiadau…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Nid yw’r ychwanegyn yn cael ei gefnogi</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Mae’r ychwanegyn eisoes wedi’i osod</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
