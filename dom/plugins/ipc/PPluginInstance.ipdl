@@ -10,6 +10,7 @@ include protocol PBrowserStream;
 include protocol PStreamNotify;
 include protocol PPluginSurface;
 
+include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
@@ -27,7 +28,7 @@ using mozilla::gfx::IntRect from "mozilla/gfx/2D.h";
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
-using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
+using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/SurfaceDescriptor.h";
 using nsIntRect from "nsRect.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";

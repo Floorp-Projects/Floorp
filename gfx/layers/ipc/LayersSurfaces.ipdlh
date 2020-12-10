@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include "gfxipc/ShadowLayerUtils.h";
+
 using struct gfxPoint from "gfxPoint.h";
 using nsIntRegion from "nsRegion.h";
-using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
+using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/SurfaceDescriptor.h";
 using mozilla::StereoMode from "ImageTypes.h";
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
