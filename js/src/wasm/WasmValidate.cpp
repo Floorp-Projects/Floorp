@@ -1313,14 +1313,23 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #endif
 #ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
+        if (!env.exceptionsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         CHECK(iter.readTry(&unusedType));
       case uint16_t(Op::Catch): {
+        if (!env.exceptionsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         LabelKind unusedKind;
         uint32_t unusedIndex;
         CHECK(iter.readCatch(&unusedKind, &unusedIndex, &unusedType,
                              &unusedType, &nothings));
       }
       case uint16_t(Op::Throw): {
+        if (!env.exceptionsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         uint32_t unusedIndex;
         CHECK(iter.readThrow(&unusedIndex, &nothings));
       }
