@@ -32,7 +32,7 @@ import java.util.Date
 import java.util.Locale
 
 internal const val API_VERSION = "api/v4"
-internal const val DEFAULT_SERVER_URL = "https://addons.mozilla.org"
+internal const val DEFAULT_SERVER_URL = "https://services.addons.mozilla.org"
 internal const val DEFAULT_COLLECTION_USER = "mozilla"
 internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
 internal const val COLLECTION_FILE_NAME_PREFIX = "mozilla_components_addon_collection"
@@ -123,7 +123,8 @@ class AddonCollectionProvider(
     private fun fetchAvailableAddons(readTimeoutInSeconds: Long?): List<Addon> {
         client.fetch(
             Request(
-                url = "$serverURL/$API_VERSION/accounts/account/$collectionUser/collections/$collectionName/addons" +
+                // NB: The trailing slash after addons is important to prevent a redirect and additional request
+                url = "$serverURL/$API_VERSION/accounts/account/$collectionUser/collections/$collectionName/addons/" +
                     "?page_size=$PAGE_SIZE" +
                     "&sort=${sortOption.value}",
                 readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
