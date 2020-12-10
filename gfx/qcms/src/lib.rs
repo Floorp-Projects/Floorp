@@ -40,6 +40,7 @@ fn double_to_s15Fixed16Number(mut v: f64) -> s15Fixed16Number {
     return (v * 65536f64) as i32;
 }
 
+pub mod c_bindings;
 pub mod chain;
 pub mod gtest;
 pub mod iccread;

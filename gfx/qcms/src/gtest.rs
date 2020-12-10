@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod test {
     use crate::{
-        iccread::*, transform::*, transform_util::lut_inverse_interp16, QCMS_INTENT_DEFAULT,
-        QCMS_INTENT_PERCEPTUAL,
+        c_bindings::*, iccread::*, transform::*, transform_util::lut_inverse_interp16,
+        QCMS_INTENT_DEFAULT, QCMS_INTENT_PERCEPTUAL,
     };
     use libc::c_void;
     use std::ptr::null_mut;
@@ -160,7 +160,7 @@ mod test {
                 qcms_enable_avx()
             }
         };
-        let sRGB_profile = crate::iccread::qcms_profile_sRGB();
+        let sRGB_profile = crate::c_bindings::qcms_profile_sRGB();
 
         let mut Rec709Primaries = qcms_CIE_xyYTRIPLE {
             red: qcms_CIE_xyY {
@@ -212,7 +212,7 @@ mod test {
 
     #[test]
     fn gray_alpha() {
-        let sRGB_profile = crate::iccread::qcms_profile_sRGB();
+        let sRGB_profile = qcms_profile_sRGB();
         let other = unsafe { qcms_profile_create_gray_with_gamma(2.2) };
         unsafe { qcms_profile_precache_output_transform(&mut *other) };
 
