@@ -226,3 +226,41 @@ add_task(async function test_private_fields() {
     Assert.ok(module.dllFile.QueryInterface(Ci.nsIFile));
   }
 });
+
+// This tests the flag EXCLUDE_STACKINFO_FROM_LOADEVENTS correctly
+// merges "Staging" and "Settled" on a JS object correctly, and
+// the "combinedStacks" field is really excluded.
+add_task(async function test_exclude_stack() {
+  const baseline = await Telemetry.getUntrustedModuleLoadEvents(
+    Telemetry.EXCLUDE_STACKINFO_FROM_LOADEVENTS |
+      Telemetry.INCLUDE_OLD_LOADEVENTS
+  );
+  Assert.ok(!("combinedStacks" in baseline.processes[gCurrentPidStr]));
+  const baseSet = baseline.processes[gCurrentPidStr].events.map(
+    x => x.processUptimeMS
+  );
+
+  await load_and_free(kDllName);
+  await load_and_free(kDllName);
+  const newLoadsWithStack = await Telemetry.getUntrustedModuleLoadEvents(
+    Telemetry.KEEP_LOADEVENTS_NEW
+  );
+  Assert.ok("combinedStacks" in newLoadsWithStack.processes[gCurrentPidStr]);
+  const newSet = newLoadsWithStack.processes[gCurrentPidStr].events.map(
+    x => x.processUptimeMS
+  );
+
+  const merged = baseSet.concat(newSet);
+
+  const allData = await Telemetry.getUntrustedModuleLoadEvents(
+    Telemetry.KEEP_LOADEVENTS_NEW |
+      Telemetry.EXCLUDE_STACKINFO_FROM_LOADEVENTS |
+      Telemetry.INCLUDE_OLD_LOADEVENTS
+  );
+  Assert.ok(!("combinedStacks" in allData.processes[gCurrentPidStr]));
+  const allSet = allData.processes[gCurrentPidStr].events.map(
+    x => x.processUptimeMS
+  );
+
+  Assert.deepEqual(allSet.sort(), merged.sort());
+});
