@@ -283,21 +283,29 @@ class TextControlState final : public SupportsWeakPtr {
              mDirection == nsITextControlFrame::eForward;
     }
     uint32_t GetStart() const { return mStart; }
-    void SetStart(uint32_t value) {
-      mIsDirty = true;
-      mStart = std::min(value, mMaxLength);
+    bool SetStart(uint32_t value) {
+      uint32_t newValue = std::min(value, mMaxLength);
+      bool changed = mStart != newValue;
+      mStart = newValue;
+      mIsDirty |= changed;
+      return changed;
     }
     uint32_t GetEnd() const { return mEnd; }
-    void SetEnd(uint32_t value) {
-      mIsDirty = true;
-      mEnd = std::min(value, mMaxLength);
+    bool SetEnd(uint32_t value) {
+      uint32_t newValue = std::min(value, mMaxLength);
+      bool changed = mEnd != newValue;
+      mEnd = newValue;
+      mIsDirty |= changed;
+      return changed;
     }
     nsITextControlFrame::SelectionDirection GetDirection() const {
       return mDirection;
     }
-    void SetDirection(nsITextControlFrame::SelectionDirection value) {
-      mIsDirty = true;
+    bool SetDirection(nsITextControlFrame::SelectionDirection value) {
+      bool changed = mDirection != value;
       mDirection = value;
+      mIsDirty |= changed;
+      return changed;
     }
     void SetMaxLength(uint32_t aMax) {
       mMaxLength = aMax;
