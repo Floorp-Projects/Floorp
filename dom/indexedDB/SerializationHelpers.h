@@ -7,7 +7,8 @@
 #ifndef mozilla_dom_indexeddb_serializationhelpers_h__
 #define mozilla_dom_indexeddb_serializationhelpers_h__
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 
 #include "mozilla/dom/indexedDB/Key.h"
 #include "mozilla/dom/indexedDB/KeyPath.h"

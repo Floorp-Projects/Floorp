@@ -40,7 +40,7 @@ typedef Observer<SensorAccuracy> ISensorAccuracyObserver;
 }  // namespace hal
 }  // namespace mozilla
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 namespace IPC {
 /**

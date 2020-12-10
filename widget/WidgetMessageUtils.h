@@ -5,6 +5,7 @@
 #ifndef mozilla_WidgetMessageUtils_h
 #define mozilla_WidgetMessageUtils_h
 
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/widget/ThemeChangeKind.h"
@@ -48,6 +49,11 @@ struct ParamTraits<nsTransparencyMode>
 template <>
 struct ParamTraits<nsCursor>
     : ContiguousEnumSerializer<nsCursor, eCursor_standard, eCursorCount> {};
+
+template <>
+struct ParamTraits<nsIWidget::TouchPointerState>
+    : public BitFlagsEnumSerializer<nsIWidget::TouchPointerState,
+                                    nsIWidget::TouchPointerState::ALL_BITS> {};
 
 }  // namespace IPC
 

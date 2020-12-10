@@ -7,6 +7,7 @@
 #ifndef dom_plugins_ipc_ipdltuple_h
 #define dom_plugins_ipc_ipdltuple_h
 
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/plugins/FunctionBrokerIPCUtils.h"
 #include "mozilla/Variant.h"
 

@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_fetch_IPCUtils_h
 #define mozilla_dom_fetch_IPCUtils_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/RequestBinding.h"

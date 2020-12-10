@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_gamepad_GamepadMessageUtils_h
 #define mozilla_dom_gamepad_GamepadMessageUtils_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/GamepadLightIndicatorBinding.h"

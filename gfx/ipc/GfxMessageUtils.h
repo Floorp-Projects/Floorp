@@ -17,6 +17,8 @@
 #include "gfxRect.h"
 #include "gfxTelemetry.h"
 #include "gfxTypes.h"
+#include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/ScaleFactor.h"

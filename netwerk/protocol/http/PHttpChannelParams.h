@@ -11,6 +11,7 @@
 #include "base/basictypes.h"
 
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
 #include "nsHttpRequestHead.h"

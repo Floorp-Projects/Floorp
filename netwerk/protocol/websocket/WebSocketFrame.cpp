@@ -6,10 +6,14 @@
 
 #include "WebSocketFrame.h"
 
-#include "WebSocketChannel.h"
+#include "ErrorList.h"
+#include "MainThreadUtils.h"
+#include "chrome/common/ipc_message_utils.h"
+#include "mozilla/Assertions.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsSocketTransportService2.h"
-#include "nsThreadUtils.h"  // for NS_IsMainThread
-#include "ipc/IPCMessageUtils.h"
+#include "nscore.h"
+#include "prtime.h"
 
 namespace mozilla {
 namespace net {

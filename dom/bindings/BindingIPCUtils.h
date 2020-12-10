@@ -7,7 +7,7 @@
 #define _mozilla_dom_BindingIPCUtils_h
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 namespace IPC {
 template <>

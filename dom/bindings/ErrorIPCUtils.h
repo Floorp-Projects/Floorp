@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"

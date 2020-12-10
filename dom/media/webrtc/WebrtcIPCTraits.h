@@ -5,7 +5,9 @@
 #ifndef _WEBRTC_IPC_TRAITS_H_
 #define _WEBRTC_IPC_TRAITS_H_
 
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "mozilla/media/webrtc/WebrtcGlobal.h"

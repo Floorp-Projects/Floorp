@@ -7,7 +7,7 @@
 #ifndef ipc_DataStorageIPCUtils_h
 #define ipc_DataStorageIPCUtils_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/DataStorage.h"
 
 namespace IPC {

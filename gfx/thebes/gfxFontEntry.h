@@ -15,6 +15,7 @@
 #include "gfxRect.h"
 #include "gfxTypes.h"
 #include "harfbuzz/hb.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/FontPropertyTypes.h"
