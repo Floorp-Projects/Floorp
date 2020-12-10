@@ -22,6 +22,9 @@ interface WindowContext {
 
   // True if this window has registered a "beforeunload" event handler.
   readonly attribute boolean hasBeforeUnload;
+
+  // True if the principal of this window is for a local ip address.
+  readonly attribute boolean isLocalIP;
 };
 
 // Keep this in sync with nsIContentViewer::PermitUnloadAction.
