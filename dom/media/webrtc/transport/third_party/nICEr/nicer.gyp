@@ -258,12 +258,14 @@
                   "DONT_HAVE_ETHTOOL_SPEED_HI",
                ]
              }],
-        ['(libfuzzer == 1) and (libfuzzer_fuzzer_no_link_flag == 1)', {
+        # libFuzzer instrumentation is not compatible with TSan.
+        # See also the comment in build/moz.configure/toolchain.configure.
+        ['(libfuzzer == 1) and (tsan == 0) and (libfuzzer_fuzzer_no_link_flag == 1)', {
           'cflags_mozilla': [
             '-fsanitize=fuzzer-no-link'
          ],
         }],
-        ['(libfuzzer == 1) and (libfuzzer_fuzzer_no_link_flag == 0)', {
+        ['(libfuzzer == 1) and (tsan == 0) and (libfuzzer_fuzzer_no_link_flag == 0)', {
           'cflags_mozilla': [
             '-fsanitize-coverage=trace-pc-guard,trace-cmp'
          ],
