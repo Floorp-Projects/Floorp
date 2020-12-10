@@ -248,7 +248,7 @@ void CodeGeneratorX86::emitWasmLoad(T* ins) {
   const MWasmLoad* mir = ins->mir();
 
   uint32_t offset = mir->access().offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
   const LAllocation* ptr = ins->ptr();
   const LAllocation* memoryBase = ins->memoryBase();
@@ -280,7 +280,7 @@ void CodeGeneratorX86::emitWasmStore(T* ins) {
   const MWasmStore* mir = ins->mir();
 
   uint32_t offset = mir->access().offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
   const LAllocation* ptr = ins->ptr();
   const LAllocation* memoryBase = ins->memoryBase();
@@ -395,7 +395,7 @@ void CodeGenerator::visitWasmAtomicBinopHeapForEffect(
 
 void CodeGenerator::visitWasmAtomicLoadI64(LWasmAtomicLoadI64* ins) {
   uint32_t offset = ins->mir()->access().offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
   const LAllocation* memoryBase = ins->memoryBase();
   const LAllocation* ptr = ins->ptr();
@@ -412,7 +412,7 @@ void CodeGenerator::visitWasmAtomicLoadI64(LWasmAtomicLoadI64* ins) {
 
 void CodeGenerator::visitWasmCompareExchangeI64(LWasmCompareExchangeI64* ins) {
   uint32_t offset = ins->mir()->access().offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
   const LAllocation* memoryBase = ins->memoryBase();
   const LAllocation* ptr = ins->ptr();
@@ -432,7 +432,7 @@ void CodeGenerator::visitWasmCompareExchangeI64(LWasmCompareExchangeI64* ins) {
 template <typename T>
 void CodeGeneratorX86::emitWasmStoreOrExchangeAtomicI64(
     T* ins, const wasm::MemoryAccessDesc& access) {
-  MOZ_ASSERT(access.offset() < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(access.offset() < masm.wasmMaxOffsetGuardLimit());
 
   const LAllocation* memoryBase = ins->memoryBase();
   const LAllocation* ptr = ins->ptr();
@@ -472,7 +472,7 @@ void CodeGenerator::visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* ins) {
 
 void CodeGenerator::visitWasmAtomicBinopI64(LWasmAtomicBinopI64* ins) {
   uint32_t offset = ins->access().offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
   const LAllocation* memoryBase = ins->memoryBase();
   const LAllocation* ptr = ins->ptr();
