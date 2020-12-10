@@ -177,8 +177,9 @@
 
       // Check for middle-click or modified clicks on the search bar
       if (popupForSearchBar) {
-        BrowserUsageTelemetry.recordSearchbarSelectedResultMethod(
+        BrowserSearchTelemetry.recordSearchSuggestionSelectionMethod(
           aEvent,
+          "searchbar",
           this.selectedIndex
         );
 

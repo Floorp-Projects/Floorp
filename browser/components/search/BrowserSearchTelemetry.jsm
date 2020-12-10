@@ -278,10 +278,13 @@ class BrowserSearchTelemetryHandler {
   }
 
   /**
-   * Records the method by which the user selected a result from the urlbar.
+   * Records the method by which the user selected a result from the urlbar or
+   * searchbar.
    *
    * @param {Event} event
    *        The event that triggered the selection.
+   * @param {string} source
+   *        Either "urlbar" or "searchbar" depending on the source.
    * @param {number} index
    *        The index that the user chose in the popup, or -1 if there wasn't a
    *        selection.
@@ -289,47 +292,23 @@ class BrowserSearchTelemetryHandler {
    *        How the user cycled through results before picking the current match.
    *        Could be one of "tab", "arrow" or "none".
    */
-  recordUrlbarSelectedResultMethod(
+  recordSearchSuggestionSelectionMethod(
     event,
+    source,
     index,
     userSelectionBehavior = "none"
   ) {
-    this._recordUrlOrSearchbarSelectedResultMethod(
-      event,
-      index,
-      "FX_URLBAR_SELECTED_RESULT_METHOD",
-      userSelectionBehavior
-    );
-  }
-
-  /**
-   * Records the method by which the user selected a searchbar result.
-   *
-   * @param {Event} event
-   *        The event that triggered the selection.
-   * @param {number} highlightedIndex
-   *        The index that the user chose in the popup, or -1 if there wasn't a
-   *        selection.
-   */
-  recordSearchbarSelectedResultMethod(event, highlightedIndex) {
-    this._recordUrlOrSearchbarSelectedResultMethod(
-      event,
-      highlightedIndex,
-      "FX_SEARCHBAR_SELECTED_RESULT_METHOD",
-      "none"
-    );
-  }
-
-  _recordUrlOrSearchbarSelectedResultMethod(
-    event,
-    highlightedIndex,
-    histogramID,
-    userSelectionBehavior
-  ) {
     // If the contents of the histogram are changed then
     // `UrlbarTestUtils.SELECTED_RESULT_METHODS` should also be updated.
+    if (source == "searchbar" && userSelectionBehavior != "none") {
+      throw new Error("Did not expect a selection behavior for the searchbar.");
+    }
 
-    let histogram = Services.telemetry.getHistogramById(histogramID);
+    let histogram = Services.telemetry.getHistogramById(
+      source == "urlbar"
+        ? "FX_URLBAR_SELECTED_RESULT_METHOD"
+        : "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
+    );
     // command events are from the one-off context menu.  Treat them as clicks.
     // Note that we don't care about MouseEvent subclasses here, since
     // those are not clicks.
@@ -340,7 +319,7 @@ class BrowserSearchTelemetryHandler {
     let category;
     if (isClick) {
       category = "click";
-    } else if (highlightedIndex >= 0) {
+    } else if (index >= 0) {
       switch (userSelectionBehavior) {
         case "tab":
           category = "tabEnterSelection";
