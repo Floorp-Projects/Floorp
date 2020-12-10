@@ -39,7 +39,6 @@
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/NodeInfo.h"
-#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ShadowRootBinding.h"
 #include "nsAtom.h"
 #include "nsAttrValue.h"
@@ -132,6 +131,7 @@ class UnrestrictedDoubleOrKeyframeAnimationOptions;
 template <typename T>
 class Optional;
 enum class CallerType : uint32_t;
+enum class ReferrerPolicy : uint8_t;
 typedef nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>
     IntersectionObserverList;
 }  // namespace dom

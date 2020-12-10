@@ -14,7 +14,6 @@
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/XSLTProcessorBinding.h"
 
 class nsINode;
@@ -33,7 +32,7 @@ class DocGroup;
 class Document;
 class DocumentFragment;
 class GlobalObject;
-
+enum class ReferrerPolicy : uint8_t;
 }  // namespace dom
 }  // namespace mozilla
 

@@ -38,7 +38,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/FromParser.h"
-#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/Point.h"
 #include "nsCOMPtr.h"
@@ -189,6 +188,7 @@ class NodeInfo;
 class Selection;
 class WorkerPrivate;
 enum class ElementCallbackType;
+enum class ReferrerPolicy : uint8_t;
 }  // namespace dom
 
 namespace intl {

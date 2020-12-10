@@ -6,7 +6,9 @@
 #include "nsISerializable.idl"
 
 %{C++
-#include "mozilla/dom/ReferrerPolicyBinding.h"
+namespace mozilla::dom {
+enum class ReferrerPolicy : uint8_t;
+}
 %}
 
 interface nsIURI;
