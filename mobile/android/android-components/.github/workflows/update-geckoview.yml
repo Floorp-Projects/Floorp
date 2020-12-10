@@ -44,4 +44,12 @@ jobs:
           command: update-geckoview-nightly
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Update GV (Release)"
+        uses: mozilla-mobile/relbot@master
+        if: github.repository == 'mozilla-mobile/android-components'
+        with:
+          project: android-components
+          command: update-geckoview-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
