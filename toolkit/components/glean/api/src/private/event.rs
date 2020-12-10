@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -11,6 +12,11 @@ use super::{CommonMetricData, Instant, MetricId, RecordedEvent};
 
 use crate::dispatcher;
 use crate::ipc::{need_ipc, with_ipc_payload};
+
+pub enum EventRecordingError {
+    InvalidId,
+    InvalidExtraKey,
+}
 
 /// Extra keys for events.
 ///
@@ -51,6 +57,22 @@ impl ExtraKeys for NoExtraKeys {
     fn index(self) -> i32 {
         // This index will never be used.
         -1
+    }
+}
+
+impl TryFrom<i32> for NoExtraKeys {
+    type Error = EventRecordingError;
+
+    fn try_from(_value: i32) -> Result<Self, Self::Error> {
+        Err(EventRecordingError::InvalidExtraKey)
+    }
+}
+
+impl TryFrom<&str> for NoExtraKeys {
+    type Error = EventRecordingError;
+
+    fn try_from(_value: &str) -> Result<Self, Self::Error> {
+        Err(EventRecordingError::InvalidExtraKey)
     }
 }
 
@@ -138,13 +160,6 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
     ///
     /// Get the currently stored events for this event metric as a JSON-encoded string.
     /// This doesn't clear the stored value.
-    ///
-    /// ## Note
-    ///
-    /// This currently returns the value as a JSON encoded string.
-    /// `glean_core` doesn't expose the underlying recorded event type.
-    /// This will eventually change to a proper `RecordedEventData` type.
-    /// See [Bug 1635074](https://bugzilla.mozilla.org/show_bug.cgi?id=1635074).
     ///
     /// ## Arguments
     ///

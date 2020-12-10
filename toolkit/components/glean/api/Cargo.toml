@@ -20,6 +20,7 @@ uuid = { version = "0.8.1", features = ["v4"] }
 xpcom = { path = "../../../../xpcom/rust/xpcom", optional = true }
 thiserror = "1.0.4"
 crossbeam-channel = "0.4.3"
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 
 [dev-dependencies]
 tempfile = "3.1.0"

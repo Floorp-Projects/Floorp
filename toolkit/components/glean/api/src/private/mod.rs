@@ -33,7 +33,7 @@ mod uuid;
 pub use self::boolean::BooleanMetric;
 pub use self::counter::CounterMetric;
 pub use self::datetime::DatetimeMetric;
-pub use self::event::{EventMetric, ExtraKeys, NoExtraKeys};
+pub use self::event::{EventMetric, EventRecordingError, ExtraKeys, NoExtraKeys};
 pub use self::labeled::LabeledMetric;
 pub use self::memory_distribution::MemoryDistributionMetric;
 pub use self::ping::Ping;
