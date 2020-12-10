@@ -194,7 +194,15 @@ class PrintHelper {
     };
   }
 
-  addMockPrinter(name = "Mock Printer", paperList = []) {
+  addMockPrinter(opts = {}) {
+    if (typeof opts == "string") {
+      opts = { name: opts };
+    }
+    let {
+      name = "Mock Printer",
+      paperList = [],
+      printerInfoPromise = Promise.resolve(),
+    } = opts;
     let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
       Ci.nsIPrintSettingsService
     );
@@ -209,11 +217,11 @@ class PrintHelper {
       name,
       supportsColor: Promise.resolve(true),
       supportsMonochrome: Promise.resolve(true),
-      printerInfo: Promise.resolve({
+      printerInfo: printerInfoPromise.then(() => ({
         paperList,
         defaultSettings,
         QueryInterface: ChromeUtils.generateQI([Ci.nsIPrinterInfo]),
-      }),
+      })),
       QueryInterface: ChromeUtils.generateQI([Ci.nsIPrinter]),
     };
 

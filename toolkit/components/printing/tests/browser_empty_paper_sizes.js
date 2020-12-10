@@ -18,7 +18,7 @@ add_task(async function testSanityCheckPaperList() {
         height: 1224,
       }),
     ];
-    helper.addMockPrinter(mockPrinterName, paperList);
+    helper.addMockPrinter({ name: mockPrinterName, paperList });
     await helper.startPrint();
     await helper.dispatchSettingsChange({ printerName: mockPrinterName });
     await helper.awaitAnimationFrame();
