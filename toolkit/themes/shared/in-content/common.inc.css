@@ -1070,6 +1070,7 @@ input[type="text"][warning]:enabled:not(:focus) {
 .sidebar-footer-link:-moz-focusring,
 .sidebar-footer-button > .text-link:-moz-focusring {
   outline: var(--in-content-category-outline-focus);
+  outline-offset: -1px;
 }
 
 .sidebar-footer-icon {
