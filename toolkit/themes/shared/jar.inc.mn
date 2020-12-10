@@ -37,6 +37,8 @@ toolkit.jar:
   skin/classic/global/icons/check-partial.svg              (../../shared/icons/check-partial.svg)
   skin/classic/global/icons/chevron.svg                    (../../shared/icons/chevron.svg)
   skin/classic/global/icons/close.svg                      (../../shared/icons/close.svg)
+  skin/classic/global/icons/connection-mixed-active-loaded.svg  (../../shared/icons/connection-mixed-active-loaded.svg)
+  skin/classic/global/icons/connection-mixed-passive-loaded.svg (../../shared/icons/connection-mixed-passive-loaded.svg)
   skin/classic/global/icons/searchfield-cancel.svg         (../../shared/icons/searchfield-cancel.svg)
   skin/classic/global/pictureinpicture/close-pip.svg       (../../shared/pictureinpicture/close-pip.svg)
   skin/classic/global/icons/columnpicker.svg               (../../shared/icons/columnpicker.svg)
@@ -45,6 +47,11 @@ toolkit.jar:
   skin/classic/global/icons/error.svg                      (../../shared/icons/error.svg)
   skin/classic/global/icons/find-previous-arrow.svg        (../../shared/icons/find-previous-arrow.svg)
   skin/classic/global/icons/find-next-arrow.svg            (../../shared/icons/find-next-arrow.svg)
+#ifndef XP_MACOSX
+  skin/classic/global/icons/findFile.svg                   (../../shared/icons/folder.svg)
+#else
+  skin/classic/global/icons/findFile.svg                   (../../shared/icons/magnifier.svg)
+#endif
   skin/classic/global/icons/heart.svg                      (../../shared/icons/heart.svg)
   skin/classic/global/icons/help.svg                       (../../shared/icons/help.svg)
   skin/classic/global/icons/info.svg                       (../../shared/incontent-icons/info.svg)
