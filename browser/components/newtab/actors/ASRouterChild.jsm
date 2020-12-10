@@ -9,17 +9,12 @@ const EXPORTED_SYMBOLS = ["ASRouterChild"];
 const { MESSAGE_TYPE_LIST, MESSAGE_TYPE_HASH: msg } = ChromeUtils.import(
   "resource://activity-stream/common/ActorConstants.jsm"
 );
-const { ASRouterTelemetry } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTelemetry.jsm"
-);
-
 const VALID_TYPES = new Set(MESSAGE_TYPE_LIST);
 
 class ASRouterChild extends JSWindowActorChild {
   constructor() {
     super();
     this.observers = new Set();
-    this.telemetry = new ASRouterTelemetry({ isParentProcess: false });
   }
 
   didDestroy() {
@@ -92,15 +87,6 @@ class ASRouterChild extends JSWindowActorChild {
   asRouterMessage({ type, data }) {
     if (VALID_TYPES.has(type)) {
       switch (type) {
-        // these messages are telemetry and can be done client side
-        case msg.AS_ROUTER_TELEMETRY_USER_EVENT:
-        case msg.TOOLBAR_BADGE_TELEMETRY:
-        case msg.TOOLBAR_PANEL_TELEMETRY:
-        case msg.MOMENTS_PAGE_TELEMETRY:
-        case msg.DOORHANGER_TELEMETRY: {
-          return this.telemetry.sendTelemetry({ type, data });
-        }
-        // these messages don't need a repsonse
         case msg.DISABLE_PROVIDER:
         case msg.ENABLE_PROVIDER:
         case msg.EXPIRE_QUERY_CACHE:

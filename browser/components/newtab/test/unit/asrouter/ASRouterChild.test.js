@@ -30,29 +30,6 @@ describe("ASRouterChild", () => {
     asRouterChild = null;
   });
   describe("asRouterMessage", () => {
-    describe("sends telemetry types to telemetry", () => {
-      [
-        msg.AS_ROUTER_TELEMETRY_USER_EVENT,
-        msg.TOOLBAR_BADGE_TELEMETRY,
-        msg.TOOLBAR_PANEL_TELEMETRY,
-        msg.MOMENTS_PAGE_TELEMETRY,
-        msg.DOORHANGER_TELEMETRY,
-      ].forEach(type => {
-        it(`type ${type}`, () => {
-          asRouterChild.asRouterMessage({
-            type,
-            data: {
-              something: 1,
-            },
-          });
-          sandbox.assert.calledOnce(asRouterChild.telemetry.sendTelemetry);
-          sandbox.assert.calledWith(asRouterChild.telemetry.sendTelemetry, {
-            type,
-            data: { something: 1 },
-          });
-        });
-      });
-    });
     describe("uses sendAsyncMessage for types that don't need an async response", () => {
       [
         msg.DISABLE_PROVIDER,
