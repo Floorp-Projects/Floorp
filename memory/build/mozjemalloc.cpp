@@ -918,6 +918,15 @@ struct arena_t {
   // A per-arena opt-in to randomize the offset of small allocations
   bool mRandomizeSmallAllocations;
 
+  // Whether this is a private arena. Multiple public arenas are just a
+  // performance optimization and not a safety feature.
+  //
+  // Since, for example, we don't want thread-local arenas to grow too much, we
+  // use the default arena for bigger allocations. We use this member to allow
+  // realloc() to switch out of our arena if needed (which is not allowed for
+  // private arenas for security).
+  bool mIsPrivate;
+
   // A pseudorandom number generator. Initially null, it gets initialized
   // on first use to avoid recursive malloc initialization (e.g. on OSX
   // arc4random allocates memory).
@@ -962,7 +971,7 @@ struct arena_t {
   //   --------+------+
   arena_bin_t mBins[1];  // Dynamically sized.
 
-  explicit arena_t(arena_params_t* aParams);
+  explicit arena_t(arena_params_t* aParams, bool aIsPrivate);
   ~arena_t();
 
  private:
@@ -3455,8 +3464,8 @@ void* arena_t::RallocSmallOrLarge(void* aPtr, size_t aSize, size_t aOldSize) {
 
   // If we get here, then aSize and aOldSize are different enough that we
   // need to move the object.  In that case, fall back to allocating new
-  // space and copying.
-  ret = Malloc(aSize, false);
+  // space and copying. Allow non-private arenas to switch arenas.
+  ret = (mIsPrivate ? this : choose_arena(aSize))->Malloc(aSize, false);
   if (!ret) {
     return nullptr;
   }
@@ -3493,7 +3502,7 @@ void arena_t::operator delete(void* aPtr) {
   TypedBaseAlloc<arena_t>::dealloc((arena_t*)aPtr);
 }
 
-arena_t::arena_t(arena_params_t* aParams) {
+arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
   unsigned i;
 
   MOZ_RELEASE_ASSERT(mLock.Init());
@@ -3524,6 +3533,8 @@ arena_t::arena_t(arena_params_t* aParams) {
     }
   }
   mPRNG = nullptr;
+
+  mIsPrivate = aIsPrivate;
 
   mNumDirty = 0;
   // The default maximum amount of dirty pages allowed on arenas is a fraction
@@ -3580,7 +3591,7 @@ arena_t::~arena_t() {
 
 arena_t* ArenaCollection::CreateArena(bool aIsPrivate,
                                       arena_params_t* aParams) {
-  arena_t* ret = new (fallible) arena_t(aParams);
+  arena_t* ret = new (fallible) arena_t(aParams, aIsPrivate);
   if (!ret) {
     // Only reached if there is an OOM error.
 
@@ -3768,9 +3779,9 @@ void* arena_t::RallocHuge(void* aPtr, size_t aSize, size_t aOldSize) {
   }
 
   // If we get here, then aSize and aOldSize are different enough that we
-  // need to use a different size class.  In that case, fall back to
-  // allocating new space and copying.
-  ret = MallocHuge(aSize, false);
+  // need to use a different size class.  In that case, fall back to allocating
+  // new space and copying. Allow non-private arenas to switch arenas.
+  ret = (mIsPrivate ? this : choose_arena(aSize))->MallocHuge(aSize, false);
   if (!ret) {
     return nullptr;
   }
