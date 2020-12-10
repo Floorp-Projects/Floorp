@@ -540,26 +540,35 @@ html|input[type="checkbox"] {
   border-radius: 2px;
   margin: 0;
   margin-inline-end: 10px;
-  background-color: var(--in-content-box-background);
+  background-color: var(--grey-90-a10);
   background-position: center;
   background-repeat: no-repeat;
 }
 
 xul|checkbox:not([disabled="true"]):hover > xul|*.checkbox-check,
 html|input[type="checkbox"]:not(:disabled):hover {
-  border-color: var(--in-content-border-focus);
+  background-color: var(--grey-90-a20);
+}
+
+xul|checkbox[checked] > xul|*.checkbox-check,
+html|input[type="checkbox"]:checked {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: white;
+  background-color: var(--blue-60);
 }
 
 xul|checkbox[checked] > xul|*.checkbox-check {
   list-style-image: url("chrome://global/skin/icons/check.svg");
-  -moz-context-properties: fill;
-  fill: #2292d0;
 }
 
 html|input[type="checkbox"]:checked {
   background-image: url("chrome://global/skin/icons/check.svg");
-  -moz-context-properties: fill;
-  fill: #2292d0;
+}
+
+xul|checkbox:not([disabled="true"])[checked]:hover > xul|*.checkbox-check,
+html|input[type="checkbox"]:not(:disabled):checked:hover {
+  background-color: var(--blue-70);
 }
 
 xul|checkbox[disabled="true"],
@@ -595,17 +604,23 @@ xul|*.radio-check {
   border-radius: 50%;
   margin: 0;
   margin-inline-end: 10px;
-  background-color: var(--in-content-box-background);
+  background-color: var(--grey-90-a10);
 }
 
-xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
-  border-color: var(--in-content-border-focus);
+xul|radio:not([disabled="true"]):not([selected="true"]):hover > xul|*.radio-check {
+  background-color: var(--grey-90-a20);
 }
 
 xul|*.radio-check[selected] {
   list-style-image: url("chrome://global/skin/in-content/radio.svg");
   -moz-context-properties: fill;
-  fill: #2292d0;
+  fill: currentColor;
+  color: white;
+  background-color: var(--blue-60);
+}
+
+xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
+  background-color: var(--blue-70);
 }
 
 xul|radio[disabled="true"] {
