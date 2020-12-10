@@ -135,7 +135,6 @@ add_task({ skip_if: () => true }, function test_fog_datetime_works() {
 
 add_task(function test_fog_boolean_works() {
   Glean.test_only.can_we_flag_it.set(false);
-  Assert.ok(Glean.test_only.can_we_flag_it.testHasValue("test-ping"));
   Assert.equal(false, Glean.test_only.can_we_flag_it.testGetValue("test-ping"));
 });
 
