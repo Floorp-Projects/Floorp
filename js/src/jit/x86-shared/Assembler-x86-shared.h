@@ -207,7 +207,6 @@ class CPUInfo {
   static bool bmi1Present;
   static bool bmi2Present;
   static bool lzcntPresent;
-  static bool needAmdBugWorkaround;
 
   static void SetSSEVersion();
 
@@ -221,7 +220,6 @@ class CPUInfo {
     avxPresent = false;
     avxEnabled = false;
     popcntPresent = false;
-    needAmdBugWorkaround = false;
   }
 
  public:
@@ -240,7 +238,6 @@ class CPUInfo {
   static bool IsBMI1Present() { return bmi1Present; }
   static bool IsBMI2Present() { return bmi2Present; }
   static bool IsLZCNTPresent() { return lzcntPresent; }
-  static bool NeedAmdBugWorkaround() { return needAmdBugWorkaround; }
 
   static void SetSSE3Disabled() {
     reset();

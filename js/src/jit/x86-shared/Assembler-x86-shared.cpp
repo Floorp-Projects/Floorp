@@ -244,7 +244,6 @@ bool CPUInfo::popcntPresent = false;
 bool CPUInfo::bmi1Present = false;
 bool CPUInfo::bmi2Present = false;
 bool CPUInfo::lzcntPresent = false;
-bool CPUInfo::needAmdBugWorkaround = false;
 
 static uintptr_t ReadXGETBV() {
   // We use a variety of low-level mechanisms to get at the xgetbv
@@ -353,13 +352,6 @@ void CPUInfo::SetSSEVersion() {
 
   static constexpr int POPCNTBit = 1 << 23;
   popcntPresent = (flagsEcx & POPCNTBit);
-
-  // Check if we need to work around an AMD CPU bug (see bug 1281759).
-  // We check for family 20 models 0-2. Intel doesn't use family 20 at
-  // this point, so this should only match AMD CPUs.
-  unsigned family = ((flagsEax >> 20) & 0xff) + ((flagsEax >> 8) & 0xf);
-  unsigned model = (((flagsEax >> 16) & 0xf) << 4) + ((flagsEax >> 4) & 0xf);
-  needAmdBugWorkaround = (family == 20 && model <= 2);
 
   flagsEax = 0x80000001;
   ReadCPUInfo(&flagsEax, &flagsEbx, &flagsEcx, &flagsEdx);
