@@ -11,6 +11,7 @@
 #include "mozilla/UntrustedModulesData.h"
 #include "mozilla/Vector.h"
 #include "nsDataHashtable.h"
+#include "UntrustedModulesBackupService.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -55,7 +56,8 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
    * @param  aData [in] The source objects to add.
    * @return nsresult
    */
-  nsresult Add(const Vector<UntrustedModulesData>& aData);
+  nsresult Add(const Vector<RefPtr<UntrustedModulesDataContainer>>& aData);
+  nsresult Add(const UntrustedModulesBackupData& aData);
 };
 
 }  // namespace Telemetry
