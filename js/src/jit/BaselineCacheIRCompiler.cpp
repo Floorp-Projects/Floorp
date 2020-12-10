@@ -52,13 +52,12 @@ BaseValueIndex CacheRegisterAllocator::addressOf(MacroAssembler& masm,
 }
 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
-BaselineCacheIRCompiler::BaselineCacheIRCompiler(
-    JSContext* cx, const CacheIRWriter& writer, uint32_t stubDataOffset,
-    BaselineCacheIRStubKind stubKind)
+BaselineCacheIRCompiler::BaselineCacheIRCompiler(JSContext* cx,
+                                                 const CacheIRWriter& writer,
+                                                 uint32_t stubDataOffset)
     : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Baseline,
                       StubFieldPolicy::Address),
-      makesGCCalls_(false),
-      kind_(stubKind) {}
+      makesGCCalls_(false) {}
 
 // AutoStubFrame methods
 AutoStubFrame::AutoStubFrame(BaselineCacheIRCompiler& compiler)
@@ -136,14 +135,6 @@ void BaselineCacheIRCompiler::tailCallVMInternal(MacroAssembler& masm,
   EmitBaselineTailCallVM(code, masm, argSize);
 }
 
-static size_t GetEnteredOffset(BaselineCacheIRStubKind kind) {
-  switch (kind) {
-    case BaselineCacheIRStubKind::Regular:
-      return ICCacheIR_Regular::offsetOfEnteredCount();
-  }
-  MOZ_CRASH("unhandled BaselineCacheIRStubKind");
-}
-
 JitCode* BaselineCacheIRCompiler::compile() {
 #ifndef JS_USE_LINK_REGISTER
   // The first value contains the return addres,
@@ -155,7 +146,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
 #endif
   // Count stub entries: We count entries rather than successes as it much
   // easier to ensure ICStubReg is valid at entry than at exit.
-  Address enteredCount(ICStubReg, GetEnteredOffset(kind_));
+  Address enteredCount(ICStubReg, ICCacheIR_Regular::offsetOfEnteredCount());
   masm.add32(Imm32(1), enteredCount);
 
   CacheIRReader reader(writer_);
@@ -2239,8 +2230,8 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
 
 ICStub* js::jit::AttachBaselineCacheIRStub(
     JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
-    BaselineCacheIRStubKind stubKind, JSScript* outerScript, ICScript* icScript,
-    ICFallbackStub* stub, bool* attached) {
+    JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub,
+    bool* attached) {
   // We shouldn't GC or report OOM (or any other exception) here.
   AutoAssertNoPendingException aanpe(cx);
   JS::AutoCheckCannotGC nogc;
@@ -2258,13 +2249,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
 #endif
 
-  // TODO(no-TI): remove stubKind argument.
-  uint32_t stubDataOffset = 0;
-  switch (stubKind) {
-    case BaselineCacheIRStubKind::Regular:
-      stubDataOffset = sizeof(ICCacheIR_Regular);
-      break;
-  }
+  uint32_t stubDataOffset = sizeof(ICCacheIR_Regular);
 
   JitZone* jitZone = cx->zone()->jitZone();
 
@@ -2281,7 +2266,7 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   if (!code) {
     // We have to generate stub code.
     JitContext jctx(cx, nullptr);
-    BaselineCacheIRCompiler comp(cx, writer, stubDataOffset, stubKind);
+    BaselineCacheIRCompiler comp(cx, writer, stubDataOffset);
     if (!comp.init(kind)) {
       return nullptr;
     }
@@ -2316,22 +2301,14 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
   // Ensure we don't attach duplicate stubs. This can happen if a stub failed
   // for some reason and the IR generator doesn't check for exactly the same
   // conditions.
-  for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd();
+  for (ICStubConstIterator iter = stub->beginChainConst(); *iter != stub;
        iter++) {
-    switch (stubKind) {
-      case BaselineCacheIRStubKind::Regular: {
-        if (!iter->isCacheIR_Regular()) {
-          continue;
-        }
-        auto otherStub = iter->toCacheIR_Regular();
-        if (otherStub->stubInfo() != stubInfo) {
-          continue;
-        }
-        if (!writer.stubDataEquals(otherStub->stubDataStart())) {
-          continue;
-        }
-        break;
-      }
+    auto otherStub = iter->toCacheIR_Regular();
+    if (otherStub->stubInfo() != stubInfo) {
+      continue;
+    }
+    if (!writer.stubDataEquals(otherStub->stubDataStart())) {
+      continue;
     }
 
     // We found a stub that's exactly the same as the stub we're about to
@@ -2373,17 +2350,11 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
       break;
   }
 
-  switch (stubKind) {
-    case BaselineCacheIRStubKind::Regular: {
-      auto newStub = new (newStubMem) ICCacheIR_Regular(code, stubInfo);
-      writer.copyStubData(newStub->stubDataStart());
-      stub->addNewStub(newStub);
-      *attached = true;
-      return newStub;
-    }
-  }
-
-  MOZ_CRASH("Invalid kind");
+  auto newStub = new (newStubMem) ICCacheIR_Regular(code, stubInfo);
+  writer.copyStubData(newStub->stubDataStart());
+  stub->addNewStub(newStub);
+  *attached = true;
+  return newStub;
 }
 
 uint8_t* ICCacheIR_Regular::stubDataStart() {
