@@ -3688,9 +3688,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadJitActivation(Register dest);
 
-  void guardGroupHasUnanalyzedNewScript(Register group, Register scratch,
-                                        Label* fail);
-
   void guardSpecificAtom(Register str, JSAtom* atom, Register scratch,
                          const LiveRegisterSet& volatileRegs, Label* fail);
 
