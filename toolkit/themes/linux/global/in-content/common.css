@@ -43,12 +43,6 @@ xul|menulist::part(dropmarker) {
   margin-block: 6px;
 }
 
-xul|checkbox[checked] > xul|*.checkbox-check,
-xul|*.radio-check[selected] {
-  background-color: Field;
-  fill: FieldText;
-}
-
 xul|menulist:-moz-focusring::part(label-box) {
   outline: none;
 }
