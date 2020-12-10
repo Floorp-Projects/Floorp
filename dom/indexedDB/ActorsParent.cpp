@@ -4992,14 +4992,12 @@ struct DatabaseActorInfo final {
   friend class mozilla::DefaultDelete<DatabaseActorInfo>;
 
   SafeRefPtr<FullDatabaseMetadata> mMetadata;
-  nsTArray<CheckedUnsafePtr<Database>> mLiveDatabases;
+  nsTArray<NotNull<CheckedUnsafePtr<Database>>> mLiveDatabases;
   RefPtr<FactoryOp> mWaitingFactoryOp;
 
   DatabaseActorInfo(SafeRefPtr<FullDatabaseMetadata> aMetadata,
-                    Database* aDatabase)
+                    NotNull<Database*> aDatabase)
       : mMetadata(std::move(aMetadata)) {
-    MOZ_ASSERT(aDatabase);
-
     MOZ_COUNT_CTOR(DatabaseActorInfo);
 
     mLiveDatabases.AppendElement(aDatabase);
@@ -6304,11 +6302,9 @@ void InvalidateLiveDatabasesMatching(const Condition& aCondition) {
 
   for (const auto& liveDatabasesEntry : *gLiveDatabaseHashtable) {
     for (const auto& database : liveDatabasesEntry.GetData()->mLiveDatabases) {
-      MOZ_ASSERT(database);
-
       if (aCondition(*database)) {
         databases.AppendElement(
-            SafeRefPtr{database, AcquireStrongRefFromRawPtr{}});
+            SafeRefPtr{database.get(), AcquireStrongRefFromRawPtr{}});
       }
     }
   }
@@ -13355,8 +13351,6 @@ nsCString QuotaClient::GetShutdownStatus() const {
       MOZ_ASSERT(entry.GetData());
 
       for (const auto& database : entry.GetData()->mLiveDatabases) {
-        MOZ_ASSERT(database);
-
         nsCString id;
         database->Stringify(id);
 
@@ -15987,8 +15981,7 @@ nsresult FactoryOp::SendVersionChangeMessages(
       if ((!aOpeningDatabase || database.get() != &aOpeningDatabase.ref()) &&
           !database->IsClosed() &&
           NS_WARN_IF(!maybeBlockedDatabases.AppendElement(
-              SafeRefPtr{static_cast<Database*>(database),
-                         AcquireStrongRefFromRawPtr{}},
+              SafeRefPtr{database.get(), AcquireStrongRefFromRawPtr{}},
               fallible))) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -17119,10 +17112,12 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
       mInPrivateBrowsing, maybeKey);
 
   if (info) {
-    info->mLiveDatabases.AppendElement(mDatabase.unsafeGetRawPtr());
+    info->mLiveDatabases.AppendElement(
+        WrapNotNullUnchecked(mDatabase.unsafeGetRawPtr()));
   } else {
-    info = new DatabaseActorInfo(mMetadata.clonePtr(),
-                                 mDatabase.unsafeGetRawPtr());
+    info = new DatabaseActorInfo(
+        mMetadata.clonePtr(),
+        WrapNotNullUnchecked(mDatabase.unsafeGetRawPtr()));
     gLiveDatabaseHashtable->Put(mDatabaseId, info);
   }
 
@@ -17712,7 +17707,7 @@ void DeleteDatabaseOp::VersionChangeOp::RunOnOwningThread() {
                        info->mLiveDatabases.cend(),
                        MakeBackInserter(liveDatabases),
                        [](const auto& aDatabase) -> SafeRefPtr<Database> {
-                         return {aDatabase, AcquireStrongRefFromRawPtr{}};
+                         return {aDatabase.get(), AcquireStrongRefFromRawPtr{}};
                        });
 
 #ifdef DEBUG
