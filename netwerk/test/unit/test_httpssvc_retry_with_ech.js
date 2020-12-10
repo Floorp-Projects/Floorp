@@ -73,7 +73,7 @@ function setup() {
 }
 
 setup();
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   prefs.clearUserPref("network.security.esni.enabled");
   prefs.clearUserPref("network.http.spdy.enabled");
   prefs.clearUserPref("network.http.spdy.enabled.http2");
@@ -93,7 +93,9 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   prefs.clearUserPref("network.dns.echconfig.enabled");
   prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
-  trrServer.stop();
+  if (trrServer) {
+    await trrServer.stop();
+  }
 });
 
 class DNSListener {

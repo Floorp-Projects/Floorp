@@ -228,7 +228,9 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
 // Test if we can successfully fallback to the original host and port.
 add_task(async function testFallback() {
   let trrServer = new TRRServer();
-  registerCleanupFunction(async () => trrServer.stop());
+  registerCleanupFunction(async () => {
+    await trrServer.stop();
+  });
   await trrServer.start();
 
   Services.prefs.setIntPref("network.trr.mode", 3);

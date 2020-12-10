@@ -207,7 +207,9 @@ add_task(async function testHTTPSSVC() {
 
 add_task(async function test_aliasform() {
   let trrServer = new TRRServer();
-  registerCleanupFunction(async () => trrServer.stop());
+  registerCleanupFunction(async () => {
+    await trrServer.stop();
+  });
   await trrServer.start();
   dump(`port = ${trrServer.port}\n`);
 

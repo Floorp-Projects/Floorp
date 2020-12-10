@@ -73,7 +73,7 @@ function setup() {
 }
 
 setup();
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   prefs.clearUserPref("network.security.esni.enabled");
   prefs.clearUserPref("network.http.spdy.enabled");
   prefs.clearUserPref("network.http.spdy.enabled.http2");
@@ -96,7 +96,9 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
   prefs.clearUserPref("network.http.http3.enabled");
   prefs.clearUserPref("network.dns.httpssvc.http3_fast_fallback_timeout");
-  trrServer.stop();
+  if (trrServer) {
+    await trrServer.stop();
+  }
 });
 
 class DNSListener {

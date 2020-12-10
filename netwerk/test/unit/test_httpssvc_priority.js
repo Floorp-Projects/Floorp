@@ -100,7 +100,9 @@ DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
 
 add_task(async function testPriorityAndECHConfig() {
   let trrServer = new TRRServer();
-  registerCleanupFunction(async () => trrServer.stop());
+  registerCleanupFunction(async () => {
+    await trrServer.stop();
+  });
   await trrServer.start();
 
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", false);

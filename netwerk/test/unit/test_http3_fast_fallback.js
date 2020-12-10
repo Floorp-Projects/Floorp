@@ -72,7 +72,7 @@ function setup() {
 }
 
 setup();
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   prefs.clearUserPref("network.security.esni.enabled");
   prefs.clearUserPref("network.http.spdy.enabled");
   prefs.clearUserPref("network.http.spdy.enabled.http2");
@@ -101,7 +101,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.http.http3.backup_timer_delay");
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   if (trrServer) {
-    trrServer.stop();
+    await trrServer.stop();
   }
 });
 
