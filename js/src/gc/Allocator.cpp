@@ -465,7 +465,7 @@ void GCRuntime::checkIncrementalZoneState(JSContext* cx, T* t) {
 
   TenuredCell* cell = &t->asTenured();
   Zone* zone = cell->zone();
-  if (zone->isGCMarking() || zone->isGCSweeping()) {
+  if (zone->isGCMarkingOrSweeping()) {
     MOZ_ASSERT(cell->isMarkedBlack());
   } else {
     MOZ_ASSERT(!cell->isMarkedAny());
@@ -610,7 +610,8 @@ inline TenuredCell* FreeLists::setArenaAndAllocate(Arena* arena,
   FreeSpan* span = arena->getFirstFreeSpan();
   freeLists_[kind] = span;
 
-  if (MOZ_UNLIKELY(arena->zone->wasGCStarted())) {
+  Zone* zone = arena->zone;
+  if (MOZ_UNLIKELY(zone->isGCMarkingOrSweeping())) {
     arena->arenaAllocatedDuringGC();
   }
 
@@ -625,12 +626,10 @@ void Arena::arenaAllocatedDuringGC() {
   // incremental GC will be marked black by pre-marking all free cells in the
   // arena we are about to allocate from.
 
-  if (zone->needsIncrementalBarrier() || zone->isGCSweeping()) {
-    for (ArenaFreeCellIter iter(this); !iter.done(); iter.next()) {
-      TenuredCell* cell = iter.getCell();
-      MOZ_ASSERT(!cell->isMarkedAny());
-      cell->markBlack();
-    }
+  MOZ_ASSERT(zone->isGCMarkingOrSweeping());
+  for (ArenaFreeCellIter cell(this); !cell.done(); cell.next()) {
+    MOZ_ASSERT(!cell->isMarkedAny());
+    cell->markBlack();
   }
 }
 
@@ -647,6 +646,25 @@ void ArenaLists::setParallelAllocEnabled(bool enabled) {
 
   static const ConcurrentUse states[2] = {ConcurrentUse::None,
                                           ConcurrentUse::ParallelAlloc};
+
+  for (auto kind : AllAllocKinds()) {
+    MOZ_ASSERT(concurrentUse(kind) == states[!enabled]);
+    concurrentUse(kind) = states[enabled];
+  }
+}
+
+void GCRuntime::setParallelUnmarkEnabled(bool enabled) {
+  // This can only be changed on the main thread otherwise we could race.
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+    zone->arenas.setParallelUnmarkEnabled(enabled);
+  }
+}
+
+void ArenaLists::setParallelUnmarkEnabled(bool enabled) {
+  static const ConcurrentUse states[2] = {ConcurrentUse::None,
+                                          ConcurrentUse::ParallelUnmark};
 
   for (auto kind : AllAllocKinds()) {
     MOZ_ASSERT(concurrentUse(kind) == states[!enabled]);
@@ -808,7 +826,7 @@ void BackgroundAllocTask::run(AutoLockHelperThreadState& lock) {
   AutoTraceLog logAllocation(logger, TraceLogger_GCAllocation);
 
   AutoLockGC gcLock(gc);
-  while (!cancel_ && gc->wantBackgroundAllocation(gcLock)) {
+  while (!isCancelled() && gc->wantBackgroundAllocation(gcLock)) {
     Chunk* chunk;
     {
       AutoUnlockGC unlock(gcLock);

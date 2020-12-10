@@ -20,7 +20,11 @@ dbg.onEnterFrame = frame => {
 // slices) and use long slices, to make sure that the debuggee removal occurs
 // during a slice.
 gczeal(10, 0);
-gcslice(1000000);
+gcslice(1);
+while (gcstate() !== "NotAcctive" && gcstate() !== "Sweep") {
+  gcslice(1000);
+}
+
 let genObj = g.f();
 genObj.return();
 assertEq(gcstate(), "Sweep");
