@@ -329,10 +329,6 @@ var gViewSourceUtils = {
     ]),
 
     destroy() {
-      if (this.webShell) {
-        this.webShell.QueryInterface(Ci.nsIBaseWindow).destroy();
-      }
-      this.webShell = null;
       this.editor = null;
       this.resolve = null;
       this.reject = null;
@@ -346,22 +342,9 @@ var gViewSourceUtils = {
     onStateChange(aProgress, aRequest, aFlag, aStatus) {
       // once it's done loading...
       if (aFlag & this.mnsIWebProgressListener.STATE_STOP && aStatus == 0) {
-        if (!this.webShell) {
-          // We aren't waiting for the parser. Instead, we are waiting for
-          // an nsIWebBrowserPersist.
-          this.onContentLoaded();
-          return 0;
-        }
-        var webNavigation = this.webShell.QueryInterface(Ci.nsIWebNavigation);
-        if (webNavigation.document.readyState == "complete") {
-          // This branch is probably never taken. Including it for completeness.
-          this.onContentLoaded();
-        } else {
-          webNavigation.document.addEventListener(
-            "DOMContentLoaded",
-            this.onContentLoaded.bind(this)
-          );
-        }
+        // We aren't waiting for the parser. Instead, we are waiting for
+        // an nsIWebBrowserPersist.
+        this.onContentLoaded();
       }
       return 0;
     },
@@ -374,44 +357,7 @@ var gViewSourceUtils = {
       }
       try {
         if (!this.file) {
-          // it's not saved to file yet, it's in the webshell
-
-          // get a temporary filename using the attributes from the data object that
-          // openInExternalEditor gave us
-          this.file = gViewSourceUtils.getTemporaryFile(
-            this.data.uri,
-            this.data.doc,
-            this.data.doc.contentType
-          );
-
-          // we have to convert from the source charset.
-          var webNavigation = this.webShell.QueryInterface(Ci.nsIWebNavigation);
-          var foStream = Cc[
-            "@mozilla.org/network/file-output-stream;1"
-          ].createInstance(Ci.nsIFileOutputStream);
-          foStream.init(this.file, 0x02 | 0x08 | 0x20, -1, 0); // write | create | truncate
-          var coStream = Cc[
-            "@mozilla.org/intl/converter-output-stream;1"
-          ].createInstance(Ci.nsIConverterOutputStream);
-          coStream.init(foStream, this.data.doc.characterSet);
-
-          // write the source to the file
-          coStream.writeString(webNavigation.document.body.textContent);
-
-          // clean up
-          coStream.close();
-          foStream.close();
-
-          let helperService = Cc[
-            "@mozilla.org/uriloader/external-helper-app-service;1"
-          ].getService(Ci.nsPIExternalAppLauncher);
-          if (this.data.isPrivate) {
-            // register the file to be deleted when possible
-            helperService.deleteTemporaryPrivateFileWhenPossible(this.file);
-          } else {
-            // register the file to be deleted on app exit
-            helperService.deleteTemporaryFileOnExit(this.file);
-          }
+          throw new Error("View-source progress listener should have a file!");
         }
 
         var editorArgs = gViewSourceUtils.buildEditorArgs(
@@ -431,7 +377,6 @@ var gViewSourceUtils = {
       }
     },
 
-    webShell: null,
     editor: null,
     resolve: null,
     reject: null,
