@@ -103,7 +103,7 @@ linux64-clang-tidy-external:
     index:
         job-name: linux64-clang-tidy-external
     treeherder:
-        symbol: TL(linux66-clang-tidy-e)
+        symbol: TL(clang-tidy-e)
     worker:
         artifacts:
             - name: project/civet/clang-tidy.tar.zst
