@@ -152,6 +152,8 @@ def s3_upload(files, key_prefix=None):
             content_type, content_encoding = mimetypes.guess_type(path)
             extra_args = {}
             if content_type:
+                if content_type.startswith("text/"):
+                    content_type += '; charset="utf-8"'
                 extra_args["ContentType"] = content_type
             if content_encoding:
                 extra_args["ContentEncoding"] = content_encoding
