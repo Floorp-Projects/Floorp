@@ -18,21 +18,21 @@ NS_IMPL_ISUPPORTS_CI(GleanBoolean, nsIGleanBoolean)
 
 NS_IMETHODIMP
 GleanBoolean::Set(bool value, JSContext* cx) {
-  this->mBoolean.Set(value);
+  mBoolean.Set(value);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanBoolean::TestHasValue(const nsACString& aStorageName, JSContext* cx,
                            bool* result) {
-  *result = this->mBoolean.TestHasValue(PromiseFlatCString(aStorageName).get());
+  *result = mBoolean.TestHasValue(PromiseFlatCString(aStorageName).get());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GleanBoolean::TestGetValue(const nsACString& aStorageName, JSContext* cx,
                            bool* result) {
-  *result = this->mBoolean.TestGetValue(PromiseFlatCString(aStorageName).get());
+  *result = mBoolean.TestGetValue(PromiseFlatCString(aStorageName).get());
   return NS_OK;
 }
 
