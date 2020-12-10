@@ -147,9 +147,6 @@ pub struct InstructionWriter {
 
     /// Number of JOF_IC instructions emitted so far.
     num_ic_entries: usize,
-
-    /// Number of instructions in this script that have JOF_TYPESET.
-    num_type_sets: usize,
 }
 
 #[derive(Debug)]
@@ -194,7 +191,6 @@ impl InstructionWriter {
             maximum_stack_depth: 0,
             body_scope_index: None,
             num_ic_entries: 0,
-            num_type_sets: 0,
         }
     }
 
@@ -302,10 +298,6 @@ impl InstructionWriter {
         }
 
         self.bytecode.push(opcode.to_byte());
-
-        if opcode.has_typeset() {
-            self.num_type_sets += 1;
-        }
     }
 
     fn set_last_jump_target_offset(&mut self, target: BytecodeOffset) {
@@ -530,11 +522,6 @@ impl InstructionWriter {
         self.write_g_c_thing_index(baseobj_index);
     }
 
-    pub fn new_object_with_group(&mut self, baseobj_index: GCThingIndex) {
-        self.emit_op(Opcode::NewObjectWithGroup);
-        self.write_g_c_thing_index(baseobj_index);
-    }
-
     pub fn object(&mut self, object_index: GCThingIndex) {
         self.emit_op(Opcode::Object);
         self.write_g_c_thing_index(object_index);
@@ -612,22 +599,8 @@ impl InstructionWriter {
         self.write_g_c_thing_index(name_index);
     }
 
-    pub fn call_prop(&mut self, name_index: GCThingIndex) {
-        self.emit_op(Opcode::CallProp);
-        self.write_g_c_thing_index(name_index);
-    }
-
     pub fn get_elem(&mut self) {
         self.emit_op(Opcode::GetElem);
-    }
-
-    pub fn call_elem(&mut self) {
-        self.emit_op(Opcode::CallElem);
-    }
-
-    pub fn length(&mut self, name_index: GCThingIndex) {
-        self.emit_op(Opcode::Length);
-        self.write_g_c_thing_index(name_index);
     }
 
     pub fn set_prop(&mut self, name_index: GCThingIndex) {
@@ -719,10 +692,6 @@ impl InstructionWriter {
         self.emit_op(Opcode::IsNoIter);
     }
 
-    pub fn iter_next(&mut self) {
-        self.emit_op(Opcode::IterNext);
-    }
-
     pub fn end_iter(&mut self) {
         self.emit_op(Opcode::EndIter);
     }
@@ -760,11 +729,6 @@ impl InstructionWriter {
 
     pub fn hole(&mut self) {
         self.emit_op(Opcode::Hole);
-    }
-
-    pub fn new_array_copy_on_write(&mut self, object_index: GCThingIndex) {
-        self.emit_op(Opcode::NewArrayCopyOnWrite);
-        self.write_g_c_thing_index(object_index);
     }
 
     pub fn reg_exp(&mut self, regexp_index: GCThingIndex) {
@@ -1263,27 +1227,9 @@ impl InstructionWriter {
         self.emit_op(Opcode::BindVar);
     }
 
-    pub fn def_var(&mut self, name_index: GCThingIndex) {
-        self.emit_op(Opcode::DefVar);
-        self.write_g_c_thing_index(name_index);
-    }
-
-    pub fn def_fun(&mut self) {
-        self.emit_op(Opcode::DefFun);
-    }
-
-    pub fn def_let(&mut self, name_index: GCThingIndex) {
-        self.emit_op(Opcode::DefLet);
-        self.write_g_c_thing_index(name_index);
-    }
-
-    pub fn def_const(&mut self, name_index: GCThingIndex) {
-        self.emit_op(Opcode::DefConst);
-        self.write_g_c_thing_index(name_index);
-    }
-
-    pub fn check_global_or_eval_decl(&mut self) {
-        self.emit_op(Opcode::CheckGlobalOrEvalDecl);
+    pub fn global_or_eval_decl_instantiation(&mut self, last_fun: u32) {
+        self.emit_op(Opcode::GlobalOrEvalDeclInstantiation);
+        self.write_u32(last_fun);
     }
 
     pub fn del_name(&mut self, name_index: GCThingIndex) {
@@ -1503,7 +1449,6 @@ impl InstructionWriter {
                 .map_err(|_| EmitError::NotImplemented("Throwing allocation overflow"))?,
             num_ic_entries: self.num_ic_entries.try_into().unwrap(),
             fun_length: 0,
-            num_bytecode_type_sets: self.num_type_sets.try_into().unwrap(),
 
             bytecode: self.bytecode,
             scope_notes: self.scope_notes.into(),

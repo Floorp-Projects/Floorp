@@ -25,34 +25,33 @@ enum {
   JOF_QARG = 11,        /* function argument index */
   JOF_LOCAL = 12,       /* var or block-local variable */
   JOF_RESUMEINDEX = 13, /* yield, await, or gosub resume index */
-  JOF_ATOM = 14,        /* uint32_t constant index */
-  JOF_OBJECT = 15,      /* uint32_t object index */
-  JOF_REGEXP = 16,      /* uint32_t regexp index */
-  JOF_DOUBLE = 17,      /* inline DoubleValue */
-  JOF_SCOPE = 18,       /* uint32_t scope index */
-  JOF_ICINDEX = 19,     /* uint32_t IC index */
-  JOF_LOOPHEAD = 20,    /* JSOp::LoopHead, combines JOF_ICINDEX and JOF_UINT8 */
-  JOF_BIGINT = 21,      /* uint32_t index for BigInt value */
-  JOF_CLASS_CTOR = 22,  /* uint32_t atom index, sourceStart, sourceEnd */
-  JOF_TWO_UINT8 = 23,   /* A pair of unspecified uint8_t arguments */
-  JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
+  JOF_DOUBLE = 14,      /* inline DoubleValue */
+  JOF_GCTHING = 15,     /* uint32_t generic gc-thing index */
+  JOF_ATOM = 16,        /* uint32_t constant index */
+  JOF_OBJECT = 17,      /* uint32_t object index */
+  JOF_REGEXP = 18,      /* uint32_t regexp index */
+  JOF_SCOPE = 19,       /* uint32_t scope index */
+  JOF_BIGINT = 20,      /* uint32_t index for BigInt value */
+  JOF_ICINDEX = 21,     /* uint32_t IC index */
+  JOF_LOOPHEAD = 22,    /* JSOp::LoopHead, combines JOF_ICINDEX and JOF_UINT8 */
+  JOF_CLASS_CTOR = 23,  /* uint32_t atom index, sourceStart, sourceEnd */
+  JOF_TWO_UINT8 = 24,   /* A pair of unspecified uint8_t arguments */
+  JOF_TYPEMASK = 0xFF,  /* mask for above immediate types */
 
-  JOF_NAME = 1 << 5,     /* name operation */
-  JOF_PROP = 2 << 5,     /* obj.prop operation */
-  JOF_ELEM = 3 << 5,     /* obj[index] operation */
-  JOF_MODEMASK = 3 << 5, /* mask for above addressing modes */
+  JOF_NAME = 1 << 8,        /* name operation */
+  JOF_PROP = 2 << 8,        /* obj.prop operation */
+  JOF_ELEM = 3 << 8,        /* obj[index] operation */
+  JOF_MODEMASK = 0xFF << 8, /* mask for above addressing modes */
 
-  JOF_PROPSET = 1 << 7,  /* property/element/name set operation */
-  JOF_PROPINIT = 1 << 8, /* property/element/name init operation */
-  // (1 << 9) is unused.
-  JOF_CHECKSLOPPY = 1 << 10, /* op can only be generated in sloppy mode */
-  JOF_CHECKSTRICT = 1 << 11, /* op can only be generated in strict mode */
-  JOF_INVOKE = 1 << 12,      /* any call, construct, or eval instruction */
-  JOF_CONSTRUCT = 1 << 13,   /* invoke instruction using [[Construct]] entry */
-  JOF_SPREAD = 1 << 14,      /* invoke instruction using spread argument */
-  JOF_GNAME = 1 << 15,       /* predicted global name */
-  JOF_TYPESET = 1 << 16,     /* has an entry in a script's type sets */
-  JOF_IC = 1 << 17,          /* baseline may use an IC for this op */
+  JOF_PROPSET = 1 << 16,     /* property/element/name set operation */
+  JOF_PROPINIT = 1 << 17,    /* property/element/name init operation */
+  JOF_CHECKSLOPPY = 1 << 18, /* op can only be generated in sloppy mode */
+  JOF_CHECKSTRICT = 1 << 19, /* op can only be generated in strict mode */
+  JOF_INVOKE = 1 << 20,      /* any call, construct, or eval instruction */
+  JOF_CONSTRUCT = 1 << 21,   /* invoke instruction using [[Construct]] entry */
+  JOF_SPREAD = 1 << 22,      /* invoke instruction using spread argument */
+  JOF_GNAME = 1 << 23,       /* predicted global name */
+  JOF_IC = 1 << 24,          /* baseline may use an IC for this op */
 };
 
 #endif /* vm_BytecodeFormatFlags_h */

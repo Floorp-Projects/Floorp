@@ -294,7 +294,6 @@ pub struct SmooshImmutableScriptData {
     pub body_scope_index: u32,
     pub num_ic_entries: u32,
     pub fun_length: u16,
-    pub num_bytecode_type_sets: u32,
     pub bytecode: CVec<u8>,
     pub scope_notes: CVec<SmooshScopeNote>,
 }
@@ -472,7 +471,6 @@ fn convert_script_data(script_data: ImmutableScriptData) -> SmooshImmutableScrip
     let body_scope_index = script_data.body_scope_index;
     let num_ic_entries = script_data.num_ic_entries;
     let fun_length = script_data.fun_length;
-    let num_bytecode_type_sets = script_data.num_bytecode_type_sets;
 
     let bytecode = CVec::from(script_data.bytecode);
 
@@ -491,7 +489,6 @@ fn convert_script_data(script_data: ImmutableScriptData) -> SmooshImmutableScrip
         body_scope_index,
         num_ic_entries,
         fun_length,
-        num_bytecode_type_sets,
         bytecode,
         scope_notes,
     }
