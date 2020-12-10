@@ -10,11 +10,21 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
   "AppMenuNotifications",
   "resource://gre/modules/AppMenuNotifications.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "AppUpdateService",
+  "@mozilla.org/updates/update-service;1",
+  "nsIApplicationUpdateService"
 );
 
 const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";
@@ -29,7 +39,7 @@ var UpdateListener = {
 
   init() {
     // Persist the unsupported notification across sessions. If at some point an
-    // update is found this pref is cleared and the notifcation won't be shown.
+    // update is found this pref is cleared and the notification won't be shown.
     let url = Services.prefs.getCharPref(PREF_APP_UPDATE_UNSUPPORTED_URL, null);
     if (url) {
       this.showUpdateNotification("unsupported", true, true, win =>
@@ -116,7 +126,9 @@ var UpdateListener = {
     const addTelemetry = id => {
       // No telemetry for the "downloading" state.
       if (type !== "downloading") {
-        Services.telemetry.getHistogramById(id).add(type);
+        // Histogram category labels can't have dashes in them.
+        let telemetryType = type.replaceAll("-", "");
+        Services.telemetry.getHistogramById(id).add(telemetryType);
       }
     };
     let action = {
@@ -150,8 +162,11 @@ var UpdateListener = {
     }
   },
 
-  showRestartNotification(dismissed) {
-    this.showUpdateNotification("restart", true, dismissed, () =>
+  showRestartNotification(update, dismissed) {
+    let notification = AppUpdateService.isOtherInstanceHandlingUpdates
+      ? "other-instance"
+      : "restart";
+    this.showUpdateNotification(notification, true, dismissed, () =>
       this.requestRestart()
     );
   },
@@ -162,10 +177,7 @@ var UpdateListener = {
       false,
       dismissed,
       () => {
-        let updateService = Cc[
-          "@mozilla.org/updates/update-service;1"
-        ].getService(Ci.nsIApplicationUpdateService);
-        updateService.downloadUpdate(update, true);
+        AppUpdateService.downloadUpdate(update, true);
       },
       doc => this.replaceReleaseNotes(doc, update, "updateAvailableWhatsNew")
     );
@@ -253,19 +265,22 @@ var UpdateListener = {
 
         if (badgeWaitTimeMs < doorhangerWaitTimeMs) {
           this.addTimeout(badgeWaitTimeMs, () => {
-            this.showRestartNotification(true);
+            // Skip the badge if we're waiting for another instance.
+            if (!AppUpdateService.isOtherInstanceHandlingUpdates) {
+              this.showRestartNotification(update, true);
+            }
 
             // doorhangerWaitTimeMs is relative to when we initially received
             // the event. Since we've already waited badgeWaitTimeMs, subtract
             // that from doorhangerWaitTimeMs.
             let remainingTime = doorhangerWaitTimeMs - badgeWaitTimeMs;
             this.addTimeout(remainingTime, () => {
-              this.showRestartNotification(false);
+              this.showRestartNotification(update, false);
             });
           });
         } else {
           this.addTimeout(doorhangerWaitTimeMs, () => {
-            this.showRestartNotification(false);
+            this.showRestartNotification(update, false);
           });
         }
         break;
