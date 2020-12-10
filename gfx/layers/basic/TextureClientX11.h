@@ -9,7 +9,6 @@
 
 #include "mozilla/layers/TextureClient.h"
 #include "ISurfaceAllocator.h"  // For IsSurfaceDescriptorValid
-#include "mozilla/layers/ShadowLayerUtilsX11.h"
 
 namespace mozilla {
 namespace layers {
