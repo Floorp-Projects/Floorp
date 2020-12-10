@@ -879,8 +879,6 @@ void FallbackICCodeCompiler::PushStubPayload(MacroAssembler& masm,
   masm.adjustFrame(sizeof(intptr_t));
 }
 
-// TODO(no-TI): maybe remove NeedAmdBugWorkaround.
-
 //
 // ToBool_Fallback
 //
