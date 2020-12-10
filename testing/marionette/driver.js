@@ -627,7 +627,6 @@ GeckoDriver.prototype.registerBrowser = function(browserElement) {
     browserElement.nodeName != "browser" ||
     browserElement.getTabBrowser()
   ) {
-    // curBrowser holds all the registered frames in knownFrames
     this.curBrowser.register(browserElement);
   }
 
