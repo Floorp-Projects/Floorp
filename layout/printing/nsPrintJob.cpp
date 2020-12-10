@@ -862,7 +862,7 @@ nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
   if (NS_FAILED(rv)) {
     if (mPrintPreviewCallback) {
       mPrintPreviewCallback(
-          PrintPreviewResultInfo(0, 0, false, false));  // signal error
+          PrintPreviewResultInfo(0, 0, false, false, false));  // signal error
       mPrintPreviewCallback = nullptr;
     }
   }
@@ -1078,7 +1078,7 @@ nsresult nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting) {
 void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
   if (mPrintPreviewCallback) {
     mPrintPreviewCallback(
-        PrintPreviewResultInfo(0, 0, false, false));  // signal error
+        PrintPreviewResultInfo(0, 0, false, false, false));  // signal error
     mPrintPreviewCallback = nullptr;
   }
 
@@ -2600,9 +2600,11 @@ nsresult nsPrintJob::FinishPrintPreview() {
   }
 
   if (mPrintPreviewCallback) {
+    const bool hasSelection =
+        !mDisallowSelectionPrint && printData->mSelectionRoot;
     mPrintPreviewCallback(PrintPreviewResultInfo(
         GetPrintPreviewNumSheets(), GetRawNumPages(), GetIsEmpty(),
-        !mDisallowSelectionPrint && printData->mSelectionRoot));
+        hasSelection, hasSelection && printData->mPrintObject->HasSelection()));
     mPrintPreviewCallback = nullptr;
   }
 

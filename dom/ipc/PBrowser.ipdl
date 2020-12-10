@@ -167,7 +167,10 @@ struct PrintPreviewResultInfo
   uint32_t sheetCount;
   uint32_t totalPageCount;
   bool isEmpty;
+  // Whether there's a selection in the previewed page, including its subframes.
   bool hasSelection;
+  // Whether there's a selection in the previewed page, excluding its subframes.
+  bool hasSelfSelection;
 };
 
 /**

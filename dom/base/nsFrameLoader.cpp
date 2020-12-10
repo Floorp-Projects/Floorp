@@ -3238,6 +3238,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
       info.mSheetCount = aInfo.sheetCount();
       info.mTotalPageCount = aInfo.totalPageCount();
       info.mHasSelection = aInfo.hasSelection();
+      info.mHasSelfSelection = aInfo.hasSelfSelection();
       info.mIsEmpty = aInfo.isEmpty();
       promise->MaybeResolve(info);
     } else {
