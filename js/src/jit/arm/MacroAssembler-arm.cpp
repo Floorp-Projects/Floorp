@@ -6019,7 +6019,7 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
   MOZ_ASSERT(!access.isWidenSimd128Load());
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < asMasm().wasmMaxOffsetGuardLimit());
 
   Scalar::Type type = access.type();
 
@@ -6093,7 +6093,7 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
   MOZ_ASSERT(ptr == ptrScratch);
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < asMasm().wasmMaxOffsetGuardLimit());
 
   unsigned byteSize = access.byteSize();
   Scalar::Type type = access.type();
@@ -6103,9 +6103,9 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
     ScratchRegisterScope scratch(asMasm());
     // We need to store the high word of an Int64 first, so always adjust the
     // pointer to point to the high word in this case.  The adjustment is always
-    // OK because MaxOffsetGuardLimit is computed so that we can add up to
+    // OK because wasmMaxOffsetGuardLimit is computed so that we can add up to
     // sizeof(LargestValue)-1 without skipping past the guard page, and we
-    // assert above that offset < MaxOffsetGuardLimit.
+    // assert above that offset < wasmMaxOffsetGuardLimit.
     if (type == Scalar::Int64) {
       offset += INT64HIGH_OFFSET;
     }
@@ -6164,7 +6164,7 @@ void MacroAssemblerARM::wasmUnalignedLoadImpl(
   MOZ_ASSERT(!access.isWidenSimd128Load());
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < asMasm().wasmMaxOffsetGuardLimit());
 
   if (offset) {
     ScratchRegisterScope scratch(asMasm());
@@ -6256,7 +6256,7 @@ void MacroAssemblerARM::wasmUnalignedStoreImpl(
                 valOrTmp != val64.high && valOrTmp != val64.low);
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
+  MOZ_ASSERT(offset < asMasm().wasmMaxOffsetGuardLimit());
 
   unsigned byteSize = access.byteSize();
   MOZ_ASSERT(byteSize == 8 || byteSize == 4 || byteSize == 2);
