@@ -493,7 +493,7 @@ TextPropertyEditor.prototype = {
       colorSwatchClass: SHARED_SWATCH_CLASS + " " + COLOR_SWATCH_CLASS,
       filterClass: "ruleview-filter",
       filterSwatchClass: SHARED_SWATCH_CLASS + " " + FILTER_SWATCH_CLASS,
-      flexClass: "ruleview-flex",
+      flexClass: "ruleview-flex js-toggle-flexbox-highlighter",
       gridClass: "ruleview-grid",
       shapeClass: "ruleview-shape",
       shapeSwatchClass: SHAPE_SWATCH_CLASS,
@@ -654,7 +654,9 @@ TextPropertyEditor.prototype = {
       flexToggle.setAttribute("title", l10n("rule.flexToggle.tooltip"));
       flexToggle.classList.toggle(
         "active",
-        this.ruleView.highlighters.flexboxHighlighterShown === nodeFront
+        this.ruleView.inspector.highlighters.getNodeForActiveHighlighter(
+          this.ruleView.inspector.highlighters.TYPES.FLEXBOX
+        ) === nodeFront
       );
     }
 

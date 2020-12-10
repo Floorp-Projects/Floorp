@@ -18,23 +18,36 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view, testActor } = await openRuleView();
-  const { highlighters } = view;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const {
+    getNodeForActiveHighlighter,
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   const onRuleViewUpdated = view.once("ruleview-refreshed");
   await selectNode("#flex", inspector);
   await onRuleViewUpdated;
   const container = getRuleViewProperty(view, "#flex", "display").valueSpan;
-  const flexboxToggle = container.querySelector(".ruleview-flex");
+  const flexboxToggle = container.querySelector(
+    ".js-toggle-flexbox-highlighter"
+  );
 
   info("Toggling ON the flexbox highlighter from the rule-view.");
-  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   flexboxToggle.click();
   await onHighlighterShown;
-  ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
+  ok(
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "Flexbox highlighter is shown."
+  );
 
   info("Remove the #flex container in the content page.");
-  const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   testActor.eval(`document.querySelector("#flex").remove();`);
   await onHighlighterHidden;
-  ok(!highlighters.flexboxHighlighterShown, "Flexbox highlighter is hidden.");
+  ok(
+    !getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "Flexbox highlighter is hidden."
+  );
 });

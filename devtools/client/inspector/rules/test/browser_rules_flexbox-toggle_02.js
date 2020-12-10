@@ -21,20 +21,26 @@ const TEST_URI = `
   </ul>
 `;
 
-const HIGHLIGHTER_TYPE = "FlexboxHighlighter";
-
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
-  const { highlighters } = view;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const {
+    getActiveHighlighter,
+    getNodeForActiveHighlighter,
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#flex", inspector);
   const container = getRuleViewProperty(view, "#flex", "display").valueSpan;
-  const flexboxToggle = container.querySelector(".ruleview-flex");
+  const flexboxToggle = container.querySelector(
+    ".js-toggle-flexbox-highlighter"
+  );
   const overriddenContainer = getRuleViewProperty(view, "div, ul", "display")
     .valueSpan;
   const overriddenFlexboxToggle = overriddenContainer.querySelector(
-    ".ruleview-flex"
+    ".js-toggle-flexbox-highlighter"
   );
 
   info("Checking the initial state of the flexbox toggle in the rule-view.");
@@ -48,15 +54,18 @@ add_task(async function() {
     "Flexbox highlighter toggle buttons are not active."
   );
   ok(
-    !highlighters.highlighters[HIGHLIGHTER_TYPE],
+    !getActiveHighlighter(HIGHLIGHTER_TYPE),
     "No flexbox highlighter exists in the rule-view."
   );
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
 
   info(
     "Toggling ON the flexbox highlighter from the overridden rule in the rule-view."
   );
-  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   overriddenFlexboxToggle.click();
   await onHighlighterShown;
 
@@ -70,16 +79,19 @@ add_task(async function() {
     "Flexbox highlighter toggle is active."
   );
   ok(
-    highlighters.highlighters[HIGHLIGHTER_TYPE],
+    getActiveHighlighter(HIGHLIGHTER_TYPE),
     "Flexbox highlighter created in the rule-view."
   );
-  ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
+  ok(
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "Flexbox highlighter is shown."
+  );
 
   info(
     "Toggling off the flexbox highlighter from the normal flexbox declaration in  " +
       "the rule-view."
   );
-  const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   flexboxToggle.click();
   await onHighlighterHidden;
 
@@ -92,5 +104,8 @@ add_task(async function() {
       !overriddenFlexboxToggle.classList.contains("active"),
     "Flexbox highlighter toggle buttons are not active."
   );
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
 });

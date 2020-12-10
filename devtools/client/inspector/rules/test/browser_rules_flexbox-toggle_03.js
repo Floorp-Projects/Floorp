@@ -16,17 +16,20 @@ const TEST_URI = `
   <div id="flex2" class="flex"></div>
 `;
 
-const HIGHLIGHTER_TYPE = "FlexboxHighlighter";
-
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
-  const { highlighters } = view;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const {
+    getActiveHighlighter,
+    getNodeForActiveHighlighter,
+    waitForHighlighterTypeShown,
+  } = getHighlighterTestHelpers(inspector);
 
   info("Selecting the first flexbox container.");
   await selectNode("#flex1", inspector);
   let container = getRuleViewProperty(view, ".flex", "display").valueSpan;
-  let flexboxToggle = container.querySelector(".ruleview-flex");
+  let flexboxToggle = container.querySelector(".js-toggle-flexbox-highlighter");
 
   info(
     "Checking the state of the flexbox toggle for the first flexbox container in " +
@@ -38,16 +41,19 @@ add_task(async function() {
     "Flexbox highlighter toggle button is not active."
   );
   ok(
-    !highlighters.highlighters[HIGHLIGHTER_TYPE],
+    !getActiveHighlighter(HIGHLIGHTER_TYPE),
     "No flexbox highlighter exists in the rule-view."
   );
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
 
   info(
     "Toggling ON the flexbox highlighter for the first flexbox container from the " +
       "rule-view."
   );
-  let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  let onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   flexboxToggle.click();
   await onHighlighterShown;
 
@@ -60,16 +66,21 @@ add_task(async function() {
     "Flexbox highlighter toggle is active."
   );
   ok(
-    highlighters.highlighters[HIGHLIGHTER_TYPE],
+    getActiveHighlighter(HIGHLIGHTER_TYPE),
     "Flexbox highlighter created in the rule-view."
   );
-  ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
+  ok(
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "Flexbox highlighter is shown."
+  );
 
   info("Selecting the second flexbox container.");
   await selectNode("#flex2", inspector);
-  const firstFlexboxHighterShown = highlighters.flexboxHighlighterShown;
+  const firstFlexboxHighterShown = getNodeForActiveHighlighter(
+    HIGHLIGHTER_TYPE
+  );
   container = getRuleViewProperty(view, ".flex", "display").valueSpan;
-  flexboxToggle = container.querySelector(".ruleview-flex");
+  flexboxToggle = container.querySelector(".js-toggle-flexbox-highlighter");
 
   info(
     "Checking the state of the CSS flexbox toggle for the second flexbox container " +
@@ -81,7 +92,7 @@ add_task(async function() {
     "Flexbox highlighter toggle button is not active."
   );
   ok(
-    highlighters.flexboxHighlighterShown,
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
     "Flexbox highlighter is still shown."
   );
 
@@ -89,7 +100,7 @@ add_task(async function() {
     "Toggling ON the flexbox highlighter for the second flexbox container from the " +
       "rule-view."
   );
-  onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   flexboxToggle.click();
   await onHighlighterShown;
 
@@ -102,14 +113,14 @@ add_task(async function() {
     "Flexbox highlighter toggle is active."
   );
   ok(
-    highlighters.flexboxHighlighterShown != firstFlexboxHighterShown,
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE) != firstFlexboxHighterShown,
     "Flexbox highlighter for the second flexbox container is shown."
   );
 
   info("Selecting the first flexbox container.");
   await selectNode("#flex1", inspector);
   container = getRuleViewProperty(view, ".flex", "display").valueSpan;
-  flexboxToggle = container.querySelector(".ruleview-flex");
+  flexboxToggle = container.querySelector(".js-toggle-flexbox-highlighter");
 
   info(
     "Checking the state of the flexbox toggle for the first flexbox container in " +
