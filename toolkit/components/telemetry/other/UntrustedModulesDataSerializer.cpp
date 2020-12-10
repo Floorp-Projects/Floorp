@@ -8,6 +8,7 @@
 
 #include "core/TelemetryCommon.h"
 #include "js/Array.h"  // JS::NewArrayObject
+#include "jsapi.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsITelemetry.h"
 #include "nsUnicharUtils.h"
@@ -360,15 +361,49 @@ nsresult UntrustedModulesDataSerializer::GetPerProcObject(
     return NS_ERROR_FAILURE;
   }
 
-  JS::RootedObject combinedStacksObj(mCx,
-                                     CreateJSStackObject(mCx, aData.mStacks));
-  if (!combinedStacksObj) {
+  if (!(mFlags & nsITelemetry::EXCLUDE_STACKINFO_FROM_LOADEVENTS)) {
+    JS::RootedObject combinedStacksObj(mCx,
+                                       CreateJSStackObject(mCx, aData.mStacks));
+    if (!combinedStacksObj) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_DefineProperty(mCx, aObj, "combinedStacks", combinedStacksObj,
+                           JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult UntrustedModulesDataSerializer::AddLoadEvents(
+    const Vector<ProcessedModuleLoadEvent>& aEvents,
+    JS::MutableHandleObject aPerProcObj) {
+  JS::RootedValue eventsArrayVal(mCx);
+  if (!JS_GetProperty(mCx, aPerProcObj, "events", &eventsArrayVal) ||
+      !eventsArrayVal.isObject()) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!JS_DefineProperty(mCx, aObj, "combinedStacks", combinedStacksObj,
-                         JSPROP_ENUMERATE)) {
+  JS::RootedObject eventsArray(mCx, &eventsArrayVal.toObject());
+  bool isArray;
+  if (!JS::IsArrayObject(mCx, eventsArray, &isArray) && !isArray) {
     return NS_ERROR_FAILURE;
+  }
+
+  uint32_t currentPos;
+  if (!GetArrayLength(mCx, eventsArray, &currentPos)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (size_t i = 0, l = aEvents.length(); i < l; ++i) {
+    JS::RootedValue jsel(mCx);
+    if (!SerializeEvent(mCx, &jsel, aEvents[i], mIndexMap) ||
+        !JS_DefineElement(mCx, eventsArray, currentPos + i, jsel,
+                          JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   return NS_OK;
@@ -398,6 +433,23 @@ nsresult UntrustedModulesDataSerializer::AddSingleData(
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
+  nsAutoCString strPid;
+  strPid.Append(GetProcessTypeString(aData.mProcessType));
+  strPid.AppendLiteral(".0x");
+  strPid.AppendInt(static_cast<uint32_t>(aData.mPid), 16);
+
+  if (mFlags & nsITelemetry::EXCLUDE_STACKINFO_FROM_LOADEVENTS) {
+    JS::RootedValue perProcVal(mCx);
+    if (JS_GetProperty(mCx, mPerProcObjContainer, strPid.get(), &perProcVal) &&
+        perProcVal.isObject()) {
+      // If a corresponding per-proc object already exists in the dictionary,
+      // and we skip to serialize CombinedStacks, we can add loading events
+      // into the JS object directly.
+      JS::RootedObject perProcObj(mCx, &perProcVal.toObject());
+      return AddLoadEvents(aData.mEvents, &perProcObj);
+    }
+  }
+
   JS::RootedObject perProcObj(mCx, JS_NewPlainObject(mCx));
   if (!perProcObj) {
     return NS_ERROR_FAILURE;
@@ -407,11 +459,6 @@ nsresult UntrustedModulesDataSerializer::AddSingleData(
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  nsAutoCString strPid;
-  strPid.Append(GetProcessTypeString(aData.mProcessType));
-  strPid.AppendLiteral(".0x");
-  strPid.AppendInt(static_cast<uint32_t>(aData.mPid), 16);
 
   JS::RootedValue jsPerProcObjValue(mCx);
   jsPerProcObjValue.setObject(*perProcObj);

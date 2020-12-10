@@ -204,7 +204,8 @@ interface nsITelemetry : nsISupports
    * This flag is set to retrieve all data including instances which have been
    * retrieved before.  If not set, only new instances since the last call
    * will be returned.
-   * If this flag is set, KEEP_LOADEVENTS_NEW must not be set.
+   * If this flag is set, KEEP_LOADEVENTS_NEW must not be set unless
+   * EXCLUDE_STACKINFO_FROM_LOADEVENTS is set.
    * (See also MultiGetUntrustedModulesData::Serialize.)
    */
   const unsigned long INCLUDE_OLD_LOADEVENTS = 1 << 0;
@@ -214,7 +215,8 @@ interface nsITelemetry : nsISupports
    * retrieved, meaning those instances will be returned by a next method
    * call without INCLUDE_OLD_LOADEVENTS.  If not set, the returned instances
    * can be re-retrieved only when INCLUDE_OLD_LOADEVENTS is specified.
-   * If this flag is set, INCLUDE_OLD_LOADEVENTS must not be set.
+   * If this flag is set, INCLUDE_OLD_LOADEVENTS must not be set unless
+   * EXCLUDE_STACKINFO_FROM_LOADEVENTS is set.
    * (See also MultiGetUntrustedModulesData::Serialize.)
    */
   const unsigned long KEEP_LOADEVENTS_NEW = 1 << 1;
@@ -224,6 +226,13 @@ interface nsITelemetry : nsISupports
    * Do not specify this flag to retrieve data to be submitted.
    */
   const unsigned long INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS = 1 << 2;
+
+  /**
+   * This flag is set to exclude the "combinedStacks" field.
+   * Without this flag, the flags INCLUDE_OLD_LOADEVENTS and KEEP_LOADEVENTS_NEW
+   * cannot be set at the same time.
+   */
+  const unsigned long EXCLUDE_STACKINFO_FROM_LOADEVENTS = 1 << 3;
 
   /*
    * An array of untrusted module load events. Each element describes one or
