@@ -95,7 +95,7 @@ impl TimespanMetric {
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    pub fn test_get_value(&self, storage_name: &str) -> Option<u64> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, storage_name: S) -> Option<u64> {
         match self {
             TimespanMetric::Parent(p) => {
                 dispatcher::block_on_queue();
@@ -143,13 +143,15 @@ impl TimespanMetricImpl {
         inner.cancel()
     }
 
-    fn test_get_value(&self, storage_name: &str) -> Option<u64> {
+    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, storage_name: S) -> Option<u64> {
+        // FIXME: This hack goes away when the type is implemented in RLB.
+        let storage = storage_name.into().unwrap_or("default");
         crate::with_glean(move |glean| {
             let inner = self
                 .inner
                 .read()
                 .expect("lock of wrapped metric was poisoned");
-            inner.test_get_value(glean, storage_name)
+            inner.test_get_value(glean, storage)
         })
     }
 }
