@@ -3828,7 +3828,9 @@ static void draw_perspective(int nump, Interpolants interp_outs[4],
       vec3_scalar(ctx->viewport.x0, ctx->viewport.y0, 0.0f) + scale;
   if (test_none(pos.z <= -pos.w || pos.z >= pos.w)) {
     // No points cross the near or far planes, so no clipping required.
-    // Just divide coords by W and convert to viewport.
+    // Just divide coords by W and convert to viewport. We assume the W
+    // coordinate is non-zero and the reciprocal is finite since it would
+    // otherwise fail the test_none condition.
     Float w = 1.0f / pos.w;
     vec3 screen = pos.sel(X, Y, Z) * w * scale + offset;
     Point3D p[4] = {{screen.x.x, screen.y.x, screen.z.x, w.x},
@@ -3884,6 +3886,11 @@ static void draw_perspective(int nump, Interpolants interp_outs[4],
     // Divide coords by W and convert to viewport.
     for (int i = 0; i < nump; i++) {
       float w = 1.0f / p_clip[i].w;
+      // If the W coord is essentially zero, small enough that division would
+      // result in Inf/NaN, then just set the reciprocal itself to zero so that
+      // the coordinates becomes zeroed out, as the only valid point that
+      // satisfies -W <= X/Y/Z <= W is all zeroes.
+      if(!isfinite(w)) w = 0.0f;
       p_clip[i] = Point3D(p_clip[i].sel(X, Y, Z) * w * scale + offset, w);
     }
     draw_perspective_clipped(nump, p_clip, interp_clip, colortex, layer,
@@ -3908,6 +3915,11 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   // Convert output of vertex shader to screen space.
   // Divide coords by W and convert to viewport.
   float w = 1.0f / pos.w.x;
+  // If the W coord is essentially zero, small enough that division would
+  // result in Inf/NaN, then just set the reciprocal itself to zero so that
+  // the coordinates becomes zeroed out, as the only valid point that
+  // satisfies -W <= X/Y/Z <= W is all zeroes.
+  if(!isfinite(w)) w = 0.0f;
   vec2 screen = (pos.sel(X, Y) * w + 1) * 0.5f *
                     vec2_scalar(ctx->viewport.width(), ctx->viewport.height()) +
                 vec2_scalar(ctx->viewport.x0, ctx->viewport.y0);
