@@ -412,6 +412,17 @@ CssRuleView.prototype = {
       // from triggering the prompt to add a new CSS declaration
       event.stopPropagation();
     }
+
+    // Handle click on swatches next to flex and inline-flex CSS properties
+    if (target.classList.contains("js-toggle-flexbox-highlighter")) {
+      this.inspector.highlighters.toggleFlexboxHighlighter(
+        this.inspector.selection.nodeFront,
+        "rule"
+      );
+      // Prevent the click on the element wrapping the CSS rule
+      // from triggering the prompt to add a new CSS declaration
+      event.stopPropagation();
+    }
   },
 
   /**
@@ -426,23 +437,33 @@ CssRuleView.prototype = {
    *        Object with data associated with the highlighter event.
    */
   handleHighlighterEvent(eventName, data) {
-    switch (data.type) {
-      // Toggle the "highlighted" CSS class name on selector icons in the Rules view when
-      // the SelectorHighlighter is shown/hidden for a certain CSS selector.
-      case this.inspector.highlighters.TYPES.SELECTOR:
-        if (data?.options?.selector) {
-          const selector = data?.options?.selector;
-          const query = `.js-toggle-selector-highlighter[data-selector='${selector}']`;
-          for (const node of this.styleDocument.querySelectorAll(query)) {
-            if (eventName == "highlighter-hidden") {
-              node.classList.remove("highlighted");
-            }
-            if (eventName == "highlighter-shown") {
-              node.classList.add("highlighted");
-            }
-          }
-        }
-        break;
+    const handlers = {};
+
+    // Toggle the "highlighted" class on selector icons in the Rules view when
+    // the SelectorHighlighter is shown/hidden for a certain CSS selector.
+    handlers[this.inspector.highlighters.TYPES.SELECTOR] = () => {
+      const selector = data?.options?.selector;
+      if (!selector) {
+        return;
+      }
+
+      const query = `.js-toggle-selector-highlighter[data-selector='${selector}']`;
+      for (const node of this.styleDocument.querySelectorAll(query)) {
+        node.classList.toggle("highlighted", eventName == "highlighter-shown");
+      }
+    };
+
+    // Toggle the "active" class on swatches next to flex and inline-flex CSS properties
+    // when the FlexboxHighlighter is shown/hidden for the currently selected node.
+    handlers[this.inspector.highlighters.TYPES.FLEXBOX] = () => {
+      const query = ".js-toggle-flexbox-highlighter";
+      for (const node of this.styleDocument.querySelectorAll(query)) {
+        node.classList.toggle("active", eventName == "highlighter-shown");
+      }
+    };
+
+    if (typeof handlers[data.type] === "function") {
+      handlers[data.type].call(this);
     }
   },
 
