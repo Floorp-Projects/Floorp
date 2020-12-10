@@ -12,7 +12,7 @@ This document is intended as a guideline for developers and reviewers when
 working with FTL (Fluent) files. As such, it’s not meant to replace the
 `existing extensive documentation`__ about Fluent.
 
-__ ./fluent_tutorial.html
+__ ./tutorial.html
 
 `Herald`_ is used to set the group `fluent-reviewers`_ as blocking reviewer for
 any patch modifying FTL files committed to Phabricator. The person from this
