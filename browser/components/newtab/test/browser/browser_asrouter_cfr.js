@@ -11,6 +11,10 @@ const { CFRMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
 
+const { TelemetryFeed } = ChromeUtils.import(
+  "resource://activity-stream/lib/TelemetryFeed.jsm"
+);
+
 const createDummyRecommendation = ({
   action,
   category,
@@ -218,6 +222,10 @@ add_task(async function setup() {
 });
 
 add_task(async function test_cfr_notification_show() {
+  const sendPingStub = sinon.stub(
+    TelemetryFeed.prototype,
+    "sendStructuredIngestionEvent"
+  );
   // addRecommendation checks that scheme starts with http and host matches
   let browser = gBrowser.selectedBrowser;
   BrowserTestUtils.loadURI(browser, "http://example.com/");
@@ -269,6 +277,11 @@ add_task(async function test_cfr_notification_show() {
     0,
     "Should have removed the notification"
   );
+
+  Assert.ok(sendPingStub.callCount >= 1, "Recorded some events");
+  let cfrPing = sendPingStub.args.find(args => args[2] === "cfr");
+  Assert.equal(cfrPing[0].source, "CFR", "Got a CFR event");
+  sendPingStub.restore();
 });
 
 add_task(async function test_cfr_notification_show() {
