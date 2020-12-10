@@ -42,7 +42,7 @@ impl Default for PingMaker {
 }
 
 impl PingMaker {
-    /// Creates a new PingMaker.
+    /// Creates a new [`PingMaker`].
     pub fn new() -> Self {
         Self
     }
@@ -165,7 +165,7 @@ impl PingMaker {
     ///
     /// # Arguments
     ///
-    /// * `glean` - the Glean instance to collect metadata from.
+    /// * `glean` - the [`Glean`] instance to collect metadata from.
     ///
     /// # Returns
     ///
@@ -217,7 +217,7 @@ impl PingMaker {
     ///
     /// # Arguments
     ///
-    /// * `glean` - the Glean instance to collect data from.
+    /// * `glean` - the [`Glean`] instance to collect data from.
     /// * `ping` - the ping to collect for.
     /// * `reason` - an optional reason code to include in the ping.
     ///
@@ -266,7 +266,7 @@ impl PingMaker {
     ///
     /// # Arguments
     ///
-    /// * `glean` - the Glean instance to collect data from.
+    /// * `glean` - the [`Glean`] instance to collect data from.
     /// * `ping` - the ping to collect for.
     /// * `reason` - an optional reason code to include in the ping.
     ///

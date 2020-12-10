@@ -38,8 +38,9 @@ impl glean_core::traits::Timespan for TimespanMetric {
     ///
     /// This uses an internal monotonic timer.
     ///
-    /// This records an error if it's already tracking time (i.e. start was already
-    /// called with no corresponding `stop`): in that case the original
+    /// This records an error if it's already tracking time (i.e.
+    /// [`start`](TimespanMetric::start) was already called with no
+    /// corresponding [`stop`](TimespanMetric::stop)): in that case the original
     /// start time will be preserved.
     fn start(&self) {
         let start_time = time::precise_time_ns();
@@ -57,7 +58,7 @@ impl glean_core::traits::Timespan for TimespanMetric {
 
     /// Stops tracking time for the provided metric. Sets the metric to the elapsed time.
     ///
-    /// This will record an error if no `start` was called.
+    /// This will record an error if no [`start`](TimespanMetric::start) was called.
     fn stop(&self) {
         let stop_time = time::precise_time_ns();
 
@@ -72,7 +73,8 @@ impl glean_core::traits::Timespan for TimespanMetric {
         });
     }
 
-    /// Aborts a previous `start` call. No error is recorded if no `start` was called.
+    /// Aborts a previous [`start`](TimespanMetric::start) call. No error is
+    /// recorded if no [`start`](TimespanMetric::start) was called.
     fn cancel(&self) {
         let metric = Arc::clone(&self.0);
         dispatcher::launch(move || {
@@ -95,16 +97,23 @@ impl glean_core::traits::Timespan for TimespanMetric {
     fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<u64> {
         dispatcher::block_on_queue();
 
-        let metric = self
-            .0
-            .read()
-            .expect("Lock poisoned for timespan metric on test_get_value.");
+        crate::with_glean(|glean| {
+            // Note: The order of operations is important here to avoid potential deadlocks because
+            // of `lock-order-inversion`.
+            // `with_glean` takes a lock on the global Glean object,
+            // then we take a lock on the metric itself here.
+            //
+            // Other parts do it in the same order, see for example `start`.
+            let metric = self
+                .0
+                .read()
+                .expect("Lock poisoned for timespan metric on test_get_value.");
 
-        let queried_ping_name = ping_name
-            .into()
-            .unwrap_or_else(|| &metric.meta().send_in_pings[0]);
-
-        crate::with_glean(|glean| metric.test_get_value(glean, queried_ping_name))
+            let queried_ping_name = ping_name
+                .into()
+                .unwrap_or_else(|| &metric.meta().send_in_pings[0]);
+            metric.test_get_value(glean, queried_ping_name)
+        })
     }
 
     /// **Exported for test purposes.**

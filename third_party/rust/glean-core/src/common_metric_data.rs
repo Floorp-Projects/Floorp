@@ -5,7 +5,8 @@
 use std::convert::TryFrom;
 
 use crate::error::{Error, ErrorKind};
-use crate::metrics::dynamic_label;
+#[allow(unused_imports)]
+use crate::metrics::{dynamic_label, LabeledMetric};
 use crate::Glean;
 
 /// The supported metrics' lifetimes.
@@ -68,9 +69,11 @@ pub struct CommonMetricData {
     /// Disabled metrics are never recorded.
     pub disabled: bool,
     /// Dynamic label.
-    /// When a LabeledMetric<T> factory creates the specific metric to be
-    /// recorded to, dynamic labels are stored in the specific label so that we
-    /// can validate them when the Glean singleton is available.
+    ///
+    /// When a [`LabeledMetric<T>`](LabeledMetric) factory creates the specific
+    /// metric to be recorded to, dynamic labels are stored in the specific
+    /// label so that we can validate them when the Glean singleton is
+    /// available.
     pub dynamic_label: Option<String>,
 }
 

@@ -180,7 +180,7 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "33.7.0"
+version = "33.8.0"
 dependencies = [
  "bincode",
  "chrono",
@@ -483,9 +483,9 @@ dependencies = [
 
 [[package]]
 name = "rkv"
-version = "0.16.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7a845aee216ee2be8a02ea265d70563d1ed7bd852c04f709a8f11979079b2ac"
+checksum = "917d7a01f8c1ae46226e9d8dd24314279be7b04dfd0b24340d420e6927c2e687"
 dependencies = [
  "arrayref",
  "bincode",
@@ -543,9 +543,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.53"
+version = "1.0.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8833e20724c24de12bbaba5ad230ea61c3eafb05b881c7c9d3cfe8638b187e68"
+checksum = "9a2af957a63d6bd42255c359c93d9bfdb97076bd3b820897ce55ffbfbf107f44"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -4,7 +4,7 @@
 
 use crate::ErrorType;
 
-/// A description for the `CounterMetric` type.
+/// A description for the [`CounterMetric`](crate::metrics::CounterMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.

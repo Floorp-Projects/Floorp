@@ -46,7 +46,7 @@ impl MemoryUnit {
 }
 
 /// Trait implementation for converting an integer value
-/// to a MemoryUnit. This is used in the FFI code. Please
+/// to a [`MemoryUnit`]. This is used in the FFI code. Please
 /// note that values should match the ordering of the platform
 /// specific side of things (e.g. Kotlin implementation).
 impl TryFrom<i32> for MemoryUnit {

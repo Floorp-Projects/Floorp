@@ -76,7 +76,7 @@ impl CustomDistributionMetric {
     ///
     /// ## Notes
     ///
-    /// Discards any negative value in `samples` and report an `ErrorType::InvalidValue`
+    /// Discards any negative value in `samples` and report an [`ErrorType::InvalidValue`]
     /// for each of them.
     pub fn accumulate_samples_signed(&self, glean: &Glean, samples: Vec<i64>) {
         if !self.should_record(glean) {

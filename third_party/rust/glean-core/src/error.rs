@@ -13,7 +13,7 @@ use rkv::StoreError;
 
 /// A specialized [`Result`] type for this crate's operations.
 ///
-/// This is generally used to avoid writing out [Error] directly and
+/// This is generally used to avoid writing out [`Error`] directly and
 /// is otherwise a direct mapping to [`Result`].
 ///
 /// [`Result`]: https://doc.rust-lang.org/stable/std/result/enum.Result.html
@@ -53,7 +53,7 @@ pub enum ErrorKind {
     /// HistogramType conversion failed
     HistogramType(i32),
 
-    /// OsString conversion failed
+    /// [`OsString`] conversion failed
     OsString(OsString),
 
     /// Unknown error

@@ -39,7 +39,7 @@ pub trait PingUploader: std::fmt::Debug + Send + Sync {
 }
 
 /// The logic for uploading pings: this leaves the actual upload mechanism as
-/// a detail of the user-provided object implementing `PingUploader`.
+/// a detail of the user-provided object implementing [`PingUploader`].
 #[derive(Debug)]
 pub(crate) struct UploadManager {
     inner: Arc<Inner>,

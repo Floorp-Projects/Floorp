@@ -4,7 +4,7 @@
 
 #![allow(clippy::too_many_arguments)]
 
-/// A description for the `DatetimeMetric` type.
+/// A description for the [`DatetimeMetric`](crate::metrics::DatetimeMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.
@@ -38,8 +38,9 @@ pub trait Datetime {
     ///
     /// # Arguments
     ///
-    /// * `value` - Some date/time value, with offset, to set the metric to.
-    ///             If none, the current local time is used.
+    /// * `value` - Some [`Datetime`](crate::metrics::Datetime), with offset, to
+    ///             set the metric to. If [`None`], the current local time is
+    ///             used.
     fn set(&self, value: Option<crate::metrics::Datetime>);
 
     /// **Exported for test purposes.**
