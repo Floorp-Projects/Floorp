@@ -10,8 +10,6 @@
 #include "jsapi-tests/tests.h"
 #include "vm/Realm.h"
 
-using namespace js;
-
 JSObject* keyDelegate = nullptr;
 
 BEGIN_TEST(testWeakMap_basicOperations) {
@@ -97,17 +95,11 @@ BEGIN_TEST(testWeakMap_keyDelegates) {
    * Perform an incremental GC, introducing an unmarked CCW to force the map
    * zone to finish marking before the delegate zone.
    */
-  JSRuntime* rt = cx->runtime();
   CHECK(newCCW(map, delegateRoot));
-  js::SliceBudget budget(js::WorkBudget(1000));
-  rt->gc.startDebugGC(GC_NORMAL, budget);
+  js::SliceBudget budget(js::WorkBudget(1000000));
+  cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
   if (JS::IsIncrementalGCInProgress(cx)) {
-    // Wait until we've started marking before finishing the GC
-    // non-incrementally.
-    while (rt->gc.state() == gc::State::Prepare) {
-      rt->gc.debugGCSlice(budget);
-    }
-    rt->gc.finishGC(JS::GCReason::DEBUG_GC);
+    cx->runtime()->gc.finishGC(JS::GCReason::DEBUG_GC);
   }
 #ifdef DEBUG
   CHECK(map->zone()->lastSweepGroupIndex() <
@@ -119,20 +111,14 @@ BEGIN_TEST(testWeakMap_keyDelegates) {
   CHECK(SetWeakMapEntry(cx, map, key, val));
   CHECK(checkSize(map, 1));
 
-  /*
-   * Check the delegate keeps the entry alive even if the key is not reachable.
+  /* Check the delegate keeps the entry alive even if the key is not reachable.
    */
   key = nullptr;
   CHECK(newCCW(map, delegateRoot));
-  budget = js::SliceBudget(js::WorkBudget(1000));
-  rt->gc.startDebugGC(GC_NORMAL, budget);
+  budget = js::SliceBudget(js::WorkBudget(100000));
+  cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
   if (JS::IsIncrementalGCInProgress(cx)) {
-    // Wait until we've started marking before finishing the GC
-    // non-incrementally.
-    while (rt->gc.state() == gc::State::Prepare) {
-      rt->gc.debugGCSlice(budget);
-    }
-    rt->gc.finishGC(JS::GCReason::DEBUG_GC);
+    cx->runtime()->gc.finishGC(JS::GCReason::DEBUG_GC);
   }
   CHECK(checkSize(map, 1));
 

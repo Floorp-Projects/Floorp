@@ -443,11 +443,6 @@ class Arena {
 
 #ifdef DEBUG
   void checkNoMarkedFreeCells();
-  void checkAllCellsMarkedBlack();
-#endif
-
-#if defined(DEBUG) || defined(JS_GC_ZEAL)
-  void checkNoMarkedCells();
 #endif
 };
 

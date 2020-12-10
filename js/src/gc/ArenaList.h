@@ -153,10 +153,6 @@ class ArenaList {
   Arena* relocateArenas(Arena* toRelocate, Arena* relocated,
                         js::SliceBudget& sliceBudget,
                         gcstats::Statistics& stats);
-
-#ifdef DEBUG
-  void dump();
-#endif
 };
 
 /*
@@ -258,8 +254,7 @@ class ArenaLists {
   enum class ConcurrentUse : uint32_t {
     None,
     BackgroundFinalize,
-    ParallelAlloc,
-    ParallelUnmark
+    ParallelAlloc
   };
 
   using ConcurrentUseState =
@@ -348,7 +343,6 @@ class ArenaLists {
   static void backgroundFinalize(JSFreeOp* fop, Arena* listHead, Arena** empty);
 
   void setParallelAllocEnabled(bool enabled);
-  void setParallelUnmarkEnabled(bool enabled);
 
   inline void mergeNewArenasInMarkPhase();
 

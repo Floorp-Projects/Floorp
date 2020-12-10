@@ -27,7 +27,6 @@ class JSLinearString;
   _(Engine)                                    \
   _(GC)                                        \
   _(GCAllocation)                              \
-  _(GCUnmarking)                               \
   _(GCSweeping)                                \
   _(GCFree)                                    \
   _(Interpreter)                               \
