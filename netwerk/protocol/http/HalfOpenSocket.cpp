@@ -1173,6 +1173,17 @@ HalfOpenSocket::OnTransportStatus(nsITransport* trans, nsresult status,
 
     if (NS_SUCCEEDED(rv) && !addressSet.IsEmpty()) {
       for (uint32_t i = 0; i < addressSet.Length(); ++i) {
+        if ((addressSet[i].raw.family == AF_INET &&
+             addressSet[i].inet.ip == 0) ||
+            (addressSet[i].raw.family == AF_INET6 &&
+             addressSet[i].inet6.ip.u64[0] == 0 &&
+             addressSet[i].inet6.ip.u64[1] == 0)) {
+          // Bug 1680249 - Don't create the coalescing key if the ip address is
+          // `0.0.0.0` or `::`.
+          LOG(("HalfOpenSocket: skip creating Coalescing Key for host [%s]",
+               mEnt->mConnInfo->Origin()));
+          continue;
+        }
         nsCString* newKey = mEnt->mCoalescingKeys.AppendElement(nsCString());
         newKey->SetLength(kIPv6CStrBufSize + 26);
         addressSet[i].ToStringBuffer(newKey->BeginWriting(), kIPv6CStrBufSize);
