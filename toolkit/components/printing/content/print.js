@@ -387,6 +387,7 @@ var PrintEventHandler = {
   },
 
   async refreshSettings(printerName) {
+    this.currentPrinterName = printerName;
     let currentPrinter;
     try {
       currentPrinter = await PrintSettingsViewProxy.resolvePropertiesForPrinter(
@@ -396,6 +397,12 @@ var PrintEventHandler = {
       this.reportPrintingError("PRINTER_PROPERTIES");
       throw e;
     }
+    if (this.currentPrinterName != printerName) {
+      // Refresh settings could take a while, if the destination has changed
+      // then we don't want to update the settings after all.
+      return {};
+    }
+
     this.settings = currentPrinter.settings;
     this.defaultSettings = currentPrinter.defaultSettings;
 
@@ -553,9 +560,14 @@ var PrintEventHandler = {
         "onUserSettingsChange, changing to printerName:",
         changedSettings.printerName
       );
+      let { printerName } = changedSettings;
       // Treat a printerName change separately, because it involves a settings
       // object switch and we don't want to set the new name on the old settings.
-      changedSettings = await this.refreshSettings(changedSettings.printerName);
+      changedSettings = await this.refreshSettings(printerName);
+      if (printerName != this.currentPrinterName) {
+        // Don't continue this update if the printer changed again.
+        return;
+      }
     } else {
       changedSettings = this.getSettingsToUpdate();
     }
@@ -1337,6 +1349,10 @@ var PrintSettingsViewProxy = {
         this.set(target, "margins", this.get(target, "margins"));
         break;
       }
+
+      case "printerName":
+        // Can't set printerName, settings objects belong to a specific printer.
+        break;
 
       case "printBackgrounds":
         target.printBGImages = value;
