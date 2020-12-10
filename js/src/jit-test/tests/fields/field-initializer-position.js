@@ -1,7 +1,5 @@
 // Test class field initializers have reasonable lineno/column values
 
-gczeal(0);
-
 // Use the Debugger API to introspect the line / column.
 let d = new Debugger();
 let g = newGlobal({newCompartment: true})

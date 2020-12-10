@@ -106,7 +106,10 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
   void cancelDispatchedTask(AutoLockHelperThreadState& lock);
 
   // Set the cancel flag and wait for the task to finish.
-  void cancelAndWait();
+  void cancelAndWait() {
+    cancel_ = true;
+    join();
+  }
 
   // Report whether the task is idle. This means either before start() has been
   // called or after join() has been called.
@@ -130,8 +133,6 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
  protected:
   // Override this method to provide the task's functionality.
   virtual void run(AutoLockHelperThreadState& lock) = 0;
-
-  bool isCancelled() const { return cancel_; }
 
  private:
   void assertIdle() const {

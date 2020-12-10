@@ -25,7 +25,6 @@ enum class MarkColor : uint8_t { Gray = 1, Black = 2 };
 // The phases of an incremental GC.
 #define GCSTATES(D) \
   D(NotActive)      \
-  D(Prepare)        \
   D(MarkRoots)      \
   D(Mark)           \
   D(Sweep)          \
@@ -43,7 +42,6 @@ enum class State {
   D(RootsChange, 1)                    \
   D(Alloc, 2)                          \
   D(VerifierPre, 4)                    \
-  D(YieldBeforeRootMarking, 6)         \
   D(GenerationalGC, 7)                 \
   D(YieldBeforeMarking, 8)             \
   D(YieldBeforeSweeping, 9)            \
