@@ -43,9 +43,7 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
     {% if type|is_implemented_type %}
     case {{ type_id }}: /* {{ type|Camelize }} */
     {
-      RefPtr<nsISupports> metric = new {{type | type_name}}(metricId);
-      return metric.forget();
-      break;
+      return MakeAndAddRef<{{type | type_name}}>(metricId);
     }
     {% endif %}
     {% endfor %}
