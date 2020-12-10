@@ -1430,7 +1430,7 @@ const char* NormalizeFlag(const char* arg) {
 // guarantee that the code which handles the non-default window is set up to
 // properly handle the transition from the skeleton UI window.
 bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
-  const char* approvedArgumentsList[] = {
+  const char* approvedArgumentsArray[] = {
       // These won't cause the browser to be visualy different in any way
       "new-instance", "no-remote", "browser", "foreground", "setDefaultBrowser",
       "attach-console", "wait-for-browser", "osint",
@@ -1440,9 +1440,20 @@ bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
       // correct enough.
       "new-tab", "new-window",
 
+      // To the extent possible, we want to ensure that existing tests cover
+      // the skeleton UI, so we need to allow marionette
+      "marionette",
+
       // These will cause the content area to appear different, but won't
       // meaningfully affect the chrome
       "preferences", "search", "url",
+
+#ifndef MOZILLA_OFFICIAL
+      // On local builds, we want to allow -profile, because it's how `mach run`
+      // operates, and excluding that would create an unnecessary blind spot for
+      // Firefox devs.
+      "profile"
+#endif
 
       // There are other arguments which are likely okay. However, they are
       // not included here because this list is not intended to be
@@ -1451,14 +1462,33 @@ bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
       // rejection of the command line.
   };
 
-  // On local builds, we want to allow -profile, because it's how `mach run`
-  // operates, and excluding that would create an unnecessary blind spot for
-  // Firefox devs.
-  const char* releaseChannel = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
-  bool acceptProfileArgument = !strcmp(releaseChannel, "default");
+  int approvedArgumentsArraySize =
+      sizeof(approvedArgumentsArray) / sizeof(approvedArgumentsArray[0]);
+  Vector<const char*> approvedArguments;
+  if (!approvedArguments.reserve(approvedArgumentsArraySize)) {
+    return false;
+  }
 
-  const int numApproved =
-      sizeof(approvedArgumentsList) / sizeof(approvedArgumentsList[0]);
+  for (int i = 0; i < approvedArgumentsArraySize; ++i) {
+    approvedArguments.infallibleAppend(approvedArgumentsArray[i]);
+  }
+
+#ifdef MOZILLA_OFFICIAL
+  // If we're running mochitests or direct marionette tests, those specify a
+  // temporary profile, and we want to ensure that we get the added coverage
+  // from those.
+  for (int i = 1; i < argc; ++i) {
+    const char* flag = NormalizeFlag(argv[i]);
+    if (flag && !strcmp(flag, "marionette")) {
+      if (!approvedArguments.append("profile")) {
+        return false;
+      }
+
+      break;
+    }
+  }
+#endif
+
   for (int i = 1; i < argc; ++i) {
     const char* flag = NormalizeFlag(argv[i]);
     if (!flag) {
@@ -1476,25 +1506,14 @@ bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
       continue;
     }
 
-    // Just force true for marionette - tests are a special case where we
-    // want to ensure we accept things like -profile.
-    if (!strcmp(flag, "marionette")) {
-      return true;
-    }
-
-    if (acceptProfileArgument && !strcmp(flag, "profile")) {
-      continue;
-    }
-
     bool approved = false;
-    for (int j = 0; j < numApproved; ++j) {
-      const char* approvedArg = approvedArgumentsList[j];
+    for (const char* approvedArg : approvedArguments) {
       // We do a case-insensitive compare here with _stricmp. Even though some
       // of these arguments are *not* read as case-insensitive, others *are*.
       // Similar to the flag logic above, we don't really care about this
       // distinction, because we don't need to parse the arguments - we just
       // rely on the assumption that none of the listed flags in our
-      // approvedArgumentsList are overloaded in such a way that a different
+      // approvedArguments are overloaded in such a way that a different
       // casing would visually alter the firefox window.
       if (!_stricmp(flag, approvedArg)) {
         approved = true;
