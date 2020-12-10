@@ -613,8 +613,7 @@ nsresult nsGeolocationService::StartDevice(nsIPrincipal* aPrincipal) {
 
   if (XRE_IsContentProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
-    cpc->SendAddGeolocationListener(IPC::Principal(aPrincipal),
-                                    HighAccuracyRequested());
+    cpc->SendAddGeolocationListener(HighAccuracyRequested());
     return NS_OK;
   }
 
