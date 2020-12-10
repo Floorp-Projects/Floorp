@@ -98,6 +98,7 @@ add_task(async function testPersistsNecessaryValuesOnChange() {
     "SpringsCSSSpan",
     "SearchbarCSSSpan",
     "Theme",
+    "MenubarShown",
   ];
 
   // Remove all of the registry values to ensure old tests aren't giving us false
@@ -118,9 +119,10 @@ add_task(async function testPersistsNecessaryValuesOnChange() {
       "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
       `${firefoxPath}|${key}`
     );
-    ok(
-      value,
-      `Skeleton UI registry values should have a non-zero value for ${key}`
+    isnot(
+      typeof value,
+      "undefined",
+      `Skeleton UI registry values should have a defined value for ${key}`
     );
     if (value.length) {
       let hasNonZero = false;
