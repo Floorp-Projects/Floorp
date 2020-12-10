@@ -56,6 +56,61 @@ add_task(async function init() {
 });
 
 /**
+ * Override our binary path so that the update lock doesn't think more than one
+ * instance of this test is running.
+ * This is a heavily pared down copy of the function in xpcshellUtilsAUS.js.
+ */
+function adjustGeneralPaths() {
+  let dirProvider = {
+    getFile(aProp, aPersistent) {
+      // Set the value of persistent to false so when this directory provider is
+      // unregistered it will revert back to the original provider.
+      aPersistent.value = false;
+      // The sync manager only uses XRE_EXECUTABLE_FILE, so that's all we need
+      // to override, we won't bother handling anything else.
+      if (aProp == XRE_EXECUTABLE_FILE) {
+        // The temp directory that the mochitest runner creates is unique per
+        // test, so its path can serve to provide the unique key that the update
+        // sync manager requires (it doesn't need for this to be the actual
+        // path to any real file, it's only used as an opaque string).
+        let tempPath = gEnv.get("MOZ_PROCESS_LOG");
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        file.initWithPath(tempPath);
+        return file;
+      }
+      return null;
+    },
+    QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
+  };
+
+  let ds = Services.dirsvc.QueryInterface(Ci.nsIDirectoryService);
+  try {
+    ds.QueryInterface(Ci.nsIProperties).undefine(XRE_EXECUTABLE_FILE);
+  } catch (_ex) {
+    // We only override one property, so we have nothing to do if that fails.
+    return;
+  }
+  ds.registerProvider(dirProvider);
+  registerCleanupFunction(() => {
+    ds.unregisterProvider(dirProvider);
+    // Reset the update lock once again so that we know the lock we're
+    // interested in here will be closed properly (normally that happens during
+    // XPCOM shutdown, but that isn't consistent during tests).
+    let syncManager = Cc[
+      "@mozilla.org/updates/update-sync-manager;1"
+    ].getService(Ci.nsIUpdateSyncManager);
+    syncManager.resetLock();
+  });
+
+  // Now that we've overridden the directory provider, the name of the update
+  // lock needs to be changed to match the overridden path.
+  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
+    Ci.nsIUpdateSyncManager
+  );
+  syncManager.resetLock();
+}
+
+/**
  * Initializes a mock app update.  Adapted from runAboutDialogUpdateTest:
  * https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/tests/browser/head.js
  *
@@ -71,6 +126,7 @@ async function initUpdate(params) {
     ],
   });
 
+  adjustGeneralPaths();
   await setupTestUpdater();
 
   let queryString = params.queryString ? params.queryString : "";
