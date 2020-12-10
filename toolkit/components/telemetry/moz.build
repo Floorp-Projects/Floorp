@@ -80,6 +80,7 @@ SOURCES += [
 if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
         "other/UntrustedModules.cpp",
+        "other/UntrustedModulesBackupService.cpp",
         "other/UntrustedModulesDataSerializer.cpp",
     ]
 
