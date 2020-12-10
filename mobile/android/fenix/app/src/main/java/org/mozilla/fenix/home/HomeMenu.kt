@@ -26,6 +26,7 @@ import org.mozilla.fenix.experiments.ExperimentBranch
 import org.mozilla.fenix.experiments.Experiments
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.withExperiment
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.whatsnew.WhatsNew
 
@@ -99,14 +100,12 @@ class HomeMenu(
         }
 
         val experiments = context.components.analytics.experiments
-        val bookmarksIcon = experiments.getExperimentBranch(Experiments.BOOKMARK_ICON)
-            .let {
-                when (it) {
-                    ExperimentBranch.TREATMENT -> R.drawable.ic_bookmark_list
-                    else -> R.drawable.ic_bookmark_filled
-                }
+        val bookmarksIcon = experiments.withExperiment(Experiments.BOOKMARK_ICON) {
+            when (it) {
+                ExperimentBranch.TREATMENT -> R.drawable.ic_bookmark_list
+                else -> R.drawable.ic_bookmark_filled
             }
-
+        }
         val bookmarksItem = BrowserMenuImageText(
             context.getString(R.string.library_bookmarks),
             bookmarksIcon,
@@ -122,14 +121,13 @@ class HomeMenu(
         // user isn't targeted, then we get still get the same treatment.
         // The `let` block is degenerate here, but left here so as to document the form of how experiments
         // are implemented here.
-        val historyIcon = experiments.getExperimentBranch(Experiments.A_A_NIMBUS_VALIDATION)
-            .let {
-                when (it) {
-                    ExperimentBranch.A1 -> R.drawable.ic_history
-                    ExperimentBranch.A2 -> R.drawable.ic_history
-                    else -> R.drawable.ic_history
-                }
+        val historyIcon = experiments.withExperiment(Experiments.A_A_NIMBUS_VALIDATION) {
+            when (it) {
+                ExperimentBranch.A1 -> R.drawable.ic_history
+                ExperimentBranch.A2 -> R.drawable.ic_history
+                else -> R.drawable.ic_history
             }
+        }
         val historyItem = BrowserMenuImageText(
             context.getString(R.string.library_history),
             historyIcon,
