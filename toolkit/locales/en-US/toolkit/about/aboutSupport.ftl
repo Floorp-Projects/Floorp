@@ -182,6 +182,33 @@ remote-debugging-accepting-connections = Accepting Connections
 remote-debugging-url = URL
 ##
 
+support-third-party-modules-title = Third-Party Modules
+support-third-party-modules-module = Module File
+support-third-party-modules-version = File Version
+support-third-party-modules-vendor = Vendor Info
+support-third-party-modules-occurrence = Occurrence
+support-third-party-modules-process = Process Type & ID
+support-third-party-modules-thread = Thread
+support-third-party-modules-base = Imagebase Address
+support-third-party-modules-uptime = Process Uptime (ms)
+support-third-party-modules-duration = Loading Duration (ms)
+support-third-party-modules-empty = No third-party modules were loaded.
+support-third-party-modules-no-value = (No value)
+support-third-party-modules-button-open =
+    .title = Open file location…
+support-third-party-modules-expand =
+    .title = Show detailed information
+support-third-party-modules-collapse =
+    .title = Collapse detailed information
+support-third-party-modules-unsigned-icon =
+    .title = This module is not signed
+support-third-party-modules-folder-icon =
+    .title = Open file location…
+support-third-party-modules-down-icon =
+    .title = Show detailed information
+support-third-party-modules-up-icon =
+    .title = Collapse detailed information
+
 # Variables
 # $days (Integer) - Number of days of crashes to log
 report-crash-for-days =
