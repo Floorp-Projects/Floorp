@@ -4844,7 +4844,8 @@ void Datastore::NoteFinishedPrepareDatastoreOp(
     mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
         "PrepareDatastoreOp finished"_ns);
   } else {
-    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
+    // which resolves this case.
   }
 
   MaybeClose();
@@ -4873,7 +4874,8 @@ void Datastore::NoteFinishedPrivateDatastore() {
     mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
         "PrivateDatastore finished"_ns);
   } else {
-    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
+    // which resolves this case.
   }
 
   MaybeClose();
@@ -4906,7 +4908,8 @@ void Datastore::NoteFinishedPreparedDatastore(
     mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
         "PreparedDatastore finished"_ns);
   } else {
-    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
+    // which resolves this case.
   }
 
   MaybeClose();
@@ -4938,7 +4941,8 @@ void Datastore::NoteFinishedDatabase(Database* aDatabase) {
     mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
         "Database finished"_ns);
   } else {
-    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
+    // which resolves this case.
   }
 
   MaybeClose();
@@ -5606,7 +5610,8 @@ void Datastore::CleanupMetadata() {
     mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
         "Datastore removed"_ns);
   } else {
-    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
+    // which resolves this case.
   }
 
   if (!gDatastores->Count()) {
@@ -8046,7 +8051,8 @@ void PrepareDatastoreOp::CleanupMetadata() {
     mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
         "PrepareDatastoreOp completed"_ns);
   } else {
-    NS_WARNING("Cannot record shutdown step, mConnection is nullptr");
+    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
+    // which resolves this case.
   }
 
   if (gPrepareDatastoreOps->IsEmpty()) {
