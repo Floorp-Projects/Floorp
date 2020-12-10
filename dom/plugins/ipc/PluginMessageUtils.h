@@ -15,7 +15,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/UniquePtr.h"
-#include "gfxipc/ShadowLayerUtils.h"
+#include "gfxipc/SurfaceDescriptor.h"
 
 #include "npapi.h"
 #include "npruntime.h"

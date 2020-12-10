@@ -7,59 +7,11 @@
 #ifndef mozilla_layers_ShadowLayerUtilsX11_h
 #define mozilla_layers_ShadowLayerUtilsX11_h
 
-#include "mozilla/gfx/Point.h"
+#include "gfxipc/SurfaceDescriptor.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/AlreadyAddRefed.h"
-
-#define MOZ_HAVE_SURFACEDESCRIPTORX11
-#define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
-
-typedef unsigned long XID;
-typedef XID Drawable;
-
-class gfxXlibSurface;
 
 namespace IPC {
 class Message;
-}
-
-namespace mozilla {
-namespace layers {
-
-struct SurfaceDescriptorX11 {
-  SurfaceDescriptorX11() = default;
-
-  explicit SurfaceDescriptorX11(gfxXlibSurface* aSurf,
-                                bool aForwardGLX = false);
-
-  SurfaceDescriptorX11(Drawable aDrawable, XID aFormatID,
-                       const gfx::IntSize& aSize);
-
-  // Default copy ctor and operator= are OK
-
-  bool operator==(const SurfaceDescriptorX11& aOther) const {
-    // Define == as two descriptors having the same XID for now,
-    // ignoring size and render format.  If the two indeed refer to
-    // the same valid XID, then size/format are "actually" the same
-    // anyway, regardless of the values of the fields in
-    // SurfaceDescriptorX11.
-    return mId == aOther.mId;
-  }
-
-  already_AddRefed<gfxXlibSurface> OpenForeign() const;
-
-  MOZ_INIT_OUTSIDE_CTOR Drawable mId;
-  MOZ_INIT_OUTSIDE_CTOR XID mFormat;  // either a PictFormat or VisualID
-  MOZ_INIT_OUTSIDE_CTOR gfx::IntSize mSize;
-  MOZ_INIT_OUTSIDE_CTOR Drawable
-      mGLXPixmap;  // used to prevent multiple bindings to the same GLXPixmap
-                   // in-process
-};
-
-}  // namespace layers
-}  // namespace mozilla
-
-namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
