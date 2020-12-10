@@ -142,6 +142,9 @@ MockedSocketTransport::SetConnectionFlags(uint32_t) {
 }
 
 NS_IMETHODIMP
+MockedSocketTransport::SetIsPrivate(bool) { return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
 MockedSocketTransport::GetTlsFlags(uint32_t*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
