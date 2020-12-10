@@ -980,6 +980,12 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
+    thirdPartyModules: {
+      required:
+        AppConstants.platform == "win" &&
+        Services.prefs.getBoolPref("browser.enableAboutThirdParty"),
+      type: "array",
+    },
   },
 };
 
