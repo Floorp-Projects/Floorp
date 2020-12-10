@@ -147,17 +147,10 @@ this.InsecurePasswordUtils = {
       let isLocalIP = this._isPrincipalForLocalIPAddress(
         aForm.rootElement.nodePrincipal
       );
-      // XXXndeakin fix this: bug 1582499 - top document not accessible in OOP frame
-      // So for now, just use the current document if access to top fails.
-      let topDocument;
-      try {
-        topDocument = aForm.ownerDocument.defaultView.top.document;
-      } catch (ex) {
-        topDocument = aForm.ownerDocument.defaultView.document;
-      }
-      let topIsLocalIP = this._isPrincipalForLocalIPAddress(
-        topDocument.nodePrincipal
-      );
+
+      let topIsLocalIP =
+        aForm.ownerDocument.defaultView.windowGlobalChild.windowContext
+          .topWindowContext.isLocalIP;
 
       // Only consider the page safe if the top window has a local IP address
       // and, if this is an iframe, the iframe also has a local IP address.
