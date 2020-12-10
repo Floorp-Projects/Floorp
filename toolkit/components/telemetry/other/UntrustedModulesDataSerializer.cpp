@@ -290,17 +290,21 @@ bool UntrustedModulesDataSerializer::SerializeEvent(
   return true;
 }
 
-nsresult UntrustedModulesDataSerializer::GetPerProcObject(
-    const UntrustedModulesData& aData, JS::MutableHandleObject aObj) {
+static nsDependentCString GetProcessTypeString(GeckoProcessType aType) {
   nsDependentCString strProcType;
-  if (aData.mProcessType == GeckoProcessType_Default) {
+  if (aType == GeckoProcessType_Default) {
     strProcType.Rebind("browser"_ns, 0);
   } else {
-    strProcType.Rebind(XRE_GeckoProcessTypeToString(aData.mProcessType));
+    strProcType.Rebind(XRE_GeckoProcessTypeToString(aType));
   }
+  return strProcType;
+}
 
+nsresult UntrustedModulesDataSerializer::GetPerProcObject(
+    const UntrustedModulesData& aData, JS::MutableHandleObject aObj) {
   JS::RootedValue jsProcType(mCx);
-  jsProcType.setString(Common::ToJSString(mCx, strProcType));
+  jsProcType.setString(
+      Common::ToJSString(mCx, GetProcessTypeString(aData.mProcessType)));
   if (!JS_DefineProperty(mCx, aObj, "processType", jsProcType,
                          JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
@@ -394,7 +398,8 @@ nsresult UntrustedModulesDataSerializer::AddSingleData(
   }
 
   nsAutoCString strPid;
-  strPid.AppendLiteral("0x");
+  strPid.Append(GetProcessTypeString(aData.mProcessType));
+  strPid.AppendLiteral(".0x");
   strPid.AppendInt(static_cast<uint32_t>(aData.mPid), 16);
 
   JS::RootedValue jsPerProcObjValue(mCx);

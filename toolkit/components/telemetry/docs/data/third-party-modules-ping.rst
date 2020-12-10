@@ -30,7 +30,7 @@ were loaded into Firefox processes.
           ... Additional modules (maximum 100)
         ],
         "processes": {
-          <string containing pid, formatted as "0x%x">: {
+          <string containing processType and pid, formatted as `${processType}.0x${pid}">`: {
             // Except for Default (which is remapped to "browser"), one of the process string names specified in xpcom/build/GeckoProcessTypes.h.
             "processType": <string>,
             // Elapsed time since process creation that this object was generated, in seconds.
