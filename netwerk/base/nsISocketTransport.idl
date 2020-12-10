@@ -340,4 +340,10 @@ interface nsISocketTransport : nsITransport
      * IP address resolved using TRR.
      */
     bool resolvedByTRR();
+
+    /**
+     * Indicate whether this socket is created from a private window. If yes,
+     * this socket will be closed when the last private window is closed.
+     */
+    [noscript] void setIsPrivate(in boolean isPrivate);
 };
