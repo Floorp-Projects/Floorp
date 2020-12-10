@@ -160,12 +160,14 @@ def test_manifests_modifier(task, label, symbol, revision, test_manifests):
     task.task["metadata"]["name"] = task.label
     th_info = task.task["extra"]["treeherder"]
     # Use a job symbol of the originating task as defined in the backfill action
-    add_backfill_suffix(
+    th_info["symbol"] = add_backfill_suffix(
         SYMBOL_REGEX, th_info["symbol"], "-{}-bk".format(revision[0:11])
     )
     if th_info.get("groupSymbol"):
         # Group all backfilled tasks together
-        add_backfill_suffix(GROUP_SYMBOL_REGEX, th_info["groupSymbol"], "-bk")
+        th_info["groupSymbol"] = add_backfill_suffix(
+            GROUP_SYMBOL_REGEX, th_info["groupSymbol"], "-bk"
+        )
     task.task["tags"]["action"] = "backfill-task"
     return task
 
