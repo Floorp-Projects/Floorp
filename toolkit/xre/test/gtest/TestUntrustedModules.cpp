@@ -5,11 +5,14 @@
 
 #include "gtest/gtest.h"
 
+#include "js/RegExp.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UntrustedModulesProcessor.h"
 #include "mozilla/WinDllServices.h"
+#include "nsContentUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "TelemetryFixture.h"
+#include "UntrustedModulesDataSerializer.h"
 
 class ModuleLoadCounter final {
   nsDataHashtable<nsStringCaseInsensitiveHashKey, int> mCounters;
@@ -159,6 +162,7 @@ static void ValidateUntrustedModules(const UntrustedModulesData& aData) {
 class UntrustedModulesFixture : public TelemetryTestFixture {
   static constexpr int kLoadCountBeforeDllServices = 5;
   static constexpr int kLoadCountAfterDllServices = 5;
+  static constexpr uint32_t kMaxModulesArrayLen = 10;
 
   // One of the important test scenarios is to load modules before DllServices
   // is initialized and to make sure those loading events are forwarded when
@@ -205,6 +209,42 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
   static const Vector<UntrustedModulesData>& GetInitLoadData() {
     return sInitLoadDataCollector.Data();
   }
+
+  template <typename DataFetcherT>
+  void ValidateJSValue(const char16_t* aPattern, size_t aPatternLength,
+                       DataFetcherT&& aDataFetcher) {
+    AutoJSContextWithGlobal cx(mCleanGlobal);
+    mozilla::Telemetry::UntrustedModulesDataSerializer serializer(
+        cx.GetJSContext(), kMaxModulesArrayLen);
+    EXPECT_TRUE(!!serializer);
+    aDataFetcher(serializer);
+
+    JS::RootedValue jsval(cx.GetJSContext());
+    serializer.GetObject(&jsval);
+
+    nsAutoString json;
+    EXPECT_TRUE(nsContentUtils::StringifyJSON(cx.GetJSContext(), &jsval, json));
+
+    JS::RootedObject re(
+        cx.GetJSContext(),
+        JS::NewUCRegExpObject(cx.GetJSContext(), aPattern, aPatternLength,
+                              JS::RegExpFlag::Global));
+    EXPECT_TRUE(!!re);
+
+    JS::RootedValue matchResult(cx.GetJSContext(), JS::NullValue());
+    size_t idx = 0;
+    EXPECT_TRUE(JS::ExecuteRegExpNoStatics(cx.GetJSContext(), re, json.get(),
+                                           json.Length(), &idx, true,
+                                           &matchResult));
+    // On match, with aOnlyMatch = true, ExecuteRegExpNoStatics returns boolean
+    // true.  If no match, ExecuteRegExpNoStatics returns Null.
+    EXPECT_TRUE(matchResult.isBoolean() && matchResult.toBoolean());
+    if (!matchResult.toBoolean()) {
+      // If match failed, print out the actual JSON kindly.
+      wprintf(L"JSON: %s\n", json.get());
+      wprintf(L"RE: %s\n", aPattern);
+    }
+  }
 };
 
 const nsString UntrustedModulesFixture::kTestModules[] = {
@@ -246,4 +286,44 @@ BOOL CALLBACK UntrustedModulesFixture::InitialModuleLoadOnce(PINIT_ONCE, void*,
   return TRUE;
 }
 
-TEST_F(UntrustedModulesFixture, Main) {}
+#define PROCESS_OBJ(TYPE, KEY) \
+  u"\"" KEY u"\":{" \
+    u"\"processType\":\"" TYPE u"\",\"elapsed\":\\d+\\.\\d+," \
+    u"\"sanitizationFailures\":0,\"trustTestFailures\":0," \
+    u"\"events\":\\[{" \
+      u"\"processUptimeMS\":\\d+,\"loadDurationMS\":\\d+\\.\\d+," \
+      u"\"threadID\":\\d+,\"threadName\":\"Main Thread\"," \
+      u"\"baseAddress\":\"0x[0-9a-f]+\",\"moduleIndex\":0," \
+      u"\"isDependent\":false}\\]," \
+    u"\"combinedStacks\":{" \
+      u"\"memoryMap\":\\[\\[\"\\w+\\.\\w+\",\"[0-9A-Z]+\"\\]" \
+        u"(,\\[\"\\w+\\.\\w+\",\"[0-9A-Z]+\\\"\\])*\\]," \
+      u"\"stacks\":\\[\\[\\[\\d+,\\d+\\]" \
+        u"(,\\[\\d+,\\d+\\])*\\]\\]}}"
+
+TEST_F(UntrustedModulesFixture, Serialize) {
+  // clang-format off
+  const char16_t kPattern[] = u"{\"structVersion\":1,"
+    u"\"modules\":\\[{"
+      u"\"resolvedDllName\":\"TestUntrustedModules_Dll1\\.dll\","
+      u"\"fileVersion\":\"1\\.2\\.3\\.4\","
+      u"\"companyName\":\"Mozilla Corporation\",\"trustFlags\":0}\\],"
+    u"\"processes\":{"
+      PROCESS_OBJ(u"browser", u"0x[0-9a-f]+")
+  u"}}";
+  // clang-format on
+
+  LoadAndFree(kTestModules[0]);
+
+  UntrustedModulesCollector collector;
+  ModuleLoadCounter waitForOne({kTestModules[0]}, {1});
+  EXPECT_EQ(collector.Collect(waitForOne), NS_OK);
+  EXPECT_TRUE(waitForOne.Remains({kTestModules[0]}, {0}));
+
+  ValidateJSValue(
+      kPattern, mozilla::ArrayLength(kPattern) - 1,
+      [&collector](
+          mozilla::Telemetry::UntrustedModulesDataSerializer& aSerializer) {
+        EXPECT_TRUE(NS_SUCCEEDED(aSerializer.Add(collector.Data())));
+      });
+}
