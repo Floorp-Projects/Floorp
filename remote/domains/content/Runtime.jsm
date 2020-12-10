@@ -10,6 +10,7 @@ const { addDebuggerToGlobal } = ChromeUtils.import(
   "resource://gre/modules/jsdebugger.jsm",
   {}
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { ContentProcessDomain } = ChromeUtils.import(
   "chrome://remote/content/domains/ContentProcessDomain.jsm"
@@ -21,6 +22,8 @@ const { executeSoon } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 
 // Import the `Debugger` constructor in the current scope
 addDebuggerToGlobal(Cu.getGlobalForObject(this));
+
+const OBSERVER_CONSOLE_API = "console-api-log-event";
 
 class SetMap extends Map {
   constructor() {
@@ -61,6 +64,7 @@ class Runtime extends ContentProcessDomain {
 
     this._onContextCreated = this._onContextCreated.bind(this);
     this._onContextDestroyed = this._onContextDestroyed.bind(this);
+
     // TODO Bug 1602083
     this.session.contextObserver.on("context-created", this._onContextCreated);
     this.session.contextObserver.on(
@@ -71,11 +75,13 @@ class Runtime extends ContentProcessDomain {
 
   destructor() {
     this.disable();
+
     this.session.contextObserver.off("context-created", this._onContextCreated);
     this.session.contextObserver.off(
       "context-destroyed",
       this._onContextDestroyed
     );
+
     super.destructor();
   }
 
@@ -84,6 +90,9 @@ class Runtime extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
+
+      Services.console.registerListener(this);
+      Services.obs.addObserver(this, OBSERVER_CONSOLE_API);
 
       // Spin the event loop in order to send the `executionContextCreated` event right
       // after we replied to `enable` request.
@@ -100,6 +109,9 @@ class Runtime extends ContentProcessDomain {
   disable() {
     if (this.enabled) {
       this.enabled = false;
+
+      Services.console.unregisterListener(this);
+      Services.obs.removeObserver(this, OBSERVER_CONSOLE_API);
     }
   }
 
@@ -348,6 +360,30 @@ class Runtime extends ContentProcessDomain {
     return frameContexts;
   }
 
+  _emitConsoleAPICalled(payload) {
+    // Filter out messages that aren't coming from a valid inner window, or from
+    // a different browser tab. Also messages of type "time", which are not
+    // getting reported by Chrome.
+    const curBrowserId = this.session.browsingContext.browserId;
+    const win = Services.wm.getCurrentInnerWindowWithId(payload.innerWindowId);
+    if (
+      !win ||
+      BrowsingContext.getFromWindow(win).browserId != curBrowserId ||
+      payload.type === "time"
+    ) {
+      return;
+    }
+
+    const context = this._getDefaultContextForWindow();
+    this.emit("Runtime.consoleAPICalled", {
+      args: payload.arguments.map(arg => context._toRemoteObject(arg)),
+      executionContextId: context?.id || 0,
+      timestamp: payload.timestamp,
+      type: payload.type,
+      stackTrace: payload.stacktrace,
+    });
+  }
+
   /**
    * Helper method in order to instantiate the ExecutionContext for a given
    * DOM Window as well as emitting the related
@@ -475,4 +511,78 @@ class Runtime extends ContentProcessDomain {
       }
     }
   }
+
+  // nsIObserver
+
+  /**
+   * Takes a console message belonging to the current window that is not
+   * a Javascript error, and emits a "consoleAPICalled" event.
+   *
+   * @param {nsIConsoleMessage} message
+   *     Console message.
+   */
+  observe(subject, topic, data) {
+    let entry;
+
+    if (topic == OBSERVER_CONSOLE_API) {
+      const message = subject.wrappedJSObject;
+      entry = fromConsoleAPI(message);
+      this._emitConsoleAPICalled(entry);
+      return;
+    }
+
+    if (subject instanceof Ci.nsIConsoleMessage) {
+      // Script errors will be handled through Log.entryAdded
+      if (
+        subject instanceof Ci.nsIScriptError &&
+        subject.flags == Ci.nsIScriptError.errorFlag
+      ) {
+        return;
+      }
+
+      entry = fromConsoleMessage(subject);
+      this._emitConsoleAPICalled(entry);
+    }
+  }
+
+  // XPCOM
+
+  get QueryInterface() {
+    return ChromeUtils.generateQI(["nsIConsoleListener"]);
+  }
+}
+
+function fromConsoleAPI(message) {
+  const CONSOLE_API_LEVEL_MAP = {
+    warn: "warning",
+  };
+
+  // From sendConsoleAPIMessage (toolkit/modules/Console.jsm)
+  return {
+    arguments: message.arguments,
+    innerWindowId: message.innerID,
+    // TODO: Fetch the stack (Bug 1679981)
+    stacktrace: undefined,
+    timestamp: message.timeStamp,
+    type: CONSOLE_API_LEVEL_MAP[message.level] || message.level,
+  };
+}
+
+function fromConsoleMessage(message) {
+  const CONSOLE_MESSAGE_LEVEL_MAP = {
+    [Ci.nsIConsoleMessage.debug]: "verbose",
+    [Ci.nsIConsoleMessage.info]: "info",
+    [Ci.nsIConsoleMessage.warn]: "warning",
+    [Ci.nsIConsoleMessage.error]: "error",
+  };
+
+  // From xpcom/base/nsIConsoleMessage.idl and dom/bindings/nsIScriptError.idl
+  return {
+    arguments: [message.message],
+    innerWindowId: message.innerWindowID,
+    // TODO: Fetch the stack (Bug 1679981)
+    stacktrace: undefined,
+    timestamp: message.timeStamp,
+    type: CONSOLE_MESSAGE_LEVEL_MAP[message.logLevel] || message.logLevel,
+  };
 }

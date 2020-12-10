@@ -11,6 +11,13 @@ const { ContentProcessDomain } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const CONSOLE_MESSAGE_LEVEL_MAP = {
+  [Ci.nsIConsoleMessage.debug]: "verbose",
+  [Ci.nsIConsoleMessage.info]: "info",
+  [Ci.nsIConsoleMessage.warn]: "warning",
+  [Ci.nsIConsoleMessage.error]: "error",
+};
+
 class Log extends ContentProcessDomain {
   constructor(session) {
     super(session);
@@ -28,38 +35,44 @@ class Log extends ContentProcessDomain {
       this.enabled = true;
 
       Services.console.registerListener(this);
-      Services.obs.addObserver(this, "console-api-log-event");
     }
   }
 
   disable() {
     if (this.enabled) {
       this.enabled = false;
+
       Services.console.unregisterListener(this);
-      Services.obs.removeObserver(this, "console-api-log-event");
     }
   }
 
   // nsIObserver
 
   /**
-   * Takes all script error messages belonging to the current window
-   * and emits a "console-service-message" event.
+   * Takes all script error messages belonging to the current window.
+   * and emits a "Log.entryAdded" event.
    *
    * @param {nsIConsoleMessage} message
    *     Message originating from the nsIConsoleService.
    */
-  observe(message, topic) {
-    let entry;
-    if (message instanceof Ci.nsIScriptError) {
-      entry = fromScriptError(message);
-    } else if (message instanceof Ci.nsIConsoleMessage) {
-      entry = fromConsoleMessage(message);
-    } else if (topic == "console-api-log-event") {
-      entry = fromConsoleAPI(message.wrappedJSObject);
-    }
+  observe(message) {
+    // Console messages will be handled via Runtime.consoleAPICalled
+    if (
+      message instanceof Ci.nsIScriptError &&
+      message.flags == Ci.nsIScriptError.errorFlag
+    ) {
+      const entry = {
+        source: "javascript",
+        level: CONSOLE_MESSAGE_LEVEL_MAP[message.flags],
+        lineNumber: message.lineNumber,
+        stacktrace: message.stack,
+        text: message.errorMessage,
+        timestamp: message.timeStamp,
+        url: message.sourceName,
+      };
 
-    this.emit("Log.entryAdded", { entry });
+      this.emit("Log.entryAdded", { entry });
+    }
   }
 
   // XPCOM
@@ -67,63 +80,4 @@ class Log extends ContentProcessDomain {
   get QueryInterface() {
     return ChromeUtils.generateQI(["nsIConsoleListener"]);
   }
-}
-
-const MESSAGE_LEVELS = {
-  [Ci.nsIConsoleMessage.debug]: "verbose",
-  [Ci.nsIConsoleMessage.info]: "info",
-  [Ci.nsIConsoleMessage.warn]: "warning",
-  [Ci.nsIConsoleMessage.error]: "error",
-};
-
-function fromConsoleMessage(message) {
-  const level = MESSAGE_LEVELS[message.logLevel];
-
-  return {
-    source: "javascript",
-    level,
-    text: message.message,
-    timestamp: Date.now(),
-  };
-}
-
-function fromConsoleAPI(message) {
-  // message is a ConsoleEvent instance:
-  // https://searchfox.org/mozilla-central/rev/00c0d068ece99717bea7475f7dc07e61f7f35984/dom/webidl/Console.webidl#83-107
-
-  // A couple of possible level are defined here:
-  // https://searchfox.org/mozilla-central/rev/00c0d068ece99717bea7475f7dc07e61f7f35984/dom/console/Console.cpp#1086-1100
-  const levels = {
-    log: "verbose",
-    info: "info",
-    warn: "warning",
-    error: "error",
-    exception: "error",
-  };
-  const level = levels[message.level] || "info";
-
-  return {
-    source: "javascript",
-    level,
-    text: message.arguments,
-    url: message.filename,
-    lineNumber: message.lineNumber,
-    stackTrace: message.stacktrace,
-    timestamp: Date.now(),
-  };
-}
-
-function fromScriptError(error) {
-  const { logLevel, errorMessage, sourceName, lineNumber, stack } = error;
-  const level = MESSAGE_LEVELS[logLevel];
-
-  return {
-    source: "javascript",
-    level,
-    text: errorMessage,
-    timestamp: Date.now(),
-    url: sourceName,
-    lineNumber,
-    stackTrace: stack,
-  };
 }
