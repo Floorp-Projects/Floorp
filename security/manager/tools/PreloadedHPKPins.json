@@ -74,10 +74,7 @@
       "sha256_hashes": [
         "DigiCert Global Root CA",
         "DigiCert High Assurance EV Root CA",
-        // Backup intermediates with Let's Encrypt are not normally
-        // in use and require disabling Mozilla's sites blacklisting
-        "Let's Encrypt Authority X3",
-        "Let's Encrypt Authority X4"
+        "ISRG Root X1"
       ]
     },
     // For pinning tests on pinning.example.com, the certificate must be 'End
