@@ -14209,10 +14209,19 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitElse());
 #ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
+        if (!moduleEnv_.exceptionsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
         CHECK_NEXT(emitTry());
       case uint16_t(Op::Catch):
+        if (!moduleEnv_.exceptionsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
         CHECK_NEXT(emitCatch());
       case uint16_t(Op::Throw):
+        if (!moduleEnv_.exceptionsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
         CHECK_NEXT(emitThrow());
 #endif
       case uint16_t(Op::Br):
