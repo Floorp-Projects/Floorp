@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/ReferrerInfoUtils.h"
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "nsSerializationHelper.h"
 #include "nsString.h"
 

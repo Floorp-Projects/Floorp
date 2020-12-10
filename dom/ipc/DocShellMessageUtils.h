@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_docshell_message_utils_h__
 #define mozilla_dom_docshell_message_utils_h__
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "nsCOMPtr.h"
 #include "nsDocShellLoadState.h"
 #include "nsIContentViewer.h"

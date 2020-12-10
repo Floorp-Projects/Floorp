@@ -7,7 +7,7 @@
 #ifndef mozilla_CamerasTypes_h
 #define mozilla_CamerasTypes_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 namespace mozilla {
 

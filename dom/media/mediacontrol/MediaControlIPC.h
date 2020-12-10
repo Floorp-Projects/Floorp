@@ -7,7 +7,7 @@
 #ifndef ipc_MediaControlIPC_h
 #define ipc_MediaControlIPC_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 #include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/dom/MediaControlKeySource.h"

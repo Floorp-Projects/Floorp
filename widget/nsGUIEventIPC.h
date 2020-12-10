@@ -6,6 +6,7 @@
 #ifndef nsGUIEventIPC_h__
 #define nsGUIEventIPC_h__
 
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ContentCache.h"
 #include "mozilla/GfxMessageUtils.h"

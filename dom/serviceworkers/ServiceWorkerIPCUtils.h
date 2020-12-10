@@ -6,7 +6,7 @@
 #ifndef _mozilla_dom_ServiceWorkerIPCUtils_h
 #define _mozilla_dom_ServiceWorkerIPCUtils_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 // Undo X11/X.h's definition of None
 #undef None

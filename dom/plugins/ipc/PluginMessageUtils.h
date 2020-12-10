@@ -7,7 +7,7 @@
 #ifndef DOM_PLUGINS_PLUGINMESSAGEUTILS_H
 #define DOM_PLUGINS_PLUGINMESSAGEUTILS_H
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "base/message_loop.h"
 #include "base/shared_memory.h"
 

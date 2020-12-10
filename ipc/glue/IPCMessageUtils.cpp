@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCMessageUtils.h"
+
+#include <cstddef>
 #include "mozilla/CheckedInt.h"
 
 namespace IPC {

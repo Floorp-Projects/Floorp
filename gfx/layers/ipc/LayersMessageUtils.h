@@ -14,6 +14,7 @@
 #include "FrameMetrics.h"
 #include "VsyncSource.h"
 #include "chrome/common/ipc_message_utils.h"
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"

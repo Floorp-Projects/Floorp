@@ -6,6 +6,7 @@
 #define mozilla_net_DashboardTypes_h_
 
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "nsHttp.h"
 #include "nsString.h"
 #include "nsTArray.h"

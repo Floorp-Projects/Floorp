@@ -9,7 +9,7 @@
 
 #include "DecoderDoctorDiagnostics.h"
 #include "PlatformDecoderModule.h"
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/gfx/Rect.h"

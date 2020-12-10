@@ -9,7 +9,7 @@
 
 #include <cstdint>
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
 namespace mozilla {

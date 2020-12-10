@@ -9,7 +9,7 @@
 
 #include <string>
 #include "chrome/common/ipc_message_utils.h"
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/dom/LSSnapshot.h"
 #include "mozilla/dom/LSValue.h"
 

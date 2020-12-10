@@ -6,7 +6,7 @@
 #ifndef _mozilla_dom_ClientIPCUtils_h
 #define _mozilla_dom_ClientIPCUtils_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 #include "X11UndefineNone.h"
 #include "mozilla/dom/ClientBinding.h"

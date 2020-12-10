@@ -18,6 +18,7 @@
 #include "nsITimedChannel.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/net/nsServerTiming.h"
 
 class nsIHttpChannel;

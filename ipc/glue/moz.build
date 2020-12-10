@@ -143,7 +143,9 @@ if CONFIG["OS_ARCH"] != "WINNT":
     ]
 
 EXPORTS.ipc += [
+    "EnumSerializer.h",
     "IPCMessageUtils.h",
+    "IPCMessageUtilsSpecializations.h",
 ]
 
 UNIFIED_SOURCES += [

@@ -12,6 +12,7 @@
 #include <utility>
 #include "gfxPlatform.h"
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"

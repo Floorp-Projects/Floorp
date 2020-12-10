@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_quota_SerializationHelpers_h
 #define mozilla_dom_quota_SerializationHelpers_h
 
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/dom/quota/Client.h"

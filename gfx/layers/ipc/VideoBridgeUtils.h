@@ -7,7 +7,7 @@
 #ifndef IPC_VideoBridgeUtils_h
 #define IPC_VideoBridgeUtils_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 namespace mozilla {
 namespace layers {

@@ -8,7 +8,7 @@
 #ifndef ipc_glue_MessageChannel_h
 #define ipc_glue_MessageChannel_h 1
 
-#include "base/basictypes.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
@@ -16,7 +16,6 @@
 #if defined(OS_WIN)
 #  include "mozilla/ipc/Neutering.h"
 #endif  // defined(OS_WIN)
-#include <math.h>
 
 #include <functional>
 #include <map>
@@ -31,7 +30,11 @@
 #endif
 
 class MessageLoop;
-class nsIEventTarget;
+
+namespace IPC {
+template <typename T>
+struct ParamTraits;
+}
 
 namespace mozilla {
 namespace ipc {
