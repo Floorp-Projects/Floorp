@@ -9,6 +9,7 @@ include('gyp_base.mozbuild')
 gyp_vars.update({
     'lsan': 0,
     'asan': 0,
+    'tsan': 1 if CONFIG['MOZ_TSAN'] else 0,
     'ubsan' : 0,
     'fuzzing' : 1 if CONFIG['FUZZING'] else 0,
     'libfuzzer' : 1 if CONFIG['LIBFUZZER'] else 0,
