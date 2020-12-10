@@ -247,6 +247,11 @@ bool WindowContext::CanSet(
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_IsLocalIP>, const bool& aValue,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 void WindowContext::DidSet(FieldIndex<IDX_SHEntryHasUserInteraction>,
                            bool aOldValue) {
   MOZ_ASSERT(
