@@ -12,6 +12,7 @@
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "TelemetryFixture.h"
+#include "UntrustedModulesBackupService.h"
 #include "UntrustedModulesDataSerializer.h"
 
 class ModuleLoadCounter final {
@@ -78,7 +79,7 @@ class UntrustedModulesCollector {
   Vector<UntrustedModulesData> mData;
 
  public:
-  const Vector<UntrustedModulesData>& Data() const { return mData; }
+  Vector<UntrustedModulesData>& Data() { return mData; }
 
   nsresult Collect(ModuleLoadCounter& aChecker) {
     nsresult rv = NS_OK;
@@ -210,6 +211,25 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
     return sInitLoadDataCollector.Data();
   }
 
+  // This method is useful if we want a new instance of UntrustedModulesData
+  // which is not copyable.
+  static UntrustedModulesData CollectSingleData() {
+    // If we call LoadAndFree more than once, those loading events are
+    // likely to be merged into an instance of UntrustedModulesData,
+    // meaning the length of the collector's vector is at least one but
+    // the exact number is unknown.
+    LoadAndFree(kTestModules[0]);
+
+    UntrustedModulesCollector collector;
+    ModuleLoadCounter waitForOne({kTestModules[0]}, {1});
+    EXPECT_TRUE(NS_SUCCEEDED(collector.Collect(waitForOne)));
+    EXPECT_TRUE(waitForOne.Remains({kTestModules[0]}, {0}));
+    EXPECT_EQ(collector.Data().length(), 1);
+
+    // Cannot "return collector.Data()[0]" as copy ctor is deleted.
+    return UntrustedModulesData(std::move(collector.Data()[0]));
+  }
+
   template <typename DataFetcherT>
   void ValidateJSValue(const char16_t* aPattern, size_t aPatternLength,
                        DataFetcherT&& aDataFetcher) {
@@ -309,21 +329,44 @@ TEST_F(UntrustedModulesFixture, Serialize) {
       u"\"fileVersion\":\"1\\.2\\.3\\.4\","
       u"\"companyName\":\"Mozilla Corporation\",\"trustFlags\":0}\\],"
     u"\"processes\":{"
-      PROCESS_OBJ(u"browser", u"0x[0-9a-f]+")
+      PROCESS_OBJ(u"browser", u"0xabc") u","
+      PROCESS_OBJ(u"rdd", u"0x4")
   u"}}";
   // clang-format on
 
-  LoadAndFree(kTestModules[0]);
+  UntrustedModulesBackupData backup1, backup2;
+  {
+    UntrustedModulesData data1 = CollectSingleData();
+    UntrustedModulesData data2 = CollectSingleData();
 
-  UntrustedModulesCollector collector;
-  ModuleLoadCounter waitForOne({kTestModules[0]}, {1});
-  EXPECT_EQ(collector.Collect(waitForOne), NS_OK);
-  EXPECT_TRUE(waitForOne.Remains({kTestModules[0]}, {0}));
+    data1.mPid = 0xabc;
+    data2.mPid = 0x4;
+    data2.mProcessType = GeckoProcessType_RDD;
 
-  ValidateJSValue(
-      kPattern, mozilla::ArrayLength(kPattern) - 1,
-      [&collector](
-          mozilla::Telemetry::UntrustedModulesDataSerializer& aSerializer) {
-        EXPECT_TRUE(NS_SUCCEEDED(aSerializer.Add(collector.Data())));
-      });
+    backup1.Add(std::move(data1));
+    backup2.Add(std::move(data2));
+  }
+
+  ValidateJSValue(kPattern, ArrayLength(kPattern) - 1,
+                  [&backup1, &backup2](
+                      Telemetry::UntrustedModulesDataSerializer& aSerializer) {
+                    EXPECT_TRUE(NS_SUCCEEDED(aSerializer.Add(backup1)));
+                    EXPECT_TRUE(NS_SUCCEEDED(aSerializer.Add(backup2)));
+                  });
+}
+
+TEST_F(UntrustedModulesFixture, Backup) {
+  RefPtr<UntrustedModulesBackupService> backupSvc(
+      UntrustedModulesBackupService::Get());
+  for (int i = 0; i < 5; ++i) {
+    backupSvc->Backup(CollectSingleData());
+  }
+
+  for (auto iter = backupSvc->Ref().ConstIter(); !iter.Done(); iter.Next()) {
+    const RefPtr<UntrustedModulesDataContainer>& container = iter.Data();
+    EXPECT_TRUE(!!container);
+    const UntrustedModulesData& data = container->mData;
+    EXPECT_EQ(iter.Key(), ProcessHashKey(data.mProcessType, data.mPid));
+    ValidateUntrustedModules(data);
+  }
 }
