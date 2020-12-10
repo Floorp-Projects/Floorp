@@ -813,7 +813,7 @@ JSLinearString* js::Int32ToString(JSContext* cx, int32_t si) {
 
   mozilla::Range<const Latin1Char> chars(start, length);
   JSInlineString* str =
-      NewInlineString<allowGC>(cx, chars, js::gc::TenuredHeap);
+      NewInlineString<allowGC>(cx, chars, js::gc::DefaultHeap);
   if (!str) {
     return nullptr;
   }
@@ -1609,7 +1609,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
   }
 
   JSLinearString* s =
-      NewStringCopyN<allowGC>(cx, numStr, numStrLen, js::gc::TenuredHeap);
+      NewStringCopyN<allowGC>(cx, numStr, numStrLen, js::gc::DefaultHeap);
   if (!s) {
     return nullptr;
   }
@@ -1707,7 +1707,7 @@ JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
   RangedPtr<Latin1Char> start = BackfillIndexInCharBuffer(index, end);
 
   mozilla::Range<const Latin1Char> chars(start.get(), end - start);
-  JSInlineString* str = NewInlineString<CanGC>(cx, chars, js::gc::TenuredHeap);
+  JSInlineString* str = NewInlineString<CanGC>(cx, chars, js::gc::DefaultHeap);
   if (!str) {
     return nullptr;
   }
