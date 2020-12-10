@@ -155,6 +155,14 @@ def output_rust(objs, output_fd, options={}):
     #   ("COUNTERS", "CounterMetric") -> [(1, "test_only::clicks"), ...]
     objs_by_type = {}
 
+    # Map from a metric ID to the fully qualified path of the event object in Rust.
+    # Required for the special handling of event lookups.
+    #
+    # Example:
+    #
+    #   17 -> "test_only::an_event"
+    events_by_id = {}
+
     if len(objs) == 1 and "pings" in objs:
         template_filename = "rust_pings.jinja2"
     else:
@@ -162,20 +170,22 @@ def output_rust(objs, output_fd, options={}):
 
         for category_name, metrics in objs.items():
             for metric in metrics.values():
-                # FIXME: Support events correctly
-                if metric.type == "event":
-                    continue
 
                 # The constant is all uppercase and suffixed by `_MAP`
                 const_name = util.snake_case(metric.type).upper() + "_MAP"
                 typ = type_name(metric)
                 key = (const_name, typ)
-                if key not in objs_by_type:
-                    objs_by_type[key] = []
 
                 metric_name = util.snake_case(metric.name)
                 category_name = util.snake_case(category_name)
                 full_path = f"{category_name}::{metric_name}"
+
+                if metric.type == "event":
+                    events_by_id[get_metric_id(metric)] = full_path
+                    continue
+
+                if key not in objs_by_type:
+                    objs_by_type[key] = []
                 objs_by_type[key].append((get_metric_id(metric), full_path))
 
     # Now for the modules for each category.
@@ -209,6 +219,7 @@ def output_rust(objs, output_fd, options={}):
             common_metric_data_args=common_metric_data_args,
             metric_by_type=objs_by_type,
             extra_args=util.extra_args,
+            events_by_id=events_by_id,
         )
     )
     output_fd.write("\n")

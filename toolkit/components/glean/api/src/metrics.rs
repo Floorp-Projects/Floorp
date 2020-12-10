@@ -44,4 +44,27 @@ pub(crate) mod __glean_metric_maps {
 
     pub static STRING_LIST_MAP: Lazy<HashMap<MetricId, &Lazy<StringListMetric>>> =
         Lazy::new(HashMap::new);
+
+    pub static UUID_MAP: Lazy<HashMap<MetricId, &Lazy<UuidMetric>>> = Lazy::new(HashMap::new);
+
+    pub(crate) fn event_record_wrapper(
+        _metric_id: u32,
+        _extra: Option<HashMap<i32, String>>,
+    ) -> Result<(), EventRecordingError> {
+        Err(EventRecordingError::InvalidId)
+    }
+
+    pub(crate) fn event_record_wrapper_str(
+        _metric_id: u32,
+        _extra: Option<HashMap<String, String>>,
+    ) -> Result<(), EventRecordingError> {
+        Err(EventRecordingError::InvalidId)
+    }
+
+    pub(crate) fn event_test_get_value_wrapper(
+        _metric_id: u32,
+        _storage_name: &str,
+    ) -> Option<Vec<RecordedEvent>> {
+        None
+    }
 }

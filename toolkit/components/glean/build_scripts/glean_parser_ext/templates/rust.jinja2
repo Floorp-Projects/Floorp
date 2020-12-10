@@ -26,6 +26,34 @@ Jinja2 template is not. Please file bugs! #}
         }
     }
 
+    /// Convert from an extra key's index to its variant.
+    impl std::convert::TryFrom<i32> for {{ obj.name|Camelize }}{{ suffix }} {
+        type Error = EventRecordingError;
+
+        fn try_from(value: i32) -> Result<Self, Self::Error> {
+          match value {
+              {% for key in obj|attr(name) %}
+              {{loop.index-1}} => Ok(Self::{{key | Camelize}}),
+              {% endfor %}
+              _ => Err(EventRecordingError::InvalidExtraKey),
+          }
+        }
+    }
+
+    /// Convert from an extra key's string representation to its variant.
+    impl std::convert::TryFrom<&str> for {{ obj.name|Camelize }}{{ suffix }} {
+        type Error = EventRecordingError;
+
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+          match value {
+              {% for key in obj|attr(name) %}
+              "{{key}}" => Ok(Self::{{key | Camelize}}),
+              {% endfor %}
+              _ => Err(EventRecordingError::InvalidExtraKey),
+          }
+        }
+    }
+
 {% endif %}
 {% endfor %}
 {% endmacro %}
@@ -72,6 +100,7 @@ pub mod {{ category_name|snake_case }} {
 #[allow(dead_code)]
 pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
+    use std::convert::TryInto;
 
     use crate::private::*;
     use once_cell::sync::Lazy;
@@ -86,5 +115,103 @@ pub(crate) mod __glean_metric_maps {
     });
 
 {% endfor %}
+
+    /// Helper to get the number of allowed extra keys for a given event metric.
+    fn extra_keys_len<K: ExtraKeys>(_event: &EventMetric<K>) -> usize {
+        K::ALLOWED_KEYS.len()
+    }
+
+    /// Wrapper to record an event based on its metric ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `extra`     - An (optional) map of (extra key id, string) pairs.
+    ///                 The map will be decoded into the appropriate `ExtraKeys` type.
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the event was found and `record` was called with the given `extra`,
+    /// or an `EventRecordingError::InvalidId` if no event by that ID exists
+    /// or an `EventRecordingError::InvalidExtraKey` the `extra` map could not be deserialized.
+    pub(crate) fn event_record_wrapper(metric_id: u32, extra: HashMap<i32, String>) -> Result<(), EventRecordingError> {
+        match metric_id {
+{% for metric_id, event in events_by_id.items() %}
+          {{metric_id}} => {
+              assert!(
+                  extra_keys_len(&super::{{event}}) != 0 || extra.is_empty(),
+                  "No extra keys allowed, but some were passed"
+              );
+
+              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
+              #[allow(unused_variables)]
+              let extra: HashMap<_, _> = extra
+                  .into_iter()
+                  .map(|(k, v)| k.try_into().map(|k| (k, v)))
+                  .collect::<Result<HashMap<_, _>, _>>()?;
+              super::{{event}}.record(Some(extra));
+              Ok(())
+          }
+{% endfor %}
+           _ => Err(EventRecordingError::InvalidId),
+        }
+    }
+
+    /// Wrapper to record an event based on its metric ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `extra`     - An (optional) map of (string, string) pairs.
+    ///                 The map will be decoded into the appropriate `ExtraKeys` types.
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the event was found and `record` was called with the given `extra`,
+    /// or an `EventRecordingError::InvalidId` if no event by that ID exists
+    /// or an `EventRecordingError::InvalidExtraKey` the `extra` map could not be deserialized.
+    pub(crate) fn event_record_wrapper_str(metric_id: u32, extra: HashMap<String, String>) -> Result<(), EventRecordingError> {
+        match metric_id {
+{% for metric_id, event in events_by_id.items() %}
+          {{metric_id}} => {
+              assert!(
+                  extra_keys_len(&super::{{event}}) != 0 || extra.is_empty(),
+                  "No extra keys allowed, but some were passed"
+              );
+
+              // In case of `NoExtraKeys` the whole iterator is impossible, so rustc complains.
+              #[allow(unused_variables)]
+              let extra = extra
+                  .into_iter()
+                  .map(|(k, v)| (&*k).try_into().map(|k| (k, v)))
+                  .collect::<Result<HashMap<_, _>, _>>()?;
+              super::{{event}}.record(Some(extra));
+              Ok(())
+          }
+{% endfor %}
+           _ => Err(EventRecordingError::InvalidId),
+        }
+    }
+
+    /// Wrapper to get the currently stored events for event metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `storage_name` - the storage name to look into.
+    ///
+    /// # Returns
+    ///
+    /// Returns the recorded events or `None` if nothing stored.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no event by the given metric ID could be found.
+    pub(crate) fn event_test_get_value_wrapper(metric_id: u32, storage_name: &str) -> Option<Vec<RecordedEvent>> {
+        match metric_id {
+{% for metric_id, event in events_by_id.items() %}
+           {{metric_id}} => super::{{event}}.test_get_value(storage_name),
+{% endfor %}
+           _ => panic!("No event for metric id {}", metric_id),
+        }
+    }
 }
 {% endif %}

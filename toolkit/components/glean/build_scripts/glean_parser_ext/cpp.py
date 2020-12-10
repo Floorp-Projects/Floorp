@@ -19,6 +19,15 @@ def type_name(obj):
     Returns the C++ type to use for a given metric object.
     """
 
+    generate_enums = getattr(obj, "_generate_enums", [])  # Extra Keys? Reasons?
+    if len(generate_enums):
+        for name, suffix in generate_enums:
+            if not len(getattr(obj, name)) and suffix == "Keys":
+                return util.Camelize(obj.type) + "Metric<uint32_t>"
+            else:
+                return "{}Metric<{}>".format(
+                    util.Camelize(obj.type), util.Camelize(obj.name) + suffix
+                )
     return util.Camelize(obj.type) + "Metric"
 
 
@@ -42,6 +51,8 @@ def output_cpp(objs, output_fd, options={}):
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        env.filters["camelize"] = util.camelize
+        env.filters["Camelize"] = util.Camelize
         for filter_name, filter_func in filters:
             env.filters[filter_name] = filter_func
         return env.get_template(template_name)
