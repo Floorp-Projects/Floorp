@@ -54,6 +54,10 @@ static void CrashOnPendingException() {
   }
 }
 
+#ifdef LIBFUZZER
+static void FuzzJSRuntimeAtExit() { JS_ShutDown(); }
+#endif
+
 int js::shell::FuzzJSRuntimeStart(JSContext* cx, int* argc, char*** argv) {
   gCx = cx;
   gFuzzModuleName = getenv("FUZZER");
@@ -65,6 +69,8 @@ int js::shell::FuzzJSRuntimeStart(JSContext* cx, int* argc, char*** argv) {
   }
 
 #ifdef LIBFUZZER
+  // This is required because libFuzzer can exit() in various cases
+  std::atexit(FuzzJSRuntimeAtExit);
   fuzzer::FuzzerDriver(&shell::sArgc, &shell::sArgv, FuzzJSRuntimeFuzz);
 #elif __AFL_COMPILER
   MOZ_CRASH("AFL is unsupported for JS runtime fuzzing integration");
