@@ -2754,6 +2754,9 @@ def libfuzzer_flags(value, tsan):
         # With this setup, we can still run files through these targets in TSan builds,
         # e.g. those obtained from regular fuzzing.
         # This code can be removed once libFuzzer has been made compatible with TSan.
+        #
+        # Also, this code needs to be kept in sync with certain gyp files, currently:
+        #   - dom/media/webrtc/transport/third_party/nICEr/nicer.gyp
         return namespace(no_link_flag_supported=False, use_flags=[])
 
     if value:
