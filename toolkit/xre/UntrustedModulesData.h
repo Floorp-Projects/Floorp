@@ -189,6 +189,7 @@ class UntrustedModulesData final {
   void AddNewLoads(const ModulesMap& aModulesMap,
                    Vector<ProcessedModuleLoadEvent>&& aEvents,
                    Vector<Telemetry::ProcessedStack>&& aStacks);
+  void Merge(UntrustedModulesData&& aNewData);
 
   void Swap(UntrustedModulesData& aOther);
 
