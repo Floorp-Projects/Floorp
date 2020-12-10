@@ -209,3 +209,20 @@ add_task(async function test_new_old_instances() {
   // payload is {baseline, A, B, C}
   Assert.equal(get_events_count(payload), baseline_count + 3);
 });
+
+// This tests the flag INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS returns
+// data including private fields.
+add_task(async function test_private_fields() {
+  await load_and_free(kDllName);
+  const data = await Telemetry.getUntrustedModuleLoadEvents(
+    Telemetry.KEEP_LOADEVENTS_NEW |
+      Telemetry.INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS
+  );
+
+  for (const module of data.modules) {
+    Assert.ok(!("resolvedDllName" in module));
+    Assert.ok("dllFile" in module);
+    Assert.ok(module.dllFile.QueryInterface);
+    Assert.ok(module.dllFile.QueryInterface(Ci.nsIFile));
+  }
+});
