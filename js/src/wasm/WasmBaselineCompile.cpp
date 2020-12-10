@@ -6529,7 +6529,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     uint32_t offsetGuardLimit =
-        GetOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
     if ((bceSafe_ & (BCESet(1) << local)) &&
         access->offset() < offsetGuardLimit) {
@@ -6551,7 +6551,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
                            RegI32 tls, RegI32 ptr) {
     uint32_t offsetGuardLimit =
-        GetOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
     // Fold offset if necessary for further computations.
     if (access->offset() >= offsetGuardLimit ||
@@ -11062,7 +11062,7 @@ RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
     uint32_t addr = addrTemp;
 
     uint32_t offsetGuardLimit =
-        GetOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
     uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
     uint64_t limit = moduleEnv_.minMemoryLength + offsetGuardLimit;
@@ -15699,7 +15699,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
   TempAllocator alloc(&lifo);
   JitContext jitContext(&alloc);
   MOZ_ASSERT(IsCompilingWasm());
-  WasmMacroAssembler masm(alloc);
+  WasmMacroAssembler masm(alloc, moduleEnv);
 
   // Swap in already-allocated empty vectors to avoid malloc/free.
   MOZ_ASSERT(code->empty());

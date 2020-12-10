@@ -41,6 +41,7 @@
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmTypes.h"
+#include "wasm/WasmValidate.h"
 
 #include "gc/Nursery-inl.h"
 #include "jit/ABIFunctionList-inl.h"
@@ -2396,7 +2397,8 @@ void MacroAssembler::alignJitStackBasedOnNArgs(uint32_t argc) {
 // ===============================================================
 
 MacroAssembler::MacroAssembler(JSContext* cx)
-    : framePushed_(0),
+    : wasmMaxOffsetGuardLimit_(0),
+      framePushed_(0),
 #ifdef DEBUG
       inCall_(false),
 #endif
@@ -2415,7 +2417,8 @@ MacroAssembler::MacroAssembler(JSContext* cx)
 }
 
 MacroAssembler::MacroAssembler()
-    : framePushed_(0),
+    : wasmMaxOffsetGuardLimit_(0),
+      framePushed_(0),
 #ifdef DEBUG
       inCall_(false),
 #endif
@@ -2441,7 +2444,8 @@ MacroAssembler::MacroAssembler()
 }
 
 MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
-    : framePushed_(0),
+    : wasmMaxOffsetGuardLimit_(0),
+      framePushed_(0),
 #ifdef DEBUG
       inCall_(false),
 #endif
@@ -2459,6 +2463,24 @@ MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
   SetStackPointer64(sp);
   armbuffer_.id = 0;
 #endif
+}
+
+WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc, bool limitedSize)
+    : MacroAssembler(WasmToken(), alloc) {
+  if (!limitedSize) {
+    setUnlimitedBuffer();
+  }
+}
+
+WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc,
+                                       const wasm::ModuleEnvironment& env,
+                                       bool limitedSize)
+    : MacroAssembler(WasmToken(), alloc) {
+  setWasmMaxOffsetGuardLimit(
+      wasm::GetMaxOffsetGuardLimit(env.hugeMemoryEnabled()));
+  if (!limitedSize) {
+    setUnlimitedBuffer();
+  }
 }
 
 bool MacroAssembler::icBuildOOLFakeExitFrame(void* fakeReturnAddr,
