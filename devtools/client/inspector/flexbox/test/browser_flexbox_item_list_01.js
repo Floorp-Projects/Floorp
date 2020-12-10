@@ -17,7 +17,8 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
-  const { highlighters } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const { getActiveHighlighter } = getHighlighterTestHelpers(inspector);
 
   const onFlexHeaderRendered = waitForDOM(doc, ".flex-header");
   await selectNode("#container", inspector);
@@ -39,5 +40,8 @@ add_task(async function() {
     !flexHighlighterToggle.checked,
     "The flexbox highlighter toggle is unchecked."
   );
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
 });
