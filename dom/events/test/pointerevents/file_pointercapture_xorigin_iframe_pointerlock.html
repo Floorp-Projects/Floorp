@@ -80,6 +80,8 @@ function waitEventOnRemoteTarget(aRemoteTarget, aEventName) {
 }
 
 add_task(async function test_pointer_capture_xorigin_iframe_pointer_lock() {
+  await SimpleTest.promiseFocus();
+
   // Request pointer capture on top-level.
   let target = document.getElementById("target");
   synthesizeMouse(target, 10, 10, { type: "mousedown" });
