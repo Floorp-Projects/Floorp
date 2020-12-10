@@ -632,8 +632,6 @@ GeckoDriver.prototype.registerBrowser = function(browserElement) {
 
   const browsingContext = browserElement.browsingContext;
   this.wins.set(browsingContext.id, browsingContext.currentWindowGlobal);
-
-  return browsingContext.id;
 };
 
 GeckoDriver.prototype.registerPromise = function() {
