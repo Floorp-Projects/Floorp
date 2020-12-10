@@ -195,3 +195,34 @@ add_task(async function testPagesPerSheetPref() {
     await helper.closeDialog();
   });
 });
+
+add_task(async function testUpdateCopiesNoPreviewUpdate() {
+  const mockPrinterName = "Fake Printer";
+  await PrintHelper.withTestPage(async helper => {
+    helper.addMockPrinter(mockPrinterName);
+    await helper.startPrint();
+
+    await helper.waitForSettingsEvent(() =>
+      helper.dispatchSettingsChange({ numCopies: 5 })
+    );
+
+    ok(
+      !helper.win.PrintEventHandler._updatePrintPreviewTask.isArmed,
+      "Preview Task is not armed"
+    );
+
+    await helper.waitForPreview(() =>
+      helper.dispatchSettingsChange({ printerName: mockPrinterName })
+    );
+
+    await helper.waitForSettingsEvent(() =>
+      helper.dispatchSettingsChange({ numCopies: 2 })
+    );
+    ok(
+      !helper.win.PrintEventHandler._updatePrintPreviewTask.isArmed,
+      "Preview Task is not armed"
+    );
+
+    await helper.closeDialog();
+  });
+});
