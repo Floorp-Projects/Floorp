@@ -5,7 +5,7 @@
 <resources>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="mozac_tab_counter_open_tab_tray_single">1 open tab. Tap to switch tabs.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <!-- Message announced to the user when tab tray is selected with multiple tabs -->
     <string name="mozac_tab_counter_open_tab_tray_plural">%1$s open tabs. Tap to switch tabs.</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="mozac_browser_menu_new_tab">New tab</string>
