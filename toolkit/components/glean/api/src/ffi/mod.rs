@@ -17,7 +17,7 @@ pub unsafe extern "C" fn fog_counter_add(id: u32, amount: i32) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_counter_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+pub unsafe extern "C" fn fog_counter_test_has_value(id: u32, storage_name: FfiStr) -> bool {
     test_has!(COUNTER_MAP, id, storage_name)
 }
 
@@ -39,7 +39,7 @@ pub unsafe extern "C" fn fog_timespan_stop(id: u32) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_timespan_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+pub unsafe extern "C" fn fog_timespan_test_has_value(id: u32, storage_name: FfiStr) -> bool {
     test_has!(TIMESPAN_MAP, id, storage_name)
 }
 
@@ -49,19 +49,19 @@ pub unsafe extern "C" fn fog_timespan_test_get_value(id: u32, storage_name: FfiS
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_boolean_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+pub unsafe extern "C" fn fog_boolean_test_has_value(id: u32, storage_name: FfiStr) -> bool {
     test_has!(BOOLEAN_MAP, id, storage_name)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_boolean_test_get_value(id: u32, storage_name: FfiStr) -> u8 {
+pub unsafe extern "C" fn fog_boolean_test_get_value(id: u32, storage_name: FfiStr) -> bool {
     test_get!(BOOLEAN_MAP, id, storage_name)
 }
 
 #[no_mangle]
-pub extern "C" fn fog_boolean_set(id: u32, value: u8) {
+pub extern "C" fn fog_boolean_set(id: u32, value: bool) {
     let metric = metric_get!(BOOLEAN_MAP, id);
-    metric.set(value != 0);
+    metric.set(value);
 }
 
 // The String functions are custom because test_get needs to use an outparam.
@@ -69,7 +69,7 @@ pub extern "C" fn fog_boolean_set(id: u32, value: u8) {
 // generate the rest of the functions, or something.
 
 #[no_mangle]
-pub extern "C" fn fog_string_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+pub extern "C" fn fog_string_test_has_value(id: u32, storage_name: FfiStr) -> bool {
     test_has!(STRING_MAP, id, storage_name)
 }
 
@@ -92,7 +92,7 @@ pub extern "C" fn fog_string_set(id: u32, value: &nsACString) {
 // generate the rest of the functions, or something.
 
 #[no_mangle]
-pub extern "C" fn fog_uuid_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+pub extern "C" fn fog_uuid_test_has_value(id: u32, storage_name: FfiStr) -> bool {
     test_has!(UUID_MAP, id, storage_name)
 }
 
@@ -119,7 +119,7 @@ pub extern "C" fn fog_uuid_generate_and_set(id: u32) {
 }
 
 #[no_mangle]
-pub extern "C" fn fog_datetime_test_has_value(id: u32, storage_name: FfiStr) -> u8 {
+pub extern "C" fn fog_datetime_test_has_value(id: u32, storage_name: FfiStr) -> bool {
     test_has!(DATETIME_MAP, id, storage_name)
 }
 

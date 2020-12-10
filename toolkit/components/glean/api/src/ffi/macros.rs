@@ -31,7 +31,7 @@ macro_rules! metric_get {
 macro_rules! test_has {
     ($map:ident, $id:ident, $storage:ident) => {{
         let metric = metric_get!($map, $id);
-        metric.test_get_value($storage.as_str()).is_some() as u8
+        metric.test_get_value($storage.as_str()).is_some()
     }};
 }
 
