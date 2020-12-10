@@ -98,20 +98,3 @@ void LossyUTF8ToUTF16(const char* str, uint32_t len,
     CopyASCIItoUTF16(span, result);
   }
 }
-
-nsresult GetCertFingerprintByOidTag(CERTCertificate* nsscert, SECOidTag aOidTag,
-                                    nsCString& fp) {
-  nsTArray<uint8_t> digestArray;
-  nsresult rv = Digest::DigestBuf(aOidTag, nsscert->derCert.data,
-                                  nsscert->derCert.len, digestArray);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SECItem digestItem = {siBuffer, digestArray.Elements(),
-                        static_cast<unsigned int>(digestArray.Length())};
-
-  UniquePORTString tmpstr(CERT_Hexify(&digestItem, 1));
-  NS_ENSURE_TRUE(tmpstr, NS_ERROR_OUT_OF_MEMORY);
-
-  fp.Assign(tmpstr.get());
-  return NS_OK;
-}

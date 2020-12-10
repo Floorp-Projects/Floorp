@@ -424,13 +424,15 @@ nsresult nsCertOverrideService::Write(const MutexAutoLock& aProofOfLock) {
   return NS_OK;
 }
 
-static nsresult GetCertFingerprintByOidTag(nsIX509Cert* aCert,
-                                           SECOidTag aOidTag, nsCString& fp) {
-  UniqueCERTCertificate nsscert(aCert->GetCert());
-  if (!nsscert) {
-    return NS_ERROR_FAILURE;
+static nsresult GetCertSha256Fingerprint(nsIX509Cert* aCert,
+                                         nsCString& aResult) {
+  nsAutoString fpStrUTF16;
+  nsresult rv = aCert->GetSha256Fingerprint(fpStrUTF16);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  return GetCertFingerprintByOidTag(nsscert.get(), aOidTag, fp);
+  aResult.Assign(NS_ConvertUTF16toUTF8(fpStrUTF16));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -473,8 +475,10 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
   }
 
   nsAutoCString fpStr;
-  rv = GetCertFingerprintByOidTag(nsscert.get(), SEC_OID_SHA256, fpStr);
-  if (NS_FAILED(rv)) return rv;
+  rv = GetCertSha256Fingerprint(aCert, fpStr);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsAutoCString dbkey;
   rv = aCert->GetDbKey(dbkey);
@@ -565,9 +569,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString& aHostName,
   *aIsTemporary = settings->mIsTemporary;
 
   nsAutoCString fpStr;
-  nsresult rv;
-
-  rv = GetCertFingerprintByOidTag(aCert, SEC_OID_SHA256, fpStr);
+  nsresult rv = GetCertSha256Fingerprint(aCert, fpStr);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -704,11 +706,10 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert* aCert,
       }
 
       if (matchesDBKey(aCert, settings->mDBKey)) {
-        nsAutoCString cert_fingerprint;
-        nsresult rv =
-            GetCertFingerprintByOidTag(aCert, SEC_OID_SHA256, cert_fingerprint);
+        nsAutoCString certFingerprint;
+        nsresult rv = GetCertSha256Fingerprint(aCert, certFingerprint);
         if (NS_SUCCEEDED(rv) &&
-            settings->mFingerprint.Equals(cert_fingerprint)) {
+            settings->mFingerprint.Equals(certFingerprint)) {
           counter++;
         }
       }
@@ -759,11 +760,10 @@ nsresult nsCertOverrideService::EnumerateCertOverrides(
       aEnumerator(settings, aUserData);
     } else {
       if (matchesDBKey(aCert, settings->mDBKey)) {
-        nsAutoCString cert_fingerprint;
-        nsresult rv =
-            GetCertFingerprintByOidTag(aCert, SEC_OID_SHA256, cert_fingerprint);
+        nsAutoCString certFingerprint;
+        nsresult rv = GetCertSha256Fingerprint(aCert, certFingerprint);
         if (NS_SUCCEEDED(rv) &&
-            settings->mFingerprint.Equals(cert_fingerprint)) {
+            settings->mFingerprint.Equals(certFingerprint)) {
           aEnumerator(settings, aUserData);
         }
       }
