@@ -223,27 +223,6 @@ class MOZ_RAII FallbackStubAllocator {
   }
 };
 
-// Helper method called by lambda expressions `addIC` and `addPrologueIC` in
-// `JitScript::initICEntriesAndBytecodeTypeMap`.
-// TODO(no-TI): inline into addIC, fix comment.
-static bool AddICImpl(JSContext* cx, ICScript* icScript, uint32_t offset,
-                      ICStub* stub, uint32_t& icEntryIndex) {
-  if (!stub) {
-    MOZ_ASSERT(cx->isExceptionPending());
-    mozilla::Unused << cx;  // Silence -Wunused-lambda-capture in opt builds.
-    return false;
-  }
-
-  // Initialize the ICEntry.
-  ICEntry& entryRef = icScript->icEntry(icEntryIndex);
-  icEntryIndex++;
-  new (&entryRef) ICEntry(stub, offset);
-
-  // Fix up pointers from fallback stubs to the ICEntry.
-  stub->toFallbackStub()->fixupICEntry(&entryRef);
-  return true;
-}
-
 bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
   MOZ_ASSERT(jit::IsBaselineInterpreterEnabled());
@@ -258,9 +237,22 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
   using Kind = BaselineICFallbackKind;
 
   auto addIC = [cx, this, script, &icEntryIndex](BytecodeLocation loc,
-                                                 ICStub* stub) {
+                                                 ICFallbackStub* stub) {
+    if (MOZ_UNLIKELY(!stub)) {
+      MOZ_ASSERT(cx->isExceptionPending());
+      mozilla::Unused << cx;  // Silence -Wunused-lambda-capture in opt builds.
+      return false;
+    }
+
+    // Initialize the ICEntry.
     uint32_t offset = loc.bytecodeToOffset(script);
-    return AddICImpl(cx, this, offset, stub, icEntryIndex);
+    ICEntry& entryRef = this->icEntry(icEntryIndex);
+    icEntryIndex++;
+    new (&entryRef) ICEntry(stub, offset);
+
+    // Fix up pointers from fallback stubs to the ICEntry.
+    stub->fixupICEntry(&entryRef);
+    return true;
   };
 
   // For JOF_IC ops: initialize ICEntries and fallback stubs.
@@ -280,7 +272,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::Or:
       case JSOp::IfEq:
       case JSOp::IfNe: {
-        ICStub* stub = alloc.newStub<ICToBool_Fallback>(Kind::ToBool);
+        auto* stub = alloc.newStub<ICToBool_Fallback>(Kind::ToBool);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -292,7 +284,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::Inc:
       case JSOp::Dec:
       case JSOp::ToNumeric: {
-        ICStub* stub = alloc.newStub<ICUnaryArith_Fallback>(Kind::UnaryArith);
+        auto* stub = alloc.newStub<ICUnaryArith_Fallback>(Kind::UnaryArith);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -310,7 +302,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::Div:
       case JSOp::Mod:
       case JSOp::Pow: {
-        ICStub* stub = alloc.newStub<ICBinaryArith_Fallback>(Kind::BinaryArith);
+        auto* stub = alloc.newStub<ICBinaryArith_Fallback>(Kind::BinaryArith);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -324,7 +316,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::Ge:
       case JSOp::StrictEq:
       case JSOp::StrictNe: {
-        ICStub* stub = alloc.newStub<ICCompare_Fallback>(Kind::Compare);
+        auto* stub = alloc.newStub<ICCompare_Fallback>(Kind::Compare);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -341,8 +333,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         if (!group) {
           return false;
         }
-        ICStub* stub =
-            alloc.newStub<ICNewArray_Fallback>(Kind::NewArray, group);
+        auto* stub = alloc.newStub<ICNewArray_Fallback>(Kind::NewArray, group);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -350,7 +341,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::NewObject:
       case JSOp::NewInit: {
-        ICStub* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
+        auto* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -362,7 +353,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::InitElemInc:
       case JSOp::SetElem:
       case JSOp::StrictSetElem: {
-        ICStub* stub = alloc.newStub<ICSetElem_Fallback>(Kind::SetElem);
+        auto* stub = alloc.newStub<ICSetElem_Fallback>(Kind::SetElem);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -378,7 +369,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::StrictSetName:
       case JSOp::SetGName:
       case JSOp::StrictSetGName: {
-        ICStub* stub = alloc.newStub<ICSetProp_Fallback>(Kind::SetProp);
+        auto* stub = alloc.newStub<ICSetProp_Fallback>(Kind::SetProp);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -386,49 +377,49 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::GetProp:
       case JSOp::GetBoundName: {
-        ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetProp);
+        auto* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetProp);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::GetPropSuper: {
-        ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetPropSuper);
+        auto* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetPropSuper);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::GetElem: {
-        ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElem);
+        auto* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElem);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::GetElemSuper: {
-        ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElemSuper);
+        auto* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElemSuper);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::In: {
-        ICStub* stub = alloc.newStub<ICIn_Fallback>(Kind::In);
+        auto* stub = alloc.newStub<ICIn_Fallback>(Kind::In);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::HasOwn: {
-        ICStub* stub = alloc.newStub<ICHasOwn_Fallback>(Kind::HasOwn);
+        auto* stub = alloc.newStub<ICHasOwn_Fallback>(Kind::HasOwn);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::CheckPrivateField: {
-        ICStub* stub = alloc.newStub<ICCheckPrivateField_Fallback>(
+        auto* stub = alloc.newStub<ICCheckPrivateField_Fallback>(
             Kind::CheckPrivateField);
         if (!addIC(loc, stub)) {
           return false;
@@ -437,7 +428,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::GetName:
       case JSOp::GetGName: {
-        ICStub* stub = alloc.newStub<ICGetName_Fallback>(Kind::GetName);
+        auto* stub = alloc.newStub<ICGetName_Fallback>(Kind::GetName);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -445,15 +436,14 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::BindName:
       case JSOp::BindGName: {
-        ICStub* stub = alloc.newStub<ICBindName_Fallback>(Kind::BindName);
+        auto* stub = alloc.newStub<ICBindName_Fallback>(Kind::BindName);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::GetIntrinsic: {
-        ICStub* stub =
-            alloc.newStub<ICGetIntrinsic_Fallback>(Kind::GetIntrinsic);
+        auto* stub = alloc.newStub<ICGetIntrinsic_Fallback>(Kind::GetIntrinsic);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -466,7 +456,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::FunApply:
       case JSOp::Eval:
       case JSOp::StrictEval: {
-        ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::Call);
+        auto* stub = alloc.newStub<ICCall_Fallback>(Kind::Call);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -474,7 +464,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::SuperCall:
       case JSOp::New: {
-        ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::CallConstructing);
+        auto* stub = alloc.newStub<ICCall_Fallback>(Kind::CallConstructing);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -483,7 +473,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       case JSOp::SpreadCall:
       case JSOp::SpreadEval:
       case JSOp::StrictSpreadEval: {
-        ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::SpreadCall);
+        auto* stub = alloc.newStub<ICCall_Fallback>(Kind::SpreadCall);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -491,7 +481,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::SpreadSuperCall:
       case JSOp::SpreadNew: {
-        ICStub* stub =
+        auto* stub =
             alloc.newStub<ICCall_Fallback>(Kind::SpreadCallConstructing);
         if (!addIC(loc, stub)) {
           return false;
@@ -499,7 +489,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::Instanceof: {
-        ICStub* stub = alloc.newStub<ICInstanceOf_Fallback>(Kind::InstanceOf);
+        auto* stub = alloc.newStub<ICInstanceOf_Fallback>(Kind::InstanceOf);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -507,14 +497,14 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
       }
       case JSOp::Typeof:
       case JSOp::TypeofExpr: {
-        ICStub* stub = alloc.newStub<ICTypeOf_Fallback>(Kind::TypeOf);
+        auto* stub = alloc.newStub<ICTypeOf_Fallback>(Kind::TypeOf);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::ToPropertyKey: {
-        ICStub* stub =
+        auto* stub =
             alloc.newStub<ICToPropertyKey_Fallback>(Kind::ToPropertyKey);
         if (!addIC(loc, stub)) {
           return false;
@@ -522,14 +512,14 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::Iter: {
-        ICStub* stub = alloc.newStub<ICGetIterator_Fallback>(Kind::GetIterator);
+        auto* stub = alloc.newStub<ICGetIterator_Fallback>(Kind::GetIterator);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOp::OptimizeSpreadCall: {
-        ICStub* stub = alloc.newStub<ICOptimizeSpreadCall_Fallback>(
+        auto* stub = alloc.newStub<ICOptimizeSpreadCall_Fallback>(
             Kind::OptimizeSpreadCall);
         if (!addIC(loc, stub)) {
           return false;
@@ -541,8 +531,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         if (!templateObject) {
           return false;
         }
-        ICStub* stub =
-            alloc.newStub<ICRest_Fallback>(Kind::Rest, templateObject);
+        auto* stub = alloc.newStub<ICRest_Fallback>(Kind::Rest, templateObject);
         if (!addIC(loc, stub)) {
           return false;
         }
