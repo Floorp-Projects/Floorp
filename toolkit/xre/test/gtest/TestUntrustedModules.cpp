@@ -306,8 +306,8 @@ BOOL CALLBACK UntrustedModulesFixture::InitialModuleLoadOnce(PINIT_ONCE, void*,
   return TRUE;
 }
 
-#define PROCESS_OBJ(TYPE, KEY) \
-  u"\"" KEY u"\":{" \
+#define PROCESS_OBJ(TYPE, PID) \
+  u"\"" TYPE u"\\." PID u"\":{" \
     u"\"processType\":\"" TYPE u"\",\"elapsed\":\\d+\\.\\d+," \
     u"\"sanitizationFailures\":0,\"trustTestFailures\":0," \
     u"\"events\":\\[{" \
@@ -330,6 +330,7 @@ TEST_F(UntrustedModulesFixture, Serialize) {
       u"\"companyName\":\"Mozilla Corporation\",\"trustFlags\":0}\\],"
     u"\"processes\":{"
       PROCESS_OBJ(u"browser", u"0xabc") u","
+      PROCESS_OBJ(u"browser", u"0x4") u","
       PROCESS_OBJ(u"rdd", u"0x4")
   u"}}";
   // clang-format on
@@ -338,13 +339,16 @@ TEST_F(UntrustedModulesFixture, Serialize) {
   {
     UntrustedModulesData data1 = CollectSingleData();
     UntrustedModulesData data2 = CollectSingleData();
+    UntrustedModulesData data3 = CollectSingleData();
 
     data1.mPid = 0xabc;
     data2.mPid = 0x4;
     data2.mProcessType = GeckoProcessType_RDD;
+    data3.mPid = 0x4;
 
     backup1.Add(std::move(data1));
     backup2.Add(std::move(data2));
+    backup1.Add(std::move(data3));
   }
 
   ValidateJSValue(kPattern, ArrayLength(kPattern) - 1,
