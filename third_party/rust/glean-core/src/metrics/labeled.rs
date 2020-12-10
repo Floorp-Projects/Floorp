@@ -89,7 +89,7 @@ where
 {
     /// Creates a new labeled metric from the given metric instance and optional list of labels.
     ///
-    /// See [`get`](#method.get) for information on how static or dynamic labels are handled.
+    /// See [`get`](LabeledMetric::get) for information on how static or dynamic labels are handled.
     pub fn new(submetric: T, labels: Option<Vec<String>>) -> LabeledMetric<T> {
         LabeledMetric { labels, submetric }
     }
@@ -187,7 +187,7 @@ pub fn strip_label(identifier: &str) -> &str {
     identifier.splitn(2, '/').next().unwrap()
 }
 
-/// Validates a dynamic label, changing it to OTHER_LABEL if it's invalid.
+/// Validates a dynamic label, changing it to `OTHER_LABEL` if it's invalid.
 ///
 /// Checks the requested label against limitations, such as the label length and allowed
 /// characters.

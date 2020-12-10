@@ -100,7 +100,7 @@ impl StorageManager {
 
         if clear_store {
             if let Err(e) = storage.clear_ping_lifetime_storage(store_name) {
-                log::error!("Failed to clear lifetime storage: {:?}", e);
+                log::warn!("Failed to clear lifetime storage: {:?}", e);
             }
         }
 

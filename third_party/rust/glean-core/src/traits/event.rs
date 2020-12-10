@@ -35,7 +35,7 @@ pub trait ExtraKeys: Hash + Eq + PartialEq + Copy {
 /// Default of no extra keys for events.
 ///
 /// An enum with no values for convenient use as the default set of extra keys
-/// that an `EventMetric` can accept.
+/// that an [`EventMetric`](crate::metrics::EventMetric) can accept.
 ///
 /// *Note*: There exist no values for this enum, it can never exist.
 /// It its equivalent to the [`never / !` type](https://doc.rust-lang.org/std/primitive.never.html).
@@ -75,7 +75,7 @@ impl TryFrom<&str> for NoExtraKeys {
     }
 }
 
-/// A description for the `EventMetric` type.
+/// A description for the [`EventMetric`](crate::metrics::EventMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.
@@ -87,10 +87,10 @@ pub trait Event {
     ///
     /// # Arguments
     ///
-    /// * `extra` - A HashMap of (key, value) pairs. The key is an index into
-    ///   the metric's `allowed_extra_keys` vector where the key's string is
-    ///   looked up. If any key index is out of range, an error is reported and
-    ///   no event is recorded.
+    /// * `extra` - A [`HashMap`] of (key, value) pairs. The key is one of the allowed extra keys as
+    ///             set in the metric defintion.
+    ///             If a wrong key is used or a value is larger than allowed, an error is reported
+    ///             and no event is recorded.
     fn record<M: Into<Option<HashMap<Self::Extra, String>>>>(&self, extra: M);
 
     /// **Exported for test purposes.**

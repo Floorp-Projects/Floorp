@@ -4,7 +4,7 @@
 
 use crate::ErrorType;
 
-/// A description for the `TimespanMetric` type.
+/// A description for the [`TimespanMetric`](crate::metrics::TimespanMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.
@@ -13,17 +13,19 @@ pub trait Timespan {
     ///
     /// This uses an internal monotonic timer.
     ///
-    /// This records an error if it's already tracking time (i.e. start was already
-    /// called with no corresponding `stop`): in that case the original
-    /// start time will be preserved.
+    /// This records an error if it's already tracking time (i.e.
+    /// [`start`](Timespan::start) was already called with no corresponding
+    /// [`stop`](Timespan::stop)): in that case the original start time will be
+    /// preserved.
     fn start(&self);
 
     /// Stops tracking time for the provided metric. Sets the metric to the elapsed time.
     ///
-    /// This will record an error if no `start` was called.
+    /// This will record an error if no [`start`](Timespan::start) was called.
     fn stop(&self);
 
-    /// Aborts a previous `start` call. No error is recorded if no `start` was called.
+    /// Aborts a previous [`start`](Timespan::start) call. No error is recorded
+    /// if no [`start`](Timespan::start) was called.
     fn cancel(&self);
 
     /// **Exported for test purposes.**

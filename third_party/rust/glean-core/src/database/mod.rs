@@ -98,6 +98,7 @@ mod backend {
                 // Source environment is corrupted.
                 // We start fresh with the new database.
                 Err(MigrateError::StoreError(StoreError::FileInvalid)) => true,
+                Err(MigrateError::StoreError(StoreError::DatabaseCorrupted)) => true,
                 // Path not accessible.
                 // Somehow our directory vanished between us creating it and reading from it.
                 // Nothing we can do really.
@@ -635,7 +636,7 @@ impl Database {
             let mut res = Ok(());
             for to_delete in metrics {
                 if let Err(e) = store.delete(&mut writer, to_delete) {
-                    log::error!("Can't delete from store: {:?}", e);
+                    log::warn!("Can't delete from store: {:?}", e);
                     res = Err(e);
                 }
             }
@@ -710,7 +711,7 @@ impl Database {
             Ok(())
         });
         if let Err(e) = res {
-            log::error!("Could not clear store for lifetime {:?}: {:?}", lifetime, e);
+            log::warn!("Could not clear store for lifetime {:?}: {:?}", lifetime, e);
         }
     }
 

@@ -48,7 +48,7 @@ impl Timings {
 
     /// Start a new timer and set it to the `start_time`.
     ///
-    /// Returns a new `TimerId` identifying the timer.
+    /// Returns a new [`TimerId`] identifying the timer.
     fn set_start(&mut self, start_time: u64) -> TimerId {
         let id = self.next_id;
         self.next_id += 1;
@@ -149,7 +149,7 @@ impl TimingDistributionMetric {
     ///
     /// # Returns
     ///
-    /// A unique `TimerId` for the new timer.
+    /// A unique [`TimerId`] for the new timer.
     pub fn set_start(&mut self, start_time: u64) -> TimerId {
         self.timings.set_start(start_time)
     }
@@ -157,11 +157,12 @@ impl TimingDistributionMetric {
     /// Stops tracking time for the provided metric and associated timer id.
     ///
     /// Adds a count to the corresponding bucket in the timing distribution.
-    /// This will record an error if no `start` was called.
+    /// This will record an error if no
+    /// [`set_start`](TimingDistributionMetric::set_start) was called.
     ///
     /// # Arguments
     ///
-    /// * `id` - The `TimerId` to associate with this timing. This allows
+    /// * `id` - The [`TimerId`] to associate with this timing. This allows
     ///   for concurrent timing of events associated with different ids to the
     ///   same timespan metric.
     /// * `stop_time` - Timestamp in nanoseconds.
@@ -212,12 +213,13 @@ impl TimingDistributionMetric {
             });
     }
 
-    /// Aborts a previous `set_start` call. No error is recorded if no `set_start`
-    /// was called.
+    /// Aborts a previous [`set_start`](TimingDistributionMetric::set_start)
+    /// call. No error is recorded if no
+    /// [`set_start`](TimingDistributionMetric.set_start) was called.
     ///
     /// # Arguments
     ///
-    /// * `id` - The `TimerId` to associate with this timing. This allows
+    /// * `id` - The [`TimerId`] to associate with this timing. This allows
     ///   for concurrent timing of events associated with different ids to the
     ///   same timing distribution metric.
     pub fn cancel(&mut self, id: TimerId) {
@@ -233,7 +235,7 @@ impl TimingDistributionMetric {
     ///
     /// Please note that this assumes that the provided samples are already in
     /// the "unit" declared by the instance of the metric type (e.g. if the
-    /// instance this method was called on is using [TimeUnit::Second], then
+    /// instance this method was called on is using [`TimeUnit::Second`], then
     /// `samples` are assumed to be in that unit).
     ///
     /// # Arguments
@@ -242,8 +244,8 @@ impl TimingDistributionMetric {
     ///
     /// ## Notes
     ///
-    /// Discards any negative value in `samples` and report an `ErrorType::InvalidValue`
-    /// for each of them. Reports an `ErrorType::InvalidOverflow` error for samples that
+    /// Discards any negative value in `samples` and report an [`ErrorType::InvalidValue`]
+    /// for each of them. Reports an [`ErrorType::InvalidOverflow`] error for samples that
     /// are longer than `MAX_SAMPLE_TIME`.
     pub fn accumulate_samples_signed(&mut self, glean: &Glean, samples: Vec<i64>) {
         if !self.should_record(glean) {
