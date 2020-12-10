@@ -15,8 +15,7 @@
 extern const char* kRootModuleName;
 extern const size_t kRootModuleNameLen;
 
-nsresult GetCertFingerprintByOidTag(CERTCertificate* nsscert, SECOidTag aOidTag,
-                                    nsCString& fp);
+class nsIX509Cert;
 
 // If input is valid UTF-8, converts from UTF-8 to UTF-16. Otherwise,
 // converts from Latin1 to UTF-16.
