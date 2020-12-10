@@ -141,7 +141,7 @@ linux64-rust-macos-beta:
         symbol: TL(rust-macos-beta)
     run:
         arguments: [
-            '--channel', 'beta-2020-11-26',
+            '--channel', 'beta-2020-12-10',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
