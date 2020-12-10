@@ -856,40 +856,20 @@ bool BaselineCacheIRCompiler::emitCompareStringResult(JSOp op,
   return true;
 }
 
-bool BaselineCacheIRCompiler::callTypeUpdateIC(
-    Register obj, ValueOperand val, Register scratch,
-    LiveGeneralRegisterSet saveRegs) {
-  // Ensure the stack is empty for the VM call below.
-  allocator.discardStack(masm);
-
-  // TODO(no-TI): clean up.
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed,
                                                   ObjOperandId objId,
                                                   uint32_t offsetOffset,
                                                   ValOperandId rhsId) {
-  Address offsetAddr = stubAddress(offsetOffset);
-
-  // Allocate the fixed registers first. These need to be fixed for
-  // callTypeUpdateIC.
-  AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
-
   Register obj = allocator.useRegister(masm, objId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  AutoScratchRegister scratch1(allocator, masm);
   Maybe<AutoScratchRegister> scratch2;
   if (!isFixed) {
     scratch2.emplace(allocator, masm);
   }
 
-  LiveGeneralRegisterSet saveRegs;
-  saveRegs.add(obj);
-  saveRegs.add(val);
-  if (!callTypeUpdateIC(obj, val, scratch1, saveRegs)) {
-    return false;
-  }
-
+  Address offsetAddr = stubAddress(offsetOffset);
   masm.load32(offsetAddr, scratch1);
 
   if (isFixed) {
@@ -924,24 +904,19 @@ bool BaselineCacheIRCompiler::emitStoreDynamicSlot(ObjOperandId objId,
 bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
     CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
     uint32_t newShapeOffset, Maybe<uint32_t> numNewSlotsOffset) {
-  Address offsetAddr = stubAddress(offsetOffset);
-
-  // Allocate the fixed registers first. These need to be fixed for
-  // callTypeUpdateIC.
-  AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
-
   Register obj = allocator.useRegister(masm, objId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
 
   Address newShapeAddr = stubAddress(newShapeOffset);
+  Address offsetAddr = stubAddress(offsetOffset);
 
   if (op == CacheOp::AllocateAndStoreDynamicSlot) {
     // We have to (re)allocate dynamic slots. Do this first, as it's the
-    // only fallible operation here. This simplifies the callTypeUpdateIC
-    // call below: it does not have to worry about saving registers used by
-    // failure paths. Note that growSlotsPure is fallible but does
-    // not GC.
+    // only fallible operation here. Note that growSlotsPure is fallible but
+    // does not GC.
     Address numNewSlotsAddr = stubAddress(*numNewSlotsOffset);
 
     FailurePath* failure;
@@ -968,13 +943,6 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
     masm.PopRegsInMaskIgnore(save, ignore);
 
     masm.branchIfFalseBool(scratch1, failure->label());
-  }
-
-  LiveGeneralRegisterSet saveRegs;
-  saveRegs.add(obj);
-  saveRegs.add(val);
-  if (!callTypeUpdateIC(obj, val, scratch1, saveRegs)) {
-    return false;
   }
 
   // Update the object's shape.
@@ -1036,13 +1004,11 @@ bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
                                                     ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  // Allocate the fixed registers first. These need to be fixed for
-  // callTypeUpdateIC.
-  AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
-
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1062,19 +1028,7 @@ bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   BaseObjectElementIndex element(scratch, index);
   masm.branchTestMagic(Assembler::Equal, element, failure->label());
 
-  // Call the type update IC. After this everything must be infallible as we
-  // don't save all registers here.
-  LiveGeneralRegisterSet saveRegs;
-  saveRegs.add(obj);
-  saveRegs.add(index);
-  saveRegs.add(val);
-  if (!callTypeUpdateIC(obj, val, scratch, saveRegs)) {
-    return false;
-  }
-
-  // Perform the store. Reload obj->elements because callTypeUpdateIC
-  // used the scratch register.
-  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+  // Perform the store.
   EmitPreBarrier(masm, element, MIRType::Value);
   masm.storeValue(val, element);
 
@@ -1109,19 +1063,18 @@ static void EmitAssertWritableArrayLengthElements(MacroAssembler& masm,
 #endif
 }
 
+// TODO(no-TI): try to merge with IonCacheIRCompiler version
 bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
                                                         Int32OperandId indexId,
                                                         ValOperandId rhsId,
                                                         bool handleAdd) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  // Allocate the fixed registers first. These need to be fixed for
-  // callTypeUpdateIC.
-  AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
-
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  AutoScratchRegister scratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1144,11 +1097,12 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   // slightly less efficient code on x86.
   Register spectreTemp = InvalidReg;
 
+  Label storeSkipPreBarrier;
   if (handleAdd) {
     // Bounds check.
-    Label capacityOk, outOfBounds;
+    Label inBounds, outOfBounds;
     masm.spectreBoundsCheck32(index, initLength, spectreTemp, &outOfBounds);
-    masm.jump(&capacityOk);
+    masm.jump(&inBounds);
 
     // If we're out-of-bounds, only handle the index == initLength case.
     masm.bind(&outOfBounds);
@@ -1156,10 +1110,10 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
 
     // If index < capacity, we can add a dense element inline. If not we
     // need to allocate more elements.
-    Label allocElement;
+    Label allocElement, addNewElement;
     Address capacity(scratch, ObjectElements::offsetOfCapacity());
     masm.spectreBoundsCheck32(index, capacity, spectreTemp, &allocElement);
-    masm.jump(&capacityOk);
+    masm.jump(&addNewElement);
 
     masm.bind(&allocElement);
 
@@ -1182,33 +1136,7 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
     // Load the reallocated elements pointer.
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
-    masm.bind(&capacityOk);
-
-    // We increment initLength after the callTypeUpdateIC call, to ensure
-    // the type update code doesn't read uninitialized memory.
-  } else {
-    // Fail if index >= initLength.
-    masm.spectreBoundsCheck32(index, initLength, spectreTemp, failure->label());
-  }
-
-  // Call the type update IC. After this everything must be infallible as we
-  // don't save all registers here.
-  LiveGeneralRegisterSet saveRegs;
-  saveRegs.add(obj);
-  saveRegs.add(index);
-  saveRegs.add(val);
-  if (!callTypeUpdateIC(obj, val, scratch, saveRegs)) {
-    return false;
-  }
-
-  // Reload obj->elements as callTypeUpdateIC used the scratch register.
-  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-
-  Label doStore;
-  if (handleAdd) {
-    // If index == initLength, increment initLength.
-    Label inBounds;
-    masm.branch32(Assembler::NotEqual, initLength, index, &inBounds);
+    masm.bind(&addNewElement);
 
     // Increment initLength.
     masm.add32(Imm32(1), initLength);
@@ -1221,14 +1149,17 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
     masm.bind(&skipIncrementLength);
 
     // Skip EmitPreBarrier as the memory is uninitialized.
-    masm.jump(&doStore);
+    masm.jump(&storeSkipPreBarrier);
 
     masm.bind(&inBounds);
+  } else {
+    // Fail if index >= initLength.
+    masm.spectreBoundsCheck32(index, initLength, spectreTemp, failure->label());
   }
 
   EmitPreBarrier(masm, element, MIRType::Value);
 
-  masm.bind(&doStore);
+  masm.bind(&storeSkipPreBarrier);
   masm.storeValue(val, element);
 
   emitPostBarrierElement(obj, val, scratch, index);
@@ -1239,13 +1170,12 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
                                             ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  // Allocate the fixed registers first. These need to be fixed for
-  // callTypeUpdateIC.
-  AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
-  ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
-
+  AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister scratchLength(allocator, masm);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  AutoScratchRegisterMaybeOutput scratchLength(allocator, masm, output);
+  AutoScratchRegisterMaybeOutputType scratch(allocator, masm, output);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1270,10 +1200,10 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
 
   // If scratchLength < capacity, we can add a dense element inline. If not we
   // need to allocate more elements.
-  Label capacityOk, allocElement;
+  Label allocElement, addNewElement;
   Address capacity(scratch, ObjectElements::offsetOfCapacity());
   masm.spectreBoundsCheck32(scratchLength, capacity, InvalidReg, &allocElement);
-  masm.jump(&capacityOk);
+  masm.jump(&addNewElement);
 
   masm.bind(&allocElement);
 
@@ -1295,23 +1225,10 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   // Load the reallocated elements pointer.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
-  masm.bind(&capacityOk);
-
-  // Call the type update IC. After this everything must be infallible as we
-  // don't save all registers here.
-  LiveGeneralRegisterSet saveRegs;
-  saveRegs.add(obj);
-  saveRegs.add(val);
-  if (!callTypeUpdateIC(obj, val, scratch, saveRegs)) {
-    return false;
-  }
-
-  // Reload obj->elements as callTypeUpdateIC used the scratch register.
-  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+  masm.bind(&addNewElement);
 
   // Increment initLength and length.
   masm.add32(Imm32(1), elementsInitLength);
-  masm.load32(elementsLength, scratchLength);
   masm.add32(Imm32(1), elementsLength);
 
   // Store the value.
@@ -1321,7 +1238,7 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
 
   // Return value is new length.
   masm.add32(Imm32(1), scratchLength);
-  masm.tagValue(JSVAL_TYPE_INT32, scratchLength, val);
+  masm.tagValue(JSVAL_TYPE_INT32, scratchLength, output.valueReg());
 
   return true;
 }

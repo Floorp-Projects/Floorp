@@ -38,10 +38,6 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   template <typename Fn, Fn fn>
   void tailCallVM(MacroAssembler& masm);
 
-  MOZ_MUST_USE bool callTypeUpdateIC(Register obj, ValueOperand val,
-                                     Register scratch,
-                                     LiveGeneralRegisterSet saveRegs);
-
   MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed, ObjOperandId objId,
                                         uint32_t offsetOffset,
                                         ValOperandId rhsId);
