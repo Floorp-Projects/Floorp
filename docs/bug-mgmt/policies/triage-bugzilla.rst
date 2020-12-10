@@ -12,7 +12,7 @@ What is a Triaged Bug
 
 The new definition of Triaged will be Firefox-related bugs of type
 ``defect`` where the component is not
-``UNTRIAGED``, and a non-default value not equal to ``--`` or ``N/A``.
+``UNTRIAGED``, and a severity value not equal to ``--`` or ``N/A``.
 
 Bugs of type Task or Enhancement may have a severity of ``N/A``,
 but defects must have a severity that is neither ``--`` or
