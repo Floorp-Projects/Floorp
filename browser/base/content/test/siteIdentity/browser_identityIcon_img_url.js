@@ -20,7 +20,7 @@ const TEST_CASES = [
   {
     type: "http",
     testURL: "http://example.com",
-    img_url: `url("chrome://browser/skin/connection-mixed-active-loaded.svg")`,
+    img_url: `url("chrome://global/skin/icons/connection-mixed-active-loaded.svg")`,
   },
   {
     type: "https",
@@ -50,7 +50,7 @@ const TEST_CASES = [
   {
     type: "mixedPassiveContent",
     testURL: kBaseURI + "file_mixedPassiveContent.html",
-    img_url: `url("chrome://browser/skin/connection-mixed-passive-loaded.svg")`,
+    img_url: `url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")`,
   },
   {
     type: "mixedActiveContent",
@@ -60,7 +60,7 @@ const TEST_CASES = [
   {
     type: "certificateError",
     testURL: "https://self-signed.example.com",
-    img_url: `url("chrome://browser/skin/connection-mixed-passive-loaded.svg")`,
+    img_url: `url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")`,
   },
   {
     type: "localhost",
@@ -75,12 +75,12 @@ const TEST_CASES = [
   {
     type: "data URI",
     testURL: "data:text/html,<div>",
-    img_url: `url("chrome://browser/skin/connection-mixed-active-loaded.svg")`,
+    img_url: `url("chrome://global/skin/icons/connection-mixed-active-loaded.svg")`,
   },
   {
     type: "view-source HTTP",
     testURL: "view-source:http://example.com/",
-    img_url: `url("chrome://browser/skin/connection-mixed-active-loaded.svg")`,
+    img_url: `url("chrome://global/skin/icons/connection-mixed-active-loaded.svg")`,
   },
   {
     type: "view-source HTTPS",
