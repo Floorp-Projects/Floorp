@@ -6955,23 +6955,6 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardGroupHasUnanalyzedNewScript(
-    uint32_t groupOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  StubFieldOffset group(groupOffset, StubField::Type::ObjectGroup);
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  emitLoadStubField(group, scratch1);
-  masm.guardGroupHasUnanalyzedNewScript(scratch1, scratch2, failure->label());
-  return true;
-}
-
 bool CacheIRCompiler::emitLoadObject(ObjOperandId resultId,
                                      uint32_t objOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
