@@ -4364,8 +4364,7 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
   return true;
 }
 
-AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
-    HandleObjectGroup oldGroup, HandleShape oldShape) {
+AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
   ValOperandId objValId(writer.setInputOperandId(0));
   ValOperandId rhsValId;
   if (cacheKind_ == CacheKind::SetProp) {
@@ -4441,30 +4440,21 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
 
   ShapeGuardProtoChain(writer, obj, objId);
 
-  ObjectGroup* newGroup = obj->group();
-
-  // Check if we have to change the object's group. We only have to change from
-  // a partially to fully initialized group if the object is a PlainObject.
-  bool changeGroup = oldGroup != newGroup;
-  MOZ_ASSERT_IF(changeGroup, obj->is<PlainObject>());
-
   if (holder->isFixedSlot(propShape->slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(propShape->slot());
-    writer.addAndStoreFixedSlot(objId, offset, rhsValId, changeGroup, newGroup,
-                                propShape);
+    writer.addAndStoreFixedSlot(objId, offset, rhsValId, propShape);
     trackAttached("AddSlot");
   } else {
     size_t offset = holder->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::calculateDynamicSlots(oldShape);
     uint32_t numNewSlots = holder->numDynamicSlots();
     if (numOldSlots == numNewSlots) {
-      writer.addAndStoreDynamicSlot(objId, offset, rhsValId, changeGroup,
-                                    newGroup, propShape);
+      writer.addAndStoreDynamicSlot(objId, offset, rhsValId, propShape);
       trackAttached("AddSlot");
     } else {
       MOZ_ASSERT(numNewSlots > numOldSlots);
-      writer.allocateAndStoreDynamicSlot(objId, offset, rhsValId, changeGroup,
-                                         newGroup, propShape, numNewSlots);
+      writer.allocateAndStoreDynamicSlot(objId, offset, rhsValId, propShape,
+                                         numNewSlots);
       trackAttached("AllocateSlot");
     }
   }

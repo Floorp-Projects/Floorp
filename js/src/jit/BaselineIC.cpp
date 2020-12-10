@@ -1066,9 +1066,6 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedShape oldShape(cx, obj->shape());
 
-  // TODO(no-TI): remove.
-  RootedObjectGroup oldGroup(cx, obj->group());
-
   // We cannot attach a stub if the operation executed after the stub
   // is attached may throw.
   bool mayThrow = false;
@@ -1150,7 +1147,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
                            stub->state().mode(), objv, index, rhs);
 
     MOZ_ASSERT(deferType == DeferType::AddSlot);
-    AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
+    AttachDecision decision = gen.tryAttachAddSlotStub(oldShape);
 
     switch (decision) {
       case AttachDecision::Attach: {
@@ -1662,9 +1659,6 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   }
   RootedShape oldShape(cx, obj->shape());
 
-  // TODO(no-TI): remove.
-  RootedObjectGroup oldGroup(cx, obj->group());
-
   DeferType deferType = DeferType::None;
   bool attached = false;
   if (stub->state().maybeTransition()) {
@@ -1750,7 +1744,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
                            stub->state().mode(), lhs, idVal, rhs);
 
     MOZ_ASSERT(deferType == DeferType::AddSlot);
-    AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
+    AttachDecision decision = gen.tryAttachAddSlotStub(oldShape);
 
     switch (decision) {
       case AttachDecision::Attach: {
