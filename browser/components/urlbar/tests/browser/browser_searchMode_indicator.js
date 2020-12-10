@@ -298,25 +298,54 @@ add_task(async function click_close() {
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "Urlbar view is closed.");
 });
 
-// Tests that Accel+K enters search mode with the default engine.
+// Tests that Accel+K enters search mode with the default engine. Also tests
+// that Accel+K highlights the typed search string.
 add_task(async function keyboard_shortcut() {
+  const query = "test query";
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: query,
+  });
   await UrlbarTestUtils.assertSearchMode(window, null);
+  Assert.equal(
+    gURLBar.selectionStart,
+    gURLBar.selectionEnd,
+    "The search string is not highlighted."
+  );
   EventUtils.synthesizeKey("k", { accelKey: true });
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     engineName: defaultEngine.name,
     entry: "shortcut",
   });
+  Assert.equal(gURLBar.value, query, "The search string was not cleared.");
+  Assert.equal(gURLBar.selectionStart, 0);
+  Assert.equal(
+    gURLBar.selectionEnd,
+    query.length,
+    "The search string is highlighted."
+  );
   await UrlbarTestUtils.exitSearchMode(window, {
     clickClose: true,
     waitForSearch: false,
   });
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 // Tests that the Tools:Search menu item enters search mode with the default
-// engine.
+// engine. Also tests that Tools:Search highlights the typed search string.
 add_task(async function menubar_item() {
+  const query = "test query 2";
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: query,
+  });
   await UrlbarTestUtils.assertSearchMode(window, null);
+  Assert.equal(
+    gURLBar.selectionStart,
+    gURLBar.selectionEnd,
+    "The search string is not highlighted."
+  );
   let command = window.document.getElementById("Tools:Search");
   command.doCommand();
   await UrlbarTestUtils.assertSearchMode(window, {
@@ -324,10 +353,18 @@ add_task(async function menubar_item() {
     engineName: defaultEngine.name,
     entry: "shortcut",
   });
+  Assert.equal(gURLBar.value, query, "The search string was not cleared.");
+  Assert.equal(gURLBar.selectionStart, 0);
+  Assert.equal(
+    gURLBar.selectionEnd,
+    query.length,
+    "The search string is highlighted."
+  );
   await UrlbarTestUtils.exitSearchMode(window, {
     clickClose: true,
     waitForSearch: false,
   });
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 // Tests that entering search mode invalidates pageproxystate and that

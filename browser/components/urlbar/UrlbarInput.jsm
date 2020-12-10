@@ -1549,7 +1549,11 @@ class UrlbarInput {
         engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
         entry: "shortcut",
       };
-      this.search("");
+      // The searchMode setter clears the input if pageproxystate is valid, so
+      // we know at this point this.value will either be blank or the user's
+      // typed string.
+      this.search(this.value);
+      this.select();
     } else {
       this.search(UrlbarTokenizer.RESTRICT.SEARCH);
     }
