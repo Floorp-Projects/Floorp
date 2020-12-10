@@ -518,8 +518,9 @@ class UrlbarController {
       // will happen when you press the Enter key.  Treat it as no selection.
       selectedResult = resultIndex > 0 || !result.heuristic ? resultIndex : -1;
     }
-    BrowserSearchTelemetry.recordUrlbarSelectedResultMethod(
+    BrowserSearchTelemetry.recordSearchSuggestionSelectionMethod(
       event,
+      "urlbar",
       selectedResult,
       this._userSelectionBehavior
     );

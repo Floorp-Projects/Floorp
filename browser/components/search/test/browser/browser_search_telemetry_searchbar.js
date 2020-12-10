@@ -50,8 +50,10 @@ let searchInSearchbar = async function(inputText) {
  *
  * @param {string} entryName
  *        The name of the elemet to click on.
+ * @param {object} [clickOptions]
+ *        The options to use for the click.
  */
-function clickSearchbarSuggestion(entryName) {
+function clickSearchbarSuggestion(entryName, clickOptions = {}) {
   let richlistbox = BrowserSearch.searchBar.textbox.popup.richlistbox;
   let richlistitem = Array.prototype.find.call(
     richlistbox.children,
@@ -60,7 +62,7 @@ function clickSearchbarSuggestion(entryName) {
 
   // Make sure the suggestion is visible and simulate the click.
   richlistbox.ensureElementIsVisible(richlistitem);
-  EventUtils.synthesizeMouseAtCenter(richlistitem, {});
+  EventUtils.synthesizeMouseAtCenter(richlistitem, clickOptions);
 }
 
 add_task(async function setup() {
@@ -327,8 +329,7 @@ add_task(async function test_oneOff_click() {
   BrowserTestUtils.removeTab(tab);
 });
 
-// Clicks the first suggestion offered by the test search engine.
-add_task(async function test_suggestion_click() {
+async function checkSuggestionClick(clickOptions, waitForActionFn) {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
@@ -352,10 +353,10 @@ add_task(async function test_suggestion_click() {
   );
 
   info("Perform a one-off search using the first engine.");
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let p = waitForActionFn(tab);
   await searchInSearchbar("query");
   info("Clicking the searchbar suggestion.");
-  clickSearchbarSuggestion("queryfoo");
+  clickSearchbarSuggestion("queryfoo", clickOptions);
   await p;
 
   // Check if the scalars contain the expected values.
@@ -403,6 +404,23 @@ add_task(async function test_suggestion_click() {
   await Services.search.setDefault(previousEngine);
   await Services.search.removeEngine(suggestionEngine);
   BrowserTestUtils.removeTab(tab);
+}
+
+// Clicks the first suggestion offered by the test search engine.
+add_task(async function test_suggestion_click() {
+  await checkSuggestionClick({}, tab => {
+    return BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  });
+});
+
+add_task(async function test_suggestion_middle_click() {
+  let openedTab;
+  await checkSuggestionClick({ button: 1 }, () => {
+    return BrowserTestUtils.waitForNewTab(gBrowser, "http://example.com/").then(
+      tab => (openedTab = tab)
+    );
+  });
+  BrowserTestUtils.removeTab(openedTab);
 });
 
 // Selects and presses the Return (Enter) key on the first suggestion offered by
