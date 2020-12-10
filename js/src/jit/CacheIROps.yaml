@@ -839,8 +839,6 @@
     obj: ObjId
     offset: RawInt32Field
     rhs: ValId
-    changeGroup: BoolImm
-    newGroup: GroupField
     newShape: ShapeField
 
 - name: AddAndStoreDynamicSlot
@@ -851,8 +849,6 @@
     obj: ObjId
     offset: RawInt32Field
     rhs: ValId
-    changeGroup: BoolImm
-    newGroup: GroupField
     newShape: ShapeField
 
 - name: AllocateAndStoreDynamicSlot
@@ -863,8 +859,6 @@
     obj: ObjId
     offset: RawInt32Field
     rhs: ValId
-    changeGroup: BoolImm
-    newGroup: GroupField
     newShape: ShapeField
     numNewSlots: RawInt32Field
 

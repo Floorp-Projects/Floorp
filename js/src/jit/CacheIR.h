@@ -1480,8 +1480,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
                      HandleValue lhsVal, HandleValue idVal, HandleValue rhsVal);
 
   AttachDecision tryAttachStub();
-  AttachDecision tryAttachAddSlotStub(HandleObjectGroup oldGroup,
-                                      HandleShape oldShape);
+  AttachDecision tryAttachAddSlotStub(HandleShape oldShape);
   void trackAttached(const char* name);
 
   DeferType deferType() const { return deferType_; }

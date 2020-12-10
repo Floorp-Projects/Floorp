@@ -937,23 +937,6 @@ void MacroAssembler::reserveStack(uint32_t amount) {
 #endif  // !JS_CODEGEN_ARM64
 
 template <typename EmitPreBarrier>
-void MacroAssembler::storeObjGroup(Register group, Register obj,
-                                   EmitPreBarrier emitPreBarrier) {
-  MOZ_ASSERT(group != obj);
-  Address groupAddr(obj, JSObject::offsetOfGroup());
-  emitPreBarrier(*this, groupAddr);
-  storePtr(group, groupAddr);
-}
-
-template <typename EmitPreBarrier>
-void MacroAssembler::storeObjGroup(ObjectGroup* group, Register obj,
-                                   EmitPreBarrier emitPreBarrier) {
-  Address groupAddr(obj, JSObject::offsetOfGroup());
-  emitPreBarrier(*this, groupAddr);
-  storePtr(ImmGCPtr(group), groupAddr);
-}
-
-template <typename EmitPreBarrier>
 void MacroAssembler::storeObjShape(Register shape, Register obj,
                                    EmitPreBarrier emitPreBarrier) {
   MOZ_ASSERT(shape != obj);

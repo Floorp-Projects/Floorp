@@ -1564,8 +1564,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void branchTestObjCompartment(Condition cond, Register obj,
                                 const JS::Compartment* compartment,
                                 Register scratch, Label* label);
-  void branchIfObjGroupHasNoAddendum(Register obj, Register scratch,
-                                     Label* label);
   void branchIfPretenuredGroup(Register group, Label* label);
   void branchIfPretenuredGroup(const ObjectGroup* group, Register scratch,
                                Label* label);
@@ -3576,12 +3574,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
     loadPtr(Address(dest, ObjectGroup::offsetOfClasp()), dest);
   }
 
-  template <typename EmitPreBarrier>
-  inline void storeObjGroup(Register group, Register obj,
-                            EmitPreBarrier emitPreBarrier);
-  template <typename EmitPreBarrier>
-  inline void storeObjGroup(ObjectGroup* group, Register obj,
-                            EmitPreBarrier emitPreBarrier);
   template <typename EmitPreBarrier>
   inline void storeObjShape(Register shape, Register obj,
                             EmitPreBarrier emitPreBarrier);

@@ -3217,12 +3217,6 @@ void MacroAssembler::branchTestObjCompartment(
   branchPtr(cond, scratch, ImmPtr(compartment), label);
 }
 
-void MacroAssembler::branchIfObjGroupHasNoAddendum(Register obj,
-                                                   Register scratch,
-                                                   Label* label) {
-  MOZ_CRASH("TODO(no-TI): remove");
-}
-
 void MacroAssembler::branchIfPretenuredGroup(const ObjectGroup* group,
                                              Register scratch, Label* label) {
   movePtr(ImmGCPtr(group), scratch);

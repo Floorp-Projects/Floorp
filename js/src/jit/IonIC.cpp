@@ -220,7 +220,6 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   using DeferType = SetPropIRGenerator::DeferType;
 
   RootedShape oldShape(cx);
-  RootedObjectGroup oldGroup(cx);
   IonScript* ionScript = outerScript->ionScript();
 
   bool attached = false;
@@ -232,9 +231,6 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
 
   if (ic->state().canAttachStub()) {
     oldShape = obj->shape();
-
-    // TODO(no-TI): remove.
-    oldGroup = obj->group();
 
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());
@@ -318,7 +314,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
                            idVal, rhs);
     MOZ_ASSERT(deferType == DeferType::AddSlot);
-    AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
+    AttachDecision decision = gen.tryAttachAddSlotStub(oldShape);
 
     switch (decision) {
       case AttachDecision::Attach:
