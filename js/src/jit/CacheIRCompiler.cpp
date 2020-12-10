@@ -6955,6 +6955,51 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitGuardWasmArg(ValOperandId argId,
+                                       wasm::ValType::Kind kind) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  // All values can be boxed as AnyRef.
+  if (kind == wasm::ValType::Ref) {
+    return true;
+  }
+  MOZ_ASSERT(kind != wasm::ValType::V128);
+
+  ValueOperand arg = allocator.useValueRegister(masm, argId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Check that the argument can be converted to the Wasm type in Warp code
+  // without bailing out.
+  Label done;
+  switch (kind) {
+    case wasm::ValType::I32:
+    case wasm::ValType::F32:
+    case wasm::ValType::F64: {
+      // Argument must be number, bool, or undefined.
+      masm.branchTestNumber(Assembler::Equal, arg, &done);
+      masm.branchTestBoolean(Assembler::Equal, arg, &done);
+      masm.branchTestUndefined(Assembler::NotEqual, arg, failure->label());
+      break;
+    }
+    case wasm::ValType::I64: {
+      // Argument must be bigint, bool, or string.
+      masm.branchTestBigInt(Assembler::Equal, arg, &done);
+      masm.branchTestBoolean(Assembler::Equal, arg, &done);
+      masm.branchTestString(Assembler::NotEqual, arg, failure->label());
+      break;
+    }
+    default:
+      MOZ_CRASH("Unexpected kind");
+  }
+  masm.bind(&done);
+
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadObject(ObjOperandId resultId,
                                      uint32_t objOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

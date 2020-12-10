@@ -8231,6 +8231,7 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
 
   // If there are too many arguments, don't optimize (we won't be able to store
   // the arguments in the LIR node).
+  static_assert(wasm::MaxArgsForJitInlineCall <= ArgumentKindArgIndexLimit);
   if (sig.args().length() > wasm::MaxArgsForJitInlineCall) {
     return AttachDecision::NoAction;
   }
@@ -8266,8 +8267,6 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
 
   // Check that all arguments can be converted to the Wasm type in Warp code
   // without bailing out.
-  // TODO(post-Warp): we should emit CacheIR instructions to check this to
-  // prevent bailout loops.
   for (size_t i = 0; i < sig.args().length(); i++) {
     Value argVal = i < argc_ ? args_[i] : UndefinedValue();
     switch (sig.args()[i].kind()) {
@@ -8280,7 +8279,7 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
         }
         break;
       case wasm::ValType::I64:
-        if (!argVal.isBigInt() && !argVal.isString()) {
+        if (!argVal.isBigInt() && !argVal.isBoolean() && !argVal.isString()) {
           return AttachDecision::NoAction;
         }
         break;
@@ -8288,6 +8287,8 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
         MOZ_CRASH("Function should not have a Wasm JitEntry");
       case wasm::ValType::Ref:
         // All values can be boxed as AnyRef.
+        MOZ_ASSERT(sig.args()[i].refTypeKind() == wasm::RefType::Extern,
+                   "Unexpected type for Wasm JitEntry");
         break;
     }
   }
@@ -8300,11 +8301,19 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
 
   // Load the callee and ensure it is an object
   ValOperandId calleeValId =
-      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
   // Ensure the callee is this Wasm function.
   emitCalleeGuard(calleeObjId, calleeFunc);
+
+  // Guard the argument types.
+  uint32_t guardedArgs = std::min<uint32_t>(sig.args().length(), argc_);
+  for (uint32_t i = 0; i < guardedArgs; i++) {
+    ArgumentKind argKind = ArgumentKindForArgIndex(i);
+    ValOperandId argId = writer.loadArgumentFixedSlot(argKind, argc_, flags);
+    writer.guardWasmArg(argId, sig.args()[i].kind());
+  }
 
   writer.callWasmFunction(calleeObjId, argcId, flags, &funcExport,
                           inst.object());
