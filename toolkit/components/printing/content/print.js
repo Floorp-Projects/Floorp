@@ -114,7 +114,6 @@ var PrintEventHandler = {
   allPaperSizes: {},
   previewIsEmpty: false,
   _delayedChanges: {},
-  _nonFlaggedChangedSettings: {},
   _userChangedSettings: {},
   settingFlags: {
     margins: Ci.nsIPrintSettings.kInitSaveMargins,
@@ -145,6 +144,7 @@ var PrintEventHandler = {
   // These settings do not have an associated pref value or flag, but
   // changing them requires us to update the print preview.
   _nonFlaggedUpdatePreviewSettings: new Set(["pageRanges", "numPagesPerSheet"]),
+  _noPreviewUpdateSettings: new Set(["numCopies", "printDuplex"]),
 
   async init() {
     Services.telemetry.scalarAdd("printing.preview_opened_tm", 1);
@@ -534,6 +534,7 @@ var PrintEventHandler = {
   },
 
   async onUserSettingsChange(changedSettings = {}) {
+    let previewableChange = false;
     for (let [setting, value] of Object.entries(changedSettings)) {
       Services.telemetry.keyedScalarAdd(
         "printing.settings_changed",
@@ -543,6 +544,9 @@ var PrintEventHandler = {
       // Update the list of user-changed settings, which we attempt to maintain
       // across printer changes.
       this._userChangedSettings[setting] = value;
+      if (!this._noPreviewUpdateSettings.has(setting)) {
+        previewableChange = true;
+      }
     }
     if (changedSettings.printerName) {
       logger.debug(
@@ -556,10 +560,11 @@ var PrintEventHandler = {
       changedSettings = this.getSettingsToUpdate();
     }
 
-    let shouldPreviewUpdate = await this.updateSettings(
-      changedSettings,
-      !!changedSettings.printerName
-    );
+    let shouldPreviewUpdate =
+      (await this.updateSettings(
+        changedSettings,
+        !!changedSettings.printerName
+      )) && previewableChange;
 
     if (shouldPreviewUpdate && !printPending) {
       // We do not need to arm the preview task if the user has already printed
