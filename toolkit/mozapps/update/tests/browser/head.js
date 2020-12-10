@@ -81,6 +81,44 @@ add_task(async function setupTestCommon() {
     ],
   });
 
+  // We need to keep the update sync manager from thinking two instances are
+  // running because of the mochitest parent instance, which means we need to
+  // override the directory service with a fake executable path and then reset
+  // the lock. But leaving the directory service overridden causes problems for
+  // these tests, so we need to restore the real service immediately after.
+  // To form the path, we'll use the real executable path with a token appended
+  // (the path needs to be absolute, but not to point to a real file).
+  // This block is loosely copied from adjustGeneralPaths() in another update
+  // test file, xpcshellUtilsAUS.js, but this is a much more limited version;
+  // it's been copied here both because the full function is overkill and also
+  // because making it general enough to run in both xpcshell and mochitest
+  // would have been unreasonably difficult.
+  let exePath = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile);
+  let dirProvider = {
+    getFile: function AGP_DP_getFile(aProp, aPersistent) {
+      // Set the value of persistent to false so when this directory provider is
+      // unregistered it will revert back to the original provider.
+      aPersistent.value = false;
+      switch (aProp) {
+        case XRE_EXECUTABLE_FILE:
+          exePath.append("browser-test");
+          return exePath;
+      }
+      return null;
+    },
+    QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
+  };
+  let ds = Services.dirsvc.QueryInterface(Ci.nsIDirectoryService);
+  ds.QueryInterface(Ci.nsIProperties).undefine(XRE_EXECUTABLE_FILE);
+  ds.registerProvider(dirProvider);
+
+  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
+    Ci.nsIUpdateSyncManager
+  );
+  syncManager.resetLock();
+
+  ds.unregisterProvider(dirProvider);
+
   setUpdateTimerPrefs();
   reloadUpdateManagerData(true);
   removeUpdateFiles(true);
@@ -107,6 +145,13 @@ registerCleanupFunction(async () => {
   // Always try to restore the original updater files. If none of the updater
   // backup files are present then this is just a no-op.
   await finishTestRestoreUpdaterBackup();
+  // Reset the update lock once again so that we know the lock we're
+  // interested in here will be closed properly (normally that happens during
+  // XPCOM shutdown, but that isn't consistent during tests).
+  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
+    Ci.nsIUpdateSyncManager
+  );
+  syncManager.resetLock();
 });
 
 /**
