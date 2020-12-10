@@ -314,6 +314,7 @@ class ProviderTabToSearch extends UrlbarProvider {
     // Add all matching engines.
     let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr, {
       matchAllDomainLevels: true,
+      onlyEnabled: true,
     });
     if (!engines.length) {
       return;

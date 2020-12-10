@@ -410,3 +410,55 @@ add_task(async function test_publicSuffixIsHost() {
   await cleanupPlaces();
   await Services.search.removeEngine(suffixEngine);
 });
+
+add_task(async function test_disabledEngine() {
+  info("Tab-to-search results does not appear for a Pref-disabled engine.");
+  let engine = await Services.search.addEngineWithDetails("Disabled", {
+    template: "https://disabled.com/?search={searchTerms}",
+  });
+  await PlacesTestUtils.addVisits(["https://disabled.com/"]);
+  let context = createContext("dis", { isPrivate: false });
+
+  info("Sanity check that the engine would appear.");
+  await check_results({
+    context,
+    autofilled: "disabled.com/",
+    completed: "https://disabled.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "https://disabled.com/",
+        title: "https://disabled.com",
+        heuristic: true,
+        providerName: "Autofill",
+      }),
+      makeSearchResult(context, {
+        engineName: engine.name,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        uri: UrlbarUtils.stripPublicSuffixFromHost(engine.getResultDomain()),
+        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        query: "",
+        providerName: "TabToSearch",
+      }),
+    ],
+  });
+
+  info("Now disable the engine.");
+  Services.prefs.setCharPref("browser.search.hiddenOneOffs", engine.name);
+  await check_results({
+    context,
+    autofilled: "disabled.com/",
+    completed: "https://disabled.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "https://disabled.com/",
+        title: "https://disabled.com",
+        heuristic: true,
+        providerName: "Autofill",
+      }),
+    ],
+  });
+  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+
+  await cleanupPlaces();
+  await Services.search.removeEngine(engine);
+});

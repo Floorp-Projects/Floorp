@@ -54,6 +54,26 @@ add_task(async function hide_search_engine_nomatch() {
   Assert.ok(matchedEngine2);
 });
 
+add_task(async function onlyEnabled_option_nomatch() {
+  let engine = await Services.search.getDefault();
+  let domain = engine.getResultDomain();
+  let token = domain.substr(0, 1);
+  Services.prefs.setCharPref("browser.search.hiddenOneOffs", engine.name);
+  let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
+    onlyEnabled: true,
+  });
+  Assert.ok(
+    !matchedEngines.length || matchedEngines[0].getResultDomain() != domain
+  );
+  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+  matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
+    onlyEnabled: true,
+  });
+  Assert.ok(
+    matchedEngines.length && matchedEngines[0].getResultDomain() == domain
+  );
+});
+
 add_task(async function add_search_engine_match() {
   let promiseTopic = promiseSearchTopic("engine-added");
   Assert.equal(
