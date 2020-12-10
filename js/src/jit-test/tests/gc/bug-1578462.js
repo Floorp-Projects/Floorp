@@ -16,6 +16,13 @@ function createOtherCompartment() {
     return g;
 }
 
+function startGCMarking() {
+  startgc(1);
+  while (gcstate() === "Prepare") {
+    gcslice(1);
+  }
+}
+
 gczeal(0);
 
 let g = createOtherCompartment();
@@ -31,7 +38,7 @@ assertEq(getMarks()[0], "gray");
 // If a barrier marks the gray wrapper black after the start of the
 // GC, the target ends up black.
 schedulezone(this);
-startgc(1);
+startGCMarking()
 assertEq(getMarks()[0], "unmarked");
 g.eval(`grayRoot()`); // Barrier marks gray roots black.
 assertEq(getMarks()[0], "black");
@@ -45,7 +52,7 @@ assertEq(getMarks()[0], "gray");
 // already been marked gray, the target ends up black.
 gczeal(25); // Yield during gray marking.
 schedulezone(this);
-startgc(1);
+startGCMarking();
 assertEq(getMarks()[0], "gray");
 g.eval(`grayRoot()`); // Barrier marks gray roots black.
 assertEq(getMarks()[0], "black");
