@@ -33,7 +33,9 @@ function channelOpenPromise(chan) {
 }
 
 let trrServer = new TRRServer();
-registerCleanupFunction(async () => trrServer.stop());
+registerCleanupFunction(async () => {
+  await trrServer.stop();
+});
 add_task(async function setup_server() {
   await trrServer.start();
   dump(`port = ${trrServer.port}\n`);
