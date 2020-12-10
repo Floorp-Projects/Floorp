@@ -30,7 +30,8 @@ using MultiGetUntrustedModulesPromise =
 class MOZ_HEAP_CLASS MultiGetUntrustedModulesData final {
  public:
   MultiGetUntrustedModulesData()
-      : mPromise(new MultiGetUntrustedModulesPromise::Private(__func__)),
+      : mBackupSvc(UntrustedModulesBackupService::Get()),
+        mPromise(new MultiGetUntrustedModulesPromise::Private(__func__)),
         mNumPending(0) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MultiGetUntrustedModulesData)
@@ -96,15 +97,18 @@ class MOZ_HEAP_CLASS MultiGetUntrustedModulesData final {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (aResult.isSome()) {
-      Unused << mResults.emplaceBack(std::move(aResult.ref()));
+      Unused << mResults.emplaceBack(
+          MakeRefPtr<mozilla::UntrustedModulesDataContainer>(
+              std::move(aResult.ref())));
     }
 
     OnCompletion();
   }
 
  private:
+  RefPtr<UntrustedModulesBackupService> mBackupSvc;
   RefPtr<MultiGetUntrustedModulesPromise::Private> mPromise;
-  Vector<UntrustedModulesData> mResults;
+  Vector<RefPtr<UntrustedModulesDataContainer>> mResults;
   size_t mNumPending;
 };
 
