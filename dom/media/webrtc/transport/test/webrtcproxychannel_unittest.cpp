@@ -127,10 +127,6 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
-  NS_IMETHOD SetIsPrivate(bool) override {
-    MOZ_ASSERT(false);
-    return NS_OK;
-  }
   NS_IMETHOD GetTlsFlags(uint32_t* aTlsFlags) override {
     MOZ_ASSERT(false);
     return NS_OK;
