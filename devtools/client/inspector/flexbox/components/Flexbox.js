@@ -45,7 +45,6 @@ class Flexbox extends PureComponent {
       flexContainer: PropTypes.shape(Types.flexContainer).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
-      onToggleFlexboxHighlighter: PropTypes.func.isRequired,
       scrollToTop: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
@@ -94,7 +93,6 @@ class Flexbox extends PureComponent {
       flexContainer,
       getSwatchColorPickerTooltip,
       onSetFlexboxOverlayColor,
-      onToggleFlexboxHighlighter,
       setSelectedNode,
     } = this.props;
 
@@ -117,7 +115,6 @@ class Flexbox extends PureComponent {
         getSwatchColorPickerTooltip,
         highlighted,
         onSetFlexboxOverlayColor,
-        onToggleFlexboxHighlighter,
         setSelectedNode,
       }),
       !flexItemShown ? this.renderFlexItemList() : null,

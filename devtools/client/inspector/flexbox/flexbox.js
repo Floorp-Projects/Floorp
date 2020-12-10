@@ -40,9 +40,6 @@ class FlexboxInspector {
     this.onReflow = throttle(this.onReflow, 500, this);
     this.onSetFlexboxOverlayColor = this.onSetFlexboxOverlayColor.bind(this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
-    this.onToggleFlexboxHighlighter = this.onToggleFlexboxHighlighter.bind(
-      this
-    );
     this.onUpdatePanel = this.onUpdatePanel.bind(this);
 
     this.init();
@@ -125,7 +122,6 @@ class FlexboxInspector {
   getComponentProps() {
     return {
       onSetFlexboxOverlayColor: this.onSetFlexboxOverlayColor,
-      onToggleFlexboxHighlighter: this.onToggleFlexboxHighlighter,
     };
   }
 
@@ -434,23 +430,6 @@ class FlexboxInspector {
     this.selection.on("new-node-front", this.onUpdatePanel);
 
     this.update();
-  }
-
-  /**
-   * Handler for a change in the input checkboxes in the FlexboxItem component.
-   * Toggles on/off the flexbox highlighter for the provided flex container element.
-   *
-   * @param  {NodeFront} node
-   *         The NodeFront of the flex container element for which the flexbox
-   *         highlighter is toggled on/off for.
-   */
-  onToggleFlexboxHighlighter(node) {
-    this.highlighters.toggleFlexboxHighlighter(node, "layout");
-    this.store.dispatch(
-      updateFlexboxHighlighted(
-        node !== this.highlighters.flexboxHighlighterShow
-      )
-    );
   }
 
   /**

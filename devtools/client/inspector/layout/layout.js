@@ -55,7 +55,6 @@ class LayoutView {
     );
     const {
       onSetFlexboxOverlayColor,
-      onToggleFlexboxHighlighter,
     } = this.flexboxInspector.getComponentProps();
 
     this.gridInspector = new GridInspector(
@@ -78,7 +77,6 @@ class LayoutView {
       onShowBoxModelEditor,
       onShowRulePreviewTooltip,
       onShowGridOutlineHighlight,
-      onToggleFlexboxHighlighter,
       onToggleGeometryEditor,
       onToggleGridHighlighter,
       onToggleShowGridAreas,
