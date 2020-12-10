@@ -4406,10 +4406,19 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitElse(f));
 #ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
+        if (!f.moduleEnv().exceptionsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
         CHECK(EmitTry(f));
       case uint16_t(Op::Catch):
+        if (!f.moduleEnv().exceptionsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
         CHECK(EmitCatch(f));
       case uint16_t(Op::Throw):
+        if (!f.moduleEnv().exceptionsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
         CHECK(EmitThrow(f));
 #endif
       case uint16_t(Op::Br):

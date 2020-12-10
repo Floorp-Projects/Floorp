@@ -51,7 +51,8 @@ struct FeatureArgs {
         gcTypes(false),
         multiValue(false),
         v128(false),
-        hugeMemory(false) {}
+        hugeMemory(false),
+        exceptions(false) {}
 
   static FeatureArgs build(JSContext* cx);
 
@@ -68,6 +69,7 @@ struct FeatureArgs {
   bool multiValue;
   bool v128;
   bool hugeMemory;
+  bool exceptions;
 };
 
 // Describes all the parameters that control wasm compilation.
