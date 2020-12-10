@@ -1638,36 +1638,51 @@ void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
   va_end(args);
 }
 
-bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
-  // Use |NoValues| to keep the flags consistent with their usage for normal
-  // object literal creation, where |NoValues| is always used in conjunction
-  // with |NewObject|.
-  ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
+bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
+                                        GCThingIndex* outIndex) {
+  size_t len = writer.getCode().size();
+  auto* code =
+      compilationInfo.stencil.alloc.newArrayUninitialized<uint8_t>(len);
+  if (!code) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  memcpy(code, writer.getCode().data(), len);
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
   if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack(code, len,
+                                                          writer.getFlags())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
-  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
 
-  data.writer().beginObject(flags);
+  return perScriptData().gcThingList().append(objIndex, outIndex);
+}
+
+bool BytecodeEmitter::iteratorResultShape(GCThingIndex* outShape) {
+  // Use |NoValues| to keep the flags consistent with their usage for normal
+  // object literal creation, where |NoValues| is always used in conjunction
+  // with |NewObject|.
+  ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
+
+  ObjLiteralWriter writer;
+  writer.beginObject(flags);
 
   using WellKnownName = js::frontend::WellKnownParserAtoms;
   for (auto name : {&WellKnownName::value, &WellKnownName::done}) {
     const ParserAtom* propName = cx->parserNames().*name;
-    data.writer().setPropName(propName);
+    writer.setPropName(propName);
 
-    if (!data.writer().propWithUndefinedValue(cx)) {
+    if (!writer.propWithUndefinedValue(cx)) {
       return false;
     }
   }
 
-  return perScriptData().gcThingList().append(objIndex, shape);
+  return addObjLiteralData(writer, outShape);
 }
 
 bool BytecodeEmitter::emitPrepareIteratorResult() {
@@ -4693,7 +4708,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
 }
 
 bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
-                                              GCThingIndex* arrayIndex) {
+                                              GCThingIndex* outArrayIndex) {
   uint32_t count = cookedOrRaw->count();
   ParseNode* pn = cookedOrRaw->head();
 
@@ -4706,33 +4721,24 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
     MOZ_ASSERT(cookedOrRaw->isKind(ParseNodeKind::ArrayExpr));
   }
 
-  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
-    return false;
-  }
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
-    js::ReportOutOfMemory(cx);
-    return false;
-  }
-  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
+  ObjLiteralWriter writer;
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
-  data.writer().beginObject(flags);
-  data.writer().beginDenseArrayElements();
+  writer.beginObject(flags);
+  writer.beginDenseArrayElements();
 
   size_t idx;
   for (idx = 0; pn; idx++, pn = pn->pn_next) {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::TemplateStringExpr) ||
                pn->isKind(ParseNodeKind::RawUndefinedExpr));
 
-    if (!emitObjLiteralValue(&data, pn)) {
+    if (!emitObjLiteralValue(writer, pn)) {
       return false;
     }
   }
   MOZ_ASSERT(idx == count);
 
-  return perScriptData().gcThingList().append(objIndex, arrayIndex);
+  return addObjLiteralData(writer, outArrayIndex);
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
@@ -8909,18 +8915,9 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  ObjLiteralFlags flags) {
-  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
-    return false;
-  }
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
-    js::ReportOutOfMemory(cx);
-    return false;
-  }
-  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
+  ObjLiteralWriter writer;
 
-  data.writer().beginObject(flags);
+  writer.beginObject(flags);
   bool noValues = flags.contains(ObjLiteralFlag::NoValues);
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
@@ -8929,7 +8926,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     ParseNode* key = prop->left();
 
     if (key->is<NameNode>()) {
-      data.writer().setPropName(key->as<NameNode>().atom());
+      writer.setPropName(key->as<NameNode>().atom());
     } else {
       double numValue = key->as<NumericLiteral>().value();
       int32_t i = 0;
@@ -8938,23 +8935,23 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
       MOZ_ASSERT(numIsInt);
       MOZ_ASSERT(
           ObjLiteralWriter::arrayIndexInRange(i));  // checked previously.
-      data.writer().setPropIndex(i);
+      writer.setPropIndex(i);
     }
 
     if (noValues) {
-      if (!data.writer().propWithUndefinedValue(cx)) {
+      if (!writer.propWithUndefinedValue(cx)) {
         return false;
       }
     } else {
       ParseNode* value = prop->right();
-      if (!emitObjLiteralValue(&data, value)) {
+      if (!emitObjLiteralValue(writer, value)) {
         return false;
       }
     }
   }
 
   GCThingIndex index;
-  if (!perScriptData().gcThingList().append(objIndex, &index)) {
+  if (!addObjLiteralData(writer, &index)) {
     return false;
   }
 
@@ -8979,18 +8976,9 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   // with |NewObject|.
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
-  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
-    return false;
-  }
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
-    js::ReportOutOfMemory(cx);
-    return false;
-  }
-  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
+  ObjLiteralWriter writer;
 
-  data.writer().beginObject(flags);
+  writer.beginObject(flags);
 
   for (ParseNode* member : pattern->contents()) {
     if (member->isKind(ParseNodeKind::Spread)) {
@@ -9006,15 +8994,15 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       atom = key->as<NameNode>().atom();
     }
 
-    data.writer().setPropName(atom);
+    writer.setPropName(atom);
 
-    if (!data.writer().propWithUndefinedValue(cx)) {
+    if (!writer.propWithUndefinedValue(cx)) {
       return false;
     }
   }
 
   GCThingIndex index;
-  if (!perScriptData().gcThingList().append(objIndex, &index)) {
+  if (!addObjLiteralData(writer, &index)) {
     return false;
   }
 
@@ -9032,33 +9020,24 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 }
 
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
-  ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (uint32_t(objIndex) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
-    return false;
-  }
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
-    js::ReportOutOfMemory(cx);
-    return false;
-  }
-  ObjLiteralStencil& data = compilationInfo.stencil.objLiteralData.back();
+  ObjLiteralWriter writer;
 
   ObjLiteralFlags flags(ObjLiteralFlag::Array);
   if (isCow) {
     // TODO(no-TI): remove.
     flags += ObjLiteralFlag::ArrayCOW;
   }
-  data.writer().beginObject(flags);
+  writer.beginObject(flags);
 
-  data.writer().beginDenseArrayElements();
+  writer.beginDenseArrayElements();
   for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next) {
-    if (!emitObjLiteralValue(&data, elem)) {
+    if (!emitObjLiteralValue(writer, elem)) {
       return false;
     }
   }
 
   GCThingIndex index;
-  if (!perScriptData().gcThingList().append(objIndex, &index)) {
+  if (!addObjLiteralData(writer, &index)) {
     return false;
   }
 
@@ -9080,7 +9059,7 @@ bool BytecodeEmitter::isRHSObjLiteralCompatible(ParseNode* value) {
          value->isKind(ParseNodeKind::TemplateStringExpr);
 }
 
-bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralStencil* data,
+bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralWriter& writer,
                                           ParseNode* value) {
   MOZ_ASSERT(isRHSObjLiteralCompatible(value));
   if (value->isKind(ParseNodeKind::NumberExpr)) {
@@ -9092,28 +9071,28 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralStencil* data,
     } else {
       v.setDouble(numValue);
     }
-    if (!data->writer().propWithConstNumericValue(cx, v)) {
+    if (!writer.propWithConstNumericValue(cx, v)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::TrueExpr)) {
-    if (!data->writer().propWithTrueValue(cx)) {
+    if (!writer.propWithTrueValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::FalseExpr)) {
-    if (!data->writer().propWithFalseValue(cx)) {
+    if (!writer.propWithFalseValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::NullExpr)) {
-    if (!data->writer().propWithNullValue(cx)) {
+    if (!writer.propWithNullValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::RawUndefinedExpr)) {
-    if (!data->writer().propWithUndefinedValue(cx)) {
+    if (!writer.propWithUndefinedValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::StringExpr) ||
              value->isKind(ParseNodeKind::TemplateStringExpr)) {
-    if (!data->writer().propWithAtomValue(cx, value->as<NameNode>().atom())) {
+    if (!writer.propWithAtomValue(cx, value->as<NameNode>().atom())) {
       return false;
     }
   } else {
