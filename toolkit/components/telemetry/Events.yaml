@@ -1963,17 +1963,17 @@ security.ui.app_menu:
       - 1603545
       - 1616229
       - 1643428
+      - 1678201
     description: >
       Privacy and Security click events on app menu.
     objects: [
       "open_full_report",
     ]
-    expiry_version: "86"
+    expiry_version: "97"
     record_in_processes:
       - main
     release_channel_collection: opt-out
     notification_emails:
-      - chsiang@mozilla.com
       - ewright@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
@@ -1986,14 +1986,14 @@ security.ui.protectionspopup:
       - 1560327
       - 1607488
       - 1643428
+      - 1678201
     description: >
       How many times the protections panel was opened.
-    expiry_version: "86"
+    expiry_version: "97"
     notification_emails:
       - ewright@mozilla.com
       - nhnt11@mozilla.com
       - jhofmann@mozilla.com
-      - chsiang@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
@@ -2022,14 +2022,14 @@ security.ui.protectionspopup:
       - 1602015
       - 1607488
       - 1643428
+      - 1678201
     description: >
       User interaction by click events in the protections panel.
-    expiry_version: "86"
+    expiry_version: "97"
     notification_emails:
       - ewright@mozilla.com
       - nhnt11@mozilla.com
       - jhofmann@mozilla.com
-      - chsiang@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
