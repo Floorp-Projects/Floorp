@@ -916,49 +916,6 @@ bool FallbackICCodeCompiler::emit_ToBool() {
   return tailCallVM<Fn, DoToBoolFallback>(masm);
 }
 
-// TODO(no-TI): can this be replaced with TryAttachStub?
-static void TryAttachGetPropStub(const char* name, JSContext* cx,
-                                 BaselineFrame* frame, ICFallbackStub* stub,
-                                 CacheKind kind, HandleValue val,
-                                 HandleValue idVal, HandleValue receiver) {
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
-
-  if (stub->state().canAttachStub()) {
-    RootedScript script(cx, frame->script());
-    ICScript* icScript = frame->icScript();
-    jsbytecode* pc = stub->icEntry()->pc(script);
-    bool attached = false;
-
-    GetPropIRGenerator gen(cx, script, pc, stub->state().mode(), kind, val,
-                           idVal, receiver);
-    switch (gen.tryAttachStub()) {
-      case AttachDecision::Attach: {
-        ICStub* newStub =
-            AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                      BaselineCacheIRStubKind::Regular, script,
-                                      icScript, stub, &attached);
-        if (newStub) {
-          JitSpew(JitSpew_BaselineIC, "  Attached %s CacheIR stub", name);
-        }
-      } break;
-      case AttachDecision::NoAction:
-        break;
-      case AttachDecision::TemporarilyUnoptimizable:
-        attached = true;
-        break;
-      case AttachDecision::Deferred:
-        MOZ_ASSERT_UNREACHABLE("No deferred GetProp stubs");
-        break;
-    }
-
-    if (!attached) {
-      stub->trackNotAttached(cx, frame->invalidationScript());
-    }
-  }
-}
-
 //
 // GetElem_Fallback
 //
@@ -985,8 +942,9 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
         MaybeGetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res);
   }
 
-  TryAttachGetPropStub("GetElem", cx, frame, stub, CacheKind::GetElem, lhs, rhs,
-                       lhs);
+  TryAttachStub<GetPropIRGenerator>("GetElem", cx, frame, stub,
+                                    BaselineCacheIRStubKind::Regular,
+                                    CacheKind::GetElem, lhs, rhs, lhs);
 
   if (!isOptimizedArgs) {
     if (!GetElementOperation(cx, lhsCopy, rhs, res)) {
@@ -1011,8 +969,9 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::GetElemSuper);
 
-  TryAttachGetPropStub("GetElemSuper", cx, frame, stub, CacheKind::GetElemSuper,
-                       lhs, rhs, receiver);
+  TryAttachStub<GetPropIRGenerator>(
+      "GetElemSuper", cx, frame, stub, BaselineCacheIRStubKind::Regular,
+      CacheKind::GetElemSuper, lhs, rhs, receiver);
 
   // |lhs| is [[HomeObject]].[[Prototype]] which must be Object
   RootedObject lhsObj(cx, &lhs.toObject());
@@ -1587,14 +1546,11 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedPropertyName name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
 
-  TryAttachGetPropStub("GetProp", cx, frame, stub, CacheKind::GetProp, val,
-                       idVal, val);
+  TryAttachStub<GetPropIRGenerator>("GetProp", cx, frame, stub,
+                                    BaselineCacheIRStubKind::Regular,
+                                    CacheKind::GetProp, val, idVal, val);
 
-  if (!ComputeGetPropResult(cx, frame, op, name, val, res)) {
-    return false;
-  }
-
-  return true;
+  return ComputeGetPropResult(cx, frame, op, name, val, res);
 }
 
 bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
@@ -1611,8 +1567,9 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
   RootedPropertyName name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
 
-  TryAttachGetPropStub("GetPropSuper", cx, frame, stub, CacheKind::GetPropSuper,
-                       val, idVal, receiver);
+  TryAttachStub<GetPropIRGenerator>(
+      "GetPropSuper", cx, frame, stub, BaselineCacheIRStubKind::Regular,
+      CacheKind::GetPropSuper, val, idVal, receiver);
 
   // |val| is [[HomeObject]].[[Prototype]] which must be Object
   RootedObject valObj(cx, &val.toObject());
