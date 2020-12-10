@@ -39,9 +39,8 @@
 namespace mozilla::dom {
 
 // We don't use NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE because we need to
-// unregister our MediaKeys from mDocument's activity listeners. If we don't do
-// this then cycle collection can null mDocument before our dtor runs and the
-// observer ptr held by mDocument will dangle.
+// disconnect our MediaKeys instances from the inner window (mparent) before
+// we unlink it.
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaKeys)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaKeys)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
@@ -49,18 +48,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaKeys)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mKeySessions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromises)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingSessions)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(MediaKeys)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaKeys)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
+  tmp->DisconnectInnerWindow();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mKeySessions)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromises)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingSessions)
-  tmp->UnregisterActivityObserver();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -70,7 +67,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaKeys)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeys)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
 NS_INTERFACE_MAP_END
 
 MediaKeys::MediaKeys(nsPIDOMWindowInner* aParent, const nsAString& aKeySystem,
@@ -84,36 +80,48 @@ MediaKeys::MediaKeys(nsPIDOMWindowInner* aParent, const nsAString& aKeySystem,
 }
 
 MediaKeys::~MediaKeys() {
-  UnregisterActivityObserver();
-  mDocument = nullptr;
+  MOZ_ASSERT(NS_IsMainThread());
+
+  DisconnectInnerWindow();
   Shutdown();
   EME_LOG("MediaKeys[%p] destroyed", this);
 }
 
-void MediaKeys::RegisterActivityObserver() {
-  MOZ_ASSERT(mDocument);
-  if (mDocument) {
-    mDocument->RegisterActivityObserver(this);
-  }
+void MediaKeys::ConnectInnerWindow() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsPIDOMWindowInner> innerWindowParent = GetParentObject();
+  MOZ_ASSERT(innerWindowParent,
+             "We should only be connecting when we have an inner window!");
+  innerWindowParent->AddMediaKeysInstance(this);
 }
 
-void MediaKeys::UnregisterActivityObserver() {
-  if (mDocument) {
-    mDocument->UnregisterActivityObserver(this);
+void MediaKeys::DisconnectInnerWindow() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!GetParentObject()) {
+    // We don't have a parent. We've been cycle collected, or the window
+    // already notified us of its destruction and we cleared the ref.
+    return;
   }
+
+  GetParentObject()->RemoveMediaKeysInstance(this);
 }
 
-// NS_DECL_NSIDOCUMENTACTIVITY
-void MediaKeys::NotifyOwnerDocumentActivityChanged() {
-  EME_LOG("MediaKeys[%p] NotifyOwnerDocumentActivityChanged()", this);
-  // If our owning document is no longer active we should shutdown.
-  if (!mDocument->IsCurrentActiveDocument()) {
-    EME_LOG(
-        "MediaKeys[%p] NotifyOwnerDocumentActivityChanged() owning document is "
-        "not active, shutting down!",
-        this);
-    Shutdown();
-  }
+void MediaKeys::OnInnerWindowDestroy() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  EME_LOG("MediaKeys[%p] OnInnerWindowDestroy()", this);
+
+  // The InnerWindow should clear its reference to this object after this call,
+  // so we don't need to explicitly call DisconnectInnerWindow before nulling.
+  mParent = nullptr;
+
+  // Don't call shutdown directly because (at time of writing) mProxy can
+  // spin the event loop when it's shutdown. This can change the world state
+  // in the middle of window destruction, which we do not want.
+  GetMainThreadEventTarget()->Dispatch(
+      NewRunnableMethod("MediaKeys::Shutdown", this, &MediaKeys::Shutdown));
 }
 
 void MediaKeys::Terminated() {
@@ -148,7 +156,10 @@ void MediaKeys::Shutdown() {
     mProxy = nullptr;
   }
 
-  RefPtr<MediaKeys> kungFuDeathGrip = this;
+  // Hold a self reference to keep us alive after we clear the self reference
+  // for each promise. This ensures we stay alive until we're done shutting
+  // down.
+  RefPtr<MediaKeys> selfReference = this;
 
   for (auto iter = mPromises.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<dom::DetailedPromise>& promise = iter.Data();
@@ -410,6 +421,7 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
 
   // Begin figuring out the top level principal.
   nsCOMPtr<nsPIDOMWindowInner> window = GetParentObject();
+
   // If we're in a top level document, getting the top level principal is easy.
   // However, we're not in a top level doc this becomes more complicated. If
   // we're not top level we need to get the top level principal, this can be
@@ -422,8 +434,8 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   // walking up a level in the window context chain. See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1675360
   // for more info.
-  mDocument = window->GetExtantDoc();
-  if (!mDocument) {
+  Document* document = window->GetExtantDoc();
+  if (!document) {
     NS_WARNING("Failed to get document when creating MediaKeys");
     promise->MaybeRejectWithInvalidStateError(
         "Couldn't get document in MediaKeys::Init");
@@ -445,9 +457,9 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   } else {
     // We have a different origin than the top doc, try and find the top level
     // principal by looking it up via load info, which we read off a channel.
-    nsIChannel* channel = mDocument->GetChannel();
+    nsIChannel* channel = document->GetChannel();
 
-    WindowContext* windowContext = mDocument->GetWindowContext();
+    WindowContext* windowContext = document->GetWindowContext();
     if (!windowContext) {
       NS_WARNING("Failed to get window context when creating MediaKeys");
       promise->MaybeRejectWithInvalidStateError(
@@ -537,7 +549,7 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
                NS_ConvertUTF8toUTF16(topLevelOrigin),
                KeySystemToGMPName(mKeySystem));
 
-  RegisterActivityObserver();
+  ConnectInnerWindow();
 
   return promise.forget();
 }

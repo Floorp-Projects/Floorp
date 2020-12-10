@@ -61,6 +61,7 @@ class DocGroup;
 class Document;
 class Element;
 class Location;
+class MediaKeys;
 class Navigator;
 class Performance;
 class Selection;
@@ -167,6 +168,21 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   void UnmuteAudioContexts();
 
   void SetAudioCapture(bool aCapture);
+
+  /**
+   * Associate this inner window with a MediaKeys instance.
+   */
+  void AddMediaKeysInstance(mozilla::dom::MediaKeys* aMediaKeysInstance);
+
+  /**
+   * Remove an association between this inner window and a MediaKeys instance.
+   */
+  void RemoveMediaKeysInstance(mozilla::dom::MediaKeys* aMediaKeysInstance);
+
+  /**
+   * Return if any MediaKeys instances are associated with this window.
+   */
+  bool HasActiveMediaKeysInstance();
 
   mozilla::dom::Performance* GetPerformance();
 
@@ -640,6 +656,11 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   // The AudioContexts created for the current document, if any.
   nsTArray<mozilla::dom::AudioContext*> mAudioContexts;  // Weak
+
+  // Instances of MediaKeys created in this inner window. Storing these allows
+  // us to shutdown MediaKeys when an inner windows is destroyed. We can also
+  // use the presence of MediaKeys to assess if a window has EME activity.
+  nsTArray<mozilla::dom::MediaKeys*> mMediaKeysInstances;  // Weak
 
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
