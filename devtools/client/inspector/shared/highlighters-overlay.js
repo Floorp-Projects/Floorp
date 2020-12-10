@@ -72,10 +72,6 @@ const HIGHLIGHTER_EVENTS = {
     shown: "grid-highlighter-shown",
     hidden: "grid-highlighter-hidden",
   },
-  [TYPES.FLEXBOX]: {
-    shown: "flexbox-highlighter-shown",
-    hidden: "flexbox-highlighter-hidden",
-  },
   [TYPES.GEOMETRY]: {
     shown: "geometry-editor-highlighter-shown",
     hidden: "geometry-editor-highlighter-hidden",
@@ -199,11 +195,6 @@ class HighlightersOverlay {
     this.walker.on("display-change", this.onDisplayChange);
 
     EventEmitter.decorate(this);
-  }
-
-  // FIXME: Temporary shim to get node currently highlighted by flexbox highlighter
-  get flexboxHighlighterShown() {
-    return this.getNodeForActiveHighlighter(TYPES.FLEXBOX);
   }
 
   /**

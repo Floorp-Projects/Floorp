@@ -47,21 +47,22 @@ registerCleanupFunction(() => {
  *
  * @param  {DOMNode} button
  *         The flexbox highlighter toggle button in the flex container panel.
- * @param  {HighlightersOverlay} highlighters
- *         The HighlightersOverlay instance.
- * @param  {Store} store
- *         The Redux store instance.
+ * @param  {Inspector} inspector
+ *         Inspector panel instance.
  */
-async function toggleHighlighterON(button, highlighters, store) {
+async function toggleHighlighterON(button, inspector) {
   info("Toggling ON the flexbox highlighter from the layout panel.");
-  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
+  const onHighlighterShown = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.FLEXBOX
+  );
+  const { store } = inspector;
   const onToggleChange = waitUntilState(
     store,
     state => state.flexbox.highlighted
   );
   button.click();
-  await onHighlighterShown;
-  await onToggleChange;
+  await Promise.all([onHighlighterShown, onToggleChange]);
 }
 
 /**
@@ -70,19 +71,20 @@ async function toggleHighlighterON(button, highlighters, store) {
  *
  * @param  {DOMNode} button
  *         The flexbox highlighter toggle button in the flex container panel.
- * @param  {HighlightersOverlay} highlighters
- *         The HighlightersOverlay instance.
- * @param  {Store} store
- *         The Redux store instance.
+ * @param  {Inspector} inspector
+ *         Inspector panel instance.
  */
-async function toggleHighlighterOFF(button, highlighters, store) {
+async function toggleHighlighterOFF(button, inspector) {
   info("Toggling OFF the flexbox highlighter from the layout panel.");
-  const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
+  const { waitForHighlighterTypeHidden } = getHighlighterTestHelpers(inspector);
+  const onHighlighterHidden = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.FLEXBOX
+  );
+  const { store } = inspector;
   const onToggleChange = waitUntilState(
     store,
     state => !state.flexbox.highlighted
   );
   button.click();
-  await onHighlighterHidden;
-  await onToggleChange;
+  await Promise.all([onHighlighterHidden, onToggleChange]);
 }

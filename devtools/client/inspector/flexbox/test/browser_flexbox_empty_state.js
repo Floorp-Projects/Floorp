@@ -11,19 +11,14 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, flexboxInspector } = await openLayoutView();
+  const { flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
-  const { highlighters } = inspector;
 
   info("Checking the initial state of the Flexbox Inspector.");
   ok(
     doc.querySelector(
       ".flex-accordion .devtools-sidepanel-no-result",
-      "A message is displayede when no flex container is selected."
+      "A message is shown when no flex container is selected."
     )
-  );
-  ok(
-    !highlighters.flexboxHighlighterShown,
-    "No flexbox highlighter exists in the highlighters overlay."
   );
 });

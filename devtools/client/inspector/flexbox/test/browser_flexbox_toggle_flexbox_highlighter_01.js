@@ -11,7 +11,8 @@ add_task(async function() {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
-  const { highlighters, store } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
+  const { getActiveHighlighter } = getHighlighterTestHelpers(inspector);
 
   const onFlexHighlighterToggleRendered = waitForDOM(
     doc,
@@ -26,21 +27,27 @@ add_task(async function() {
     !flexHighlighterToggle.checked,
     "The flexbox highlighter toggle is unchecked."
   );
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
 
-  await toggleHighlighterON(flexHighlighterToggle, highlighters, store);
+  await toggleHighlighterON(flexHighlighterToggle, inspector);
 
   info("Checking the flexbox highlighter is created.");
-  ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
+  ok(getActiveHighlighter(HIGHLIGHTER_TYPE), "Flexbox highlighter is shown.");
   ok(
     flexHighlighterToggle.checked,
     "The flexbox highlighter toggle is checked."
   );
 
-  await toggleHighlighterOFF(flexHighlighterToggle, highlighters, store);
+  await toggleHighlighterOFF(flexHighlighterToggle, inspector);
 
   info("Checking the flexbox highlighter is not shown.");
-  ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
+  ok(
+    !getActiveHighlighter(HIGHLIGHTER_TYPE),
+    "No flexbox highlighter is shown."
+  );
   ok(
     !flexHighlighterToggle.checked,
     "The flexbox highlighter toggle is unchecked."
