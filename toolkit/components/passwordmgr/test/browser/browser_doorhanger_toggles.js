@@ -449,6 +449,7 @@ async function checkForm(browser, expected) {
 
 async function submitForm(browser, action = "") {
   // Submit the form
+  let correctPathNamePromise = BrowserTestUtils.browserLoaded(browser);
   await SpecialPowers.spawn(browser, [action], async function(actionPathname) {
     let form = content.document.querySelector("form");
     if (actionPathname) {
@@ -456,7 +457,10 @@ async function submitForm(browser, action = "") {
     }
     info("Submitting form to:" + form.action);
     form.submit();
-
+    info("Submitted the form");
+  });
+  await correctPathNamePromise;
+  await SpecialPowers.spawn(browser, [action], async actionPathname => {
     let win = content;
     await ContentTaskUtils.waitForCondition(() => {
       return (
