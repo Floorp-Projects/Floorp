@@ -8,6 +8,7 @@
 #define mozilla_glean_GleanEvent_h
 
 #include "nsIGleanMetrics.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Tuple.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -18,14 +19,6 @@ namespace mozilla::glean {
 class GleanEvent;
 
 namespace impl {
-
-extern "C" {
-void fog_event_record(uint32_t id, const nsTArray<int32_t>* extra_keys,
-                      const nsTArray<nsCString>* extra_values);
-void fog_event_record_str(uint32_t id, const nsTArray<nsCString>* extra_keys,
-                          const nsTArray<nsCString>* extra_values);
-bool fog_event_test_has_value(uint32_t id, const nsACString* storageName);
-}
 
 /**
  * Represents the recorded data for a single event
