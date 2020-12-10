@@ -86,7 +86,7 @@ const vixl::MacroAssembler& MacroAssemblerCompat::asVIXL() const {
 }
 
 void MacroAssemblerCompat::mov(CodeLabel* label, Register dest) {
-  BufferOffset bo = movePatchablePtr(ImmPtr(/* placeholder */ nullptr), dest);
+  BufferOffset bo = movePatchablePtr(ImmWord(/* placeholder */ 0), dest);
   label->patchAt()->bind(bo.getOffset());
   label->setLinkMode(CodeLabel::MoveImmediate);
 }
