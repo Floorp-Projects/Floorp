@@ -1132,18 +1132,6 @@ TextPropertyEditor.prototype = {
       session_id: this.toolbox.sessionId,
     });
 
-    // Since the value was changed, check if the original property was a flex or grid
-    // display declaration and hide their respective highlighters.
-    if (this.isDisplayFlex()) {
-      this.ruleView.highlighters.hideFlexboxHighlighter();
-    }
-
-    if (this.isDisplayGrid()) {
-      this.ruleView.highlighters.hideGridHighlighter(
-        this.ruleView.inspector.selection.nodeFront
-      );
-    }
-
     // First, set this property value (common case, only modified a property)
     this.prop.setValue(val.value, val.priority);
 
@@ -1281,30 +1269,6 @@ TextPropertyEditor.prototype = {
    */
   isNameValid: function() {
     return this.prop.isNameValid();
-  },
-
-  /**
-   * Returns true if the property is a `display: [inline-]flex` declaration.
-   *
-   * @return {Boolean} true if the property is a `display: [inline-]flex` declaration.
-   */
-  isDisplayFlex: function() {
-    return (
-      this.prop.name === "display" &&
-      (this.prop.value === "flex" || this.prop.value === "inline-flex")
-    );
-  },
-
-  /**
-   * Returns true if the property is a `display: [inline-]grid` declaration.
-   *
-   * @return {Boolean} true if the property is a `display: [inline-]grid` declaration.
-   */
-  isDisplayGrid: function() {
-    return (
-      this.prop.name === "display" &&
-      (this.prop.value === "grid" || this.prop.value === "inline-grid")
-    );
   },
 };
 
