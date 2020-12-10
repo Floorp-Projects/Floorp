@@ -380,7 +380,10 @@
           if (!aEngine) {
             aEngine = this.currentEngine;
           }
-          BrowserSearch.recordOneoffSearchInTelemetry(aEngine, source, type);
+          BrowserSearchTelemetry.recordSearch(gBrowser, aEngine, source, {
+            type,
+            isOneOff: true,
+          });
         }
       }
 
@@ -440,7 +443,12 @@
         selection: telemetrySearchDetails,
         url: submission.uri,
       };
-      BrowserSearch.recordSearchInTelemetry(engine, "searchbar", details);
+      BrowserSearchTelemetry.recordSearch(
+        gBrowser,
+        engine,
+        "searchbar",
+        details
+      );
       // null parameter below specifies HTML response for search
       let params = {
         postData: submission.postData,

@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchUIUtils: "resource:///modules/SearchUIUtils.jsm",
@@ -1073,11 +1074,10 @@ class SearchOneOffs {
       source += "-" + this.telemetryOrigin;
     }
 
-    this.window.BrowserSearch.recordOneoffSearchInTelemetry(
-      engine,
-      source,
-      type
-    );
+    BrowserSearchTelemetry.recordSearch(this.window.gBrowser, engine, source, {
+      type,
+      isOneOff: true,
+    });
     return true;
   }
 

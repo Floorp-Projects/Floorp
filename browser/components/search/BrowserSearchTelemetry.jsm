@@ -83,50 +83,58 @@ class BrowserSearchTelemetryHandler {
    * @throws if source is not in the known sources list.
    */
   recordSearch(tabbrowser, engine, source, details = {}) {
-    if (!this.shouldRecordSearchCount(tabbrowser)) {
-      return;
-    }
+    try {
+      if (!this.shouldRecordSearchCount(tabbrowser)) {
+        return;
+      }
 
-    const countIdPrefix = `${engine.telemetryId}.`;
-    const countIdSource = countIdPrefix + source;
-    let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+      const countIdPrefix = `${engine.telemetryId}.`;
+      const countIdSource = countIdPrefix + source;
+      let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
 
-    if (details.isOneOff) {
-      if (!KNOWN_ONEOFF_SOURCES.includes(source)) {
-        // Silently drop the error if this bogus call
-        // came from 'urlbar' or 'searchbar'. They're
-        // calling |recordSearch| twice from two different
-        // code paths because they want to record the search
-        // in SEARCH_COUNTS.
-        if (["urlbar", "searchbar"].includes(source)) {
-          histogram.add(countIdSource);
-          PartnerLinkAttribution.makeSearchEngineRequest(
-            engine,
-            details.url
-          ).catch(Cu.reportError);
+      if (details.isOneOff) {
+        if (!KNOWN_ONEOFF_SOURCES.includes(source)) {
+          // Silently drop the error if this bogus call
+          // came from 'urlbar' or 'searchbar'. They're
+          // calling |recordSearch| twice from two different
+          // code paths because they want to record the search
+          // in SEARCH_COUNTS.
+          if (["urlbar", "searchbar"].includes(source)) {
+            histogram.add(countIdSource);
+            PartnerLinkAttribution.makeSearchEngineRequest(
+              engine,
+              details.url
+            ).catch(Cu.reportError);
+            return;
+          }
+          console.trace("Unknown source for one-off search: ", source);
           return;
         }
-        throw new Error("Unknown source for one-off search: " + source);
-      }
-    } else {
-      if (!KNOWN_SEARCH_SOURCES.includes(source)) {
-        throw new Error("Unknown source for search: " + source);
-      }
-      if (
-        details.alias &&
-        engine.isAppProvided &&
-        engine.aliases.includes(details.alias)
-      ) {
-        // This is a keyword search using an AppProvided engine.
-        // Record the source as "alias", not "urlbar".
-        histogram.add(countIdPrefix + "alias");
       } else {
-        histogram.add(countIdSource);
+        if (!KNOWN_SEARCH_SOURCES.includes(source)) {
+          console.trace("Unknown source for search: ", source);
+          return;
+        }
+        if (
+          details.alias &&
+          engine.isAppProvided &&
+          engine.aliases.includes(details.alias)
+        ) {
+          // This is a keyword search using an AppProvided engine.
+          // Record the source as "alias", not "urlbar".
+          histogram.add(countIdPrefix + "alias");
+        } else {
+          histogram.add(countIdSource);
+        }
       }
-    }
 
-    // Dispatch the search signal to other handlers.
-    this._handleSearchAction(engine, source, details);
+      // Dispatch the search signal to other handlers.
+      this._handleSearchAction(engine, source, details);
+    } catch (ex) {
+      // Catch any errors here, so that search actions are not broken if
+      // telemetry is broken for some reason.
+      console.error(ex);
+    }
   }
 
   _recordSearch(engine, url, source, action = null) {
