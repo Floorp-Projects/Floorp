@@ -1430,7 +1430,7 @@ function PrintUIControlMixin(superClass) {
         this.update(settings);
       });
 
-      this.addEventListener("change", this);
+      this.addEventListener("input", this);
     }
 
     render() {}
@@ -1514,7 +1514,7 @@ class PrintSettingSelect extends PrintUIControlMixin(HTMLSelectElement) {
   }
 
   handleEvent(e) {
-    if (e.type == "change" && this.settingName) {
+    if (e.type == "input" && this.settingName) {
       this.dispatchSettingsChange({
         [this.settingName]: e.target.value,
       });
@@ -1568,7 +1568,7 @@ class ColorModePicker extends PrintSettingSelect {
   }
 
   handleEvent(e) {
-    if (e.type == "change") {
+    if (e.type == "input") {
       // turn our string value into the expected boolean
       this.dispatchSettingsChange({
         [this.settingName]: this.value == "color",
@@ -1620,7 +1620,6 @@ customElements.define("orientation-input", OrientationInput);
 class CopiesInput extends PrintUIControlMixin(HTMLInputElement) {
   initialize() {
     super.initialize();
-    this.addEventListener("input", this);
     this.addEventListener("keypress", this);
     this.addEventListener("paste", this);
   }
@@ -1654,10 +1653,8 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   initialize() {
     super.initialize();
 
-    this.addEventListener("change", this);
     this.addEventListener("submit", this);
     this.addEventListener("click", this);
-    this.addEventListener("input", this);
     this.addEventListener("revalidate", this);
 
     this._printerDestination = this.querySelector("#destination");
@@ -1756,11 +1753,7 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
       if (e.submitter.name == "print" && this.checkValidity()) {
         this.dispatchEvent(new Event("print", { bubbles: true }));
       }
-    } else if (
-      e.type == "change" ||
-      e.type == "input" ||
-      e.type == "revalidate"
-    ) {
+    } else if (e.type == "input" || e.type == "revalidate") {
       this.enable();
     }
   }
@@ -1780,10 +1773,8 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
     this._scaleChoice = this.querySelector("#percent-scale-choice");
     this._scaleError = this.querySelector("#error-invalid-scale");
 
-    this._percentScale.addEventListener("input", this);
     this._percentScale.addEventListener("keypress", this);
     this._percentScale.addEventListener("paste", this);
-    this.addEventListener("input", this);
   }
 
   updateScale() {
@@ -1824,11 +1815,6 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    if (e.type == "change") {
-      // We listen to input events, no need for change too.
-      return;
-    }
-
     if (e.type == "keypress") {
       this.handleKeypress(e);
       return;
@@ -1884,7 +1870,6 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
     this._pagesSet = new Set();
 
-    this.addEventListener("input", this);
     this.addEventListener("keypress", this);
     this.addEventListener("paste", this);
     document.addEventListener("page-count", this);
@@ -2082,12 +2067,6 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    if (e.type == "change") {
-      // We handle input events rather than change events, make sure we only
-      // dispatch one settings change per user change.
-      return;
-    }
-
     if (e.type == "keypress") {
       if (e.target == this._rangeInput) {
         this.handleKeypress(e);
@@ -2142,7 +2121,6 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
     this._customRightMargin = this.querySelector("#custom-margin-right");
     this._marginError = this.querySelector("#error-invalid-margin");
 
-    this.addEventListener("input", this);
     this.addEventListener("keypress", this);
     this.addEventListener("paste", this);
   }
@@ -2261,12 +2239,6 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
   }
 
   handleEvent(e) {
-    if (e.type == "change") {
-      // We handle input events rather than change events, make sure we only
-      // dispatch one settings change per user change.
-      return;
-    }
-
     if (e.type == "keypress") {
       this.handleKeypress(e);
       return;
