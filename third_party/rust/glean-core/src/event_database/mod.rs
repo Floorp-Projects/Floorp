@@ -121,15 +121,20 @@ impl EventDatabase {
         match self.load_events_from_disk() {
             Ok(_) => self.send_all_events(glean),
             Err(err) => {
-                log::error!("Error loading events from disk: {}", err);
+                log::warn!("Error loading events from disk: {}", err);
                 false
             }
         }
     }
 
     fn load_events_from_disk(&self) -> Result<()> {
-        let _lock = self.file_lock.read().unwrap(); // safe unwrap, only error case is poisoning
+        // NOTE: The order of locks here is important.
+        // In other code parts we might acquire the `file_lock` when we already have acquired
+        // a lock on `event_stores`.
+        // This is a potential lock-order-inversion.
         let mut db = self.event_stores.write().unwrap(); // safe unwrap, only error case is poisoning
+        let _lock = self.file_lock.read().unwrap(); // safe unwrap, only error case is poisoning
+
         for entry in fs::read_dir(&self.path)? {
             let entry = entry?;
             if entry.file_type()?.is_file() {
@@ -156,7 +161,7 @@ impl EventDatabase {
         let mut ping_sent = false;
         for store_name in store_names {
             if let Err(err) = glean.submit_ping_by_name(&store_name, Some("startup")) {
-                log::error!(
+                log::warn!(
                     "Error flushing existing events to the '{}' ping: {}",
                     store_name,
                     err
@@ -220,7 +225,7 @@ impl EventDatabase {
         // containing those events immediately.
         for store_name in stores_to_submit {
             if let Err(err) = glean.submit_ping_by_name(store_name, Some("max_capacity")) {
-                log::error!(
+                log::warn!(
                     "Got more than {} events, but could not send {} ping: {}",
                     glean.get_max_events(),
                     store_name,
@@ -244,7 +249,7 @@ impl EventDatabase {
             .open(self.path.join(store_name))
             .and_then(|mut file| writeln!(file, "{}", event_json))
         {
-            log::error!("IO error writing event to store '{}': {}", store_name, err);
+            log::warn!("IO error writing event to store '{}': {}", store_name, err);
         }
     }
 
@@ -275,7 +280,7 @@ impl EventDatabase {
                         store.iter().map(|e| e.serialize_relative(first_timestamp)),
                     ))
                 } else {
-                    log::error!("Unexpectly got empty event store for '{}'", store_name);
+                    log::warn!("Unexpectly got empty event store for '{}'", store_name);
                     None
                 }
             })
@@ -293,7 +298,7 @@ impl EventDatabase {
                     std::io::ErrorKind::NotFound => {
                         // silently drop this error, the file was already non-existing
                     }
-                    _ => log::error!("Error removing events queue file '{}': {}", store_name, err),
+                    _ => log::warn!("Error removing events queue file '{}': {}", store_name, err),
                 }
             }
         }

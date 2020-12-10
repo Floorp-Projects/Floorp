@@ -122,14 +122,14 @@ impl PingDirectoryManager {
         let path = match self.get_file_path(uuid) {
             Some(path) => path,
             None => {
-                log::error!("Cannot find ping file to delete {}", uuid);
+                log::warn!("Cannot find ping file to delete {}", uuid);
                 return false;
             }
         };
 
         match fs::remove_file(&path) {
             Err(e) => {
-                log::error!("Error deleting file {}. {}", path.display(), e);
+                log::warn!("Error deleting file {}. {}", path.display(), e);
                 return false;
             }
             _ => log::info!("File was deleted {}", path.display()),
@@ -149,14 +149,14 @@ impl PingDirectoryManager {
         let path = match self.get_file_path(document_id) {
             Some(path) => path,
             None => {
-                log::error!("Cannot find ping file to process {}", document_id);
+                log::warn!("Cannot find ping file to process {}", document_id);
                 return None;
             }
         };
         let file = match File::open(&path) {
             Ok(file) => file,
             Err(e) => {
-                log::error!("Error reading ping file {}. {}", path.display(), e);
+                log::warn!("Error reading ping file {}. {}", path.display(), e);
                 return None;
             }
         };
@@ -202,7 +202,7 @@ impl PingDirectoryManager {
     ///
     /// A vector of tuples with the file size and payload of each ping file in the directory.
     fn process_dir(&self, dir: &Path) -> Vec<(u64, PingPayload)> {
-        log::info!("Processing persisted pings.");
+        log::trace!("Processing persisted pings.");
 
         let entries = match dir.read_dir() {
             Ok(entries) => entries,

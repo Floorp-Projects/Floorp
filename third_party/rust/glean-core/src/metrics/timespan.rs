@@ -48,9 +48,10 @@ impl TimespanMetric {
 
     /// Starts tracking time for the provided metric.
     ///
-    /// This records an error if it's already tracking time (i.e. start was already
-    /// called with no corresponding `stop`): in that case the original
-    /// start time will be preserved.
+    /// This records an error if it's already tracking time (i.e. start was
+    /// already called with no corresponding
+    /// [`set_stop`](TimespanMetric::set_stop)): in that case the original start
+    /// time will be preserved.
     pub fn set_start(&mut self, glean: &Glean, start_time: u64) {
         if !self.should_record(glean) {
             return;
@@ -72,7 +73,7 @@ impl TimespanMetric {
 
     /// Stops tracking time for the provided metric. Sets the metric to the elapsed time.
     ///
-    /// This will record an error if no `start` was called.
+    /// This will record an error if no [`set_start`](TimespanMetric::set_start) was called.
     pub fn set_stop(&mut self, glean: &Glean, stop_time: u64) {
         if !self.should_record(glean) {
             // Reset timer when disabled, so that we don't record timespans across
@@ -110,18 +111,22 @@ impl TimespanMetric {
         self.set_raw(glean, duration, false);
     }
 
-    /// Aborts a previous `start` call. No error is recorded if no `start` was called.
+    /// Aborts a previous [`set_start`](TimespanMetric::set_start) call. No
+    /// error is recorded if no [`set_start`](TimespanMetric::set_start) was
+    /// called.
     pub fn cancel(&mut self) {
         self.start_time = None;
     }
 
     /// Explicitly sets the timespan value.
     ///
-    /// This API should only be used if your library or application requires recording
-    /// times in a way that can not make use of `start`/`stop`/`cancel`.
+    /// This API should only be used if your library or application requires
+    /// recording times in a way that can not make use of
+    /// [`set_start`](TimespanMetric::set_start)/[`set_stop`](TimespanMetric::set_stop)/[`cancel`](TimespanMetric::cancel).
     ///
-    /// Care should be taken using this if the ping lifetime might contain more than one
-    /// timespan measurement. To be safe, `set_raw` should generally be followed by
+    /// Care should be taken using this if the ping lifetime might contain more
+    /// than one timespan measurement. To be safe,
+    /// [`set_raw`](TimespanMetric::set_raw) should generally be followed by
     /// sending a custom ping containing the timespan.
     ///
     /// # Arguments

@@ -8,8 +8,8 @@ use serde::Deserialize;
 /// Deserialized experiment data.
 #[derive(Clone, Deserialize, Debug)]
 pub struct RecordedExperimentData {
-    /// The experiment's branch as set through `set_experiment_active`.
+    /// The experiment's branch as set through [`set_experiment_active`](crate::set_experiment_active).
     pub branch: String,
-    /// Any extra data associated with this experiment through `set_experiment_active`.
+    /// Any extra data associated with this experiment through [`set_experiment_active`](crate::set_experiment_active).
     pub extra: Option<HashMap<String, String>>,
 }

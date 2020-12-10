@@ -49,7 +49,7 @@ fn gzip_content(path: &str, content: &[u8]) -> Option<Vec<u8>> {
 
     // Attempt to add the content to the gzipper.
     if let Err(e) = gzipper.write_all(content) {
-        log::error!("Failed to write to the gzipper: {} - {:?}", path, e);
+        log::warn!("Failed to write to the gzipper: {} - {:?}", path, e);
         return None;
     }
 

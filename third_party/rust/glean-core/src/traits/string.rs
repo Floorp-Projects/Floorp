@@ -4,7 +4,7 @@
 
 use crate::ErrorType;
 
-/// A description for the `StringMetric` type.
+/// A description for the [`StringMetric`](crate::metrics::StringMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.

@@ -59,7 +59,7 @@ impl PingType {
     ///
     /// # Returns
     ///
-    /// See [`Glean#submit_ping`](../struct.Glean.html#method.submit_ping) for details.
+    /// See [`Glean::submit_ping`](crate::Glean::submit_ping) for details.
     pub fn submit(&self, glean: &Glean, reason: Option<&str>) -> Result<bool> {
         let corrected_reason = match reason {
             Some(reason) => {

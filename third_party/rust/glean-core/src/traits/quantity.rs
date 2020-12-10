@@ -4,7 +4,7 @@
 
 use crate::ErrorType;
 
-/// A description for the `QuantityMetric` type.
+/// A description for the [`QuantityMetric`](crate::metrics::QuantityMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.

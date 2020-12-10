@@ -87,39 +87,39 @@ pub struct DistributionData {
 /// **Any new metric must be added at the end.**
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Metric {
-    /// A boolean metric. See [`BooleanMetric`](struct.BooleanMetric.html) for more information.
+    /// A boolean metric. See [`BooleanMetric`] for more information.
     Boolean(bool),
-    /// A counter metric. See [`CounterMetric`](struct.CounterMetric.html) for more information.
+    /// A counter metric. See [`CounterMetric`] for more information.
     Counter(i32),
     /// A custom distribution with precomputed exponential bucketing.
-    /// See [`CustomDistributionMetric`](struct.CustomDistributionMetric.html) for more information.
+    /// See [`CustomDistributionMetric`] for more information.
     CustomDistributionExponential(Histogram<PrecomputedExponential>),
     /// A custom distribution with precomputed linear bucketing.
-    /// See [`CustomDistributionMetric`](struct.CustomDistributionMetric.html) for more information.
+    /// See [`CustomDistributionMetric`] for more information.
     CustomDistributionLinear(Histogram<PrecomputedLinear>),
-    /// A datetime metric. See [`DatetimeMetric`](struct.DatetimeMetric.html) for more information.
+    /// A datetime metric. See [`DatetimeMetric`] for more information.
     Datetime(DateTime<FixedOffset>, TimeUnit),
-    /// An experiment metric. See [`ExperimentMetric`](struct.ExperimentMetric.html) for more information.
+    /// An experiment metric. See `ExperimentMetric` for more information.
     Experiment(experiment::RecordedExperimentData),
-    /// A quantity metric. See [`QuantityMetric`](struct.QuantityMetric.html) for more information.
+    /// A quantity metric. See [`QuantityMetric`] for more information.
     Quantity(i64),
-    /// A string metric. See [`StringMetric`](struct.StringMetric.html) for more information.
+    /// A string metric. See [`StringMetric`] for more information.
     String(String),
-    /// A string list metric. See [`StringListMetric`](struct.StringListMetric.html) for more information.
+    /// A string list metric. See [`StringListMetric`] for more information.
     StringList(Vec<String>),
-    /// A UUID metric. See [`UuidMetric`](struct.UuidMetric.html) for more information.
+    /// A UUID metric. See [`UuidMetric`] for more information.
     Uuid(String),
-    /// A timespan metric. See [`TimespanMetric`](struct.TimespanMetric.html) for more information.
+    /// A timespan metric. See [`TimespanMetric`] for more information.
     Timespan(std::time::Duration, TimeUnit),
-    /// A timing distribution. See [`TimingDistributionMetric`](struct.TimingDistributionMetric.html) for more information.
+    /// A timing distribution. See [`TimingDistributionMetric`] for more information.
     TimingDistribution(Histogram<Functional>),
-    /// A memory distribution. See [`MemoryDistributionMetric`](struct.MemoryDistributionMetric.html) for more information.
+    /// A memory distribution. See [`MemoryDistributionMetric`] for more information.
     MemoryDistribution(Histogram<Functional>),
-    /// A JWE metric. See [`JweMetric`](struct.JweMetric.html) for more information.
+    /// A JWE metric. See [`JweMetric`] for more information.
     Jwe(String),
 }
 
-/// A `MetricType` describes common behavior across all metrics.
+/// A [`MetricType`] describes common behavior across all metrics.
 pub trait MetricType {
     /// Access the stored metadata
     fn meta(&self) -> &CommonMetricData;

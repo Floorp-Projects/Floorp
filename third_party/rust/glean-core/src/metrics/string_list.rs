@@ -95,7 +95,9 @@ impl StringListMetric {
     /// ## Notes
     ///
     /// If passed an empty list, records an error and returns.
+    ///
     /// Truncates the list if it is longer than `MAX_LIST_LENGTH` and logs an error.
+    ///
     /// Truncates any value in the list if it is longer than `MAX_STRING_LENGTH` and logs an error.
     pub fn set(&self, glean: &Glean, value: Vec<String>) {
         if !self.should_record(glean) {

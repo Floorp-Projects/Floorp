@@ -36,7 +36,7 @@ impl glean_core::traits::Uuid for UuidMetric {
     ///
     /// # Arguments
     ///
-    /// * `value` - The UUID to set the metric to.
+    /// * `value` - The [`Uuid`](uuid::Uuid) to set the metric to.
     fn set(&self, value: uuid::Uuid) {
         let metric = Arc::clone(&self.0);
         dispatcher::launch(move || crate::with_glean(|glean| metric.set(glean, value)));

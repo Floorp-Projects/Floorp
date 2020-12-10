@@ -71,7 +71,7 @@ impl MemoryDistributionMetric {
     /// ## Notes
     ///
     /// Values bigger than 1 Terabyte (2<sup>40</sup> bytes) are truncated
-    /// and an `ErrorType::InvalidValue` error is recorded.
+    /// and an [`ErrorType::InvalidValue`] error is recorded.
     pub fn accumulate(&self, glean: &Glean, sample: u64) {
         if !self.should_record(glean) {
             return;
@@ -109,7 +109,7 @@ impl MemoryDistributionMetric {
     ///
     /// Please note that this assumes that the provided samples are already in
     /// the "unit" declared by the instance of the metric type (e.g. if the the
-    /// instance this method was called on is using [MemoryUnit::Kilobyte], then
+    /// instance this method was called on is using [`MemoryUnit::Kilobyte`], then
     /// `samples` are assumed to be in that unit).
     ///
     /// # Arguments
@@ -118,10 +118,11 @@ impl MemoryDistributionMetric {
     ///
     /// ## Notes
     ///
-    /// Discards any negative value in `samples` and report an `ErrorType::InvalidValue`
+    /// Discards any negative value in `samples` and report an [`ErrorType::InvalidValue`]
     /// for each of them.
+    ///
     /// Values bigger than 1 Terabyte (2<sup>40</sup> bytes) are truncated
-    /// and an `ErrorType::InvalidValue` error is recorded.
+    /// and an [`ErrorType::InvalidValue`] error is recorded.
     pub fn accumulate_samples_signed(&self, glean: &Glean, samples: Vec<i64>) {
         if !self.should_record(glean) {
             return;

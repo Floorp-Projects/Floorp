@@ -151,7 +151,7 @@ where
             self.value = Some(value);
             return true;
         }
-        log::info!("Invalid value for debug option {}.", self.env);
+        log::error!("Invalid value for debug option {}.", self.env);
         false
     }
 

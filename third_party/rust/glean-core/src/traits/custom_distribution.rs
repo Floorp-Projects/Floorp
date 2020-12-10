@@ -2,7 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// A description for the `CustomDistributionMetric` type.
+/// A description for the
+/// [`CustomDistributionMetric`](crate::metrics::CustomDistributionMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.
@@ -20,8 +21,9 @@ pub trait CustomDistribution {
     ///
     /// ## Notes
     ///
-    /// Discards any negative value in `samples` and report an `ErrorType::InvalidValue`
-    /// for each of them.
+    /// Discards any negative value in `samples` and report an
+    /// [`ErrorType::InvalidValue`](crate::ErrorType::InvalidValue) for each of
+    /// them.
     fn accumulate_samples_signed(&self, samples: Vec<i64>);
 
     /// **Exported for test purposes.**

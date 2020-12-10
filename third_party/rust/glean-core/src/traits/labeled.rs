@@ -4,7 +4,7 @@
 
 use crate::ErrorType;
 
-/// A description for the `LabeledMetric` type.
+/// A description for the [`LabeledMetric`](crate::metrics::LabeledMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.

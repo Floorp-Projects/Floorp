@@ -57,7 +57,7 @@ impl EventMetric {
     /// * `timestamp` - A monotonically increasing timestamp, in milliseconds.
     ///   This must be provided since the actual recording of the event may
     ///   happen some time later than the moment the event occurred.
-    /// * `extra` - A HashMap of (key, value) pairs. The key is an index into
+    /// * `extra` - A [`HashMap`] of (key, value) pairs. The key is an index into
     ///   the metric's `allowed_extra_keys` vector where the key's string is
     ///   looked up. If any key index is out of range, an error is reported and
     ///   no event is recorded.

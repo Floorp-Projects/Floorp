@@ -5,7 +5,7 @@
 use crate::metrics::DistributionData;
 use crate::metrics::TimerId;
 
-/// A description for the `TimingDistributionMetric` type.
+/// A description for the [`TimingDistributionMetric`](crate::metrics::TimingDistributionMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.
@@ -23,28 +23,30 @@ pub trait TimingDistribution {
     ///
     /// # Returns
     ///
-    /// A unique `TimerId` for the new timer.
+    /// A unique [`TimerId`] for the new timer.
     fn set_start(&mut self, start_time: u64);
 
     /// Stops tracking time for the provided metric and associated timer id.
     ///
     /// Adds a count to the corresponding bucket in the timing distribution.
-    /// This will record an error if no `start` was called.
+    /// This will record an error if no [`set_start`](TimingDistribution::set_start) was
+    /// called.
     ///
     /// # Arguments
     ///
-    /// * `id` - The `TimerId` to associate with this timing. This allows
+    /// * `id` - The [`TimerId`] to associate with this timing. This allows
     ///   for concurrent timing of events associated with different ids to the
     ///   same timespan metric.
     /// * `stop_time` - Timestamp in nanoseconds.
     fn set_stop_and_accumulate(&mut self, id: TimerId, stop_time: u64);
 
-    /// Aborts a previous `set_start` call. No error is recorded if no `set_start`
-    /// was called.
+    /// Aborts a previous [`set_start`](TimingDistribution::set_start) call. No
+    /// error is recorded if no [`set_start`](TimingDistribution::set_start) was
+    /// called.
     ///
     /// # Arguments
     ///
-    /// * `id` - The `TimerId` to associate with this timing. This allows
+    /// * `id` - The [`TimerId`] to associate with this timing. This allows
     ///   for concurrent timing of events associated with different ids to the
     ///   same timing distribution metric.
     fn cancel(&mut self, id: TimerId);
@@ -68,9 +70,13 @@ pub trait TimingDistribution {
     ///
     /// ## Notes
     ///
-    /// Discards any negative value in `samples` and report an `ErrorType::InvalidValue`
-    /// for each of them. Reports an `ErrorType::InvalidOverflow` error for samples that
-    /// are longer than `MAX_SAMPLE_TIME`.
+    /// Discards any negative value in `samples` and report an
+    /// [`ErrorType::InvalidValue`](crate::ErrorType::InvalidValue) for each of
+    /// them.
+    ///
+    /// Reports an
+    /// [`ErrorType::InvalidOverflow`](crate::ErrorType::InvalidOverflow) error
+    /// for samples that are longer than `MAX_SAMPLE_TIME`.
     fn accumulate_samples_signed(&mut self, samples: Vec<i64>);
 
     /// **Exported for test purposes.**

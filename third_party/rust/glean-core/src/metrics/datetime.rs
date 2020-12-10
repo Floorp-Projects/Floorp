@@ -110,7 +110,7 @@ impl DatetimeMetric {
     /// # Arguments
     ///
     /// * `glean` - the Glean instance this metric belongs to.
-    /// * `value` - Some date/time value, with offset, to set the metric to.
+    /// * `value` - Some [`DateTime`] value, with offset, to set the metric to.
     ///             If none, the current local time is used.
     pub fn set(&self, glean: &Glean, value: Option<Datetime>) {
         if !self.should_record(glean) {

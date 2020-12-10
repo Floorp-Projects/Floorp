@@ -4,7 +4,7 @@
 
 use crate::ErrorType;
 
-/// A description for the `UuidMetric` type.
+/// A description for the [`UuidMetric`](crate::metrics::UuidMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.
@@ -13,10 +13,10 @@ pub trait Uuid {
     ///
     /// # Arguments
     ///
-    /// * `value` - The UUID to set the metric to.
+    /// * `value` - The [`Uuid`](uuid::Uuid) to set the metric to.
     fn set(&self, value: uuid::Uuid);
 
-    /// Generates a new random UUID and set the metric to it.
+    /// Generates a new random [`Uuid`](uuid::Uuid) and set the metric to it.
     fn generate_and_set(&self) -> uuid::Uuid;
 
     /// **Exported for test purposes.**
