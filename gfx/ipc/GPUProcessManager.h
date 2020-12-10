@@ -21,6 +21,7 @@
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
 class nsBaseWidget;
+enum class DeviceResetReason;
 
 namespace mozilla {
 class MemoryReportingProcess;
@@ -147,6 +148,9 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   // Destroy and recreate all of the compositors
   void ResetCompositors();
+
+  // Record the device reset in telemetry / annotate the crash report.
+  static void RecordDeviceReset(DeviceResetReason aReason);
 
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
