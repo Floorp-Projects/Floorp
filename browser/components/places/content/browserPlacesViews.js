@@ -272,6 +272,7 @@ PlacesViewBase.prototype = {
 
         if (
           aPopup.triggerNode.id === "OtherBookmarks" ||
+          aPopup.triggerNode.id === "PlacesChevron" ||
           aPopup.triggerNode.id === "PlacesToolbarItems"
         ) {
           let otherBookmarksMenuItem = BookmarkingUI.buildShowOtherBookmarksMenuItem();
