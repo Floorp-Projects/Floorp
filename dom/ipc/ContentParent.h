@@ -1134,9 +1134,8 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvDeviceReset();
 
-  mozilla::ipc::IPCResult RecvCopyFavicon(
-      nsIURI* aOldURI, nsIURI* aNewURI, const IPC::Principal& aLoadingPrincipal,
-      const bool& aInPrivateBrowsing);
+  mozilla::ipc::IPCResult RecvCopyFavicon(nsIURI* aOldURI, nsIURI* aNewURI,
+                                          const bool& aInPrivateBrowsing);
 
   virtual void ProcessingError(Result aCode, const char* aMsgName) override;
 

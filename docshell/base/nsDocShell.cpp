@@ -8252,14 +8252,11 @@ nsresult nsDocShell::CheckLoadingPermissions() {
 //*****************************************************************************
 
 void nsDocShell::CopyFavicon(nsIURI* aOldURI, nsIURI* aNewURI,
-                             nsIPrincipal* aLoadingPrincipal,
                              bool aInPrivateBrowsing) {
   if (XRE_IsContentProcess()) {
     dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
     if (contentChild) {
-      contentChild->SendCopyFavicon(aOldURI, aNewURI,
-                                    IPC::Principal(aLoadingPrincipal),
-                                    aInPrivateBrowsing);
+      contentChild->SendCopyFavicon(aOldURI, aNewURI, aInPrivateBrowsing);
     }
     return;
   }
@@ -8975,8 +8972,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
   // Inform the favicon service that the favicon for oldURI also
   // applies to aLoadState->URI().
-  CopyFavicon(currentURI, aLoadState->URI(), doc->NodePrincipal(),
-              UsePrivateBrowsing());
+  CopyFavicon(currentURI, aLoadState->URI(), UsePrivateBrowsing());
 
   RefPtr<nsGlobalWindowOuter> scriptGlobal = mScriptGlobal;
   RefPtr<nsGlobalWindowInner> win =
@@ -11273,8 +11269,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
 
     // Inform the favicon service that our old favicon applies to this new
     // URI.
-    CopyFavicon(aCurrentURI, aNewURI, aDocument->NodePrincipal(),
-                UsePrivateBrowsing());
+    CopyFavicon(aCurrentURI, aNewURI, UsePrivateBrowsing());
   } else {
     FireDummyOnLocationChange();
   }

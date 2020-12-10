@@ -1161,7 +1161,7 @@ parent:
 
     async DeviceReset();
 
-    async CopyFavicon(nsIURI oldURI, nsIURI newURI, Principal aLoadingPrincipal, bool isPrivate);
+    async CopyFavicon(nsIURI oldURI, nsIURI newURI, bool isPrivate);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.
