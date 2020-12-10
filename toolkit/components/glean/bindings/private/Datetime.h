@@ -9,20 +9,13 @@
 
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsString.h"
 #include "prtime.h"
 
 namespace mozilla::glean {
 
 namespace impl {
-extern "C" {
-void fog_datetime_set(uint32_t aId, int32_t aYear, uint32_t aMonth,
-                      uint32_t aDay, uint32_t aHour, uint32_t aMinute,
-                      uint32_t aSecond, uint32_t aNano, int32_t aOffsetSeconds);
-uint32_t fog_datetime_test_has_value(uint32_t aId, const char* aStorageName);
-void fog_datetime_test_get_value(uint32_t aId, const char* aStorageName,
-                                 nsACString& aValue);
-}
 
 class DatetimeMetric {
  public:
@@ -67,7 +60,7 @@ class DatetimeMetric {
       return Nothing();
     }
     nsCString ret;
-    fog_datetime_test_get_value(mId, aStorageName, ret);
+    fog_datetime_test_get_value(mId, aStorageName, &ret);
     return Some(ret);
   }
 
