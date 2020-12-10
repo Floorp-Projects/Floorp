@@ -5,7 +5,7 @@
 #ifndef DOM_MEDIA_MEDIASESSION_MEDIASESSIONIPCUTILS_H_
 #define DOM_MEDIA_MEDIASESSION_MEDIASESSIONIPCUTILS_H_
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "MediaMetadata.h"
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/MediaSessionBinding.h"

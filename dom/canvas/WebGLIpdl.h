@@ -6,6 +6,7 @@
 #ifndef WEBGLIPDL_H_
 #define WEBGLIPDL_H_
 
+#include "ipc/EnumSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "WebGLTypes.h"
 

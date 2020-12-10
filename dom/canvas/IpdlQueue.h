@@ -12,6 +12,7 @@
 #include <tuple>
 #include <vector>
 #include <unordered_map>
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/dom/QueueParamTraits.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
 #include "mozilla/Assertions.h"

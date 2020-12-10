@@ -6,7 +6,8 @@
 #define _WEBRTC_GLOBAL_H_
 
 #include "WebrtcIPCTraits.h"
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"

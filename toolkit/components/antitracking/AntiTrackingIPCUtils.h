@@ -7,7 +7,7 @@
 #ifndef mozilla_antitrackingipcutils_h
 #define mozilla_antitrackingipcutils_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/ContentBlocking.h"

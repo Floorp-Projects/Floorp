@@ -7,6 +7,7 @@
 #define WEBGPU_SERIALIZE_H_
 
 #include "WebGPUTypes.h"
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/webgpu/ffi/wgpu.h"

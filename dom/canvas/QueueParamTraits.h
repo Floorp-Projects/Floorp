@@ -8,7 +8,7 @@
 #ifndef _QUEUEPARAMTRAITS_H_
 #define _QUEUEPARAMTRAITS_H_ 1
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerRange.h"

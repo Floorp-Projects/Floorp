@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_filehandle_SerializationHelpers_h
 #define mozilla_dom_filehandle_SerializationHelpers_h
 
-#include "ipc/IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
 
 #include "mozilla/dom/FileModeBinding.h"
 

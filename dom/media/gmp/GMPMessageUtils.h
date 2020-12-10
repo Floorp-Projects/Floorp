@@ -9,7 +9,8 @@
 #include "gmp-sanitized-cdm-exports.h"
 #include "gmp-video-codec.h"
 #include "gmp-video-frame-encoded.h"
-#include "IPCMessageUtils.h"
+#include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 
 namespace IPC {
 
