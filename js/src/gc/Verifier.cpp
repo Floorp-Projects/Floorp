@@ -1051,7 +1051,7 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
     if (cell->runtimeFromAnyThread() != mapRuntime) {
       return CellColor::Black;
     }
-    if (cellZone->isGCMarking() || cellZone->isGCSweeping()) {
+    if (cellZone->isGCMarkingOrSweeping()) {
       return cell->color();
     }
     return CellColor::Black;

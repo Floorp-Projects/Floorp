@@ -460,6 +460,9 @@ BEGIN_TEST(testGCHeapPreBarriers) {
   SliceBudget budget(WorkBudget(1));
   gc::GCRuntime* gc = &cx->runtime()->gc;
   gc->startDebugGC(GC_NORMAL, budget);
+  while (gc->state() != gc::State::Mark) {
+    gc->debugGCSlice(budget);
+  }
   MOZ_ASSERT(cx->zone()->needsIncrementalBarrier());
 
   TestWrapper<HeapPtr<JSObject*>>(obj1, obj2);

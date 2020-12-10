@@ -265,6 +265,8 @@ class GCMarker : public JSTracer {
   void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
   size_t maxCapacity() const { return stack.maxCapacity(); }
 
+  bool isActive() const { return state != MarkingState::NotActive; }
+
   void start();
   void stop();
   void reset();

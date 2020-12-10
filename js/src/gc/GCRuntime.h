@@ -130,6 +130,18 @@ class ChunkPool {
   };
 };
 
+class BackgroundUnmarkTask : public GCParallelTask {
+ public:
+  explicit BackgroundUnmarkTask(GCRuntime* gc) : GCParallelTask(gc) {}
+  void initZones();
+  void run(AutoLockHelperThreadState& lock) override;
+
+ private:
+  void unmarkZones(AutoLockGC& lock);
+
+  ZoneVector zones;
+};
+
 class BackgroundSweepTask : public GCParallelTask {
  public:
   explicit BackgroundSweepTask(GCRuntime* gc) : GCParallelTask(gc) {}
@@ -570,6 +582,7 @@ class GCRuntime {
   static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   void setParallelAtomsAllocEnabled(bool enabled);
+  void setParallelUnmarkEnabled(bool enabled);
 
   /*
    * Concurrent sweep infrastructure.
@@ -687,10 +700,13 @@ class GCRuntime {
   void maybeCallGCCallback(JSGCStatus status, JS::GCReason reason);
 
   void purgeRuntime();
-  MOZ_MUST_USE bool beginMarkPhase(JS::GCReason reason, AutoGCSession& session);
+  MOZ_MUST_USE bool beginPreparePhase(JS::GCReason reason,
+                                      AutoGCSession& session);
   bool prepareZonesForCollection(JS::GCReason reason, bool* isFullOut);
   void bufferGrayRoots();
   void unmarkWeakMaps();
+  void endPreparePhase(JS::GCReason reason);
+  void beginMarkPhase(AutoGCSession& session);
   bool shouldPreserveJITCode(JS::Realm* realm,
                              const mozilla::TimeStamp& currentTime,
                              JS::GCReason reason, bool canAllocateMoreCode);
@@ -792,12 +808,26 @@ class GCRuntime {
   void releaseRelocatedArenas(Arena* arenaList);
   void releaseRelocatedArenasWithoutUnlocking(Arena* arenaList,
                                               const AutoLockGC& lock);
-  IncrementalProgress waitForBackgroundTask(GCParallelTask& task,
-                                            SliceBudget& budget);
+
+  /*
+   * Whether to immediately trigger a slice after a background task
+   * finishes. This may not happen at a convenient time, so the consideration is
+   * whether the slice will run quickly or may take a long time.
+   */
+  enum ShouldTriggerSliceWhenFinished : bool {
+    DontTriggerSliceWhenFinished = false,
+    TriggerSliceWhenFinished = true
+  };
+
+  IncrementalProgress waitForBackgroundTask(
+      GCParallelTask& task, const SliceBudget& budget,
+      ShouldTriggerSliceWhenFinished triggerSlice);
+
   void maybeRequestGCAfterBackgroundTask(const AutoLockHelperThreadState& lock);
   void cancelRequestedGCAfterBackgroundTask();
   void finishCollection();
   void maybeStopStringPretenuring();
+  void checkGCStateNotInUse();
   IncrementalProgress joinSweepMarkTask();
 
 #ifdef JS_GC_ZEAL
@@ -1166,6 +1196,7 @@ class GCRuntime {
   friend class BackgroundFreeTask;
 
   BackgroundAllocTask allocTask;
+  BackgroundUnmarkTask unmarkTask;
   BackgroundSweepTask sweepTask;
   BackgroundFreeTask freeTask;
   BackgroundDecommitTask decommitTask;
@@ -1233,7 +1264,8 @@ inline bool GCRuntime::needZealousGC() {
 }
 
 inline bool GCRuntime::hasIncrementalTwoSliceZealMode() {
-  return hasZealMode(ZealMode::YieldBeforeMarking) ||
+  return hasZealMode(ZealMode::YieldBeforeRootMarking) ||
+         hasZealMode(ZealMode::YieldBeforeMarking) ||
          hasZealMode(ZealMode::YieldBeforeSweeping) ||
          hasZealMode(ZealMode::YieldBeforeSweepingAtoms) ||
          hasZealMode(ZealMode::YieldBeforeSweepingCaches) ||
