@@ -22,17 +22,6 @@ impl LazyFunctionEmitter {
     }
 }
 
-pub struct TopLevelFunctionDeclarationEmitter {
-    pub fun_index: GCThingIndex,
-}
-
-impl TopLevelFunctionDeclarationEmitter {
-    pub fn emit(self, emitter: &mut AstEmitter) {
-        emitter.emit.lambda(self.fun_index);
-        emitter.emit.def_fun();
-    }
-}
-
 pub struct LexicalFunctionDeclarationEmitter {
     pub name: SourceAtomSetIndex,
     pub fun_index: GCThingIndex,
