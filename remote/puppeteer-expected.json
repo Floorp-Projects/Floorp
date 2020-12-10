@@ -135,7 +135,7 @@
     "PASS"
   ],
   "Page.click should click offscreen buttons (click.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Page.click should click wrapped links (click.spec.ts)": [
     "PASS"
