@@ -688,7 +688,7 @@ function test_storage_sync_requires_real_id() {
       const EXCEPTION_MESSAGE =
         "The storage API is not available with a temporary addon ID. " +
         "Please add an explicit addon ID to your manifest. " +
-        "For more information see https://bugzil.la/1323228.";
+        "For more information see https://mzl.la/3lPk1aE.";
 
       await browser.test.assertRejects(
         browser.storage.sync.set({ foo: "bar" }),

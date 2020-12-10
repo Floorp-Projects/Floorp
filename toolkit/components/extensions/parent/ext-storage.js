@@ -26,7 +26,7 @@ const enforceNoTemporaryAddon = extensionId => {
   const EXCEPTION_MESSAGE =
     "The storage API will not work with a temporary addon ID. " +
     "Please add an explicit addon ID to your manifest. " +
-    "For more information see https://bugzil.la/1323228.";
+    "For more information see https://mzl.la/3lPk1aE.";
   if (AddonManagerPrivate.isTemporaryInstallID(extensionId)) {
     throw new ExtensionError(EXCEPTION_MESSAGE);
   }
