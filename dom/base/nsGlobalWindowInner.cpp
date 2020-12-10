@@ -132,6 +132,7 @@
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/Location.h"
+#include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PartitionedLocalStorage.h"
@@ -1228,6 +1229,11 @@ void nsGlobalWindowInner::FreeInnerObjects() {
     mAudioContexts[i]->OnWindowDestroy();
   }
   mAudioContexts.Clear();
+
+  for (MediaKeys* mediaKeys : mMediaKeysInstances) {
+    mediaKeys->OnInnerWindowDestroy();
+  }
+  mMediaKeysInstances.Clear();
 
   DisableGamepadUpdates();
   mHasGamepad = false;
@@ -2628,6 +2634,21 @@ bool nsPIDOMWindowInner::HasActivePeerConnections() {
   MOZ_ASSERT(NS_IsMainThread());
   return mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections
                          : mActivePeerConnections;
+}
+
+void nsPIDOMWindowInner::AddMediaKeysInstance(MediaKeys* aMediaKeys) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mMediaKeysInstances.AppendElement(aMediaKeys);
+}
+
+void nsPIDOMWindowInner::RemoveMediaKeysInstance(MediaKeys* aMediaKeys) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mMediaKeysInstances.RemoveElement(aMediaKeys);
+}
+
+bool nsPIDOMWindowInner::HasActiveMediaKeysInstance() {
+  MOZ_ASSERT(NS_IsMainThread());
+  return !mMediaKeysInstances.IsEmpty();
 }
 
 bool nsPIDOMWindowInner::IsPlayingAudio() {

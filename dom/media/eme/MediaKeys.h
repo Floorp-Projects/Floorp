@@ -8,20 +8,18 @@
 #define mozilla_dom_mediakeys_h__
 
 #include "DecoderDoctorLogger.h"
-#include "nsWrapperCache.h"
-#include "nsISupports.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DetailedPromise.h"
 #include "mozilla/RefPtr.h"
-#include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsIDocumentActivity.h"
-#include "nsRefPtrHashtable.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"  // For MediaKeyStatus
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
-#include "mozilla/DetailedPromise.h"
-#include "mozilla/WeakPtr.h"
+#include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/Promise.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsRefPtrHashtable.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 
@@ -48,7 +46,7 @@ typedef uint32_t PromiseId;
 
 // This class is used on the main thread only.
 // Note: its addref/release is not (and can't be) thread safe!
-class MediaKeys final : public nsIDocumentActivity,
+class MediaKeys final : public nsISupports,
                         public nsWrapperCache,
                         public SupportsWeakPtr,
                         public DecoderDoctorLifeLogger<MediaKeys> {
@@ -57,9 +55,6 @@ class MediaKeys final : public nsIDocumentActivity,
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeys)
-  // We want to listen to the owning document so we can shutdown if it goes
-  // inactive.
-  NS_DECL_NSIDOCUMENTACTIVITY
 
   MediaKeys(nsPIDOMWindowInner* aParentWindow, const nsAString& aKeySystem,
             const MediaKeySystemConfiguration& aConfig);
@@ -137,6 +132,10 @@ class MediaKeys final : public nsIDocumentActivity,
   // Returns true if this MediaKeys has been bound to a media element.
   bool IsBoundToMediaElement() const;
 
+  // Indicates to a MediaKeys instance that the inner window parent of that
+  // instance is being destroyed, this should prompt the keys to shutdown.
+  void OnInnerWindowDestroy();
+
   void GetSessionsInfo(nsString& sessionsInfo);
 
   // JavaScript: MediaKeys.GetStatusForPolicy()
@@ -164,8 +163,11 @@ class MediaKeys final : public nsIDocumentActivity,
   // Removes promise from mPromises, and returns it.
   already_AddRefed<DetailedPromise> RetrievePromise(PromiseId aId);
 
-  void RegisterActivityObserver();
-  void UnregisterActivityObserver();
+  // Helpers to connect and disconnect to the parent inner window. An inner
+  // window should track (via weak ptr) MediaKeys created within it so we can
+  // ensure MediaKeys are shutdown if that window is destroyed.
+  void ConnectInnerWindow();
+  void DisconnectInnerWindow();
 
   // Owning ref to proxy. The proxy has a weak reference back to the MediaKeys,
   // and the MediaKeys destructor clears the proxy's reference to the MediaKeys.
@@ -176,8 +178,13 @@ class MediaKeys final : public nsIDocumentActivity,
   // this can be null (we also cannot rely on a media element to drive shutdown
   // for this reason).
   RefPtr<HTMLMediaElement> mElement;
-  RefPtr<Document> mDocument;
 
+  // The  inner window associated with an instance of MediaKeys. We will
+  // shutdown the media keys when this Window is destroyed. We do this from the
+  // window rather than a document to address the case where media keys can be
+  // created in an about:blank document that then performs an async load -- this
+  // recreates the document, but the inner window is preserved in such a case.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1675360 for more info.
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
   KeySessionHashMap mKeySessions;
