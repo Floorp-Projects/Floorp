@@ -333,12 +333,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   void clear() { code_.clear(); }
 
-  // For XDR decoding.
   using CodeVector = typename ObjLiteralWriterBase::CodeVector;
-  void initializeForXDR(CodeVector&& code, uint8_t flags) {
-    code_ = std::move(code);
-    flags_.deserialize(flags);
-  }
 
   mozilla::Span<const uint8_t> getCode() const { return code_; }
   ObjLiteralFlags getFlags() const { return flags_; }
@@ -594,22 +589,17 @@ JSObject* InterpretObjLiteral(JSContext* cx,
                               const mozilla::Span<const uint8_t> insns,
                               ObjLiteralFlags flags);
 
-inline JSObject* InterpretObjLiteral(JSContext* cx,
-                                     frontend::CompilationAtomCache& atomCache,
-                                     const ObjLiteralWriter& writer) {
-  return InterpretObjLiteral(cx, atomCache, writer.getCode(),
-                             writer.getFlags());
-}
-
 class ObjLiteralStencil {
   friend class frontend::StencilXDR;
 
-  ObjLiteralWriter writer_;
+  mozilla::Span<uint8_t> code_;
+  ObjLiteralFlags flags_;
 
  public:
   ObjLiteralStencil() = default;
 
-  ObjLiteralWriter& writer() { return writer_; }
+  ObjLiteralStencil(uint8_t* code, size_t length, const ObjLiteralFlags& flags)
+      : code_(mozilla::Span(code, length)), flags_(flags) {}
 
   JSObject* create(JSContext* cx,
                    frontend::CompilationAtomCache& atomCache) const;
