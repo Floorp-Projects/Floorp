@@ -14,6 +14,7 @@
 #define NSOBJECTLOADINGCONTENT_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsIFrame.h"  // for WeakFrame only
 #include "nsImageLoadingContent.h"
@@ -234,6 +235,20 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   void PresetOpenerWindow(const mozilla::dom::Nullable<
                               mozilla::dom::WindowProxyHolder>& aOpenerWindow,
                           mozilla::ErrorResult& aRv);
+
+  const mozilla::Maybe<mozilla::IntrinsicSize>& GetSubdocumentIntrinsicSize()
+      const {
+    return mSubdocumentIntrinsicSize;
+  }
+
+  const mozilla::Maybe<mozilla::AspectRatio>& GetSubdocumentIntrinsicRatio()
+      const {
+    return mSubdocumentIntrinsicRatio;
+  }
+
+  void SubdocumentIntrinsicSizeOrRatioChanged(
+      const mozilla::Maybe<mozilla::IntrinsicSize>& aIntrinsicSize,
+      const mozilla::Maybe<mozilla::AspectRatio>& aIntrinsicRatio);
 
  protected:
   /**
@@ -693,6 +708,16 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   RefPtr<nsPluginInstanceOwner> mInstanceOwner;
   nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;
   nsTArray<mozilla::dom::MozPluginParameter> mCachedParameters;
+
+  // The intrinsic size and aspect ratio from a child SVG document that
+  // we should use.  These are only set when we are an <object> or <embed>
+  // and the inner document is SVG.
+  //
+  // We store these here rather than on nsSubDocumentFrame since we are
+  // sometimes notified of our child's intrinsics before we've constructed
+  // our own frame.
+  mozilla::Maybe<mozilla::IntrinsicSize> mSubdocumentIntrinsicSize;
+  mozilla::Maybe<mozilla::AspectRatio> mSubdocumentIntrinsicRatio;
 };
 
 #endif

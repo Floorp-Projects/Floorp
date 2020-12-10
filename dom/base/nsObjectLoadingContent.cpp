@@ -3545,6 +3545,25 @@ bool nsObjectLoadingContent::BlockEmbedOrObjectContentLoading() {
   return false;
 }
 
+void nsObjectLoadingContent::SubdocumentIntrinsicSizeOrRatioChanged(
+    const Maybe<IntrinsicSize>& aIntrinsicSize,
+    const Maybe<AspectRatio>& aIntrinsicRatio) {
+  if (aIntrinsicSize == mSubdocumentIntrinsicSize &&
+      aIntrinsicRatio == mSubdocumentIntrinsicRatio) {
+    return;
+  }
+
+  mSubdocumentIntrinsicSize = aIntrinsicSize;
+  mSubdocumentIntrinsicRatio = aIntrinsicRatio;
+
+  nsCOMPtr<nsIContent> thisContent =
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+  if (nsSubDocumentFrame* sdf = do_QueryFrame(thisContent->GetPrimaryFrame())) {
+    sdf->SubdocumentIntrinsicSizeOrRatioChanged();
+  }
+}
+
 // SetupProtoChainRunner implementation
 nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(
     nsObjectLoadingContent* aContent)

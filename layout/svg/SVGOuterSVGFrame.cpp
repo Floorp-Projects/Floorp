@@ -11,7 +11,7 @@
 #include "gfxContext.h"
 #include "nsDisplayList.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIObjectLoadingContent.h"
+#include "nsObjectLoadingContent.h"
 #include "nsSubDocumentFrame.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGForeignObjectFrame.h"
@@ -923,13 +923,12 @@ void SVGOuterSVGFrame::MaybeSendIntrinsicSizeAndRatioToEmbedder(
 
   if (bc->GetParent()->IsInProcess()) {
     if (Element* embedder = bc->GetEmbedderElement()) {
-      nsSubDocumentFrame* sdf = do_QueryFrame(embedder->GetPrimaryFrame());
-      if (!sdf) {
-        return;
+      if (nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(embedder)) {
+        static_cast<nsObjectLoadingContent*>(olc.get())
+            ->SubdocumentIntrinsicSizeOrRatioChanged(aIntrinsicSize,
+                                                     aIntrinsicRatio);
       }
-
-      sdf->SubdocumentIntrinsicSizeOrRatioChanged(aIntrinsicSize,
-                                                  aIntrinsicRatio);
+      return;
     }
   }
 

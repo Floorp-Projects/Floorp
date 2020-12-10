@@ -135,9 +135,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
   void ClearDisplayItems();
 
-  void SubdocumentIntrinsicSizeOrRatioChanged(
-      const mozilla::Maybe<mozilla::IntrinsicSize>& aIntrinsicSize,
-      const mozilla::Maybe<mozilla::AspectRatio>& aIntrinsicRatio);
+  void SubdocumentIntrinsicSizeOrRatioChanged();
 
  protected:
   friend class AsyncFrameInit;
@@ -170,12 +168,6 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
   nsView* mOuterView;
   nsView* mInnerView;
-
-  // The intrinsic size and aspect ratio from a child SVG document that
-  // we should use.  These are only set when we are an <object> or <embed>
-  // and the inner document is SVG.
-  mozilla::Maybe<mozilla::IntrinsicSize> mSubdocumentIntrinsicSize;
-  mozilla::Maybe<mozilla::AspectRatio> mSubdocumentIntrinsicRatio;
 
   bool mIsInline;
   bool mPostedReflowCallback;
