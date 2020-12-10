@@ -185,6 +185,7 @@ static const wchar_t* sCssToDevPixelScalingRegSuffix = L"|CssToDevPixelScaling";
 static const wchar_t* sSearchbarRegSuffix = L"|SearchbarCSSSpan";
 static const wchar_t* sSpringsCSSRegSuffix = L"|SpringsCSSSpan";
 static const wchar_t* sThemeRegSuffix = L"|Theme";
+static const wchar_t* sMenubarShownRegSuffix = L"|MenubarShown";
 
 struct LoadedCoTaskMemFreeDeleter {
   void operator()(void* ptr) {
@@ -639,7 +640,7 @@ bool RasterizeAnimatedRect(const ColorRect& colorRect,
 void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
                     CSSPixelSpan searchbarCSSSpan,
                     const Vector<CSSPixelSpan>& springs,
-                    const ThemeColors& currentTheme) {
+                    const ThemeColors& currentTheme, const bool& menubarShown) {
   // NOTE: we opt here to paint a pixel buffer for the application chrome by
   // hand, without using native UI library methods. Why do we do this?
   //
@@ -675,9 +676,10 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   // found in tabs.inc.css, "--tab-min-height" - depends on uidensity variable
   int tabBarHeight = CSSToDevPixels(33, sCSSToDevPixelScaling) + verticalOffset;
   // found in tabs.inc.css, ".titlebar-spacer"
-  int titlebarSpacerWidth =
-      (sMaximized ? 0 : CSSToDevPixels(40, sCSSToDevPixelScaling)) +
-      horizontalOffset;
+  int titlebarSpacerWidth = horizontalOffset;
+  if (!sMaximized && menubarShown == false) {
+    titlebarSpacerWidth += CSSToDevPixels(40, sCSSToDevPixelScaling);
+  }
   // found in tabs.inc.css, ".tab-line"
   int tabLineHeight = CSSToDevPixels(2, sCSSToDevPixelScaling) + verticalOffset;
   int selectedTabWidth = CSSToDevPixels(224, sCSSToDevPixelScaling);
@@ -698,6 +700,9 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   int toolbarPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
 
   int placeholderMargin = CSSToDevPixels(8, sCSSToDevPixelScaling);
+
+  int menubarHeightDevPixels =
+      menubarShown ? CSSToDevPixels(28, sCSSToDevPixelScaling) : 0;
 
   // controlled by css variable urlbarMarginInline in urlbar-searchbar.inc.css
   int urlbarMargin =
@@ -732,6 +737,16 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
     return;
   }
 
+  ColorRect menubar = {};
+  menubar.color = currentTheme.tabBarColor;
+  menubar.x = 0;
+  menubar.y = topBorder.height;
+  menubar.width = sWindowWidth;
+  menubar.height = menubarHeightDevPixels;
+  if (!rects.append(menubar)) {
+    return;
+  }
+
   int placeholderBorderRadius = CSSToDevPixels(2, sCSSToDevPixelScaling);
   // found in browser.css "--toolbarbutton-border-radius"
   int urlbarBorderRadius = CSSToDevPixels(2, sCSSToDevPixelScaling);
@@ -743,7 +758,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   ColorRect tabBar = {};
   tabBar.color = currentTheme.tabBarColor;
   tabBar.x = 0;
-  tabBar.y = topBorder.height;
+  tabBar.y = menubar.height;
   tabBar.width = sWindowWidth;
   tabBar.height = tabBarHeight;
   if (!rects.append(tabBar)) {
@@ -754,7 +769,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   ColorRect tabLine = {};
   tabLine.color = currentTheme.tabLineColor;
   tabLine.x = titlebarSpacerWidth;
-  tabLine.y = topBorder.height;
+  tabLine.y = menubar.height;
   tabLine.width = selectedTabWidth;
   tabLine.height = tabLineHeight;
   if (!rects.append(tabLine)) {
@@ -1674,6 +1689,17 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   }
   sMaximized = maximized != 0;
 
+  uint32_t menubarShown;
+  result = ::RegGetValueW(
+      regKey, nullptr,
+      GetRegValueName(binPath.get(), sMenubarShownRegSuffix).c_str(),
+      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&menubarShown),
+      &dataLen);
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Error reading menubarShown %lu\n", GetLastError());
+    return;
+  }
+
   dataLen = sizeof(double);
   result = ::RegGetValueW(
       regKey, nullptr,
@@ -1823,7 +1849,7 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
   DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbar, searchbar, springs,
-                 currentTheme);
+                 currentTheme, menubarShown);
   if (sAnimatedRects) {
     sPreXULSKeletonUIAnimationThread = ::CreateThread(
         nullptr, 256 * 1024, AnimateSkeletonUI, nullptr, 0, nullptr);
@@ -1862,11 +1888,7 @@ HWND ConsumePreXULSkeletonUIHandle() {
   return result;
 }
 
-void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
-                                   int height, bool maximized,
-                                   CSSPixelSpan urlbar, CSSPixelSpan searchbar,
-                                   const Vector<CSSPixelSpan>& springs,
-                                   double cssToDevPixelScaling) {
+void PersistPreXULSkeletonUIValues(const SkeletonUISettings& settings) {
   if (!sPreXULSkeletonUIEnabled) {
     return;
   }
@@ -1882,7 +1904,8 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
   LSTATUS result;
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sScreenXRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&screenX), sizeof(screenX));
+      REG_DWORD, reinterpret_cast<const BYTE*>(&settings.screenX),
+      sizeof(settings.screenX));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting screenX to Windows registry\n");
     return;
@@ -1890,7 +1913,8 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
 
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sScreenYRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&screenY), sizeof(screenY));
+      REG_DWORD, reinterpret_cast<const BYTE*>(&settings.screenY),
+      sizeof(settings.screenY));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting screenY to Windows registry\n");
     return;
@@ -1898,7 +1922,8 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
 
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sWidthRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&width), sizeof(width));
+      REG_DWORD, reinterpret_cast<const BYTE*>(&settings.width),
+      sizeof(settings.width));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting width to Windows registry\n");
     return;
@@ -1906,68 +1931,77 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
 
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sHeightRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&height), sizeof(height));
+      REG_DWORD, reinterpret_cast<const BYTE*>(&settings.height),
+      sizeof(settings.height));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting height to Windows registry\n");
     return;
   }
 
-  DWORD maximizedDword = maximized ? 1 : 0;
+  DWORD maximizedDword = settings.maximized ? 1 : 0;
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sMaximizedRegSuffix).c_str(), 0,
-      REG_DWORD, reinterpret_cast<PBYTE>(&maximizedDword),
+      REG_DWORD, reinterpret_cast<const BYTE*>(&maximizedDword),
       sizeof(maximizedDword));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting maximized to Windows registry\n");
   }
 
+  DWORD menubarShownDword = settings.menubarShown ? 1 : 0;
+  result = ::RegSetValueExW(
+      regKey, GetRegValueName(binPath.get(), sMenubarShownRegSuffix).c_str(), 0,
+      REG_DWORD, reinterpret_cast<const BYTE*>(&menubarShownDword),
+      sizeof(menubarShownDword));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting menubarShown to Windows registry\n");
+  }
+
   result = ::RegSetValueExW(
       regKey,
       GetRegValueName(binPath.get(), sCssToDevPixelScalingRegSuffix).c_str(), 0,
-      REG_BINARY, reinterpret_cast<PBYTE>(&cssToDevPixelScaling),
-      sizeof(cssToDevPixelScaling));
+      REG_BINARY, reinterpret_cast<const BYTE*>(&settings.cssToDevPixelScaling),
+      sizeof(settings.cssToDevPixelScaling));
   if (result != ERROR_SUCCESS) {
     printf_stderr(
         "Failed persisting cssToDevPixelScaling to Windows registry\n");
     return;
   }
 
-  double urlbarSpan[2];
-  urlbarSpan[0] = urlbar.start;
-  urlbarSpan[1] = urlbar.end;
+  double urlbar[2];
+  urlbar[0] = settings.urlbarSpan.start;
+  urlbar[1] = settings.urlbarSpan.end;
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sUrlbarCSSRegSuffix).c_str(), 0,
-      REG_BINARY, reinterpret_cast<PBYTE>(urlbarSpan), sizeof(urlbarSpan));
+      REG_BINARY, reinterpret_cast<const BYTE*>(urlbar), sizeof(urlbar));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting urlbar to Windows registry\n");
     return;
   }
 
-  double searchbarSpan[2];
-  searchbarSpan[0] = searchbar.start;
-  searchbarSpan[1] = searchbar.end;
+  double searchbar[2];
+  searchbar[0] = settings.searchbarSpan.start;
+  searchbar[1] = settings.searchbarSpan.end;
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sSearchbarRegSuffix).c_str(), 0,
-      REG_BINARY, reinterpret_cast<PBYTE>(searchbarSpan),
-      sizeof(searchbarSpan));
+      REG_BINARY, reinterpret_cast<const BYTE*>(searchbar), sizeof(searchbar));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting searchbar to Windows registry\n");
     return;
   }
 
   Vector<double> springValues;
-  if (!springValues.reserve(springs.length() * 2)) {
+  if (!springValues.reserve(settings.springs.length() * 2)) {
     return;
   }
 
-  for (auto spring : springs) {
+  for (auto spring : settings.springs) {
     springValues.infallibleAppend(spring.start);
     springValues.infallibleAppend(spring.end);
   }
 
   result = ::RegSetValueExW(
       regKey, GetRegValueName(binPath.get(), sSpringsCSSRegSuffix).c_str(), 0,
-      REG_BINARY, reinterpret_cast<PBYTE>(springValues.begin()),
+      REG_BINARY, reinterpret_cast<const BYTE*>(springValues.begin()),
       springValues.length() * sizeof(double));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting springsCSS to Windows registry\n");
