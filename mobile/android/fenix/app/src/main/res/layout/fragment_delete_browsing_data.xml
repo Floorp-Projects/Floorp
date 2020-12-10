@@ -76,6 +76,15 @@
                 android:focusable="true"
                 android:visibility="gone"
                 app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_site_permissions" />
+            <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
+                android:id="@+id/downloads_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_downloads" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/delete_data"
                 style="@style/DestructiveButton"

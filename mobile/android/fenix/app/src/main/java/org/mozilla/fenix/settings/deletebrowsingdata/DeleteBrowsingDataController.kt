@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.components.PermissionStorage
 import kotlin.coroutines.CoroutineContext
@@ -22,10 +23,12 @@ interface DeleteBrowsingDataController {
     suspend fun deleteCookies()
     suspend fun deleteCachedFiles()
     suspend fun deleteSitePermissions()
+    suspend fun deleteDownloads()
 }
 
 class DefaultDeleteBrowsingDataController(
     private val removeAllTabs: TabsUseCases.RemoveAllTabsUseCase,
+    private val removeAllDownloads: DownloadsUseCases.RemoveAllDownloadsUseCase,
     private val historyStorage: HistoryStorage,
     private val permissionStorage: PermissionStorage,
     private val store: BrowserStore,
@@ -76,5 +79,11 @@ class DefaultDeleteBrowsingDataController(
             )
         }
         permissionStorage.deleteAllSitePermissions()
+    }
+
+    override suspend fun deleteDownloads() {
+        withContext(coroutineContext) {
+            removeAllDownloads.invoke()
+        }
     }
 }

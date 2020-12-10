@@ -33,7 +33,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.Settings
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_data) {
 
     private lateinit var controller: DeleteBrowsingDataController
@@ -42,9 +42,11 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        val tabsUseCases = requireComponents.useCases.tabsUseCases
+        val downloadUseCases = requireComponents.useCases.downloadUseCases
         controller = DefaultDeleteBrowsingDataController(
-            requireComponents.useCases.tabsUseCases.removeAllTabs,
+            tabsUseCases.removeAllTabs,
+            downloadUseCases.removeAllDownloads,
             requireComponents.core.historyStorage,
             requireComponents.core.permissionStorage,
             requireComponents.core.store,
@@ -67,6 +69,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
                 R.id.cookies_item -> settings.deleteCookies
                 R.id.cached_files_item -> settings.deleteCache
                 R.id.site_permissions_item -> settings.deleteSitePermissions
+                R.id.downloads_item -> settings.deleteDownloads
                 else -> true
             }
         }
@@ -84,6 +87,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
             R.id.cookies_item -> settings.deleteCookies = it.isChecked
             R.id.cached_files_item -> settings.deleteCache = it.isChecked
             R.id.site_permissions_item -> settings.deleteSitePermissions = it.isChecked
+            R.id.downloads_item -> settings.deleteDownloads = it.isChecked
             else -> return
         }
     }
@@ -151,6 +155,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
                         COOKIES_INDEX -> controller.deleteCookies()
                         CACHED_INDEX -> controller.deleteCachedFiles()
                         PERMS_INDEX -> controller.deleteSitePermissions()
+                        DOWNLOADS_INDEX -> controller.deleteDownloads()
                     }
                 }
             }
@@ -262,7 +267,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
             fragmentView.browsing_data_item,
             fragmentView.cookies_item,
             fragmentView.cached_files_item,
-            fragmentView.site_permissions_item
+            fragmentView.site_permissions_item,
+            fragmentView.downloads_item
         )
     }
 
@@ -275,5 +281,6 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         private const val COOKIES_INDEX = 2
         private const val CACHED_INDEX = 3
         private const val PERMS_INDEX = 4
+        private const val DOWNLOADS_INDEX = 5
     }
 }

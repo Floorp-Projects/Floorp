@@ -14,7 +14,8 @@ enum class DeleteBrowsingDataOnQuitType(@StringRes private val prefKey: Int) {
     HISTORY(R.string.pref_key_delete_browsing_history_on_quit),
     COOKIES(R.string.pref_key_delete_cookies_on_quit),
     CACHE(R.string.pref_key_delete_caches_on_quit),
-    PERMISSIONS(R.string.pref_key_delete_permissions_on_quit);
+    PERMISSIONS(R.string.pref_key_delete_permissions_on_quit),
+    DOWNLOADS(R.string.pref_key_delete_downloads_on_quit);
 
     fun getPreferenceKey(context: Context) = context.getPreferenceKey(prefKey)
 }

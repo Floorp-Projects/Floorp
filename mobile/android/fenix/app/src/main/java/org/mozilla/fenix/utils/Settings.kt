@@ -532,6 +532,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
+    var deleteDownloads by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_delete_downloads_now),
+        default = true
+    )
+
     var shouldUseBottomToolbar by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_toolbar_bottom),
         // Default accessibility users to top toolbar
