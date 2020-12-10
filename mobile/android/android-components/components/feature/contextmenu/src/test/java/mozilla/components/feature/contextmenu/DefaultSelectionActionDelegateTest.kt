@@ -3,6 +3,9 @@ package mozilla.components.feature.contextmenu
 import android.content.res.Resources
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.search.SearchAdapter
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -222,6 +225,29 @@ class DefaultSelectionActionDelegateTest {
         val result = delegate.performAction(SEARCH_PRIVATELY, "some selected text")
 
         assertTrue(result)
+    }
+
+    @Test
+    fun `when calling performAction check that Facts are emitted`() {
+        val adapter = mock<SearchAdapter>()
+        val delegate =
+            DefaultSelectionActionDelegate(adapter, getTestResources(), shareClicked)
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                facts.add(fact)
+            }
+        })
+
+        assertEquals(0, facts.size)
+
+        delegate.performAction(SEARCH_PRIVATELY, "some selected text")
+
+        assertEquals(1, facts.size)
+
+        delegate.performAction(CALL, selectedPhoneText)
+
+        assertEquals(2, facts.size)
     }
 }
 

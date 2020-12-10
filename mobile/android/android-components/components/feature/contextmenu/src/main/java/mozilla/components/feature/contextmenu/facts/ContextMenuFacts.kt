@@ -19,6 +19,7 @@ class ContextMenuFacts {
      */
     object Items {
         const val ITEM = "item"
+        const val TEXT_SELECTION_OPTION = "textSelectionOption"
     }
 }
 
@@ -40,4 +41,9 @@ private fun emitContextMenuFact(
 internal fun emitClickFact(candidate: ContextMenuCandidate) {
     val metadata = mapOf("item" to candidate.id)
     emitContextMenuFact(Action.CLICK, ContextMenuFacts.Items.ITEM, metadata = metadata)
+}
+
+internal fun emitTextSelectionClickFact(optionId: String) {
+    val metadata = mapOf("textSelectionOption" to optionId)
+    emitContextMenuFact(Action.CLICK, ContextMenuFacts.Items.TEXT_SELECTION_OPTION, metadata = metadata)
 }
