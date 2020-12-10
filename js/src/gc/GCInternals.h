@@ -285,31 +285,6 @@ struct TenureCount {
   // complaining about TenureCounts being held live across a minor GC.
 } JS_HAZ_NON_GC_POINTER;
 
-// Keep rough track of how many times we tenure objects in particular groups
-// during minor collections, using a fixed size hash for efficiency at the cost
-// of potential collisions.
-struct TenureCountCache {
-  static const size_t EntryShift = 4;
-  static const size_t EntryCount = 1 << EntryShift;
-
-  TenureCount entries[EntryCount] = {};  // zeroes
-
-  TenureCountCache() = default;
-
-  HashNumber hash(ObjectGroup* group) {
-    static const size_t ZeroBits = 3;
-
-    uintptr_t word = uintptr_t(group);
-    MOZ_ASSERT((word & ((1 << ZeroBits) - 1)) == 0);
-    word >>= ZeroBits;
-    return HashNumber((word >> EntryShift) ^ word);
-  }
-
-  TenureCount& findEntry(ObjectGroup* group) {
-    return entries[hash(group) % EntryCount];
-  }
-};
-
 extern void DelayCrossCompartmentGrayMarking(JSObject* src);
 
 inline bool IsOOMReason(JS::GCReason reason) {

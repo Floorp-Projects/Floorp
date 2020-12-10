@@ -54,9 +54,6 @@ enum Stat {
   // Number of strings tenured.
   STAT_STRINGS_TENURED,
 
-  // Number of object types pretenured this minor GC.
-  STAT_OBJECT_GROUPS_PRETENURED,
-
   // Number of realms that had nursery strings disabled due to large numbers
   // being tenured.
   STAT_NURSERY_STRING_REALMS_DISABLED,

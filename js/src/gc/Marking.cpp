@@ -3564,19 +3564,10 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   return dst;
 }
 
-void js::Nursery::collectToFixedPoint(TenuringTracer& mover,
-                                      TenureCountCache& tenureCounts) {
+void js::Nursery::collectToFixedPoint(TenuringTracer& mover) {
   for (RelocationOverlay* p = mover.objHead; p; p = p->next()) {
     auto* obj = static_cast<JSObject*>(p->forwardingAddress());
     mover.traceObject(obj);
-
-    TenureCount& entry = tenureCounts.findEntry(obj->group());
-    if (entry.group == obj->group()) {
-      entry.count++;
-    } else if (!entry.group) {
-      entry.group = obj->group();
-      entry.count = 1;
-    }
   }
 
   for (StringRelocationOverlay* p = mover.stringHead; p; p = p->next()) {

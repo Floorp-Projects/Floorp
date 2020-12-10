@@ -69,7 +69,6 @@ class GCSchedulingTunables;
 class MinorCollectionTracer;
 class RelocationOverlay;
 class StringRelocationOverlay;
-struct TenureCountCache;
 enum class AllocKind : uint8_t;
 class TenuredCell;
 }  // namespace gc
@@ -479,9 +478,6 @@ class Nursery {
   // Whether we will nursery-allocate BigInts.
   bool canAllocateBigInts_;
 
-  // Report ObjectGroups with at least this many instances tenured.
-  int64_t reportTenurings_;
-
   // Whether and why a collection of this nursery has been requested. This is
   // mutable as it is set by the store buffer, which otherwise cannot modify
   // anything in the nursery.
@@ -679,17 +675,14 @@ class Nursery {
     size_t tenuredBytes;
     size_t tenuredCells;
   };
-  CollectionResult doCollection(JS::GCReason reason,
-                                gc::TenureCountCache& tenureCounts);
+  CollectionResult doCollection(JS::GCReason reason);
 
-  size_t doPretenuring(JSRuntime* rt, JS::GCReason reason,
-                       const gc::TenureCountCache& tenureCounts,
-                       bool highPromotionRate);
+  void doPretenuring(JSRuntime* rt, JS::GCReason reason,
+                     bool highPromotionRate);
 
   // Move the object at |src| in the Nursery to an already-allocated cell
   // |dst| in Tenured.
-  void collectToFixedPoint(TenuringTracer& trc,
-                           gc::TenureCountCache& tenureCounts);
+  void collectToFixedPoint(TenuringTracer& trc);
 
   // The dependent string chars needs to be relocated if the base which it's
   // using chars from has been deduplicated.
@@ -736,11 +729,9 @@ class Nursery {
   void freeChunksFrom(unsigned firstFreeChunk);
 
   void sendTelemetry(JS::GCReason reason, mozilla::TimeDuration totalTime,
-                     bool wasEmpty, size_t pretenureCount,
-                     double promotionRate);
+                     bool wasEmpty, double promotionRate);
 
   void printCollectionProfile(JS::GCReason reason, double promotionRate);
-  void printTenuringData(const gc::TenureCountCache& tenureCounts);
 
   // Profile recording and printing.
   void maybeClearProfileDurations();
