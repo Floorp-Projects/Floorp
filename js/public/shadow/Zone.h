@@ -74,9 +74,6 @@ struct Zone {
   bool isGCMarking() const {
     return isGCMarkingBlackOnly() || isGCMarkingBlackAndGray();
   }
-  bool isGCMarkingOrSweeping() const {
-    return gcState_ >= MarkBlackOnly && gcState_ <= Sweep;
-  }
   bool isGCSweepingOrCompacting() const {
     return gcState_ == Sweep || gcState_ == Compact;
   }

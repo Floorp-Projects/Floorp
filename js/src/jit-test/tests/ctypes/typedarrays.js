@@ -39,20 +39,17 @@ function test() {
 
   // Check that pointers without associated length get truncated to strlen().
 
-  const unsignedCharArray = ctypes.unsigned_char.array(10)("abc\0\0\0");
-  const shortU8cs = unsignedCharArray.addressOfElement(0).readTypedArray();
+  const shortU8cs = ctypes.unsigned_char.array(10)("abc\0\0\0").addressOfElement(0).readTypedArray();
   assertEq(shortU8cs instanceof Uint8Array, true);
   assertEq(shortU8cs.length, 3);
   assertEq(typedArrayMatchesString(shortU8cs, "abc", 'stop at NUL, please'), true);
 
-  const signedCharArray = ctypes.signed_char.array(10)("abc\0\0\0");
-  const shortI8cs = signedCharArray.addressOfElement(0).readTypedArray();
+  const shortI8cs = ctypes.signed_char.array(10)("abc\0\0\0").addressOfElement(0).readTypedArray();
   assertEq(shortI8cs instanceof Int8Array, true);
   assertEq(shortI8cs.length, 3);
   assertEq(typedArrayMatchesString(shortI8cs, "abc", 'stop at NUL, please'), true);
 
-  const char16Array = ctypes.char16_t.array(10)("千\0");
-  const shortU16cs = char16Array.addressOfElement(0).readTypedArray();
+  const shortU16cs = ctypes.char16_t.array(10)("千\0").addressOfElement(0).readTypedArray();
   assertEq(shortU16cs instanceof Uint16Array, true);
   assertEq(shortU16cs.length, 1);
   assertEq(typedArrayMatchesString(shortU16cs, "千", 'ignore zero-padding, please'), true);

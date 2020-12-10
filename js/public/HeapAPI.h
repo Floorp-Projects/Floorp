@@ -556,12 +556,21 @@ namespace gc {
 
 extern JS_PUBLIC_API void PerformIncrementalReadBarrier(JS::GCCellPtr thing);
 
-static MOZ_ALWAYS_INLINE void ExposeGCThingToActiveJS(JS::GCCellPtr thing) {
+static MOZ_ALWAYS_INLINE bool IsIncrementalBarrierNeededOnTenuredGCThing(
+    const JS::GCCellPtr thing) {
+  MOZ_ASSERT(thing);
+  MOZ_ASSERT(!js::gc::IsInsideNursery(thing.asCell()));
+
   // TODO: I'd like to assert !RuntimeHeapIsBusy() here but this gets
   // called while we are tracing the heap, e.g. during memory reporting
   // (see bug 1313318).
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
+  JS::Zone* zone = JS::GetTenuredGCThingZone(thing);
+  return JS::shadow::Zone::from(zone)->needsIncrementalBarrier();
+}
+
+static MOZ_ALWAYS_INLINE void ExposeGCThingToActiveJS(JS::GCCellPtr thing) {
   // GC things residing in the nursery cannot be gray: they have no mark bits.
   // All live objects in the nursery are moved to tenured at the beginning of
   // each GC slice, so the gray marker never sees nursery things.
@@ -575,16 +584,13 @@ static MOZ_ALWAYS_INLINE void ExposeGCThingToActiveJS(JS::GCCellPtr thing) {
     return;
   }
 
-  auto* zone = JS::shadow::Zone::from(JS::GetTenuredGCThingZone(thing));
-  if (zone->needsIncrementalBarrier()) {
+  if (IsIncrementalBarrierNeededOnTenuredGCThing(thing)) {
     PerformIncrementalReadBarrier(thing);
-  } else if (!zone->isGCPreparing() &&
-             detail::TenuredCellIsMarkedGray(thing.asCell())) {
-    MOZ_ALWAYS_TRUE(JS::UnmarkGrayGCThingRecursively(thing));
+  } else if (detail::TenuredCellIsMarkedGray(thing.asCell())) {
+    JS::UnmarkGrayGCThingRecursively(thing);
   }
 
-  MOZ_ASSERT_IF(!zone->isGCPreparing(),
-                !detail::TenuredCellIsMarkedGray(thing.asCell()));
+  MOZ_ASSERT(!detail::TenuredCellIsMarkedGray(thing.asCell()));
 }
 
 template <typename T>
