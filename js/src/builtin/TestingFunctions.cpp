@@ -5336,6 +5336,24 @@ static bool ClearMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif  // DEBUG
 
+static bool NurseryStringsEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(cx->zone()->allocNurseryStrings);
+  return true;
+}
+
+static bool IsNurseryAllocated(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.get(0).isGCThing()) {
+    JS_ReportErrorASCII(
+        cx, "The function takes one argument, which must be a GC thing");
+    return false;
+  }
+
+  args.rval().setBoolean(IsInsideNursery(args[0].toGCThing()));
+  return true;
+}
+
 static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -5547,7 +5565,7 @@ static bool GetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
       return tzname[local.tm_isdst > 0];
 #  endif /* HAVE_TM_ZONE_TM_GMTOFF */
     }
-#endif /* _WIN32 */
+#endif   /* _WIN32 */
     return nullptr;
   };
 
@@ -7117,6 +7135,15 @@ gc::ZealModeHelpText),
 "  returned values will be wrapped into the current compartment, so this loses\n"
 "  some fidelity."),
 #endif // DEBUG
+
+    JS_FN_HELP("nurseryStringsEnabled", NurseryStringsEnabled, 0, 0,
+"nurseryStringsEnabled()",
+"  Return whether strings are currently allocated in the nursery for current\n"
+"  global\n"),
+
+    JS_FN_HELP("isNurseryAllocated", IsNurseryAllocated, 1, 0,
+"isNurseryAllocated(thing)",
+"  Return whether a GC thing is nursery allocated.\n"),
 
     JS_FN_HELP("getLcovInfo", GetLcovInfo, 1, 0,
 "getLcovInfo(global)",
