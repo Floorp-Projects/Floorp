@@ -31,6 +31,11 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector } = await openLayoutView();
   const { highlighters } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   const grid1 = await getContainerForSelector("#grid1", inspector);
   const grid2 = await getContainerForSelector("#grid2", inspector);
@@ -78,7 +83,7 @@ add_task(async function() {
   );
 
   info("Toggling ON the CSS grid highlighter from the #grid1 display badge.");
-  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  let onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   gridDisplayBadge1.click();
   await onHighlighterShown;
 
@@ -113,7 +118,7 @@ add_task(async function() {
   );
 
   info("Toggling ON the CSS grid highlighter from the #grid2 display badge.");
-  onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   gridDisplayBadge2.click();
   await onHighlighterShown;
 
@@ -183,7 +188,7 @@ add_task(async function() {
   );
 
   info("Toggling OFF the CSS grid highlighter from the #grid2 display badge.");
-  let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  let onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   gridDisplayBadge2.click();
   await onHighlighterHidden;
 
@@ -218,7 +223,7 @@ add_task(async function() {
   );
 
   info("Toggling OFF the CSS grid highlighter from the #grid1 display badge.");
-  onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   gridDisplayBadge1.click();
   await onHighlighterHidden;
 
