@@ -106,7 +106,9 @@ DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
 // Test if IP hint addresses can be accessed as regular A/AAAA records.
 add_task(async function testStoreIPHint() {
   let trrServer = new TRRServer();
-  registerCleanupFunction(async () => trrServer.stop());
+  registerCleanupFunction(async () => {
+    await trrServer.stop();
+  });
   await trrServer.start();
 
   Services.prefs.setIntPref("network.trr.mode", 3);

@@ -58,7 +58,9 @@ function channelOpenPromise(chan) {
 
 add_task(async function test_add_nat64_prefix_to_trr() {
   let trrServer = new TRRServer();
-  registerCleanupFunction(async () => trrServer.stop());
+  registerCleanupFunction(async () => {
+    await trrServer.stop();
+  });
   await trrServer.start();
   dump(`port = ${trrServer.port}\n`);
   let chan = makeChan(`https://localhost:${trrServer.port}/test?bla=some`);
