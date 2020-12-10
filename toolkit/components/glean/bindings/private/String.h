@@ -9,17 +9,12 @@
 
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
 
 namespace impl {
-extern "C" {
-void fog_string_set(uint32_t aId, const nsACString& aValue);
-uint32_t fog_string_test_has_value(uint32_t aId, const char* aStorageName);
-void fog_string_test_get_value(uint32_t aId, const char* aStorageName,
-                               nsACString& aValue);
-}
 
 class StringMetric {
  public:
@@ -33,7 +28,7 @@ class StringMetric {
    *
    * @param aValue The string to set the metric to.
    */
-  void Set(const nsACString& aValue) const { fog_string_set(mId, aValue); }
+  void Set(const nsACString& aValue) const { fog_string_set(mId, &aValue); }
 
   /**
    * **Test-only API**
@@ -54,7 +49,7 @@ class StringMetric {
       return Nothing();
     }
     nsCString ret;
-    fog_string_test_get_value(mId, aStorageName, ret);
+    fog_string_test_get_value(mId, aStorageName, &ret);
     return Some(ret);
   }
 
