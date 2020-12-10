@@ -7,6 +7,7 @@
 #include "GPUProcessManager.h"
 
 #include "gfxConfig.h"
+#include "gfxPlatform.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessListener.h"
 #include "mozilla/MemoryReportingProcess.h"
@@ -524,6 +525,16 @@ void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
     return;
   }
   DisableWebRender(aError, nsCString());
+}
+
+/* static */ void GPUProcessManager::RecordDeviceReset(
+    DeviceResetReason aReason) {
+  if (aReason != DeviceResetReason::FORCED_RESET) {
+    Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(aReason));
+  }
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::DeviceResetReason, int(aReason));
 }
 
 bool GPUProcessManager::OnDeviceReset(bool aTrackThreshold) {
