@@ -12,9 +12,7 @@ Search telemetry
 ================
 This module exposes the ``recordSearch`` method, which serves as the main entry point for recording search related Telemetry. It records only the search *counts* per engine and the origin of the search, but nothing pertaining the search contents themselves.
 
-As the transition to the ``BrowserUsageTelemetry`` happens, the ``recordSearch`` calls are dispatched through `BrowserSearch.recordSearchInTelemetry <https://searchfox.org/mozilla-central/rev/1a973762afcbc5066f73f1508b0c846872fe3952/browser/base/content/browser.js#4498>`_, that is called by all the search related UI components (urlbar, searchbar, context menu and about\:\* pages).
-
-A list of the components recording search Telemetry can be found using the following `Searchfox search <https://searchfox.org/mozilla-central/search?q=recordSearchInTelemetry>`_.
+A list of the components recording search Telemetry can be found using the following `Searchfox search <https://searchfox.org/mozilla-central/search?q=recordSearch>`_.
 
 Tab and window interactions
 ===========================
