@@ -2018,11 +2018,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   Address ToType(Address value) { return value; }
 
   void wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase,
-                    Register ptr, Register ptrScratch, AnyRegister outany,
-                    Register64 out64);
+                    Register ptr, AnyRegister outany, Register64 out64);
+  void wasmLoadImpl(const wasm::MemoryAccessDesc& access, MemOperand srcAddr,
+                    AnyRegister outany, Register64 out64);
   void wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegister valany,
-                     Register64 val64, Register memoryBase, Register ptr,
-                     Register ptrScratch);
+                     Register64 val64, Register memoryBase, Register ptr);
+  void wasmStoreImpl(const wasm::MemoryAccessDesc& access, MemOperand destAddr,
+                     AnyRegister valany, Register64 val64);
 
   // Emit a BLR or NOP instruction. ToggleCall can be used to patch
   // this instruction.
