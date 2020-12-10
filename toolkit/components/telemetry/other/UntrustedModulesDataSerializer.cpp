@@ -8,6 +8,8 @@
 
 #include "core/TelemetryCommon.h"
 #include "js/Array.h"  // JS::NewArrayObject
+#include "mozilla/dom/ToJSValue.h"
+#include "nsITelemetry.h"
 #include "nsUnicharUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -128,7 +130,8 @@ static bool VectorToJSArray(JSContext* cx, JS::MutableHandleObject aRet,
 }
 
 static bool SerializeModule(JSContext* aCx, JS::MutableHandleValue aElement,
-                            const RefPtr<ModuleRecord>& aModule) {
+                            const RefPtr<ModuleRecord>& aModule,
+                            uint32_t aFlags) {
   if (!aModule) {
     return false;
   }
@@ -138,9 +141,17 @@ static bool SerializeModule(JSContext* aCx, JS::MutableHandleValue aElement,
     return false;
   }
 
-  if (!AddLengthLimitedStringProp(aCx, obj, "resolvedDllName",
-                                  aModule->mSanitizedDllName)) {
-    return false;
+  if (aFlags & nsITelemetry::INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS) {
+    JS::RootedValue jsFileObj(aCx);
+    if (!dom::ToJSValue(aCx, aModule->mResolvedDosName, &jsFileObj) ||
+        !JS_DefineProperty(aCx, obj, "dllFile", jsFileObj, JSPROP_ENUMERATE)) {
+      return false;
+    }
+  } else {
+    if (!AddLengthLimitedStringProp(aCx, obj, "resolvedDllName",
+                                    aModule->mSanitizedDllName)) {
+      return false;
+    }
   }
 
   if (aModule->mVersion.isSome()) {
@@ -373,7 +384,7 @@ nsresult UntrustedModulesDataSerializer::AddSingleData(
       addPtr.OrInsert([idx = mCurModulesArrayIdx]() { return idx; });
 
       JS::RootedValue jsModule(mCx);
-      if (!SerializeModule(mCx, &jsModule, iter.Data()) ||
+      if (!SerializeModule(mCx, &jsModule, iter.Data(), mFlags) ||
           !JS_DefineElement(mCx, mModulesArray, mCurModulesArrayIdx, jsModule,
                             JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
@@ -413,14 +424,15 @@ nsresult UntrustedModulesDataSerializer::AddSingleData(
 }
 
 UntrustedModulesDataSerializer::UntrustedModulesDataSerializer(
-    JSContext* aCx, uint32_t aMaxModulesArrayLen)
+    JSContext* aCx, uint32_t aMaxModulesArrayLen, uint32_t aFlags)
     : mCtorResult(NS_ERROR_FAILURE),
       mCx(aCx),
       mMainObj(mCx, JS_NewPlainObject(mCx)),
       mModulesArray(mCx, JS::NewArrayObject(mCx, 0)),
       mPerProcObjContainer(mCx, JS_NewPlainObject(mCx)),
       mMaxModulesArrayLen(aMaxModulesArrayLen),
-      mCurModulesArrayIdx(0) {
+      mCurModulesArrayIdx(0),
+      mFlags(aFlags) {
   if (!mMainObj || !mModulesArray || !mPerProcObjContainer) {
     return;
   }

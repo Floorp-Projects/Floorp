@@ -32,6 +32,10 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
   const uint32_t mMaxModulesArrayLen;
   uint32_t mCurModulesArrayIdx;
 
+  // Combinations of the flags defined under nsITelemetry.
+  // (See "Flags for getUntrustedModuleLoadEvents" in nsITelemetry.idl)
+  const uint32_t mFlags;
+
   static bool SerializeEvent(JSContext* aCx, JS::MutableHandleValue aElement,
                              const ProcessedModuleLoadEvent& aEvent,
                              const IndexMap& aModuleIndices);
@@ -40,7 +44,8 @@ class MOZ_RAII UntrustedModulesDataSerializer final {
   nsresult AddSingleData(const UntrustedModulesData& aData);
 
  public:
-  UntrustedModulesDataSerializer(JSContext* aCx, uint32_t aMaxModulesArrayLen);
+  UntrustedModulesDataSerializer(JSContext* aCx, uint32_t aMaxModulesArrayLen,
+                                 uint32_t aFlags = 0);
   explicit operator bool() const;
 
   /**

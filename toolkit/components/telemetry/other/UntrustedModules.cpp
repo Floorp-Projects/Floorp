@@ -150,7 +150,7 @@ void MultiGetUntrustedModulesData::Serialize(RefPtr<dom::Promise>&& aPromise) {
   }
 
   JSContext* cx = jsapi.cx();
-  UntrustedModulesDataSerializer serializer(cx, kMaxModulesArrayLen);
+  UntrustedModulesDataSerializer serializer(cx, kMaxModulesArrayLen, mFlags);
   if (!serializer) {
     aPromise->MaybeReject(NS_ERROR_FAILURE);
     return;
