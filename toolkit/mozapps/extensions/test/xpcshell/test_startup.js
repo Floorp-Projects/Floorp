@@ -21,6 +21,27 @@ function createWebExtensionXPI(id, version) {
   });
 }
 
+// Bug 1554703: Verify that the extensions.lastAppBuildId pref is updated properly
+// to avoid a full scan on second startup in XPIStates.scanForChanges.
+add_task(async function test_scan_app_build_id_updated() {
+  const PREF_EM_LAST_APP_BUILD_ID = "extensions.lastAppBuildId";
+  Assert.equal(
+    Services.prefs.getCharPref(PREF_EM_LAST_APP_BUILD_ID, ""),
+    "",
+    "fresh version with no saved build ID"
+  );
+  Assert.ok(Services.appinfo.appBuildID, "build ID is set before a startup");
+
+  await promiseStartupManager();
+  Assert.equal(
+    Services.prefs.getCharPref(PREF_EM_LAST_APP_BUILD_ID, ""),
+    Services.appinfo.appBuildID,
+    "build ID is correct after a startup"
+  );
+
+  await promiseShutdownManager();
+});
+
 // Try to install all the items into the profile
 add_task(async function test_scan_profile() {
   await promiseStartupManager();

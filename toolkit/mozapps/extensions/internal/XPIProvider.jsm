@@ -189,18 +189,6 @@ const LOGGER_ID = "addons.xpi";
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
-XPCOMUtils.defineLazyGetter(this, "gStartupScanScopes", () => {
-  let appBuildID = Services.appinfo.appBuildID;
-  let oldAppBuildID = Services.prefs.getCharPref(PREF_EM_LAST_APP_BUILD_ID, "");
-  Services.prefs.setCharPref(PREF_EM_LAST_APP_BUILD_ID, appBuildID);
-  if (appBuildID !== oldAppBuildID) {
-    // If the build id changed, scan all scopes
-    return AddonManager.SCOPE_ALL;
-  }
-
-  return Services.prefs.getIntPref(PREF_EM_STARTUP_SCAN_SCOPES, 0);
-});
-
 /**
  * Spins the event loop until the given promise resolves, and then eiter returns
  * its success value or throws its rejection value.
@@ -1443,6 +1431,24 @@ var XPIStates = {
     let changed = false;
     let oldLocations = new Set(Object.keys(oldState));
 
+    let startupScanScopes;
+    if (
+      Services.appinfo.appBuildID ==
+      Services.prefs.getCharPref(PREF_EM_LAST_APP_BUILD_ID, "")
+    ) {
+      startupScanScopes = Services.prefs.getIntPref(
+        PREF_EM_STARTUP_SCAN_SCOPES,
+        0
+      );
+    } else {
+      // If the build id has changed, we need to do a full scan on first startup.
+      Services.prefs.setCharPref(
+        PREF_EM_LAST_APP_BUILD_ID,
+        Services.appinfo.appBuildID
+      );
+      startupScanScopes = AddonManager.SCOPE_ALL;
+    }
+
     for (let loc of XPIStates.locations()) {
       oldLocations.delete(loc.name);
 
@@ -1452,7 +1458,7 @@ var XPIStates = {
       changed = changed || loc.changed;
 
       // Don't bother checking scopes where we don't accept side-loads.
-      if (ignoreSideloads && !(loc.scope & gStartupScanScopes)) {
+      if (ignoreSideloads && !(loc.scope & startupScanScopes)) {
         continue;
       }
 

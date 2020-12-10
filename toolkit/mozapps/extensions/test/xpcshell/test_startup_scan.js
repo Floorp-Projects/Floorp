@@ -4,7 +4,7 @@
 Services.prefs.setIntPref("extensions.startupScanScopes", 0);
 
 createAppInfo("xpcshell@tessts.mozilla.org", "XPCShell", "42", "42");
-// Avoid gStartupScanScopes thinking this is an update and forcing a
+// Prevent XPIStates.scanForChanges from seeing this as an update and forcing a
 // full scan.
 Services.prefs.setCharPref(
   "extensions.lastAppBuildId",
