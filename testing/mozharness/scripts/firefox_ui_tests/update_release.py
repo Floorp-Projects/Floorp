@@ -11,7 +11,8 @@ import copy
 import os
 import pprint
 import sys
-import urllib
+
+from six.moves.urllib.parse import quote
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
@@ -22,7 +23,6 @@ from mozharness.mozilla.testing.firefox_ui_tests import (
     FirefoxUIUpdateTests,
     firefox_ui_update_config_options,
 )
-
 
 # Command line arguments for release update tests
 firefox_ui_update_release_config_options = [
@@ -278,7 +278,7 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
                 # Determine from where to download the file
                 installer_url = "{server}/{fragment}".format(
                     server=rel_info["ftp_server_from"],
-                    fragment=urllib.quote(rel_info["from"].replace("%locale%", locale)),
+                    fragment=quote(rel_info["from"].replace("%locale%", locale)),
                 )
                 installer_path = self.download_file(
                     url=installer_url, parent_dir=dirs["abs_work_dir"]
