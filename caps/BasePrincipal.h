@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "nsAtom.h"
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
@@ -27,15 +26,15 @@ class nsIChannel;
 class nsIReferrerInfo;
 class nsISupports;
 class nsIURI;
-namespace JS {
-class Value;
-}
 namespace Json {
 class Value;
 }
-struct JSContext;
 
 namespace mozilla {
+
+namespace dom {
+enum class ReferrerPolicy : uint8_t;
+}
 
 namespace extensions {
 class WebExtensionPolicy;
