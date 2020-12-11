@@ -100,28 +100,6 @@ void BrowserHost::UpdateEffects(EffectsInfo aEffects) {
   Unused << mRoot->SendUpdateEffects(mEffectsInfo);
 }
 
-/* attribute boolean docShellIsActive; */
-NS_IMETHODIMP
-BrowserHost::GetDocShellIsActive(bool* aDocShellIsActive) {
-  if (!mRoot) {
-    *aDocShellIsActive = false;
-    return NS_OK;
-  }
-  *aDocShellIsActive = mRoot->GetDocShellIsActive();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserHost::SetDocShellIsActive(bool aDocShellIsActive) {
-  if (!mRoot) {
-    return NS_OK;
-  }
-  VisitAll([&](BrowserParent* aBrowserParent) {
-    aBrowserParent->SetDocShellIsActive(aDocShellIsActive);
-  });
-  return NS_OK;
-}
-
 /* attribute boolean renderLayers; */
 NS_IMETHODIMP
 BrowserHost::GetRenderLayers(bool* aRenderLayers) {

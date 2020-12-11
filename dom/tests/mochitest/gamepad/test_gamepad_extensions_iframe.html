@@ -121,9 +121,7 @@ function posecheck() {
 }
 
 function setFrameVisible(f, visible) {
-  var Ci = SpecialPowers.Ci;
-  var docshell = SpecialPowers.wrap(f.contentWindow).docShell;
-  docshell.isActive = visible;
+  SpecialPowers.wrap(f.contentWindow).browsingContext.isActive = visible;
 }
 
 function haptictest() {

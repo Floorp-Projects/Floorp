@@ -255,20 +255,21 @@ BrowserElementParent.prototype = {
     });
   },
 
-  /**
-   * Called when the visibility of the window which owns this iframe changes.
-   */
-  _ownerVisibilityChange() {
-    this._sendAsyncMsg("owner-visibility-change", {
-      visible: !this._window.document.hidden,
-    });
-  },
-
   _handleOwnerEvent(evt) {
     switch (evt.type) {
       case "visibilitychange":
         this._ownerVisibilityChange();
         break;
+    }
+  },
+
+  /**
+   * Called when the visibility of the window which owns this iframe changes.
+   */
+  _ownerVisibilityChange() {
+    let bc = this._frameLoader?.browsingContext;
+    if (bc) {
+      bc.isActive = !this._window.document.hidden;
     }
   },
 };

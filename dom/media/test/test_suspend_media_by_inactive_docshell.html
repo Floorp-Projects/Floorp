@@ -44,10 +44,12 @@ function mediaSuspendedStateShouldEqualTo(expected) {
 }
 
 function setDocShellActive(isActive) {
-  const docShell = SpecialPowers.wrap(window).docShell;
+  const win = SpecialPowers.wrap(window);
+  const docShell = win.docShell;
+  const browsingContext = win.browsingContext;
   // This flag is used to prevent media from playing when docShell is inactive.
-  docShell.browsingContext.top.suspendMediaWhenInactive = true;
-  docShell.isActive = isActive;
+  browsingContext.top.suspendMediaWhenInactive = true;
+  browsingContext.isActive = isActive;
   // After updating `docshell.isActive`, it would suspend/resume media and we
   // wait suspending/resuming finishing by listening to `MozMediaSuspendChanged`
   return new Promise(r => {

@@ -196,6 +196,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void Reload(uint32_t aReloadFlags);
   void Stop(uint32_t aStopFlags);
 
+  BrowserParent* GetBrowserParent() const;
+
   // Internal method to change which process a BrowsingContext is being loaded
   // in. The returned promise will resolve when the process switch is completed.
   //

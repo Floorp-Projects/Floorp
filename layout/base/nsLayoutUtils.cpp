@@ -3149,10 +3149,8 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     builder->IgnorePaintSuppression();
   }
 
-  if (nsIDocShell* doc = presContext->GetDocShell()) {
-    bool isActive = false;
-    doc->GetIsActive(&isActive);
-    builder->SetInActiveDocShell(isActive);
+  if (BrowsingContext* bc = presContext->Document()->GetBrowsingContext()) {
+    builder->SetInActiveDocShell(bc->IsActive());
   }
 
   nsRect rootInkOverflow = aFrame->InkOverflowRectRelativeToSelf();

@@ -111,9 +111,7 @@ function checkValueInFloat32Array(array1, array2) {
 }
 
 function setFrameVisible(f, visible) {
-  let Ci = SpecialPowers.Ci;
-  let docshell = SpecialPowers.wrap(f.contentWindow).docShell;
-  docshell.isActive = visible;
+  SpecialPowers.wrap(f.contentWindow).browsingContext.isActive = visible;
 }
 
 function touchAdd() {

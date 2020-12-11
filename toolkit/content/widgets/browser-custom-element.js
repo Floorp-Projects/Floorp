@@ -395,32 +395,24 @@
     }
 
     set docShellIsActive(val) {
+      this.browsingContext.isActive = val;
       if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          frameLoader.remoteTab.docShellIsActive = val;
+        let remoteTab = this.frameLoader?.remoteTab;
+        if (remoteTab) {
+          remoteTab.renderLayers = val;
         }
-      } else if (this.docShell) {
-        this.docShell.isActive = val;
       }
     }
 
     get docShellIsActive() {
-      if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          return frameLoader.remoteTab.docShellIsActive;
-        }
-        return false;
-      }
-      return this.docShell && this.docShell.isActive;
+      return !!this.browsingContext?.isActive;
     }
 
     set renderLayers(val) {
       if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          frameLoader.remoteTab.renderLayers = val;
+        let remoteTab = this.frameLoader?.remoteTab;
+        if (remoteTab) {
+          remoteTab.renderLayers = val;
         }
       } else {
         this.docShellIsActive = val;
@@ -429,24 +421,15 @@
 
     get renderLayers() {
       if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          return frameLoader.remoteTab.renderLayers;
-        }
-        return false;
+        return !!this.frameLoader?.remoteTab?.renderLayers;
       }
       return this.docShellIsActive;
     }
 
     get hasLayers() {
       if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          return frameLoader.remoteTab.hasLayers;
-        }
-        return false;
+        return !!this.frameLoader?.remoteTab?.hasLayers;
       }
-
       return this.docShellIsActive;
     }
 

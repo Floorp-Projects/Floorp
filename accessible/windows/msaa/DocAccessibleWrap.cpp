@@ -188,9 +188,8 @@ void DocAccessibleWrap::DoInitialUpdate() {
         rect.MoveToX(rootRect.X() - rect.X());
         rect.MoveByY(-rootRect.Y());
 
-        nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
-        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-        docShell->GetIsActive(&isActive);
+        auto* bc = mDocumentNode->GetBrowsingContext();
+        isActive = bc && bc->IsActive();
       }
 
       RefPtr<DocAccessibleWrap> self(this);

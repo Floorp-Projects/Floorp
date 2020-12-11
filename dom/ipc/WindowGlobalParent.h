@@ -94,7 +94,7 @@ class WindowGlobalParent final : public WindowContext,
 
   // Get this actor's manager if it is not an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is in-process.
-  already_AddRefed<BrowserParent> GetBrowserParent();
+  BrowserParent* GetBrowserParent();
 
   ContentParent* GetContentParent();
 

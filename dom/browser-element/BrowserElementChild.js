@@ -13,10 +13,6 @@ function debug(msg) {
   // dump("BrowserElementChild - " + msg + "\n");
 }
 
-// NB: this must happen before we process any messages from
-// mozbrowser API clients.
-docShell.isActive = true;
-
 var BrowserElementIsReady;
 
 debug(`Might load BE scripts: BEIR: ${BrowserElementIsReady}`);

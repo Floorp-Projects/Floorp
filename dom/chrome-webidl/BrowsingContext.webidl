@@ -110,6 +110,8 @@ interface BrowsingContext {
    */
   [SetterThrows] attribute unsigned long sandboxFlags;
 
+  [SetterThrows] attribute boolean isActive;
+
   // The inRDMPane flag indicates whether or not Responsive Design Mode is
   // active for the browsing context.
   [SetterThrows] attribute boolean inRDMPane;

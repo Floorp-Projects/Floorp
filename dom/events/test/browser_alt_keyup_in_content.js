@@ -159,7 +159,10 @@ add_task(async function runTests() {
               [aTest.description],
               async aTestDescription => {
                 await ContentTaskUtils.waitForCondition(() => {
-                  if (docShell.isActive && content.document.hasFocus()) {
+                  if (
+                    content.browsingContext.isActive &&
+                    content.document.hasFocus()
+                  ) {
                     return true;
                   }
                   content.window.focus();

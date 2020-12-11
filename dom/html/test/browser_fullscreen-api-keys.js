@@ -71,11 +71,11 @@ add_task(async function() {
   registerCleanupFunction(() => gBrowser.removeTab(tab));
   await waitForDocLoadComplete();
 
-  // Wait for the document being actived, so that
+  // Wait for the document being activated, so that
   // fullscreen request won't be denied.
   await SpecialPowers.spawn(browser, [], () => {
     return ContentTaskUtils.waitForCondition(
-      () => docShell.isActive && content.document.hasFocus(),
+      () => content.browsingContext.isActive && content.document.hasFocus(),
       "document is active"
     );
   });

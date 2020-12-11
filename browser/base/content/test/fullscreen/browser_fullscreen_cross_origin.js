@@ -31,9 +31,6 @@ add_task(async function test_fullscreen_cross_origin() {
               }
               frameDoc.addEventListener(message, handler);
             });
-            // In fission, we may not have docShell active automatically,
-            // Force docShell active manually
-            content.docShell.isActive = true;
             frameDoc.getElementById("request").click();
             await waitForFullscreen;
           });

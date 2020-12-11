@@ -1275,7 +1275,7 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
       }
     }
 
-    if (!widget || !docShell || !docShell->GetIsActive()) {
+    if (!widget || !docShell || !docShell->GetBrowsingContext()->IsActive()) {
       return;
     }
 

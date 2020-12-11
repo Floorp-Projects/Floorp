@@ -15,13 +15,13 @@ function waitForDocshellActivated() {
     // Setting docshell activated/deactivated will trigger visibility state
     // changes to relevant state ("visible" or "hidden"). AFAIK, there is no
     // such event notifying docshell is being activated, so I use
-    // "visibilitychange" event rather than polling the docShell.isActive.
+    // "visibilitychange" event rather than polling the isActive flag.
     await ContentTaskUtils.waitForEvent(
       content.document,
       "visibilitychange",
       true /* capture */,
       aEvent => {
-        return content.docShell.isActive;
+        return content.browsingContext.isActive;
       }
     );
   });

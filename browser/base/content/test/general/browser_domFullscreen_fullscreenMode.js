@@ -37,7 +37,7 @@ const FS_CHANGE_BOTH = FS_CHANGE_DOM | FS_CHANGE_SIZE;
 function waitForDocActivated(aBrowser) {
   return SpecialPowers.spawn(aBrowser, [], () => {
     return ContentTaskUtils.waitForCondition(
-      () => docShell.isActive && content.document.hasFocus()
+      () => content.browsingContext.isActive && content.document.hasFocus()
     );
   });
 }

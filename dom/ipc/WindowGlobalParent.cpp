@@ -213,11 +213,11 @@ already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
   return do_AddRef(static_cast<WindowGlobalChild*>(otherSide));
 }
 
-already_AddRefed<BrowserParent> WindowGlobalParent::GetBrowserParent() {
+BrowserParent* WindowGlobalParent::GetBrowserParent() {
   if (IsInProcess() || !CanSend()) {
     return nullptr;
   }
-  return do_AddRef(static_cast<BrowserParent*>(Manager()));
+  return static_cast<BrowserParent*>(Manager());
 }
 
 ContentParent* WindowGlobalParent::GetContentParent() {

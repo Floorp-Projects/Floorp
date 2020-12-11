@@ -49,7 +49,7 @@ add_task(async function test_controllers_subframes() {
     // need to wait for the focus to have been updated.
     await SpecialPowers.spawn(browsingContexts[stepNum], [], () => {
       return ContentTaskUtils.waitForCondition(
-        () => docShell.isActive && content.document.hasFocus()
+        () => content.browsingContext.isActive && content.document.hasFocus()
       );
     });
 

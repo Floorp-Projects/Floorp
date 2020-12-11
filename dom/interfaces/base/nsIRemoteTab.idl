@@ -13,14 +13,6 @@ webidl WindowGlobalParent;
 interface nsIRemoteTab : nsISupports
 {
   /**
-   * Manages the docshell active state of the remote browser. Setting the
-   * docShell to be active will also cause it to render layers and upload
-   * them to the compositor. Setting the docShell as not active will clear
-   * those layers.
-   */
-  attribute boolean docShellIsActive;
-
-  /**
    * When set to true, this tells the child to paint and upload layers to
    * the compositor. When set to false, previous layers are cleared from
    * the compositor, but only if preserveLayers is also set to false.

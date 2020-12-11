@@ -490,13 +490,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean canExecuteScripts;
 
   /**
-   * Sets whether a docshell is active. An active docshell is one that is
-   * visible, and thus is not a good candidate for certain optimizations
-   * like image frame discarding. Docshells are active unless told otherwise.
-   */
-  [infallible] attribute boolean isActive;
-
-  /**
    * The ID of the docshell in the session history.
    */
   readonly attribute nsIDRef historyID;
