@@ -54,8 +54,8 @@ use crate::{
 };
 
 use ::libc::{self};
+use std::sync::atomic::Ordering;
 use std::sync::{atomic::AtomicBool, Arc};
-use std::{ptr::null_mut, sync::atomic::Ordering};
 
 pub const PRECACHE_OUTPUT_SIZE: usize = 8192;
 pub const PRECACHE_OUTPUT_MAX: usize = PRECACHE_OUTPUT_SIZE - 1;
@@ -1101,13 +1101,13 @@ pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_
     };
 }
 /* Replace the current transformation with a LUT transformation using a given number of sample points */
-fn qcms_transform_precacheLUT_float(
+fn transform_precacheLUT_float(
     mut transform: Box<qcms_transform>,
     mut in_0: &qcms_profile,
     mut out: &qcms_profile,
     mut samples: i32,
     mut in_type: qcms_data_type,
-) -> *mut qcms_transform {
+) -> Option<Box<qcms_transform>> {
     /* The range between which 2 consecutive sample points can be used to interpolate */
     let mut x: u16;
     let mut y: u16;
@@ -1141,10 +1141,10 @@ fn qcms_transform_precacheLUT_float(
             }
             debug_assert!((*transform).transform_fn.is_some());
         } else {
-            return null_mut();
+            return None;
         }
     }
-    return Box::into_raw(transform);
+    return Some(transform);
 }
 #[no_mangle]
 pub extern "C" fn qcms_transform_create(
@@ -1196,13 +1196,14 @@ pub extern "C" fn qcms_transform_create(
         // This evenly divides 256 into blocks of 8x8x8.
         // TODO For transforming small data sets of about 200x200 or less
         // precaching should be avoided.
-        let mut result: *mut qcms_transform =
-            qcms_transform_precacheLUT_float(transform, in_0, out, 33, in_type);
-        if result.is_null() {
-            debug_assert!(false, "precacheLUT failed");
-            return 0 as *mut qcms_transform;
-        }
-        return result;
+        let mut result = transform_precacheLUT_float(transform, in_0, out, 33, in_type);
+        return match result {
+            Some(result) => Box::into_raw(result),
+            None => {
+                debug_assert!(false, "precacheLUT failed");
+                0 as *mut qcms_transform
+            }
+        };
     }
     if precache {
         (*transform).output_table_r = Some(Arc::clone((*out).output_table_r.as_ref().unwrap()));
