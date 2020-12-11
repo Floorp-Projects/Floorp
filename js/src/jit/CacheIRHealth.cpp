@@ -79,23 +79,21 @@ CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
   while (stub && !stub->isFallback()) {
     spew->beginObject();
     {
-      uint32_t count;
-      if (js::jit::GetStubEnteredCount(stub, &count)) {
-        Happiness stubHappiness = spewStubHealth(spew, stub);
-        if (stubHappiness < entryHappiness) {
-          entryHappiness = stubHappiness;
-        }
-
-        if (count > 0 && sawNonZeroCount) {
-          // More than one stub has a hit count greater than zero.
-          // This is sad because we do not Warp transpile in this case.
-          entryHappiness = Sad;
-        } else if (count > 0 && !sawNonZeroCount) {
-          sawNonZeroCount = true;
-        }
-
-        spew->property("hitCount", count);
+      uint32_t count = stub->getEnteredCount();
+      Happiness stubHappiness = spewStubHealth(spew, stub);
+      if (stubHappiness < entryHappiness) {
+        entryHappiness = stubHappiness;
       }
+
+      if (count > 0 && sawNonZeroCount) {
+        // More than one stub has a hit count greater than zero.
+        // This is sad because we do not Warp transpile in this case.
+        entryHappiness = Sad;
+      } else if (count > 0 && !sawNonZeroCount) {
+        sawNonZeroCount = true;
+      }
+
+      spew->property("hitCount", count);
     }
 
     spew->endObject();
@@ -170,8 +168,7 @@ void CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
     len = cs.length;
     MOZ_ASSERT(len);
 
-    if (entry && (entry->firstStub()->isFallback() ||
-                  ICStub::IsCacheIRKind(entry->firstStub()->kind()))) {
+    if (entry) {
       Happiness entryHappiness =
           spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
 
