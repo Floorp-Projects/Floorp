@@ -394,17 +394,16 @@ class nsWindow final : public nsBaseWidget {
   nsresult GetSystemFont(nsCString& aFontName) override;
 
   typedef enum {
-    GTK_DECORATION_SYSTEM,  // Use system (window manager) window decorations
-    GTK_DECORATION_CLIENT,  // Use client window decorations
-    GTK_DECORATION_NONE,    // Window manager does not support any type of
-                            // decorations.
-  } GtkWindowDecoration;
+    CSD_SUPPORT_SYSTEM,  // CSD including shadows
+    CSD_SUPPORT_CLIENT,  // CSD without shadows
+    CSD_SUPPORT_NONE,    // WM does not support CSD at all
+    CSD_SUPPORT_UNKNOWN
+  } CSDSupportLevel;
   /**
    * Get the support of Client Side Decoration by checking
    * the XDG_CURRENT_DESKTOP environment variable.
    */
-  static GtkWindowDecoration GetToplevelWindowDecoration();
-  static GtkWindowDecoration GetPopupWindowDecoration();
+  static CSDSupportLevel GetSystemCSDSupportLevel(bool aIsPopup = false);
 
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
@@ -550,9 +549,9 @@ class nsWindow final : public nsBaseWidget {
   // window. See bug 1225044.
   unsigned int mPendingConfigures;
 
-  // Window titlebar rendering mode, GTK_DECORATION_NONE if it's disabled
+  // Window titlebar rendering mode, CSD_SUPPORT_NONE if it's disabled
   // for this window.
-  GtkWindowDecoration mGtkWindowDecoration;
+  CSDSupportLevel mCSDSupportLevel;
   // Use dedicated GdkWindow for mContainer
   bool mDrawToContainer;
   // If true, draw our own window titlebar.
@@ -701,6 +700,7 @@ class nsWindow final : public nsBaseWidget {
   RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
   mozilla::UniquePtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
+  static CSDSupportLevel sCSDSupportLevel;
 
   static bool sTransparentMainWindow;
 };
