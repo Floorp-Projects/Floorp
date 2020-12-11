@@ -78,3 +78,6 @@ if CONFIG["JS_ENABLE_SMOOSH"]:
 SOURCES += [
     "Parser.cpp",
 ]
+
+if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
+    include("/tools/fuzzing/libfuzzer-config.mozbuild")
