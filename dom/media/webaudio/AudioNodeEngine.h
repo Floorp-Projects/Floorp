@@ -339,9 +339,8 @@ class AudioNodeEngine {
   // returning false, then the track can be suspended.
   virtual bool IsActive() const { return false; }
 
-  // Called on forced shutdown of the MediaTrackGraph before handing ownership
-  // from graph thread to main thread.
-  virtual void NotifyForcedShutdown() {}
+  // Called on graph thread when the engine will not be used again.
+  virtual void OnGraphThreadDone() {}
 
   bool HasNode() const {
     MOZ_ASSERT(NS_IsMainThread());
