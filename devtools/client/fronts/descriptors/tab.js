@@ -116,7 +116,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
 
   get favicon() {
     // Note: the favicon is not part of the default form() payload, it will be
-    // added in `retrieveAsyncFormData`.
+    // added in `retrieveFavicon`.
     return this._form.favicon;
   }
 
@@ -144,29 +144,19 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
   }
 
   /**
-   * @backward-compat { version 77 }
-   * This method is mostly intended for backward compatibility.
+   * Safely retrieves the favicon via getFavicon() and populates this._form.favicon.
    *
-   * It also retrieves the favicon via getFavicon() for regular servers, but
-   * the main reason this is done here is to keep it close to the solution
-   * used to get the favicon for older servers.
-   *
-   * Once we don't need to support those older servers, we could let callers
-   * explicitly retrieve the favicon instead of inserting it in the form dynamically.
+   * We could let callers explicitly retrieve the favicon instead of inserting it in the
+   * form dynamically.
    */
-  async retrieveAsyncFormData() {
+  async retrieveFavicon() {
     try {
-      if (this.traits.getFavicon) {
-        this._form.favicon = await this.getFavicon();
-      }
+      this._form.favicon = await this.getFavicon();
     } catch (e) {
       // We might request the data for a tab which is going to be destroyed.
       // In this case the TargetFront will be destroyed. Otherwise log an error.
       if (!this.isDestroyed()) {
-        console.error(
-          "Failed to retrieve the async form data for " + this.url,
-          e
-        );
+        console.error("Failed to retrieve the favicon for " + this.url, e);
       }
     }
   }

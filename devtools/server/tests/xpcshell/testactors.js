@@ -128,9 +128,7 @@ const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
   form() {
     const form = {
       actor: this.actorID,
-      traits: {
-        getFavicon: true,
-      },
+      traits: {},
       selected: this.selected,
       title: this._targetActor.title,
       url: this._targetActor.url,
