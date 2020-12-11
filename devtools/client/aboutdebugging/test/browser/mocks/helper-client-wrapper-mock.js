@@ -118,7 +118,6 @@ function createThisFirefoxClientMock() {
     outerWindowID: 0,
     traits: {
       getFavicon: true,
-      hasTabInfo: true,
     },
     url: "about:debugging",
   };
