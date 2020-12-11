@@ -7,12 +7,6 @@
 %define menuPanelWidth 22.35em
 %define wideMenuPanelWidth 29em
 %define standaloneSubviewWidth 30em
-% XXXgijs This is the ugliest bit of code I think I've ever written for Mozilla.
-% Basically, the 0.1px is there to avoid CSS rounding errors causing buttons to wrap.
-% For gory details, refer to https://bugzilla.mozilla.org/show_bug.cgi?id=963365#c11
-% There's no calc() here (and therefore lots of calc() where this is used) because
-% we don't support nested calc(): https://bugzilla.mozilla.org/show_bug.cgi?id=968761
-%define menuPanelButtonWidth (@menuPanelWidth@ / 3 - 0.1px)
 %define buttonStateHover :not([disabled],[open],:active):is(:hover,:focus)
 %define menuStateHover :not([disabled],:active)[_moz-menuactive]
 %define buttonStateActive :not([disabled]):is([open],:hover:active)
@@ -1446,10 +1440,9 @@ toolbarpaletteitem[place="palette"] > #search-container {
   -moz-box-orient: horizontal;
 }
 
-/* In customize mode, extend the buttons *only* in the panel, just to make them not look stupid */
-toolbarpaletteitem[place="menu-panel"] > .toolbaritem-combined-buttons > toolbarbutton {
-  min-width: calc(@menuPanelButtonWidth@ - 1px);
-  max-width: calc(@menuPanelButtonWidth@ - 1px);
+toolbarpaletteitem[place="menu-panel"],
+toolbarpaletteitem[place="menu-panel"] > toolbaritem {
+  -moz-box-flex: 1;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:not(.toolbarbutton-1)[disabled] {
