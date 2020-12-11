@@ -4,35 +4,35 @@
 
 use std::num;
 
-use failure::Fail;
 use http;
 use nserror::{
     nsresult, NS_ERROR_ILLEGAL_VALUE, NS_ERROR_INVALID_ARG, NS_ERROR_LAUNCHED_CHILD_PROCESS,
     NS_ERROR_NOT_AVAILABLE,
 };
+use thiserror::Error;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum RemoteAgentError {
-    #[fail(display = "expected address syntax [<host>]:<port>: {}", _0)]
-    AddressSpec(http::uri::InvalidUri),
+    #[error("expected address syntax [<host>]:<port>: {0}")]
+    AddressSpec(#[from] http::uri::InvalidUri),
 
-    #[fail(display = "may only be instantiated in parent process")]
+    #[error("may only be instantiated in parent process")]
     ChildProcess,
 
-    #[fail(display = "invalid port: {}", _0)]
-    InvalidPort(num::ParseIntError),
+    #[error("invalid port: {0}")]
+    InvalidPort(#[from] num::ParseIntError),
 
-    #[fail(display = "listener restricted to loopback devices")]
+    #[error("listener restricted to loopback devices")]
     LoopbackRestricted,
 
-    #[fail(display = "missing port number")]
+    #[error("missing port number")]
     MissingPort,
 
-    #[fail(display = "unavailable")]
+    #[error("unavailable")]
     Unavailable,
 
-    #[fail(display = "error result {}", _0)]
-    XpCom(nsresult),
+    #[error("error result {0}")]
+    XpCom(#[source] nsresult),
 }
 
 impl From<RemoteAgentError> for nsresult {
@@ -46,18 +46,6 @@ impl From<RemoteAgentError> for nsresult {
             Unavailable => NS_ERROR_NOT_AVAILABLE,
             XpCom(result) => result,
         }
-    }
-}
-
-impl From<num::ParseIntError> for RemoteAgentError {
-    fn from(err: num::ParseIntError) -> Self {
-        RemoteAgentError::InvalidPort(err)
-    }
-}
-
-impl From<http::uri::InvalidUri> for RemoteAgentError {
-    fn from(err: http::uri::InvalidUri) -> Self {
-        RemoteAgentError::AddressSpec(err)
     }
 }
 
