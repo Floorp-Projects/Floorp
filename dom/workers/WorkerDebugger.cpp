@@ -6,8 +6,10 @@
 
 #include "WorkerDebugger.h"
 
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/PerformanceUtils.h"
 #include "nsProxyRelease.h"
@@ -457,7 +459,7 @@ void WorkerDebugger::ReportErrorToDebuggerOnMainThread(
 
 RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
   AssertIsOnMainThread();
-  nsCOMPtr<nsPIDOMWindowOuter> top;
+  RefPtr<BrowsingContext> top;
   RefPtr<WorkerDebugger> self = this;
 
 #if defined(XP_WIN)
@@ -476,12 +478,12 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
   }
   nsPIDOMWindowInner* win = wp->GetWindow();
   if (win) {
-    nsPIDOMWindowOuter* outer = win->GetOuterWindow();
-    if (outer) {
-      top = outer->GetInProcessTop();
+    BrowsingContext* context = win->GetBrowsingContext();
+    if (context) {
+      top = context->Top();
       if (top) {
-        windowID = top->WindowID();
-        isTopLevel = outer->GetBrowsingContext()->IsTop();
+        windowID = top->GetCurrentWindowContext()->OuterWindowId();
+        isTopLevel = context->IsTop();
       }
     }
   }

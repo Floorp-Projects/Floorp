@@ -11,7 +11,10 @@
 class nsPIDOMWindowOuter;
 
 namespace mozilla {
-
+namespace dom {
+class BrowsingContext;
+class DocGroup;
+}  // namespace dom
 /**
  * Returns an array of promises to asynchronously collect all performance
  * info in the current process.
@@ -22,7 +25,11 @@ nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo();
  * Asynchronously collects memory info for a given window
  */
 RefPtr<MemoryPromise> CollectMemoryInfo(
-    const nsCOMPtr<nsPIDOMWindowOuter>& aWindow,
+    const RefPtr<dom::BrowsingContext>& aContext,
+    const RefPtr<AbstractThread>& aEventTarget);
+
+RefPtr<MemoryPromise> CollectMemoryInfo(
+    const RefPtr<dom::DocGroup>& aDocGroup,
     const RefPtr<AbstractThread>& aEventTarget);
 
 }  // namespace mozilla
