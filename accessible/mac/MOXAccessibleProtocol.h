@@ -284,6 +284,12 @@
 // AXEditableAncestor
 - (id _Nullable)moxEditableAncestor;
 
+// AXHighestEditableAncestor
+- (id _Nullable)moxHighestEditableAncestor;
+
+// AXFocusableAncestor
+- (id _Nullable)moxFocusableAncestor;
+
 // AXARIAAtomic
 - (NSNumber* _Nullable)moxARIAAtomic;
 
