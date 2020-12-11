@@ -28,10 +28,7 @@ const rootSpecPrototype = {
     },
 
     listTabs: {
-      request: {
-        // @backward-compat { version 76 } The argument is only used on older servers.
-        favicons: Option(0, "boolean"),
-      },
+      request: {},
       response: {
         tabs: RetVal("array:tabDescriptor"),
       },
