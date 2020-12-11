@@ -270,6 +270,7 @@ static SystemTimeConverter<guint32>& TimeConverter() {
   return sTimeConverterSingleton;
 }
 
+nsWindow::CSDSupportLevel nsWindow::sCSDSupportLevel = CSD_SUPPORT_UNKNOWN;
 bool nsWindow::sTransparentMainWindow = false;
 
 namespace mozilla {
@@ -494,7 +495,7 @@ nsWindow::nsWindow() {
   mLastScrollEventTime = GDK_CURRENT_TIME;
 
   mPendingConfigures = 0;
-  mGtkWindowDecoration = GTK_DECORATION_NONE;
+  mCSDSupportLevel = CSD_SUPPORT_NONE;
   mDrawToContainer = false;
   mDrawInTitlebar = false;
   mTitlebarBackdropState = false;
@@ -1024,7 +1025,7 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
 }
 
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
-  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT && mDrawInTitlebar) {
     GtkBorder decorationSize = GetCSDDecorationSize(!mIsTopLevel);
     *aWidth += decorationSize.left + decorationSize.right;
     *aHeight += decorationSize.top + decorationSize.bottom;
@@ -2239,7 +2240,7 @@ LayoutDeviceIntRect nsWindow::GetClientBounds() {
 void nsWindow::UpdateClientOffsetFromFrameExtents() {
   AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffsetFromFrameExtents", OTHER);
 
-  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT && mDrawInTitlebar) {
     return;
   }
 
@@ -3143,7 +3144,7 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   // is enabled. In either cases (Wayland or system titlebar is off on X11)
   // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
   // it from mContainer position.
-  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
     if (!mIsX11Display || (mIsX11Display && mDrawInTitlebar)) {
       UpdateClientOffsetFromCSDWindow();
     }
@@ -4069,7 +4070,7 @@ void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {
   // is enabled. In ither cases (Wayland or system titlebar is off on X11)
   // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
   // it from mContainer position.
-  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
     if (!mIsX11Display || (mIsX11Display && mDrawInTitlebar)) {
       UpdateClientOffsetFromCSDWindow();
     }
@@ -4210,8 +4211,7 @@ bool nsWindow::IsToplevelWindowTransparent() {
       } else {
         // Enable transparent toplevel window if we can draw main window
         // without system titlebar as Gtk+ themes use titlebar round corners.
-        sTransparentMainWindow =
-            (GetToplevelWindowDecoration() != GTK_DECORATION_NONE);
+        sTransparentMainWindow = GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE;
       }
     }
     transparencyConfigured = true;
@@ -4414,8 +4414,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       if (mWindowType == eWindowType_toplevel ||
           mWindowType == eWindowType_dialog) {
         bool isPopup = mIsPIPWindow || mWindowType == eWindowType_dialog;
-        mGtkWindowDecoration = isPopup ? GetPopupWindowDecoration()
-                                       : GetToplevelWindowDecoration();
+        mCSDSupportLevel = GetSystemCSDSupportLevel(isPopup);
       }
 
       // Don't use transparency for PictureInPicture windows.
@@ -4599,7 +4598,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
        */
       GtkStyleContext* style = gtk_widget_get_style_context(mShell);
       mDrawToContainer = !mIsX11Display ||
-                         (mGtkWindowDecoration == GTK_DECORATION_CLIENT) ||
+                         (mCSDSupportLevel == CSD_SUPPORT_CLIENT) ||
                          gtk_style_context_has_class(style, "csd");
       eventWidget = (mDrawToContainer) ? container : mShell;
 
@@ -7467,17 +7466,17 @@ nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& aMargins) {
 }
 
 void nsWindow::SetDrawsInTitlebar(bool aState) {
-  LOG(("nsWindow::SetDrawsInTitlebar() [%p] State %d mGtkWindowDecoration %d\n",
-       (void*)this, aState, (int)mGtkWindowDecoration));
+  LOG(("nsWindow::SetDrawsInTitlebar() [%p] State %d mCSDSupportLevel %d\n",
+       (void*)this, aState, (int)mCSDSupportLevel));
 
-  if (!mShell || mGtkWindowDecoration == GTK_DECORATION_NONE ||
+  if (!mShell || mCSDSupportLevel == CSD_SUPPORT_NONE ||
       aState == mDrawInTitlebar) {
     return;
   }
 
-  if (mGtkWindowDecoration == GTK_DECORATION_SYSTEM) {
+  if (mCSDSupportLevel == CSD_SUPPORT_SYSTEM) {
     SetWindowDecoration(aState ? eBorderStyle_border : mBorderStyle);
-  } else if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
+  } else if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
     LOG(("    Using CSD mode\n"));
 
     /* Window manager does not support GDK_DECOR_BORDER,
@@ -7817,73 +7816,93 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   return NS_OK;
 }
 
-static nsWindow::GtkWindowDecoration GetWindowDecoration(bool aIsPopup) {
+nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
+  if (sCSDSupportLevel != CSD_SUPPORT_UNKNOWN) {
+    return sCSDSupportLevel;
+  }
+
   // Allow MOZ_GTK_TITLEBAR_DECORATION to override our heuristics
   const char* decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
   if (decorationOverride) {
     if (strcmp(decorationOverride, "none") == 0) {
-      return nsWindow::GTK_DECORATION_NONE;
+      sCSDSupportLevel = CSD_SUPPORT_NONE;
     } else if (strcmp(decorationOverride, "client") == 0) {
-      return nsWindow::GTK_DECORATION_CLIENT;
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else if (strcmp(decorationOverride, "system") == 0) {
-      return nsWindow::GTK_DECORATION_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
     }
+    return sCSDSupportLevel;
   }
 
-  // GTK_CSD forces CSD mode - use also CSD because window manager
-  // decorations does not work with CSD.
-  // We check GTK_CSD as well as gtk_window_should_use_csd() does.
-  const char* csdOverride = getenv("GTK_CSD");
-  if (csdOverride && g_strcmp0(csdOverride, "1") == 0) {
-    return nsWindow::GTK_DECORATION_CLIENT;
-  }
-
-  // nsWindow::GetToplevelWindowDecoration can be called from various threads
+  // nsWindow::GetSystemCSDSupportLevel can be called from various threads
   // so we can't use gfxPlatformGtk here.
   if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    return nsWindow::GTK_DECORATION_CLIENT;
+    sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+    return sCSDSupportLevel;
   }
 
   const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   if (currentDesktop) {
     // GNOME Flashback (fallback)
     if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr) {
-      return aIsPopup ? nsWindow::GTK_DECORATION_CLIENT
-                      : nsWindow::GTK_DECORATION_SYSTEM;
+      sCSDSupportLevel = aIsPopup ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
       // Pop Linux Bug 1629198
     } else if (strstr(currentDesktop, "pop:GNOME") != nullptr) {
-      return nsWindow::GTK_DECORATION_CLIENT;
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
       // gnome-shell
     } else if (strstr(currentDesktop, "GNOME") != nullptr) {
-      return aIsPopup ? nsWindow::GTK_DECORATION_CLIENT
-                      : nsWindow::GTK_DECORATION_SYSTEM;
+      sCSDSupportLevel = aIsPopup ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
+    } else if (strstr(currentDesktop, "XFCE") != nullptr) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
-      return nsWindow::GTK_DECORATION_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+      // KDE Plasma
+    } else if (strstr(currentDesktop, "KDE") != nullptr) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+    } else if (strstr(currentDesktop, "Enlightenment") != nullptr) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+    } else if (strstr(currentDesktop, "LXDE") != nullptr) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+    } else if (strstr(currentDesktop, "openbox") != nullptr) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else if (strstr(currentDesktop, "i3") != nullptr) {
-      return nsWindow::GTK_DECORATION_NONE;
+      sCSDSupportLevel = CSD_SUPPORT_NONE;
+    } else if (strstr(currentDesktop, "MATE") != nullptr) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
       // Ubuntu Unity
     } else if (strstr(currentDesktop, "Unity") != nullptr) {
-      return nsWindow::GTK_DECORATION_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
       // Elementary OS
     } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
-      return nsWindow::GTK_DECORATION_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
     } else if (strstr(currentDesktop, "LXQt") != nullptr) {
-      return nsWindow::GTK_DECORATION_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+    } else if (strstr(currentDesktop, "Deepin") != nullptr) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+    } else {
+// Release or beta builds are not supposed to be broken
+// so disable titlebar rendering on untested/unknown systems.
+#if defined(RELEASE_OR_BETA)
+      sCSDSupportLevel = CSD_SUPPORT_NONE;
+#else
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+#endif
+    }
+  } else {
+    sCSDSupportLevel = CSD_SUPPORT_NONE;
+  }
+
+  // GTK_CSD forces CSD mode - use also CSD because window manager
+  // decorations does not work with CSD.
+  // We check GTK_CSD as well as gtk_window_should_use_csd() does.
+  if (sCSDSupportLevel == CSD_SUPPORT_SYSTEM) {
+    const char* csdOverride = getenv("GTK_CSD");
+    if (csdOverride && g_strcmp0(csdOverride, "1") == 0) {
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     }
   }
-  return nsWindow::GTK_DECORATION_CLIENT;
-};
 
-nsWindow::GtkWindowDecoration nsWindow::GetToplevelWindowDecoration() {
-  static nsWindow::GtkWindowDecoration sGtkToplevelWindowDecoration =
-      GetWindowDecoration(/* isPopup */ false);
-  return sGtkToplevelWindowDecoration;
-}
-
-nsWindow::GtkWindowDecoration nsWindow::GetPopupWindowDecoration() {
-  static nsWindow::GtkWindowDecoration sGtkPopupWindowDecoration =
-      GetWindowDecoration(/* isPopup */ true);
-  return sGtkPopupWindowDecoration;
+  return sCSDSupportLevel;
 }
 
 bool nsWindow::TitlebarUseShapeMask() {
@@ -7918,10 +7937,14 @@ bool nsWindow::HideTitlebarByDefault() {
       return Preferences::GetBool("widget.default-hidden-titlebar", false);
     }
 
-    // We hide system titlebar on Gnome/ElementaryOS by default
+    // Don't hide titlebar when it's disabled on current desktop.
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    return (currentDesktop &&
-            (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
+    if (!currentDesktop || GetSystemCSDSupportLevel() == CSD_SUPPORT_NONE) {
+      return false;
+    }
+
+    // We hide system titlebar on Gnome/ElementaryOS without any restriction.
+    return ((strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
              strstr(currentDesktop, "GNOME") != nullptr ||
              strstr(currentDesktop, "Pantheon") != nullptr));
   }();
