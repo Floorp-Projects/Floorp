@@ -8,7 +8,7 @@ dictionary of values, and returns a new iterable of test objects. It is
 possible to define custom filters if the built-in ones are not enough.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import itertools
 import os
@@ -362,6 +362,7 @@ class chunk_by_runtime(InstanceFilter):
 
         # Compute the average to use as a default for manifests that don't exist.
         times = [r[0] for r in runtimes]
+        # pylint --py3k W1619
         avg = round(sum(times) / len(times), 2) if times else 0
         missing = sorted([m for m in manifests if m not in self.runtimes])
         log(
@@ -392,6 +393,7 @@ class chunk_by_runtime(InstanceFilter):
         manifests = set(self.get_manifest(t) for t in tests)
         chunks = self.get_chunked_manifests(manifests)
         runtime, this_manifests = chunks[self.this_chunk - 1]
+        # pylint --py3k W1619
         log(
             "Cumulative test runtime is around {} minutes (average is {} minutes)".format(
                 round(runtime / 60),

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from six.moves.urllib.parse import quote
 
@@ -45,6 +45,7 @@ class BaseMouseAction(MarionetteTestCase):
         )
 
     def get_element_center_point(self, elem):
+        # pylint --py3k W1619
         return {
             "x": elem.rect["x"] + elem.rect["width"] / 2,
             "y": elem.rect["y"] + elem.rect["height"] / 2,

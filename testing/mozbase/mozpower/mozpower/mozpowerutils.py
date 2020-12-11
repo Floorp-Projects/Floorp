@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, division, unicode_literals
 
 
 def get_logger(logger_name):
@@ -32,6 +32,7 @@ def average_summary(values):
     :param list values: list of values to average.
     :returns: float
     """
+    # pylint --py3k W1619
     return sum([float(v[0]) for v in values]) / len(values)
 
 

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import argparse
 import collections
@@ -77,6 +77,7 @@ def generate_report(tuple_list, filepath, mode="variance"):
             for day in day_name:
                 if mode == "variance":
                     # removing top and bottom 10% to reduce outlier influence
+                    # pylint --py3k W1619
                     tenth = len(days[day]) / 10
                     average = numpy.average(sorted(days[day])[tenth : tenth * 9 + 1])
                 elif mode == "count":
@@ -116,6 +117,7 @@ def is_normal(y):
         clean_week = y
 
     # look at weekends now
+    # pylint --py3k W1619
     avg = sum(clean_week) / len(clean_week)
     for i in six.moves.range(5, 7):
         # look for something outside of the 20% window

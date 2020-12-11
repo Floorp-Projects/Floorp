@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from .legacy_actions import MultiActions, Actions
 
@@ -70,6 +70,7 @@ def pinch(marionette_session, element, x1, y1, x2, y2, x3, y3, x4, y4, duration=
     time_increment = 10
     if time_increment >= duration:
         time_increment = duration
+    # pylint --py3k W1619
     move_x1 = time_increment * 1.0 / duration * (x3 - x1)
     move_y1 = time_increment * 1.0 / duration * (y3 - y1)
     move_x2 = time_increment * 1.0 / duration * (x4 - x2)
@@ -81,6 +82,7 @@ def pinch(marionette_session, element, x1, y1, x2, y2, x3, y3, x4, y4, duration=
     action2.press(element, x2, y2)
     while time < duration:
         time += time_increment
+        # pylint --py3k W1619
         action1.move_by_offset(move_x1, move_y1).wait(time_increment / 1000)
         action2.move_by_offset(move_x2, move_y2).wait(time_increment / 1000)
     action1.release()

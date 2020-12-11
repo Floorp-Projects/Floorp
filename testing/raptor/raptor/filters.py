@@ -4,7 +4,7 @@
 
 # originally taken from /testing/talos/talos/filter.py
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import math
 
@@ -120,9 +120,12 @@ def median(series):
     series = sorted(series)
     if len(series) % 2:
         # odd
-        return series[len(series) / 2]
+        # pylint --py3k W1619
+        # must force to int to use as index.
+        return series[int(len(series) / 2)]
     else:
         # even
+        # pylint --py3k W1619
         middle = int(len(series) / 2)  # the higher of the middle 2, actually
         return 0.5 * (series[middle - 1] + series[middle])
 
@@ -181,6 +184,7 @@ def geometric_mean(series):
     total = 0
     for i in series:
         total += math.log(i + 1)
+    # pylint --py3k W1619
     return math.exp(total / len(series)) - 1
 
 
@@ -269,6 +273,7 @@ def v8_subtest(series, name):
         "Splay": 81491.0,
     }
 
+    # pylint --py3k W1619
     return reference[name] / geometric_mean(series)
 
 

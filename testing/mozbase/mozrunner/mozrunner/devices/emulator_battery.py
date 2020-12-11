@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 
 class EmulatorBattery(object):
@@ -26,6 +26,7 @@ class EmulatorBattery(object):
                     value = float(value)
                 status[field] = value
 
+        # pylint --py3k W1619
         state["level"] = status.get("capacity", 0.0) / 100
         if status.get("AC") == "online":
             state["charging"] = True

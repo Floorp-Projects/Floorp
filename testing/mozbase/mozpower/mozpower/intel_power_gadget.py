@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, division, unicode_literals
 
 import csv
 import os
@@ -548,6 +548,7 @@ class IPGResultsHandler(object):
         # exist in the file and that the columns have the correct
         # data type.
         column_datatypes = {"System Time": str, "RDTSC": int, "default": float}
+        # pylint --py3k W1619
         expected_samples = int(
             self._ipg_measure_duration / (float(self._sampling_rate) / 1000)
         )
@@ -694,6 +695,7 @@ class IPGResultsHandler(object):
             )
 
         # Check that the combined results have the expected number of samples.
+        # pylint W16919
         expected_samples = int(
             self._ipg_measure_duration / (float(self._sampling_rate) / 1000)
         )
@@ -817,6 +819,7 @@ class IPGResultsHandler(object):
         watt_usage = {}
         for measure in cut_results:
             if "watt" in measure.lower() and "limit" not in measure.lower():
+                # pylint --py3k W1619
                 watt_usage[replace_measure_name(measure) + "-avg"] = sum(
                     [float(val) for val in cut_results[measure]]
                 ) / len(cut_results[measure])
@@ -839,6 +842,7 @@ class IPGResultsHandler(object):
             elif "gt " in utilized_name:
                 utilized_name = "gpu"
 
+            # pylint --py3k W1619
             average_utilization[utilized_name] = sum(
                 [float(val) for val in cut_results[utilization]]
             ) / len(cut_results[utilization])
@@ -857,6 +861,7 @@ class IPGResultsHandler(object):
                 fmeasure_name = "cpu"
             elif "gt " in fmeasure_name:
                 fmeasure_name = "gpu"
+            # pylint --py3k W1619
 
             frequency_info[fmeasure_name]["favg"] = sum(
                 [float(val) for val in cut_results[frequency_measure]]

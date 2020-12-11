@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import os
 import re
@@ -358,6 +358,7 @@ def finish_android_power_test(raptor, test_name, os_baseline=False):
                 if not baseline_measure:
                     LOG.error("Power test baseline_measure is Zero.")
                     return 0
+                # pylint --py3k W1619
                 return (
                     100 * ((power_measure + baseline_measure) / baseline_measure)
                 ) - 100
@@ -369,6 +370,7 @@ def finish_android_power_test(raptor, test_name, os_baseline=False):
                 "values": {},
             }
             for power_measure in power_data["values"]:
+                # pylint --py3k W1619
                 pc_power_data["values"][power_measure] = calculate_pc(
                     (power_data["values"][power_measure] / test_time),
                     raptor.os_baseline_data["values"][power_measure],

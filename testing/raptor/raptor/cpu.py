@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import time
 import threading
@@ -132,7 +132,9 @@ class AndroidCPUProfiler(object):
             u"type": u"cpu",
             u"test": test_name + "-avg",
             u"unit": u"%",
-            u"values": {u"avg": sum(self.polls) / len(self.polls)},
+            u"values": {
+                u"avg": sum(self.polls) / len(self.polls)
+            },  # pylint --py3k W1619
         }
         self.raptor.control_server.submit_supporting_data(avg_cpuinfo_data)
 

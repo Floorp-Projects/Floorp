@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import functools
 from collections import deque
@@ -307,6 +307,7 @@ class TbplFormatter(BaseFormatter):
 
     def suite_end(self, data):
         start_time = self.suite_start_time
+        # pylint --py3k W1619
         time = int((data["time"] - start_time) / 1000)
 
         return "SUITE-END | took %is\n" % time
