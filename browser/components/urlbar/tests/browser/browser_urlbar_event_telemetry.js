@@ -1059,7 +1059,6 @@ const tests = [
     await SpecialPowers.pushPrefEnv({
       set: [
         ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.tabToComplete", true],
         ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
       ],
     });
@@ -1397,7 +1396,6 @@ const tests = [
     await SpecialPowers.pushPrefEnv({
       set: [
         ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.tabToComplete", true],
         ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
       ],
     });
