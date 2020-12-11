@@ -127,8 +127,8 @@ class ClientWrapper {
     }
   }
 
-  async listTabs(options) {
-    return this.client.mainRoot.listTabs(options);
+  async listTabs() {
+    return this.client.mainRoot.listTabs();
   }
 
   async listAddons(options) {
