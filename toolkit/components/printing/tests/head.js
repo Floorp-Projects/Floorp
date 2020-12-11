@@ -8,17 +8,43 @@ class PrintHelper {
     await SpecialPowers.pushPrefEnv({
       set: [["print.tab_modal.enabled", true]],
     });
+
     let pageUrl = pagePathname
       ? this.getTestPageUrl(pagePathname)
       : this.defaultTestPageUrl;
     info("withTestPage: " + pageUrl);
-    let taskReturn = await BrowserTestUtils.withNewTab(pageUrl, async function(
-      browser
-    ) {
-      await testFn(new PrintHelper(browser));
-    });
+    let isPdf = pageUrl.endsWith(".pdf");
+
+    if (isPdf) {
+      await SpecialPowers.pushPrefEnv({
+        set: [["pdfjs.eventBusDispatchToDOM", true]],
+      });
+    }
+
+    let taskReturn = await BrowserTestUtils.withNewTab(
+      isPdf ? "about:blank" : pageUrl,
+      async function(browser) {
+        if (isPdf) {
+          let loaded = BrowserTestUtils.waitForContentEvent(
+            browser,
+            "documentloaded",
+            false,
+            null,
+            true
+          );
+          await SpecialPowers.spawn(browser, [pageUrl], contentUrl => {
+            content.location = contentUrl;
+          });
+          await loaded;
+        }
+        await testFn(new PrintHelper(browser));
+      }
+    );
 
     await SpecialPowers.popPrefEnv();
+    if (isPdf) {
+      await SpecialPowers.popPrefEnv();
+    }
 
     // Reset all of the other printing prefs to their default.
     for (let name of Services.prefs.getChildList("print.")) {
