@@ -355,6 +355,38 @@ void UntrustedModulesData::AddNewLoads(
   }
 }
 
+void UntrustedModulesData::Merge(UntrustedModulesData&& aNewData) {
+  // Don't merge loading events of a different process
+  MOZ_ASSERT((mProcessType == aNewData.mProcessType) &&
+             (mPid == aNewData.mPid));
+
+  UntrustedModulesData newData(std::move(aNewData));
+
+  if (mEvents.empty()) {
+    mModules = std::move(newData.mModules);
+    mEvents = std::move(newData.mEvents);
+    mStacks = std::move(newData.mStacks);
+    return;
+  }
+
+  Unused << mEvents.reserve(mEvents.length() + newData.mEvents.length());
+  for (auto&& event : newData.mEvents) {
+    auto addPtr = mModules.LookupForAdd(event.mModule->mResolvedNtName);
+    if (addPtr) {
+      // Even though the path of a ModuleRecord matches, the object of
+      // ModuleRecord can be different.
+      // Make sure the event's mModule points to an object in mModules.
+      event.mModule = addPtr.Data();
+    } else {
+      addPtr.OrInsert([modRef = event.mModule]() { return modRef; });
+    }
+
+    Unused << mEvents.emplaceBack(std::move(event));
+  }
+
+  mStacks.AddStacks(newData.mStacks);
+}
+
 void UntrustedModulesData::Swap(UntrustedModulesData& aOther) {
   GeckoProcessType tmpProcessType = mProcessType;
   mProcessType = aOther.mProcessType;

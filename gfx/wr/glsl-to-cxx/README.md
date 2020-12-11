@@ -2,7 +2,8 @@ A GLSL to C++ translator.
 
 Translates GLSL to vectorized C++. Intended for use with WebRender software backend.
 
-== Architecture ==
+Architecture
+------------
 GLSL code is parsed by the glsl crate. In hir.rs we traverse the resulting AST
 and build a higher level representation by doing type checking and name
 resolution. The resulting hir tree is traversed by lib.rs to output C++ code.

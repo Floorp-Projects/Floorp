@@ -27,6 +27,26 @@ const Telemetry::ProcessedStack::Module& CombinedStacks::GetModule(
   return mModules[aIndex];
 }
 
+void CombinedStacks::AddFrame(
+    size_t aStackIndex, const ProcessedStack::Frame& aFrame,
+    const std::function<const ProcessedStack::Module&(int)>& aModuleGetter) {
+  uint16_t modIndex;
+  if (aFrame.mModIndex == std::numeric_limits<uint16_t>::max()) {
+    modIndex = aFrame.mModIndex;
+  } else {
+    const ProcessedStack::Module& module = aModuleGetter(aFrame.mModIndex);
+    auto modIterator = std::find(mModules.begin(), mModules.end(), module);
+    if (modIterator == mModules.end()) {
+      mModules.push_back(module);
+      modIndex = mModules.size() - 1;
+    } else {
+      modIndex = modIterator - mModules.begin();
+    }
+  }
+  mStacks[aStackIndex].push_back(
+      ProcessedStack::Frame{aFrame.mOffset, modIndex});
+}
+
 size_t CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
   size_t index = mNextIndex;
   // Advance the indices of the circular queue holding the stacks.
@@ -35,33 +55,43 @@ size_t CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
   if (mStacks.size() < mMaxStacksCount) {
     mStacks.resize(mStacks.size() + 1);
   }
-  // Get a reference to the location holding the new stack.
-  CombinedStacks::Stack& adjustedStack = mStacks[index];
-  // If we're using an old stack to hold aStack, clear it.
-  adjustedStack.clear();
+
+  // Clear the old stack before set.
+  mStacks[index].clear();
 
   size_t stackSize = aStack.GetStackSize();
   for (size_t i = 0; i < stackSize; ++i) {
-    const Telemetry::ProcessedStack::Frame& frame = aStack.GetFrame(i);
-    uint16_t modIndex;
-    if (frame.mModIndex == std::numeric_limits<uint16_t>::max()) {
-      modIndex = frame.mModIndex;
-    } else {
-      const Telemetry::ProcessedStack::Module& module =
-          aStack.GetModule(frame.mModIndex);
-      std::vector<Telemetry::ProcessedStack::Module>::iterator modIterator =
-          std::find(mModules.begin(), mModules.end(), module);
-      if (modIterator == mModules.end()) {
-        mModules.push_back(module);
-        modIndex = mModules.size() - 1;
-      } else {
-        modIndex = modIterator - mModules.begin();
-      }
-    }
-    Telemetry::ProcessedStack::Frame adjustedFrame = {frame.mOffset, modIndex};
-    adjustedStack.push_back(adjustedFrame);
+    // Need to specify a return type in the following lambda,
+    // otherwise it's incorrectly deduced to be a non-reference type.
+    AddFrame(index, aStack.GetFrame(i),
+             [&aStack](int aIdx) -> const ProcessedStack::Module& {
+               return aStack.GetModule(aIdx);
+             });
   }
   return index;
+}
+
+void CombinedStacks::AddStacks(const CombinedStacks& aStacks) {
+  mStacks.resize(
+      std::min(mStacks.size() + aStacks.GetStackCount(), mMaxStacksCount));
+
+  for (const auto& stack : aStacks.mStacks) {
+    size_t index = mNextIndex;
+    // Advance the indices of the circular queue holding the stacks.
+    mNextIndex = (mNextIndex + 1) % mMaxStacksCount;
+
+    // Clear the old stack before set.
+    mStacks[index].clear();
+
+    for (const auto& frame : stack) {
+      // Need to specify a return type in the following lambda,
+      // otherwise it's incorrectly deduced to be a non-reference type.
+      AddFrame(index, frame,
+               [&aStacks](int aIdx) -> const ProcessedStack::Module& {
+                 return aStacks.mModules[aIdx];
+               });
+    }
+  }
 }
 
 const CombinedStacks::Stack& CombinedStacks::GetStack(unsigned aIndex) const {

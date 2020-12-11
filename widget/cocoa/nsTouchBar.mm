@@ -4,15 +4,17 @@
 
 #include "nsTouchBar.h"
 
+#include <objc/runtime.h>
+
 #include "mozilla/MacStringHelpers.h"
 #include "nsArrayUtils.h"
+#include "nsCocoaUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIArray.h"
 #include "nsTouchBarInputIcon.h"
+#include "nsWidgetsCID.h"
 
 @implementation nsTouchBar
-
-static const NSTouchBarItemIdentifier BaseIdentifier = @"com.mozilla.firefox.touchbar";
 
 // Non-JS scrubber implemention for the Share Scrubber,
 // since it is defined by an Apple API.
@@ -59,7 +61,8 @@ static const uint32_t kInputIconSize = 16;
     if (!aInputs) {
       // This customization identifier is how users' custom layouts are saved by macOS.
       // If this changes, all users' layouts would be reset to the default layout.
-      self.customizationIdentifier = [BaseIdentifier stringByAppendingPathExtension:@"defaultbar"];
+      self.customizationIdentifier =
+          [kTouchBarBaseIdentifier stringByAppendingPathExtension:@"defaultbar"];
       nsCOMPtr<nsIArray> allItems;
 
       nsresult rv = mTouchBarHelper->GetAllItems(getter_AddRefs(allItems));

@@ -5,60 +5,35 @@
 #include "nsTouchBarInput.h"
 
 #include "mozilla/MacStringHelpers.h"
+#include "nsArrayUtils.h"
+#include "nsCocoaUtils.h"
+#include "nsTouchBar.h"
 #include "nsTouchBarInputIcon.h"
 
 @implementation TouchBarInput
-- (NSString*)key {
-  return mKey;
-}
-- (NSString*)title {
-  return mTitle;
-}
+
 - (nsCOMPtr<nsIURI>)imageURI {
   return mImageURI;
-}
-- (RefPtr<nsTouchBarInputIcon>)icon {
-  return mIcon;
-}
-- (NSString*)type {
-  return mType;
-}
-- (TouchBarInputBaseType)baseType {
-  return mBaseType;
-}
-- (NSColor*)color {
-  return mColor;
-}
-- (BOOL)isDisabled {
-  return mDisabled;
-}
-- (NSTouchBarItemIdentifier)nativeIdentifier {
-  return [TouchBarInput nativeIdentifierWithType:mType withKey:mKey];
-}
-- (nsCOMPtr<nsITouchBarInputCallback>)callback {
-  return mCallback;
-}
-- (NSMutableArray<TouchBarInput*>*)children {
-  return mChildren;
-}
-- (void)setKey:(NSString*)aKey {
-  [aKey retain];
-  [mKey release];
-  mKey = aKey;
-}
-
-- (void)setTitle:(NSString*)aTitle {
-  [aTitle retain];
-  [mTitle release];
-  mTitle = aTitle;
 }
 
 - (void)setImageURI:(nsCOMPtr<nsIURI>)aImageURI {
   mImageURI = aImageURI;
 }
 
+- (RefPtr<nsTouchBarInputIcon>)icon {
+  return mIcon;
+}
+
 - (void)setIcon:(RefPtr<nsTouchBarInputIcon>)aIcon {
   mIcon = aIcon;
+}
+
+- (TouchBarInputBaseType)baseType {
+  return mBaseType;
+}
+
+- (NSString*)type {
+  return mType;
 }
 
 - (void)setType:(NSString*)aType {
@@ -80,18 +55,20 @@
   mType = aType;
 }
 
-- (void)setColor:(NSColor*)aColor {
-  [aColor retain];
-  [mColor release];
-  mColor = aColor;
+- (NSTouchBarItemIdentifier)nativeIdentifier {
+  return [TouchBarInput nativeIdentifierWithType:mType withKey:self.key];
 }
 
-- (void)setDisabled:(BOOL)aDisabled {
-  mDisabled = aDisabled;
+- (nsCOMPtr<nsITouchBarInputCallback>)callback {
+  return mCallback;
 }
 
 - (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback {
   mCallback = aCallback;
+}
+
+- (NSMutableArray<TouchBarInput*>*)children {
+  return mChildren;
 }
 
 - (void)setChildren:(NSMutableArray<TouchBarInput*>*)aChildren {
@@ -113,12 +90,14 @@
          disabled:(BOOL)aDisabled
          children:(nsCOMPtr<nsIArray>)aChildren {
   if (self = [super init]) {
-    [self setKey:aKey];
-    [self setTitle:aTitle];
+    mType = nil;
+
+    self.key = aKey;
+    self.title = aTitle;
+    self.type = aType;
+    self.disabled = aDisabled;
     [self setImageURI:aImageURI];
-    [self setType:aType];
     [self setCallback:aCallback];
-    [self setDisabled:aDisabled];
     if (aColor) {
       [self setColor:[NSColor colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
                                               green:((aColor >> 8) & 0xFF) / 255.0
@@ -222,10 +201,7 @@
     mIcon->Destroy();
     mIcon = nil;
   }
-  [mKey release];
-  [mTitle release];
   [mType release];
-  [mColor release];
   [mChildren removeAllObjects];
   [mChildren release];
   [super dealloc];
@@ -233,7 +209,7 @@
 
 + (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey {
   NSTouchBarItemIdentifier identifier;
-  identifier = [BaseIdentifier stringByAppendingPathExtension:aType];
+  identifier = [kTouchBarBaseIdentifier stringByAppendingPathExtension:aType];
   if (aKey) {
     identifier = [identifier stringByAppendingPathExtension:aKey];
   }

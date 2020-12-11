@@ -113,6 +113,9 @@ class MOZ_RAII CacheIROpsJitSpewer {
   void spewGuardClassKindImm(const char* name, GuardClassKind kind) {
     out_.printf("%s GuardClassKind(%u)", name, unsigned(kind));
   }
+  void spewWasmValTypeImm(const char* name, wasm::ValType::Kind kind) {
+    out_.printf("%s WasmValTypeKind(%u)", name, unsigned(kind));
+  }
 
  public:
   CacheIROpsJitSpewer(GenericPrinter& out, const char* prefix)
@@ -246,6 +249,9 @@ class MOZ_RAII CacheIROpsJSONSpewer {
     spewArgImpl(name, "Word", uintptr_t(native));
   }
   void spewGuardClassKindImm(const char* name, GuardClassKind kind) {
+    spewArgImpl(name, "Imm", unsigned(kind));
+  }
+  void spewWasmValTypeImm(const char* name, wasm::ValType::Kind kind) {
     spewArgImpl(name, "Imm", unsigned(kind));
   }
 
