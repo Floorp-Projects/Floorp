@@ -16,8 +16,8 @@
 //!        Err(_) => -1,
 //!    }
 //! }
-//! let capi_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-//! let mut file = std::fs::File::open(capi_dir + "/../mp4parse/tests/minimal.mp4").unwrap();
+//!
+//! let mut file = std::fs::File::open("../mp4parse/tests/minimal.mp4").unwrap();
 //! let io = mp4parse_capi::Mp4parseIo {
 //!     read: Some(buf_read),
 //!     userdata: &mut file as *mut _ as *mut std::os::raw::c_void
@@ -436,14 +436,6 @@ pub struct Mp4parseParser {
     video_track_sample_descriptions: TryHashMap<u32, TryVec<Mp4parseTrackVideoSampleInfo>>,
 }
 
-#[repr(C)]
-#[derive(Default)]
-pub struct AvifImage {
-    pub primary_item: Mp4parseByteData,
-    pub alpha_item: Mp4parseByteData,
-    pub premultiplied_alpha: bool,
-}
-
 /// A unified interface for the parsers which have different contexts, but
 /// share the same pattern of construction. This allows unification of
 /// argument validation from C and minimizes the surface of unsafe code.
@@ -451,11 +443,11 @@ trait ContextParser
 where
     Self: Sized,
 {
-    type Context;
+    type Context: Default;
 
     fn with_context(context: Self::Context) -> Self;
 
-    fn read<T: Read>(io: &mut T) -> mp4parse::Result<Self::Context>;
+    fn read<T: Read>(io: &mut T, context: &mut Self::Context) -> mp4parse::Result<()>;
 }
 
 impl Mp4parseParser {
@@ -478,11 +470,12 @@ impl ContextParser for Mp4parseParser {
         }
     }
 
-    fn read<T: Read>(io: &mut T) -> mp4parse::Result<Self::Context> {
-        read_mp4(io)
+    fn read<T: Read>(io: &mut T, context: &mut Self::Context) -> mp4parse::Result<()> {
+        read_mp4(io, context)
     }
 }
 
+#[derive(Default)]
 pub struct Mp4parseAvifParser {
     context: AvifContext,
 }
@@ -500,8 +493,8 @@ impl ContextParser for Mp4parseAvifParser {
         Self { context }
     }
 
-    fn read<T: Read>(io: &mut T) -> mp4parse::Result<Self::Context> {
-        read_avif(io)
+    fn read<T: Read>(io: &mut T, context: &mut Self::Context) -> mp4parse::Result<()> {
+        read_avif(io, context)
     }
 }
 
@@ -604,8 +597,10 @@ unsafe fn mp4parse_new_common<P: ContextParser>(
 fn mp4parse_new_common_safe<T: Read, P: ContextParser>(
     io: &mut T,
 ) -> Result<*mut P, Mp4parseStatus> {
-    P::read(io)
-        .map(P::with_context)
+    let mut context = P::Context::default();
+
+    P::read(io, &mut context)
+        .map(|_| P::with_context(context))
         .and_then(|x| TryBox::try_new(x).map_err(mp4parse::Error::from))
         .map(TryBox::into_raw)
         .map_err(Mp4parseStatus::from)
@@ -1185,31 +1180,27 @@ fn mp4parse_get_track_video_info_safe(
 /// # Safety
 ///
 /// This function is unsafe because it dereferences both the parser and
-/// avif_image raw pointers passed into it. Callers should ensure the parser
-/// pointer points to a valid `Mp4parseAvifParser`, and that the avif_image
-/// pointer points to a valid `AvifImage`. If there was not a previous
+/// primary_item raw pointers passed into it. Callers should ensure the parser
+/// pointer points to a valid `Mp4parseAvifParser`, and that the primary_item
+/// pointer points to a valid `Mp4parseByteData`. If there was not a previous
 /// successful call to `mp4parse_avif_read()`, no guarantees are made as to
-/// the state of `avif_image`. If `avif_image.alpha_item` is set to a
-/// positive `length` and non-null `data`, then the `avif_image` contains an
-/// valid alpha channel data. Otherwise, the image is opaque.
+/// the state of `primary_item`.
 #[no_mangle]
-pub unsafe extern "C" fn mp4parse_avif_get_image(
+pub unsafe extern "C" fn mp4parse_avif_get_primary_item(
     parser: *mut Mp4parseAvifParser,
-    avif_image: *mut AvifImage,
+    primary_item: *mut Mp4parseByteData,
 ) -> Mp4parseStatus {
-    if parser.is_null() || avif_image.is_null() {
+    if parser.is_null() {
         return Mp4parseStatus::BadArg;
     }
 
     // Initialize fields to default values to ensure all fields are always valid.
-    *avif_image = Default::default();
+    *primary_item = Default::default();
+
     let context = (*parser).context();
 
-    (*avif_image).primary_item.set_data(context.primary_item());
-    if let Some(context_alpha_item) = context.alpha_item() {
-        (*avif_image).alpha_item.set_data(context_alpha_item);
-        (*avif_image).premultiplied_alpha = context.premultiplied_alpha;
-    }
+    // TODO: check for a valid parsed context. See https://github.com/mozilla/mp4parse-rust/issues/195
+    (*primary_item).set_data(&context.primary_item);
 
     Mp4parseStatus::Ok
 }
