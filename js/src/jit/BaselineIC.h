@@ -301,9 +301,6 @@ class ICStub {
     }
   }
 
-  void updateCode(JitCode* stubCode);
-  void trace(JSTracer* trc);
-
   template <typename T, typename... Args>
   static T* New(JSContext* cx, ICStubSpace* space, JitCode* code,
                 Args&&... args) {
@@ -502,6 +499,8 @@ class ICFallbackStub : public ICStub {
 
   ICState& state() { return state_; }
 
+  void trace(JSTracer* trc);
+
   // The icEntry_ field can't be initialized when the stub is created since we
   // won't know the ICEntry address until we add the stub to JitScript. This
   // method allows this field to be fixed up at that point.
@@ -572,6 +571,8 @@ class ICCacheIR_Regular : public ICStub {
   // the caller.
   uint32_t enteredCount() const { return enteredCount_; }
   void resetEnteredCount() { enteredCount_ = 0; }
+
+  void trace(JSTracer* trc);
 
   static constexpr size_t offsetOfEnteredCount() {
     return offsetof(ICCacheIR_Regular, enteredCount_);

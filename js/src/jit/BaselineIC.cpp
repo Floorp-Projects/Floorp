@@ -197,9 +197,12 @@ void ICEntry::trace(JSTracer* trc) {
   // If we have filled our padding with a magic value, check it now.
   MOZ_DIAGNOSTIC_ASSERT(traceMagic_ == EXPECTED_TRACE_MAGIC);
 #endif
-  for (ICStub* stub = firstStub(); stub; stub = stub->next()) {
-    stub->trace(trc);
+  ICStub* stub = firstStub();
+  while (!stub->isFallback()) {
+    stub->toCacheIR_Regular()->trace(trc);
+    stub = stub->next();
   }
+  stub->toFallbackStub()->trace(trc);
 }
 
 // Allocator for Baseline IC fallback stubs. These stubs use trampoline code
@@ -634,35 +637,24 @@ void ICFallbackStub::maybeInvalidateWarp(JSContext* cx, JSScript* script) {
   }
 }
 
-void ICStub::updateCode(JitCode* code) {
-  // Write barrier on the old code.
-  gc::PreWriteBarrier(jitCode());
-  stubCode_ = code->raw();
+void ICCacheIR_Regular::trace(JSTracer* trc) {
+  JitCode* stubJitCode = jitCode();
+  TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
+
+  TraceCacheIRStub(trc, static_cast<ICStub*>(this), stubInfo());
 }
 
-/* static */
-void ICStub::trace(JSTracer* trc) {
-  // TODO(no-TI): move this branch into the caller.
-  if (!isFallback()) {
-    JitCode* stubJitCode = jitCode();
-    TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
-
-    TraceCacheIRStub(trc, this, toCacheIR_Regular()->stubInfo());
-    return;
-  }
-
-  ICFallbackStub* fallback = toFallbackStub();
-
+void ICFallbackStub::trace(JSTracer* trc) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  fallback->checkTraceMagic();
+  checkTraceMagic();
 #endif
 
   // Fallback stubs use runtime-wide trampoline code we don't need to trace.
   MOZ_ASSERT(usesTrampolineCode());
 
-  switch (fallback->kind()) {
+  switch (kind()) {
     case ICStub::NewArray_Fallback: {
-      ICNewArray_Fallback* stub = fallback->toNewArray_Fallback();
+      ICNewArray_Fallback* stub = toNewArray_Fallback();
       TraceNullableEdge(trc, &stub->templateObject(),
                         "baseline-newarray-template");
       TraceEdge(trc, &stub->templateGroup(),
@@ -670,13 +662,13 @@ void ICStub::trace(JSTracer* trc) {
       break;
     }
     case ICStub::NewObject_Fallback: {
-      ICNewObject_Fallback* stub = fallback->toNewObject_Fallback();
+      ICNewObject_Fallback* stub = toNewObject_Fallback();
       TraceNullableEdge(trc, &stub->templateObject(),
                         "baseline-newobject-template");
       break;
     }
     case ICStub::Rest_Fallback: {
-      ICRest_Fallback* stub = fallback->toRest_Fallback();
+      ICRest_Fallback* stub = toRest_Fallback();
       TraceEdge(trc, &stub->templateObject(), "baseline-rest-template");
       break;
     }
@@ -741,7 +733,7 @@ void ICFallbackStub::unlinkStubDontInvalidateWarp(Zone* zone, ICStub* prev,
   if (zone->needsIncrementalBarrier()) {
     // We are removing edges from ICStub to gcthings. Perform one final trace
     // of the stub for incremental GC, as it must know about those edges.
-    stub->trace(zone->barrierTracer());
+    stub->toCacheIR_Regular()->trace(zone->barrierTracer());
   }
 
 #ifdef DEBUG
