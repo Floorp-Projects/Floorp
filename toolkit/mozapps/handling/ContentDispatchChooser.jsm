@@ -110,6 +110,14 @@ let ContentDispatchChooserTelemetry = {
   },
 
   /**
+   * Sandbox flags for telemetry
+   * Copied from nsSandboxFlags.h
+   */
+  SANDBOXED_AUXILIARY_NAVIGATION: 0x2,
+  SANDBOXED_TOPLEVEL_NAVIGATION: 0x4,
+  SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION: 0x20000,
+
+  /**
    * Lazy getter for labels of the external protocol navigation telemetry probe.
    * @returns {string[]} - An array of histogram labels.
    */
@@ -155,7 +163,7 @@ let ContentDispatchChooserTelemetry = {
 
   /**
    * Determine if a load was triggered from toplevel or an iframe
-   * (cross or same origin) and returns the histogram key.
+   * (cross origin, same origin, sandboxed).
    *
    * @param {BrowsingContext} [aBrowsingContext] - Context of the load.
    * @param {nsIPrincipal} [aTriggeringPrincipal] - Principal which triggered
@@ -170,13 +178,23 @@ let ContentDispatchChooserTelemetry = {
       return "TOPLEVEL";
     }
 
+    let { sandboxFlags } = aBrowsingContext;
+    if (sandboxFlags) {
+      // Iframe is sandboxed. Determine whether it sets allow flags relevant
+      // for the external protocol navigation.
+      if (
+        !(sandboxFlags & this.SANDBOXED_TOPLEVEL_NAVIGATION) ||
+        !(sandboxFlags & this.SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION) ||
+        !(sandboxFlags & this.SANDBOXED_AUXILIARY_NAVIGATION)
+      ) {
+        return "SUB_SANDBOX_ALLOW";
+      }
+      return "SUB_SANDBOX_NOALLOW";
+    }
+
     // We're in a frame, check if the frame is cross origin with the top context.
     if (!aTriggeringPrincipal) {
       return "UNKNOWN";
-    }
-
-    if (aTriggeringPrincipal.isNullPrincipal) {
-      return "NULLPRINCIPAL";
     }
 
     let topLevelPrincipal =
