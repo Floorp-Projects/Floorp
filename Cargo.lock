@@ -4201,12 +4201,12 @@ checksum = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 name = "remote"
 version = "0.1.0"
 dependencies = [
- "failure",
  "http",
  "libc",
  "log",
  "nserror",
  "nsstring",
+ "thiserror",
  "xpcom",
 ]
 
