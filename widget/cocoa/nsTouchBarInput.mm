@@ -7,6 +7,7 @@
 #include "mozilla/MacStringHelpers.h"
 #include "nsArrayUtils.h"
 #include "nsCocoaUtils.h"
+#include "nsTouchBar.h"
 #include "nsTouchBarInputIcon.h"
 
 @implementation TouchBarInput
@@ -235,7 +236,7 @@
 
 + (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey {
   NSTouchBarItemIdentifier identifier;
-  identifier = [BaseIdentifier stringByAppendingPathExtension:aType];
+  identifier = [kTouchBarBaseIdentifier stringByAppendingPathExtension:aType];
   if (aKey) {
     identifier = [identifier stringByAppendingPathExtension:aKey];
   }
