@@ -82,6 +82,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
     private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+    private var dialogHandledAction = false
 
     override fun onStart() {
         super.onStart()
@@ -146,8 +147,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 navController = findNavController(),
                 settings = requireContext().settings(),
                 metrics = requireComponents.analytics.metrics,
-                dismissDialog = { dismissAllowingStateLoss() },
+                dismissDialog = {
+                    dialogHandledAction = true
+                    dismissAllowingStateLoss()
+                },
                 clearToolbarFocus = {
+                    dialogHandledAction = true
                     toolbarView.view.hideKeyboard()
                     toolbarView.view.clearFocus()
                 },
@@ -345,8 +350,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
      * is also dismissing. For example, when clicking a top site on home while this dialog is showing.
      */
     private fun hideDeviceKeyboard() {
-        // If the controller has handled a search event itself, it will clear the focus.
-        if (toolbarView.view.hasFocus()) {
+        // If the interactor/controller has handled a search event itself, it will hide the keyboard.
+        if (!dialogHandledAction) {
             val imm =
                 requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
