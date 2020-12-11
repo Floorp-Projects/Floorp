@@ -53,6 +53,10 @@ class StringVersion(six.text_type):
         if self.version > other.version:
             return 1
 
+    def __hash__(self):
+        # pylint --py3k: W1641
+        return hash(self.version)
+
     # operator overloads
     def __eq__(self, other):
         return self._cmp(other) == 0

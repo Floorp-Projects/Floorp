@@ -110,6 +110,10 @@ class Location(object):
 
     __eq__ = isEqual
 
+    def __hash__(self):
+        # pylint --py3k: W1641
+        return hash(tuple(getattr(attr) for attr in self.attrs))
+
     def url(self):
         return "%s://%s:%s" % (self.scheme, self.host, self.port)
 
