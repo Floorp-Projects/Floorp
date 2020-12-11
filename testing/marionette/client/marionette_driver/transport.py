@@ -36,6 +36,10 @@ class Message(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        # pylint --py3k: W1641
+        return hash(self.id)
+
 
 class Command(Message):
     TYPE = 0
