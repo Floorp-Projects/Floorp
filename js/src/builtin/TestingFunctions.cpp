@@ -51,6 +51,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Disassemble.h"
 #include "jit/InlinableNatives.h"
+#include "jit/Invalidation.h"
 #include "jit/Ion.h"
 #include "jit/JitRuntime.h"
 #include "jit/TrialInlining.h"
@@ -3338,6 +3339,22 @@ static bool testingFunc_bailAfter(JSContext* cx, unsigned argc, Value* vp) {
     jitRuntime->setIonBailAfterCounter(bailAfter);
   }
 #endif
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool testingFunc_invalidate(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // If the topmost frame is Ion/Warp, find the IonScript and invalidate it.
+  FrameIter iter(cx);
+  if (!iter.done() && iter.isIon()) {
+    while (!iter.isPhysicalJitFrame()) {
+      ++iter;
+    }
+    js::jit::Invalidate(cx, iter.script());
+  }
 
   args.rval().setUndefined();
   return true;
@@ -6888,6 +6905,9 @@ gc::ZealModeHelpText),
 "  Start a counter to bail once after passing the given amount of possible bailout positions in\n"
 "  ionmonkey.\n"),
 
+    JS_FN_HELP("invalidate", testingFunc_invalidate, 0, 0,
+"invalidate()",
+"  Force an immediate invalidation (if running in Warp)."),
 
     JS_FN_HELP("inJit", testingFunc_inJit, 0, 0,
 "inJit()",
