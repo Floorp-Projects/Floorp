@@ -1594,9 +1594,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            Register scratch,
                                            const void* handlerp, Label* label);
 
-  void copyObjGroupNoPreBarrier(Register sourceObj, Register destObj,
-                                Register scratch);
-
   // Emit type case branch on tag matching if the type tag in the definition
   // might actually be that type.
   void maybeBranchTestType(MIRType type, MDefinition* maybeDef, Register tag,
