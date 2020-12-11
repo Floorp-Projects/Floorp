@@ -9,6 +9,7 @@
 
 #include "nsITouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
+#include "nsCOMPtr.h"
 
 using namespace mozilla::dom;
 
@@ -27,36 +28,28 @@ class nsTouchBarInputIcon;
  * NSObject representation of nsITouchBarInput.
  */
 @interface TouchBarInput : NSObject {
-  NSString* mKey;
-  NSString* mTitle;
   nsCOMPtr<nsIURI> mImageURI;
   RefPtr<nsTouchBarInputIcon> mIcon;
-  NSString* mType;
   TouchBarInputBaseType mBaseType;
-  NSColor* mColor;
-  BOOL mDisabled;
+  NSString* mType;
   nsCOMPtr<nsITouchBarInputCallback> mCallback;
   NSMutableArray<TouchBarInput*>* mChildren;
 }
 
-- (NSString*)key;
-- (NSString*)title;
+@property(strong) NSString* key;
+@property(strong) NSString* type;
+@property(strong) NSString* title;
+@property(strong) NSColor* color;
+@property(nonatomic, getter=isDisabled) BOOL disabled;
+
 - (nsCOMPtr<nsIURI>)imageURI;
 - (RefPtr<nsTouchBarInputIcon>)icon;
-- (NSString*)type;
 - (TouchBarInputBaseType)baseType;
-- (NSColor*)color;
-- (BOOL)isDisabled;
 - (NSTouchBarItemIdentifier)nativeIdentifier;
 - (nsCOMPtr<nsITouchBarInputCallback>)callback;
 - (NSMutableArray<TouchBarInput*>*)children;
-- (void)setKey:(NSString*)aKey;
-- (void)setTitle:(NSString*)aTitle;
 - (void)setImageURI:(nsCOMPtr<nsIURI>)aImageURI;
 - (void)setIcon:(RefPtr<nsTouchBarInputIcon>)aIcon;
-- (void)setType:(NSString*)aType;
-- (void)setColor:(NSColor*)aColor;
-- (void)setDisabled:(BOOL)aDisabled;
 - (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback;
 - (void)setChildren:(NSMutableArray<TouchBarInput*>*)aChildren;
 

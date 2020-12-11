@@ -46,6 +46,33 @@ describe("MultiStageAboutWelcome module", () => {
       assert.ok(wrapper.exists());
     });
 
+    it("should send <MESSAGEID>_SITES impression telemetry ", async () => {
+      const impressionSpy = sandbox.spy(
+        AboutWelcomeUtils,
+        "sendImpressionTelemetry"
+      );
+      globals.set({
+        AWGetImportableSites: () =>
+          Promise.resolve('["site-1","site-2","site-3","site-4","site-5"]'),
+      });
+
+      mount(<MultiStageAboutWelcome {...DEFAULT_PROPS} />);
+      // Delay slightly to make sure we've finished executing any promise
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      assert.calledTwice(impressionSpy);
+      assert.equal(
+        impressionSpy.firstCall.args[0],
+        `${DEFAULT_PROPS.message_id}_${DEFAULT_PROPS.screens[0].id}`
+      );
+      assert.equal(
+        impressionSpy.secondCall.args[0],
+        `${DEFAULT_PROPS.message_id}_SITES`
+      );
+      assert.equal(impressionSpy.secondCall.lastArg.display, "static");
+      assert.equal(impressionSpy.secondCall.lastArg.importable, 5);
+    });
+
     it("should pass activeTheme and initialTheme props to WelcomeScreen", async () => {
       let wrapper = mount(<MultiStageAboutWelcome {...DEFAULT_PROPS} />);
       // Spin the event loop to allow the useEffect hooks to execute,

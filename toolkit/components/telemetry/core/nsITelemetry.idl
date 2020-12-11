@@ -196,14 +196,55 @@ interface nsITelemetry : nsISupports
    */
   readonly attribute uint32_t maximalNumberOfConcurrentThreads;
 
+  /**
+   * Flags for getUntrustedModuleLoadEvents.
+   */
+
+  /**
+   * This flag is set to retrieve all data including instances which have been
+   * retrieved before.  If not set, only new instances since the last call
+   * will be returned.
+   * If this flag is set, KEEP_LOADEVENTS_NEW must not be set unless
+   * EXCLUDE_STACKINFO_FROM_LOADEVENTS is set.
+   * (See also MultiGetUntrustedModulesData::Serialize.)
+   */
+  const unsigned long INCLUDE_OLD_LOADEVENTS = 1 << 0;
+
+  /**
+   * This flag is set to keep the returned instances as if they were not
+   * retrieved, meaning those instances will be returned by a next method
+   * call without INCLUDE_OLD_LOADEVENTS.  If not set, the returned instances
+   * can be re-retrieved only when INCLUDE_OLD_LOADEVENTS is specified.
+   * If this flag is set, INCLUDE_OLD_LOADEVENTS must not be set unless
+   * EXCLUDE_STACKINFO_FROM_LOADEVENTS is set.
+   * (See also MultiGetUntrustedModulesData::Serialize.)
+   */
+  const unsigned long KEEP_LOADEVENTS_NEW = 1 << 1;
+
+  /**
+   * This flag is set to include private fields.
+   * Do not specify this flag to retrieve data to be submitted.
+   */
+  const unsigned long INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS = 1 << 2;
+
+  /**
+   * This flag is set to exclude the "combinedStacks" field.
+   * Without this flag, the flags INCLUDE_OLD_LOADEVENTS and KEEP_LOADEVENTS_NEW
+   * cannot be set at the same time.
+   */
+  const unsigned long EXCLUDE_STACKINFO_FROM_LOADEVENTS = 1 << 3;
+
   /*
    * An array of untrusted module load events. Each element describes one or
    * more modules that were loaded, contextual information at the time of the
    * event (including stack trace), and flags describing the module's
    * trustworthiness.
+   *
+   * @param aFlags   Combination (bitwise OR) of the flags specified above.
+   *                 Defaults to 0.
    */
   [implicit_jscontext]
-  Promise getUntrustedModuleLoadEvents();
+  Promise getUntrustedModuleLoadEvents([optional] in unsigned long aFlags);
 
   /*
    * Asynchronously get an array of the modules loaded in the process.

@@ -407,8 +407,20 @@ enum class ArgumentKind : uint8_t {
   Arg1,
   Arg2,
   Arg3,
+  Arg4,
+  Arg5,
+  Arg6,
+  Arg7,
   NumKinds
 };
+
+const uint8_t ArgumentKindArgIndexLimit =
+    uint8_t(ArgumentKind::NumKinds) - uint8_t(ArgumentKind::Arg0);
+
+inline ArgumentKind ArgumentKindForArgIndex(uint32_t idx) {
+  MOZ_ASSERT(idx < ArgumentKindArgIndexLimit);
+  return ArgumentKind(uint32_t(ArgumentKind::Arg0) + idx);
+}
 
 // This function calculates the index of an argument based on the call flags.
 // addArgc is an out-parameter, indicating whether the value of argc should
@@ -461,6 +473,14 @@ inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
       return flags.isConstructing() + hasArgumentArray - 3;
     case ArgumentKind::Arg3:
       return flags.isConstructing() + hasArgumentArray - 4;
+    case ArgumentKind::Arg4:
+      return flags.isConstructing() + hasArgumentArray - 5;
+    case ArgumentKind::Arg5:
+      return flags.isConstructing() + hasArgumentArray - 6;
+    case ArgumentKind::Arg6:
+      return flags.isConstructing() + hasArgumentArray - 7;
+    case ArgumentKind::Arg7:
+      return flags.isConstructing() + hasArgumentArray - 8;
     case ArgumentKind::NewTarget:
       MOZ_ASSERT(flags.isConstructing());
       *addArgc = false;
@@ -685,6 +705,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writePointer(JS_FUNC_TO_DATA_PTR(void*, native));
   }
   void writeStaticStringImm(const char* str) { writePointer(str); }
+
+  void writeWasmValTypeImm(wasm::ValType::Kind kind) {
+    static_assert(unsigned(wasm::TypeCode::Limit) <= UINT8_MAX);
+    buffer_.writeByte(uint8_t(kind));
+  }
 
   uint32_t newOperandId() { return nextOperandId_++; }
 
@@ -1090,6 +1115,9 @@ class MOZ_RAII CacheIRReader {
   GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
   JSValueType jsValueType() { return JSValueType(buffer_.readByte()); }
   ValueType valueType() { return ValueType(buffer_.readByte()); }
+  wasm::ValType::Kind wasmValType() {
+    return wasm::ValType::Kind(buffer_.readByte());
+  }
 
   Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
   uint32_t typeDescrKey() { return buffer_.readByte(); }

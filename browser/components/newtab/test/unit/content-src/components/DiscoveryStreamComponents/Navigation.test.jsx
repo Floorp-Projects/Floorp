@@ -27,7 +27,27 @@ describe("<Navigation>", () => {
   it("should render a title", () => {
     wrapper.setProps({ header: { title: "Foo" } });
 
-    assert.equal(wrapper.find(".ds-header").text(), "Foo");
+    assert.equal(wrapper.find(".ds-navigation-header").text(), "Foo");
+  });
+
+  it("should not render a title", () => {
+    wrapper.setProps({ header: null });
+
+    assert.lengthOf(wrapper.find(".ds-navigation-header"), 0);
+  });
+
+  it("should set default alignment", () => {
+    assert.lengthOf(wrapper.find(".ds-navigation-centered"), 1);
+  });
+
+  it("should set custom alignment", () => {
+    wrapper.setProps({ alignment: "left-align" });
+
+    assert.lengthOf(wrapper.find(".ds-navigation-left-align"), 1);
+  });
+
+  it("should set default of no links", () => {
+    assert.lengthOf(wrapper.find("ul").children(), 0);
   });
 
   it("should render a FluentOrText", () => {
