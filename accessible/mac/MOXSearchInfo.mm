@@ -315,10 +315,9 @@ using namespace mozilla::a11y;
     }
 
     if ([key isEqualToString:@"AXTextFieldSearchKey"]) {
-      RotorMacRoleRule rule =
-          mImmediateDescendantsOnly
-              ? RotorMacRoleRule(@"AXTextField", geckoRootAcc)
-              : RotorMacRoleRule(@"AXTextField");
+      RotorTextEntryRule rule = mImmediateDescendantsOnly
+                                    ? RotorTextEntryRule(geckoRootAcc)
+                                    : RotorTextEntryRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
