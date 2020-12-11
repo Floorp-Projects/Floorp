@@ -94,6 +94,10 @@ class MobileTabBrowser {
     });
     this.window.document.dispatchEvent(event);
   }
+
+  get selectedBrowser() {
+    return this.selectedTab.linkedBrowser;
+  }
 }
 
 /**
