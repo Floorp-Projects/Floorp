@@ -68,7 +68,6 @@ if CONFIG["MOZ_APP_BASENAME"]:
         "MOZ_APP_ID",
         "MAR_CHANNEL_ID",
         "MOZ_APP_REMOTINGNAME",
-        "MOZ_CRASHREPORTER_URL",
     ):
         appini_defines[var] = CONFIG[var]
 
