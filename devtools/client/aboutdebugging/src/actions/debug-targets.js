@@ -172,12 +172,7 @@ function requestTabs() {
         runtime.runtimeDetails.info.type,
         DEBUG_TARGET_PANE.TAB
       );
-      const tabs = isSupported
-        ? await clientWrapper.listTabs({
-            // @backward-compat { version 75 } This is only used for older servers.
-            favicons: true,
-          })
-        : [];
+      const tabs = isSupported ? await clientWrapper.listTabs() : [];
 
       // Fetch the missing information for all tabs.
       await Promise.all(
