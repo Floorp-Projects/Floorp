@@ -16072,9 +16072,9 @@
     "expires_in_version": "87",
     "kind": "categorical",
     "releaseChannelCollection": "opt-out",
-    "description": "Counts how often the external protocol handler dialog is shown. Labelled by protocol scheme. Keyed by whether the navigation came from the top level browser, an iframe or a cross origin iframe, or a null principal.",
+    "description": "Counts how often the external protocol handler dialog is shown. Labelled by protocol scheme. Keyed by the kind of browsing context the navigation was triggered from: TOPLEVEL: Top browser, SUB_SAMEORIGIN: Same origin iframe, SUB_CROSSORIGIN: Cross origin iframe, SUB_SANDBOX_ALLOW: Sandboxed iframe with relevant allow flags, SUB_SANDBOX_NOALLOW: Sandboxed iframe without relevant allow flags",
     "keyed": true,
-    "keys": ["TOPLEVEL", "SUB_SAMEORIGIN", "SUB_CROSSORIGIN", "NULLPRINCIPAL", "UNKNOWN"],
+    "keys": ["TOPLEVEL", "SUB_SAMEORIGIN", "SUB_CROSSORIGIN", "SUB_SANDBOX_ALLOW", "SUB_SANDBOX_NOALLOW", "UNKNOWN"],
     "labels": [
       "APPLE",
       "APPLE_FINDMY",
