@@ -20,14 +20,13 @@ const perfDescription = {
       interval: Arg(1, "number"),
       features: Arg(2, "number"),
       duration: Arg(3, "nullable:number"),
-      // @backward-compat { version 72 } The `activeBrowsingContextID` option
-      // passed to `profiler_start` is used to determine the active tab when
-      // user starts the profiler. This is a parameter that is generated on the
+      // The `activeBrowsingContextID` option passed to `profiler_start` is used to
+      // determine the active tab when user starts the profiler.
+      // This is a parameter that is generated on the
       // server, that's why we don't need to pass anything on `startProfiler`
       // actor method. But we return this in "profiler-started" event because
-      // client may want to use that value. It's not a nullable value but we set
-      // it nullable here to not fail on older Firefox versions.
-      activeBrowsingContextID: Arg(4, "nullable:number"),
+      // client may want to use that value.
+      activeBrowsingContextID: Arg(4, "number"),
     },
     "profiler-stopped": {
       type: "profiler-stopped",
