@@ -54,13 +54,9 @@ class SharedDataMap extends EventEmitter {
     }
   }
 
-  async init(runSync = false) {
+  async init() {
     if (!this._isReady && this.isParent) {
-      if (runSync) {
-        this._store.ensureDataReady();
-      } else {
-        await this._store.load();
-      }
+      await this._store.load();
       this._data = this._store.data;
       this._syncToChildren({ flush: true });
       this._checkIfReady();

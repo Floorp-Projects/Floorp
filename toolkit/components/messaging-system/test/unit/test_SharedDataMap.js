@@ -32,16 +32,8 @@ function with_sharedDataMap(test) {
   add_task(testTask);
 }
 
-with_sharedDataMap(function test_sync({ instance, sandbox }) {
-  instance.init(true);
-
-  instance.set("foo", "bar");
-
-  Assert.equal(instance.get("foo"), "bar", "It should retrieve a string value");
-});
-
-with_sharedDataMap(function test_set_notify({ instance, sandbox }) {
-  instance.init(true);
+with_sharedDataMap(async function test_set_notify({ instance, sandbox }) {
+  await instance.init();
   let updateStub = sandbox.stub();
 
   instance.on("parent-store-update:foo", updateStub);
@@ -52,7 +44,7 @@ with_sharedDataMap(function test_set_notify({ instance, sandbox }) {
 });
 
 with_sharedDataMap(async function test_set_child_notify({ instance, sandbox }) {
-  instance.init(true);
+  await instance.init();
 
   let updateStub = sandbox.stub();
   const childInstance = new SharedDataMap("xpcshell", {
@@ -82,8 +74,8 @@ with_sharedDataMap(async function test_async({ instance, sandbox }) {
   Assert.equal(instance.get("foo"), "bar", "It should retrieve a string value");
 });
 
-with_sharedDataMap(function test_saveSoon({ instance, sandbox }) {
-  instance.init(true);
+with_sharedDataMap(async function test_saveSoon({ instance, sandbox }) {
+  await instance.init();
   const stub = sandbox.stub(instance._store, "saveSoon");
 
   instance.set("foo", "bar");
@@ -96,7 +88,7 @@ with_sharedDataMap(async function test_childInit({ instance, sandbox }) {
   const stubA = sandbox.stub(instance._store, "ensureDataReady");
   const stubB = sandbox.stub(instance._store, "load");
 
-  await instance.init(true);
+  await instance.init();
 
   Assert.equal(
     stubA.callCount,
@@ -114,7 +106,7 @@ with_sharedDataMap(async function test_parentChildSync_synchronously({
   instance: parentInstance,
   sandbox,
 }) {
-  parentInstance.init(true);
+  await parentInstance.init();
   parentInstance.set("foo", { bar: 1 });
 
   const childInstance = new SharedDataMap("xpcshell", {
@@ -175,7 +167,7 @@ with_sharedDataMap(async function test_earlyChildSync({
 
   Assert.equal(childInstance.has("baz"), false, "Should not fail");
 
-  parentInstance.init(true);
+  await parentInstance.init();
   parentInstance.set("baz", { bar: 1 });
 
   await TestUtils.waitForCondition(

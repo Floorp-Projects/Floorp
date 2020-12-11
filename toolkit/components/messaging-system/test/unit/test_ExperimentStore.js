@@ -1,5 +1,7 @@
 "use strict";
 
+const SYNC_DATA_PREF = "messaging-system.syncdatastore.data";
+
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
 );
@@ -308,5 +310,129 @@ add_task(async function test_updateExperiment() {
     actual.branch.feature,
     feature,
     "should not update other props"
+  );
+});
+
+add_task(async function test_sync_access_before_init() {
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
+  let store = ExperimentFakes.store();
+
+  Assert.equal(store.getAll().length, 0, "Start with an empty store");
+
+  const syncAccessExp = ExperimentFakes.experiment("foo", {
+    feature: { featureId: "newtab", enabled: "true" },
+  });
+  await store.init();
+  store.addExperiment(syncAccessExp);
+
+  let prefValue = JSON.parse(Services.prefs.getStringPref(SYNC_DATA_PREF));
+
+  Assert.ok(Object.keys(prefValue).length === 1, "Parsed stored experiment");
+  Assert.equal(
+    prefValue.foo.slug,
+    syncAccessExp.slug,
+    "Got back the experiment"
+  );
+
+  // New un-initialized store that should read the pref value
+  store = ExperimentFakes.store();
+
+  Assert.equal(store.getAll().length, 1, "Returns experiment from pref");
+});
+
+add_task(async function test_sync_access_update() {
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
+  let store = ExperimentFakes.store();
+  let experiment = ExperimentFakes.experiment("foo", {
+    feature: { featureId: "aboutwelcome", enabled: true },
+  });
+
+  await store.init();
+
+  store.addExperiment(experiment);
+  store.updateExperiment("foo", {
+    branch: {
+      ...experiment.branch,
+      feature: { featureId: "aboutwelcome", enabled: true, value: "bar" },
+    },
+  });
+
+  store = ExperimentFakes.store();
+  let experiments = store.getAll();
+
+  Assert.equal(experiments.length, 1, "Got back 1 experiment");
+  Assert.equal(experiments[0].branch.feature.value, "bar", "Got updated value");
+});
+
+add_task(async function test_sync_features_only() {
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
+  let store = ExperimentFakes.store();
+  let experiment = ExperimentFakes.experiment("foo", {
+    feature: { featureId: "cfr", enabled: true },
+  });
+
+  await store.init();
+
+  store.addExperiment(experiment);
+  store = ExperimentFakes.store();
+
+  Assert.equal(store.getAll().length, 0, "cfr is not a sync access experiment");
+});
+
+add_task(async function test_sync_access_unenroll() {
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
+  let store = ExperimentFakes.store();
+  let experiment = ExperimentFakes.experiment("foo", {
+    feature: { featureId: "aboutwelcome", enabled: true },
+    active: true,
+  });
+
+  await store.init();
+
+  store.addExperiment(experiment);
+  store.updateExperiment("foo", { active: false });
+
+  store = ExperimentFakes.store();
+  let experiments = store.getAll();
+
+  Assert.equal(experiments.length, 0, "Unenrolled experiment is deleted");
+});
+
+add_task(async function test_sync_access_unenroll_2() {
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
+  let store = ExperimentFakes.store();
+  let experiment1 = ExperimentFakes.experiment("foo", {
+    feature: { featureId: "aboutwelcome", enabled: true },
+  });
+  let experiment2 = ExperimentFakes.experiment("bar", {
+    feature: { featureId: "aboutwelcome", enabled: true },
+  });
+
+  await store.init();
+
+  store.addExperiment(experiment1);
+  store.addExperiment(experiment2);
+
+  Assert.equal(store.getAll().length, 2, "2/2 experiments");
+
+  store.updateExperiment("bar", { active: false });
+  let other_store = ExperimentFakes.store();
+  Assert.equal(
+    other_store.getAll().length,
+    1,
+    "Unenrolled from 1/2 experiments"
+  );
+
+  store.updateExperiment("foo", { active: false });
+  Assert.equal(
+    other_store.getAll().length,
+    0,
+    "Unenrolled from 2/2 experiments"
+  );
+
+  Assert.equal(
+    Services.prefs.getStringPref(SYNC_DATA_PREF),
+    "{}",
+    "Empty store"
   );
 });
