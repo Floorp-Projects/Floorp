@@ -60,7 +60,7 @@ var gTests = [
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAABGklEQVQoz2NgGB6AnZ1dUlJSXl4eSDIyMhLW4Ovr%2B%2Fr168uXL69Zs4YoG%2BLi4i5dusTExMTGxsbNzd3f37937976%2BnpmZmagbHR09J49e5YvX66kpATVEBYW9ubNm2nTphkbG7e2tp44cQLIuHfvXm5urpaWFlDKysqqu7v73LlzECMYIiIiHj58mJCQoKKicvXq1bS0NKBgW1vbjh074uPjgeqAXE1NzSdPnvDz84M0AEUvXLgAsW379u1z5swBen3jxo2zZ892cHB4%2BvQp0KlAfwI1cHJyghQFBwfv2rULokFXV%2FfixYu7d%2B8GGqGgoMDKyrpu3br9%2B%2FcDuXl5eVA%2FAEWBfoWHAdAYoNuAYQ0XAeoUERFhGDYAAPoUaT2dfWJuAAAAAElFTkSuQmCC"
       );
     },
-    added(engine) {
+    async added(engine) {
       ok(engine, "engine was added.");
 
       checkEngine(this.engine, engine);
@@ -68,7 +68,7 @@ var gTests = [
       let engineFromSS = gSS.getEngineByName(this.engine.name);
       is(engine, engineFromSS, "engine is obtainable via getEngineByName");
 
-      let aEngine = gSS.getEngineByAlias("fooalias");
+      let aEngine = await gSS.getEngineByAlias("fooalias");
       ok(!aEngine, "Alias was not parsed from engine description");
 
       gSS.defaultEngine = engine;

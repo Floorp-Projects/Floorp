@@ -396,7 +396,7 @@ add_task(async function test_tabmenu() {
 // NOTE: We don't test handoff on about:home. Running mochitests on about:home
 // is quite difficult. This subtest verifies that `handoff` is a valid scalar
 // suffix and that a call to
-// UrlbarInput.search(value, { searchModeEntry: "handoff" }) records values in
+// UrlbarInput.search(value, { searchEngine, searchModeEntry: "handoff" }) records values in
 // the urlbar.searchmode.handoff scalar. PlacesFeed.test.js verfies that
 // about:home handoff makes that exact call.
 add_task(async function test_handoff_pbm() {

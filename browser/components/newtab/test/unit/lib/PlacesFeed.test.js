@@ -396,7 +396,7 @@ describe("PlacesFeed", () => {
       assert.equal(url.endsWith("sponsor-privacy"), true);
       assert.equal(where, "tab");
     });
-    it("should set the URL bar value to the label value", () => {
+    it("should set the URL bar value to the label value", async () => {
       const locationBar = { search: sandbox.stub() };
       const action = {
         type: at.FILL_SEARCH_TERM,
@@ -404,10 +404,11 @@ describe("PlacesFeed", () => {
         _target: { browser: { ownerGlobal: { gURLBar: locationBar } } },
       };
 
-      feed.fillSearchTopSiteTerm(action);
+      await feed.fillSearchTopSiteTerm(action);
 
       assert.calledOnce(locationBar.search);
       assert.calledWithExactly(locationBar.search, "@Foo", {
+        searchEngine: null,
         searchModeEntry: "topsites_newtab",
       });
     });
@@ -616,6 +617,7 @@ describe("PlacesFeed", () => {
       });
       assert.calledOnce(fakeUrlBar.search);
       assert.calledWith(fakeUrlBar.search, "@google foo", {
+        searchEngine: global.Services.search.defaultEngine,
         searchModeEntry: "handoff",
       });
       assert.notCalled(fakeUrlBar.focus);
@@ -643,6 +645,7 @@ describe("PlacesFeed", () => {
       });
       assert.calledOnce(fakeUrlBar.search);
       assert.calledWith(fakeUrlBar.search, "@bing foo", {
+        searchEngine: global.Services.search.defaultPrivateEngine,
         searchModeEntry: "handoff",
       });
       assert.notCalled(fakeUrlBar.focus);
@@ -670,6 +673,7 @@ describe("PlacesFeed", () => {
       });
       assert.calledOnce(fakeUrlBar.search);
       assert.calledWithExactly(fakeUrlBar.search, "@google foo", {
+        searchEngine: global.Services.search.defaultEngine,
         searchModeEntry: "handoff",
       });
       assert.notCalled(fakeUrlBar.focus);
@@ -696,6 +700,7 @@ describe("PlacesFeed", () => {
       });
       assert.calledOnce(fakeUrlBar.search);
       assert.calledWithExactly(fakeUrlBar.search, "foo", {
+        searchEngine: global.Services.search.defaultEngine,
         searchModeEntry: "handoff",
       });
     });
