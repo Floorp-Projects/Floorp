@@ -13,7 +13,7 @@ async function assertStatus(tab, expected) {
     [],
     async function() {
       info("visbility state: " + content.document.visibilityState);
-      info("docshell active: " + docShell.isActive);
+      info("active: " + content.browsingContext.isActive);
       return content.document.getElementById("status").value;
     }
   );
@@ -32,7 +32,12 @@ async function waitForStatus(tab, expected) {
           ", visbility state: " +
           content.document.visibilityState
       );
-      info("expecting " + expected + ", docshell active: " + docShell.isActive);
+      info(
+        "expecting " +
+          expected +
+          ", active: " +
+          content.browsingContext.isActive
+      );
       return content.document.getElementById("status").value == expected;
     });
   });

@@ -1624,7 +1624,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
 bool WebRenderCommandBuilder::ShouldDumpDisplayList(
     nsDisplayListBuilder* aBuilder) {
-  return aBuilder != nullptr && aBuilder->IsInActiveDocShell() &&
+  return aBuilder && aBuilder->IsInActiveDocShell() &&
          ((XRE_IsParentProcess() &&
            StaticPrefs::gfx_webrender_dl_dump_parent()) ||
           (XRE_IsContentProcess() &&

@@ -393,12 +393,16 @@ const browsingContextTargetPrototype = {
     return null;
   },
 
+  get browsingContext() {
+    return this.docShell?.browsingContext;
+  },
+
   get browsingContextID() {
-    return this.docShell && this.docShell.browsingContext.id;
+    return this.browsingContext?.id;
   },
 
   get browserId() {
-    return this.docShell && this.docShell.browsingContext.browserId;
+    return this.browsingContext?.browserId;
   },
 
   /**
@@ -1275,7 +1279,7 @@ const browsingContextTargetPrototype = {
     this._setServiceWorkersTestingEnabled(false);
     this._setPaintFlashingEnabled(false);
 
-    if (this._restoreFocus && this.window.docShell.isActive) {
+    if (this._restoreFocus && this.browsingContext?.isActive) {
       this.window.focus();
     }
   },

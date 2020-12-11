@@ -970,9 +970,6 @@ class BrowserParent final : public PBrowserParent,
   int32_t mActiveSupressDisplayportCount = 0;
 #endif
 
-  // Cached value indicating the docshell active state of the remote browser.
-  bool mDocShellIsActive : 1;
-
   // When true, we've initiated normal shutdown and notified our managing
   // PContent.
   bool mMarkedDestroying : 1;

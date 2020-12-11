@@ -735,7 +735,7 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
 
   RefPtr<nsDOMNavigationTiming> timing = new nsDOMNavigationTiming(nullptr);
   timing->NotifyNavigationStart(
-      browsingContext->GetIsActive()
+      browsingContext->IsActive()
           ? nsDOMNavigationTiming::DocShellState::eActive
           : nsDOMNavigationTiming::DocShellState::eInactive);
 

@@ -6526,7 +6526,7 @@ bool HTMLMediaElement::IsBeingDestroyed() {
 
 bool HTMLMediaElement::ShouldBeSuspendedByInactiveDocShell() const {
   BrowsingContext* bc = OwnerDoc()->GetBrowsingContext();
-  return bc && !bc->GetIsActive() && bc->Top()->GetSuspendMediaWhenInactive();
+  return bc && !bc->IsActive() && bc->Top()->GetSuspendMediaWhenInactive();
 }
 
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged() {
