@@ -109,6 +109,7 @@ enum class VMFunctionId;
 //
 
 class ICStub;
+class ICCacheIRStub;
 class ICFallbackStub;
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
@@ -353,13 +354,13 @@ class ICStub {
     return reinterpret_cast<ICFallbackStub*>(this);
   }
 
-  ICCacheIR_Regular* toCacheIR_Regular() {
+  ICCacheIRStub* toCacheIRStub() {
     MOZ_ASSERT(!isFallback());
-    return reinterpret_cast<ICCacheIR_Regular*>(this);
+    return reinterpret_cast<ICCacheIRStub*>(this);
   }
-  const ICCacheIR_Regular* toCacheIR_Regular() const {
+  const ICCacheIRStub* toCacheIRStub() const {
     MOZ_ASSERT(!isFallback());
-    return reinterpret_cast<const ICCacheIR_Regular*>(this);
+    return reinterpret_cast<const ICCacheIRStub*>(this);
   }
 
   inline ICStub* next() const { return next_; }
@@ -550,7 +551,7 @@ class ICFallbackStub : public ICStub {
   void resetEnteredCount() { enteredCount_ = 0; }
 };
 
-class ICCacheIR_Regular : public ICStub {
+class ICCacheIRStub : public ICStub {
  protected:
   const CacheIRStubInfo* stubInfo_;
 
@@ -561,7 +562,7 @@ class ICCacheIR_Regular : public ICStub {
   uint32_t enteredCount_ = 0;
 
  public:
-  ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
+  ICCacheIRStub(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
       : ICStub(stubCode), stubInfo_(stubInfo) {}
 
   const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
@@ -575,7 +576,7 @@ class ICCacheIR_Regular : public ICStub {
   void trace(JSTracer* trc);
 
   static constexpr size_t offsetOfEnteredCount() {
-    return offsetof(ICCacheIR_Regular, enteredCount_);
+    return offsetof(ICCacheIRStub, enteredCount_);
   }
 };
 

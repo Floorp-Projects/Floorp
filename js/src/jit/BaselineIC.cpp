@@ -199,7 +199,7 @@ void ICEntry::trace(JSTracer* trc) {
 #endif
   ICStub* stub = firstStub();
   while (!stub->isFallback()) {
-    stub->toCacheIR_Regular()->trace(trc);
+    stub->toCacheIRStub()->trace(trc);
     stub = stub->next();
   }
   stub->toFallbackStub()->trace(trc);
@@ -589,7 +589,7 @@ void ICStubIterator::unlink(JSContext* cx, JSScript* script) {
 
 bool ICStub::makesGCCalls() const {
   if (!isFallback()) {
-    return toCacheIR_Regular()->stubInfo()->makesGCCalls();
+    return toCacheIRStub()->stubInfo()->makesGCCalls();
   }
 
   Kind kind = toFallbackStub()->kind();
@@ -614,7 +614,7 @@ uint32_t ICStub::getEnteredCount() const {
   if (isFallback()) {
     return toFallbackStub()->enteredCount();
   }
-  return toCacheIR_Regular()->enteredCount();
+  return toCacheIRStub()->enteredCount();
 }
 
 void ICFallbackStub::trackNotAttached(JSContext* cx, JSScript* script) {
@@ -637,7 +637,7 @@ void ICFallbackStub::maybeInvalidateWarp(JSContext* cx, JSScript* script) {
   }
 }
 
-void ICCacheIR_Regular::trace(JSTracer* trc) {
+void ICCacheIRStub::trace(JSTracer* trc) {
   JitCode* stubJitCode = jitCode();
   TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
 
@@ -733,7 +733,7 @@ void ICFallbackStub::unlinkStubDontInvalidateWarp(Zone* zone, ICStub* prev,
   if (zone->needsIncrementalBarrier()) {
     // We are removing edges from ICStub to gcthings. Perform one final trace
     // of the stub for incremental GC, as it must know about those edges.
-    stub->toCacheIR_Regular()->trace(zone->barrierTracer());
+    stub->toCacheIRStub()->trace(zone->barrierTracer());
   }
 
 #ifdef DEBUG
@@ -2787,11 +2787,11 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
 
 // TODO(no-TI): no longer need this and cacheIRStubData in base class.
 const CacheIRStubInfo* ICStub::cacheIRStubInfo() const {
-  return toCacheIR_Regular()->stubInfo();
+  return toCacheIRStub()->stubInfo();
 }
 
 const uint8_t* ICStub::cacheIRStubData() {
-  return toCacheIR_Regular()->stubDataStart();
+  return toCacheIRStub()->stubDataStart();
 }
 
 }  // namespace jit

@@ -1013,7 +1013,7 @@ static void TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame) {
     if (stub->isFallback()) {
       stub->toFallbackStub()->trace(trc);
     } else {
-      stub->toCacheIR_Regular()->trace(trc);
+      stub->toCacheIRStub()->trace(trc);
     }
   }
 }
