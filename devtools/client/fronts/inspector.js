@@ -58,10 +58,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     );
     this.walker = await this.getWalker({
       showAllAnonymousContent,
-      // @backward-compat { version 74 } getWalker() now uses a single boolean flag to
-      // drive the display of both anonymous content and user-agent shadow roots.
-      // Older servers used separate flags. See Bug 1613773.
-      showUserAgentShadowRoots: showAllAnonymousContent,
     });
 
     // We need to reparent the RootNode of remote iframe Walkers
