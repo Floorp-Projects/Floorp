@@ -265,15 +265,8 @@ function requestWorkers() {
           continue;
         }
 
-        try {
-          const subscription = await registrationFront.getPushSubscription();
-          serviceWorker.subscription = subscription;
-        } catch (e) {
-          // @backward-compat { version 78 } See Bug 1637687.
-          // On older GeckoView, some PushSubscription methods were not implemented and
-          // getPushSubscription would throw.
-          console.error("Failed to retrieve service worker subscription", e);
-        }
+        const subscription = await registrationFront.getPushSubscription();
+        serviceWorker.subscription = subscription;
       }
 
       dispatch({
