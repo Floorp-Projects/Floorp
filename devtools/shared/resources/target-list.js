@@ -296,8 +296,8 @@ class TargetList extends EventEmitter {
       }
       this._setListening(type, true);
 
-      // @backward-compat { version 77 } We now support frames watching via watchTargets
-      // for Tab and Process descriptors.
+      // Only a few top level targets support the watcher actor at the moment (see WatcherActor
+      // traits in the _form method). Bug 1675763 tracks watcher actor support for all targets.
       if (this.hasTargetWatcherSupport(type)) {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.
@@ -336,8 +336,8 @@ class TargetList extends EventEmitter {
       }
       this._setListening(type, false);
 
-      // @backward-compat { version 77 } We now support frames watching via watchTargets
-      // for Tab and Process descriptors.
+      // Only a few top level targets support the watcher actor at the moment (see WatcherActor
+      // traits in the _form method). Bug 1675763 tracks watcher actor support for all targets.
       if (this.hasTargetWatcherSupport(type)) {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.
