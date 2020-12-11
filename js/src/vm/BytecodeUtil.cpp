@@ -1174,7 +1174,8 @@ static UniqueChars ToDisassemblySource(JSContext* cx, HandleValue v) {
     }
 
     if (obj.is<RegExpObject>()) {
-      JSString* source = obj.as<RegExpObject>().toString(cx);
+      Rooted<RegExpObject*> reobj(cx, &obj.as<RegExpObject>());
+      JSString* source = RegExpObject::toString(cx, reobj);
       if (!source) {
         return nullptr;
       }
@@ -1907,8 +1908,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::NewArray:
       return write("[]");
     case JSOp::RegExp: {
-      RootedObject obj(cx, script->getObject(pc));
-      JSString* str = obj->as<RegExpObject>().toString(cx);
+      Rooted<RegExpObject*> obj(cx, &script->getObject(pc)->as<RegExpObject>());
+      JSString* str = RegExpObject::toString(cx, obj);
       if (!str) {
         return false;
       }

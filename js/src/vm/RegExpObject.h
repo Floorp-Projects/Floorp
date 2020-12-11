@@ -129,7 +129,7 @@ class RegExpObject : public NativeObject {
     setSlot(LAST_INDEX_SLOT, Int32Value(0));
   }
 
-  JSLinearString* toString(JSContext* cx) const;
+  static JSLinearString* toString(JSContext* cx, Handle<RegExpObject*> obj);
 
   JSAtom* getSource() const {
     return &getSlot(SOURCE_SLOT).toString()->asAtom();
@@ -224,7 +224,7 @@ XDRResult XDRScriptRegExpObject(XDRState<mode>* xdr,
 extern JSObject* CloneScriptRegExpObject(JSContext* cx, RegExpObject& re);
 
 /* Escape all slashes and newlines in the given string. */
-extern JSAtom* EscapeRegExpPattern(JSContext* cx, HandleAtom src);
+extern JSLinearString* EscapeRegExpPattern(JSContext* cx, HandleAtom src);
 
 template <typename CharT>
 extern bool HasRegExpMetaChars(const CharT* chars, size_t length);
