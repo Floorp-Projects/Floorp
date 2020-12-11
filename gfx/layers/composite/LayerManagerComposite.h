@@ -708,6 +708,21 @@ class LayerComposite : public HostLayer {
   gfx::IntRect mClearRect;
 };
 
+class WindowLMC : public profiler_screenshots::Window {
+ public:
+  explicit WindowLMC(Compositor* aCompositor) : mCompositor(aCompositor) {}
+
+  already_AddRefed<profiler_screenshots::RenderSource> GetWindowContents(
+      const gfx::IntSize& aWindowSize) override;
+  already_AddRefed<profiler_screenshots::DownscaleTarget> CreateDownscaleTarget(
+      const gfx::IntSize& aSize) override;
+  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
+  CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
+
+ protected:
+  Compositor* mCompositor;
+};
+
 }  // namespace layers
 }  // namespace mozilla
 
