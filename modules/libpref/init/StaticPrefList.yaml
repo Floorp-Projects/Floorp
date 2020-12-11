@@ -5175,7 +5175,8 @@
   value: 10000
   mirror: always
 
-# Duration of the dom events full gc delay, in ms.
+# After doing a zonal GC, wait this much time (in ms) and then do a full GC,
+# unless one is already pending.
 - name: javascript.options.gc_delay.full
   type: uint32_t
   value: 60000
