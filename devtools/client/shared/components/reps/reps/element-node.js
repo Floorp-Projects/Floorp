@@ -121,6 +121,9 @@ define(function(require, exports, module) {
     // Initiate config
     const config = {
       "data-link-actor-id": object.actor,
+      "data-link-content-dom-reference": JSON.stringify(
+        object.contentDomReference
+      ),
       className: "objectBox objectBox-node",
     };
 

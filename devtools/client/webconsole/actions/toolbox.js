@@ -34,9 +34,9 @@ function unHighlightDomElement(grip) {
   };
 }
 
-function openNodeInInspector(actor) {
+function openNodeInInspector(contentDomReference) {
   return ({ hud }) => {
-    hud.openNodeInInspector({ actor: actor });
+    hud.openNodeInInspector({ contentDomReference });
   };
 }
 

@@ -2621,33 +2621,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * Given an ObjectActor (identified by its ID), commonly used in the debugger,
-   * webconsole and variablesView, return the corresponding inspector's
-   * NodeActor
-   */
-  getNodeActorFromObjectActor: function(objectActorID) {
-    const actor = this.conn.getActor(objectActorID);
-    if (!actor) {
-      return null;
-    }
-
-    const debuggerObject = this.conn.getActor(objectActorID).obj;
-    let rawNode = debuggerObject.unsafeDereference();
-
-    if (!this._isInDOMTree(rawNode)) {
-      return null;
-    }
-
-    // This is a special case for the document object whereby it is considered
-    // as document.documentElement (the <html> node)
-    if (rawNode.defaultView && rawNode === rawNode.defaultView.document) {
-      rawNode = rawNode.documentElement;
-    }
-
-    return this.attachElement(rawNode);
-  },
-
-  /**
    * Given a windowID return the NodeActor for the corresponding frameElement,
    * unless it's the root window
    */
