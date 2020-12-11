@@ -790,10 +790,23 @@ child:
     prio(input) async RealMouseMoveEvent(WidgetMouseEvent event,
                                          ScrollableLayerGuid aGuid,
                                          uint64_t aInputBlockId) compress;
-
     async NormalPriorityRealMouseMoveEvent(WidgetMouseEvent event,
                                            ScrollableLayerGuid aGuid,
                                            uint64_t aInputBlockId) compress;
+
+    /**
+     * But don't compress mousemove events for tests since every event is
+     * important for the test since synthesizing various input events may
+     * be faster than what the user operates same things.  If you need to
+     * test the `compress`, send mouse move events with setting `isSyntehsized`
+     * of `aEvent` of `EventUtils#syntehsizeMouse*()`.
+     */
+    prio(input) async RealMouseMoveEventForTests(WidgetMouseEvent event,
+                                                 ScrollableLayerGuid aGuid,
+                                                 uint64_t aInputBlockId);
+    async NormalPriorityRealMouseMoveEventForTests(WidgetMouseEvent event,
+                                                   ScrollableLayerGuid aGuid,
+                                                   uint64_t aInputBlockId);
 
     /**
      * Mouse move events with |reason == eSynthesized| are sent via a separate
