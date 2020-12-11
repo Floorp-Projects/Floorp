@@ -507,24 +507,23 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     return AsVariant(NonDecoderResult::ParseError);
   }
 
-  AvifImage image = {};
-  Mp4parseStatus status = mp4parse_avif_get_image(mParser, &image);
+  Mp4parseByteData primaryItem = {};
+  Mp4parseStatus status = mp4parse_avif_get_primary_item(mParser, &primaryItem);
 
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
           ("[this=%p] mp4parse_avif_get_primary_item -> %d; length: %u", this,
-           status, image.primary_item.length));
+           status, primaryItem.length));
 
-  if (status != MP4PARSE_STATUS_OK || !image.primary_item.data ||
-      !image.primary_item.length) {
+  if (status != MP4PARSE_STATUS_OK) {
     return AsVariant(NonDecoderResult::NoPrimaryItem);
   }
 
   layers::PlanarYCbCrData decodedData;
   DecodeResult decodeResult = AsVariant(NonDecoderResult::MetadataOk);
   if (StaticPrefs::image_avif_use_dav1d()) {
-    decodeResult = AsVariant(DecodeWithDav1d(image.primary_item, decodedData));
+    decodeResult = AsVariant(DecodeWithDav1d(primaryItem, decodedData));
   } else {
-    decodeResult = AsVariant(DecodeWithAOM(image.primary_item, decodedData));
+    decodeResult = AsVariant(DecodeWithAOM(primaryItem, decodedData));
   }
   bool decodeOK = IsDecodeSuccess(decodeResult);
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
