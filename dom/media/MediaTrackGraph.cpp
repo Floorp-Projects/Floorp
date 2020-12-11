@@ -1342,7 +1342,7 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
   MOZ_ASSERT(OnGraphThread());
   if (mForceShutDownReceived) {
     for (MediaTrack* track : AllTracks()) {
-      track->NotifyForcedShutdown();
+      track->OnGraphThreadDone();
     }
   }
   {
@@ -2037,13 +2037,16 @@ void MediaTrack::Destroy() {
   class Message : public ControlMessage {
    public:
     explicit Message(MediaTrack* aTrack) : ControlMessage(aTrack) {}
-    void Run() override {
+    void RunDuringShutdown() override {
       mTrack->RemoveAllResourcesAndListenersImpl();
       auto graph = mTrack->GraphImpl();
       mTrack->DestroyImpl();
       graph->RemoveTrackGraphThread(mTrack);
     }
-    void RunDuringShutdown() override { Run(); }
+    void Run() override {
+      mTrack->OnGraphThreadDone();
+      RunDuringShutdown();
+    }
   };
   // Keep a reference to the graph, since Message might RunDuringShutdown()
   // synchronously and make GraphImpl() invalid.
@@ -2435,7 +2438,7 @@ SourceMediaTrack::SourceMediaTrack(MediaSegment::Type aType,
   mUpdateTrack->mData = UniquePtr<MediaSegment>(mSegment->CreateEmptyClone());
   mUpdateTrack->mEnded = false;
   mUpdateTrack->mPullingEnabled = false;
-  mUpdateTrack->mInForcedShutdown = false;
+  mUpdateTrack->mGraphThreadDone = false;
 }
 
 void SourceMediaTrack::DestroyImpl() {
@@ -2649,9 +2652,7 @@ TrackTime SourceMediaTrack::AppendData(MediaSegment* aSegment,
   MutexAutoLock lock(mMutex);
   MOZ_DIAGNOSTIC_ASSERT(aSegment->GetType() == mType);
   TrackTime appended = 0;
-  auto graph = GraphImpl();
-  if (!mUpdateTrack || mUpdateTrack->mEnded ||
-      mUpdateTrack->mInForcedShutdown || !graph) {
+  if (!mUpdateTrack || mUpdateTrack->mEnded || mUpdateTrack->mGraphThreadDone) {
     aSegment->Clear();
     return appended;
   }
@@ -2673,6 +2674,7 @@ TrackTime SourceMediaTrack::AppendData(MediaSegment* aSegment,
   appended = aSegment->GetDuration();
   mUpdateTrack->mData->AppendFrom(aSegment);  // note: aSegment is now dead
   {
+    auto graph = GraphImpl();
     MonitorAutoLock lock(graph->GetMonitor());
     if (graph->CurrentDriver()) {  // graph has not completed forced shutdown
       graph->EnsureNextIteration();
