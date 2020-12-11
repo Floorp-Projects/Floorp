@@ -1084,7 +1084,6 @@ const browsingContextTargetPrototype = {
     return {};
   },
 
-  // @backward-compat { version 79 }
   goForward() {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
@@ -1103,7 +1102,6 @@ const browsingContextTargetPrototype = {
     return {};
   },
 
-  // @backward-compat { version 79 }
   goBack() {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
