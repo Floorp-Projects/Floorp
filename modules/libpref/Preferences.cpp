@@ -2982,40 +2982,79 @@ class PreferencesWriter final {
   // that there are no outstanding writes left incomplete, and thus our prefs
   // on disk are in sync with what we have in memory.
   static Atomic<int> sPendingWriteCount;
+
+  // See PWRunnable::Run for details on why we need this lock.
+  static StaticMutex sWritingToFile;
 };
 
 Atomic<PrefSaveData*> PreferencesWriter::sPendingWriteData(nullptr);
 Atomic<int> PreferencesWriter::sPendingWriteCount(0);
+StaticMutex PreferencesWriter::sWritingToFile;
 
 class PWRunnable : public Runnable {
  public:
   explicit PWRunnable(nsIFile* aFile) : Runnable("PWRunnable"), mFile(aFile) {}
 
   NS_IMETHOD Run() override {
-    // If we get a nullptr on the exchange, it means that somebody
-    // else has already processed the request, and we can just return.
-    UniquePtr<PrefSaveData> prefs(
-        PreferencesWriter::sPendingWriteData.exchange(nullptr));
+    // Preference writes are handled a bit strangely, in that a "newer"
+    // write is generally regarded as always better. For this reason,
+    // sPendingWriteData can be overwritten multiple times before anyone
+    // gets around to actually using it, minimizing writes. However,
+    // once we've acquired sPendingWriteData we've reached a
+    // "point of no return" and have to complete the write.
+    //
+    // Unfortunately, this design allows the following behaviour:
+    //
+    // 1. write1 is queued up
+    // 2. thread1 acquires write1
+    // 3. write2 is queued up
+    // 4. thread2 acquires write2
+    // 5. thread1 and thread2 concurrently clobber each other
+    //
+    // To avoid this, we use this lock to ensure that only one thread
+    // at a time is trying to acquire the write, and when it does,
+    // all other threads are prevented from acquiring writes until it
+    // completes the write. New writes are still allowed to be queued
+    // up in this time.
+    //
+    // Although it's atomic, the acquire needs to be guarded by the mutex
+    // to avoid reordering of writes -- we don't want an older write to
+    // run after a newer one. To avoid this causing too much waiting, we check
+    // if sPendingWriteData is already null before acquiring the mutex. If it
+    // is, then there's definitely no work to be done (or someone is in the
+    // middle of doing it for us).
+    //
+    // Note that every time a new write is queued up, a new write task is
+    // is also queued up, so there will always be a task that can see the newest
+    // write.
+    //
+    // Ideally this lock wouldn't be necessary, and the PreferencesWriter
+    // would be used more carefully, but it's hard to untangle all that.
     nsresult rv = NS_OK;
-    if (prefs) {
-      rv = PreferencesWriter::Write(mFile, *prefs);
-
-      // Make a copy of these so we can have them in runnable lambda.
-      // nsIFile is only there so that we would never release the
-      // ref counted pointer off main thread.
-      nsresult rvCopy = rv;
-      nsCOMPtr<nsIFile> fileCopy(mFile);
-      SchedulerGroup::Dispatch(
-          TaskCategory::Other,
-          NS_NewRunnableFunction("Preferences::WriterRunnable",
-                                 [fileCopy, rvCopy] {
-                                   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-                                   if (NS_FAILED(rvCopy)) {
-                                     Preferences::HandleDirty();
-                                   }
-                                 }));
+    if (PreferencesWriter::sPendingWriteData) {
+      StaticMutexAutoLock lock(PreferencesWriter::sWritingToFile);
+      // If we get a nullptr on the exchange, it means that somebody
+      // else has already processed the request, and we can just return.
+      UniquePtr<PrefSaveData> prefs(
+          PreferencesWriter::sPendingWriteData.exchange(nullptr));
+      if (prefs) {
+        rv = PreferencesWriter::Write(mFile, *prefs);
+        // Make a copy of these so we can have them in runnable lambda.
+        // nsIFile is only there so that we would never release the
+        // ref counted pointer off main thread.
+        nsresult rvCopy = rv;
+        nsCOMPtr<nsIFile> fileCopy(mFile);
+        SchedulerGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction("Preferences::WriterRunnable",
+                                   [fileCopy, rvCopy] {
+                                     MOZ_RELEASE_ASSERT(NS_IsMainThread());
+                                     if (NS_FAILED(rvCopy)) {
+                                       Preferences::HandleDirty();
+                                     }
+                                   }));
+      }
     }
-
     // We've completed the write to the best of our abilities, whether
     // we had prefs to write or another runnable got to them first. If
     // PreferencesWriter::Write failed, this is still correct as the
