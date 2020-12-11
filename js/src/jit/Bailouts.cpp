@@ -147,11 +147,7 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
                                       bailoutInfo, /*exceptionInfo=*/nullptr);
   MOZ_ASSERT_IF(success, *bailoutInfo != nullptr);
 
-  if (success) {
-    // Update the bailout kind.
-    (*bailoutInfo)->bailoutKind =
-        mozilla::Some(BailoutKind::OnStackInvalidation);
-  } else {
+  if (!success) {
     MOZ_ASSERT(cx->isExceptionPending());
 
     // If the bailout failed, then bailout trampoline will pop the
@@ -187,6 +183,9 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
           cx->runtime())) {
     cx->jitActivation->setLastProfilingFrame(currentFramePtr);
   }
+
+  // Update the bailout kind.
+  (*bailoutInfo)->bailoutKind = mozilla::Some(BailoutKind::OnStackInvalidation);
 
   return success;
 }
