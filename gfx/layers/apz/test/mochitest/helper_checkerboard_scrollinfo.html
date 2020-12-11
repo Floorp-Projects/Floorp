@@ -53,7 +53,7 @@
  </svg>
 </body>
 <script type="application/javascript">
-function* test(testDriver) {
+async function test() {
   var scroller = document.querySelector("#scroller");
   var utils = SpecialPowers.getDOMWindowUtils(window);
   var scrollerId = utils.getViewId(scroller);
@@ -78,14 +78,14 @@ function* test(testDriver) {
   for (var y = 3; y <= scroller.scrollTopMax; y += 17) {
     dump(`Scrolling scroller to ${y}\n`);
     scroller.scrollTo(0, y);
-    yield waitForApzFlushedRepaints(testDriver);
+    await promiseApzFlushedRepaints();
     assertNotCheckerboarded(utils, scrollerId, `At y=${y}`);
   }
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
