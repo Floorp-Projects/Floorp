@@ -39,20 +39,11 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
 
   // Fetch already existing messages
   // /!\ The actor implementation requires to call startListeners(ConsoleAPI) first /!\
-  let { messages } = await webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  const { messages } = await webConsoleFront.getCachedMessages(["ConsoleAPI"]);
 
-  messages = messages.map(message => {
-    // @backward-compat { version 78 } Handling cached messages for older servers.
-    // Wrap the message into a `message` attribute, to match `consoleAPICall` behavior
-    if (message._type) {
-      return {
-        message,
-        resourceType: ResourceWatcher.TYPES.CONSOLE_MESSAGE,
-      };
-    }
+  for (const message of messages) {
     message.resourceType = ResourceWatcher.TYPES.CONSOLE_MESSAGE;
-    return message;
-  });
+  }
   onAvailable(messages);
 
   // Forward new message events
