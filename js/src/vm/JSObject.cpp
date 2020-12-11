@@ -1549,7 +1549,8 @@ bool ProxyObject::initExternalValueArrayAfterSwap(
 }
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
-void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
+void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
+                    AutoEnterOOMUnsafeRegion& oomUnsafe) {
   // Ensure swap doesn't cause a finalizer to not be run.
   MOZ_ASSERT(IsBackgroundFinalized(a->asTenured().getAllocKind()) ==
              IsBackgroundFinalized(b->asTenured().getAllocKind()));
@@ -1557,8 +1558,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
 
   // You must have entered the objects' compartment before calling this.
   MOZ_ASSERT(cx->compartment() == a->compartment());
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
 
   // Only certain types of objects are allowed to be swapped. This allows the
   // JITs to better optimize objects that can never swap.

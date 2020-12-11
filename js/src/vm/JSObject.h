@@ -31,6 +31,7 @@ namespace js {
 using PropertyDescriptorVector = JS::GCVector<JS::PropertyDescriptor>;
 class GCMarker;
 class Nursery;
+struct AutoEnterOOMUnsafeRegion;
 
 namespace gc {
 class RelocationOverlay;
@@ -421,7 +422,8 @@ class JSObject
                                   js::HandleValue receiver,
                                   JS::ObjectOpResult& result);
 
-  static void swap(JSContext* cx, JS::HandleObject a, JS::HandleObject b);
+  static void swap(JSContext* cx, JS::HandleObject a, JS::HandleObject b,
+                   js::AutoEnterOOMUnsafeRegion& oomUnsafe);
 
  private:
   void fixDictionaryShapeAfterSwap();
