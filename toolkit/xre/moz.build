@@ -38,6 +38,7 @@ EXPORTS.mozilla += [
     "AutoSQLiteLifetime.h",
     "Bootstrap.h",
     "CmdLineAndEnvUtils.h",
+    "MultiInstanceLock.h",
     "SafeMode.h",
     "UntrustedModulesData.h",
 ]
@@ -123,6 +124,11 @@ if CONFIG["MOZ_X11"]:
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     UNIFIED_SOURCES += [
         "nsAndroidStartup.cpp",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
+    UNIFIED_SOURCES += [
+        "MultiInstanceLock.cpp",
     ]
 
 UNIFIED_SOURCES += [
