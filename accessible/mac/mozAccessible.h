@@ -111,9 +111,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 // Handle a role change
 - (void)handleRoleChanged:(mozilla::a11y::role)newRole;
 
-// Get ARIA role
-- (nsStaticAtom*)ARIARole;
-
 #pragma mark - mozAccessible protocol / widget
 
 // override
@@ -210,12 +207,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 
 // override
 - (id)moxEditableAncestor;
-
-// override
-- (id)moxHighestEditableAncestor;
-
-// override
-- (id)moxFocusableAncestor;
 
 #ifndef RELEASE_OR_BETA
 // override
