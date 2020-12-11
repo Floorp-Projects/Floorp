@@ -1824,9 +1824,9 @@ void nsContainerFrame::NormalizeChildLists() {
     }
   }
 
-  // Pull up item's next-in-flow (if any) into aItems, and reparent it to our
-  // next-in-flow, unless its parent is already our next-in-flow (to avoid
-  // leaving a hole there).
+  // For each item in aItems, pull up its next-in-flow (if any), and reparent it
+  // to our next-in-flow, unless its parent is already ourselves or our
+  // next-in-flow (to avoid leaving a hole there).
   auto PullItemsNextInFlow = [this](const nsFrameList& aItems) {
     auto* firstNIF = static_cast<nsContainerFrame*>(GetNextInFlow());
     if (!firstNIF) {
@@ -1835,15 +1835,16 @@ void nsContainerFrame::NormalizeChildLists() {
     nsFrameList childNIFs;
     nsFrameList childOCNIFs;
     for (auto* child : aItems) {
-      auto* childNIF = child->GetNextInFlow();
-      if (childNIF && childNIF->GetParent() != firstNIF) {
-        auto* parent = childNIF->GetParent();
-        parent->StealFrame(childNIF);
-        ReparentFrame(childNIF, parent, firstNIF);
-        if (childNIF->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-          childOCNIFs.AppendFrame(nullptr, childNIF);
-        } else {
-          childNIFs.AppendFrame(nullptr, childNIF);
+      if (auto* childNIF = child->GetNextInFlow()) {
+        if (auto* parent = childNIF->GetParent();
+            parent != this && parent != firstNIF) {
+          parent->StealFrame(childNIF);
+          ReparentFrame(childNIF, parent, firstNIF);
+          if (childNIF->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+            childOCNIFs.AppendFrame(nullptr, childNIF);
+          } else {
+            childNIFs.AppendFrame(nullptr, childNIF);
+          }
         }
       }
     }
