@@ -135,7 +135,7 @@ class ProviderTabToSearch extends UrlbarProvider {
       queryContext.tokens.length == 1 &&
       !queryContext.searchMode &&
       UrlbarPrefs.get("update2") &&
-      UrlbarPrefs.get("update2.tabToComplete")
+      UrlbarPrefs.get("suggest.engines")
     );
   }
 

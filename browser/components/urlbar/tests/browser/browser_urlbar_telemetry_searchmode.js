@@ -459,7 +459,6 @@ add_task(async function test_touchbar() {
 add_task(async function test_tabtosearch() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.update2.tabToComplete", true],
       // Do not show the onboarding result for this subtest.
       ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
     ],
@@ -519,10 +518,7 @@ add_task(async function test_tabtosearch() {
 // Enters search mode by selecting a tab-to-search onboarding result.
 add_task(async function test_tabtosearch_onboard() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2.tabToComplete", true],
-      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 3],
-    ],
+    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 3]],
   });
   await PlacesTestUtils.addVisits([`http://${engineDomain}/`]);
 
