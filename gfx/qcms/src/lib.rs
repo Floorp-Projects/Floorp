@@ -41,8 +41,8 @@ fn double_to_s15Fixed16Number(mut v: f64) -> s15Fixed16Number {
 }
 
 pub mod c_bindings;
-pub mod chain;
-pub mod gtest;
+mod chain;
+mod gtest;
 pub mod iccread;
 pub mod matrix;
 pub mod transform;
@@ -52,4 +52,4 @@ pub mod transform_avx;
 pub mod transform_neon;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 pub mod transform_sse2;
-pub mod transform_util;
+mod transform_util;

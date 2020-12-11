@@ -74,7 +74,7 @@ pub const XYZ_SIGNATURE: u32 = 0x58595A20;
 pub const LAB_SIGNATURE: u32 = 0x4C616220;
 
 #[repr(C)]
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct qcms_profile {
     pub(crate) class_type: u32,
     pub(crate) color_space: u32,
@@ -97,11 +97,11 @@ pub struct qcms_profile {
     pub(crate) output_table_b: Option<Arc<precache_output>>,
 }
 
-#[repr(C)]
-#[derive(Clone, Default)]
-pub struct lutmABType {
+#[derive(Default)]
+pub(crate) struct lutmABType {
     pub num_in_channels: u8,
     pub num_out_channels: u8,
+    // 16 is the upperbound, actual is 0..num_in_channels.
     pub num_grid_points: [u8; 16],
     pub e00: s15Fixed16Number,
     pub e01: s15Fixed16Number,
@@ -115,6 +115,7 @@ pub struct lutmABType {
     pub e21: s15Fixed16Number,
     pub e22: s15Fixed16Number,
     pub e23: s15Fixed16Number,
+    // reversed elements (for mBA)
     pub reversed: bool,
     pub clut_table: Option<Vec<f32>>,
     pub a_curves: [Option<Box<curveType>>; 10],
@@ -122,17 +123,15 @@ pub struct lutmABType {
     pub m_curves: [Option<Box<curveType>>; 10],
 }
 
-#[repr(C)]
-#[derive(Clone)]
-pub enum curveType {
+pub(crate) enum curveType {
     Curve(Vec<uInt16Number>),
     Parametric(Vec<f32>),
 }
-pub type uInt16Number = u16;
+type uInt16Number = u16;
 
-#[repr(C)]
-#[derive(Clone)]
-pub struct lutType {
+/* should lut8Type and lut16Type be different types? */
+pub(crate) struct lutType {
+    // used by lut8Type/lut16Type (mft2) only
     pub num_input_channels: u8,
     pub num_output_channels: u8,
     pub num_clut_grid_points: u8,
@@ -177,9 +176,7 @@ pub struct qcms_CIE_xyYTRIPLE {
     pub blue: qcms_CIE_xyY,
 }
 
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct tag {
+struct tag {
     pub signature: u32,
     pub offset: u32,
     pub size: u32,
@@ -195,10 +192,7 @@ type tag_index = [tag];
 
 /* a wrapper around the memory that we are going to parse
  * into a qcms_profile */
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct mem_source<'a> {
+struct mem_source<'a> {
     pub buf: &'a [u8],
     pub valid: bool,
     pub invalid_reason: Option<&'static str>,
