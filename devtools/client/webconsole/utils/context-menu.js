@@ -144,14 +144,24 @@ function createContextMenu(event, message, webConsoleWrapper) {
   );
 
   // Open DOM node in the Inspector panel.
-  if (isConnectedElement) {
+  const contentDomReferenceEl = target.closest(
+    "[data-link-content-dom-reference]"
+  );
+  if (isConnectedElement && contentDomReferenceEl) {
+    const contentDomReference = contentDomReferenceEl.getAttribute(
+      "data-link-content-dom-reference"
+    );
+
     menu.append(
       new MenuItem({
         id: "console-menu-open-node",
         label: l10n.getStr("webconsole.menu.openNodeInInspector.label"),
         accesskey: l10n.getStr("webconsole.menu.openNodeInInspector.accesskey"),
         disabled: false,
-        click: () => dispatch(actions.openNodeInInspector(actor)),
+        click: () =>
+          dispatch(
+            actions.openNodeInInspector(JSON.parse(contentDomReference))
+          ),
       })
     );
   }
