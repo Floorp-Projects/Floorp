@@ -1192,9 +1192,9 @@ checksum = "09c3753c3db574d215cba4ea76018483895d7bff25a31b49ba45db21c48e50ab"
 
 [[package]]
 name = "dtoa-short"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "068d4026697c1a18f0b0bb8cfcad1b0c151b90d8edb9bf4c235ad68128920d1d"
+checksum = "bde03329ae10e79ede66c9ce4dc930aa8599043b0743008548680f25b91502d6"
 dependencies = [
  "dtoa",
 ]
