@@ -250,7 +250,7 @@ class CCGCScheduler {
         std::max({delaySliceBudget, laterSliceBudget, baseBudget}));
   }
 
-  bool ShouldFireForgetSkippable(uint32_t aSuspected) const {
+  bool ShouldForgetSkippable(uint32_t aSuspected) const {
     // Only do a forget skippable if there are more than a few new objects
     // or we're doing the initial forget skippables.
     return ((mPreviousSuspectedCount + 100) <= aSuspected) ||
@@ -365,6 +365,29 @@ class CCGCScheduler {
   void DeactivateCCRunner() { mCCRunnerState = CCRunnerState::Inactive; }
 
   CCRunnerStep GetNextCCRunnerAction(TimeStamp aDeadline, uint32_t aSuspected) {
+    struct StateDescriptor {
+      // When in this state, should we first check to see if we still have
+      // enough reason to CC?
+      bool mCanAbortCC;
+
+      // If we do decide to abort the CC, should we still try to forget
+      // skippables one more time?
+      bool mTryFinalForgetSkippable;
+    };
+
+    constexpr StateDescriptor stateDescriptors[] = {
+        /* clang-format off */
+      [int(CCRunnerState::Inactive)] = {false, false},
+      [int(CCRunnerState::ReducePurple)] = {false, false},
+      [int(CCRunnerState::CleanupChildless)] = {true, true},
+      [int(CCRunnerState::CleanupContentUnbinder)] = {true, false},
+      [int(CCRunnerState::CleanupDeferred)] = {false, false},
+      [int(CCRunnerState::StartCycleCollection)] = {false, false},
+      [int(CCRunnerState::CycleCollecting)] = {false, false}
+        /* clang-format on */
+    };
+    const StateDescriptor& desc = stateDescriptors[int(mCCRunnerState)];
+
     if (mDidShutdown) {
       return {CCRunnerAction::StopRunning, Yield};
     }
@@ -410,30 +433,21 @@ class CCGCScheduler {
     // For states that aren't just continuations of previous states, check
     // whether a CC is still needed (after doing various things to reduce the
     // purple buffer).
-    switch (mCCRunnerState) {
-      case CCRunnerState::ReducePurple:
-      case CCRunnerState::CleanupDeferred:
-      case CCRunnerState::StartCycleCollection:
-      case CCRunnerState::CycleCollecting:
-        break;
+    if (desc.mCanAbortCC && !IsCCNeeded(aSuspected, now)) {
+      // If we don't pass the threshold for wanting to cycle collect, stop now
+      // (after possibly doing a final ForgetSkippable).
+      mCCRunnerState = CCRunnerState::Inactive;
+      NoteForgetSkippableOnlyCycle();
 
-      default:
-        // If we don't pass the threshold for wanting to cycle collect, stop
-        // now (after possibly doing a final ForgetSkippable).
-        if (!IsCCNeeded(aSuspected, now)) {
-          mCCRunnerState = CCRunnerState::Inactive;
-          NoteForgetSkippableOnlyCycle();
+      // Preserve the previous code's idea of when to check whether a
+      // ForgetSkippable should be fired.
+      if (desc.mTryFinalForgetSkippable && ShouldForgetSkippable(aSuspected)) {
+        // The Inactive state will make us StopRunning after this action is
+        // performed (see conditional at top of function).
+        return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
+      }
 
-          // Preserve the previous code's idea of when to check whether a
-          // ForgetSkippable should be fired.
-          if (mCCRunnerState != CCRunnerState::CleanupContentUnbinder &&
-              ShouldFireForgetSkippable(aSuspected)) {
-            // The Inactive state will make us StopRunning after this action is
-            // performed (see conditional at top of function).
-            return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
-          }
-          return {CCRunnerAction::StopRunning, Yield};
-        }
+      return {CCRunnerAction::StopRunning, Yield};
     }
 
     switch (mCCRunnerState) {
@@ -447,7 +461,7 @@ class CCGCScheduler {
           mCCRunnerState = CCRunnerState::CleanupChildless;
         }
 
-        if (ShouldFireForgetSkippable(aSuspected)) {
+        if (ShouldForgetSkippable(aSuspected)) {
           return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
         }
 
@@ -462,7 +476,7 @@ class CCGCScheduler {
 
         // Continue on to CleanupChildless, but only after checking IsCCNeeded
         // again.
-        return GetNextCCRunnerAction(aDeadline, aSuspected);
+        return {CCRunnerAction::None, Continue};
 
       // CleanupChildless: do a stronger ForgetSkippable that removes nodes
       // with no children in the cycle collector graph. This state is split
