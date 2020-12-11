@@ -25,9 +25,6 @@
 - (NSNumber*)moxInsertionPointLineNumber;
 
 // override
-- (NSString*)moxRole;
-
-// override
 - (NSString*)moxSubrole;
 
 // override

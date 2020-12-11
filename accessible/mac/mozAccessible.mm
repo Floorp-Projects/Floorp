@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "mozAccessible.h"
-#include "MOXAccessibleBase.h"
 
 #import "MacUtils.h"
 #import "mozView.h"
@@ -40,6 +39,8 @@ using namespace mozilla::a11y;
 
 @interface mozAccessible ()
 - (BOOL)providesLabelNotTitle;
+
+- (nsStaticAtom*)ARIARole;
 
 - (void)maybePostLiveRegionChanged;
 @end
@@ -828,35 +829,6 @@ struct RoleDescrComparator {
   }
 
   return nil;
-}
-
-- (id)moxHighestEditableAncestor {
-  MOXAccessibleBase* highestEditableAncestor = [self moxEditableAncestor];
-  while (highestEditableAncestor) {
-    MOXAccessibleBase* ancestorParent = reinterpret_cast<MOXAccessibleBase*>(
-        [highestEditableAncestor moxUnignoredParent]);
-    if (![ancestorParent conformsToProtocol:@protocol(MOXAccessible)]) {
-      break;
-    }
-
-    MOXAccessibleBase* higherAncestor =
-        static_cast<MOXAccessibleBase*>([ancestorParent moxEditableAncestor]);
-
-    if (!higherAncestor) {
-      break;
-    }
-
-    highestEditableAncestor = higherAncestor;
-  }
-
-  return highestEditableAncestor;
-}
-
-- (id)moxFocusableAncestor {
-  // XXX: Checking focusable state up the chain can be expensive. For now,
-  // we can just return AXEditableAncestor since the main use case for this
-  // is rich text editing with links.
-  return [self moxEditableAncestor];
 }
 
 #ifndef RELEASE_OR_BETA
