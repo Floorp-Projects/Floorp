@@ -1163,6 +1163,12 @@ static void FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
   }
 }
 
+MOZ_ALWAYS_INLINE
+static TimeDuration TimeBetween(TimeStamp aStart, TimeStamp aEnd) {
+  MOZ_ASSERT(aEnd >= aStart);
+  return aEnd - aStart;
+}
+
 static TimeDuration TimeUntilNow(TimeStamp start) {
   if (start.IsNull()) {
     return TimeDuration();
@@ -1616,17 +1622,13 @@ void ShrinkingGCTimerFired(nsITimer* aTimer, void* aClosure) {
 static bool CCRunnerFired(TimeStamp aDeadline) {
   bool didDoWork = false;
 
-  using CCRunnerAction = CCGCScheduler::CCRunnerAction;
-  using CCRunnerStep = CCGCScheduler::CCRunnerStep;
-
   // The CC/GC scheduler (sScheduler) decides what action(s) to take during
   // this invocation of the CC runner.
   //
   // This may be zero, one, or multiple actions. (Zero is when CC is blocked by
   // incremental GC, or when the scheduler determined that a CC is no longer
-  // needed.) Loop until an action is requested that finishes this invocation,
-  // or the scheduler decides that this invocation should finish by returning
-  // `Yield`.
+  // needed.) Loop until the scheduler finishes this invocation by returning
+  // `Yield` in step.mYield.
   CCRunnerStep step;
   do {
     uint32_t suspected = nsCycleCollector_suspectedCount();
@@ -1665,7 +1667,7 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
     if (step.mAction != CCRunnerAction::None) {
       didDoWork = true;
     }
-  } while (step.mYield == CCGCScheduler::CCRunnerYield::Continue);
+  } while (step.mYield == CCRunnerYield::Continue);
 
   return didDoWork;
 }
