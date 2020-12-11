@@ -25,6 +25,12 @@ from marionette_harness import (
 )
 
 
+def decodebytes(s):
+    if six.PY3:
+        return base64.decodebytes(six.ensure_binary(s))
+    return base64.decodestring(s)
+
+
 def inline(doc, mime="text/html;charset=utf-8"):
     return "data:{0},{1}".format(mime, quote(doc))
 
@@ -85,7 +91,7 @@ class ScreenCaptureTestCase(MarionetteTestCase):
         """Test that screenshot is a Base64 encoded PNG file."""
         if six.PY3 and not isinstance(screenshot, bytes):
             screenshot = bytes(screenshot, encoding="utf-8")
-        image = base64.decodestring(screenshot)
+        image = decodebytes(screenshot)
         self.assertEqual(imghdr.what("", image), "png")
 
     def assert_formats(self, element=None):
@@ -127,7 +133,7 @@ class ScreenCaptureTestCase(MarionetteTestCase):
         if six.PY3 and not isinstance(screenshot, bytes):
             screenshot = bytes(screenshot, encoding="utf-8")
         self.assert_png(screenshot)
-        image = base64.decodestring(screenshot)
+        image = decodebytes(screenshot)
         width, height = struct.unpack(">LL", image[16:24])
         return int(width), int(height)
 
