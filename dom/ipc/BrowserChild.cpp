@@ -2494,41 +2494,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvDestroy() {
   return IPC_OK();
 }
 
-void BrowserChild::AddPendingDocShellBlocker() { mPendingDocShellBlockers++; }
-
-void BrowserChild::RemovePendingDocShellBlocker() {
-  mPendingDocShellBlockers--;
-  if (!mPendingDocShellBlockers && mPendingDocShellReceivedMessage) {
-    mPendingDocShellReceivedMessage = false;
-    InternalSetDocShellIsActive(mPendingDocShellIsActive);
-  }
-  if (!mPendingDocShellBlockers && mPendingRenderLayersReceivedMessage) {
-    mPendingRenderLayersReceivedMessage = false;
-    RecvRenderLayers(mPendingRenderLayers, mPendingLayersObserverEpoch);
-  }
-}
-
-void BrowserChild::InternalSetDocShellIsActive(bool aIsActive) {
-  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
-    docShell->SetIsActive(aIsActive);
-  }
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvSetDocShellIsActive(
-    const bool& aIsActive) {
-  // If we're currently waiting for window opening to complete, we need to hold
-  // off on setting the docshell active. We queue up the values we're receiving
-  // in the mWindowOpenDocShellActiveStatus.
-  if (mPendingDocShellBlockers > 0) {
-    mPendingDocShellReceivedMessage = true;
-    mPendingDocShellIsActive = aIsActive;
-    return IPC_OK();
-  }
-
-  InternalSetDocShellIsActive(aIsActive);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
     const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch) {
   if (mPendingDocShellBlockers > 0) {
@@ -2907,26 +2872,18 @@ void BrowserChild::MakeVisible() {
     return;
   }
 
-  // For top level stuff, the browser / tab-switcher is responsible of fixing
-  // the docshell state up explicitly via SetDocShellIsActive.
+  // The browser / tab-switcher is responsible of fixing the browsingContext
+  // state up explicitly via SetDocShellIsActive, which propagates to children
+  // automatically.
   //
   // We need it not to be observable, as this used via RecvRenderLayers and co.,
   // for stuff like async tab warming.
   //
   // We don't want to go through the docshell because we don't want to change
   // the visibility state of the document, which has side effects like firing
-  // events to content and unblocking media playback.
-  //
-  // FIXME(emilio): This feels a bit sketchy. Ideally we'd be able to just not
-  // update visibility of stuff in the tab warming case (we just want to paint
-  // once so that stuff is there already, really...), and use the docshell here
-  // all the time, but that makes some of the devtools tests fail (??).
-  if (mIsTopLevel) {
-    if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
-      presShell->SetIsActive(true);
-    }
-  } else {
-    docShell->SetIsActive(true);
+  // events to content, unblocking media playback, unthrottling timeouts...
+  if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
+    presShell->SetIsActive(true);
   }
 }
 
@@ -2958,8 +2915,16 @@ void BrowserChild::MakeHidden() {
                                                       nullptr);
         rootPresContext->ApplyPluginGeometryUpdates();
       }
+      presShell->SetIsActive(false);
     }
-    docShell->SetIsActive(false);
+  }
+
+  // FIXME(emilio): The lack of parallelism between this and MakeVisible is a
+  // bit suspect, but I guess we don't always want the front-end to manage the
+  // tab visibility.
+  if (mIsTopLevel && mBrowsingContext && mBrowsingContext->IsActive()) {
+    Unused << mBrowsingContext->SetExplicitActive(
+        dom::ExplicitActiveStatus::None);
   }
 
   if (mPuppetWidget) {

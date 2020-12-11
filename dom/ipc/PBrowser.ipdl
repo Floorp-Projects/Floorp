@@ -913,16 +913,6 @@ child:
     async Destroy();
 
     /**
-     * Update the child side docShell active (resource use) state.
-     *
-     * @param aIsActive
-     *        Whether to activate or deactivate the docshell.
-     * @param aPreserveLayers
-     *        Whether layer trees should be preserved for inactive docshells.
-     */
-    async SetDocShellIsActive(bool aIsActive);
-
-    /**
      * If aEnabled is true, tells the child to paint and upload layers to
      * the compositor. If aEnabled is false, the child stops painting and
      * clears the layers from the compositor.

@@ -63,8 +63,8 @@ add_task(async function() {
     Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
     for (var i = 0; i < content.frames.length; i++) {
       info("step 3, frame " + i + " info: " + content.frames[i].location);
-      let docShell = content.frames[i].docShell;
-      Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
+      let bc = content.frames[i].browsingContext;
+      Assert.ok(!bc.isActive, `Tab2 iframe ${i} should be inactive`);
     }
   });
 
@@ -81,7 +81,8 @@ add_task(async function() {
     ) {
       function isActive(aWindow) {
         var docshell = aWindow.docShell;
-        return docshell.isActive;
+        info(`checking ${docshell.browsingContext.id}`);
+        return docshell.browsingContext.isActive;
       }
 
       let active = expected ? "active" : "inactive";
@@ -157,8 +158,8 @@ add_task(async function() {
 
   await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
     for (var i = 0; i < content.frames.length; i++) {
-      let docShell = content.frames[i].docShell;
-      Assert.ok(docShell.isActive, `Tab2 iframe ${i} should be active`);
+      let bc = content.frames[i].browsingContext;
+      Assert.ok(bc.isActive, `Tab2 iframe ${i} should be active`);
     }
   });
 
@@ -184,7 +185,8 @@ add_task(async function() {
   await SpecialPowers.spawn(ctx.tab1Browser, [], async function() {
     function isActive(aWindow) {
       var docshell = aWindow.docShell;
-      return docshell.isActive;
+      info(`checking ${docshell.browsingContext.id}`);
+      return docshell.browsingContext.isActive;
     }
 
     Assert.ok(isActive(content.frames[0]), "Tab1 iframe 0 should be active");
@@ -199,8 +201,8 @@ add_task(async function() {
 
   await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
     for (var i = 0; i < content.frames.length; i++) {
-      let docShell = content.frames[i].docShell;
-      Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
+      let bc = content.frames[i].browsingContext;
+      Assert.ok(!bc.isActive, `Tab2 iframe ${i} should be inactive`);
     }
   });
 
@@ -222,7 +224,8 @@ add_task(async function() {
     }) {
       function isActive(aWindow) {
         var docshell = aWindow.docShell;
-        return docshell.isActive;
+        info(`checking ${docshell.browsingContext.id}`);
+        return docshell.browsingContext.isActive;
       }
 
       let activestr = active ? "active" : "inactive";

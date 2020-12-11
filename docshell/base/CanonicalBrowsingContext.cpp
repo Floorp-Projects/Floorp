@@ -1319,6 +1319,13 @@ CanonicalBrowsingContext::PendingRemotenessChange::~PendingRemotenessChange() {
              "should've already been Cancel() or Complete()-ed");
 }
 
+BrowserParent* CanonicalBrowsingContext::GetBrowserParent() const {
+  if (auto* wg = GetCurrentWindowGlobal()) {
+    return wg->GetBrowserParent();
+  }
+  return nullptr;
+}
+
 RefPtr<CanonicalBrowsingContext::RemotenessPromise>
 CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
                                            uint64_t aPendingSwitchId,

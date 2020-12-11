@@ -8,6 +8,17 @@
 
 #include "ipc/IPCMessageUtils.h"
 
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/DocAccessibleParent.h"
+#  include "mozilla/a11y/Platform.h"
+#  include "mozilla/a11y/ProxyAccessibleBase.h"
+#  include "nsAccessibilityService.h"
+#  if defined(XP_WIN)
+#    include "mozilla/a11y/AccessibleWrap.h"
+#    include "mozilla/a11y/Compatibility.h"
+#    include "mozilla/a11y/nsWinUtils.h"
+#  endif
+#endif
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
@@ -85,6 +96,13 @@ struct ParamTraits<mozilla::dom::DisplayMode>
     : public ContiguousEnumSerializer<mozilla::dom::DisplayMode,
                                       mozilla::dom::DisplayMode::Browser,
                                       mozilla::dom::DisplayMode::EndGuard_> {};
+
+template <>
+struct ParamTraits<mozilla::dom::ExplicitActiveStatus>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::ExplicitActiveStatus,
+          mozilla::dom::ExplicitActiveStatus::None,
+          mozilla::dom::ExplicitActiveStatus::EndGuard_> {};
 
 // Allow serialization and deserialization of TouchEventsOverride over IPC
 template <>
@@ -327,7 +345,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   }
 
   nsContentUtils::GenerateUUIDInPlace(fields.mHistoryID);
-  fields.mIsActive = true;
+  fields.mExplicitActive =
+      parentBC ? ExplicitActiveStatus::None : ExplicitActiveStatus::Active;
 
   fields.mFullZoom = parentBC ? parentBC->FullZoom() : 1.0f;
   fields.mTextZoom = parentBC ? parentBC->TextZoom() : 1.0f;
@@ -541,6 +560,21 @@ void BrowsingContext::CleanUpDanglingRemoteOuterWindowProxies(
 
   CompartmentRemoteProxyTransplantCallback cb(this);
   js::RemapRemoteWindowProxies(aCx, &cb, aOuter);
+}
+
+bool BrowsingContext::IsActive() const {
+  const BrowsingContext* current = this;
+  do {
+    auto explicit_ = current->GetExplicitActive();
+    if (explicit_ != ExplicitActiveStatus::None) {
+      return explicit_ == ExplicitActiveStatus::Active;
+    }
+    if (current->IsCached()) {
+      return false;
+    }
+  } while ((current = current->GetParent()));
+
+  return false;
 }
 
 bool BrowsingContext::GetIsActiveBrowserWindow() {
@@ -816,11 +850,11 @@ void BrowsingContext::PrepareForProcessChange() {
   MOZ_ASSERT(!mWindowProxy);
 }
 
-bool BrowsingContext::IsCached() {
+bool BrowsingContext::IsCached() const {
   return mParentWindow && mParentWindow->IsCached();
 }
 
-bool BrowsingContext::IsTargetable() {
+bool BrowsingContext::IsTargetable() const {
   return !GetClosed() && !mIsDiscarded && !IsCached();
 }
 
@@ -1811,7 +1845,7 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
 
   const auto& sourceBC = aLoadState->SourceBrowsingContext();
   bool isActive =
-      sourceBC && sourceBC->GetIsActive() && !GetIsActive() &&
+      sourceBC && sourceBC->IsActive() && !IsActive() &&
       !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
   if (mDocShell) {
     nsresult rv = nsDocShell::Cast(mDocShell)->InternalLoad(aLoadState);
@@ -2194,11 +2228,49 @@ void BrowsingContext::DidSet(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>) {
              "browsing context");
 }
 
-void BrowsingContext::DidSet(FieldIndex<IDX_IsActive>, bool aOldValue) {
-  if (!IsTop() || aOldValue == GetIsActive()) {
+void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
+                             ExplicitActiveStatus aOldValue) {
+  const bool isActive = IsActive();
+  const bool wasActive = [&] {
+    if (aOldValue != ExplicitActiveStatus::None) {
+      return aOldValue == ExplicitActiveStatus::Active;
+    }
+    return GetParent() && GetParent()->IsActive();
+  }();
+
+  if (isActive == wasActive) {
     return;
   }
-  Group()->UpdateToplevelsSuspendedIfNeeded();
+
+  if (IsTop()) {
+    Group()->UpdateToplevelsSuspendedIfNeeded();
+
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+    if (XRE_IsParentProcess() && a11y::Compatibility::IsDolphin()) {
+      // update active accessible documents on windows
+      if (BrowserParent* bp = Canonical()->GetBrowserParent()) {
+        if (a11y::DocAccessibleParent* tabDoc =
+                bp->GetTopLevelDocAccessible()) {
+          HWND window = tabDoc->GetEmulatedWindowHandle();
+          MOZ_ASSERT(window);
+          if (window) {
+            if (isActive) {
+              a11y::nsWinUtils::ShowNativeWindow(window);
+            } else {
+              a11y::nsWinUtils::HideNativeWindow(window);
+            }
+          }
+        }
+      }
+    }
+#endif
+  }
+
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    if (nsCOMPtr<nsIDocShell> ds = aContext->GetDocShell()) {
+      nsDocShell::Cast(ds)->ActivenessMaybeChanged();
+    }
+  });
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_HasMainMediaController>,
@@ -2222,7 +2294,7 @@ bool BrowsingContext::InactiveForSuspend() const {
   // media controller. Having a main controller in context means it might be
   // playing media, or waiting media keys to control media (could be not playing
   // anything currently)
-  return !GetIsActive() && !GetHasMainMediaController();
+  return !IsActive() && !GetHasMainMediaController();
 }
 
 bool BrowsingContext::CanSet(

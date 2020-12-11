@@ -69,7 +69,7 @@ add_task(async function testSeparateWindowToolboxInactiveTab() {
   await SpecialPowers.spawn(firstTab.linkedBrowser, [], async () => {
     // For some reason, there is no blur event fired on the document
     await ContentTaskUtils.waitForCondition(
-      () => !docShell.isActive && !content.document.hasFocus(),
+      () => !content.browsingContext.isActive && !content.document.hasFocus(),
       "Waiting for first tab to become inactive"
     );
     content.onFocus = new Promise(resolve => {

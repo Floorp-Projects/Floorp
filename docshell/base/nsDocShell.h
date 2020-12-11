@@ -1052,6 +1052,8 @@ class nsDocShell final : public nsDocLoader,
   // (directly or over IPC).
   void MoveLoadingToActiveEntry();
 
+  void ActivenessMaybeChanged();
+
  private:  // data members
   nsString mTitle;
   nsCString mOriginalUriString;

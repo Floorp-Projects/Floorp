@@ -25,9 +25,7 @@ function pressButton() {
 }
 
 function setFrameVisible(f, visible) {
-  var Ci = SpecialPowers.Ci;
-  var docshell = SpecialPowers.wrap(f.contentWindow).docShell;
-  docshell.isActive = visible;
+  SpecialPowers.wrap(f.contentWindow).browsingContext.isActive = visible;
 }
 
 var frames_loaded = 0;

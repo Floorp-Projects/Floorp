@@ -136,7 +136,8 @@ nsAppShellService::CreateHiddenWindow() {
   nsCOMPtr<nsIDocShell> docShell;
   newWindow->GetDocShell(getter_AddRefs(docShell));
   if (docShell) {
-    docShell->SetIsActive(false);
+    Unused << docShell->GetBrowsingContext()->SetExplicitActive(
+        dom::ExplicitActiveStatus::Inactive);
   }
 
   mHiddenWindow.swap(newWindow);

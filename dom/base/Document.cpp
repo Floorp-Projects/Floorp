@@ -6556,6 +6556,12 @@ bool Document::ShouldThrottleFrameRequests() const {
     return false;  // Can't do anything smarter.
   }
 
+  if (!mPresShell->IsActive()) {
+    // The pres shell is not active (we're an invisible OOP iframe or such), so
+    // throttle.
+    return true;
+  }
+
   nsIFrame* frame = mPresShell->GetRootFrame();
   if (!frame) {
     return false;  // Can't do anything smarter.
@@ -14122,14 +14128,12 @@ nsTArray<Element*> Document::GetTopLayer() const {
 
 // Returns true if aDoc is in the focused tab in the active window.
 bool IsInActiveTab(Document* aDoc) {
-  nsCOMPtr<nsIDocShell> docshell = aDoc->GetDocShell();
-  if (!docshell) {
+  BrowsingContext* bc = aDoc->GetBrowsingContext();
+  if (!bc) {
     return false;
   }
 
-  bool isActive = false;
-  docshell->GetIsActive(&isActive);
-  if (!isActive) {
+  if (!bc->IsActive()) {
     return false;
   }
 
@@ -14141,7 +14145,10 @@ bool IsInActiveTab(Document* aDoc) {
   if (XRE_IsParentProcess()) {
     // Keep dom/tests/mochitest/chrome/test_MozDomFullscreen_event.xhtml happy
     // by retaining the old code path for the parent process.
-
+    nsIDocShell* docshell = aDoc->GetDocShell();
+    if (!docshell) {
+      return false;
+    }
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
     docshell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
     if (!rootItem) {
@@ -14161,17 +14168,7 @@ bool IsInActiveTab(Document* aDoc) {
     return activeWindow == rootWin;
   }
 
-  BrowsingContext* bc = aDoc->GetBrowsingContext();
-  if (!bc) {
-    return false;
-  }
-
-  BrowsingContext* activeBrowsingContext = fm->GetActiveBrowsingContext();
-  if (!activeBrowsingContext) {
-    return false;
-  }
-
-  return activeBrowsingContext == bc->Top();
+  return fm->GetActiveBrowsingContext() == bc->Top();
 }
 
 void Document::RemoteFrameFullscreenChanged(Element* aFrameElement) {
@@ -14622,7 +14619,7 @@ static const char* GetPointerLockError(Element* aElement, Element* aCurrentLock,
   BrowsingContext* bc = ownerDoc->GetBrowsingContext();
   BrowsingContext* topBC = bc ? bc->Top() : nullptr;
   WindowContext* topWC = ownerDoc->GetTopLevelWindowContext();
-  if (!topBC || !topBC->GetIsActive() || !topWC ||
+  if (!topBC || !topBC->IsActive() || !topWC ||
       topWC != topBC->GetCurrentWindowContext()) {
     return "PointerLockDeniedHidden";
   }

@@ -120,7 +120,6 @@ BrowserElementChild.prototype = {
 
     let mmCalls = {
       "unblock-modal-prompt": this._recvStopWaiting,
-      "owner-visibility-change": this._recvOwnerVisibilityChange,
     };
 
     if (message.data.msg_name in mmCalls) {
@@ -283,18 +282,6 @@ BrowserElementChild.prototype = {
     debug("recvStopWaiting " + win);
     win.modalReturnValue = returnValue;
     win.modalDepth--;
-  },
-
-  /**
-   * Called when the window which contains this iframe becomes hidden or
-   * visible.
-   */
-  _recvOwnerVisibilityChange(data) {
-    debug("Received ownerVisibilityChange: (" + data.json.visible + ")");
-    var visible = data.json.visible;
-    if (docShell && docShell.isActive !== visible) {
-      docShell.isActive = visible;
-    }
   },
 };
 

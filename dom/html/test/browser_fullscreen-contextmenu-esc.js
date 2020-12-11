@@ -15,7 +15,7 @@ const kPage = "http://example.org/browser/dom/html/test/dummy_page.html";
 function waitForDocActivated(aBrowser) {
   return SpecialPowers.spawn(aBrowser, [], () => {
     return ContentTaskUtils.waitForCondition(
-      () => docShell.isActive && content.document.hasFocus()
+      () => content.browsingContext.isActive && content.document.hasFocus()
     );
   });
 }
@@ -38,7 +38,7 @@ add_task(async function() {
   // the fullscreen request won't be denied.
   await SpecialPowers.spawn(browser, [], () => {
     return ContentTaskUtils.waitForCondition(
-      () => docShell.isActive && content.document.hasFocus()
+      () => content.browsingContext.isActive && content.document.hasFocus()
     );
   });
 

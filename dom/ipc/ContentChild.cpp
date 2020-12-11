@@ -1147,15 +1147,6 @@ nsresult ContentChild::ProvideWindowCommon(
   // we're going to need to return from this function, So we spin a nested event
   // loop until they get back to us.
 
-  // Prevent the docshell from becoming active while the nested event loop is
-  // spinning.
-  newChild->AddPendingDocShellBlocker();
-  auto removePendingDocShellBlocker = MakeScopeExit([&] {
-    if (newChild) {
-      newChild->RemovePendingDocShellBlocker();
-    }
-  });
-
   {
     // Suppress event handling for all contexts in our BrowsingContextGroup so
     // that event handlers cannot target our new window while it's still being

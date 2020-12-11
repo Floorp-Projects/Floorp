@@ -2132,11 +2132,11 @@ void nsCocoaWindow::PauseCompositor() {
   if (!presContext) {
     return;
   }
-  nsDocShell* docShell = presContext->GetDocShell();
-  if (!docShell) {
+  BrowsingContext* bc = presContext->Document()->GetBrowsingContext();
+  if (!bc) {
     return;
   }
-  docShell->SetIsActive(false);
+  Unused << bc->SetExplicitActive(ExplicitActiveStatus::Inactive);
 }
 
 void nsCocoaWindow::ResumeCompositor() {
@@ -2165,11 +2165,11 @@ void nsCocoaWindow::ResumeCompositor() {
   if (!presContext) {
     return;
   }
-  nsDocShell* docShell = presContext->GetDocShell();
-  if (!docShell) {
+  BrowsingContext* bc = presContext->Document()->GetBrowsingContext();
+  if (!bc) {
     return;
   }
-  docShell->SetIsActive(true);
+  Unused << bc->SetExplicitActive(ExplicitActiveStatus::Active);
 }
 
 void nsCocoaWindow::SetMenuBar(nsMenuBarX* aMenuBar) {
