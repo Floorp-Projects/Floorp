@@ -7,9 +7,10 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_D3D11_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_D3D11_H
 
-#include "mozilla/webrender/RenderCompositor.h"
+#include "mozilla/layers/ScreenshotGrabber.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/CompositorD3D11.h"
+#include "mozilla/webrender/RenderCompositor.h"
 
 namespace mozilla {
 
@@ -87,6 +88,10 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
                      const wr::ImageFormat& aReadbackFormat,
                      const Range<uint8_t>& aReadbackBuffer,
                      bool* aNeedsYFlip) override;
+  void MaybeRequestAllowFrameRecording(bool aWillRecord) override;
+  bool MaybeRecordFrame(layers::CompositionRecorder& aRecorder) override;
+  bool MaybeGrabScreenshot(const gfx::IntSize& aWindowSize) override;
+  bool MaybeProcessScreenshotQueue() override;
 
   // TODO: Screenshots etc
 
@@ -155,6 +160,8 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   };
   nsTArray<FrameSurface> mFrameSurfaces;
   bool mInFrame = false;
+
+  layers::ScreenshotGrabber mProfilerScreenshotGrabber;
 };
 
 static inline bool operator==(const RenderCompositorD3D11SWGL::TileKey& a0,

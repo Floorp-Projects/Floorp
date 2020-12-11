@@ -17,39 +17,10 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "RenderCompositorRecordedFrame.h"
 
 namespace mozilla {
 namespace wr {
-
-class RenderCompositorRecordedFrame final : public layers::RecordedFrame {
- public:
-  RenderCompositorRecordedFrame(
-      const TimeStamp& aTimeStamp,
-      RefPtr<layers::profiler_screenshots::AsyncReadbackBuffer>&& aBuffer)
-      : RecordedFrame(aTimeStamp), mBuffer(aBuffer) {}
-
-  virtual already_AddRefed<gfx::DataSourceSurface> GetSourceSurface() override {
-    if (mSurface) {
-      return do_AddRef(mSurface);
-    }
-
-    gfx::IntSize size = mBuffer->Size();
-    mSurface = gfx::Factory::CreateDataSourceSurface(
-        size, gfx::SurfaceFormat::B8G8R8A8,
-        /* aZero = */ false);
-
-    if (!mBuffer->MapAndCopyInto(mSurface, size)) {
-      mSurface = nullptr;
-      return nullptr;
-    }
-
-    return do_AddRef(mSurface);
-  }
-
- private:
-  RefPtr<layers::profiler_screenshots::AsyncReadbackBuffer> mBuffer;
-  RefPtr<gfx::DataSourceSurface> mSurface;
-};
 
 RenderCompositorNative::RenderCompositorNative(
     RefPtr<widget::CompositorWidget>&& aWidget, gl::GLContext* aGL)

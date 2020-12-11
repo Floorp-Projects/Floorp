@@ -10,7 +10,9 @@
 
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/Effects.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
+#include "RenderCompositorRecordedFrame.h"
 
 namespace mozilla {
 using namespace layers;
@@ -384,6 +386,43 @@ bool RenderCompositorD3D11SWGL::MaybeReadback(
   }
 
   mCompositor->Readback(dt);
+  return true;
+}
+
+void RenderCompositorD3D11SWGL::MaybeRequestAllowFrameRecording(
+    bool aWillRecord) {
+  mCompositor->RequestAllowFrameRecording(aWillRecord);
+}
+
+bool RenderCompositorD3D11SWGL::MaybeRecordFrame(
+    layers::CompositionRecorder& aRecorder) {
+  layers::WindowLMC window(mCompositor);
+  gfx::IntSize size = GetBufferSize().ToUnknownSize();
+  RefPtr<layers::profiler_screenshots::RenderSource> snapshot =
+      window.GetWindowContents(size);
+  if (!snapshot) {
+    return true;
+  }
+
+  RefPtr<layers::profiler_screenshots::AsyncReadbackBuffer> buffer =
+      window.CreateAsyncReadbackBuffer(size);
+  buffer->CopyFrom(snapshot);
+
+  RefPtr<layers::RecordedFrame> frame =
+      new RenderCompositorRecordedFrame(TimeStamp::Now(), std::move(buffer));
+  aRecorder.RecordFrame(frame);
+  return false;
+}
+
+bool RenderCompositorD3D11SWGL::MaybeGrabScreenshot(
+    const gfx::IntSize& aWindowSize) {
+  layers::WindowLMC window(mCompositor);
+  mProfilerScreenshotGrabber.MaybeGrabScreenshot(window, aWindowSize);
+  return true;
+}
+
+bool RenderCompositorD3D11SWGL::MaybeProcessScreenshotQueue() {
+  mProfilerScreenshotGrabber.MaybeProcessQueue();
   return true;
 }
 

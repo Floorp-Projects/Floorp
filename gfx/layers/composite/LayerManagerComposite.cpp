@@ -92,21 +92,6 @@ class ImageLayer;
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
-class WindowLMC : public profiler_screenshots::Window {
- public:
-  explicit WindowLMC(Compositor* aCompositor) : mCompositor(aCompositor) {}
-
-  already_AddRefed<profiler_screenshots::RenderSource> GetWindowContents(
-      const IntSize& aWindowSize) override;
-  already_AddRefed<profiler_screenshots::DownscaleTarget> CreateDownscaleTarget(
-      const IntSize& aSize) override;
-  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
-  CreateAsyncReadbackBuffer(const IntSize& aSize) override;
-
- protected:
-  Compositor* mCompositor;
-};
-
 static LayerComposite* ToLayerComposite(Layer* aLayer) {
   return static_cast<LayerComposite*>(aLayer->ImplData());
 }
@@ -1762,7 +1747,7 @@ class AsyncReadbackBufferLMC
 };
 
 already_AddRefed<profiler_screenshots::RenderSource>
-WindowLMC::GetWindowContents(const IntSize& aWindowSize) {
+WindowLMC::GetWindowContents(const gfx::IntSize& aWindowSize) {
   RefPtr<CompositingRenderTarget> rt = mCompositor->GetWindowRenderTarget();
   if (!rt) {
     return nullptr;
@@ -1771,14 +1756,14 @@ WindowLMC::GetWindowContents(const IntSize& aWindowSize) {
 }
 
 already_AddRefed<profiler_screenshots::DownscaleTarget>
-WindowLMC::CreateDownscaleTarget(const IntSize& aSize) {
+WindowLMC::CreateDownscaleTarget(const gfx::IntSize& aSize) {
   RefPtr<CompositingRenderTarget> rt =
       mCompositor->CreateRenderTarget(IntRect({}, aSize), INIT_MODE_NONE);
   return MakeAndAddRef<DownscaleTargetLMC>(rt, mCompositor);
 }
 
 already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
-WindowLMC::CreateAsyncReadbackBuffer(const IntSize& aSize) {
+WindowLMC::CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) {
   RefPtr<AsyncReadbackBuffer> carb =
       mCompositor->CreateAsyncReadbackBuffer(aSize);
   if (!carb) {
