@@ -309,8 +309,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Indicates whether StyleRuleActor implements and can use the setRuleText method.
         // It cannot use it if the stylesheet was programmatically mutated via the CSSOM.
         canSetRuleText: this.canSetRuleText,
-        // @backward-compat { version 72 }  Indicates that StyleRuleActor emits the "rule-updated" event.
-        emitsRuleUpdatedEvent: true,
       },
     };
 
