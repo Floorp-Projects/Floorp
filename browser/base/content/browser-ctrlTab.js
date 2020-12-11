@@ -383,8 +383,6 @@ var ctrlTab = {
       return;
     }
 
-    document.addEventListener("keyup", this, true);
-
     this.canvasWidth = Math.ceil(
       (screen.availWidth * 0.85) / this.maxTabPreviews
     );
@@ -454,8 +452,6 @@ var ctrlTab = {
   },
 
   suspendGUI: function ctrlTab_suspendGUI() {
-    document.removeEventListener("keyup", this, true);
-
     for (let preview of this.previews) {
       this.updatePreview(preview, null);
     }
@@ -479,6 +475,8 @@ var ctrlTab = {
       this.showAllTabs();
       return;
     }
+
+    Services.els.addSystemEventListener(document, "keyup", this, false);
 
     let tabs = gBrowser.visibleTabs;
     if (tabs.length > 2) {
@@ -584,8 +582,21 @@ var ctrlTab = {
         this.onKeyPress(event);
         break;
       case "keyup":
-        if (event.keyCode == event.DOM_VK_CONTROL) {
-          this.pick();
+        // During cycling tabs, we avoid sending keyup event to content document.
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (event.keyCode === event.DOM_VK_CONTROL) {
+          Services.els.removeSystemEventListener(
+            document,
+            "keyup",
+            this,
+            false
+          );
+
+          if (this.isOpen) {
+            this.pick();
+          }
         }
         break;
       case "popupshowing":
