@@ -84,18 +84,11 @@ class Rule {
     this.textProps = this.textProps.concat(this._getDisabledProperties());
 
     this.getUniqueSelector = this.getUniqueSelector.bind(this);
-    this.onDeclarationsUpdated = this.onDeclarationsUpdated.bind(this);
     this.onLocationChanged = this.onLocationChanged.bind(this);
     this.onStyleRuleFrontUpdated = this.onStyleRuleFrontUpdated.bind(this);
     this.updateOriginalLocation = this.updateOriginalLocation.bind(this);
 
-    // @backward-compat { version 72 } Older server don't emit rule-updated.
-    // Added during the initial fix for Bug 1557689. See follow-up fix in Bug 1593944.
-    if (this.domRule.traits.emitsRuleUpdatedEvent) {
-      this.domRule.on("rule-updated", this.onStyleRuleFrontUpdated);
-    } else {
-      this.domRule.on("declarations-updated", this.onDeclarationsUpdated);
-    }
+    this.domRule.on("rule-updated", this.onStyleRuleFrontUpdated);
   }
 
   destroy() {
@@ -103,14 +96,7 @@ class Rule {
       this._unsubscribeSourceMap();
     }
 
-    // @backward-compat { version 72 } Older server don't emit rule-updated.
-    // Added during the initial fix for Bug 1557689. See follow-up fix in Bug 1593944.
-    if (this.domRule.traits.emitsRuleUpdatedEvent) {
-      this.domRule.off("rule-updated", this.onStyleRuleFrontUpdated);
-    } else {
-      this.domRule.off("declarations-updated", this.onDeclarationsUpdated);
-    }
-
+    this.domRule.off("rule-updated", this.onStyleRuleFrontUpdated);
     this.domRule.off("location-changed", this.onLocationChanged);
     this.compatibilityIssues = null;
   }
@@ -914,39 +900,6 @@ class Rule {
       }
     }
     return false;
-  }
-
-  /**
-   * @backward-compat { version 75 } Keep until then for backwards-compatibility for Bug
-   * 1557689 which has an updated fix from Bug 1593944.
-   * Handler for "declarations-updated" events fired from the StyleRuleActor for a
-   * CSS rule when the status of any of its CSS declarations change.
-   *
-   * Check whether the used/unused status of any declaration has changed and update the
-   * inactive CSS indicator in the UI accordingly.
-   *
-   * @param {Array} declarations
-   *        List of objects describing all CSS declarations of this CSS rule.
-   *        @See StyleRuleActor._declarations
-   */
-  onDeclarationsUpdated(declarations) {
-    this.textProps.forEach((textProp, index) => {
-      const isUsedPrevious = textProp.isUsed().used;
-      const isUsedCurrent = declarations[index].isUsed.used;
-
-      // Skip if property used state did not change.
-      if (isUsedPrevious === isUsedCurrent) {
-        return;
-      }
-
-      // Replace the method called by TextPropertyEditor to check whether the CSS
-      // declaration is used with the updated declaration's `isUsed` object.
-      // TODO: convert from Object to Boolean. See Bug 1574471
-      textProp.isUsed = () => declarations[index].isUsed;
-
-      // Reflect the new active/inactive flag state in the UI.
-      textProp.editor.updatePropertyUsedIndicator();
-    });
   }
 
   /**
