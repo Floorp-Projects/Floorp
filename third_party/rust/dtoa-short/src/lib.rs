@@ -62,7 +62,12 @@ fn write_with_prec<W, V>(dest: &mut W, value: V, prec: usize)
     let mut buf = [b'\0'; BUFFER_SIZE + 8];
     let len = dtoa::write(&mut buf[1..], value).map_err(|_| fmt::Error)?;
     let (result, notation) = restrict_prec(&mut buf[0..len + 1], prec);
-    dest.write_str(str::from_utf8(result).unwrap())?;
+    dest.write_str(if cfg!(debug_assertions) {
+        str::from_utf8(result).unwrap()
+    } else {
+        // safety: dtoa only generates ascii.
+        unsafe { str::from_utf8_unchecked(result) }
+    })?;
     Ok(notation)
 }
 
