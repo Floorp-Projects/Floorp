@@ -404,7 +404,7 @@ const MultiStageAboutWelcome = props => {
   }, []);
   const useImportable = props.message_id.includes("IMPORTABLE"); // Track whether we have already sent the importable sites impression telemetry
 
-  const [importTelemetrySent, setImportTelemetrySent] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
+  const importTelemetrySent = Object(react__WEBPACK_IMPORTED_MODULE_0__["useRef"])(false);
   const [topSites, setTopSites] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])([]);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
@@ -412,12 +412,12 @@ const MultiStageAboutWelcome = props => {
       const importable = JSON.parse((await window.AWGetImportableSites()));
       const showImportable = useImportable && importable.length >= 5;
 
-      if (!importTelemetrySent) {
+      if (!importTelemetrySent.current) {
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_SITES`, {
           display: showImportable ? "importable" : "static",
           importable: importable.length
         });
-        setImportTelemetrySent(true);
+        importTelemetrySent.current = true;
       }
 
       setTopSites(showImportable ? {
