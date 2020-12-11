@@ -2284,7 +2284,9 @@ class EventManager {
 
     for (let [module, moduleEntry] of extension.persistentListeners) {
       let api = extension.apiManager.getAPI(module, extension, "addon_parent");
-      if (!api.primeListener) {
+      // If an extension is upgraded and a permission, such as webRequest, is
+      // removed, we will have been called but the API is no longer available.
+      if (!api?.primeListener) {
         // The runtime module no longer implements primed listeners, drop them.
         extension.persistentListeners.delete(module);
         EventManager._writePersistentListeners(extension);

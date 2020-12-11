@@ -2928,9 +2928,8 @@ this.XPIDatabaseReconcile = {
    *        The new state of the add-on
    * @param {AddonInternal?} [aNewAddon]
    *        The manifest for the new add-on if it has already been loaded
-   * @returns {boolean?}
-   *        A boolean indicating if flushing caches is required to complete
-   *        changing this add-on
+   * @returns {AddonInternal}
+   *        The AddonInternal that was added to the database
    */
   updateMetadata(aLocation, aOldAddon, aAddonState, aNewAddon) {
     logger.debug(`Add-on ${aOldAddon.id} modified in ${aLocation.name}`);
@@ -2973,6 +2972,8 @@ this.XPIDatabaseReconcile = {
 
     // Set the additional properties on the new AddonInternal
     aNewAddon.updateDate = aAddonState.mtime;
+
+    XPIProvider.persistStartupData(aNewAddon, aAddonState);
 
     // Update the database
     return XPIDatabase.updateAddonMetadata(
