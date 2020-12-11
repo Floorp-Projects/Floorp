@@ -11,6 +11,8 @@
 #include "nsTouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
 
+const NSTouchBarItemIdentifier kTouchBarBaseIdentifier = @"com.mozilla.firefox.touchbar";
+
 /**
  * Our TouchBar is its own delegate. This is adequate for our purposes,
  * since the current implementation only defines Touch Bar buttons for the
