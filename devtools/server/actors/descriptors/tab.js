@@ -60,7 +60,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       selected: this.selected,
       title: this._getTitle(),
       traits: {
-        // @backward-compat { version 77 }
+        // Supports the Watcher actor. Can be removed as part of Bug 1680280.
         watcher: true,
       },
       url: this._getUrl(),
