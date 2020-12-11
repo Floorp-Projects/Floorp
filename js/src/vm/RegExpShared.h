@@ -135,12 +135,6 @@ class RegExpShared
   /* Internal functions. */
   RegExpShared(JSAtom* source, JS::RegExpFlags flags);
 
-  static bool compile(JSContext* cx, MutableHandleRegExpShared res,
-                      HandleLinearString input, CodeKind code);
-  static bool compile(JSContext* cx, MutableHandleRegExpShared res,
-                      HandleAtom pattern, HandleLinearString input,
-                      CodeKind code);
-
   const RegExpCompilation& compilation(bool latin1) const {
     return compilationArray[CompilationIndex(latin1)];
   }
