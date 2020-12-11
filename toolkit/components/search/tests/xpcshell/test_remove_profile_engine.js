@@ -16,7 +16,7 @@ add_task(async function run_test() {
   if (!dir.exists()) {
     dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
-  do_get_file("data/engine-override.xml").copyTo(dir, "test-search-engine.xml");
+  do_get_file("data/engine.xml").copyTo(dir, "test-search-engine.xml");
 
   let file = dir.clone();
   file.append("test-search-engine.xml");
