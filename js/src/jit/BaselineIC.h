@@ -278,6 +278,7 @@ class ICStub {
   friend class ICFallbackStub;
 
  public:
+  // TODO(no-TI): move to ICFallbackStub, make enum class.
   enum Kind : uint16_t {
     INVALID = 0,
 #define DEF_ENUM_KIND(kindName) kindName,
@@ -287,7 +288,6 @@ class ICStub {
   };
 
   static bool IsValidKind(Kind k) { return (k > INVALID) && (k < LIMIT); }
-  static bool IsCacheIRKind(Kind k) { return k == CacheIR_Regular; }
 
   static const char* KindString(Kind k) {
     switch (k) {
@@ -335,51 +335,16 @@ class ICStub {
   // either be a fallback or inert IC stub.
   ICStub* next_ = nullptr;
 
-  // A 16-bit field usable by subtypes of ICStub for subtype-specific small-info
-  uint16_t extra_ = 0;
-
-  // A 16-bit field storing the kind.
-  // Unused bits are filled with a magic value and verified when tracing.
-  uint16_t kindBits_;
-
-  static const uint16_t KIND_OFFSET = 0;
-  static const uint16_t KIND_BITS = 5;
-  static const uint16_t KIND_MASK = (1 << KIND_BITS) - 1;
-  static const uint16_t MAGIC_OFFSET = KIND_OFFSET + KIND_BITS;
-  static const uint16_t MAGIC_BITS = 11;
-  static const uint16_t MAGIC_MASK = (1 << MAGIC_BITS) - 1;
-  static const uint16_t EXPECTED_MAGIC = 0b10011100011;
-
-  static_assert(LIMIT <= (1 << KIND_BITS), "Not enough kind bits");
-  static_assert(LIMIT > (1 << (KIND_BITS - 1)), "Too many kind bits");
-  static_assert(KIND_BITS + MAGIC_BITS == 16, "Unused bits");
-
-  inline ICStub(Kind kind, uint8_t* stubCode) : stubCode_(stubCode) {
-    setKind(kind);
+  explicit ICStub(uint8_t* stubCode) : stubCode_(stubCode) {
     MOZ_ASSERT(stubCode != nullptr);
   }
 
-  inline ICStub(Kind kind, JitCode* stubCode) : ICStub(kind, stubCode->raw()) {
+  explicit ICStub(JitCode* stubCode) : ICStub(stubCode->raw()) {
     MOZ_ASSERT(stubCode != nullptr);
   }
-
-  inline void setKind(Kind kind) {
-    kindBits_ = (kind << KIND_OFFSET) | (EXPECTED_MAGIC << MAGIC_OFFSET);
-  }
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  inline void checkTraceMagic() {
-    uint16_t magic = (kindBits_ >> MAGIC_OFFSET) & MAGIC_MASK;
-    MOZ_DIAGNOSTIC_ASSERT(magic == EXPECTED_MAGIC);
-  }
-#endif
 
  public:
-  inline Kind kind() const {
-    return (Kind)((kindBits_ >> KIND_OFFSET) & KIND_MASK);
-  }
-
-  inline bool isFallback() const { return kind() != Kind::CacheIR_Regular; }
+  inline bool isFallback() const { return next_ == nullptr; }
 
   inline const ICFallbackStub* toFallbackStub() const {
     MOZ_ASSERT(isFallback());
@@ -391,18 +356,14 @@ class ICStub {
     return reinterpret_cast<ICFallbackStub*>(this);
   }
 
-#define KIND_METHODS(kindName)                                    \
-  inline bool is##kindName() const { return kind() == kindName; } \
-  inline const IC##kindName* to##kindName() const {               \
-    MOZ_ASSERT(is##kindName());                                   \
-    return reinterpret_cast<const IC##kindName*>(this);           \
-  }                                                               \
-  inline IC##kindName* to##kindName() {                           \
-    MOZ_ASSERT(is##kindName());                                   \
-    return reinterpret_cast<IC##kindName*>(this);                 \
+  ICCacheIR_Regular* toCacheIR_Regular() {
+    MOZ_ASSERT(!isFallback());
+    return reinterpret_cast<ICCacheIR_Regular*>(this);
   }
-  IC_BASELINE_STUB_KIND_LIST(KIND_METHODS)
-#undef KIND_METHODS
+  const ICCacheIR_Regular* toCacheIR_Regular() const {
+    MOZ_ASSERT(!isFallback());
+    return reinterpret_cast<const ICCacheIR_Regular*>(this);
+  }
 
   inline ICStub* next() const { return next_; }
 
@@ -443,9 +404,6 @@ class ICStub {
     return offsetof(ICStub, stubCode_);
   }
 
-  static inline size_t offsetOfExtra() { return offsetof(ICStub, extra_); }
-
-  static bool NonCacheIRStubMakesGCCalls(Kind kind);
   bool makesGCCalls() const;
 
   // Returns the number of times this stub has been entered. Must only be called
@@ -475,20 +433,65 @@ class ICFallbackStub : public ICStub {
   // The IC entry in JitScript for this linked list of stubs.
   ICEntry* icEntry_ = nullptr;
 
-  // The state of this IC
-  ICState state_{};
-
   // Counts the number of times the stub was entered
   //
   // See Bug 1494473 comment 6 for a mechanism to handle overflow if overflow
   // becomes a concern.
   uint32_t enteredCount_ = 0;
 
-  ICFallbackStub(Kind kind, TrampolinePtr stubCode)
-      : ICStub(kind, stubCode.value) {}
+  // The state of this IC
+  ICState state_{};
+
+  // A 16-bit field storing the kind.
+  // Unused bits are filled with a magic value and verified when tracing.
+  uint16_t kindBits_;
+
+  static const uint16_t KIND_OFFSET = 0;
+  static const uint16_t KIND_BITS = 5;
+  static const uint16_t KIND_MASK = (1 << KIND_BITS) - 1;
+  static const uint16_t MAGIC_OFFSET = KIND_OFFSET + KIND_BITS;
+  static const uint16_t MAGIC_BITS = 11;
+  static const uint16_t MAGIC_MASK = (1 << MAGIC_BITS) - 1;
+  static const uint16_t EXPECTED_MAGIC = 0b10011100011;
+
+  static_assert(LIMIT <= (1 << KIND_BITS), "Not enough kind bits");
+  static_assert(LIMIT > (1 << (KIND_BITS - 1)), "Too many kind bits");
+  static_assert(KIND_BITS + MAGIC_BITS == 16, "Unused bits");
+
+  ICFallbackStub(Kind kind, TrampolinePtr stubCode) : ICStub(stubCode.value) {
+    setKind(kind);
+  }
+
+  inline void setKind(Kind kind) {
+    kindBits_ = (kind << KIND_OFFSET) | (EXPECTED_MAGIC << MAGIC_OFFSET);
+  }
 
  public:
   inline ICEntry* icEntry() const { return icEntry_; }
+
+  inline Kind kind() const {
+    return (Kind)((kindBits_ >> KIND_OFFSET) & KIND_MASK);
+  }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  inline void checkTraceMagic() {
+    uint16_t magic = (kindBits_ >> MAGIC_OFFSET) & MAGIC_MASK;
+    MOZ_DIAGNOSTIC_ASSERT(magic == EXPECTED_MAGIC);
+  }
+#endif
+
+#define KIND_METHODS(kindName)                                    \
+  inline bool is##kindName() const { return kind() == kindName; } \
+  inline const IC##kindName* to##kindName() const {               \
+    MOZ_ASSERT(is##kindName());                                   \
+    return reinterpret_cast<const IC##kindName*>(this);           \
+  }                                                               \
+  inline IC##kindName* to##kindName() {                           \
+    MOZ_ASSERT(is##kindName());                                   \
+    return reinterpret_cast<IC##kindName*>(this);                 \
+  }
+  IC_BASELINE_STUB_KIND_LIST(KIND_METHODS)
+#undef KIND_METHODS
 
   inline size_t numOptimizedStubs() const { return state_.numOptimizedStubs(); }
 
@@ -560,7 +563,7 @@ class ICCacheIR_Regular : public ICStub {
 
  public:
   ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
-      : ICStub(ICStub::CacheIR_Regular, stubCode), stubInfo_(stubInfo) {}
+      : ICStub(stubCode), stubInfo_(stubInfo) {}
 
   const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
   uint8_t* stubDataStart();

@@ -2208,14 +2208,8 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
 }
 
 static void ResetEnteredCounts(ICFallbackStub* stub) {
-  for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
-    switch (iter->kind()) {
-      case ICStub::CacheIR_Regular:
-        iter->toCacheIR_Regular()->resetEnteredCount();
-        break;
-      default:
-        break;
-    }
+  for (ICStubIterator iter = stub->beginChain(); *iter != stub; iter++) {
+    iter->toCacheIR_Regular()->resetEnteredCount();
   }
   stub->resetEnteredCount();
 }
