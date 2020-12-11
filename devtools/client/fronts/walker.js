@@ -146,17 +146,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     return response.node;
   }
 
-  async gripToNodeFront(grip) {
-    const response = await this.getNodeActorFromObjectActor(grip.actor);
-    const nodeFront = response ? response.node : null;
-    if (!nodeFront) {
-      throw new Error(
-        "The ValueGrip passed could not be translated to a NodeFront"
-      );
-    }
-    return nodeFront;
-  }
-
   async getNodeActorFromWindowID(windowID) {
     const response = await super.getNodeActorFromWindowID(windowID);
     return response ? response.node : null;

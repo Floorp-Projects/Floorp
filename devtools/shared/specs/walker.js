@@ -287,14 +287,6 @@ const walkerSpec = generateActorSpec({
       request: { node: Arg(0, "domnode") },
       response: { attached: RetVal("boolean") },
     },
-    getNodeActorFromObjectActor: {
-      request: {
-        objectActorID: Arg(0, "string"),
-      },
-      response: {
-        nodeFront: RetVal("nullable:disconnectedNode"),
-      },
-    },
     getNodeActorFromWindowID: {
       request: {
         windowID: Arg(0, "string"),

@@ -1948,10 +1948,10 @@ Inspector.prototype = {
     );
   },
 
-  async inspectNodeActor(nodeActor, reason) {
-    const nodeFront = await this.inspectorFront.getNodeFrontFromNodeGrip({
-      actor: nodeActor,
-    });
+  async inspectNodeActor(nodeGrip, reason) {
+    const nodeFront = await this.inspectorFront.getNodeFrontFromNodeGrip(
+      nodeGrip
+    );
     if (!nodeFront) {
       console.error(
         "The object cannot be linked to the inspector, the " +

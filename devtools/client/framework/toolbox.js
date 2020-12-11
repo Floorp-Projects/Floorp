@@ -3963,14 +3963,11 @@ Toolbox.prototype = {
     );
   },
 
-  viewElementInInspector: async function(objectActor, reason) {
+  viewElementInInspector: async function(objectGrip, reason) {
     // Open the inspector and select the DOM Element.
     await this.loadTool("inspector");
     const inspector = this.getPanel("inspector");
-    const nodeFound = await inspector.inspectNodeActor(
-      objectActor.actor,
-      reason
-    );
+    const nodeFound = await inspector.inspectNodeActor(objectGrip, reason);
     if (nodeFound) {
       await this.selectTool("inspector", reason);
     }
