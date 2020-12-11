@@ -545,25 +545,11 @@ void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
   script->updateJitCodeRaw(fop->runtime());
 }
 
-#if defined(JS_STRUCTURED_SPEW) || defined(JS_CACHEIR_SPEW)
-bool jit::GetStubEnteredCount(ICStub* stub, uint32_t* count) {
-  if (ICStub::IsCacheIRKind(stub->kind())) {
-    *count = stub->getEnteredCount();
-    return true;
-  }
-  return false;
-}
-#endif  // JS_STRUCTURED_SPEW || JS_CACHEIR_SPEW
-
 #ifdef JS_STRUCTURED_SPEW
 static bool HasEnteredCounters(ICEntry& entry) {
   ICStub* stub = entry.firstStub();
-  while (stub && !stub->isFallback()) {
-    uint32_t count;
-    if (GetStubEnteredCount(stub, &count)) {
-      return true;
-    }
-    stub = stub->next();
+  if (stub && !stub->isFallback()) {
+    return true;
   }
   return false;
 }
@@ -600,12 +586,8 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
     spew->beginListProperty("counts");
     ICStub* stub = entry.firstStub();
     while (stub && !stub->isFallback()) {
-      uint32_t count;
-      if (GetStubEnteredCount(stub, &count)) {
-        spew->value(count);
-      } else {
-        spew->value("?");
-      }
+      uint32_t count = stub->getEnteredCount();
+      spew->value(count);
       stub = stub->next();
     }
     spew->endList();
