@@ -111,13 +111,7 @@ function evaluateExpression(expression, from = "input") {
       })
       .then(onSettled, onSettled);
 
-    // @backward-compat { version 77 } On older server, the response did not have a
-    // `startTime` property, so we're using the `resultID`, which does contain the server
-    // time at which the evaluation started (its shape is `${timestamp}-${someId}`).
-    const serverConsoleCommandTimestamp =
-      response.startTime ||
-      (response.resultID && Number(response.resultID.replace(/\-\d*$/, ""))) ||
-      null;
+    const serverConsoleCommandTimestamp = response.startTime;
 
     // In case of remote debugging, it might happen that the debuggee page does not have
     // the exact same clock time as the client. This could cause some ordering issues
