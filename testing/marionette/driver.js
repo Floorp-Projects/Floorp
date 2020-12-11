@@ -119,7 +119,6 @@ this.GeckoDriver = function(server) {
   this._server = server;
 
   this.sessionID = null;
-  this.wins = new browser.Windows();
   this.browsers = {};
 
   // Maps permanentKey to browsing context id: WeakMap.<Object, number>
@@ -517,11 +516,6 @@ GeckoDriver.prototype.addBrowser = function(win) {
 
   this.browsers[winId] = context;
   this.curBrowser = this.browsers[winId];
-  if (!this.wins.has(winId)) {
-    // add this to seenItems so we can guarantee
-    // the user will get winId as this window's id
-    this.wins.set(winId, win);
-  }
 };
 
 /**
@@ -631,9 +625,6 @@ GeckoDriver.prototype.registerBrowser = function(browserElement) {
   ) {
     this.curBrowser.register(browserElement);
   }
-
-  const browsingContext = browserElement.browsingContext;
-  this.wins.set(browsingContext.id, browsingContext.currentWindowGlobal);
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -1682,7 +1673,7 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
  * Find a specific window according to some filter function.
  *
  * @param {Iterable.<Window>} winIterable
- *     Iterable that emits Windows.
+ *     Iterable that emits Window objects.
  * @param {function(Window, number): boolean} filter
  *     A callback function taking two arguments; the window and
  *     the outerId of the window, and returning a boolean indicating

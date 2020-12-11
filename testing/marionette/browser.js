@@ -488,59 +488,6 @@ browser.Context = class {
 };
 
 /**
- * The window storage is used to save browsing context ids mapped to weak
- * references of Window objects.
- *
- * Usage:
- *
- *     let wins = new browser.Windows();
- *     wins.set(browser.browsingContext.id, window);
- *
- *     ...
- *
- *     let win = wins.get(browser.browsingContext.id);
- *
- */
-browser.Windows = class extends Map {
-  /**
-   * Save a weak reference to the Window object.
-   *
-   * @param {string} id
-   *     Browsing context id.
-   * @param {Window} win
-   *     Window object to save.
-   *
-   * @return {browser.Windows}
-   *     Instance of self.
-   */
-  set(id, win) {
-    let wref = Cu.getWeakReference(win);
-    super.set(id, wref);
-    return this;
-  }
-
-  /**
-   * Get the window object stored by provided |id|.
-   *
-   * @param {string} id
-   *     Browsing context id.
-   *
-   * @return {Window}
-   *     Saved window object.
-   *
-   * @throws {RangeError}
-   *     If |id| is not in the store.
-   */
-  get(id) {
-    let wref = super.get(id);
-    if (!wref) {
-      throw new RangeError();
-    }
-    return wref.get();
-  }
-};
-
-/**
  * Marionette representation of the {@link ChromeWindow} window state.
  *
  * @enum {string}
