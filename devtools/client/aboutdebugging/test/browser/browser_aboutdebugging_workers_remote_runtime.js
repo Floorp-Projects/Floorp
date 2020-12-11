@@ -140,7 +140,6 @@ async function testWorkerOnMockedRemoteClient(
     outerWindowID: 0,
     traits: {
       getFavicon: true,
-      hasTabInfo: true,
     },
     url: "http://some.random/url.com",
   };

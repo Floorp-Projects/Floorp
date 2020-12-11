@@ -130,7 +130,6 @@ const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
       actor: this.actorID,
       traits: {
         getFavicon: true,
-        hasTabInfo: true,
       },
       selected: this.selected,
       title: this._targetActor.title,

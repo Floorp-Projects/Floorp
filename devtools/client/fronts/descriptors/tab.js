@@ -156,19 +156,6 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
    */
   async retrieveAsyncFormData() {
     try {
-      if (!this.traits.hasTabInfo) {
-        // @backward-compat { version 77 }
-        const targetForm = await super.getTarget();
-        this._form.outerWindowID = targetForm.outerWindowID;
-        this._form.title = targetForm.title;
-        this._form.url = targetForm.url;
-
-        if (!this.traits.getFavicon) {
-          // @backward-compat { version 76 }
-          this._form.favicon = targetForm.favicon;
-        }
-      }
-
       if (this.traits.getFavicon) {
         this._form.favicon = await this.getFavicon();
       }
