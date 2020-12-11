@@ -11,7 +11,6 @@ var { CrashManager, CrashStore, dateToDays } = ChromeUtils.import(
   "resource://gre/modules/CrashManager.jsm",
   null
 );
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 DUMMY_DATE.setMilliseconds(0);
@@ -39,9 +38,9 @@ var STORE_DIR_COUNT = 0;
 function getStore() {
   return (async function() {
     let storeDir = do_get_tempdir().path;
-    storeDir = OS.Path.join(storeDir, "store-" + STORE_DIR_COUNT++);
+    storeDir = PathUtils.join(storeDir, "store-" + STORE_DIR_COUNT++);
 
-    await OS.File.makeDir(storeDir, { unixMode: OS.Constants.libc.S_IRWXU });
+    await IOUtils.makeDirectory(storeDir, { permissions: 0o700 });
 
     let s = new CrashStore(storeDir);
     await s.load();
@@ -51,7 +50,7 @@ function getStore() {
 }
 
 add_task(async function test_constructor() {
-  let s = new CrashStore("/some/path");
+  let s = new CrashStore(do_get_tempdir().path);
   Assert.ok(s instanceof CrashStore);
 });
 
@@ -120,7 +119,7 @@ add_task(async function test_corrupt_json() {
   let s = await getStore();
 
   let buffer = new TextEncoder().encode("{bad: json-file");
-  await OS.File.writeAtomic(s._storePath, buffer, { compression: "lz4" });
+  await IOUtils.write(s._storePath, buffer, { compress: true });
 
   await s.load();
   Assert.ok(s.corruptDate, "Corrupt date is defined.");
