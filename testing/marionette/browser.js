@@ -162,8 +162,6 @@ browser.Context = class {
     // and MobileTabBrowser in GeckoView.
     this.tabBrowser = browser.getTabBrowser(this.window);
 
-    this.knownFrames = [];
-
     // Used to set curFrameId upon new session
     this.newSession = true;
 
@@ -470,24 +468,22 @@ browser.Context = class {
    *     The <xul:browser> that was the target of the originating message.
    */
   register(target) {
-    // Note that browsing contexts can be swapped during navigation in which
-    // case this id would no longer match the target. See Bug 1680479.
-    const uid = target.browsingContext.id;
-
-    if (this.tabBrowser) {
-      // If we're setting up a new session on Firefox, we only process the
-      // registration for this frame if it belongs to the current tab.
-      if (!this.tab) {
-        this.switchToTab();
-      }
-
-      if (target === this.contentBrowser) {
-        this.updateIdForBrowser(this.contentBrowser, uid);
-      }
+    if (!this.tabBrowser) {
+      return;
     }
 
-    // used to delete sessions
-    this.knownFrames.push(uid);
+    // If we're setting up a new session on Firefox, we only process the
+    // registration for this frame if it belongs to the current tab.
+    if (!this.tab) {
+      this.switchToTab();
+    }
+
+    if (target === this.contentBrowser) {
+      // Note that browsing contexts can be swapped during navigation in which
+      // case this id would no longer match the target. See Bug 1680479.
+      const uid = target.browsingContext.id;
+      this.updateIdForBrowser(this.contentBrowser, uid);
+    }
   }
 };
 
