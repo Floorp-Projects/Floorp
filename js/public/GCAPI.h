@@ -514,7 +514,7 @@ namespace JS {
   D(DOM_WINDOW_UTILS, FIRST_FIREFOX_REASON) \
   D(COMPONENT_UTILS, 34)                    \
   D(MEM_PRESSURE, 35)                       \
-  D(CC_WAITING, 36)                         \
+  D(CC_FINISHED, 36)                        \
   D(CC_FORCED, 37)                          \
   D(LOAD_END, 38)                           \
   D(UNUSED3, 39)                            \
