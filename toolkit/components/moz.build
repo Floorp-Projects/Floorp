@@ -110,6 +110,9 @@ DIRS += ["captivedetect"]
 if CONFIG["OS_TARGET"] != "Android":
     DIRS += ["terminator"]
 
+if CONFIG["MOZ_UPDATE_AGENT"]:
+    DIRS += ["taskscheduler"]
+
 DIRS += ["build"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
