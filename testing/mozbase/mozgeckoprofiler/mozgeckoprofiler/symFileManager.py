@@ -194,7 +194,7 @@ class SymFileManager:
             LOG.error("Error parsing SYM file " + path)
             return None
 
-        logString = "Found " + str(len(symbolMap.keys())) + " unique entries from "
+        logString = "Found " + str(len(symbolMap)) + " unique entries from "
         logString += (
             str(publicCount) + " PUBLIC lines, " + str(funcCount) + " FUNC lines"
         )

@@ -442,7 +442,7 @@ class SingleTestMixin(object):
         suites = None
         if self.verify_enabled or self.per_test_coverage:
             if self.config.get("per_test_category") == "web-platform":
-                suites = self.suites.keys()
+                suites = list(self.suites)
                 self.info("Per-test suites: %s" % suites)
             elif all_suites and self.tests_downloaded:
                 suites = dict(
