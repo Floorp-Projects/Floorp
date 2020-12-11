@@ -34,18 +34,11 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
   const { messages } = await webConsoleFront.getCachedMessages(["PageError"]);
 
   const cachedMessages = [];
-  for (let message of messages) {
+  for (const message of messages) {
     if (message.pageError?.category !== MESSAGE_CATEGORY.CSS_PARSER) {
       continue;
     }
 
-    // @backward-compat { version 78 } Handling cached messages for older servers.
-    // Wrap the message into a `pageError` attribute, to match `pageError` behavior
-    if (message._type) {
-      message = {
-        pageError: message,
-      };
-    }
     message.resourceType = ResourceWatcher.TYPES.CSS_MESSAGE;
     message.cssSelectors = message.pageError.cssSelectors;
     delete message.pageError.cssSelectors;
