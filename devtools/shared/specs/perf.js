@@ -88,7 +88,6 @@ const perfDescription = {
       response: { value: RetVal("boolean") },
     },
 
-    // @backward-compat { version 72 }
     getSupportedFeatures: {
       request: {},
       response: { value: RetVal("array:string") },
