@@ -35,10 +35,6 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
   const { messages } = await webConsoleFront.getCachedMessages(["LogMessage"]);
 
   for (const message of messages) {
-    // @backward-compat { version 78 } Handling cached messages for older servers.
-    if (message._type) {
-      delete message._type;
-    }
     message.resourceType = ResourceWatcher.TYPES.PLATFORM_MESSAGE;
   }
   onAvailable(messages);
