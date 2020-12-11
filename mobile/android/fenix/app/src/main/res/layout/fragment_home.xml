@@ -72,7 +72,7 @@
         android:padding="16dp"
         android:scrollbars="none"
         android:transitionGroup="false"
-        android:importantForAccessibility="no"
+        android:importantForAccessibility="yes"
         android:overScrollMode="never"
         tools:listheader="@layout/collection_header"
         tools:listitem="@layout/collection_home_list_row"

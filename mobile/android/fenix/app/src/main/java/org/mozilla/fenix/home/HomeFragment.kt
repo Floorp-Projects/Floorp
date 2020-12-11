@@ -15,7 +15,9 @@ import android.view.Display.FLAG_SECURE
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.AccessibilityDelegate
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -954,6 +956,43 @@ class HomeFragment : Fragment() {
             border?.animate()?.alpha(1.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
                 ?.setDuration(FADE_ANIM_DURATION)
                 ?.setListener(listener)?.start()
+        }.invokeOnCompletion {
+            val a11yEnabled = context?.settings()?.accessibilityServicesEnabled ?: false
+            if (a11yEnabled) {
+                focusCollectionForTalkBack(indexOfCollection)
+            }
+        }
+    }
+
+    /**
+     * Will focus the collection with [indexOfCollection] for accessibility services.
+     * */
+    private fun focusCollectionForTalkBack(indexOfCollection: Int) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            var focusedForAccessibility = false
+            view?.let { mainView ->
+                mainView.accessibilityDelegate = object : AccessibilityDelegate() {
+                    override fun onRequestSendAccessibilityEvent(
+                        host: ViewGroup,
+                        child: View,
+                        event: AccessibilityEvent
+                    ): Boolean {
+                        if (!focusedForAccessibility &&
+                            event.eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED
+                        ) {
+                            sessionControlView?.view?.findViewHolderForAdapterPosition(
+                                indexOfCollection
+                            )?.itemView?.let { viewToFocus ->
+                                focusedForAccessibility = true
+                                viewToFocus.requestFocus()
+                                viewToFocus.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                                return false
+                            }
+                        }
+                        return super.onRequestSendAccessibilityEvent(host, child, event)
+                    }
+                }
+            }
         }
     }
 
