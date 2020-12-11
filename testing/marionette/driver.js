@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ChromeWebElement: "chrome://marionette/content/element.js",
   clearElementIdCache:
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
+  clearActionInputState:
+    "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
   Context: "chrome://marionette/content/browser.js",
   cookie: "chrome://marionette/content/cookie.js",
   DebounceCallback: "chrome://marionette/content/sync.js",
@@ -3048,6 +3050,7 @@ GeckoDriver.prototype.deleteSession = function() {
 
   if (MarionettePrefs.useActors) {
     clearElementIdCache();
+    clearActionInputState();
 
     unregisterCommandsActor();
   }
