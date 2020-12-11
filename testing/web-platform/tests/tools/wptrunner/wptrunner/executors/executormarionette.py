@@ -35,6 +35,7 @@ from .protocol import (ActionSequenceProtocolPart,
                        StorageProtocolPart,
                        SelectorProtocolPart,
                        ClickProtocolPart,
+                       CookiesProtocolPart,
                        SendKeysProtocolPart,
                        TestDriverProtocolPart,
                        CoverageProtocolPart,
@@ -438,6 +439,15 @@ class MarionetteClickProtocolPart(ClickProtocolPart):
         return element.click()
 
 
+class MarionetteCookiesProtocolPart(CookiesProtocolPart):
+    def setup(self):
+        self.marionette = self.parent.marionette
+
+    def delete_all_cookies(self):
+        self.logger.info("Deleting all cookies")
+        return self.marionette.delete_all_cookies()
+
+
 class MarionetteSendKeysProtocolPart(SendKeysProtocolPart):
     def setup(self):
         self.marionette = self.parent.marionette
@@ -625,6 +635,7 @@ class MarionetteProtocol(Protocol):
                   MarionetteStorageProtocolPart,
                   MarionetteSelectorProtocolPart,
                   MarionetteClickProtocolPart,
+                  MarionetteCookiesProtocolPart,
                   MarionetteSendKeysProtocolPart,
                   MarionetteActionSequenceProtocolPart,
                   MarionetteTestDriverProtocolPart,
