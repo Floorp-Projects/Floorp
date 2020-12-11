@@ -11,6 +11,7 @@
 #include "CTDiversityPolicy.h"
 #include "CTKnownLogs.h"
 #include "CTLogVerifier.h"
+#include "CSTrustDomain.h"
 #include "ExtendedValidation.h"
 #include "MultiLogCTVerifier.h"
 #include "NSSCertDBTrustDomain.h"
@@ -26,6 +27,7 @@
 #include "pk11pub.h"
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixutil.h"
 #include "secmod.h"
 
 using namespace mozilla::ct;
@@ -870,20 +872,29 @@ Result CertVerifier::VerifyCert(
 }
 
 static bool CertIsSelfSigned(const UniqueCERTCertificate& cert, void* pinarg) {
-  if (!SECITEM_ItemsAreEqual(&cert->derIssuer, &cert->derSubject)) {
+  Input certInput;
+  Result rv = certInput.Init(cert->derCert.data, cert->derCert.len);
+  if (rv != Success) {
+    return false;
+  }
+  // we don't use the certificate for path building, so this parameter doesn't
+  // matter
+  EndEntityOrCA notUsedForPaths = EndEntityOrCA::MustBeEndEntity;
+  BackCert backCert(certInput, notUsedForPaths, nullptr);
+  rv = backCert.Init();
+  if (rv != Success) {
+    return false;
+  }
+  if (!InputsAreEqual(backCert.GetIssuer(), backCert.GetSubject())) {
     return false;
   }
 
-  // Check that the certificate is signed with the cert's spki.
-  SECStatus rv = CERT_VerifySignedDataWithPublicKeyInfo(
-      const_cast<CERTSignedData*>(&cert->signatureWrap),
-      const_cast<CERTSubjectPublicKeyInfo*>(&cert->subjectPublicKeyInfo),
-      pinarg);
-  if (rv != SECSuccess) {
-    return false;
-  }
-
-  return true;
+  nsTArray<nsTArray<uint8_t>> emptyCertList;
+  // CSTrustDomain is only used for the signature verification callbacks
+  mozilla::psm::CSTrustDomain trustDomain(emptyCertList);
+  rv = VerifySignedData(trustDomain, backCert.GetSignedData(),
+                        backCert.GetSubjectPublicKeyInfo());
+  return rv == Success;
 }
 
 Result CertVerifier::VerifySSLServerCert(
