@@ -360,7 +360,7 @@ const TEST_GLOBAL = {
         searchForm: "https://www.bing.com",
         aliases: ["@bing"],
       },
-      getEngineByAlias: () => null,
+      getEngineByAlias: async () => null,
     },
     scriptSecurityManager: {
       createNullPrincipal() {},

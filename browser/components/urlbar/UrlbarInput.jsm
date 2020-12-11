@@ -1297,6 +1297,8 @@ class UrlbarInput {
    * @param {string} value
    *   The input's value will be set to this value, and the search will
    *   use it as its query.
+   * @param {UrlbarUtils.WEB_ENGINE_NAMES} [options.searchEngine]
+   *   Search engine to use when the search is using a known alias.
    * @param {UrlbarUtils.SEARCH_MODE_ENTRY} [options.searchModeEntry]
    *   If provided, we will record this parameter as the search mode entry point
    *   in Telemetry. Consumers should provide this if they expect their call
@@ -1305,7 +1307,7 @@ class UrlbarInput {
    *   If true, the urlbar will be focused.  If false, the focus will remain
    *   unchanged.
    */
-  search(value, { searchModeEntry, focus = true } = {}) {
+  search(value, { searchEngine, searchModeEntry, focus = true } = {}) {
     if (focus) {
       this.focus();
     }
@@ -1316,12 +1318,8 @@ class UrlbarInput {
     if (UrlbarPrefs.get("update2")) {
       // Check if the string starts with a restriction token.
       searchMode = UrlbarUtils.searchModeForToken(tokens[0]);
-      if (!searchMode) {
-        // Check if the string starts with an engine alias.
-        let engine = Services.search.getEngineByAlias(tokens[0]);
-        if (engine) {
-          searchMode = { engineName: engine.name };
-        }
+      if (!searchMode && searchEngine) {
+        searchMode = { engineName: searchEngine.name };
       }
     }
 

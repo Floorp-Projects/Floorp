@@ -50,7 +50,7 @@ let gAddEngineDialog = {
   async onAliasInput() {
     let validity = "";
     if (this._alias.value) {
-      let engine = Services.search.getEngineByAlias(this._alias.value);
+      let engine = await Services.search.getEngineByAlias(this._alias.value);
       if (engine) {
         engine = document.getElementById("engineAliasExists").textContent;
       }

@@ -44,11 +44,11 @@ add_task(async function basic_install_test() {
   await extension.startup();
   await AddonTestUtils.waitForSearchProviderStartup(extension);
 
-  let engine = Services.search.getEngineByAlias("foo");
+  let engine = await Services.search.getEngineByAlias("foo");
   Assert.ok(engine, "Can fetch engine with alias");
   engine.alias = "testing";
 
-  engine = Services.search.getEngineByAlias("testing");
+  engine = await Services.search.getEngineByAlias("testing");
   Assert.ok(engine, "Can fetch engine by alias");
   let params = engine.getSubmission("test").uri.query.split("&");
   Assert.ok(params.includes("version=1.0"), "Correct version installed");
@@ -62,7 +62,7 @@ add_task(async function basic_install_test() {
   await AddonTestUtils.waitForSearchProviderStartup(extension);
   await promiseChanged;
 
-  engine = Services.search.getEngineByAlias("testing");
+  engine = await Services.search.getEngineByAlias("testing");
   Assert.ok(engine, "Engine still has alias set");
 
   params = engine.getSubmission("test").uri.query.split("&");

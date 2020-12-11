@@ -187,7 +187,7 @@ test_newtab({
 
     return searchTopSites[0].innerText.trim();
   },
-  after(searchTopSiteTag) {
+  async after(searchTopSiteTag) {
     ok(
       gURLBar.focused,
       "We clicked a search topsite the focus should be in location bar"
@@ -198,15 +198,18 @@ test_newtab({
         "Should contain the tag of the search topsite clicked"
       );
     } else {
-      let engineName = Services.search.getEngineByAlias(searchTopSiteTag).name;
+      let engine = await Services.search.getEngineByAlias(searchTopSiteTag);
+
       // We don't use UrlbarTestUtils.assertSearchMode here since the newtab
       // testing scope doesn't integrate well with UrlbarTestUtils.
-      ok(
-        ObjectUtils.deepEqual(
-          gURLBar.searchMode,
-          { engineName, entry: "topsites_newtab", isPreview: false },
-          "The Urlbar is in search mode."
-        )
+      Assert.deepEqual(
+        gURLBar.searchMode,
+        {
+          engineName: engine.name,
+          entry: "topsites_newtab",
+          isPreview: false,
+        },
+        "The Urlbar is in search mode."
       );
       ok(
         gURLBar.hasAttribute("searchmode"),

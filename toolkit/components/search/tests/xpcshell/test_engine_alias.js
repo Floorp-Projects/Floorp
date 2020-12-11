@@ -21,7 +21,7 @@ add_task(async function upgrade_with_configuration_change_test() {
   await extension.awaitStartup();
   await settingsFileWritten;
 
-  let engine = Services.search.getEngineByAlias("testalias");
+  let engine = await Services.search.getEngineByAlias("testalias");
   Assert.equal(engine?.name, NAME, "Engine can be fetched by alias");
 
   // Restart the search service but not the AddonManager, we will
@@ -29,7 +29,7 @@ add_task(async function upgrade_with_configuration_change_test() {
   Services.search.wrappedJSObject.reset();
   await Services.search.init();
 
-  engine = Services.search.getEngineByAlias("testalias");
+  engine = await Services.search.getEngineByAlias("testalias");
   Assert.equal(engine?.name, NAME, "Engine can be fetched by alias");
 
   await extension.unload();

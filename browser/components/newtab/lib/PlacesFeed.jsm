@@ -385,17 +385,22 @@ class PlacesFeed {
     }
   }
 
-  fillSearchTopSiteTerm({ _target, data }) {
+  async fillSearchTopSiteTerm({ _target, data }) {
+    const searchEngine = await Services.search.getEngineByAlias(data.label);
     _target.browser.ownerGlobal.gURLBar.search(data.label, {
+      searchEngine,
       searchModeEntry: "topsites_newtab",
     });
   }
 
-  _getSearchPrefix(isPrivateWindow) {
-    const searchAliases =
-      Services.search[
-        isPrivateWindow ? "defaultPrivateEngine" : "defaultEngine"
-      ].aliases;
+  _getDefaultSearchEngine(isPrivateWindow) {
+    return Services.search[
+      isPrivateWindow ? "defaultPrivateEngine" : "defaultEngine"
+    ];
+  }
+
+  _getSearchPrefix(searchEngine) {
+    const searchAliases = searchEngine.aliases;
     if (searchAliases && searchAliases.length) {
       return `${searchAliases[0]} `;
     }
@@ -403,9 +408,10 @@ class PlacesFeed {
   }
 
   handoffSearchToAwesomebar({ _target, data, meta }) {
-    const searchAlias = this._getSearchPrefix(
+    const searchEngine = this._getDefaultSearchEngine(
       PrivateBrowsingUtils.isBrowserPrivate(_target.browser)
     );
+    const searchAlias = this._getSearchPrefix(searchEngine);
     const urlBar = _target.browser.ownerGlobal.gURLBar;
     let isFirstChange = true;
 
@@ -413,6 +419,7 @@ class PlacesFeed {
       urlBar.setHiddenFocus();
     } else {
       urlBar.search(searchAlias + data.text, {
+        searchEngine,
         searchModeEntry: "handoff",
       });
       isFirstChange = false;
@@ -425,7 +432,10 @@ class PlacesFeed {
       if (isFirstChange) {
         isFirstChange = false;
         urlBar.removeHiddenFocus();
-        urlBar.search(searchAlias, { searchModeEntry: "handoff" });
+        urlBar.search(searchAlias, {
+          searchEngine,
+          searchModeEntry: "handoff",
+        });
         this.store.dispatch(
           ac.OnlyToOneContent({ type: at.HIDE_SEARCH }, meta.fromTarget)
         );
