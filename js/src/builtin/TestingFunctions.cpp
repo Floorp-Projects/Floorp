@@ -53,6 +53,7 @@
 #include "jit/InlinableNatives.h"
 #include "jit/Invalidation.h"
 #include "jit/Ion.h"
+#include "jit/JitOptions.h"
 #include "jit/JitRuntime.h"
 #include "jit/TrialInlining.h"
 #include "js/Array.h"        // JS::NewArrayObject
@@ -6289,6 +6290,36 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool IsSmallFunction(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.requireAtLeast(cx, "IsSmallFunction", 1)) {
+    return false;
+  }
+
+  HandleValue arg = args[0];
+  if (!arg.isObject() || !arg.toObject().is<JSFunction>()) {
+    ReportUsageErrorASCII(cx, callee, "First argument must be a function");
+    return false;
+  }
+
+  RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
+  if (!fun->isInterpreted()) {
+    ReportUsageErrorASCII(cx, callee,
+                          "First argument must be an interpreted function");
+    return false;
+  }
+
+  JSScript* script = JSFunction::getOrCreateScript(cx, fun);
+  if (!script) {
+    return false;
+  }
+
+  args.rval().setBoolean(jit::JitOptions.isSmallFunction(script));
+  return true;
+}
+
 static bool PCCountProfiling_Start(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -7289,6 +7320,10 @@ JS_FN_HELP("getICUOptions", GetICUOptions, 0, 0,
 "    tzdata: a string containing the tzdata version number, e.g. '2020a'\n"
 "    timezone: the ICU default time zone, e.g. 'America/Los_Angeles'\n"
 "    host-timezone: the host time zone, e.g. 'America/Los_Angeles'"),
+
+JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
+"isSmallFunction(fun)",
+"  Returns true if a scripted function is small enough to be inlinable."),
 
     JS_FS_HELP_END
 };
