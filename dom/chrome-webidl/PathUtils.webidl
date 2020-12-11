@@ -42,6 +42,15 @@ namespace PathUtils {
   DOMString join(DOMString... components);
 
   /**
+   * Join the given relative path to the base path.
+   *
+   * @param base The base path. This must be an absolute path.
+   * @param relativePath A relative path to join to the base path.
+   */
+  [Throws]
+  DOMString joinRelative(DOMString base, DOMString relativePath);
+
+  /**
    * Normalize a path by removing multiple separators and `..` and `.`
    * directories.
    *
