@@ -709,6 +709,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                 tab -> arrayOf(tab.content.url, tab.content.loadRequest)
             }
             .collect {
+                findInPageIntegration.onBackPressed()
                 browserToolbarView.expand()
             }
         }
