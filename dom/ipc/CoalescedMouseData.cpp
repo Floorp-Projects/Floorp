@@ -60,7 +60,9 @@ bool CoalescedMouseData::CanCoalesce(const WidgetMouseEvent& aEvent,
                                      const uint64_t& aInputBlockId) {
   MOZ_ASSERT(aEvent.mMessage == eMouseMove);
   return !mCoalescedInputEvent ||
-         (mCoalescedInputEvent->mModifiers == aEvent.mModifiers &&
+         (!mCoalescedInputEvent->mFlags.mIsSynthesizedForTests &&
+          !aEvent.mFlags.mIsSynthesizedForTests &&
+          mCoalescedInputEvent->mModifiers == aEvent.mModifiers &&
           mCoalescedInputEvent->mInputSource == aEvent.mInputSource &&
           mCoalescedInputEvent->pointerId == aEvent.pointerId &&
           mCoalescedInputEvent->mButton == aEvent.mButton &&

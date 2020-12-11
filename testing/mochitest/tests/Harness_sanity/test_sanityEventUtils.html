@@ -38,7 +38,7 @@ const kStrictKeyDownKeyUpEvents =
 info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
   SimpleTest.waitForFocus(
-    function () {
+    async function () {
       SimpleTest.waitForExplicitFinish();
       var startTime = new Date();
       var check = false;
@@ -478,6 +478,44 @@ function starttest() {
 
       $("textBoxB").removeEventListener("keydown", onKeyDown);
       $("textBoxB").removeEventListener("keyup", onKeyUp);
+
+
+      // Async event synthesizing.
+      // On Android this does not work.
+      if (navigator.userAgent.includes("Android")) {
+        SimpleTest.finish();
+        return;
+      }
+
+      await (async function () {
+        await SpecialPowers.pushPrefEnv({set: [["test.events.async.enabled", true]]});
+        try {
+          disableNonTestMouseEvents(true);
+          let mouseMoveCount = 0;
+          let waitForAllSynthesizedMouseMove =
+            new Promise(resolve => {
+              window.addEventListener("mousemove", function onMouseMove(aEvent) {
+                mouseMoveCount++;
+                is(aEvent.target, $("testMouseEvent"),
+                  `The mousemove event target of ${
+                    mouseMoveCount
+                  } should be the input#testMouseEvent, but ${
+                    aEvent.target.nodeName
+                  }`);
+                if (mouseMoveCount === 30) {
+                  window.removeEventListener("mousemove", onMouseMove, { capture: true });
+                  resolve();
+                }
+              }, { capture: true });
+            });
+          for (let i = 0; i < 30; i++) {
+            synthesizeMouse($("testMouseEvent"), 3 + i % 2, 3 + i % 2, { type: "mousemove" });
+          }
+          await waitForAllSynthesizedMouseMove;
+        } finally {
+          disableNonTestMouseEvents(false);
+        }
+      })();
 
       SimpleTest.finish();
     }
