@@ -10,8 +10,8 @@
 namespace js {
 namespace jit {
 
-// List of Baseline IC stub kinds. The stub kind determines the structure of the
-// ICStub data.
+// List of Baseline IC fallback stub kinds. The stub kind determines which
+// class (deriving from ICFallbackStub) this is.
 #define IC_BASELINE_STUB_KIND_LIST(_) \
   _(NewArray_Fallback)                \
   _(NewObject_Fallback)               \
@@ -53,9 +53,7 @@ namespace jit {
                                       \
   _(Compare_Fallback)                 \
                                       \
-  _(GetProp_Fallback)                 \
-                                      \
-  _(CacheIR_Regular)
+  _(GetProp_Fallback)
 
 // List of fallback trampolines. Each of these fallback trampolines exists as
 // part of the JitRuntime. Note that some fallback stubs in previous list may
