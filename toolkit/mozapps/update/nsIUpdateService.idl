@@ -426,6 +426,35 @@ interface nsIUpdateProcessor : nsISupports
 };
 
 /**
+ * Upon creation, which should happen early during startup, the sync manager
+ * creates/opens and locks a file. All other running instances of the same
+ * installation of the app also open the same lock, so we can use it to
+ * determine whether any other instance is running. If so, we'll temporarily
+ * hold off on performing update tasks until there are no other instances or
+ * until a timeout expires, whichever comes first. That way we can avoid
+ * updating behind the back of copies that are still running, so we don't force
+ * all running instances to restart (see bug 1366808, where an error was added
+ * informing the user of the need to restart any running instances that have
+ * been updated).
+ */
+[scriptable, uuid(cf4c4487-66d9-4e18-a2e9-39002245332f)]
+interface nsIUpdateSyncManager : nsISupports
+{
+  /**
+   * Returns whether another instance of this application is running.
+   * @returns true if another instance has the lock open, false if not
+   */
+  bool isOtherInstanceRunning();
+
+  /**
+   * Should only be used for testing.
+   * Closes and reopens the lock file, possibly under a different name if the
+   * path hash has changed (which should only happen if a test is forcing it).
+   */
+  void resetLock();
+};
+
+/**
  * An interface describing a global application service that maintains a list
  * of updates previously performed as well as the current active update.
  */
