@@ -13,7 +13,6 @@ add_task(async function setup() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   // Enable tab-to-search.
   Services.prefs.setBoolPref("browser.urlbar.update2", true);
-  Services.prefs.setBoolPref("browser.urlbar.update2.tabToComplete", true);
   // Disable tab-to-search onboarding results.
   Services.prefs.setIntPref(
     "browser.urlbar.tabToSearch.onboard.interactionsLeft",
