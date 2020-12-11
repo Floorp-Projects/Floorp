@@ -657,8 +657,14 @@ impl TextureCache {
         );
         self.picture_textures.update_profile(profile);
 
-        profile.set(profiler::TEXTURE_CACHE_SHARED_MEM, self.shared_bytes_allocated);
-        profile.set(profiler::TEXTURE_CACHE_STANDALONE_MEM, self.standalone_bytes_allocated);
+        profile.set(
+            profiler::TEXTURE_CACHE_SHARED_MEM,
+            profiler::bytes_to_mb(self.shared_bytes_allocated),
+        );
+        profile.set(
+            profiler::TEXTURE_CACHE_STANDALONE_MEM,
+            profiler::bytes_to_mb(self.standalone_bytes_allocated),
+        );
 
         self.now = FrameStamp::INVALID;
     }

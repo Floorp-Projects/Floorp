@@ -206,11 +206,7 @@
 }
 
 .downloadIconShow > .button-box > .button-icon {
-%ifdef XP_MACOSX
-  list-style-image: url("chrome://browser/skin/panel-icon-magnifier.svg");
-%else
-  list-style-image: url("chrome://browser/skin/panel-icon-folder.svg");
-%endif
+  list-style-image: url("chrome://global/skin/icons/findFile.svg");
 }
 
 .downloadIconRetry > .button-box > .button-icon {

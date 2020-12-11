@@ -213,7 +213,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     if (activeLoaded) {
       is(
         identityIconImage,
-        'url("chrome://browser/skin/connection-mixed-active-loaded.svg")',
+        'url("chrome://global/skin/icons/connection-mixed-active-loaded.svg")',
         "Using active loaded icon"
       );
     }
@@ -227,14 +227,14 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     if (passiveLoaded && !(activeLoaded || activeBlocked)) {
       is(
         identityIconImage,
-        'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
+        'url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")',
         "Using passive loaded icon"
       );
     }
     if (passiveLoaded && activeBlocked) {
       is(
         identityIconImage,
-        'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
+        'url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")',
         "Using active blocked and passive loaded icon"
       );
     }
@@ -309,12 +309,12 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
   if (stateInsecure) {
     is(
       securityViewBG,
-      'url("chrome://browser/skin/connection-mixed-active-loaded.svg")',
+      'url("chrome://global/skin/icons/connection-mixed-active-loaded.svg")',
       "CC using 'not secure' icon"
     );
     is(
       securityContentBG,
-      'url("chrome://browser/skin/connection-mixed-active-loaded.svg")',
+      'url("chrome://global/skin/icons/connection-mixed-active-loaded.svg")',
       "CC using 'not secure' icon"
     );
   }
@@ -347,12 +347,12 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     } else if (activeBlocked || passiveLoaded) {
       is(
         securityViewBG,
-        'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
+        'url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")',
         "CC using degraded icon"
       );
       is(
         securityContentBG,
-        'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
+        'url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")',
         "CC using degraded icon"
       );
     } else {

@@ -26,6 +26,13 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PlacesDBUtils.jsm"
 );
 
+function showThirdPartyModules() {
+  return (
+    AppConstants.platform == "win" &&
+    Services.prefs.getBoolPref("browser.enableAboutThirdParty")
+  );
+}
+
 window.addEventListener("load", function onload(event) {
   try {
     window.removeEventListener("load", onload);
@@ -36,6 +43,10 @@ window.addEventListener("load", function onload(event) {
     });
     populateActionBox();
     setupEventListeners();
+    if (showThirdPartyModules()) {
+      $("third-party-modules").hidden = false;
+      $("third-party-modules-table").hidden = false;
+    }
   } catch (e) {
     Cu.reportError(
       "stack of load error for about:support: " + e + ": " + e.stack
@@ -1160,6 +1171,180 @@ var snapshotFormatters = {
     $("intl-osprefs-regionalprefs").textContent = JSON.stringify(
       data.osPrefs.regionalPrefsLocales
     );
+  },
+
+  thirdPartyModules(aData) {
+    if (!showThirdPartyModules()) {
+      return;
+    }
+
+    if (!aData || !aData.length) {
+      $("third-party-modules-no-data").hidden = false;
+      return;
+    }
+
+    const createElementWithLabel = (tag, label) =>
+      label
+        ? $.new(tag, label)
+        : $.new(tag, "", "", {
+            "data-l10n-id": "support-third-party-modules-no-value",
+          });
+
+    const iconUp = "chrome://global/skin/icons/arrow-up-12.svg";
+    const iconDown = "chrome://global/skin/icons/arrow-dropdown-12.svg";
+    const iconFolder = "chrome://global/skin/icons/findFile.svg";
+    const iconUnsigned =
+      "chrome://global/skin/icons/connection-mixed-active-loaded.svg";
+    const outerTHead = $("third-party-modules-thead");
+    const outerTBody = $("third-party-modules-tbody");
+
+    outerTBody.addEventListener("click", event => {
+      const btnOpenDir = event.target.closest("button");
+      if (!btnOpenDir || !btnOpenDir.fileObj) {
+        return;
+      }
+      btnOpenDir.fileObj.reveal();
+    });
+
+    for (const module of aData) {
+      const btnOpenDir = $.new(
+        "button",
+        [
+          $.new("img", "", "third-party-svg-common", {
+            src: iconFolder,
+            "data-l10n-id": "support-third-party-modules-folder-icon",
+          }),
+        ],
+        "third-party-button third-party-button-open-dir",
+        {
+          "data-l10n-id": "support-third-party-modules-button-open",
+        }
+      );
+      btnOpenDir.fileObj = module.dllFile;
+
+      const innerTBody = $.new("tbody", [], null);
+      for (const event of module.events) {
+        innerTBody.appendChild(
+          $.new("tr", [
+            $.new("td", event.processIdAndType),
+            createElementWithLabel("td", event.threadName),
+            $.new("td", event.baseAddress),
+            $.new("td", event.processUptimeMS),
+            // loadDurationMS can be empty (not zero) when a module is loaded
+            // very early in the process.  processUptimeMS always has a value.
+            createElementWithLabel("td", event.loadDurationMS),
+          ])
+        );
+      }
+
+      const detailRow = $.new(
+        "tr",
+        [
+          $.new(
+            "td",
+            [
+              $.new("table", [
+                $.new("thead", [
+                  $.new("th", "", "", {
+                    "data-l10n-id": "support-third-party-modules-process",
+                  }),
+                  $.new("th", "", "", {
+                    "data-l10n-id": "support-third-party-modules-thread",
+                  }),
+                  $.new("th", "", "", {
+                    "data-l10n-id": "support-third-party-modules-base",
+                  }),
+                  $.new("th", "", "", {
+                    "data-l10n-id": "support-third-party-modules-uptime",
+                  }),
+                  $.new("th", "", "", {
+                    "data-l10n-id": "support-third-party-modules-duration",
+                  }),
+                ]),
+                innerTBody,
+              ]),
+            ],
+            "",
+            { colspan: outerTHead.children.length + 1 }
+          ),
+        ],
+        "",
+        { hidden: true }
+      );
+
+      const imgUpDown = $.new("img", "", "third-party-svg-common", {
+        src: iconDown,
+        "data-l10n-id": "support-third-party-modules-down-icon",
+      });
+      const btnExpandCollapse = $.new(
+        "button",
+        [imgUpDown],
+        "third-party-button",
+        {
+          "data-l10n-id": "support-third-party-modules-expand",
+        }
+      );
+      btnExpandCollapse.addEventListener("click", () => {
+        if (detailRow.hidden) {
+          detailRow.hidden = false;
+          imgUpDown.src = iconUp;
+          document.l10n.setAttributes(
+            imgUpDown,
+            "support-third-party-modules-up-icon"
+          );
+          document.l10n.setAttributes(
+            btnExpandCollapse,
+            "support-third-party-modules-collapse"
+          );
+        } else {
+          detailRow.hidden = true;
+          imgUpDown.src = iconDown;
+          document.l10n.setAttributes(
+            imgUpDown,
+            "support-third-party-modules-down-icon"
+          );
+          document.l10n.setAttributes(
+            btnExpandCollapse,
+            "support-third-party-modules-expand"
+          );
+        }
+      });
+
+      const vendorInfoCell = $.new("td", [
+        createElementWithLabel("span", module.signedBy || module.companyName),
+      ]);
+      if (!module.signedBy) {
+        vendorInfoCell.prepend(
+          $.new(
+            "img",
+            "",
+            "third-party-svg-common third-party-image-unsigned",
+            {
+              src: iconUnsigned,
+              "data-l10n-id": "support-third-party-modules-unsigned-icon",
+            }
+          )
+        );
+      }
+
+      outerTBody.appendChild(
+        $.new("tr", [
+          $.new("td", [
+            document.createTextNode(module.dllFile.leafName),
+            btnOpenDir,
+          ]),
+          createElementWithLabel("td", module.fileVersion),
+          vendorInfoCell,
+          $.new(
+            "td",
+            module.events.length,
+            "third-party-modules-column-occurrence"
+          ),
+          $.new("td", [btnExpandCollapse], "third-party-modules-column-expand"),
+        ])
+      );
+      outerTBody.appendChild(detailRow);
+    }
   },
 };
 

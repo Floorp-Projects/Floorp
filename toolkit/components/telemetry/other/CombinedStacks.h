@@ -36,6 +36,7 @@ class CombinedStacks {
   size_t GetModuleCount() const;
   const Stack& GetStack(unsigned aIndex) const;
   size_t AddStack(const Telemetry::ProcessedStack& aStack);
+  void AddStacks(const CombinedStacks& aStacks);
   size_t GetStackCount() const;
   size_t SizeOfExcludingThis() const;
   void RemoveStack(unsigned aIndex);
@@ -53,6 +54,10 @@ class CombinedStacks {
   size_t mNextIndex;
   // The maximum number of stacks to keep in the CombinedStacks object.
   size_t mMaxStacksCount;
+
+  void AddFrame(
+      size_t aStackIndex, const ProcessedStack::Frame& aFrame,
+      const std::function<const ProcessedStack::Module&(int)>& aModuleGetter);
 
   friend struct ::IPC::ParamTraits<CombinedStacks>;
 };

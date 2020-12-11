@@ -246,7 +246,7 @@ add_task(async function testPreviewNavigationCommands() {
     await helper.awaitAnimationFrame();
     await helper.closeDialog();
   }, "longerArticle.html");
-}).skip(); // Bug 1681026
+});
 
 add_task(async function testMultiplePreviewNavigation() {
   await PrintHelper.withTestPage(async helper => {

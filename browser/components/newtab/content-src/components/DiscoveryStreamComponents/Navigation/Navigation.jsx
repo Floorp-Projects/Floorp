@@ -43,49 +43,16 @@ export class Topic extends React.PureComponent {
   }
 }
 
-class ExploreTopics extends React.PureComponent {
-  render() {
-    const { explore_topics } = this.props;
-    if (!explore_topics) {
-      return null;
-    }
-    return (
-      <>
-        <Topic
-          dispatch={this.props.dispatch}
-          className="ds-navigation-inline-explore-more"
-          url={explore_topics.url}
-          name={explore_topics.name}
-        />
-        <Topic
-          dispatch={this.props.dispatch}
-          className="ds-navigation-header-explore-more"
-          url={explore_topics.url}
-          name={explore_topics.header}
-        />
-      </>
-    );
-  }
-}
-
 export class Navigation extends React.PureComponent {
   render() {
-    const { links } = this.props || [];
-    const { alignment } = this.props || "centered";
-    // Basic isn't currently used, but keeping it here to be very explicit.
-    // The other variant that's supported is "responsive".
-    // The responsive variant is intended for longer lists of topics, more than 6.
-    // It hides the last item on larger displays. The last item is meant for "see more topics"
-    const variant = this.props.display_variant || "basic";
+    const links = this.props.links || [];
+    const alignment = this.props.alignment || "centered";
     const header = this.props.header || {};
-    const { explore_topics } = this.props;
     return (
-      <div
-        className={`ds-navigation ds-navigation-${alignment} ds-navigation-variant-${variant}`}
-      >
+      <div className={`ds-navigation ds-navigation-${alignment}`}>
         {header.title ? (
           <FluentOrText message={header.title}>
-            <span className="ds-header" />
+            <span className="ds-navigation-header" />
           </FluentOrText>
         ) : null}
         <ul>
@@ -100,10 +67,6 @@ export class Navigation extends React.PureComponent {
               </li>
             ))}
         </ul>
-        <ExploreTopics
-          dispatch={this.props.dispatch}
-          explore_topics={explore_topics}
-        />
       </div>
     );
   }
