@@ -96,7 +96,7 @@ TEST(MediaController, ActiveAndDeactiveController)
   {
     FakeControlledMedia fakeMedia(controller);
     fakeMedia.SetPlaying(MediaPlaybackState::ePlayed);
-    ASSERT_TRUE(service->GetActiveControllersNum() == 0);
+    ASSERT_TRUE(service->GetActiveControllersNum() == 1);
 
     fakeMedia.SetAudible(MediaAudibleState::eAudible);
     ASSERT_TRUE(service->GetActiveControllersNum() == 1);
