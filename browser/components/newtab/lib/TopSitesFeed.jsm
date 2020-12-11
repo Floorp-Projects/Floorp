@@ -681,7 +681,7 @@ this.TopSitesFeed = class TopSitesFeed {
         if (link.customScreenshotURL) {
           this._fetchScreenshot(link, link.customScreenshotURL, isStartup);
         } else if (link.searchTopSite && !link.isDefault) {
-          this._attachTippyTopIconForSearchShortcut(link, link.label);
+          await this._attachTippyTopIconForSearchShortcut(link, link.label);
         } else {
           this._fetchIcon(link, isStartup);
         }
@@ -712,12 +712,12 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param {Object} link A link object with a `url` property
    * @param {string} keyword Search keyword
    */
-  _attachTippyTopIconForSearchShortcut(link, keyword) {
+  async _attachTippyTopIconForSearchShortcut(link, keyword) {
     if (
       ["@\u044F\u043D\u0434\u0435\u043A\u0441", "@yandex"].includes(keyword)
     ) {
       let site = { url: link.url };
-      site.url = getSearchFormURL(keyword) || site.url;
+      site.url = (await getSearchFormURL(keyword)) || site.url;
       this._tippyTopProvider.processSite(site);
       link.tippyTopIcon = site.tippyTopIcon;
       link.smallFavicon = site.smallFavicon;
@@ -781,20 +781,18 @@ this.TopSitesFeed = class TopSitesFeed {
     }
 
     // Populate the state with available search shortcuts
-    const searchShortcuts = (await Services.search.getDefaultEngines()).reduce(
-      (result, engine) => {
-        const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s =>
-          engine.aliases.includes(s.keyword)
-        );
-        if (shortcut) {
-          let clone = { ...shortcut };
-          this._attachTippyTopIconForSearchShortcut(clone, clone.keyword);
-          result.push(clone);
-        }
-        return result;
-      },
-      []
-    );
+    let searchShortcuts = [];
+    for (const engine of await Services.search.getDefaultEngines()) {
+      const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s =>
+        engine.aliases.includes(s.keyword)
+      );
+      if (shortcut) {
+        let clone = { ...shortcut };
+        await this._attachTippyTopIconForSearchShortcut(clone, clone.keyword);
+        searchShortcuts.push(clone);
+      }
+    }
+
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.UPDATE_SEARCH_SHORTCUTS,

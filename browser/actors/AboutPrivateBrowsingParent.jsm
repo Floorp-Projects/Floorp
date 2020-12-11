@@ -58,7 +58,8 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
       }
       case "SearchHandoff": {
         let searchAlias = "";
-        let searchAliases = Services.search.defaultPrivateEngine.aliases;
+        let searchEngine = Services.search.defaultPrivateEngine;
+        let searchAliases = searchEngine.aliases;
         if (searchAliases && searchAliases.length) {
           searchAlias = `${searchAliases[0]} `;
         }
@@ -70,6 +71,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         } else {
           // Pass the provided text to the awesomebar. Prepend the @engine shortcut.
           urlBar.search(`${searchAlias}${aMessage.data.text}`, {
+            searchEngine,
             searchModeEntry: "handoff",
           });
           isFirstChange = false;
@@ -82,7 +84,10 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           if (isFirstChange) {
             isFirstChange = false;
             urlBar.removeHiddenFocus();
-            urlBar.search(searchAlias, { searchModeEntry: "handoff" });
+            urlBar.search(searchAlias, {
+              searchEngine,
+              searchModeEntry: "handoff",
+            });
             this.sendAsyncMessage("HideSearch");
             urlBar.removeEventListener("compositionstart", checkFirstChange);
             urlBar.removeEventListener("paste", checkFirstChange);

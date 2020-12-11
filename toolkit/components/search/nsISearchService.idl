@@ -340,7 +340,7 @@ interface nsISearchService : nsISupports
    * @returns The corresponding nsISearchEngine object, or null if it doesn't
    *          exist.
    */
-  nsISearchEngine getEngineByAlias(in AString alias);
+  Promise getEngineByAlias(in AString alias);
 
   /**
    * Returns an engine with the specified name.

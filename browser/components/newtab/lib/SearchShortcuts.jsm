@@ -55,8 +55,8 @@ this.getSearchProvider = getSearchProvider;
 // Get the search form URL for a given search keyword. This allows us to pick
 // different tippytop icons for the different variants. Sush as yandex.com vs. yandex.ru.
 // See more details in bug 1643523.
-function getSearchFormURL(keyword) {
-  const engine = Services.search.getEngineByAlias(keyword);
+async function getSearchFormURL(keyword) {
+  const engine = await Services.search.getEngineByAlias(keyword);
   return engine?.wrappedJSObject._searchForm;
 }
 this.getSearchFormURL = getSearchFormURL;

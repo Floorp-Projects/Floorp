@@ -19,9 +19,9 @@ add_task(async function upgrade_with_configuration_change_test() {
   await extension.awaitStartup();
   await settingsFileWritten;
 
-  let engine = Services.search.getEngineByAlias("test");
+  let engine = await Services.search.getEngineByAlias("test");
   Assert.equal(engine?.name, NAME, "Can be fetched by either alias");
-  engine = Services.search.getEngineByAlias("alias");
+  engine = await Services.search.getEngineByAlias("alias");
   Assert.equal(engine?.name, NAME, "Can be fetched by either alias");
 
   await extension.unload();
