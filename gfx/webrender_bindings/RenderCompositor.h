@@ -166,6 +166,7 @@ class RenderCompositor {
                              bool* aNeedsYFlip) {
     return false;
   }
+  virtual void MaybeRequestAllowFrameRecording(bool aWillRecord) {}
   virtual bool MaybeRecordFrame(layers::CompositionRecorder& aRecorder) {
     return false;
   }
