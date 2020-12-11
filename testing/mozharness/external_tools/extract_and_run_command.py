@@ -103,7 +103,7 @@ def maybe_extract(filename):
     directory and chmods it. The consumer is responsible for removing
     the extracted files, if desired."""
     ext = path.splitext(filename)[1]
-    if ext not in EXTRACTORS.keys():
+    if ext not in EXTRACTORS:
         return None
     # Append the full filepath to the tempdir
     tempdir_root = tempfile.mkdtemp()

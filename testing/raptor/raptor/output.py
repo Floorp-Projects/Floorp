@@ -459,7 +459,7 @@ class PerftestOutput(object):
         for page_cycle in data:
             for sub, replicates in page_cycle[0].items():
                 # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -472,7 +472,7 @@ class PerftestOutput(object):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
@@ -566,7 +566,7 @@ class PerftestOutput(object):
         for page_cycle in data:
             for sub, replicates in page_cycle[0].items():
                 # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -615,7 +615,7 @@ class PerftestOutput(object):
             lower_is_better=test["subtest_lower_is_better"],
         ):
             # build a list of subtests and append all related replicates
-            if name not in _subtests.keys():
+            if name not in _subtests:
                 # subtest not added yet, first pagecycle, so add new one
                 _subtests[name] = {
                     "name": name,
@@ -677,7 +677,7 @@ class PerftestOutput(object):
             )
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = round(
@@ -714,7 +714,7 @@ class PerftestOutput(object):
             for item in data:
                 # for each pagecycle, build a list of subtests and append all related replicates
                 sub = item["benchmark"]
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -727,7 +727,7 @@ class PerftestOutput(object):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
@@ -1042,7 +1042,7 @@ class RaptorOutput(PerftestOutput):
         for page_cycle in data:
             for sub, replicates in page_cycle[0].items():
                 # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -1055,7 +1055,7 @@ class RaptorOutput(PerftestOutput):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
@@ -1081,7 +1081,7 @@ class RaptorOutput(PerftestOutput):
             for item in page_cycle[0]:
                 # for each pagecycle, build a list of subtests and append all related replicates
                 sub = item["name"]
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -1094,7 +1094,7 @@ class RaptorOutput(PerftestOutput):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
@@ -1122,7 +1122,7 @@ class RaptorOutput(PerftestOutput):
             for item in page_cycle[0]:
                 # for each pagecycle, build a list of subtests and append all related replicates
                 sub = item["name"]
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -1135,7 +1135,7 @@ class RaptorOutput(PerftestOutput):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
@@ -1171,7 +1171,7 @@ class RaptorOutput(PerftestOutput):
                 # for each pagecycle, build a list of subtests and append all related replicates
                 sub = item["name"]
                 replicates = [item["duration"]]
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -1184,7 +1184,7 @@ class RaptorOutput(PerftestOutput):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
@@ -1224,7 +1224,7 @@ class RaptorOutput(PerftestOutput):
             page_cycle_results = page_cycle[0]
 
             # TODO: this assumes a single suite is run
-            suite = list(page_cycle_results.keys())[0]
+            suite = list(page_cycle_results)[0]
             for sub in page_cycle_results[suite].keys():
                 try:
                     replicate = round(
@@ -1236,7 +1236,7 @@ class RaptorOutput(PerftestOutput):
                         "[{}][{}] : {} - {}".format(suite, sub, e.__class__.__name__, e)
                     )
 
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -1249,7 +1249,7 @@ class RaptorOutput(PerftestOutput):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
@@ -1264,7 +1264,7 @@ class RaptorOutput(PerftestOutput):
         for page_cycle in data:
             for sub, replicates in page_cycle[0].items():
                 # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests.keys():
+                if sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[sub] = {
                         "unit": test["subtest_unit"],
@@ -1278,7 +1278,7 @@ class RaptorOutput(PerftestOutput):
         subtests = []
         vals = []
 
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
@@ -1307,7 +1307,7 @@ class RaptorOutput(PerftestOutput):
         for pagecycle in data:
             for _sub, _value in pagecycle[0].items():
                 # build a list of subtests and append all related replicates
-                if _sub not in _subtests.keys():
+                if _sub not in _subtests:
                     # subtest not added yet, first pagecycle, so add new one
                     _subtests[_sub] = {
                         "unit": test["subtest_unit"],
@@ -1320,7 +1320,7 @@ class RaptorOutput(PerftestOutput):
 
         vals = []
         subtests = []
-        names = _subtests.keys()
+        names = list(_subtests)
         names.sort(reverse=True)
         for name in names:
             _subtests[name]["value"] = round(

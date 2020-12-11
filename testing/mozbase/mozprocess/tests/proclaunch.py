@@ -164,7 +164,7 @@ class ProcessLauncher(object):
         :param proc_name: File name of the manifest as a string.
         :param level: Depth of the current process in the tree.
         """
-        if proc_name not in self.children.keys():
+        if proc_name not in self.children:
             raise IOError("%s is not a valid process" % proc_name)
 
         maxtime = self.children[proc_name].maxtime

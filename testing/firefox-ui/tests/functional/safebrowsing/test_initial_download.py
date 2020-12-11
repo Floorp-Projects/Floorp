@@ -116,7 +116,7 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
         def check_downloaded(_):
             return reduce(
                 lambda state, pref: state and int(self.marionette.get_pref(pref)) != 1,
-                self.prefs_provider_update_time.keys(),
+                list(self.prefs_provider_update_time),
                 True,
             )
 

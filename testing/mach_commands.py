@@ -57,7 +57,7 @@ class TestConfig(object):
         from mozlog.structuredlog import log_levels
 
         format_desc = "The default format to use when running tests with `mach test`."
-        format_choices = log_formatters.keys()
+        format_choices = list(log_formatters)
         level_desc = "The default log level to use when running tests with `mach test`."
         level_choices = [l.lower() for l in log_levels]
         return [
