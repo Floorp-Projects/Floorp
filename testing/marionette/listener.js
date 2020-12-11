@@ -245,12 +245,6 @@ function deleteSession() {
   curContainer.frame.focus();
 
   legacyactions.touchIds = {};
-  if (action.inputStateMap !== undefined) {
-    action.inputStateMap.clear();
-  }
-  if (action.inputsToCancel !== undefined) {
-    action.inputsToCancel.length = 0;
-  }
 }
 
 /**
@@ -1071,8 +1065,6 @@ function registerSelf() {
 
   sandboxes.clear();
   legacyactions.mouseEventsOnly = false;
-  action.inputStateMap = new Map();
-  action.inputsToCancel = [];
 
   let reply = sendSyncMessage("Marionette:Register", {
     frameId: contentId,
