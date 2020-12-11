@@ -1,8 +1,18 @@
 .ds-navigation {
-  line-height: 32px;
+  @include dark-theme-only {
+    color: $grey-30;
+  }
+
+  color: $grey-50;
   padding: 4px 0;
-  font-size: 14px;
   font-weight: 600;
+  line-height: 22px;
+  font-size: 11.5px;
+
+  @media (min-width: $break-point-widest) {
+    line-height: 32px;
+    font-size: 14px;
+  }
 
   &.ds-navigation-centered {
     text-align: center;
@@ -10,55 +20,6 @@
 
   &.ds-navigation-right-aligned {
     text-align: end;
-  }
-
-  &.ds-navigation-variant-responsive {
-    font-size: 11px;
-
-    .ds-header {
-      font-size: 11px;
-    }
-
-    .ds-navigation-inline-explore-more,
-    .ds-header,
-    ul li,
-    ul {
-      display: none;
-    }
-
-    @media (min-width: $break-point-medium) {
-      .ds-navigation-inline-explore-more,
-      .ds-header,
-      ul {
-        display: inline-block;
-      }
-
-      .ds-navigation-header-explore-more {
-        display: none;
-      }
-
-      ul li {
-        &:nth-child(-n+3) {
-          display: inline-block;
-        }
-      }
-    }
-    @media (min-width: $break-point-large) {
-      ul li {
-        &:nth-child(-n+6) {
-          display: inline-block;
-        }
-      }
-    }
-    @media (min-width: $break-point-widest) {
-      ul li {
-        display: inline-block;
-      }
-
-      .ds-navigation-inline-explore-more {
-        display: none;
-      }
-    }
   }
 
   ul {
@@ -73,7 +34,6 @@
     &::after {
       content: '·';
       padding: 6px;
-      color: $grey-50;
     }
 
     &:last-child::after {
@@ -92,8 +52,7 @@
     }
   }
 
-  .ds-header {
-    margin-bottom: 8px;
-    padding-inline-end: 8px;
+  .ds-navigation-header {
+    padding-inline-end: 6px;
   }
 }
