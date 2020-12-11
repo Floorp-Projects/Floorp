@@ -258,3 +258,6 @@ GeneratedFile(
     entry_point="generate_cacheirops_header",
     inputs=["CacheIROps.yaml"],
 )
+
+if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
+    include("/tools/fuzzing/libfuzzer-config.mozbuild")
