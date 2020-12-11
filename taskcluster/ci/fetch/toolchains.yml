@@ -387,7 +387,7 @@ android-rs-glue:
     fetch:
         type: git
         repo: https://github.com/jamienicol/android-rs-glue
-        revision: 7a57ad320de79c74a57a8ce02b1dc69b1ea7332a
+        revision: 86d9cb4db7bf7a8052e6765d9f8caae6009107cb
 
 clang-5.0:
     description: clang 5.0.2 source code
