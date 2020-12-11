@@ -5,6 +5,8 @@
 # The content of this file comes orginally from automationutils.py
 # and *should* be revised.
 
+from __future__ import division
+
 import re
 from operator import itemgetter
 
@@ -153,6 +155,7 @@ class ShutdownLeaks(object):
                 # Note: to figure out how many hidden windows were created, we divide
                 # this number by 2, because 1 hidden window creation implies in
                 # 1 outer window + 1 inner window.
+                # pylint --py3k W1619
                 self.logger.info(
                     "TEST-INFO | %s | This test created %d hidden window(s)"
                     % (test["fileName"], test["hiddenWindowsCount"] / 2)

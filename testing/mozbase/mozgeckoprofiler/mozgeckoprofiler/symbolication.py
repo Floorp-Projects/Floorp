@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import hashlib
 import os
@@ -312,6 +312,7 @@ class ProfileSymbolicator:
         left = 0
         right = len(libs) - 1
         while left <= right:
+            # pylint --py3k W1619
             mid = (left + right) / 2
             if address >= libs[mid]["end"]:
                 left = mid + 1

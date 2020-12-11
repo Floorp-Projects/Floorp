@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import os
 
@@ -35,6 +35,7 @@ def test_with_profile_should_cleanup():
 
 def test_with_profile_should_cleanup_even_on_exception():
     with pytest.raises(ZeroDivisionError):
+        # pylint --py3k W1619
         with Profile() as profile:
             assert os.path.exists(profile.profile)
             1 / 0  # will raise ZeroDivisionError

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import json
 import yaml
@@ -211,6 +211,7 @@ class TPSTestRunner(object):
                                 possible_time = line[0:13]
                                 if len(possible_time) == 13 and possible_time.isdigit():
                                     time_ms = int(possible_time)
+                                    # pylint --py3k W1619
                                     formatted = time.strftime(
                                         "%Y-%m-%d %H:%M:%S",
                                         time.localtime(time_ms / 1000),

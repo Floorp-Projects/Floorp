@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import json
 import os
@@ -73,9 +73,11 @@ class WebExtension(Perftest):
         # we don't want this timeout occurring unless abosultely necessary
 
         # convert timeout to seconds and account for page cycles
+        # pylint --py3k W1619
         timeout = int(timeout / 1000) * int(test.get("page_cycles", 1))
         # account for the pause the raptor webext runner takes after browser startup
         # and the time an exception is propagated through the framework
+        # pylint --py3k W1619
         timeout += int(self.post_startup_delay / 1000) + 10
 
         # for page-load tests we don't start the page-timeout timer until the pageload.js content

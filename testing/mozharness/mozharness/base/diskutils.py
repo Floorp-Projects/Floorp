@@ -28,6 +28,7 @@
         pass
 
 """
+from __future__ import division
 import ctypes
 import logging
 import os
@@ -67,6 +68,7 @@ def convert_to(size, from_unit, to_unit):
     try:
         df = sizes[to_unit]
         sf = sizes[from_unit]
+        # pylint --py3k W1619
         return size * sf / df
     except KeyError:
         raise DiskutilsError("conversion error: Invalid source or destination format")

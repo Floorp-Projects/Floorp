@@ -4,8 +4,7 @@
 #
 # This module needs to stay Python 2 and 3 compatible
 #
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import platform
 import time
@@ -245,6 +244,7 @@ def download_file(url, target=None):
                     f.flush()
         else:
             iter = req.iter_content(chunk_size=1024)
+            # pylint --py3k W1619
             size = total_length / 1024 + 1
             for chunk in progress.bar(iter, expected_size=size):
                 if chunk:

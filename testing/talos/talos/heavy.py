@@ -5,7 +5,7 @@
 """
 Downloads Heavy profiles from TaskCluster.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 import os
 import tarfile
 import functools
@@ -121,6 +121,7 @@ def download_profile(name, profiles_dir=None):
     template = "Download progress %d%%"
     with open(archive_file, "wb") as f:
         iter = req.iter_content(chunk_size=1024)
+        # pylint --py3k W1619
         size = total_length / 1024 + 1
         with ProgressBar(size=size, template=template) as bar:
             for chunk in iter:
