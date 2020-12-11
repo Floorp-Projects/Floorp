@@ -1525,7 +1525,7 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
                    kMaxICCDuration.ToMilliseconds(),
                "A max duration ICC shouldn't reduce GC delay to 0");
 
-    PokeGC(JS::GCReason::CC_WAITING, nullptr,
+    PokeGC(JS::GCReason::CC_FINISHED, nullptr,
            StaticPrefs::javascript_options_gc_delay() -
                std::min(ccNowDuration, kMaxICCDuration).ToMilliseconds());
   }
@@ -1805,7 +1805,7 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
   if (aObj) {
     JS::Zone* zone = JS::GetObjectZone(aObj);
     CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(zone);
-  } else if (aReason != JS::GCReason::CC_WAITING) {
+  } else if (aReason != JS::GCReason::CC_FINISHED) {
     sScheduler.SetNeedsFullGC();
   }
 
