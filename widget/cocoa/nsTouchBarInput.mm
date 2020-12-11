@@ -5,6 +5,8 @@
 #include "nsTouchBarInput.h"
 
 #include "mozilla/MacStringHelpers.h"
+#include "nsArrayUtils.h"
+#include "nsCocoaUtils.h"
 #include "nsTouchBarInputIcon.h"
 
 @implementation TouchBarInput

@@ -4,11 +4,15 @@
 
 #include "nsTouchBar.h"
 
+#include <objc/runtime.h>
+
 #include "mozilla/MacStringHelpers.h"
 #include "nsArrayUtils.h"
+#include "nsCocoaUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIArray.h"
 #include "nsTouchBarInputIcon.h"
+#include "nsWidgetsCID.h"
 
 @implementation nsTouchBar
 
