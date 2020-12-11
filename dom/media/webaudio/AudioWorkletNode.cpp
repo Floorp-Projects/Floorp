@@ -96,7 +96,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                             Span<const AudioBlock> aInput,
                             Span<AudioBlock> aOutput, bool* aFinished) override;
 
-  void NotifyForcedShutdown() override { ReleaseJSResources(); }
+  void OnGraphThreadDone() override { ReleaseJSResources(); }
 
   bool IsActive() const override { return mKeepEngineActive; }
 
