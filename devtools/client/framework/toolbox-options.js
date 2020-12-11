@@ -289,8 +289,10 @@ OptionsPanel.prototype = {
       checkboxLabel.appendChild(checkboxInput);
       checkboxLabel.appendChild(checkboxSpanLabel);
 
-      // @backward-compat { version 71 } We shouldn't have deprecated anymore. We might
-      // want to remove this code.
+      // We shouldn't have deprecated tools anymore, but we might have one in the future,
+      // when migrating the storage inspector to the application panel (Bug 1681059).
+      // Let's keep this code for now so we keep the l10n property around and avoid
+      // unnecessary translation work if we need it again in the future.
       if (tool.deprecated) {
         const deprecationURL = this.panelDoc.createElement("a");
         deprecationURL.title = deprecationURL.href = tool.deprecationURL;
