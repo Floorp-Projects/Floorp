@@ -9,6 +9,7 @@
 
 #include "nsITouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
+#include "nsCOMPtr.h"
 
 using namespace mozilla::dom;
 
