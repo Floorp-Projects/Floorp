@@ -6391,12 +6391,20 @@ AttachDecision CallIRGenerator::tryAttachMathFloor(HandleFunction callee) {
 
   ValOperandId argumentId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  NumberOperandId numberId = writer.guardIsNumber(argumentId);
 
-  if (resultIsInt32) {
-    writer.mathFloorToInt32Result(numberId);
+  if (args_[0].isInt32()) {
+    MOZ_ASSERT(resultIsInt32);
+
+    Int32OperandId intId = writer.guardToInt32(argumentId);
+    writer.loadInt32Result(intId);
   } else {
-    writer.mathFloorNumberResult(numberId);
+    NumberOperandId numberId = writer.guardIsNumber(argumentId);
+
+    if (resultIsInt32) {
+      writer.mathFloorToInt32Result(numberId);
+    } else {
+      writer.mathFloorNumberResult(numberId);
+    }
   }
 
   writer.returnFromIC();
@@ -6424,12 +6432,20 @@ AttachDecision CallIRGenerator::tryAttachMathCeil(HandleFunction callee) {
 
   ValOperandId argumentId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  NumberOperandId numberId = writer.guardIsNumber(argumentId);
 
-  if (resultIsInt32) {
-    writer.mathCeilToInt32Result(numberId);
+  if (args_[0].isInt32()) {
+    MOZ_ASSERT(resultIsInt32);
+
+    Int32OperandId intId = writer.guardToInt32(argumentId);
+    writer.loadInt32Result(intId);
   } else {
-    writer.mathCeilNumberResult(numberId);
+    NumberOperandId numberId = writer.guardIsNumber(argumentId);
+
+    if (resultIsInt32) {
+      writer.mathCeilToInt32Result(numberId);
+    } else {
+      writer.mathCeilNumberResult(numberId);
+    }
   }
 
   writer.returnFromIC();
@@ -6457,12 +6473,20 @@ AttachDecision CallIRGenerator::tryAttachMathTrunc(HandleFunction callee) {
 
   ValOperandId argumentId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  NumberOperandId numberId = writer.guardIsNumber(argumentId);
 
-  if (resultIsInt32) {
-    writer.mathTruncToInt32Result(numberId);
+  if (args_[0].isInt32()) {
+    MOZ_ASSERT(resultIsInt32);
+
+    Int32OperandId intId = writer.guardToInt32(argumentId);
+    writer.loadInt32Result(intId);
   } else {
-    writer.mathTruncNumberResult(numberId);
+    NumberOperandId numberId = writer.guardIsNumber(argumentId);
+
+    if (resultIsInt32) {
+      writer.mathTruncToInt32Result(numberId);
+    } else {
+      writer.mathTruncNumberResult(numberId);
+    }
   }
 
   writer.returnFromIC();
@@ -6490,12 +6514,20 @@ AttachDecision CallIRGenerator::tryAttachMathRound(HandleFunction callee) {
 
   ValOperandId argumentId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  NumberOperandId numberId = writer.guardIsNumber(argumentId);
 
-  if (resultIsInt32) {
-    writer.mathRoundToInt32Result(numberId);
+  if (args_[0].isInt32()) {
+    MOZ_ASSERT(resultIsInt32);
+
+    Int32OperandId intId = writer.guardToInt32(argumentId);
+    writer.loadInt32Result(intId);
   } else {
-    writer.mathFunctionNumberResult(numberId, UnaryMathFunction::Round);
+    NumberOperandId numberId = writer.guardIsNumber(argumentId);
+
+    if (resultIsInt32) {
+      writer.mathRoundToInt32Result(numberId);
+    } else {
+      writer.mathFunctionNumberResult(numberId, UnaryMathFunction::Round);
+    }
   }
 
   writer.returnFromIC();
