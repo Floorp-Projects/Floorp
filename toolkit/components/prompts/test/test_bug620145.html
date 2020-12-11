@@ -23,7 +23,6 @@
 <button id="button" onmouseup="openAlert()">Button</button>
 
 <script class="testbody" type="text/javascript">
-var selectionTest = false;
 
 function openAlert() {
   info("opening alert...");
@@ -35,8 +34,6 @@ add_task(async function runTest() {
   var state, action;
   // The <button> in this test's HTML opens a prompt when clicked.
   // Here we send the events to simulate clicking it.
-  info("tabModalPromptEnabled? " + tabModalPromptEnabled);
-  selectionTest = tabModalPromptEnabled;
   modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
 
   state = {
@@ -90,12 +87,8 @@ function dispatchMouseEvent(target, type) {
 }
 
 function checkSelection() {
-  if (!selectionTest) {
-    todo(false, "Selection test is disabled when tab modal prompts are not enabled.");
-  } else {
-    synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
-    is(window.getSelection().toString(), "", "selection not made");
-  }
+  synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
+  is(window.getSelection().toString(), "", "selection not made");
 }
 </script>
 
