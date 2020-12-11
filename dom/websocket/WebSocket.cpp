@@ -860,6 +860,23 @@ WebSocketImpl::OnServerClose(nsISupports* aContext, uint16_t aCode,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebSocketImpl::OnError() {
+  if (!IsTargetThread()) {
+    return Dispatch(
+        NS_NewRunnableFunction("dom::FailConnectionRunnable",
+                               [self = RefPtr{this}]() {
+                                 self->FailConnection(
+                                     nsIWebSocketChannel::CLOSE_ABNORMAL);
+                               }),
+        NS_DISPATCH_NORMAL);
+  }
+
+  AssertIsOnTargetThread();
+  FailConnection(nsIWebSocketChannel::CLOSE_ABNORMAL);
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // WebSocketImpl::nsIInterfaceRequestor
 //-----------------------------------------------------------------------------

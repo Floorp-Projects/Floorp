@@ -307,6 +307,9 @@ WebSocketChannelParent::OnServerClose(nsISupports* aContext, uint16_t code,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebSocketChannelParent::OnError() { return NS_OK; }
+
 void WebSocketChannelParent::ActorDestroy(ActorDestroyReason why) {
   LOG(("WebSocketChannelParent::ActorDestroy() %p\n", this));
 
