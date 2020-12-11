@@ -495,7 +495,7 @@ nsresult gfxPlatformFontList::InitFontList() {
     bool oldSharedList = mSharedFontList != nullptr;
     mSharedFontList.reset(new fontlist::FontList(mFontlistInitCount));
     InitSharedFontListForPlatform();
-    if (mSharedFontList->Initialized()) {
+    if (mSharedFontList && mSharedFontList->Initialized()) {
       if (mLocalNameTable.Count()) {
         SharedFontList()->SetLocalNames(mLocalNameTable);
         mLocalNameTable.Clear();
