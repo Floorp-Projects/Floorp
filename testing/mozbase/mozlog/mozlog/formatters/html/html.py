@@ -6,7 +6,6 @@
 from __future__ import absolute_import
 
 import base64
-import cgi
 from datetime import datetime
 import os
 import json
@@ -18,6 +17,11 @@ import six
 
 html = None
 raw = None
+
+if six.PY2:
+    from cgi import escape
+else:
+    from html import escape
 
 base_path = os.path.split(__file__)[0]
 
@@ -226,9 +230,9 @@ class HTMLFormatter(base.BaseFormatter):
                         line.lower().find("error") != -1
                         or line.lower().find("exception") != -1
                     ):
-                        log.append(html.span(raw(cgi.escape(line)), class_="error"))
+                        log.append(html.span(raw(escape(line)), class_="error"))
                     else:
-                        log.append(raw(cgi.escape(line)))
+                        log.append(raw(escape(line)))
                 log.append(html.br())
             additional_html.append(log)
 
