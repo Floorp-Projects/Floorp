@@ -310,6 +310,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_debug_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSecretSettingsFragment()
             }
+            resources.getString(R.string.pref_key_secret_debug_info) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToSecretInfoSettingsFragment()
+            }
             resources.getString(R.string.pref_key_override_amo_collection) -> {
                 val context = requireContext()
                 val dialogView = LayoutInflater.from(context).inflate(R.layout.amo_collection_override_dialog, null)
@@ -415,6 +418,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
         preferenceSyncOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
         findPreference<Preference>(
             getPreferenceKey(R.string.pref_key_debug_settings)
+        )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
+        findPreference<Preference>(
+            getPreferenceKey(R.string.pref_key_secret_debug_info)
         )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
 
         setupAmoCollectionOverridePreference(requireContext().settings())

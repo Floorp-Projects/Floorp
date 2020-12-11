@@ -232,4 +232,9 @@
     <string name="pref_key_camera_permissions_needed" translatable="false">pref_key_camera_permissions_needed</string>
 
     <string name="pref_key_return_to_browser" translatable="false">pref_key_return_to_browser</string>
+  
+    <!-- Secret Info Setting Keys -->
+    <string name="pref_key_secret_debug_info" translatable="false">pref_key_secret_debug_info</string>
+    <string name="pref_key_leanplum_user_id" translatable="false">pref_key_leanplum_user_id</string>
+    <string name="pref_key_leanplum_device_id" translatable="false">pref_key_leanplum_device_id</string>
 </resources>
