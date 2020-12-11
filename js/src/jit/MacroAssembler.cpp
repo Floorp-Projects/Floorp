@@ -3261,13 +3261,6 @@ void MacroAssembler::branchIfObjectNotExtensible(Register obj, Register scratch,
                Imm32(js::BaseShape::NOT_EXTENSIBLE), label);
 }
 
-void MacroAssembler::copyObjGroupNoPreBarrier(Register sourceObj,
-                                              Register destObj,
-                                              Register scratch) {
-  loadPtr(Address(sourceObj, JSObject::offsetOfGroup()), scratch);
-  storePtr(scratch, Address(destObj, JSObject::offsetOfGroup()));
-}
-
 void MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef,
                                          Register tag, Label* label) {
   if (!maybeDef || maybeDef->mightBeType(type)) {
