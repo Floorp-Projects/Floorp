@@ -58,6 +58,5 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
   isActive: actorBridgeWithSpec("isActive"),
   isSupportedPlatform: actorBridgeWithSpec("isSupportedPlatform"),
   isLockedForPrivateBrowsing: actorBridgeWithSpec("isLockedForPrivateBrowsing"),
-  // @backward-compat { version 72 }
   getSupportedFeatures: actorBridgeWithSpec("getSupportedFeatures"),
 });
