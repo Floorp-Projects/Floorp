@@ -1010,7 +1010,11 @@ static void TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame) {
 
   if (ICStub* stub = layout->maybeStubPtr()) {
     MOZ_ASSERT(stub->makesGCCalls());
-    stub->trace(trc);
+    if (stub->isFallback()) {
+      stub->toFallbackStub()->trace(trc);
+    } else {
+      stub->toCacheIR_Regular()->trace(trc);
+    }
   }
 }
 
