@@ -135,8 +135,7 @@ function TargetMixin(parentClass) {
      * @return {TargetMixin} the parent target.
      */
     getWatcherFront() {
-      // @backward-compat { version 77 } On newer servers, all additional frame targets
-      // are spawn by the WatcherActor and are managed by it.
+      // All additional frame targets are spawn by the WatcherActor and are managed by it.
       if (this.parentFront.typeName == "watcher") {
         return this.parentFront;
       }
@@ -151,7 +150,7 @@ function TargetMixin(parentClass) {
         return this.parentFront.getWatcher();
       }
 
-      // @backward-compat { version 77 } There is no watcher on older servers.
+      // For WebExtension, the descriptor doesn't expose a watcher yet (See Bug 1675456).
       return null;
     }
 
@@ -161,11 +160,11 @@ function TargetMixin(parentClass) {
      * @return {TargetMixin} the parent target.
      */
     async getParentTarget() {
-      // @backward-compat { version 77 } We now support frames watching via watchTargets
-      // for Tab and Process descriptors.
+      // We now support frames watching via watchTargets for Tab and Process descriptors.
       const watcherFront = await this.getWatcherFront();
       if (watcherFront) {
-        // Safety check, in theory all watcher should support frames.
+        // Safety check, in theory all watcher should support frames. We should be able
+        // to remove this as part of Bug 1680280.
         if (watcherFront.traits.frame) {
           // Retrieve the Watcher, which manage all the targets and should already have a reference to
           // to the parent target.
@@ -176,15 +175,13 @@ function TargetMixin(parentClass) {
         return null;
       }
 
-      // Other targets, like WebExtensions, don't have a Watcher yet, nor do expose `getParentTarget`.
-      // We can't fetch parent target yet for these targets.
-      if (!this.parentFront.getParentTarget) {
-        return null;
+      if (this.parentFront.getParentTarget) {
+        return this.parentFront.getParentTarget();
       }
 
-      // @backward-compat { version 77 } On older servers, we still have FrameDescriptor
-      // for Frame targets and can fetch the parent target from it.
-      return this.parentFront.getParentTarget();
+      // Other targets, like WebExtensions, don't have a Watcher yet, nor do expose `getParentTarget`.
+      // We can't fetch parent target yet for these targets.
+      return null;
     }
 
     /**
