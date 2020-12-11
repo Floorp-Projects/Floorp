@@ -397,7 +397,7 @@ def get_parser():
     parser = ArgumentParser()
     parser.add_argument(
         "benchmark",
-        choices=all_benchmarks.keys(),
+        choices=list(all_benchmarks),
         help="The name of the benchmark to run.",
     )
     parser.add_argument(

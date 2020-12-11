@@ -85,7 +85,7 @@ def create_parser(mach_interface=False):
         default="firefox",
         dest="app",
         help="Name of the application we are testing (default: firefox)",
-        choices=APPS.keys(),
+        choices=list(APPS),
     )
     add_arg(
         "-b",

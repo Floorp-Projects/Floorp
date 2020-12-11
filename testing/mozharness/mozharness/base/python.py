@@ -236,8 +236,9 @@ class VirtualenvMixin(object):
         """
         Return whether the package is installed
         """
-        packages = self.package_versions(error_level=error_level).keys()
-        return package_name.lower() in [package.lower() for package in packages]
+        # pylint --py3k W1655
+        package_versions = self.package_versions(error_level=error_level)
+        return package_name.lower() in [package.lower() for package in package_versions]
 
     def install_module(
         self,
