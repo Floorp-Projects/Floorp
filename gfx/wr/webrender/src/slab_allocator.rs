@@ -321,9 +321,11 @@ impl SlabAllocator {
         let (region_index, location) = unpack_alloc_id(id);
 
         let region = &mut self.regions[region_index];
+        let size = size2(region.slab_size.width, region.slab_size.height);
+
         region.free(location, &mut self.empty_regions);
 
-        size2(region.slab_size.width, region.slab_size.height)
+        size
     }
 
     pub fn num_regions(&self) -> usize {
