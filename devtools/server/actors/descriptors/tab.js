@@ -60,8 +60,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       selected: this.selected,
       title: this._getTitle(),
       traits: {
-        // @backward-compat { version 76 }
-        getFavicon: true,
         // @backward-compat { version 77 }
         watcher: true,
       },

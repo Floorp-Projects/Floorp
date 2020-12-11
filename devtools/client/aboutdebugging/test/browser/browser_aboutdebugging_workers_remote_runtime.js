@@ -136,11 +136,9 @@ async function testWorkerOnMockedRemoteClient(
   // when the new tab was processed.
   info("Wait until the tab target for 'http://some.random/url.com' appears");
   const testTab = {
-    retrieveAsyncFormData: () => {},
+    retrieveFavicon: () => {},
     outerWindowID: 0,
-    traits: {
-      getFavicon: true,
-    },
+    traits: {},
     url: "http://some.random/url.com",
   };
   remoteClient.listTabs = () => [testTab];

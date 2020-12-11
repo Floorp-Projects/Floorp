@@ -174,9 +174,9 @@ function requestTabs() {
       );
       const tabs = isSupported ? await clientWrapper.listTabs() : [];
 
-      // Fetch the missing information for all tabs.
+      // Fetch the favicon for all tabs.
       await Promise.all(
-        tabs.map(descriptorFront => descriptorFront.retrieveAsyncFormData())
+        tabs.map(descriptorFront => descriptorFront.retrieveFavicon())
       );
 
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });

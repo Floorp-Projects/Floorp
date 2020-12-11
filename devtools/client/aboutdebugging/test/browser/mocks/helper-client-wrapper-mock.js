@@ -114,11 +114,9 @@ function createThisFirefoxClientMock() {
   // Create a fake about:debugging tab because our test helper openAboutDebugging
   // waits until about:debugging is displayed in the list of tabs.
   const mockAboutDebuggingTab = {
-    retrieveAsyncFormData: () => {},
+    retrieveFavicon: () => {},
     outerWindowID: 0,
-    traits: {
-      getFavicon: true,
-    },
+    traits: {},
     url: "about:debugging",
   };
 
