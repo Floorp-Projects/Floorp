@@ -36,7 +36,7 @@ class AboutTabCrashedParent extends JSWindowActorParent {
 
     switch (message.name) {
       case "Load": {
-        gAboutTabCrashedPages.set(this, this.browser);
+        gAboutTabCrashedPages.set(this, browser);
         this.updateTabCrashedCount();
 
         let report = TabCrashHandler.onAboutTabCrashedLoad(browser);
