@@ -134,15 +134,6 @@ inline NSString* ToNSString(id aValue) {
   return (lineNumber >= 0) ? [NSNumber numberWithInt:lineNumber] : nil;
 }
 
-- (NSString*)moxRole {
-  if ([self ARIARole] == nsGkAtoms::textbox ||
-      [self stateWithMask:states::MULTI_LINE]) {
-    return NSAccessibilityTextAreaRole;
-  }
-
-  return [super moxRole];
-}
-
 - (NSString*)moxSubrole {
   MOZ_ASSERT(!mGeckoAccessible.IsNull());
 
