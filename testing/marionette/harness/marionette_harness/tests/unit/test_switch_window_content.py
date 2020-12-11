@@ -192,3 +192,22 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.marionette.current_window_handle, new_pb_tab)
 
         self.marionette.execute_script(" return true; ")
+
+    def test_switch_to_window_after_remoteness_change(self):
+        # Test that after a remoteness change (and a browsing context swap)
+        # marionette can still switch to tabs correctly.
+        with self.marionette.using_context("content"):
+            # about:robots runs in a different process and will trigger a
+            # remoteness change with or without fission.
+            self.marionette.navigate("about:robots")
+
+        about_robots_tab = self.marionette.current_window_handle
+
+        # Open a new tab and switch to it before trying to switch back to the
+        # initial tab.
+        tab2 = self.open_tab(focus=True)
+        self.marionette.switch_to_window(tab2)
+        self.marionette.close()
+
+        self.marionette.switch_to_window(about_robots_tab)
+        self.assertEqual(self.marionette.current_window_handle, about_robots_tab)
