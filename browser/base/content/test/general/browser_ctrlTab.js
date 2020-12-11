@@ -211,6 +211,17 @@ add_task(async function() {
         ? "back to the previously selected tab"
         : normalized + " tabs back in most-recently-selected order";
 
+    // Add keyup listener to all content documents.
+    await Promise.all(
+      gBrowser.tabs.map(tab =>
+        SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+          content.window.addEventListener("keyup", () => {
+            content.window._ctrlTabTestKeyupHappend = true;
+          });
+        })
+      )
+    );
+
     for (let i = 0; i < tabTimes; i++) {
       await pressCtrlTab();
 
@@ -252,6 +263,20 @@ add_task(async function() {
         tabTimes +
         " goes " +
         where
+    );
+
+    const keyupEvents = await Promise.all(
+      gBrowser.tabs.map(tab =>
+        SpecialPowers.spawn(
+          tab.linkedBrowser,
+          [],
+          () => !!content.window._ctrlTabTestKeyupHappend
+        )
+      )
+    );
+    ok(
+      keyupEvents.every(isKeyupHappned => !isKeyupHappned),
+      "Content document doesn't capture Keyup event during cycling tabs"
     );
   }
 });
