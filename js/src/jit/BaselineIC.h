@@ -301,12 +301,6 @@ class ICStub {
     }
   }
 
-  // TODO(no-TI): remove enum
-  enum Trait : uint16_t {
-    Regular = 0x0,
-    Fallback = 0x1,
-  };
-
   void updateCode(JitCode* stubCode);
   void trace(JSTracer* trc);
 
@@ -344,27 +338,24 @@ class ICStub {
   // A 16-bit field usable by subtypes of ICStub for subtype-specific small-info
   uint16_t extra_ = 0;
 
-  // A 16-bit field storing the trait and kind.
+  // A 16-bit field storing the kind.
   // Unused bits are filled with a magic value and verified when tracing.
-  uint16_t traitKindBits_;
+  uint16_t kindBits_;
 
-  static const uint16_t TRAIT_OFFSET = 0;
-  static const uint16_t TRAIT_BITS = 3;
-  static const uint16_t TRAIT_MASK = (1 << TRAIT_BITS) - 1;
-  static const uint16_t KIND_OFFSET = TRAIT_OFFSET + TRAIT_BITS;
+  static const uint16_t KIND_OFFSET = 0;
   static const uint16_t KIND_BITS = 5;
   static const uint16_t KIND_MASK = (1 << KIND_BITS) - 1;
   static const uint16_t MAGIC_OFFSET = KIND_OFFSET + KIND_BITS;
-  static const uint16_t MAGIC_BITS = 8;
+  static const uint16_t MAGIC_BITS = 11;
   static const uint16_t MAGIC_MASK = (1 << MAGIC_BITS) - 1;
-  static const uint16_t EXPECTED_MAGIC = 0b11100011;
+  static const uint16_t EXPECTED_MAGIC = 0b10011100011;
 
   static_assert(LIMIT <= (1 << KIND_BITS), "Not enough kind bits");
   static_assert(LIMIT > (1 << (KIND_BITS - 1)), "Too many kind bits");
-  static_assert(TRAIT_BITS + KIND_BITS + MAGIC_BITS == 16, "Unused bits");
+  static_assert(KIND_BITS + MAGIC_BITS == 16, "Unused bits");
 
   inline ICStub(Kind kind, uint8_t* stubCode) : stubCode_(stubCode) {
-    setTraitKind(Regular, kind);
+    setKind(kind);
     MOZ_ASSERT(stubCode != nullptr);
   }
 
@@ -372,39 +363,23 @@ class ICStub {
     MOZ_ASSERT(stubCode != nullptr);
   }
 
-  inline ICStub(Kind kind, Trait trait, uint8_t* stubCode)
-      : stubCode_(stubCode) {
-    setTraitKind(trait, kind);
-    MOZ_ASSERT(stubCode != nullptr);
-  }
-
-  inline ICStub(Kind kind, Trait trait, JitCode* stubCode)
-      : ICStub(kind, trait, stubCode->raw()) {
-    MOZ_ASSERT(stubCode != nullptr);
-  }
-
-  inline Trait trait() const {
-    return (Trait)((traitKindBits_ >> TRAIT_OFFSET) & TRAIT_MASK);
-  }
-
-  inline void setTraitKind(Trait trait, Kind kind) {
-    traitKindBits_ = (trait << TRAIT_OFFSET) | (kind << KIND_OFFSET) |
-                     (EXPECTED_MAGIC << MAGIC_OFFSET);
+  inline void setKind(Kind kind) {
+    kindBits_ = (kind << KIND_OFFSET) | (EXPECTED_MAGIC << MAGIC_OFFSET);
   }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   inline void checkTraceMagic() {
-    uint16_t magic = (traitKindBits_ >> MAGIC_OFFSET) & MAGIC_MASK;
+    uint16_t magic = (kindBits_ >> MAGIC_OFFSET) & MAGIC_MASK;
     MOZ_DIAGNOSTIC_ASSERT(magic == EXPECTED_MAGIC);
   }
 #endif
 
  public:
   inline Kind kind() const {
-    return (Kind)((traitKindBits_ >> KIND_OFFSET) & KIND_MASK);
+    return (Kind)((kindBits_ >> KIND_OFFSET) & KIND_MASK);
   }
 
-  inline bool isFallback() const { return trait() == Fallback; }
+  inline bool isFallback() const { return kind() != Kind::CacheIR_Regular; }
 
   inline const ICFallbackStub* toFallbackStub() const {
     MOZ_ASSERT(isFallback());
@@ -510,12 +485,7 @@ class ICFallbackStub : public ICStub {
   uint32_t enteredCount_ = 0;
 
   ICFallbackStub(Kind kind, TrampolinePtr stubCode)
-      : ICStub(kind, ICStub::Fallback, stubCode.value) {}
-
-  ICFallbackStub(Kind kind, Trait trait, TrampolinePtr stubCode)
-      : ICStub(kind, trait, stubCode.value) {
-    MOZ_ASSERT(trait == ICStub::Fallback);
-  }
+      : ICStub(kind, stubCode.value) {}
 
  public:
   inline ICEntry* icEntry() const { return icEntry_; }
