@@ -1824,6 +1824,18 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1603515");
+
+    ////////////////////////////////////
+    // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
+#ifdef NIGHTLY_BUILD
+    APPEND_TO_DRIVER_BLOCKLIST2_EXT(
+        OperatingSystem::Windows, ScreenSizeStatus::SmallAndMedium,
+        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
+        DriverVendor::All, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_NIGHTLY_SOFTWARE_WR_S_M_SCRN");
+#endif
   }
   return *sDriverInfo;
 }
