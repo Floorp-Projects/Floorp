@@ -1809,18 +1809,29 @@ TEST(GeckoProfiler, GetProfile)
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
+  mozilla::Maybe<uint32_t> activeFeatures = profiler_features_if_active();
+  ASSERT_TRUE(activeFeatures.isSome());
+  // Not all platforms support stack-walking.
+  const bool hasStackWalk = ProfilerFeature::HasStackWalk(*activeFeatures);
+  // "threads" may automatically be added when `filters` is not empty.
+  const bool hasThreads = ProfilerFeature::HasThreads(*activeFeatures);
+
   UniquePtr<char[]> profile = profiler_get_profile();
-  JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
+  JSONOutputCheck(profile.get(), [&](const Json::Value& aRoot) {
     GET_JSON(meta, aRoot["meta"], Object);
     {
       GET_JSON(configuration, meta["configuration"], Object);
       {
         GET_JSON(features, configuration["features"], Array);
         {
-          EXPECT_EQ(features.size(), 2u);
-          EXPECT_JSON_ARRAY_CONTAINS(features, String, "stackwalk");
-          // "threads" is automatically added when `filters` is not empty.
-          EXPECT_JSON_ARRAY_CONTAINS(features, String, "threads");
+          EXPECT_EQ(features.size(),
+                    (hasStackWalk ? 1u : 0u) + (hasThreads ? 1u : 0u));
+          if (hasStackWalk) {
+            EXPECT_JSON_ARRAY_CONTAINS(features, String, "stackwalk");
+          }
+          if (hasThreads) {
+            EXPECT_JSON_ARRAY_CONTAINS(features, String, "threads");
+          }
         }
         GET_JSON(threads, configuration["threads"], Array);
         {
