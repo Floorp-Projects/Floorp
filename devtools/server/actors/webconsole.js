@@ -1008,8 +1008,11 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         // Wait for any potential returned Promise.
         response = await this._maybeWaitForResponseResult(response);
         // Set the timestamp only now, so any messages logged in the expression will come
-        // before the result.
-        response.timestamp = Date.now();
+        // before the result. Add an extra millisecond so the result has a different timestamp
+        // than the console message it might have emitted (unlike the evaluation result,
+        // console api messages are throttled before being handled by the webconsole client,
+        // which might cause some ordering issue).
+        response.timestamp = Date.now() + 1;
         // Finally, emit an unsolicited evaluationResult packet with the evaluation result.
         this.emit("evaluationResult", {
           type: "evaluationResult",
