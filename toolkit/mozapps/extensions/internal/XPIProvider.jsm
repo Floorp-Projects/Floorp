@@ -779,6 +779,8 @@ class XPIStateLocation extends Map {
       addon
     );
 
+    XPIProvider.persistStartupData(addon);
+
     let xpiState = this._addState(addon.id, { file: addon._sourceBundle });
     xpiState.syncWithDB(addon, true);
 
@@ -3107,6 +3109,25 @@ var XPIProvider = {
     let state = XPIStates.findAddon(aID);
     state.startupData = aData;
     XPIStates.save();
+  },
+
+  /**
+   * Persists some startupData into an addon if it is available in the current
+   * XPIState for the addon id.
+   *
+   * @param {AddonInternal} addon An addon to receive the startup data, typically an update that is occuring.
+   * @param {XPIState} state optional
+   */
+  persistStartupData(addon, state) {
+    if (!addon.startupData) {
+      state = state || XPIStates.findAddon(addon.id);
+      if (state?.enabled) {
+        // Save persistent listener data if available.  It will be
+        // removed later if necessary.
+        let persistentListeners = state.startupData?.persistentListeners;
+        addon.startupData = { persistentListeners };
+      }
+    }
   },
 
   getAddonIDByInstanceID(aInstanceID) {
