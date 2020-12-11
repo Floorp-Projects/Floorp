@@ -4,16 +4,6 @@ const { propBagToObject } = ChromeUtils.import(
   "resource://gre/modules/BrowserUtils.jsm"
 ).BrowserUtils;
 
-function hasTabModalPrompts() {
-  var prefName = "prompts.tab_modal.enabled";
-  const Services = SpecialPowers.Services;
-  return (
-    Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
-    Services.prefs.getBoolPref(prefName)
-  );
-}
-var tabModalPromptEnabled = hasTabModalPrompts();
-
 var modalType;
 var tabSubDialogsEnabled = SpecialPowers.Services.prefs.getBoolPref(
   "prompts.tabChromePromptSubDialog",
@@ -45,12 +35,11 @@ async function runPromptCombinations(window, testFunc) {
   util.useAsync = false;
   await run();
 
-  let modalTypes = [Ci.nsIPrompt.MODAL_TYPE_WINDOW];
-  // if tab/content prompts are disabled by pref, only test window prompts
-  if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
-    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_TAB);
-    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_CONTENT);
-  }
+  let modalTypes = [
+    Ci.nsIPrompt.MODAL_TYPE_WINDOW,
+    Ci.nsIPrompt.MODAL_TYPE_TAB,
+    Ci.nsIPrompt.MODAL_TYPE_CONTENT,
+  ];
 
   for (let type of modalTypes) {
     util.modalType = type;
