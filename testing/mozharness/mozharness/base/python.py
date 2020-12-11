@@ -7,6 +7,7 @@
 """Python usage, esp. virtualenv.
 """
 
+from __future__ import division
 import errno
 import json
 import os
@@ -835,6 +836,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
         for attr in cpu_attrs:
             value = getattr(cpu_times, attr)
             # cpu_total can be 0.0. Guard against division by 0.
+            # pylint --py3k W1619
             percent = value / cpu_total * 100.0 if cpu_total else 0.0
 
             if percent > 1.00:

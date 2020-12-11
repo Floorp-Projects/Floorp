@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import datetime
 import errno
@@ -530,6 +530,7 @@ class TestInfoLongRunningTasks(TestInfo):
         def get_long_running_ratio(record):
             count = record["count"]
             tasks_gt_pct = record["tasks_gt_pct"]
+            # pylint --py3k W1619
             return count / tasks_gt_pct
 
         # Search test durations in ActiveData for long-running tests
@@ -589,6 +590,7 @@ class TestInfoLongRunningTasks(TestInfo):
                 count = record["count"]
                 max_run_time = record["max_run_time"]
                 tasks_gt_pct = record["tasks_gt_pct"]
+                # pylint --py3k W1619
                 print(
                     "%-55s: %d of %d runs (%.1f%%) exceeded %d%% of max-run-time (%d s)"
                     % (

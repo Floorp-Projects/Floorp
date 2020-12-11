@@ -5,7 +5,7 @@
 # some parts of this originally taken from /testing/talos/talos/output.py
 
 """output raptor test results"""
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import filters
 
@@ -334,6 +334,7 @@ class PerftestOutput(object):
                 )
 
             results = results[9::10]
+            # pylint --py3k W1619
             score = 60 * 1000 / filters.geometric_mean(results) / correctionFactor
             return score
 
@@ -379,6 +380,7 @@ class PerftestOutput(object):
                     "StyleBench requires 380 entries, found: %s instead" % len(results)
                 )
             results = results[75::76]
+            # pylint --py3k W1619
             return 60 * 1000 / filters.geometric_mean(results) / correctionFactor
 
         if testname.startswith(("raptor-kraken", "raptor-sunspider")):

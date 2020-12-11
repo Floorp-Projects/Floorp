@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 import json
@@ -1656,6 +1656,7 @@ class XPCShellTests(object):
         ):
             # TSan requires significantly more memory, so reduce the amount of parallel
             # tests we run to avoid OOMs and timeouts.
+            # pylint --py3k W1619
             self.threadCount = self.threadCount / 2
 
         self.stack_fixer_function = None

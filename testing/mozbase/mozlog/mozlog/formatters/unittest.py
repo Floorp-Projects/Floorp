@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from . import base
 
@@ -78,6 +78,7 @@ class UnittestFormatter(base.BaseFormatter):
         return "\n".join("ERROR %(test)s\n%(message)s" % data for data in self.errors)
 
     def output_summary(self):
+        # pylint --py3k W1619
         return "Ran %i tests in %.1fs" % (
             self.tests_run,
             (self.end_time - self.start_time) / 1000,

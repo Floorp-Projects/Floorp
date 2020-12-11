@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import division
 from distutils.version import LooseVersion
 import json
 import math
@@ -39,6 +40,7 @@ def is_triangualar(x):
     >>> all(not is_triangualar(x) for x in [4, 5, 8, 9, 11, 17, 25, 29, 39, 44, 59, 61, 72, 98, 112])
     True
     """
+    # pylint --py3k W1619
     n = (math.sqrt(8 * x + 1) - 1) / 2
     return n == int(n)
 

@@ -6,7 +6,7 @@
 Runs the Mochitest test harness.
 """
 
-from __future__ import print_function, with_statement
+from __future__ import division, print_function, with_statement
 import os
 import sys
 
@@ -357,6 +357,7 @@ class MessageLogger(object):
 
         last_timestamp = None
         for buf in dumped_messages:
+            # pylint --py3k W1619
             timestamp = datetime.fromtimestamp(buf["time"] / 1000).strftime("%H:%M:%S")
             if timestamp != last_timestamp:
                 self.logger.info("Buffered messages logged at {}".format(timestamp))

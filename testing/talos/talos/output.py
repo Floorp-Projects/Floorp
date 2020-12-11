@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """output formats for Talos"""
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from talos import filter
 
@@ -310,6 +310,7 @@ class Output(object):
             )
 
         results = results[75::76]
+        # pylint --py3k W1619
         score = 60 * 1000 / filter.geometric_mean(results) / correctionFactor
         return score
 

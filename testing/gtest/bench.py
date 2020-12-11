@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
-
+from __future__ import division, print_function
 import sys
 import subprocess
 import json
@@ -13,6 +12,7 @@ for line in proc.stdout:
         data = json.loads(line[len("PERFHERDER_DATA:") :].decode("utf8"))
         for suite in data["suites"]:
             for subtest in suite["subtests"]:
+                # pylint --py3k W1619
                 print(
                     "%4d.%03d ± %6s ms    %s.%s"
                     % (

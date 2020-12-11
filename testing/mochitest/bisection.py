@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import division, print_function
 
 import math
 import mozinfo
@@ -139,6 +139,7 @@ class Bisect(object):
             self.contents["start"] = 0
             self.contents["end"] = totalTests - 2
 
+        # pylint --py3k W1619
         mid = (self.contents["start"] + self.contents["end"]) / 2
         if "result" in self.contents:
             if self.contents["result"] == "PASS":
