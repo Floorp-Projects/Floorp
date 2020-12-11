@@ -216,7 +216,7 @@ fn compute_curve_gamma_table_type0(mut gamma_table: &mut Vec<f32>) {
         gamma_table.push((i as f64 / 255.0f64) as f32);
     }
 }
-pub fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec<f32>> {
+pub(crate) fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec<f32>> {
     let TRC = match TRC {
         Some(TRC) => TRC,
         None => return None,
@@ -398,7 +398,10 @@ pub fn compute_precache_linear(mut output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
         v = v + 1
     }
 }
-pub fn compute_precache(mut trc: &curveType, mut output: &mut [u8; PRECACHE_OUTPUT_SIZE]) -> bool {
+pub(crate) fn compute_precache(
+    mut trc: &curveType,
+    mut output: &mut [u8; PRECACHE_OUTPUT_SIZE],
+) -> bool {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table = Vec::with_capacity(256);
@@ -465,7 +468,7 @@ fn build_pow_table(mut gamma: f32, mut length: i32) -> Vec<u16> {
     return output;
 }
 
-pub fn build_output_lut(mut trc: &curveType) -> Vec<u16> {
+pub(crate) fn build_output_lut(mut trc: &curveType) -> Vec<u16> {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table = Vec::with_capacity(256);
