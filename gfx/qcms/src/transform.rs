@@ -37,8 +37,8 @@ use crate::{
     },
 };
 use crate::{
-    iccread::{curveType, qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile, RGB_SIGNATURE},
-    qcms_intent, s15Fixed16Number,
+    iccread::{qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile, RGB_SIGNATURE},
+    qcms_intent,
     transform_util::clamp_float,
 };
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -123,68 +123,6 @@ pub type transform_fn_t = Option<
         _: usize,
     ) -> (),
 >;
-
-// 16 is the upperbound, actual is 0..num_in_channels.
-// reversed elements (for mBA)
-/* should lut8Type and lut16Type be different types? */
-// used by lut8Type/lut16Type (mft2) only
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct lutmABType {
-    pub num_in_channels: u8,
-    pub num_out_channels: u8,
-    pub num_grid_points: [u8; 16],
-    pub e00: s15Fixed16Number,
-    pub e01: s15Fixed16Number,
-    pub e02: s15Fixed16Number,
-    pub e03: s15Fixed16Number,
-    pub e10: s15Fixed16Number,
-    pub e11: s15Fixed16Number,
-    pub e12: s15Fixed16Number,
-    pub e13: s15Fixed16Number,
-    pub e20: s15Fixed16Number,
-    pub e21: s15Fixed16Number,
-    pub e22: s15Fixed16Number,
-    pub e23: s15Fixed16Number,
-    pub reversed: bool,
-    pub clut_table: *mut f32,
-    pub a_curves: [*mut curveType; 10],
-    pub b_curves: [*mut curveType; 10],
-    pub m_curves: [*mut curveType; 10],
-    pub clut_table_data: [f32; 0],
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct lutType {
-    pub num_input_channels: u8,
-    pub num_output_channels: u8,
-    pub num_clut_grid_points: u8,
-    pub e00: s15Fixed16Number,
-    pub e01: s15Fixed16Number,
-    pub e02: s15Fixed16Number,
-    pub e10: s15Fixed16Number,
-    pub e11: s15Fixed16Number,
-    pub e12: s15Fixed16Number,
-    pub e20: s15Fixed16Number,
-    pub e21: s15Fixed16Number,
-    pub e22: s15Fixed16Number,
-    pub num_input_table_entries: u16,
-    pub num_output_table_entries: u16,
-    pub input_table: *mut f32,
-    pub clut_table: *mut f32,
-    pub output_table: *mut f32,
-    pub table_data: [f32; 0],
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct XYZNumber {
-    pub X: s15Fixed16Number,
-    pub Y: s15Fixed16Number,
-    pub Z: s15Fixed16Number,
-}
 
 pub type qcms_data_type = libc::c_uint;
 pub const QCMS_DATA_GRAYA_8: qcms_data_type = 4;
