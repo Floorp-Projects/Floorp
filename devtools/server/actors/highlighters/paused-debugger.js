@@ -209,12 +209,11 @@ PausedDebuggerOverlay.prototype = {
     try {
       reason = L10N.getStr(`whyPaused.${reason}`);
     } catch (e) {
-      // @backward-compat { version 71 } This is a temporary workaround.
+      // This is a temporary workaround (See Bug 1591025).
       // This actors relies on a client side properties file. This file will not
       // be available when debugging Firefox for Android / Gecko View.
       // The highlighter also shows buttons that use client only images and are
       // therefore invisible when remote debugging a mobile Firefox.
-      // Should be fixed in Bug 1591025.
       return false;
     }
 
