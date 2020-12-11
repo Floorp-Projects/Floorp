@@ -2257,6 +2257,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Math_max", math_max, 2, 0, MathMax),
     JS_INLINABLE_FN("std_Math_min", math_min, 2, 0, MathMin),
     JS_INLINABLE_FN("std_Math_abs", math_abs, 1, 0, MathAbs),
+    JS_INLINABLE_FN("std_Math_trunc", math_trunc, 1, 0, MathTrunc),
 
     JS_FN("std_Map_entries", MapObject::entries, 0, 0),
 

@@ -250,8 +250,6 @@ class OptimizationInfo {
     return smallFunctionMaxInlineDepth_;
   }
 
-  bool isSmallFunction(JSScript* script) const;
-
   uint32_t maxInlineDepth() const { return maxInlineDepth_; }
 
   uint32_t inlineMaxBytecodePerCallSite(bool offThread) const {
