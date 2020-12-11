@@ -212,6 +212,50 @@ class ScriptPreloader : public nsIObserver,
       const ScriptStatus mStatus;
     };
 
+    // The purpose of this helper class is to avoid a race between
+    // ScriptPreloader::WriteCache() and the GC on a JSScript*.
+    // The former checks if the actual JSScript* is null on the save thread
+    // while holding mMonitor. Aside from GC tracing, all places that mutate
+    // the JSScript* either hold mMonitor or don't run at the same time as the
+    // save thread. The GC can move the script, which will cause the value to
+    // change, but this will not change whether it is null or not.
+    //
+    // We can't hold mMonitor while tracing, because we can end running the
+    // GC while the current thread already holds mMonitor. Instead, this class
+    // avoids the race by storing a separate field to indicate if the script is
+    // null or not. To enforce this, the mutation by the GC that cannot affect
+    // the nullness of the script is split out from other mutation.
+    class MOZ_HEAP_CLASS ScriptHolder {
+     public:
+      explicit ScriptHolder(JSScript* script)
+          : mScript(script), mHasScript(script) {}
+      ScriptHolder() : mHasScript(false) {}
+
+      // This should only be called on the main thread (either while holding
+      // the preloader's mMonitor or while the save thread isn't running), or on
+      // the save thread while holding the preloader's mMonitor.
+      explicit operator bool() const { return mHasScript; }
+
+      // This should only be called on the main thread.
+      JSScript* Get() const {
+        MOZ_ASSERT(NS_IsMainThread());
+        return mScript;
+      }
+
+      // This should only be called on the main thread (or from a GC thread
+      // while the main thread is GCing).
+      void Trace(JSTracer* trc);
+
+      // These should only be called on the main thread, either while holding
+      // the preloader's mMonitor or while the save thread isn't running.
+      void Set(JS::HandleScript jsscript);
+      void Clear();
+
+     private:
+      JS::Heap<JSScript*> mScript;
+      bool mHasScript;  // true iff mScript is non-null.
+    };
+
     void FreeData() {
       // If the script data isn't mmapped, we need to release both it
       // and the Range that points to it at the same time.
@@ -237,7 +281,7 @@ class ScriptPreloader : public nsIObserver,
     // not.
     bool MaybeDropScript() {
       if (mIsRunOnce && (HasRange() || !mCache.WillWriteScripts())) {
-        mScript = nullptr;
+        mScript.Clear();
         return true;
       }
       return false;
@@ -321,7 +365,7 @@ class ScriptPreloader : public nsIObserver,
 
     TimeStamp mLoadTime{};
 
-    JS::Heap<JSScript*> mScript;
+    ScriptHolder mScript;
 
     // True if this script is ready to be executed. This means that either the
     // off-thread portion of an off-thread decode has finished, or the script
