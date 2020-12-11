@@ -12,6 +12,7 @@ const { Sampling } = ChromeUtils.import(
 const { ClientEnvironment } = ChromeUtils.import(
   "resource://normandy/lib/ClientEnvironment.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * The normal case: Enrollment of a new experiment
@@ -196,4 +197,37 @@ add_task(async function test_sampling_check() {
   );
 
   sandbox.reset();
+});
+
+add_task(async function enroll_in_reference_aw_experiment() {
+  const SYNC_DATA_PREF = "messaging-system.syncdatastore.data";
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
+  let dir = await OS.File.getCurrentDirectory();
+  let src = OS.Path.join(dir, "reference_aboutwelcome_experiment_content.json");
+  let bytes = await OS.File.read(src);
+  const decoder = new TextDecoder();
+  const content = JSON.parse(decoder.decode(bytes));
+  // Create two dummy branches with the content from disk
+  const branches = ["treatment-a", "treatment-b"].map(slug => ({
+    slug,
+    ratio: 1,
+    feature: { value: content, enabled: true, featureId: "aboutwelcome" },
+  }));
+  let recipe = ExperimentFakes.recipe("reference-aw", { branches });
+  // Ensure we get enrolled
+  recipe.bucketConfig.count = recipe.bucketConfig.total;
+
+  const manager = ExperimentFakes.manager();
+  await manager.onStartup();
+  await manager.enroll(recipe);
+
+  Assert.ok(manager.store.get("reference-aw"), "Successful onboarding");
+  let prefValue = Services.prefs.getStringPref(SYNC_DATA_PREF);
+  Assert.ok(
+    prefValue,
+    "aboutwelcome experiment enrollment should be stored to prefs"
+  );
+  // In case some regression causes us to store a significant amount of data
+  // in prefs.
+  Assert.ok(prefValue.length < 3498, "Make sure we don't bloat the prefs");
 });
