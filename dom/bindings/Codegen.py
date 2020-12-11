@@ -8541,7 +8541,9 @@ def getRetvalDeclarationForType(returnType, descriptorProvider, isMember=False):
             return CGGeneric("nsString"), "ref", None, None, None
         return CGGeneric("DOMString"), "ref", None, None, None
     if returnType.isByteString() or returnType.isUTF8String():
-        return CGGeneric("nsCString"), "ref", None, None, None
+        if isMember:
+            return CGGeneric("nsCString"), "ref", None, None, None
+        return CGGeneric("nsAutoCString"), "ref", None, None, None
     if returnType.isEnum():
         result = CGGeneric(returnType.unroll().inner.identifier.name)
         if returnType.nullable():
