@@ -253,12 +253,19 @@ class CCGCScheduler {
     CleanupDeferred,
     StartCycleCollection,
     CycleCollecting,
+    Canceled,
     NumStates
   };
 
   void InitCCRunnerStateMachine(CCRunnerState initialState) {
-    MOZ_ASSERT(mCCRunnerState == CCRunnerState::Inactive);
+    // The state machine should always have been deactivated after the previous
+    // collection, however far that collection may have gone.
+    MOZ_ASSERT(mCCRunnerState == CCRunnerState::Inactive,
+               "DeactivateCCRunner should have been called");
     mCCRunnerState = initialState;
+
+    // Currently, there are only two entry points to the non-Inactive part of
+    // the state machine.
     if (initialState == CCRunnerState::ReducePurple) {
       mCCDelay = kCCDelay;
       mCCRunnerEarlyFireCount = 0;
@@ -425,6 +432,9 @@ CCRunnerStep CCGCScheduler::GetNextCCRunnerAction(TimeStamp aDeadline,
     bool mTryFinalForgetSkippable;
   };
 
+  // The state descriptors for Inactive and Canceled will never actually be
+  // used. We will never call this function while Inactive, and Canceled is
+  // handled specially at the beginning.
   constexpr StateDescriptor stateDescriptors[] = {
       {false, false},  /* CCRunnerState::Inactive */
       {false, false},  /* CCRunnerState::ReducePurple */
@@ -432,17 +442,21 @@ CCRunnerStep CCGCScheduler::GetNextCCRunnerAction(TimeStamp aDeadline,
       {true, false},   /* CCRunnerState::CleanupContentUnbinder */
       {false, false},  /* CCRunnerState::CleanupDeferred */
       {false, false},  /* CCRunnerState::StartCycleCollection */
-      {false, false}}; /* CCRunnerState::CycleCollecting */
+      {false, false},  /* CCRunnerState::CycleCollecting */
+      {false, false}}; /* CCRunnerState::Canceled */
   static_assert(mozilla::ArrayLength(stateDescriptors) ==
                     size_t(CCRunnerState::NumStates),
                 "need one state descriptor per state");
   const StateDescriptor& desc = stateDescriptors[int(mCCRunnerState)];
 
+  // Make sure we initialized the state machine.
+  MOZ_ASSERT(mCCRunnerState != CCRunnerState::Inactive);
+
   if (mDidShutdown) {
     return {CCRunnerAction::StopRunning, Yield};
   }
 
-  if (mCCRunnerState == CCRunnerState::Inactive) {
+  if (mCCRunnerState == CCRunnerState::Canceled) {
     // When we cancel a cycle, there may have been a final ForgetSkippable.
     return {CCRunnerAction::StopRunning, Yield};
   }
@@ -486,13 +500,13 @@ CCRunnerStep CCGCScheduler::GetNextCCRunnerAction(TimeStamp aDeadline,
   if (desc.mCanAbortCC && !IsCCNeeded(aSuspected, now)) {
     // If we don't pass the threshold for wanting to cycle collect, stop now
     // (after possibly doing a final ForgetSkippable).
-    mCCRunnerState = CCRunnerState::Inactive;
+    mCCRunnerState = CCRunnerState::Canceled;
     NoteForgetSkippableOnlyCycle();
 
     // Preserve the previous code's idea of when to check whether a
     // ForgetSkippable should be fired.
     if (desc.mTryFinalForgetSkippable && ShouldForgetSkippable(aSuspected)) {
-      // The Inactive state will make us StopRunning after this action is
+      // The Canceled state will make us StopRunning after this action is
       // performed (see conditional at top of function).
       return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
     }
