@@ -10,19 +10,23 @@
   padding-block-start: 2px;
   align-items: baseline;
   border: 1px solid transparent;
+  border-top-color: var(--theme-splitter-color);
   transition: border-color 0.2s ease-in-out;
 }
 
+.jsterm-editor .reverse-search {
+  border-inline-end-color: var(--theme-splitter-color);
+}
 
 /* Add a border radius match the borders of the window on Mac OS
  * and hide the border radius on the right if the sidebar or editor
  * is open. */
 :root[platform="mac"] .webconsole-app .reverse-search {
-  border-bottom-left-radius: 5px;
+  border-end-start-radius: 5px;
 }
 :root[platform="mac"] .webconsole-app:not(.jsterm-editor):not(.sidebar-visible) .reverse-search
 {
-  border-bottom-right-radius: 5px;
+  border-end-end-radius: 5px;
 }
 
 .reverse-search:focus-within {

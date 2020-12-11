@@ -197,10 +197,7 @@ body {
   /* Let the reverse search buttons wrap to the next line */
   flex-wrap: wrap;
   justify-content: end;
-  border-top: 1px solid var(--theme-splitter-color);
-  border-inline-end: 1px solid var(--theme-splitter-color);
 }
-
 
 .sidebar {
   display: grid;
