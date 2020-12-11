@@ -614,8 +614,10 @@ GeckoDriver.prototype.getVisibleText = function(el, lines) {
 /**
  * Handles registration of new content listener browsers.  Depending on
  * their type they are either accepted or ignored.
+ *
+ * @param {xul:browser} browserElement
  */
-GeckoDriver.prototype.registerBrowser = function(id, be) {
+GeckoDriver.prototype.registerBrowser = function(browserElement) {
   // We want to ignore frames that are XUL browsers that aren't in the "main"
   // tabbrowser, but accept things on Fennec (which doesn't have a
   // xul:tabbrowser), and accept HTML iframes (because tests depend on it),
@@ -623,17 +625,18 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
   // keep track of browsers a different way.
   if (
     this.appId != APP_ID_FIREFOX ||
-    be.namespaceURI != XUL_NS ||
-    be.nodeName != "browser" ||
-    be.getTabBrowser()
+    browserElement.namespaceURI != XUL_NS ||
+    browserElement.nodeName != "browser" ||
+    browserElement.getTabBrowser()
   ) {
     // curBrowser holds all the registered frames in knownFrames
-    this.curBrowser.register(id, be);
+    this.curBrowser.register(browserElement);
   }
 
-  this.wins.set(id, BrowsingContext.get(id).currentWindowGlobal);
+  const browsingContext = browserElement.browsingContext;
+  this.wins.set(browsingContext.id, browsingContext.currentWindowGlobal);
 
-  return id;
+  return browsingContext.id;
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -641,8 +644,7 @@ GeckoDriver.prototype.registerPromise = function() {
 
   return new Promise(resolve => {
     let cb = ({ json, target }) => {
-      let { frameId } = json;
-      this.registerBrowser(frameId, target);
+      this.registerBrowser(target);
 
       if (this.curBrowser.frameRegsPending > 0) {
         this.curBrowser.frameRegsPending--;
@@ -653,7 +655,7 @@ GeckoDriver.prototype.registerPromise = function() {
         resolve();
       }
 
-      return { frameId };
+      return { frameId: json.frameId };
     };
     this.mm.addMessageListener(li, cb);
   });
@@ -885,7 +887,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       const tabBrowser = browser.getTabBrowser(win);
       for (const tab of tabBrowser.tabs) {
         const contentBrowser = browser.getBrowserForTab(tab);
-        this.registerBrowser(contentBrowser.browsingContext.id, contentBrowser);
+        this.registerBrowser(contentBrowser);
       }
     }
   } else {
@@ -1766,7 +1768,7 @@ GeckoDriver.prototype.setWindowHandle = async function(
         : tabBrowser;
 
       this.contentBrowsingContext = contentBrowser.browsingContext;
-      this.registerBrowser(this.contentBrowsingContext.id, contentBrowser);
+      this.registerBrowser(contentBrowser);
     } else {
       await registerBrowsers;
       const id = await browserListening;
@@ -3708,9 +3710,8 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       break;
 
     case "Marionette:Register":
-      let { frameId } = message.json;
-      this.registerBrowser(frameId, message.target);
-      return { frameId };
+      this.registerBrowser(message.target);
+      return { frameId: message.json.frameId };
 
     case "Marionette:ListenersAttached":
       if (MarionettePrefs.useActors) {
