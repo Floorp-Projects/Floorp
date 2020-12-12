@@ -343,19 +343,19 @@ class ScriptStencilIterable {
     Iterator(const CompilationStencil& stencil, CompilationGCOutput& gcOutput,
              size_t index)
         : index_(index), stencil_(stencil), gcOutput_(gcOutput) {
-      skipNonFunctions();
+      MOZ_ASSERT(index == stencil.scriptData.length());
     }
 
    public:
     explicit Iterator(const CompilationStencil& stencil,
                       CompilationGCOutput& gcOutput)
         : stencil_(stencil), gcOutput_(gcOutput) {
-      skipNonFunctions();
+      skipTopLevelNonFunction();
     }
 
     Iterator operator++() {
       next();
-      skipNonFunctions();
+      assertFunction();
       return *this;
     }
 
@@ -364,14 +364,19 @@ class ScriptStencilIterable {
       index_++;
     }
 
-    void skipNonFunctions() {
-      size_t length = stencil_.scriptData.length();
-      while (index_ < length) {
-        if (stencil_.scriptData[index_].isFunction()) {
-          return;
-        }
+    void assertFunction() {
+      if (index_ < stencil_.scriptData.length()) {
+        MOZ_ASSERT(stencil_.scriptData[index_].isFunction());
+      }
+    }
 
-        index_++;
+    void skipTopLevelNonFunction() {
+      MOZ_ASSERT(index_ == 0);
+      if (stencil_.scriptData.length()) {
+        if (!stencil_.scriptData[0].isFunction()) {
+          next();
+          assertFunction();
+        }
       }
     }
 
