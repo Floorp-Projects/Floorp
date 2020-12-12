@@ -1248,9 +1248,9 @@ bool CSSEditUtils::DoStyledElementsHaveSameStyle(
     return true;
   }
 
-  nsAutoCString propertyNameString;
-  nsAutoString firstValue, otherValue;
   for (uint32_t i = 0; i < firstLength; i++) {
+    nsAutoString firstValue, otherValue;
+    nsAutoCString propertyNameString;
     firstCSSDecl->Item(i, propertyNameString);
     DebugOnly<nsresult> rvIgnored =
         firstCSSDecl->GetPropertyValue(propertyNameString, firstValue);
@@ -1266,6 +1266,8 @@ bool CSSEditUtils::DoStyledElementsHaveSameStyle(
     }
   }
   for (uint32_t i = 0; i < otherLength; i++) {
+    nsAutoString firstValue, otherValue;
+    nsAutoCString propertyNameString;
     otherCSSDecl->Item(i, propertyNameString);
     DebugOnly<nsresult> rvIgnored =
         otherCSSDecl->GetPropertyValue(propertyNameString, otherValue);

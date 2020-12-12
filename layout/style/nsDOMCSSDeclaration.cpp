@@ -37,8 +37,8 @@ nsresult nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
                                                nsAString& aValue) {
   MOZ_ASSERT(aPropID != eCSSProperty_UNKNOWN,
              "Should never pass eCSSProperty_UNKNOWN around");
+  MOZ_ASSERT(aValue.IsEmpty());
 
-  aValue.Truncate();
   if (DeclarationBlock* decl =
           GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
     decl->GetPropertyValueByID(aPropID, aValue);
@@ -91,10 +91,9 @@ void nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
 }
 
 void nsDOMCSSDeclaration::GetCssText(nsAString& aCssText) {
-  DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
-  aCssText.Truncate();
+  MOZ_ASSERT(aCssText.IsEmpty());
 
-  if (decl) {
+  if (auto* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
     decl->ToString(aCssText);
   }
 }
@@ -165,9 +164,8 @@ void nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound,
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
                                       nsAString& aReturn) {
-  aReturn.Truncate();
-  if (DeclarationBlock* decl =
-          GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
+  MOZ_ASSERT(aReturn.IsEmpty());
+  if (auto* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr)) {
     decl->GetPropertyValue(aPropertyName, aReturn);
   }
   return NS_OK;
@@ -175,9 +173,8 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
 
 void nsDOMCSSDeclaration::GetPropertyPriority(const nsACString& aPropertyName,
                                               nsAString& aPriority) {
+  MOZ_ASSERT(aPriority.IsEmpty());
   DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
-
-  aPriority.Truncate();
   if (decl && decl->GetPropertyIsImportant(aPropertyName)) {
     aPriority.AssignLiteral("important");
   }
