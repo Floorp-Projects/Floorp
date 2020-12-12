@@ -137,6 +137,10 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
  private:
+  nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
+                            const nsACString& aMaybeCustomPropertyNme,
+                            nsAString& aValue);
+
   virtual ~nsComputedDOMStyle();
 
   void AssertFlushedPendingReflows() {
