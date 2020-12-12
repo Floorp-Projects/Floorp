@@ -84,6 +84,10 @@ printui-preview-label =
 
 printui-pages-per-sheet = Pages per sheet
 
+# This is shown next to the Print button with an indefinite loading spinner
+# when the user prints a page and it is being sent to the printer.
+printui-print-progress-indicator = Printing…
+
 ## Paper sizes that may be supported by the Save to PDF destination:
 
 printui-paper-a5 = A5
