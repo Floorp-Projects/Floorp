@@ -129,13 +129,12 @@ SizeComputationInput::SizeComputationInput(
 ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
                          gfxContext* aRenderingContext,
                          const LogicalSize& aAvailableSpace, InitFlags aFlags)
-    : SizeComputationInput(aFrame, aRenderingContext) {
+    : SizeComputationInput(aFrame, aRenderingContext),
+      mAvailableSize(aAvailableSpace) {
   MOZ_ASSERT(aRenderingContext, "no rendering context");
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
-  AvailableISize() = aAvailableSpace.ISize(mWritingMode);
-  AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
 
   if (aFlags.contains(InitFlag::DummyParentReflowInput)) {
     mFlags.mDummyParentReflowInput = true;
@@ -170,15 +169,13 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
               : nullptr),
       mFlags(aParentReflowInput.mFlags),
       mComputeSizeFlags(aComputeSizeFlags),
-      mReflowDepth(aParentReflowInput.mReflowDepth + 1) {
+      mReflowDepth(aParentReflowInput.mReflowDepth + 1),
+      mAvailableSize(aAvailableSpace) {
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
   MOZ_ASSERT(!mFlags.mSpecialBSizeReflow || !aFrame->IsSubtreeDirty(),
              "frame should be clean when getting special bsize reflow");
-
-  AvailableISize() = aAvailableSpace.ISize(mWritingMode);
-  AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
 
   if (mWritingMode.IsOrthogonalTo(aParentReflowInput.GetWritingMode())) {
     // If we're setting up for an orthogonal flow, and the parent reflow input
