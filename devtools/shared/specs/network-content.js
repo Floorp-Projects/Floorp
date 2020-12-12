@@ -9,6 +9,12 @@ const { generateActorSpec, RetVal, Arg } = require("devtools/shared/protocol");
 const networkContentSpec = generateActorSpec({
   typeName: "networkContent",
   methods: {
+    sendHTTPRequest: {
+      request: {
+        request: Arg(0, "json"),
+      },
+      response: RetVal("number"),
+    },
     getStackTrace: {
       request: { resourceId: Arg(0) },
       // stacktrace is an "array:string", but not always.

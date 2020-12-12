@@ -97,7 +97,8 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
   asResource() {
     return {
       resourceType: NETWORK_EVENT,
-      // The browsingContextID is used by the ResourceWatcher on the client to find the related Target Front.
+      // The browsingContextID is used by the ResourceWatcher on the client
+      // to find the related Target Front.
       browsingContextID: this.networkEventWatcher.watcherActor.browserElement
         .browsingContext.id,
       resourceId: this._channelId,
