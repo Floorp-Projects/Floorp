@@ -22,10 +22,6 @@ pub use base::*;
 mod method;
 pub use method::*;
 
-// dom::Promise resolving.
-mod promise;
-pub use promise::*;
-
 mod refptr;
 pub use refptr::*;
 
