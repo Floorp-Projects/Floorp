@@ -391,8 +391,18 @@ class FirefoxConnector {
    *
    * @param {object} data data payload would like to sent to backend
    */
-  sendHTTPRequest(data) {
-    return this.webConsoleFront.sendHTTPRequest(data);
+  async sendHTTPRequest(data) {
+    if (this.hasResourceWatcherSupport && this.currentTarget) {
+      const networkContentFront = await this.currentTarget.getFront(
+        "networkContent"
+      );
+      const { channelId } = await networkContentFront.sendHTTPRequest(data);
+      return { channelId };
+    }
+    const {
+      eventActor: { actor },
+    } = await this.webConsoleFront.sendHTTPRequest(data);
+    return { actor };
   }
 
   /**
