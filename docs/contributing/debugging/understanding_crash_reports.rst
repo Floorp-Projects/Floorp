@@ -13,7 +13,7 @@ a processed crash report. The processed crash report is based on the raw
 crash report but also has a signature, classifications, and a number of
 improved fields (e.g. OS, product, version). Many of the fields in both
 the raw crash report and the processed crash report are viewable and
-searchable on `crash-stats <https://crash-stats.mozilla.com/>`__.
+searchable on `crash-stats <https://crash-stats.mozilla.org/>`__.
 Although there are two distinct crash reports, the raw and the
 processed, people typically talk about a single "crash report" because
 crash-stats mostly presents them in a combined way.
@@ -28,8 +28,8 @@ Note that most crash report fields are visible, but a few
 privacy-sensitive parts of it are only available to users who are logged
 in and have "minidump access". A relatively small number of users have
 minidump access, and they are required to follow certain rules. For
-access, see the `Memory Dump Access docs on Crash
-Stats <https://crash-stats.mozilla.com/documentation/memory_dump_access/>`__.
+access, see the `Protected Data Access docs on Crash Stats
+<https://crash-stats.mozilla.org/documentation/protected_data_access/>`__.
 
 Each crash report has the following tabs: Details, Metadata, Modules,
 Raw Dump, Extensions, and (optional) Correlations.
@@ -57,9 +57,9 @@ want to do searches involving this field. (The field name is usually but
 not always similar to the search key. E.g. the field "Adapter Device ID"
 has the search key "adapter_device_id".) These descriptions are shown in
 the `SuperSearchFields
-API <https://crash-stats.mozilla.com/api/SuperSearchFields/>`__ and can
-be `modified by crash-stats
-superusers <http://adrian.gaudebert.fr/blog/post/2014/12/02/socorro-super-search-fields-guide>`__.
+API <https://crash-stats.mozilla.org/api/SuperSearchFields/>`__ and can be
+`modified in super_search_fields.py <https://github.com/mozilla-services/socorro/blob/main/socorro/external/es/super_search_fields.py>`__
+or by writing up a `bug in Socorro <https://bugzilla.mozilla.org/enter_bug.cgi?format=__standard__&product=Socorro>`__.
 
 The fields present in this tab vary depending on the crash kind. Not all
 fields are always present.

@@ -16,7 +16,7 @@ Where did my crash get submitted?
 ---------------------------------
 
 Crash data submitted using the Mozilla Crash Reporter is located on
-`crash-stats <https://crash-stats.mozilla.com/>`__. If you want to find
+`crash-stats <https://crash-stats.mozilla.org/>`__. If you want to find
 a specific crash that you submitted, you first need to find the Crash ID
 that the server has assigned your crash. Type ``about:crashes`` into
 your location bar to get a page listing both submitted and unsubmitted
@@ -41,7 +41,7 @@ See also
 
 -  :ref:`Understanding crash reports`
 -  :ref:`A guide to searching crash reports`
--  `crash-stats <https://crash-stats.mozilla.com/>`__
+-  `crash-stats <https://crash-stats.mozilla.org/>`__
 -  `Crash pings (Telemetry) and crash reports (Socorro/Crash
    Stats) <https://bluesock.org/~willkg/blog/mozilla/crash_pings_crash_reports.html>`__
 -  :ref:`Building with Debug Symbols`
