@@ -1958,6 +1958,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
 
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(script);
+  funbox->copyScriptFields(script);
 
   return true;
 }

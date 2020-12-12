@@ -11308,7 +11308,14 @@ bool BytecodeEmitter::intoScriptStencil(ScriptStencil* script) {
   // Update flags specific to functions.
   if (sc->isFunctionBox()) {
     FunctionBox* funbox = sc->asFunctionBox();
-    funbox->copyScriptFields(*script);
+    MOZ_ASSERT(script == &funbox->functionStencil());
+    funbox->copyUpdatedImmutableFlags();
+    MOZ_ASSERT(funbox->extent().sourceStart == script->extent.sourceStart);
+    MOZ_ASSERT(funbox->extent().sourceEnd == script->extent.sourceEnd);
+    MOZ_ASSERT(funbox->extent().toStringStart == script->extent.toStringStart);
+    MOZ_ASSERT(funbox->extent().toStringEnd == script->extent.toStringEnd);
+    MOZ_ASSERT(funbox->extent().lineno == script->extent.lineno);
+    MOZ_ASSERT(funbox->extent().column == script->extent.column);
     MOZ_ASSERT(script->isFunction());
   } else {
     sc->copyScriptFields(*script);
