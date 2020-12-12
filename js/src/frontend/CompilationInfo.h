@@ -437,9 +437,9 @@ struct CompilationInfo {
       : input(options) {}
 
   static MOZ_MUST_USE bool prepareInputAndStencilForInstantiate(
-      JSContext* cx, CompilationInfo& compilationInfo);
+      JSContext* cx, CompilationInput& input, CompilationStencil& stencil);
   static MOZ_MUST_USE bool prepareGCOutputForInstantiate(
-      JSContext* cx, CompilationInfo& compilationInfo,
+      JSContext* cx, CompilationStencil& stencil,
       CompilationGCOutput& gcOutput);
 
   static MOZ_MUST_USE bool prepareForInstantiate(
@@ -449,7 +449,7 @@ struct CompilationInfo {
                                                CompilationInfo& compilationInfo,
                                                CompilationGCOutput& gcOutput);
   static MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
-      JSContext* cx, CompilationInfo& compilationInfo,
+      JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
       CompilationGCOutput& gcOutput);
 
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
@@ -463,7 +463,8 @@ struct CompilationInfo {
   CompilationInfo& operator=(const CompilationInfo&) = delete;
   CompilationInfo& operator=(CompilationInfo&&) = delete;
 
-  ScriptStencilIterable functionScriptStencils(CompilationGCOutput& gcOutput) {
+  static ScriptStencilIterable functionScriptStencils(
+      CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
     return ScriptStencilIterable(stencil, gcOutput);
   }
 
