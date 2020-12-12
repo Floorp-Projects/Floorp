@@ -309,8 +309,6 @@ struct ReflowInput : public SizeComputationInput {
   nscoord ComputedMinHeight() const { return mComputedMinHeight; }
   nscoord ComputedMaxHeight() const { return mComputedMaxHeight; }
 
-  nscoord& ComputedWidth() { return mComputedWidth; }
-  nscoord& ComputedHeight() { return mComputedHeight; }
   nscoord& ComputedMinWidth() { return mComputedMinWidth; }
   nscoord& ComputedMaxWidth() { return mComputedMaxWidth; }
   nscoord& ComputedMinHeight() { return mComputedMinHeight; }
@@ -874,32 +872,36 @@ struct ReflowInput : public SizeComputationInput {
   bool ShouldReflowAllKids() const;
 
   // This method doesn't apply min/max computed widths to the value passed in.
-  void SetComputedWidth(nscoord aComputedWidth);
+  void SetComputedWidth(nscoord aComputedWidth) {
+    if (mWritingMode.IsVertical()) {
+      SetComputedBSize(aComputedWidth);
+    } else {
+      SetComputedISize(aComputedWidth);
+    }
+  }
 
   // This method doesn't apply min/max computed heights to the value passed in.
-  void SetComputedHeight(nscoord aComputedHeight);
-
-  void SetComputedISize(nscoord aComputedISize) {
+  void SetComputedHeight(nscoord aComputedHeight) {
     if (mWritingMode.IsVertical()) {
-      SetComputedHeight(aComputedISize);
+      SetComputedISize(aComputedHeight);
     } else {
-      SetComputedWidth(aComputedISize);
+      SetComputedBSize(aComputedHeight);
     }
   }
 
-  void SetComputedBSize(nscoord aComputedBSize) {
-    if (mWritingMode.IsVertical()) {
-      SetComputedWidth(aComputedBSize);
-    } else {
-      SetComputedHeight(aComputedBSize);
-    }
-  }
+  // This method doesn't apply min/max computed inline-sizes to the value passed
+  // in.
+  void SetComputedISize(nscoord aComputedISize);
 
+  // These methods don't apply min/max computed block-sizes to the value passed
+  // in.
+  void SetComputedBSize(nscoord aComputedBSize);
   void SetComputedBSizeWithoutResettingResizeFlags(nscoord aComputedBSize) {
     // Viewport frames reset the computed block size on a copy of their reflow
     // input when reflowing fixed-pos kids.  In that case we actually don't
     // want to mess with the resize flags, because comparing the frame's rect
     // to the munged computed isize is pointless.
+    MOZ_ASSERT(aComputedBSize >= 0, "Invalid computed block-size!");
     ComputedBSize() = aComputedBSize;
   }
 
