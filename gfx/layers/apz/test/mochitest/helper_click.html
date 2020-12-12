@@ -9,29 +9,29 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function* clickButton(testDriver) {
-  document.addEventListener("click", clicked);
+async function clickButton() {
+  let clickPromise = new Promise(resolve => {
+    document.addEventListener("click", resolve);
+  });
 
   if (getQueryArgs().dtc) {
     // force a dispatch-to-content region on the document
     document.addEventListener("wheel", function() { /* no-op */ }, { passive: false });
-    yield waitForAllPaints(function() {
-      flushApzRepaints(testDriver);
-    });
+    await promiseAllPaintsDone();
+    await promiseApzRepaintsFlushed();
   }
 
   synthesizeNativeClick(document.getElementById("b"), 5, 5, function() {
     dump("Finished synthesizing click, waiting for button to be clicked...\n");
   });
-}
 
-function clicked(e) {
+  let e = await clickPromise;
   is(e.target, document.getElementById("b"), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
-  subtestDone();
 }
 
 waitUntilApzStable()
-.then(runContinuation(clickButton));
+.then(clickButton)
+.then(subtestDone, subtestFailed);
 
   </script>
 </head>
