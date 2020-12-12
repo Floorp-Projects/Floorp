@@ -33,6 +33,8 @@ function Requests() {
     requests: [],
     // Selected request ID
     selectedId: null,
+    // @backward-compact { version 85 } The preselectedId can either be
+    // the actor id on old servers, or the resourceId on new ones.
     preselectedId: null,
     // True if the monitor is recording HTTP traffic
     recording: true,
@@ -171,8 +173,16 @@ function addRequest(state, action) {
   }
 
   // Select the request if it was preselected and there is no other selection.
-  if (state.preselectedId && state.preselectedId === action.id) {
-    nextState.selectedId = state.selectedId || state.preselectedId;
+  if (state.preselectedId) {
+    if (state.preselectedId === action.id) {
+      nextState.selectedId = state.selectedId || state.preselectedId;
+    }
+    // @backward-compact { version 85 } The preselectedId can be resourceId
+    // instead of actor id when a custom request is created, and could not be
+    // selected immediately because it was not yet in the request map.
+    else if (state.preselectedId === newRequest.resourceId) {
+      nextState.selectedId = action.id;
+    }
     nextState.preselectedId = null;
   }
 
@@ -272,12 +282,18 @@ function closeCustomRequest(state) {
     return state;
   }
 
+  // Find the cloned requests to be removed
   const removedRequest = requests.find(needle => needle.id === selectedId);
 
   // If the custom request is already in the Map, select it immediately,
   // and reset `preselectedId` attribute.
-  const hasPreselectedId =
-    preselectedId && requests.find(needle => needle.id === preselectedId);
+  // @backward-compact { version 85 } The preselectId can also be a resourceId
+  // or an actor id.
+  const customRequest = requests.find(
+    needle => needle.id === preselectedId || needle.resourceId === preselectedId
+  );
+  const hasPreselectedId = preselectedId && customRequest;
+
   return {
     ...state,
     // Only custom requests can be removed
@@ -285,7 +301,7 @@ function closeCustomRequest(state) {
       item => item.id !== selectedId
     ),
     preselectedId: hasPreselectedId ? null : preselectedId,
-    selectedId: hasPreselectedId ? preselectedId : null,
+    selectedId: hasPreselectedId ? customRequest.id : null,
   };
 }
 
