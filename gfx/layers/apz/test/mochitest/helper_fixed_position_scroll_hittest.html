@@ -28,27 +28,24 @@
 <body>
   <div id="fixed"><input type="button" value="Button" /></div>
   <script>
-    const input = document.querySelector("input");
-    function* test(testDriver) {
-      SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
-      yield synthesizeNativeTouchDrag(document.body, 10, 10, -2000, 0);
-      SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+    async function test() {
+      let transformEndPromise = promiseTransformEnd();
+      synthesizeNativeTouchDrag(document.body, 10, 10, -2000, 0);
+      await transformEndPromise;
 
-      yield waitForApzFlushedRepaints(testDriver);
+      await promiseApzFlushedRepaints();
 
-      // TODO: We're unsure why, but adding this observer substantially
-      // decreases the rate of intermittents that we see. We should figure out
-      // why and/or rewrite this test entirely.
-      SpecialPowers.Services.obs.addObserver(testDriver, "mouseevent");
-      yield synthesizeNativeClick(input, 10, 10, testDriver);
-      SpecialPowers.Services.obs.removeObserver(testDriver, "mouseevent");
-    }
-    window.addEventListener("click", (e) => {
+      let clickPromise = new Promise(resolve => {
+        window.addEventListener("click", resolve);
+      });
+      let input = document.querySelector("input");
+      synthesizeNativeClick(input, 10, 10);
+      let e = await clickPromise;
       is(e.target, input, "got click");
-      subtestDone();
-    });
+    }
+
     SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
-    waitUntilApzStable().then(runContinuation(test));
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>
