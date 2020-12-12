@@ -123,3 +123,9 @@ pub extern "C" fn Rust_WriteToBufferFromRust(
         fallible_s_buf[2] = b'C' as u16;
     }
 }
+
+#[no_mangle]
+pub extern "C" fn Rust_VoidStringFromRust(cs: &mut nsACString, s: &mut nsAString) {
+    cs.set_is_void(true);
+    s.set_is_void(true);
+}

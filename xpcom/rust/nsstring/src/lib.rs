@@ -546,6 +546,23 @@ macro_rules! define_string_types {
                 }
             }
 
+            /// Mark the string's data as void. If `true`, the string will be truncated.
+            ///
+            /// A void string is generally converted to a `null` JS value by bindings code.
+            pub fn set_is_void(&mut self, is_void: bool) {
+                if is_void {
+                    self.truncate();
+                }
+                unsafe {
+                    self.as_repr_mut().as_mut().dataflags.set(DataFlags::VOIDED, is_void);
+                }
+            }
+
+            /// Returns whether the string's data is voided.
+            pub fn is_void(&self) -> bool {
+                self.as_repr().dataflags.contains(DataFlags::VOIDED)
+            }
+
             /// Set the length of the string to the passed-in length, and expand
             /// the backing capacity to match. This method is unsafe as it can
             /// expose uninitialized memory when len is greater than the current
