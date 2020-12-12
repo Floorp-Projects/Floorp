@@ -9,6 +9,14 @@ extern crate lmdb;
 extern crate rkv;
 extern crate tempfile;
 
+use rkv::backend::{
+    BackendEnvironmentBuilder,
+    SafeMode,
+    SafeModeDatabase,
+    SafeModeEnvironment,
+    SafeModeRoTransaction,
+    SafeModeRwTransaction,
+};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -17,6 +25,9 @@ use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use tempfile::Builder;
+
+type Rkv = rkv::Rkv<SafeModeEnvironment>;
+type SingleStore = rkv::SingleStore<SafeModeDatabase>;
 
 fn eat_lmdb_err<T>(value: Result<T, rkv::StoreError>) -> Result<Option<T>, rkv::StoreError> {
     match value {
@@ -49,8 +60,7 @@ pub extern "C" fn fuzz_rkv_db_file(raw_data: *const u8, size: libc::size_t) -> l
     let mut db_file = File::create("data.mdb").unwrap();
     db_file.write_all(db).unwrap();
 
-    let &mut builder = rkv::Rkv::environment_builder().set_max_dbs(2);
-    let env = rkv::Rkv::from_env(Path::new("."), builder).unwrap();
+    let env = Rkv::with_capacity::<SafeMode>(Path::new("."), 2).unwrap();
     let store = env
         .open_single("test", rkv::StoreOptions::create())
         .unwrap();
@@ -68,7 +78,7 @@ pub extern "C" fn fuzz_rkv_db_name(raw_data: *const u8, size: libc::size_t) -> l
     let root = Builder::new().prefix("fuzz_rkv_db_name").tempdir().unwrap();
     fs::create_dir_all(root.path()).unwrap();
 
-    let env = rkv::Rkv::new(root.path()).unwrap();
+    let env = Rkv::new::<SafeMode>(root.path()).unwrap();
     let name = String::from_utf8_lossy(data);
     println!("Checking string: '{:?}'", name);
     // Some strings are invalid database names, and are handled as store errors.
@@ -93,7 +103,7 @@ pub extern "C" fn fuzz_rkv_key_write(raw_data: *const u8, size: libc::size_t) ->
         .unwrap();
     fs::create_dir_all(root.path()).unwrap();
 
-    let env = rkv::Rkv::new(root.path()).unwrap();
+    let env = Rkv::new::<SafeMode>(root.path()).unwrap();
     let store = env
         .open_single("test", rkv::StoreOptions::create())
         .unwrap();
@@ -116,7 +126,7 @@ pub extern "C" fn fuzz_rkv_val_write(raw_data: *const u8, size: libc::size_t) ->
         .unwrap();
     fs::create_dir_all(root.path()).unwrap();
 
-    let env = rkv::Rkv::new(root.path()).unwrap();
+    let env = Rkv::new::<SafeMode>(root.path()).unwrap();
     let store = env
         .open_single("test", rkv::StoreOptions::create())
         .unwrap();
@@ -157,7 +167,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
 
     fn maybe_abort<I: Iterator<Item = u8>>(
         fuzz: &mut I,
-        read: rkv::Reader,
+        read: rkv::Reader<SafeModeRoTransaction>,
     ) -> Result<(), rkv::StoreError> {
         match fuzz.next().map(|byte| byte % 2) {
             Some(0) => Ok(read.abort()),
@@ -167,7 +177,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
 
     fn maybe_commit<I: Iterator<Item = u8>>(
         fuzz: &mut I,
-        write: rkv::Writer,
+        write: rkv::Writer<SafeModeRwTransaction>,
     ) -> Result<(), rkv::StoreError> {
         match fuzz.next().map(|byte| byte % 3) {
             Some(0) => write.commit(),
@@ -207,8 +217,8 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
 
     fn store_put<I: Iterator<Item = u8> + Clone>(
         fuzz: &mut I,
-        env: &rkv::Rkv,
-        store: &rkv::SingleStore,
+        env: &Rkv,
+        store: &SingleStore,
     ) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
@@ -239,8 +249,8 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
 
     fn store_get<I: Iterator<Item = u8> + Clone>(
         fuzz: &mut I,
-        env: &rkv::Rkv,
-        store: &rkv::SingleStore,
+        env: &Rkv,
+        store: &SingleStore,
     ) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
@@ -264,8 +274,8 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
 
     fn store_delete<I: Iterator<Item = u8> + Clone>(
         fuzz: &mut I,
-        env: &rkv::Rkv,
-        store: &rkv::SingleStore,
+        env: &Rkv,
+        store: &SingleStore,
     ) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
@@ -284,7 +294,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         maybe_commit(fuzz, writer).unwrap();
     }
 
-    fn store_resize<I: Iterator<Item = u8>>(fuzz: &mut I, env: &rkv::Rkv) {
+    fn store_resize<I: Iterator<Item = u8>>(fuzz: &mut I, env: &Rkv) {
         let n = fuzz.next().unwrap_or(1) as usize;
         env.set_map_size(1_048_576 * (n % 100)).unwrap() // 1,048,576 bytes, i.e. 1MiB.
     };
@@ -292,7 +302,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     let root = Builder::new().prefix("fuzz_rkv_calls").tempdir().unwrap();
     fs::create_dir_all(root.path()).unwrap();
 
-    let mut builder = rkv::Rkv::environment_builder();
+    let mut builder: SafeMode = Rkv::environment_builder();
     builder.set_max_dbs(1); // need at least one db
 
     maybe_do(&mut fuzz, |fuzz| {
@@ -308,7 +318,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         builder.set_map_size(1_048_576 * (n % 100)); // 1,048,576 bytes, i.e. 1MiB.
     });
 
-    let env = rkv::Rkv::from_env(root.path(), builder).unwrap();
+    let env = Rkv::from_builder(root.path(), builder).unwrap();
     let store = env
         .open_single("test", rkv::StoreOptions::create())
         .unwrap();

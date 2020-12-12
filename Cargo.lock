@@ -525,7 +525,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "rental",
- "rkv 0.16.1",
+ "rkv",
  "rust_cascade",
  "sha2",
  "storage_variant",
@@ -1712,7 +1712,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "lmdb-rkv",
- "rkv 0.10.4",
+ "rkv",
  "tempfile",
 ]
 
@@ -2088,7 +2088,7 @@ dependencies = [
  "flate2",
  "log",
  "once_cell",
- "rkv 0.16.1",
+ "rkv",
  "serde",
  "serde_json",
  "uuid",
@@ -2655,7 +2655,7 @@ dependencies = [
  "moz_task",
  "nserror",
  "nsstring",
- "rkv 0.16.1",
+ "rkv",
  "storage_variant",
  "tempfile",
  "thin-vec",
@@ -4245,26 +4245,6 @@ name = "ringbuf"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c2b29d87cfbdce39849012bb5020fff88b8f01f4f5b55846a0b6ef360774eae"
-
-[[package]]
-name = "rkv"
-version = "0.10.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30a3dbc1f4971372545ed4175f23ef206c81e5874cd574d153646e7ee78f6793"
-dependencies = [
- "arrayref",
- "bincode",
- "bitflags",
- "byteorder",
- "failure",
- "lazy_static",
- "lmdb-rkv",
- "ordered-float",
- "serde",
- "serde_derive",
- "url",
- "uuid",
-]
 
 [[package]]
 name = "rkv"
@@ -6066,7 +6046,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "once_cell",
- "rkv 0.16.1",
+ "rkv",
  "serde_json",
  "tempfile",
  "xpcom",
