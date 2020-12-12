@@ -2189,8 +2189,8 @@ void ReflowInput::InitConstraints(
       ComputedBSize() = NS_UNCONSTRAINEDSIZE;
     }
 
-    ComputedMinWidth() = ComputedMinHeight() = 0;
-    ComputedMaxWidth() = ComputedMaxHeight() = NS_UNCONSTRAINEDSIZE;
+    ComputedMinISize() = ComputedMinBSize() = 0;
+    ComputedMaxBSize() = ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
   } else {
     // Get the containing block reflow input
     const ReflowInput* cbri = mCBReflowInput;
@@ -2344,8 +2344,8 @@ void ReflowInput::InitConstraints(
       }
 
       // Doesn't apply to internal table elements
-      ComputedMinWidth() = ComputedMinHeight() = 0;
-      ComputedMaxWidth() = ComputedMaxHeight() = NS_UNCONSTRAINEDSIZE;
+      ComputedMinISize() = ComputedMinBSize() = 0;
+      ComputedMaxISize() = ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
     } else if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
       // XXX not sure if this belongs here or somewhere else - cwk
       InitAbsoluteConstraints(aPresContext, cbri,
