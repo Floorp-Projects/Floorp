@@ -263,12 +263,12 @@ bool ReflowInput::ShouldReflowAllKids() const {
           mFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE));
 }
 
-void ReflowInput::SetComputedWidth(nscoord aComputedWidth) {
+void ReflowInput::SetComputedISize(nscoord aComputedISize) {
   NS_ASSERTION(mFrame, "Must have a frame!");
   // It'd be nice to assert that |frame| is not in reflow, but this fails for
   // two reasons:
   //
-  // 1) Viewport frames reset the computed width on a copy of their reflow
+  // 1) Viewport frames reset the computed isize on a copy of their reflow
   //    input when reflowing fixed-pos kids.  In that case we actually don't
   //    want to mess with the resize flags, because comparing the frame's rect
   //    to the munged computed width is pointless.
@@ -278,18 +278,17 @@ void ReflowInput::SetComputedWidth(nscoord aComputedWidth) {
   //    (like a text control, for example), we'll end up creating a reflow
   //    input for the parent while the parent is reflowing.
 
-  MOZ_ASSERT(aComputedWidth >= 0, "Invalid computed width");
-  if (ComputedWidth() != aComputedWidth) {
-    ComputedWidth() = aComputedWidth;
-    LayoutFrameType frameType = mFrame->Type();
-    if (frameType != LayoutFrameType::Viewport ||  // Or check GetParent()?
-        mWritingMode.IsVertical()) {
+  MOZ_ASSERT(aComputedISize >= 0, "Invalid computed inline-size!");
+  if (ComputedISize() != aComputedISize) {
+    ComputedISize() = aComputedISize;
+    const LayoutFrameType frameType = mFrame->Type();
+    if (frameType != LayoutFrameType::Viewport) {
       InitResizeFlags(mFrame->PresContext(), frameType);
     }
   }
 }
 
-void ReflowInput::SetComputedHeight(nscoord aComputedHeight) {
+void ReflowInput::SetComputedBSize(nscoord aComputedBSize) {
   NS_ASSERTION(mFrame, "Must have a frame!");
   // It'd be nice to assert that |frame| is not in reflow, but this fails
   // because:
@@ -300,13 +299,10 @@ void ReflowInput::SetComputedHeight(nscoord aComputedHeight) {
   //    (like a text control, for example), we'll end up creating a reflow
   //    input for the parent while the parent is reflowing.
 
-  MOZ_ASSERT(aComputedHeight >= 0, "Invalid computed height");
-  if (ComputedHeight() != aComputedHeight) {
-    ComputedHeight() = aComputedHeight;
-    LayoutFrameType frameType = mFrame->Type();
-    if (frameType != LayoutFrameType::Viewport || !mWritingMode.IsVertical()) {
-      InitResizeFlags(mFrame->PresContext(), frameType);
-    }
+  MOZ_ASSERT(aComputedBSize >= 0, "Invalid computed block-size!");
+  if (ComputedBSize() != aComputedBSize) {
+    ComputedBSize() = aComputedBSize;
+    InitResizeFlags(mFrame->PresContext(), mFrame->Type());
   }
 }
 
