@@ -160,3 +160,18 @@ TEST(RustNsString, InlineCapacityFromRust)
   EXPECT_EQ(cStrCapacity, 92U);
   EXPECT_EQ(strCapacity, 92U);
 }
+
+extern "C" void Rust_VoidStringFromRust(nsACString* aCStr, nsAString* aStr);
+TEST(RustNsString, VoidStringFromRust)
+{
+  nsAutoCString cs;
+  nsAutoString s;
+
+  EXPECT_FALSE(cs.IsVoid());
+  EXPECT_FALSE(s.IsVoid());
+
+  Rust_VoidStringFromRust(&cs, &s);
+
+  EXPECT_TRUE(cs.IsVoid());
+  EXPECT_TRUE(s.IsVoid());
+}
