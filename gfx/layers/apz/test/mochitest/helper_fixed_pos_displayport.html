@@ -42,12 +42,14 @@
       return parseRect(data[key]);
     }
 
-    function* scrollToVisual(targetX, targetY, testDriver) {
-      vv.addEventListener("scroll", testDriver, { once: true });
+    async function scrollToVisual(targetX, targetY) {
+      let scrollPromise = new Promise(resolve => {
+        vv.addEventListener("scroll", resolve, { once: true });
+      });
       utils.scrollToVisual(targetX, targetY, utils.UPDATE_TYPE_MAIN_THREAD,
                            utils.SCROLL_MODE_INSTANT);
-      yield; // wait for visual viewport "scroll" event
-      yield waitForApzFlushedRepaints(testDriver);
+      await scrollPromise;
+      await promiseApzFlushedRepaints();
       // Allow up to 1 pixel discrepancy due to floating-point error.
       isfuzzy(vv.pageLeft, targetX, 1, "visual-scrolled horizontally as expected");
       isfuzzy(vv.pageTop, targetY, 1, "visual-scrolled vertically as expected");
@@ -76,24 +78,24 @@
                             vvRect, "visual viewport");
     }
 
-    function* test(testDriver) {
+    async function test() {
       // First, check size and position on page load.
       checkFixedPosDisplayport();
 
       // Scroll the visual viewport within the layout viewport, without
       // scrolling the layout viewport itself, and check the size and
       // position again.
-      yield* scrollToVisual(vv.width * 3, vv.height * 3, testDriver);
+      await scrollToVisual(vv.width * 3, vv.height * 3);
       checkFixedPosDisplayport();
 
       // Finally, scroll the visual viewport farther so as to cause the
       // layout viewport to scroll as well, and check the size and position
       // once more.
-      yield* scrollToVisual(vv.width * 3, vv.height * 30, testDriver);
+      await scrollToVisual(vv.width * 3, vv.height * 30);
       checkFixedPosDisplayport();
     }
     SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(8.0);
-    waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>
