@@ -358,10 +358,8 @@ NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
 
 nsresult nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
                                               nsAString& aValue) {
-  // This is mostly to avoid code duplication with GetPropertyCSSValue(); if
-  // perf ever becomes an issue here (doubtful), we can look into changing
-  // this.
-  return GetPropertyValue(nsCSSProps::GetStringValue(aPropID), aValue);
+  MOZ_ASSERT(aPropID != eCSSPropertyExtra_variable);
+  return GetPropertyValue(aPropID, EmptyCString(), aValue);
 }
 
 void nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
@@ -404,19 +402,24 @@ css::Rule* nsComputedDOMStyle::GetParentRule() { return nullptr; }
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
                                      nsAString& aReturn) {
+  nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
+  return GetPropertyValue(prop, aPropertyName, aReturn);
+}
+
+nsresult nsComputedDOMStyle::GetPropertyValue(
+    nsCSSPropertyID aPropID, const nsACString& aMaybeCustomPropertyName,
+    nsAString& aReturn) {
   MOZ_ASSERT(aReturn.IsEmpty());
 
-  nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
-
   const ComputedStyleMap::Entry* entry = nullptr;
-  if (prop != eCSSPropertyExtra_variable) {
-    entry = GetComputedStyleMap()->FindEntryForProperty(prop);
+  if (aPropID != eCSSPropertyExtra_variable) {
+    entry = GetComputedStyleMap()->FindEntryForProperty(aPropID);
     if (!entry) {
       return NS_OK;
     }
   }
 
-  UpdateCurrentStyleSources(prop);
+  UpdateCurrentStyleSources(aPropID);
   if (!mComputedStyle) {
     return NS_OK;
   }
@@ -424,28 +427,28 @@ nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
   auto cleanup = mozilla::MakeScopeExit([&] { ClearCurrentStyleSources(); });
 
   if (!entry) {
-    MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
+    MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aMaybeCustomPropertyName));
     const nsACString& name =
-        Substring(aPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
+        Substring(aMaybeCustomPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
     Servo_GetCustomPropertyValue(mComputedStyle, &name, &aReturn);
     return NS_OK;
   }
 
-  if (nsCSSProps::PropHasFlags(prop, CSSPropFlags::IsLogical)) {
+  if (nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::IsLogical)) {
     MOZ_ASSERT(entry);
     MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
 
-    DebugOnly<nsCSSPropertyID> logicalProp = prop;
+    DebugOnly<nsCSSPropertyID> logicalProp = aPropID;
 
-    prop = Servo_ResolveLogicalProperty(prop, mComputedStyle);
-    entry = GetComputedStyleMap()->FindEntryForProperty(prop);
+    aPropID = Servo_ResolveLogicalProperty(aPropID, mComputedStyle);
+    entry = GetComputedStyleMap()->FindEntryForProperty(aPropID);
 
-    MOZ_ASSERT(NeedsToFlushLayout(logicalProp) == NeedsToFlushLayout(prop),
+    MOZ_ASSERT(NeedsToFlushLayout(logicalProp) == NeedsToFlushLayout(aPropID),
                "Logical and physical property don't agree on whether layout is "
                "needed");
   }
 
-  if (!nsCSSProps::PropHasFlags(prop, CSSPropFlags::SerializedByServo)) {
+  if (!nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::SerializedByServo)) {
     if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
       ErrorResult rv;
       nsString text;
@@ -457,7 +460,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
   }
 
   MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
-  mComputedStyle->GetComputedPropertyValue(prop, aReturn);
+  mComputedStyle->GetComputedPropertyValue(aPropID, aReturn);
   return NS_OK;
 }
 
