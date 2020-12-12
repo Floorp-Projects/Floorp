@@ -752,18 +752,17 @@ XDRResult XDRStencilDecoder::codeStencils(
   }
 
   for (size_t i = 1; i < nchunks_; i++) {
-    compilationInfos.delazifications.infallibleEmplaceBack(
-        cx(), compilationInfos.initial.input.options);
-    auto& funInfo = compilationInfos.delazifications[i - 1];
+    compilationInfos.delazifications.infallibleEmplaceBack();
+    auto& delazification = compilationInfos.delazifications[i - 1];
 
     hasFinishedAtomTable_ = false;
 
     frontend::ParserAtomVectorBuilder parserAtomBuilder(
-        cx()->runtime(), funInfo.stencil.alloc, funInfo.stencil.parserAtomData);
+        cx()->runtime(), delazification.alloc, delazification.parserAtomData);
     parserAtomBuilder_ = &parserAtomBuilder;
-    stencilAlloc_ = &funInfo.stencil.alloc;
+    stencilAlloc_ = &delazification.alloc;
 
-    MOZ_TRY(codeFunctionStencil(funInfo.stencil));
+    MOZ_TRY(codeFunctionStencil(delazification));
   }
 
   return Ok();
@@ -776,7 +775,7 @@ XDRResult XDRIncrementalStencilEncoder::codeStencils(
   MOZ_TRY(codeStencil(compilationInfos.initial));
 
   for (auto& delazification : compilationInfos.delazifications) {
-    MOZ_TRY(codeFunctionStencil(delazification.stencil));
+    MOZ_TRY(codeFunctionStencil(delazification));
   }
 
   return Ok();

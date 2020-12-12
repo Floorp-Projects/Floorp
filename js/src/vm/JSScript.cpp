@@ -2812,7 +2812,7 @@ bool ScriptSource::xdrEncodeStencils(
   }
 
   for (auto& delazification : compilationInfos.delazifications) {
-    if (!xdrEncodeFunctionStencilWith(cx, delazification.stencil, xdrEncoder)) {
+    if (!xdrEncodeFunctionStencilWith(cx, delazification, xdrEncoder)) {
       return false;
     }
   }

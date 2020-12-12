@@ -701,7 +701,7 @@ bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
 
   for (size_t i = 0; i < delazifications.length(); i++) {
     const auto& delazification = delazifications[i];
-    auto key = toFunctionKey(delazification.stencil.scriptData[0].extent);
+    auto key = toFunctionKey(delazification.scriptData[0].extent);
     keyToIndex.putNewInfallible(key, i);
   }
 
@@ -748,17 +748,19 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
     BaseScript* lazy = fun->baseScript();
     MOZ_ASSERT(!lazy->hasBytecode());
 
-    // CompilationInfo.input for delazification isn't initialized when
-    // decoding.
-    delazification.input.initFromLazy(lazy);
+    CompilationInput input(initial.input.options);
+    input.initFromLazy(lazy);
 
+    if (!CompilationInfo::prepareInputAndStencilForInstantiate(
+            cx, input, delazification)) {
+      return false;
+    }
     if (!CompilationInfo::prepareGCOutputForInstantiate(
-            cx, delazification.stencil, gcOutputForDelazification)) {
+            cx, delazification, gcOutputForDelazification)) {
       return false;
     }
     if (!CompilationInfo::instantiateStencilsAfterPreparation(
-            cx, delazification.input, delazification.stencil,
-            gcOutputForDelazification)) {
+            cx, input, delazification, gcOutputForDelazification)) {
       return false;
     }
 
@@ -823,15 +825,12 @@ bool CompilationInfoVector::prepareForInstantiate(
   size_t maxScriptDataLength = 0;
   size_t maxScopeDataLength = 0;
   for (auto& delazification : delazifications) {
-    if (!CompilationInfo::prepareInputAndStencilForInstantiate(
-            cx, delazification.input, delazification.stencil)) {
-      return false;
+    // FIXME: Prepare atomCache vector.
+    if (maxScriptDataLength < delazification.scriptData.length()) {
+      maxScriptDataLength = delazification.scriptData.length();
     }
-    if (maxScriptDataLength < delazification.stencil.scriptData.length()) {
-      maxScriptDataLength = delazification.stencil.scriptData.length();
-    }
-    if (maxScopeDataLength < delazification.stencil.scopeData.length()) {
-      maxScopeDataLength = delazification.stencil.scopeData.length();
+    if (maxScopeDataLength < delazification.scopeData.length()) {
+      maxScopeDataLength = delazification.scopeData.length();
     }
   }
 
