@@ -8,6 +8,8 @@
 
 #include "mozilla/RefPtr.h"  // RefPtr
 
+#include <memory>  // std::uninitialized_fill
+
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"  // CompilationInfo, CompilationInfoVector, CompilationGCOutput
@@ -748,25 +750,25 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
     BaseScript* lazy = fun->baseScript();
     MOZ_ASSERT(!lazy->hasBytecode());
 
-    CompilationInput input(initial.input.options);
-    input.initFromLazy(lazy);
+    Rooted<CompilationInput> input(cx, CompilationInput(initial.input.options));
+    input.get().initFromLazy(lazy);
 
-    if (!CompilationInfo::prepareInputAndStencilForInstantiate(
-            cx, input, delazification)) {
-      return false;
-    }
+    input.get().atomCache.stealBuffer(delazificationAtomCache);
+
     if (!CompilationInfo::prepareGCOutputForInstantiate(
             cx, delazification, gcOutputForDelazification)) {
       return false;
     }
     if (!CompilationInfo::instantiateStencilsAfterPreparation(
-            cx, input, delazification, gcOutputForDelazification)) {
+            cx, input.get(), delazification, gcOutputForDelazification)) {
       return false;
     }
 
     // Destroy elements, without unreserving.
-    gcOutputForDelazification.functions.shrinkTo(0);
-    gcOutputForDelazification.scopes.shrinkTo(0);
+    gcOutputForDelazification.functions.clear();
+    gcOutputForDelazification.scopes.clear();
+
+    input.get().atomCache.returnBuffer(delazificationAtomCache);
   }
 
   return true;
@@ -824,8 +826,11 @@ bool CompilationInfoVector::prepareForInstantiate(
 
   size_t maxScriptDataLength = 0;
   size_t maxScopeDataLength = 0;
+  size_t maxParserAtomDataLength = 0;
   for (auto& delazification : delazifications) {
-    // FIXME: Prepare atomCache vector.
+    if (maxParserAtomDataLength < delazification.parserAtomData.length()) {
+      maxParserAtomDataLength = delazification.parserAtomData.length();
+    }
     if (maxScriptDataLength < delazification.scriptData.length()) {
       maxScriptDataLength = delazification.scriptData.length();
     }
@@ -834,6 +839,10 @@ bool CompilationInfoVector::prepareForInstantiate(
     }
   }
 
+  if (!delazificationAtomCache.resize(maxParserAtomDataLength)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
   if (!gcOutput.functions.reserve(maxScriptDataLength)) {
     ReportOutOfMemory(cx);
     return false;
@@ -1721,6 +1730,16 @@ bool CompilationAtomCache::allocate(JSContext* cx, size_t length) {
   }
 
   return true;
+}
+
+void CompilationAtomCache::stealBuffer(AtomCacheVector& atoms) {
+  atoms_ = std::move(atoms);
+  // Destroy elements, without unreserving.
+  atoms_.clear();
+}
+
+void CompilationAtomCache::returnBuffer(AtomCacheVector& atoms) {
+  atoms = std::move(atoms_);
 }
 
 const ParserAtom* CompilationStencil::getParserAtomAt(
