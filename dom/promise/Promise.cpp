@@ -861,3 +861,42 @@ void Promise::SetSettledPromiseIsHandled() {
 
 }  // namespace dom
 }  // namespace mozilla
+
+extern "C" {
+
+// These functions are used in the implementation of ffi bindings for
+// dom::Promise from Rust.
+
+void DomPromise_AddRef(mozilla::dom::Promise* aPromise) {
+  MOZ_ASSERT(aPromise);
+  aPromise->AddRef();
+}
+
+void DomPromise_Release(mozilla::dom::Promise* aPromise) {
+  MOZ_ASSERT(aPromise);
+  aPromise->Release();
+}
+
+#define DOM_PROMISE_FUNC_WITH_VARIANT(name, func)                         \
+  void name(mozilla::dom::Promise* aPromise, nsIVariant* aVariant) {      \
+    MOZ_ASSERT(aPromise);                                                 \
+    MOZ_ASSERT(aVariant);                                                 \
+    mozilla::dom::AutoEntryScript aes(aPromise->GetGlobalObject(),        \
+                                      "Promise resolution or rejection"); \
+    JSContext* cx = aes.cx();                                             \
+                                                                          \
+    JS::Rooted<JS::Value> val(cx);                                        \
+    nsresult rv = NS_OK;                                                  \
+    if (!XPCVariant::VariantDataToJS(cx, aVariant, &rv, &val)) {          \
+      aPromise->MaybeRejectWithTypeError(                                 \
+          "Failed to convert nsIVariant to JS");                          \
+      return;                                                             \
+    }                                                                     \
+    aPromise->func(val);                                                  \
+  }
+
+DOM_PROMISE_FUNC_WITH_VARIANT(DomPromise_RejectWithVariant, MaybeReject)
+DOM_PROMISE_FUNC_WITH_VARIANT(DomPromise_ResolveWithVariant, MaybeResolve)
+
+#undef DOM_PROMISE_FUNC_WITH_VARIANT
+}
