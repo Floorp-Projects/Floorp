@@ -485,8 +485,8 @@ struct CompilationInfoVector {
   MOZ_MUST_USE bool buildDelazificationIndices(JSContext* cx);
 
  public:
-  frontend::CompilationInfo initial;
-  GCVector<frontend::CompilationInfo, 0, js::SystemAllocPolicy> delazifications;
+  CompilationInfo initial;
+  Vector<CompilationStencil, 0, js::SystemAllocPolicy> delazifications;
   FunctionIndexVector delazificationIndices;
 
   CompilationInfoVector(JSContext* cx,
