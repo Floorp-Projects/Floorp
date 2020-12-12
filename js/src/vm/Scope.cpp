@@ -1911,14 +1911,15 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 
 /* static */
 bool ScopeStencil::createForFunctionScope(
-    JSContext* cx, frontend::CompilationStencil& stencil,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
     ParserFunctionScopeData* data, bool hasParameterExprs,
     bool needsEnvironment, FunctionIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
+  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<FunctionScope>(data);
   } else {
-    data = NewEmptyParserScopeData<FunctionScope>(cx, stencil.alloc);
+    data = NewEmptyParserScopeData<FunctionScope>(cx, compilationInfo.alloc);
     if (!data) {
       return false;
     }
@@ -1951,13 +1952,14 @@ bool ScopeStencil::createForFunctionScope(
 
 /* static */
 bool ScopeStencil::createForLexicalScope(
-    JSContext* cx, frontend::CompilationStencil& stencil, ScopeKind kind,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
     ParserLexicalScopeData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
+  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<LexicalScope>(data);
   } else {
-    data = NewEmptyParserScopeData<LexicalScope>(cx, stencil.alloc);
+    data = NewEmptyParserScopeData<LexicalScope>(cx, compilationInfo.alloc);
     if (!data) {
       return false;
     }
@@ -1983,13 +1985,14 @@ bool ScopeStencil::createForLexicalScope(
 }
 
 bool ScopeStencil::createForVarScope(
-    JSContext* cx, frontend::CompilationStencil& stencil, ScopeKind kind,
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
     ParserVarScopeData* data, uint32_t firstFrameSlot, bool needsEnvironment,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
+  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<VarScope>(data);
   } else {
-    data = NewEmptyParserScopeData<VarScope>(cx, stencil.alloc);
+    data = NewEmptyParserScopeData<VarScope>(cx, compilationInfo.alloc);
     if (!data) {
       return false;
     }
@@ -2015,15 +2018,14 @@ bool ScopeStencil::createForVarScope(
 }
 
 /* static */
-bool ScopeStencil::createForGlobalScope(JSContext* cx,
-                                        frontend::CompilationStencil& stencil,
-                                        ScopeKind kind,
-                                        ParserGlobalScopeData* data,
-                                        ScopeIndex* index) {
+bool ScopeStencil::createForGlobalScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+    ParserGlobalScopeData* data, ScopeIndex* index) {
+  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<GlobalScope>(data);
   } else {
-    data = NewEmptyParserScopeData<GlobalScope>(cx, stencil.alloc);
+    data = NewEmptyParserScopeData<GlobalScope>(cx, compilationInfo.alloc);
     if (!data) {
       return false;
     }
@@ -2052,15 +2054,15 @@ bool ScopeStencil::createForGlobalScope(JSContext* cx,
 }
 
 /* static */
-bool ScopeStencil::createForEvalScope(JSContext* cx,
-                                      frontend::CompilationStencil& stencil,
-                                      ScopeKind kind, ParserEvalScopeData* data,
-                                      mozilla::Maybe<ScopeIndex> enclosing,
-                                      ScopeIndex* index) {
+bool ScopeStencil::createForEvalScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+    ParserEvalScopeData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
+  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<EvalScope>(data);
   } else {
-    data = NewEmptyParserScopeData<EvalScope>(cx, stencil.alloc);
+    data = NewEmptyParserScopeData<EvalScope>(cx, compilationInfo.alloc);
     if (!data) {
       return false;
     }
@@ -2087,15 +2089,15 @@ bool ScopeStencil::createForEvalScope(JSContext* cx,
 }
 
 /* static */
-bool ScopeStencil::createForModuleScope(JSContext* cx,
-                                        frontend::CompilationStencil& stencil,
-                                        ParserModuleScopeData* data,
-                                        mozilla::Maybe<ScopeIndex> enclosing,
-                                        ScopeIndex* index) {
+bool ScopeStencil::createForModuleScope(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    ParserModuleScopeData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
+  frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
     MarkParserScopeData<ModuleScope>(data);
   } else {
-    data = NewEmptyParserScopeData<ModuleScope>(cx, stencil.alloc);
+    data = NewEmptyParserScopeData<ModuleScope>(cx, compilationInfo.alloc);
     if (!data) {
       return false;
     }
@@ -2153,9 +2155,11 @@ bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
 
 /* static */
 bool ScopeStencil::createForWithScope(JSContext* cx,
-                                      CompilationStencil& stencil,
+                                      CompilationInfo& compilationInfo,
                                       mozilla::Maybe<ScopeIndex> enclosing,
                                       ScopeIndex* index) {
+  frontend::CompilationStencil& stencil = compilationInfo.stencil;
+
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
 
