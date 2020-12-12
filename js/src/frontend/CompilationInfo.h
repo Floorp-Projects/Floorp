@@ -495,12 +495,15 @@ struct CompilationInfoVector {
   CompilationInfoVector& operator=(const CompilationInfoVector&) = delete;
   CompilationInfoVector& operator=(CompilationInfoVector&&) = delete;
 
-  MOZ_MUST_USE bool prepareForInstantiate(JSContext* cx,
-                                          CompilationGCOutput& gcOutput);
-  MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
-                                        CompilationGCOutput& gcOutput);
+  MOZ_MUST_USE bool prepareForInstantiate(
+      JSContext* cx, CompilationGCOutput& gcOutput,
+      CompilationGCOutput& gcOutputForDelazification);
+  MOZ_MUST_USE bool instantiateStencils(
+      JSContext* cx, CompilationGCOutput& gcOutput,
+      CompilationGCOutput& gcOutputForDelazification);
   MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
-      JSContext* cx, CompilationGCOutput& gcOutput);
+      JSContext* cx, CompilationGCOutput& gcOutput,
+      CompilationGCOutput& gcOutputForDelazification);
 
   MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
                                         const JS::TranscodeRange& range,

@@ -75,16 +75,18 @@ extern UniquePtr<CompilationInfo> CompileGlobalScriptToStencil(
 extern bool PrepareForInstantiate(JSContext* cx,
                                   CompilationInfo& compilationInfo,
                                   CompilationGCOutput& gcOutput);
-extern bool PrepareForInstantiate(JSContext* cx,
-                                  CompilationInfoVector& compilationInfos,
-                                  CompilationGCOutput& gcOutput);
+extern bool PrepareForInstantiate(
+    JSContext* cx, CompilationInfoVector& compilationInfos,
+    CompilationGCOutput& gcOutput,
+    CompilationGCOutput& gcOutputForDelazification);
 
 extern bool InstantiateStencils(JSContext* cx, CompilationInfo& compilationInfo,
                                 CompilationGCOutput& gcOutput);
 
 extern bool InstantiateStencils(JSContext* cx,
                                 CompilationInfoVector& compilationInfos,
-                                CompilationGCOutput& gcOutput);
+                                CompilationGCOutput& gcOutput,
+                                CompilationGCOutput& gcOutputForDelazification);
 
 extern JSScript* CompileGlobalScript(JSContext* cx,
                                      const JS::ReadOnlyCompileOptions& options,

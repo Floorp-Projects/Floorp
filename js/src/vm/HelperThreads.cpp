@@ -588,6 +588,7 @@ void ParseTask::trace(JSTracer* trc) {
     compilationInfos_->trace(trc);
   }
   gcOutput_.trace(trc);
+  gcOutputForDelazification_.trace(trc);
 }
 
 size_t ParseTask::sizeOfExcludingThis(
@@ -701,7 +702,8 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
   if (compilationInfo_) {
     result = frontend::InstantiateStencils(cx, *compilationInfo_, gcOutput_);
   } else {
-    result = frontend::InstantiateStencils(cx, *compilationInfos_, gcOutput_);
+    result = frontend::InstantiateStencils(cx, *compilationInfos_, gcOutput_,
+                                           gcOutputForDelazification_);
   }
 
   // Whatever happens to the top-level script compilation (even if it fails),
@@ -794,7 +796,8 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     compilationInfos_ = std::move(compilationInfos.get());
 
     if (compilationInfos_) {
-      if (!frontend::PrepareForInstantiate(cx, *compilationInfos_, gcOutput_)) {
+      if (!frontend::PrepareForInstantiate(cx, *compilationInfos_, gcOutput_,
+                                           gcOutputForDelazification_)) {
         compilationInfos_ = nullptr;
       }
     }

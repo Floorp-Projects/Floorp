@@ -717,17 +717,20 @@ bool CompilationInfoVector::buildDelazificationIndices(JSContext* cx) {
   return true;
 }
 
-bool CompilationInfoVector::instantiateStencils(JSContext* cx,
-                                                CompilationGCOutput& gcOutput) {
-  if (!prepareForInstantiate(cx, gcOutput)) {
+bool CompilationInfoVector::instantiateStencils(
+    JSContext* cx, CompilationGCOutput& gcOutput,
+    CompilationGCOutput& gcOutputForDelazification) {
+  if (!prepareForInstantiate(cx, gcOutput, gcOutputForDelazification)) {
     return false;
   }
 
-  return instantiateStencilsAfterPreparation(cx, gcOutput);
+  return instantiateStencilsAfterPreparation(cx, gcOutput,
+                                             gcOutputForDelazification);
 }
 
 bool CompilationInfoVector::instantiateStencilsAfterPreparation(
-    JSContext* cx, CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationGCOutput& gcOutput,
+    CompilationGCOutput& gcOutputForDelazification) {
   if (!initial.instantiateStencilsAfterPreparation(cx, gcOutput)) {
     return false;
   }
@@ -746,15 +749,18 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
     // decoding.
     delazification.input.initFromLazy(lazy);
 
-    Rooted<CompilationGCOutput> gcOutputForDelazification(cx);
     if (!delazification.prepareGCOutputForInstantiate(
-            cx, gcOutputForDelazification.get())) {
+            cx, gcOutputForDelazification)) {
       return false;
     }
     if (!delazification.instantiateStencilsAfterPreparation(
-            cx, gcOutputForDelazification.get())) {
+            cx, gcOutputForDelazification)) {
       return false;
     }
+
+    // Destroy elements, without unreserving.
+    gcOutputForDelazification.functions.shrinkTo(0);
+    gcOutputForDelazification.scopes.shrinkTo(0);
   }
 
   return true;
@@ -796,15 +802,33 @@ bool CompilationInfo::prepareForInstantiate(JSContext* cx,
 }
 
 bool CompilationInfoVector::prepareForInstantiate(
-    JSContext* cx, CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationGCOutput& gcOutput,
+    CompilationGCOutput& gcOutputForDelazification) {
   if (!initial.prepareForInstantiate(cx, gcOutput)) {
     return false;
   }
 
+  size_t maxScriptDataLength = 0;
+  size_t maxScopeDataLength = 0;
   for (auto& delazification : delazifications) {
     if (!delazification.prepareInputAndStencilForInstantiate(cx)) {
       return false;
     }
+    if (maxScriptDataLength < delazification.stencil.scriptData.length()) {
+      maxScriptDataLength = delazification.stencil.scriptData.length();
+    }
+    if (maxScopeDataLength < delazification.stencil.scopeData.length()) {
+      maxScopeDataLength = delazification.stencil.scopeData.length();
+    }
+  }
+
+  if (!gcOutput.functions.reserve(maxScriptDataLength)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  if (!gcOutput.scopes.reserve(maxScopeDataLength)) {
+    ReportOutOfMemory(cx);
+    return false;
   }
 
   if (!buildDelazificationIndices(cx)) {
