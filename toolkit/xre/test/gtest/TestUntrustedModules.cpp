@@ -151,11 +151,10 @@ static void ValidateUntrustedModules(const UntrustedModulesData& aData) {
     EXPECT_FALSE(evt.mIsDependent);
   }
 
+  // No check for the mXULLoadDurationMS field because the field has a value
+  // in CCov build GTest, but it is empty in non-CCov build (bug 1681936).
   EXPECT_GT(aData.mEvents.length(), 0);
   EXPECT_GT(aData.mStacks.GetModuleCount(), 0);
-  // Because xul.dll is not signed when running GTest,
-  // mXULLoadDurationMS is expected to be empty.
-  EXPECT_TRUE(aData.mXULLoadDurationMS.isNothing());
   EXPECT_EQ(aData.mSanitizationFailures, 0);
   EXPECT_EQ(aData.mTrustTestFailures, 0);
 }
