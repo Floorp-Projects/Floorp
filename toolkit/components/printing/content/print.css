@@ -24,8 +24,7 @@ body[loading] #print {
 }
 
 .section-block {
-  padding-inline: 16px;
-  margin-block: 16px;
+  margin: 16px;
 }
 
 .section-block .block-label {
@@ -237,6 +236,18 @@ input[type="text"] {
 .footer-container {
   border-top: 1px solid var(--in-content-border-color);
   flex: 0 1 auto;
+}
+
+#print-progress {
+  background-image: url("chrome://browser/skin/tabbrowser/pendingpaint.png");
+  background-repeat: no-repeat;
+  background-size: 16px;
+  background-position: left center;
+  padding-inline-start: 20px;
+}
+
+#print-progress:dir(rtl) {
+  background-position-x: right;
 }
 
 #button-container {

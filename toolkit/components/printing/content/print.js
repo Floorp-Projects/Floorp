@@ -181,6 +181,7 @@ var PrintEventHandler = {
     this.originalSourceCurrentURI =
       sourceBrowsingContext.currentWindowContext.documentURI.spec;
 
+    this.printProgressIndicator = document.getElementById("print-progress");
     this.printForm = document.getElementById("print");
     if (sourceIsPdf) {
       this.printForm.removeNonPdfSettings();
@@ -265,7 +266,7 @@ var PrintEventHandler = {
         this.settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
           ? PrintUtils.getPrintSettings(this.viewSettings.defaultSystemPrinter)
           : this.settings.clone();
-      settings.showPrintProgress = true;
+      settings.showPrintProgress = false;
       // We set the title so that if the user chooses save-to-PDF from the
       // system dialog the title will be used to generate the prepopulated
       // filename in the file picker.
@@ -376,10 +377,10 @@ var PrintEventHandler = {
     Services.prefs.setStringPref("print_printer", settings.printerName);
 
     try {
-      // The print progress dialog is causing an uncaught exception in tests.
-      // Only show it to users.
-      this.settings.showPrintProgress = !Cu.isInAutomation;
+      // We'll provide our own progress indicator.
+      this.settings.showPrintProgress = false;
       let bc = this.previewBrowser.browsingContext;
+      this.printProgressIndicator.hidden = false;
       await this._doPrint(bc, settings);
     } catch (e) {
       Cu.reportError(e);
