@@ -11,7 +11,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - signing
+    - beetmover
 
 group-by: build-type
 
@@ -23,7 +23,7 @@ job-template:
         platform: android-all/opt
         symbol:
             by-build-type:
-                release: post-signing-release
-                nightly: post-signing-nightly
-                default: post-signing
+                release: post-beetmover-release
+                nightly: post-beetmover-nightly
+                default: post-beetmover
         tier: 1

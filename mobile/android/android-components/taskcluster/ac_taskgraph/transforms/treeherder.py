@@ -14,7 +14,10 @@ transforms = TransformSequence()
 @transforms.add
 def build_treeherder_definition(config, tasks):
     for task in tasks:
-        dep = task.pop("primary-dependency")
+        if task.get("primary-dependency"):
+            dep = task.pop("primary-dependency")
+        else:
+            dep = task["dependent-tasks"].values()[0]
 
         task.setdefault("treeherder", {}).update(inherit_treeherder_from_dep(task, dep))
         job_group = dep.task["extra"]["treeherder"].get("groupSymbol", "?")

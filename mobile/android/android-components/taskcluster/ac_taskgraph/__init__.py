@@ -16,6 +16,7 @@ from .build_config import get_components, get_version
 extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
     Required("base_rev"): Any(basestring, None),
+    Required("version"): basestring,
 })
 
 def register(graph_config):
@@ -44,6 +45,8 @@ def get_decision_parameters(graph_config, parameters):
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
     parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
     parameters["base_rev"] = os.environ.get("MOBILE_BASE_REV")
+    version = get_version()
+    parameters["version"] = version
 
     if parameters["tasks_for"] == "github-release":
         head_tag = parameters["head_tag"].decode("utf-8")
@@ -53,7 +56,6 @@ def get_decision_parameters(graph_config, parameters):
                     head_tag
                 )
             )
-        version = get_version()
         # XXX: tags are in the format of `v<semver>`
         if head_tag[1:] != version:
             raise ValueError(
