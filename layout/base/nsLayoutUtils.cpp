@@ -1100,7 +1100,7 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
   // TODO: remove the uglyness, see bug 598468.
   NS_ASSERTION(gPreventAssertInCompareTreePosition || parent,
                "no common ancestor at all???");
-#endif            // DEBUG
+#endif  // DEBUG
   if (!parent) {  // different documents??
     return 0;
   }
@@ -4338,12 +4338,16 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
                  "unknown min block-size unit");
   }
 
-  // Now adjust h for box-sizing styles on the parent.  We never ignore padding
-  // here.  That could conceivably cause some problems with fieldsets (which are
-  // the one place that wants to ignore padding), but solving that here without
-  // hardcoding a check for f being a fieldset-content frame is a bit of a pain.
-  nscoord bSizeTakenByBoxSizing =
-      GetBSizeTakenByBoxSizing(pos->mBoxSizing, f, aHorizontalAxis, false);
+  // Ignore padding if we're an abspos box, as percentages in that case resolve
+  // against the padding box.
+  //
+  // TODO: This could conceivably cause some problems with fieldsets (which are
+  // the other place that wants to ignore padding), but solving that here
+  // without hardcoding a check for f being a fieldset-content frame is a bit of
+  // a pain.
+  const bool ignorePadding = aFrame->IsAbsolutelyPositioned();
+  nscoord bSizeTakenByBoxSizing = GetBSizeTakenByBoxSizing(
+      pos->mBoxSizing, f, aHorizontalAxis, ignorePadding);
   h = std::max(0, h - bSizeTakenByBoxSizing);
 
   aResult = std::max(aStyle.Resolve(h), 0);
@@ -4880,9 +4884,10 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
         AddStateBitToAncestors(
             aFrame, NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE);
 
+        const bool ignorePadding =
+            (aFlags & IGNORE_PADDING) || aFrame->IsAbsolutelyPositioned();
         nscoord bSizeTakenByBoxSizing = GetDefiniteSizeTakenByBoxSizing(
-            boxSizing, aFrame, !isInlineAxis, aFlags & IGNORE_PADDING,
-            aPercentageBasis);
+            boxSizing, aFrame, !isInlineAxis, ignorePadding, aPercentageBasis);
         // NOTE: This is only the minContentSize if we've been passed
         // MIN_INTRINSIC_ISIZE (which is fine, because this should only be used
         // inside a check for that flag).
