@@ -436,16 +436,21 @@ struct CompilationInfo {
   CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
       : input(options) {}
 
-  MOZ_MUST_USE bool prepareInputAndStencilForInstantiate(JSContext* cx);
-  MOZ_MUST_USE bool prepareGCOutputForInstantiate(
-      JSContext* cx, CompilationGCOutput& gcOutput);
+  static MOZ_MUST_USE bool prepareInputAndStencilForInstantiate(
+      JSContext* cx, CompilationInfo& compilationInfo);
+  static MOZ_MUST_USE bool prepareGCOutputForInstantiate(
+      JSContext* cx, CompilationInfo& compilationInfo,
+      CompilationGCOutput& gcOutput);
 
-  MOZ_MUST_USE bool prepareForInstantiate(JSContext* cx,
-                                          CompilationGCOutput& gcOutput);
-  MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
-                                        CompilationGCOutput& gcOutput);
-  MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
-      JSContext* cx, CompilationGCOutput& gcOutput);
+  static MOZ_MUST_USE bool prepareForInstantiate(
+      JSContext* cx, CompilationInfo& compilationInfo,
+      CompilationGCOutput& gcOutput);
+  static MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
+                                               CompilationInfo& compilationInfo,
+                                               CompilationGCOutput& gcOutput);
+  static MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
+      JSContext* cx, CompilationInfo& compilationInfo,
+      CompilationGCOutput& gcOutput);
 
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                       bool* succeededOut = nullptr);
