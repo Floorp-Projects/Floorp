@@ -5,7 +5,6 @@ authors = ["Nika Layzell <nika@thelayzells.com>"]
 edition = "2018"
 
 [dependencies]
-cstr = "0.1"
 libc = "0.2"
 nsstring = { path = "../nsstring" }
 nserror = { path = "../nserror" }
