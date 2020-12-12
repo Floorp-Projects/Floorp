@@ -602,35 +602,42 @@ static void FunctionsFromExistingLazy(CompilationInfo& compilationInfo,
   MOZ_ASSERT(idx == gcOutput.functions.length());
 }
 
+/* static */
 bool CompilationInfo::instantiateStencils(JSContext* cx,
+                                          CompilationInfo& compilationInfo,
                                           CompilationGCOutput& gcOutput) {
-  if (!preparationIsPerformed) {
-    if (!prepareForInstantiate(cx, gcOutput)) {
+  if (!compilationInfo.preparationIsPerformed) {
+    if (!prepareForInstantiate(cx, compilationInfo, gcOutput)) {
       return false;
     }
   }
 
-  return instantiateStencilsAfterPreparation(cx, gcOutput);
+  return instantiateStencilsAfterPreparation(cx, compilationInfo, gcOutput);
 }
 
+/* static */
 bool CompilationInfo::instantiateStencilsAfterPreparation(
-    JSContext* cx, CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) {
+  auto& input = compilationInfo.input;
+  auto& stencil = compilationInfo.stencil;
+
   if (!gcOutput.functions.resize(stencil.scriptData.length())) {
     ReportOutOfMemory(cx);
     return false;
   }
 
-  if (!InstantiateAtoms(cx, *this)) {
+  if (!InstantiateAtoms(cx, compilationInfo)) {
     return false;
   }
 
   if (input.lazy) {
     MOZ_ASSERT(!stencil.scriptData[CompilationInfo::TopLevelIndex].isModule());
 
-    FunctionsFromExistingLazy(*this, gcOutput);
+    FunctionsFromExistingLazy(compilationInfo, gcOutput);
 
 #ifdef DEBUG
-    AssertDelazificationFieldsMatch(*this, gcOutput);
+    AssertDelazificationFieldsMatch(compilationInfo, gcOutput);
 #endif
   } else {
     if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
@@ -640,39 +647,39 @@ bool CompilationInfo::instantiateStencilsAfterPreparation(
                  ModuleScope::EnclosingEnvironmentChainLength);
     }
 
-    if (!InstantiateScriptSourceObject(cx, *this, gcOutput)) {
+    if (!InstantiateScriptSourceObject(cx, compilationInfo, gcOutput)) {
       return false;
     }
 
-    if (!MaybeInstantiateModule(cx, *this, gcOutput)) {
+    if (!MaybeInstantiateModule(cx, compilationInfo, gcOutput)) {
       return false;
     }
 
-    if (!InstantiateFunctions(cx, *this, gcOutput)) {
+    if (!InstantiateFunctions(cx, compilationInfo, gcOutput)) {
       return false;
     }
   }
 
-  if (!InstantiateScopes(cx, *this, gcOutput)) {
+  if (!InstantiateScopes(cx, compilationInfo, gcOutput)) {
     return false;
   }
 
   if (!input.lazy) {
-    if (!InstantiateScriptStencils(cx, *this, gcOutput)) {
+    if (!InstantiateScriptStencils(cx, compilationInfo, gcOutput)) {
       return false;
     }
   }
 
-  if (!InstantiateTopLevel(cx, *this, gcOutput)) {
+  if (!InstantiateTopLevel(cx, compilationInfo, gcOutput)) {
     return false;
   }
 
   // Must be infallible from here forward.
 
-  UpdateEmittedInnerFunctions(cx, *this, gcOutput);
+  UpdateEmittedInnerFunctions(cx, compilationInfo, gcOutput);
 
   if (!input.lazy) {
-    LinkEnclosingLazyScript(*this, gcOutput);
+    LinkEnclosingLazyScript(compilationInfo, gcOutput);
   }
 
   return true;
@@ -731,7 +738,8 @@ bool CompilationInfoVector::instantiateStencils(
 bool CompilationInfoVector::instantiateStencilsAfterPreparation(
     JSContext* cx, CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification) {
-  if (!initial.instantiateStencilsAfterPreparation(cx, gcOutput)) {
+  if (!CompilationInfo::instantiateStencilsAfterPreparation(cx, initial,
+                                                            gcOutput)) {
     return false;
   }
 
@@ -749,12 +757,12 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
     // decoding.
     delazification.input.initFromLazy(lazy);
 
-    if (!delazification.prepareGCOutputForInstantiate(
-            cx, gcOutputForDelazification)) {
+    if (!CompilationInfo::prepareGCOutputForInstantiate(
+            cx, delazification, gcOutputForDelazification)) {
       return false;
     }
-    if (!delazification.instantiateStencilsAfterPreparation(
-            cx, gcOutputForDelazification)) {
+    if (!CompilationInfo::instantiateStencilsAfterPreparation(
+            cx, delazification, gcOutputForDelazification)) {
       return false;
     }
 
@@ -766,18 +774,27 @@ bool CompilationInfoVector::instantiateStencilsAfterPreparation(
   return true;
 }
 
-bool CompilationInfo::prepareInputAndStencilForInstantiate(JSContext* cx) {
+/* static */
+bool CompilationInfo::prepareInputAndStencilForInstantiate(
+    JSContext* cx, CompilationInfo& compilationInfo) {
+  auto& input = compilationInfo.input;
+  auto& stencil = compilationInfo.stencil;
+
   if (!input.atomCache.allocate(cx, stencil.parserAtomData.length())) {
     return false;
   }
 
-  preparationIsPerformed = true;
+  compilationInfo.preparationIsPerformed = true;
 
   return true;
 }
 
+/* static */
 bool CompilationInfo::prepareGCOutputForInstantiate(
-    JSContext* cx, CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput) {
+  auto& stencil = compilationInfo.stencil;
+
   if (!gcOutput.functions.reserve(stencil.scriptData.length())) {
     ReportOutOfMemory(cx);
     return false;
@@ -790,12 +807,14 @@ bool CompilationInfo::prepareGCOutputForInstantiate(
   return true;
 }
 
+/* static */
 bool CompilationInfo::prepareForInstantiate(JSContext* cx,
+                                            CompilationInfo& compilationInfo,
                                             CompilationGCOutput& gcOutput) {
-  if (!prepareInputAndStencilForInstantiate(cx)) {
+  if (!prepareInputAndStencilForInstantiate(cx, compilationInfo)) {
     return false;
   }
-  if (!prepareGCOutputForInstantiate(cx, gcOutput)) {
+  if (!prepareGCOutputForInstantiate(cx, compilationInfo, gcOutput)) {
     return false;
   }
   return true;
@@ -804,14 +823,15 @@ bool CompilationInfo::prepareForInstantiate(JSContext* cx,
 bool CompilationInfoVector::prepareForInstantiate(
     JSContext* cx, CompilationGCOutput& gcOutput,
     CompilationGCOutput& gcOutputForDelazification) {
-  if (!initial.prepareForInstantiate(cx, gcOutput)) {
+  if (!CompilationInfo::prepareForInstantiate(cx, initial, gcOutput)) {
     return false;
   }
 
   size_t maxScriptDataLength = 0;
   size_t maxScopeDataLength = 0;
   for (auto& delazification : delazifications) {
-    if (!delazification.prepareInputAndStencilForInstantiate(cx)) {
+    if (!CompilationInfo::prepareInputAndStencilForInstantiate(
+            cx, delazification)) {
       return false;
     }
     if (maxScriptDataLength < delazification.stencil.scriptData.length()) {

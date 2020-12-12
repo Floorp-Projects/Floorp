@@ -642,7 +642,7 @@ bool Smoosh::compileGlobalScript(JSContext* cx,
     return false;
   }
 
-  if (!compilationInfo.instantiateStencils(cx, gcOutput)) {
+  if (!CompilationInfo::instantiateStencils(cx, compilationInfo, gcOutput)) {
     return false;
   }
 
