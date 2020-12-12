@@ -298,8 +298,10 @@ struct ReflowInput : public SizeComputationInput {
   // change clients from physical to logical as needed; and potentially switch
   // the internal fields from physical to logical coordinates in due course,
   // while maintaining compatibility with not-yet-updated code.
-  nscoord AvailableWidth() const { return mAvailableWidth; }
-  nscoord AvailableHeight() const { return mAvailableHeight; }
+  nscoord AvailableWidth() const { return mAvailableSize.Width(mWritingMode); }
+  nscoord AvailableHeight() const {
+    return mAvailableSize.Height(mWritingMode);
+  }
   nscoord ComputedWidth() const { return mComputedWidth; }
   nscoord ComputedHeight() const { return mComputedHeight; }
   nscoord ComputedMinWidth() const { return mComputedMinWidth; }
@@ -307,8 +309,6 @@ struct ReflowInput : public SizeComputationInput {
   nscoord ComputedMinHeight() const { return mComputedMinHeight; }
   nscoord ComputedMaxHeight() const { return mComputedMaxHeight; }
 
-  nscoord& AvailableWidth() { return mAvailableWidth; }
-  nscoord& AvailableHeight() { return mAvailableHeight; }
   nscoord& ComputedWidth() { return mComputedWidth; }
   nscoord& ComputedHeight() { return mComputedHeight; }
   nscoord& ComputedMinWidth() { return mComputedMinWidth; }
@@ -320,12 +320,8 @@ struct ReflowInput : public SizeComputationInput {
   // ISize is the size in the writing mode's inline direction (which equates to
   // width in horizontal writing modes, height in vertical ones), and BSize is
   // the size in the block-progression direction.
-  nscoord AvailableISize() const {
-    return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth;
-  }
-  nscoord AvailableBSize() const {
-    return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight;
-  }
+  nscoord AvailableISize() const { return mAvailableSize.ISize(mWritingMode); }
+  nscoord AvailableBSize() const { return mAvailableSize.BSize(mWritingMode); }
   nscoord ComputedISize() const {
     return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth;
   }
@@ -345,12 +341,8 @@ struct ReflowInput : public SizeComputationInput {
     return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight;
   }
 
-  nscoord& AvailableISize() {
-    return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth;
-  }
-  nscoord& AvailableBSize() {
-    return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight;
-  }
+  nscoord& AvailableISize() { return mAvailableSize.ISize(mWritingMode); }
+  nscoord& AvailableBSize() { return mAvailableSize.BSize(mWritingMode); }
   nscoord& ComputedISize() {
     return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth;
   }
@@ -370,10 +362,7 @@ struct ReflowInput : public SizeComputationInput {
     return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight;
   }
 
-  mozilla::LogicalSize AvailableSize() const {
-    return mozilla::LogicalSize(mWritingMode, AvailableISize(),
-                                AvailableBSize());
-  }
+  mozilla::LogicalSize AvailableSize() const { return mAvailableSize; }
   mozilla::LogicalSize ComputedSize() const {
     return mozilla::LogicalSize(mWritingMode, ComputedISize(), ComputedBSize());
   }
@@ -449,22 +438,6 @@ struct ReflowInput : public SizeComputationInput {
   }
 
  private:
-  // the available width in which to reflow the frame. The space
-  // represents the amount of room for the frame's margin, border,
-  // padding, and content area. The frame size you choose should fit
-  // within the available width.
-  nscoord mAvailableWidth = 0;
-
-  // A value of NS_UNCONSTRAINEDSIZE for the available height means
-  // you can choose whatever size you want. In galley mode the
-  // available height is always NS_UNCONSTRAINEDSIZE, and only page
-  // mode or multi-column layout involves a constrained height. The
-  // element's the top border and padding, and content, must fit. If the
-  // element is complete after reflow then its bottom border, padding
-  // and margin (and similar for its complete ancestors) will need to
-  // fit in this height.
-  nscoord mAvailableHeight = 0;
-
   // The computed width specifies the frame's content area width, and it does
   // not apply to inline non-replaced elements
   //
@@ -740,8 +713,7 @@ struct ReflowInput : public SizeComputationInput {
    * @param aFrame The frame for whose reflow input is being constructed.
    * @param aRenderingContext The rendering context to be used for measurements.
    * @param aAvailableSpace The available space to reflow aFrame (in aFrame's
-   *        writing-mode). See comments for mAvailableHeight and mAvailableWidth
-   *        members for more information.
+   *        writing-mode). See comments for mAvailableSize for more information.
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        InitFlags above).
    */
@@ -759,8 +731,7 @@ struct ReflowInput : public SizeComputationInput {
    *        is to be the parent of this object.
    * @param aFrame The frame for whose reflow input is being constructed.
    * @param aAvailableSpace The available space to reflow aFrame (in aFrame's
-   *        writing-mode). See comments for mAvailableHeight and mAvailableWidth
-   *        members for more information.
+   *        writing-mode). See comments for mAvailableSize for more information.
    * @param aContainingBlockSize An optional size (in aFrame's writing mode),
    *        specifying the containing block size to use instead of the default
    *        size computed by ComputeContainingBlockRectangle(). If
@@ -1048,6 +1019,26 @@ struct ReflowInput : public SizeComputationInput {
                                     nscoord* aOutsideBoxSizing) const;
 
   void CalculateBlockSideMargins(LayoutFrameType aFrameType);
+
+ private:
+  // The available size in which to reflow the frame. The space represents the
+  // amount of room for the frame's margin, border, padding, and content area.
+  //
+  // The available inline-size should be constrained. The frame's inline-size
+  // you choose should fit within it.
+
+  // In galley mode, the available block-size is always unconstrained, and only
+  // page mode or multi-column layout involves a constrained available
+  // block-size.
+  //
+  // An unconstrained available block-size means you can choose whatever size
+  // you want. If the value is constrained, the frame's block-start border,
+  // padding, and content, must fit. If a frame is fully-complete after reflow,
+  // then its block-end border, padding, and margin (and similar for its
+  // fully-complete ancestors) will need to fit within this available
+  // block-size. However, if a frame is monolithic, it may choose a block-size
+  // larger than the available block-size.
+  mozilla::LogicalSize mAvailableSize{mWritingMode};
 };
 
 }  // namespace mozilla
