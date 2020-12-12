@@ -293,11 +293,10 @@ struct ReflowInput : public SizeComputationInput {
   // but reset to a suitable value for the reflow root by PresShell.
   nscoord mOrthogonalLimit = NS_UNCONSTRAINEDSIZE;
 
-  // Accessors for the private fields below. Forcing all callers to use these
-  // will allow us to introduce logical-coordinate versions and gradually
-  // change clients from physical to logical as needed; and potentially switch
-  // the internal fields from physical to logical coordinates in due course,
-  // while maintaining compatibility with not-yet-updated code.
+  // Physical accessors for the private fields. They are needed for
+  // compatibility with not-yet-updated code. New code should use the accessors
+  // for logical coordinates, unless the code really works on physical
+  // coordinates.
   nscoord AvailableWidth() const { return mAvailableSize.Width(mWritingMode); }
   nscoord AvailableHeight() const {
     return mAvailableSize.Height(mWritingMode);
@@ -317,10 +316,7 @@ struct ReflowInput : public SizeComputationInput {
     return mComputedMaxSize.Height(mWritingMode);
   }
 
-  // ISize and BSize are logical-coordinate dimensions:
-  // ISize is the size in the writing mode's inline direction (which equates to
-  // width in horizontal writing modes, height in vertical ones), and BSize is
-  // the size in the block-progression direction.
+  // Logical accessors for private fields in mWritingMode.
   nscoord AvailableISize() const { return mAvailableSize.ISize(mWritingMode); }
   nscoord AvailableBSize() const { return mAvailableSize.BSize(mWritingMode); }
   nscoord ComputedISize() const { return mComputedSize.ISize(mWritingMode); }
@@ -397,7 +393,7 @@ struct ReflowInput : public SizeComputationInput {
     mComputedOffsets = aOffsets.ConvertTo(mWritingMode, aWM);
   }
 
-  // Return the state's computed size including border-padding, with
+  // Return ReflowInput's computed size including border-padding, with
   // unconstrained dimensions replaced by zero.
   nsSize ComputedSizeAsContainerIfConstrained() const {
     const nscoord wd = ComputedWidth();
@@ -578,9 +574,7 @@ struct ReflowInput : public SizeComputationInput {
   // is from the top of the frame tree.
   int16_t mReflowDepth = 0;
 
-  // Logical and physical accessors for the resize flags. All users should go
-  // via these accessors, so that in due course we can change the storage from
-  // physical to logical.
+  // Logical and physical accessors for the resize flags.
   bool IsHResize() const {
     return mWritingMode.IsVertical() ? mFlags.mIsBResize : mFlags.mIsIResize;
   }
@@ -944,10 +938,10 @@ struct ReflowInput : public SizeComputationInput {
                                const mozilla::LogicalSize& aContainingBlockSize,
                                mozilla::LayoutFrameType aFrameType);
 
-  // Calculates the computed values for the 'min-Width', 'max-Width',
-  // 'min-Height', and 'max-Height' properties, and stores them in the assorted
-  // data members
-  void ComputeMinMaxValues(const mozilla::LogicalSize& aContainingBlockSize);
+  // Calculates the computed values for the 'min-inline-size',
+  // 'max-inline-size', 'min-block-size', and 'max-block-size' properties, and
+  // stores them in the assorted data members
+  void ComputeMinMaxValues(const mozilla::LogicalSize& aCBSize);
 
   // aInsideBoxSizing returns the part of the padding, border, and margin
   // in the aAxis dimension that goes inside the edge given by box-sizing;
