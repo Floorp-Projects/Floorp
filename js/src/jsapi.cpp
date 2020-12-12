@@ -531,7 +531,7 @@ JS_PUBLIC_API JSErrorInterceptor* JS_GetErrorInterceptorCallback(
     JSRuntime* rt) {
 #if defined(NIGHTLY_BUILD)
   return rt->errorInterception.interceptor;
-#else  // !NIGHTLY_BUILD
+#else   // !NIGHTLY_BUILD
   return nullptr;
 #endif  // defined(NIGHTLY_BUILD)
 }
@@ -5771,8 +5771,9 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, compilationInfos.get(),
-                                     gcOutput.get())) {
+  Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfos.get(), gcOutput.get(),
+                                     gcOutputForDelazification.get())) {
     return JS::TranscodeResult_Throw;
   }
 
@@ -5833,8 +5834,9 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, compilationInfos.get(),
-                                     gcOutput.get())) {
+  Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfos.get(), gcOutput.get(),
+                                     gcOutputForDelazification.get())) {
     return JS::TranscodeResult_Throw;
   }
 

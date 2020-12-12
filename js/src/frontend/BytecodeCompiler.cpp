@@ -349,14 +349,16 @@ bool frontend::InstantiateStencils(JSContext* cx,
   return true;
 }
 
-bool frontend::InstantiateStencils(JSContext* cx,
-                                   CompilationInfoVector& compilationInfos,
-                                   CompilationGCOutput& gcOutput) {
+bool frontend::InstantiateStencils(
+    JSContext* cx, CompilationInfoVector& compilationInfos,
+    CompilationGCOutput& gcOutput,
+    CompilationGCOutput& gcOutputForDelazification_) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!compilationInfos.instantiateStencils(cx, gcOutput)) {
+    if (!compilationInfos.instantiateStencils(cx, gcOutput,
+                                              gcOutputForDelazification_)) {
       return false;
     }
   }
@@ -385,13 +387,15 @@ bool frontend::PrepareForInstantiate(JSContext* cx,
   return compilationInfo.prepareForInstantiate(cx, gcOutput);
 }
 
-bool frontend::PrepareForInstantiate(JSContext* cx,
-                                     CompilationInfoVector& compilationInfos,
-                                     CompilationGCOutput& gcOutput) {
+bool frontend::PrepareForInstantiate(
+    JSContext* cx, CompilationInfoVector& compilationInfos,
+    CompilationGCOutput& gcOutput,
+    CompilationGCOutput& gcOutputForDelazification_) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return compilationInfos.prepareForInstantiate(cx, gcOutput);
+  return compilationInfos.prepareForInstantiate(cx, gcOutput,
+                                                gcOutputForDelazification_);
 }
 
 template <typename Unit>
