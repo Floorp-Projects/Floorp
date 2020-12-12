@@ -3717,7 +3717,8 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 /* static */
 bool PrivateScriptData::InitFromStencil(
     JSContext* cx, js::HandleScript script,
-    js::frontend::CompilationInfo& compilationInfo,
+    js::frontend::CompilationInput& input,
+    js::frontend::CompilationStencil& stencil,
     js::frontend::CompilationGCOutput& gcOutput,
     const frontend::ScriptStencil& scriptStencil) {
   uint32_t ngcthings = scriptStencil.gcThings.size();
@@ -3731,7 +3732,7 @@ bool PrivateScriptData::InitFromStencil(
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
-    if (!EmitScriptThingsVector(cx, compilationInfo, gcOutput,
+    if (!EmitScriptThingsVector(cx, input, stencil, gcOutput,
                                 scriptStencil.gcThings, data->gcthings())) {
       return false;
     }
@@ -3812,7 +3813,8 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 
 /* static */
 bool JSScript::fullyInitFromStencil(
-    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    JSContext* cx, js::frontend::CompilationInput& input,
+    js::frontend::CompilationStencil& stencil,
     frontend::CompilationGCOutput& gcOutput, HandleScript script,
     const frontend::ScriptStencil& scriptStencil, HandleFunction fun) {
   MutableScriptFlags lazyMutableFlags;
@@ -3871,7 +3873,7 @@ bool JSScript::fullyInitFromStencil(
   script->resetArgsUsageAnalysis();
 
   // Create and initialize PrivateScriptData
-  if (!PrivateScriptData::InitFromStencil(cx, script, compilationInfo, gcOutput,
+  if (!PrivateScriptData::InitFromStencil(cx, script, input, stencil, gcOutput,
                                           scriptStencil)) {
     return false;
   }
@@ -3914,7 +3916,8 @@ bool JSScript::fullyInitFromStencil(
 }
 
 JSScript* JSScript::fromStencil(JSContext* cx,
-                                frontend::CompilationInfo& compilationInfo,
+                                js::frontend::CompilationInput& input,
+                                js::frontend::CompilationStencil& stencil,
                                 frontend::CompilationGCOutput& gcOutput,
                                 const frontend::ScriptStencil& scriptStencil,
                                 HandleFunction fun) {
@@ -3934,8 +3937,8 @@ JSScript* JSScript::fromStencil(JSContext* cx,
     return nullptr;
   }
 
-  if (!fullyInitFromStencil(cx, compilationInfo, gcOutput, script,
-                            scriptStencil, fun)) {
+  if (!fullyInitFromStencil(cx, input, stencil, gcOutput, script, scriptStencil,
+                            fun)) {
     return nullptr;
   }
 

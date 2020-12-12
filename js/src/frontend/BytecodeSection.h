@@ -128,7 +128,7 @@ struct MOZ_STACK_CLASS GCThingList {
 };
 
 MOZ_MUST_USE bool EmitScriptThingsVector(
-    JSContext* cx, CompilationInfo& compilationInfo,
+    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output);

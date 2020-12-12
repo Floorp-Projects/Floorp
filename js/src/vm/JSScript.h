@@ -1400,7 +1400,8 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
                     js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
   static bool InitFromStencil(JSContext* cx, js::HandleScript script,
-                              js::frontend::CompilationInfo& compilationInfo,
+                              js::frontend::CompilationInput& input,
+                              js::frontend::CompilationStencil& stencil,
                               js::frontend::CompilationGCOutput& gcOutput,
                               const js::frontend::ScriptStencil& scriptStencil);
 
@@ -1894,7 +1895,8 @@ class JSScript : public js::BaseScript {
 
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
-      js::frontend::CompilationInfo& compilationInfo,
+      js::frontend::CompilationInput& input,
+      js::frontend::CompilationStencil& stencil,
       js::frontend::CompilationGCOutput& gcOutput,
       const js::frontend::ScriptStencil& scriptStencil);
 
@@ -1921,7 +1923,8 @@ class JSScript : public js::BaseScript {
 
  public:
   static bool fullyInitFromStencil(
-      JSContext* cx, js::frontend::CompilationInfo& compilationInfo,
+      JSContext* cx, js::frontend::CompilationInput& input,
+      js::frontend::CompilationStencil& stencil,
       js::frontend::CompilationGCOutput& gcOutput, js::HandleScript script,
       const js::frontend::ScriptStencil& scriptStencil,
       js::HandleFunction function);
@@ -1929,7 +1932,8 @@ class JSScript : public js::BaseScript {
   // Allocate a JSScript and initialize it with bytecode. This consumes
   // allocations within the stencil.
   static JSScript* fromStencil(JSContext* cx,
-                               js::frontend::CompilationInfo& compilationInfo,
+                               js::frontend::CompilationInput& input,
+                               js::frontend::CompilationStencil& stencil,
                                js::frontend::CompilationGCOutput& gcOutput,
                                const js::frontend::ScriptStencil& scriptStencil,
                                js::HandleFunction function);
