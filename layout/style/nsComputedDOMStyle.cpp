@@ -404,7 +404,7 @@ css::Rule* nsComputedDOMStyle::GetParentRule() { return nullptr; }
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
                                      nsAString& aReturn) {
-  aReturn.Truncate();
+  MOZ_ASSERT(aReturn.IsEmpty());
 
   nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
 
