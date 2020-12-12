@@ -70,7 +70,10 @@ add_task(async function triggerDefaultActionHandler() {
 add_task(async function triggerNonDefaultHandlerWhenSetCustomizedHandler() {
   info(`open page and start media`);
   const tab = await createLoadedTabWrapper(PAGE_URL);
-  await startMedia(tab, { videoId });
+  await Promise.all([
+    new Promise(r => (tab.controller.onactivated = r)),
+    startMedia(tab, { videoId }),
+  ]);
 
   const kActions = ["play", "pause", "stop"];
   for (const action of kActions) {
@@ -101,7 +104,10 @@ add_task(
         await loadIframe(tab, frameId, url);
 
         info(`start media from iframe would make it become active session`);
-        await startMedia(tab, { frameId });
+        await Promise.all([
+          new Promise(r => (tab.controller.onactivated = r)),
+          startMedia(tab, { frameId }),
+        ]);
 
         info(`press '${action}' should trigger iframe's action handler`);
         await setActionHandler(tab, action, frameId);

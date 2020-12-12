@@ -24,7 +24,7 @@ add_task(async function setupTestingPref() {
 add_task(async function testActiveSessionWhenClosingTab() {
   info(`open tab1 and load media session test page`);
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
-  await startMediaPlayback(tab1);
+  await startMediaPlaybackAndWaitMedisSessionBecomeActiveSession(tab1);
 
   info(`pressing '${ACTION}' key`);
   MediaControlService.generateMediaControlKey(ACTION);
@@ -34,7 +34,7 @@ add_task(async function testActiveSessionWhenClosingTab() {
 
   info(`open tab2 and load media session test page`);
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
-  await startMediaPlayback(tab2);
+  await startMediaPlaybackAndWaitMedisSessionBecomeActiveSession(tab2);
 
   info(`pressing '${ACTION}' key`);
   MediaControlService.generateMediaControlKey(ACTION);
@@ -66,7 +66,7 @@ add_task(async function testActiveSessionWhenClosingTab() {
 add_task(async function testActiveSessionWhenNavigatingTab() {
   info(`open tab1 and load media session test page`);
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
-  await startMediaPlayback(tab1);
+  await startMediaPlaybackAndWaitMedisSessionBecomeActiveSession(tab1);
 
   info(`pressing '${ACTION}' key`);
   MediaControlService.generateMediaControlKey(ACTION);
@@ -76,7 +76,7 @@ add_task(async function testActiveSessionWhenNavigatingTab() {
 
   info(`open tab2 and load media session test page`);
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
-  await startMediaPlayback(tab2);
+  await startMediaPlaybackAndWaitMedisSessionBecomeActiveSession(tab2);
 
   info(`pressing '${ACTION}' key`);
   MediaControlService.generateMediaControlKey(ACTION);
@@ -109,7 +109,7 @@ add_task(async function testActiveSessionWhenNavigatingTab() {
 add_task(async function testCreatingSessionWithoutPlayingMedia() {
   info(`open tab1 and load media session test page`);
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
-  await startMediaPlayback(tab1);
+  await startMediaPlaybackAndWaitMedisSessionBecomeActiveSession(tab1);
 
   info(`pressing '${ACTION}' key`);
   MediaControlService.generateMediaControlKey(ACTION);
@@ -137,16 +137,17 @@ add_task(async function testCreatingSessionWithoutPlayingMedia() {
 /**
  * The following are helper functions
  */
-async function startMediaPlayback(tab) {
-  const controllerChanged = waitUntilMainMediaControllerChanged();
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    const video = content.document.getElementById("testVideo");
-    if (!video) {
-      ok(false, `can't get the media element!`);
-    }
-    video.play();
-  });
-  await controllerChanged;
+async function startMediaPlaybackAndWaitMedisSessionBecomeActiveSession(tab) {
+  await Promise.all([
+    BrowserUtils.promiseObserved("active-media-session-changed"),
+    SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+      const video = content.document.getElementById("testVideo");
+      if (!video) {
+        ok(false, `can't get the media element!`);
+      }
+      video.play();
+    }),
+  ]);
 }
 
 async function checkIfActionReceived(tab, action) {
