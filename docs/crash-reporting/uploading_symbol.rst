@@ -5,7 +5,7 @@ As a third-party releasing your own builds of Firefox or B2G, you should
 consider uploading debug symbols from the builds to Mozilla's symbol
 server. If you have not disabled crash reporting in your builds, crash
 reports will be submitted to `Mozilla's crash reporting
-server <https://crash-stats.mozilla.com/>`__. Without the debug symbols
+server <https://crash-stats.mozilla.org/>`__. Without the debug symbols
 that match your build the crash reports will not contain actionable
 information.
 

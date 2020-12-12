@@ -38,7 +38,7 @@ def fetch_missing_symbols_from_crash(file_or_crash):
         else:
             crash_id = file_or_crash
         url = (
-            "https://crash-stats.mozilla.com/api/ProcessedCrash/"
+            "https://crash-stats.mozilla.org/api/ProcessedCrash/"
             "?crash_id={crash_id}&datatype=processed".format(crash_id=crash_id)
         )
         log.info("Fetching missing symbols from crash: %s" % url)

@@ -7,7 +7,7 @@ A guide to searching crash reports
    reports <Understanding crash reports>` before reading
    this page.
 
-The Mozilla `crash-stats <https://crash-stats.mozilla.com/>`__ site
+The Mozilla `crash-stats <https://crash-stats.mozilla.org/>`__ site
 provides facilities for investigating large numbers of Firefox `crash
 reports <Understanding crash reports>`__. This guide to
 searching through crash reports may help you locate the crash reports
@@ -33,7 +33,7 @@ The search form
 ~~~~~~~~~~~~~~~
 
 You can get to the `search
-page <https://crash-stats.mozilla.com/search/?product=Firefox&_dont_run=1>`__
+page <https://crash-stats.mozilla.org/search/?product=Firefox&_dont_run=1>`__
 by clicking on the "Super Search" link near the toolbar at the top right
 of any page in crash-stats. This brings up a search form like the one in
 the following screenshot.
@@ -49,7 +49,7 @@ The default search: Signature facet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you click on the "Search" button, you will get
-`results <https://crash-stats.mozilla.com/search/?product=Firefox&_sort=-date&_facets=signature&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-signature>`__
+`results <https://crash-stats.mozilla.org/search/?product=Firefox&_sort=-date&_facets=signature&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-signature>`__
 like the ones in the following screenshot.
 
 |Results of a default search in crash-stats|
@@ -80,7 +80,7 @@ The default search: Crash reports
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you switch to the "Crash Reports" tab you will see
-`results <https://crash-stats.mozilla.com/search/?product=Firefox&_sort=-date&_facets=signature&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#crash-reports>`__
+`results <https://crash-stats.mozilla.org/search/?product=Firefox&_sort=-date&_facets=signature&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#crash-reports>`__
 like the ones in the following screenshot.
 
 |Results of a default search in crash-stats (crash reports tab)|
@@ -119,7 +119,7 @@ screenshot.
 |crash-stats Super Search form with additional criteria|
 
 After clicking on "Search" we get
-`results <https://crash-stats.mozilla.com/search/?is_garbage_collecting=__true__&product=Firefox&platform=Mac%20OS%20X&_sort=-date&_facets=signature&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform>`__
+`results <https://crash-stats.mozilla.org/search/?is_garbage_collecting=__true__&product=Firefox&platform=Mac%20OS%20X&_sort=-date&_facets=signature&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform>`__
 like those in the following screenshot.
 
 |Results of a narrower search in crash-stats|
@@ -177,7 +177,7 @@ For example, if we start with a default search for all Firefox crashes
 in the past week, but then replace the "signature" facet with "platform"
 and "moz crash reason", we get search results with two facet tabs. The
 first of these is a "Platform facet" tab, with
-`results <https://crash-stats.mozilla.com/search/?product=Firefox&_sort=-date&_facets=platform&_facets=moz_crash_reason&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-platform>`__
+`results <https://crash-stats.mozilla.org/search/?product=Firefox&_sort=-date&_facets=platform&_facets=moz_crash_reason&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-platform>`__
 like those shown in the following screenshot.
 
 |Results of a faceted search in crash-stats|
@@ -193,7 +193,7 @@ Grouping by "moz crash reason"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The second facet tab is a "Moz crash reason facet" tab, with
-`results <https://crash-stats.mozilla.com/search/?product=Firefox&_sort=-date&_facets=platform&_facets=moz_crash_reason&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-moz_crash_reason>`__
+`results <https://crash-stats.mozilla.org/search/?product=Firefox&_sort=-date&_facets=platform&_facets=moz_crash_reason&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-moz_crash_reason>`__
 like those shown in the following screenshot.
 
 |Results of a faceted search in crash-stats (moz crash reason tab)|
@@ -211,7 +211,7 @@ The usefulness of grouping varies from field to field. In particular,
 fields that can have many possible values (such as numeric fields) often
 don't group well. For example, if we do a default search grouped by
 uptime we get
-`results <https://crash-stats.mozilla.com/search/?product=Firefox&_sort=-date&_facets=uptime&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-uptime>`__
+`results <https://crash-stats.mozilla.org/search/?product=Firefox&_sort=-date&_facets=uptime&_columns=date&_columns=signature&_columns=product&_columns=version&_columns=build_id&_columns=platform#facet-uptime>`__
 like those in the following screenshot.
 
 |Results of a faceted search in crash-stats (uptime)|
@@ -238,11 +238,11 @@ way to learn about them is to read lots of individual crash reports;
 note that all fields shown in the Details tab of an individual crash
 report have a tool-tip that indicates its key for search. Alternatively,
 you can browse the `complete
-list <https://crash-stats.mozilla.com/documentation/supersearch/api/#section-filters>`__.
+list <https://crash-stats.mozilla.org/documentation/supersearch/api/#section-filters>`__.
 
 There is also an API through which searches can be performed
 programmatically. See the `API
-documentation <https://crash-stats.mozilla.com/documentation/supersearch/>`__
+documentation <https://crash-stats.mozilla.org/documentation/supersearch/>`__
 for full details; note that it uses the term "aggregation" for
 grouping/faceting.
 
