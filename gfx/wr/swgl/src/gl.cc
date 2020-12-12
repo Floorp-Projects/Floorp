@@ -3754,8 +3754,13 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         // by a single increment so that we essentially round it up and move it
         // further inside the clipping boundary. We use nextafter to do this in
         // a portable fashion.
-        float k = nextafterf(prevDist / (prevDist - curDist), 1.0f);
-        outP[numClip] = prev + (cur - prev) * k;
+        float k = prevDist / (prevDist - curDist);
+        Point3D clipped = prev + (cur - prev) * k;
+        if (prevSide * clipped.select(AXIS) > clipped.w) {
+            k = nextafterf(k, 1.0f);
+            clipped = prev + (cur - prev) * k;
+        }
+        outP[numClip] = clipped;
         outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
         numClip++;
       }
@@ -3767,9 +3772,16 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         float prevDist = prevCoord - curSide * prev.w;
         float curDist = curCoord - curSide * cur.w;
         // Calculate interpolation weight k and the nudge it inside clipping
-        // boundary with nextafter.
-        float k = nextafterf(prevDist / (prevDist - curDist), 1.0f);
-        outP[numClip] = prev + (cur - prev) * k;
+        // boundary with nextafter. Note that since we were previously inside
+        // and now crossing outside, we have to flip the nudge direction for
+        // the weight towards 0 instead of 1.
+        float k = prevDist / (prevDist - curDist);
+        Point3D clipped = prev + (cur - prev) * k;
+        if (curSide * clipped.select(AXIS) > clipped.w) {
+            k = nextafterf(k, 0.0f);
+            clipped = prev + (cur - prev) * k;
+        }
+        outP[numClip] = clipped;
         outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
         numClip++;
       }
