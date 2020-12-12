@@ -1216,7 +1216,10 @@ void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
 void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }
 
-void CompilationInfoVector::trace(JSTracer* trc) { initial.trace(trc); }
+void CompilationInfoVector::trace(JSTracer* trc) {
+  initial.trace(trc);
+  delazificationAtomCache.trace(trc);
+}
 
 void CompilationGCOutput::trace(JSTracer* trc) {
   TraceNullableRoot(trc, &script, "compilation-gc-output-script");

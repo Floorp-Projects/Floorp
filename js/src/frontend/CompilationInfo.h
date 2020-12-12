@@ -91,13 +91,16 @@ struct ScopeContext {
 };
 
 struct CompilationAtomCache {
+ public:
+  using AtomCacheVector = JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy>;
+
  private:
   // Atoms lowered into or converted from CompilationStencil.parserAtomData.
   //
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
   // etc), and having 2 vectors in both input/output is error prone.
-  JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy> atoms_;
+  AtomCacheVector atoms_;
 
  public:
   JSAtom* getExistingAtomAt(ParserAtomIndex index) const;
@@ -107,6 +110,9 @@ struct CompilationAtomCache {
   bool hasAtomAt(ParserAtomIndex index) const;
   bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSAtom* atom);
   bool allocate(JSContext* cx, size_t length);
+
+  void stealBuffer(AtomCacheVector& atoms);
+  void returnBuffer(AtomCacheVector& atoms);
 
   void trace(JSTracer* trc);
 } JS_HAZ_GC_POINTER;
@@ -488,6 +494,7 @@ struct CompilationInfoVector {
   CompilationInfo initial;
   Vector<CompilationStencil, 0, js::SystemAllocPolicy> delazifications;
   FunctionIndexVector delazificationIndices;
+  CompilationAtomCache::AtomCacheVector delazificationAtomCache;
 
   CompilationInfoVector(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options)
