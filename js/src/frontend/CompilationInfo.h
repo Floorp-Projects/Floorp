@@ -208,7 +208,7 @@ struct CompilationInput {
   void trace(JSTracer* trc);
 } JS_HAZ_GC_POINTER;
 
-struct CompilationStencil;
+struct CompilationInfo;
 
 struct MOZ_RAII CompilationState {
   // Until we have dealt with Atoms in the front end, we need to hold
@@ -225,16 +225,13 @@ struct MOZ_RAII CompilationState {
 
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    const JS::ReadOnlyCompileOptions& options,
-                   CompilationStencil& stencil, Scope* enclosingScope = nullptr,
+                   CompilationInfo& compilationInfo,
+                   Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr);
 };
 
 // The top level struct of stencil.
 struct CompilationStencil {
-  // This holds allocations that do not require destructors to be run but are
-  // live until the stencil is released.
-  LifoAlloc alloc;
-
   // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
   // allocated during parse to ensure correct destruction.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
@@ -270,26 +267,10 @@ struct CompilationStencil {
   // was generated in original parse but not used by stencil.
   ParserAtomVector parserAtomData;
 
-  // Parameterized chunk size to use for LifoAlloc.
-  static constexpr size_t LifoAllocChunkSize = 512;
+  CompilationStencil() = default;
 
-  CompilationStencil() : alloc(LifoAllocChunkSize) {}
-
-  // We need a move-constructor to work with Rooted, but must be explicit in
-  // order to steal the LifoAlloc data.
-  CompilationStencil(CompilationStencil&& other) noexcept
-      : alloc(LifoAllocChunkSize),
-        regExpData(std::move(other.regExpData)),
-        bigIntData(std::move(other.bigIntData)),
-        objLiteralData(std::move(other.objLiteralData)),
-        scriptData(std::move(other.scriptData)),
-        scopeData(std::move(other.scopeData)),
-        moduleMetadata(std::move(other.moduleMetadata)),
-        asmJS(std::move(other.asmJS)),
-        parserAtomData(std::move(other.parserAtomData)) {
-    // Steal the data from the LifoAlloc.
-    alloc.steal(&other.alloc);
-  }
+  // We need a move-constructor to work with Rooted.
+  CompilationStencil(CompilationStencil&& other) = default;
 
   const ParserAtom* getParserAtomAt(JSContext* cx,
                                     TaggedParserAtomIndex taggedIndex) const;
@@ -420,6 +401,13 @@ class ScriptStencilIterable {
 struct CompilationInfo {
   static constexpr FunctionIndex TopLevelIndex = FunctionIndex(0);
 
+  // This holds allocations that do not require destructors to be run but are
+  // live until the stencil is released.
+  LifoAlloc alloc;
+
+  // Parameterized chunk size to use for LifoAlloc.
+  static constexpr size_t LifoAllocChunkSize = 512;
+
   CompilationInput input;
   CompilationStencil stencil;
 
@@ -440,7 +428,7 @@ struct CompilationInfo {
 
   // Construct a CompilationInfo
   CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : input(options) {}
+      : alloc(LifoAllocChunkSize), input(options) {}
 
   static MOZ_MUST_USE bool prepareInputAndStencilForInstantiate(
       JSContext* cx, CompilationInput& input, CompilationStencil& stencil);
@@ -461,8 +449,15 @@ struct CompilationInfo {
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                       bool* succeededOut = nullptr);
 
-  // Move constructor is necessary to use Rooted.
-  CompilationInfo(CompilationInfo&&) = default;
+  // Move constructor is necessary to use Rooted, but must be explicit in
+  // order to steal the LifoAlloc data
+  CompilationInfo(CompilationInfo&& other) noexcept
+      : alloc(LifoAllocChunkSize),
+        input(std::move(other.input)),
+        stencil(std::move(other.stencil)) {
+    // Steal the data from the LifoAlloc.
+    alloc.steal(&other.alloc);
+  }
 
   // To avoid any misuses, make sure this is neither copyable or assignable.
   CompilationInfo(const CompilationInfo&) = delete;
@@ -490,18 +485,29 @@ struct CompilationInfoVector {
 
   MOZ_MUST_USE bool buildDelazificationIndices(JSContext* cx);
 
+  // Parameterized chunk size to use for LifoAlloc.
+  static constexpr size_t LifoAllocChunkSize = 512;
+
  public:
   CompilationInfo initial;
+  LifoAlloc allocForDelazifications;
   Vector<CompilationStencil, 0, js::SystemAllocPolicy> delazifications;
   FunctionIndexVector delazificationIndices;
   CompilationAtomCache::AtomCacheVector delazificationAtomCache;
 
   CompilationInfoVector(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options)
-      : initial(cx, options) {}
+      : initial(cx, options), allocForDelazifications(LifoAllocChunkSize) {}
 
   // Move constructor is necessary to use Rooted.
-  CompilationInfoVector(CompilationInfoVector&&) = default;
+  CompilationInfoVector(CompilationInfoVector&& other) noexcept
+      : initial(std::move(other.initial)),
+        allocForDelazifications(LifoAllocChunkSize),
+        delazifications(std::move(other.delazifications)),
+        delazificationAtomCache(std::move(other.delazificationAtomCache)) {
+    // Steal the data from the LifoAlloc.
+    allocForDelazifications.steal(&other.allocForDelazifications);
+  }
 
   // To avoid any misuses, make sure this is neither copyable or assignable.
   CompilationInfoVector(const CompilationInfoVector&) = delete;

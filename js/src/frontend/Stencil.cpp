@@ -919,14 +919,15 @@ bool CompilationInfoVector::deserializeStencils(JSContext* cx,
 CompilationState::CompilationState(JSContext* cx,
                                    LifoAllocScope& frontendAllocScope,
                                    const JS::ReadOnlyCompileOptions& options,
-                                   CompilationStencil& stencil,
+                                   CompilationInfo& compilationInfo,
                                    Scope* enclosingScope /* = nullptr */,
                                    JSObject* enclosingEnv /* = nullptr */)
     : directives(options.forceStrictMode()),
       scopeContext(cx, enclosingScope, enclosingEnv),
       usedNames(cx),
       allocScope(frontendAllocScope),
-      parserAtoms(cx->runtime(), stencil.alloc, stencil.parserAtomData) {}
+      parserAtoms(cx->runtime(), compilationInfo.alloc,
+                  compilationInfo.stencil.parserAtomData) {}
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
