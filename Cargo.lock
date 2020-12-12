@@ -6025,7 +6025,6 @@ checksum = "541b12c998c5b56aa2b4e6f18f03664eef9a4fd0a246a55594efae6cc2d964b5"
 name = "xpcom"
 version = "0.1.0"
 dependencies = [
- "cstr",
  "libc",
  "nserror",
  "nsstring",
