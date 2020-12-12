@@ -330,7 +330,7 @@ bool frontend::InstantiateStencils(JSContext* cx,
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!compilationInfo.instantiateStencils(cx, gcOutput)) {
+    if (!CompilationInfo::instantiateStencils(cx, compilationInfo, gcOutput)) {
       return false;
     }
   }
@@ -384,7 +384,7 @@ bool frontend::PrepareForInstantiate(JSContext* cx,
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return compilationInfo.prepareForInstantiate(cx, gcOutput);
+  return CompilationInfo::prepareForInstantiate(cx, compilationInfo, gcOutput);
 }
 
 bool frontend::PrepareForInstantiate(
@@ -868,7 +868,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
             .functionFlags.isAsmJSNative());
   }
 
-  if (!compilationInfo.instantiateStencils(cx, gcOutput)) {
+  if (!CompilationInfo::instantiateStencils(cx, compilationInfo, gcOutput)) {
     return false;
   }
 
@@ -1089,7 +1089,8 @@ bool frontend::InstantiateStencilsForDelazify(
       static_cast<uint32_t>(compilationInfo.input.lazy->immutableFlags());
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!compilationInfo.instantiateStencils(cx, gcOutput.get())) {
+  if (!CompilationInfo::instantiateStencils(cx, compilationInfo,
+                                            gcOutput.get())) {
     return false;
   }
 
