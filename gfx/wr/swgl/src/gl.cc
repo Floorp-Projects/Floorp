@@ -3767,10 +3767,8 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         float prevDist = prevCoord - curSide * prev.w;
         float curDist = curCoord - curSide * cur.w;
         // Calculate interpolation weight k and the nudge it inside clipping
-        // boundary with nextafter. Note that since we were previously inside
-        // and now crossing outside, we have to flip the nudge direction for
-        // the weight towards 0 instead of 1.
-        float k = nextafterf(prevDist / (prevDist - curDist), 0.0f);
+        // boundary with nextafter.
+        float k = nextafterf(prevDist / (prevDist - curDist), 1.0f);
         outP[numClip] = prev + (cur - prev) * k;
         outInterp[numClip] = prevInterp + (curInterp - prevInterp) * k;
         numClip++;
