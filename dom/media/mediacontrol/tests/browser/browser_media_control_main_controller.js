@@ -51,19 +51,19 @@ add_task(async function testDeterminingMainController() {
   await setMediaMetadataForTabs([tab0, tab1, tab2]);
 
   info(`start media for tab0, main controller should become tab0`);
-  await makeTabBecomeMainController(tab0);
+  await makeTabBecomeMainControllerAndWaitForMetadataChange(tab0);
 
   info(`currrent metadata should be equal to tab0's metadata`);
   await isCurrentMetadataEqualTo(tab0.metadata);
 
   info(`start media for tab1, main controller should become tab1`);
-  await makeTabBecomeMainController(tab1);
+  await makeTabBecomeMainControllerAndWaitForMetadataChange(tab1);
 
   info(`currrent metadata should be equal to tab1's metadata`);
   await isCurrentMetadataEqualTo(tab1.metadata);
 
   info(`start media for tab2, main controller should become tab2`);
-  await makeTabBecomeMainController(tab2);
+  await makeTabBecomeMainControllerAndWaitForMetadataChange(tab2);
 
   info(`currrent metadata should be equal to tab2's metadata`);
   await isCurrentMetadataEqualTo(tab2.metadata);
@@ -114,7 +114,7 @@ add_task(async function testPIPControllerWontBeReplacedByNormalController() {
   await setMediaMetadataForTabs([tab0, tab1]);
 
   info(`start media for tab0, main controller should become tab0`);
-  await makeTabBecomeMainController(tab0);
+  await makeTabBecomeMainControllerAndWaitForMetadataChange(tab0);
 
   info(`currrent metadata should be equal to tab0's metadata`);
   await isCurrentMetadataEqualTo(tab0.metadata);
@@ -150,7 +150,7 @@ add_task(
     await setMediaMetadataForTabs([tab0, tab1]);
 
     info(`start media for tab0, main controller should become tab0`);
-    await makeTabBecomeMainController(tab0);
+    await makeTabBecomeMainControllerAndWaitForMetadataChange(tab0);
 
     info(`current metadata should be equal to tab0's metadata`);
     await isCurrentMetadataEqualTo(tab0.metadata);
@@ -185,7 +185,7 @@ add_task(async function testFullscreenAndPIPControllers() {
    * Current controller list : [tab0 (fullscreen)]
    */
   info(`start media for tab0, main controller should become tab0`);
-  await makeTabBecomeMainController(tab0);
+  await makeTabBecomeMainControllerAndWaitForMetadataChange(tab0);
 
   info(`currrent metadata should be equal to tab0's metadata`);
   await isCurrentMetadataEqualTo(tab0.metadata);
@@ -297,6 +297,13 @@ function makeTabBecomeMainController(tab) {
     }
   );
   return Promise.all([playPromise, waitUntilMainMediaControllerChanged()]);
+}
+
+function makeTabBecomeMainControllerAndWaitForMetadataChange(tab) {
+  return Promise.all([
+    new Promise(r => (tab.controller.onmetadatachange = r)),
+    makeTabBecomeMainController(tab),
+  ]);
 }
 
 function playMediaAndWaitUntilRegisteringController(tab, elementId) {

@@ -288,7 +288,9 @@ function playMediaFrom(tab, frameId = undefined) {
 }
 
 function playAndWaitUntilMetadataChanged(tab, frameId = undefined) {
-  const metadataChanged = waitUntilDisplayedMetadataChanged();
+  const metadataChanged = frameId
+    ? new Promise(r => (tab.controller.onmetadatachange = r))
+    : waitUntilDisplayedMetadataChanged();
   return Promise.all([metadataChanged, playMediaFrom(tab, frameId)]);
 }
 
