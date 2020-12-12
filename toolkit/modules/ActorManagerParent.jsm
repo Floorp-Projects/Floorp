@@ -291,7 +291,7 @@ let JSWINDOWACTORS = {
     },
 
     allFrames: true,
-    messageManagerGroups: ["browsers", ""],
+    messageManagerGroups: ["browsers", "webext-browsers", ""],
   },
 
   ManifestMessages: {
