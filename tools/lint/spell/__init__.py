@@ -98,9 +98,11 @@ def setup(root, **lintargs):
 
 
 def get_codespell_version(binary):
-    return subprocess.check_output([which('python'), binary, "--version"],
-                                   universal_newlines=True,
-                                   stderr=subprocess.STDOUT)
+    return subprocess.check_output(
+        [which("python"), binary, "--version"],
+        universal_newlines=True,
+        stderr=subprocess.STDOUT,
+    )
 
 
 def lint(paths, config, fix=None, **lintargs):
