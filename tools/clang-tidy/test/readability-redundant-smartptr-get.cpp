@@ -17,3 +17,4 @@ struct A {
 void foo() {
   A& b2 = *std::unique_ptr<A>().get();
 }
+

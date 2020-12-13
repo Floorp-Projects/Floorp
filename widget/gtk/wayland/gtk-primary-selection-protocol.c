@@ -113,3 +113,4 @@ WL_PRIVATE const struct wl_interface gtk_primary_selection_source_interface = {
 	2, gtk_primary_selection_source_requests,
 	2, gtk_primary_selection_source_events,
 };
+

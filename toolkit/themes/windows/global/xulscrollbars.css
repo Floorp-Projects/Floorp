@@ -97,3 +97,4 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
   appearance: auto;
   -moz-default-appearance: scrollbarbutton-up;
 }
+
