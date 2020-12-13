@@ -125,4 +125,3 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
     }
     return regCount;
 }
-
