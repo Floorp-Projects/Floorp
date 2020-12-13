@@ -90,106 +90,14 @@ Val::Val(const LitVal& val) {
 
 bool Val::fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
                       MutableHandleVal rval) {
-  switch (targetType.kind()) {
-    case ValType::I32: {
-      int32_t i32;
-      if (!ToInt32(cx, val, &i32)) {
-        return false;
-      }
-      rval.set(Val(uint32_t(i32)));
-      return true;
-    }
-    case ValType::F32: {
-      double d;
-      if (!ToNumber(cx, val, &d)) {
-        return false;
-      }
-      rval.set(Val(float(d)));
-      return true;
-    }
-    case ValType::F64: {
-      double d;
-      if (!ToNumber(cx, val, &d)) {
-        return false;
-      }
-      rval.set(Val(d));
-      return true;
-    }
-    case ValType::I64: {
-      BigInt* bigint = ToBigInt(cx, val);
-      if (!bigint) {
-        return false;
-      }
-      rval.set(Val(BigInt::toUint64(bigint)));
-      return true;
-    }
-    case ValType::Ref: {
-      RootedFunction fun(cx);
-      RootedAnyRef any(cx, AnyRef::null());
-      if (!CheckRefType(cx, targetType.refType(), val, &fun, &any)) {
-        return false;
-      }
-      switch (targetType.refTypeKind()) {
-        case RefType::Func:
-          rval.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
-          return true;
-        case RefType::Eq:
-        case RefType::Extern:
-          rval.set(Val(targetType.refType(), any));
-          return true;
-        case RefType::TypeIndex:
-          break;
-      }
-      break;
-    }
-    case ValType::V128: {
-      break;
-    }
-  }
-  MOZ_ASSERT(!targetType.isExposable());
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_VAL_TYPE);
-  return false;
+  rval.get().type_ = targetType;
+  // No pre/post barrier needed as rval is rooted
+  return ToWebAssemblyValue(cx, val, targetType, &rval.get().cell_,
+                            targetType.size() == 8);
 }
 
 bool Val::toJSValue(JSContext* cx, MutableHandleValue rval) const {
-  switch (type().kind()) {
-    case ValType::I32:
-      rval.setInt32(i32());
-      return true;
-    case ValType::F32:
-      rval.setDouble(JS::CanonicalizeNaN(double(f32())));
-      return true;
-    case ValType::F64:
-      rval.setDouble(JS::CanonicalizeNaN(f64()));
-      return true;
-    case ValType::I64: {
-      BigInt* bi = BigInt::createFromInt64(cx, i64());
-      if (!bi) {
-        return false;
-      }
-      rval.setBigInt(bi);
-      return true;
-    }
-    case ValType::Ref:
-      switch (type().refTypeKind()) {
-        case RefType::Func:
-          rval.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(ref())));
-          return true;
-        case RefType::Eq:
-        case RefType::Extern:
-          rval.set(UnboxAnyRef(ref()));
-          return true;
-        case RefType::TypeIndex:
-          break;
-      }
-      break;
-    case ValType::V128:
-      break;
-  }
-  MOZ_ASSERT(!type().isExposable());
-  rval.setUndefined();
-  return true;
+  return ToJSValue(cx, &cell_, type_, rval);
 }
 
 void Val::trace(JSTracer* trc) const {
