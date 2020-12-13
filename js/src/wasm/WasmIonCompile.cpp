@@ -1527,12 +1527,12 @@ class FunctionCompiler {
     }
 
     const FuncType& funcType = moduleEnv_.types[funcTypeIndex].funcType();
-    const FuncTypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
+    const TypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
 
     CalleeDesc callee;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(tableIndex == 0);
-      MOZ_ASSERT(funcTypeId.kind() == FuncTypeIdDescKind::None);
+      MOZ_ASSERT(funcTypeId.kind() == TypeIdDescKind::None);
       const TableDesc& table =
           moduleEnv_.tables[moduleEnv_.asmJSSigToTableIndex[funcTypeIndex]];
       MOZ_ASSERT(IsPowerOfTwo(table.initialLength));
@@ -1546,7 +1546,7 @@ class FunctionCompiler {
       index = maskedIndex;
       callee = CalleeDesc::asmJSTable(table);
     } else {
-      MOZ_ASSERT(funcTypeId.kind() != FuncTypeIdDescKind::None);
+      MOZ_ASSERT(funcTypeId.kind() != TypeIdDescKind::None);
       const TableDesc& table = moduleEnv_.tables[tableIndex];
       callee = CalleeDesc::wasmTable(table, funcTypeId);
     }
@@ -5463,7 +5463,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
     // Build the local types vector.
 
     const FuncType& funcType = *moduleEnv.funcs[func.index].type;
-    const FuncTypeIdDesc& funcTypeId = *moduleEnv.funcs[func.index].typeId;
+    const TypeIdDesc& funcTypeId = *moduleEnv.funcs[func.index].typeId;
     ValTypeVector locals;
     if (!locals.appendAll(funcType.args())) {
       return false;

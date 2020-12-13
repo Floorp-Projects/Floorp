@@ -282,7 +282,7 @@ static unsigned EncodeImmediateType(ValType vt) {
 }
 
 /* static */
-bool FuncTypeIdDesc::isGlobal(const FuncType& funcType) {
+bool TypeIdDesc::isGlobal(const FuncType& funcType) {
   const ValTypeVector& results = funcType.results();
   const ValTypeVector& args = funcType.args();
   if (results.length() + args.length() > sMaxTypes) {
@@ -309,10 +309,10 @@ bool FuncTypeIdDesc::isGlobal(const FuncType& funcType) {
 }
 
 /* static */
-FuncTypeIdDesc FuncTypeIdDesc::global(const FuncType& funcType,
-                                      uint32_t globalDataOffset) {
+TypeIdDesc TypeIdDesc::global(const FuncType& funcType,
+                              uint32_t globalDataOffset) {
   MOZ_ASSERT(isGlobal(funcType));
-  return FuncTypeIdDesc(FuncTypeIdDescKind::Global, globalDataOffset);
+  return TypeIdDesc(TypeIdDescKind::Global, globalDataOffset);
 }
 
 static ImmediateType LengthToBits(uint32_t length) {
@@ -322,7 +322,7 @@ static ImmediateType LengthToBits(uint32_t length) {
 }
 
 /* static */
-FuncTypeIdDesc FuncTypeIdDesc::immediate(const FuncType& funcType) {
+TypeIdDesc TypeIdDesc::immediate(const FuncType& funcType) {
   ImmediateType immediate = ImmediateBit;
   uint32_t shift = sTagBits;
 
@@ -346,7 +346,7 @@ FuncTypeIdDesc FuncTypeIdDesc::immediate(const FuncType& funcType) {
   }
 
   MOZ_ASSERT(shift <= sTotalBits);
-  return FuncTypeIdDesc(FuncTypeIdDescKind::Immediate, immediate);
+  return TypeIdDesc(TypeIdDescKind::Immediate, immediate);
 }
 
 size_t FuncTypeWithId::serializedSize() const {

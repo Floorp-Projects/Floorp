@@ -60,7 +60,7 @@ class Instance {
   StructTypeDescrVector structTypeDescrs_;
 
   // Internal helpers:
-  const void** addressOfFuncTypeId(const FuncTypeIdDesc& funcTypeId) const;
+  const void** addressOfFuncTypeId(const TypeIdDesc& funcTypeId) const;
   FuncImportTls& funcImportTls(const FuncImport& fi);
   TableTls& tableTls(const TableDesc& td) const;
 

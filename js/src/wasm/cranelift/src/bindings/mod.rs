@@ -41,7 +41,7 @@ pub use self::low_level::CraneliftFuncCompileInput as FuncCompileInput;
 pub use self::low_level::CraneliftMetadataEntry as MetadataEntry;
 pub use self::low_level::CraneliftModuleEnvironment as LowLevelModuleEnvironment;
 pub use self::low_level::CraneliftStaticEnvironment as StaticEnvironment;
-pub use self::low_level::FuncTypeIdDescKind;
+pub use self::low_level::TypeIdDescKind;
 pub use self::low_level::Trap;
 
 mod low_level;
@@ -192,16 +192,16 @@ impl FuncType {
 }
 
 #[derive(Clone)]
-pub struct FuncTypeIdDesc {
-    ptr: *const low_level::FuncTypeIdDesc,
+pub struct TypeIdDesc {
+    ptr: *const low_level::TypeIdDesc,
 }
 
-impl FuncTypeIdDesc {
-    pub(crate) fn new(ptr: *const low_level::FuncTypeIdDesc) -> Self {
+impl TypeIdDesc {
+    pub(crate) fn new(ptr: *const low_level::TypeIdDesc) -> Self {
         Self { ptr }
     }
 
-    pub(crate) fn id_kind(&self) -> FuncTypeIdDescKind {
+    pub(crate) fn id_kind(&self) -> TypeIdDescKind {
         unsafe { low_level::funcType_idKind(self.ptr) }
     }
     pub(crate) fn id_immediate(&self) -> usize {
@@ -321,8 +321,8 @@ impl<'a> ModuleEnvironment<'a> {
         // this will need to be revisited.
         FuncType::new(unsafe { low_level::env_signature(self.env, type_index.index()) })
     }
-    pub fn signature_id(&self, sig_index: SignatureIndex) -> FuncTypeIdDesc {
-        FuncTypeIdDesc::new(unsafe { low_level::env_signature_id(self.env, sig_index.index()) })
+    pub fn signature_id(&self, type_index: TypeIndex) -> TypeIdDesc {
+        TypeIdDesc::new(unsafe { low_level::env_signature_id(self.env, type_index.index()) })
     }
     pub fn table(&self, table_index: TableIndex) -> TableDesc {
         TableDesc(unsafe { low_level::env_table(self.env, table_index.index()) })

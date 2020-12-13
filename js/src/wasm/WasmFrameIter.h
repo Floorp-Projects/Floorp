@@ -37,7 +37,7 @@ namespace wasm {
 class Code;
 class CodeRange;
 class DebugFrame;
-class FuncTypeIdDesc;
+class TypeIdDesc;
 class Instance;
 class ModuleSegment;
 
@@ -229,7 +229,7 @@ void GenerateJitExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
 void GenerateJitEntryPrologue(jit::MacroAssembler& masm, Offsets* offsets);
 
 void GenerateFunctionPrologue(jit::MacroAssembler& masm,
-                              const FuncTypeIdDesc& funcTypeId,
+                              const TypeIdDesc& funcTypeId,
                               const mozilla::Maybe<uint32_t>& tier1FuncIndex,
                               FuncOffsets* offsets);
 void GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,

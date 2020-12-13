@@ -112,7 +112,7 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
 
 static bool GenerateCraneliftCode(
     WasmMacroAssembler& masm, const CraneliftCompiledFunc& func,
-    const FuncType& funcType, const FuncTypeIdDesc& funcTypeId,
+    const FuncType& funcType, const TypeIdDesc& funcTypeId,
     uint32_t lineOrBytecode, uint32_t funcBytecodeSize, StackMaps* stackMaps,
     size_t stackMapsOffset, size_t stackMapsCount, FuncOffsets* offsets) {
   wasm::GenerateFunctionPrologue(masm, funcTypeId, mozilla::Nothing(), offsets);
@@ -432,8 +432,8 @@ const FuncType* env_func_sig(const CraneliftModuleEnvironment* env,
                              size_t funcIndex) {
   return env->env->funcs[funcIndex].type;
 }
-const FuncTypeIdDesc* env_func_sig_id(const CraneliftModuleEnvironment* env,
-                                      size_t funcIndex) {
+const TypeIdDesc* env_func_sig_id(const CraneliftModuleEnvironment* env,
+                                  size_t funcIndex) {
   return env->env->funcs[funcIndex].typeId;
 }
 size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
@@ -460,8 +460,8 @@ const FuncType* env_signature(const CraneliftModuleEnvironment* env,
   return &env->env->types[funcTypeIndex].funcType();
 }
 
-const FuncTypeIdDesc* env_signature_id(const CraneliftModuleEnvironment* env,
-                                       size_t funcTypeIndex) {
+const TypeIdDesc* env_signature_id(const CraneliftModuleEnvironment* env,
+                                   size_t funcTypeIndex) {
   return &env->env->typeIds[funcTypeIndex];
 }
 
@@ -551,7 +551,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& moduleEnv,
 
     uint32_t lineOrBytecode = func.lineOrBytecode;
     const FuncType& funcType = *moduleEnv.funcs[clifInput.index].type;
-    const FuncTypeIdDesc& funcTypeId = *moduleEnv.funcs[clifInput.index].typeId;
+    const TypeIdDesc& funcTypeId = *moduleEnv.funcs[clifInput.index].typeId;
 
     FuncOffsets offsets;
     if (!GenerateCraneliftCode(
@@ -716,15 +716,15 @@ const BD_ValType* funcType_results(const FuncType* funcType) {
   return (const BD_ValType*)funcType->results().begin();
 }
 
-FuncTypeIdDescKind funcType_idKind(const FuncTypeIdDesc* funcTypeId) {
+TypeIdDescKind funcType_idKind(const TypeIdDesc* funcTypeId) {
   return funcTypeId->kind();
 }
 
-size_t funcType_idImmediate(const FuncTypeIdDesc* funcTypeId) {
+size_t funcType_idImmediate(const TypeIdDesc* funcTypeId) {
   return funcTypeId->immediate();
 }
 
-size_t funcType_idTlsOffset(const FuncTypeIdDesc* funcTypeId) {
+size_t funcType_idTlsOffset(const TypeIdDesc* funcTypeId) {
   return globalToTlsOffset(funcTypeId->globalDataOffset());
 }
 
