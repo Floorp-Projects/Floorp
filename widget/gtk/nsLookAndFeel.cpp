@@ -615,13 +615,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
     case IntID::SelectTextfieldsOnKeyFocus: {
-      GtkWidget* entry;
       GtkSettings* settings;
       gboolean select_on_focus;
 
-      entry = gtk_entry_new();
-      g_object_ref_sink(entry);
-      settings = gtk_widget_get_settings(entry);
+      settings = gtk_settings_get_default();
       g_object_get(settings, "gtk-entry-select-on-focus", &select_on_focus,
                    nullptr);
 
@@ -630,8 +627,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       else
         aResult = 0;
 
-      gtk_widget_destroy(entry);
-      g_object_unref(entry);
     } break;
     case IntID::ScrollToClick: {
       GtkSettings* settings;
@@ -671,11 +666,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     case IntID::DragThresholdX:
     case IntID::DragThresholdY: {
-      GtkWidget* box = gtk_hbox_new(FALSE, 5);
       gint threshold = 0;
-      g_object_get(gtk_widget_get_settings(box), "gtk-dnd-drag-threshold",
+      g_object_get(gtk_settings_get_default(), "gtk-dnd-drag-threshold",
                    &threshold, nullptr);
-      g_object_ref_sink(box);
 
       aResult = threshold;
     } break;
