@@ -821,7 +821,7 @@ bool js::CreateWasmBuffer(JSContext* cx, wasm::MemoryKind memKind,
                           const wasm::Limits& memory,
                           MutableHandleArrayBufferObjectMaybeShared buffer) {
   MOZ_ASSERT(memory.initial % wasm::PageSize == 0);
-  MOZ_RELEASE_ASSERT(cx->wasmHaveSignalHandlers);
+  MOZ_RELEASE_ASSERT(cx->wasm().haveSignalHandlers);
   MOZ_RELEASE_ASSERT(memory.initial <=
                      ArrayBufferObject::maxBufferByteLength());
 

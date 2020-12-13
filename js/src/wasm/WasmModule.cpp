@@ -1429,7 +1429,7 @@ bool Module::makeStructTypeDescrs(
 bool Module::instantiate(JSContext* cx, ImportValues& imports,
                          HandleObject instanceProto,
                          MutableHandleWasmInstanceObject instance) const {
-  MOZ_RELEASE_ASSERT(cx->wasmHaveSignalHandlers);
+  MOZ_RELEASE_ASSERT(cx->wasm().haveSignalHandlers);
 
   if (!instantiateFunctions(cx, imports.funcs)) {
     return false;

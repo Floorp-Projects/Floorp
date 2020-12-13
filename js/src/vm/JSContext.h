@@ -30,6 +30,7 @@
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
 #include "vm/SharedStencil.h"  // js::SharedImmutableScriptDataTable
+#include "wasm/WasmContext.h"
 
 struct JS_PUBLIC_API JSContext;
 
@@ -635,10 +636,11 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   void disableProfilerSampling() { suppressProfilerSampling = true; }
   void enableProfilerSampling() { suppressProfilerSampling = false; }
 
-  // Used by wasm::EnsureThreadSignalHandlers(cx) to install thread signal
-  // handlers once per JSContext/thread.
-  bool wasmTriedToInstallSignalHandlers;
-  bool wasmHaveSignalHandlers;
+ private:
+  js::wasm::Context wasm_;
+
+ public:
+  js::wasm::Context& wasm() { return wasm_; }
 
   /* Temporary arena pool used while compiling and decompiling. */
   static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;

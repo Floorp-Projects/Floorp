@@ -915,8 +915,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       compactingDisabledCount(this, 0),
       frontendCollectionPool_(this),
       suppressProfilerSampling(false),
-      wasmTriedToInstallSignalHandlers(false),
-      wasmHaveSignalHandlers(false),
       tempLifoAlloc_(this, (size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       debuggerMutations(this, 0),
       ionPcScriptCache(this, nullptr),
@@ -1122,6 +1120,7 @@ size_t JSContext::sizeOfExcludingThis(
    * added later.
    */
   return cycleDetectorVector().sizeOfExcludingThis(mallocSizeOf) +
+         wasm_.sizeOfExcludingThis(mallocSizeOf) +
          irregexp::IsolateSizeOfIncludingThis(isolate, mallocSizeOf);
 }
 
