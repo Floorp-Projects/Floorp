@@ -54,7 +54,7 @@ async function checkCopySelection(view) {
     ".ruleview-propertyvaluecontainer"
   );
 
-  const range = contentDoc.createRange();
+  let range = contentDoc.createRange();
   range.setStart(prop, 0);
   range.setEnd(values[4], 2);
   win.getSelection().addRange(range);
@@ -86,6 +86,24 @@ async function checkCopySelection(view) {
   } catch (e) {
     failedClipboard(expectedPattern);
   }
+
+  info("Check copying from keyboard");
+  win.getSelection().removeRange(range);
+  // Selecting the declaration `margin: 10em;`
+  range = contentDoc.createRange();
+  range.setStart(prop, 0);
+  range.setEnd(prop, 1);
+  win.getSelection().addRange(range);
+
+  // Dispatching the copy event from the checkbox to make sure we cover Bug 1680893.
+  const declarationCheckbox = contentDoc.querySelector(
+    "input[type=checkbox].ruleview-enableproperty"
+  );
+  const copyEvent = new win.Event("copy", { bubbles: true });
+  await waitForClipboardPromise(
+    () => declarationCheckbox.dispatchEvent(copyEvent),
+    () => checkClipboardData("^margin: 10em;$")
+  );
 }
 
 async function checkSelectAll(view) {
