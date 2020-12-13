@@ -90,11 +90,6 @@ Val::Val(const LitVal& val) {
 
 bool Val::fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
                       MutableHandleVal rval) {
-  if (!targetType.isExposable()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_VAL_TYPE);
-    return false;
-  }
   switch (targetType.kind()) {
     case ValType::I32: {
       int32_t i32;
@@ -151,11 +146,13 @@ bool Val::fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
       break;
     }
   }
-  MOZ_ASSERT_UNREACHABLE();
+  MOZ_ASSERT(!targetType.isExposable());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_VAL_TYPE);
+  return false;
 }
 
 bool Val::toJSValue(JSContext* cx, MutableHandleValue rval) const {
-  MOZ_ASSERT(type().isExposable());
   switch (type().kind()) {
     case ValType::I32:
       rval.setInt32(i32());
@@ -190,7 +187,9 @@ bool Val::toJSValue(JSContext* cx, MutableHandleValue rval) const {
     case ValType::V128:
       break;
   }
-  MOZ_CRASH("unexpected value type, caller must guard on isExposable()");
+  MOZ_ASSERT(!type().isExposable());
+  rval.setUndefined();
+  return true;
 }
 
 void Val::trace(JSTracer* trc) const {
@@ -396,13 +395,6 @@ bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val, void** loc,
   Debug::print(*loc);
   return true;
 }
-template <typename Debug = NoDebug>
-bool ToWebAssemblyValue_typeref(JSContext* cx, HandleValue val, void** loc,
-                                bool mustWrite64) {
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_TYPEREF_FROM_JS);
-  return false;
-}
 
 template <typename Debug>
 bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
@@ -417,7 +409,7 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
     case ValType::F64:
       return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc, mustWrite64);
     case ValType::V128:
-      MOZ_CRASH("unexpected v128 in ToWebAssemblyValue");
+      break;
     case ValType::Ref:
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       if (!type.isNullable() && val.isNull()) {
@@ -439,11 +431,13 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
           return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc,
                                                  mustWrite64);
         case RefType::TypeIndex:
-          return ToWebAssemblyValue_typeref<Debug>(cx, val, (void**)loc,
-                                                   mustWrite64);
+          break;
       }
   }
-  MOZ_CRASH("unreachable");
+  MOZ_ASSERT(!type.isExposable());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_VAL_TYPE);
+  return false;
 }
 
 template <typename Debug = NoDebug>
@@ -476,24 +470,6 @@ bool ToJSValue_f64(JSContext* cx, double src, MutableHandleValue dst) {
   Debug::print(src);
   return true;
 }
-#ifdef ENABLE_WASM_SIMD
-template <typename Debug = NoDebug>
-bool ToJSValue_v128(JSContext* cx, const V128& src, MutableHandleValue dst) {
-  // Conversion to v128 happens only in the context of the debugger, all other
-  // execution paths are blocked from running this conversion.
-  //
-  // v128 does not have a convenient representation in JS, nor a convenient way
-  // of printing it -- after all, what's the intended interpretation?  For the
-  // time being, we transform it to a single i32 that represents lane 0 of an
-  // int32x4, and we print it as an int32x4 -- at least this shows the bit
-  // representation.
-  dst.set(Int32Value(src.extractLane<int32_t>(0)));
-  for (unsigned i = 0; i < 4; i++) {
-    Debug::print(src.extractLane<int32_t>(i));
-  }
-  return true;
-}
-#endif
 template <typename Debug = NoDebug>
 bool ToJSValue_funcref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxFuncRef(FuncRef::fromCompiledCode(src)));
@@ -505,12 +481,6 @@ bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
   Debug::print(src);
   return true;
-}
-template <typename Debug = NoDebug>
-bool ToJSValue_typeref(JSContext* cx, void* src, MutableHandleValue dst) {
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_TYPEREF_TO_JS);
-  return false;
 }
 
 template <typename Debug>
@@ -530,12 +500,7 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
       return ToJSValue_f64<Debug>(cx, *reinterpret_cast<const double*>(src),
                                   dst);
     case ValType::V128:
-#ifdef ENABLE_WASM_SIMD
-      return ToJSValue_v128<Debug>(cx, *reinterpret_cast<const V128*>(src),
-                                   dst);
-#else
       break;
-#endif
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Func:
@@ -548,11 +513,13 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
           return ToJSValue_anyref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
         case RefType::TypeIndex:
-          return ToJSValue_typeref<Debug>(
-              cx, *reinterpret_cast<void* const*>(src), dst);
+          break;
       }
   }
-  MOZ_CRASH("unreachable");
+  MOZ_ASSERT(!type.isExposable());
+  Debug::print(nullptr);
+  dst.setUndefined();
+  return true;
 }
 
 void AnyRef::trace(JSTracer* trc) {
