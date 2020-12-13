@@ -97,6 +97,12 @@ def setup(root, **lintargs):
         return 1
 
 
+def get_codespell_version(binary):
+    return subprocess.check_output([which('python'), binary, "--version"],
+                                   universal_newlines=True,
+                                   stderr=subprocess.STDOUT)
+
+
 def lint(paths, config, fix=None, **lintargs):
     log = lintargs["log"]
     binary = get_codespell_binary()
@@ -130,6 +136,8 @@ def lint(paths, config, fix=None, **lintargs):
     if fix:
         cmd_args.append("--write-changes")
     log.debug("Command: {}".format(" ".join(cmd_args)))
+
+    log.debug("Version: {}".format(get_codespell_version(binary)))
 
     base_command = cmd_args + paths
 
