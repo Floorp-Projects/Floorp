@@ -96,7 +96,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   ~CodeGenerator();
 
   MOZ_MUST_USE bool generate();
-  MOZ_MUST_USE bool generateWasm(wasm::FuncTypeIdDesc funcTypeId,
+  MOZ_MUST_USE bool generateWasm(wasm::TypeIdDesc funcTypeId,
                                  wasm::BytecodeOffset trapOffset,
                                  const wasm::ArgTypeVector& argTys,
                                  const MachineState& trapExitLayout,

@@ -1858,15 +1858,15 @@ typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
 // A FuncDesc describes a single function.
 
-class FuncTypeIdDesc;
+class TypeIdDesc;
 
 struct FuncDesc {
   FuncType* type;
-  FuncTypeIdDesc* typeId;
+  TypeIdDesc* typeId;
   uint32_t typeIndex;
 
   FuncDesc() = default;
-  FuncDesc(FuncType* type, FuncTypeIdDesc* typeId, uint32_t typeIndex)
+  FuncDesc(FuncType* type, TypeIdDesc* typeId, uint32_t typeIndex)
       : type(type), typeId(typeId), typeIndex(typeIndex) {}
 };
 
@@ -2130,7 +2130,7 @@ struct Name {
 
 typedef Vector<Name, 0, SystemAllocPolicy> NameVector;
 
-// FuncTypeIdDesc describes a function type that can be used by call_indirect
+// TypeIdDesc describes a function type that can be used by call_indirect
 // and table-entry prologues to structurally compare whether the caller and
 // callee's signatures *structurally* match. To handle the general case, a
 // FuncType is allocated and stored in a process-wide hash table, so that
@@ -2141,51 +2141,49 @@ typedef Vector<Name, 0, SystemAllocPolicy> NameVector;
 // always setting the LSB for the immediates (the LSB is necessarily 0 for
 // allocated FuncType pointers due to alignment).
 
-class FuncTypeIdDesc {
+class TypeIdDesc {
  public:
   static const uintptr_t ImmediateBit = 0x1;
 
  private:
-  FuncTypeIdDescKind kind_;
+  TypeIdDescKind kind_;
   size_t bits_;
 
-  FuncTypeIdDesc(FuncTypeIdDescKind kind, size_t bits)
-      : kind_(kind), bits_(bits) {}
+  TypeIdDesc(TypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
 
  public:
-  FuncTypeIdDescKind kind() const { return kind_; }
+  TypeIdDescKind kind() const { return kind_; }
   static bool isGlobal(const FuncType& funcType);
 
-  FuncTypeIdDesc() : kind_(FuncTypeIdDescKind::None), bits_(0) {}
-  static FuncTypeIdDesc global(const FuncType& funcType,
-                               uint32_t globalDataOffset);
-  static FuncTypeIdDesc immediate(const FuncType& funcType);
+  TypeIdDesc() : kind_(TypeIdDescKind::None), bits_(0) {}
+  static TypeIdDesc global(const FuncType& funcType, uint32_t globalDataOffset);
+  static TypeIdDesc immediate(const FuncType& funcType);
 
-  bool isGlobal() const { return kind_ == FuncTypeIdDescKind::Global; }
+  bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
 
   size_t immediate() const {
-    MOZ_ASSERT(kind_ == FuncTypeIdDescKind::Immediate);
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
     return bits_;
   }
   uint32_t globalDataOffset() const {
-    MOZ_ASSERT(kind_ == FuncTypeIdDescKind::Global);
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Global);
     return bits_;
   }
 };
 
-typedef Vector<FuncTypeIdDesc, 0, SystemAllocPolicy> FuncTypeIdDescVector;
+typedef Vector<TypeIdDesc, 0, SystemAllocPolicy> TypeIdDescVector;
 
-// FuncTypeWithId pairs a FuncType with FuncTypeIdDesc, describing either how to
+// FuncTypeWithId pairs a FuncType with TypeIdDesc, describing either how to
 // compile code that compares this signature's id or, at instantiation what
 // signature ids to allocate in the global hash and where to put them.
 
 struct FuncTypeWithId : FuncType {
-  FuncTypeIdDesc id;
+  TypeIdDesc id;
 
   FuncTypeWithId() = default;
   explicit FuncTypeWithId(FuncType&& funcType)
       : FuncType(std::move(funcType)), id() {}
-  FuncTypeWithId(FuncType&& funcType, FuncTypeIdDesc id)
+  FuncTypeWithId(FuncType&& funcType, TypeIdDesc id)
       : FuncType(std::move(funcType)), id(id) {}
   void operator=(FuncType&& rhs) { FuncType::operator=(std::move(rhs)); }
 
@@ -3037,7 +3035,7 @@ class CalleeDesc {
     struct {
       uint32_t globalDataOffset_;
       uint32_t minLength_;
-      FuncTypeIdDesc funcTypeId_;
+      TypeIdDesc funcTypeId_;
     } table;
     SymbolicAddress builtin_;
   } u;
@@ -3056,8 +3054,7 @@ class CalleeDesc {
     c.u.import.globalDataOffset_ = globalDataOffset;
     return c;
   }
-  static CalleeDesc wasmTable(const TableDesc& desc,
-                              FuncTypeIdDesc funcTypeId) {
+  static CalleeDesc wasmTable(const TableDesc& desc, TypeIdDesc funcTypeId) {
     CalleeDesc c;
     c.which_ = WasmTable;
     c.u.table.globalDataOffset_ = desc.globalDataOffset;
@@ -3101,7 +3098,7 @@ class CalleeDesc {
     MOZ_ASSERT(isTable());
     return u.table.globalDataOffset_ + offsetof(TableTls, functionBase);
   }
-  FuncTypeIdDesc wasmTableSigId() const {
+  TypeIdDesc wasmTableSigId() const {
     MOZ_ASSERT(which_ == WasmTable);
     return u.table.funcTypeId_;
   }

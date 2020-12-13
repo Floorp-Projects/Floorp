@@ -10818,7 +10818,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   return true;
 }
 
-bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
+bool CodeGenerator::generateWasm(wasm::TypeIdDesc funcTypeId,
                                  wasm::BytecodeOffset trapOffset,
                                  const wasm::ArgTypeVector& argTypes,
                                  const MachineState& trapExitLayout,

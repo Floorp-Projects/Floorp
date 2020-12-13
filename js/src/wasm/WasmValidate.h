@@ -137,7 +137,7 @@ struct ModuleEnvironment {
   Maybe<uint64_t> maxMemoryLength;
   uint32_t numStructTypes;
   TypeDefVector types;
-  FuncTypeIdDescVector typeIds;
+  TypeIdDescVector typeIds;
   FuncDescVector funcs;
   Uint32Vector funcImportGlobalDataOffsets;
 

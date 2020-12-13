@@ -1879,7 +1879,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
 
     *sigIndex = moduleEnv_.types.length();
     return moduleEnv_.types.append(std::move(sig)) &&
-           moduleEnv_.typeIds.append(FuncTypeIdDesc());
+           moduleEnv_.typeIds.append(TypeIdDesc());
   }
   bool declareSig(FuncType&& sig, uint32_t* sigIndex) {
     SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
