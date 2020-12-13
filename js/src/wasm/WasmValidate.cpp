@@ -1751,10 +1751,8 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     return d.fail("struct type entry referenced as function");
   }
 
-  env->types[typeIndex] =
-      TypeDef(StructType(std::move(fields), env->numStructTypes, isInline));
+  env->types[typeIndex] = TypeDef(StructType(std::move(fields), isInline));
   (*typeState)[typeIndex] = TypeState::Struct;
-  env->numStructTypes++;
 
   return true;
 }
