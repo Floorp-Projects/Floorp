@@ -1135,7 +1135,7 @@ static bool GetGlobalExport(JSContext* cx, HandleWasmInstanceObject instanceObj,
     }
   }
 
-  globalObj->setVal(cx, globalVal);
+  globalObj->val() = globalVal;
   return true;
 }
 
