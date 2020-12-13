@@ -2047,23 +2047,24 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
   }
 
   SharedModule finish() {
-    MOZ_ASSERT(moduleEnv_.funcTypes.empty());
-    if (!moduleEnv_.funcTypes.resize(funcImportMap_.count() +
-                                     funcDefs_.length())) {
+    MOZ_ASSERT(moduleEnv_.funcs.empty());
+    if (!moduleEnv_.funcs.resize(funcImportMap_.count() + funcDefs_.length())) {
       return nullptr;
     }
     for (FuncImportMap::Range r = funcImportMap_.all(); !r.empty();
          r.popFront()) {
       uint32_t funcIndex = r.front().value();
-      MOZ_ASSERT(!moduleEnv_.funcTypes[funcIndex]);
-      moduleEnv_.funcTypes[funcIndex] =
-          &moduleEnv_.types[r.front().key().sigIndex()].funcType();
+      uint32_t funcTypeIndex = r.front().key().sigIndex();
+      MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
+      moduleEnv_.funcs[funcIndex] =
+          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(), funcTypeIndex);
     }
     for (const Func& func : funcDefs_) {
       uint32_t funcIndex = funcImportMap_.count() + func.funcDefIndex();
-      MOZ_ASSERT(!moduleEnv_.funcTypes[funcIndex]);
-      moduleEnv_.funcTypes[funcIndex] =
-          &moduleEnv_.types[func.sigIndex()].funcType();
+      uint32_t funcTypeIndex = func.sigIndex();
+      MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
+      moduleEnv_.funcs[funcIndex] =
+          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(), funcTypeIndex);
     }
 
     if (!moduleEnv_.funcImportGlobalDataOffsets.resize(

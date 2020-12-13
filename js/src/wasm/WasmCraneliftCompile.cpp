@@ -430,15 +430,15 @@ const FuncTypeWithId* env_type(const CraneliftModuleEnvironment* env,
 }
 
 size_t env_num_funcs(const CraneliftModuleEnvironment* env) {
-  return env->env->funcTypes.length();
+  return env->env->funcs.length();
 }
 const FuncTypeWithId* env_func_sig(const CraneliftModuleEnvironment* env,
                                    size_t funcIndex) {
-  return env->env->funcTypes[funcIndex];
+  return env->env->funcs[funcIndex].type;
 }
 size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
                           size_t funcIndex) {
-  return env->env->funcTypeIndices[funcIndex];
+  return env->env->funcs[funcIndex].typeIndex;
 }
 bool env_is_func_valid_for_ref(const CraneliftModuleEnvironment* env,
                                uint32_t index) {
@@ -545,7 +545,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& moduleEnv,
     }
 
     uint32_t lineOrBytecode = func.lineOrBytecode;
-    const FuncTypeWithId& funcType = *moduleEnv.funcTypes[clifInput.index];
+    const FuncTypeWithId& funcType = *moduleEnv.funcs[clifInput.index].type;
 
     FuncOffsets offsets;
     if (!GenerateCraneliftCode(

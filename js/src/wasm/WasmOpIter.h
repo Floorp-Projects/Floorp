@@ -1000,7 +1000,7 @@ inline bool OpIter<Policy>::readFunctionStart(uint32_t funcIndex) {
   MOZ_ASSERT(valueStack_.empty());
   MOZ_ASSERT(controlStack_.empty());
   MOZ_ASSERT(op_.b0 == uint16_t(Op::Limit));
-  BlockType type = BlockType::FuncResults(*env_.funcTypes[funcIndex]);
+  BlockType type = BlockType::FuncResults(*env_.funcs[funcIndex].type);
   return pushControl(LabelKind::Body, type);
 }
 
@@ -1834,7 +1834,7 @@ inline bool OpIter<Policy>::readRefFunc(uint32_t* funcTypeIndex) {
   if (!readVarU32(funcTypeIndex)) {
     return fail("unable to read function index");
   }
-  if (*funcTypeIndex >= env_.funcTypes.length()) {
+  if (*funcTypeIndex >= env_.funcs.length()) {
     return fail("function index out of range");
   }
   if (!env_.validForRefFunc.getBit(*funcTypeIndex)) {
@@ -1958,11 +1958,11 @@ inline bool OpIter<Policy>::readCall(uint32_t* funcTypeIndex,
     return fail("unable to read call function index");
   }
 
-  if (*funcTypeIndex >= env_.funcTypes.length()) {
+  if (*funcTypeIndex >= env_.funcs.length()) {
     return fail("callee index out of range");
   }
 
-  const FuncType& funcType = *env_.funcTypes[*funcTypeIndex];
+  const FuncType& funcType = *env_.funcs[*funcTypeIndex].type;
 
   if (!popCallArgs(funcType.args(), argValues)) {
     return false;
@@ -2042,11 +2042,11 @@ inline bool OpIter<Policy>::readOldCallDirect(uint32_t numFuncImports,
 
   *funcTypeIndex = numFuncImports + funcDefIndex;
 
-  if (*funcTypeIndex >= env_.funcTypes.length()) {
+  if (*funcTypeIndex >= env_.funcs.length()) {
     return fail("callee index out of range");
   }
 
-  const FuncType& funcType = *env_.funcTypes[*funcTypeIndex];
+  const FuncType& funcType = *env_.funcs[*funcTypeIndex].type;
 
   if (!popCallArgs(funcType.args(), argValues)) {
     return false;
