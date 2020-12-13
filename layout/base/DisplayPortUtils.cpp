@@ -8,6 +8,7 @@
 
 #include "FrameMetrics.h"
 #include "Layers.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -15,6 +16,7 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/PAPZ.h"
 #include "mozilla/layers/RepaintRequest.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "nsDeckFrame.h"
 #include "nsIScrollableFrame.h"
