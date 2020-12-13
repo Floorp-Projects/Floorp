@@ -110,15 +110,11 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
   MOZ_CRASH("unknown baldrdash symbolic address");
 }
 
-static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
-                                  const CraneliftCompiledFunc& func,
-                                  const FuncTypeWithId& funcType,
-                                  uint32_t lineOrBytecode,
-                                  uint32_t funcBytecodeSize,
-                                  StackMaps* stackMaps, size_t stackMapsOffset,
-                                  size_t stackMapsCount, FuncOffsets* offsets) {
-  const FuncTypeIdDesc& funcTypeId = funcType.id;
-
+static bool GenerateCraneliftCode(
+    WasmMacroAssembler& masm, const CraneliftCompiledFunc& func,
+    const FuncType& funcType, const FuncTypeIdDesc& funcTypeId,
+    uint32_t lineOrBytecode, uint32_t funcBytecodeSize, StackMaps* stackMaps,
+    size_t stackMapsOffset, size_t stackMapsCount, FuncOffsets* offsets) {
   wasm::GenerateFunctionPrologue(masm, funcTypeId, mozilla::Nothing(), offsets);
 
   // Omit the check when framePushed is small and we know there's no
@@ -424,17 +420,21 @@ bool env_has_memory(const CraneliftModuleEnvironment* env) {
 size_t env_num_types(const CraneliftModuleEnvironment* env) {
   return env->env->types.length();
 }
-const FuncTypeWithId* env_type(const CraneliftModuleEnvironment* env,
-                               size_t typeIndex) {
+const FuncType* env_type(const CraneliftModuleEnvironment* env,
+                         size_t typeIndex) {
   return &env->env->types[typeIndex].funcType();
 }
 
 size_t env_num_funcs(const CraneliftModuleEnvironment* env) {
   return env->env->funcs.length();
 }
-const FuncTypeWithId* env_func_sig(const CraneliftModuleEnvironment* env,
-                                   size_t funcIndex) {
+const FuncType* env_func_sig(const CraneliftModuleEnvironment* env,
+                             size_t funcIndex) {
   return env->env->funcs[funcIndex].type;
+}
+const FuncTypeIdDesc* env_func_sig_id(const CraneliftModuleEnvironment* env,
+                                      size_t funcIndex) {
+  return env->env->funcs[funcIndex].typeId;
 }
 size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
                           size_t funcIndex) {
@@ -455,9 +455,14 @@ bool env_func_is_import(const CraneliftModuleEnvironment* env,
   return env->env->funcIsImport(funcIndex);
 }
 
-const FuncTypeWithId* env_signature(const CraneliftModuleEnvironment* env,
-                                    size_t funcTypeIndex) {
+const FuncType* env_signature(const CraneliftModuleEnvironment* env,
+                              size_t funcTypeIndex) {
   return &env->env->types[funcTypeIndex].funcType();
+}
+
+const FuncTypeIdDesc* env_signature_id(const CraneliftModuleEnvironment* env,
+                                       size_t funcTypeIndex) {
+  return &env->env->typeIds[funcTypeIndex];
 }
 
 size_t env_num_tables(const CraneliftModuleEnvironment* env) {
@@ -545,12 +550,13 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& moduleEnv,
     }
 
     uint32_t lineOrBytecode = func.lineOrBytecode;
-    const FuncTypeWithId& funcType = *moduleEnv.funcs[clifInput.index].type;
+    const FuncType& funcType = *moduleEnv.funcs[clifInput.index].type;
+    const FuncTypeIdDesc& funcTypeId = *moduleEnv.funcs[clifInput.index].typeId;
 
     FuncOffsets offsets;
     if (!GenerateCraneliftCode(
-            masm, clifFunc, funcType, lineOrBytecode, funcBytecodeSize,
-            &code->stackMaps, previousStackmapCount,
+            masm, clifFunc, funcType, funcTypeId, lineOrBytecode,
+            funcBytecodeSize, &code->stackMaps, previousStackmapCount,
             code->stackMaps.length() - previousStackmapCount, &offsets)) {
       return false;
     }
@@ -692,34 +698,34 @@ TypeCode table_elementTypeCode(const TableDesc* table) {
 
 // Sig
 
-size_t funcType_numArgs(const FuncTypeWithId* funcType) {
+size_t funcType_numArgs(const FuncType* funcType) {
   return funcType->args().length();
 }
 
-const BD_ValType* funcType_args(const FuncTypeWithId* funcType) {
+const BD_ValType* funcType_args(const FuncType* funcType) {
   static_assert(sizeof(BD_ValType) == sizeof(ValType), "update BD_ValType");
   return (const BD_ValType*)funcType->args().begin();
 }
 
-size_t funcType_numResults(const FuncTypeWithId* funcType) {
+size_t funcType_numResults(const FuncType* funcType) {
   return funcType->results().length();
 }
 
-const BD_ValType* funcType_results(const FuncTypeWithId* funcType) {
+const BD_ValType* funcType_results(const FuncType* funcType) {
   static_assert(sizeof(BD_ValType) == sizeof(ValType), "update BD_ValType");
   return (const BD_ValType*)funcType->results().begin();
 }
 
-FuncTypeIdDescKind funcType_idKind(const FuncTypeWithId* funcType) {
-  return funcType->id.kind();
+FuncTypeIdDescKind funcType_idKind(const FuncTypeIdDesc* funcTypeId) {
+  return funcTypeId->kind();
 }
 
-size_t funcType_idImmediate(const FuncTypeWithId* funcType) {
-  return funcType->id.immediate();
+size_t funcType_idImmediate(const FuncTypeIdDesc* funcTypeId) {
+  return funcTypeId->immediate();
 }
 
-size_t funcType_idTlsOffset(const FuncTypeWithId* funcType) {
-  return globalToTlsOffset(funcType->id.globalDataOffset());
+size_t funcType_idTlsOffset(const FuncTypeIdDesc* funcTypeId) {
+  return globalToTlsOffset(funcTypeId->globalDataOffset());
 }
 
 void stackmaps_add(BD_Stackmaps* sink, const uint32_t* bitMap,

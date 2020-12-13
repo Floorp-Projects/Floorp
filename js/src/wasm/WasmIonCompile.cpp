@@ -1526,12 +1526,13 @@ class FunctionCompiler {
       return true;
     }
 
-    const FuncTypeWithId& funcType = moduleEnv_.types[funcTypeIndex].funcType();
+    const FuncType& funcType = moduleEnv_.types[funcTypeIndex].funcType();
+    const FuncTypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
 
     CalleeDesc callee;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(tableIndex == 0);
-      MOZ_ASSERT(funcType.id.kind() == FuncTypeIdDescKind::None);
+      MOZ_ASSERT(funcTypeId.kind() == FuncTypeIdDescKind::None);
       const TableDesc& table =
           moduleEnv_.tables[moduleEnv_.asmJSSigToTableIndex[funcTypeIndex]];
       MOZ_ASSERT(IsPowerOfTwo(table.initialLength));
@@ -1545,9 +1546,9 @@ class FunctionCompiler {
       index = maskedIndex;
       callee = CalleeDesc::asmJSTable(table);
     } else {
-      MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDescKind::None);
+      MOZ_ASSERT(funcTypeId.kind() != FuncTypeIdDescKind::None);
       const TableDesc& table = moduleEnv_.tables[tableIndex];
-      callee = CalleeDesc::wasmTable(table, funcType.id);
+      callee = CalleeDesc::wasmTable(table, funcTypeId);
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
@@ -5461,7 +5462,8 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
 
     // Build the local types vector.
 
-    const FuncTypeWithId& funcType = *moduleEnv.funcs[func.index].type;
+    const FuncType& funcType = *moduleEnv.funcs[func.index].type;
+    const FuncTypeIdDesc& funcTypeId = *moduleEnv.funcs[func.index].typeId;
     ValTypeVector locals;
     if (!locals.appendAll(funcType.args())) {
       return false;
@@ -5516,7 +5518,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
       BytecodeOffset prologueTrapOffset(func.lineOrBytecode);
       FuncOffsets offsets;
       ArgTypeVector args(funcType);
-      if (!codegen.generateWasm(funcType.id, prologueTrapOffset, args,
+      if (!codegen.generateWasm(funcTypeId, prologueTrapOffset, args,
                                 trapExitLayout, trapExitLayoutNumWords,
                                 &offsets, &code->stackMaps)) {
         return false;

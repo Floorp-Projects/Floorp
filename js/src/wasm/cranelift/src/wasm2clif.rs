@@ -73,7 +73,7 @@ fn imm64(offset: usize) -> ir::immediates::Imm64 {
 /// a callee.
 fn init_sig_from_wsig(
     call_conv: CallConv,
-    wsig: &bindings::FuncTypeWithId,
+    wsig: &bindings::FuncType,
 ) -> WasmResult<ir::Signature> {
     let mut sig = ir::Signature::new(call_conv);
 
@@ -828,9 +828,10 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         index: TypeIndex,
     ) -> WasmResult<ir::SigRef> {
         let wsig = self.module_env.signature(index);
+        let wsig_id = self.module_env.signature_id(index);
         let mut sigdata = init_sig_from_wsig(self.static_env.call_conv(), &wsig)?;
 
-        if wsig.id_kind() != bindings::FuncTypeIdDescKind::None {
+        if wsig_id.id_kind() != bindings::FuncTypeIdDescKind::None {
             // A signature to be used for an indirect call also takes a signature id.
             sigdata.params.push(ir::AbiParam::special(
                 POINTER_TYPE,
@@ -895,22 +896,22 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         callee: ir::Value,
         call_args: &[ir::Value],
     ) -> WasmResult<ir::Inst> {
-        let wsig = self.module_env.signature(sig_index);
+        let wsig_id = self.module_env.signature_id(sig_index);
 
         let wtable = self.get_table(pos.func, table_index);
 
         // Follows `MacroAssembler::wasmCallIndirect`:
 
         // 1. Materialize the signature ID.
-        let sigid_value = match wsig.id_kind() {
+        let sigid_value = match wsig_id.id_kind() {
             bindings::FuncTypeIdDescKind::None => None,
             bindings::FuncTypeIdDescKind::Immediate => {
                 // The signature is represented as an immediate pointer-sized value.
-                let imm = wsig.id_immediate() as i64;
+                let imm = wsig_id.id_immediate() as i64;
                 Some(pos.ins().iconst(POINTER_TYPE, imm))
             }
             bindings::FuncTypeIdDescKind::Global => {
-                let gv = self.sig_global(pos.func, wsig.id_tls_offset());
+                let gv = self.sig_global(pos.func, wsig_id.id_tls_offset());
                 let addr = pos.ins().global_value(POINTER_TYPE, gv);
                 Some(
                     pos.ins()

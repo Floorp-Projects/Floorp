@@ -274,12 +274,19 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
   }
 
   if (!isAsmJS()) {
-    for (TypeDef& td : moduleEnv_->types) {
-      if (!td.isFuncType()) {
+    // Allocate space for type-id's of function types that cannot fit in a
+    // machine word and initialize the id descriptor so that codegen can
+    // generate references to the type-id later.
+    for (uint32_t typeIndex = 0; typeIndex < moduleEnv_->types.length();
+         typeIndex++) {
+      const TypeDef& typeDef = moduleEnv_->types[typeIndex];
+      if (!typeDef.isFuncType()) {
         continue;
       }
 
-      FuncTypeWithId& funcType = td.funcType();
+      const FuncType& funcType = typeDef.funcType();
+      FuncTypeIdDesc& funcTypeId = moduleEnv_->typeIds[typeIndex];
+
       if (FuncTypeIdDesc::isGlobal(funcType)) {
         uint32_t globalDataOffset;
         if (!allocateGlobalBytes(sizeof(void*), sizeof(void*),
@@ -287,18 +294,18 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
           return false;
         }
 
-        funcType.id = FuncTypeIdDesc::global(funcType, globalDataOffset);
+        funcTypeId = FuncTypeIdDesc::global(funcType, globalDataOffset);
 
         FuncType copy;
         if (!copy.clone(funcType)) {
           return false;
         }
 
-        if (!metadata_->funcTypeIds.emplaceBack(std::move(copy), funcType.id)) {
+        if (!metadata_->funcTypeIds.emplaceBack(std::move(copy), funcTypeId)) {
           return false;
         }
       } else {
-        funcType.id = FuncTypeIdDesc::immediate(funcType);
+        funcTypeId = FuncTypeIdDesc::immediate(funcType);
       }
     }
   }
