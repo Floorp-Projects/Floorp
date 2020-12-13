@@ -28,6 +28,7 @@
 #include "vm/Warnings.h"  // js:WarnNumberASCII
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmJS.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmStubs.h"
 
@@ -66,34 +67,138 @@ Val::Val(const LitVal& val) {
   type_ = val.type();
   switch (type_.kind()) {
     case ValType::I32:
-      u.i32_ = val.i32();
+      cell_.i32_ = val.i32();
       return;
     case ValType::F32:
-      u.f32_ = val.f32();
+      cell_.f32_ = val.f32();
       return;
     case ValType::I64:
-      u.i64_ = val.i64();
+      cell_.i64_ = val.i64();
       return;
     case ValType::F64:
-      u.f64_ = val.f64();
+      cell_.f64_ = val.f64();
       return;
     case ValType::V128:
-      u.v128_ = val.v128();
+      cell_.v128_ = val.v128();
       return;
     case ValType::Ref:
-      u.ref_ = val.ref();
+      cell_.ref_ = val.ref();
       return;
   }
   MOZ_CRASH();
 }
 
-void Val::trace(JSTracer* trc) {
-  if (type_.isValid() && type_.isReference() && !u.ref_.isNull()) {
+bool Val::fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
+                      MutableHandleVal rval) {
+  if (!targetType.isExposable()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_VAL_TYPE);
+    return false;
+  }
+  switch (targetType.kind()) {
+    case ValType::I32: {
+      int32_t i32;
+      if (!ToInt32(cx, val, &i32)) {
+        return false;
+      }
+      rval.set(Val(uint32_t(i32)));
+      return true;
+    }
+    case ValType::F32: {
+      double d;
+      if (!ToNumber(cx, val, &d)) {
+        return false;
+      }
+      rval.set(Val(float(d)));
+      return true;
+    }
+    case ValType::F64: {
+      double d;
+      if (!ToNumber(cx, val, &d)) {
+        return false;
+      }
+      rval.set(Val(d));
+      return true;
+    }
+    case ValType::I64: {
+      BigInt* bigint = ToBigInt(cx, val);
+      if (!bigint) {
+        return false;
+      }
+      rval.set(Val(BigInt::toUint64(bigint)));
+      return true;
+    }
+    case ValType::Ref: {
+      RootedFunction fun(cx);
+      RootedAnyRef any(cx, AnyRef::null());
+      if (!CheckRefType(cx, targetType.refType(), val, &fun, &any)) {
+        return false;
+      }
+      switch (targetType.refTypeKind()) {
+        case RefType::Func:
+          rval.set(Val(RefType::func(), FuncRef::fromJSFunction(fun)));
+          return true;
+        case RefType::Eq:
+        case RefType::Extern:
+          rval.set(Val(targetType.refType(), any));
+          return true;
+        case RefType::TypeIndex:
+          break;
+      }
+      break;
+    }
+    case ValType::V128: {
+      break;
+    }
+  }
+  MOZ_ASSERT_UNREACHABLE();
+}
+
+bool Val::toJSValue(JSContext* cx, MutableHandleValue rval) const {
+  MOZ_ASSERT(type().isExposable());
+  switch (type().kind()) {
+    case ValType::I32:
+      rval.setInt32(i32());
+      return true;
+    case ValType::F32:
+      rval.setDouble(JS::CanonicalizeNaN(double(f32())));
+      return true;
+    case ValType::F64:
+      rval.setDouble(JS::CanonicalizeNaN(f64()));
+      return true;
+    case ValType::I64: {
+      BigInt* bi = BigInt::createFromInt64(cx, i64());
+      if (!bi) {
+        return false;
+      }
+      rval.setBigInt(bi);
+      return true;
+    }
+    case ValType::Ref:
+      switch (type().refTypeKind()) {
+        case RefType::Func:
+          rval.set(UnboxFuncRef(FuncRef::fromAnyRefUnchecked(ref())));
+          return true;
+        case RefType::Eq:
+        case RefType::Extern:
+          rval.set(UnboxAnyRef(ref()));
+          return true;
+        case RefType::TypeIndex:
+          break;
+      }
+      break;
+    case ValType::V128:
+      break;
+  }
+  MOZ_CRASH("unexpected value type, caller must guard on isExposable()");
+}
+
+void Val::trace(JSTracer* trc) const {
+  if (isJSObject()) {
     // TODO/AnyRef-boxing: With boxed immediates and strings, the write
     // barrier is going to have to be more complicated.
     ASSERT_ANYREF_IS_JSOBJECT;
-    TraceManuallyBarrieredEdge(trc, u.ref_.asJSObjectAddress(),
-                               "wasm reference-typed global");
+    TraceManuallyBarrieredEdge(trc, asJSObjectAddress(), "wasm val");
   }
 }
 

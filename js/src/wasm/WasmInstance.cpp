@@ -1454,7 +1454,8 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       case GlobalKind::Import: {
         size_t imported = global.importIndex();
         if (global.isIndirect()) {
-          *(void**)globalAddr = globalObjs[imported]->cell();
+          *(void**)globalAddr =
+              (void*)&globalObjs[imported]->val().get().cell();
         } else {
           CopyValPostBarriered(globalAddr, globalImportValues[imported]);
         }
@@ -1491,7 +1492,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         }
 
         if (global.isIndirect()) {
-          void* address = globalObjs[i]->cell();
+          void* address = (void*)&globalObjs[i]->val().get().cell();
           *(void**)globalAddr = address;
           CopyValPostBarriered((uint8_t*)address, val.get());
         } else {

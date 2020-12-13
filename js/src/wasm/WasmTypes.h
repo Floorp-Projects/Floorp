@@ -647,9 +647,16 @@ class ValType {
     return IsReferenceType(tc_);
   }
 
+  // Returns whether the type has a default value.
   bool isDefaultable() const {
     MOZ_ASSERT(isValid());
     return !isReference() || isNullable();
+  }
+
+  // Returns whether the type has a representation in JS.
+  bool isExposable() const {
+    MOZ_ASSERT(isValid());
+    return kind() != ValType::V128 && !isTypeIndex();
   }
 
   Kind kind() const {
@@ -729,6 +736,17 @@ struct V128 {
     MOZ_ASSERT(lane < 16 / sizeof(T));
     memcpy(bytes + sizeof(T) * lane, &value, sizeof(T));
   }
+
+  bool operator==(const V128& rhs) const {
+    for (size_t i = 0; i < sizeof(bytes); i++) {
+      if (bytes[i] != rhs.bytes[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool operator!=(const V128& rhs) const { return !(*this == rhs); }
 };
 
 static_assert(sizeof(V128) == 16, "Invariant");
@@ -820,7 +838,9 @@ extern UniqueChars ToString(const Maybe<ValType>& type);
 // WasmAnyRefFromJSObject) and in WasmStubs.cpp (in functions Box* and Unbox*).
 
 class AnyRef {
-  JSObject* value_;
+  // mutable so that tracing may access a JSObject* from a `const Val` or
+  // `const AnyRef`.
+  mutable JSObject* value_;
 
   explicit AnyRef() : value_((JSObject*)-1) {}
   explicit AnyRef(JSObject* p) : value_(p) {
@@ -841,13 +861,19 @@ class AnyRef {
   // Generate an AnyRef null pointer.
   static AnyRef null() { return AnyRef(nullptr); }
 
-  bool isNull() { return value_ == nullptr; }
+  bool isNull() const { return value_ == nullptr; }
+
+  bool operator==(const AnyRef& rhs) const {
+    return this->value_ == rhs.value_;
+  }
+
+  bool operator!=(const AnyRef& rhs) const { return !(*this == rhs); }
 
   void* forCompiledCode() const { return value_; }
 
-  JSObject* asJSObject() { return value_; }
+  JSObject* asJSObject() const { return value_; }
 
-  JSObject** asJSObjectAddress() { return &value_; }
+  JSObject** asJSObjectAddress() const { return &value_; }
 
   void trace(JSTracer* trc);
 
@@ -1064,98 +1090,104 @@ struct FeatureArgs {
 // happen at the JS boundary.
 
 class LitVal {
- protected:
-  ValType type_;
-  union U {
-    U() : i32_(0) {}
-    uint32_t i32_;
-    uint64_t i64_;
+ public:
+  union Cell {
+    int32_t i32_;
+    int64_t i64_;
     float f32_;
     double f64_;
-    AnyRef ref_;
-    V128 v128_;
-  } u;
+    wasm::V128 v128_;
+    wasm::AnyRef ref_;
+    Cell() : v128_() {}
+    ~Cell() = default;
+  };
+
+ protected:
+  ValType type_;
+  Cell cell_;
 
  public:
-  LitVal() : type_(), u{} {}
+  LitVal() : type_(ValType()), cell_{} {}
 
   explicit LitVal(ValType type) : type_(type) {
+    MOZ_ASSERT(type.isDefaultable());
     switch (type.kind()) {
       case ValType::Kind::I32: {
-        u.i32_ = 0;
+        cell_.i32_ = 0;
         break;
       }
       case ValType::Kind::I64: {
-        u.i64_ = 0;
+        cell_.i64_ = 0;
         break;
       }
       case ValType::Kind::F32: {
-        u.f32_ = 0;
+        cell_.f32_ = 0;
         break;
       }
       case ValType::Kind::F64: {
-        u.f64_ = 0;
+        cell_.f64_ = 0;
         break;
       }
       case ValType::Kind::V128: {
-        new (&u.v128_) V128();
+        new (&cell_.v128_) V128();
         break;
       }
       case ValType::Kind::Ref: {
-        u.ref_ = AnyRef::null();
+        cell_.ref_ = AnyRef::null();
         break;
       }
     }
   }
 
-  explicit LitVal(uint32_t i32) : type_(ValType::I32) { u.i32_ = i32; }
-  explicit LitVal(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
+  explicit LitVal(uint32_t i32) : type_(ValType::I32) { cell_.i32_ = i32; }
+  explicit LitVal(uint64_t i64) : type_(ValType::I64) { cell_.i64_ = i64; }
 
-  explicit LitVal(float f32) : type_(ValType::F32) { u.f32_ = f32; }
-  explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
+  explicit LitVal(float f32) : type_(ValType::F32) { cell_.f32_ = f32; }
+  explicit LitVal(double f64) : type_(ValType::F64) { cell_.f64_ = f64; }
 
-  explicit LitVal(V128 v128) : type_(ValType::V128) { u.v128_ = v128; }
+  explicit LitVal(V128 v128) : type_(ValType::V128) { cell_.v128_ = v128; }
 
   explicit LitVal(ValType type, AnyRef any) : type_(type) {
     MOZ_ASSERT(type.isReference());
     MOZ_ASSERT(any.isNull(),
                "use Val for non-nullptr ref types to get tracing");
-    u.ref_ = any;
+    cell_.ref_ = any;
   }
 
   ValType type() const { return type_; }
-  static constexpr size_t sizeofLargestValue() { return sizeof(u); }
+  static constexpr size_t sizeofLargestValue() { return sizeof(cell_); }
+
+  Cell& cell() { return cell_; }
+  const Cell& cell() const { return cell_; }
 
   uint32_t i32() const {
     MOZ_ASSERT(type_ == ValType::I32);
-    return u.i32_;
+    return cell_.i32_;
   }
   uint64_t i64() const {
     MOZ_ASSERT(type_ == ValType::I64);
-    return u.i64_;
+    return cell_.i64_;
   }
   const float& f32() const {
     MOZ_ASSERT(type_ == ValType::F32);
-    return u.f32_;
+    return cell_.f32_;
   }
   const double& f64() const {
     MOZ_ASSERT(type_ == ValType::F64);
-    return u.f64_;
+    return cell_.f64_;
   }
   AnyRef ref() const {
     MOZ_ASSERT(type_.isReference());
-    return u.ref_;
+    return cell_.ref_;
   }
   const V128& v128() const {
     MOZ_ASSERT(type_ == ValType::V128);
-    return u.v128_;
+    return cell_.v128_;
   }
 };
 
 // A Val is a LitVal that can contain (non-null) pointers to GC things. All Vals
-// must be stored in Rooteds so that their trace() methods are called during
-// stack marking. Vals do not implement barriers and thus may not be stored on
-// the heap.
+// must be used with the rooting APIs as they may contain JS objects.
 
 class MOZ_NON_PARAM Val : public LitVal {
  public:
@@ -1169,15 +1201,69 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(V128 v128) : LitVal(v128) {}
   explicit Val(ValType type, AnyRef val) : LitVal(type, AnyRef::null()) {
     MOZ_ASSERT(type.isReference());
-    u.ref_ = val;
+    cell_.ref_ = val;
   }
   explicit Val(ValType type, FuncRef val) : LitVal(type, AnyRef::null()) {
     MOZ_ASSERT(type.isFuncRef());
-    u.ref_ = val.asAnyRef();
+    cell_.ref_ = val.asAnyRef();
   }
-  void trace(JSTracer* trc);
+
+  Val(const Val&) = default;
+  Val& operator=(const Val&) = default;
+
+  bool operator==(const Val& rhs) const {
+    if (type_ != rhs.type_) {
+      return false;
+    }
+    switch (type_.kind()) {
+      case ValType::I32:
+        return cell_.i32_ == rhs.cell_.i32_;
+      case ValType::I64:
+        return cell_.i64_ == rhs.cell_.i64_;
+      case ValType::F32:
+        return cell_.f32_ == rhs.cell_.f32_;
+      case ValType::F64:
+        return cell_.f64_ == rhs.cell_.f64_;
+      case ValType::V128:
+        return cell_.v128_ == rhs.cell_.v128_;
+      case ValType::Ref:
+        return cell_.ref_ == rhs.cell_.ref_;
+    }
+    MOZ_ASSERT_UNREACHABLE();
+    return false;
+  }
+  bool operator!=(const Val& rhs) const { return !(*this == rhs); }
+
+  bool isJSObject() const {
+    return type_.isValid() && type_.isReference() && !cell_.ref_.isNull();
+  }
+
+  JSObject* asJSObject() const {
+    MOZ_ASSERT(isJSObject());
+    return cell_.ref_.asJSObject();
+  }
+
+  JSObject** asJSObjectAddress() const {
+    return cell_.ref_.asJSObjectAddress();
+  }
+
+  // Coercion function from a WebAssembly value to a JS value [1]. This
+  // function sets an error upon failure to coerce the value.
+  //
+  // [1] https://webassembly.github.io/spec/js-api/index.html#towebassemblyvalue
+  static bool fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
+                          MutableHandle<Val> rval);
+
+  // Coercion function from a JS value to a WebAssembly value [1]. The caller
+  // must ensure that type().isExposable() before this function.
+  //
+  // [1] https://webassembly.github.io/spec/js-api/index.html#tojsvalue
+  bool toJSValue(JSContext* cx, MutableHandleValue rval) const;
+
+  void trace(JSTracer* trc) const;
 };
 
+using GCPtrVal = GCPtr<Val>;
 using RootedVal = Rooted<Val>;
 using HandleVal = Handle<Val>;
 using MutableHandleVal = MutableHandle<Val>;
@@ -3736,6 +3822,45 @@ void DebugCodegen(DebugChannel channel, const char* fmt, ...)
 using PrintCallback = void (*)(const char*);
 
 }  // namespace wasm
+
+template <>
+struct InternalBarrierMethods<wasm::Val> {
+  STATIC_ASSERT_ANYREF_IS_JSOBJECT;
+
+  static bool isMarkable(const wasm::Val& v) { return v.isJSObject(); }
+
+  static void preBarrier(const wasm::Val& v) {
+    if (v.isJSObject()) {
+      gc::PreWriteBarrier(v.asJSObject());
+    }
+  }
+
+  static MOZ_ALWAYS_INLINE void postBarrier(wasm::Val* vp,
+                                            const wasm::Val& prev,
+                                            const wasm::Val& next) {
+    MOZ_RELEASE_ASSERT(!prev.type().isValid() || prev.type() == next.type());
+    JSObject* prevObj = prev.isJSObject() ? prev.asJSObject() : nullptr;
+    JSObject* nextObj = next.isJSObject() ? next.asJSObject() : nullptr;
+    if (nextObj) {
+      JSObject::postWriteBarrier(vp->asJSObjectAddress(), prevObj, nextObj);
+    }
+  }
+
+  static void readBarrier(const wasm::Val& v) {
+    if (v.isJSObject()) {
+      gc::ReadBarrier(v.asJSObject());
+    }
+  }
+
+#ifdef DEBUG
+  static void assertThingIsNotGray(const wasm::Val& v) {
+    if (v.isJSObject()) {
+      JS::AssertObjectIsNotGray(v.asJSObject());
+    }
+  }
+#endif
+};
+
 }  // namespace js
 
 #endif  // wasm_types_h

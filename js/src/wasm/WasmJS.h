@@ -271,9 +271,8 @@ class WasmModuleObject : public NativeObject {
 STATIC_ASSERT_ANYREF_IS_JSOBJECT;
 
 class WasmGlobalObject : public NativeObject {
-  static const unsigned TYPE_SLOT = 0;
-  static const unsigned MUTABLE_SLOT = 1;
-  static const unsigned CELL_SLOT = 2;
+  static const unsigned MUTABLE_SLOT = 0;
+  static const unsigned VAL_SLOT = 1;
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
@@ -289,20 +288,7 @@ class WasmGlobalObject : public NativeObject {
   static bool valueSetter(JSContext* cx, unsigned argc, Value* vp);
 
  public:
-  // For exposed globals the Cell holds the value of the global; the
-  // instance's global area holds a pointer to the Cell.
-  union Cell {
-    int32_t i32;
-    int64_t i64;
-    float f32;
-    double f64;
-    wasm::V128 v128;
-    wasm::AnyRef ref;
-    Cell() : v128() {}
-    ~Cell() = default;
-  };
-
-  static const unsigned RESERVED_SLOTS = 3;
+  static const unsigned RESERVED_SLOTS = 2;
   static const JSClass class_;
   static const JSClass& protoClass_;
   static const JSPropertySpec properties[];
@@ -312,14 +298,11 @@ class WasmGlobalObject : public NativeObject {
 
   static WasmGlobalObject* create(JSContext* cx, wasm::HandleVal value,
                                   bool isMutable, HandleObject proto);
-  bool isNewborn() { return getReservedSlot(CELL_SLOT).isUndefined(); }
+  bool isNewborn() { return getReservedSlot(VAL_SLOT).isUndefined(); }
 
-  wasm::ValType type() const;
-  void setVal(JSContext* cx, wasm::HandleVal value);
-  void val(wasm::MutableHandleVal outval) const;
   bool isMutable() const;
-  bool value(JSContext* cx, MutableHandleValue out);
-  Cell* cell() const;
+  wasm::ValType type() const;
+  wasm::GCPtrVal& val() const;
 };
 
 // The class of WebAssembly.Instance. Each WasmInstanceObject owns a
