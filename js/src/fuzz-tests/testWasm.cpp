@@ -435,7 +435,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
           Rooted<WasmGlobalObject*> global(gCx,
                                            &propObj->as<WasmGlobalObject>());
           if (global->type() != ValType::I64) {
-            global->value(gCx, &lastReturnVal);
+            global->val().get().toJSValue(gCx, &lastReturnVal);
           }
         }
       }
