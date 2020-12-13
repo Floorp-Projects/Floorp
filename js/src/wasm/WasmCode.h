@@ -349,7 +349,7 @@ typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncArgTypesVector;
 typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncReturnTypesVector;
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
-  FuncTypeWithIdVector funcTypeIds;
+  TypeDefWithIdVector types;
   GlobalDescVector globals;
   TableDescVector tables;
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -683,11 +683,10 @@ class Code : public ShareableBase<Code> {
   SharedMetadata metadata_;
   ExclusiveData<CacheableCharsVector> profilingLabels_;
   JumpTables jumpTables_;
-  StructTypeVector structTypes_;
 
  public:
   Code(UniqueCodeTier tier1, const Metadata& metadata,
-       JumpTables&& maybeJumpTables, StructTypeVector&& structTypes);
+       JumpTables&& maybeJumpTables);
   bool initialized() const { return tier1_->initialized(); }
 
   bool initialize(const LinkData& linkData);
@@ -721,7 +720,6 @@ class Code : public ShareableBase<Code> {
 
   const CodeTier& codeTier(Tier tier) const;
   const Metadata& metadata() const { return *metadata_; }
-  const StructTypeVector& structTypes() const { return structTypes_; }
 
   const ModuleSegment& segment(Tier iter) const {
     return codeTier(iter).segment();

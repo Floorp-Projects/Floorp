@@ -12592,8 +12592,12 @@ bool BaseCompiler::emitStructNew() {
   // Returns null on OOM.
 
   const StructType& structType = moduleEnv_.types[typeIndex].structType();
+  const TypeIdDesc& structTypeId = moduleEnv_.typeIds[typeIndex];
+  RegPtr rst = needRef();
+  masm.loadWasmGlobalPtr(structTypeId.globalDataOffset(), rst);
+  RegI32 rstWrapped = narrowPtr(rst);
+  pushI32(rstWrapped);
 
-  pushI32(structType.moduleIndex_);
   if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
   }
@@ -12909,10 +12913,13 @@ bool BaseCompiler::emitStructNarrow() {
   RegPtr rp = popRef();
 
   // Dynamic downcast eqref|(optref T) -> (optref U), leaves rp or null
-  const StructType& outputStruct =
-      moduleEnv_.types[outputType.refType().typeIndex()].structType();
+  const TypeIdDesc& outputStructTypeId =
+      moduleEnv_.typeIds[outputType.refType().typeIndex()];
+  RegPtr rst = needRef();
+  masm.loadWasmGlobalPtr(outputStructTypeId.globalDataOffset(), rst);
+  RegI32 rstWrapped = narrowPtr(rst);
+  pushI32(rstWrapped);
 
-  pushI32(outputStruct.moduleIndex_);
   pushRef(rp);
   return emitInstanceCall(lineOrBytecode, SASigStructNarrow);
 }

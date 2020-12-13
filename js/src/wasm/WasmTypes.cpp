@@ -18,7 +18,10 @@
 
 #include "wasm/WasmTypes.h"
 
+#include <algorithm>
+
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
+
 #include "js/Printf.h"
 #include "util/Memory.h"
 #include "vm/ArrayBufferObject.h"
@@ -282,7 +285,11 @@ static unsigned EncodeImmediateType(ValType vt) {
 }
 
 /* static */
-bool TypeIdDesc::isGlobal(const FuncType& funcType) {
+bool TypeIdDesc::isGlobal(const TypeDef& type) {
+  if (!type.isFuncType()) {
+    return true;
+  }
+  const FuncType& funcType = type.funcType();
   const ValTypeVector& results = funcType.results();
   const ValTypeVector& args = funcType.args();
   if (results.length() + args.length() > sMaxTypes) {
@@ -309,9 +316,8 @@ bool TypeIdDesc::isGlobal(const FuncType& funcType) {
 }
 
 /* static */
-TypeIdDesc TypeIdDesc::global(const FuncType& funcType,
-                              uint32_t globalDataOffset) {
-  MOZ_ASSERT(isGlobal(funcType));
+TypeIdDesc TypeIdDesc::global(const TypeDef& type, uint32_t globalDataOffset) {
+  MOZ_ASSERT(isGlobal(type));
   return TypeIdDesc(TypeIdDescKind::Global, globalDataOffset);
 }
 
@@ -322,7 +328,9 @@ static ImmediateType LengthToBits(uint32_t length) {
 }
 
 /* static */
-TypeIdDesc TypeIdDesc::immediate(const FuncType& funcType) {
+TypeIdDesc TypeIdDesc::immediate(const TypeDef& type) {
+  const FuncType& funcType = type.funcType();
+
   ImmediateType immediate = ImmediateBit;
   uint32_t shift = sTagBits;
 
@@ -349,24 +357,102 @@ TypeIdDesc TypeIdDesc::immediate(const FuncType& funcType) {
   return TypeIdDesc(TypeIdDescKind::Immediate, immediate);
 }
 
-size_t FuncTypeWithId::serializedSize() const {
-  return FuncType::serializedSize() + sizeof(id);
+size_t TypeDef::serializedSize() const {
+  size_t size = sizeof(tag_);
+  switch (tag_) {
+    case TypeDef::IsStructType: {
+      size += sizeof(structType_);
+      break;
+    }
+    case TypeDef::IsFuncType: {
+      size += sizeof(funcType_);
+      break;
+    }
+    case TypeDef::IsNone: {
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+  return size;
 }
 
-uint8_t* FuncTypeWithId::serialize(uint8_t* cursor) const {
-  cursor = FuncType::serialize(cursor);
+uint8_t* TypeDef::serialize(uint8_t* cursor) const {
+  cursor = WriteBytes(cursor, &tag_, sizeof(tag_));
+  switch (tag_) {
+    case TypeDef::IsStructType: {
+      cursor = structType_.serialize(cursor);
+      break;
+    }
+    case TypeDef::IsFuncType: {
+      cursor = funcType_.serialize(cursor);
+      break;
+    }
+    case TypeDef::IsNone: {
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+  return cursor;
+}
+
+const uint8_t* TypeDef::deserialize(const uint8_t* cursor) {
+  cursor = ReadBytes(cursor, &tag_, sizeof(tag_));
+  switch (tag_) {
+    case TypeDef::IsStructType: {
+      cursor = structType_.deserialize(cursor);
+      break;
+    }
+    case TypeDef::IsFuncType: {
+      cursor = funcType_.deserialize(cursor);
+      break;
+    }
+    case TypeDef::IsNone: {
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+  return cursor;
+}
+
+size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  switch (tag_) {
+    case TypeDef::IsStructType: {
+      return structType_.sizeOfExcludingThis(mallocSizeOf);
+    }
+    case TypeDef::IsFuncType: {
+      return funcType_.sizeOfExcludingThis(mallocSizeOf);
+    }
+    case TypeDef::IsNone: {
+      return 0;
+    }
+    default:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE();
+  return 0;
+}
+
+size_t TypeDefWithId::serializedSize() const {
+  return TypeDef::serializedSize() + sizeof(TypeIdDesc);
+}
+
+uint8_t* TypeDefWithId::serialize(uint8_t* cursor) const {
+  cursor = TypeDef::serialize(cursor);
   cursor = WriteBytes(cursor, &id, sizeof(id));
   return cursor;
 }
 
-const uint8_t* FuncTypeWithId::deserialize(const uint8_t* cursor) {
-  (cursor = FuncType::deserialize(cursor)) &&
-      (cursor = ReadBytes(cursor, &id, sizeof(id)));
+const uint8_t* TypeDefWithId::deserialize(const uint8_t* cursor) {
+  cursor = TypeDef::deserialize(cursor);
+  cursor = ReadBytes(cursor, &id, sizeof(id));
   return cursor;
 }
 
-size_t FuncTypeWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
-  return FuncType::sizeOfExcludingThis(mallocSizeOf);
+size_t TypeDefWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return TypeDef::sizeOfExcludingThis(mallocSizeOf);
 }
 
 ArgTypeVector::ArgTypeVector(const FuncType& funcType)
