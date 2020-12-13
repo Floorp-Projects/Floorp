@@ -198,7 +198,43 @@ class HighlightersOverlay {
   }
 
   /**
-   * Optionally run some operations before showing a highligther of a given type.
+   * Optionally run some operations right after showing a highlighter of a given type,
+   * but before notifying consumers by emitting the "highlighter-shown" event.
+   *
+   * This is a chance to run some non-essential operations like: logging telemetry data,
+   * storing metadata about the highlighter to enable restoring it after refresh, etc.
+   *
+   * @param  {String} type
+   *          Highlighter type shown.
+   * @param  {NodeFront} nodeFront
+   *          Node front of the element that was highlighted.
+   * @param  {Options} options
+   *          Optional object with options passed to the highlighter.
+   * @return {Promise}
+   */
+  async _afterShowHighlighterTypeForNode(type, nodeFront, options) {
+    // Log telemetry for showing the flexbox highlighter.
+    if (type === TYPES.FLEXBOX) {
+      this.telemetry.toolOpened(
+        "FLEXBOX_HIGHLIGHTER",
+        this.inspector.toolbox.sessionId,
+        this
+      );
+
+      const scalars = {
+        layout: "devtools.layout.flexboxhighlighter.opened",
+        markup: "devtools.markup.flexboxhighlighter.opened",
+        rule: "devtools.rules.flexboxhighlighter.opened",
+      };
+
+      if (scalars[options.trigger]) {
+        this.telemetry.scalarAdd(scalars[options.trigger], 1);
+      }
+    }
+  }
+
+  /**
+   * Optionally run some operations before showing a highlighter of a given type.
    *
    * Depending its type, before showing a new instance of a highlighter, we may do extra
    * operations, like hiding another visible highlighter, or preventing the show
@@ -263,6 +299,25 @@ class HighlightersOverlay {
     }
 
     return skipShow;
+  }
+
+  /**
+   * Optionally run some operations before hiding a highlighter of a given type.
+   * Runs only if a highlighter of that type exists.
+   *
+   * @param {String} type
+   *         highlighter type
+   * @return {Promise}
+   */
+  async _beforeHideHighlighterType(type) {
+    // Log telemetry for hiding the flexbox highlighter.
+    if (type === TYPES.FLEXBOX) {
+      this.telemetry.toolClosed(
+        "FLEXBOX_HIGHLIGHTER",
+        this.inspector.toolbox.sessionId,
+        this
+      );
+    }
   }
 
   /**
@@ -406,6 +461,7 @@ class HighlightersOverlay {
       timer,
     });
     await highlighter.show(nodeFront, options);
+    await this._afterShowHighlighterTypeForNode(type, nodeFront, options);
 
     // Emit any type-specific highlighter shown event for tests
     // which have not yet been updated to listen for the generic event
@@ -460,6 +516,7 @@ class HighlightersOverlay {
     // Clear any autohide timer associated with this highlighter type.
     clearTimeout(timer);
     this._activeHighlighters.delete(type);
+    await this._beforeHideHighlighterType(type);
     await highlighter.hide();
 
     // Emit any type-specific highlighter hidden event for tests
@@ -709,29 +766,16 @@ class HighlightersOverlay {
    *         String name matching "layout", "markup" or "rule" to indicate where the
    *         flexbox highlighter was toggled on from. "layout" represents the layout view.
    *         "markup" represents the markup view. "rule" represents the rule view.
+   *         Will be passed as an option even though the highlighter doesn't use it
+   *         in order to log telemetry in _afterShowHighlighterTypeForNode()
    */
   async showFlexboxHighlighter(node, options, trigger) {
-    this.telemetry.toolOpened(
-      "FLEXBOX_HIGHLIGHTER",
-      this.inspector.toolbox.sessionId,
-      this
-    );
-
     const color = await this.getFlexboxHighlighterColor(node);
     await this.showHighlighterTypeForNode(TYPES.FLEXBOX, node, {
       ...options,
+      trigger,
       color,
     });
-
-    const scalars = {
-      layout: "devtools.layout.flexboxhighlighter.opened",
-      markup: "devtools.markup.flexboxhighlighter.opened",
-      rule: "devtools.rules.flexboxhighlighter.opened",
-    };
-
-    if (scalars[trigger]) {
-      this.telemetry.scalarAdd(scalars[trigger], 1);
-    }
 
     try {
       // Save flexbox highlighter state.
@@ -750,12 +794,6 @@ class HighlightersOverlay {
    *         The NodeFront of the flexbox container element to unhighlight.
    */
   async hideFlexboxHighlighter(node) {
-    this.telemetry.toolClosed(
-      "FLEXBOX_HIGHLIGHTER",
-      this.inspector.toolbox.sessionId,
-      this
-    );
-
     await this.hideHighlighterType(TYPES.FLEXBOX);
 
     // Erase flexbox highlighter state.

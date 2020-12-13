@@ -91,10 +91,13 @@ class Telemetry {
    *        milliseconds. Defaults to false.
    * @returns {Boolean}
    *          True if the timer was successfully started, false otherwise. If a
-   *          timer already exists, it can't be started again, and the existing
-   *          one will be cleared in order to avoid measurements errors.
+   *          timer already exists, it can't be started again.
    */
   start(histogramId, obj, { inSeconds } = {}) {
+    if (TelemetryStopwatch.running(histogramId, obj)) {
+      return false;
+    }
+
     return TelemetryStopwatch.start(histogramId, obj, { inSeconds });
   }
 
