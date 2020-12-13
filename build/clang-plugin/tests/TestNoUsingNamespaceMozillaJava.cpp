@@ -27,3 +27,4 @@ using namespace shouldPass::java;
 
 void test() {
 }
+

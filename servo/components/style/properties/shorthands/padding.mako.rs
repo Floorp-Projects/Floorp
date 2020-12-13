@@ -56,3 +56,4 @@ ${helpers.two_properties_shorthand(
     engines="gecko",
     spec="https://drafts.csswg.org/css-scroll-snap-1/#propdef-scroll-padding-inline"
 )}
+
