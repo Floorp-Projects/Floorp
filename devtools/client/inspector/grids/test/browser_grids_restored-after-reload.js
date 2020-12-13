@@ -36,6 +36,11 @@ add_task(async function() {
   const { gridInspector, inspector } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
+  const {
+    waitForHighlighterTypeRestored,
+    waitForHighlighterTypeDiscarded,
+  } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid", inspector);
   const gridList = doc.getElementById("grid-list");
@@ -65,7 +70,7 @@ add_task(async function() {
     "Reload the page, expect the highlighter to be displayed once again and " +
       "grid is checked"
   );
-  let onStateRestored = highlighters.once("grid-state-restored");
+  const onRestored = waitForHighlighterTypeRestored(HIGHLIGHTER_TYPE);
   let onGridListRestored = waitUntilState(
     store,
     state => state.grids.length == 1 && state.grids[0].highlighted
@@ -76,13 +81,12 @@ add_task(async function() {
   info("Wait for inspector to be reloaded after page reload");
   await onReloaded;
 
-  let { restored } = await onStateRestored;
+  await onRestored;
   await onGridListRestored;
 
   info(
     "Check that the grid highlighter can be displayed after reloading the page"
   );
-  ok(restored, "The highlighter state was restored");
   is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
   is(
     highlighters.state.grids.size,
@@ -96,19 +100,18 @@ add_task(async function() {
   );
   const otherUri =
     "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
-  onStateRestored = highlighters.once("grid-state-restored");
+  const onDiscarded = waitForHighlighterTypeDiscarded(HIGHLIGHTER_TYPE);
   onGridListRestored = waitUntilState(
     store,
     state => state.grids.length == 1 && !state.grids[0].highlighted
   );
   await navigateTo(otherUri);
-  ({ restored } = await onStateRestored);
+  await onDiscarded;
   await onGridListRestored;
 
   info(
     "Check that the grid highlighter is hidden after navigating to a different page"
   );
-  ok(!restored, "The highlighter state was not restored");
   ok(!highlighters.gridHighlighters.size, "CSS grid highlighter is hidden.");
   ok(!highlighters.state.grids.size, "No grids to be restored on page reload.");
 });

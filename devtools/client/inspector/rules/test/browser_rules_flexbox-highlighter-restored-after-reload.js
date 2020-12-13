@@ -30,8 +30,10 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
   const {
-    getNodeForActiveHighlighter,
+    getActiveHighlighter,
     waitForHighlighterTypeShown,
+    waitForHighlighterTypeRestored,
+    waitForHighlighterTypeDiscarded,
   } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#flex", inspector);
@@ -44,40 +46,24 @@ add_task(async function() {
   const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   flexboxToggle.click();
   await onHighlighterShown;
-
-  ok(
-    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
-    "Flexbox highlighter is shown."
-  );
+  ok(getActiveHighlighter(HIGHLIGHTER_TYPE), "Flexbox highlighter is shown.");
 
   info("Reload the page, expect the highlighter to be displayed once again");
-  let onStateRestored = inspector.highlighters.once("flexbox-state-restored");
-
+  const onRestored = waitForHighlighterTypeRestored(HIGHLIGHTER_TYPE);
   const onReloaded = inspector.once("reloaded");
   await refreshTab();
   info("Wait for inspector to be reloaded after page reload");
   await onReloaded;
-
-  let { restored } = await onStateRestored;
-  ok(restored, "The highlighter state was restored");
-
-  info(
-    "Check that the flexbox highlighter can be displayed after reloading the page"
-  );
-  ok(
-    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
-    "Flexbox highlighter is shown."
-  );
+  info("Wait for the highlighter to be restored");
+  await onRestored;
+  ok(getActiveHighlighter(HIGHLIGHTER_TYPE), "Flexbox highlighter restored.");
 
   info("Navigate to another URL, and check that the highlighter is hidden");
   const otherUri =
     "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
-  onStateRestored = inspector.highlighters.once("flexbox-state-restored");
+  const onDiscarded = waitForHighlighterTypeDiscarded(HIGHLIGHTER_TYPE);
   await navigateTo(otherUri);
-  ({ restored } = await onStateRestored);
-  ok(!restored, "The highlighter state was not restored");
-  ok(
-    !getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
-    "Flexbox highlighter is hidden."
-  );
+  info("Expect the highlighter not to be restored");
+  await onDiscarded;
+  ok(!getActiveHighlighter(HIGHLIGHTER_TYPE), "Flexbox highlighter not shown.");
 });
