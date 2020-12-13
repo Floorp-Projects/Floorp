@@ -878,15 +878,15 @@ bitflags!{
         ///
         const IMAGES = 0b1;
         ///
-        const GLYPHS = 0b01;
+        const GLYPHS = 0b10;
         ///
-        const GLYPH_DIMENSIONS = 0b001;
+        const GLYPH_DIMENSIONS = 0b100;
         ///
-        const RENDER_TASKS = 0b0001;
+        const RENDER_TASKS = 0b1000;
         ///
-        const TEXTURE_CACHE = 0b00001;
+        const TEXTURE_CACHE = 0b10000;
         /// Clear render target pool
-        const RENDER_TARGETS = 0b000001;
+        const RENDER_TARGETS = 0b100000;
     }
 }
 
