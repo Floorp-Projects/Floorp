@@ -243,13 +243,10 @@ class FuncExport {
   }
 
   bool canHaveJitEntry() const {
-    return
-#ifdef ENABLE_WASM_SIMD
-        !funcType_.hasV128ArgOrRet() &&
-#endif
-        !funcType_.temporarilyUnsupportedReftypeForEntry() &&
-        !funcType_.temporarilyUnsupportedResultCountForJitEntry() &&
-        JitOptions.enableWasmJitEntry;
+    return !funcType_.hasUnexposableArgOrRet() &&
+           !funcType_.temporarilyUnsupportedReftypeForEntry() &&
+           !funcType_.temporarilyUnsupportedResultCountForJitEntry() &&
+           JitOptions.enableWasmJitEntry;
   }
 
   bool clone(const FuncExport& src) {

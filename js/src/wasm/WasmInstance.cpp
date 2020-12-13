@@ -236,13 +236,11 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-#ifdef ENABLE_WASM_SIMD
-  if (fi.funcType().hasV128ArgOrRet()) {
+  if (fi.funcType().hasUnexposableArgOrRet()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_VAL_TYPE);
     return false;
   }
-#endif
 
   MOZ_ASSERT(argTypes.lengthWithStackResults() == argc);
   Maybe<char*> stackResultPointer;
@@ -300,10 +298,8 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return true;
   }
 
-#ifdef ENABLE_WASM_SIMD
   // Should have been guarded earlier
-  MOZ_ASSERT(!fi.funcType().hasV128ArgOrRet());
-#endif
+  MOZ_ASSERT(!fi.funcType().hasUnexposableArgOrRet());
 
   // Functions with unsupported reference types in signature don't have a jit
   // exit at the moment.
@@ -1781,13 +1777,11 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-#ifdef ENABLE_WASM_SIMD
-  if (funcType->hasV128ArgOrRet()) {
+  if (funcType->hasUnexposableArgOrRet()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_VAL_TYPE);
     return false;
   }
-#endif
 
   ArgTypeVector argTypes(*funcType);
   ResultType resultType(ResultType::Vector(funcType->results()));

@@ -619,11 +619,9 @@ bool LazyStubSegment::addStubs(size_t codeLength,
     codeRanges_.back().offsetBy(offsetInSegment);
     i++;
 
-#ifdef ENABLE_WASM_SIMD
-    if (funcExports[funcExportIndex].funcType().hasV128ArgOrRet()) {
+    if (funcExports[funcExportIndex].funcType().hasUnexposableArgOrRet()) {
       continue;
     }
-#endif
     if (funcExports[funcExportIndex]
             .funcType()
             .temporarilyUnsupportedReftypeForEntry()) {
@@ -686,9 +684,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
     const FuncExport& fe = funcExports[funcExportIndex];
     // Entries with unsupported types get only the interp exit
     bool unsupportedType =
-#ifdef ENABLE_WASM_SIMD
-        fe.funcType().hasV128ArgOrRet() ||
-#endif
+        fe.funcType().hasUnexposableArgOrRet() ||
         fe.funcType().temporarilyUnsupportedReftypeForEntry();
     numExpectedRanges += (unsupportedType ? 1 : 2);
     void* calleePtr =
@@ -781,9 +777,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
     // Functions with unsupported types in their sig have only one entry
     // (interp).  All other functions get an extra jit entry.
     bool unsupportedType =
-#ifdef ENABLE_WASM_SIMD
-        fe.funcType().hasV128ArgOrRet() ||
-#endif
+        fe.funcType().hasUnexposableArgOrRet() ||
         fe.funcType().temporarilyUnsupportedReftypeForEntry();
     interpRangeIndex += (unsupportedType ? 1 : 2);
   }
@@ -816,14 +810,11 @@ bool LazyStubTier::createOne(uint32_t funcExportIndex,
   if (codeTier.metadata()
           .funcExports[funcExportIndex]
           .funcType()
-          .temporarilyUnsupportedReftypeForEntry()
-#ifdef ENABLE_WASM_SIMD
-      || codeTier.metadata()
-             .funcExports[funcExportIndex]
-             .funcType()
-             .hasV128ArgOrRet()
-#endif
-  ) {
+          .temporarilyUnsupportedReftypeForEntry() ||
+      codeTier.metadata()
+          .funcExports[funcExportIndex]
+          .funcType()
+          .hasUnexposableArgOrRet()) {
     MOZ_ASSERT(codeRanges.length() >= 1);
     MOZ_ASSERT(codeRanges.back().isInterpEntry());
     return true;
