@@ -23,4 +23,3 @@ template <typename T, typename U> void f1(U &&SomeU) {
 void foo() {
   f1<int, int>(2);
 }
-

@@ -113,4 +113,3 @@ WL_PRIVATE const struct wl_interface zwp_primary_selection_source_v1_interface =
 	2, zwp_primary_selection_source_v1_requests,
 	2, zwp_primary_selection_source_v1_events,
 };
-

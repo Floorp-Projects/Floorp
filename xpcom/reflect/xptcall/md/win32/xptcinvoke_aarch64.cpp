@@ -139,4 +139,3 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 {
     return XPTC__InvokebyIndex(that, methodIndex, paramCount, params);
 }
-
