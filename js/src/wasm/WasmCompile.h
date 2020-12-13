@@ -41,37 +41,6 @@ struct ScriptedCaller {
   ScriptedCaller() : filenameIsURL(false), line(0) {}
 };
 
-// Describes the features that control wasm compilation.
-
-struct FeatureArgs {
-  FeatureArgs()
-      : sharedMemory(Shareable::False),
-        refTypes(false),
-        functionReferences(false),
-        gcTypes(false),
-        multiValue(false),
-        v128(false),
-        hugeMemory(false),
-        exceptions(false) {}
-
-  static FeatureArgs build(JSContext* cx);
-
-  FeatureArgs withRefTypes(bool refTypes) const {
-    FeatureArgs features = *this;
-    features.refTypes = refTypes;
-    return features;
-  }
-
-  Shareable sharedMemory;
-  bool refTypes;
-  bool functionReferences;
-  bool gcTypes;
-  bool multiValue;
-  bool v128;
-  bool hugeMemory;
-  bool exceptions;
-};
-
 // Describes all the parameters that control wasm compilation.
 
 struct CompileArgs;

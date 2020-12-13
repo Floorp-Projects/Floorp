@@ -135,7 +135,7 @@ struct ModuleEnvironment {
   MemoryUsage memoryUsage;
   uint64_t minMemoryLength;
   Maybe<uint64_t> maxMemoryLength;
-  TypeDefVector types;
+  TypeContext types;
   TypeIdDescVector typeIds;
   FuncDescVector funcs;
   Uint32Vector funcImportGlobalDataOffsets;
@@ -165,7 +165,8 @@ struct ModuleEnvironment {
       : kind(kind),
         features(features),
         memoryUsage(MemoryUsage::None),
-        minMemoryLength(0) {}
+        minMemoryLength(0),
+        types(features, TypeDefVector()) {}
 
   size_t numTables() const { return tables.length(); }
   size_t numTypes() const { return types.length(); }
@@ -191,52 +192,6 @@ struct ModuleEnvironment {
   }
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();
-  }
-  bool isRefSubtypeOf(RefType one, RefType two) const {
-    // Anything's a subtype of itself.
-    if (one == two) {
-      return true;
-    }
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-    if (functionReferencesEnabled()) {
-      // A subtype must have the same nullability as the supertype or the
-      // supertype must be nullable.
-      if (!(one.isNullable() == two.isNullable() || two.isNullable())) {
-        return false;
-      }
-
-      // Non type-index reftypes are subtypes if they are equal
-      if (!one.isTypeIndex() && !two.isTypeIndex() &&
-          one.kind() == two.kind()) {
-        return true;
-      }
-
-#  ifdef ENABLE_WASM_GC
-      // gc can only be enabled if function-references is enabled
-      if (gcTypesEnabled()) {
-        // Structs are subtypes of EqRef.
-        if (isStructType(one) && two.isEq()) {
-          return true;
-        }
-        // Struct One is a subtype of struct Two if Two is a prefix of One.
-        if (isStructType(one) && isStructType(two)) {
-          return isStructPrefixOf(two, one);
-        }
-      }
-#  endif
-      return false;
-    }
-#endif
-    return false;
-  }
-  bool isStructType(ValType t) const {
-    return t.isTypeIndex() && types[t.refType().typeIndex()].isStructType();
-  }
-
- private:
-  bool isStructPrefixOf(ValType a, ValType b) const {
-    const StructType& other = types[a.refType().typeIndex()].structType();
-    return types[b.refType().typeIndex()].structType().hasPrefix(other);
   }
 };
 
@@ -731,7 +686,7 @@ class Decoder {
         return fail("bad type");
     }
   }
-  MOZ_MUST_USE bool readValType(const TypeDefVector& types,
+  MOZ_MUST_USE bool readValType(const TypeContext& types,
                                 const FeatureArgs& features, ValType* type) {
     if (!readValType(types.length(), features, type)) {
       return false;
@@ -785,7 +740,7 @@ class Decoder {
 #endif
     return fail("invalid heap type");
   }
-  MOZ_MUST_USE bool readHeapType(const TypeDefVector& types,
+  MOZ_MUST_USE bool readHeapType(const TypeContext& types,
                                  const FeatureArgs& features, bool nullable,
                                  RefType* type) {
     if (!readHeapType(types.length(), features, nullable, type)) {
@@ -809,7 +764,7 @@ class Decoder {
     *type = valType.refType();
     return true;
   }
-  MOZ_MUST_USE bool readRefType(const TypeDefVector& types,
+  MOZ_MUST_USE bool readRefType(const TypeContext& types,
                                 const FeatureArgs& features, RefType* type) {
     ValType valType;
     if (!readValType(types, features, &valType)) {
@@ -821,7 +776,7 @@ class Decoder {
     *type = valType.refType();
     return true;
   }
-  MOZ_MUST_USE bool validateTypeIndex(const TypeDefVector& types,
+  MOZ_MUST_USE bool validateTypeIndex(const TypeContext& types,
                                       const FeatureArgs& features,
                                       RefType type) {
     MOZ_ASSERT(type.isTypeIndex());
@@ -958,7 +913,7 @@ MOZ_MUST_USE bool DecodeValidatedLocalEntries(Decoder& d,
 
 // This validates the entries.
 
-MOZ_MUST_USE bool DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
+MOZ_MUST_USE bool DecodeLocalEntries(Decoder& d, const TypeContext& types,
                                      const FeatureArgs& features,
                                      ValTypeVector* locals);
 
