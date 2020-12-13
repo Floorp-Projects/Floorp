@@ -400,7 +400,7 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
   return true;
 }
 
-bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
+bool wasm::DecodeLocalEntries(Decoder& d, const TypeContext& types,
                               const FeatureArgs& features,
                               ValTypeVector* locals) {
   uint32_t numLocalEntries;
@@ -1839,7 +1839,7 @@ static UniqueChars DecodeName(Decoder& d) {
   return name;
 }
 
-static bool DecodeFuncTypeIndex(Decoder& d, const TypeDefVector& types,
+static bool DecodeFuncTypeIndex(Decoder& d, const TypeContext& types,
                                 uint32_t* funcTypeIndex) {
   if (!d.readVarU32(funcTypeIndex)) {
     return d.fail("expected signature index");
@@ -1913,7 +1913,7 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
 }
 
 static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
-                                     const TypeDefVector& types,
+                                     const TypeContext& types,
                                      TableDescVector* tables) {
   RefType tableElemType;
   if (!d.readRefType(types, features.withRefTypes(true), &tableElemType)) {
@@ -1987,7 +1987,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
   return true;
 }
 
-static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
+static bool DecodeGlobalType(Decoder& d, const TypeContext& types,
                              const FeatureArgs& features, ValType* type,
                              bool* isMutable) {
   if (!d.readValType(types, features, type)) {
@@ -2116,11 +2116,11 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
         return false;
       }
 #ifdef WASM_PRIVATE_REFTYPES
-      if (!FuncTypeIsJSCompatible(d, env->types[funcTypeIndex].funcType())) {
+      if (!FuncTypeIsJSCompatible(d, env->types.funcType(funcTypeIndex))) {
         return false;
       }
 #endif
-      if (!env->funcs.append(FuncDesc(&env->types[funcTypeIndex].funcType(),
+      if (!env->funcs.append(FuncDesc(&env->types.funcType(funcTypeIndex),
                                       &env->typeIds[funcTypeIndex],
                                       funcTypeIndex))) {
         return false;
@@ -2258,7 +2258,7 @@ static bool DecodeFunctionSection(Decoder& d, ModuleEnvironment* env) {
     if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
       return false;
     }
-    env->funcs.infallibleAppend(FuncDesc(&env->types[funcTypeIndex].funcType(),
+    env->funcs.infallibleAppend(FuncDesc(&env->types.funcType(funcTypeIndex),
                                          &env->typeIds[funcTypeIndex],
                                          funcTypeIndex));
   }
@@ -2374,13 +2374,15 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
 #endif
 #ifdef ENABLE_WASM_REFTYPES
     case uint16_t(Op::RefNull): {
-      MOZ_ASSERT_IF(env->isStructType(expected), env->gcTypesEnabled());
+      MOZ_ASSERT_IF(
+          expected.isReference() && env->types.isStructType(expected.refType()),
+          env->gcTypesEnabled());
       RefType initType;
       if (!d.readHeapType(env->types, env->features, true, &initType)) {
         return false;
       }
       if (!expected.isReference() ||
-          !env->isRefSubtypeOf(initType, expected.refType())) {
+          !env->types.isRefSubtypeOf(initType, expected.refType())) {
         return d.fail(
             "type mismatch: initializer type and expected type don't match");
       }
@@ -2423,12 +2425,12 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         bool fail = false;
         if (!globals[i].type().isReference()) {
           fail = true;
-        } else if ((env->isStructType(expected) ||
-                    env->isStructType(globals[i].type())) &&
+        } else if ((env->types.isStructType(expected.refType()) ||
+                    env->types.isStructType(globals[i].type().refType())) &&
                    !env->gcTypesEnabled()) {
           fail = true;
-        } else if (!env->isRefSubtypeOf(globals[i].type().refType(),
-                                        expected.refType())) {
+        } else if (!env->types.isRefSubtypeOf(globals[i].type().refType(),
+                                              expected.refType())) {
           fail = true;
         }
         if (fail) {
@@ -2855,7 +2857,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       case ElemSegmentKind::Active:
       case ElemSegmentKind::ActiveWithTableIndex: {
         RefType tblElemType = env->tables[seg->tableIndex].elemType;
-        if (!env->isRefSubtypeOf(elemType, tblElemType)) {
+        if (!env->types.isRefSubtypeOf(elemType, tblElemType)) {
           return d.fail(
               "segment's element type must be subtype of table's element type");
         }
@@ -2920,7 +2922,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
           default:
             return d.fail("failed to read initializer operation");
         }
-        if (!env->isRefSubtypeOf(initType, elemType)) {
+        if (!env->types.isRefSubtypeOf(initType, elemType)) {
           return d.fail("initializer type must be subtype of element type");
         }
       }

@@ -12900,8 +12900,10 @@ bool BaseCompiler::emitStructNarrow() {
 
   // struct.narrow validation ensures that these hold.
 
-  MOZ_ASSERT(inputType.isEqRef() || moduleEnv_.isStructType(inputType));
-  MOZ_ASSERT(outputType.isEqRef() || moduleEnv_.isStructType(outputType));
+  MOZ_ASSERT(inputType.isEqRef() ||
+             moduleEnv_.types.isStructType(inputType.refType()));
+  MOZ_ASSERT(outputType.isEqRef() ||
+             moduleEnv_.types.isStructType(outputType.refType()));
   MOZ_ASSERT_IF(outputType.isEqRef(), inputType.isEqRef());
 
   // EqRef -> EqRef is a no-op, just leave the value on the stack.
