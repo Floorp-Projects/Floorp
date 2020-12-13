@@ -1547,7 +1547,7 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
 
   if (JSObject* descr = maybeTypeDescr()) {
     TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
-    MOZ_ASSERT(js::IsTypeDescrClass(MaybeForwardedObjectClass(descr)));
+    MOZ_ASSERT(MaybeForwardedObjectClass(descr) == &js::TypeDescr::class_);
     setTypeDescr(static_cast<TypeDescr*>(descr));
   }
 }

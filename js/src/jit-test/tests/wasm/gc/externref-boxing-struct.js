@@ -35,7 +35,7 @@ for (let v of WasmExternrefValues)
            (func (export "make") (param $v externref) (result eqref)
              (struct.new $S (local.get $v))))`);
     let x = ins.exports.make(v);
-    assertEq(x._0, v);
+    assertEq(x[0], v);
 }
 
 // Try to make sure externrefs are properly traced
@@ -51,26 +51,26 @@ for (let v of WasmExternrefValues)
     let ins = wasmEvalText(txt);
     let x = ins.exports.make({x:0}, {x:1}, {x:2}, {x:3}, {x:4}, {x:5}, {x:6}, {x:7}, {x:8}, {x:9})
     gc('shrinking');
-    assertEq(typeof x._0, "object");
-    assertEq(x._0.x, 0);
-    assertEq(typeof x._1, "object");
-    assertEq(x._1.x, 1);
-    assertEq(typeof x._2, "object");
-    assertEq(x._2.x, 2);
-    assertEq(typeof x._3, "object");
-    assertEq(x._3.x, 3);
-    assertEq(typeof x._4, "object");
-    assertEq(x._4.x, 4);
-    assertEq(typeof x._5, "object");
-    assertEq(x._5.x, 5);
-    assertEq(typeof x._6, "object");
-    assertEq(x._6.x, 6);
-    assertEq(typeof x._7, "object");
-    assertEq(x._7.x, 7);
-    assertEq(typeof x._8, "object");
-    assertEq(x._8.x, 8);
-    assertEq(typeof x._9, "object");
-    assertEq(x._9.x, 9);
+    assertEq(typeof x[0], "object");
+    assertEq(x[0].x, 0);
+    assertEq(typeof x[1], "object");
+    assertEq(x[1].x, 1);
+    assertEq(typeof x[2], "object");
+    assertEq(x[2].x, 2);
+    assertEq(typeof x[3], "object");
+    assertEq(x[3].x, 3);
+    assertEq(typeof x[4], "object");
+    assertEq(x[4].x, 4);
+    assertEq(typeof x[5], "object");
+    assertEq(x[5].x, 5);
+    assertEq(typeof x[6], "object");
+    assertEq(x[6].x, 6);
+    assertEq(typeof x[7], "object");
+    assertEq(x[7].x, 7);
+    assertEq(typeof x[8], "object");
+    assertEq(x[8].x, 8);
+    assertEq(typeof x[9], "object");
+    assertEq(x[9].x, 9);
 }
 
 function iota(k) {

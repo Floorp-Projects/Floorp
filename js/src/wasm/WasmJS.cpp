@@ -49,7 +49,6 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/StringType.h"
 #include "vm/Warnings.h"  // js::WarnNumberASCII
-#include "wasm/TypedObject.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"
@@ -1732,10 +1731,8 @@ WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, SharedCode code, const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, UniqueTlsData tlsData,
     HandleWasmMemoryObject memory, SharedExceptionTagVector&& exceptionTags,
-    SharedTableVector&& tables, StructTypePtrVector&& structTypes,
-    StructTypeDescrVector&& structTypeDescrs,
-    const JSFunctionVector& funcImports, const GlobalDescVector& globals,
-    const ValVector& globalImportValues,
+    SharedTableVector&& tables, const JSFunctionVector& funcImports,
+    const GlobalDescVector& globals, const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs, HandleObject proto,
     UniqueDebugState maybeDebug) {
   UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>(cx->zone());
@@ -1807,10 +1804,9 @@ WasmInstanceObject* WasmInstanceObject::create(
     MOZ_ASSERT(obj->isNewborn());
 
     // Root the Instance via WasmInstanceObject before any possible GC.
-    instance = cx->new_<Instance>(
-        cx, obj, code, std::move(tlsData), memory, std::move(exceptionTags),
-        std::move(tables), std::move(structTypes), std::move(structTypeDescrs),
-        std::move(maybeDebug));
+    instance = cx->new_<Instance>(cx, obj, code, std::move(tlsData), memory,
+                                  std::move(exceptionTags), std::move(tables),
+                                  std::move(maybeDebug));
     if (!instance) {
       return nullptr;
     }
@@ -4423,10 +4419,6 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
     }
   }
 
-  if (GcTypesAvailable(cx) && !InitTypedObjectSlots(cx, wasm)) {
-    return false;
-  }
-
   return true;
 }
 
@@ -4439,7 +4431,5 @@ static const ClassSpec WebAssemblyClassSpec = {CreateWebAssemblyObject,
                                                WebAssemblyClassFinish};
 
 const JSClass js::WasmNamespaceObject::class_ = {
-    js_WebAssembly_str,
-    JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly),
+    js_WebAssembly_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly),
     JS_NULL_CLASS_OPS, &WebAssemblyClassSpec};

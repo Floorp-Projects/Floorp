@@ -57,8 +57,7 @@ class Instance {
   DataSegmentVector passiveDataSegments_;
   ElemSegmentVector passiveElemSegments_;
   const UniqueDebugState maybeDebug_;
-  StructTypeDescrVector structTypeDescrs_;
-  StructTypePtrVector structTypes_;
+  bool hasGcTypes_;
 
   // Internal helpers:
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
@@ -76,8 +75,6 @@ class Instance {
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
            UniqueTlsData tlsData, HandleWasmMemoryObject memory,
            SharedExceptionTagVector&& exceptionTags, SharedTableVector&& tables,
-           StructTypePtrVector&& structTypes,
-           StructTypeDescrVector&& structTypeDescrs,
            UniqueDebugState maybeDebug);
   ~Instance();
   bool init(JSContext* cx, const JSFunctionVector& funcImports,
@@ -120,7 +117,6 @@ class Instance {
   const SharedExceptionTagVector& exceptionTags() const {
     return exceptionTags_;
   }
-  const StructType* structType(HandleStructTypeDescr structTypeDescr) const;
 
   static constexpr size_t offsetOfJSJitArgsRectifier() {
     return offsetof(Instance, jsJitArgsRectifier_);
@@ -224,8 +220,8 @@ class Instance {
   static void preBarrierFiltering(Instance* instance, gc::Cell** location);
   static void postBarrier(Instance* instance, gc::Cell** location);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
-  static void* structNew(Instance* instance, uint32_t structTypeIndex);
-  static void* structNarrow(Instance* instance, uint32_t outputStructTypeIndex,
+  static void* structNew(Instance* instance, void* structDescr);
+  static void* structNarrow(Instance* instance, void* outputStructDescr,
                             void* maybeNullPtr);
 };
 

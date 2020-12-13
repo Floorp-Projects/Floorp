@@ -12594,9 +12594,9 @@ bool BaseCompiler::emitStructNew() {
   const StructType& structType = moduleEnv_.types[typeIndex].structType();
   const TypeIdDesc& structTypeId = moduleEnv_.typeIds[typeIndex];
   RegPtr rst = needRef();
+  fr.loadTlsPtr(WasmTlsReg);
   masm.loadWasmGlobalPtr(structTypeId.globalDataOffset(), rst);
-  RegI32 rstWrapped = narrowPtr(rst);
-  pushI32(rstWrapped);
+  pushRef(rst);
 
   if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
@@ -12622,7 +12622,7 @@ bool BaseCompiler::emitStructNew() {
 
   uint32_t fieldNo = structType.fields_.length();
   while (fieldNo-- > 0) {
-    uint32_t offs = structType.fields_[fieldNo].offset;
+    uint32_t offs = structType.objectBaseFieldOffset(fieldNo);
     switch (structType.fields_[fieldNo].type.kind()) {
       case ValType::I32: {
         RegI32 r = popI32();
@@ -12736,7 +12736,7 @@ bool BaseCompiler::emitStructGet() {
     masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
   }
 
-  uint32_t offs = structType.fields_[fieldIndex].offset;
+  uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
   switch (structType.fields_[fieldIndex].type.kind()) {
     case ValType::I32: {
       RegI32 r = needI32();
@@ -12837,7 +12837,7 @@ bool BaseCompiler::emitStructSet() {
     masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
   }
 
-  uint32_t offs = structType.fields_[fieldIndex].offset;
+  uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
   switch (structType.fields_[fieldIndex].type.kind()) {
     case ValType::I32: {
       masm.store32(ri, Address(rp, offs));
@@ -12918,9 +12918,9 @@ bool BaseCompiler::emitStructNarrow() {
   const TypeIdDesc& outputStructTypeId =
       moduleEnv_.typeIds[outputType.refType().typeIndex()];
   RegPtr rst = needRef();
+  fr.loadTlsPtr(WasmTlsReg);
   masm.loadWasmGlobalPtr(outputStructTypeId.globalDataOffset(), rst);
-  RegI32 rstWrapped = narrowPtr(rst);
-  pushI32(rstWrapped);
+  pushRef(rst);
 
   pushRef(rp);
   return emitInstanceCall(lineOrBytecode, SASigStructNarrow);
