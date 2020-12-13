@@ -1530,7 +1530,7 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
                                 uint32_t funcIndex, uint32_t bodySize,
                                 Decoder& d) {
   ValTypeVector locals;
-  if (!locals.appendAll(env.funcTypes[funcIndex]->args())) {
+  if (!locals.appendAll(env.funcs[funcIndex].type->args())) {
     return false;
   }
 
@@ -1841,8 +1841,8 @@ static UniqueChars DecodeName(Decoder& d) {
   return name;
 }
 
-static bool DecodeSignatureIndex(Decoder& d, const TypeDefVector& types,
-                                 uint32_t* funcTypeIndex) {
+static bool DecodeFuncTypeIndex(Decoder& d, const TypeDefVector& types,
+                                uint32_t* funcTypeIndex) {
   if (!d.readVarU32(funcTypeIndex)) {
     return d.fail("expected signature index");
   }
@@ -2114,7 +2114,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
   switch (importKind) {
     case DefinitionKind::Function: {
       uint32_t funcTypeIndex;
-      if (!DecodeSignatureIndex(d, env->types, &funcTypeIndex)) {
+      if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
         return false;
       }
 #ifdef WASM_PRIVATE_REFTYPES
@@ -2122,13 +2122,11 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
         return false;
       }
 #endif
-      if (!env->funcTypes.append(&env->types[funcTypeIndex].funcType())) {
+      if (!env->funcs.append(
+              FuncDesc(&env->types[funcTypeIndex].funcType(), funcTypeIndex))) {
         return false;
       }
-      if (!env->funcTypeIndices.append(funcTypeIndex)) {
-        return false;
-      }
-      if (env->funcTypes.length() > MaxFuncs) {
+      if (env->funcs.length() > MaxFuncs) {
         return d.fail("too many functions");
       }
       break;
@@ -2225,7 +2223,7 @@ static bool DecodeImportSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   // The global data offsets will be filled in by ModuleGenerator::init.
-  if (!env->funcImportGlobalDataOffsets.resize(env->funcTypes.length())) {
+  if (!env->funcImportGlobalDataOffsets.resize(env->funcs.length())) {
     return false;
   }
 
@@ -2246,26 +2244,23 @@ static bool DecodeFunctionSection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("expected number of function definitions");
   }
 
-  CheckedInt<uint32_t> numFuncs = env->funcTypes.length();
+  CheckedInt<uint32_t> numFuncs = env->funcs.length();
   numFuncs += numDefs;
   if (!numFuncs.isValid() || numFuncs.value() > MaxFuncs) {
     return d.fail("too many functions");
   }
 
-  if (!env->funcTypes.reserve(numFuncs.value())) {
-    return false;
-  }
-  if (!env->funcTypeIndices.reserve(numFuncs.value())) {
+  if (!env->funcs.reserve(numFuncs.value())) {
     return false;
   }
 
   for (uint32_t i = 0; i < numDefs; i++) {
     uint32_t funcTypeIndex;
-    if (!DecodeSignatureIndex(d, env->types, &funcTypeIndex)) {
+    if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
       return false;
     }
-    env->funcTypes.infallibleAppend(&env->types[funcTypeIndex].funcType());
-    env->funcTypeIndices.infallibleAppend(funcTypeIndex);
+    env->funcs.infallibleAppend(
+        FuncDesc(&env->types[funcTypeIndex].funcType(), funcTypeIndex));
   }
 
   return d.finishSection(*range, "function");
@@ -2592,7 +2587,7 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
         return d.fail("exported function index out of bounds");
       }
 #ifdef WASM_PRIVATE_REFTYPES
-      if (!FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex])) {
+      if (!FuncTypeIsJSCompatible(d, *env->funcs[funcIndex].type)) {
         return false;
       }
 #endif
@@ -2721,7 +2716,7 @@ static bool DecodeStartSection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("unknown start function");
   }
 
-  const FuncType& funcType = *env->funcTypes[funcIndex];
+  const FuncType& funcType = *env->funcs[funcIndex].type;
   if (funcType.results().length() > 0) {
     return d.fail("start function must not return anything");
   }
@@ -2940,7 +2935,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         }
 #ifdef WASM_PRIVATE_REFTYPES
         if (exportedTable &&
-            !FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex])) {
+            !FuncTypeIsJSCompatible(d, *env->funcs[funcIndex].type)) {
           return false;
         }
 #endif

@@ -2020,7 +2020,7 @@ bool wasm::GenerateImportFunctions(const ModuleEnvironment& env,
     const FuncImport& fi = imports[funcIndex];
 
     FuncOffsets offsets;
-    if (!GenerateImportFunction(masm, fi, env.funcTypes[funcIndex]->id,
+    if (!GenerateImportFunction(masm, fi, env.funcs[funcIndex].type->id,
                                 &offsets)) {
       return false;
     }

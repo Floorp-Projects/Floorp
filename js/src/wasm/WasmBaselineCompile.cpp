@@ -3279,7 +3279,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitInitStackLocals();
 
   const FuncTypeWithId& funcType() const {
-    return *moduleEnv_.funcTypes[func_.index];
+    return *moduleEnv_.funcs[func_.index].type;
   }
 
   // Used by some of the ScratchRegister implementations.
@@ -5280,7 +5280,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
     }
 
-    GenerateFunctionPrologue(masm, moduleEnv_.funcTypes[func_.index]->id,
+    GenerateFunctionPrologue(masm, moduleEnv_.funcs[func_.index].type->id,
                              compilerEnv_.mode() == CompileMode::Tier1
                                  ? Some(func_.index)
                                  : Nothing(),
@@ -10361,7 +10361,7 @@ bool BaseCompiler::emitCall() {
 
   sync();
 
-  const FuncType& funcType = *moduleEnv_.funcTypes[funcIndex];
+  const FuncType& funcType = *moduleEnv_.funcs[funcIndex].type;
   bool import = moduleEnv_.funcIsImport(funcIndex);
 
   uint32_t numArgs = funcType.args().length();
@@ -15726,7 +15726,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
     // Build the local types vector.
 
     ValTypeVector locals;
-    if (!locals.appendAll(moduleEnv.funcTypes[func.index]->args())) {
+    if (!locals.appendAll(moduleEnv.funcs[func.index].type->args())) {
       return false;
     }
     if (!DecodeLocalEntries(d, moduleEnv.types, moduleEnv.features, &locals)) {

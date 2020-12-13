@@ -147,7 +147,7 @@ class FunctionCompiler {
   // FIXME(1401675): Replace with BlockType.
   uint32_t funcIndex() const { return func_.index; }
   const FuncType& funcType() const {
-    return *moduleEnv_.funcTypes[func_.index];
+    return *moduleEnv_.funcs[func_.index].type;
   }
 
   BytecodeOffset bytecodeOffset() const { return iter_.bytecodeOffset(); }
@@ -2578,7 +2578,7 @@ static bool EmitCall(FunctionCompiler& f, bool asmJSFuncDef) {
     return true;
   }
 
-  const FuncType& funcType = *f.moduleEnv().funcTypes[funcIndex];
+  const FuncType& funcType = *f.moduleEnv().funcs[funcIndex].type;
 
   CallCompileState call;
   if (!EmitCallArgs(f, funcType, args, &call)) {
@@ -5461,7 +5461,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
 
     // Build the local types vector.
 
-    const FuncTypeWithId& funcType = *moduleEnv.funcTypes[func.index];
+    const FuncTypeWithId& funcType = *moduleEnv.funcs[func.index].type;
     ValTypeVector locals;
     if (!locals.appendAll(funcType.args())) {
       return false;
