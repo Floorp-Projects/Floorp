@@ -1430,7 +1430,7 @@ class HighlightersOverlay {
       const isInTree =
         node.walkerFront && (await node.walkerFront.isInDOMTree(node));
       if (!isInTree) {
-        hideHighlighter(node);
+        await hideHighlighter(node);
       }
     } catch (e) {
       this._handleRejection(e);
@@ -1564,7 +1564,7 @@ class HighlightersOverlay {
       if (
         display !== "flex" &&
         display !== "inline-flex" &&
-        node == this.flexboxHighlighterShown
+        node == this.getNodeForActiveHighlighter(TYPES.FLEXBOX)
       ) {
         await this.hideFlexboxHighlighter(node);
         return;
@@ -1684,7 +1684,7 @@ class HighlightersOverlay {
         continue;
       }
 
-      await this._updateHighlighters();
+      await this._hideOrphanedHighlighters();
     }
   }
 
@@ -1702,10 +1702,16 @@ class HighlightersOverlay {
       return;
     }
 
-    await this._updateHighlighters();
+    await this._hideOrphanedHighlighters();
   }
 
-  async _updateHighlighters() {
+  /**
+   * Hide every active highlighter whose nodeFront is no longer present in the DOM.
+   * Returns a promise that resolves when all orphaned highlighters are hidden.
+   *
+   * @return {Promise}
+   */
+  async _hideOrphanedHighlighters() {
     for (const node of this.gridHighlighters.keys()) {
       await this._hideHighlighterIfDeadNode(node, this.hideGridHighlighter);
     }
@@ -1715,13 +1721,21 @@ class HighlightersOverlay {
     }
 
     await this._hideHighlighterIfDeadNode(
-      this.flexboxHighlighterShown,
-      this.hideFlexboxHighlighter
-    );
-    await this._hideHighlighterIfDeadNode(
       this.shapesHighlighterShown,
       this.hideShapesHighlighter
     );
+
+    // Hide all active highlighters whose nodeFront is no longer attached.
+    const promises = [];
+    for (const [type, data] of this._activeHighlighters) {
+      promises.push(
+        this._hideHighlighterIfDeadNode(data.nodeFront, () => {
+          return this.hideHighlighterType(type);
+        })
+      );
+    }
+
+    return Promise.all(promises);
   }
 
   /**
