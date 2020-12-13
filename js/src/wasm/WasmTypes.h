@@ -2491,6 +2491,10 @@ class TypeContext {
 #endif
     return false;
   }
+
+  size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+    return types_.sizeOfExcludingThis(mallocSizeOf);
+  }
 };
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole

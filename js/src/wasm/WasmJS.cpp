@@ -442,6 +442,11 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
     return false;
   }
 
+  // Lazily initialize the global type context
+  if (!cx->wasm().ensureTypeContext(cx)) {
+    return false;
+  }
+
   // Test only whether the compilers are supported on the hardware, not whether
   // they are enabled.
   return BaselinePlatformSupport() || IonPlatformSupport() ||
