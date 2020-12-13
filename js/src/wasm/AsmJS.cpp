@@ -1270,10 +1270,10 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
  protected:
   class HashableSig {
     uint32_t sigIndex_;
-    const TypeDefVector& types_;
+    const TypeContext& types_;
 
    public:
-    HashableSig(uint32_t sigIndex, const TypeDefVector& types)
+    HashableSig(uint32_t sigIndex, const TypeContext& types)
         : sigIndex_(sigIndex), types_(types) {}
     uint32_t sigIndex() const { return sigIndex_; }
     const FuncType& funcType() const { return types_[sigIndex_].funcType(); }
@@ -1291,7 +1291,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
    public:
     NamedSig(const ParserName* name, uint32_t sigIndex,
-             const TypeDefVector& types)
+             const TypeContext& types)
         : HashableSig(sigIndex, types), name_(name) {}
     const ParserName* name() const { return name_; }
 
@@ -1885,7 +1885,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
     if (p) {
       *sigIndex = p->sigIndex();
-      MOZ_ASSERT(moduleEnv_.types[*sigIndex].funcType() == sig);
+      MOZ_ASSERT(moduleEnv_.types.funcType(*sigIndex) == sig);
       return true;
     }
 
@@ -2058,7 +2058,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       uint32_t funcTypeIndex = r.front().key().sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
       moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(),
+          FuncDesc(&moduleEnv_.types.funcType(funcTypeIndex),
                    &moduleEnv_.typeIds[funcTypeIndex], funcTypeIndex);
     }
     for (const Func& func : funcDefs_) {
@@ -2066,7 +2066,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       uint32_t funcTypeIndex = func.sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
       moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(),
+          FuncDesc(&moduleEnv_.types.funcType(funcTypeIndex),
                    &moduleEnv_.typeIds[funcTypeIndex], funcTypeIndex);
     }
 
@@ -3953,7 +3953,7 @@ static bool CheckFunctionSignature(ModuleValidator<Unit>& m, ParseNode* usepn,
     return m.addFuncDef(name, usepn->pn_pos.begin, std::move(sig), func);
   }
 
-  const FuncType& existingSig = m.env().types[existing->sigIndex()].funcType();
+  const FuncType& existingSig = m.env().types.funcType(existing->sigIndex());
 
   if (!CheckSignatureAgainstExisting(m, usepn, sig, existingSig)) {
     return false;
@@ -4027,7 +4027,7 @@ static bool CheckFuncPtrTableAgainstExisting(ModuleValidator<Unit>& m,
     }
 
     if (!CheckSignatureAgainstExisting(
-            m, usepn, sig, m.env().types[table.sigIndex()].funcType())) {
+            m, usepn, sig, m.env().types.funcType(table.sigIndex()))) {
       return false;
     }
 
@@ -6197,7 +6197,7 @@ static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* decl) {
           elem, "function-pointer table's elements must be names of functions");
     }
 
-    const FuncType& funcSig = m.env().types[func->sigIndex()].funcType();
+    const FuncType& funcSig = m.env().types.funcType(func->sigIndex());
     if (sig) {
       if (*sig != funcSig) {
         return m.fail(elem, "all functions in table must have same signature");

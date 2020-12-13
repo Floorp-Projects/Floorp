@@ -1022,6 +1022,40 @@ enum ModuleKind { Wasm, AsmJS };
 
 enum class Shareable { False, True };
 
+// Describes the features that control wasm compilation.
+
+struct FeatureArgs {
+  FeatureArgs()
+      : sharedMemory(Shareable::False),
+        refTypes(false),
+        functionReferences(false),
+        gcTypes(false),
+        multiValue(false),
+        v128(false),
+        hugeMemory(false),
+        exceptions(false) {}
+  FeatureArgs(const FeatureArgs&) = default;
+  FeatureArgs& operator=(const FeatureArgs&) = default;
+  FeatureArgs(FeatureArgs&&) = default;
+
+  static FeatureArgs build(JSContext* cx);
+
+  FeatureArgs withRefTypes(bool refTypes) const {
+    FeatureArgs features = *this;
+    features.refTypes = refTypes;
+    return features;
+  }
+
+  Shareable sharedMemory;
+  bool refTypes;
+  bool functionReferences;
+  bool gcTypes;
+  bool multiValue;
+  bool v128;
+  bool hugeMemory;
+  bool exceptions;
+};
+
 // The LitVal class represents a single WebAssembly value of a given value
 // type, mostly for the purpose of numeric literals and initializers. A LitVal
 // does not directly map to a JS value since there is not (currently) a precise
@@ -2344,6 +2378,120 @@ struct TypeDefWithId : public TypeDef {
 typedef Vector<TypeDefWithId, 0, SystemAllocPolicy> TypeDefWithIdVector;
 typedef Vector<const TypeDefWithId*, 0, SystemAllocPolicy>
     TypeDefWithIdPtrVector;
+
+// A type context maintains an index space for TypeDef's that can be used to
+// give ValType's meaning. It is used during compilation for modules, and
+// during runtime for all instances.
+
+class TypeContext {
+  FeatureArgs features_;
+  TypeDefVector types_;
+
+ public:
+  TypeContext(const FeatureArgs& features, TypeDefVector&& types)
+      : features_(features), types_(std::move(types)) {}
+
+  // Disallow copy, allow move initialization
+  TypeContext(const TypeContext&) = delete;
+  TypeContext& operator=(const TypeContext&) = delete;
+  TypeContext(TypeContext&&) = default;
+  TypeContext& operator=(TypeContext&&) = default;
+
+  TypeDef& type(uint32_t index) { return types_[index]; }
+  const TypeDef& type(uint32_t index) const { return types_[index]; }
+
+  TypeDef& operator[](uint32_t index) { return types_[index]; }
+  const TypeDef& operator[](uint32_t index) const { return types_[index]; }
+
+  uint32_t length() const { return types_.length(); }
+
+  template <typename U>
+  MOZ_MUST_USE bool append(U&& typeDef) {
+    return types_.append(std::move(typeDef));
+  }
+  MOZ_MUST_USE bool resize(uint32_t length) { return types_.resize(length); }
+
+  // FuncType accessors
+
+  bool isFuncType(uint32_t index) const { return types_[index].isFuncType(); }
+  bool isFuncType(RefType t) const {
+    return t.isTypeIndex() && isFuncType(t.typeIndex());
+  }
+
+  FuncType& funcType(uint32_t index) { return types_[index].funcType(); }
+  const FuncType& funcType(uint32_t index) const {
+    return types_[index].funcType();
+  }
+  FuncType& funcType(RefType t) { return funcType(t.typeIndex()); }
+  const FuncType& funcType(RefType t) const { return funcType(t.typeIndex()); }
+
+  // StructType accessors
+
+  bool isStructType(uint32_t index) const {
+    return types_[index].isStructType();
+  }
+  bool isStructType(RefType t) const {
+    return t.isTypeIndex() && isStructType(t.typeIndex());
+  }
+
+  StructType& structType(uint32_t index) { return types_[index].structType(); }
+  const StructType& structType(uint32_t index) const {
+    return types_[index].structType();
+  }
+  StructType& structType(RefType t) { return structType(t.typeIndex()); }
+  const StructType& structType(RefType t) const {
+    return structType(t.typeIndex());
+  }
+
+  bool isSubtypeOf(ValType one, ValType two) const {
+    // Anything's a subtype of itself.
+    if (one == two) {
+      return true;
+    }
+
+    // A reference may be a subtype of another reference
+    return one.isReference() && two.isReference() &&
+           isRefSubtypeOf(one.refType(), two.refType());
+  }
+
+  bool isRefSubtypeOf(RefType one, RefType two) const {
+    // Anything's a subtype of itself.
+    if (one == two) {
+      return true;
+    }
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+    if (features_.functionReferences) {
+      // A subtype must have the same nullability as the supertype or the
+      // supertype must be nullable.
+      if (!(one.isNullable() == two.isNullable() || two.isNullable())) {
+        return false;
+      }
+
+      // Non type-index reftypes are subtypes if they are equal
+      if (!one.isTypeIndex() && !two.isTypeIndex() &&
+          one.kind() == two.kind()) {
+        return true;
+      }
+
+#  ifdef ENABLE_WASM_GC
+      // gc can only be enabled if function-references is enabled
+      if (features_.gcTypes) {
+        // Structs are subtypes of EqRef.
+        if (isStructType(one) && two.isEq()) {
+          return true;
+        }
+        // Struct One is a subtype of struct Two if Two is a prefix of One.
+        if (isStructType(one) && isStructType(two)) {
+          return structType(one).hasPrefix(structType(two));
+        }
+      }
+#  endif
+      return false;
+    }
+#endif
+    return false;
+  }
+};
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
 // module, used for trap offsets or call offsets. These offsets should refer to

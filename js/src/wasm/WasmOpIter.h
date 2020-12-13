@@ -605,12 +605,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
 template <typename Policy>
 inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
-  if (actual == expected) {
-    return true;
-  }
-
-  if (actual.isReference() && expected.isReference() &&
-      env_.isRefSubtypeOf(actual.refType(), expected.refType())) {
+  if (env_.types.isSubtypeOf(actual, expected)) {
     return true;
   }
 
@@ -954,11 +949,11 @@ inline bool OpIter<Policy>::readBlockType(BlockType* type) {
     return fail("invalid block type type index");
   }
 
-  if (!env_.types[x].isFuncType()) {
+  if (!env_.types.isFuncType(x)) {
     return fail("block type type index must be func type");
   }
 
-  *type = BlockType::Func(env_.types[x].funcType());
+  *type = BlockType::Func(env_.types.funcType(x));
 
   return true;
 #else
@@ -2005,11 +2000,11 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     return false;
   }
 
-  if (!env_.types[*funcTypeIndex].isFuncType()) {
+  if (!env_.types.isFuncType(*funcTypeIndex)) {
     return fail("expected signature type");
   }
 
-  const FuncType& funcType = env_.types[*funcTypeIndex].funcType();
+  const FuncType& funcType = env_.types.funcType(*funcTypeIndex);
 
 #ifdef WASM_PRIVATE_REFTYPES
   if (env_.tables[*tableIndex].importedOrExported &&
@@ -2069,11 +2064,11 @@ inline bool OpIter<Policy>::readOldCallIndirect(uint32_t* funcTypeIndex,
     return fail("signature index out of range");
   }
 
-  if (!env_.types[*funcTypeIndex].isFuncType()) {
+  if (!env_.types.isFuncType(*funcTypeIndex)) {
     return fail("expected signature type");
   }
 
-  const FuncType& funcType = env_.types[*funcTypeIndex].funcType();
+  const FuncType& funcType = env_.types.funcType(*funcTypeIndex);
 
   if (!popCallArgs(funcType.args(), argValues)) {
     return false;
@@ -2497,7 +2492,7 @@ inline bool OpIter<Policy>::readStructTypeIndex(uint32_t* typeIndex) {
     return fail("type index out of range");
   }
 
-  if (!env_.types[*typeIndex].isStructType()) {
+  if (!env_.types.isStructType(*typeIndex)) {
     return fail("not a struct type");
   }
 
@@ -2530,7 +2525,7 @@ inline bool OpIter<Policy>::readStructNew(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& str = env_.types[*typeIndex].structType();
+  const StructType& str = env_.types.structType(*typeIndex);
 
   if (!argValues->resize(str.fields_.length())) {
     return false;
@@ -2557,7 +2552,7 @@ inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& structType = env_.types[*typeIndex].structType();
+  const StructType& structType = env_.types.structType(*typeIndex);
 
   if (!readFieldIndex(fieldIndex, structType)) {
     return false;
@@ -2581,7 +2576,7 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& structType = env_.types[*typeIndex].structType();
+  const StructType& structType = env_.types.structType(*typeIndex);
 
   if (!readFieldIndex(fieldIndex, structType)) {
     return false;
@@ -2616,15 +2611,14 @@ inline bool OpIter<Policy>::readStructNarrow(ValType* inputType,
     return false;
   }
 
-  if (env_.isStructType(*inputType)) {
-    if (!env_.isStructType(*outputType)) {
+  if (env_.types.isStructType(inputType->refType())) {
+    if (!env_.types.isStructType(outputType->refType())) {
       return fail("invalid type combination in struct.narrow");
     }
 
-    const StructType& inputStruct =
-        env_.types[inputType->refType().typeIndex()].structType();
+    const StructType& inputStruct = env_.types.structType(inputType->refType());
     const StructType& outputStruct =
-        env_.types[outputType->refType().typeIndex()].structType();
+        env_.types.structType(outputType->refType());
 
     if (!outputStruct.hasPrefix(inputStruct)) {
       return fail("invalid narrowing operation");
