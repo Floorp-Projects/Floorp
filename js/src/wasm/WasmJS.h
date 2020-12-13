@@ -196,10 +196,6 @@ MOZ_MUST_USE bool DeserializeModule(JSContext* cx, const Bytes& serialized,
 // can be used for both wasm and asm.js, however.
 
 bool IsWasmExportedFunction(JSFunction* fun);
-MOZ_MUST_USE bool CheckFuncRefValue(JSContext* cx, HandleValue v,
-                                    MutableHandleFunction fun);
-MOZ_MUST_USE bool CheckEqRefValue(JSContext* cx, HandleValue v,
-                                  MutableHandleAnyRef vp);
 
 Instance& ExportedFunctionToInstance(JSFunction* fun);
 WasmInstanceObject* ExportedFunctionToInstanceObject(JSFunction* fun);
@@ -207,17 +203,6 @@ uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
 
 bool IsSharedWasmMemoryObject(JSObject* obj);
 
-// Check a value against the given reference type.  If the targetType
-// is RefType::Extern then the test always passes, but the value may be boxed.
-// If the test passes then the value is stored either in fnval (for
-// RefType::Func) or in refval (for other types); this split is not strictly
-// necessary but is convenient for the users of this function.
-//
-// This can return false if the type check fails, or if a boxing into AnyRef
-// throws an OOM.
-MOZ_MUST_USE bool CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
-                               MutableHandleFunction fnval,
-                               MutableHandleAnyRef refval);
 
 // Abstractions that clarify that we are working on a 32-bit memory and check
 // that the buffer length does not exceed that's memory's fixed limits.
