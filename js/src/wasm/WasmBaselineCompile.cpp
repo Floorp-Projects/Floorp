@@ -3282,7 +3282,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     return *moduleEnv_.funcs[func_.index].type;
   }
 
-  const FuncTypeIdDesc& funcTypeId() const {
+  const TypeIdDesc& funcTypeId() const {
     return *moduleEnv_.funcs[func_.index].typeId;
   }
 
@@ -5903,8 +5903,8 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   CodeOffset callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                           const Stk& indexVal, const FunctionCall& call) {
-    const FuncTypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
-    MOZ_ASSERT(funcTypeId.kind() != FuncTypeIdDescKind::None);
+    const TypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
+    MOZ_ASSERT(funcTypeId.kind() != TypeIdDescKind::None);
 
     const TableDesc& table = moduleEnv_.tables[tableIndex];
 

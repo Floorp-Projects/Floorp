@@ -546,7 +546,7 @@ static void EnsureOffset(MacroAssembler& masm, uint32_t base,
 }
 
 void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
-                                    const FuncTypeIdDesc& funcTypeId,
+                                    const TypeIdDesc& funcTypeId,
                                     const Maybe<uint32_t>& tier1FuncIndex,
                                     FuncOffsets* offsets) {
   // These constants reflect statically-determined offsets
@@ -588,7 +588,7 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
 
   EnsureOffset(masm, offsets->begin, WasmCheckedTailEntryOffset);
   switch (funcTypeId.kind()) {
-    case FuncTypeIdDescKind::Global: {
+    case TypeIdDescKind::Global: {
       Register scratch = WasmTableCallScratchReg0;
       masm.loadWasmGlobalPtr(funcTypeId.globalDataOffset(), scratch);
       masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
@@ -596,13 +596,13 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
       masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
       break;
     }
-    case FuncTypeIdDescKind::Immediate: {
+    case TypeIdDescKind::Immediate: {
       masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
                     Imm32(funcTypeId.immediate()), &functionBody);
       masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
       break;
     }
-    case FuncTypeIdDescKind::None:
+    case TypeIdDescKind::None:
       masm.jump(&functionBody);
       break;
   }

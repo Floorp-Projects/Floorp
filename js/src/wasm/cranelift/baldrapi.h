@@ -45,7 +45,7 @@ struct FuncCompileInput;
 // wasm/WasmTypes.h
 class GlobalDesc;
 class FuncType;
-class FuncTypeIdDesc;
+class TypeIdDesc;
 struct TableDesc;
 // wasm/WasmValidate.h
 struct ModuleEnvironment;
@@ -237,7 +237,7 @@ const js::wasm::FuncType* env_type(const CraneliftModuleEnvironment* env,
                                    size_t typeIndex);
 const js::wasm::FuncType* env_func_sig(const CraneliftModuleEnvironment* env,
                                        size_t funcIndex);
-const js::wasm::FuncTypeIdDesc* env_func_sig_id(
+const js::wasm::TypeIdDesc* env_func_sig_id(
     const CraneliftModuleEnvironment* env, size_t funcIndex);
 size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
                           size_t funcIndex);
@@ -247,7 +247,7 @@ bool env_func_is_import(const CraneliftModuleEnvironment* env,
                         size_t funcIndex);
 const js::wasm::FuncType* env_signature(const CraneliftModuleEnvironment* env,
                                         size_t sigIndex);
-const js::wasm::FuncTypeIdDesc* env_signature_id(
+const js::wasm::TypeIdDesc* env_signature_id(
     const CraneliftModuleEnvironment* env, size_t sigIndex);
 const js::wasm::TableDesc* env_table(const CraneliftModuleEnvironment* env,
                                      size_t tableIndex);
@@ -271,9 +271,9 @@ const BD_ValType* funcType_args(const js::wasm::FuncType*);
 size_t funcType_numResults(const js::wasm::FuncType*);
 const BD_ValType* funcType_results(const js::wasm::FuncType*);
 
-js::wasm::FuncTypeIdDescKind funcType_idKind(const js::wasm::FuncTypeIdDesc*);
-size_t funcType_idImmediate(const js::wasm::FuncTypeIdDesc*);
-size_t funcType_idTlsOffset(const js::wasm::FuncTypeIdDesc*);
+js::wasm::TypeIdDescKind funcType_idKind(const js::wasm::TypeIdDesc*);
+size_t funcType_idImmediate(const js::wasm::TypeIdDesc*);
+size_t funcType_idTlsOffset(const js::wasm::TypeIdDesc*);
 
 void stackmaps_add(BD_Stackmaps* sink, const uint32_t* bitMap,
                    size_t mappedWords, size_t argsSize, size_t codeOffset);

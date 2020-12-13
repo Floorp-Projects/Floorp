@@ -285,16 +285,16 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
       }
 
       const FuncType& funcType = typeDef.funcType();
-      FuncTypeIdDesc& funcTypeId = moduleEnv_->typeIds[typeIndex];
+      TypeIdDesc& funcTypeId = moduleEnv_->typeIds[typeIndex];
 
-      if (FuncTypeIdDesc::isGlobal(funcType)) {
+      if (TypeIdDesc::isGlobal(funcType)) {
         uint32_t globalDataOffset;
         if (!allocateGlobalBytes(sizeof(void*), sizeof(void*),
                                  &globalDataOffset)) {
           return false;
         }
 
-        funcTypeId = FuncTypeIdDesc::global(funcType, globalDataOffset);
+        funcTypeId = TypeIdDesc::global(funcType, globalDataOffset);
 
         FuncType copy;
         if (!copy.clone(funcType)) {
@@ -305,7 +305,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
           return false;
         }
       } else {
-        funcTypeId = FuncTypeIdDesc::immediate(funcType);
+        funcTypeId = TypeIdDesc::immediate(funcType);
       }
     }
   }
