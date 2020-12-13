@@ -516,36 +516,6 @@ uint32_t wasm::VolatileByteLength32(const SharedArrayRawBuffer* buffer) {
   return uint32_t(len);
 }
 
-bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
-                        MutableHandleFunction fnval,
-                        MutableHandleAnyRef refval) {
-  if (!targetType.isNullable() && v.isNull()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_REF_NONNULLABLE_VALUE);
-    return false;
-  }
-  switch (targetType.kind()) {
-    case RefType::Func:
-      if (!CheckFuncRefValue(cx, v, fnval)) {
-        return false;
-      }
-      break;
-    case RefType::Extern:
-      if (!BoxAnyRef(cx, v, refval)) {
-        return false;
-      }
-      break;
-    case RefType::Eq:
-      if (!CheckEqRefValue(cx, v, refval)) {
-        return false;
-      }
-      break;
-    case RefType::TypeIndex:
-      MOZ_CRASH("temporarily unsupported Ref type");
-  }
-  return true;
-}
-
 // ============================================================================
 // Imports
 
@@ -2090,49 +2060,6 @@ WasmFunctionScope* WasmInstanceObject::getFunctionScope(
 
 bool wasm::IsWasmExportedFunction(JSFunction* fun) {
   return fun->kind() == FunctionFlags::Wasm;
-}
-
-bool wasm::CheckFuncRefValue(JSContext* cx, HandleValue v,
-                             MutableHandleFunction fun) {
-  if (v.isNull()) {
-    MOZ_ASSERT(!fun);
-    return true;
-  }
-
-  if (v.isObject()) {
-    JSObject& obj = v.toObject();
-    if (obj.is<JSFunction>()) {
-      JSFunction* f = &obj.as<JSFunction>();
-      if (IsWasmExportedFunction(f)) {
-        fun.set(f);
-        return true;
-      }
-    }
-  }
-
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_FUNCREF_VALUE);
-  return false;
-}
-
-bool wasm::CheckEqRefValue(JSContext* cx, HandleValue v,
-                           MutableHandleAnyRef vp) {
-  if (v.isNull()) {
-    vp.set(AnyRef::null());
-    return true;
-  }
-
-  if (v.isObject()) {
-    JSObject& obj = v.toObject();
-    if (obj.is<TypedObject>()) {
-      vp.set(AnyRef::fromJSObject(&obj.as<TypedObject>()));
-      return true;
-    }
-  }
-
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_EQREF_VALUE);
-  return false;
 }
 
 Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {

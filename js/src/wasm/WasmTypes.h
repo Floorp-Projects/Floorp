@@ -1273,6 +1273,36 @@ using RootedValVector = Rooted<ValVector>;
 using HandleValVector = Handle<ValVector>;
 using MutableHandleValVector = MutableHandle<ValVector>;
 
+// Check a value against the given reference type.  If the targetType
+// is RefType::Extern then the test always passes, but the value may be boxed.
+// If the test passes then the value is stored either in fnval (for
+// RefType::Func) or in refval (for other types); this split is not strictly
+// necessary but is convenient for the users of this function.
+//
+// This can return false if the type check fails, or if a boxing into AnyRef
+// throws an OOM.
+extern MOZ_MUST_USE bool CheckRefType(JSContext* cx, RefType targetType,
+                                      HandleValue v,
+                                      MutableHandleFunction fnval,
+                                      MutableHandleAnyRef refval);
+
+// The same as above for when the target type is 'funcref'.
+extern MOZ_MUST_USE bool CheckFuncRefValue(JSContext* cx, HandleValue v,
+                                           MutableHandleFunction fun);
+
+// The same as above for when the target type is 'eqref'.
+extern MOZ_MUST_USE bool CheckEqRefValue(JSContext* cx, HandleValue v,
+                                         MutableHandleAnyRef vp);
+class NoDebug;
+class DebugCodegenVal;
+template <typename Debug = NoDebug>
+extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
+                               void* loc, bool mustWrite64);
+
+template <typename Debug = NoDebug>
+extern bool ToJSValue(JSContext* cx, const void* src, ValType type,
+                      MutableHandleValue dst);
+
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two
 // in-memory representations of the argument Vector's memory (when elements do
