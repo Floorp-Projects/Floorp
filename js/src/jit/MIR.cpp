@@ -1250,12 +1250,12 @@ void MConstantElements::printOpcode(GenericPrinter& out) const {
 
 void MLoadUnboxedScalar::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
-  out.printf(" %s", ScalarTypeDescr::typeName(storageType()));
+  out.printf(" %s", Scalar::name(storageType()));
 }
 
 void MLoadDataViewElement::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
-  out.printf(" %s", ScalarTypeDescr::typeName(storageType()));
+  out.printf(" %s", Scalar::name(storageType()));
 }
 
 void MAssertRange::printOpcode(GenericPrinter& out) const {

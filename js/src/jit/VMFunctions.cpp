@@ -2163,7 +2163,7 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp) {
         }
       }
     } else if (obj->is<TypedObject>()) {
-      if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
+      if (obj->as<TypedObject>().typeDescr().hasProperty(cx, id)) {
         vp[1].setBoolean(true);
         return true;
       }

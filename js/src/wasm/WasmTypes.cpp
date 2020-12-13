@@ -39,6 +39,7 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::CheckedInt32;
 using mozilla::IsPowerOfTwo;
 using mozilla::MakeEnumeratedRange;
 
@@ -793,6 +794,81 @@ ArgTypeVector::ArgTypeVector(const FuncType& funcType)
       hasStackResults_(ABIResultIter::HasStackResults(
           ResultType::Vector(funcType.results()))) {}
 
+static inline CheckedInt32 RoundUpToAlignment(CheckedInt32 address,
+                                              uint32_t align) {
+  MOZ_ASSERT(IsPowerOfTwo(align));
+
+  // Note: Be careful to order operators such that we first make the
+  // value smaller and then larger, so that we don't get false
+  // overflow errors due to (e.g.) adding `align` and then
+  // subtracting `1` afterwards when merely adding `align-1` would
+  // not have overflowed. Note that due to the nature of two's
+  // complement representation, if `address` is already aligned,
+  // then adding `align-1` cannot itself cause an overflow.
+
+  return ((address + (align - 1)) / align) * align;
+}
+
+class StructLayout {
+  CheckedInt32 sizeSoFar = 0;
+  uint32_t structAlignment = 1;
+
+ public:
+  // The field adders return the offset of the the field.
+  CheckedInt32 addField(ValType type) {
+    uint32_t fieldSize = type.size();
+    uint32_t fieldAlignment = type.alignmentInStruct();
+
+    // Alignment of the struct is the max of the alignment of its fields.
+    structAlignment = std::max(structAlignment, fieldAlignment);
+
+    // Align the pointer.
+    CheckedInt32 offset = RoundUpToAlignment(sizeSoFar, fieldAlignment);
+    if (!offset.isValid()) {
+      return offset;
+    }
+
+    // Allocate space.
+    sizeSoFar = offset + fieldSize;
+    if (!sizeSoFar.isValid()) {
+      return sizeSoFar;
+    }
+
+    return offset;
+  }
+
+  // The close method rounds up the structure size to the appropriate
+  // alignment and returns that size.
+  CheckedInt32 close() {
+    return RoundUpToAlignment(sizeSoFar, structAlignment);
+  }
+};
+
+bool StructType::computeLayout() {
+  StructLayout layout;
+  for (StructField& field : fields_) {
+    CheckedInt32 offset = layout.addField(field.type);
+    if (!offset.isValid()) {
+      return false;
+    }
+    field.offset = offset.value();
+  }
+
+  CheckedInt32 size = layout.close();
+  if (!size.isValid()) {
+    return false;
+  }
+  size_ = size.value();
+  isInline_ = InlineTypedObject::canAccommodateSize(size_);
+
+  return true;
+}
+
+uint32_t StructType::objectBaseFieldOffset(uint32_t fieldIndex) const {
+  return fields_[fieldIndex].offset +
+         (isInline_ ? InlineTypedObject::offsetOfDataStart() : 0);
+}
+
 // A simple notion of prefix: types and mutability must match exactly.
 
 bool StructType::hasPrefix(const StructType& other) const {
@@ -810,16 +886,20 @@ bool StructType::hasPrefix(const StructType& other) const {
 }
 
 size_t StructType::serializedSize() const {
-  return SerializedPodVectorSize(fields_);
+  return SerializedPodVectorSize(fields_) + sizeof(size_) + sizeof(isInline_);
 }
 
 uint8_t* StructType::serialize(uint8_t* cursor) const {
   cursor = SerializePodVector(cursor, fields_);
+  cursor = WriteBytes(cursor, &size_, sizeof(size_));
+  cursor = WriteBytes(cursor, &isInline_, sizeof(isInline_));
   return cursor;
 }
 
 const uint8_t* StructType::deserialize(const uint8_t* cursor) {
-  (cursor = DeserializePodVector(cursor, &fields_));
+  (cursor = DeserializePodVector(cursor, &fields_)) &&
+      (cursor = ReadBytes(cursor, &size_, sizeof(size_))) &&
+      (cursor = ReadBytes(cursor, &isInline_, sizeof(isInline_)));
   return cursor;
 }
 

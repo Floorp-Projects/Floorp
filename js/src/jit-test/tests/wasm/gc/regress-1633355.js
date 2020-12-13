@@ -26,5 +26,5 @@ let bin = wasmTextToBinary(`
 let mod = new WebAssembly.Module(bin);
 let ins = new WebAssembly.Instance(mod).exports;
 
-assertErrorMessage(() => ins.init(6), TypeError,
-                    /conversion from WebAssembly typed ref to JavaScript/);
+// Debugger can handle non-exposable fields, like (ref T).
+ins.init(6)
