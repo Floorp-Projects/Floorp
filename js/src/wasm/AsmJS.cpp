@@ -1878,7 +1878,8 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     }
 
     *sigIndex = moduleEnv_.types.length();
-    return moduleEnv_.types.append(std::move(sig));
+    return moduleEnv_.types.append(std::move(sig)) &&
+           moduleEnv_.typeIds.append(FuncTypeIdDesc());
   }
   bool declareSig(FuncType&& sig, uint32_t* sigIndex) {
     SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
@@ -2057,14 +2058,16 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       uint32_t funcTypeIndex = r.front().key().sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
       moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(), funcTypeIndex);
+          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(),
+                   &moduleEnv_.typeIds[funcTypeIndex], funcTypeIndex);
     }
     for (const Func& func : funcDefs_) {
       uint32_t funcIndex = funcImportMap_.count() + func.funcDefIndex();
       uint32_t funcTypeIndex = func.sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
       moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(), funcTypeIndex);
+          FuncDesc(&moduleEnv_.types[funcTypeIndex].funcType(),
+                   &moduleEnv_.typeIds[funcTypeIndex], funcTypeIndex);
     }
 
     if (!moduleEnv_.funcImportGlobalDataOffsets.resize(
@@ -3950,8 +3953,7 @@ static bool CheckFunctionSignature(ModuleValidator<Unit>& m, ParseNode* usepn,
     return m.addFuncDef(name, usepn->pn_pos.begin, std::move(sig), func);
   }
 
-  const FuncTypeWithId& existingSig =
-      m.env().types[existing->sigIndex()].funcType();
+  const FuncType& existingSig = m.env().types[existing->sigIndex()].funcType();
 
   if (!CheckSignatureAgainstExisting(m, usepn, sig, existingSig)) {
     return false;

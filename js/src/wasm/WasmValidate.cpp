@@ -1777,7 +1777,7 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("too many types");
   }
 
-  if (!env->types.resize(numTypes)) {
+  if (!env->types.resize(numTypes) || !env->typeIds.resize(numTypes)) {
     return false;
   }
 
@@ -2122,8 +2122,9 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
         return false;
       }
 #endif
-      if (!env->funcs.append(
-              FuncDesc(&env->types[funcTypeIndex].funcType(), funcTypeIndex))) {
+      if (!env->funcs.append(FuncDesc(&env->types[funcTypeIndex].funcType(),
+                                      &env->typeIds[funcTypeIndex],
+                                      funcTypeIndex))) {
         return false;
       }
       if (env->funcs.length() > MaxFuncs) {
@@ -2259,8 +2260,9 @@ static bool DecodeFunctionSection(Decoder& d, ModuleEnvironment* env) {
     if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
       return false;
     }
-    env->funcs.infallibleAppend(
-        FuncDesc(&env->types[funcTypeIndex].funcType(), funcTypeIndex));
+    env->funcs.infallibleAppend(FuncDesc(&env->types[funcTypeIndex].funcType(),
+                                         &env->typeIds[funcTypeIndex],
+                                         funcTypeIndex));
   }
 
   return d.finishSection(*range, "function");

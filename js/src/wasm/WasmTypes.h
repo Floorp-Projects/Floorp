@@ -1858,15 +1858,16 @@ typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
 // A FuncDesc describes a single function.
 
-struct FuncTypeWithId;
+class FuncTypeIdDesc;
 
 struct FuncDesc {
-  FuncTypeWithId* type;
+  FuncType* type;
+  FuncTypeIdDesc* typeId;
   uint32_t typeIndex;
 
   FuncDesc() = default;
-  FuncDesc(FuncTypeWithId* type, uint32_t typeIndex)
-      : type(type), typeIndex(typeIndex) {}
+  FuncDesc(FuncType* type, FuncTypeIdDesc* typeId, uint32_t typeIndex)
+      : type(type), typeId(typeId), typeIndex(typeIndex) {}
 };
 
 typedef Vector<FuncDesc, 0, SystemAllocPolicy> FuncDescVector;
@@ -2172,6 +2173,8 @@ class FuncTypeIdDesc {
   }
 };
 
+typedef Vector<FuncTypeIdDesc, 0, SystemAllocPolicy> FuncTypeIdDescVector;
+
 // FuncTypeWithId pairs a FuncType with FuncTypeIdDesc, describing either how to
 // compile code that compares this signature's id or, at instantiation what
 // signature ids to allocate in the global hash and where to put them.
@@ -2199,7 +2202,7 @@ typedef Vector<const FuncTypeWithId*, 0, SystemAllocPolicy>
 class TypeDef {
   enum { IsFuncType, IsStructType, IsNone } tag_;
   union {
-    FuncTypeWithId funcType_;
+    FuncType funcType_;
     StructType structType_;
   };
 
@@ -2207,7 +2210,7 @@ class TypeDef {
   TypeDef() : tag_(IsNone) {}
 
   explicit TypeDef(FuncType&& funcType)
-      : tag_(IsFuncType), funcType_(FuncTypeWithId(std::move(funcType))) {}
+      : tag_(IsFuncType), funcType_(std::move(funcType)) {}
 
   explicit TypeDef(StructType&& structType)
       : tag_(IsStructType), structType_(std::move(structType)) {}
@@ -2228,7 +2231,7 @@ class TypeDef {
   ~TypeDef() {
     switch (tag_) {
       case IsFuncType:
-        funcType_.~FuncTypeWithId();
+        funcType_.~FuncType();
         break;
       case IsStructType:
         structType_.~StructType();
@@ -2242,7 +2245,7 @@ class TypeDef {
     MOZ_ASSERT(isNone());
     switch (that.tag_) {
       case IsFuncType:
-        new (&funcType_) FuncTypeWithId(std::move(that.funcType_));
+        new (&funcType_) FuncType(std::move(that.funcType_));
         break;
       case IsStructType:
         new (&structType_) StructType(std::move(that.structType_));
@@ -2260,12 +2263,12 @@ class TypeDef {
 
   bool isStructType() const { return tag_ == IsStructType; }
 
-  const FuncTypeWithId& funcType() const {
+  const FuncType& funcType() const {
     MOZ_ASSERT(isFuncType());
     return funcType_;
   }
 
-  FuncTypeWithId& funcType() {
+  FuncType& funcType() {
     MOZ_ASSERT(isFuncType());
     return funcType_;
   }

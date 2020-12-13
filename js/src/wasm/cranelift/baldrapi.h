@@ -44,7 +44,8 @@ namespace wasm {
 struct FuncCompileInput;
 // wasm/WasmTypes.h
 class GlobalDesc;
-struct FuncTypeWithId;
+class FuncType;
+class FuncTypeIdDesc;
 struct TableDesc;
 // wasm/WasmValidate.h
 struct ModuleEnvironment;
@@ -232,9 +233,11 @@ uint32_t env_max_memory(const CraneliftModuleEnvironment* env);
 
 bool env_uses_shared_memory(const CraneliftModuleEnvironment* env);
 bool env_has_memory(const CraneliftModuleEnvironment* env);
-const js::wasm::FuncTypeWithId* env_type(const CraneliftModuleEnvironment* env,
-                                         size_t typeIndex);
-const js::wasm::FuncTypeWithId* env_func_sig(
+const js::wasm::FuncType* env_type(const CraneliftModuleEnvironment* env,
+                                   size_t typeIndex);
+const js::wasm::FuncType* env_func_sig(const CraneliftModuleEnvironment* env,
+                                       size_t funcIndex);
+const js::wasm::FuncTypeIdDesc* env_func_sig_id(
     const CraneliftModuleEnvironment* env, size_t funcIndex);
 size_t env_func_sig_index(const CraneliftModuleEnvironment* env,
                           size_t funcIndex);
@@ -242,7 +245,9 @@ size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
                                   size_t funcIndex);
 bool env_func_is_import(const CraneliftModuleEnvironment* env,
                         size_t funcIndex);
-const js::wasm::FuncTypeWithId* env_signature(
+const js::wasm::FuncType* env_signature(const CraneliftModuleEnvironment* env,
+                                        size_t sigIndex);
+const js::wasm::FuncTypeIdDesc* env_signature_id(
     const CraneliftModuleEnvironment* env, size_t sigIndex);
 const js::wasm::TableDesc* env_table(const CraneliftModuleEnvironment* env,
                                      size_t tableIndex);
@@ -261,13 +266,14 @@ uint32_t table_initialLimit(const js::wasm::TableDesc*);
 uint32_t table_maximumLimit(const js::wasm::TableDesc*);
 js::wasm::TypeCode table_elementTypeCode(const js::wasm::TableDesc*);
 
-size_t funcType_numArgs(const js::wasm::FuncTypeWithId*);
-const BD_ValType* funcType_args(const js::wasm::FuncTypeWithId*);
-size_t funcType_numResults(const js::wasm::FuncTypeWithId*);
-const BD_ValType* funcType_results(const js::wasm::FuncTypeWithId*);
-js::wasm::FuncTypeIdDescKind funcType_idKind(const js::wasm::FuncTypeWithId*);
-size_t funcType_idImmediate(const js::wasm::FuncTypeWithId*);
-size_t funcType_idTlsOffset(const js::wasm::FuncTypeWithId*);
+size_t funcType_numArgs(const js::wasm::FuncType*);
+const BD_ValType* funcType_args(const js::wasm::FuncType*);
+size_t funcType_numResults(const js::wasm::FuncType*);
+const BD_ValType* funcType_results(const js::wasm::FuncType*);
+
+js::wasm::FuncTypeIdDescKind funcType_idKind(const js::wasm::FuncTypeIdDesc*);
+size_t funcType_idImmediate(const js::wasm::FuncTypeIdDesc*);
+size_t funcType_idTlsOffset(const js::wasm::FuncTypeIdDesc*);
 
 void stackmaps_add(BD_Stackmaps* sink, const uint32_t* bitMap,
                    size_t mappedWords, size_t argsSize, size_t codeOffset);
