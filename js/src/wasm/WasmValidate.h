@@ -137,9 +137,9 @@ struct ModuleEnvironment {
   Maybe<uint64_t> maxMemoryLength;
   uint32_t numStructTypes;
   TypeDefVector types;
-  FuncTypeWithIdPtrVector funcTypes;
-  Uint32Vector funcTypeIndices;
+  FuncDescVector funcs;
   Uint32Vector funcImportGlobalDataOffsets;
+
   GlobalDescVector globals;
 #ifdef ENABLE_WASM_EXCEPTIONS
   EventDescVector events;
@@ -170,10 +170,10 @@ struct ModuleEnvironment {
 
   size_t numTables() const { return tables.length(); }
   size_t numTypes() const { return types.length(); }
-  size_t numFuncs() const { return funcTypes.length(); }
+  size_t numFuncs() const { return funcs.length(); }
   size_t numFuncImports() const { return funcImportGlobalDataOffsets.length(); }
   size_t numFuncDefs() const {
-    return funcTypes.length() - funcImportGlobalDataOffsets.length();
+    return funcs.length() - funcImportGlobalDataOffsets.length();
   }
   Shareable sharedMemoryEnabled() const { return features.sharedMemory; }
   bool refTypesEnabled() const { return features.refTypes; }

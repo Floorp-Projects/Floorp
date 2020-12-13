@@ -215,7 +215,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
   // elements will be initialized by the time module generation is finished.
 
   if (!metadataTier_->funcToCodeRange.appendN(BAD_CODE_RANGE,
-                                              moduleEnv_->funcTypes.length())) {
+                                              moduleEnv_->funcs.length())) {
     return false;
   }
 
@@ -257,7 +257,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
     moduleEnv_->funcImportGlobalDataOffsets[i] = globalDataOffset;
 
     FuncType copy;
-    if (!copy.clone(*moduleEnv_->funcTypes[i])) {
+    if (!copy.clone(*moduleEnv_->funcs[i].type)) {
       return false;
     }
     if (!metadataTier_->funcImports.emplaceBack(std::move(copy),
@@ -414,7 +414,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata,
 
   for (const ExportedFunc& funcIndex : exportedFuncs) {
     FuncType funcType;
-    if (!funcType.clone(*moduleEnv_->funcTypes[funcIndex.index()])) {
+    if (!funcType.clone(*moduleEnv_->funcs[funcIndex.index()].type)) {
       return false;
     }
     metadataTier_->funcExports.infallibleEmplaceBack(
@@ -1139,20 +1139,20 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
   if (compilerEnv_->debugEnabled()) {
     metadata_->debugEnabled = true;
 
-    const size_t numFuncTypes = moduleEnv_->funcTypes.length();
-    if (!metadata_->debugFuncArgTypes.resize(numFuncTypes)) {
+    const size_t numFuncs = moduleEnv_->funcs.length();
+    if (!metadata_->debugFuncArgTypes.resize(numFuncs)) {
       return nullptr;
     }
-    if (!metadata_->debugFuncReturnTypes.resize(numFuncTypes)) {
+    if (!metadata_->debugFuncReturnTypes.resize(numFuncs)) {
       return nullptr;
     }
-    for (size_t i = 0; i < numFuncTypes; i++) {
+    for (size_t i = 0; i < numFuncs; i++) {
       if (!metadata_->debugFuncArgTypes[i].appendAll(
-              moduleEnv_->funcTypes[i]->args())) {
+              moduleEnv_->funcs[i].type->args())) {
         return nullptr;
       }
       if (!metadata_->debugFuncReturnTypes[i].appendAll(
-              moduleEnv_->funcTypes[i]->results())) {
+              moduleEnv_->funcs[i].type->results())) {
         return nullptr;
       }
     }
