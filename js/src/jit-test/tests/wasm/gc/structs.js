@@ -199,26 +199,26 @@ assertEq(ins.x1(12), 36)
 assertEq(ins.x2(8), Math.PI)
 
 var point = ins.mk_point();
-assertEq("_0" in point, true);
-assertEq("_1" in point, true);
-assertEq("_2" in point, false);
-assertEq(point._0, 37);
-assertEq(point._1, 42);
+assertEq(0 in point, true);
+assertEq(1 in point, true);
+assertEq(2 in point, false);
+assertEq(point[0], 37);
+assertEq(point[1], 42);
 
 var int_node = ins.mk_int_node(78, point);
-assertEq(int_node._0, 78);
-assertEq(int_node._1, point);
+assertEq(int_node[0], 78);
+assertEq(int_node[1], point);
 
 var bigger = ins.mk_bigger();
 for ( let i=0; i < 52; i++ )
-    assertEq(bigger["_" + i], i);
+    assertEq(bigger[i], i);
 
 var withfloats = ins.mk_withfloats(1/3, Math.PI, bigger, 5/6, 0x1337);
-assertEq(withfloats._0, Math.fround(1/3));
-assertEq(withfloats._1, Math.PI);
-assertEq(withfloats._2, bigger);
-assertEq(withfloats._3, Math.fround(5/6));
-assertEq(withfloats._4, 0x1337);
+assertEq(withfloats[0], Math.fround(1/3));
+assertEq(withfloats[1], Math.PI);
+assertEq(withfloats[2], bigger);
+assertEq(withfloats[3], Math.fround(5/6));
+assertEq(withfloats[4], 0x1337);
 
 // A simple stress test
 
@@ -238,8 +238,8 @@ var stressIns = new WebAssembly.Instance(new WebAssembly.Module(stress)).exports
 var stressLevel = conf.x64 && !conf.tsan && !conf.asan && !conf.valgrind ? 100000 : 1000;
 var the_list = stressIns.iota1(stressLevel);
 for (let i=1; i <= stressLevel; i++) {
-    assertEq(the_list._0, i);
-    the_list = the_list._1;
+    assertEq(the_list[0], i);
+    the_list = the_list[1];
 }
 assertEq(the_list, null);
 
@@ -283,21 +283,19 @@ assertEq(the_list, null);
 
     let v = ins.mk();
     assertEq(typeof v, "object");
-    assertEq(v._0, 0x7aaaaaaa);
-    assertEq(v._1_low, 0x01020337);
-    assertEq(v._1_high, 0x42);
+    assertEq(v[0], 0x7aaaaaaa);
+    assertEq(v[1], 0x4201020337n);
     assertEq(ins.low(v), 0x01020337);
     assertEq(ins.high(v), 0x42);
-    assertEq(v._2, 0x6bbbbbbb);
+    assertEq(v[2], 0x6bbbbbbb);
 
     ins.set(v);
-    assertEq(v._0, 0x7aaaaaaa);
-    assertEq(v._1_low, 0x76544567);
-    assertEq(v._2, 0x6bbbbbbb);
+    assertEq(v[0], 0x7aaaaaaa);
+    assertEq(v[1], 0x3333333376544567n);
+    assertEq(v[2], 0x6bbbbbbb);
 
     ins.set2(v);
-    assertEq(v._1_low, 0x53589793);
-    assertEq(v._1_high, 0x31415926)
+    assertEq(v[1], 0x3141592653589793n);
     assertEq(ins.low(v), 0x53589793);
     assertEq(ins.high(v), 0x31415926)
 }
@@ -347,32 +345,28 @@ assertEq(the_list, null);
     let ins = wasmEvalText(txt).exports;
 
     let v = ins.make();
-    assertEq(v._0, 0x7aaaaaaa);
-    assertEq(v._1_low, 0x01020337);
-    assertEq(v._1_high, 0x42);
-    assertEq(v._2, 0x6bbbbbbb);
+    assertEq(v[0], 0x7aaaaaaa);
+    assertEq(v[1], 0x4201020337n);
+    assertEq(v[2], 0x6bbbbbbb);
 
     ins.update0(0x45367101);
-    assertEq(v._0, 0x45367101);
+    assertEq(v[0], 0x45367101);
     assertEq(ins.get0(), 0x45367101);
-    assertEq(v._1_low, 0x01020337);
-    assertEq(v._1_high, 0x42);
-    assertEq(v._2, 0x6bbbbbbb);
+    assertEq(v[1], 0x4201020337n);
+    assertEq(v[2], 0x6bbbbbbb);
 
     ins.update2(0x62345123);
-    assertEq(v._0, 0x45367101);
-    assertEq(v._1_low, 0x01020337);
-    assertEq(v._1_high, 0x42);
+    assertEq(v[0], 0x45367101);
+    assertEq(v[1], 0x4201020337n);
     assertEq(ins.get2(), 0x62345123);
-    assertEq(v._2, 0x62345123);
+    assertEq(v[2], 0x62345123);
 
     ins.update1(0x77777777, 0x22222222);
-    assertEq(v._0, 0x45367101);
+    assertEq(v[0], 0x45367101);
     assertEq(ins.get1_low(), 0x22222222);
-    assertEq(v._1_low, 0x22222222);
     assertEq(ins.get1_high(), 0x77777777);
-    assertEq(v._1_high, 0x77777777);
-    assertEq(v._2, 0x62345123);
+    assertEq(v[1], 0x7777777722222222n);
+    assertEq(v[2], 0x62345123);
 }
 
 
@@ -600,13 +594,10 @@ WebAssembly.CompileError, /signature index references non-signature/);
           (func (export "make") (result eqref)
            (struct.new $s (i32.const 37) (i64.const 42))))`).exports;
     let v = ins.make();
-    assertErrorMessage(() => v._0 = 12,
+    assertErrorMessage(() => v[0] = 12,
                        Error,
                        /setting immutable field/);
-    assertErrorMessage(() => v._1_low = 12,
-                       Error,
-                       /setting immutable field/);
-    assertErrorMessage(() => v._1_high = 12,
+    assertErrorMessage(() => v[1] = 12,
                        Error,
                        /setting immutable field/);
 }

@@ -213,13 +213,13 @@ const SymbolicAddressSignature SASigPostBarrierFiltering = {
     2,
     {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigStructNew = {
-    SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _I32, _END}};
+    SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 const SymbolicAddressSignature SASigStructNarrow = {
     SymbolicAddress::StructNarrow,
     _RoN,
     _Infallible,
     3,
-    {_PTR, _I32, _RoN, _END}};
+    {_PTR, _RoN, _RoN, _END}};
 
 }  // namespace wasm
 }  // namespace js
@@ -1056,12 +1056,12 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       return FuncCast(Instance::postBarrierFiltering, *abiType);
     case SymbolicAddress::StructNew:
       *abiType = MakeABIFunctionType(ArgType_General,
-                                     {ArgType_General, ArgType_Int32});
+                                     {ArgType_General, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNew));
       return FuncCast(Instance::structNew, *abiType);
     case SymbolicAddress::StructNarrow:
       *abiType = MakeABIFunctionType(
-          ArgType_General, {ArgType_General, ArgType_Int32, ArgType_General});
+          ArgType_General, {ArgType_General, ArgType_General, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNarrow));
       return FuncCast(Instance::structNarrow, *abiType);
 

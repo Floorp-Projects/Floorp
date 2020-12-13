@@ -338,9 +338,6 @@ class WasmInstanceObject : public NativeObject {
       HandleWasmMemoryObject memory,
       Vector<RefPtr<wasm::ExceptionTag>, 0, SystemAllocPolicy>&& exceptionTags,
       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
-      wasm::StructTypePtrVector&& structTypes,
-      GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>&&
-          structTypeDescrs,
       const JSFunctionVector& funcImports,
       const wasm::GlobalDescVector& globals,
       const wasm::ValVector& globalImportValues,
@@ -507,18 +504,6 @@ class WasmExceptionObject : public NativeObject {
 
 class WasmNamespaceObject : public NativeObject {
  public:
-  enum Slot {
-    ArrayTypePrototype,
-    StructTypePrototype,
-    Int32Desc,
-    Int64Desc,
-    Float32Desc,
-    Float64Desc,
-    ObjectDesc,
-    WasmAnyRefDesc,
-    SlotCount
-  };
-
   static const JSClass class_;
 
  private:

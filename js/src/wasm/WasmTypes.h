@@ -89,10 +89,6 @@ typedef GCVector<WasmExceptionObject*, 0, SystemAllocPolicy>
     WasmExceptionObjectVector;
 using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
 
-class StructTypeDescr;
-typedef GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>
-    StructTypeDescrVector;
-
 namespace wasm {
 
 using mozilla::ArrayEqual;
@@ -693,6 +689,27 @@ class ValType {
     }
   }
 
+  uint32_t size() const {
+    switch (kind()) {
+      case ValType::I32:
+        return 4;
+      case ValType::I64:
+        return 8;
+      case ValType::F32:
+        return 4;
+      case ValType::F64:
+        return 8;
+      case ValType::V128:
+        return 16;
+      case ValType::Ref:
+        return sizeof(void*);
+    }
+    MOZ_ASSERT_UNREACHABLE();
+    return 0;
+  }
+
+  uint32_t alignmentInStruct() { return size(); }
+
   void renumber(const RenumberMap& map) {
     if (!isTypeIndex()) {
       return;
@@ -701,6 +718,14 @@ class ValType {
     if (RenumberMap::Ptr p = map.lookup(refType().typeIndex())) {
       *this = RefType::fromTypeIndex(p->value(), isNullable());
     }
+  }
+
+  void offsetTypeIndex(uint32_t offsetBy) {
+    if (!isTypeIndex()) {
+      return;
+    }
+    *this =
+        RefType::fromTypeIndex(refType().typeIndex() + offsetBy, isNullable());
   }
 
   bool operator==(const ValType& that) const {
@@ -1351,6 +1376,14 @@ class FuncType {
       result.renumber(map);
     }
   }
+  void offsetTypeIndex(uint32_t offsetBy) {
+    for (auto& arg : args_) {
+      arg.offsetTypeIndex(offsetBy);
+    }
+    for (auto& result : results_) {
+      result.offsetTypeIndex(offsetBy);
+    }
+  }
 
   ValType arg(unsigned i) const { return args_[i]; }
   const ValTypeVector& args() const { return args_; }
@@ -1859,21 +1892,26 @@ typedef Vector<StructField, 0, SystemAllocPolicy> StructFieldVector;
 class StructType {
  public:
   StructFieldVector fields_;  // Field type, offset, and mutability
+  uint32_t size_;             // The size of the type in bytes.
   bool isInline_;             // True if this is an InlineTypedObject and we
                    //   interpret the offsets from the object pointer;
                    //   if false this is an OutlineTypedObject and we
                    //   interpret everything relative to the pointer to
                    //   the attached storage.
  public:
-  StructType() : fields_(), isInline_(true) {}
+  StructType() : fields_(), size_(0), isInline_(true) {}
 
-  StructType(StructFieldVector&& fields, bool isInline)
-      : fields_(std::move(fields)), isInline_(isInline) {}
+  explicit StructType(StructFieldVector&& fields)
+      : fields_(std::move(fields)), size_(0), isInline_(true) {}
+
+  StructType(StructType&&) = default;
+  StructType& operator=(StructType&&) = default;
 
   MOZ_MUST_USE bool clone(const StructType& src) {
     if (!fields_.appendAll(src.fields_)) {
       return false;
     }
+    size_ = src.size_;
     isInline_ = src.isInline_;
     return true;
   }
@@ -1883,6 +1921,18 @@ class StructType {
       field.type.renumber(map);
     }
   }
+  void offsetTypeIndex(uint32_t offsetBy) {
+    for (auto& field : fields_) {
+      field.type.offsetTypeIndex(offsetBy);
+    }
+  }
+
+  MOZ_MUST_USE bool computeLayout();
+
+  // Get the offset to a field from the base of the struct object. This
+  // is just the field offset for outline typed objects, but includes
+  // the header for inline typed objects.
+  uint32_t objectBaseFieldOffset(uint32_t fieldIndex) const;
 
   bool hasPrefix(const StructType& other) const;
 
@@ -2429,6 +2479,18 @@ class TypeDef {
         break;
     }
   }
+  void offsetTypeIndex(uint32_t offsetBy) {
+    switch (tag_) {
+      case IsFuncType:
+        funcType_.offsetTypeIndex(offsetBy);
+        break;
+      case IsStructType:
+        structType_.offsetTypeIndex(offsetBy);
+        break;
+      case IsNone:
+        break;
+    }
+  }
 
   WASM_DECLARE_SERIALIZABLE(TypeDef)
 };
@@ -2534,6 +2596,21 @@ class TypeContext {
   }
   MOZ_MUST_USE bool resize(uint32_t length) { return types_.resize(length); }
 
+  MOZ_MUST_USE bool transferTypes(const TypeDefWithIdVector& types,
+                                  uint32_t* baseIndex) {
+    *baseIndex = length();
+    if (!resize(*baseIndex + types.length())) {
+      return false;
+    }
+    for (uint32_t i = 0; i < types.length(); i++) {
+      if (!types_[*baseIndex + i].clone(types[i])) {
+        return false;
+      }
+      types_[*baseIndex + i].offsetTypeIndex(*baseIndex);
+    }
+    return true;
+  }
+
   // FuncType accessors
 
   bool isFuncType(uint32_t index) const { return types_[index].isFuncType(); }
@@ -2618,6 +2695,24 @@ class TypeContext {
   size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
     return types_.sizeOfExcludingThis(mallocSizeOf);
   }
+};
+
+class TypeHandle {
+ private:
+  uint32_t index_;
+
+ public:
+  explicit TypeHandle(uint32_t index) : index_(index) {}
+
+  TypeHandle(const TypeHandle&) = default;
+  TypeHandle& operator=(const TypeHandle&) = default;
+
+  TypeDef& get(TypeContext* tycx) const { return tycx->type(index_); }
+  const TypeDef& get(const TypeContext* tycx) const {
+    return tycx->type(index_);
+  }
+
+  uint32_t index() const { return index_; }
 };
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole

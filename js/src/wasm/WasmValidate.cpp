@@ -1663,13 +1663,18 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     return d.fail("Structure types not enabled");
   }
 
+  if ((*typeState)[typeIndex] != TypeState::None &&
+      (*typeState)[typeIndex] != TypeState::ForwardStruct) {
+    return d.fail("struct type entry referenced as function");
+  }
+
   uint32_t numFields;
   if (!d.readVarU32(&numFields)) {
     return d.fail("Bad number of fields");
   }
 
   if (numFields > MaxStructFields) {
-    return d.fail("too many fields in structure");
+    return d.fail("too many fields in struct");
   }
 
   StructFieldVector fields;
@@ -1677,7 +1682,6 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     return false;
   }
 
-  StructMetaTypeDescr::Layout layout;
   for (uint32_t i = 0; i < numFields; i++) {
     if (!d.readValType(env->types.length(), env->features, &fields[i].type)) {
       return false;
@@ -1695,63 +1699,15 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     if (!ValidateTypeState(d, typeState, fields[i].type)) {
       return false;
     }
-
-    CheckedInt32 offset;
-    switch (fields[i].type.kind()) {
-      case ValType::I32:
-        offset = layout.addScalar(Scalar::Int32);
-        break;
-      case ValType::I64:
-        offset = layout.addScalar(Scalar::Int64);
-        break;
-      case ValType::F32:
-        offset = layout.addScalar(Scalar::Float32);
-        break;
-      case ValType::F64:
-        offset = layout.addScalar(Scalar::Float64);
-        break;
-      case ValType::V128:
-        MOZ_ASSERT(env->v128Enabled());
-        offset = layout.addScalar(Scalar::Simd128);
-        break;
-      case ValType::Ref:
-        switch (fields[i].type.refTypeKind()) {
-          case RefType::Eq:
-          case RefType::TypeIndex:
-            offset = layout.addReference(ReferenceType::TYPE_OBJECT);
-            break;
-          case RefType::Func:
-          case RefType::Extern:
-            offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
-            break;
-        }
-        break;
-    }
-    if (!offset.isValid()) {
-      return d.fail("Object too large");
-    }
-
-    fields[i].offset = offset.value();
   }
 
-  CheckedInt32 totalSize = layout.close();
-  if (!totalSize.isValid()) {
-    return d.fail("Object too large");
+  StructType structType = StructType(std::move(fields));
+
+  if (!structType.computeLayout()) {
+    return d.fail("Struct type too large");
   }
 
-  bool isInline = InlineTypedObject::canAccommodateSize(totalSize.value());
-  uint32_t offsetBy = isInline ? InlineTypedObject::offsetOfDataStart() : 0;
-
-  for (StructField& f : fields) {
-    f.offset += offsetBy;
-  }
-
-  if ((*typeState)[typeIndex] != TypeState::None &&
-      (*typeState)[typeIndex] != TypeState::ForwardStruct) {
-    return d.fail("struct type entry referenced as function");
-  }
-
-  env->types[typeIndex] = TypeDef(StructType(std::move(fields), isInline));
+  env->types[typeIndex] = TypeDef(std::move(structType));
   (*typeState)[typeIndex] = TypeState::Struct;
 
   return true;

@@ -54,10 +54,6 @@ class GlobalScope;
 class LexicalEnvironmentObject;
 class PlainObject;
 class RegExpStatics;
-class TypeDescr;
-class WasmNamespaceObject;
-
-enum class ReferenceType;
 
 /*
  * Global object slots are reserved as follows:
@@ -499,21 +495,6 @@ class GlobalObject : public NativeObject {
     }
     return &global->getPrototype(JSProto_WeakSet).toObject().as<NativeObject>();
   }
-
-  static JSObject* getOrCreateWebAssemblyNamespace(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateConstructor(cx, JSProto_WebAssembly);
-  }
-
-  static TypeDescr* getOrCreateScalarTypeDescr(JSContext* cx,
-                                               Handle<GlobalObject*> global,
-                                               Scalar::Type scalarType);
-
-  static TypeDescr* getOrCreateReferenceTypeDescr(JSContext* cx,
-                                                  Handle<GlobalObject*> global,
-                                                  ReferenceType type);
-
-  WasmNamespaceObject& getWebAssemblyNamespace() const;
 
   static bool ensureModulePrototypesCreated(JSContext* cx,
                                             Handle<GlobalObject*> global);

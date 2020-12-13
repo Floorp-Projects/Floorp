@@ -2242,7 +2242,7 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
       return false;
     }
   } else if (obj->is<TypedObject>()) {
-    if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
+    if (obj->as<TypedObject>().typeDescr().hasProperty(cx, id)) {
       propp->setNonNativeProperty();
       return true;
     }

@@ -17,9 +17,8 @@ namespace js {
 
 namespace Scalar {
 
-// Scalar types that can appear in typed arrays and typed objects.
+// Scalar types that can appear in typed arrays.
 // The enum values must be kept in sync with:
-//  * the JS_SCALARTYPEREPR constants
 //  * the TYPEDARRAY_KIND constants
 //  * the SCTAG_TYPED_ARRAY constants
 //  * JS_FOR_EACH_TYPEDARRAY
@@ -122,6 +121,40 @@ static inline bool isBigIntType(Type atype) {
       return false;
     case MaxTypedArrayViewType:
       break;
+  }
+  MOZ_CRASH("invalid scalar type");
+}
+
+static inline const char* name(Type atype) {
+  switch (atype) {
+    case Int8:
+      return "Int8";
+    case Uint8:
+      return "Uint8";
+    case Int16:
+      return "Int16";
+    case Uint16:
+      return "Uint16";
+    case Int32:
+      return "Int32";
+    case Uint32:
+      return "Uint32";
+    case Float32:
+      return "Float32";
+    case Float64:
+      return "Float64";
+    case Uint8Clamped:
+      return "Uint8Clamped";
+    case BigInt64:
+      return "BigInt64";
+    case BigUint64:
+      return "BigUint64";
+    case MaxTypedArrayViewType:
+      return "MaxTypedArrayViewType";
+    case Int64:
+      return "Int64";
+    case Simd128:
+      return "Simd128";
   }
   MOZ_CRASH("invalid scalar type");
 }

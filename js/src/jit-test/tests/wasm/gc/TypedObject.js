@@ -10,9 +10,9 @@
                               (struct.new $p (f64.const 1.5) (i32.const 33))))`).exports;
 
     let p = ins.mkp();
-    assertEq(p._0, 1.5);
-    assertEq(p._1, 33);
-    assertEq(p._2, undefined);
+    assertEq(p[0], 1.5);
+    assertEq(p[1], 33);
+    assertEq(p[2], undefined);
 }
 
 // Writing an immutable field from JS throws.
@@ -25,7 +25,7 @@
                               (struct.new $p (f64.const 1.5))))`).exports;
 
     let p = ins.mkp();
-    assertErrorMessage(() => p._0 = 5.7,
+    assertErrorMessage(() => p[0] = 5.7,
                        Error,
                        /setting immutable field/);
 }
@@ -45,13 +45,8 @@
                              (func (export "mkr") (result eqref)
                               (struct.new $r (ref.null eq))))`).exports;
 
-    assertErrorMessage(() => new (ins.mkp().constructor)({_0:null}),
-                       TypeError,
-                       /not constructible/);
-
-    assertErrorMessage(() => new (ins.mkr().constructor)({_0:null}),
-                       TypeError,
-                       /not constructible/);
+    assertEq(ins.mkp().constructor, Object);
+    assertEq(ins.mkr().constructor, Object);
 }
 
 // MVA v1 restriction: all fields are immutable
@@ -68,17 +63,17 @@
                               (struct.new $p (ref.null $q) (ref.null eq))))`).exports;
     let q = ins.mkq();
     assertEq(typeof q, "object");
-    assertEq(q._0, 1.5);
+    assertEq(q[0], 1.5);
 
     let p = ins.mkp();
     assertEq(typeof p, "object");
-    assertEq(p._0, null);
+    assertEq(p[0], null);
 
-    assertErrorMessage(() => { p._0 = q },
+    assertErrorMessage(() => { p[0] = q },
                        Error,
                        /setting immutable field/);
 
-    assertErrorMessage(() => { p._1 = q },
+    assertErrorMessage(() => { p[1] = q },
                        Error,
                        /setting immutable field/);
 }
@@ -94,17 +89,11 @@
 
     let p = ins.mkp();
     assertEq(typeof p, "object");
-    assertEq(p._0_high, 0x12345678)
-    assertEq(p._0_low, 0x87654321|0);
+    assertEq(p[0], 0x1234567887654321n)
 
-    assertErrorMessage(() => new (p.constructor)({_0_high:0, _0_low:0}),
-                       TypeError,
-                       /not constructible/);
+    assertEq(p.constructor, Object);
 
-    assertErrorMessage(() => { p._0_low = 0 },
-                       Error,
-                       /setting immutable field/);
-    assertErrorMessage(() => { p._0_high = 0 },
+    assertErrorMessage(() => { p[0] = 0 },
                        Error,
                        /setting immutable field/);
 }
