@@ -3278,8 +3278,12 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitFunction();
   void emitInitStackLocals();
 
-  const FuncTypeWithId& funcType() const {
+  const FuncType& funcType() const {
     return *moduleEnv_.funcs[func_.index].type;
+  }
+
+  const FuncTypeIdDesc& funcTypeId() const {
+    return *moduleEnv_.funcs[func_.index].typeId;
   }
 
   // Used by some of the ScratchRegister implementations.
@@ -5280,7 +5284,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
     }
 
-    GenerateFunctionPrologue(masm, moduleEnv_.funcs[func_.index].type->id,
+    GenerateFunctionPrologue(masm, *moduleEnv_.funcs[func_.index].typeId,
                              compilerEnv_.mode() == CompileMode::Tier1
                                  ? Some(func_.index)
                                  : Nothing(),
@@ -5899,15 +5903,15 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   CodeOffset callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                           const Stk& indexVal, const FunctionCall& call) {
-    const FuncTypeWithId& funcType = moduleEnv_.types[funcTypeIndex].funcType();
-    MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDescKind::None);
+    const FuncTypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
+    MOZ_ASSERT(funcTypeId.kind() != FuncTypeIdDescKind::None);
 
     const TableDesc& table = moduleEnv_.tables[tableIndex];
 
     loadI32(indexVal, RegI32(WasmTableCallIndexReg));
 
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
-    CalleeDesc callee = CalleeDesc::wasmTable(table, funcType.id);
+    CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
     return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
   }
 
@@ -10423,7 +10427,7 @@ bool BaseCompiler::emitCallIndirect() {
 
   sync();
 
-  const FuncTypeWithId& funcType = moduleEnv_.types[funcTypeIndex].funcType();
+  const FuncType& funcType = moduleEnv_.types[funcTypeIndex].funcType();
 
   // Stack: ... arg1 .. argn callee
 
