@@ -1862,7 +1862,8 @@ WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, SharedCode code, const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, UniqueTlsData tlsData,
     HandleWasmMemoryObject memory, SharedExceptionTagVector&& exceptionTags,
-    SharedTableVector&& tables, StructTypeDescrVector&& structTypeDescrs,
+    SharedTableVector&& tables, StructTypePtrVector&& structTypes,
+    StructTypeDescrVector&& structTypeDescrs,
     const JSFunctionVector& funcImports, const GlobalDescVector& globals,
     const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs, HandleObject proto,
@@ -1938,7 +1939,8 @@ WasmInstanceObject* WasmInstanceObject::create(
     // Root the Instance via WasmInstanceObject before any possible GC.
     instance = cx->new_<Instance>(
         cx, obj, code, std::move(tlsData), memory, std::move(exceptionTags),
-        std::move(tables), std::move(structTypeDescrs), std::move(maybeDebug));
+        std::move(tables), std::move(structTypes), std::move(structTypeDescrs),
+        std::move(maybeDebug));
     if (!instance) {
       return nullptr;
     }

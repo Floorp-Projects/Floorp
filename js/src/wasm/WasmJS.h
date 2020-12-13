@@ -370,6 +370,7 @@ class WasmInstanceObject : public NativeObject {
       HandleWasmMemoryObject memory,
       Vector<RefPtr<wasm::ExceptionTag>, 0, SystemAllocPolicy>&& exceptionTags,
       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
+      wasm::StructTypePtrVector&& structTypes,
       GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>&&
           structTypeDescrs,
       const JSFunctionVector& funcImports,

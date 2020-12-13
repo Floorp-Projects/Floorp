@@ -58,9 +58,10 @@ class Instance {
   ElemSegmentVector passiveElemSegments_;
   const UniqueDebugState maybeDebug_;
   StructTypeDescrVector structTypeDescrs_;
+  StructTypePtrVector structTypes_;
 
   // Internal helpers:
-  const void** addressOfFuncTypeId(const TypeIdDesc& funcTypeId) const;
+  const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportTls& funcImportTls(const FuncImport& fi);
   TableTls& tableTls(const TableDesc& td) const;
 
@@ -75,6 +76,7 @@ class Instance {
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
            UniqueTlsData tlsData, HandleWasmMemoryObject memory,
            SharedExceptionTagVector&& exceptionTags, SharedTableVector&& tables,
+           StructTypePtrVector&& structTypes,
            StructTypeDescrVector&& structTypeDescrs,
            UniqueDebugState maybeDebug);
   ~Instance();
@@ -118,7 +120,7 @@ class Instance {
   const SharedExceptionTagVector& exceptionTags() const {
     return exceptionTags_;
   }
-  const StructTypeVector& structTypes() const { return code_->structTypes(); }
+  const StructType* structType(HandleStructTypeDescr structTypeDescr) const;
 
   static constexpr size_t offsetOfJSJitArgsRectifier() {
     return offsetof(Instance, jsJitArgsRectifier_);
@@ -222,8 +224,8 @@ class Instance {
   static void preBarrierFiltering(Instance* instance, gc::Cell** location);
   static void postBarrier(Instance* instance, gc::Cell** location);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
-  static void* structNew(Instance* instance, uint32_t typeIndex);
-  static void* structNarrow(Instance* instance, uint32_t outputTypeIndex,
+  static void* structNew(Instance* instance, uint32_t structTypeIndex);
+  static void* structNarrow(Instance* instance, uint32_t outputStructTypeIndex,
                             void* maybeNullPtr);
 };
 

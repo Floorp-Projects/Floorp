@@ -102,8 +102,8 @@ class FuncTypeIdSet {
 
 ExclusiveData<FuncTypeIdSet> funcTypeIdSet(mutexid::WasmFuncTypeIdSet);
 
-const void** Instance::addressOfFuncTypeId(const TypeIdDesc& funcTypeId) const {
-  return (const void**)(globalData() + funcTypeId.globalDataOffset());
+const void** Instance::addressOfTypeId(const TypeIdDesc& typeId) const {
+  return (const void**)(globalData() + typeId.globalDataOffset());
 }
 
 FuncImportTls& Instance::funcImportTls(const FuncImport& fi) {
@@ -1244,15 +1244,18 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 // When we fail to allocate we return a nullptr; the wasm side must check this
 // and propagate it as an error.
 
-/* static */ void* Instance::structNew(Instance* instance, uint32_t typeIndex) {
+/* static */ void* Instance::structNew(Instance* instance,
+                                       uint32_t structTypeIndex) {
   MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = TlsContext.get();
-  Rooted<TypeDescr*> typeDescr(cx, instance->structTypeDescrs_[typeIndex]);
+  Rooted<TypeDescr*> typeDescr(cx,
+                               instance->structTypeDescrs_[structTypeIndex]);
+  MOZ_ASSERT(typeDescr);
   return TypedObject::createZeroed(cx, typeDescr);
 }
 
 /* static */ void* Instance::structNarrow(Instance* instance,
-                                          uint32_t outputTypeIndex,
+                                          uint32_t outputStructTypeIndex,
                                           void* maybeNullPtr) {
   MOZ_ASSERT(SASigStructNarrow.failureMode == FailureMode::Infallible);
 
@@ -1269,38 +1272,19 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   obj = static_cast<TypedObject*>(nonnullPtr);
   typeDescr = &obj->typeDescr().as<StructTypeDescr>();
 
-  // Optimization opportunity: instead of this loop we could perhaps load an
-  // index from `typeDescr` and use that to index into the structTypes table
-  // of the instance.  If the index is in bounds and the desc at that index is
-  // the desc we have then we know the index is good, and we can use that for
-  // the prefix check.
-
-  uint32_t found = UINT32_MAX;
-  for (uint32_t i = 0; i < instance->structTypeDescrs_.length(); i++) {
-    if (instance->structTypeDescrs_[i] == typeDescr) {
-      found = i;
-      break;
-    }
-  }
-
-  if (found == UINT32_MAX) {
+  const StructType* inputStructType = instance->structType(typeDescr);
+  if (inputStructType == nullptr) {
     return nullptr;
   }
-
-  // Also asserted in constructor; let's just be double sure.
-
-  MOZ_ASSERT(instance->structTypeDescrs_.length() ==
-             instance->structTypes().length());
 
   // Now we know that the object was created by the instance, and we know its
   // concrete type.  We need to check that its type is an extension of the
   // type of outputTypeIndex.
 
-  if (!instance->structTypes()[found].hasPrefix(
-          instance->structTypes()[outputTypeIndex])) {
+  if (!inputStructType->hasPrefix(
+          *instance->structTypes_[outputStructTypeIndex])) {
     return nullptr;
   }
-
   return nonnullPtr;
 }
 
@@ -1367,6 +1351,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    HandleWasmMemoryObject memory,
                    SharedExceptionTagVector&& exceptionTags,
                    SharedTableVector&& tables,
+                   StructTypePtrVector&& structTypes,
                    StructTypeDescrVector&& structTypeDescrs,
                    UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
@@ -1383,7 +1368,8 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       exceptionTags_(std::move(exceptionTags)),
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug)),
-      structTypeDescrs_(std::move(structTypeDescrs)) {}
+      structTypeDescrs_(std::move(structTypeDescrs)),
+      structTypes_(std::move(structTypes)) {}
 
 bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
                     const ValVector& globalImportValues,
@@ -1397,7 +1383,6 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 #else
   MOZ_ASSERT(exceptionTags_.length() == 0);
 #endif
-  MOZ_ASSERT(structTypeDescrs_.length() == structTypes().length());
 
 #ifdef DEBUG
   for (auto t : code_->tiers()) {
@@ -1534,17 +1519,28 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   }
 
   // Allocate in the global function type set for structural signature checks
-  if (!metadata().funcTypeIds.empty()) {
+  if (!metadata().types.empty()) {
     ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
         funcTypeIdSet.lock();
 
-    for (const FuncTypeWithId& funcType : metadata().funcTypeIds) {
-      const void* funcTypeId;
-      if (!lockedFuncTypeIdSet->allocateFuncTypeId(cx, funcType, &funcTypeId)) {
-        return false;
+    uint32_t structIndex = 0;
+    for (const TypeDefWithId& typeDef : metadata().types) {
+      if (typeDef.isStructType()) {
+        MOZ_ASSERT(structTypes_[structIndex] == &typeDef.structType());
+        *addressOfTypeId(typeDef.id) = (void*)(size_t)structIndex;
+        structIndex++;
+        continue;
+      } else if (typeDef.isFuncType()) {
+        const FuncType& funcType = typeDef.funcType();
+        const void* funcTypeId;
+        if (!lockedFuncTypeIdSet->allocateFuncTypeId(cx, funcType,
+                                                     &funcTypeId)) {
+          return false;
+        }
+        *addressOfTypeId(typeDef.id) = funcTypeId;
+      } else {
+        MOZ_CRASH();
       }
-
-      *addressOfFuncTypeId(funcType.id) = funcTypeId;
     }
   }
 
@@ -1574,12 +1570,16 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 Instance::~Instance() {
   realm_->wasm.unregisterInstance(*this);
 
-  if (!metadata().funcTypeIds.empty()) {
+  if (!metadata().types.empty()) {
     ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
         funcTypeIdSet.lock();
 
-    for (const FuncTypeWithId& funcType : metadata().funcTypeIds) {
-      if (const void* funcTypeId = *addressOfFuncTypeId(funcType.id)) {
+    for (const TypeDefWithId& typeDef : metadata().types) {
+      if (!typeDef.isFuncType()) {
+        continue;
+      }
+      const FuncType& funcType = typeDef.funcType();
+      if (const void* funcTypeId = *addressOfTypeId(typeDef.id)) {
         lockedFuncTypeIdSet->deallocateFuncTypeId(funcType, funcTypeId);
       }
     }
@@ -1635,6 +1635,16 @@ bool Instance::memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const {
   }
 
   return true;
+}
+
+const StructType* Instance::structType(
+    HandleStructTypeDescr structTypeDescr) const {
+  for (uint32_t i = 0; i < structTypeDescrs_.length(); i++) {
+    if (structTypeDescrs_[i] == structTypeDescr) {
+      return structTypes_[i];
+    }
+  }
+  return nullptr;
 }
 
 void Instance::tracePrivate(JSTracer* trc) {

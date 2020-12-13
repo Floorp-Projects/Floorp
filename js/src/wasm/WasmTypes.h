@@ -126,6 +126,8 @@ using UniqueConstBytes = UniquePtr<const Bytes>;
 typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
 typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 typedef Vector<UniqueChars, 0, SystemAllocPolicy> UniqueCharsVector;
+typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>
+    RenumberMap;
 
 // Bit set as the lowest bit of a frame pointer, used in two different mutually
 // exclusive situations:
@@ -680,6 +682,16 @@ class ValType {
     }
   }
 
+  void renumber(const RenumberMap& map) {
+    if (!isTypeIndex()) {
+      return;
+    }
+
+    if (RenumberMap::Ptr p = map.lookup(refType().typeIndex())) {
+      *this = RefType::fromTypeIndex(p->value(), isNullable());
+    }
+  }
+
   bool operator==(const ValType& that) const {
     MOZ_ASSERT(isValid() && that.isValid());
     return tc_ == that.tc_;
@@ -1160,10 +1172,19 @@ class FuncType {
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
       : args_(std::move(args)), results_(std::move(results)) {}
 
-  MOZ_MUST_USE bool clone(const FuncType& rhs) {
+  MOZ_MUST_USE bool clone(const FuncType& src) {
     MOZ_ASSERT(args_.empty());
     MOZ_ASSERT(results_.empty());
-    return args_.appendAll(rhs.args_) && results_.appendAll(rhs.results_);
+    return args_.appendAll(src.args_) && results_.appendAll(src.results_);
+  }
+
+  void renumber(const RenumberMap& map) {
+    for (auto& arg : args_) {
+      arg.renumber(map);
+    }
+    for (auto& result : results_) {
+      result.renumber(map);
+    }
   }
 
   ValType arg(unsigned i) const { return args_[i]; }
@@ -1681,25 +1702,29 @@ typedef Vector<StructField, 0, SystemAllocPolicy> StructFieldVector;
 class StructType {
  public:
   StructFieldVector fields_;  // Field type, offset, and mutability
-  uint32_t moduleIndex_;      // Index in a dense array of structs in the module
   bool isInline_;             // True if this is an InlineTypedObject and we
                    //   interpret the offsets from the object pointer;
                    //   if false this is an OutlineTypedObject and we
                    //   interpret everything relative to the pointer to
                    //   the attached storage.
  public:
-  StructType() : fields_(), moduleIndex_(0), isInline_(true) {}
+  StructType() : fields_(), isInline_(true) {}
 
-  StructType(StructFieldVector&& fields, uint32_t index, bool isInline)
-      : fields_(std::move(fields)), moduleIndex_(index), isInline_(isInline) {}
+  StructType(StructFieldVector&& fields, bool isInline)
+      : fields_(std::move(fields)), isInline_(isInline) {}
 
-  bool copyFrom(const StructType& src) {
+  MOZ_MUST_USE bool clone(const StructType& src) {
     if (!fields_.appendAll(src.fields_)) {
       return false;
     }
-    moduleIndex_ = src.moduleIndex_;
     isInline_ = src.isInline_;
     return true;
+  }
+
+  void renumber(const RenumberMap& map) {
+    for (auto& field : fields_) {
+      field.type.renumber(map);
+    }
   }
 
   bool hasPrefix(const StructType& other) const;
@@ -1708,6 +1733,7 @@ class StructType {
 };
 
 typedef Vector<StructType, 0, SystemAllocPolicy> StructTypeVector;
+typedef Vector<const StructType*, 0, SystemAllocPolicy> StructTypePtrVector;
 
 // An InitExpr describes a deferred initializer expression, used to initialize
 // a global or a table element offset. Such expressions are created during
@@ -2130,70 +2156,6 @@ struct Name {
 
 typedef Vector<Name, 0, SystemAllocPolicy> NameVector;
 
-// TypeIdDesc describes a function type that can be used by call_indirect
-// and table-entry prologues to structurally compare whether the caller and
-// callee's signatures *structurally* match. To handle the general case, a
-// FuncType is allocated and stored in a process-wide hash table, so that
-// pointer equality implies structural equality. As an optimization for the 99%
-// case where the FuncType has a small number of parameters, the FuncType is
-// bit-packed into a uint32 immediate value so that integer equality implies
-// structural equality. Both cases can be handled with a single comparison by
-// always setting the LSB for the immediates (the LSB is necessarily 0 for
-// allocated FuncType pointers due to alignment).
-
-class TypeIdDesc {
- public:
-  static const uintptr_t ImmediateBit = 0x1;
-
- private:
-  TypeIdDescKind kind_;
-  size_t bits_;
-
-  TypeIdDesc(TypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
-
- public:
-  TypeIdDescKind kind() const { return kind_; }
-  static bool isGlobal(const FuncType& funcType);
-
-  TypeIdDesc() : kind_(TypeIdDescKind::None), bits_(0) {}
-  static TypeIdDesc global(const FuncType& funcType, uint32_t globalDataOffset);
-  static TypeIdDesc immediate(const FuncType& funcType);
-
-  bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
-
-  size_t immediate() const {
-    MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
-    return bits_;
-  }
-  uint32_t globalDataOffset() const {
-    MOZ_ASSERT(kind_ == TypeIdDescKind::Global);
-    return bits_;
-  }
-};
-
-typedef Vector<TypeIdDesc, 0, SystemAllocPolicy> TypeIdDescVector;
-
-// FuncTypeWithId pairs a FuncType with TypeIdDesc, describing either how to
-// compile code that compares this signature's id or, at instantiation what
-// signature ids to allocate in the global hash and where to put them.
-
-struct FuncTypeWithId : FuncType {
-  TypeIdDesc id;
-
-  FuncTypeWithId() = default;
-  explicit FuncTypeWithId(FuncType&& funcType)
-      : FuncType(std::move(funcType)), id() {}
-  FuncTypeWithId(FuncType&& funcType, TypeIdDesc id)
-      : FuncType(std::move(funcType)), id(id) {}
-  void operator=(FuncType&& rhs) { FuncType::operator=(std::move(rhs)); }
-
-  WASM_DECLARE_SERIALIZABLE(FuncTypeWithId)
-};
-
-typedef Vector<FuncTypeWithId, 0, SystemAllocPolicy> FuncTypeWithIdVector;
-typedef Vector<const FuncTypeWithId*, 0, SystemAllocPolicy>
-    FuncTypeWithIdPtrVector;
-
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
 
@@ -2216,7 +2178,7 @@ class TypeDef {
   TypeDef(TypeDef&& td) : tag_(td.tag_) {
     switch (tag_) {
       case IsFuncType:
-        new (&funcType_) FuncTypeWithId(std::move(td.funcType_));
+        new (&funcType_) FuncType(std::move(td.funcType_));
         break;
       case IsStructType:
         new (&structType_) StructType(std::move(td.structType_));
@@ -2255,6 +2217,23 @@ class TypeDef {
     return *this;
   }
 
+  MOZ_MUST_USE bool clone(const TypeDef& src) {
+    MOZ_ASSERT(isNone());
+    tag_ = src.tag_;
+    switch (src.tag_) {
+      case IsFuncType:
+        new (&funcType_) FuncType();
+        return funcType_.clone(src.funcType());
+      case IsStructType:
+        new (&structType_) StructType();
+        return structType_.clone(src.structType());
+      case IsNone:
+        break;
+    }
+    MOZ_ASSERT_UNREACHABLE();
+    return false;
+  }
+
   bool isFuncType() const { return tag_ == IsFuncType; }
 
   bool isNone() const { return tag_ == IsNone; }
@@ -2280,9 +2259,91 @@ class TypeDef {
     MOZ_ASSERT(isStructType());
     return structType_;
   }
+
+  void renumber(const RenumberMap& map) {
+    switch (tag_) {
+      case IsFuncType:
+        funcType_.renumber(map);
+        break;
+      case IsStructType:
+        structType_.renumber(map);
+        break;
+      case IsNone:
+        break;
+    }
+  }
+
+  WASM_DECLARE_SERIALIZABLE(TypeDef)
 };
 
 typedef Vector<TypeDef, 0, SystemAllocPolicy> TypeDefVector;
+
+// TypeIdDesc describes the runtime representation of a TypeDef suitable for
+// type equality checks. The kind of representation depends on whether the type
+// is a function or a struct. This will likely be simplified in the future once
+// mutually recursives types are able to be collected.
+//
+// For functions, a FuncType is allocated and stored in a process-wide hash
+// table, so that pointer equality implies structural equality. As an
+// optimization for the 99% case where the FuncType has a small number of
+// parameters, the FuncType is bit-packed into a uint32 immediate value so that
+// integer equality implies structural equality. Both cases can be handled with
+// a single comparison by always setting the LSB for the immediates
+// (the LSB is necessarily 0 for allocated FuncType pointers due to alignment).
+//
+// TODO: Write description for StructTypes once it is well formed.
+
+class TypeIdDesc {
+ public:
+  static const uintptr_t ImmediateBit = 0x1;
+
+ private:
+  TypeIdDescKind kind_;
+  size_t bits_;
+
+  TypeIdDesc(TypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
+
+ public:
+  TypeIdDescKind kind() const { return kind_; }
+  static bool isGlobal(const TypeDef& type);
+
+  TypeIdDesc() : kind_(TypeIdDescKind::None), bits_(0) {}
+  static TypeIdDesc global(const TypeDef& type, uint32_t globalDataOffset);
+  static TypeIdDesc immediate(const TypeDef& type);
+
+  bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
+
+  size_t immediate() const {
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
+    return bits_;
+  }
+  uint32_t globalDataOffset() const {
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Global);
+    return bits_;
+  }
+};
+
+typedef Vector<TypeIdDesc, 0, SystemAllocPolicy> TypeIdDescVector;
+
+// TypeDefWithId pairs a FuncType with TypeIdDesc, describing either how to
+// compile code that compares this signature's id or, at instantiation what
+// signature ids to allocate in the global hash and where to put them.
+
+struct TypeDefWithId : public TypeDef {
+  TypeIdDesc id;
+
+  TypeDefWithId() = default;
+  explicit TypeDefWithId(TypeDef&& typeDef)
+      : TypeDef(std::move(typeDef)), id() {}
+  TypeDefWithId(TypeDef&& typeDef, TypeIdDesc id)
+      : TypeDef(std::move(typeDef)), id(id) {}
+
+  WASM_DECLARE_SERIALIZABLE(TypeDefWithId)
+};
+
+typedef Vector<TypeDefWithId, 0, SystemAllocPolicy> TypeDefWithIdVector;
+typedef Vector<const TypeDefWithId*, 0, SystemAllocPolicy>
+    TypeDefWithIdPtrVector;
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
 // module, used for trap offsets or call offsets. These offsets should refer to

@@ -135,7 +135,6 @@ struct ModuleEnvironment {
   MemoryUsage memoryUsage;
   uint64_t minMemoryLength;
   Maybe<uint64_t> maxMemoryLength;
-  uint32_t numStructTypes;
   TypeDefVector types;
   TypeIdDescVector typeIds;
   FuncDescVector funcs;
@@ -166,8 +165,7 @@ struct ModuleEnvironment {
       : kind(kind),
         features(features),
         memoryUsage(MemoryUsage::None),
-        minMemoryLength(0),
-        numStructTypes(0) {}
+        minMemoryLength(0) {}
 
   size_t numTables() const { return tables.length(); }
   size_t numTypes() const { return types.length(); }

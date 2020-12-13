@@ -1055,18 +1055,8 @@ SharedCode Module::getDebugEnabledCode() const {
     return nullptr;
   }
 
-  StructTypeVector structTypes;
-  if (!structTypes.resize(code_->structTypes().length())) {
-    return nullptr;
-  }
-  for (uint32_t i = 0; i < code_->structTypes().length(); i++) {
-    if (!structTypes[i].copyFrom(code_->structTypes()[i])) {
-      return nullptr;
-    }
-  }
   MutableCode debugCode =
-      js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables),
-                   std::move(structTypes));
+      js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables));
   if (!debugCode || !debugCode->initialize(*debugLinkData_)) {
     return nullptr;
   }
@@ -1327,16 +1317,11 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
 #endif
 
 bool Module::makeStructTypeDescrs(
-    JSContext* cx,
+    JSContext* cx, StructTypePtrVector* structTypes,
     MutableHandle<StructTypeDescrVector> structTypeDescrs) const {
-  // This method must be a no-op if there are no structs.
-  if (structTypes().length() == 0) {
+  if (!GcTypesAvailable(cx)) {
     return true;
   }
-
-#ifndef ENABLE_WASM_GC
-  MOZ_CRASH("Should not have seen any struct types");
-#else
 
   // Not just any prototype object will do, we must have the actual
   // StructTypePrototype.
@@ -1351,7 +1336,15 @@ bool Module::makeStructTypeDescrs(
       cx, &toModule->getReservedSlot(WasmNamespaceObject::StructTypePrototype)
                .toObject());
 
-  for (const StructType& structType : structTypes()) {
+  for (const TypeDefWithId& typeDef : typeDefs()) {
+    if (!typeDef.isStructType()) {
+      continue;
+    }
+#ifndef ENABLE_WASM_GC
+    MOZ_CRASH("Should not have seen any struct types");
+#endif
+    const StructType& structType = typeDef.structType();
+
     RootedIdVector ids(cx);
     RootedValueVector fieldTypeObjs(cx);
     Vector<StructFieldProps> fieldProps(cx);
@@ -1424,13 +1417,13 @@ bool Module::makeStructTypeDescrs(
         cx, StructMetaTypeDescr::createFromArrays(cx, prototype, ids,
                                                   fieldTypeObjs, fieldProps));
 
-    if (!structTypeDescr || !structTypeDescrs.append(structTypeDescr)) {
+    if (!structTypeDescr || !structTypeDescrs.append(structTypeDescr) ||
+        !structTypes->append(&structType)) {
       return false;
     }
   }
 
   return true;
-#endif
 }
 
 bool Module::instantiate(JSContext* cx, ImportValues& imports,
@@ -1500,15 +1493,17 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   // Create type descriptors for any struct types that the module has.
 
   Rooted<StructTypeDescrVector> structTypeDescrs(cx);
-  if (!makeStructTypeDescrs(cx, &structTypeDescrs)) {
+  StructTypePtrVector structTypes;
+  if (!makeStructTypeDescrs(cx, &structTypes, &structTypeDescrs)) {
     return false;
   }
 
   instance.set(WasmInstanceObject::create(
       cx, code, dataSegments_, elemSegments_, std::move(tlsData), memory,
-      std::move(tags), std::move(tables), std::move(structTypeDescrs.get()),
-      imports.funcs, metadata().globals, imports.globalValues,
-      imports.globalObjs, instanceProto, std::move(maybeDebug)));
+      std::move(tags), std::move(tables), std::move(structTypes),
+      std::move(structTypeDescrs.get()), imports.funcs, metadata().globals,
+      imports.globalValues, imports.globalObjs, instanceProto,
+      std::move(maybeDebug)));
   if (!instance) {
     return false;
   }
