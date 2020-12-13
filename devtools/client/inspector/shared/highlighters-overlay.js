@@ -114,6 +114,9 @@ class HighlightersOverlay {
     // until it doesn't complete, this map will be populated with the requested type and
     // a unique symbol identifying that request. Once completed, the entry is removed.
     this._pendingHighlighters = new Map();
+    // Map of highlighter types to objects with metadata used to restore active
+    // highlighters after a page reload.
+    this._restorableHighlighters = new Map();
     // Collection of instantiated highlighter actors like FlexboxHighlighter,
     // ShapesHighlighter and GeometryEditorHighlighter.
     this.highlighters = {};
@@ -139,11 +142,16 @@ class HighlightersOverlay {
     // changes to properties in the Rule view.
     this.editors = {};
 
-    // Saved state to be restore on page navigation.
+    // Highlighter state.
     this.state = {
-      flexbox: {},
       // Map of grid container NodeFront to the their stored grid options
+      // Used to restore grid highlighters on reload (should be migrated to
+      // _restorableHighlighters in Bug 1572652).
       grids: new Map(),
+      // Shape Path Editor highlighter options.
+      // Used as a cache for the latest configuration when showing the highlighter.
+      // It is reused and augmented when hovering coordinates in the Rules view which
+      // mark the corresponding points in the highlighter overlay.
       shapes: {},
     };
 
@@ -181,6 +189,10 @@ class HighlightersOverlay {
       this.showHighlighterTypeForNode.bind(this),
       () => this.destroyed
     );
+    this.restoreState = safeAsyncMethod(
+      this.restoreState.bind(this),
+      () => this.destroyed
+    );
 
     // Add inspector events, not specific to a given view.
     this.inspector.on("markupmutation", this.onMarkupMutation);
@@ -214,6 +226,7 @@ class HighlightersOverlay {
    */
   async _afterShowHighlighterTypeForNode(type, nodeFront, options) {
     // Log telemetry for showing the flexbox highlighter.
+    // Set metadata necessary to restore the active highlighter upon page refresh.
     if (type === TYPES.FLEXBOX) {
       this.telemetry.toolOpened(
         "FLEXBOX_HIGHLIGHTER",
@@ -230,6 +243,16 @@ class HighlightersOverlay {
       if (scalars[options.trigger]) {
         this.telemetry.scalarAdd(scalars[options.trigger], 1);
       }
+
+      const { url } = this.target;
+      const selectors = [...this.inspector.selectionCssSelectors];
+
+      this._restorableHighlighters.set(type, {
+        options,
+        selectors,
+        type,
+        url,
+      });
     }
   }
 
@@ -310,6 +333,9 @@ class HighlightersOverlay {
    * @return {Promise}
    */
   async _beforeHideHighlighterType(type) {
+    // Remove any metadata used to restore this highlighter type on page refresh.
+    this._restorableHighlighters.delete(type);
+
     // Log telemetry for hiding the flexbox highlighter.
     if (type === TYPES.FLEXBOX) {
       this.telemetry.toolClosed(
@@ -776,28 +802,13 @@ class HighlightersOverlay {
       trigger,
       color,
     });
-
-    try {
-      // Save flexbox highlighter state.
-      const { url } = this.target;
-      const selector = await node.getUniqueSelector();
-      this.state.flexbox = { selector, options, url };
-    } catch (e) {
-      this._handleRejection(e);
-    }
   }
 
   /**
-   * Hide the flexbox highlighter for the given flexbox container element.
-   *
-   * @param  {NodeFront} node
-   *         The NodeFront of the flexbox container element to unhighlight.
+   * Hide the flexbox highlighter if any instance is visible.
    */
-  async hideFlexboxHighlighter(node) {
+  async hideFlexboxHighlighter() {
     await this.hideHighlighterType(TYPES.FLEXBOX);
-
-    // Erase flexbox highlighter state.
-    this.state.flexbox = null;
   }
 
   /**
@@ -923,8 +934,8 @@ class HighlightersOverlay {
     try {
       // Save grid highlighter state.
       const { url } = this.target;
-      const selector = await node.getUniqueSelector();
-      this.state.grids.set(node, { selector, options, url });
+      const selectors = await node.getAllSelectors();
+      this.state.grids.set(node, { selectors, options, url });
 
       // Emit the NodeFront of the grid container element that the grid highlighter was
       // shown for, and its options for testing the highlighter setting options.
@@ -1119,15 +1130,13 @@ class HighlightersOverlay {
    * Restores the saved flexbox highlighter state.
    */
   async restoreFlexboxState() {
-    try {
-      await this.restoreState(
-        "flexbox",
-        this.state.flexbox,
-        this.showFlexboxHighlighter
-      );
-    } catch (e) {
-      this._handleRejection(e);
+    const state = this._restorableHighlighters.get(TYPES.FLEXBOX);
+    if (!state) {
+      return;
     }
+
+    this._restorableHighlighters.delete(TYPES.FLEXBOX);
+    await this.restoreState(TYPES.FLEXBOX, state, this.showFlexboxHighlighter);
   }
 
   /**
@@ -1142,7 +1151,11 @@ class HighlightersOverlay {
 
     try {
       for (const gridState of values) {
-        await this.restoreState("grid", gridState, this.showGridHighlighter);
+        await this.restoreState(
+          TYPES.GRID,
+          gridState,
+          this.showGridHighlighter
+        );
       }
     } catch (e) {
       this._handleRejection(e);
@@ -1154,36 +1167,42 @@ class HighlightersOverlay {
    * Restores the saved highlighter state for the given highlighter
    * and their state.
    *
-   * @param  {String} name
-   *         The name of the highlighter to be restored
+   * @param  {String} type
+   *         Highlighter type to be restored.
    * @param  {Object} state
-   *         The state of the highlighter to be restored
+   *         Object containing the metadata used to restore the highlighter.
+   *         {Array} state.selectors
+   *         Array of CSS selector which identifies the node to be highlighted.
+   *         If the node is in the top-level document, the array contains just one item.
+   *         Otherwise, if the node is nested within a stack of iframes, each iframe is
+   *         identified by its unique selector; the last item in the array identifies
+   *         the target node within its host iframe document.
+   *         {Object} state.options
+   *         Configuration options to use when showing the highlighter.
+   *         {String} state.url
+   *         URL of the top-level target when the metadata was stored. Used to identify
+   *         if there was a page refresh or a navigation away to a different page.
    * @param  {Function} showFunction
    *         The function that shows the highlighter
-   * @return {Promise} that resolves when the highlighter state was restored, and the
-   *         expected highlighters are displayed.
+   * @return {Promise} that resolves when the highlighter was restored and shown.
    */
-  async restoreState(name, state, showFunction) {
-    const { selector, options, url } = state;
+  async restoreState(type, state, showFunction) {
+    const { selectors = [], options, url } = state;
 
-    if (!selector || url !== this.target.url) {
+    if (!selectors.length || url !== this.target.url) {
       // Bail out if no selector was saved, or if we are on a different page.
-      this.emit(`${name}-state-restored`, { restored: false });
+      this.emit(`highlighter-discarded`, { type });
       return;
     }
 
-    const rootNode = await this.walker.getRootNode();
-    const nodeFront = await this.walker.querySelector(rootNode, selector);
+    const inspectorFront = await this.target.getFront("inspector");
+    const nodeFront = await inspectorFront.walker.findNodeFront(selectors);
 
     if (nodeFront) {
-      if (options.hoverPoint) {
-        options.hoverPoint = null;
-      }
-
       await showFunction(nodeFront, options);
-      this.emit(`${name}-state-restored`, { restored: true });
+      this.emit(`highlighter-restored`, { type });
     } else {
-      this.emit(`${name}-state-restored`, { restored: false });
+      this.emit(`highlighter-discarded`, { type });
     }
   }
 
