@@ -1251,26 +1251,10 @@ class MOZ_NON_PARAM Val : public LitVal {
     return cell_.ref_.asJSObjectAddress();
   }
 
-  // Coercion function from a WebAssembly value to a JS value [1].
-  //
-  // This function may fail for any of the following reasons:
-  //  * The input value has an incorrect type for the targetType
-  //  * The targetType is not exposable
-  //  * An OOM ocurred
-  // An error will be set upon failure.
-  //
-  // [1] https://webassembly.github.io/spec/js-api/index.html#towebassemblyvalue
+  // See the comment for `ToWebAssemblyValue` below.
   static bool fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
                           MutableHandle<Val> rval);
-
-  // Coercion function from a JS value to a WebAssembly value [1].
-  //
-  // This function will only fail if an OOM ocurred. If the type of WebAssembly
-  // value being coerced is not exposable to JS, then it will be coerced to
-  // 'undefined'. Callers are responsible for guarding against this if this is
-  // not desirable.
-  //
-  // [1] https://webassembly.github.io/spec/js-api/index.html#tojsvalue
+  // See the comment for `ToJSValue` below.
   bool toJSValue(JSContext* cx, MutableHandleValue rval) const;
 
   void trace(JSTracer* trc) const;
@@ -1309,10 +1293,27 @@ extern MOZ_MUST_USE bool CheckEqRefValue(JSContext* cx, HandleValue v,
 class NoDebug;
 class DebugCodegenVal;
 
+// Coercion function from a JS value to a WebAssembly value [1].
+//
+// This function may fail for any of the following reasons:
+//  * The input value has an incorrect type for the targetType
+//  * The targetType is not exposable
+//  * An OOM ocurred
+// An error will be set upon failure.
+//
+// [1] https://webassembly.github.io/spec/js-api/index.html#towebassemblyvalue
 template <typename Debug = NoDebug>
 extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
                                void* loc, bool mustWrite64);
 
+// Coercion function from a WebAssembly value to a JS value [1].
+//
+// This function will only fail if an OOM ocurred. If the type of WebAssembly
+// value being coerced is not exposable to JS, then it will be coerced to
+// 'undefined'. Callers are responsible for guarding against this if this is
+// not desirable.
+//
+// [1] https://webassembly.github.io/spec/js-api/index.html#tojsvalue
 template <typename Debug = NoDebug>
 extern bool ToJSValue(JSContext* cx, const void* src, ValType type,
                       MutableHandleValue dst);
