@@ -469,7 +469,8 @@ void CanonicalBrowsingContext::CallOnAllTopDescendants(
 
 void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
                                                     const nsID& aChangeID,
-                                                    uint32_t aLoadType) {
+                                                    uint32_t aLoadType,
+                                                    bool aPersist) {
   MOZ_LOG(gSHLog, LogLevel::Verbose,
           ("CanonicalBrowsingContext::SessionHistoryCommit %p %" PRIu64, this,
            aLoadId));
@@ -523,7 +524,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
           }
 
           if (addEntry) {
-            shistory->AddEntry(mActiveEntry, mActiveEntry->GetPersist());
+            shistory->AddEntry(mActiveEntry, aPersist);
           }
         }
       } else {

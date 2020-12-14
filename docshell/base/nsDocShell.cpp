@@ -5606,7 +5606,7 @@ nsresult nsDocShell::RefreshURIFromQueue() {
 
 nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
                            WindowGlobalChild* aWindowActor,
-                           bool aIsTransientAboutBlank) {
+                           bool aIsTransientAboutBlank, bool aPersist) {
   // Save the LayoutHistoryState of the previous document, before
   // setting up new document
   PersistLayoutHistoryState();
@@ -5632,7 +5632,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
 
   if (!aIsTransientAboutBlank && mozilla::SessionHistoryInParent()) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Embed", this));
-    MoveLoadingToActiveEntry();
+    MoveLoadingToActiveEntry(aPersist);
   }
 
   bool updateHistory = true;
@@ -6679,7 +6679,7 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       // hook 'em up
       if (viewer) {
         viewer->SetContainer(this);
-        rv = Embed(viewer, aActor, true);
+        rv = Embed(viewer, aActor, true, false);
         NS_ENSURE_SUCCESS(rv, rv);
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nullptr, true, 0);
@@ -7916,7 +7916,9 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     }
   }
 
-  NS_ENSURE_SUCCESS(Embed(viewer), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(Embed(viewer, nullptr, false,
+                          ShouldAddToSessionHistory(finalURI, aOpenedChannel)),
+                    NS_ERROR_FAILURE);
 
   if (!mBrowsingContext->GetHasLoadedNonInitialDocument()) {
     MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetHasLoadedNonInitialDocument(true));
@@ -8844,8 +8846,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
       nsID changeID = {};
       if (XRE_IsParentProcess()) {
+        // Persist value for session history commit doesn't matter here
+        // since the load is from session history.
         mBrowsingContext->Canonical()->SessionHistoryCommit(
-            mLoadingEntry->mLoadId, changeID, mLoadType);
+            mLoadingEntry->mLoadId, changeID, mLoadType, true);
       } else {
         RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
         if (rootSH) {
@@ -8856,8 +8860,11 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
                                     changeID);
         }
         ContentChild* cc = ContentChild::GetSingleton();
-        mozilla::Unused << cc->SendHistoryCommit(
-            mBrowsingContext, mLoadingEntry->mLoadId, changeID, mLoadType);
+        // Persist value for session history commit doesn't matter here
+        // since the load is from session history.
+        mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
+                                                 mLoadingEntry->mLoadId,
+                                                 changeID, mLoadType, true);
       }
       // FIXME Need to set postdata.
       SetCacheKeyOnHistoryEntry(nullptr, cacheKey);
@@ -13231,7 +13238,7 @@ void nsDocShell::SetLoadingSessionHistoryInfo(
   mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(aLoadingInfo);
 }
 
-void nsDocShell::MoveLoadingToActiveEntry() {
+void nsDocShell::MoveLoadingToActiveEntry(bool aPersist) {
   MOZ_ASSERT(mozilla::SessionHistoryInParent());
 
   MOZ_LOG(gSHLog, LogLevel::Debug,
@@ -13257,8 +13264,8 @@ void nsDocShell::MoveLoadingToActiveEntry() {
     uint32_t loadType =
         mLoadType == LOAD_ERROR_PAGE ? mFailedLoadType : mLoadType;
     if (XRE_IsParentProcess()) {
-      mBrowsingContext->Canonical()->SessionHistoryCommit(loadingEntry->mLoadId,
-                                                          changeID, loadType);
+      mBrowsingContext->Canonical()->SessionHistoryCommit(
+          loadingEntry->mLoadId, changeID, loadType, aPersist);
     } else {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
       if (rootSH) {
@@ -13285,8 +13292,9 @@ void nsDocShell::MoveLoadingToActiveEntry() {
         }
       }
       ContentChild* cc = ContentChild::GetSingleton();
-      mozilla::Unused << cc->SendHistoryCommit(
-          mBrowsingContext, loadingEntry->mLoadId, changeID, loadType);
+      mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
+                                               loadingEntry->mLoadId, changeID,
+                                               loadType, aPersist);
     }
   }
 }
