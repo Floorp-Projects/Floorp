@@ -131,6 +131,21 @@ def WebIDLTest(parser, harness):
     )
 
     parser = parser.reset()
+    parser.parse(
+        """
+        interface TestStringifier {
+            stringifier attribute UTF8String foo;
+        };
+    """
+    )
+    results = parser.finish()
+    stringifier = results[0].members[1]
+    harness.ok(
+        stringifier.signatures()[0][0].isUTF8String(),
+        "Stringifier attributes should allow UTF8String",
+    )
+
+    parser = parser.reset()
     threw = False
     try:
         parser.parse(
