@@ -5,13 +5,19 @@
 from __future__ import absolute_import
 
 import os
+import sys
 
 import manifestparser
 import mozinfo
 import mozunit
 import pytest
 
-from mock import Mock, patch, mock_open, sentinel, DEFAULT
+PY2 = sys.version_info.major == 2
+
+if PY2:
+    from mock import Mock, patch, mock_open, sentinel, DEFAULT
+else:
+    from unittest.mock import Mock, patch, mock_open, sentinel, DEFAULT
 
 from marionette_harness.runtests import MarionetteTestRunner
 

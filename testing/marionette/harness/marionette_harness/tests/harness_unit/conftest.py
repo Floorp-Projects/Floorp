@@ -4,9 +4,16 @@
 
 from __future__ import absolute_import
 
+import sys
+
 import pytest
 
-from mock import Mock, MagicMock
+PY2 = sys.version_info.major == 2
+
+if PY2:
+    from mock import Mock, MagicMock
+else:
+    from unittest.mock import Mock, MagicMock
 
 from marionette_driver.marionette import Marionette
 
