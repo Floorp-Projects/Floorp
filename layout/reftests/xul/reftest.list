@@ -8,9 +8,9 @@ random-if(Android) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xhtml c
 == chrome://reftest/content/xul/textbox-overflow-1.xhtml chrome://reftest/content/xul/textbox-overflow-1-ref.xhtml # for bug 749658
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
 pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xhtml chrome://reftest/content/xul/accesskey-ref.xhtml
-pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) == chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-ref.xhtml # win8: bug 1254832
+fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) == chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-ref.xhtml # win8: bug 1254832
 skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget) == chrome://reftest/content/xul/mac-tab-toolbar.xhtml chrome://reftest/content/xul/mac-tab-toolbar-ref.xhtml
-pref(layout.css.xul-tree-pseudos.content.enabled,true) != chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-notref.xhtml
+!= chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-notref.xhtml
 == chrome://reftest/content/xul/text-crop.xhtml chrome://reftest/content/xul/text-crop-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == chrome://reftest/content/xul/text-small-caps-1.xhtml chrome://reftest/content/xul/text-small-caps-1-ref.xhtml
 fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,350-1050) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xhtml inactive-fixed-bg-bug1205630-ref.html
@@ -74,8 +74,8 @@ skip == chrome://reftest/content/xul/treecell-image-svg-1b.xhtml chrome://reftes
 
 == chrome://reftest/content/xul/treechildren-padding-percent-1.xhtml chrome://reftest/content/xul/treechildren-padding-percent-1-ref.xhtml
 
-pref(layout.css.xul-tree-pseudos.content.enabled,true) != chrome://reftest/content/xul/treetwisty-svg-context-paint-1-not-ref.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
-pref(layout.css.xul-tree-pseudos.content.enabled,true) test-pref(svg.context-properties.content.enabled,true) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
+!= chrome://reftest/content/xul/treetwisty-svg-context-paint-1-not-ref.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
+test-pref(svg.context-properties.content.enabled,true) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
 
 # resizer (non-native-themed)
 
