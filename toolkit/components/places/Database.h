@@ -203,8 +203,6 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
   already_AddRefed<mozIStorageAsyncStatement> GetAsyncStatement(
       const nsACString& aQuery);
 
-  uint32_t MaxUrlLength();
-
   int64_t GetRootFolderId() {
     mozilla::Unused << EnsureConnection();
     return mRootId;
