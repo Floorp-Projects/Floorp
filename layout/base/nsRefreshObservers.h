@@ -23,6 +23,9 @@ class AnimationEventDispatcher;
 class PendingFullscreenEvent;
 class PresShell;
 class RefreshDriverTimer;
+namespace layout {
+class VsyncChild;
+}
 }  // namespace mozilla
 
 /**
