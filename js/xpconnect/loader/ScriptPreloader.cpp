@@ -900,12 +900,13 @@ JSScript* ScriptPreloader::GetCachedScriptInternal(
 JSScript* ScriptPreloader::WaitForCachedScript(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     CachedScript* script) {
-  // Check for finished operations before locking so that we can move onto
-  // decoding the next batch as soon as possible after the pending batch is
-  // ready. If we wait until we hit an unfinished script, we wind up having at
-  // most one batch of buffered scripts, and occasionally under-running that
-  // buffer.
-  MaybeFinishOffThreadDecode();
+  // Always check for finished operations so that we can move on to decoding the
+  // next batch as soon as possible after the pending batch is ready. If we wait
+  // until we hit an unfinished script, we wind up having at most one batch of
+  // buffered scripts, and occasionally under-running that buffer.
+  if (JS::OffThreadToken* token = mToken.exchange(nullptr)) {
+    FinishOffThreadDecode(token);
+  }
 
   if (!script->mReadyToExecute) {
     LOG(Info, "Must wait for async script load: %s\n", script->mURL.get());
@@ -924,9 +925,9 @@ JSScript* ScriptPreloader::WaitForCachedScript(
 
       // Process script batches until our target is found.
       while (!script->mReadyToExecute) {
-        if (mToken) {
+        if (JS::OffThreadToken* token = mToken.exchange(nullptr)) {
           MonitorAutoUnlock mau(mMonitor);
-          MaybeFinishOffThreadDecode();
+          FinishOffThreadDecode(token);
         } else {
           MOZ_ASSERT(!mParsingScripts.empty());
           mal.Wait();
@@ -947,18 +948,20 @@ void ScriptPreloader::OffThreadDecodeCallback(JS::OffThreadToken* token,
                                               void* context) {
   auto cache = static_cast<ScriptPreloader*>(context);
 
+  // Make the token available to main-thread asynchronously. The lock below is
+  // used for Wait/Notify machinery and isn't needed to update the token itself.
+  MOZ_ALWAYS_FALSE(cache->mToken.exchange(token));
+
   cache->mMonitor.AssertNotCurrentThreadOwns();
   MonitorAutoLock mal(cache->mMonitor);
 
   // First notify any tasks that are already waiting on scripts, since they'll
   // be blocking the main thread, and prevent any runnables from executing.
-  cache->mToken = token;
   mal.NotifyAll();
 
-  // If nothing processed the token, and we don't already have a pending
-  // runnable, then dispatch a new one to finish the processing on the main
-  // thread as soon as possible.
-  if (cache->mToken && !cache->mFinishDecodeRunnablePending) {
+  // If we don't already have a pending runnable, then dispatch a new one to
+  // finish the processing on the main thread as soon as possible.
+  if (!cache->mFinishDecodeRunnablePending) {
     cache->mFinishDecodeRunnablePending = true;
     NS_DispatchToMainThread(
         NewRunnableMethod("ScriptPreloader::DoFinishOffThreadDecode", cache,
@@ -974,9 +977,9 @@ void ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal) {
 
   // Process any pending decodes that are in flight.
   while (!mParsingScripts.empty()) {
-    if (mToken) {
+    if (JS::OffThreadToken* token = mToken.exchange(nullptr)) {
       MonitorAutoUnlock mau(mMonitor);
-      MaybeFinishOffThreadDecode();
+      FinishOffThreadDecode(token);
     } else {
       aMal.Wait();
     }
@@ -985,18 +988,17 @@ void ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal) {
 
 void ScriptPreloader::DoFinishOffThreadDecode() {
   mFinishDecodeRunnablePending = false;
-  MaybeFinishOffThreadDecode();
+
+  if (JS::OffThreadToken* token = mToken.exchange(nullptr)) {
+    FinishOffThreadDecode(token);
+  }
 }
 
-void ScriptPreloader::MaybeFinishOffThreadDecode() {
+void ScriptPreloader::FinishOffThreadDecode(JS::OffThreadToken* token) {
   mMonitor.AssertNotCurrentThreadOwns();
-
-  if (!mToken) {
-    return;
-  }
+  MOZ_ASSERT(token);
 
   auto cleanup = MakeScopeExit([&]() {
-    mToken = nullptr;
     mParsingSources.clear();
     mParsingScripts.clear();
 
@@ -1016,7 +1018,7 @@ void ScriptPreloader::MaybeFinishOffThreadDecode() {
   //
   // The exception from the off-thread decode operation will be reported when
   // we pop the AutoJSAPI off the stack.
-  Unused << JS::FinishMultiOffThreadScriptsDecoder(cx, mToken, &jsScripts);
+  Unused << JS::FinishMultiOffThreadScriptsDecoder(cx, token, &jsScripts);
 
   unsigned i = 0;
   for (auto script : mParsingScripts) {
