@@ -82,7 +82,7 @@ This augmentation is tested by running:
 These tests require Python 3+.
 If your default Python is Python 2, you may need to instead run:
 
-`mach python-test --python 3 toolkit/components/glean/pytest`
+`python3 mach python-test toolkit/components/glean/pytest`
 
 ## C++
 
@@ -112,3 +112,6 @@ You can either add a test case to an existing file or add a new file.
 If you add a new file, remember to add it to the
 [`xpcshell.ini`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/xpcshell.ini)
 or the test runner will not be able to find it.
+
+To run FOG's JS tests, run:
+`./mach test toolkit/components/glean/xpcshell`
