@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod test {
     use crate::{
-        c_bindings::*, iccread::*, transform::*, transform_util::lut_inverse_interp16,
-        QCMS_INTENT_DEFAULT, QCMS_INTENT_PERCEPTUAL,
+        c_bindings::*, iccread::*, transform::qcms_data_type::*, transform::*,
+        transform_util::lut_inverse_interp16, QCMS_INTENT_DEFAULT, QCMS_INTENT_PERCEPTUAL,
     };
     use libc::c_void;
     use std::ptr::null_mut;
@@ -186,9 +186,9 @@ mod test {
         let transform = unsafe {
             qcms_transform_create(
                 &mut *sRGB_profile,
-                QCMS_DATA_RGB_8,
+                DATA_RGB_8,
                 &mut *other,
-                QCMS_DATA_RGB_8,
+                DATA_RGB_8,
                 QCMS_INTENT_PERCEPTUAL,
             )
         };
@@ -219,9 +219,9 @@ mod test {
         let transform = unsafe {
             qcms_transform_create(
                 &mut *other,
-                QCMS_DATA_GRAYA_8,
+                DATA_GRAYA_8,
                 &mut *sRGB_profile,
-                QCMS_DATA_RGBA_8,
+                DATA_RGBA_8,
                 QCMS_INTENT_PERCEPTUAL,
             )
         };
@@ -306,13 +306,7 @@ mod test {
 
         let intent = unsafe { qcms_profile_get_rendering_intent(profile) };
         let transform = unsafe {
-            qcms_transform_create(
-                &*profile,
-                QCMS_DATA_RGB_8,
-                &*srgb_profile,
-                QCMS_DATA_RGB_8,
-                intent,
-            )
+            qcms_transform_create(&*profile, DATA_RGB_8, &*srgb_profile, DATA_RGB_8, intent)
         };
 
         assert_ne!(transform, std::ptr::null_mut());
@@ -538,7 +532,7 @@ mod test {
                 reference: Vec::new(),
 
                 pixels: 0,
-                storage_type: QCMS_DATA_RGB_8,
+                storage_type: DATA_RGB_8,
                 precache: false,
             }
         }
@@ -606,21 +600,21 @@ mod test {
 
         unsafe fn SetBuffers(&mut self, ty: qcms_data_type) -> bool {
             match ty {
-                QCMS_DATA_RGB_8 => {
+                DATA_RGB_8 => {
                     let (pixels, input) = GetRgbInputBuffer();
                     self.input = input;
                     self.pixels = pixels;
                     self.reference = GetRgbOutputBuffer(self.pixels);
                     self.output = GetRgbOutputBuffer(self.pixels)
                 }
-                QCMS_DATA_RGBA_8 => {
+                DATA_RGBA_8 => {
                     let (pixels, input) = GetBgraInputBuffer();
                     self.input = input;
                     self.pixels = pixels;
                     self.reference = GetRgbaOutputBuffer(self.pixels);
                     self.output = GetRgbaOutputBuffer(self.pixels);
                 }
-                QCMS_DATA_BGRA_8 => {
+                DATA_BGRA_8 => {
                     let (pixels, input) = GetRgbaInputBuffer();
                     self.input = input;
                     self.pixels = pixels;
@@ -635,10 +629,8 @@ mod test {
 
         unsafe fn ClearOutputBuffer(&mut self) {
             match self.storage_type {
-                QCMS_DATA_RGB_8 => ClearRgbBuffer(&mut self.output, self.pixels),
-                QCMS_DATA_RGBA_8 | QCMS_DATA_BGRA_8 => {
-                    ClearRgbaBuffer(&mut self.output, self.pixels)
-                }
+                DATA_RGB_8 => ClearRgbBuffer(&mut self.output, self.pixels),
+                DATA_RGBA_8 | DATA_BGRA_8 => ClearRgbaBuffer(&mut self.output, self.pixels),
                 _ => unreachable!("Unknown type!"),
             }
         }
@@ -654,8 +646,8 @@ mod test {
 
         fn CopyInputToRef(&mut self) {
             let pixelSize = match self.storage_type {
-                QCMS_DATA_RGB_8 => 3,
-                QCMS_DATA_RGBA_8 | QCMS_DATA_BGRA_8 => 4,
+                DATA_RGB_8 => 3,
+                DATA_RGBA_8 | DATA_BGRA_8 => 4,
                 _ => unreachable!("Unknown type!"),
             };
             self.reference
@@ -674,9 +666,9 @@ mod test {
 
         unsafe fn VerifyOutput(&self, buf: &[u8]) -> bool {
             match self.storage_type {
-                QCMS_DATA_RGB_8 => return CmpRgbBuffer(buf, &self.output, self.pixels),
-                QCMS_DATA_RGBA_8 => return CmpRgbaBuffer(buf, &self.output, self.pixels),
-                QCMS_DATA_BGRA_8 => return CmpBgraBuffer(buf, &self.output, self.pixels),
+                DATA_RGB_8 => return CmpRgbBuffer(buf, &self.output, self.pixels),
+                DATA_RGBA_8 => return CmpRgbaBuffer(buf, &self.output, self.pixels),
+                DATA_BGRA_8 => return CmpBgraBuffer(buf, &self.output, self.pixels),
                 _ => unreachable!("Unknown type!"),
             }
         }
@@ -692,12 +684,12 @@ mod test {
         }
         unsafe fn TransformPrecache(&mut self) {
             assert_eq!(self.precache, false);
-            assert!(self.SetBuffers(QCMS_DATA_RGB_8));
-            assert!(self.SetTransformForType(QCMS_DATA_RGB_8));
+            assert!(self.SetBuffers(DATA_RGB_8));
+            assert!(self.SetTransformForType(DATA_RGB_8));
             self.ProduceRef(Some(qcms_transform_data_rgb_out_lut));
 
             self.PrecacheOutput();
-            assert!(self.SetTransformForType(QCMS_DATA_RGB_8));
+            assert!(self.SetTransformForType(DATA_RGB_8));
             assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_precache)))
         }
 
@@ -705,8 +697,8 @@ mod test {
             self.PrecacheOutput();
 
             // Verify RGB transforms.
-            assert!(self.SetBuffers(QCMS_DATA_RGB_8));
-            assert!(self.SetTransformForType(QCMS_DATA_RGB_8));
+            assert!(self.SetBuffers(DATA_RGB_8));
+            assert!(self.SetTransformForType(DATA_RGB_8));
             self.ProduceRef(Some(qcms_transform_data_rgb_out_lut_precache));
 
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -732,8 +724,8 @@ mod test {
             }
 
             // Verify RGBA transform.
-            assert!(self.SetBuffers(QCMS_DATA_RGBA_8));
-            assert!(self.SetTransformForType(QCMS_DATA_RGBA_8));
+            assert!(self.SetBuffers(DATA_RGBA_8));
+            assert!(self.SetTransformForType(DATA_RGBA_8));
             self.ProduceRef(Some(qcms_transform_data_rgba_out_lut_precache));
 
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -759,8 +751,8 @@ mod test {
             }
 
             // Verify BGRA transform.
-            assert!(self.SetBuffers(QCMS_DATA_BGRA_8));
-            assert!(self.SetTransformForType(QCMS_DATA_BGRA_8));
+            assert!(self.SetBuffers(DATA_BGRA_8));
+            assert!(self.SetTransformForType(DATA_BGRA_8));
             self.ProduceRef(Some(qcms_transform_data_bgra_out_lut_precache));
 
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -807,8 +799,8 @@ mod test {
             pt.in_profile = qcms_profile_sRGB();
             pt.out_profile = qcms_profile_sRGB();
             pt.PrecacheOutput();
-            pt.SetBuffers(QCMS_DATA_RGB_8);
-            pt.SetTransformForType(QCMS_DATA_RGB_8);
+            pt.SetBuffers(DATA_RGB_8);
+            pt.SetTransformForType(DATA_RGB_8);
             qcms_transform_data(
                 pt.transform,
                 pt.input.as_mut_ptr() as *mut c_void,
@@ -871,9 +863,9 @@ mod test {
         let transform = unsafe {
             qcms_transform_create(
                 &*input,
-                QCMS_DATA_RGB_8,
+                DATA_RGB_8,
                 &*output,
-                QCMS_DATA_RGB_8,
+                DATA_RGB_8,
                 QCMS_INTENT_PERCEPTUAL,
             )
         };
