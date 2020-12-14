@@ -109,17 +109,17 @@ interface nsIEditorSpellCheck : nsISupports
    *
    * @see mozISpellCheckingEngine::GetDictionaryList
    */
-  Array<AString> GetDictionaryList();
+  Array<ACString> GetDictionaryList();
 
   /**
    * @see mozSpellChecker::GetCurrentDictionary
    */
-  AString       GetCurrentDictionary();
+  ACString      GetCurrentDictionary();
 
   /**
    * @see mozSpellChecker::SetCurrentDictionary
    */
-  void          SetCurrentDictionary(in AString dictionary);
+  void          SetCurrentDictionary(in ACString dictionary);
 
   /**
    * Call this to free up the spell checking object. It will also save the

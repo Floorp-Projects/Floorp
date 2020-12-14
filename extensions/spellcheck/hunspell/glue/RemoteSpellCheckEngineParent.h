@@ -20,11 +20,11 @@ class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent {
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvSetDictionary(const nsString& aDictionary,
-                                                    bool* success);
+  virtual mozilla::ipc::IPCResult RecvSetDictionary(
+      const nsCString& aDictionary, bool* success);
 
   virtual mozilla::ipc::IPCResult RecvSetDictionaryFromList(
-      nsTArray<nsString>&& aList, SetDictionaryFromListResolver&& aResolve);
+      nsTArray<nsCString>&& aList, SetDictionaryFromListResolver&& aResolve);
 
   virtual mozilla::ipc::IPCResult RecvCheckAsync(nsTArray<nsString>&& aWord,
                                                  CheckAsyncResolver&& aResolve);

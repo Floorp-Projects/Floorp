@@ -17,22 +17,22 @@ RemoteSpellcheckEngineParent::RemoteSpellcheckEngineParent() {
 RemoteSpellcheckEngineParent::~RemoteSpellcheckEngineParent() {}
 
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionary(
-    const nsString& aDictionary, bool* success) {
+    const nsCString& aDictionary, bool* success) {
   nsresult rv = mSpellChecker->SetCurrentDictionary(aDictionary);
   *success = NS_SUCCEEDED(rv);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionaryFromList(
-    nsTArray<nsString>&& aList, SetDictionaryFromListResolver&& aResolve) {
+    nsTArray<nsCString>&& aList, SetDictionaryFromListResolver&& aResolve) {
   for (auto& dictionary : aList) {
     nsresult rv = mSpellChecker->SetCurrentDictionary(dictionary);
     if (NS_SUCCEEDED(rv)) {
-      aResolve(Tuple<const bool&, const nsString&>(true, dictionary));
+      aResolve(Tuple<const bool&, const nsCString&>(true, dictionary));
       return IPC_OK();
     }
   }
-  aResolve(Tuple<const bool&, const nsString&>(false, u""_ns));
+  aResolve(Tuple<const bool&, const nsCString&>(false, ""_ns));
   return IPC_OK();
 }
 
