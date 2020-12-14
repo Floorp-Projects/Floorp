@@ -911,27 +911,26 @@ JSScript* ScriptPreloader::WaitForCachedScript(
     LOG(Info, "Must wait for async script load: %s\n", script->mURL.get());
     auto start = TimeStamp::Now();
 
-    mMonitor.AssertNotCurrentThreadOwns();
-    MonitorAutoLock mal(mMonitor);
-
-    // Check for finished operations again *after* locking, or we may race
-    // against mToken being set between our last check and the time we
-    // entered the mutex.
-    MaybeFinishOffThreadDecode();
-
-    if (!script->mReadyToExecute &&
-        script->mSize < MAX_MAINTHREAD_DECODE_SIZE) {
+    // If script is small enough, we'd rather recompile on main-thread than wait
+    // for a decode task to complete.
+    if (script->mSize < MAX_MAINTHREAD_DECODE_SIZE) {
       LOG(Info, "Script is small enough to recompile on main thread\n");
 
       script->mReadyToExecute = true;
       Telemetry::ScalarAdd(
           Telemetry::ScalarID::SCRIPT_PRELOADER_MAINTHREAD_RECOMPILE, 1);
     } else {
-      while (!script->mReadyToExecute) {
-        mal.Wait();
+      MonitorAutoLock mal(mMonitor);
 
-        MonitorAutoUnlock mau(mMonitor);
-        MaybeFinishOffThreadDecode();
+      // Process script batches until our target is found.
+      while (!script->mReadyToExecute) {
+        if (mToken) {
+          MonitorAutoUnlock mau(mMonitor);
+          MaybeFinishOffThreadDecode();
+        } else {
+          MOZ_ASSERT(!mParsingScripts.empty());
+          mal.Wait();
+        }
       }
     }
 
@@ -970,14 +969,17 @@ void ScriptPreloader::OffThreadDecodeCallback(JS::OffThreadToken* token,
 void ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal) {
   mMonitor.AssertCurrentThreadOwns();
 
+  // Clear out scripts that we have not issued batch for yet.
   mPendingScripts.clear();
 
-  MaybeFinishOffThreadDecode();
-
-  // Loop until all pending decode operations finish.
+  // Process any pending decodes that are in flight.
   while (!mParsingScripts.empty()) {
-    aMal.Wait();
-    MaybeFinishOffThreadDecode();
+    if (mToken) {
+      MonitorAutoUnlock mau(mMonitor);
+      MaybeFinishOffThreadDecode();
+    } else {
+      aMal.Wait();
+    }
   }
 }
 
@@ -987,6 +989,8 @@ void ScriptPreloader::DoFinishOffThreadDecode() {
 }
 
 void ScriptPreloader::MaybeFinishOffThreadDecode() {
+  mMonitor.AssertNotCurrentThreadOwns();
+
   if (!mToken) {
     return;
   }
