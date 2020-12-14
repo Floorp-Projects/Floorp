@@ -135,9 +135,9 @@ this.EXPORTED_SYMBOLS = ["fathom"];
      * Iterate, depth first, over a DOM node. Return the original node first.
      *
      * @arg shouldTraverse {function} Given a node, say whether we should
-     *     include it and its children
+     *     include it and its children. Default: always true.
      */
-    function *walk(element, shouldTraverse) {
+    function *walk(element, shouldTraverse = element => true) {
         yield element;
         for (let child of element.childNodes) {
             if (shouldTraverse(child)) {
@@ -254,15 +254,6 @@ this.EXPORTED_SYMBOLS = ["fathom"];
     }
 
     /**
-     * Return an backward iterator over an Array.
-     */
-    function *reversed(array) {
-        for (let i = array.length - 1; i >= 0; i--) {
-            yield array[i];
-        }
-    }
-
-    /**
      * Return an Array, the reverse topological sort of the given nodes.
      *
      * @arg nodes An iterable of arbitrary things
@@ -320,6 +311,19 @@ this.EXPORTED_SYMBOLS = ["fathom"];
                 this.add(item);
             }
             return this;
+        }
+
+        /**
+         * Subtract another set from a copy of me.
+         *
+         * @return a copy of myself excluding the elements in ``otherSet``.
+         */
+        minus(otherSet) {
+            const ret = new NiceSet(this);
+            for (const item of otherSet) {
+                ret.delete(item);
+            }
+            return ret;
         }
 
         /**
@@ -403,14 +407,6 @@ this.EXPORTED_SYMBOLS = ["fathom"];
 
     /* istanbul ignore next */
     /**
-     * @return whether a thing appears to be a DOM element.
-     */
-    function isDomElement(thing) {
-        return thing.nodeName !== undefined;
-    }
-
-    /* istanbul ignore next */
-    /**
      * Return the DOM element contained in a passed-in fnode. Return passed-in DOM
      * elements verbatim.
      *
@@ -479,12 +475,22 @@ this.EXPORTED_SYMBOLS = ["fathom"];
     /**
      * Return whether an element is practically visible, considering things like 0
      * size or opacity, ``visibility: hidden`` and ``overflow: hidden``.
+     *
+     * Merely being scrolled off the page in either horizontally or vertically
+     * doesn't count as invisible; the result of this function is meant to be
+     * independent of viewport size.
+     *
+     * @throws {Error} The element (or perhaps one of its ancestors) is not in a
+     *     window, so we can't find the `getComputedStyle()` routine to call. That
+     *     routine is the source of most of the information we use, so you should
+     *     pick a different strategy for non-window contexts.
      */
     function isVisible(fnodeOrElement) {
         // This could be 5x more efficient if https://github.com/w3c/csswg-drafts/issues/4122 happens.
         const element = toDomElement(fnodeOrElement);
+        const elementWindow = windowForElement(element);
         const elementRect = element.getBoundingClientRect();
-        const elementStyle = getComputedStyle(element);
+        const elementStyle = elementWindow.getComputedStyle(element);
         // Alternative to reading ``display: none`` due to Bug 1381071.
         if (elementRect.width === 0 && elementRect.height === 0 && elementStyle.overflow !== 'hidden') {
             return false;
@@ -492,17 +498,15 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         if (elementStyle.visibility === 'hidden') {
             return false;
         }
-        // Check if the element is off-screen:
-        const frame = element.ownerDocument.defaultView;
+        // Check if the element is irrevocably off-screen:
         if (elementRect.x + elementRect.width < 0 ||
-            elementRect.y + elementRect.height < 0 ||
-            elementRect.x > frame.innerWidth || elementRect.y > frame.innerHeight
+            elementRect.y + elementRect.height < 0
         ) {
             return false;
         }
         for (const ancestor of ancestors(element)) {
             const isElement = ancestor === element;
-            const style = isElement ? elementStyle : getComputedStyle(ancestor);
+            const style = isElement ? elementStyle : elementWindow.getComputedStyle(ancestor);
             if (style.opacity === '0') {
                 return false;
             }
@@ -609,8 +613,44 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
     }
 
+    /* istanbul ignore next */
+    /**
+     * @return whether a thing appears to be a DOM element.
+     */
+    function isDomElement(thing) {
+        return thing.nodeName !== undefined;
+    }
+
     function isIterable(thing) {
         return thing && typeof thing[Symbol.iterator] === 'function';
+    }
+
+    /**
+     * Return an backward iterator over an Array.
+     */
+    function *reversed(array) {
+        for (let i = array.length - 1; i >= 0; i--) {
+            yield array[i];
+        }
+    }
+
+    /* istanbul ignore next */
+    /*
+     * Return the window an element is in.
+     *
+     * @throws {Error} There isn't such a window.
+     */
+    function windowForElement(element) {
+        let doc = element.ownerDocument;
+        if (doc === null) {
+            // The element itself was a document.
+            doc = element;
+        }
+        const win = doc.defaultView;
+        if (win === null) {
+            throw new Error('The element was not in a window.');
+        }
+        return win;
     }
 
     var utilsForFrontend = /*#__PURE__*/Object.freeze({
@@ -631,7 +671,6 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         isWhitespace: isWhitespace,
         setDefault: setDefault,
         getDefault: getDefault,
-        reversed: reversed,
         toposort: toposort,
         NiceSet: NiceSet,
         first: first,
@@ -639,7 +678,6 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         numberOfMatches: numberOfMatches,
         page: page,
         domSort: domSort,
-        isDomElement: isDomElement,
         toDomElement: toDomElement,
         attributesMatch: attributesMatch,
         ancestors: ancestors,
@@ -650,7 +688,10 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         linearScale: linearScale,
         flatten: flatten,
         map: map,
-        forEach: forEach
+        forEach: forEach,
+        isDomElement: isDomElement,
+        reversed: reversed,
+        windowForElement: windowForElement
     });
 
     /**
@@ -1031,7 +1072,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
     /**
      * Take a single given node if it matches a given DOM selector, without looking
      * through its descendents or ancestors. Otherwise, take no nodes. Example:
-     * ``element(someNodeTheUserClicked)``
+     * ``element('input')``
      *
      * This is useful for applications in which you want Fathom to classify an
      * element the user has selected, rather than scanning the whole page for
@@ -1205,7 +1246,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
             for (let i = 0; i < domNodes.length; i++) {
                 ret.push(ruleset.fnodeForElement(domNodes[i]));
             }
-            return super.fnodesSatisfyingWhen(ret);
+            return this.fnodesSatisfyingWhen(ret);
         }
 
         checkFact(fact) {
@@ -1255,7 +1296,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
 
         fnodes(ruleset) {
             const cached = getDefault(ruleset.typeCache, this._type, () => []);
-            return super.fnodesSatisfyingWhen(cached);
+            return this.fnodesSatisfyingWhen(cached);
         }
 
         /** Override the type previously specified by this constraint. */
@@ -1958,8 +1999,8 @@ this.EXPORTED_SYMBOLS = ["fathom"];
      */
     class Fnode {
         /**
-         * @arg element The DOM element I describe
-         * @arg ruleset The ruleset which created me
+         * @arg element The DOM element described by the fnode.
+         * @arg ruleset The ruleset which created the fnode.
          */
         constructor(element, ruleset) {
             if (element === undefined) {
@@ -1991,7 +2032,8 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
 
         /**
-         * Return whether the given type is one of the ones attached to the node.
+         * Return whether the given type is one of the ones attached to the wrapped
+         * HTML node.
          */
         hasType(type) {
             // Run type(theType) against the ruleset to make sure this doesn't
@@ -2001,7 +2043,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
 
         /**
-         * Return the confidence, in the range (0, 1), that the node belongs to the
+         * Return the confidence, in the range (0, 1), that the fnode belongs to the
          * given type, 0 by default.
          */
         scoreFor(type) {
@@ -2011,7 +2053,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
 
         /**
-         * Return the node's note for the given type, ``undefined`` if none.
+         * Return the fnode's note for the given type, ``undefined`` if none.
          */
         noteFor(type) {
             this._computeType(type);
@@ -2019,7 +2061,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
 
         /**
-         * Return whether this node has a note for the given type.
+         * Return whether this fnode has a note for the given type.
          *
          * ``undefined`` is not considered a note and may be overwritten with
          * impunity.
@@ -2180,9 +2222,9 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         prerequisites(ruleset) {
             // Optimization: we could cache the result of this when in a compiled (immutable) ruleset.
 
-            // Extend prereqs with rules derived from each of the give types. If no
-            // rules are found, raise an exception, as that indicates a malformed
-            // ruleset.
+            // Extend prereqs with rules derived from each of the given types. If
+            // no rules are found, raise an exception, as that indicates a
+            // malformed ruleset.
             function extendOrThrow(prereqs, types, ruleGetter, verb) {
                 for (let type of types) {
                     const rules = ruleGetter(type);
@@ -2439,9 +2481,8 @@ this.EXPORTED_SYMBOLS = ["fathom"];
     }
 
     /**
-     * An unbound ruleset. Eventually, you'll be able to add rules to these. Then,
-     * when you bind them by calling :func:`~Ruleset.against()`, the resulting
-     * :class:`BoundRuleset` will be immutable.
+     * An unbound ruleset. When you bind it by calling :func:`~Ruleset.against()`,
+     * the resulting :class:`BoundRuleset` will be immutable.
      */
     class Ruleset {
         /**
@@ -2521,7 +2562,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
      * A ruleset that is earmarked to analyze a certain DOM
      *
      * Carries a cache of rule results on that DOM. Typically comes from
-     * :func:`against`.
+     * :meth:`~Ruleset.against`.
      */
     class BoundRuleset {
         /**
@@ -2544,9 +2585,10 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
 
         /**
-         * Change my coefficients and biases after I've already been constructed.
+         * Change my coefficients and biases after construction.
          *
-         * @arg coeffsAndBiases See the :class:`Ruleset` constructor.
+         * @arg coeffs See the :class:`Ruleset` constructor.
+         * @arg biases See the :class:`Ruleset` constructor.
          */
         setCoeffsAndBiases(coeffs, biases = []) {
             // Destructuring assignment doesn't make it through rollup properly
@@ -2567,15 +2609,15 @@ this.EXPORTED_SYMBOLS = ["fathom"];
 
         /**
          * Return an array of zero or more fnodes.
-         * @arg thing {string|Lhs|Node} Can be...
+         * @arg thing {string|Lhs|Node} Can be
          *
-         *       * A string which matches up with an "out" rule in the ruleset. If the
-         *         out rule uses through(), the results of through's callback (which
-         *         might not be fnodes) will be returned.
-         *       * An arbitrary LHS which we calculate and return the results of
-         *       * A DOM node, for which we will return the corresponding fnode
+         *       (1) A string which matches up with an "out" rule in the ruleset.
+         *           If the out rule uses through(), the results of through's
+         *           callback (which might not be fnodes) will be returned.
+         *       (2) An arbitrary LHS which we calculate and return the results of.
+         *       (3) A DOM node, for which we will return the corresponding fnode.
          *
-         *     Results are cached in the first and third cases.
+         *     Results are cached for cases (1) and (3).
          */
         get(thing) {
             if (typeof thing === 'string') {
@@ -2710,7 +2752,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
      * License, v. 2.0. If a copy of the MPL was not distributed with this
      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-    const version = '3.3';
+    const version = '3.7.2';
 
     exports.and = and;
     exports.atMost = atMost;
