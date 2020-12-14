@@ -21,8 +21,10 @@ static void UpdateAllowedBehavior(StyleTouchAction aTouchActionValue,
   if (aTouchActionValue != StyleTouchAction::AUTO) {
     // Double-tap-zooming need property value AUTO
     aOutBehavior &= ~AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
-    if (aTouchActionValue != StyleTouchAction::MANIPULATION) {
-      // Pinch-zooming need value AUTO or MANIPULATION
+    if (aTouchActionValue != StyleTouchAction::MANIPULATION &&
+        !(aTouchActionValue & StyleTouchAction::PINCH_ZOOM)) {
+      // Pinch-zooming needs value AUTO or MANIPULATION, or the PINCH_ZOOM bit
+      // set
       aOutBehavior &= ~AllowedTouchBehavior::PINCH_ZOOM;
     }
   }
