@@ -34,6 +34,7 @@ IMPLEMENTED_CPP_TYPES = [
     "counter",
     "datetime",
     "event",
+    "memory_distribution",
     "string",
     "timespan",
     "uuid",
