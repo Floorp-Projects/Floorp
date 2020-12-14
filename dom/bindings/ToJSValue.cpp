@@ -36,6 +36,11 @@ bool ToJSValue(JSContext* aCx, const nsAString& aArgument,
   return true;
 }
 
+bool ToJSValue(JSContext* aCx, const nsACString& aArgument,
+               JS::MutableHandle<JS::Value> aValue) {
+  return UTF8StringToJsval(aCx, aArgument, aValue);
+}
+
 bool ToJSValue(JSContext* aCx, nsresult aArgument,
                JS::MutableHandle<JS::Value> aValue) {
   RefPtr<Exception> exception = CreateException(aArgument);
