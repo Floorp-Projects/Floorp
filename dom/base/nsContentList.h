@@ -52,10 +52,13 @@ class nsBaseContentList : public nsINodeList {
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsBaseContentList)
 
   void AppendElement(nsIContent* aContent) {
+    MOZ_ASSERT(aContent);
     mElements.AppendElement(aContent);
   }
   void MaybeAppendElement(nsIContent* aContent) {
-    if (aContent) AppendElement(aContent);
+    if (aContent) {
+      AppendElement(aContent);
+    }
   }
 
   /**
