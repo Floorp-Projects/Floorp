@@ -33,41 +33,42 @@ namespace dom {
 
 /*
  * The mapping of RequestDestination and nsContentPolicyType is currently as the
- * following.  Note that this mapping is not perfect yet (see the TODO comments
- * below for examples).
+ * following.
  *
  * RequestDestination| nsContentPolicyType
  * ------------------+--------------------
- * audio             | TYPE_INTERNAL_AUDIO
- * audioworklet      | TYPE_INTERNAL_AUDIOWORKLET
- * document          | TYPE_DOCUMENT, TYPE_INTERNAL_IFRAME, TYPE_SUBDOCUMENT
- * embed             | TYPE_INTERNAL_EMBED
- * font              | TYPE_FONT, TYPE_INTERNAL_FONT_PRELOAD
- * image             | TYPE_INTERNAL_IMAGE, TYPE_INTERNAL_IMAGE_PRELOAD,
+ * "audio"           | TYPE_INTERNAL_AUDIO
+ * "audioworklet"    | TYPE_INTERNAL_AUDIOWORKLET
+ * "document"        | TYPE_DOCUMENT
+ * "embed"           | TYPE_INTERNAL_EMBED
+ * "font"            | TYPE_FONT, TYPE_INTERNAL_FONT_PRELOAD
+ * "frame"           | TYPE_INTERNAL_FRAME
+ * "iframe"          | TYPE_SUBDOCUMENT, TYPE_INTERNAL_IFRAME
+ * "image"           | TYPE_INTERNAL_IMAGE, TYPE_INTERNAL_IMAGE_PRELOAD,
  *                   | TYPE_IMAGE, TYPE_INTERNAL_IMAGE_FAVICON, TYPE_IMAGESET
- * manifest          | TYPE_WEB_MANIFEST
- * object            | TYPE_INTERNAL_OBJECT, TYPE_OBJECT
+ * "manifest"        | TYPE_WEB_MANIFEST
+ * "object"          | TYPE_INTERNAL_OBJECT, TYPE_OBJECT
  * "paintworklet"    | TYPE_INTERNAL_PAINTWORKLET
- * report"           | TODO
- * script            | TYPE_INTERNAL_SCRIPT, TYPE_INTERNAL_SCRIPT_PRELOAD,
+ * "report"          | TYPE_CSP_REPORT
+ * "script"          | TYPE_INTERNAL_SCRIPT, TYPE_INTERNAL_SCRIPT_PRELOAD,
  *                   | TYPE_INTERNAL_MODULE, TYPE_INTERNAL_MODULE_PRELOAD,
  *                   | TYPE_SCRIPT,
  *                   | TYPE_INTERNAL_SERVICE_WORKER,
  *                   | TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS,
  *                   | TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT
  *                   | TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT
- * sharedworker      | TYPE_INTERNAL_SHARED_WORKER
- * serviceworker     | The spec lists this as a valid value for the enum,
+ * "sharedworker"    | TYPE_INTERNAL_SHARED_WORKER
+ * "serviceworker"   | The spec lists this as a valid value for the enum,
  *                   | however it is impossible to observe a request with this
  *                   | destination value.
- * style             | TYPE_INTERNAL_STYLESHEET,
+ * "style"           | TYPE_INTERNAL_STYLESHEET,
  *                   | TYPE_INTERNAL_STYLESHEET_PRELOAD,
  *                   | TYPE_STYLESHEET
- * track             | TYPE_INTERNAL_TRACK
- * video             | TYPE_INTERNAL_VIDEO
- * worker            | TYPE_INTERNAL_WORKER
- * xslt              | TYPE_XSLT
- * _empty            | Default for everything else.
+ * "track"           | TYPE_INTERNAL_TRACK
+ * "video"           | TYPE_INTERNAL_VIDEO
+ * "worker"          | TYPE_INTERNAL_WORKER
+ * "xslt"            | TYPE_XSLT
+ * ""                | Default for everything else.
  *
  */
 

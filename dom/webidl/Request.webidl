@@ -69,9 +69,9 @@ dictionary RequestInit {
 
 enum RequestDestination {
   "",
-  "audio", "audioworklet", "document", "embed", "font", "image", "manifest", "object",
-  "paintworklet", "report", "script", "sharedworker", "style",  "track", "video",
-  "worker", "xslt"
+  "audio", "audioworklet", "document", "embed", "font", "frame", "iframe",
+  "image", "manifest", "object", "paintworklet", "report", "script",
+  "sharedworker", "style",  "track", "video", "worker", "xslt"
 };
 
 enum RequestMode { "same-origin", "no-cors", "cors", "navigate" };
