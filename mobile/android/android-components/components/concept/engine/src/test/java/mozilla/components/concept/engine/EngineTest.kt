@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.JsonReader
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
@@ -32,6 +33,10 @@ class EngineTest {
         }
 
         override fun createSessionState(json: JSONObject): EngineSessionState {
+            throw NotImplementedError("Not needed for test")
+        }
+
+        override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
             throw NotImplementedError("Not needed for test")
         }
 

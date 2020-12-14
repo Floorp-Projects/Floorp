@@ -4,11 +4,13 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.util.JsonReader
 import android.util.JsonWriter
 import mozilla.components.concept.engine.EngineSessionState
 import org.json.JSONException
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoSession
+import java.io.IOException
 
 private const val GECKO_STATE_KEY = "GECKO_STATE"
 
@@ -44,6 +46,28 @@ class GeckoEngineSessionState internal constructor(
                 GeckoSession.SessionState.fromString(state)
             )
         } catch (e: JSONException) {
+            GeckoEngineSessionState(null)
+        }
+
+        /**
+         * Creates a [GeckoEngineSessionState] from the given [JsonReader].
+         */
+        fun from(reader: JsonReader): GeckoEngineSessionState = try {
+            reader.beginObject()
+
+            val key = reader.nextName()
+            if (key != GECKO_STATE_KEY) {
+                throw AssertionError("Unknown state key: $key")
+            }
+
+            val rawState = reader.nextString()
+
+            reader.endObject()
+
+            GeckoEngineSessionState(
+                GeckoSession.SessionState.fromString(rawState)
+            )
+        } catch (e: IOException) {
             GeckoEngineSessionState(null)
         }
     }

@@ -44,8 +44,11 @@ android {
 }
 
 dependencies {
+    implementation project(':feature-tabs')
+
     implementation project(':concept-engine')
 
+    implementation project(':browser-state')
     implementation project(':browser-session')
 
     implementation project(':support-ktx')

@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.JsonReader
 import androidx.annotation.MainThread
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
@@ -95,6 +96,11 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * Create a new [EngineSessionState] instance from the serialized JSON representation.
      */
     fun createSessionState(json: JSONObject): EngineSessionState
+
+    /**
+     * Creates a new [EngineSessionState] instances from the serialized JSON representation.
+     */
+    fun createSessionStateFrom(reader: JsonReader): EngineSessionState
 
     /**
      * Returns the name of this engine. The returned string might be used

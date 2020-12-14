@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
+import android.util.JsonReader
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.ext.getAntiTrackingPolicy
 import mozilla.components.browser.engine.gecko.ext.getEtpLevel
@@ -163,6 +164,13 @@ class GeckoEngine(
      */
     override fun createSessionState(json: JSONObject): EngineSessionState {
         return GeckoEngineSessionState.fromJSON(json)
+    }
+
+    /**
+     * See [Engine.createSessionStateFrom].
+     */
+    override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
+        return GeckoEngineSessionState.from(reader)
     }
 
     /**
