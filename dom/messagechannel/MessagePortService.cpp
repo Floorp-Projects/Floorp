@@ -185,7 +185,7 @@ bool MessagePortService::RequestEntangling(MessagePortParent* aParent,
 
 bool MessagePortService::DisentanglePort(
     MessagePortParent* aParent,
-    FallibleTArray<RefPtr<SharedMessageBody>>& aMessages) {
+    FallibleTArray<RefPtr<SharedMessageBody>> aMessages) {
   MessagePortServiceData* data;
   if (!mPorts.Get(aParent->ID(), &data)) {
     MOZ_ASSERT(false, "Unknown MessagePortParent should not happen.");
@@ -201,11 +201,10 @@ bool MessagePortService::DisentanglePort(
 
   // Let's put the messages in the correct order. |aMessages| contains the
   // unsent messages so they have to go first.
-  if (!aMessages.AppendElements(data->mMessages, mozilla::fallible)) {
+  if (!aMessages.AppendElements(std::move(data->mMessages),
+                                mozilla::fallible)) {
     return false;
   }
-
-  data->mMessages.Clear();
 
   ++data->mSequenceID;
 
@@ -330,7 +329,7 @@ void MessagePortService::MaybeShutdown() {
 
 bool MessagePortService::PostMessages(
     MessagePortParent* aParent,
-    FallibleTArray<RefPtr<SharedMessageBody>>& aMessages) {
+    FallibleTArray<RefPtr<SharedMessageBody>> aMessages) {
   MessagePortServiceData* data;
   if (!mPorts.Get(aParent->ID(), &data)) {
     MOZ_ASSERT(false, "Unknown MessagePortParent should not happend.");
@@ -345,7 +344,8 @@ bool MessagePortService::PostMessages(
 
   MOZ_ALWAYS_TRUE(mPorts.Get(data->mDestinationUUID, &data));
 
-  if (!data->mMessages.AppendElements(aMessages, mozilla::fallible)) {
+  if (!data->mMessages.AppendElements(std::move(aMessages),
+                                      mozilla::fallible)) {
     return false;
   }
 
