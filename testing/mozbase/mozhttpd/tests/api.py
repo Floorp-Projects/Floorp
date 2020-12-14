@@ -11,6 +11,7 @@ import json
 import os
 
 import pytest
+from six import ensure_binary, ensure_str
 from six.moves.urllib.error import HTTPError
 from six.moves.urllib.request import (
     HTTPHandler,
@@ -79,7 +80,7 @@ def fixture_try_post(num_requests):
 
         f = urlopen(
             httpd_url(httpd, "/api/resource/", querystr),
-            data=json.dumps(postdata),
+            data=ensure_binary(json.dumps(postdata)),
         )
 
         assert f.getcode() == 201
@@ -262,7 +263,10 @@ def test_nonexistent_resources(httpd_no_urlhandlers):
 
     # POST: POST should also return 404
     with pytest.raises(HTTPError) as excinfo:
-        urlopen(httpd_url(httpd_no_urlhandlers, "/api/resource/"), data=json.dumps({}))
+        urlopen(
+            httpd_url(httpd_no_urlhandlers, "/api/resource/"),
+            data=ensure_binary(json.dumps({})),
+        )
     assert excinfo.value.code == 404
 
     # DEL: DEL should also return 404
@@ -278,7 +282,7 @@ def test_nonexistent_resources(httpd_no_urlhandlers):
 def test_api_with_docroot(httpd_with_docroot, try_get):
     f = urlopen(httpd_url(httpd_with_docroot, "/"))
     assert f.getcode() == 200
-    assert "Directory listing for" in f.read()
+    assert "Directory listing for" in ensure_str(f.read())
 
     # Make sure API methods still work
     try_get(httpd_with_docroot, "")
@@ -335,7 +339,7 @@ def test_proxy(httpd_with_proxy_handler, hosts):
     for host in hosts:
         f = urlopen("http://{host}/".format(host=host))
         assert f.getcode() == 200
-        assert f.read() == index_contents("*")
+        assert f.read() == ensure_binary(index_contents("*"))
 
 
 @pytest.fixture(name="httpd_with_proxy_host_dirs")
@@ -366,7 +370,7 @@ def test_proxy_separate_directories(httpd_with_proxy_host_dirs, hosts):
     for host in hosts:
         f = urlopen("http://{host}/".format(host=host))
         assert f.getcode() == 200
-        assert f.read() == index_contents(host)
+        assert f.read() == ensure_binary(index_contents(host))
 
     unproxied_host = "notmozilla.org"
 
