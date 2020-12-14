@@ -4405,11 +4405,6 @@ Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
     return Nothing();
   }
 
-  if (!nsLayoutUtils::UsesAsyncScrolling(mOuter)) {
-    // Return early, since if we don't use APZ we don't need FrameMetrics.
-    return Nothing();
-  }
-
   Maybe<nsRect> parentLayerClip;
   if (aClip && mAddClipRectToLayer) {
     parentLayerClip = Some(aClip->GetClipRect());
