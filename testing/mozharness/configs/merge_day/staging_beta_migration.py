@@ -6,6 +6,7 @@
 # mozharness/scripts/merge_day/gecko_migration.py -c \
 #   mozharness/configs/merge_day/aurora_to_beta.py -c
 #   mozharness/configs/merge_day/staging_beta_migration.py ...
+from __future__ import absolute_import
 import os
 
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")

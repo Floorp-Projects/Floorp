@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """ Drives an android device.
 """
+from __future__ import absolute_import
 import os
 import posixpath
 import tempfile

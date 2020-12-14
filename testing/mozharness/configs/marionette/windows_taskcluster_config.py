@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This is a template config file for marionette production on Windows.
+from __future__ import absolute_import
 import os
 import platform
 import sys
