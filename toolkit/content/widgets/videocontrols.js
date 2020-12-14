@@ -996,6 +996,31 @@ this.VideoControlsImplWidget = class {
               );
             }
             break;
+          case "mousedown":
+            // We only listen for mousedown on sliders.
+            // If this slider isn't focused already, mousedown will focus it.
+            // We don't want that because it will then handle additional keys.
+            // For example, we don't want the up/down arrow keys to seek after
+            // the scrubber is clicked. To prevent that, we need to redirect
+            // focus. However, dragging only works while the slider is focused,
+            // so we must redirect focus after mouseup.
+            if (
+              this.prefs["media.videocontrols.keyboard-tab-to-all-controls"] &&
+              !aEvent.currentTarget.matches(":focus")
+            ) {
+              aEvent.currentTarget.addEventListener(
+                "mouseup",
+                aEvent => {
+                  if (aEvent.currentTarget.matches(":focus")) {
+                    // We can't use target.blur() because that will blur the
+                    // video element as well.
+                    this.video.focus();
+                  }
+                },
+                { once: true }
+              );
+            }
+            break;
           default:
             this.log("!!! control event " + aEvent.type + " not handled!");
         }
@@ -1875,20 +1900,36 @@ this.VideoControlsImplWidget = class {
 
         this.log("Got keystroke: " + keystroke);
 
+        // If unmodified cursor keys are pressed when a slider is focused, we
+        // should act on that slider. For example, if we're focused on the
+        // volume slider, rightArrow should increase the volume, not seek.
+        // Normally, we'd just pass the keys through to the slider in this case.
+        // However, the native adjustment is too small, so we override it.
         try {
+          const target = event.originalTarget;
+          const allTabbable = this.prefs[
+            "media.videocontrols.keyboard-tab-to-all-controls"
+          ];
           switch (keystroke) {
             case "Space" /* Play */:
-              let target = event.originalTarget;
               if (target.localName === "button" && !target.disabled) {
                 break;
               }
               this.togglePause();
               break;
             case "ArrowDown" /* Volume decrease */:
-              this.keyboardVolumeDecrease();
+              if (allTabbable && target == this.scrubber) {
+                this.keyboardSeekBack(/* tenPercent */ false);
+              } else {
+                this.keyboardVolumeDecrease();
+              }
               break;
             case "ArrowUp" /* Volume increase */:
-              this.keyboardVolumeIncrease();
+              if (allTabbable && target == this.scrubber) {
+                this.keyboardSeekForward(/* tenPercent */ false);
+              } else {
+                this.keyboardVolumeIncrease();
+              }
               break;
             case "accel-ArrowDown" /* Mute */:
               this.video.muted = true;
@@ -1897,13 +1938,21 @@ this.VideoControlsImplWidget = class {
               this.video.muted = false;
               break;
             case "ArrowLeft" /* Seek back 15 seconds */:
-              this.keyboardSeekBack(/* tenPercent */ false);
+              if (allTabbable && target == this.volumeControl) {
+                this.keyboardVolumeDecrease();
+              } else {
+                this.keyboardSeekBack(/* tenPercent */ false);
+              }
               break;
             case "accel-ArrowLeft" /* Seek back 10% */:
               this.keyboardSeekBack(/* tenPercent */ true);
               break;
             case "ArrowRight" /* Seek forward 15 seconds */:
-              this.keyboardSeekForward(/* tenPercent */ false);
+              if (allTabbable && target == this.volumeControl) {
+                this.keyboardVolumeIncrease();
+              } else {
+                this.keyboardSeekForward(/* tenPercent */ false);
+              }
               break;
             case "accel-ArrowRight" /* Seek forward 10% */:
               this.keyboardSeekForward(/* tenPercent */ true);
@@ -2499,6 +2548,8 @@ this.VideoControlsImplWidget = class {
           { el: this.video, type: "media-videoCasting", touchOnly: true },
 
           { el: this.controlBar, type: "focusin" },
+          { el: this.scrubber, type: "mousedown" },
+          { el: this.volumeControl, type: "mousedown" },
         ];
 
         for (let {
