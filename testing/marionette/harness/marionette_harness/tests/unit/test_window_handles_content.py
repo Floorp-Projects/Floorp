@@ -4,13 +4,10 @@
 
 from __future__ import absolute_import
 
-import types
-
 import six
 from six.moves.urllib.parse import quote
 
 from marionette_driver import errors
-
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
@@ -25,6 +22,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.chrome_dialog = "chrome://marionette/content/test_dialog.xhtml"
 
     def tearDown(self):
+        self.close_all_windows()
         self.close_all_tabs()
 
         super(TestWindowHandles, self).tearDown()
@@ -40,7 +38,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         for handle in self.marionette.window_handles:
             self.assertIsInstance(handle, six.string_types)
 
-    def tst_window_handles_after_opening_new_tab(self):
+    def test_window_handles_after_opening_new_tab(self):
         new_tab = self.open_tab()
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs) + 1)
@@ -62,7 +60,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
-    def tst_window_handles_after_opening_new_browser_window(self):
+    def test_window_handles_after_opening_new_browser_window(self):
         new_tab = self.open_window()
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs) + 1)
@@ -81,7 +79,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
-    def tst_window_handles_after_opening_new_non_browser_window(self):
+    def test_window_handles_after_opening_new_non_browser_window(self):
         new_window = self.open_chrome_window(self.chrome_dialog)
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
@@ -106,6 +104,23 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
+    def test_window_handles_after_session_created(self):
+        new_window = self.open_chrome_window(self.chrome_dialog)
+        self.assert_window_handles()
+        self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
+        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+        self.assertNotIn(new_window, self.marionette.window_handles)
+
+        window_handles = self.marionette.window_handles
+
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
+        self.assert_window_handles()
+        self.assertEqual(window_handles, self.marionette.window_handles)
+
+        self.marionette.switch_to_window(new_window)
+
     def test_window_handles_after_closing_original_tab(self):
         new_tab = self.open_tab()
         self.assert_window_handles()
@@ -122,6 +137,6 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
 
-    def tst_window_handles_after_closing_last_tab(self):
+    def test_window_handles_after_closing_last_tab(self):
         self.close_all_tabs()
         self.assertEqual(self.marionette.close(), [])
