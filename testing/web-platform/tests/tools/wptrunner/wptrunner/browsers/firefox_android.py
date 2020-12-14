@@ -226,7 +226,8 @@ class FirefoxAndroidBrowser(Browser):
                                            serial=self.device_serial,
                                            # TODO - choose appropriate log dir
                                            logdir=os.getcwd(),
-                                           adb_path=self.adb_binary)
+                                           adb_path=self.adb_binary,
+                                           explicit_cleanup=True)
 
         self.logger.debug("Starting %s" % self.package_name)
         # connect to a running emulator
@@ -258,7 +259,7 @@ class FirefoxAndroidBrowser(Browser):
                     self.logger.warning("Failed to remove forwarded or reversed ports: %s" % e)
             # We assume that stopping the runner prompts the
             # browser to shut down.
-            self.runner.stop()
+            self.runner.cleanup()
         self.logger.debug("stopped")
 
     def pid(self):
