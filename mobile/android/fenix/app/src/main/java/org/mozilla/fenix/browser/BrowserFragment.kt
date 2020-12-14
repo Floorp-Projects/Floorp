@@ -19,6 +19,7 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -257,11 +258,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
-        override fun onCollectionCreated(title: String, sessions: List<Session>, id: Long?) {
+        override fun onCollectionCreated(title: String, sessions: List<TabSessionState>, id: Long?) {
             showTabSavedToCollectionSnackbar(sessions.size, true)
         }
 
-        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
+        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<TabSessionState>) {
             showTabSavedToCollectionSnackbar(sessions.size)
         }
 

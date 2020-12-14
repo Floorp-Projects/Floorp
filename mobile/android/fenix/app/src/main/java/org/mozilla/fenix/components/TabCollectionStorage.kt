@@ -8,12 +8,11 @@ import android.content.Context
 import android.os.StrictMode
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
-import androidx.paging.DataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.BrowserStateSerializer
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
@@ -28,7 +27,6 @@ import org.mozilla.fenix.utils.Mockable
 @Mockable
 class TabCollectionStorage(
     private val context: Context,
-    private val sessionManager: SessionManager,
     strictMode: StrictModeManager,
     private val delegate: Observable<Observer> = ObserverRegistry()
 ) : Observable<org.mozilla.fenix.components.TabCollectionStorage.Observer> by delegate {
@@ -40,12 +38,12 @@ class TabCollectionStorage(
         /**
          * A collection has been created
          */
-        fun onCollectionCreated(title: String, sessions: List<Session>, id: Long?) = Unit
+        fun onCollectionCreated(title: String, sessions: List<TabSessionState>, id: Long?) = Unit
 
         /**
          *  Tab(s) have been added to collection
          */
-        fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) = Unit
+        fun onTabsAdded(tabCollection: TabCollection, sessions: List<TabSessionState>) = Unit
 
         /**
          *  Collection has been renamed
@@ -58,30 +56,22 @@ class TabCollectionStorage(
 
     private val collectionStorage by lazy {
         strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            TabCollectionStorage(context, sessionManager)
+            TabCollectionStorage(context, BrowserStateSerializer())
         }
     }
 
-    suspend fun createCollection(title: String, sessions: List<Session>) = ioScope.launch {
+    suspend fun createCollection(title: String, sessions: List<TabSessionState>) = ioScope.launch {
         val id = collectionStorage.createCollection(title, sessions)
         notifyObservers { onCollectionCreated(title, sessions, id) }
     }.join()
 
-    suspend fun addTabsToCollection(tabCollection: TabCollection, sessions: List<Session>) = ioScope.launch {
+    suspend fun addTabsToCollection(tabCollection: TabCollection, sessions: List<TabSessionState>) = ioScope.launch {
         collectionStorage.addTabsToCollection(tabCollection, sessions)
         notifyObservers { onTabsAdded(tabCollection, sessions) }
     }.join()
 
-    fun getTabCollectionsCount(): Int {
-        return collectionStorage.getTabCollectionsCount()
-    }
-
     fun getCollections(): LiveData<List<TabCollection>> {
         return collectionStorage.getCollections().asLiveData()
-    }
-
-    fun getCollectionsPaged(): DataSource.Factory<Int, TabCollection> {
-        return collectionStorage.getCollectionsPaged()
     }
 
     suspend fun removeCollection(tabCollection: TabCollection) = ioScope.launch {

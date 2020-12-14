@@ -9,11 +9,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.prompt.ShareData
@@ -100,8 +101,8 @@ class DefaultTabTrayController(
     private val registerCollectionStorageObserver: () -> Unit,
     private val tabTrayDialogFragmentStore: TabTrayDialogFragmentStore,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
-    private val showChooseCollectionDialog: (List<Session>) -> Unit,
-    private val showAddNewCollectionDialog: (List<Session>) -> Unit,
+    private val showChooseCollectionDialog: (List<TabSessionState>) -> Unit,
+    private val showAddNewCollectionDialog: (List<TabSessionState>) -> Unit,
     private val showUndoSnackbarForTabs: () -> Unit,
     private val showBookmarksSnackbar: () -> Unit
 ) : TabTrayController {
@@ -129,7 +130,7 @@ class DefaultTabTrayController(
         metrics.track(Event.TabsTraySaveToCollectionPressed)
 
         val sessionList = selectedTabs.map {
-            sessionManager.findSessionById(it.id) ?: return
+            browserStore.state.findTab(it.id) ?: return
         }
 
         // Only register the observer right before moving to collection creation

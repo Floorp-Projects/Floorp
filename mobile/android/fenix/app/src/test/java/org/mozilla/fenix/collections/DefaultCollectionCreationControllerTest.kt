@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.collections
 
 import io.mockk.MockKAnnotations
@@ -10,10 +14,12 @@ import io.mockk.verifyAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.support.test.ext.joinBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -35,7 +41,7 @@ class DefaultCollectionCreationControllerTest {
     @MockK(relaxed = true) private lateinit var dismiss: () -> Unit
     @MockK(relaxUnitFun = true) private lateinit var metrics: MetricController
     @MockK(relaxUnitFun = true) private lateinit var tabCollectionStorage: TabCollectionStorage
-    @MockK private lateinit var sessionManager: SessionManager
+    private lateinit var browserStore: BrowserStore
 
     @Before
     fun before() {
@@ -47,9 +53,15 @@ class DefaultCollectionCreationControllerTest {
         )
         every { store.state } answers { state }
 
+        browserStore = BrowserStore()
+
         controller = DefaultCollectionCreationController(
-            store, dismiss, metrics,
-            tabCollectionStorage, sessionManager, testCoroutineScope
+            store,
+            browserStore,
+            dismiss,
+            metrics,
+            tabCollectionStorage,
+            testCoroutineScope
         )
     }
 
@@ -60,14 +72,13 @@ class DefaultCollectionCreationControllerTest {
 
     @Test
     fun `GIVEN tab list WHEN saveCollectionName is called THEN collection should be created`() {
-        val session = mockSession(sessionId = "session-1")
-        val sessions = listOf(
-            session,
-            mockSession(sessionId = "session-2")
-        )
-        every { sessionManager.findSessionById("session-1") } returns session
-        every { sessionManager.findSessionById("null-session") } returns null
-        every { sessionManager.sessions } returns sessions
+        val tab1 = createTab("https://www.mozilla.org", id = "session-1")
+        val tab2 = createTab("https://www.mozilla.org", id = "session-2")
+
+        browserStore.dispatch(
+            TabListAction.AddMultipleTabsAction(listOf(tab1, tab2))
+        ).joinBlocking()
+
         val tabs = listOf(
             Tab("session-1", "", "", "", mediaState = MediaState.State.NONE),
             Tab("null-session", "", "", "", mediaState = MediaState.State.NONE)
@@ -76,7 +87,7 @@ class DefaultCollectionCreationControllerTest {
         controller.saveCollectionName(tabs, "name")
 
         verify { dismiss() }
-        coVerify { tabCollectionStorage.createCollection("name", listOf(session)) }
+        coVerify { tabCollectionStorage.createCollection("name", listOf(tab1)) }
         verify { metrics.track(Event.CollectionSaved(2, 1)) }
     }
 
@@ -154,13 +165,13 @@ class DefaultCollectionCreationControllerTest {
 
     @Test
     fun `WHEN selectCollection is called THEN add tabs should be added to collection`() {
-        val session = mockSession(sessionId = "session-1")
-        val sessions = listOf(
-            session,
-            mockSession(sessionId = "session-2")
-        )
-        every { sessionManager.findSessionById("session-1") } returns session
-        every { sessionManager.sessions } returns sessions
+        val tab1 = createTab("https://www.mozilla.org", id = "session-1")
+        val tab2 = createTab("https://www.mozilla.org", id = "session-2")
+
+        browserStore.dispatch(
+            TabListAction.AddMultipleTabsAction(listOf(tab1, tab2))
+        ).joinBlocking()
+
         val tabs = listOf(
             Tab("session-1", "", "", "", mediaState = MediaState.State.NONE)
         )
@@ -169,7 +180,7 @@ class DefaultCollectionCreationControllerTest {
         controller.selectCollection(collection, tabs)
 
         verify { dismiss() }
-        coVerify { tabCollectionStorage.addTabsToCollection(collection, listOf(session)) }
+        coVerify { tabCollectionStorage.addTabsToCollection(collection, listOf(tab1)) }
         verify { metrics.track(Event.CollectionTabsAdded(2, 1)) }
     }
 
@@ -245,15 +256,5 @@ class DefaultCollectionCreationControllerTest {
         controller.saveTabsToCollection(ArrayList())
 
         verify { store.dispatch(CollectionCreationAction.StepChanged(SaveCollectionStep.SelectCollection, 2)) }
-    }
-
-    private fun mockSession(
-        sessionId: String? = null,
-        isPrivate: Boolean = false,
-        isCustom: Boolean = false
-    ) = mockk<Session> {
-        sessionId?.let { every { id } returns it }
-        every { private } returns isPrivate
-        every { isCustomTabSession() } returns isCustom
     }
 }

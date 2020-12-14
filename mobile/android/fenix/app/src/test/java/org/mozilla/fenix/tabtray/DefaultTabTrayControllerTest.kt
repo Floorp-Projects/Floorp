@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
@@ -48,20 +49,12 @@ class DefaultTabTrayControllerTest {
     private val profiler: Profiler? = mockk(relaxed = true)
     private val navController: NavController = mockk()
     private val sessionManager: SessionManager = mockk(relaxed = true)
-    var store = BrowserStore(
-        BrowserState(
-            tabs = listOf(
-                createTab(url = "http://firefox.com", id = "5678"),
-                createTab(url = "http://mozilla.org", id = "1234")
-            ), selectedTabId = "1234"
-        )
-    )
     private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private val dismissTabTray: (() -> Unit) = mockk(relaxed = true)
     private val dismissTabTrayAndNavigateHome: ((String) -> Unit) = mockk(relaxed = true)
     private val registerCollectionStorageObserver: (() -> Unit) = mockk(relaxed = true)
-    private val showChooseCollectionDialog: ((List<Session>) -> Unit) = mockk(relaxed = true)
-    private val showAddNewCollectionDialog: ((List<Session>) -> Unit) = mockk(relaxed = true)
+    private val showChooseCollectionDialog: ((List<TabSessionState>) -> Unit) = mockk(relaxed = true)
+    private val showAddNewCollectionDialog: ((List<TabSessionState>) -> Unit) = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
     private val bookmarksStorage: BookmarksStorage = mockk(relaxed = true)
     private val tabCollection: TabCollection = mockk()
@@ -76,6 +69,9 @@ class DefaultTabTrayControllerTest {
 
     private lateinit var controller: DefaultTabTrayController
 
+    private val tab1 = createTab(url = "http://firefox.com", id = "5678")
+    private val tab2 = createTab(url = "http://mozilla.org", id = "1234")
+
     private val session = Session(
         "mozilla.org",
         true
@@ -89,6 +85,12 @@ class DefaultTabTrayControllerTest {
     @Before
     fun setUp() {
         mockkStatic("org.mozilla.fenix.ext.SessionManagerKt")
+
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab1, tab2), selectedTabId = tab2.id
+            )
+        )
 
         every { sessionManager.sessionsOfType(private = true) } returns listOf(session).asSequence()
         every { sessionManager.sessionsOfType(private = false) } returns listOf(nonPrivateSession).asSequence()
@@ -268,13 +270,14 @@ class DefaultTabTrayControllerTest {
 
     @Test
     fun onSaveToCollectionClicked() {
-        val tab = Tab("1234", "mozilla.org")
+        val tab = Tab(tab2.id, tab2.content.url)
 
         controller.handleSaveToCollectionClicked(setOf(tab))
+
         verify {
             metrics.track(Event.TabsTraySaveToCollectionPressed)
             registerCollectionStorageObserver()
-            showChooseCollectionDialog(listOf(session))
+            showChooseCollectionDialog(listOf(tab2))
         }
     }
 

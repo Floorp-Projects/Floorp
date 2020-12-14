@@ -9,14 +9,15 @@ package org.mozilla.fenix.collections
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.getDefaultCollectionNumber
-import org.mozilla.fenix.ext.normalSessionSize
 import org.mozilla.fenix.home.Tab
 
 interface CollectionCreationController {
@@ -59,24 +60,24 @@ interface CollectionCreationController {
     fun removeTabFromSelection(tab: Tab)
 }
 
-fun List<Tab>.toSessionBundle(sessionManager: SessionManager): List<Session> {
-    return this.mapNotNull { sessionManager.findSessionById(it.sessionId) }
+fun List<Tab>.toTabSessionStateList(store: BrowserStore): List<TabSessionState> {
+    return this.mapNotNull { store.state.findTab(it.sessionId) }
 }
 
 /**
  * @param store Store used to hold in-memory collection state.
+ * @param browserStore The global `BrowserStore` instance.
  * @param dismiss Callback to dismiss the collection creation dialog.
  * @param metrics Controller that handles telemetry events.
  * @param tabCollectionStorage Storage used to save tab collections to disk.
- * @param sessionManager Used to query and serialize tabs.
  * @param scope Coroutine scope to launch coroutines.
  */
 class DefaultCollectionCreationController(
     private val store: CollectionCreationStore,
+    private val browserStore: BrowserStore,
     private val dismiss: () -> Unit,
     private val metrics: MetricController,
     private val tabCollectionStorage: TabCollectionStorage,
-    private val sessionManager: SessionManager,
     private val scope: CoroutineScope
 ) : CollectionCreationController {
 
@@ -88,13 +89,13 @@ class DefaultCollectionCreationController(
     override fun saveCollectionName(tabs: List<Tab>, name: String) {
         dismiss()
 
-        val sessionBundle = tabs.toSessionBundle(sessionManager)
+        val sessionBundle = tabs.toTabSessionStateList(browserStore)
         scope.launch {
             tabCollectionStorage.createCollection(name, sessionBundle)
         }
 
         metrics.track(
-            Event.CollectionSaved(sessionManager.normalSessionSize(), sessionBundle.size)
+            Event.CollectionSaved(browserStore.state.normalTabs.size, sessionBundle.size)
         )
     }
 
@@ -129,14 +130,14 @@ class DefaultCollectionCreationController(
 
     override fun selectCollection(collection: TabCollection, tabs: List<Tab>) {
         dismiss()
-        val sessionBundle = tabs.toList().toSessionBundle(sessionManager)
+        val sessionBundle = tabs.toList().toTabSessionStateList(browserStore)
         scope.launch {
             tabCollectionStorage
                 .addTabsToCollection(collection, sessionBundle)
         }
 
         metrics.track(
-            Event.CollectionTabsAdded(sessionManager.normalSessionSize(), sessionBundle.size)
+            Event.CollectionTabsAdded(browserStore.state.normalTabs.size, sessionBundle.size)
         )
     }
 

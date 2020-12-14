@@ -346,7 +346,6 @@ class Core(
     val tabCollectionStorage by lazyMonitored {
         TabCollectionStorage(
             context,
-            sessionManager,
             strictMode
         )
     }

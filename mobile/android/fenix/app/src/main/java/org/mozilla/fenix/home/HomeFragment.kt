@@ -239,6 +239,7 @@ class HomeFragment : Fragment() {
                 sessionManager = sessionManager,
                 tabCollectionStorage = components.core.tabCollectionStorage,
                 addTabUseCase = components.useCases.tabsUseCases.addTab,
+                restoreUseCase = components.useCases.tabsUseCases.restore,
                 reloadUrlUseCase = components.useCases.sessionUseCases.reload,
                 fragmentStore = homeFragmentStore,
                 navController = findNavController(),

@@ -86,11 +86,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             else null
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
-        override fun onCollectionCreated(title: String, sessions: List<Session>, id: Long?) {
+        override fun onCollectionCreated(title: String, sessions: List<TabSessionState>, id: Long?) {
             showCollectionSnackbar(sessions.size, true, collectionToSelect = id)
         }
 
-        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
+        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<TabSessionState>) {
             showCollectionSnackbar(
                 sessions.size,
                 collectionToSelect = tabCollection.id
@@ -424,7 +424,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         return true
     }
 
-    private fun showChooseCollectionDialog(sessionList: List<Session>) {
+    private fun showChooseCollectionDialog(sessionList: List<TabSessionState>) {
         context?.let {
             val tabCollectionStorage = it.components.core.tabCollectionStorage
             val collections =
@@ -467,7 +467,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         }
     }
 
-    private fun showAddNewCollectionDialog(sessionList: List<Session>) {
+    private fun showAddNewCollectionDialog(sessionList: List<TabSessionState>) {
         context?.let {
             val tabCollectionStorage = it.components.core.tabCollectionStorage
             val customLayout =

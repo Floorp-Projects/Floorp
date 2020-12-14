@@ -15,7 +15,9 @@ import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.SessionUseCases
@@ -108,6 +110,8 @@ class DefaultSessionControlControllerTest {
         every { activity.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
 
+        val restoreUseCase: TabsUseCases.RestoreUseCase = mockk(relaxed = true)
+
         controller = DefaultSessionControlController(
             activity = activity,
             store = store,
@@ -118,6 +122,7 @@ class DefaultSessionControlControllerTest {
             tabCollectionStorage = tabCollectionStorage,
             addTabUseCase = tabsUseCases.addTab,
             reloadUrlUseCase = reloadUrlUseCase.reload,
+            restoreUseCase = restoreUseCase,
             fragmentStore = fragmentStore,
             navController = navController,
             viewLifecycleScope = scope,
@@ -173,12 +178,22 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun `handleCollectionOpenTabClicked onTabRestored`() {
+        val restoredTab = RecoverableTab(
+            id = "test",
+            parentId = null,
+            url = "https://www.mozilla.org",
+            title = "Mozilla",
+            state = null,
+            contextId = null,
+            readerState = ReaderState(),
+            lastAccess = 0,
+            private = false
+        )
+
         val tab = mockk<ComponentTab> {
-            every { restore(activity, engine, restoreSessionId = false) } returns mockk {
-                every { session } returns mockk()
-                every { engineSessionState } returns mockk()
-            }
+            every { restore(activity, engine, restoreSessionId = false) } returns restoredTab
         }
+
         controller.handleCollectionOpenTabClicked(tab)
 
         verify { metrics.track(Event.CollectionTabRestored) }

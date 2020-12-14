@@ -18,7 +18,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.feature.tab.collections.ext.restore
+import mozilla.components.feature.tab.collections.ext.invoke
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.ktx.android.view.showKeyboard
@@ -177,6 +177,7 @@ class DefaultSessionControlController(
     private val store: BrowserStore,
     private val tabCollectionStorage: TabCollectionStorage,
     private val addTabUseCase: TabsUseCases.AddNewTabUseCase,
+    private val restoreUseCase: TabsUseCases.RestoreUseCase,
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val fragmentStore: HomeFragmentStore,
     private val navController: NavController,
@@ -208,7 +209,8 @@ class DefaultSessionControlController(
 
     override fun handleCollectionOpenTabClicked(tab: ComponentTab) {
         dismissSearchDialogIfDisplayed()
-        sessionManager.restore(
+
+        restoreUseCase.invoke(
             activity,
             engine,
             tab,
@@ -229,7 +231,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleCollectionOpenTabsTapped(collection: TabCollection) {
-        sessionManager.restore(
+        restoreUseCase.invoke(
             activity,
             engine,
             collection,

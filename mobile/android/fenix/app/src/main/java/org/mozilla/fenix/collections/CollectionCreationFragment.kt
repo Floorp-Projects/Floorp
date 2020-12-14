@@ -55,10 +55,10 @@ class CollectionCreationFragment : DialogFragment() {
         collectionCreationInteractor = DefaultCollectionCreationInteractor(
             DefaultCollectionCreationController(
                 collectionCreationStore,
+                requireComponents.core.store,
                 ::dismiss,
                 requireComponents.analytics.metrics,
                 requireComponents.core.tabCollectionStorage,
-                requireComponents.core.sessionManager,
                 scope = lifecycleScope
             )
         )
