@@ -6,6 +6,7 @@ package mozilla.components.browser.state.state.content
 
 import android.os.Environment
 import mozilla.components.concept.fetch.Response
+import java.io.File
 import java.util.UUID
 
 /**
@@ -47,7 +48,7 @@ data class DownloadState(
     val response: Response? = null
 ) {
     val filePath: String get() =
-        Environment.getExternalStoragePublicDirectory(destinationDirectory).path + "/" + fileName
+        Environment.getExternalStoragePublicDirectory(destinationDirectory).path + File.separatorChar + fileName
 
     val directoryPath: String get() = Environment.getExternalStoragePublicDirectory(destinationDirectory).path
     /**
