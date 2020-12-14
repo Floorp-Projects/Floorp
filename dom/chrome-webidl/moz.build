@@ -91,6 +91,7 @@ if CONFIG["MOZ_PLACES"]:
 if CONFIG["MOZ_GLEAN"]:
     WEBIDL_FILES += [
         "Glean.webidl",
+        "GleanPings.webidl",
     ]
 
 WEBIDL_FILES += [

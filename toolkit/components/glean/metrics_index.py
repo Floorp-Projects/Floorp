@@ -15,4 +15,5 @@ metrics_yamls = [
 # New additions should be added to the bottom of the list.
 pings_yamls = [
     "toolkit/components/glean/pings.yaml",
+    "toolkit/components/glean/test_pings.yaml",
 ]

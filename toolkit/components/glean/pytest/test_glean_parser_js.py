@@ -44,5 +44,32 @@ def test_all_metric_types():
     assert output_fd.getvalue() == EXPECTED_JS
 
 
+def test_fake_pings():
+    """Another similarly-fragile test.
+    It generates C++ for pings_test.yaml, comparing it byte-for-byte
+    with an expected output C++ file `pings_test_output_js`.
+    Expect it to be fragile.
+    To generate a new expected output file, edit t/c/g/metrics_index.py,
+    comment out all other ping yamls, and add one for
+    t/c/g/pytest/pings_test.yaml. Run `mach build` (it'll fail). Copy
+    objdir/t/c/g/GleanJSPingsLookup.h over pings_test_output_js.
+    (Don't forget to undo your edits to t/c/g/metrics_index.py)
+    """
+
+    options = {"allow_reserved": False}
+    input_files = [Path(path.join(path.dirname(__file__), "pings_test.yaml"))]
+
+    all_objs = parser.parse_objects(input_files, options)
+    assert not util.report_validation_errors(all_objs)
+    assert not lint.lint_metrics(all_objs.value, options)
+
+    output_fd = io.StringIO()
+    js.output_js(all_objs.value, output_fd, options)
+
+    with open(path.join(path.dirname(__file__), "pings_test_output_js"), "r") as file:
+        EXPECTED_JS = file.read()
+    assert output_fd.getvalue() == EXPECTED_JS
+
+
 if __name__ == "__main__":
     mozunit.main()

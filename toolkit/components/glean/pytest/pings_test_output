@@ -69,3 +69,16 @@ pub static not_deletion_request: Lazy<Ping> = Lazy::new(|| {
 });
 
 
+#[cfg(feature = "with_gecko")]
+pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
+    match id {
+        1 => not_baseline.submit(reason),
+        2 => not_metrics.submit(reason),
+        3 => not_events.submit(reason),
+        4 => not_deletion_request.submit(reason),
+        _ => {
+            // TODO: instrument this error.
+            log::error!("Cannot submit unknown ping {} by id.", id);
+        }
+    }
+}

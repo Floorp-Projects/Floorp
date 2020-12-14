@@ -9,9 +9,38 @@ Outputter to generate C++ code for metrics.
 """
 
 import jinja2
+import json
 
-from util import generate_metric_ids, is_implemented_metric_type
+from util import generate_metric_ids, generate_ping_ids, is_implemented_metric_type
 from glean_parser import util
+
+
+def cpp_datatypes_filter(value):
+    """
+    A Jinja2 filter that renders Rust literals.
+
+    Based on Python's JSONEncoder, but overrides:
+      - lists to array literals {}
+      - strings to "value"
+    """
+
+    class CppEncoder(json.JSONEncoder):
+        def iterencode(self, value):
+            if isinstance(value, list):
+                yield "{"
+                first = True
+                for subvalue in list(value):
+                    if not first:
+                        yield ", "
+                    yield from self.iterencode(subvalue)
+                    first = False
+                yield "}"
+            elif isinstance(value, str):
+                yield '"' + value + '"'
+            else:
+                yield from super().iterencode(value)
+
+    return "".join(CppEncoder().iterencode(value))
 
 
 def type_name(obj):
@@ -59,15 +88,23 @@ def output_cpp(objs, output_fd, options={}):
 
     util.get_jinja2_template = get_local_template
     get_metric_id = generate_metric_ids(objs)
+    get_ping_id = generate_ping_ids(objs)
 
-    template_filename = "cpp.jinja2"
+    if len(objs) == 1 and "pings" in objs:
+        template_filename = "cpp_pings.jinja2"
+    else:
+        template_filename = "cpp.jinja2"
+
     template = util.get_jinja2_template(
         template_filename,
         filters=(
+            ("cpp", cpp_datatypes_filter),
             ("snake_case", util.snake_case),
             ("type_name", type_name),
             ("metric_id", get_metric_id),
+            ("ping_id", get_ping_id),
             ("is_implemented_type", is_implemented_metric_type),
+            ("Camelize", util.Camelize),
         ),
     )
 

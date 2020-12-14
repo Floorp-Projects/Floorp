@@ -707,6 +707,8 @@ partial interface Window {
 #ifdef MOZ_GLEAN
   [ChromeOnly]
   readonly attribute GleanImpl Glean;
+  [ChromeOnly]
+  readonly attribute GleanPingsImpl GleanPings;
 #endif
 };
 

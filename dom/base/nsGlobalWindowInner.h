@@ -52,6 +52,7 @@
 #include "mozilla/dom/WindowProxyHolder.h"
 #ifdef MOZ_GLEAN
 #  include "mozilla/glean/bindings/Glean.h"
+#  include "mozilla/glean/bindings/GleanPings.h"
 #endif
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
@@ -839,6 +840,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
 #ifdef MOZ_GLEAN
   mozilla::glean::Glean* Glean();
+  mozilla::glean::GleanPings* GleanPings();
 #endif
   already_AddRefed<nsICSSDeclaration> GetDefaultComputedStyle(
       mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
@@ -1445,6 +1447,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
 #ifdef MOZ_GLEAN
   RefPtr<mozilla::glean::Glean> mGlean;
+  RefPtr<mozilla::glean::GleanPings> mGleanPings;
 #endif
 
   // This is the CC generation the last time we called CanSkip.
