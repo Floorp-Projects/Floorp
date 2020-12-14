@@ -1,6 +1,7 @@
 //! Implement Fallible HashMap
 use super::TryClone;
 use crate::TryReserveError;
+use core::borrow::Borrow;
 use core::default::Default;
 use core::hash::Hash;
 
@@ -25,7 +26,7 @@ where
 
     pub fn get<Q: ?Sized>(&self, k: &Q) -> Option<&V>
     where
-        K: core::borrow::Borrow<Q>,
+        K: Borrow<Q>,
         Q: Hash + Eq,
     {
         self.inner.get(k)
@@ -36,8 +37,33 @@ where
         Ok(self.inner.insert(k, v))
     }
 
+    pub fn iter(&self) -> hashbrown::hash_map::Iter<'_, K, V> {
+        self.inner.iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn remove<Q: ?Sized>(&mut self, k: &Q) -> Option<V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.inner.remove(k)
+    }
+
     fn reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.inner.try_reserve(additional)
+    }
+}
+
+impl<K, V> IntoIterator for TryHashMap<K, V> {
+    type Item = (K, V);
+    type IntoIter = hashbrown::hash_map::IntoIter<K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.into_iter()
     }
 }
 

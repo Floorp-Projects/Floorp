@@ -15,7 +15,7 @@ tag = "v0.4.18"
 [source."https://github.com/mozilla/mp4parse-rust"]
 git = "https://github.com/mozilla/mp4parse-rust"
 replace-with = "vendored-sources"
-rev = "f7c35a30ff25521bebe64c19d3f306569ecb5385"
+rev = "3d9efdc868ce8c5767cea28708fa6512c0ab6d17"
 
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
