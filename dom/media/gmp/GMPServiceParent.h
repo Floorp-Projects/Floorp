@@ -222,8 +222,8 @@ class GMPServiceParent final : public PGMPServiceParent {
 
   // Mark AddRef and Release as `final`, as they overload pure virtual
   // implementations in PGMPServiceParent.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(GMPServiceParent,
-                                                     Destroy(), final);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD(
+      GMPServiceParent, final);
 
   ipc::IPCResult RecvGetGMPNodeId(const nsString& aOrigin,
                                   const nsString& aTopLevelOrigin,
@@ -250,8 +250,6 @@ class GMPServiceParent final : public PGMPServiceParent {
 
  private:
   ~GMPServiceParent();
-
-  void Destroy();
 
   RefPtr<GeckoMediaPluginServiceParent> mService;
 };

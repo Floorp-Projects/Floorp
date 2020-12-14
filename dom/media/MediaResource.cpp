@@ -23,19 +23,6 @@ mozilla::LazyLogModule gMediaResourceIndexLog("MediaResourceIndex");
 
 namespace mozilla {
 
-void MediaResource::Destroy() {
-  // Ensures we only delete the MediaResource on the main thread.
-  if (NS_IsMainThread()) {
-    delete this;
-    return;
-  }
-  nsresult rv = SchedulerGroup::Dispatch(
-      TaskCategory::Other,
-      NewNonOwningRunnableMethod("MediaResource::Destroy", this,
-                                 &MediaResource::Destroy));
-  MOZ_ALWAYS_SUCCEEDS(rv);
-}
-
 static const uint32_t kMediaResourceIndexCacheSize = 8192;
 static_assert(IsPowerOfTwo(kMediaResourceIndexCacheSize),
               "kMediaResourceIndexCacheSize cache size must be a power of 2");
