@@ -121,7 +121,7 @@ def calculate_memory_report_values(
     # If a process name is provided, restricted output to processes matching
     # that name.
     if process_names is not None:
-        for k in totals.keys():
+        for k in list(totals.keys()):
             if not any([process_name in k for process_name in process_names]):
                 del totals[k]
 
