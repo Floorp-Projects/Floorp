@@ -159,7 +159,9 @@ CompositorBridgeChild* WebRenderLayerManager::GetCompositorBridgeChild() {
 }
 
 void WebRenderLayerManager::GetBackendName(nsAString& name) {
-  if (WrBridge()->UsingSoftwareWebRender()) {
+  if (WrBridge()->UsingSoftwareWebRenderD3D11()) {
+    name.AssignLiteral("WebRender (Software D3D11)");
+  } else if (WrBridge()->UsingSoftwareWebRender()) {
     name.AssignLiteral("WebRender (Software)");
   } else {
     name.AssignLiteral("WebRender");

@@ -497,7 +497,8 @@ function BuildConditionSandbox(aURL) {
     sandbox.layersOpenGL =
       g.windowUtils.layerManagerType == "OpenGL";
     sandbox.swgl =
-      g.windowUtils.layerManagerType == "WebRender (Software)";
+      g.windowUtils.layerManagerType == "WebRender (Software)"
+      || g.windowUtils.layerManagerType == "WebRender (Software D3D11)";
     sandbox.webrender =
       g.windowUtils.layerManagerType == "WebRender" || sandbox.swgl;
     sandbox.layersOMTC =
