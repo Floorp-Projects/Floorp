@@ -26,6 +26,7 @@ def WebIDLTest(parser, harness):
                             [TreatNullAs=EmptyString] DOMString baz);
                 void method2(optional [EnforceRange] long foo, optional [Clamp] long bar,
                              optional [TreatNullAs=EmptyString] DOMString baz);
+                void method3(optional [TreatNullAs=EmptyString] UTF8String foo = "");
             };
             interface C {
                 attribute [EnforceRange] long? foo;
@@ -99,18 +100,31 @@ def WebIDLTest(parser, harness):
         )
         method2 = B.members[5].signatures()[0][1]
         harness.check(
-            method[0].type.hasEnforceRange(),
+            method2[0].type.hasEnforceRange(),
             True,
             "foo argument of method2 is [EnforceRange]",
         )
         harness.check(
-            method[1].type.hasClamp(), True, "bar argument of method2 is [Clamp]"
+            method2[1].type.hasClamp(), True, "bar argument of method2 is [Clamp]"
         )
         harness.check(
-            method[2].type.treatNullAsEmpty,
+            method2[2].type.treatNullAsEmpty,
             True,
             "baz argument of method2 is [TreatNullAs=EmptyString]",
         )
+
+        method3 = B.members[6].signatures()[0][1]
+        harness.check(
+            method3[0].type.treatNullAsEmpty,
+            True,
+            "bar argument of method2 is [TreatNullAs=EmptyString]",
+        )
+        harness.check(
+            method3[0].defaultValue.type.isUTF8String(),
+            True,
+            "default value of bar argument of method2 is correctly coerced to UTF8String",
+        )
+
         C = results[5]
         harness.ok(C.members[0].type.nullable(), "C.foo is nullable")
         harness.ok(C.members[0].type.hasEnforceRange(), "C.foo has [EnforceRange]")
