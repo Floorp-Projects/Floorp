@@ -47,9 +47,15 @@ Building clang is handled by `build-clang.py`_, which uses several resources
 in the `build-clang`_ directory. Read the `build-clang README`_ for more
 details.
 
+Note for local builds: build-clang.py can be run on developer machines but its
+lengthy multi-stage build process is unnecessary for most local development. The
+upstream `LLVM Getting Started Guide`_ has instructions on how to build
+clang more directly.
+
 .. _build-clang.py: https://searchfox.org/mozilla-central/source/build/build-clang/build-clang.py
 .. _build-clang README: https://searchfox.org/mozilla-central/source/build/build-clang/README
 .. _build-clang: https://searchfox.org/mozilla-central/source/build/build-clang/
+.. _LLVM Getting Started Guide: https://llvm.org/docs/GettingStarted.html
 
 Rust
 ----
