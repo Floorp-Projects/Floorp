@@ -7,76 +7,11 @@
 #ifndef mozilla_dom_AbortSignal_h
 #define mozilla_dom_AbortSignal_h
 
+#include "mozilla/dom/AbortFollower.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsISupportsImpl.h"
-#include "nsTObserverArray.h"
 
 namespace mozilla {
 namespace dom {
-
-class AbortSignal;
-class AbortSignalImpl;
-
-// This class must be implemented by objects who want to follow an
-// AbortSignalImpl.
-class AbortFollower : public nsISupports {
- public:
-  virtual void RunAbortAlgorithm() = 0;
-
-  void Follow(AbortSignalImpl* aSignal);
-
-  void Unfollow();
-
-  bool IsFollowing() const;
-
-  AbortSignalImpl* Signal() const { return mFollowingSignal; }
-
- protected:
-  // Subclasses of this class must call these Traverse and Unlink functions
-  // during corresponding cycle collection operations.
-  static void Traverse(AbortFollower* aFollower,
-                       nsCycleCollectionTraversalCallback& cb);
-
-  static void Unlink(AbortFollower* aFollower) { aFollower->Unfollow(); }
-
-  virtual ~AbortFollower();
-
-  friend class AbortSignalImpl;
-
-  RefPtr<AbortSignalImpl> mFollowingSignal;
-};
-
-class AbortSignalImpl : public nsISupports {
- public:
-  explicit AbortSignalImpl(bool aAborted);
-
-  bool Aborted() const;
-
-  virtual void SignalAbort();
-
- protected:
-  // Subclasses of this class must call these Traverse and Unlink functions
-  // during corresponding cycle collection operations.
-  static void Traverse(AbortSignalImpl* aSignal,
-                       nsCycleCollectionTraversalCallback& cb);
-
-  static void Unlink(AbortSignalImpl* aSignal) {
-    // To be filled in shortly.
-  }
-
-  virtual ~AbortSignalImpl() = default;
-
- private:
-  friend class AbortFollower;
-
-  // Raw pointers.  |AbortFollower::Follow| adds to this array, and
-  // |AbortFollower::Unfollow| (also callbed by the destructor) will remove
-  // from this array.  Finally, calling |SignalAbort()| will (after running all
-  // abort algorithms) empty this and make all contained followers |Unfollow()|.
-  nsTObserverArray<AbortFollower*> mFollowers;
-
-  bool mAborted;
-};
 
 // AbortSignal the spec concept includes the concept of a child signal
 // "following" a parent signal -- internally, adding abort steps to the parent
