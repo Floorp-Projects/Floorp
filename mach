@@ -24,9 +24,7 @@ py2commands="
     raptor-test
     telemetry-tests-client
     test
-    web-platform-tests
     web-platform-tests-update
-    wpt
     wpt-metadata-merge
     wpt-serve
     wpt-update
