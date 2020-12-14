@@ -36,7 +36,7 @@ def test_crash_is_recorded_as_error(empty_marionette_test, logger, has_crashed):
     result = MarionetteTestResult(
         marionette=empty_marionette_test._marionette_weakref(),
         logger=logger,
-        verbosity=None,
+        verbosity=1,
         stream=None,
         descriptions=None,
     )
