@@ -21,18 +21,21 @@
 
   const playButton = getElementWithinVideo(video, "playButton");
   const scrubber = getElementWithinVideo(video, "scrubber");
-  const volumeStack = getElementWithinVideo(video, "volumeStack");
+  const volumeControl = getElementWithinVideo(video, "volumeControl");
 
   // Setup video
   tests.push(done => {
-    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, done);
+    SpecialPowers.pushPrefEnv({"set": [
+      ["media.cache_size", 40000],
+      ["media.videocontrols.keyboard-tab-to-all-controls", true],
+    ]}, done);
   }, done => {
     video.src = "seek_with_sound.ogg";
     video.addEventListener("loadedmetadata", done);
   });
 
   // Bug 1350191, video should not seek while changing volume by
-  // pressing up/down arrow key.
+  // pressing up/down arrow key after clicking the scrubber.
   tests.push(done => {
     video.addEventListener("play", done, { once: true });
     synthesizeMouseAtCenter(playButton, {});
@@ -43,21 +46,61 @@
     let counter = 0;
     let keys = ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowUp"];
 
-    video.addEventListener("seeked", () => ok(false, "should not trigger seeked event"));
-    video.addEventListener("volumechange", () => {
+    const onSeeked = () => ok(false, "should not trigger seeked event");
+    video.addEventListener("seeked", onSeeked);
+    const onVolumeChange = () => {
       if (++counter === keys.length) {
         ok(true, "change volume by up/down arrow key without trigger 'seeked' event");
+        video.removeEventListener("seeked", onSeeked);
+        video.removeEventListener("volumechange", onVolumeChange);
         done();
       }
 
       if (counter > keys.length) {
         ok(false, "trigger too much volumechange events");
       }
-    });
+    };
+    video.addEventListener("volumechange", onVolumeChange);
 
     for (let key of keys) {
       synthesizeKey(key);
     }
+  });
+
+  // However, if the scrubber is *focused* (e.g. by keyboard), it should handle
+  // up/down arrow keys.
+  tests.push(done => {
+    info("Focusing the scrubber");
+    scrubber.focus();
+    video.addEventListener("seeked", () =>  {
+      ok(true, "DownArrow seeked the video");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowDown");
+  }, done => {
+    video.addEventListener("seeked", () =>  {
+      ok(true, "UpArrow seeked the video");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowUp");
+  });
+
+  // Similarly, if the volume control is focused, left/right arrows should
+  // adjust the volume.
+  tests.push(done => {
+    info("Focusing the volume control");
+    volumeControl.focus();
+    video.addEventListener("volumechange", () =>  {
+      ok(true, "LeftArrow changed the volume");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowLeft");
+  }, done => {
+    video.addEventListener("volumechange", () =>  {
+      ok(true, "RightArrow changed the volume");
+      done();
+    }, { once: true });
+    synthesizeKey("KEY_ArrowRight");
   });
 
   tests.push(SimpleTest.finish);
