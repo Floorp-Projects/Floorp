@@ -9,8 +9,8 @@ extern crate libc;
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
  use qcms::iccread::{qcms_profile, icSigRgbData, qcms_profile_is_bogus, icSigGrayData};
- use qcms::c_bindings::{qcms_profile_get_color_space, qcms_profile_get_rendering_intent, qcms_profile_from_memory, qcms_profile_release, qcms_profile_sRGB};
- use qcms::transform::{QCMS_DATA_RGBA_8, QCMS_DATA_RGB_8, QCMS_DATA_GRAYA_8, QCMS_DATA_GRAY_8, qcms_profile_precache_output_transform, qcms_transform_create, qcms_transform_data, qcms_transform_release, qcms_enable_iccv4};
+ use qcms::c_bindings::{qcms_profile_get_color_space, qcms_profile_get_rendering_intent, qcms_profile_from_memory, qcms_profile_release, qcms_profile_sRGB, qcms_transform_create};
+ use qcms::transform::{QCMS_DATA_RGBA_8, QCMS_DATA_RGB_8, QCMS_DATA_GRAYA_8, QCMS_DATA_GRAY_8, qcms_profile_precache_output_transform, qcms_transform_data, qcms_transform_release, qcms_enable_iccv4};
 
  unsafe fn transform(src_profile: *mut qcms_profile, dst_profile: *mut qcms_profile, size: usize)
  {
