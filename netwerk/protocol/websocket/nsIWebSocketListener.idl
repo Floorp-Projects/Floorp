@@ -85,6 +85,12 @@ interface nsIWebSocketListener : nsISupports
                                   in unsigned short aCode,
                                   in AUTF8String aReason);
 
+    /**
+     * Called to inform an error is happened. The connection will be closed
+     * when this is called.
+     */
+    [must_use] void OnError();
+
 };
 
 
