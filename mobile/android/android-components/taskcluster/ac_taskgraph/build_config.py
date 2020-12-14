@@ -17,6 +17,8 @@ EXTENSIONS = {
     'jar': ('.jar', '.pom', '-sources.jar')
 }
 CHECKSUMS_EXTENSIONS = ('.sha1', '.md5')
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+PROJECT_DIR = os.path.realpath(os.path.join(CURRENT_DIR, '..', '..'))
 
 
 def get_components():
@@ -29,7 +31,9 @@ def get_components():
 
 
 def get_version():
-    return ensure_text(_read_build_config()["componentsVersion"])
+    with open(os.path.join(PROJECT_DIR, "version.txt")) as fh:
+        version = fh.read().strip()
+    return ensure_text(version)
 
 
 def get_path(component):
@@ -54,8 +58,5 @@ def get_extensions(component):
 
 @memoize
 def _read_build_config():
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    project_dir = os.path.realpath(os.path.join(current_dir, '..', '..'))
-
-    with open(os.path.join(project_dir, '.buildconfig.yml'), 'rb') as f:
+    with open(os.path.join(PROJECT_DIR, '.buildconfig.yml'), 'rb') as f:
         return yaml.safe_load(f)

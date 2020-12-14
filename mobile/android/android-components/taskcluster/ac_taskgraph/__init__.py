@@ -16,6 +16,7 @@ from .build_config import get_components, get_version
 extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
     Required("base_rev"): Any(basestring, None),
+    Required("next_version"): Any(basestring, None),
     Required("version"): basestring,
 })
 
@@ -47,6 +48,7 @@ def get_decision_parameters(graph_config, parameters):
     parameters["base_rev"] = os.environ.get("MOBILE_BASE_REV")
     version = get_version()
     parameters["version"] = version
+    parameters.setdefault("next_version", None)
 
     if parameters["tasks_for"] == "github-release":
         head_tag = parameters["head_tag"].decode("utf-8")

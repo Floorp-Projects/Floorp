@@ -146,3 +146,46 @@ def build_github_release_payload(config, task, task_def):
         "{}:github:project:{}".format(scope_prefix, worker["github-project"]),
         "{}:github:action:{}".format(scope_prefix, worker["action"]),
     ])
+
+
+@payload_builder(
+    "scriptworker-tree",
+    schema={
+        Optional("upstream-artifacts"): [
+            {
+                Optional("taskId"): taskref_or_string,
+                Optional("taskType"): text_type,
+                Optional("paths"): [text_type],
+            }
+        ],
+        Required("bump"): bool,
+        Optional("bump-files"): [text_type],
+        Optional("push"): bool,
+        Optional("branch"): text_type,
+    },
+)
+def build_version_bump_payload(config, task, task_def):
+    worker = task["worker"]
+    task_def["tags"]["worker-implementation"] = "scriptworker"
+
+    task_def['payload'] = {'actions': []}
+    actions = task_def['payload']['actions']
+
+    if worker['bump']:
+        if not worker['bump-files']:
+            raise Exception("Version Bump requested without bump-files")
+
+        bump_info = {}
+        bump_info["next_version"] = config.params["next_version"]
+        bump_info['files'] = worker['bump-files']
+        task_def['payload']['version_bump_info'] = bump_info
+        actions.append('version_bump')
+
+    if worker["push"]:
+        task_def['payload']['push'] = True
+
+    if worker.get('force-dry-run'):
+        task_def['payload']['dry_run'] = True
+
+    if worker.get("branch"):
+        task_def["payload"]["branch"] = worker["branch"]
