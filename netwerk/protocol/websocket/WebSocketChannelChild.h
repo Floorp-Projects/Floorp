@@ -82,10 +82,8 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   // This function tries to get a labeled event target for |mNeckoTarget|.
   void SetupNeckoTarget();
 
-  bool RecvOnMessageAvailableInternal(const nsDependentCSubstring& aMsg,
+  void RecvOnMessageAvailableInternal(const nsDependentCSubstring& aMsg,
                                       bool aMoreData, bool aBinary);
-
-  void OnError();
 
   RefPtr<ChannelEventQueue> mEventQ;
   nsString mEffectiveURL;
@@ -102,7 +100,6 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   friend class AcknowledgeEvent;
   friend class ServerCloseEvent;
   friend class AsyncOpenFailedEvent;
-  friend class OnErrorEvent;
 };
 
 }  // namespace net
