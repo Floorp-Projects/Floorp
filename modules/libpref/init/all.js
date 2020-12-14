@@ -3813,7 +3813,7 @@ pref("network.psl.onUpdate_notify", false);
   pref("widget.titlebar-x11-use-shape-mask", false);
 #endif
 #ifdef MOZ_WAYLAND
-  pref("widget.wayland_vsync.enabled", true);
+  pref("widget.wayland_vsync.enabled", false);
   pref("widget.wayland.use-opaque-region", false);
   pref("widget.use-xdg-desktop-portal", false);
 #endif
