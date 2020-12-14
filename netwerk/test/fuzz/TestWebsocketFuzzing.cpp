@@ -96,6 +96,12 @@ FuzzingWebSocketListener::OnBinaryMessageAvailable(nsISupports* aContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FuzzingWebSocketListener::OnError() {
+  FUZZING_LOG(("FuzzingWebSocketListener::OnError"));
+  return NS_OK;
+}
+
 static int FuzzingInitNetworkWebsocket(int* argc, char*** argv) {
   Preferences::SetBool("network.dns.native-is-localhost", true);
   Preferences::SetBool("fuzzing.necko.enabled", true);
