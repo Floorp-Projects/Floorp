@@ -4172,10 +4172,6 @@ class IDLValue(IDLObject):
             # extra normalization step.
             assert self.type.isDOMString()
             return self
-        elif self.type.isDOMString() and type.treatNullAsEmpty:
-            # TreatNullAsEmpty is a different type for resolution reasons,
-            # however once you have a value it doesn't matter
-            return self
         elif self.type.isString() and (
             type.isByteString() or type.isJSString() or type.isUTF8String()
         ):
@@ -4197,6 +4193,10 @@ class IDLValue(IDLObject):
                     )
 
             return IDLValue(self.location, type, self.value)
+        elif self.type.isDOMString() and type.treatNullAsEmpty:
+            # TreatNullAsEmpty is a different type for resolution reasons,
+            # however once you have a value it doesn't matter
+            return self
 
         raise NoCoercionFoundError(
             "Cannot coerce type %s to type %s." % (self.type, type), [location]
