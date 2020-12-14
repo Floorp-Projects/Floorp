@@ -33,6 +33,7 @@ add_task(async function setup() {
 
   gMenuButton = document.createElement("menu-button");
   displayEl.appendChild(gMenuButton);
+  gMenuButton.style.marginInlineStart = "100px";
 
   isnot(document.activeElement, gMenuButton, "menu-button should not be focused by default");
   while (document.activeElement != gMenuButton) {
@@ -41,23 +42,60 @@ add_task(async function setup() {
   }
 });
 
-add_task(async function test_menu_clicks () {
+add_task(async function test_menu_click_button () {
   let menu = gMenuButton.shadowRoot.querySelector(".menu");
   let menuButton = gMenuButton.shadowRoot.querySelector(".menu-button");
   ok(menu.hidden, "menu should be hidden before being clicked");
-  menuButton.click();
+  await synthesizeMouseAtCenter(menuButton, {});
   await new Promise(resolve => requestAnimationFrame(resolve));
   ok(!menu.hidden, "menu should be visible after clicked");
 
   let menuListSeparators = gMenuButton.shadowRoot.querySelectorAll(".menuitem-separator");
-  menuListSeparators[0].click();
+  await synthesizeMouseAtCenter(menuListSeparators[0], {});
   await new Promise(resolve => requestAnimationFrame(resolve));
   ok(!menu.hidden, "menu should still be visible after menu separator has been clicked");
 
   let menuListButtons = gMenuButton.shadowRoot.querySelectorAll(".menuitem-button");
-  menuListButtons[0].click();
+  await synthesizeMouseAtCenter(menuListButtons[0], {});
   await new Promise(resolve => requestAnimationFrame(resolve));
   ok(menu.hidden, "menu should be hidden after a button has been clicked");
+});
+
+add_task(async function test_menu_click_outside () {
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+  let menuButton = gMenuButton.shadowRoot.querySelector(".menu-button");
+  ok(menu.hidden, "menu should be hidden before being clicked");
+  await synthesizeMouseAtCenter(menuButton, {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should be visible after clicked");
+
+  let menuListSeparators = gMenuButton.shadowRoot.querySelectorAll(".menuitem-separator");
+  await synthesizeMouseAtCenter(menuListSeparators[0], {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should still be visible after menu separator has been clicked");
+
+  let outsideEl = document.getElementById("test");
+  await synthesizeMouseAtCenter(outsideEl, {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(menu.hidden, "menu should be hidden after a click outside of the menu has been clicked");
+});
+
+add_task(async function test_menu_esc_after_click_disabled_item () {
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+  let menuButton = gMenuButton.shadowRoot.querySelector(".menu-button");
+  ok(menu.hidden, "menu should be hidden before being clicked");
+  await synthesizeMouseAtCenter(menuButton, {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should be visible after clicked");
+
+  let menuListSeparators = gMenuButton.shadowRoot.querySelectorAll(".menuitem-separator");
+  await synthesizeMouseAtCenter(menuListSeparators[0], {});
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(!menu.hidden, "menu should still be visible after menu separator has been clicked");
+
+  sendKey("ESCAPE");
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  ok(menu.hidden, "menu should be hidden after pressing 'escape'");
 });
 
 add_task(async function test_menu_open_close() {
