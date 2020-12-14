@@ -685,14 +685,6 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
-template <typename StepFunc>
-Result<Ok, nsresult> CollectWhileHasResult(mozIStorageStatement& aStmt,
-                                           StepFunc&& aStepFunc) {
-  return CollectWhile(
-      [&aStmt] { IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep)); },
-      [&aStmt, &aStepFunc] { return aStepFunc(aStmt); });
-}
-
 nsresult SetJournalMode(mozIStorageConnection& aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
 

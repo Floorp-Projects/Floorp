@@ -352,12 +352,15 @@ struct IdCount {
   int32_t mCount;
 };
 
-static Result<nsTArray<EntryId>, nsresult> QueryAll(
-    mozIStorageConnection& aConn, CacheId aCacheId);
-static Result<nsTArray<EntryId>, nsresult> QueryCache(
-    mozIStorageConnection& aConn, CacheId aCacheId,
-    const CacheRequest& aRequest, const CacheQueryParams& aParams,
-    uint32_t aMaxResults = UINT32_MAX);
+using EntryIds = AutoTArray<EntryId, 256>;
+
+static Result<EntryIds, nsresult> QueryAll(mozIStorageConnection& aConn,
+                                           CacheId aCacheId);
+static Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
+                                             CacheId aCacheId,
+                                             const CacheRequest& aRequest,
+                                             const CacheQueryParams& aParams,
+                                             uint32_t aMaxResults = UINT32_MAX);
 static Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
                                                 const CacheRequest& aRequest,
                                                 EntryId entryId);
@@ -668,8 +671,7 @@ Result<DeletionInfo, nsresult> DeleteCacheId(mozIStorageConnection& aConn,
   // Delete the bodies explicitly as we need to read out the body IDs
   // anyway.  These body IDs must be deleted one-by-one as content may
   // still be referencing them invidivually.
-  AutoTArray<EntryId, 256> matches;
-  CACHE_TRY_UNWRAP(matches, QueryAll(aConn, aCacheId));
+  CACHE_TRY_INSPECT(const auto& matches, QueryAll(aConn, aCacheId));
 
   AutoTArray<nsID, 16> deletedBodyIdList;
   AutoTArray<IdCount, 16> deletedSecurityIdList;
@@ -706,30 +708,19 @@ Result<DeletionInfo, nsresult> DeleteCacheId(mozIStorageConnection& aConn,
   return DeletionInfo{std::move(deletedBodyIdList), deletedPaddingSize};
 }
 
-Result<nsTArray<CacheId>, nsresult> FindOrphanedCacheIds(
+Result<AutoTArray<CacheId, 8>, nsresult> FindOrphanedCacheIds(
     mozIStorageConnection& aConn) {
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn.CreateStatement(
-      "SELECT id FROM caches "
-      "WHERE id NOT IN (SELECT cache_id from storage);"_ns,
-      getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY_INSPECT(const auto& state,
+                    MOZ_TO_RESULT_INVOKE_TYPED(
+                        nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
+                        "SELECT id FROM caches "
+                        "WHERE id NOT IN (SELECT cache_id from storage);"_ns));
 
-  AutoTArray<CacheId, 8> orphanedList;
-
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    CacheId cacheId = INVALID_CACHE_ID;
-    rv = state->GetInt64(0, &cacheId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-    orphanedList.AppendElement(cacheId);
-  }
-
-  return std::move(orphanedList);
+  CACHE_TRY_RETURN(
+      (quota::CollectElementsWhileHasResultTyped<AutoTArray<CacheId, 8>>(
+          *state, [](auto& stmt) {
+            CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+          })));
 }
 
 Result<int64_t, nsresult> FindOverallPaddingSize(mozIStorageConnection& aConn) {
@@ -743,18 +734,18 @@ Result<int64_t, nsresult> FindOverallPaddingSize(mozIStorageConnection& aConn) {
   }
 
   int64_t overallPaddingSize = 0;
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    int64_t padding_size = 0;
-    rv = state->GetInt64(0, &padding_size);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
 
-    MOZ_DIAGNOSTIC_ASSERT(padding_size >= 0);
-    MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - padding_size >= overallPaddingSize);
-    overallPaddingSize += padding_size;
-  }
+  CACHE_TRY(quota::CollectWhileHasResult(
+      *state, [&overallPaddingSize](auto& stmt) -> Result<Ok, nsresult> {
+        CACHE_TRY_INSPECT(const int64_t& padding_size,
+                          MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+
+        MOZ_DIAGNOSTIC_ASSERT(padding_size >= 0);
+        MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - padding_size >= overallPaddingSize);
+        overallPaddingSize += padding_size;
+
+        return Ok{};
+      }));
 
   return overallPaddingSize;
 }
@@ -773,25 +764,22 @@ Result<nsTArray<nsID>, nsresult> GetKnownBodyIds(mozIStorageConnection& aConn) {
 
   AutoTArray<nsID, 64> idList;
 
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    // extract 0 to 2 nsID structs per row
-    for (uint32_t i = 0; i < 2; ++i) {
-      bool isNull = false;
+  CACHE_TRY(quota::CollectWhileHasResult(
+      *state, [&idList](auto& stmt) -> Result<Ok, nsresult> {
+        // extract 0 to 2 nsID structs per row
+        for (uint32_t i = 0; i < 2; ++i) {
+          CACHE_TRY_INSPECT(const bool& isNull,
+                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, i));
 
-      rv = state->GetIsNull(i, &isNull);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+          if (!isNull) {
+            CACHE_TRY_INSPECT(const auto& id, ExtractId(stmt, i));
 
-      if (!isNull) {
-        nsID id;
-        CACHE_TRY_UNWRAP(id, ExtractId(*state, i));
+            idList.AppendElement(id);
+          }
+        }
 
-        idList.AppendElement(id);
-      }
-    }
-  }
+        return Ok{};
+      }));
 
   return std::move(idList);
 }
@@ -821,7 +809,7 @@ Result<nsTArray<SavedResponse>, nsresult> CacheMatchAll(
     const Maybe<CacheRequest>& aMaybeRequest, const CacheQueryParams& aParams) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  AutoTArray<EntryId, 256> matches;
+  EntryIds matches;
   if (aMaybeRequest.isNothing()) {
     CACHE_TRY_UNWRAP(matches, QueryAll(aConn, aCacheId));
   } else {
@@ -851,9 +839,10 @@ Result<DeletionInfo, nsresult> CachePut(mozIStorageConnection& aConn,
                                         const nsID* aResponseBodyId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  CacheQueryParams params(false, false, false, false, u""_ns);
-  AutoTArray<EntryId, 256> matches;
-  CACHE_TRY_UNWRAP(matches, QueryCache(aConn, aCacheId, aRequest, params));
+  CACHE_TRY_INSPECT(
+      const auto& matches,
+      QueryCache(aConn, aCacheId, aRequest,
+                 CacheQueryParams(false, false, false, false, u""_ns)));
 
   nsTArray<nsID> deletedBodyIdList;
   AutoTArray<IdCount, 16> deletedSecurityIdList;
@@ -885,8 +874,8 @@ Result<Maybe<DeletionInfo>, nsresult> CacheDelete(
     const CacheRequest& aRequest, const CacheQueryParams& aParams) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  AutoTArray<EntryId, 256> matches;
-  CACHE_TRY_UNWRAP(matches, QueryCache(aConn, aCacheId, aRequest, aParams));
+  CACHE_TRY_INSPECT(const auto& matches,
+                    QueryCache(aConn, aCacheId, aRequest, aParams));
 
   if (matches.IsEmpty()) {
     return Maybe<DeletionInfo>();
@@ -914,7 +903,7 @@ Result<nsTArray<SavedRequest>, nsresult> CacheKeys(
     const Maybe<CacheRequest>& aMaybeRequest, const CacheQueryParams& aParams) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  AutoTArray<EntryId, 256> matches;
+  EntryIds matches;
   if (aMaybeRequest.isNothing()) {
     CACHE_TRY_UNWRAP(matches, QueryAll(aConn, aCacheId));
   } else {
@@ -971,17 +960,12 @@ Result<Maybe<SavedResponse>, nsresult> StorageMatch(
     return Err(rv);
   }
 
-  AutoTArray<CacheId, 32> cacheIdList;
-
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    CacheId cacheId = INVALID_CACHE_ID;
-    rv = state->GetInt64(0, &cacheId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-    cacheIdList.AppendElement(cacheId);
-  }
+  CACHE_TRY_INSPECT(
+      const auto& cacheIdList,
+      (quota::CollectElementsWhileHasResultTyped<AutoTArray<CacheId, 32>>(
+          *state, [](auto& stmt) {
+            CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+          })));
 
   // Now try to find a match in each cache in order
   for (const auto cacheId : cacheIdList) {
@@ -1116,25 +1100,16 @@ Result<nsTArray<nsString>, nsresult> StorageGetKeys(
     return Err(rv);
   }
 
-  nsTArray<nsString> keys;
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    nsAutoString key;
-    rv = state->GetBlobAsString(0, key);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-
-    keys.AppendElement(key);
-  }
-
-  return std::move(keys);
+  CACHE_TRY_RETURN(quota::CollectElementsWhileHasResult(*state, [](auto& stmt) {
+    CACHE_TRY_RETURN(
+        MOZ_TO_RESULT_INVOKE_TYPED(nsString, stmt, GetBlobAsString, 0));
+  }));
 }
 
 namespace {
 
-Result<nsTArray<EntryId>, nsresult> QueryAll(mozIStorageConnection& aConn,
-                                             CacheId aCacheId) {
+Result<EntryIds, nsresult> QueryAll(mozIStorageConnection& aConn,
+                                    CacheId aCacheId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   nsCOMPtr<mozIStorageStatement> state;
@@ -1151,29 +1126,21 @@ Result<nsTArray<EntryId>, nsresult> QueryAll(mozIStorageConnection& aConn,
     return Err(rv);
   }
 
-  AutoTArray<EntryId, 256> entryIdList;
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    EntryId entryId = INT32_MAX;
-    rv = state->GetInt32(0, &entryId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-    entryIdList.AppendElement(entryId);
-  }
-
-  return std::move(entryIdList);
+  CACHE_TRY_RETURN((quota::CollectElementsWhileHasResultTyped<EntryIds>(
+      *state, [](auto& stmt) {
+        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
+      })));
 }
 
-Result<nsTArray<EntryId>, nsresult> QueryCache(mozIStorageConnection& aConn,
-                                               CacheId aCacheId,
-                                               const CacheRequest& aRequest,
-                                               const CacheQueryParams& aParams,
-                                               uint32_t aMaxResults) {
+Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
+                                      CacheId aCacheId,
+                                      const CacheRequest& aRequest,
+                                      const CacheQueryParams& aParams,
+                                      uint32_t aMaxResults) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aMaxResults > 0);
 
-  AutoTArray<EntryId, 256> entryIdList;
+  EntryIds entryIdList;
 
   if (!aParams.ignoreMethod() &&
       !aRequest.method().LowerCaseEqualsLiteral("get")) {
@@ -1304,20 +1271,13 @@ Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
     return Err(rv);
   }
 
-  AutoTArray<nsCString, 8> varyValues;
-
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    nsAutoCString value;
-    rv = state->GetUTF8String(0, value);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-    varyValues.AppendElement(value);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  CACHE_TRY_UNWRAP(
+      auto varyValues,
+      (quota::CollectElementsWhileHasResultTyped<AutoTArray<nsCString, 8>>(
+          *state, [](auto& stmt) {
+            CACHE_TRY_RETURN(
+                MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 0));
+          })));
 
   // Should not have called this function if this was not the case
   MOZ_DIAGNOSTIC_ASSERT(!varyValues.IsEmpty());
@@ -1339,28 +1299,24 @@ Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
   RefPtr<InternalHeaders> cachedHeaders =
       new InternalHeaders(HeadersGuardEnum::None);
 
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    nsAutoCString name;
-    nsAutoCString value;
-    rv = state->GetUTF8String(0, name);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-    rv = state->GetUTF8String(1, value);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+  CACHE_TRY(quota::CollectWhileHasResult(
+      *state, [&cachedHeaders](auto& stmt) -> Result<Ok, nsresult> {
+        CACHE_TRY_INSPECT(
+            const auto& name,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 0));
+        CACHE_TRY_INSPECT(
+            const auto& value,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 1));
 
-    ErrorResult errorResult;
+        ErrorResult errorResult;
 
-    cachedHeaders->Append(name, value, errorResult);
-    if (errorResult.Failed()) {
-      return Err(errorResult.StealNSResult());
-    }
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+        cachedHeaders->Append(name, value, errorResult);
+        if (errorResult.Failed()) {
+          return Err(errorResult.StealNSResult());
+        }
+
+        return Ok{};
+      }));
 
   RefPtr<InternalHeaders> queryHeaders =
       TypeUtils::ToInternalHeaders(aRequest.headers());
@@ -1479,74 +1435,68 @@ nsresult DeleteEntries(mozIStorageConnection& aConn,
   }
 
   int64_t overallPaddingSize = 0;
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    // extract 0 to 2 nsID structs per row
-    for (uint32_t i = 0; i < 2; ++i) {
-      bool isNull = false;
 
-      rv = state->GetIsNull(i, &isNull);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+  CACHE_TRY(quota::CollectWhileHasResult(
+      *state,
+      [&overallPaddingSize, &aDeletedBodyIdListOut,
+       &aDeletedSecurityIdListOut](auto& stmt) -> Result<Ok, nsresult> {
+        // extract 0 to 2 nsID structs per row
+        for (uint32_t i = 0; i < 2; ++i) {
+          CACHE_TRY_INSPECT(const bool& isNull,
+                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, i));
 
-      if (!isNull) {
-        nsID id;
-        CACHE_TRY_UNWRAP(id, ExtractId(*state, i));
+          if (!isNull) {
+            CACHE_TRY_INSPECT(const auto& id, ExtractId(stmt, i));
 
-        aDeletedBodyIdListOut.AppendElement(id);
-      }
-    }
+            aDeletedBodyIdListOut.AppendElement(id);
+          }
+        }
 
-    // and then a possible third entry for the security id
-    bool isNull = false;
-    rv = state->GetIsNull(2, &isNull);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        {  // and then a possible third entry for the security id
+          CACHE_TRY_INSPECT(const bool& isNull,
+                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, 2));
 
-    if (!isNull) {
-      int32_t securityId = -1;
-      rv = state->GetInt32(2, &securityId);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          if (!isNull) {
+            CACHE_TRY_INSPECT(const int32_t& securityId,
+                              MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 2));
 
-      // XXXtt: Consider using map for aDeletedSecuityIdListOut.
-      auto foundIt = std::find_if(aDeletedSecurityIdListOut.begin(),
-                                  aDeletedSecurityIdListOut.end(),
-                                  [securityId](const auto& deletedSecurityId) {
-                                    return deletedSecurityId.mId == securityId;
-                                  });
+            // XXXtt: Consider using map for aDeletedSecuityIdListOut.
+            auto foundIt =
+                std::find_if(aDeletedSecurityIdListOut.begin(),
+                             aDeletedSecurityIdListOut.end(),
+                             [securityId](const auto& deletedSecurityId) {
+                               return deletedSecurityId.mId == securityId;
+                             });
 
-      if (foundIt == aDeletedSecurityIdListOut.end()) {
-        // Add a new entry for this ID with a count of 1, if it's not in the
-        // list
-        aDeletedSecurityIdListOut.AppendElement(IdCount(securityId));
-      } else {
-        // Otherwise, increment the count for this ID
-        foundIt->mCount += 1;
-      }
-    }
+            if (foundIt == aDeletedSecurityIdListOut.end()) {
+              // Add a new entry for this ID with a count of 1, if it's not in
+              // the list
+              aDeletedSecurityIdListOut.AppendElement(IdCount(securityId));
+            } else {
+              // Otherwise, increment the count for this ID
+              foundIt->mCount += 1;
+            }
+          }
+        }
 
-    // It's possible to have null padding size for non-opaque response
-    rv = state->GetIsNull(3, &isNull);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        {
+          // It's possible to have null padding size for non-opaque response
+          CACHE_TRY_INSPECT(const bool& isNull,
+                            MOZ_TO_RESULT_INVOKE(stmt, GetIsNull, 3));
 
-    if (!isNull) {
-      int64_t paddingSize = 0;
-      rv = state->GetInt64(3, &paddingSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          if (!isNull) {
+            CACHE_TRY_INSPECT(const int64_t& paddingSize,
+                              MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 3));
 
-      MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
-      MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - overallPaddingSize >= paddingSize);
-      overallPaddingSize += paddingSize;
-    }
-  }
+            MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
+            MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - overallPaddingSize >=
+                                  paddingSize);
+            overallPaddingSize += paddingSize;
+          }
+        }
+
+        return Ok{};
+      }));
 
   *aDeletedPaddingSizeOut = overallPaddingSize;
 
@@ -2136,6 +2086,22 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
   return rv;
 }
 
+/**
+ * Gets a HeadersEntry from a storage statement by retrieving the first column
+ * as the name and the second column as the value.
+ */
+Result<HeadersEntry, nsresult> GetHeadersEntryFromStatement(
+    mozIStorageStatement& aStmt) {
+  HeadersEntry header;
+
+  CACHE_TRY_UNWRAP(header.name(), MOZ_TO_RESULT_INVOKE_TYPED(nsCString, aStmt,
+                                                             GetUTF8String, 0));
+  CACHE_TRY_UNWRAP(header.value(), MOZ_TO_RESULT_INVOKE_TYPED(
+                                       nsCString, aStmt, GetUTF8String, 1));
+
+  return header;
+}
+
 Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
                                              EntryId aEntryId) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -2288,22 +2254,9 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
       return Err(rv);
     }
 
-    bool hasMoreData;
-    while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-      HeadersEntry header;
-
-      rv = state->GetUTF8String(0, header.name());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      rv = state->GetUTF8String(1, header.value());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      savedResponse.mValue.headers().AppendElement(header);
-    }
+    CACHE_TRY_UNWRAP(savedResponse.mValue.headers(),
+                     quota::CollectElementsWhileHasResult(
+                         *state, GetHeadersEntryFromStatement));
   }
 
   {
@@ -2322,17 +2275,12 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
       return Err(rv);
     }
 
-    bool hasMoreData;
-    while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-      nsCString url;
-
-      rv = state->GetUTF8String(0, url);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      savedResponse.mValue.urlList().AppendElement(url);
-    }
+    CACHE_TRY_UNWRAP(savedResponse.mValue.urlList(),
+                     quota::CollectElementsWhileHasResult(
+                         *state, [](auto& stmt) -> Result<nsCString, nsresult> {
+                           CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+                               nsCString, stmt, GetUTF8String, 0));
+                         }));
   }
 
   return savedResponse;
@@ -2469,22 +2417,9 @@ Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
       return Err(rv);
     }
 
-    bool hasMoreData;
-    while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-      HeadersEntry header;
-
-      rv = state->GetUTF8String(0, header.name());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      rv = state->GetUTF8String(1, header.value());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      savedRequest.mValue.headers().AppendElement(header);
-    }
+    CACHE_TRY_UNWRAP(savedRequest.mValue.headers(),
+                     quota::CollectElementsWhileHasResult(
+                         *state, GetHeadersEntryFromStatement));
   }
 
   return savedRequest;
@@ -2739,7 +2674,7 @@ nsresult Validate(mozIStorageConnection& aConn) {
 #ifdef DEBUG
   // This is the schema we expect the database at the latest version to
   // contain.  Update this list if you add a new table or index.
-  Expect expects[] = {
+  const Expect expects[] = {
       Expect("caches", "table", kTableCaches),
       Expect("sqlite_sequence", "table"),  // auto-gen by sqlite
       Expect("security_info", "table", kTableSecurityInfo),
@@ -2762,56 +2697,52 @@ nsresult Validate(mozIStorageConnection& aConn) {
     return rv;
   }
 
-  bool hasMoreData = false;
-  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    nsAutoCString name;
-    rv = state->GetUTF8String(0, name);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  CACHE_TRY(quota::CollectWhileHasResult(
+      *state, [&expects](auto& stmt) -> Result<Ok, nsresult> {
+        CACHE_TRY_INSPECT(
+            const auto& name,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, stmt, GetUTF8String, 0));
+        CACHE_TRY_INSPECT(
+            const auto& type,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, stmt, GetUTF8String, 1));
+        CACHE_TRY_INSPECT(
+            const auto& sql,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsAutoCString, stmt, GetUTF8String, 2));
 
-    nsAutoCString type;
-    rv = state->GetUTF8String(1, type);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        bool foundMatch = false;
+        for (const auto& expect : expects) {
+          if (name == expect.mName) {
+            if (type != expect.mType) {
+              NS_WARNING(
+                  nsPrintfCString("Unexpected type for Cache schema entry %s",
+                                  name.get())
+                      .get());
+              return Err(NS_ERROR_FAILURE);
+            }
 
-    nsAutoCString sql;
-    rv = state->GetUTF8String(2, sql);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+            if (!expect.mIgnoreSql && sql != expect.mSql) {
+              NS_WARNING(
+                  nsPrintfCString("Unexpected SQL for Cache schema entry %s",
+                                  name.get())
+                      .get());
+              return Err(NS_ERROR_FAILURE);
+            }
 
-    bool foundMatch = false;
-    for (const auto& expect : expects) {
-      if (name == expect.mName) {
-        if (type != expect.mType) {
+            foundMatch = true;
+            break;
+          }
+        }
+
+        if (NS_WARN_IF(!foundMatch)) {
           NS_WARNING(
-              nsPrintfCString("Unexpected type for Cache schema entry %s",
+              nsPrintfCString("Unexpected schema entry %s in Cache database",
                               name.get())
                   .get());
-          return NS_ERROR_FAILURE;
+          return Err(NS_ERROR_FAILURE);
         }
 
-        if (!expect.mIgnoreSql && sql != expect.mSql) {
-          NS_WARNING(nsPrintfCString("Unexpected SQL for Cache schema entry %s",
-                                     name.get())
-                         .get());
-          return NS_ERROR_FAILURE;
-        }
-
-        foundMatch = true;
-        break;
-      }
-    }
-
-    if (NS_WARN_IF(!foundMatch)) {
-      NS_WARNING(nsPrintfCString("Unexpected schema entry %s in Cache database",
-                                 name.get())
-                     .get());
-      return NS_ERROR_FAILURE;
-    }
-  }
+        return Ok{};
+      }));
 #endif
 
   return NS_OK;

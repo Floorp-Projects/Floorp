@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <utility>
 #include "ErrorList.h"
+#include "mozIStorageStatement.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
@@ -1115,6 +1116,39 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
   QM_TRY(aBindFunctor(*stmt));
 
   return ExecuteSingleStep<ResultHandling>(std::move(stmt));
+}
+
+template <typename StepFunc>
+Result<Ok, nsresult> CollectWhileHasResult(mozIStorageStatement& aStmt,
+                                           StepFunc&& aStepFunc) {
+  return CollectWhile(
+      [&aStmt] { QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep)); },
+      [&aStmt, &aStepFunc] { return aStepFunc(aStmt); });
+}
+
+template <typename StepFunc,
+          typename ArrayType = nsTArray<typename std::invoke_result_t<
+              StepFunc, mozIStorageStatement&>::ok_type>>
+auto CollectElementsWhileHasResult(mozIStorageStatement& aStmt,
+                                   StepFunc&& aStepFunc)
+    -> Result<ArrayType, nsresult> {
+  ArrayType res;
+
+  QM_TRY(CollectWhileHasResult(
+      aStmt, [&aStepFunc, &res](auto& stmt) -> Result<Ok, nsresult> {
+        QM_TRY_UNWRAP(auto element, aStepFunc(stmt));
+        res.AppendElement(std::move(element));
+        return Ok{};
+      }));
+
+  return std::move(res);
+}
+
+template <typename ArrayType, typename StepFunc>
+auto CollectElementsWhileHasResultTyped(mozIStorageStatement& aStmt,
+                                        StepFunc&& aStepFunc) {
+  return CollectElementsWhileHasResult<StepFunc, ArrayType>(
+      aStmt, std::forward<StepFunc>(aStepFunc));
 }
 
 }  // namespace quota

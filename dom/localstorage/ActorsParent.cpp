@@ -3026,33 +3026,29 @@ nsresult LoadArchivedOrigins() {
 
   auto archivedOrigins = MakeUnique<ArchivedOriginHashtable>();
 
-  bool hasResult;
-  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
-    nsCString originSuffix;
-    rv = stmt->GetUTF8String(0, originSuffix);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  // XXX Actually, this could use a hashtable variant of
+  // CollectElementsWhileHasResult
+  LS_TRY(quota::CollectWhileHasResult(
+      *stmt, [&archivedOrigins](auto& stmt) -> Result<Ok, nsresult> {
+        LS_TRY_INSPECT(
+            const auto& originSuffix,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 0));
+        LS_TRY_INSPECT(
+            const auto& originNoSuffix,
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 1));
 
-    nsCString originNoSuffix;
-    rv = stmt->GetUTF8String(1, originNoSuffix);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        const nsCString hashKey =
+            GetArchivedOriginHashKey(originSuffix, originNoSuffix);
 
-    nsCString hashKey = GetArchivedOriginHashKey(originSuffix, originNoSuffix);
+        OriginAttributes originAttributes;
+        LS_TRY(OkIf(originAttributes.PopulateFromSuffix(originSuffix)),
+               Err(NS_ERROR_FAILURE));
 
-    OriginAttributes originAttributes;
-    if (NS_WARN_IF(!originAttributes.PopulateFromSuffix(originSuffix))) {
-      return NS_ERROR_FAILURE;
-    }
+        archivedOrigins->Put(hashKey, MakeUnique<ArchivedOriginInfo>(
+                                          originAttributes, originNoSuffix));
 
-    archivedOrigins->Put(hashKey, MakeUnique<ArchivedOriginInfo>(
-                                      originAttributes, originNoSuffix));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
   gArchivedOrigins = archivedOrigins.release();
   return NS_OK;
@@ -8128,33 +8124,27 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
     return rv;
   }
 
-  bool hasResult;
-  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
-    nsString key;
-    rv = stmt->GetString(0, key);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  LS_TRY(quota::CollectWhileHasResult(
+      *stmt, [this](auto& stmt) -> mozilla::Result<Ok, nsresult> {
+        LS_TRY_UNWRAP(auto key,
+                      MOZ_TO_RESULT_INVOKE_TYPED(nsString, stmt, GetString, 0));
 
-    LSValue value;
-    rv = value.InitFromStatement(stmt, 1);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        LSValue value;
+        LS_TRY(value.InitFromStatement(&stmt, 1));
 
-    mPrepareDatastoreOp->mValues.Put(key, value);
-    auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
-    item->key() = key;
-    item->value() = value;
-    mPrepareDatastoreOp->mSizeOfKeys += key.Length();
-    mPrepareDatastoreOp->mSizeOfItems += key.Length() + value.Length();
+        mPrepareDatastoreOp->mValues.Put(key, value);
+        mPrepareDatastoreOp->mSizeOfKeys += key.Length();
+        mPrepareDatastoreOp->mSizeOfItems += key.Length() + value.Length();
 #ifdef DEBUG
-    mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.UTF16Length();
+        mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.UTF16Length();
 #endif
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+
+        auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
+        item->key() = std::move(key);
+        item->value() = std::move(value);
+
+        return Ok{};
+      }));
 
   return NS_OK;
 }
