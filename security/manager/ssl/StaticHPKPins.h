@@ -295,6 +295,10 @@ static const char kGo_Daddy_Root_Certificate_Authority___G2Fingerprint[] =
 static const char kGoogleBackup2048Fingerprint[] =
   "IPMbDAjLVSGntGO3WP53X/zilCVndez5YJ2+vJvhJsA=";
 
+/* ISRG Root X1 */
+static const char kISRG_Root_X1Fingerprint[] =
+  "C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=";
+
 /* Let's Encrypt Authority X3 */
 static const char kLet_s_Encrypt_Authority_X3Fingerprint[] =
   "YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=";
@@ -429,10 +433,9 @@ static const StaticFingerprints kPinset_google_root_pems = {
 };
 
 static const char* const kPinset_mozilla_services_Data[] = {
+  kISRG_Root_X1Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
-  kLet_s_Encrypt_Authority_X3Fingerprint,
   kDigiCert_Global_Root_CAFingerprint,
-  kLet_s_Encrypt_Authority_X4Fingerprint,
 };
 static const StaticFingerprints kPinset_mozilla_services = {
   sizeof(kPinset_mozilla_services_Data) / sizeof(const char*),
@@ -1141,4 +1144,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1616077132824000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1616422809658000);
