@@ -953,6 +953,12 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
     }
   }
 
+  if (foundElementsNeedingRestyle) {
+    // Update the last refresh driver time in the timeline to avoid mutating it
+    // during parallel styling.
+    mPresContext->Document()->Timeline()->UpdateLastRefreshDriverTime();
+  }
+
   return foundElementsNeedingRestyle;
 }
 
