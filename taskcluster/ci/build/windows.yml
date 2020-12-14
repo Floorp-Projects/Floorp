@@ -866,7 +866,7 @@ win64-ccov/opt:
             - name: public/code-coverage-grcov.zip
               path: workspace\obj-build\code-coverage-grcov.zip
               type: file
-        max-run-time: 7200
+        max-run-time: 9000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             RUSTC_BOOTSTRAP: '1'
