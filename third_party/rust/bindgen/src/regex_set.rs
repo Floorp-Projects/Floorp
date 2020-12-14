@@ -58,7 +58,7 @@ impl RegexSet {
         self.set = match RxSet::new(items) {
             Ok(x) => Some(x),
             Err(e) => {
-                error!("Invalid regex in {:?}: {:?}", self.items, e);
+                warn!("Invalid regex in {:?}: {:?}", self.items, e);
                 None
             }
         }

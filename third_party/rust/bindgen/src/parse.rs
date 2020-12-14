@@ -1,8 +1,8 @@
 //! Common traits and types related to parsing our IR from Clang cursors.
 
-use clang;
-use ir::context::{BindgenContext, ItemId, TypeId};
-use ir::ty::TypeKind;
+use crate::clang;
+use crate::ir::context::{BindgenContext, ItemId, TypeId};
+use crate::ir::ty::TypeKind;
 
 /// Not so much an error in the traditional sense, but a control flow message
 /// when walking over Clang's AST with a cursor.

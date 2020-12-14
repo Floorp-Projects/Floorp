@@ -42,6 +42,23 @@ fn connection_close() {
     assert_draining(&server, &Error::PeerApplicationError(42));
 }
 
+#[test]
+fn connection_close_with_long_reason_string() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect(&mut client, &mut server);
+
+    let now = now();
+    // Create a long string and use it as the close reason.
+    let long_reason = String::from_utf8([0x61; 2048].to_vec()).unwrap();
+    client.close(now, 42, long_reason);
+
+    let out = client.process(None, now);
+
+    server.process_input(out.dgram().unwrap(), now);
+    assert_draining(&server, &Error::PeerApplicationError(42));
+}
+
 // During the handshake, an application close should be sanitized.
 #[test]
 fn early_application_close() {

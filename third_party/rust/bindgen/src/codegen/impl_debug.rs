@@ -1,7 +1,7 @@
-use ir::comp::{BitfieldUnit, CompKind, Field, FieldData, FieldMethods};
-use ir::context::BindgenContext;
-use ir::item::{HasTypeParamInArray, IsOpaque, Item, ItemCanonicalName};
-use ir::ty::{TypeKind, RUST_DERIVE_IN_ARRAY_LIMIT};
+use crate::ir::comp::{BitfieldUnit, CompKind, Field, FieldData, FieldMethods};
+use crate::ir::context::BindgenContext;
+use crate::ir::item::{HasTypeParamInArray, IsOpaque, Item, ItemCanonicalName};
+use crate::ir::ty::{TypeKind, RUST_DERIVE_IN_ARRAY_LIMIT};
 use proc_macro2;
 
 pub fn gen_debug_impl(

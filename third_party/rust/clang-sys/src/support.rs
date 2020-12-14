@@ -84,11 +84,15 @@ impl Clang {
             paths.push(path.into());
         }
         if let Ok(path) = run_llvm_config(&["--bindir"]) {
-            paths.push(path.into());
+            if let Some(line) = path.lines().next() {
+                paths.push(line.into());
+            }
         }
         if cfg!(target_os = "macos") {
             if let Ok((path, _)) = run("xcodebuild", &["-find", "clang"]) {
-                paths.push(path.into());
+                if let Some(line) = path.lines().next() {
+                    paths.push(line.into());
+                }
             }
         }
         paths.extend(env::split_paths(&env::var("PATH").unwrap()));
@@ -181,7 +185,7 @@ fn parse_version_number(number: &str) -> Option<c_int> {
 fn parse_version(path: &Path) -> Option<CXVersion> {
     let output = run_clang(path, &["--version"]).0;
     let start = try_opt!(output.find("version ")) + 8;
-    let mut numbers = try_opt!(output[start..].split_whitespace().nth(0)).split('.');
+    let mut numbers = try_opt!(output[start..].split_whitespace().next()).split('.');
     let major = try_opt!(numbers.next().and_then(parse_version_number));
     let minor = try_opt!(numbers.next().and_then(parse_version_number));
     let subminor = numbers.next().and_then(parse_version_number).unwrap_or(0);
