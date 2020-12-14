@@ -78,6 +78,7 @@
 #include "mozilla/dom/nsCSPContext.h"
 #ifdef MOZ_GLEAN
 #  include "mozilla/glean/bindings/Glean.h"
+#  include "mozilla/glean/bindings/GleanPings.h"
 #endif
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DeferredFinalize.h"
@@ -916,6 +917,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
 #ifdef MOZ_GLEAN
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Glean")) {
       glean = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "GleanPings")) {
+      gleanPings = true;
 #endif
 #ifdef MOZ_WEBRTC
     } else if (JS_LinearStringEqualsLiteral(nameStr, "rtcIdentityProvider")) {
@@ -1084,6 +1087,9 @@ bool xpc::GlobalProperties::DefineInXPCComponents(JSContext* cx,
 
 #ifdef MOZ_GLEAN
   if (glean && !mozilla::glean::Glean::DefineGlean(cx, obj)) return false;
+  if (gleanPings && !mozilla::glean::GleanPings::DefineGleanPings(cx, obj)) {
+    return false;
+  }
 #endif
 
   return Define(cx, obj);

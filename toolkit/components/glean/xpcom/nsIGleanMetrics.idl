@@ -120,6 +120,31 @@ interface nsIGleanMemoryDistribution : nsISupports
 	jsval testGetValue(in ACString aStorageName);
 };
 
+[scriptable, uuid(5223a48b-687d-47ff-a629-fd4a72d1ecfa)]
+interface nsIGleanPing : nsISupports
+{
+  /**
+   * Collect and submit the ping for eventual upload.
+   *
+   * This will collect all stored data to be included in the ping.
+   * Data with lifetime `ping` will then be reset.
+   *
+   * If the ping is configured with `send_if_empty = false`
+   * and the ping currently contains no content,
+   * it will not be queued for upload.
+   * If the ping is configured with `send_if_empty = true`
+   * it will be queued for upload even if empty.
+   *
+   * Pings always contain the `ping_info` and `client_info` sections.
+   * See [ping sections](https://mozilla.github.io/glean/book/user/pings/index.html#ping-sections)
+   * for details.
+   *
+   * @param aReason - Optional. The reason the ping is being submitted.
+   *                  Must match one of the configured `reason_codes`.
+   */
+	void submit([optional] in ACString aReason);
+};
+
 [scriptable, uuid(d84a3555-46f1-48c1-9122-e8e88b069d2b)]
 interface nsIGleanString : nsISupports
 {

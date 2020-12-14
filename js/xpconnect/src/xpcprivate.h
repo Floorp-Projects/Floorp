@@ -2262,6 +2262,7 @@ struct GlobalProperties {
   bool rtcIdentityProvider : 1;
 #ifdef MOZ_GLEAN
   bool glean : 1;
+  bool gleanPings : 1;
 #endif
 
  private:

@@ -4,12 +4,14 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/glean/GleanPings.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Tuple.h"
 #include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Unused.h"
 #include "nsString.h"
 #include "prtime.h"
 
@@ -155,4 +157,13 @@ TEST(FOG, TestCppMemoryDistWorks)
                 (count == 1 && (bucket == 17520006 || bucket == 7053950)))
     << "Only two occupied buckets";
   }
+}
+
+TEST(FOG, TestCppPings)
+{
+  auto ping = mozilla::glean_pings::OnePingOnly;
+  mozilla::Unused << ping;
+  // That's it. That's the test. It will fail to compile if it's missing.
+  // For a test that actually submits the ping, we have integration tests.
+  // See also bug 1681742.
 }
