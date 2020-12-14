@@ -331,6 +331,7 @@ class ProfileSymbolicator:
             if lib["start"] not in libs_with_symbols:
                 libs_with_symbols[lib["start"]] = {"library": lib, "symbols": set()}
             libs_with_symbols[lib["start"]]["symbols"].add(address)
+        # pylint: disable=W1656
         return libs_with_symbols.values()
 
     def _resolve_symbols(self, symbols_to_resolve):
