@@ -34,21 +34,11 @@ var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
 var iframe_prompt = document.getElementById("iframe_prompt");
 
 // Depending on pref state we either show auth prompts as windows or on tab level.
-let authPromptModalType = SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW;
-if (SpecialPowers.Services.prefs.getBoolPref("prompts.tab_modal.enabled")) {
-  authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
-    "prompts.modalType.httpAuth"
-  );
-}
-
+let authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
+  "prompts.modalType.httpAuth"
+);
 
 add_task(async function runTest() {
-  // This test depends on tab modal prompts being enabled.
-  if (!tabModalPromptEnabled) {
-    todo(false, "Test disabled when tab modal prompts are not enabled.");
-    return;
-  }
-
   modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
 
   info("Ensuring iframe1 has loaded...");

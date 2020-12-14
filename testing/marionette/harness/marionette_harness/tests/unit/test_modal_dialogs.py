@@ -34,12 +34,6 @@ class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
 class TestTabModalAlerts(BaseAlertTestCase):
     def setUp(self):
         super(TestTabModalAlerts, self).setUp()
-        self.assertTrue(
-            self.marionette.get_pref(
-                "prompts.tab_modal.enabled",
-                "Tab modal alerts should be enabled by default.",
-            )
-        )
 
         self.test_page = self.marionette.absolute_url("test_tab_modal_dialogs.html")
         self.marionette.navigate(self.test_page)
