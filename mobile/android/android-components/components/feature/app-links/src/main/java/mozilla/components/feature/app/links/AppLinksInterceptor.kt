@@ -75,6 +75,8 @@ class AppLinksInterceptor(
 
         val doNotIntercept = when {
             uriScheme == null -> true
+            // A subframe request not triggered by the user should not go to an external app.
+            (!hasUserGesture && isSubframeRequest) -> true
             // If request not from an user gesture, allowed redirect and direct navigation
             // or if we're already on the site then let's not go to an external app.
             ((!hasUserGesture && !isAllowedRedirect && !isDirectNavigation) ||

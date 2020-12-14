@@ -155,6 +155,12 @@ class AppLinksInterceptorTest {
     }
 
     @Test
+    fun `request is not intercepted if a subframe request and not triggered by user`() {
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, false, false, false, true, true)
+        assertEquals(null, response)
+    }
+
+    @Test
     fun `request is not intercepted if not user gesture, not redirect and not direct navigation`() {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, false, false, false, false, false)
         assertEquals(null, response)
