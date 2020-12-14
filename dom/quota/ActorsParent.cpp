@@ -1957,24 +1957,24 @@ bool IsTempMetadata(const nsAString& aFileName) {
          aFileName.EqualsLiteral(METADATA_V2_TMP_FILE_NAME);
 }
 
-nsresult MaybeUpdateGroupForOrigin(GroupAndOrigin& aGroupAndOrigin,
-                                   bool& aUpdated) {
+// Return whether the group was actually updated.
+Result<bool, nsresult> MaybeUpdateGroupForOrigin(
+    GroupAndOrigin& aGroupAndOrigin) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  aUpdated = false;
+  bool updated = false;
 
   if (aGroupAndOrigin.mOrigin.EqualsLiteral(kChromeOrigin)) {
     if (!aGroupAndOrigin.mGroup.EqualsLiteral(kChromeOrigin)) {
       aGroupAndOrigin.mGroup.AssignLiteral(kChromeOrigin);
-      aUpdated = true;
+      updated = true;
     }
   } else {
     OriginAttributes originAttributes;
     nsCString originNoSuffix;
-    if (NS_WARN_IF(!originAttributes.PopulateFromOrigin(aGroupAndOrigin.mOrigin,
-                                                        originNoSuffix))) {
-      return NS_ERROR_FAILURE;
-    }
+    QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aGroupAndOrigin.mOrigin,
+                                                    originNoSuffix)),
+           Err(NS_ERROR_FAILURE));
 
     nsCString suffix;
     originAttributes.CreateSuffix(suffix);
@@ -1983,20 +1983,17 @@ nsresult MaybeUpdateGroupForOrigin(GroupAndOrigin& aGroupAndOrigin,
     nsresult rv = MozURL::Init(getter_AddRefs(url), originNoSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       QM_WARNING("A URL %s is not recognized by MozURL", originNoSuffix.get());
-      return rv;
+      return Err(rv);
     }
 
     nsCString baseDomain;
-    rv = url->BaseDomain(baseDomain);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(url->BaseDomain(baseDomain));
 
     nsCString upToDateGroup = baseDomain + suffix;
 
     if (aGroupAndOrigin.mGroup != upToDateGroup) {
       aGroupAndOrigin.mGroup = upToDateGroup;
-      aUpdated = true;
+      updated = true;
 
 #ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
       ContentPrincipalInfo contentPrincipalInfo;
@@ -2016,7 +2013,7 @@ nsresult MaybeUpdateGroupForOrigin(GroupAndOrigin& aGroupAndOrigin,
     }
   }
 
-  return NS_OK;
+  return updated;
 }
 
 }  // namespace
@@ -4377,145 +4374,103 @@ nsresult QuotaManager::LoadQuota() {
 
     auto autoRemoveQuota = MakeScopeExit([&] { RemoveQuota(); });
 
-    bool hasResult;
-    while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-      int32_t repositoryId;
-      rv = stmt->GetInt32(0, &repositoryId);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    QM_TRY(quota::CollectWhileHasResult(
+        *stmt, [this](auto& stmt) -> Result<Ok, nsresult> {
+          QM_TRY_INSPECT(const int32_t& repositoryId,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
 
-      const auto maybePersistenceType =
-          PersistenceTypeFromInt32(repositoryId, fallible);
-      if (NS_WARN_IF(maybePersistenceType.isNothing())) {
-        return NS_ERROR_FAILURE;
-      }
+          const auto maybePersistenceType =
+              PersistenceTypeFromInt32(repositoryId, fallible);
+          QM_TRY(OkIf(maybePersistenceType.isSome()), Err(NS_ERROR_FAILURE));
 
-      const PersistenceType persistenceType = maybePersistenceType.value();
+          const PersistenceType persistenceType = maybePersistenceType.value();
 
-      GroupAndOrigin groupAndOrigin;
+          GroupAndOrigin groupAndOrigin;
 
-      rv = stmt->GetUTF8String(1, groupAndOrigin.mOrigin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          QM_TRY_UNWRAP(
+              groupAndOrigin.mOrigin,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 1));
 
-      rv = stmt->GetUTF8String(2, groupAndOrigin.mGroup);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          QM_TRY_UNWRAP(
+              groupAndOrigin.mGroup,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 2));
 
-      bool updated;
-      rv = MaybeUpdateGroupForOrigin(groupAndOrigin, updated);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          QM_TRY_INSPECT(const bool& updated,
+                         MaybeUpdateGroupForOrigin(groupAndOrigin));
 
-      // We don't need to update the .metadata-v2 file on disk here,
-      // EnsureTemporaryOriginIsInitialized is responsible for doing that. We
-      // just need to use correct group before initializing quota for the given
-      // origin. (Note that calling GetDirectoryMetadata2WithRestore below
-      // might update the group in the metadata file, but only as a side-effect.
-      // The actual place we ensure consistency is in
-      // EnsureTemporaryOriginIsInitialized.)
+          Unused << updated;
 
-      nsCString clientUsagesText;
-      rv = stmt->GetUTF8String(3, clientUsagesText);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          // We don't need to update the .metadata-v2 file on disk here,
+          // EnsureTemporaryOriginIsInitialized is responsible for doing that.
+          // We just need to use correct group before initializing quota for the
+          // given origin. (Note that calling GetDirectoryMetadata2WithRestore
+          // below might update the group in the metadata file, but only as a
+          // side-effect. The actual place we ensure consistency is in
+          // EnsureTemporaryOriginIsInitialized.)
 
-      ClientUsageArray clientUsages;
-      rv = clientUsages.Deserialize(clientUsagesText);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          QM_TRY_INSPECT(
+              const auto& clientUsagesText,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 3));
 
-      int64_t usage;
-      rv = stmt->GetInt64(4, &usage);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          ClientUsageArray clientUsages;
+          QM_TRY(clientUsages.Deserialize(clientUsagesText));
 
-      int64_t lastAccessTime;
-      rv = stmt->GetInt64(5, &lastAccessTime);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          QM_TRY_INSPECT(const int64_t& usage,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 4));
+          QM_TRY_INSPECT(const int64_t& lastAccessTime,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 5));
+          QM_TRY_INSPECT(const int64_t& accessed,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 6));
+          QM_TRY_INSPECT(const int64_t& persisted,
+                         MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 7));
 
-      int32_t accessed;
-      rv = stmt->GetInt32(6, &accessed);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          if (accessed) {
+            QM_TRY_INSPECT(
+                const auto& directory,
+                GetDirectoryForOrigin(persistenceType, groupAndOrigin.mOrigin));
 
-      int32_t persisted;
-      rv = stmt->GetInt32(7, &persisted);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+            QM_TRY_INSPECT(const bool& exists,
+                           MOZ_TO_RESULT_INVOKE(directory, Exists));
 
-      if (accessed) {
-        QM_TRY_UNWRAP(
-            auto directory,
-            GetDirectoryForOrigin(persistenceType, groupAndOrigin.mOrigin));
+            QM_TRY(OkIf(exists), Err(NS_ERROR_FAILURE));
 
-        bool exists;
-        rv = directory->Exists(&exists);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+            QM_TRY_INSPECT(const bool& isDirectory,
+                           MOZ_TO_RESULT_INVOKE(directory, IsDirectory));
 
-        if (NS_WARN_IF(!exists)) {
-          return NS_ERROR_FAILURE;
-        }
+            QM_TRY(OkIf(isDirectory), Err(NS_ERROR_FAILURE));
 
-        bool isDirectory;
-        rv = directory->IsDirectory(&isDirectory);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+            // Calling GetDirectoryMetadata2WithRestore might update the group
+            // in the metadata file, but only as a side-effect. The actual place
+            // we ensure consistency is in EnsureTemporaryOriginIsInitialized.
 
-        if (NS_WARN_IF(!isDirectory)) {
-          return NS_ERROR_FAILURE;
-        }
+            int64_t metadataLastAccessTime;
+            bool metadataPersisted;
+            QuotaInfo metadataQuotaInfo;
+            QM_TRY(GetDirectoryMetadata2WithRestore(
+                directory, /* aPersistent */ false, &metadataLastAccessTime,
+                &metadataPersisted, metadataQuotaInfo,
+                /* aTelemetry */ false));
 
-        // Calling GetDirectoryMetadata2WithRestore might update the group in
-        // the metadata file, but only as a side-effect. The actual place we
-        // ensure consistency is in EnsureTemporaryOriginIsInitialized.
+            QM_TRY(OkIf(lastAccessTime == metadataLastAccessTime),
+                   Err(NS_ERROR_FAILURE));
 
-        int64_t metadataLastAccessTime;
-        bool metadataPersisted;
-        QuotaInfo metadataQuotaInfo;
-        rv = GetDirectoryMetadata2WithRestore(
-            directory, /* aPersistent */ false, &metadataLastAccessTime,
-            &metadataPersisted, metadataQuotaInfo,
-            /* aTelemetry */ false);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+            QM_TRY(OkIf(persisted == metadataPersisted), Err(NS_ERROR_FAILURE));
 
-        if (NS_WARN_IF(lastAccessTime != metadataLastAccessTime) ||
-            NS_WARN_IF(persisted != metadataPersisted) ||
-            NS_WARN_IF(groupAndOrigin.mGroup != metadataQuotaInfo.mGroup) ||
-            NS_WARN_IF(groupAndOrigin.mOrigin != metadataQuotaInfo.mOrigin)) {
-          return NS_ERROR_FAILURE;
-        }
+            QM_TRY(OkIf(groupAndOrigin.mGroup == metadataQuotaInfo.mGroup),
+                   Err(NS_ERROR_FAILURE));
 
-        rv = InitializeOrigin(persistenceType, groupAndOrigin, lastAccessTime,
-                              persisted, directory);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      } else {
-        InitQuotaForOrigin(persistenceType, groupAndOrigin, clientUsages, usage,
-                           lastAccessTime, persisted);
-      }
-    }
+            QM_TRY(OkIf(groupAndOrigin.mOrigin == metadataQuotaInfo.mOrigin),
+                   Err(NS_ERROR_FAILURE));
 
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+            QM_TRY(InitializeOrigin(persistenceType, groupAndOrigin,
+                                    lastAccessTime, persisted, directory));
+          } else {
+            InitQuotaForOrigin(persistenceType, groupAndOrigin, clientUsages,
+                               usage, lastAccessTime, persisted);
+          }
+
+          return Ok{};
+        }));
 
     autoRemoveQuota.release();
 
@@ -4975,8 +4930,7 @@ nsresult QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory,
 
   QM_TRY(binaryStream->Close());
 
-  bool updated;
-  QM_TRY(MaybeUpdateGroupForOrigin(quotaInfo, updated));
+  QM_TRY_INSPECT(const bool& updated, MaybeUpdateGroupForOrigin(quotaInfo));
 
   if (updated) {
     // Only overwriting .metadata-v2 (used to overwrite .metadata too) to reduce

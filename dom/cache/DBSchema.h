@@ -39,7 +39,7 @@ Result<CacheId, nsresult> CreateCacheId(mozIStorageConnection& aConn);
 Result<DeletionInfo, nsresult> DeleteCacheId(mozIStorageConnection& aConn,
                                              CacheId aCacheId);
 
-Result<nsTArray<CacheId>, nsresult> FindOrphanedCacheIds(
+Result<AutoTArray<CacheId, 8>, nsresult> FindOrphanedCacheIds(
     mozIStorageConnection& aConn);
 
 Result<int64_t, nsresult> FindOverallPaddingSize(mozIStorageConnection& aConn);
