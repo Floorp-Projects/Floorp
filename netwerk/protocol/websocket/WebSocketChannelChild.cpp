@@ -294,22 +294,44 @@ class MessageEvent : public WebSocketEvent {
   bool mBinary;
 };
 
-void WebSocketChannelChild::RecvOnMessageAvailableInternal(
+bool WebSocketChannelChild::RecvOnMessageAvailableInternal(
     const nsDependentCSubstring& aMsg, bool aMoreData, bool aBinary) {
   if (aMoreData) {
-    mReceivedMsgBuffer.Append(aMsg);
-    return;
+    return mReceivedMsgBuffer.Append(aMsg, fallible);
   }
 
-  mReceivedMsgBuffer.Append(aMsg);
+  if (!mReceivedMsgBuffer.Append(aMsg, fallible)) {
+    return false;
+  }
+
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
       this, new MessageEvent(mReceivedMsgBuffer, aBinary), mTargetThread));
   mReceivedMsgBuffer.Truncate();
+  return true;
+}
+
+class OnErrorEvent : public WebSocketEvent {
+ public:
+  OnErrorEvent() = default;
+
+  void Run(WebSocketChannelChild* aChild) override { aChild->OnError(); }
+};
+
+void WebSocketChannelChild::OnError() {
+  LOG(("WebSocketChannelChild::OnError() %p", this));
+  if (mListenerMT) {
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
+    Unused << mListenerMT->mListener->OnError();
+  }
 }
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnMessageAvailable(
     const nsDependentCSubstring& aMsg, const bool& aMoreData) {
-  RecvOnMessageAvailableInternal(aMsg, aMoreData, false);
+  if (!RecvOnMessageAvailableInternal(aMsg, aMoreData, false)) {
+    LOG(("WebSocketChannelChild %p append message failed", this));
+    mEventQ->RunOrEnqueue(
+        new EventTargetDispatcher(this, new OnErrorEvent(), mTargetThread));
+  }
   return IPC_OK();
 }
 
@@ -331,7 +353,11 @@ void WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg) {
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnBinaryMessageAvailable(
     const nsDependentCSubstring& aMsg, const bool& aMoreData) {
-  RecvOnMessageAvailableInternal(aMsg, aMoreData, true);
+  if (!RecvOnMessageAvailableInternal(aMsg, aMoreData, true)) {
+    LOG(("WebSocketChannelChild %p append message failed", this));
+    mEventQ->RunOrEnqueue(
+        new EventTargetDispatcher(this, new OnErrorEvent(), mTargetThread));
+  }
   return IPC_OK();
 }
 
