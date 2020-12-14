@@ -26,6 +26,7 @@ DevToolsModules(
     "animation-type-longhand.js",
     "animation.js",
     "array-buffer.js",
+    "breakpoint-list.js",
     "breakpoint.js",
     "changes.js",
     "common.js",

@@ -39,6 +39,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/network-monitor/network-parent",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "BreakpointListActor",
+  "devtools/server/actors/breakpoint-list",
+  true
+);
 
 exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   /**
@@ -83,6 +89,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       this.unwatchTargets(targetType);
     }
     this.unwatchResources(Object.values(Resources.TYPES));
+
+    WatcherRegistry.unregisterWatcher(this);
 
     // Destroy the actor at the end so that its actorID keeps being defined.
     protocol.Actor.prototype.destroy.call(this);
@@ -145,6 +153,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
             enableServerWatcher && hasBrowserElement,
           [Resources.TYPES.SOURCE]: hasBrowserElement,
         },
+        // @backward-compat { version 85 } When removing this trait, consumers using
+        // the TargetList to retrieve the Breakpoints front should still be careful to check
+        // that the Watcher is available
+        "set-breakpoints": true,
       },
     };
   },
@@ -427,5 +439,69 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    */
   getNetworkParentActor() {
     return new NetworkParentActor(this);
+  },
+
+  /**
+   * Returns the breakpoint list actor.
+   *
+   * @return {Object} actor
+   *        The breakpoint list actor.
+   */
+  getBreakpointListActor() {
+    return new BreakpointListActor(this);
+  },
+
+  /**
+   * Server internal API, called by other actors, but not by the client.
+   * Used to agrement some new entries for a given data type (watchers target, resources,
+   * breakpoints,...)
+   *
+   * @param {String} type
+   *        Data type to contribute to.
+   * @param {Array<*>} entries
+   *        List of values to add for this data type.
+   */
+  async addDataEntry(type, entries) {
+    WatcherRegistry.addWatcherDataEntry(this, type, entries);
+
+    await Promise.all(
+      Object.values(Targets.TYPES)
+        .filter(targetType =>
+          WatcherRegistry.isWatchingTargets(this, targetType)
+        )
+        .map(async targetType => {
+          const targetHelperModule = TARGET_HELPERS[targetType];
+          await targetHelperModule.addWatcherDataEntry({
+            watcher: this,
+            type,
+            entries,
+          });
+        })
+    );
+  },
+
+  /**
+   * Server internal API, called by other actors, but not by the client.
+   * Used to remve some existing entries for a given data type (watchers target, resources,
+   * breakpoints,...)
+   *
+   * @param {String} type
+   *        Data type to modify.
+   * @param {Array<*>} entries
+   *        List of values to remove from this data type.
+   */
+  removeDataEntry(type, entries) {
+    WatcherRegistry.removeWatcherDataEntry(this, type, entries);
+
+    Object.values(Targets.TYPES)
+      .filter(targetType => WatcherRegistry.isWatchingTargets(this, targetType))
+      .forEach(targetType => {
+        const targetHelperModule = TARGET_HELPERS[targetType];
+        targetHelperModule.removeWatcherDataEntry({
+          watcher: this,
+          type,
+          entries,
+        });
+      });
   },
 });

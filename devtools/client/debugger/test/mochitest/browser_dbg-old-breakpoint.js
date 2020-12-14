@@ -12,11 +12,13 @@ add_task(async function() {
       location: {
         sourceId: "",
         sourceUrl: EXAMPLE_URL + "nowhere2.js",
-        line: 5
+        line: 5,
+        column: 0
       },
       generatedLocation: {
         sourceUrl: EXAMPLE_URL + "simple1.js",
-        line: 4
+        line: 4,
+        column: 0
       },
       options: {},
       disabled: false
@@ -25,11 +27,13 @@ add_task(async function() {
       location: {
         sourceId: "",
         sourceUrl: EXAMPLE_URL + "nowhere.js",
-        line: 5
+        line: 5,
+        column: 0
       },
       generatedLocation: {
         sourceUrl: EXAMPLE_URL + "simple3.js",
-        line: 2
+        line: 2,
+        column: 0
       },
       options: {},
       disabled: false
