@@ -58,10 +58,12 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
             # Note that this import may fail in non-firefox-for-android trees
             from mozrunner.devices.android_device import (
+                get_adb_path,
                 verify_android_device,
                 InstallIntent,
             )
 
+            kwargs["adb_binary"] = get_adb_path(self)
             install = (
                 InstallIntent.NO if kwargs.pop("no_install") else InstallIntent.YES
             )
