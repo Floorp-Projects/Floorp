@@ -10978,18 +10978,6 @@ exports.PREFERENCES = [
     "layout.css.scroll-anchoring.enabled"
   ],
   [
-    "text-decoration-skip-ink",
-    "layout.css.text-decoration-skip-ink.enabled"
-  ],
-  [
-    "text-justify",
-    "layout.css.text-justify.enabled"
-  ],
-  [
-    "text-underline-position",
-    "layout.css.text-underline-position.enabled"
-  ],
-  [
     "touch-action",
     "layout.css.touch_action.enabled"
   ],
@@ -11066,20 +11054,12 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
-    "text-decoration-thickness",
-    "layout.css.text-decoration-thickness.enabled"
-  ],
-  [
     "translate",
     "layout.css.individual-transform.enabled"
   ],
   [
     "offset-distance",
     "layout.css.motion-path.enabled"
-  ],
-  [
-    "text-underline-offset",
-    "layout.css.text-underline-offset.enabled"
   ],
   [
     "overflow-clip-box",
