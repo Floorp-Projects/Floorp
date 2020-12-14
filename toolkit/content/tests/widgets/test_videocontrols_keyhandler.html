@@ -22,6 +22,7 @@
   const playButton = getElementWithinVideo(video, "playButton");
   const scrubber = getElementWithinVideo(video, "scrubber");
   const volumeControl = getElementWithinVideo(video, "volumeControl");
+  const muteButton = getElementWithinVideo(video, "muteButton");
 
   // Setup video
   tests.push(done => {
@@ -101,6 +102,43 @@
       done();
     }, { once: true });
     synthesizeKey("KEY_ArrowRight");
+  });
+
+  // If something other than a button has focus, space should pause/play.
+  tests.push(done => {
+    ok(volumeControl.matches(":focus"), "Volume control still has focus");
+    video.addEventListener("pause", () => {
+      ok(true, "Space paused the video");
+      done();
+    }, {once: true});
+    synthesizeKey(" ");
+  }, done => {
+    video.addEventListener("play", () => {
+      ok(true, "Space played the video");
+      done();
+    }, {once: true});
+    synthesizeKey(" ");
+  });
+
+  // If a button has focus, space should activate it, *not* pause/play.
+  tests.push(done => {
+    info("Focusing the mute button");
+    muteButton.focus();
+    const onPause = () => ok(false, "Shouldn't pause the video");
+    video.addEventListener("pause", onPause);
+    let volChanges = 0;
+    const onVolChange = () => {
+      if (++volChanges == 2) {
+        ok(true, "Space twice muted then unmuted the video");
+        video.removeEventListener("pause", onPause);
+        video.removeEventListener("volumechange", onVolChange);
+        done();
+      }
+    };
+    video.addEventListener("volumechange", onVolChange);
+    // Press space twice. The first time should mute, the second should unmute.
+    synthesizeKey(" ");
+    synthesizeKey(" ");
   });
 
   tests.push(SimpleTest.finish);
