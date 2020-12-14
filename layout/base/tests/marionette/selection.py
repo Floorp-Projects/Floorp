@@ -5,7 +5,7 @@
 
 from __future__ import absolute_import
 
-from marionette_driver.marionette import Actions
+from marionette_driver.marionette import Actions, errors
 
 
 class CaretActions(Actions):
@@ -188,13 +188,45 @@ class SelectionManager(object):
 
         """
         range_count = self.range_count()
-        first_rect_list = self.selection_rect_list(0)
-        last_rect_list = self.selection_rect_list(range_count - 1)
-        last_list_length = last_rect_list["length"]
-        first_rect, last_rect = (
-            first_rect_list["0"],
-            last_rect_list[str(last_list_length - 1)],
-        )
+        if range_count <= 0:
+            raise errors.MarionetteException(
+                "Expect at least one range object in Selection, but found nothing!"
+            )
+
+        # FIXME (Bug 1682382): We shouldn't need the retry for-loops if
+        # selection_rect_list() can reliably return a valid list.
+        retry_times = 3
+        for _ in range(retry_times):
+            try:
+                first_rect_list = self.selection_rect_list(0)
+                first_rect = first_rect_list["0"]
+                break
+            except KeyError:
+                continue
+        else:
+            raise errors.MarionetteException(
+                "Expect at least one rect in the first range, but found nothing!"
+            )
+
+        for _ in range(retry_times):
+            try:
+                # Making a selection over some non-selectable elements can
+                # create multiple ranges.
+                last_rect_list = (
+                    first_rect_list
+                    if range_count == 1
+                    else self.selection_rect_list(range_count - 1)
+                )
+                last_list_length = last_rect_list["length"]
+                last_rect = last_rect_list[str(last_list_length - 1)]
+                break
+            except KeyError:
+                continue
+        else:
+            raise errors.MarionetteException(
+                "Expect at least one rect in the last range, but found nothing!"
+            )
+
         origin_x, origin_y = self.element.rect["x"], self.element.rect["y"]
 
         if self.element.get_property("dir") == "rtl":  # such as Arabic
