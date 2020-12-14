@@ -243,22 +243,15 @@ static const GUID DXVA2_Intel_ModeH264_E = {
 // (CLSID_CMSH264DecoderMFT) uses, so we can use it to determine if the MFT will
 // use software fallback or not.
 bool D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate) {
-  MOZ_ASSERT(NS_IsMainThread());
   DXVA2_VideoDesc desc;
   HRESULT hr = ConvertMFTypeToDXVAType(aType, &desc);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
   return CanCreateDecoder(desc, aFramerate);
 }
 
-D3D9DXVA2Manager::D3D9DXVA2Manager() {
-  MOZ_COUNT_CTOR(D3D9DXVA2Manager);
-  MOZ_ASSERT(NS_IsMainThread());
-}
+D3D9DXVA2Manager::D3D9DXVA2Manager() { MOZ_COUNT_CTOR(D3D9DXVA2Manager); }
 
-D3D9DXVA2Manager::~D3D9DXVA2Manager() {
-  MOZ_COUNT_DTOR(D3D9DXVA2Manager);
-  MOZ_ASSERT(NS_IsMainThread());
-}
+D3D9DXVA2Manager::~D3D9DXVA2Manager() { MOZ_COUNT_DTOR(D3D9DXVA2Manager); }
 
 IUnknown* D3D9DXVA2Manager::GetDXVADeviceManager() {
   MutexAutoLock lock(mLock);
@@ -268,16 +261,7 @@ IUnknown* D3D9DXVA2Manager::GetDXVADeviceManager() {
 HRESULT
 D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
                        nsACString& aFailureReason) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   ScopedGfxFeatureReporter reporter("DXVA2D3D9");
-
-  gfx::D3D9VideoCrashGuard crashGuard;
-  if (crashGuard.Crashed()) {
-    NS_WARNING("DXVA2D3D9 crash detected");
-    aFailureReason.AssignLiteral("DXVA2D3D9 crashes detected in the past");
-    return E_FAIL;
-  }
 
   // Create D3D9Ex.
   HMODULE d3d9lib = LoadLibraryW(L"d3d9.dll");
@@ -497,12 +481,11 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample, const gfx::IntRect& aRegion,
 
 // Count of the number of DXVAManager's we've created. This is also the
 // number of videos we're decoding with DXVA. Use on main thread only.
-static uint32_t sDXVAVideosCount = 0;
+static Atomic<uint32_t> sDXVAVideosCount(0);
 
 /* static */
 DXVA2Manager* DXVA2Manager::CreateD3D9DXVA(
     layers::KnowsCompositor* aKnowsCompositor, nsACString& aFailureReason) {
-  MOZ_ASSERT(NS_IsMainThread());
   HRESULT hr;
 
   // DXVA processing takes up a lot of GPU resources, so limit the number of
@@ -526,7 +509,6 @@ DXVA2Manager* DXVA2Manager::CreateD3D9DXVA(
 
 bool D3D9DXVA2Manager::CanCreateDecoder(const DXVA2_VideoDesc& aDesc,
                                         const float aFramerate) const {
-  MOZ_ASSERT(NS_IsMainThread());
   if (IsUnsupportedResolution(aDesc.SampleWidth, aDesc.SampleHeight,
                               aFramerate)) {
     return false;
@@ -537,13 +519,6 @@ bool D3D9DXVA2Manager::CanCreateDecoder(const DXVA2_VideoDesc& aDesc,
 
 already_AddRefed<IDirectXVideoDecoder> D3D9DXVA2Manager::CreateDecoder(
     const DXVA2_VideoDesc& aDesc) const {
-  MOZ_ASSERT(NS_IsMainThread());
-  gfx::D3D9VideoCrashGuard crashGuard;
-  if (crashGuard.Crashed()) {
-    NS_WARNING("DXVA2D3D9 crash detected");
-    return nullptr;
-  }
-
   UINT configCount;
   DXVA2_ConfigPictureDecode* configs = nullptr;
   HRESULT hr = mDecoderService->GetDecoderConfigurations(
@@ -632,7 +607,6 @@ class D3D11DXVA2Manager : public DXVA2Manager {
 };
 
 bool D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate) {
-  MOZ_ASSERT(NS_IsMainThread());
   D3D11_VIDEO_DECODER_DESC desc;
   desc.Guid = mDecoderGUID;
   desc.OutputFormat = DXGI_FORMAT_NV12;
@@ -654,23 +628,12 @@ IUnknown* D3D11DXVA2Manager::GetDXVADeviceManager() {
 HRESULT
 D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
                         nsACString& aFailureReason, ID3D11Device* aDevice) {
-  if (!NS_IsMainThread()) {
-    // DXVA Managers used for full video have to be initialized on the main
-    // thread. Managers initialized off the main thread have to pass a device
-    // and can only be used for color conversion.
-    MOZ_ASSERT(aDevice);
+  if (aDevice) {
     return InitInternal(aKnowsCompositor, aFailureReason, aDevice);
   }
 
   HRESULT hr;
   ScopedGfxFeatureReporter reporter("DXVA2D3D11");
-
-  gfx::D3D11VideoCrashGuard crashGuard;
-  if (crashGuard.Crashed()) {
-    NS_WARNING("DXVA2D3D11 crash detected");
-    aFailureReason.AssignLiteral("DXVA2D3D11 crashes detected in the past");
-    return E_FAIL;
-  }
 
   hr = InitInternal(aKnowsCompositor, aFailureReason, aDevice);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -1184,7 +1147,6 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
 
 bool D3D11DXVA2Manager::CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc,
                                          const float aFramerate) const {
-  MOZ_ASSERT(NS_IsMainThread());
   if (IsUnsupportedResolution(aDesc.SampleWidth, aDesc.SampleHeight,
                               aFramerate)) {
     return false;
@@ -1195,13 +1157,6 @@ bool D3D11DXVA2Manager::CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc,
 
 already_AddRefed<ID3D11VideoDecoder> D3D11DXVA2Manager::CreateDecoder(
     const D3D11_VIDEO_DECODER_DESC& aDesc) const {
-  MOZ_ASSERT(NS_IsMainThread());
-  gfx::D3D11VideoCrashGuard crashGuard;
-  if (crashGuard.Crashed()) {
-    NS_WARNING("DXVA2D3D9 crash detected");
-    return nullptr;
-  }
-
   RefPtr<ID3D11VideoDevice> videoDevice;
   HRESULT hr = mDevice->QueryInterface(
       static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
@@ -1244,17 +1199,9 @@ DXVA2Manager* DXVA2Manager::CreateD3D11DXVA(
   return manager.release();
 }
 
-DXVA2Manager::DXVA2Manager() : mLock("DXVA2Manager") {
-  if (NS_IsMainThread()) {
-    ++sDXVAVideosCount;
-  }
-}
+DXVA2Manager::DXVA2Manager() : mLock("DXVA2Manager") { ++sDXVAVideosCount; }
 
-DXVA2Manager::~DXVA2Manager() {
-  if (NS_IsMainThread()) {
-    --sDXVAVideosCount;
-  }
-}
+DXVA2Manager::~DXVA2Manager() { --sDXVAVideosCount; }
 
 bool DXVA2Manager::IsUnsupportedResolution(const uint32_t& aWidth,
                                            const uint32_t& aHeight,

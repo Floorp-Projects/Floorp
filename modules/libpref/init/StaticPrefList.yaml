@@ -7455,11 +7455,6 @@
     value: false
     mirror: always
 
--   name: media.wmf.deblacklisting-for-telemetry-in-gpu-process
-    type: RelaxedAtomicBool
-    value: true
-    mirror: always
-
 -   name: media.wmf.amd.highres.enabled
     type: RelaxedAtomicBool
     value: true
