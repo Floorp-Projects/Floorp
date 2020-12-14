@@ -8,9 +8,9 @@
 #define mozilla_glean_Glean_h
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/Category.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
-#include "mozilla/glean/Category.h"
 
 namespace mozilla::glean {
 

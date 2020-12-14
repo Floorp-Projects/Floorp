@@ -51,7 +51,7 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #ifdef MOZ_GLEAN
-#  include "mozilla/glean/Glean.h"
+#  include "mozilla/glean/bindings/Glean.h"
 #endif
 #include "Units.h"
 #include "nsComponentManagerUtils.h"

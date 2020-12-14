@@ -7,9 +7,9 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/GleanBinding.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/glean/Glean.h"
-#include "mozilla/glean/Category.h"
-#include "mozilla/glean/GleanJSMetricsLookup.h"
+#include "mozilla/glean/bindings/Glean.h"
+#include "mozilla/glean/bindings/Category.h"
+#include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
 #include "MainThreadUtils.h"
 
 namespace mozilla::glean {

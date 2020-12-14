@@ -5,13 +5,13 @@
 #ifndef mozilla_Glean_MetricTypes_h
 #define mozilla_Glean_MetricTypes_h
 
-#include "mozilla/glean/Boolean.h"
-#include "mozilla/glean/Counter.h"
-#include "mozilla/glean/Datetime.h"
-#include "mozilla/glean/Event.h"
-#include "mozilla/glean/MemoryDistribution.h"
-#include "mozilla/glean/Timespan.h"
-#include "mozilla/glean/String.h"
-#include "mozilla/glean/Uuid.h"
+#include "mozilla/glean/bindings/Boolean.h"
+#include "mozilla/glean/bindings/Counter.h"
+#include "mozilla/glean/bindings/Datetime.h"
+#include "mozilla/glean/bindings/Event.h"
+#include "mozilla/glean/bindings/MemoryDistribution.h"
+#include "mozilla/glean/bindings/Timespan.h"
+#include "mozilla/glean/bindings/String.h"
+#include "mozilla/glean/bindings/Uuid.h"
 
 #endif  // mozilla_Glean_MetricTypes_h

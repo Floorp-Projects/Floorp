@@ -23,8 +23,11 @@ if CONFIG["MOZ_GLEAN"]:
     ]
 
     EXPORTS.mozilla.glean += [
-        "!GleanJSMetricsLookup.h",
         "!GleanMetrics.h",
+    ]
+
+    EXPORTS.mozilla.glean.bindings += [
+        "!GleanJSMetricsLookup.h",
         "bindings/Category.h",
         "bindings/Glean.h",
         "bindings/MetricTypes.h",
