@@ -18,7 +18,6 @@
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/TabContext.h"
-#include "mozilla/dom/VsyncParent.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layout/RemoteLayerTreeOwner.h"
 #include "nsCOMPtr.h"
@@ -461,10 +460,6 @@ class BrowserParent final : public PBrowserParent,
 
   bool DeallocPColorPickerParent(PColorPickerParent* aColorPicker);
 
-  PVsyncParent* AllocPVsyncParent();
-
-  bool DeallocPVsyncParent(PVsyncParent* aActor);
-
 #ifdef ACCESSIBILITY
   PDocAccessibleParent* AllocPDocAccessibleParent(PDocAccessibleParent*,
                                                   const uint64_t&,
@@ -877,8 +872,6 @@ class BrowserParent final : public PBrowserParent,
   void SendRealTouchMoveEvent(WidgetTouchEvent& aEvent, APZData& aAPZData,
                               uint32_t aConsecutiveTouchMoveCount);
 
-  void UpdateVsyncParentVsyncSource();
-
  public:
   // Unsets sTopLevelWebFocus regardless of its current value.
   static void UnsetTopLevelWebFocusAll();
@@ -963,8 +956,6 @@ class BrowserParent final : public PBrowserParent,
   uint32_t mCustomCursorHotspotX, mCustomCursorHotspotY;
 
   nsTArray<nsString> mVerifyDropLinks;
-
-  RefPtr<VsyncParent> mVsyncParent;
 
 #ifdef DEBUG
   int32_t mActiveSupressDisplayportCount = 0;

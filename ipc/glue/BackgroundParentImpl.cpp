@@ -55,7 +55,6 @@
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
-#include "mozilla/dom/VsyncParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -65,6 +64,7 @@
 #include "mozilla/ipc/PBackgroundTestParent.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
+#include "mozilla/layout/VsyncParent.h"
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/HttpBackgroundChannelParent.h"
@@ -717,8 +717,8 @@ BackgroundParentImpl::PVsyncParent* BackgroundParentImpl::AllocPVsyncParent() {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<mozilla::dom::VsyncParent> actor = new mozilla::dom::VsyncParent();
-  actor->UpdateVsyncSource(nullptr);
+  RefPtr<mozilla::layout::VsyncParent> actor =
+      mozilla::layout::VsyncParent::Create();
   // There still has one ref-count after return, and it will be released in
   // DeallocPVsyncParent().
   return actor.forget().take();
@@ -730,8 +730,8 @@ bool BackgroundParentImpl::DeallocPVsyncParent(PVsyncParent* aActor) {
   MOZ_ASSERT(aActor);
 
   // This actor already has one ref-count. Please check AllocPVsyncParent().
-  RefPtr<mozilla::dom::VsyncParent> actor =
-      dont_AddRef(static_cast<mozilla::dom::VsyncParent*>(aActor));
+  RefPtr<mozilla::layout::VsyncParent> actor =
+      dont_AddRef(static_cast<mozilla::layout::VsyncParent*>(aActor));
   return true;
 }
 
