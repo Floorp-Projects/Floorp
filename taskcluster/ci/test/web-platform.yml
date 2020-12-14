@@ -46,6 +46,7 @@ job-defaults:
             android-em-7.0-x86_64(-qr)?/opt: geckoview-androidTest.apk
             android-em-7.0-x86_64(-qr)?/debug: geckoview-androidTest.apk
             default: null
+    python-3: true
 
 web-platform-tests:
     description: "Web platform test run"
