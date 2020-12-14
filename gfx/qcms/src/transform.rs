@@ -1146,14 +1146,14 @@ fn transform_precacheLUT_float(
     }
     return Some(transform);
 }
-#[no_mangle]
-pub extern "C" fn qcms_transform_create(
+
+pub fn transform_create(
     mut in_0: &qcms_profile,
     mut in_type: qcms_data_type,
     mut out: &qcms_profile,
     mut out_type: qcms_data_type,
     mut intent: qcms_intent,
-) -> *mut qcms_transform {
+) -> Option<Box<qcms_transform>> {
     // Ensure the requested input and output types make sense.
     let mut match_0: bool = false;
     if in_type == QCMS_DATA_RGB_8 {
@@ -1171,7 +1171,7 @@ pub extern "C" fn qcms_transform_create(
     }
     if !match_0 {
         debug_assert!(false, "input/output type");
-        return 0 as *mut qcms_transform;
+        return None;
     }
     let mut transform: Box<qcms_transform> = Box::new(Default::default());
     let mut precache: bool = false;
@@ -1197,13 +1197,8 @@ pub extern "C" fn qcms_transform_create(
         // TODO For transforming small data sets of about 200x200 or less
         // precaching should be avoided.
         let mut result = transform_precacheLUT_float(transform, in_0, out, 33, in_type);
-        return match result {
-            Some(result) => Box::into_raw(result),
-            None => {
-                debug_assert!(false, "precacheLUT failed");
-                0 as *mut qcms_transform
-            }
-        };
+        debug_assert!(result.is_some(), "precacheLUT failed");
+        return result;
     }
     if precache {
         (*transform).output_table_r = Some(Arc::clone((*out).output_table_r.as_ref().unwrap()));
@@ -1211,7 +1206,7 @@ pub extern "C" fn qcms_transform_create(
         (*transform).output_table_b = Some(Arc::clone((*out).output_table_b.as_ref().unwrap()));
     } else {
         if (*out).redTRC.is_none() || (*out).greenTRC.is_none() || (*out).blueTRC.is_none() {
-            return 0 as *mut qcms_transform;
+            return None;
         }
         (*transform).output_gamma_lut_r = Some(build_output_lut((*out).redTRC.as_deref().unwrap()));
         (*transform).output_gamma_lut_g =
@@ -1223,7 +1218,7 @@ pub extern "C" fn qcms_transform_create(
             || (*transform).output_gamma_lut_g.is_none()
             || (*transform).output_gamma_lut_b.is_none()
         {
-            return 0 as *mut qcms_transform;
+            return None;
         }
     }
     if (*in_0).color_space == RGB_SIGNATURE {
@@ -1291,7 +1286,7 @@ pub extern "C" fn qcms_transform_create(
             || (*transform).input_gamma_table_g.is_none()
             || (*transform).input_gamma_table_b.is_none()
         {
-            return 0 as *mut qcms_transform;
+            return None;
         }
         /* build combined colorant matrix */
 
@@ -1299,7 +1294,7 @@ pub extern "C" fn qcms_transform_create(
         let mut out_matrix: matrix = build_colorant_matrix(out);
         out_matrix = matrix_invert(out_matrix);
         if out_matrix.invalid {
-            return 0 as *mut qcms_transform;
+            return None;
         }
         let mut result_0: matrix = matrix_multiply(out_matrix, in_matrix);
         /* check for NaN values in the matrix and bail if we find any */
@@ -1308,7 +1303,7 @@ pub extern "C" fn qcms_transform_create(
             let mut j: libc::c_uint = 0;
             while j < 3 {
                 if result_0.m[i as usize][j as usize] != result_0.m[i as usize][j as usize] {
-                    return 0 as *mut qcms_transform;
+                    return None;
                 }
                 j = j + 1
             }
@@ -1328,7 +1323,7 @@ pub extern "C" fn qcms_transform_create(
     } else if (*in_0).color_space == 0x47524159 {
         (*transform).input_gamma_table_gray = build_input_gamma_table((*in_0).grayTRC.as_deref());
         if (*transform).input_gamma_table_gray.is_none() {
-            return 0 as *mut qcms_transform;
+            return None;
         }
         if precache {
             if out_type == QCMS_DATA_RGB_8 {
@@ -1363,10 +1358,10 @@ pub extern "C" fn qcms_transform_create(
         }
     } else {
         debug_assert!(false, "unexpected colorspace");
-        return 0 as *mut qcms_transform;
+        return None;
     }
     debug_assert!((*transform).transform_fn.is_some());
-    return Box::into_raw(transform);
+    return Some(transform);
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data(
