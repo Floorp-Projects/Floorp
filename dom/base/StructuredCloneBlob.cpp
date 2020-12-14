@@ -6,14 +6,22 @@
 
 #include "mozilla/dom/StructuredCloneBlob.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <new>
+#include <utility>
 #include "js/StructuredClone.h"
-#include "js/Utility.h"
+#include "js/Value.h"
 #include "js/Wrapper.h"
+#include "jsapi.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/StructuredCloneHolderBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
 #include "xpcpublic.h"
 
 namespace mozilla::dom {
