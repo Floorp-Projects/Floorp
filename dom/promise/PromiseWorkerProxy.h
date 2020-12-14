@@ -7,17 +7,26 @@
 #ifndef mozilla_dom_PromiseWorkerProxy_h
 #define mozilla_dom_PromiseWorkerProxy_h
 
-// Required for Promise::PromiseTaskSync.
+#include <cstdint>
+#include "js/TypeDecls.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/WorkerRunnable.h"
-#include "nsProxyRelease.h"
+#include "nsISupports.h"
+
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
+
+namespace JS {
+class CloneDataPolicy;
+}  // namespace JS
 
 namespace mozilla {
 namespace dom {
 
-class Promise;
 class ThreadSafeWorkerRef;
 class WorkerPrivate;
 
