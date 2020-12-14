@@ -769,7 +769,7 @@ static void AddOverflowingChildrenOfElement(const nsIFrame* aFrame,
 
       if (FrameHasSpecifiedSize(child) &&
           IsFrameOutsideOfAncestor(child, aAncestorFrame, aRect)) {
-        aList.AppendElement(child->GetContent());
+        aList.MaybeAppendElement(child->GetContent());
         continue;
       }
 
@@ -780,7 +780,7 @@ static void AddOverflowingChildrenOfElement(const nsIFrame* aFrame,
       // calling AddOverflowingChildrenOfElement on it.
       if (currListLength == aList.Length() &&
           IsFrameOutsideOfAncestor(child, aAncestorFrame, aRect)) {
-        aList.AppendElement(child->GetContent());
+        aList.MaybeAppendElement(child->GetContent());
       }
     }
   }
