@@ -225,16 +225,16 @@ var ChromeMigrationUtils = {
   async getLocalState(dataPath = "Chrome") {
     let localState = null;
     try {
-      let localStatePath = OS.Path.join(
+      let localStatePath = PathUtils.join(
         this.getDataPath(dataPath),
         "Local State"
       );
-      let localStateJson = await OS.File.read(localStatePath, {
-        encoding: "utf-8",
-      });
-      localState = JSON.parse(localStateJson);
+      localState = JSON.parse(await IOUtils.readUTF8(localStatePath));
     } catch (ex) {
-      Cu.reportError(ex);
+      // Don't report the error if it's just a file not existing.
+      if (ex.name != "NotFoundError") {
+        Cu.reportError(ex);
+      }
       throw ex;
     }
     return localState;
@@ -246,7 +246,7 @@ var ChromeMigrationUtils = {
    * @returns {String} The path of Chrome extension directory.
    */
   getExtensionPath(profileId) {
-    return OS.Path.join(this.getDataPath(), profileId, "Extensions");
+    return PathUtils.join(this.getDataPath(), profileId, "Extensions");
   },
 
   /**
@@ -281,24 +281,33 @@ var ChromeMigrationUtils = {
         // Edge is not available on Linux.
       },
     };
-    let dirKey, subfolders;
-    subfolders = SUB_DIRECTORIES[AppConstants.platform][chromeProjectName];
+    let subfolders = SUB_DIRECTORIES[AppConstants.platform][chromeProjectName];
     if (!subfolders) {
       return null;
     }
 
+    let rootDir;
     if (AppConstants.platform == "win") {
-      dirKey = "winLocalAppDataDir";
+      rootDir = "LocalAppData";
       subfolders = subfolders.concat(["User Data"]);
     } else if (AppConstants.platform == "macosx") {
-      dirKey = "macUserLibDir";
+      rootDir = "ULibDir";
       subfolders = ["Application Support"].concat(subfolders);
     } else {
-      dirKey = "homeDir";
+      rootDir = "Home";
       subfolders = [".config"].concat(subfolders);
     }
-    subfolders.unshift(OS.Constants.Path[dirKey]);
-    return OS.Path.join(...subfolders);
+    try {
+      let target = Services.dirsvc.get(rootDir, Ci.nsIFile);
+      for (let subfolder of subfolders) {
+        target.append(subfolder);
+      }
+      return target.path;
+    } catch (ex) {
+      // The path logic here shouldn't error, so log it:
+      Cu.reportError(ex);
+    }
+    return null;
   },
 
   /**
