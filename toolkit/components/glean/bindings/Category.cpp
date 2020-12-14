@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/glean/Glean.h"
-#include "mozilla/glean/Category.h"
 #include "mozilla/dom/GleanBinding.h"
-#include "mozilla/glean/GleanJSMetricsLookup.h"
+#include "mozilla/glean/bindings/Glean.h"
+#include "mozilla/glean/bindings/Category.h"
+#include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
 
 namespace mozilla::glean {
 

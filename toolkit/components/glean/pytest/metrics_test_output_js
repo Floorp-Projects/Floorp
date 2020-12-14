@@ -11,7 +11,7 @@
 
 #include "mozilla/PerfectHash.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/glean/MetricTypes.h"
+#include "mozilla/glean/bindings/MetricTypes.h"
 
 #define GLEAN_INDEX_BITS (32)
 #define GLEAN_ID_BITS (27)
