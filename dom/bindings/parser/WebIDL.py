@@ -5541,10 +5541,14 @@ class IDLAttribute(IDLInterfaceMember):
 
     def expand(self, members):
         assert self.stringifier
-        if not self.type.isDOMString() and not self.type.isUSVString():
+        if (
+            not self.type.isDOMString()
+            and not self.type.isUSVString()
+            and not self.type.isUTF8String()
+        ):
             raise WebIDLError(
                 "The type of a stringifer attribute must be "
-                "either DOMString or USVString",
+                "either DOMString, USVString or UTF8String",
                 [self.location],
             )
         identifier = IDLUnresolvedIdentifier(
