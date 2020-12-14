@@ -2,7 +2,12 @@ use std::{ptr::null_mut, slice};
 
 use libc::{fclose, fopen, fread, free, malloc, FILE};
 
-use crate::{iccread::*, qcms_intent};
+use crate::{
+    iccread::*,
+    qcms_intent,
+    transform::qcms_data_type,
+    transform::{qcms_transform, transform_create},
+};
 
 #[no_mangle]
 pub extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
@@ -219,4 +224,19 @@ pub unsafe extern "C" fn qcms_data_from_unicode_path(
         qcms_data_from_file(file, mem, size);
         fclose(file);
     };
+}
+
+#[no_mangle]
+pub extern "C" fn qcms_transform_create(
+    mut in_0: &qcms_profile,
+    mut in_type: qcms_data_type,
+    mut out: &qcms_profile,
+    mut out_type: qcms_data_type,
+    mut intent: qcms_intent,
+) -> *mut qcms_transform {
+    let transform = transform_create(in_0, in_type, out, out_type, intent);
+    match transform {
+        Some(transform) => Box::into_raw(transform),
+        None => null_mut(),
+    }
 }
