@@ -77,6 +77,11 @@ def assert_actions(logger):
         actions = [json.loads(l)["action"] for l in lines]
         assert actions == expected
         buf.truncate(0)
+        # Python3 will not reposition the buffer position after
+        # truncate and will extend the buffer with null bytes.
+        # Force the buffer position to the start of the buffer
+        # to prevent null bytes from creeping in.
+        buf.seek(0)
 
     return inner
 
