@@ -7,15 +7,36 @@
 #ifndef mozilla_dom_RefMessageBodyService_h
 #define mozilla_dom_RefMessageBodyService_h
 
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/StructuredCloneHolder.h"
+#include <cstdint>
+#include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/UniquePtr.h"
+#include "nsHashKeys.h"
+#include "nsID.h"
+#include "nsISupports.h"
 #include "nsRefPtrHashtable.h"
 
+namespace JS {
+class CloneDataPolicy;
+}  // namespace JS
+
 namespace mozilla {
+
+class ErrorResult;
+template <class T>
+class OwningNonNull;
+
 namespace dom {
+
+class MessagePort;
+template <typename T>
+class Sequence;
+
+namespace ipc {
+class StructuredCloneData;
+}
 
 /**
  * At the time a BroadcastChannel or MessagePort sends messages, we don't know
