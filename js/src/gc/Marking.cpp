@@ -1389,7 +1389,6 @@ static inline void TraceNullableBindingNames(JSTracer* trc, BindingName* names,
     }
   }
 };
-template <>
 void AbstractBindingName<JSAtom>::trace(JSTracer* trc) {
   if (JSAtom* atom = name()) {
     TraceManuallyBarrieredEdge(trc, &atom, "binding name");

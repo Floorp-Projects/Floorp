@@ -54,10 +54,12 @@ class RegExpStencil;
 class BigIntStencil;
 class StencilXDR;
 
-using BaseParserScopeData = AbstractBaseScopeData<const ParserAtom>;
+using BaseParserScopeData = AbstractBaseScopeData<TaggedParserAtomIndex>;
+using ParserBindingName = AbstractBindingName<TaggedParserAtomIndex>;
 
 template <typename Scope>
-using ParserScopeData = typename Scope::template AbstractData<const ParserAtom>;
+using ParserScopeData =
+    typename Scope::template AbstractData<TaggedParserAtomIndex>;
 using ParserGlobalScopeData = ParserScopeData<GlobalScope>;
 using ParserEvalScopeData = ParserScopeData<EvalScope>;
 using ParserLexicalScopeData = ParserScopeData<LexicalScope>;
@@ -65,7 +67,7 @@ using ParserFunctionScopeData = ParserScopeData<FunctionScope>;
 using ParserModuleScopeData = ParserScopeData<ModuleScope>;
 using ParserVarScopeData = ParserScopeData<VarScope>;
 
-using ParserBindingIter = AbstractBindingIter<const ParserAtom>;
+using ParserBindingIter = AbstractBindingIter<TaggedParserAtomIndex>;
 
 // [SMDOC] Script Stencil (Frontend Representation)
 //
@@ -269,17 +271,17 @@ class ScopeStencil {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
-  void dump(JSONPrinter& json);
-  void dumpFields(JSONPrinter& json);
+  void dump(JSONPrinter& json, CompilationStencil* compilationStencil);
+  void dumpFields(JSONPrinter& json, CompilationStencil* compilationStencil);
 #endif
 
  private:
   // Non owning reference to data
   template <typename SpecificScopeType>
-  typename SpecificScopeType::template AbstractData<const ParserAtom>& data()
-      const {
-    using Data =
-        typename SpecificScopeType ::template AbstractData<const ParserAtom>;
+  typename SpecificScopeType::template AbstractData<TaggedParserAtomIndex>&
+  data() const {
+    using Data = typename SpecificScopeType ::template AbstractData<
+        TaggedParserAtomIndex>;
 
     MOZ_ASSERT(data_);
     return *static_cast<Data*>(data_);

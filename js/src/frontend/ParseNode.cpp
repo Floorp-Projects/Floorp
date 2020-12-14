@@ -367,12 +367,12 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
   if (!isEmptyScope()) {
     ParserScopeData<LexicalScope>* bindings = scopeBindings();
     for (uint32_t i = 0; i < bindings->length; i++) {
-      const ParserAtom* name = bindings->trailingNames[i].name();
-      if (name->hasLatin1Chars()) {
-        DumpName(out, name->latin1Chars(), name->length());
-      } else {
-        DumpName(out, name->twoByteChars(), name->length());
-      }
+      auto index = bindings->trailingNames[i].name();
+      JSONPrinter json(out);
+      json.setIndentLevel((nameIndent + 1) / 2);
+      json.beginObject();
+      DumpTaggedParserAtomIndex(json, index, nullptr);
+      json.endObject();
       if (i < bindings->length - 1) {
         IndentNewLine(out, nameIndent);
       }
