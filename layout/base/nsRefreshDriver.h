@@ -46,6 +46,10 @@ class PresShell;
 class RefreshDriverTimer;
 class Runnable;
 
+namespace layout {
+class VsyncChild;
+}  // namespace layout
+
 }  // namespace mozilla
 
 class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
@@ -296,6 +300,14 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    * Return the prescontext we were initialized with
    */
   nsPresContext* GetPresContext() const;
+
+  /**
+   * PBackgroundChild actor is created asynchronously in content process.
+   * We can't create vsync-based timers during PBackground startup. This
+   * function will be called when PBackgroundChild actor is created. Then we can
+   * do the pending vsync-based timer creation.
+   */
+  static void PVsyncActorCreated(mozilla::layout::VsyncChild* aVsyncChild);
 
   void CreateVsyncRefreshTimer();
 
