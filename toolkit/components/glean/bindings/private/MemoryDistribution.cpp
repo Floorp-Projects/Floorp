@@ -51,7 +51,7 @@ GleanMemoryDistribution::TestGetValue(const nsACString& aPingName,
       const uint64_t bucket = iter.Key();
       const uint64_t count = iter.UserData();
       if (!JS_DefineProperty(aCx, valuesObj,
-                             nsPrintfCString("%lu", bucket).get(),
+                             nsPrintfCString("%" PRIu64, bucket).get(),
                              static_cast<double>(count), JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
