@@ -4,7 +4,7 @@
 
 ../web-platform/tests/tools/wptserve
 ../web-platform/tests/tools/third_party/certifi
-../web-platform/tests/tools/third_party/enum
+../web-platform/tests/tools/third_party/enum ; python_version < '3'
 ../web-platform/tests/tools/third_party/h2
 ../web-platform/tests/tools/third_party/hyperframe
 ../web-platform/tests/tools/third_party/hpack
