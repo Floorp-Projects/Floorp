@@ -101,7 +101,7 @@
 
     <!-- Search Fragment -->
     <dimen name="search_fragment_clipboard_item_height">56dp</dimen>
-    <dimen name="search_fragment_clipboard_item_horizontal_margin">12dp</dimen>
+    <dimen name="search_fragment_clipboard_item_horizontal_margin">8dp</dimen>
     <dimen name="search_fragment_clipboard_item_vertical_margin">8dp</dimen>
     <dimen name="search_fragment_clipboard_item_title_margin_start">8dp</dimen>
     <dimen name="search_fragment_shortcuts_label_margin_horizontal">18dp</dimen>
