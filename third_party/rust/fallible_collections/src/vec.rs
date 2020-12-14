@@ -64,9 +64,17 @@ pub trait FallibleVec<T> {
 /// fallible allocation.
 ///
 /// See the crate documentation for more.
-#[derive(Default, PartialEq)]
+#[derive(PartialEq)]
 pub struct TryVec<T> {
     inner: Vec<T>,
+}
+
+impl<T> Default for TryVec<T> {
+    fn default() -> Self {
+        Self {
+            inner: Default::default(),
+        }
+    }
 }
 
 impl<T: core::fmt::Debug> core::fmt::Debug for TryVec<T> {

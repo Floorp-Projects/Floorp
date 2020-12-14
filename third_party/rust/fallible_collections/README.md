@@ -20,7 +20,7 @@ Add the following dependency to your Cargo manifest...
 
 ```toml
 [dependencies]
-fallible_collections = "0.1.3"
+fallible_collections = "0.3.1"
 ```
 
 ...and see the [docs](https://docs.rs/fallible_collections) for how to use it.
