@@ -128,7 +128,7 @@ HttpChannelChild::~HttpChannelChild() {
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy && mAsyncOpenSucceeded &&
-      !mSuccesfullyRedirected && !mOnStopRequestCalled) {
+      !mSuccesfullyRedirected && !LoadOnStopRequestCalled()) {
     bool emptyBgChildQueue, nullBgChild;
     {
       MutexAutoLock lock(mBgChildMutex);
@@ -140,7 +140,7 @@ HttpChannelChild::~HttpChannelChild() {
         (mRedirectChannelChild ? 1 << 0 : 0) |
         (mEventQ->IsEmpty() ? 1 << 1 : 0) | (nullBgChild ? 1 << 2 : 0) |
         (emptyBgChildQueue ? 1 << 3 : 0) |
-        (mOnStartRequestCalled ? 1 << 4 : 0) |
+        (LoadOnStartRequestCalled() ? 1 << 4 : 0) |
         (mBackgroundChildQueueFinalState == BCKCHILD_EMPTY ? 1 << 5 : 0) |
         (mBackgroundChildQueueFinalState == BCKCHILD_NON_EMPTY ? 1 << 6 : 0) |
         (mRemoteChannelExistedAtCancel ? 1 << 7 : 0) |
@@ -151,7 +151,7 @@ HttpChannelChild::~HttpChannelChild() {
         (mCanSendAtCancel ? 1 << 12 : 0) | (!!mSuspendCount ? 1 << 13 : 0) |
         (!!mCallOnResume ? 1 << 14 : 0);
     MOZ_CRASH_UNSAFE_PRINTF(
-        "~HttpChannelChild, mOnStopRequestCalled=false, mStatus=0x%08x, "
+        "~HttpChannelChild, LoadOnStopRequestCalled()=false, mStatus=0x%08x, "
         "mActorDestroyReason=%d, 20200717 flags=%u",
         static_cast<uint32_t>(nsresult(mStatus)),
         static_cast<int32_t>(mActorDestroyReason ? *mActorDestroyReason : -1),
@@ -211,7 +211,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
 
     // We don't have a listener when AsyncOpen has failed or when this channel
     // has been sucessfully redirected.
-    if (MOZ_LIKELY(mOnStartRequestCalled && mOnStopRequestCalled) ||
+    if (MOZ_LIKELY(LoadOnStartRequestCalled() && LoadOnStopRequestCalled()) ||
         !mListener) {
       NS_LOG_RELEASE(this, 0, "HttpChannelChild");
       delete this;
@@ -349,7 +349,7 @@ void HttpChannelChild::AssociateApplicationCache(const nsCString& aGroupID,
   LOG(("HttpChannelChild::AssociateApplicationCache [this=%p]\n", this));
   mApplicationCache = new nsApplicationCache();
 
-  mLoadedFromApplicationCache = true;
+  StoreLoadedFromApplicationCache(true);
   mApplicationCache->InitAsHandle(aGroupID, aClientID);
 }
 
@@ -405,7 +405,7 @@ void HttpChannelChild::OnStartRequest(
   // OnStartRequest/OnStopRequest/OnDataAvailable IPC messages that need to
   // be handled. In that case we just ignore them to avoid calling the listener
   // twice.
-  if (mOnStartRequestCalled && mIPCActorDeleted) {
+  if (LoadOnStartRequestCalled() && mIPCActorDeleted) {
     return;
   }
 
@@ -445,13 +445,13 @@ void HttpChannelChild::OnStartRequest(
 
   mRedirectCount = aArgs.redirectCount();
   mAvailableCachedAltDataType = aArgs.altDataType();
-  mDeliveringAltData = aArgs.deliveringAltData();
+  StoreDeliveringAltData(aArgs.deliveringAltData());
   mAltDataLength = aArgs.altDataLength();
-  mResolvedByTRR = aArgs.isResolvedByTRR();
+  StoreResolvedByTRR(aArgs.isResolvedByTRR());
 
   SetApplyConversion(aArgs.applyConversion());
 
-  mAfterOnStartRequestBegun = true;
+  StoreAfterOnStartRequestBegun(true);
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
@@ -467,7 +467,7 @@ void HttpChannelChild::OnStartRequest(
 
   ResourceTimingStructArgsToTimingsStruct(aArgs.timing(), mTransactionTimings);
 
-  mAllRedirectsSameOrigin = aArgs.allRedirectsSameOrigin();
+  StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());
 
   mMultiPartID = aArgs.multiPartID();
   mIsLastPartOfMultiPart = aArgs.isLastPartOfMultiPart();
@@ -534,10 +534,10 @@ void HttpChannelChild::ProcessOnAfterLastPart(const nsresult& aStatus) {
 }
 
 void HttpChannelChild::OnAfterLastPart(const nsresult& aStatus) {
-  if (mOnStopRequestCalled) {
+  if (LoadOnStopRequestCalled()) {
     return;
   }
-  mOnStopRequestCalled = true;
+  StoreOnStopRequestCalled(true);
 
   // notify "http-on-stop-connect" observers
   gHttpHandler->OnStopRequest(this);
@@ -578,10 +578,10 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
   // We handle all the listener chaining before OnStartRequest at this moment.
   // Prevent additional listeners being added to the chain after the request
   // as started.
-  mTracingEnabled = false;
+  StoreTracingEnabled(false);
 
   // mListener could be null if the redirect setup is not completed.
-  MOZ_ASSERT(mListener || mOnStartRequestCalled);
+  MOZ_ASSERT(mListener || LoadOnStartRequestCalled());
   if (!mListener) {
     Cancel(NS_ERROR_FAILURE);
     return;
@@ -589,12 +589,12 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
 
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
-    mOnStartRequestCalled = true;
+    StoreOnStartRequestCalled(true);
     rv = listener->OnStartRequest(aRequest);
   } else {
     rv = NS_ERROR_UNEXPECTED;
   }
-  mOnStartRequestCalled = true;
+  StoreOnStartRequestCalled(true);
 
   if (NS_FAILED(rv)) {
     Cancel(rv);
@@ -751,7 +751,7 @@ void HttpChannelChild::DoOnStatus(nsIRequest* aRequest, nsresult status) {
 
   // block status/progress after Cancel or OnStopRequest has been called,
   // or if channel has LOAD_BACKGROUND set.
-  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending &&
+  if (mProgressSink && NS_SUCCEEDED(mStatus) && LoadIsPending() &&
       !(mLoadFlags & LOAD_BACKGROUND)) {
     nsAutoCString host;
     mURI->GetHost(host);
@@ -772,7 +772,7 @@ void HttpChannelChild::DoOnProgress(nsIRequest* aRequest, int64_t progress,
 
   // block status/progress after Cancel or OnStopRequest has been called,
   // or if channel has LOAD_BACKGROUND set.
-  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending) {
+  if (mProgressSink && NS_SUCCEEDED(mStatus) && LoadIsPending()) {
     // OnProgress
     //
     if (progress > 0) {
@@ -866,7 +866,7 @@ void HttpChannelChild::OnStopRequest(
   // OnStartRequest/OnStopRequest/OnDataAvailable IPC messages that need to
   // be handled. In that case we just ignore them to avoid calling the listener
   // twice.
-  if (mOnStopRequestCalled && mIPCActorDeleted) {
+  if (LoadOnStopRequestCalled() && mIPCActorDeleted) {
     return;
   }
 
@@ -966,7 +966,7 @@ void HttpChannelChild::DoPreOnStopRequest(nsresult aStatus) {
   AUTO_PROFILER_LABEL("HttpChannelChild::DoPreOnStopRequest", NETWORK);
   LOG(("HttpChannelChild::DoPreOnStopRequest [this=%p status=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aStatus)));
-  mIsPending = false;
+  StoreIsPending(false);
 
   MaybeReportTimingData();
 
@@ -999,7 +999,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   AUTO_PROFILER_LABEL("HttpChannelChild::DoOnStopRequest", NETWORK);
   LOG(("HttpChannelChild::DoOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mIsPending);
+  MOZ_ASSERT(!LoadIsPending());
 
   auto checkForBlockedContent = [&]() {
     // NB: We use aChannelStatus here instead of mStatus because if there was an
@@ -1031,19 +1031,20 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
 
   // See bug 1587686. If the redirect setup is not completed, the post-redirect
   // channel will be not opened and mListener will be null.
-  MOZ_ASSERT(mListener || !mWasOpened);
+  MOZ_ASSERT(mListener || !LoadWasOpened());
   if (!mListener) {
     return;
   }
 
-  MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
+  MOZ_ASSERT(!LoadOnStopRequestCalled(),
+             "We should not call OnStopRequest twice");
 
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
-    mOnStopRequestCalled = true;
+    StoreOnStopRequestCalled(true);
     listener->OnStopRequest(aRequest, mStatus);
   }
-  mOnStopRequestCalled = true;
+  StoreOnStopRequestCalled(true);
 
   // If we're a multi-part stream, then don't cleanup yet, and we'll do so
   // in OnAfterLastPart.
@@ -1051,8 +1052,8 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
     LOG(
         ("HttpChannelChild::DoOnStopRequest  - Expecting future parts on a "
          "multipart channel not releasing listeners."));
-    mOnStopRequestCalled = false;
-    mOnStartRequestCalled = false;
+    StoreOnStopRequestCalled(false);
+    StoreOnStartRequestCalled(false);
     return;
   }
 
@@ -1122,7 +1123,7 @@ void HttpChannelChild::FailedAsyncOpen(const nsresult& status) {
   // Might be called twice in race condition in theory.
   // (one by RecvFailedAsyncOpen, another by
   // HttpBackgroundChannelChild::ActorFailed)
-  if (mOnStartRequestCalled) {
+  if (LoadOnStartRequestCalled()) {
     return;
   }
 
@@ -1194,7 +1195,8 @@ void HttpChannelChild::DeleteSelf() { Send__delete__(this); }
 void HttpChannelChild::NotifyOrReleaseListeners(nsresult rv) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (NS_SUCCEEDED(rv) || (mOnStartRequestCalled && mOnStopRequestCalled)) {
+  if (NS_SUCCEEDED(rv) ||
+      (LoadOnStartRequestCalled() && LoadOnStopRequestCalled())) {
     ReleaseListeners();
     return;
   }
@@ -1213,18 +1215,19 @@ void HttpChannelChild::DoNotifyListener() {
   MOZ_ASSERT(NS_IsMainThread());
 
   // In case nsHttpChannel::OnStartRequest wasn't called (e.g. due to flag
-  // LOAD_ONLY_IF_MODIFIED) we want to set mAfterOnStartRequestBegun to true
-  // before notifying listener.
-  if (!mAfterOnStartRequestBegun) {
-    mAfterOnStartRequestBegun = true;
+  // LOAD_ONLY_IF_MODIFIED) we want to set LoadAfterOnStartRequestBegun() to
+  // true before notifying listener.
+  if (!LoadAfterOnStartRequestBegun()) {
+    StoreAfterOnStartRequestBegun(true);
   }
 
-  if (mListener && !mOnStartRequestCalled) {
+  if (mListener && !LoadOnStartRequestCalled()) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    mOnStartRequestCalled = true;  // avoid reentrancy bugs by setting this now
+    StoreOnStartRequestCalled(
+        true);  // avoid reentrancy bugs by setting this now
     listener->OnStartRequest(this);
   }
-  mOnStartRequestCalled = true;
+  StoreOnStartRequestCalled(true);
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this)] {
@@ -1236,17 +1239,17 @@ void HttpChannelChild::ContinueDoNotifyListener() {
   LOG(("HttpChannelChild::ContinueDoNotifyListener this=%p", this));
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Make sure mIsPending is set to false. At this moment we are done from
+  // Make sure IsPending is set to false. At this moment we are done from
   // the point of view of our consumer and we have to report our self
   // as not-pending.
-  mIsPending = false;
+  StoreIsPending(false);
 
-  if (mListener && !mOnStopRequestCalled) {
+  if (mListener && !LoadOnStopRequestCalled()) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    mOnStopRequestCalled = true;
+    StoreOnStopRequestCalled(true);
     listener->OnStopRequest(this, mStatus);
   }
-  mOnStopRequestCalled = true;
+  StoreOnStopRequestCalled(true);
 
   // notify "http-on-stop-request" observers
   gHttpHandler->OnStopRequest(this);
@@ -1661,8 +1664,8 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
   LOG(("HttpChannelChild::CompleteRedirectSetup [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+  NS_ENSURE_TRUE(!LoadIsPending(), NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(!LoadWasOpened(), NS_ERROR_ALREADY_OPENED);
 
   // Resume the suspension in ConnectParent.
   auto eventQueueResumeGuard = MakeScopeExit([&] {
@@ -1690,8 +1693,8 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
         mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
   }
 #endif
-  mIsPending = true;
-  mWasOpened = true;
+  StoreIsPending(true);
+  StoreWasOpened(true);
   mListener = aListener;
 
   // add ourselves to the load group.
@@ -1973,14 +1976,14 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
 
   NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
   NS_ENSURE_ARG_POINTER(listener);
-  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+  NS_ENSURE_TRUE(!LoadIsPending(), NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(!LoadWasOpened(), NS_ERROR_ALREADY_OPENED);
 
   if (MaybeWaitForUploadStreamLength(listener, nullptr)) {
     return NS_OK;
   }
 
-  if (!mAsyncOpenTimeOverriden) {
+  if (!LoadAsyncOpenTimeOverriden()) {
     mAsyncOpenTime = TimeStamp::Now();
   }
 
@@ -2033,8 +2036,8 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
         mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
   }
 #endif
-  mIsPending = true;
-  mWasOpened = true;
+  StoreIsPending(true);
+  StoreWasOpened(true);
   mListener = listener;
 
   // add ourselves to the load group.
@@ -2111,7 +2114,7 @@ already_AddRefed<nsIEventTarget> HttpChannelChild::GetODATarget() {
 nsresult HttpChannelChild::ContinueAsyncOpen() {
   nsresult rv;
   nsCString appCacheClientId;
-  if (mInheritApplicationCache) {
+  if (LoadInheritApplicationCache()) {
     // Pick up an application cache from the notification
     // callbacks if available
     nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer;
@@ -2187,30 +2190,30 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   openArgs.preflightArgs() = optionalCorsPreflightArgs;
 
-  openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
+  openArgs.uploadStreamHasHeaders() = LoadUploadStreamHasHeaders();
   openArgs.priority() = mPriority;
   openArgs.classOfService() = mClassOfService;
   openArgs.redirectionLimit() = mRedirectionLimit;
-  openArgs.allowSTS() = mAllowSTS;
-  openArgs.thirdPartyFlags() = mThirdPartyFlags;
+  openArgs.allowSTS() = LoadAllowSTS();
+  openArgs.thirdPartyFlags() = LoadThirdPartyFlags();
   openArgs.resumeAt() = mSendResumeAt;
   openArgs.startPos() = mStartPos;
   openArgs.entityID() = mEntityID;
-  openArgs.chooseApplicationCache() = mChooseApplicationCache;
+  openArgs.chooseApplicationCache() = LoadChooseApplicationCache();
   openArgs.appCacheClientID() = appCacheClientId;
-  openArgs.allowSpdy() = mAllowSpdy;
-  openArgs.allowHttp3() = mAllowHttp3;
-  openArgs.allowAltSvc() = mAllowAltSvc;
-  openArgs.beConservative() = mBeConservative;
+  openArgs.allowSpdy() = LoadAllowSpdy();
+  openArgs.allowHttp3() = LoadAllowHttp3();
+  openArgs.allowAltSvc() = LoadAllowAltSvc();
+  openArgs.beConservative() = LoadBeConservative();
   openArgs.tlsFlags() = mTlsFlags;
   openArgs.initialRwin() = mInitialRwin;
 
   openArgs.cacheKey() = mCacheKey;
 
-  openArgs.blockAuthPrompt() = mBlockAuthPrompt;
+  openArgs.blockAuthPrompt() = LoadBlockAuthPrompt();
 
-  openArgs.allowStaleCacheContent() = mAllowStaleCacheContent;
-  openArgs.preferCacheLoadOverBypass() = mPreferCacheLoadOverBypass;
+  openArgs.allowStaleCacheContent() = LoadAllowStaleCacheContent();
+  openArgs.preferCacheLoadOverBypass() = LoadPreferCacheLoadOverBypass();
 
   openArgs.contentTypeHint() = mContentTypeHint;
 
@@ -2250,7 +2253,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.handleFetchEventStart() = mHandleFetchEventStart;
   openArgs.handleFetchEventEnd() = mHandleFetchEventEnd;
 
-  openArgs.forceMainDocumentChannel() = mForceMainDocumentChannel;
+  openArgs.forceMainDocumentChannel() = LoadForceMainDocumentChannel();
 
   openArgs.navigationStartTimeStamp() = navigationStartTimeStamp;
   openArgs.hasNonEmptySandboxingFlag() = GetHasNonEmptySandboxingFlag();
@@ -2431,7 +2434,7 @@ HttpChannelChild::SetCacheTokenCachedCharset(const nsACString& aCharset) {
 
 NS_IMETHODIMP
 HttpChannelChild::IsFromCache(bool* value) {
-  if (!mIsPending) return NS_ERROR_NOT_AVAILABLE;
+  if (!LoadIsPending()) return NS_ERROR_NOT_AVAILABLE;
 
   *value = mIsFromCache;
   return NS_OK;
@@ -2451,7 +2454,7 @@ HttpChannelChild::GetCacheEntryId(uint64_t* aCacheEntryId) {
 
 NS_IMETHODIMP
 HttpChannelChild::IsRacing(bool* aIsRacing) {
-  if (!mAfterOnStartRequestBegun) {
+  if (!LoadAfterOnStartRequestBegun()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   *aIsRacing = mIsRacing;
@@ -2475,27 +2478,27 @@ HttpChannelChild::SetCacheKey(uint32_t cacheKey) {
 
 NS_IMETHODIMP
 HttpChannelChild::SetAllowStaleCacheContent(bool aAllowStaleCacheContent) {
-  mAllowStaleCacheContent = aAllowStaleCacheContent;
+  StoreAllowStaleCacheContent(aAllowStaleCacheContent);
   return NS_OK;
 }
 NS_IMETHODIMP
 HttpChannelChild::GetAllowStaleCacheContent(bool* aAllowStaleCacheContent) {
   NS_ENSURE_ARG(aAllowStaleCacheContent);
-  *aAllowStaleCacheContent = mAllowStaleCacheContent;
+  *aAllowStaleCacheContent = LoadAllowStaleCacheContent();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::SetPreferCacheLoadOverBypass(
     bool aPreferCacheLoadOverBypass) {
-  mPreferCacheLoadOverBypass = aPreferCacheLoadOverBypass;
+  StorePreferCacheLoadOverBypass(aPreferCacheLoadOverBypass);
   return NS_OK;
 }
 NS_IMETHODIMP
 HttpChannelChild::GetPreferCacheLoadOverBypass(
     bool* aPreferCacheLoadOverBypass) {
   NS_ENSURE_ARG(aPreferCacheLoadOverBypass);
-  *aPreferCacheLoadOverBypass = mPreferCacheLoadOverBypass;
+  *aPreferCacheLoadOverBypass = LoadPreferCacheLoadOverBypass();
   return NS_OK;
 }
 
@@ -2518,7 +2521,7 @@ HttpChannelChild::PreferredAlternativeDataTypes() {
 NS_IMETHODIMP
 HttpChannelChild::GetAlternativeDataType(nsACString& aType) {
   // Must be called during or after OnStartRequest
-  if (!mAfterOnStartRequestBegun) {
+  if (!LoadAfterOnStartRequestBegun()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2710,7 +2713,7 @@ HttpChannelChild::GetApplicationCache(nsIApplicationCache** aApplicationCache) {
 }
 NS_IMETHODIMP
 HttpChannelChild::SetApplicationCache(nsIApplicationCache* aApplicationCache) {
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+  NS_ENSURE_TRUE(!LoadWasOpened(), NS_ERROR_ALREADY_OPENED);
 
   mApplicationCache = aApplicationCache;
   return NS_OK;
@@ -2729,7 +2732,7 @@ HttpChannelChild::GetApplicationCacheForWrite(
 NS_IMETHODIMP
 HttpChannelChild::SetApplicationCacheForWrite(
     nsIApplicationCache* aApplicationCache) {
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+  NS_ENSURE_TRUE(!LoadWasOpened(), NS_ERROR_ALREADY_OPENED);
 
   // Child channels are not intended to be used for cache writes
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -2738,30 +2741,30 @@ HttpChannelChild::SetApplicationCacheForWrite(
 NS_IMETHODIMP
 HttpChannelChild::GetLoadedFromApplicationCache(
     bool* aLoadedFromApplicationCache) {
-  *aLoadedFromApplicationCache = mLoadedFromApplicationCache;
+  *aLoadedFromApplicationCache = LoadLoadedFromApplicationCache();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::GetInheritApplicationCache(bool* aInherit) {
-  *aInherit = mInheritApplicationCache;
+  *aInherit = LoadInheritApplicationCache();
   return NS_OK;
 }
 NS_IMETHODIMP
 HttpChannelChild::SetInheritApplicationCache(bool aInherit) {
-  mInheritApplicationCache = aInherit;
+  StoreInheritApplicationCache(aInherit);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::GetChooseApplicationCache(bool* aChoose) {
-  *aChoose = mChooseApplicationCache;
+  *aChoose = LoadChooseApplicationCache();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpChannelChild::SetChooseApplicationCache(bool aChoose) {
-  mChooseApplicationCache = aChoose;
+  StoreChooseApplicationCache(aChoose);
   return NS_OK;
 }
 
@@ -2788,7 +2791,7 @@ NS_IMETHODIMP HttpChannelChild::GetClientSetRequestHeaders(
 
 void HttpChannelChild::GetClientSetCorsPreflightParameters(
     Maybe<CorsPreflightArgs>& aArgs) {
-  if (mRequireCORSPreflight) {
+  if (LoadRequireCORSPreflight()) {
     CorsPreflightArgs args;
     args.unsafeHeaders() = mUnsafeHeaders.Clone();
     aArgs.emplace(args);
@@ -2979,8 +2982,9 @@ nsresult HttpChannelChild::AsyncCallImpl(
 nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer,
                                              bool aRespectBeforeConnect) {
   // Normally this would be ENSURE_CALLED_BEFORE_CONNECT, but since the
-  // "connect" is done in the main process, and mRequestObserversCalled is never
-  // set in the ChannelChild, before connect basically means before asyncOpen.
+  // "connect" is done in the main process, and LoadRequestObserversCalled() is
+  // never set in the ChannelChild, before connect basically means before
+  // asyncOpen.
   if (aRespectBeforeConnect) {
     ENSURE_CALLED_BEFORE_ASYNC_OPEN();
   }
