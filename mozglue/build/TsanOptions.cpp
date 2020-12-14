@@ -238,9 +238,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1607138
          "race:gXPCOMThreadsShutDown\n"
 
-         // Bug 1608462
-         "deadlock:ScriptPreloader::OffThreadDecodeCallback\n"
-
          // Bug 1615017
          "race:CacheFileMetadata::SetHash\n"
          "race:CacheFileMetadata::OnDataWritten\n"
