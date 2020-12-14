@@ -216,7 +216,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:SkSpriteBlitter_Memcpy\n"
 
          // Bug 1601632
-         "race:ScriptPreloader::MaybeFinishOffThreadDecode\n"
          "race:ScriptPreloader::DoFinishOffThreadDecode\n"
 
          // Bug 1606651
