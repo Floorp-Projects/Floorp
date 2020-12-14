@@ -56,13 +56,13 @@ class BrowserChild;
 
 #define ENSURE_CALLED_BEFORE_ASYNC_OPEN()                                      \
   do {                                                                         \
-    if (mIsPending || mWasOpened) {                                            \
+    if (LoadIsPending() || LoadWasOpened()) {                                  \
       nsPrintfCString msg("'%s' called after AsyncOpen: %s +%d", __FUNCTION__, \
                           __FILE__, __LINE__);                                 \
       NECKO_MAYBE_ABORT(msg);                                                  \
     }                                                                          \
-    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);                         \
-    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);                      \
+    NS_ENSURE_TRUE(!LoadIsPending(), NS_ERROR_IN_PROGRESS);                    \
+    NS_ENSURE_TRUE(!LoadWasOpened(), NS_ERROR_ALREADY_OPENED);                 \
   } while (0)
 
 // Fails call if made after request observers (on-modify-request, etc) have been
@@ -70,12 +70,12 @@ class BrowserChild;
 
 #define ENSURE_CALLED_BEFORE_CONNECT()                                  \
   do {                                                                  \
-    if (mRequestObserversCalled) {                                      \
+    if (LoadRequestObserversCalled()) {                                 \
       nsPrintfCString msg("'%s' called too late: %s +%d", __FUNCTION__, \
                           __FILE__, __LINE__);                          \
       NECKO_MAYBE_ABORT(msg);                                           \
-      if (mIsPending) return NS_ERROR_IN_PROGRESS;                      \
-      MOZ_ASSERT(mWasOpened);                                           \
+      if (LoadIsPending()) return NS_ERROR_IN_PROGRESS;                 \
+      MOZ_ASSERT(LoadWasOpened());                                      \
       return NS_ERROR_ALREADY_OPENED;                                   \
     }                                                                   \
   } while (0)
