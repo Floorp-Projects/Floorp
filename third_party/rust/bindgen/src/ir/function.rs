@@ -6,9 +6,11 @@ use super::dot::DotAttributes;
 use super::item::Item;
 use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::TypeKind;
-use clang;
+use crate::clang;
+use crate::parse::{
+    ClangItemParser, ClangSubItemParser, ParseError, ParseResult,
+};
 use clang_sys::{self, CXCallingConv};
-use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
 use proc_macro2;
 use quote;
 use quote::TokenStreamExt;
@@ -309,7 +311,7 @@ fn args_from_ty_and_cursor(
     cursor: &clang::Cursor,
     ctx: &mut BindgenContext,
 ) -> Vec<(Option<String>, TypeId)> {
-    let cursor_args = cursor.args().unwrap().into_iter();
+    let cursor_args = cursor.args().unwrap_or_default().into_iter();
     let type_args = ty.args().unwrap_or_default().into_iter();
 
     // Argument types can be found in either the cursor or the type, but argument names may only be
@@ -375,9 +377,14 @@ impl FunctionSig {
             return Err(ParseError::Continue);
         }
 
-        // Don't parse operatorxx functions in C++
         let spelling = cursor.spelling();
-        if spelling.starts_with("operator") {
+
+        // Don't parse operatorxx functions in C++
+        let is_operator = |spelling: &str| {
+            spelling.starts_with("operator") &&
+                !clang::is_valid_identifier(spelling)
+        };
+        if is_operator(&spelling) {
             return Err(ParseError::Continue);
         }
 
@@ -419,7 +426,16 @@ impl FunctionSig {
                     }
                     CXChildVisit_Continue
                 });
-                args
+
+                if args.is_empty() {
+                    // FIXME(emilio): Sometimes libclang doesn't expose the
+                    // right AST for functions tagged as stdcall and such...
+                    //
+                    // https://bugs.llvm.org/show_bug.cgi?id=45919
+                    args_from_ty_and_cursor(&ty, &cursor, ctx)
+                } else {
+                    args
+                }
             }
         };
 
@@ -479,7 +495,15 @@ impl FunctionSig {
         } else {
             ty.ret_type().ok_or(ParseError::Continue)?
         };
-        let ret = Item::from_ty_or_ref(ty_ret_type, cursor, None, ctx);
+
+        let ret = if is_constructor && ctx.is_target_wasm32() {
+            // Constructors in Clang wasm32 target return a pointer to the object
+            // being constructed.
+            let void = Item::builtin_type(TypeKind::Void, false, ctx);
+            Item::builtin_type(TypeKind::Pointer(void), false, ctx)
+        } else {
+            Item::from_ty_or_ref(ty_ret_type, cursor, None, ctx)
+        };
 
         // Clang plays with us at "find the calling convention", see #549 and
         // co. This seems to be a better fix than that commit.

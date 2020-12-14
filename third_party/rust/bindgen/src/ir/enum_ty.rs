@@ -3,12 +3,11 @@
 use super::super::codegen::EnumVariation;
 use super::context::{BindgenContext, TypeId};
 use super::item::Item;
-use super::ty::TypeKind;
-use clang;
-use ir::annotations::Annotations;
-use ir::item::ItemCanonicalPath;
-use parse::{ClangItemParser, ParseError};
-use regex_set::RegexSet;
+use super::ty::{Type, TypeKind};
+use crate::clang;
+use crate::ir::annotations::Annotations;
+use crate::parse::{ClangItemParser, ParseError};
+use crate::regex_set::RegexSet;
 
 /// An enum representing custom handling that can be given to a variant.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -69,15 +68,17 @@ impl Enum {
             .and_then(|et| Item::from_ty(&et, declaration, None, ctx).ok());
         let mut variants = vec![];
 
+        let variant_ty =
+            repr.and_then(|r| ctx.resolve_type(r).safe_canonical_type(ctx));
+        let is_bool = variant_ty.map_or(false, Type::is_bool);
+
         // Assume signedness since the default type by the C standard is an int.
-        let is_signed = repr
-            .and_then(|r| ctx.resolve_type(r).safe_canonical_type(ctx))
-            .map_or(true, |ty| match *ty.kind() {
-                TypeKind::Int(ref int_kind) => int_kind.is_signed(),
-                ref other => {
-                    panic!("Since when enums can be non-integers? {:?}", other)
-                }
-            });
+        let is_signed = variant_ty.map_or(true, |ty| match *ty.kind() {
+            TypeKind::Int(ref int_kind) => int_kind.is_signed(),
+            ref other => {
+                panic!("Since when enums can be non-integers? {:?}", other)
+            }
+        });
 
         let type_name = ty.spelling();
         let type_name = if type_name.is_empty() {
@@ -90,7 +91,9 @@ impl Enum {
         let definition = declaration.definition().unwrap_or(declaration);
         definition.visit(|cursor| {
             if cursor.kind() == CXCursor_EnumConstantDecl {
-                let value = if is_signed {
+                let value = if is_bool {
+                    cursor.enum_val_boolean().map(EnumVariantValue::Boolean)
+                } else if is_signed {
                     cursor.enum_val_signed().map(EnumVariantValue::Signed)
                 } else {
                     cursor.enum_val_unsigned().map(EnumVariantValue::Unsigned)
@@ -149,7 +152,7 @@ impl Enum {
         enums: &RegexSet,
         item: &Item,
     ) -> bool {
-        let path = item.canonical_path(ctx);
+        let path = item.path_for_whitelisting(ctx);
         let enum_ty = item.expect_type();
 
         if enums.matches(&path[1..].join("::")) {
@@ -234,6 +237,9 @@ pub struct EnumVariant {
 /// A constant value assigned to an enumeration variant.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum EnumVariantValue {
+    /// A boolean constant.
+    Boolean(bool),
+
     /// A signed constant.
     Signed(i64),
 

@@ -15,7 +15,7 @@ use std::panic;
 mod log_stubs;
 
 mod options;
-use options::builder_from_flags;
+use crate::options::builder_from_flags;
 
 fn clang_version_check() {
     let version = clang_version();
@@ -27,8 +27,6 @@ fn clang_version_check() {
         Some((4, 0))
     } else if cfg!(feature = "testing_only_libclang_3_9") {
         Some((3, 9))
-    } else if cfg!(feature = "testing_only_libclang_3_8") {
-        Some((3, 8))
     } else {
         None
     };
@@ -85,4 +83,33 @@ fn print_verbose_err() {
         "Otherwise, please file an issue at \
          https://github.com/rust-lang/rust-bindgen/issues/new"
     );
+}
+
+#[cfg(test)]
+mod test {
+    fn build_flags_output_helper(builder: &bindgen::Builder) {
+        let mut command_line_flags = builder.command_line_flags();
+        command_line_flags.insert(0, "bindgen".to_string());
+
+        let flags_quoted: Vec<String> = command_line_flags
+            .iter()
+            .map(|x| format!("{}", shlex::quote(x)))
+            .collect();
+        let flags_str = flags_quoted.join(" ");
+        println!("{}", flags_str);
+
+        let (builder, _output, _verbose) =
+            crate::options::builder_from_flags(command_line_flags.into_iter())
+                .unwrap();
+        builder.generate().expect("failed to generate bindings");
+    }
+
+    #[test]
+    fn commandline_multiple_headers() {
+        let bindings = bindgen::Builder::default()
+            .header("tests/headers/char.h")
+            .header("tests/headers/func_ptr.h")
+            .header("tests/headers/16-byte-alignment.h");
+        build_flags_output_helper(&bindings);
+    }
 }

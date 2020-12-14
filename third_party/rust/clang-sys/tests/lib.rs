@@ -29,6 +29,8 @@ fn parse() {
 #[test]
 fn test() {
     load().unwrap();
+    let library = get_library().unwrap();
+    println!("{:?} ({:?})", library.version(), library.path());
     parse();
     unload().unwrap();
 }

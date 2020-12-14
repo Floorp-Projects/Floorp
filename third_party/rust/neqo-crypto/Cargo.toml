@@ -1,6 +1,6 @@
 [package]
 name = "neqo-crypto"
-version = "0.4.16"
+version = "0.4.18"
 authors = ["Martin Thomson <mt@lowentropy.net>"]
 edition = "2018"
 build = "build.rs"
@@ -11,7 +11,7 @@ neqo-common = { path = "../neqo-common" }
 log = {version = "0.4.0", default-features = false}
 
 [build-dependencies]
-bindgen = {version = "0.53.2", default-features = false, features= ["runtime"]}
+bindgen = {version = "0.56", default-features = false, features= ["runtime"]}
 serde = "1.0"
 serde_derive = "1.0"
 toml = "0.4"

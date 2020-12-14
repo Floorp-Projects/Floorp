@@ -1,7 +1,7 @@
-use ir::comp::{CompInfo, CompKind, Field, FieldMethods};
-use ir::context::BindgenContext;
-use ir::item::{IsOpaque, Item};
-use ir::ty::{TypeKind, RUST_DERIVE_IN_ARRAY_LIMIT};
+use crate::ir::comp::{CompInfo, CompKind, Field, FieldMethods};
+use crate::ir::context::BindgenContext;
+use crate::ir::item::{IsOpaque, Item};
+use crate::ir::ty::{TypeKind, RUST_DERIVE_IN_ARRAY_LIMIT};
 use proc_macro2;
 
 /// Generate a manual implementation of `PartialEq` trait for the

@@ -19,19 +19,19 @@ use super::module::{Module, ModuleKind};
 use super::template::{TemplateInstantiation, TemplateParameters};
 use super::traversal::{self, Edge, ItemTraversal};
 use super::ty::{FloatKind, Type, TypeKind};
-use callbacks::ParseCallbacks;
+use crate::callbacks::ParseCallbacks;
+use crate::clang::{self, Cursor};
+use crate::parse::ClangItemParser;
+use crate::BindgenOptions;
+use crate::{Entry, HashMap, HashSet};
 use cexpr;
-use clang::{self, Cursor};
 use clang_sys;
-use parse::ClangItemParser;
 use proc_macro2::{Ident, Span};
 use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::HashMap as StdHashMap;
 use std::iter::IntoIterator;
 use std::mem;
-use BindgenOptions;
-use {Entry, HashMap, HashSet};
 
 /// An identifier for some kind of IR item.
 #[derive(Debug, Copy, Clone, Eq, PartialOrd, Ord, Hash)]
@@ -507,46 +507,12 @@ impl<'ctx> WhitelistedItemsTraversal<'ctx> {
     }
 }
 
-const HOST_TARGET: &'static str =
-    include_str!(concat!(env!("OUT_DIR"), "/host-target.txt"));
-
-/// Returns the effective target, and whether it was explicitly specified on the
-/// clang flags.
-fn find_effective_target(clang_args: &[String]) -> (String, bool) {
-    use std::env;
-
-    let mut args = clang_args.iter();
-    while let Some(opt) = args.next() {
-        if opt.starts_with("--target=") {
-            let mut split = opt.split('=');
-            split.next();
-            return (split.next().unwrap().to_owned(), true);
-        }
-
-        if opt == "-target" {
-            if let Some(target) = args.next() {
-                return (target.clone(), true);
-            }
-        }
-    }
-
-    // If we're running from a build script, try to find the cargo target.
-    if let Ok(t) = env::var("TARGET") {
-        return (t, false);
-    }
-
-    (HOST_TARGET.to_owned(), false)
-}
-
 impl BindgenContext {
     /// Construct the context for the given `options`.
     pub(crate) fn new(options: BindgenOptions) -> Self {
         // TODO(emilio): Use the CXTargetInfo here when available.
         //
         // see: https://reviews.llvm.org/D32389
-        let (effective_target, explicit_target) =
-            find_effective_target(&options.clang_args);
-
         let index = clang::Index::new(false, true);
 
         let parse_options =
@@ -555,19 +521,11 @@ impl BindgenContext {
         let translation_unit = {
             let _t =
                 Timer::new("translation_unit").with_output(options.time_phases);
-            let clang_args = if explicit_target {
-                Cow::Borrowed(&options.clang_args)
-            } else {
-                let mut args = Vec::with_capacity(options.clang_args.len() + 1);
-                args.push(format!("--target={}", effective_target));
-                args.extend_from_slice(&options.clang_args);
-                Cow::Owned(args)
-            };
 
             clang::TranslationUnit::parse(
                 &index,
                 "",
-                &clang_args,
+                &options.clang_args,
                 &options.input_unsaved_files,
                 parse_options,
             ).expect("libclang error; possible causes include:
@@ -580,22 +538,6 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         };
 
         let target_info = clang::TargetInfo::new(&translation_unit);
-
-        #[cfg(debug_assertions)]
-        {
-            if let Some(ref ti) = target_info {
-                if effective_target == HOST_TARGET {
-                    assert_eq!(
-                        ti.pointer_width / 8,
-                        mem::size_of::<*mut ()>(),
-                        "{:?} {:?}",
-                        effective_target,
-                        HOST_TARGET
-                    );
-                }
-            }
-        }
-
         let root_module = Self::build_root_module(ItemId(0));
         let root_module_id = root_module.id().as_module_id_unchecked();
 
@@ -632,6 +574,14 @@ If you encounter an error missing from this list, please file an issue or a PR!"
             have_destructor: None,
             has_type_param_in_array: None,
             has_float: None,
+        }
+    }
+
+    /// Returns `true` if the target architecture is wasm32
+    pub fn is_target_wasm32(&self) -> bool {
+        match self.target_info {
+            Some(ref ti) => ti.triple.starts_with("wasm32-"),
+            None => false,
         }
     }
 
@@ -864,7 +814,9 @@ If you encounter an error missing from this list, please file an issue or a PR!"
                 "return" | "Self" | "self" | "sizeof" | "static" |
                 "struct" | "super" | "trait" | "true" | "type" | "typeof" |
                 "unsafe" | "unsized" | "use" | "virtual" | "where" |
-                "while" | "yield" | "bool" | "_" => true,
+                "while" | "yield" | "str" | "bool" | "f32" | "f64" |
+                "usize" | "isize" | "u128" | "i128" | "u64" | "i64" |
+                "u32" | "i32" | "u16" | "i16" | "u8" | "i8" | "_" => true,
                 _ => false,
             }
         {
@@ -2398,15 +2350,15 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         self.codegen_items = Some(codegen_items);
 
         for item in self.options().whitelisted_functions.unmatched_items() {
-            error!("unused option: --whitelist-function {}", item);
+            warn!("unused option: --whitelist-function {}", item);
         }
 
         for item in self.options().whitelisted_vars.unmatched_items() {
-            error!("unused option: --whitelist-var {}", item);
+            warn!("unused option: --whitelist-var {}", item);
         }
 
         for item in self.options().whitelisted_types.unmatched_items() {
-            error!("unused option: --whitelist-type {}", item);
+            warn!("unused option: --whitelist-type {}", item);
         }
     }
 
@@ -2631,6 +2583,18 @@ If you encounter an error missing from this list, please file an issue or a PR!"
     pub fn no_copy_by_name(&self, item: &Item) -> bool {
         let name = item.path_for_whitelisting(self)[1..].join("::");
         self.options().no_copy_types.matches(&name)
+    }
+
+    /// Check if `--no-debug` flag is enabled for this item.
+    pub fn no_debug_by_name(&self, item: &Item) -> bool {
+        let name = item.path_for_whitelisting(self)[1..].join("::");
+        self.options().no_debug_types.matches(&name)
+    }
+
+    /// Check if `--no-default` flag is enabled for this item.
+    pub fn no_default_by_name(&self, item: &Item) -> bool {
+        let name = item.path_for_whitelisting(self)[1..].join("::");
+        self.options().no_default_types.matches(&name)
     }
 
     /// Check if `--no-hash` flag is enabled for this item.

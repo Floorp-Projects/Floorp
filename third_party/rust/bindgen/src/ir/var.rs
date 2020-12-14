@@ -1,15 +1,19 @@
 //! Intermediate representation of variables.
 
+use super::super::codegen::MacroTypeVariation;
 use super::context::{BindgenContext, TypeId};
 use super::dot::DotAttributes;
 use super::function::cursor_mangling;
 use super::int::IntKind;
 use super::item::Item;
 use super::ty::{FloatKind, TypeKind};
-use callbacks::MacroParsingBehavior;
+use crate::callbacks::MacroParsingBehavior;
+use crate::clang;
+use crate::clang::ClangToken;
+use crate::parse::{
+    ClangItemParser, ClangSubItemParser, ParseError, ParseResult,
+};
 use cexpr;
-use clang;
-use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
 use std::io;
 use std::num::Wrapping;
 
@@ -114,9 +118,12 @@ impl DotAttributes for Var {
 }
 
 // TODO(emilio): we could make this more (or less) granular, I guess.
-fn default_macro_constant_type(value: i64) -> IntKind {
-    if value < 0 {
-        if value < i32::min_value() as i64 {
+fn default_macro_constant_type(ctx: &BindgenContext, value: i64) -> IntKind {
+    if value < 0 ||
+        ctx.options().default_macro_constant_type ==
+            MacroTypeVariation::Signed
+    {
+        if value < i32::min_value() as i64 || value > i32::max_value() as i64 {
             IntKind::I64
         } else {
             IntKind::I32
@@ -126,6 +133,54 @@ fn default_macro_constant_type(value: i64) -> IntKind {
     } else {
         IntKind::U32
     }
+}
+
+/// Determines whether a set of tokens from a CXCursor_MacroDefinition
+/// represent a function-like macro. If so, calls the func_macro callback
+/// and returns `Err(ParseError::Continue)` to signal to skip further
+/// processing. If conversion to UTF-8 fails (it is performed only where it
+/// should be infallible), then `Err(ParseError::Continue)` is returned as well.
+fn handle_function_macro(
+    cursor: &clang::Cursor,
+    tokens: &[ClangToken],
+    callbacks: &dyn crate::callbacks::ParseCallbacks,
+) -> Result<(), ParseError> {
+    // TODO: Hoist the `is_macro_function_like` check into this function's
+    // caller, and thus avoid allocating the `tokens` vector for non-functional
+    // macros.
+    let is_functional_macro = cursor.is_macro_function_like();
+
+    if !is_functional_macro {
+        return Ok(());
+    }
+
+    let is_closing_paren = |t: &ClangToken| {
+        // Test cheap token kind before comparing exact spellings.
+        t.kind == clang_sys::CXToken_Punctuation && t.spelling() == b")"
+    };
+    let boundary = tokens.iter().position(is_closing_paren);
+
+    let mut spelled = tokens.iter().map(ClangToken::spelling);
+    // Add 1, to convert index to length.
+    let left = spelled
+        .by_ref()
+        .take(boundary.ok_or(ParseError::Continue)? + 1);
+    let left = left.collect::<Vec<_>>().concat();
+    let left = String::from_utf8(left).map_err(|_| ParseError::Continue)?;
+    let right = spelled;
+    // Drop last token with LLVM < 4.0, due to an LLVM bug.
+    //
+    // See:
+    //   https://bugs.llvm.org//show_bug.cgi?id=9069
+    let len = match (right.len(), crate::clang_version().parsed) {
+        (len, Some((v, _))) if len > 0 && v < 4 => len - 1,
+        (len, _) => len,
+    };
+    let right: Vec<_> = right.take(len).collect();
+    callbacks.func_macro(&left, &right);
+
+    // We handled the macro, skip future macro processing.
+    Err(ParseError::Continue)
 }
 
 impl ClangSubItemParser for Var {
@@ -138,6 +193,8 @@ impl ClangSubItemParser for Var {
         use clang_sys::*;
         match cursor.kind() {
             CXCursor_MacroDefinition => {
+                let tokens: Vec<_> = cursor.tokens().iter().collect();
+
                 if let Some(callbacks) = ctx.parse_callbacks() {
                     match callbacks.will_parse_macro(&cursor.spelling()) {
                         MacroParsingBehavior::Ignore => {
@@ -145,9 +202,11 @@ impl ClangSubItemParser for Var {
                         }
                         MacroParsingBehavior::Default => {}
                     }
+
+                    handle_function_macro(&cursor, &tokens, callbacks)?;
                 }
 
-                let value = parse_macro(ctx, &cursor);
+                let value = parse_macro(ctx, &tokens);
 
                 let (id, value) = match value {
                     Some(v) => v,
@@ -209,7 +268,7 @@ impl ClangSubItemParser for Var {
                             .parse_callbacks()
                             .and_then(|c| c.int_macro(&name, value))
                             .unwrap_or_else(|| {
-                                default_macro_constant_type(value)
+                                default_macro_constant_type(&ctx, value)
                             });
 
                         (TypeKind::Int(kind), VarType::Int(value))
@@ -314,11 +373,14 @@ impl ClangSubItemParser for Var {
 /// Try and parse a macro using all the macros parsed until now.
 fn parse_macro(
     ctx: &BindgenContext,
-    cursor: &clang::Cursor,
+    tokens: &[ClangToken],
 ) -> Option<(Vec<u8>, cexpr::expr::EvalResult)> {
     use cexpr::expr;
 
-    let mut cexpr_tokens = cursor.cexpr_tokens();
+    let mut cexpr_tokens: Vec<_> = tokens
+        .iter()
+        .filter_map(ClangToken::as_cexpr_token)
+        .collect();
 
     let parser = expr::IdentifierParser::new(ctx.parsed_macros());
 

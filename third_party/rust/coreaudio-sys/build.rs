@@ -11,7 +11,12 @@ fn sdk_path(target: &str) -> Result<String, std::io::Error> {
 
     let sdk = if target.contains("apple-darwin") {
         "macosx"
-    } else if target.contains("apple-ios") {
+    } else if target == "x86_64-apple-ios" || target == "i386-apple-ios" {
+        "iphonesimulator"
+    } else if target == "aarch64-apple-ios"
+        || target == "armv7-apple-ios"
+        || target == "armv7s-apple-ios"
+    {
         "iphoneos"
     } else {
         unreachable!();
@@ -37,7 +42,7 @@ fn build(sdk_path: Option<&str>, target: &str) {
     use std::env;
     use std::path::PathBuf;
 
-    let mut headers = vec![];
+    let mut headers: Vec<&'static str> = vec![];
 
     #[cfg(feature = "audio_toolbox")]
     {
@@ -47,14 +52,19 @@ fn build(sdk_path: Option<&str>, target: &str) {
 
     #[cfg(feature = "audio_unit")]
     {
-        println!("cargo:rustc-link-lib=framework=AudioUnit");
+        println!("cargo:rustc-link-lib=framework=AudioToolbox");
         headers.push("AudioUnit/AudioUnit.h");
     }
 
     #[cfg(feature = "core_audio")]
     {
         println!("cargo:rustc-link-lib=framework=CoreAudio");
-        headers.push("CoreAudio/CoreAudio.h");
+
+        if target.contains("apple-ios") {
+            headers.push("CoreAudio/CoreAudioTypes.h");
+        } else {
+            headers.push("CoreAudio/CoreAudio.h");
+        }
     }
 
     #[cfg(feature = "open_al")]
@@ -79,12 +89,28 @@ fn build(sdk_path: Option<&str>, target: &str) {
     // Begin building the bindgen params.
     let mut builder = bindgen::Builder::default();
 
+    // See https://github.com/rust-lang/rust-bindgen/issues/1211
+    // Technically according to the llvm mailing list, the argument to clang here should be
+    // -arch arm64 but it looks cleaner to just change the target.
+    let target = if target == "aarch64-apple-ios" {
+        "arm64-apple-ios"
+    } else if target == "aarch64-apple-darwin" {
+        "arm64-apple-darwin"
+    } else {
+        target
+    };
     builder = builder.size_t_is_usize(true);
 
     builder = builder.clang_args(&[&format!("--target={}", target)]);
 
     if let Some(sdk_path) = sdk_path {
         builder = builder.clang_args(&["-isysroot", sdk_path]);
+    }
+    if target.contains("apple-ios") {
+        // time.h as has a variable called timezone that conflicts with some of the objective-c
+        // calls from NSCalendar.h in the Foundation framework. This removes that one variable.
+        builder = builder.blacklist_item("timezone");
+        builder = builder.blacklist_item("objc_object");
     }
 
     let meta_header: Vec<_> = headers
@@ -95,9 +121,7 @@ fn build(sdk_path: Option<&str>, target: &str) {
     builder = builder.header_contents("coreaudio.h", &meta_header.concat());
 
     // Generate the bindings.
-    builder = builder
-        .trust_clang_mangling(false)
-        .derive_default(true);
+    builder = builder.trust_clang_mangling(false).derive_default(true);
 
     let bindings = builder.generate().expect("unable to generate bindings");
 

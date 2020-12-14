@@ -1,7 +1,7 @@
 //! A public API for more fine-grained customization of bindgen behavior.
 
-pub use ir::enum_ty::{EnumVariantCustomBehavior, EnumVariantValue};
-pub use ir::int::IntKind;
+pub use crate::ir::enum_ty::{EnumVariantCustomBehavior, EnumVariantValue};
+pub use crate::ir::int::IntKind;
 use std::fmt;
 use std::panic::UnwindSafe;
 
@@ -35,9 +35,18 @@ pub trait ParseCallbacks: fmt::Debug + UnwindSafe {
         None
     }
 
-    /// This will be run on every string macro. The callback can not influence the further
+    /// This will be run on every string macro. The callback cannot influence the further
     /// treatment of the macro, but may use the value to generate additional code or configuration.
     fn str_macro(&self, _name: &str, _value: &[u8]) {}
+
+    /// This will be run on every function-like macro. The callback cannot
+    /// influence the further treatment of the macro, but may use the value to
+    /// generate additional code or configuration.
+    ///
+    /// The first parameter represents the name and argument list (including the
+    /// parentheses) of the function-like macro. The second parameter represents
+    /// the expansion of the macro as a sequence of tokens.
+    fn func_macro(&self, _name: &str, _value: &[&[u8]]) {}
 
     /// This function should return whether, given an enum variant
     /// name, and value, this enum variant will forcibly be a constant.
