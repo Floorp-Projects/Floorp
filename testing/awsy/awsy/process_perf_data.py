@@ -160,7 +160,7 @@ def create_suite(
             totals_uss = parse_about_memory.calculate_memory_report_values(
                 memory_report_path, "resident-unique"
             )
-            value = totals_rss.values()[0] + sum(
+            value = list(totals_rss.values())[0] + sum(
                 [v for k, v in totals_uss.iteritems() if "Main" not in k]
             )
 
