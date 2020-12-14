@@ -582,7 +582,8 @@ class PerftestOutput(object):
             test["value"] = filters.mean(test["replicates"])
             vals.append([test["value"], name])
 
-        return _subtests.values(), sorted(vals, reverse=True)
+        # pylint W1656
+        return list(_subtests.values()), sorted(vals, reverse=True)
 
     def parseYoutubePlaybackPerformanceOutput(self, test):
         """Parse the metrics for the Youtube playback performance test.
