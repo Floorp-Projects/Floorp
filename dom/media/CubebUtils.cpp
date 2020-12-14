@@ -142,7 +142,7 @@ std::unordered_map<std::string, LABELS_MEDIA_AUDIO_BACKEND>
         {"pulse", LABELS_MEDIA_AUDIO_BACKEND::pulse},
         {"pulse-rust", LABELS_MEDIA_AUDIO_BACKEND::pulse_rust},
         {"sndio", LABELS_MEDIA_AUDIO_BACKEND::sndio},
-        {"sun", LABELS_MEDIA_AUDIO_BACKEND::sun},
+        {"sun", LABELS_MEDIA_AUDIO_BACKEND::sunaudio},
 };
 
 // Prefered samplerate, in Hz (characteristic of the hardware, mixer, platform,

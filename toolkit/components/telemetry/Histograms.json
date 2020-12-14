@@ -9955,10 +9955,10 @@
       "pulse",
       "pulse_rust",
       "sndio",
-      "sun"
+      "sunaudio"
     ],
     "description": "The operating system audio backend",
-    "bug_numbers": [1671714]
+    "bug_numbers": [1671714, 1679745]
   },
   "WEBRTC_DTLS_CIPHER": {
     "record_in_processes": ["content", "socket"],
