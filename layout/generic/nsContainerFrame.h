@@ -327,6 +327,18 @@ class nsContainerFrame : public nsSplittableFrame {
    * See nsBlockFrame::Reflow for a sample implementation.
    *
    * For more information, see https://wiki.mozilla.org/Gecko:Continuation_Model
+   *
+   * Note that Flex/GridContainerFrame doesn't use nsOverflowContinuationTracker
+   * so the above doesn't apply.  Flex/Grid containers may have items that
+   * aren't in document order between fragments, due to the 'order' property,
+   * but they do maintain the invariant that children in the same nsFrameList
+   * are in document order.  This means that when pushing/pulling items or
+   * merging lists, the result needs to be sorted to restore the order.
+   * However, given that lists are individually sorted, it's a simple merge
+   * operation of the two lists to make the result sorted.
+   * DrainExcessOverflowContainersList takes a merging function to perform that
+   * operation.  (By "document order" here we mean normal frame tree order,
+   * which is approximately flattened DOM tree order.)
    */
 
   friend class nsOverflowContinuationTracker;
