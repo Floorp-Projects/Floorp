@@ -873,9 +873,12 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   if (MarionettePrefs.useActors) {
     for (let win of this.windows) {
       const tabBrowser = browser.getTabBrowser(win);
-      for (const tab of tabBrowser.tabs) {
-        const contentBrowser = browser.getBrowserForTab(tab);
-        this.registerBrowser(contentBrowser);
+
+      if (tabBrowser) {
+        for (const tab of tabBrowser.tabs) {
+          const contentBrowser = browser.getBrowserForTab(tab);
+          this.registerBrowser(contentBrowser);
+        }
       }
     }
   } else {

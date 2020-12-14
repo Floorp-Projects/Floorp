@@ -4,12 +4,9 @@
 
 from __future__ import absolute_import
 
-import types
-
 import six
 
 from marionette_driver import errors
-
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
@@ -136,6 +133,27 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(
             self.marionette.current_chrome_window_handle, self.start_window
         )
+
+    def test_chrome_window_handles_after_session_created(self):
+        new_window = self.open_chrome_window(self.chrome_dialog)
+        self.assert_window_handles()
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles), len(self.start_windows) + 1
+        )
+        self.assertIn(new_window, self.marionette.chrome_window_handles)
+        self.assertEqual(
+            self.marionette.current_chrome_window_handle, self.start_window
+        )
+
+        chrome_window_handles = self.marionette.chrome_window_handles
+
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
+        self.assert_window_handles()
+        self.assertEqual(chrome_window_handles, self.marionette.chrome_window_handles)
+
+        self.marionette.switch_to_window(new_window)
 
     def test_window_handles_after_opening_new_tab(self):
         with self.marionette.using_context("content"):
