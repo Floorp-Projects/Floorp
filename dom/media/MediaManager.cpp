@@ -14,7 +14,6 @@
 #include "MediaTrackConstraints.h"
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackListener.h"
-#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "VideoStreamTrack.h"
 #include "VideoUtils.h"
 #include "mozilla/Base64.h"
@@ -303,7 +302,7 @@ class SourceListener : public SupportsWeakPtr {
   typedef MozPromise<bool /* aIgnored */, RefPtr<MediaMgrError>, true>
       SourceListenerPromise;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD(
       SourceListener)
 
   SourceListener();
@@ -1946,9 +1945,10 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
     // Need to ask permission to retrieve list of all devices;
     // notify frontend observer and wait for callback notification to post task.
     const char16_t* const type =
-        (aVideoInputType != MediaSourceEnum::Camera)       ? u"audio"
-        : (aAudioInputType != MediaSourceEnum::Microphone) ? u"video"
-                                                           : u"all";
+        (aVideoInputType != MediaSourceEnum::Camera)
+            ? u"audio"
+            : (aAudioInputType != MediaSourceEnum::Microphone) ? u"video"
+                                                               : u"all";
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     obs->NotifyObservers(static_cast<nsIRunnable*>(task),
                          "getUserMedia:ask-device-permission", type);

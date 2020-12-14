@@ -735,6 +735,62 @@ class ThreadSafeAutoRefCnt {
   NS_INLINE_DECL_THREADSAFE_VIRTUAL_REFCOUNTING_WITH_DESTROY(      \
       _class, delete (this), __VA_ARGS__)
 
+#if !defined(XPCOM_GLUE_AVOID_NSPR)
+class nsISerialEventTarget;
+namespace mozilla {
+// Forward-declare `GetMainThreadSerialEventTarget`, as `nsISupportsImpl.h`
+// cannot include `nsThreadUtils.h`.
+nsISerialEventTarget* GetMainThreadSerialEventTarget();
+
+namespace detail {
+using DeleteVoidFunction = void(void*);
+void ProxyDeleteVoid(const char* aRunnableName,
+                     nsISerialEventTarget* aEventTarget, void* aSelf,
+                     DeleteVoidFunction* aDeleteFunc);
+}  // namespace detail
+}  // namespace mozilla
+
+/**
+ * Helper for _WITH_DELETE_ON_EVENT_TARGET threadsafe refcounting macros which
+ * provides an implementation of `_destroy`
+ */
+#  define NS_PROXY_DELETE_TO_EVENT_TARGET(_class, _target) \
+    ::mozilla::detail::ProxyDeleteVoid(                    \
+        "ProxyDelete " #_class, _target, this,             \
+        [](void* self) { delete static_cast<_class*>(self); })
+
+/**
+ * Use this macro to declare and implement the AddRef & Release methods for a
+ * given non-XPCOM <i>_class</i> in a threadsafe manner, ensuring the
+ * destructor runs on a specific nsISerialEventTarget.
+ *
+ * DOES NOT DO REFCOUNT STABILIZATION!
+ *
+ * @param _class The name of the class implementing the method
+ * @param _target nsISerialEventTarget to run the class's destructor on
+ * @param optional override Mark the AddRef & Release methods as overrides
+ */
+#  define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET( \
+      _class, _target, ...)                                                  \
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(                      \
+        _class, NS_PROXY_DELETE_TO_EVENT_TARGET(_class, _target), __VA_ARGS__)
+
+/**
+ * Use this macro to declare and implement the AddRef & Release methods for a
+ * given non-XPCOM <i>_class</i> in a threadsafe manner, ensuring the
+ * destructor runs on the main thread.
+ *
+ * DOES NOT DO REFCOUNT STABILIZATION!
+ *
+ * @param _class The name of the class implementing the method
+ * @param optional override Mark the AddRef & Release methods as overrides
+ */
+#  define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD( \
+      _class, ...)                                                          \
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(      \
+        _class, ::mozilla::GetMainThreadSerialEventTarget(), __VA_ARGS__)
+#endif
+
 /**
  * Use this macro in interface classes that you want to be able to reference
  * using RefPtr, but don't want to provide a refcounting implemenation. The
