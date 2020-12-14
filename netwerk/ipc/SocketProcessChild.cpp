@@ -499,7 +499,10 @@ namespace {
 
 class DataResolverBase {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataResolverBase)
+  // This type is threadsafe-refcounted, as it's referenced on the socket
+  // thread, but must be destroyed on the main thread.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD(
+      DataResolverBase)
 
   DataResolverBase() = default;
 
