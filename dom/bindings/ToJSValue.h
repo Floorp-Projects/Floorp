@@ -46,6 +46,10 @@ class TypedArrayCreator;
 MOZ_MUST_USE bool ToJSValue(JSContext* aCx, const nsAString& aArgument,
                             JS::MutableHandle<JS::Value> aValue);
 
+// Treats the input as UTF-8, and throws otherwise.
+MOZ_MUST_USE bool ToJSValue(JSContext* aCx, const nsACString& aArgument,
+                            JS::MutableHandle<JS::Value> aValue);
+
 // Accept booleans.  But be careful here: if we just have a function that takes
 // a boolean argument, then any pointer that doesn't match one of our other
 // signatures/templates will get treated as a boolean, which is clearly not
