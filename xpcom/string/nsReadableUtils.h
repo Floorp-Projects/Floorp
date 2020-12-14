@@ -429,6 +429,62 @@ char16_t* CopyUnicodeTo(const nsAString& aSource, uint32_t aSrcOffset,
 void ParseString(const nsACString& aSource, char aDelimiter,
                  nsTArray<nsCString>& aArray);
 
+namespace mozilla::detail {
+
+constexpr auto kStringJoinAppendDefault =
+    [](auto& aResult, const auto& aValue) { aResult.Append(aValue); };
+
+}  // namespace mozilla::detail
+
+/**
+ * Join a sequence of items, each optionally transformed to a string, with a
+ * given separator, appending to a given string.
+ *
+ * \tparam CharType char or char16_t
+ * \tparam InputRange a range usable with range-based for
+ * \tparam Func optionally, a functor accepting a nsTSubstring<CharType>& and
+ *   an item of InputRange which appends the latter to the former
+ */
+template <
+    typename CharType, typename InputRange,
+    typename Func = const decltype(mozilla::detail::kStringJoinAppendDefault)&>
+void StringJoinAppend(
+    nsTSubstring<CharType>& aOutput,
+    const nsTLiteralString<CharType>& aSeparator, const InputRange& aInputRange,
+    Func&& aFunc = mozilla::detail::kStringJoinAppendDefault) {
+  bool first = true;
+  for (const auto& item : aInputRange) {
+    if (first) {
+      first = false;
+    } else {
+      aOutput.Append(aSeparator);
+    }
+
+    aFunc(aOutput, item);
+  }
+}
+
+/**
+ * Join a sequence of items, each optionally transformed to a string, with a
+ * given separator, returning a new string.
+ *
+ * \tparam CharType char or char16_t
+ * \tparam InputRange a range usable with range-based for
+ * \tparam Func optionally, a functor accepting a nsTSubstring<CharType>& and
+ *   an item of InputRange which appends the latter to the former
+
+ */
+template <
+    typename CharType, typename InputRange,
+    typename Func = const decltype(mozilla::detail::kStringJoinAppendDefault)&>
+auto StringJoin(const nsTLiteralString<CharType>& aSeparator,
+                const InputRange& aInputRange,
+                Func&& aFunc = mozilla::detail::kStringJoinAppendDefault) {
+  nsTAutoString<CharType> res;
+  StringJoinAppend(res, aSeparator, aInputRange, std::forward<Func>(aFunc));
+  return res;
+}
+
 /**
  * Converts case in place in the argument string.
  */

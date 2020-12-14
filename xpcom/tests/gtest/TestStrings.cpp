@@ -1705,6 +1705,74 @@ TEST_F(Strings, Split) {
   EXPECT_EQ(counter, (size_t)2);
 }
 
+TEST_F(Strings, Join) {
+  // Join a sequence of strings.
+  {
+    // 8-bit strings
+    EXPECT_EQ(""_ns, StringJoin(","_ns, std::array<nsCString, 0>{}));
+    EXPECT_EQ("foo"_ns, StringJoin(","_ns, std::array{"foo"_ns}));
+    EXPECT_EQ("foo,bar"_ns, StringJoin(","_ns, std::array{"foo"_ns, "bar"_ns}));
+
+    // 16-bit strings
+    EXPECT_EQ(u""_ns, StringJoin(u","_ns, std::array<nsString, 0>{}));
+    EXPECT_EQ(u"foo"_ns, StringJoin(u","_ns, std::array{u"foo"_ns}));
+    EXPECT_EQ(u"foo,bar"_ns,
+              StringJoin(u","_ns, std::array{u"foo"_ns, u"bar"_ns}));
+  }
+
+  // Join a sequence of strings, appending.
+  {
+    // 8-bit string
+    {
+      nsAutoCString dst{"prefix:"_ns};
+      StringJoinAppend(dst, ","_ns, std::array{"foo"_ns, "bar"_ns});
+      EXPECT_EQ("prefix:foo,bar"_ns, dst);
+    }
+
+    // 16-bit string
+    {
+      nsAutoString dst{u"prefix:"_ns};
+      StringJoinAppend(dst, u","_ns, std::array{u"foo"_ns, u"bar"_ns});
+      EXPECT_EQ(u"prefix:foo,bar"_ns, dst);
+    }
+  }
+}
+
+TEST_F(Strings, JoinWithAppendingTransformation) {
+  const auto toCString = [](nsACString& dst, int val) { dst.AppendInt(val); };
+  const auto toString = [](nsAString& dst, int val) { dst.AppendInt(val); };
+
+  // Join a sequence of elements transformed to a string.
+  {
+    // 8-bit strings
+    EXPECT_EQ(""_ns, StringJoin(","_ns, std::array<int, 0>{}, toCString));
+    EXPECT_EQ("7"_ns, StringJoin(","_ns, std::array{7}, toCString));
+    EXPECT_EQ("7,42"_ns, StringJoin(","_ns, std::array{7, 42}, toCString));
+
+    // 16-bit strings
+    EXPECT_EQ(u""_ns, StringJoin(u","_ns, std::array<int, 0>{}, toString));
+    EXPECT_EQ(u"7"_ns, StringJoin(u","_ns, std::array{7}, toString));
+    EXPECT_EQ(u"7,42"_ns, StringJoin(u","_ns, std::array{7, 42}, toString));
+  }
+
+  // Join a sequence of elements transformed to a string, appending.
+  {
+    // 8-bit string
+    {
+      nsAutoCString dst{"prefix:"_ns};
+      StringJoinAppend(dst, ","_ns, std::array{7, 42}, toCString);
+      EXPECT_EQ("prefix:7,42"_ns, dst);
+    }
+
+    // 16-bit string
+    {
+      nsAutoString dst{u"prefix:"_ns};
+      StringJoinAppend(dst, u","_ns, std::array{7, 42}, toString);
+      EXPECT_EQ(u"prefix:7,42"_ns, dst);
+    }
+  }
+}
+
 constexpr bool TestSomeChars(char c) {
   return c == 'a' || c == 'c' || c == 'e' || c == '7' || c == 'G' || c == 'Z' ||
          c == '\b' || c == '?';
