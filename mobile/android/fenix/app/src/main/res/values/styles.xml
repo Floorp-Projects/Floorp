@@ -560,16 +560,12 @@
 
     <style name="BottomSheet" parent="@style/BottomSheetBase" />
 
-    <style name="BottomSheetBasePrivate" parent="Theme.MaterialComponents.BottomSheetDialog">
+    <style name="BottomSheetBasePrivate" parent="ThemeOverlay.MaterialComponents.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:colorBackground">?foundation</item>
     </style>
 
-    <style name="BottomSheetBase" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+    <style name="BottomSheetBase" parent="ThemeOverlay.MaterialComponents.Light.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:colorBackground">?foundation</item>
     </style>
 
     <!-- Tab Tray does not present a private theme, so it needs to be separate from other bottom sheet styles -->
