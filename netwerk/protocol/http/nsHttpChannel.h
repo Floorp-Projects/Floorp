@@ -28,6 +28,7 @@
 #include "nsICorsPreflightCallback.h"
 #include "AlternateServices.h"
 #include "nsIRaceCacheWithNetwork.h"
+#include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
 #include "mozilla/net/DocumentLoadListener.h"
@@ -198,7 +199,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter);
   HttpChannelSecurityWarningReporter* GetWarningReporter();
 
-  bool DataSentToChildProcess() { return mDataSentToChildProcess; }
+  bool DataSentToChildProcess() { return LoadDataSentToChildProcess(); }
 
  public: /* internal necko use only */
   uint32_t GetRequestTime() const { return mRequestTime; }
@@ -235,9 +236,9 @@ class nsHttpChannel final : public HttpBaseChannel,
     explicit AutoCacheWaitFlags(nsHttpChannel* channel)
         : mChannel(channel), mKeep(0) {
       // Flags must be set before entering any AsyncOpenCacheEntry call.
-      mChannel->mCacheEntriesToWaitFor =
+      mChannel->StoreCacheEntriesToWaitFor(
           nsHttpChannel::WAIT_FOR_CACHE_ENTRY |
-          nsHttpChannel::WAIT_FOR_OFFLINE_CACHE_ENTRY;
+          nsHttpChannel::WAIT_FOR_OFFLINE_CACHE_ENTRY);
     }
 
     void Keep(uint32_t flags) {
@@ -247,7 +248,8 @@ class nsHttpChannel final : public HttpBaseChannel,
 
     ~AutoCacheWaitFlags() {
       // Keep only flags those are left to be wait for.
-      mChannel->mCacheEntriesToWaitFor &= mKeep;
+      mChannel->StoreCacheEntriesToWaitFor(
+          mChannel->LoadCacheEntriesToWaitFor() & mKeep);
     }
 
    private:
@@ -657,90 +659,99 @@ class nsHttpChannel final : public HttpBaseChannel,
   Atomic<bool> mIsAuthChannel;
   Atomic<bool> mAuthRetryPending;
 
+  // clang-format off
   // state flags
-  uint32_t mCachedContentIsPartial : 1;
-  uint32_t mCacheOnlyMetadata : 1;
-  uint32_t mTransactionReplaced : 1;
-  uint32_t mProxyAuthPending : 1;
-  // Set if before the first authentication attempt a custom authorization
-  // header has been set on the channel.  This will make that custom header
-  // go to the server instead of any cached credentials.
-  uint32_t mCustomAuthHeader : 1;
-  uint32_t mResuming : 1;
-  uint32_t mInitedCacheEntry : 1;
-  // True if we are loading a fallback cache entry from the
-  // application cache.
-  uint32_t mFallbackChannel : 1;
-  // True if consumer added its own If-None-Match or If-Modified-Since
-  // headers. In such a case we must not override them in the cache code
-  // and also we want to pass possible 304 code response through.
-  uint32_t mCustomConditionalRequest : 1;
-  uint32_t mFallingBack : 1;
-  uint32_t mWaitingForRedirectCallback : 1;
-  // True if mRequestTime has been set. In such a case it is safe to update
-  // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
-  uint32_t mRequestTimeInitialized : 1;
-  uint32_t mCacheEntryIsReadOnly : 1;
-  uint32_t mCacheEntryIsWriteOnly : 1;
-  // see WAIT_FOR_* constants above
-  uint32_t mCacheEntriesToWaitFor : 2;
-  // whether cache entry data write was in progress during cache entry check
-  // when true, after we finish read from cache we must check all data
-  // had been loaded from cache. If not, then an error has to be propagated
-  // to the consumer.
-  uint32_t mConcurrentCacheAccess : 1;
-  // whether the request is setup be byte-range
-  uint32_t mIsPartialRequest : 1;
-  // true iff there is AutoRedirectVetoNotifier on the stack
-  uint32_t mHasAutoRedirectVetoNotifier : 1;
-  // consumers set this to true to use cache pinning, this has effect
-  // only when the channel is in an app context
-  uint32_t mPinCacheContent : 1;
-  // True if CORS preflight has been performed
-  uint32_t mIsCorsPreflightDone : 1;
+  MOZ_ATOMIC_BITFIELDS(mAtomicBitfields5, 32, (
+    (uint32_t, CachedContentIsPartial, 1),
+    (uint32_t, CacheOnlyMetadata, 1),
+    (uint32_t, TransactionReplaced, 1),
+    (uint32_t, ProxyAuthPending, 1),
+    // Set if before the first authentication attempt a custom authorization
+    // header has been set on the channel.  This will make that custom header
+    // go to the server instead of any cached credentials.
+    (uint32_t, CustomAuthHeader, 1),
+    (uint32_t, Resuming, 1),
+    (uint32_t, InitedCacheEntry, 1),
+    // True if we are loading a fallback cache entry from the
+    // application cache.
+    (uint32_t, FallbackChannel, 1),
+    // True if consumer added its own If-None-Match or If-Modified-Since
+    // headers. In such a case we must not override them in the cache code
+    // and also we want to pass possible 304 code response through.
+    (uint32_t, CustomConditionalRequest, 1),
+    (uint32_t, FallingBack, 1),
+    (uint32_t, WaitingForRedirectCallback, 1),
+    // True if mRequestTime has been set. In such a case it is safe to update
+    // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
+    (uint32_t, RequestTimeInitialized, 1),
+    (uint32_t, CacheEntryIsReadOnly, 1),
+    (uint32_t, CacheEntryIsWriteOnly, 1),
+    // see WAIT_FOR_* constants above
+    (uint32_t, CacheEntriesToWaitFor, 2),
+    // whether cache entry data write was in progress during cache entry check
+    // when true, after we finish read from cache we must check all data
+    // had been loaded from cache. If not, then an error has to be propagated
+    // to the consumer.
+    (uint32_t, ConcurrentCacheAccess, 1),
+    // whether the request is setup be byte-range
+    (uint32_t, IsPartialRequest, 1),
+    // true iff there is AutoRedirectVetoNotifier on the stack
+    (uint32_t, HasAutoRedirectVetoNotifier, 1),
+    // consumers set this to true to use cache pinning, this has effect
+    // only when the channel is in an app context
+    (uint32_t, PinCacheContent, 1),
+    // True if CORS preflight has been performed
+    (uint32_t, IsCorsPreflightDone, 1),
 
-  // if the http transaction was performed (i.e. not cached) and
-  // the result in OnStopRequest was known to be correctly delimited
-  // by chunking, content-length, or h2 end-stream framing
-  uint32_t mStronglyFramed : 1;
+    // if the http transaction was performed (i.e. not cached) and
+    // the result in OnStopRequest was known to be correctly delimited
+    // by chunking, content-length, or h2 end-stream framing
+    (uint32_t, StronglyFramed, 1),
 
-  // true if an HTTP transaction is created for the socket thread
-  uint32_t mUsedNetwork : 1;
+    // true if an HTTP transaction is created for the socket thread
+    (uint32_t, UsedNetwork, 1),
 
-  // the next authentication request can be sent on a whole new connection
-  uint32_t mAuthConnectionRestartable : 1;
+    // the next authentication request can be sent on a whole new connection
+    (uint32_t, AuthConnectionRestartable, 1),
 
-  // True if the channel classifier has marked the channel to be cancelled due
-  // to the safe-browsing classifier rules, but the asynchronous cancellation
-  // process hasn't finished yet.
-  uint32_t mChannelClassifierCancellationPending : 1;
+    // True if the channel classifier has marked the channel to be cancelled due
+    // to the safe-browsing classifier rules, but the asynchronous cancellation
+    // process hasn't finished yet.
+    (uint32_t, ChannelClassifierCancellationPending, 1),
 
-  // True only when we are between Resume and async fire of mCallOnResume.
-  // Used to suspend any newly created pumps in mCallOnResume handler.
-  uint32_t mAsyncResumePending : 1;
+    // True only when we are between Resume and async fire of mCallOnResume.
+    // Used to suspend any newly created pumps in mCallOnResume handler.
+    (uint32_t, AsyncResumePending, 1),
 
-  // True only when we have checked whether this channel has been isolated for
-  // anti-tracking purposes.
-  uint32_t mHasBeenIsolatedChecked : 1;
-  // True only when we have determined this channel should be isolated for
-  // anti-tracking purposes.  Can never ben true unless mHasBeenIsolatedChecked
-  // is true.
-  uint32_t mIsIsolated : 1;
+    // True only when we have checked whether this channel has been isolated for
+    // anti-tracking purposes.
+    (uint32_t, HasBeenIsolatedChecked, 1),
+    // True only when we have determined this channel should be isolated for
+    // anti-tracking purposes.  Can never ben true unless HasBeenIsolatedChecked
+    // is true.
+    (uint32_t, IsIsolated, 1),
 
-  // True only when we have computed the value of the top window origin.
-  uint32_t mTopWindowOriginComputed : 1;
+    // True only when we have computed the value of the top window origin.
+    (uint32_t, TopWindowOriginComputed, 1),
 
-  // True if the data will be sent from the socket process to the
-  // content process directly.
-  uint32_t mDataSentToChildProcess : 1;
+    // True if the data will be sent from the socket process to the
+    // content process directly.
+    (uint32_t, DataSentToChildProcess, 1),
 
-  uint32_t mUseHTTPSSVC : 1;
-  uint32_t mWaitHTTPSSVCRecord : 1;
-  // Only set to true when we receive an HTTPSSVC record before the transaction
-  // is created.
-  uint32_t mHTTPSSVCTelemetryReported : 1;
+    (uint32_t, UseHTTPSSVC, 1),
+    (uint32_t, WaitHTTPSSVCRecord, 1)
+  ))
 
-  // The origin of the top window, only valid when mTopWindowOriginComputed is
+  // Broken up into two bitfields to avoid alignment requirements of uint64_t.
+  // (Too many bits used for one uint32_t.)
+  MOZ_ATOMIC_BITFIELDS(mAtomicBitfields6, 32, (
+    // Only set to true when we receive an HTTPSSVC record before the
+    // transaction is created.
+    (uint32_t, HTTPSSVCTelemetryReported, 1)
+  ))
+  // clang-format on
+
+  // The origin of the top window, only valid when TopWindowOriginComputed is
   // true.
   nsCString mTopWindowOrigin;
 
