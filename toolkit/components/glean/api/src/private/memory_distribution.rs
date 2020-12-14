@@ -2,32 +2,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::sync::Arc;
+use inherent::inherent;
 
 use super::{CommonMetricData, DistributionData, MemoryUnit, MetricId};
 
-use crate::dispatcher;
+use glean_core::traits::MemoryDistribution;
+
 use crate::ipc::{need_ipc, with_ipc_payload};
 
 /// A memory distribution metric.
 ///
 /// Memory distributions are used to accumulate and store memory measurements for analyzing distributions of the memory data.
-#[derive(Debug)]
+#[derive(Clone)]
 pub enum MemoryDistributionMetric {
     Parent {
         /// The metric's ID.
         ///
         /// **TEST-ONLY** - Do not use unless gated with `#[cfg(test)]`.
         id: MetricId,
-        inner: Arc<MemoryDistributionMetricImpl>,
+        inner: glean::private::MemoryDistributionMetric,
     },
     Child(MemoryDistributionMetricIpc),
 }
-#[derive(Debug)]
-pub struct MemoryDistributionMetricImpl {
-    inner: glean_core::metrics::MemoryDistributionMetric,
-}
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct MemoryDistributionMetricIpc(MetricId);
 
 impl MemoryDistributionMetric {
@@ -36,7 +33,7 @@ impl MemoryDistributionMetric {
         if need_ipc() {
             MemoryDistributionMetric::Child(MemoryDistributionMetricIpc(id))
         } else {
-            let inner = Arc::new(MemoryDistributionMetricImpl::new(meta, memory_unit));
+            let inner = glean::private::MemoryDistributionMetric::new(meta, memory_unit);
             MemoryDistributionMetric::Parent { id, inner }
         }
     }
@@ -52,7 +49,10 @@ impl MemoryDistributionMetric {
             }
         }
     }
+}
 
+#[inherent(pub)]
+impl MemoryDistribution for MemoryDistributionMetric {
     /// Accumulates the provided sample in the metric.
     ///
     /// ## Arguments
@@ -64,11 +64,10 @@ impl MemoryDistributionMetric {
     ///
     /// Values bigger than 1 Terabyte (2<sup>40</sup> bytes) are truncated
     /// and an `ErrorType::InvalidValue` error is recorded.
-    pub fn accumulate(&self, sample: u64) {
+    fn accumulate(&self, sample: u64) {
         match self {
             MemoryDistributionMetric::Parent { inner, .. } => {
-                let metric = Arc::clone(&inner);
-                dispatcher::launch(move || metric.accumulate(sample));
+                MemoryDistribution::accumulate(&*inner, sample);
             }
             MemoryDistributionMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -89,37 +88,50 @@ impl MemoryDistributionMetric {
     ///
     /// ## Arguments
     ///
-    /// * `storage_name` - the storage name to look into.
+    /// * `ping_name` - the storage name to look into.
     ///
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    pub fn test_get_value(&self, storage_name: &str) -> Option<DistributionData> {
+    fn test_get_value<'a, S: Into<Option<&'a str>>>(
+        &self,
+        ping_name: S,
+    ) -> Option<DistributionData> {
         match self {
-            MemoryDistributionMetric::Parent { inner, .. } => {
-                dispatcher::block_on_queue();
-                inner.test_get_value(storage_name)
+            MemoryDistributionMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
+            MemoryDistributionMetric::Child(c) => {
+                panic!("Cannot get test value for {:?} in non-parent process!", c.0)
             }
-            MemoryDistributionMetric::Child(_c) => panic!(
-                "Cannot get test value for {:?} in non-parent process!",
-                self
-            ),
         }
     }
-}
 
-impl MemoryDistributionMetricImpl {
-    pub fn new(meta: CommonMetricData, memory_unit: MemoryUnit) -> Self {
-        let inner = glean_core::metrics::MemoryDistributionMetric::new(meta, memory_unit);
-        Self { inner }
-    }
-
-    pub fn accumulate(&self, sample: u64) {
-        crate::with_glean(|glean| self.inner.accumulate(glean, sample))
-    }
-
-    pub fn test_get_value(&self, storage_name: &str) -> Option<DistributionData> {
-        crate::with_glean(move |glean| self.inner.test_get_value(glean, storage_name))
+    /// **Exported for test purposes.**
+    ///
+    /// Gets the number of recorded errors for the given error type.
+    ///
+    /// # Arguments
+    ///
+    /// * `error` - The type of error
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///
+    /// # Returns
+    ///
+    /// The number of errors recorded.
+    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+        &self,
+        error: glean::ErrorType,
+        ping_name: S,
+    ) -> i32 {
+        match self {
+            MemoryDistributionMetric::Parent { inner, .. } => {
+                inner.test_get_num_recorded_errors(error, ping_name)
+            }
+            MemoryDistributionMetric::Child(c) => panic!(
+                "Cannot get the number of recorded errors for {:?} in non-parent process!",
+                c.0
+            ),
+        }
     }
 }
 
@@ -129,7 +141,6 @@ mod test {
     use crate::{common_test::*, ipc, metrics};
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677451 lands.
     fn smoke_test_memory_distribution() {
         let _lock = lock_test();
 
@@ -154,7 +165,6 @@ mod test {
     }
 
     #[test]
-    #[ignore] // TODO: Enable them back when bug 1677451 lands.
     fn memory_distribution_child() {
         let _lock = lock_test();
 

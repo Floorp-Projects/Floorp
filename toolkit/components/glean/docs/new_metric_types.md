@@ -92,8 +92,11 @@ Each metric type has six pieces you'll need to cover:
     - Its methods should be named the same as the ones in the Rust API, transformed to `CamelCase`.
     - They should all be public.
     - Multiplex the FFI's `test_have` and `test_get` functions into a single `TestGetValue` function that returns a `mozilla::Maybe` wrapping the C++ type that best fits the metric type.
-- Include the new metric type in [`bindings/MetricTypes.h`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/MetricTypes.h)
-- Include the new files in [`moz.build`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/MetricTypes.h). The header file should be added to `EXPORTS.mozilla.glean` and the `.cpp` file should be added to `UNIFIED_SOURCES`.
+- Include the new metric type in
+  [`bindings/MetricTypes.h`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/MetricTypes.h)
+  and
+  [`build_scripts/glean_parser_ext/util.py`'s `IMPLEMENTED_CPP_TYPES`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/build_scripts/glean_parser_ext/util.py).
+- Include the new files in [`moz.build`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/MetricTypes.h). The header file should be added to `EXPORTS.mozilla.glean.bindings` and the `.cpp` file should be added to `UNIFIED_SOURCES`.
 
 ### 3. IDL
 
@@ -109,7 +112,7 @@ Each metric type has six pieces you'll need to cover:
     - In the definition of `GleanX`, member identifiers are back to `CamelCase` and need macros like `NS_IMETHODIMP`. Delegate operations to the owned `XMetric`, returning `NS_OK` no matter what in non-test methods.
     - Test-only methods can return `NS_ERROR` codes on failures, but mostly return `NS_OK` and use `undefined` in the `JS::MutableHandleValue` result to signal no value.
 
-### 5. Tests
+### 6. Tests
 
 Two languages means two test suites.
 
@@ -120,6 +123,6 @@ Two languages means two test suites.
 - **JS Tests (xpcshell)** - Add a small test case to [`xpcshell/test_Glean.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/test_Glean.js).
     - For more details, peruse the [testing docs](testing.md).
 
-### 6. API Documentation
+### 7. API Documentation
 
 TODO
