@@ -67,8 +67,12 @@ def fixSymbols(
         # because it is more forceful than `wait()`, and the Python docs warn
         # about possible deadlocks with `wait()`.
         def cleanup(fix_stacks):
-            fix_stacks.stdin.close()
-            fix_stacks.terminate()
+            for fn in [fix_stacks.stdin.close, fix_stacks.terminate]:
+
+                try:
+                    fn()
+                except OSError:
+                    pass
 
         atexit.register(cleanup, fix_stacks)
 
