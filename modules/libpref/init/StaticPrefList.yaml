@@ -6062,30 +6062,6 @@
   value: -1.0f
   mirror: always
 
-# text underline offset
-- name: layout.css.text-underline-offset.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# text underline position
-- name: layout.css.text-underline-position.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# text decoration thickness
-- name: layout.css.text-decoration-thickness.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# text decoration skip ink
-- name: layout.css.text-decoration-skip-ink.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for CSS backdrop-filter enabled?
 - name: layout.css.backdrop-filter.enabled
   type: bool
@@ -6699,12 +6675,6 @@
 
 # Are shared memory User Agent style sheets enabled?
 - name: layout.css.shared-memory-ua-sheets.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Is support for CSS text-justify property enabled?
-- name: layout.css.text-justify.enabled
   type: bool
   value: true
   mirror: always
