@@ -5,9 +5,12 @@
 package mozilla.components.feature.sitepermissions
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_AUDIBLE
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.AUTOPLAY_INAUDIBLE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.NOTIFICATION
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCAL_STORAGE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCATION
@@ -30,11 +33,15 @@ class SitePermissionsTest {
         assertEquals(NO_DECISION, sitePermissions[MICROPHONE])
         assertEquals(NO_DECISION, sitePermissions[BLUETOOTH])
         assertEquals(NO_DECISION, sitePermissions[CAMERA])
+        assertEquals(BLOCKED, sitePermissions[AUTOPLAY_AUDIBLE])
+        assertEquals(ALLOWED, sitePermissions[AUTOPLAY_INAUDIBLE])
 
         sitePermissions = sitePermissions.copy(
             location = ALLOWED,
             notification = BLOCKED,
-            microphone = NO_DECISION
+            microphone = NO_DECISION,
+            autoplayAudible = AutoplayStatus.ALLOWED,
+            autoplayInaudible = AutoplayStatus.BLOCKED
         )
 
         assertEquals(BLOCKED, sitePermissions[NOTIFICATION])
@@ -43,5 +50,41 @@ class SitePermissionsTest {
         assertEquals(NO_DECISION, sitePermissions[BLUETOOTH])
         assertEquals(NO_DECISION, sitePermissions[CAMERA])
         assertEquals(NO_DECISION, sitePermissions[LOCAL_STORAGE])
+        assertEquals(ALLOWED, sitePermissions[AUTOPLAY_AUDIBLE])
+        assertEquals(BLOCKED, sitePermissions[AUTOPLAY_INAUDIBLE])
+    }
+
+    @Test
+    fun `AutoplayStatus - toStatus`() {
+        var sitePermissions = SitePermissions(
+            origin = "mozilla.dev",
+            autoplayInaudible = AutoplayStatus.BLOCKED,
+            autoplayAudible = AutoplayStatus.BLOCKED,
+            savedAt = 0
+        )
+
+        assertEquals(BLOCKED, sitePermissions.autoplayAudible.toStatus())
+        assertEquals(BLOCKED, sitePermissions.autoplayInaudible.toStatus())
+
+        sitePermissions = sitePermissions.copy(
+            autoplayAudible = AutoplayStatus.ALLOWED,
+            autoplayInaudible = AutoplayStatus.ALLOWED
+        )
+
+        assertEquals(ALLOWED, sitePermissions.autoplayAudible.toStatus())
+        assertEquals(ALLOWED, sitePermissions.autoplayInaudible.toStatus())
+    }
+
+    @Test
+    fun `Status to AutoplayStatus`() {
+        assertEquals(AutoplayStatus.BLOCKED, BLOCKED.toAutoplayStatus())
+        assertEquals(AutoplayStatus.ALLOWED, ALLOWED.toAutoplayStatus())
+        assertEquals(AutoplayStatus.BLOCKED, NO_DECISION.toAutoplayStatus())
+    }
+
+    @Test
+    fun `AutoplayStatus ids are aligned with Status`() {
+        assertEquals(AutoplayStatus.BLOCKED.id, AutoplayStatus.BLOCKED.id)
+        assertEquals(AutoplayStatus.ALLOWED, AutoplayStatus.ALLOWED)
     }
 }

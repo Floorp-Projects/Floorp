@@ -14,9 +14,11 @@ import mozilla.components.concept.engine.permission.Permission.ContentNotificati
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.Permission.Generic
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -57,8 +59,8 @@ class SitePermissionsRulesTest {
             location = BLOCKED,
             notification = ASK_TO_ALLOW,
             microphone = BLOCKED,
-            autoplayAudible = ASK_TO_ALLOW,
-            autoplayInaudible = BLOCKED,
+            autoplayAudible = AutoplayAction.BLOCKED,
+            autoplayInaudible = AutoplayAction.ALLOWED,
             persistentStorage = BLOCKED,
             mediaKeySystemAccess = ASK_TO_ALLOW
         )
@@ -83,11 +85,11 @@ class SitePermissionsRulesTest {
 
         doReturn(listOf(Permission.ContentAutoPlayAudible())).`when`(mockRequest).permissions
         action = rules.getActionFrom(mockRequest)
-        assertEquals(action, rules.autoplayAudible)
+        assertEquals(action, rules.autoplayAudible.toAction())
 
         doReturn(listOf(Permission.ContentAutoPlayInaudible())).`when`(mockRequest).permissions
         action = rules.getActionFrom(mockRequest)
-        assertEquals(action, rules.autoplayInaudible)
+        assertEquals(action, rules.autoplayInaudible.toAction())
 
         doReturn(listOf(Generic("", ""))).`when`(mockRequest).permissions
         action = rules.getActionFrom(mockRequest)
@@ -110,8 +112,8 @@ class SitePermissionsRulesTest {
             persistentStorage = BLOCKED,
             notification = ASK_TO_ALLOW,
             microphone = BLOCKED,
-            autoplayInaudible = ASK_TO_ALLOW,
-            autoplayAudible = ASK_TO_ALLOW,
+            autoplayInaudible = AutoplayAction.ALLOWED,
+            autoplayAudible = AutoplayAction.BLOCKED,
             mediaKeySystemAccess = ASK_TO_ALLOW
         )
 
@@ -126,8 +128,8 @@ class SitePermissionsRulesTest {
             location = BLOCKED,
             notification = ASK_TO_ALLOW,
             microphone = ASK_TO_ALLOW,
-            autoplayInaudible = BLOCKED,
-            autoplayAudible = BLOCKED,
+            autoplayInaudible = AutoplayAction.ALLOWED,
+            autoplayAudible = AutoplayAction.BLOCKED,
             persistentStorage = BLOCKED,
             mediaKeySystemAccess = ASK_TO_ALLOW
         )
@@ -145,8 +147,8 @@ class SitePermissionsRulesTest {
                 localStorage = Status.BLOCKED,
                 notification = Status.NO_DECISION,
                 microphone = Status.BLOCKED,
-                autoplayInaudible = Status.NO_DECISION,
-                autoplayAudible = Status.NO_DECISION,
+                autoplayInaudible = AutoplayStatus.ALLOWED,
+                autoplayAudible = AutoplayStatus.BLOCKED,
                 mediaKeySystemAccess = Status.BLOCKED,
                 savedAt = 1L
         )
@@ -156,8 +158,8 @@ class SitePermissionsRulesTest {
                 location = BLOCKED,
                 notification = ASK_TO_ALLOW,
                 microphone = BLOCKED,
-                autoplayInaudible = ASK_TO_ALLOW,
-                autoplayAudible = ASK_TO_ALLOW,
+                autoplayInaudible = AutoplayAction.ALLOWED,
+                autoplayAudible = AutoplayAction.BLOCKED,
                 persistentStorage = BLOCKED,
                 mediaKeySystemAccess = BLOCKED
         )
@@ -174,5 +176,11 @@ class SitePermissionsRulesTest {
         assertEquals(expectedSitePermission.localStorage, convertedSitePermissions.localStorage)
         assertEquals(expectedSitePermission.mediaKeySystemAccess, convertedSitePermissions.mediaKeySystemAccess)
         assertEquals(expectedSitePermission.savedAt, convertedSitePermissions.savedAt)
+    }
+
+    @Test
+    fun `AutoplayAction - toAutoplayStatus`() {
+        assertEquals(AutoplayStatus.ALLOWED, AutoplayAction.ALLOWED.toAutoplayStatus())
+        assertEquals(AutoplayStatus.BLOCKED, AutoplayAction.BLOCKED.toAutoplayStatus())
     }
 }

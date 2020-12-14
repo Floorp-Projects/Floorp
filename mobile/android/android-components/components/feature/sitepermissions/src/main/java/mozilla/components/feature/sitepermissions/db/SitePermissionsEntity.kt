@@ -38,10 +38,10 @@ internal data class SitePermissionsEntity(
     var localStorage: SitePermissions.Status,
 
     @ColumnInfo(name = "autoplay_audible")
-    var autoplayAudible: SitePermissions.Status,
+    var autoplayAudible: SitePermissions.AutoplayStatus,
 
     @ColumnInfo(name = "autoplay_inaudible")
-    var autoplayInaudible: SitePermissions.Status,
+    var autoplayInaudible: SitePermissions.AutoplayStatus,
 
     @ColumnInfo(name = "media_key_system_access")
     var mediaKeySystemAccess: SitePermissions.Status,

@@ -26,7 +26,7 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ALLOWED
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.support.base.feature.PermissionsFeature
@@ -91,8 +91,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
         layout.toolbar.display.setOnPermissionIndicatorClickedListener {
             sitePermissionsFeature.withFeature { feature ->
                 feature.sitePermissionsRules = feature.sitePermissionsRules?.copy(
-                    autoplayAudible = ALLOWED,
-                    autoplayInaudible = ALLOWED
+                    autoplayAudible = AutoplayAction.ALLOWED,
+                    autoplayInaudible = AutoplayAction.ALLOWED
                 )
                 components.sessionUseCases.reload()
             }
@@ -179,8 +179,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 storage = components.permissionStorage,
                 fragmentManager = parentFragmentManager,
                 sitePermissionsRules = SitePermissionsRules(
-                    autoplayAudible = SitePermissionsRules.AutoplayAction.BLOCKED,
-                    autoplayInaudible = SitePermissionsRules.AutoplayAction.BLOCKED,
+                    autoplayAudible = AutoplayAction.BLOCKED,
+                    autoplayInaudible = AutoplayAction.BLOCKED,
                     camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     location = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     notification = SitePermissionsRules.Action.ASK_TO_ALLOW,

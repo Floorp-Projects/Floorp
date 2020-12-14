@@ -17,7 +17,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 /**
  * Internal database for saving site permissions.
  */
-@Database(entities = [SitePermissionsEntity::class], version = 4)
+@Database(entities = [SitePermissionsEntity::class], version = 5)
 @TypeConverters(StatusConverter::class)
 internal abstract class SitePermissionsDatabase : RoomDatabase() {
     abstract fun sitePermissionsDao(): SitePermissionsDao
@@ -40,6 +40,8 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
                 Migrations.migration_2_3
             ).addMigrations(
                 Migrations.migration_3_4
+            ).addMigrations(
+                Migrations.migration_4_5
             ).build().also { instance = it }
         }
     }
@@ -47,6 +49,8 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
 
 @Suppress("unused")
 internal class StatusConverter {
+    private val autoplayStatusArray = SitePermissions.AutoplayStatus.values()
+
     private val statusArray = SitePermissions.Status.values()
 
     @TypeConverter
@@ -57,6 +61,16 @@ internal class StatusConverter {
     @TypeConverter
     fun toStatus(index: Int): SitePermissions.Status? {
         return statusArray.find { it.id == index }
+    }
+
+    @TypeConverter
+    fun toInt(status: SitePermissions.AutoplayStatus): Int {
+        return status.id
+    }
+
+    @TypeConverter
+    fun toAutoplayStatus(index: Int): SitePermissions.AutoplayStatus {
+        return autoplayStatusArray.find { it.id == index } ?: SitePermissions.AutoplayStatus.BLOCKED
     }
 }
 
@@ -111,6 +125,17 @@ internal object Migrations {
                 // default is NO_DECISION
                 database.execSQL("UPDATE site_permissions SET media_key_system_access = 0")
             }
+        }
+    }
+
+    @Suppress("MagicNumber")
+    val migration_4_5 = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Updating any previous autoplay sites with 0 (NO_DECISION) with the supported values
+            // Autoplay permission doesn't support 0 (NO_DECISION),
+            // it only supports 1 (ALLOWED) or -1 (BLOCKED)
+            database.execSQL("UPDATE site_permissions SET autoplay_audible = -1 WHERE autoplay_audible = 0 ")
+            database.execSQL("UPDATE site_permissions SET autoplay_inaudible = 1 WHERE autoplay_inaudible = 0 ")
         }
     }
 }

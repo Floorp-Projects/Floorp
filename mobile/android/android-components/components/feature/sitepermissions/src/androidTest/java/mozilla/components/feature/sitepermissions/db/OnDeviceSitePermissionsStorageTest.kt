@@ -12,6 +12,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import org.junit.After
@@ -150,6 +151,27 @@ class OnDeviceSitePermissionsStorageTest {
 
             cursor.moveToFirst()
             assertEquals(Status.NO_DECISION.id, cursor.getInt(cursor.getColumnIndexOrThrow("media_key_system_access")))
+        }
+    }
+
+    @Test
+    fun migrate4to5() {
+        helper.createDatabase(MIGRATION_TEST_DB, 4).apply {
+            execSQL(
+                    "INSERT INTO " +
+                            "site_permissions " +
+                            "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,media_key_system_access,saved_at) " +
+                            "VALUES " +
+                            "('mozilla.org',1,1,1,1,1,1,0,0,1,1)"
+            )
+        }
+
+        val dbVersion5 = helper.runMigrationsAndValidate(MIGRATION_TEST_DB, 5, true, Migrations.migration_4_5)
+
+        dbVersion5.query("SELECT * FROM site_permissions").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(AutoplayStatus.BLOCKED.id, cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_audible")))
+            assertEquals(AutoplayStatus.ALLOWED.id, cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_inaudible")))
         }
     }
 }

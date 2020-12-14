@@ -364,9 +364,7 @@ class SitePermissionsFeature(
             storage.findSitePermissionsBy(host)
         }
 
-        val prompt = if (shouldApplyRules(permissionFromStorage) ||
-            permissionRequest.isForAutoplay()
-        ) {
+        val prompt = if (shouldApplyRules(permissionFromStorage)) {
             handleRuledFlow(permissionRequest, host)
         } else {
             handleNoRuledFlow(permissionFromStorage, permissionRequest, host)
@@ -388,6 +386,7 @@ class SitePermissionsFeature(
                 permissionRequest.grant()
             } else {
                 permissionRequest.reject()
+                updateAutoplayToolbarIndicator(permissionRequest)
             }
             consumePermissionRequest(permissionRequest)
             null
@@ -399,9 +398,12 @@ class SitePermissionsFeature(
         permissionRequest: PermissionRequest,
         permissionFromStorage: SitePermissions?
     ): Boolean {
-        return (permissionFromStorage == null || !permissionRequest.doNotAskAgain(
-            permissionFromStorage
-        ))
+        return if (permissionRequest.isForAutoplay()) {
+            false
+        } else {
+            (permissionFromStorage == null ||
+                    !permissionRequest.doNotAskAgain(permissionFromStorage))
+        }
     }
 
     @VisibleForTesting
@@ -409,32 +411,24 @@ class SitePermissionsFeature(
         permissionRequest: PermissionRequest,
         host: String
     ): SitePermissionsDialogFragment? {
-        // For now we only support autoplay via sitePermissionsRules until we add support for
-        // autoplay for specific sites see Fenix issue  #8603
-        return if (permissionRequest.isForAutoplay() && sitePermissionsRules == null) {
-            permissionRequest.reject()
-            consumePermissionRequest(permissionRequest)
-            null
-        } else {
-            when (sitePermissionsRules?.getActionFrom(permissionRequest)) {
-                SitePermissionsRules.Action.ALLOWED -> {
-                    permissionRequest.grant()
-                    consumePermissionRequest(permissionRequest)
-                    null
-                }
-                SitePermissionsRules.Action.BLOCKED -> {
-                    permissionRequest.reject()
-                    consumePermissionRequest(permissionRequest)
-                    updateAutoplayToolbarIndicator(permissionRequest)
-                    null
-                }
-                SitePermissionsRules.Action.ASK_TO_ALLOW -> {
-                    createPrompt(permissionRequest, host)
-                }
-                null -> {
-                    consumePermissionRequest(permissionRequest)
-                    null
-                }
+        return when (sitePermissionsRules?.getActionFrom(permissionRequest)) {
+            SitePermissionsRules.Action.ALLOWED -> {
+                permissionRequest.grant()
+                consumePermissionRequest(permissionRequest)
+                null
+            }
+            SitePermissionsRules.Action.BLOCKED -> {
+                permissionRequest.reject()
+                consumePermissionRequest(permissionRequest)
+                updateAutoplayToolbarIndicator(permissionRequest)
+                null
+            }
+            SitePermissionsRules.Action.ASK_TO_ALLOW -> {
+                createPrompt(permissionRequest, host)
+            }
+            null -> {
+                consumePermissionRequest(permissionRequest)
+                null
             }
         }
     }
@@ -529,10 +523,10 @@ class SitePermissionsFeature(
                 sitePermissions.copy(camera = status)
             }
             is ContentAutoPlayAudible -> {
-                sitePermissions.copy(autoplayAudible = status)
+                sitePermissions.copy(autoplayAudible = status.toAutoplayStatus())
             }
             is ContentAutoPlayInaudible -> {
-                sitePermissions.copy(autoplayInaudible = status)
+                sitePermissions.copy(autoplayInaudible = status.toAutoplayStatus())
             }
             is ContentPersistentStorage -> {
                 sitePermissions.copy(localStorage = status)
@@ -782,6 +776,12 @@ internal fun isPermissionGranted(
         }
         is ContentMediaKeySystemAccess -> {
             permissionFromStorage.mediaKeySystemAccess.isAllowed()
+        }
+        is ContentAutoPlayAudible -> {
+            permissionFromStorage.autoplayAudible.isAllowed()
+        }
+        is ContentAutoPlayInaudible -> {
+            permissionFromStorage.autoplayInaudible.isAllowed()
         }
         else ->
             throw InvalidParameterException("$permission is not a valid permission.")

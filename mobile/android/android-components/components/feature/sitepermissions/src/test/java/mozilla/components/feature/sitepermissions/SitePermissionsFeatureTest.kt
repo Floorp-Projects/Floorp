@@ -18,22 +18,28 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.PermissionHighlightsState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.AppAudio
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
+import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
+import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
+import mozilla.components.concept.engine.permission.Permission.ContentPersistentStorage
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.Permission.Generic
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
@@ -133,7 +139,7 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(mockStore).dispatch(
-            ContentAction.UpdatePermissionHighlightsStateAction
+            UpdatePermissionHighlightsStateAction
             (SESSION_ID, PermissionHighlightsState())
         )
     }
@@ -151,7 +157,7 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(mockStore, never()).dispatch(
-            ContentAction.UpdatePermissionHighlightsStateAction
+            UpdatePermissionHighlightsStateAction
             (SESSION_ID, PermissionHighlightsState())
         )
     }
@@ -479,6 +485,62 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `GIVEN autoplay permissionRequest and shouldApplyRules is false WHEN onContentPermissionRequested() THEN handleNoRuledFlow is called`() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentAutoPlayInaudible(id = "permission")))
+        }
+        val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
+        val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+
+        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL)
+        doReturn(false).`when`(sitePermissionFeature).shouldApplyRules(any())
+        doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+                .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
+
+        // when
+        runBlockingTest {
+            sitePermissionFeature.onContentPermissionRequested(
+                mockPermissionRequest,
+                URL,
+                testScope
+            )
+        }
+
+        // then
+        verify(mockStorage).findSitePermissionsBy(URL)
+        verify(sitePermissionFeature).handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
+    }
+
+    @Test
+    fun `GIVEN shouldShowPrompt with isForAutoplay false AND null permissionFromStorage THEN return true`() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(Permission.ContentGeoLocation(id = "permission")))
+        }
+
+        // when
+        val shouldShowPrompt = sitePermissionFeature.shouldShowPrompt(mockPermissionRequest, null)
+
+        // then
+        assertTrue(shouldShowPrompt)
+    }
+
+    @Test
+    fun `GIVEN shouldShowPrompt with isForAutoplay true THEN return false`() {
+        // given
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(Permission.ContentAutoPlayInaudible(id = "permission")))
+        }
+
+        // when
+        val shouldShowPrompt = sitePermissionFeature.shouldShowPrompt(mockPermissionRequest, mock())
+
+        // then
+        assertFalse(shouldShowPrompt)
+    }
+
+    @Test
     fun `GIVEN shouldShowPrompt true WHEN handleNoRuledFlow THEN createPrompt is called`() {
         // given
         val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
@@ -499,6 +561,7 @@ class SitePermissionsFeatureTest {
     fun `GIVEN shouldShowPrompt false and permissionFromStorage not granted WHEN handleNoRuledFlow THEN reject, consumePermissionRequest are called `() {
         // given
         doReturn(false).`when`(sitePermissionFeature).shouldShowPrompt(mockPermissionRequest, null)
+        doNothing().`when`(sitePermissionFeature).updateAutoplayToolbarIndicator(any())
 
         // when
         sitePermissionFeature.handleNoRuledFlow(null, mockPermissionRequest, URL)
@@ -506,6 +569,25 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockPermissionRequest).reject()
         verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
+        verify(sitePermissionFeature).updateAutoplayToolbarIndicator(mockPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN updateAutoplayToolbarIndicator  WHEN isForAutoplay is true THEN update PermissionHighlightsState`() {
+        val tab1 = createTab("https://www.mozilla.org", id = "1")
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentAutoPlayAudible(id = "permission")))
+        }
+        // given
+        doReturn(tab1).`when`(sitePermissionFeature).getCurrentTabState()
+
+        // when
+        sitePermissionFeature.updateAutoplayToolbarIndicator(mockPermissionRequest)
+
+        // then
+        verify(mockStore).dispatch(
+            UpdatePermissionHighlightsStateAction(tab1.id, PermissionHighlightsState(true))
+        )
     }
 
     @Test
@@ -527,84 +609,12 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN permissionRequest with isForAutoplay true and sitePermissionsRules null WHEN handleRuledFlow THEN reject, consumePermissionRequest are called`() {
+    fun `GIVEN permissionRequest with isForAutoplay true and BLOCKED WHEN handleRuledFlow THEN reject, consumePermissionRequest are called`() {
         // given
         val mockPermissionRequest: PermissionRequest = mock {
-            whenever(permissions).thenReturn(listOf(ContentAutoPlayInaudible(id = "permission")))
+            whenever(permissions).thenReturn(listOf(ContentAutoPlayAudible(id = "permission")))
         }
-
-        val sitePermissionFeature = spy(
-            SitePermissionsFeature(
-                context = testContext,
-                sitePermissionsRules = null,
-                onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
-                storage = mockStorage,
-                fragmentManager = mockFragmentManager,
-                onShouldShowRequestPermissionRationale = { false },
-                store = mockStore,
-                sessionId = SESSION_ID
-            )
-        )
-
-        // when
-        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
-
-        // then
-        verify(mockPermissionRequest).reject()
-        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
-    }
-
-    @Test
-    fun `GIVEN permissionRequest with isForAutoplay false and ALLOWED WHEN handleRuledFlow THEN grant, consumePermissionRequest are called`() {
-        // given
-        val mockPermissionsRules: SitePermissionsRules = mock()
-        val mockPermissionRequest: PermissionRequest = mock {
-            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
-        }
-        doReturn(mockPermissionsRules).`when`(sitePermissionFeature).sitePermissionsRules
-        doReturn(SitePermissionsRules.Action.ALLOWED).`when`(mockPermissionsRules)
-            .getActionFrom(mockPermissionRequest)
-
-        // when
-        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
-
-        // then
-        verify(mockPermissionRequest).grant()
-        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
-    }
-
-    @Test
-    fun `GIVEN permissionRequest with isForAutoplay true and BLOCKED WHEN handleRuledFlow THEN the toolbar permission indicator must be updated`() {
-        // given
-        val mockPermissionsRules: SitePermissionsRules = mock()
-        val mockPermissionRequest: PermissionRequest = mock {
-            whenever(permissions).thenReturn(listOf(ContentAutoPlayInaudible(id = "permission")))
-        }
-
-        doReturn(SitePermissionsRules.Action.BLOCKED).`when`(mockPermissionsRules)
-                .getActionFrom(mockPermissionRequest)
-
-        sitePermissionFeature.sitePermissionsRules = mockPermissionsRules
-
-        // when
-        sitePermissionFeature.handleRuledFlow(mockPermissionRequest, URL)
-        testCoroutineDispatcher.advanceUntilIdle()
-
-        // then
-        verify(sitePermissionFeature).updateAutoplayToolbarIndicator(any())
-
-        verify(mockStore).dispatch(
-            ContentAction.UpdatePermissionHighlightsStateAction
-            (SESSION_ID, PermissionHighlightsState(true))
-        )
-    }
-
-    @Test
-    fun `GIVEN permissionRequest with isForAutoplay false and BLOCKED WHEN handleRuledFlow THEN reject, consumePermissionRequest are called`() {
-        // given
-        val mockPermissionRequest: PermissionRequest = mock {
-            whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
-        }
+        doNothing().`when`(sitePermissionFeature).updateAutoplayToolbarIndicator(mockPermissionRequest)
         doReturn(mockSitePermissionRules).`when`(sitePermissionFeature).sitePermissionsRules
         doReturn(SitePermissionsRules.Action.BLOCKED).`when`(mockSitePermissionRules)
             .getActionFrom(mockPermissionRequest)
@@ -615,6 +625,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockPermissionRequest).reject()
         verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
+        verify(sitePermissionFeature).updateAutoplayToolbarIndicator(mockPermissionRequest)
     }
 
     @Test
@@ -716,7 +727,11 @@ class SitePermissionsFeatureTest {
             ContentAudioCapture(),
             ContentAudioMicrophone(),
             ContentVideoCamera(),
-            ContentVideoCapture()
+            ContentVideoCapture(),
+            ContentPersistentStorage(),
+            ContentAutoPlayAudible(),
+            ContentAutoPlayInaudible(),
+            ContentMediaKeySystemAccess()
         )
 
         sitePermissionsList.forEach { permission ->
@@ -729,6 +744,10 @@ class SitePermissionsFeatureTest {
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).notification
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).camera
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).microphone
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).localStorage
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).mediaKeySystemAccess
+            doReturn(AutoplayStatus.ALLOWED).`when`(sitePermissionFromStorage).autoplayAudible
+            doReturn(AutoplayStatus.ALLOWED).`when`(sitePermissionFromStorage).autoplayInaudible
 
             val isAllowed = sitePermissionFromStorage.isGranted(request)
             assertTrue(isAllowed)
@@ -832,8 +851,8 @@ class SitePermissionsFeatureTest {
                 camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
                 notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
                 microphone = SitePermissionsRules.Action.BLOCKED,
-                autoplayAudible = SitePermissionsRules.Action.BLOCKED,
-                autoplayInaudible = SitePermissionsRules.Action.ALLOWED,
+                autoplayAudible = SitePermissionsRules.AutoplayAction.BLOCKED,
+                autoplayInaudible = SitePermissionsRules.AutoplayAction.ALLOWED,
                 persistentStorage = SitePermissionsRules.Action.BLOCKED,
                 mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
         )
@@ -847,8 +866,8 @@ class SitePermissionsFeatureTest {
         assertEquals(NO_DECISION, sitePermissions.camera)
         assertEquals(NO_DECISION, sitePermissions.notification)
         assertEquals(BLOCKED, sitePermissions.microphone)
-        assertEquals(BLOCKED, sitePermissions.autoplayAudible)
-        assertEquals(ALLOWED, sitePermissions.autoplayInaudible)
+        assertEquals(BLOCKED, sitePermissions.autoplayAudible.toStatus())
+        assertEquals(ALLOWED, sitePermissions.autoplayInaudible.toStatus())
         assertEquals(BLOCKED, sitePermissions.localStorage)
         assertEquals(NO_DECISION, sitePermissions.mediaKeySystemAccess)
     }

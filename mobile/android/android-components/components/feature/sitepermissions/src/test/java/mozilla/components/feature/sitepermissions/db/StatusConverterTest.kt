@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.sitepermissions.db
 
+import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
@@ -42,5 +43,30 @@ class StatusConverterTest {
 
         index = converter.toInt(NO_DECISION)
         assertEquals(index, NO_DECISION.id)
+    }
+
+    @Test
+    fun `convert from int to autoplay status`() {
+        val converter = StatusConverter()
+
+        var status = converter.toAutoplayStatus(AutoplayStatus.BLOCKED.id)
+        assertEquals(status, AutoplayStatus.BLOCKED)
+
+        status = converter.toAutoplayStatus(AutoplayStatus.ALLOWED.id)
+        assertEquals(status, AutoplayStatus.ALLOWED)
+
+        status = converter.toAutoplayStatus(Int.MAX_VALUE)
+        assertEquals(AutoplayStatus.BLOCKED, status)
+    }
+
+    @Test
+    fun `convert from autoplay status to int`() {
+        val converter = StatusConverter()
+
+        var index = converter.toInt(AutoplayStatus.ALLOWED)
+        assertEquals(index, AutoplayStatus.ALLOWED.id)
+
+        index = converter.toInt(AutoplayStatus.BLOCKED)
+        assertEquals(index, AutoplayStatus.BLOCKED.id)
     }
 }

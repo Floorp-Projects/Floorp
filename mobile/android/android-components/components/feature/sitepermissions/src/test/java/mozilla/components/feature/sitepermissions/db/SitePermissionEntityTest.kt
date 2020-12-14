@@ -5,6 +5,7 @@
 package mozilla.components.feature.sitepermissions.db
 
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
@@ -23,8 +24,8 @@ class SitePermissionEntityTest {
             microphone = NO_DECISION,
             camera = NO_DECISION,
             bluetooth = ALLOWED,
-            autoplayInaudible = BLOCKED,
-            autoplayAudible = NO_DECISION,
+            autoplayInaudible = AutoplayStatus.ALLOWED,
+            autoplayAudible = AutoplayStatus.BLOCKED,
             mediaKeySystemAccess = NO_DECISION,
             savedAt = 0
         )
@@ -56,8 +57,8 @@ class SitePermissionEntityTest {
             microphone = NO_DECISION,
             camera = NO_DECISION,
             bluetooth = ALLOWED,
-            autoplayInaudible = BLOCKED,
-            autoplayAudible = NO_DECISION,
+            autoplayInaudible = AutoplayStatus.ALLOWED,
+            autoplayAudible = AutoplayStatus.BLOCKED,
             mediaKeySystemAccess = NO_DECISION,
             savedAt = 0
         )

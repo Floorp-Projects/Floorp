@@ -12,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.DataCleanable
 import mozilla.components.concept.engine.Engine.BrowsingData
+import mozilla.components.feature.sitepermissions.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
@@ -160,8 +161,8 @@ class SitePermissionsStorageTest {
                 microphone = ALLOWED,
                 camera = BLOCKED,
                 bluetooth = ALLOWED,
-                autoplayAudible = BLOCKED,
-                autoplayInaudible = NO_DECISION,
+                autoplayAudible = AutoplayStatus.BLOCKED,
+                autoplayInaudible = AutoplayStatus.BLOCKED,
                 mediaKeySystemAccess = NO_DECISION,
                 savedAt = 0
             ),
@@ -173,8 +174,8 @@ class SitePermissionsStorageTest {
                 microphone = ALLOWED,
                 camera = BLOCKED,
                 bluetooth = ALLOWED,
-                autoplayAudible = BLOCKED,
-                autoplayInaudible = NO_DECISION,
+                autoplayAudible = AutoplayStatus.BLOCKED,
+                autoplayInaudible = AutoplayStatus.BLOCKED,
                 mediaKeySystemAccess = NO_DECISION,
                 savedAt = 0
             )

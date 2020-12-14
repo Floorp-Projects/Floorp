@@ -33,6 +33,9 @@ permalink: /changelog/
 * **feature-qr**
   * QR Scanner can now scan inverted QR codes, by decoding inverted source when the decoding the original source fails.
 
+* **feature-sitepermissions**
+  * ⚠️ **This is a breaking change**: The `SitePermissions` constructor, now parameter types for `autoplayAudible` and `autoplayInaudible` have changed to `AutoplayStatus` as autoplay permissions only support two status `ALLOWED` and `BLOCKED`.
+
 * **feature-app-links**
   * ⚠️ **This is a breaking change**: Migrated this component to use `browser-state` instead of `browser-session`. It is now required to pass a `BrowserStore` instance (instead of `SessionManager`) to `AppLinksFeature`.
 

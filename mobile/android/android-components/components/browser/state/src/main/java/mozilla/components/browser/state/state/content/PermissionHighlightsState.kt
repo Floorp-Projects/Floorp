@@ -4,6 +4,9 @@
 
 package mozilla.components.browser.state.state.content
 
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
+
 /**
  * Value type that represents any information about permissions that should
  * be brought to user's attention.
@@ -11,6 +14,7 @@ package mozilla.components.browser.state.state.content
  * @property isAutoPlayBlocking indicates if the autoplay setting
  * disabled some web content from playing.
  */
+@Parcelize
 data class PermissionHighlightsState(
     val isAutoPlayBlocking: Boolean = false
-)
+) : Parcelable

@@ -115,8 +115,8 @@ class SitePermissionsStorage(
                 map.putIfAllowed(LOCAL_STORAGE, localStorage, permission)
                 map.putIfAllowed(NOTIFICATION, notification, permission)
                 map.putIfAllowed(LOCATION, location, permission)
-                map.putIfAllowed(AUTOPLAY_AUDIBLE, autoplayAudible, permission)
-                map.putIfAllowed(AUTOPLAY_INAUDIBLE, autoplayInaudible, permission)
+                map.putIfAllowed(AUTOPLAY_AUDIBLE, autoplayAudible.toStatus(), permission)
+                map.putIfAllowed(AUTOPLAY_INAUDIBLE, autoplayInaudible.toStatus(), permission)
                 map.putIfAllowed(MEDIA_KEY_SYSTEM_ACCESS, mediaKeySystemAccess, permission)
             }
         }

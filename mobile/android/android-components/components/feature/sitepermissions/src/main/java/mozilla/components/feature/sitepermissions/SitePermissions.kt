@@ -21,8 +21,8 @@ data class SitePermissions(
     val camera: Status = NO_DECISION,
     val bluetooth: Status = NO_DECISION,
     val localStorage: Status = NO_DECISION,
-    val autoplayAudible: Status = NO_DECISION,
-    val autoplayInaudible: Status = NO_DECISION,
+    val autoplayAudible: AutoplayStatus = AutoplayStatus.BLOCKED,
+    val autoplayInaudible: AutoplayStatus = AutoplayStatus.ALLOWED,
     val mediaKeySystemAccess: Status = NO_DECISION,
     val savedAt: Long
 ) : Parcelable {
@@ -39,6 +39,37 @@ data class SitePermissions(
             BLOCKED, NO_DECISION -> ALLOWED
             ALLOWED -> BLOCKED
         }
+
+        /**
+         * Converts from [SitePermissions.Status] to [AutoplayStatus].
+         */
+        fun toAutoplayStatus(): AutoplayStatus {
+            return when (this) {
+                NO_DECISION, BLOCKED -> AutoplayStatus.BLOCKED
+                ALLOWED -> AutoplayStatus.ALLOWED
+            }
+        }
+    }
+
+    /**
+     * An enum that represents the status that autoplay can have.
+     */
+    enum class AutoplayStatus(internal val id: Int) {
+        BLOCKED(Status.BLOCKED.id), ALLOWED(Status.ALLOWED.id);
+        /**
+         * Indicates if the status is allowed.
+         */
+        fun isAllowed() = this == ALLOWED
+
+        /**
+         * Convert from a AutoplayStatus to Status.
+         */
+        fun toStatus(): Status {
+            return when (this) {
+                BLOCKED -> Status.BLOCKED
+                ALLOWED -> Status.ALLOWED
+            }
+        }
     }
 
     /**
@@ -52,8 +83,8 @@ data class SitePermissions(
             Permission.LOCAL_STORAGE -> localStorage
             Permission.NOTIFICATION -> notification
             Permission.LOCATION -> location
-            Permission.AUTOPLAY_AUDIBLE -> autoplayAudible
-            Permission.AUTOPLAY_INAUDIBLE -> autoplayInaudible
+            Permission.AUTOPLAY_AUDIBLE -> autoplayAudible.toStatus()
+            Permission.AUTOPLAY_INAUDIBLE -> autoplayInaudible.toStatus()
             Permission.MEDIA_KEY_SYSTEM_ACCESS -> mediaKeySystemAccess
         }
     }
