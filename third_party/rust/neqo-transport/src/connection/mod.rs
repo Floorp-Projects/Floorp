@@ -7,7 +7,7 @@
 // The class implementing a QUIC connection.
 
 use std::cell::RefCell;
-use std::cmp::max;
+use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt::{self, Debug};
@@ -1531,7 +1531,8 @@ impl Connection {
                 if let CloseError::Transport(_) = error_code {
                     builder.encode_varint(*frame_type);
                 }
-                builder.encode_vvec(reason_phrase);
+                let reason_len = min(min(reason_phrase.len(), 256), builder.remaining() - 2);
+                builder.encode_vvec(&reason_phrase[..reason_len]);
             } else {
                 unreachable!();
             }

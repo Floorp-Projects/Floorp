@@ -14,6 +14,8 @@
 
 extern crate glob;
 
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -46,30 +48,38 @@ const DIRECTORIES_WINDOWS: &[&str] = &[
     "C:\\MSYS*\\MinGW*\\lib",
 ];
 
+thread_local! {
+    /// The errors encountered when attempting to execute console commands.
+    static COMMAND_ERRORS: RefCell<HashMap<String, Vec<String>>> = RefCell::default();
+}
+
 /// Executes the supplied console command, returning the `stdout` output if the
 /// command was successfully executed.
-fn run_command(command: &str, arguments: &[&str]) -> Option<String> {
-    macro_rules! warn {
-        ($error:expr) => {
-            println!(
-                "cargo:warning=couldn't execute `{} {}` ({})",
-                command,
-                arguments.join(" "),
-                $error,
-            );
-        };
+fn run_command(name: &str, command: &str, arguments: &[&str]) -> Option<String> {
+    macro_rules! error {
+        ($error:expr) => {{
+            COMMAND_ERRORS.with(|e| e.borrow_mut()
+                .entry(name.into())
+                .or_insert_with(Vec::new)
+                .push(format!(
+                    "couldn't execute `{} {}` ({})",
+                    command,
+                    arguments.join(" "),
+                    $error,
+                )));
+        }};
     }
 
     let output = match Command::new(command).args(arguments).output() {
         Ok(output) => output,
         Err(error) => {
-            warn!(format!("error: {}", error));
+            error!(format!("error: {}", error));
             return None;
         }
     };
 
     if !output.status.success() {
-        warn!(format!("exit code: {}", output.status));
+        error!(format!("exit code: {}", output.status));
         return None;
     }
 
@@ -80,17 +90,50 @@ fn run_command(command: &str, arguments: &[&str]) -> Option<String> {
 /// successfully executed.
 pub fn run_llvm_config(arguments: &[&str]) -> Option<String> {
     let path = env::var("LLVM_CONFIG_PATH").unwrap_or_else(|_| "llvm-config".into());
+    run_command("llvm-config", &path, arguments)
+}
 
-    let output = run_command(&path, arguments);
-    if output.is_none() {
-        println!(
-            "cargo:warning=set the LLVM_CONFIG_PATH environment variable to \
-            the full path to a valid `llvm-config` executable (including the \
-            executable itself)"
-        );
+/// A struct that prints errors encountered when attempting to execute console
+/// commands on drop if not discarded.
+#[derive(Default)]
+pub struct CommandErrorPrinter {
+    discard: bool
+}
+
+impl CommandErrorPrinter {
+    pub fn discard(mut self) {
+        self.discard = true;
     }
+}
 
-    output
+impl Drop for CommandErrorPrinter {
+    fn drop(&mut self) {
+        if self.discard {
+            return;
+        }
+
+        let errors = COMMAND_ERRORS.with(|e| e.borrow().clone());
+
+        if let Some(errors) = errors.get("llvm-config") {
+            println!(
+                "cargo:warning=could not execute `llvm-config` one or more \
+                times, if the LLVM_CONFIG_PATH environment variable is set to \
+                a full path to valid `llvm-config` executable it will be used \
+                to try to find an instance of `libclang` on your system: {}",
+                errors.iter().map(|e| format!("\"{}\"", e)).collect::<Vec<_>>().join("\n  "),
+            )
+        }
+
+        if let Some(errors) = errors.get("xcode-select") {
+            println!(
+                "cargo:warning=could not execute `xcode-select` one or more \
+                times, if a valid instance of this executable is on your PATH \
+                it will be used to try to find an instance of `libclang` on \
+                your system: {}",
+                errors.iter().map(|e| format!("\"{}\"", e)).collect::<Vec<_>>().join("\n  "),
+            )
+        }
+    }
 }
 
 /// Returns the paths to and the filenames of the files matching the supplied
@@ -179,7 +222,7 @@ pub fn search_libclang_directories(files: &[String], variable: &str) -> Vec<(Pat
     // Search the toolchain directory in the directory provided by
     // `xcode-select --print-path`.
     if cfg!(target_os = "macos") {
-        if let Some(output) = run_command("xcode-select", &["--print-path"]) {
+        if let Some(output) = run_command("xcode-select", "xcode-select", &["--print-path"]) {
             let directory = Path::new(output.lines().next().unwrap()).to_path_buf();
             let directory = directory.join("Toolchains/XcodeDefault.xctoolchain/usr/lib");
             found.extend(search_directories(&directory, files));

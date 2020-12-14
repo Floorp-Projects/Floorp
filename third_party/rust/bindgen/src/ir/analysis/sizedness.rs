@@ -3,12 +3,12 @@
 use super::{
     generate_dependencies, ConstrainResult, HasVtable, MonotoneFramework,
 };
-use ir::context::{BindgenContext, TypeId};
-use ir::item::IsOpaque;
-use ir::traversal::EdgeKind;
-use ir::ty::TypeKind;
+use crate::ir::context::{BindgenContext, TypeId};
+use crate::ir::item::IsOpaque;
+use crate::ir::traversal::EdgeKind;
+use crate::ir::ty::TypeKind;
+use crate::{Entry, HashMap};
 use std::{cmp, ops};
-use {Entry, HashMap};
 
 /// The result of the `Sizedness` analysis for an individual item.
 ///

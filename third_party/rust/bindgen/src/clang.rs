@@ -3,10 +3,9 @@
 
 #![allow(non_upper_case_globals, dead_code)]
 
-
+use crate::ir::context::BindgenContext;
 use cexpr;
 use clang_sys::*;
-use ir::context::BindgenContext;
 use regex;
 use std::ffi::{CStr, CString};
 use std::fmt;
@@ -70,20 +69,13 @@ impl Cursor {
 
     /// Get the mangled name of this cursor's referent.
     pub fn mangling(&self) -> String {
-        if clang_Cursor_getMangling::is_loaded() {
-            unsafe { cxstring_into_string(clang_Cursor_getMangling(self.x)) }
-        } else {
-            self.spelling()
-        }
+        unsafe { cxstring_into_string(clang_Cursor_getMangling(self.x)) }
     }
 
-    /// Gets the C++ manglings for this cursor, or an error if the function is
-    /// not loaded or the manglings are not available.
+    /// Gets the C++ manglings for this cursor, or an error if the manglings
+    /// are not available.
     pub fn cxx_manglings(&self) -> Result<Vec<String>, ()> {
         use clang_sys::*;
-        if !clang_Cursor_getCXXManglings::is_loaded() {
-            return Err(());
-        }
         unsafe {
             let manglings = clang_Cursor_getCXXManglings(self.x);
             if manglings.is_null() {
@@ -237,6 +229,11 @@ impl Cursor {
             CXCursor_TypeAliasTemplateDecl => true,
             _ => false,
         }
+    }
+
+    /// Is this Cursor pointing to a function-like macro definition?
+    pub fn is_macro_function_like(&self) -> bool {
+        unsafe { clang_Cursor_isMacroFunctionLike(self.x) != 0 }
     }
 
     /// Get the kind of referent this cursor is pointing to.
@@ -469,8 +466,7 @@ impl Cursor {
 
     /// Is the referent an inlined function?
     pub fn is_inlined_function(&self) -> bool {
-        clang_Cursor_isFunctionInlined::is_loaded() &&
-            unsafe { clang_Cursor_isFunctionInlined(self.x) != 0 }
+        unsafe { clang_Cursor_isFunctionInlined(self.x) != 0 }
     }
 
     /// Get the width of this cursor's referent bit field, or `None` if the
@@ -495,6 +491,19 @@ impl Cursor {
             };
             if t.is_valid() {
                 Some(t)
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Get the boolean constant value for this cursor's enum variant referent.
+    ///
+    /// Returns None if the cursor's referent is not an enum variant.
+    pub fn enum_val_boolean(&self) -> Option<bool> {
+        unsafe {
+            if self.kind() == CXCursor_EnumConstantDecl {
+                Some(clang_getEnumConstantDeclValue(self.x) != 0)
             } else {
                 None
             }
@@ -581,11 +590,7 @@ impl Cursor {
 
     /// Get the visibility of this cursor's referent.
     pub fn visibility(&self) -> CXVisibilityKind {
-        if clang_getCursorVisibility::is_loaded() {
-            unsafe { clang_getCursorVisibility(self.x) }
-        } else {
-            CXVisibility_Default
-        }
+        unsafe { clang_getCursorVisibility(self.x) }
     }
 
     /// Given that this cursor's referent is a function, return cursors to its
@@ -630,16 +635,11 @@ impl Cursor {
     /// Is this cursor's referent a field declaration that is marked as
     /// `mutable`?
     pub fn is_mutable_field(&self) -> bool {
-        clang_CXXField_isMutable::is_loaded() &&
-            unsafe { clang_CXXField_isMutable(self.x) != 0 }
+        unsafe { clang_CXXField_isMutable(self.x) != 0 }
     }
 
     /// Get the offset of the field represented by the Cursor.
     pub fn offset_of_field(&self) -> Result<usize, LayoutError> {
-        if !clang_Cursor_getOffsetOfField::is_loaded() {
-            return Err(LayoutError::from(-1));
-        }
-
         let offset = unsafe { clang_Cursor_getOffsetOfField(self.x) };
 
         if offset < 0 {
@@ -698,30 +698,9 @@ impl Cursor {
 
     /// Gets the tokens that correspond to that cursor as  `cexpr` tokens.
     pub fn cexpr_tokens(self) -> Vec<cexpr::token::Token> {
-        use cexpr::token;
-
         self.tokens()
             .iter()
-            .filter_map(|token| {
-                let kind = match token.kind {
-                    CXToken_Punctuation => token::Kind::Punctuation,
-                    CXToken_Literal => token::Kind::Literal,
-                    CXToken_Identifier => token::Kind::Identifier,
-                    CXToken_Keyword => token::Kind::Keyword,
-                    // NB: cexpr is not too happy about comments inside
-                    // expressions, so we strip them down here.
-                    CXToken_Comment => return None,
-                    _ => {
-                        error!("Found unexpected token kind: {:?}", token);
-                        return None;
-                    }
-                };
-
-                Some(token::Token {
-                    kind,
-                    raw: token.spelling().to_vec().into_boxed_slice(),
-                })
-            })
+            .filter_map(|token| token.as_cexpr_token())
             .collect()
     }
 
@@ -793,13 +772,16 @@ impl<'a> Drop for RawTokens<'a> {
     }
 }
 
-/// A raw clang token, that exposes only the kind and spelling. This is a
+/// A raw clang token, that exposes only kind, spelling, and extent. This is a
 /// slightly more convenient version of `CXToken` which owns the spelling
-/// string.
+/// string and extent.
 #[derive(Debug)]
 pub struct ClangToken {
     spelling: CXString,
-    /// The kind of token, this is the same as the relevant member from
+    /// The extent of the token. This is the same as the relevant member from
+    /// `CXToken`.
+    pub extent: CXSourceRange,
+    /// The kind of the token. This is the same as the relevant member from
     /// `CXToken`.
     pub kind: CXTokenKind,
 }
@@ -811,6 +793,30 @@ impl ClangToken {
             CStr::from_ptr(clang_getCString(self.spelling) as *const _)
         };
         c_str.to_bytes()
+    }
+
+    /// Converts a ClangToken to a `cexpr` token if possible.
+    pub fn as_cexpr_token(&self) -> Option<cexpr::token::Token> {
+        use cexpr::token;
+
+        let kind = match self.kind {
+            CXToken_Punctuation => token::Kind::Punctuation,
+            CXToken_Literal => token::Kind::Literal,
+            CXToken_Identifier => token::Kind::Identifier,
+            CXToken_Keyword => token::Kind::Keyword,
+            // NB: cexpr is not too happy about comments inside
+            // expressions, so we strip them down here.
+            CXToken_Comment => return None,
+            _ => {
+                warn!("Found unexpected token kind: {:?}", self);
+                return None;
+            }
+        };
+
+        Some(token::Token {
+            kind,
+            raw: self.spelling().to_vec().into_boxed_slice(),
+        })
     }
 }
 
@@ -834,7 +840,12 @@ impl<'a> Iterator for ClangTokenIterator<'a> {
         unsafe {
             let kind = clang_getTokenKind(*raw);
             let spelling = clang_getTokenSpelling(self.tu, *raw);
-            Some(ClangToken { kind, spelling })
+            let extent = clang_getTokenExtent(self.tu, *raw);
+            Some(ClangToken {
+                kind,
+                extent,
+                spelling,
+            })
         }
     }
 }
@@ -1085,8 +1096,8 @@ impl Type {
     pub fn fallible_layout(
         &self,
         ctx: &BindgenContext,
-    ) -> Result<::ir::layout::Layout, LayoutError> {
-        use ir::layout::Layout;
+    ) -> Result<crate::ir::layout::Layout, LayoutError> {
+        use crate::ir::layout::Layout;
         let size = self.fallible_size(ctx)?;
         let align = self.fallible_align(ctx)?;
         Ok(Layout::new(size, align))
@@ -1095,13 +1106,6 @@ impl Type {
     /// Get the number of template arguments this type has, or `None` if it is
     /// not some kind of template.
     pub fn num_template_args(&self) -> Option<u32> {
-        // If an old libclang is loaded, we have no hope of answering this
-        // question correctly. However, that's no reason to panic when
-        // generating bindings for simple C headers with an old libclang.
-        if !clang_Type_getNumTemplateArguments::is_loaded() {
-            return None;
-        }
-
         let n = unsafe { clang_Type_getNumTemplateArguments(self.x) };
         if n >= 0 {
             Some(n as u32)
@@ -1231,11 +1235,7 @@ impl Type {
     pub fn named(&self) -> Type {
         unsafe {
             Type {
-                x: if clang_Type_getNamedType::is_loaded() {
-                    clang_Type_getNamedType(self.x)
-                } else {
-                    self.x
-                },
+                x: clang_Type_getNamedType(self.x),
             }
         }
     }
@@ -1538,15 +1538,6 @@ impl Drop for Index {
             clang_disposeIndex(self.x);
         }
     }
-}
-
-/// A token emitted by clang's lexer.
-#[derive(Debug)]
-pub struct Token {
-    /// The kind of token this is.
-    pub kind: CXTokenKind,
-    /// A display name for this token.
-    pub spelling: String,
 }
 
 /// A translation unit (or "compilation unit").
@@ -1854,11 +1845,7 @@ pub fn ast_dump(c: &Cursor, depth: isize) -> CXChildVisitResult {
             format!(" {}spelling = \"{}\"", prefix, ty.spelling()),
         );
         let num_template_args =
-            if clang_Type_getNumTemplateArguments::is_loaded() {
-                unsafe { clang_Type_getNumTemplateArguments(ty.x) }
-            } else {
-                -1
-            };
+            unsafe { clang_Type_getNumTemplateArguments(ty.x) };
         if num_template_args >= 0 {
             print_indent(
                 depth,
@@ -1955,10 +1942,6 @@ pub struct EvalResult {
 impl EvalResult {
     /// Evaluate `cursor` and return the result.
     pub fn new(cursor: Cursor) -> Option<Self> {
-        if !clang_Cursor_Evaluate::is_loaded() {
-            return None;
-        }
-
         // Work around https://bugs.llvm.org/show_bug.cgi?id=42532, see:
         //  * https://github.com/rust-lang/rust-bindgen/issues/283
         //  * https://github.com/rust-lang/rust-bindgen/issues/1590

@@ -2,8 +2,8 @@
 
 use super::derive::CanDerive;
 use super::ty::{Type, TypeKind, RUST_DERIVE_IN_ARRAY_LIMIT};
-use clang;
-use ir::context::BindgenContext;
+use crate::clang;
+use crate::ir::context::BindgenContext;
 use std::cmp;
 
 /// A type that represents the struct layout of a type.

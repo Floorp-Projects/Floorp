@@ -1,7 +1,7 @@
 //! Helpers for code generation that don't need macro expansion.
 
-use ir::context::BindgenContext;
-use ir::layout::Layout;
+use crate::ir::context::BindgenContext;
+use crate::ir::layout::Layout;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::TokenStreamExt;
 
@@ -136,10 +136,10 @@ pub fn bitfield_unit(ctx: &BindgenContext, layout: Layout) -> TokenStream {
 }
 
 pub mod ast_ty {
-    use ir::context::BindgenContext;
-    use ir::function::FunctionSig;
-    use ir::layout::Layout;
-    use ir::ty::FloatKind;
+    use crate::ir::context::BindgenContext;
+    use crate::ir::function::FunctionSig;
+    use crate::ir::layout::Layout;
+    use crate::ir::ty::FloatKind;
     use proc_macro2::{self, TokenStream};
     use std::str::FromStr;
 

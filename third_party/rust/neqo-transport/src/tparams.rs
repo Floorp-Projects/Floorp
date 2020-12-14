@@ -521,4 +521,21 @@ mod tests {
             assert!(!tps_b.ok_for_0rtt(&tps_a));
         }
     }
+
+    #[test]
+    fn active_connection_id_limit_lt_2_is_error() {
+        let mut tps = TransportParameters::default();
+
+        // Intentionally set an invalid value for the ACTIVE_CONNECTION_ID_LIMIT transport parameter.
+        tps.params
+            .insert(ACTIVE_CONNECTION_ID_LIMIT, TransportParameter::Integer(1));
+
+        let mut enc = Encoder::default();
+        tps.encode(&mut enc);
+
+        // When decoding a set of transport parameters with an invalid ACTIVE_CONNECTION_ID_LIMIT
+        // the result should be an error.
+        let invalid_decode_result = TransportParameters::decode(&mut enc.as_decoder());
+        assert!(invalid_decode_result.is_err());
+    }
 }

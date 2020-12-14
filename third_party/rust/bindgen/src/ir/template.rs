@@ -28,10 +28,10 @@
 //! ```
 
 use super::context::{BindgenContext, ItemId, TypeId};
-use super::item::{IsOpaque, Item, ItemAncestors, ItemCanonicalPath};
+use super::item::{IsOpaque, Item, ItemAncestors};
 use super::traversal::{EdgeKind, Trace, Tracer};
-use clang;
-use parse::ClangItemParser;
+use crate::clang;
+use crate::parse::ClangItemParser;
 
 /// Template declaration (and such declaration's template parameters) related
 /// methods.
@@ -306,12 +306,13 @@ impl IsOpaque for TemplateInstantiation {
         // correct fix is to make `canonical_{name,path}` include template
         // arguments properly.
 
-        let mut path = item.canonical_path(ctx);
+        let mut path = item.path_for_whitelisting(ctx).clone();
         let args: Vec<_> = self
             .template_arguments()
             .iter()
             .map(|arg| {
-                let arg_path = arg.canonical_path(ctx);
+                let arg_path =
+                    ctx.resolve_item(*arg).path_for_whitelisting(ctx);
                 arg_path[1..].join("::")
             })
             .collect();

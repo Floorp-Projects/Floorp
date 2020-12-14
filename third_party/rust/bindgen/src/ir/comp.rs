@@ -9,15 +9,15 @@ use super::layout::Layout;
 use super::template::TemplateParameters;
 use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
-use clang;
-use codegen::struct_layout::{align_to, bytes_from_bits_pow2};
-use ir::derive::CanDeriveCopy;
-use parse::{ClangItemParser, ParseError};
+use crate::clang;
+use crate::codegen::struct_layout::{align_to, bytes_from_bits_pow2};
+use crate::ir::derive::CanDeriveCopy;
+use crate::parse::{ClangItemParser, ParseError};
+use crate::HashMap;
 use peeking_take_while::PeekableExt;
 use std::cmp;
 use std::io;
 use std::mem;
-use HashMap;
 
 /// The kind of compound type.
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -748,16 +748,13 @@ impl CompFields {
 
         match result {
             Ok((fields, has_bitfield_units)) => {
-                mem::replace(
-                    self,
-                    CompFields::AfterComputingBitfieldUnits {
-                        fields,
-                        has_bitfield_units,
-                    },
-                );
+                *self = CompFields::AfterComputingBitfieldUnits {
+                    fields,
+                    has_bitfield_units,
+                };
             }
             Err(()) => {
-                mem::replace(self, CompFields::ErrorComputingBitfieldUnits);
+                *self = CompFields::ErrorComputingBitfieldUnits;
             }
         }
     }
@@ -828,9 +825,11 @@ impl CompFields {
                     }
 
                     anon_field_counter += 1;
-                    let generated_name =
-                        format!("__bindgen_anon_{}", anon_field_counter);
-                    *name = Some(generated_name);
+                    *name = Some(format!(
+                        "{}{}",
+                        ctx.options().anon_fields_prefix,
+                        anon_field_counter
+                    ));
                 }
                 Field::Bitfields(ref mut bu) => {
                     for bitfield in &mut bu.bitfields {
@@ -1410,8 +1409,8 @@ impl CompInfo {
                         Item::from_ty_or_ref(cur.cur_type(), cur, None, ctx);
                     ci.base_members.push(Base {
                         ty: type_id,
-                        kind: kind,
-                        field_name: field_name,
+                        kind,
+                        field_name,
                     });
                 }
                 CXCursor_Constructor | CXCursor_Destructor |

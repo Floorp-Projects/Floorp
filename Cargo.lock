@@ -269,13 +269,12 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.53.2"
+version = "0.56.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bb26d6a69a335b8cb0e7c7e9775cd5666611dc50a37177c3f2cedcfc040e8c8"
+checksum = "2da379dbebc0b76ef63ca68d8fc6e71c0f13e59432e0987e508c1820e6ab5239"
 dependencies = [
  "bitflags",
  "cexpr",
- "cfg-if 0.1.10",
  "clang-sys",
  "lazy_static",
  "lazycell",
@@ -595,13 +594,13 @@ dependencies = [
 
 [[package]]
 name = "clang-sys"
-version = "0.29.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f92986241798376849e1a007827041fed9bb36195822c2049d18e174420e0534"
+checksum = "0659001ab56b791be01d4b729c44376edc6718cf389a502e579b77b758f3296c"
 dependencies = [
  "glob",
  "libc",
- "libloading 0.5.2",
+ "libloading 0.6.2",
 ]
 
 [[package]]
@@ -728,9 +727,9 @@ dependencies = [
 
 [[package]]
 name = "coreaudio-sys"
-version = "0.2.4"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e81f1c165c33ffab90a03077ac3b03462b34d5947145dfa48102e063d581502c"
+checksum = "2b7e3347be6a09b46aba228d6608386739fb70beff4f61e07422da87b0bb31fa"
 dependencies = [
  "bindgen",
 ]
@@ -3294,8 +3293,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.4.16"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.16#1b0664a1e2b3ac59a5c919d32ddc284dc57634e6"
+version = "0.4.18"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
 dependencies = [
  "chrono",
  "env_logger",
@@ -3306,8 +3305,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.4.16"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.16#1b0664a1e2b3ac59a5c919d32ddc284dc57634e6"
+version = "0.4.18"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
 dependencies = [
  "bindgen",
  "log",
@@ -3319,8 +3318,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.4.16"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.16#1b0664a1e2b3ac59a5c919d32ddc284dc57634e6"
+version = "0.4.18"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
 dependencies = [
  "log",
  "neqo-common",
@@ -3333,8 +3332,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.4.16"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.16#1b0664a1e2b3ac59a5c919d32ddc284dc57634e6"
+version = "0.4.18"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
 dependencies = [
  "lazy_static",
  "log",
@@ -3347,8 +3346,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.4.16"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.16#1b0664a1e2b3ac59a5c919d32ddc284dc57634e6"
+version = "0.4.18"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
 dependencies = [
  "indexmap",
  "lazy_static",

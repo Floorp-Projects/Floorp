@@ -1,12 +1,12 @@
 //! Determining which types has typed parameters in array.
 
 use super::{generate_dependencies, ConstrainResult, MonotoneFramework};
-use ir::comp::Field;
-use ir::comp::FieldMethods;
-use ir::context::{BindgenContext, ItemId};
-use ir::traversal::EdgeKind;
-use ir::ty::TypeKind;
-use {HashMap, HashSet};
+use crate::ir::comp::Field;
+use crate::ir::comp::FieldMethods;
+use crate::ir::context::{BindgenContext, ItemId};
+use crate::ir::traversal::EdgeKind;
+use crate::ir::ty::TypeKind;
+use crate::{HashMap, HashSet};
 
 /// An analysis that finds for each IR item whether it has array or not.
 ///

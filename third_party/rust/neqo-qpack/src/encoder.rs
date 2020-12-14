@@ -191,7 +191,7 @@ impl QPackEncoder {
     fn stream_cancellation(&mut self, stream_id: u64) -> Res<()> {
         self.stats.stream_cancelled_recv += 1;
         let mut was_blocker = false;
-        if let Some(hb_list) = self.unacked_header_blocks.get_mut(&stream_id) {
+        if let Some(mut hb_list) = self.unacked_header_blocks.remove(&stream_id) {
             debug_assert!(!hb_list.is_empty());
             while let Some(ref_list) = hb_list.pop_front() {
                 for iter in ref_list {
@@ -546,6 +546,41 @@ mod tests {
             // We will try to really change the table only when we send the change capacity instruction.
             self.encoder.send(&mut self.conn)
         }
+
+        pub fn insert(&mut self, header: &[u8], value: &[u8], inst: &[u8]) {
+            let res = self.encoder.send_and_insert(&mut self.conn, header, value);
+            assert!(res.is_ok());
+            self.send_instructions(inst);
+        }
+
+        pub fn encode_header_block(
+            &mut self,
+            stream_id: u64,
+            headers: &[Header],
+            expected_encoding: &[u8],
+            inst: &[u8],
+        ) {
+            let buf = self
+                .encoder
+                .encode_header_block(&mut self.conn, headers, stream_id)
+                .unwrap();
+            assert_eq!(&buf[..], expected_encoding);
+            self.send_instructions(inst);
+        }
+
+        pub fn send_instructions(&mut self, encoder_instruction: &[u8]) {
+            self.encoder.send(&mut self.conn).unwrap();
+            let out = self.conn.process(None, now());
+            let out2 = self.peer_conn.process(out.dgram(), now());
+            let _ = self.conn.process(out2.dgram(), now());
+            let mut buf = [0_u8; 100];
+            let (amount, fin) = self
+                .peer_conn
+                .stream_recv(self.send_stream_id, &mut buf)
+                .unwrap();
+            assert_eq!(fin, false);
+            assert_eq!(buf[..amount], encoder_instruction[..]);
+        }
     }
 
     fn connect_generic<F>(huffman: bool, f: F) -> TestEncoder
@@ -597,20 +632,6 @@ mod tests {
 
             handshake(client, server);
         })
-    }
-
-    fn send_instructions(encoder: &mut TestEncoder, encoder_instruction: &[u8]) {
-        encoder.encoder.send(&mut encoder.conn).unwrap();
-        let out = encoder.conn.process(None, now());
-        let out2 = encoder.peer_conn.process(out.dgram(), now());
-        let _ = encoder.conn.process(out2.dgram(), now());
-        let mut buf = [0_u8; 100];
-        let (amount, fin) = encoder
-            .peer_conn
-            .stream_recv(encoder.send_stream_id, &mut buf)
-            .unwrap();
-        assert_eq!(fin, false);
-        assert_eq!(buf[..amount], encoder_instruction[..]);
     }
 
     fn recv_instruction(encoder: &mut TestEncoder, decoder_instruction: &[u8]) {
@@ -667,7 +688,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
         assert_eq!(Error::DynamicTableFull, res.unwrap_err());
-        send_instructions(&mut encoder, &[0x02]);
+        encoder.send_instructions(&[0x02]);
     }
 
     // test insert_with_name_literal - succeeds
@@ -677,7 +698,7 @@ mod tests {
 
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
         // test the change capacity instruction.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         // insert "content-length: 1234
         let res =
@@ -685,7 +706,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
     }
 
     #[test]
@@ -693,7 +714,7 @@ mod tests {
         let mut encoder = connect(false);
 
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
     }
 
     struct TestElement {
@@ -766,7 +787,7 @@ mod tests {
         encoder.encoder.set_max_capacity(200).unwrap();
 
         // test the change capacity instruction.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         for t in &test_cases {
             let buf = encoder
@@ -774,7 +795,7 @@ mod tests {
                 .encode_header_block(&mut encoder.conn, &t.headers, 1)
                 .unwrap();
             assert_eq!(&buf[..], t.header_block);
-            send_instructions(&mut encoder, t.encoder_inst);
+            encoder.send_instructions(t.encoder_inst);
         }
     }
 
@@ -840,7 +861,7 @@ mod tests {
         encoder.encoder.set_max_capacity(200).unwrap();
 
         // test the change capacity instruction.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         for t in &test_cases {
             let buf = encoder
@@ -848,7 +869,7 @@ mod tests {
                 .encode_header_block(&mut encoder.conn, &t.headers, 1)
                 .unwrap();
             assert_eq!(&buf[..], t.header_block);
-            send_instructions(&mut encoder, t.encoder_inst);
+            encoder.send_instructions(t.encoder_inst);
         }
     }
 
@@ -860,7 +881,7 @@ mod tests {
         encoder.encoder.set_max_capacity(60).unwrap();
 
         // test the change capacity instruction.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_60);
+        encoder.send_instructions(CAP_INSTRUCTION_60);
 
         // insert "content-length: 1234
         let res =
@@ -868,7 +889,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         // insert "content-length: 12345 which will fail because the ntry in the table cannot be evicted.
         let res =
@@ -876,7 +897,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_2);
         assert!(res.is_err());
-        send_instructions(&mut encoder, &[]);
+        encoder.send_instructions(&[]);
 
         // receive an insert count increment.
         recv_instruction(&mut encoder, &[0x01]);
@@ -887,7 +908,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_2);
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_2_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_2_NAME_LITERAL);
     }
 
     // Test inserts block on waiting for acks
@@ -899,7 +920,7 @@ mod tests {
 
         assert!(encoder.encoder.set_max_capacity(60).is_ok());
         // test the change capacity instruction.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_60);
+        encoder.send_instructions(CAP_INSTRUCTION_60);
 
         // insert "content-length: 1234
         let res =
@@ -907,7 +928,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         // receive an insert count increment.
         recv_instruction(&mut encoder, &[0x01]);
@@ -922,7 +943,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(&buf[..], ENCODE_INDEXED_REF_DYNAMIC);
-        send_instructions(&mut encoder, &[]);
+        encoder.send_instructions(&[]);
 
         // insert "content-length: 12345 which will fail because the entry in the table cannot be evicted
         let res =
@@ -930,7 +951,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_2);
         assert!(res.is_err());
-        send_instructions(&mut encoder, &[]);
+        encoder.send_instructions(&[]);
 
         if wait == 0 {
             // receive a header_ack.
@@ -946,7 +967,7 @@ mod tests {
                 .encoder
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_2);
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_2_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_2_NAME_LITERAL);
     }
 
     #[test]
@@ -982,7 +1003,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(60).is_ok());
 
         // change capacity to 60.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_60);
+        encoder.send_instructions(CAP_INSTRUCTION_60);
 
         // insert "content-length: 1234
         let res =
@@ -991,7 +1012,7 @@ mod tests {
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
 
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         encoder.encoder.set_max_blocked_streams(1).unwrap();
 
@@ -1008,7 +1029,7 @@ mod tests {
 
         assert_eq!(encoder.encoder.blocked_stream_cnt(), 1);
 
-        send_instructions(&mut encoder, &[]);
+        encoder.send_instructions(&[]);
 
         // The next one will not use the dynamic entry because it is exceeding the max_blocked_streams
         // limit.
@@ -1022,7 +1043,7 @@ mod tests {
             .unwrap();
         assert_is_index_to_static_name_only(&buf);
 
-        send_instructions(&mut encoder, &[]);
+        encoder.send_instructions(&[]);
         assert_eq!(encoder.encoder.blocked_stream_cnt(), 1);
 
         // another header block to already blocked stream can still use the entry.
@@ -1046,7 +1067,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
 
         // change capacity to 200.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         // insert "content-length: 1234
         let res =
@@ -1055,7 +1076,7 @@ mod tests {
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
 
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         // insert "content-length: 12345
         let res =
@@ -1064,7 +1085,7 @@ mod tests {
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_2);
 
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_2_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_2_NAME_LITERAL);
 
         encoder.encoder.set_max_blocked_streams(1).unwrap();
 
@@ -1102,7 +1123,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
 
         // change capacity to 200.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         encoder.encoder.set_max_blocked_streams(1).unwrap();
 
@@ -1155,7 +1176,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
 
         // change capacity to 200.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         encoder.encoder.set_max_blocked_streams(1).unwrap();
 
@@ -1201,7 +1222,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
 
         // change capacity to 200.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         encoder.encoder.set_max_blocked_streams(1).unwrap();
 
@@ -1247,7 +1268,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
 
         // change capacity to 200.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         encoder.encoder.set_max_blocked_streams(2).unwrap();
 
@@ -1293,7 +1314,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
 
         // change capacity to 200.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         encoder.encoder.set_max_blocked_streams(2).unwrap();
 
@@ -1341,7 +1362,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(200).is_ok());
 
         // change capacity to 200.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_200);
+        encoder.send_instructions(CAP_INSTRUCTION_200);
 
         encoder.encoder.set_max_blocked_streams(2).unwrap();
 
@@ -1401,7 +1422,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(60).is_ok());
 
         // change capacity to 60.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_60);
+        encoder.send_instructions(CAP_INSTRUCTION_60);
 
         encoder.encoder.set_max_blocked_streams(2).unwrap();
 
@@ -1412,7 +1433,7 @@ mod tests {
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
 
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         // send a header block, it refers to unacked entry.
         let buf = encoder
@@ -1448,7 +1469,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(60).is_ok());
 
         // change capacity to 60.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_60);
+        encoder.send_instructions(CAP_INSTRUCTION_60);
 
         encoder.encoder.set_max_blocked_streams(2).unwrap();
 
@@ -1459,7 +1480,7 @@ mod tests {
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
 
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         // send a header block, it refers to unacked entry.
         let buf = encoder
@@ -1495,7 +1516,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(60).is_ok());
 
         // change capacity to 60.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_60);
+        encoder.send_instructions(CAP_INSTRUCTION_60);
 
         encoder.encoder.set_max_blocked_streams(2).unwrap();
 
@@ -1506,7 +1527,7 @@ mod tests {
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
 
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         // trying to evict the entry will failed, because the entry is not acked.
         assert!(encoder.change_capacity(10).is_err());
@@ -1525,7 +1546,7 @@ mod tests {
         assert!(encoder.encoder.set_max_capacity(60).is_ok());
 
         // change capacity to 60.
-        send_instructions(&mut encoder, CAP_INSTRUCTION_60);
+        encoder.send_instructions(CAP_INSTRUCTION_60);
 
         encoder.encoder.set_max_blocked_streams(2).unwrap();
 
@@ -1536,7 +1557,7 @@ mod tests {
                 .send_and_insert(&mut encoder.conn, HEADER_CONTENT_LENGTH, VALUE_1);
 
         assert!(res.is_ok());
-        send_instructions(&mut encoder, HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
+        encoder.send_instructions(HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL);
 
         // send a header block, it refers to unacked entry.
         let buf = encoder
@@ -1578,7 +1599,7 @@ mod tests {
         // change capacity to 1000 and max_block streams to 20.
         encoder.encoder.set_max_blocked_streams(20).unwrap();
         assert!(encoder.encoder.set_max_capacity(1000).is_ok());
-        send_instructions(&mut encoder, CAP_INSTRUCTION_1000);
+        encoder.send_instructions(CAP_INSTRUCTION_1000);
 
         // Write some data to fill the flow control allowance.
         let stream_id = encoder.conn.stream_create(StreamType::UniDi).unwrap();
@@ -1622,7 +1643,7 @@ mod tests {
         assert_eq!(buf2[2] & 0xf0, 0x20);
 
         // Ensure that we have sent only one instruction for (String::from("something"), String::from("1234"))
-        send_instructions(&mut encoder, ONE_INSTRUCTION);
+        encoder.send_instructions(ONE_INSTRUCTION);
 
         // Try writing a new header block. Now, headers will be added to the dynamic table again, because
         // instructions can be sent.
@@ -1642,7 +1663,7 @@ mod tests {
         assert_eq!(buf3[3], 0x11);
 
         // Asset that 2 instruction has been sent
-        send_instructions(&mut encoder, TWO_INSTRUCTION);
+        encoder.send_instructions(TWO_INSTRUCTION);
     }
 
     #[test]
@@ -1651,7 +1672,7 @@ mod tests {
 
         // change capacity to 2000.
         assert!(encoder.encoder.set_max_capacity(2000).is_ok());
-        send_instructions(&mut encoder, CAP_INSTRUCTION_1500);
+        encoder.send_instructions(CAP_INSTRUCTION_1500);
     }
 
     #[test]
@@ -1683,5 +1704,34 @@ mod tests {
                 3,
             )
             .is_ok());
+    }
+
+    #[test]
+    fn test_streams_cancel_cleans_up_unacked_header_blocks() {
+        let mut encoder = connect(false);
+
+        encoder.encoder.set_max_blocked_streams(10).unwrap();
+        assert!(encoder.change_capacity(60).is_ok());
+        encoder.send_instructions(CAP_INSTRUCTION_60);
+
+        // insert "content-length: 1234
+        encoder.insert(
+            HEADER_CONTENT_LENGTH,
+            VALUE_1,
+            HEADER_CONTENT_LENGTH_VALUE_1_NAME_LITERAL,
+        );
+
+        // send a header block
+        encoder.encode_header_block(
+            1,
+            &[(String::from("content-length"), String::from("1234"))],
+            ENCODE_INDEXED_REF_DYNAMIC,
+            &[],
+        );
+
+        // receive a stream canceled instruction.
+        recv_instruction(&mut encoder, STREAM_CANCELED_ID_1);
+
+        recv_instruction(&mut encoder, &[0x01]);
     }
 }
