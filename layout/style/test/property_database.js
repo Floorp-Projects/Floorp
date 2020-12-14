@@ -11932,17 +11932,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.touch_action.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.text-justify.enabled")) {
-  gCSSProperties["text-justify"] = {
-    domProp: "textJustify",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_placeholder: true,
-    initial_values: ["auto"],
-    other_values: ["none", "inter-word", "inter-character", "distribute"],
-    invalid_values: [],
-  };
-}
+gCSSProperties["text-justify"] = {
+  domProp: "textJustify",
+  inherited: true,
+  type: CSS_TYPE_LONGHAND,
+  applies_to_placeholder: true,
+  initial_values: ["auto"],
+  other_values: ["none", "inter-word", "inter-character", "distribute"],
+  invalid_values: [],
+};
 
 if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   gCSSProperties["font-variation-settings"] = {
