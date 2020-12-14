@@ -156,9 +156,6 @@ this.uicontrol = (function() {
     cancel: () => {
       sendEvent("cancel-shot", "overlay-cancel-button");
       exports.deactivate();
-    }, save: () => {
-      sendEvent("save-shot", "overlay-save-button");
-      shooter.takeShot("selection", selectedPos);
     }, download: () => {
       sendEvent("download-shot", "overlay-download-button");
       downloadShot();
@@ -210,17 +207,6 @@ this.uicontrol = (function() {
         0, 0,
         width, height);
       setState("previewing");
-    },
-    onSavePreview: () => {
-      sendEvent(`save-${captureType.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`, "save-preview-button");
-      if (captureType === "fullPageTruncated") {
-        selectedPos = new Selection(
-          0, 0,
-          Math.min(selectedPos.right, MAX_PAGE_WIDTH),
-          Math.min(selectedPos.bottom, MAX_PAGE_HEIGHT));
-        dataUrl = null;
-      }
-      shooter.takeShot(captureType, selectedPos, dataUrl);
     },
     onDownloadPreview: () => {
       sendEvent(`download-${captureType.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`, "download-preview-button");
@@ -292,9 +278,7 @@ this.uicontrol = (function() {
 
   stateHandlers.previewing = {
     start() {
-      dataUrl = shooter.screenshotPage(selectedPos, captureType);
-      ui.iframe.usePreview();
-      ui.Preview.display(dataUrl, captureType === "fullPageTruncated");
+      shooter.preview(selectedPos, captureType);
     },
   };
 

@@ -10,108 +10,49 @@ this.takeshot = (function() {
   const exports = {};
   const Shot = shot.AbstractShot;
   const { sendEvent, incrementCount } = analytics;
+  const MAX_CANVAS_DIMENSION = 32767;
 
-  communication.register("takeShot", catcher.watchFunction((sender, options) => {
-    const { captureType, captureText, scroll, selectedPos, shotId } = options;
-    const shot = new Shot(main.getBackend(), shotId, options.shot);
-    let imageBlob = options.imageBlob;
-    let capturePromise = Promise.resolve();
-    let openedTab;
-    let thumbnailBlob;
-    if (!shot.clipNames().length) {
-      // canvas.drawWindow isn't available, so we fall back to captureVisibleTab
-      capturePromise = screenshotPage(selectedPos, scroll).then((dataUrl) => {
-        imageBlob = buildSettings.uploadBinary ? blobConverters.dataUrlToBlob(dataUrl) : null;
-        shot.addClip({
-          createdDate: Date.now(),
-          image: {
-            url: buildSettings.uploadBinary ? "" : dataUrl,
-            captureType,
-            text: captureText,
-            location: selectedPos,
-            dimensions: {
-              x: selectedPos.right - selectedPos.left,
-              y: selectedPos.bottom - selectedPos.top,
-            },
-          },
-        });
-      });
-    }
-    const shotAbTests = {};
-    const abTests = auth.getAbTests();
-    for (const testName of Object.keys(abTests)) {
-      if (abTests[testName].shotField) {
-        shotAbTests[testName] = abTests[testName].value;
-      }
-    }
-    if (Object.keys(shotAbTests).length) {
-      shot.abTests = shotAbTests;
-    }
-    return catcher.watchPromise(capturePromise.then(() => {
-      if (buildSettings.uploadBinary) {
-        const blobToUrlPromise = blobConverters.blobToDataUrl(imageBlob);
-        return thumbnailGenerator.createThumbnailBlobFromPromise(shot, blobToUrlPromise);
-      }
-      return thumbnailGenerator.createThumbnailUrl(shot);
-    }).then((thumbnailImage) => {
-      if (buildSettings.uploadBinary) {
-        thumbnailBlob = thumbnailImage;
-      } else {
-        shot.thumbnail = thumbnailImage;
-      }
-      return browser.experiments.screenshots.getUpdateChannel();
-    }).then((firefoxChannel) => {
-      shot.firefoxChannel = firefoxChannel;
-      return browser.tabs.create({url: shot.creatingUrl});
-    }).then((tab) => {
-      openedTab = tab;
-      sendEvent("internal", "open-shot-tab");
-      return uploadShot(shot, imageBlob, thumbnailBlob);
-    }).then(() => {
-      return browser.tabs.update(openedTab.id, {url: shot.viewUrl, loadReplace: true}).then(
-        null,
-        (error) => {
-          // FIXME: If https://bugzilla.mozilla.org/show_bug.cgi?id=1365718 is resolved,
-          // use the errorCode added as an additional check:
-          if ((/invalid tab id/i).test(error)) {
-            // This happens if the tab was closed before the upload completed
-            return browser.tabs.create({url: shot.viewUrl});
-          }
-          throw error;
-        }
-      );
-    }).then(() => {
-      catcher.watchPromise(incrementCount("upload"));
-      return shot.viewUrl;
-    }).catch((error) => {
-      browser.tabs.remove(openedTab.id);
-      throw error;
-    }));
-  }));
-
-  communication.register("screenshotPage", (sender, selectedPos, scroll) => {
-    return screenshotPage(selectedPos, scroll);
+  communication.register("screenshotPage", (sender, selectedPos, scroll, isFullPage, devicePixelRatio) => {
+    return screenshotPage(selectedPos, scroll, isFullPage, devicePixelRatio);
   });
 
-  function screenshotPage(pos, scroll) {
+  function screenshotPage(pos, scroll, isFullPage, devicePixelRatio) {
     pos = {
       top: pos.top - scroll.scrollY,
       left: pos.left - scroll.scrollX,
       bottom: pos.bottom - scroll.scrollY,
       right: pos.right - scroll.scrollX,
     };
-    pos.width = pos.right - pos.left;
-    pos.height = pos.bottom - pos.top;
-    return catcher.watchPromise(browser.tabs.captureVisibleTab(
+    pos.width = Math.min(pos.right - pos.left, MAX_CANVAS_DIMENSION);
+    pos.height = Math.min(pos.bottom - pos.top, MAX_CANVAS_DIMENSION);
+
+    // If we are printing the full page or a truncated full page,
+    // we must pass in this rectangle to preview the entire image
+    let options = {format: "png"};
+    if (isFullPage) {
+      let rectangle = {
+        x: 0,
+        y: 0,
+        width: pos.width,
+        height: pos.height,
+      }
+      options.rect = rectangle;
+
+      // To avoid creating extremely large images (which causes
+      // performance problems), we set the scale to 1.
+      devicePixelRatio = options.scale = 1;
+    }
+
+    return catcher.watchPromise(browser.tabs.captureTab(
       null,
-      {format: "png"}
+      options,
     ).then((dataUrl) => {
       const image = new Image();
       image.src = dataUrl;
       return new Promise((resolve, reject) => {
         image.onload = catcher.watchFunction(() => {
-          const xScale = image.width / scroll.innerWidth;
-          const yScale = image.height / scroll.innerHeight;
+          const xScale = devicePixelRatio;
+          const yScale = devicePixelRatio;
           const canvas = document.createElement("canvas");
           canvas.height = pos.height * yScale;
           canvas.width = pos.width * xScale;
