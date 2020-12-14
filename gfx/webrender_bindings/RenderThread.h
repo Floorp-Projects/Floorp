@@ -13,7 +13,6 @@
 #include "base/message_loop.h"
 #include "GLTypes.h"  // for GLenum
 #include "nsISupportsImpl.h"
-#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/DataMutex.h"
@@ -131,8 +130,7 @@ class RendererEvent {
 /// singleton but in some places we pretend it's not). Hopefully we can evolve
 /// this in a way that keeps the door open to removing the singleton bits.
 class RenderThread final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(
-      RenderThread)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD(RenderThread)
 
  public:
   /// Can be called from any thread.
