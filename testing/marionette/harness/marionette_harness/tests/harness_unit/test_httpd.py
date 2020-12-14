@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import json
 import os
 import types
-import urllib2
 
 import six
 from six.moves.urllib_request import urlopen
