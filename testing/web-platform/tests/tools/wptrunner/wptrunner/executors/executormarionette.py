@@ -729,8 +729,9 @@ class ExecuteAsyncScriptRun(TimedRunner):
                 # timeout is set too high. This works at least.
                 self.protocol.base.set_timeout(2**28 - 1)
         except IOError:
-            self.logger.error("Lost marionette connection before starting test")
-            return Stop
+            msg = "Lost marionette connection before starting test"
+            self.logger.error(msg)
+            return ("INTERNAL-ERROR", msg)
 
     def before_run(self):
         index = self.url.rfind("/storage/")
