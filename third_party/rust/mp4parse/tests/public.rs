@@ -4,6 +4,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 extern crate mp4parse as mp4;
 
+use mp4::Error;
 use std::convert::TryInto;
 use std::fs::File;
 use std::io::{Cursor, Read};
@@ -28,10 +29,15 @@ static AUDIO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_audio_init.mp4";
 static VIDEO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_video_init.mp4";
 static VIDEO_AV1_MP4: &str = "tests/tiny_av1.mp4";
 static IMAGE_AVIF: &str = "av1-avif/testFiles/Microsoft/Monochrome.avif";
-static IMAGE_AVIF_CORRUPT: &str = "tests/bug-1655846.avif";
-static IMAGE_AVIF_CORRUPT_2: &str = "tests/bug-1661347.avif";
+static IMAGE_AVIF_EXTENTS: &str = "tests/kodim-extents.avif";
+static IMAGE_AVIF_ALPHA: &str = "tests/bug-1661347.avif";
+static IMAGE_AVIF_CORRUPT: &str = "tests/corrupt/bug-1655846.avif";
+static IMAGE_AVIF_CORRUPT_2: &str = "tests/corrupt/bug-1661347.avif";
+static IMAGE_AVIF_CORRUPT_3: &str = "tests/corrupt/bad-ipma-version.avif";
+static IMAGE_AVIF_CORRUPT_4: &str = "tests/corrupt/bad-ipma-flags.avif";
 static IMAGE_AVIF_GRID: &str = "av1-avif/testFiles/Microsoft/Summer_in_Tomsk_720p_5x4_grid.avif";
-static AVIF_TEST_DIR: &str = "av1-avif/testFiles";
+static AVIF_TEST_DIRS: &[&str] = &["tests", "av1-avif/testFiles"];
+static AVIF_CORRUPT_IMAGES: &str = "tests/corrupt";
 
 // Adapted from https://github.com/GuillaumeGomez/audio-video-metadata/blob/9dff40f565af71d5502e03a2e78ae63df95cfd40/src/metadata.rs#L53
 #[test]
@@ -42,8 +48,7 @@ fn public_api() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     assert_eq!(context.timescale, Some(mp4::MediaTimeScale(1000)));
     for track in context.tracks {
         match track.track_type {
@@ -163,8 +168,7 @@ fn public_metadata() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     let udta = context
         .userdata
         .expect("didn't find udta")
@@ -231,8 +235,7 @@ fn public_metadata_gnre() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     let udta = context
         .userdata
         .expect("didn't find udta")
@@ -300,8 +303,7 @@ fn public_audio_tenc() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     for track in context.tracks {
         let stsd = track.stsd.expect("expected an stsd");
         let a = match stsd.descriptions.first().expect("expected a SampleEntry") {
@@ -359,8 +361,7 @@ fn public_video_cenc() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     for track in context.tracks {
         let stsd = track.stsd.expect("expected an stsd");
         let v = match stsd.descriptions.first().expect("expected a SampleEntry") {
@@ -432,8 +433,7 @@ fn public_audio_cbcs() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     for track in context.tracks {
         let stsd = track.stsd.expect("expected an stsd");
         assert_eq!(stsd.descriptions.len(), 2);
@@ -515,8 +515,7 @@ fn public_video_cbcs() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     for track in context.tracks {
         let stsd = track.stsd.expect("expected an stsd");
         assert_eq!(stsd.descriptions.len(), 2);
@@ -575,8 +574,7 @@ fn public_video_av1() {
     fd.read_to_end(&mut buf).expect("File error");
 
     let mut c = Cursor::new(&buf);
-    let mut context = mp4::MediaContext::new();
-    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    let context = mp4::read_mp4(&mut c).expect("read_mp4 failed");
     for track in context.tracks {
         // track part
         assert_eq!(track.duration, Some(mp4::TrackScaledTime(512, 0)));
@@ -621,55 +619,111 @@ fn public_video_av1() {
 }
 
 #[test]
+fn public_mp4_bug_1185230() {
+    let input = &mut File::open("tests/test_case_1185230.mp4").expect("Unknown file");
+    let context = mp4::read_mp4(input).expect("read_mp4 failed");
+    let number_video_tracks = context
+        .tracks
+        .iter()
+        .filter(|t| t.track_type == mp4::TrackType::Video)
+        .count();
+    let number_audio_tracks = context
+        .tracks
+        .iter()
+        .filter(|t| t.track_type == mp4::TrackType::Audio)
+        .count();
+    assert_eq!(number_video_tracks, 2);
+    assert_eq!(number_audio_tracks, 2);
+}
+
+#[test]
 fn public_avif_primary_item() {
-    let context = &mut mp4::AvifContext::new();
     let input = &mut File::open(IMAGE_AVIF).expect("Unknown file");
-    mp4::read_avif(input, context).expect("read_avif failed");
-    assert_eq!(context.primary_item.len(), 6979);
-    assert_eq!(context.primary_item[0..4], [0x12, 0x00, 0x0a, 0x0a]);
+    let context = mp4::read_avif(input).expect("read_avif failed");
+    assert_eq!(context.primary_item().len(), 6979);
+    assert_eq!(context.primary_item()[0..4], [0x12, 0x00, 0x0a, 0x0a]);
+}
+
+#[test]
+fn public_avif_primary_item_split_extents() {
+    let input = &mut File::open(IMAGE_AVIF_EXTENTS).expect("Unknown file");
+    let context = mp4::read_avif(input).expect("read_avif failed");
+    assert_eq!(context.primary_item().len(), 4387);
+}
+
+#[test]
+fn public_avif_alpha_item() {
+    let input = &mut File::open(IMAGE_AVIF_ALPHA).expect("Unknown file");
+    let context = mp4::read_avif(input).expect("read_avif failed");
+    assert!(context.alpha_item().is_some());
+    assert!(!context.premultiplied_alpha);
 }
 
 #[test]
 fn public_avif_bug_1655846() {
-    let context = &mut mp4::AvifContext::new();
     let input = &mut File::open(IMAGE_AVIF_CORRUPT).expect("Unknown file");
-    assert!(mp4::read_avif(input, context).is_err());
+    assert!(mp4::read_avif(input).is_err());
 }
 
 #[test]
 fn public_avif_bug_1661347() {
-    let context = &mut mp4::AvifContext::new();
     let input = &mut File::open(IMAGE_AVIF_CORRUPT_2).expect("Unknown file");
-    assert!(mp4::read_avif(input, context).is_err());
+    assert!(mp4::read_avif(input).is_err());
+}
+
+fn assert_invalid_data<T: std::fmt::Debug>(result: mp4::Result<T>, expected_msg: &str) {
+    match result {
+        Err(Error::InvalidData(msg)) if msg == expected_msg => {}
+        r => panic!(
+            "Expected Err(Error::InvalidData({:?})), found {:?}",
+            expected_msg, r
+        ),
+    }
+}
+
+#[test]
+fn public_avif_bad_ipma_version() {
+    let input = &mut File::open(IMAGE_AVIF_CORRUPT_3).expect("Unknown file");
+    let expected_msg = "The version 0 should be used unless 32-bit item_ID values are needed";
+    assert_invalid_data(mp4::read_avif(input), expected_msg);
+}
+
+#[test]
+fn public_avif_bad_ipma_flags() {
+    let input = &mut File::open(IMAGE_AVIF_CORRUPT_4).expect("Unknown file");
+    let expected_msg = "flags should be equal to 0 unless there are more than 127 properties in the ItemPropertyContainerBox";
+    assert_invalid_data(mp4::read_avif(input), expected_msg);
 }
 
 #[test]
 #[ignore] // Remove when we add support; see https://github.com/mozilla/mp4parse-rust/issues/198
 fn public_avif_primary_item_is_grid() {
-    let context = &mut mp4::AvifContext::new();
     let input = &mut File::open(IMAGE_AVIF_GRID).expect("Unknown file");
-    mp4::read_avif(input, context).expect("read_avif failed");
+    mp4::read_avif(input).expect("read_avif failed");
     // Add some additional checks
 }
 
 #[test]
 fn public_avif_read_samples() {
-    env_logger::init();
-
-    for entry in walkdir::WalkDir::new(AVIF_TEST_DIR) {
-        let entry = entry.expect("AVIF entry");
-        let path = entry.path();
-        if !path.is_file() || path.extension().unwrap_or_default() != "avif" {
-            eprintln!("Skipping {:?}", path);
-            continue; // Skip directories, ReadMe.txt, etc.
+    for dir in AVIF_TEST_DIRS {
+        for entry in walkdir::WalkDir::new(dir) {
+            let entry = entry.expect("AVIF entry");
+            let path = entry.path();
+            if !path.is_file() || path.extension().unwrap_or_default() != "avif" {
+                eprintln!("Skipping {:?}", path);
+                continue; // Skip directories, ReadMe.txt, etc.
+            }
+            if path.parent().unwrap() == Path::new(AVIF_CORRUPT_IMAGES) {
+                eprintln!("Skipping {:?}", path);
+                continue;
+            }
+            if path == Path::new(IMAGE_AVIF_GRID) {
+                eprintln!("Skipping {:?}", path);
+                continue; // Remove when public_avif_primary_item_is_grid passes
+            }
+            println!("parsing {:?}", path);
+            let input = &mut File::open(path).expect("Unknow file");
+            mp4::read_avif(input).expect("read_avif failed");
         }
-        if path == Path::new(IMAGE_AVIF_GRID) {
-            eprintln!("Skipping {:?}", path);
-            continue; // Remove when public_avif_primary_item_is_grid passes
-        }
-        println!("parsing {:?}", path);
-        let context = &mut mp4::AvifContext::new();
-        let input = &mut File::open(path).expect("Unknow file");
-        mp4::read_avif(input, context).expect("read_avif failed");
     }
 }
