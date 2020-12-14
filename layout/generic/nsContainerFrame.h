@@ -806,6 +806,19 @@ class nsContainerFrame : public nsSplittableFrame {
                                            nsIFrame* aFrame,
                                            bool aReparentSiblings);
 
+  /**
+   * Try to remove aChildToRemove from the frame list stored in aProp.
+   * If aChildToRemove was removed from the aProp list and that list became
+   * empty, then aProp is removed from this frame and deleted.
+   * @note if aChildToRemove isn't on the aProp frame list, it might still be
+   * removed from whatever list it happens to be on, so use this method
+   * carefully.  This method is primarily meant for removing frames from the
+   * [Excess]OverflowContainers lists.
+   * @return true if aChildToRemove was removed from some list
+   */
+  bool TryRemoveFrame(FrameListPropertyDescriptor aProp,
+                      nsIFrame* aChildToRemove);
+
   // ==========================================================================
   /*
    * Convenience methods for traversing continuations
