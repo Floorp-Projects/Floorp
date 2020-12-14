@@ -184,6 +184,8 @@ static nsresult MOZ_FORMAT_PRINTF(2, 3)
   return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS(mozJSComponentLoader, nsIMemoryReporter)
+
 mozJSComponentLoader::mozJSComponentLoader()
     : mModules(16),
       mImports(16),
@@ -505,6 +507,7 @@ void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 void mozJSComponentLoader::InitStatics() {
   MOZ_ASSERT(!sSelf);
   sSelf = new mozJSComponentLoader();
+  RegisterWeakMemoryReporter(sSelf);
 }
 
 void mozJSComponentLoader::Unload() {
@@ -515,6 +518,7 @@ void mozJSComponentLoader::Unload() {
 
 void mozJSComponentLoader::Shutdown() {
   MOZ_ASSERT(sSelf);
+  UnregisterWeakMemoryReporter(sSelf);
   sSelf = nullptr;
 }
 
@@ -538,6 +542,39 @@ size_t mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   n += mLocations.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += SizeOfTableExcludingThis(mInProgressImports, aMallocSizeOf);
   return n;
+}
+
+// Memory report paths are split on '/', with each component displayed as a
+// separate layer of a visual tree. Any slashes which are meant to belong to a
+// particular path component, rather than be used to build a hierarchy,
+// therefore need to be replaced with backslashes, which are displayed as
+// slashes in the UI.
+static nsAutoCString QuoteURL(const char* aURL) {
+  nsAutoCString url(aURL);
+  url.ReplaceChar('/', '\\');
+  return url;
+}
+
+NS_IMETHODIMP
+mozJSComponentLoader::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                     nsISupports* aData, bool aAnonymize) {
+  for (const auto& entry : mImports) {
+    nsAutoCString path("js-component-loader/modules/");
+    path.Append(QuoteURL(entry.GetData()->location));
+
+    aHandleReport->Callback(""_ns, path, KIND_NONHEAP, UNITS_COUNT, 1,
+                            "Loaded JS modules"_ns, aData);
+  }
+
+  for (const auto& entry : mModules) {
+    nsAutoCString path("js-component-loader/components/");
+    path.Append(QuoteURL(entry.GetData()->location));
+
+    aHandleReport->Callback(""_ns, path, KIND_NONHEAP, UNITS_COUNT, 1,
+                            "Loaded JS components"_ns, aData);
+  }
+
+  return NS_OK;
 }
 
 void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
