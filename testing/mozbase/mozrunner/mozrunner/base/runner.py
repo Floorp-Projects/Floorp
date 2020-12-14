@@ -47,6 +47,7 @@ class BaseRunner(object):
         symbols_path=None,
         dump_save_path=None,
         addons=None,
+        explicit_cleanup=False,
     ):
         self.app_ctx = app_ctx or DefaultContext()
 
@@ -72,9 +73,11 @@ class BaseRunner(object):
         self.dump_save_path = dump_save_path
 
         self.crashed = 0
+        self.explicit_cleanup = explicit_cleanup
 
     def __del__(self):
-        self.cleanup()
+        if not self.explicit_cleanup:
+            self.cleanup()
 
     @abstractproperty
     def command(self):
