@@ -268,10 +268,6 @@ pub enum TextureSource {
     TextureCache(CacheTextureId, ImageBufferKind, Swizzle),
     /// An external image texture, mananged by the embedding.
     External(DeferredResolveIndex, ImageBufferKind),
-    /// The alpha target of the immediately-preceding pass.
-    PrevPassAlpha,
-    /// The color target of the immediately-preceding pass.
-    PrevPassColor,
     /// Select a dummy 1x1 white texture. This can be used by image
     /// shaders that want to draw a solid color.
     Dummy,
@@ -285,10 +281,7 @@ impl TextureSource {
             TextureSource::External(_, image_buffer_kind) => image_buffer_kind,
 
             // Render tasks use texture arrays for now.
-            TextureSource::PrevPassAlpha
-            | TextureSource::PrevPassColor
-            | TextureSource::Dummy => ImageBufferKind::Texture2DArray,
-
+            TextureSource::Dummy => ImageBufferKind::Texture2DArray,
 
             TextureSource::Invalid => ImageBufferKind::Texture2D,
         }
