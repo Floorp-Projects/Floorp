@@ -2867,6 +2867,26 @@ bool MSub::fallible() const {
   return true;
 }
 
+MDefinition* MSub::foldsTo(TempAllocator& alloc) {
+  MDefinition* out = MBinaryArithInstruction::foldsTo(alloc);
+  if (out != this) {
+    return out;
+  }
+
+  if (type() != MIRType::Int32) {
+    return this;
+  }
+
+  // This optimization is only valid for Int32 values. Subtracting a floating
+  // point value from itself returns NaN when the operand is either Infinity
+  // or NaN.
+  if (lhs() == rhs()) {
+    return MConstant::New(alloc, Int32Value(0));
+  }
+
+  return this;
+}
+
 MDefinition* MMul::foldsTo(TempAllocator& alloc) {
   MDefinition* out = MBinaryArithInstruction::foldsTo(alloc);
   if (out != this) {
