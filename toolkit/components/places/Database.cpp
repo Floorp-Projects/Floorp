@@ -2480,17 +2480,5 @@ Database::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-uint32_t Database::MaxUrlLength() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mMaxUrlLength) {
-    mMaxUrlLength = Preferences::GetInt(PREF_HISTORY_MAXURLLEN,
-                                        PREF_HISTORY_MAXURLLEN_DEFAULT);
-    if (mMaxUrlLength < 255 || mMaxUrlLength > INT32_MAX) {
-      mMaxUrlLength = PREF_HISTORY_MAXURLLEN_DEFAULT;
-    }
-  }
-  return mMaxUrlLength;
-}
-
 }  // namespace places
 }  // namespace mozilla
