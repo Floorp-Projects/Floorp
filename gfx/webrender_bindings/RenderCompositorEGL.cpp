@@ -256,7 +256,8 @@ void RenderCompositorEGL::SetBufferDamageRegion(const wr::DeviceIntRect* aRects,
                                                 size_t aNumRects) {
   const auto& gle = gl::GLContextEGL::Cast(gl());
   const auto& egl = gle->mEgl;
-  if (gle->HasKhrPartialUpdate()) {
+  if (gle->HasKhrPartialUpdate() &&
+      StaticPrefs::gfx_webrender_allow_partial_present_buffer_age_AtStartup()) {
     std::vector<EGLint> rects;
     rects.reserve(4 * aNumRects);
     const auto bufferSize = GetBufferSize();
