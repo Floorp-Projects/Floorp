@@ -7,7 +7,13 @@ from __future__ import absolute_import, print_function
 import json
 import os
 from argparse import Namespace
-from cStringIO import StringIO
+
+try:
+    # Python2
+    from cStringIO import StringIO
+except ImportError:
+    # Python3
+    from io import StringIO
 
 import mozinfo
 import pytest
