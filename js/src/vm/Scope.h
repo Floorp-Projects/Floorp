@@ -18,6 +18,7 @@
 #include <type_traits>  // std::is_same_v
 
 #include "builtin/ModuleObject.h"  // ModuleObject, HandleModuleObject
+#include "frontend/ParserAtom.h"   // frontend::TaggedParserAtomIndex
 #include "gc/Allocator.h"          // AllowGC
 #include "gc/Barrier.h"            // HeapPtr
 #include "gc/Cell.h"               // TenuredCellWithNonGCPointer
@@ -87,28 +88,29 @@ const char* BindingKindString(BindingKind kind);
 const char* ScopeKindString(ScopeKind kind);
 
 template <typename NameT>
-class AbstractBindingName {
-  template <typename OtherNameT>
-  friend class AbstractBindingName;
+class AbstractBindingName;
 
-  // A JSAtom* or ParserAtom* with its low bit used as a tag for the:
+template <>
+class AbstractBindingName<JSAtom> {
+ public:
+  using NameT = JSAtom;
+  using NamePointerT = NameT*;
+
+ private:
+  // A JSAtom* with its low bit used as a tag for the:
   //  * whether it is closed over (i.e., exists in the environment shape)
   //  * whether it is a top-level function binding in global or eval scope,
   //    instead of var binding (both are in the same range in Scope data)
   uintptr_t bits_;
 
-  static const uintptr_t ClosedOverFlag = 0x1;
+  static constexpr uintptr_t ClosedOverFlag = 0x1;
   // TODO: We should reuse this bit for let vs class distinction to
   //       show the better redeclaration error message (bug 1428672).
-  static const uintptr_t TopLevelFunctionFlag = 0x2;
-  static const uintptr_t FlagMask = 0x3;
+  static constexpr uintptr_t TopLevelFunctionFlag = 0x2;
+  static constexpr uintptr_t FlagMask = 0x3;
 
  public:
   AbstractBindingName() : bits_(0) {}
-
-  template <typename OldNameT>
-  AbstractBindingName(NameT* name, const AbstractBindingName<OldNameT>& old)
-      : bits_(uintptr_t(name) | (old.bits_ & FlagMask)) {}
 
   AbstractBindingName(NameT* name, bool closedOver,
                       bool isTopLevelFunction = false)
@@ -131,18 +133,14 @@ class AbstractBindingName {
 
   uint8_t flagsForXDR() const { return static_cast<uint8_t>(bits_ & FlagMask); }
 
-  NameT* name() const { return reinterpret_cast<NameT*>(bits_ & ~FlagMask); }
+  NamePointerT name() const {
+    return reinterpret_cast<NameT*>(bits_ & ~FlagMask);
+  }
 
   bool closedOver() const { return bits_ & ClosedOverFlag; }
 
-  template <typename NewNameT>
-  AbstractBindingName<NewNameT> transformName(NewNameT* newName) const {
-    return AbstractBindingName<NewNameT>(newName, *this);
-  }
-
  private:
   friend class BaseAbstractBindingIter<NameT>;
-  friend class frontend::ScopeStencil;
 
   // This method should be called only for binding names in `vars` range in
   // BindingIter.
@@ -150,6 +148,62 @@ class AbstractBindingName {
 
  public:
   void trace(JSTracer* trc);
+};
+
+template <>
+class AbstractBindingName<frontend::TaggedParserAtomIndex> {
+  uint32_t bits_;
+
+  using TaggedParserAtomIndex = frontend::TaggedParserAtomIndex;
+
+ public:
+  using NameT = TaggedParserAtomIndex;
+  using NamePointerT = NameT;
+
+ private:
+  static constexpr size_t TaggedIndexBit = TaggedParserAtomIndex::IndexBit + 2;
+
+  static constexpr size_t FlagShift = TaggedIndexBit;
+  static constexpr size_t FlagBit = 2;
+  static constexpr uint32_t FlagMask = BitMask(FlagBit) << FlagShift;
+
+  static constexpr uint32_t ClosedOverFlag = 1 << FlagShift;
+  static constexpr uint32_t TopLevelFunctionFlag = 2 << FlagShift;
+
+ public:
+  AbstractBindingName() : bits_(TaggedParserAtomIndex::NullTag) {
+    // TaggedParserAtomIndex's tags shouldn't overlap with flags.
+    static_assert((TaggedParserAtomIndex::NullTag & FlagMask) == 0);
+    static_assert((TaggedParserAtomIndex::ParserAtomIndexTag & FlagMask) == 0);
+    static_assert((TaggedParserAtomIndex::WellKnownTag & FlagMask) == 0);
+  }
+
+  AbstractBindingName(TaggedParserAtomIndex name, bool closedOver,
+                      bool isTopLevelFunction = false)
+      : bits_(*name.rawData() | (closedOver ? ClosedOverFlag : 0x0) |
+              (isTopLevelFunction ? TopLevelFunctionFlag : 0x0)) {}
+
+ public:
+  uint32_t* rawData() { return &bits_; }
+
+  NamePointerT name() const {
+    return TaggedParserAtomIndex::fromRaw(bits_ & ~FlagMask);
+  }
+
+  bool closedOver() const { return bits_ & ClosedOverFlag; }
+
+  AbstractBindingName<JSAtom> copyWithNewAtom(JSAtom* newName) const {
+    return AbstractBindingName<JSAtom>(newName, closedOver(),
+                                       isTopLevelFunction());
+  }
+
+ private:
+  friend class BaseAbstractBindingIter<TaggedParserAtomIndex>;
+  friend class frontend::ScopeStencil;
+
+  // This method should be called only for binding names in `vars` range in
+  // BindingIter.
+  bool isTopLevelFunction() const { return bits_ & TopLevelFunctionFlag; }
 };
 
 using BindingName = AbstractBindingName<JSAtom>;
@@ -614,7 +668,8 @@ class FunctionScope : public Scope {
   }
 
   static bool isSpecialName(JSContext* cx, JSAtom* name);
-  static bool isSpecialName(JSContext* cx, const frontend::ParserAtom* name);
+  static bool isSpecialName(JSContext* cx,
+                            frontend::TaggedParserAtomIndex name);
 };
 
 //
@@ -1302,7 +1357,7 @@ class BaseAbstractBindingIter {
     return flags_ & CanHaveEnvironmentSlots;
   }
 
-  NameT* name() const {
+  typename AbstractBindingName<NameT>::NamePointerT name() const {
     MOZ_ASSERT(!done());
     return names_[index_].name();
   }
@@ -1411,9 +1466,9 @@ class AbstractBindingIter<JSAtom> : public BaseAbstractBindingIter<JSAtom> {
 };
 
 template <>
-class AbstractBindingIter<const frontend::ParserAtom>
-    : public BaseAbstractBindingIter<const frontend::ParserAtom> {
-  using Base = BaseAbstractBindingIter<const frontend::ParserAtom>;
+class AbstractBindingIter<frontend::TaggedParserAtomIndex>
+    : public BaseAbstractBindingIter<frontend::TaggedParserAtomIndex> {
+  using Base = BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>;
 
  public:
   using Base::Base;
@@ -1581,8 +1636,8 @@ Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
 
 Shape* CreateEnvironmentShape(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
-    AbstractBindingIter<const frontend::ParserAtom>& bi, const JSClass* cls,
-    uint32_t numSlots, uint32_t baseShapeFlags);
+    AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
+    const JSClass* cls, uint32_t numSlots, uint32_t baseShapeFlags);
 
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                              uint32_t numSlots, uint32_t baseShapeFlags);

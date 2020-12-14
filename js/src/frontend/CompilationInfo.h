@@ -243,15 +243,6 @@ struct CompilationStencil {
   // function.
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
 
-  // A rooted list of scopes created during this parse.
-  //
-  // To ensure that ScopeStencil's destructors fire, and thus our HeapPtr
-  // barriers, we store the scopeData at this level so that they
-  // can be safely destroyed, rather than LifoAllocing them with the rest of
-  // the parser data structures.
-  //
-  // References to scopes are controlled via AbstractScopePtr, which holds onto
-  // an index (and CompilationInfo reference).
   Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
 
   // Module metadata if this is a module compile.

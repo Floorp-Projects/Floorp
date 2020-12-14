@@ -1067,16 +1067,18 @@ void BigIntStencil::dump(js::JSONPrinter& json) {
 void ScopeStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
-  dump(json);
+  dump(json, nullptr);
 }
 
-void ScopeStencil::dump(js::JSONPrinter& json) {
+void ScopeStencil::dump(js::JSONPrinter& json,
+                        CompilationStencil* compilationStencil) {
   json.beginObject();
-  dumpFields(json);
+  dumpFields(json, compilationStencil);
   json.endObject();
 }
 
-void ScopeStencil::dumpFields(js::JSONPrinter& json) {
+void ScopeStencil::dumpFields(js::JSONPrinter& json,
+                              CompilationStencil* compilationStencil) {
   if (enclosing_) {
     json.formatProperty("enclosing", "Some(ScopeIndex(%zu))",
                         size_t(*enclosing_));
@@ -1108,7 +1110,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
   json.beginObjectProperty("data");
 
-  AbstractTrailingNamesArray<const ParserAtom>* trailingNames = nullptr;
+  AbstractTrailingNamesArray<TaggedParserAtomIndex>* trailingNames = nullptr;
   uint32_t length = 0;
 
   switch (kind_) {
@@ -1187,9 +1189,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::WasmInstance: {
-      auto* data =
-          static_cast<AbstractScopeData<WasmInstanceScope, const ParserAtom>*>(
-              data_);
+      auto* data = static_cast<
+          AbstractScopeData<WasmInstanceScope, TaggedParserAtomIndex>*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
       json.property("globalsStart", data->globalsStart);
 
@@ -1199,9 +1200,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
     }
 
     case ScopeKind::WasmFunction: {
-      auto* data =
-          static_cast<AbstractScopeData<WasmFunctionScope, const ParserAtom>*>(
-              data_);
+      auto* data = static_cast<
+          AbstractScopeData<WasmFunctionScope, TaggedParserAtomIndex>*>(data_);
       json.property("nextFrameSlot", data->nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -1225,9 +1225,9 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json) {
 
       json.boolProperty("isTopLevelFunction", name.isTopLevelFunction());
 
-      GenericPrinter& out = json.beginStringProperty("name");
-      name.name()->dumpCharsNoQuote(out);
-      json.endStringProperty();
+      json.beginObjectProperty("name");
+      DumpTaggedParserAtomIndex(json, name.name(), compilationStencil);
+      json.endObject();
 
       json.endObject();
     }
@@ -1633,7 +1633,7 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 
   json.beginListProperty("scopeData");
   for (auto& data : scopeData) {
-    data.dump(json);
+    data.dump(json, this);
   }
   json.endList();
 
