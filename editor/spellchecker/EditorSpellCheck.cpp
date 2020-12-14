@@ -14,6 +14,7 @@
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/intl/LocaleService.h"    // for retrieving app locale
 #include "mozilla/intl/MozLocale.h"        // for mozilla::intl::Locale
+#include "mozilla/intl/OSPreferences.h"    // for mozilla::intl::OSPreferences
 #include "mozilla/mozalloc.h"              // for operator delete, etc
 #include "mozilla/mozSpellChecker.h"       // for mozSpellChecker
 #include "mozilla/Preferences.h"           // for Preferences
@@ -47,6 +48,7 @@ namespace mozilla {
 
 using namespace dom;
 using intl::LocaleService;
+using intl::OSPreferences;
 
 class UpdateDictionaryHolder {
  private:
@@ -723,7 +725,8 @@ nsresult EditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher) {
    *    matches that. (Introduced in bug 338427.)
    *    Eg. if the website is "en-GB", a user who only has "en-US" will get
    *    that. If the website is generic "en", the user will get one of the
-   *    "en-*" installed, (almost) at random.
+   *    "en-*" installed. If application locale or system locale is "en-*",
+   *    we get it. If others, it is (almost) random.
    *    However, we prefer what is stored in "spellchecker.dictionary",
    *    so if the user chose "en-AU" before, they will get "en-AU" on a plain
    *    "en" site. (Introduced in bug 682564.)
@@ -843,6 +846,7 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
   nsAutoCString preferredDict;
   Preferences::GetLocalizedCString("spellchecker.dictionary", preferredDict);
 
+  nsAutoCString appLocaleStr;
   if (!dictName.IsEmpty()) {
     // RFC 5646 explicitly states that matches should be case-insensitive.
     BuildDictionaryList(dictName, dictList, DICT_COMPARE_CASE_INSENSITIVE,
@@ -872,6 +876,31 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
                           DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
     }
 
+    if (tryDictList.IsEmpty()) {
+      // Use the application locale dictionary when the required language
+      // equlas applocation locale language.
+      LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocaleStr);
+      if (!appLocaleStr.IsEmpty()) {
+        mozilla::intl::Locale appLoc = mozilla::intl::Locale(appLocaleStr);
+        if (langCode.Equals(appLoc.GetLanguage())) {
+          BuildDictionaryList(appLocaleStr, dictList,
+                              DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
+        }
+      }
+
+      // Use the system locale dictionary when the required language equlas
+      // system locale language.
+      nsAutoCString sysLocaleStr;
+      OSPreferences::GetInstance()->GetSystemLocale(sysLocaleStr);
+      if (!sysLocaleStr.IsEmpty()) {
+        mozilla::intl::Locale sysLoc = mozilla::intl::Locale(sysLocaleStr);
+        if (langCode.Equals(sysLoc.GetLanguage())) {
+          BuildDictionaryList(sysLocaleStr, dictList,
+                              DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
+        }
+      }
+    }
+
     // Use any dictionary with the required language.
 #ifdef DEBUG_DICT
     printf("***** Trying to find match for language code |%s|\n",
@@ -894,11 +923,13 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
 
   // Priority 4:
   // As next fallback, try the current locale.
-  LocaleService::GetInstance()->GetAppLocaleAsBCP47(dictName);
+  if (appLocaleStr.IsEmpty()) {
+    LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocaleStr);
+  }
 #ifdef DEBUG_DICT
-  printf("***** Trying locale |%s|\n", dictName.get());
+  printf("***** Trying locale |%s|\n", appLocaleStr.get());
 #endif
-  BuildDictionaryList(dictName, dictList, DICT_COMPARE_CASE_INSENSITIVE,
+  BuildDictionaryList(appLocaleStr, dictList, DICT_COMPARE_CASE_INSENSITIVE,
                       tryDictList);
 
   // Priority 5:
