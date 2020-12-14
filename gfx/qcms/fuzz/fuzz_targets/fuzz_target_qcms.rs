@@ -10,16 +10,18 @@ extern crate libc;
 
  use qcms::iccread::{qcms_profile, icSigRgbData, qcms_profile_is_bogus, icSigGrayData};
  use qcms::c_bindings::{qcms_profile_get_color_space, qcms_profile_get_rendering_intent, qcms_profile_from_memory, qcms_profile_release, qcms_profile_sRGB, qcms_transform_create};
- use qcms::transform::{QCMS_DATA_RGBA_8, QCMS_DATA_RGB_8, QCMS_DATA_GRAYA_8, QCMS_DATA_GRAY_8, qcms_profile_precache_output_transform, qcms_transform_data, qcms_transform_release, qcms_enable_iccv4};
+ use qcms::transform::{qcms_data_type, qcms_profile_precache_output_transform, qcms_transform_data, qcms_transform_release, qcms_enable_iccv4};
+
+ use qcms_data_type::*;
 
  unsafe fn transform(src_profile: *mut qcms_profile, dst_profile: *mut qcms_profile, size: usize)
  {
    // qcms supports GRAY and RGB profiles as input, and RGB as output.
  
    let src_color_space = qcms_profile_get_color_space(src_profile);
-   let mut src_type = if (size & 1) != 0 { QCMS_DATA_RGBA_8 } else { QCMS_DATA_RGB_8 };
+   let mut src_type = if (size & 1) != 0 { DATA_RGBA_8 } else { DATA_RGB_8 };
    if src_color_space == icSigGrayData {
-     src_type = if (size & 1) != 0 { QCMS_DATA_GRAYA_8 } else { QCMS_DATA_GRAY_8 };
+     src_type = if (size & 1) != 0 { DATA_GRAYA_8 } else { DATA_GRAY_8 };
    } else if src_color_space != icSigRgbData {
      return;
    }
@@ -28,7 +30,7 @@ extern crate libc;
    if dst_color_space != icSigRgbData {
      return;
    }
-   let dst_type = if (size & 2) != 0 { QCMS_DATA_RGBA_8 } else { QCMS_DATA_RGB_8 };
+   let dst_type = if (size & 2) != 0 { DATA_RGBA_8 } else { DATA_RGB_8 };
  
    let intent = qcms_profile_get_rendering_intent(src_profile);
    // Firefox calls this on the display profile to increase performance.
@@ -51,12 +53,12 @@ extern crate libc;
    ];
    let mut dst: [u8; 36 * 4] = [0; 144]; // 4x in case of GRAY to RGBA
  
-   let mut src_bytes_per_pixel = 4; // QCMS_DATA_RGBA_8
-   if src_type == QCMS_DATA_RGB_8 {
+   let mut src_bytes_per_pixel = 4; // DATA_RGBA_8
+   if src_type == DATA_RGB_8 {
      src_bytes_per_pixel = 3;
-   } else if src_type == QCMS_DATA_GRAYA_8 {
+   } else if src_type == DATA_GRAYA_8 {
      src_bytes_per_pixel = 2;
-   } else if src_type == QCMS_DATA_GRAY_8 {
+   } else if src_type == DATA_GRAY_8 {
      src_bytes_per_pixel = 1;
    }
  

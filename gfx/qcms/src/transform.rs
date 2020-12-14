@@ -123,13 +123,17 @@ pub type transform_fn_t = Option<
         _: usize,
     ) -> (),
 >;
+#[repr(u32)]
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum qcms_data_type {
+    DATA_RGB_8 = 0,
+    DATA_RGBA_8 = 1,
+    DATA_BGRA_8 = 2,
+    DATA_GRAY_8 = 3,
+    DATA_GRAYA_8 = 4,
+}
 
-pub type qcms_data_type = libc::c_uint;
-pub const QCMS_DATA_GRAYA_8: qcms_data_type = 4;
-pub const QCMS_DATA_GRAY_8: qcms_data_type = 3;
-pub const QCMS_DATA_BGRA_8: qcms_data_type = 2;
-pub const QCMS_DATA_RGBA_8: qcms_data_type = 1;
-pub const QCMS_DATA_RGB_8: qcms_data_type = 0;
+use qcms_data_type::*;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -1132,11 +1136,11 @@ fn transform_precacheLUT_float(
         if let Some(lut) = lut {
             (*transform).clut = Some(lut);
             (*transform).grid_size = samples as u16;
-            if in_type == QCMS_DATA_RGBA_8 {
+            if in_type == DATA_RGBA_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgba)
-            } else if in_type == QCMS_DATA_BGRA_8 {
+            } else if in_type == DATA_BGRA_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_bgra)
-            } else if in_type == QCMS_DATA_RGB_8 {
+            } else if in_type == DATA_RGB_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgb)
             }
             debug_assert!((*transform).transform_fn.is_some());
@@ -1156,18 +1160,16 @@ pub fn transform_create(
 ) -> Option<Box<qcms_transform>> {
     // Ensure the requested input and output types make sense.
     let mut match_0: bool = false;
-    if in_type == QCMS_DATA_RGB_8 {
-        match_0 = out_type == QCMS_DATA_RGB_8
-    } else if in_type == QCMS_DATA_RGBA_8 {
-        match_0 = out_type == QCMS_DATA_RGBA_8
-    } else if in_type == QCMS_DATA_BGRA_8 {
-        match_0 = out_type == QCMS_DATA_BGRA_8
-    } else if in_type == QCMS_DATA_GRAY_8 {
-        match_0 = out_type == QCMS_DATA_RGB_8
-            || out_type == QCMS_DATA_RGBA_8
-            || out_type == QCMS_DATA_BGRA_8
-    } else if in_type == QCMS_DATA_GRAYA_8 {
-        match_0 = out_type == QCMS_DATA_RGBA_8 || out_type == QCMS_DATA_BGRA_8
+    if in_type == DATA_RGB_8 {
+        match_0 = out_type == DATA_RGB_8
+    } else if in_type == DATA_RGBA_8 {
+        match_0 = out_type == DATA_RGBA_8
+    } else if in_type == DATA_BGRA_8 {
+        match_0 = out_type == DATA_BGRA_8
+    } else if in_type == DATA_GRAY_8 {
+        match_0 = out_type == DATA_RGB_8 || out_type == DATA_RGBA_8 || out_type == DATA_BGRA_8
+    } else if in_type == DATA_GRAYA_8 {
+        match_0 = out_type == DATA_RGBA_8 || out_type == DATA_BGRA_8
     }
     if !match_0 {
         debug_assert!(false, "input/output type");
@@ -1183,9 +1185,7 @@ pub fn transform_create(
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
     if qcms_supports_iccv4.load(Ordering::Relaxed) as i32 != 0
-        && (in_type == QCMS_DATA_RGB_8
-            || in_type == QCMS_DATA_RGBA_8
-            || in_type == QCMS_DATA_BGRA_8)
+        && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
         && (!(*in_0).A2B0.is_none()
             || !(*out).B2A0.is_none()
             || !(*in_0).mAB.is_none()
@@ -1228,11 +1228,11 @@ pub fn transform_create(
             {
                 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
                 {
-                    if in_type == QCMS_DATA_RGB_8 {
+                    if in_type == DATA_RGB_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_avx)
-                    } else if in_type == QCMS_DATA_RGBA_8 {
+                    } else if in_type == DATA_RGBA_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_avx)
-                    } else if in_type == QCMS_DATA_BGRA_8 {
+                    } else if in_type == DATA_BGRA_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_avx)
                     }
                 }
@@ -1243,11 +1243,11 @@ pub fn transform_create(
             {
                 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
                 {
-                    if in_type == QCMS_DATA_RGB_8 {
+                    if in_type == DATA_RGB_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_sse2)
-                    } else if in_type == QCMS_DATA_RGBA_8 {
+                    } else if in_type == DATA_RGBA_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_sse2)
-                    } else if in_type == QCMS_DATA_BGRA_8 {
+                    } else if in_type == DATA_BGRA_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_sse2)
                     }
                 }
@@ -1256,26 +1256,26 @@ pub fn transform_create(
             {
                 #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
                 {
-                    if in_type == QCMS_DATA_RGB_8 {
+                    if in_type == DATA_RGB_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_neon)
-                    } else if in_type == QCMS_DATA_RGBA_8 {
+                    } else if in_type == DATA_RGBA_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_neon)
-                    } else if in_type == QCMS_DATA_BGRA_8 {
+                    } else if in_type == DATA_BGRA_8 {
                         (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_neon)
                     }
                 }
-            } else if in_type == QCMS_DATA_RGB_8 {
+            } else if in_type == DATA_RGB_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_precache)
-            } else if in_type == QCMS_DATA_RGBA_8 {
+            } else if in_type == DATA_RGBA_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_precache)
-            } else if in_type == QCMS_DATA_BGRA_8 {
+            } else if in_type == DATA_BGRA_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_precache)
             }
-        } else if in_type == QCMS_DATA_RGB_8 {
+        } else if in_type == DATA_RGB_8 {
             (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut)
-        } else if in_type == QCMS_DATA_RGBA_8 {
+        } else if in_type == DATA_RGBA_8 {
             (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut)
-        } else if in_type == QCMS_DATA_BGRA_8 {
+        } else if in_type == DATA_BGRA_8 {
             (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut)
         }
         //XXX: avoid duplicating tables if we can
@@ -1326,31 +1326,31 @@ pub fn transform_create(
             return None;
         }
         if precache {
-            if out_type == QCMS_DATA_RGB_8 {
+            if out_type == DATA_RGB_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_gray_out_precache)
-            } else if out_type == QCMS_DATA_RGBA_8 {
-                if in_type == QCMS_DATA_GRAY_8 {
+            } else if out_type == DATA_RGBA_8 {
+                if in_type == DATA_GRAY_8 {
                     (*transform).transform_fn = Some(qcms_transform_data_gray_rgba_out_precache)
                 } else {
                     (*transform).transform_fn = Some(qcms_transform_data_graya_rgba_out_precache)
                 }
-            } else if out_type == QCMS_DATA_BGRA_8 {
-                if in_type == QCMS_DATA_GRAY_8 {
+            } else if out_type == DATA_BGRA_8 {
+                if in_type == DATA_GRAY_8 {
                     (*transform).transform_fn = Some(qcms_transform_data_gray_bgra_out_precache)
                 } else {
                     (*transform).transform_fn = Some(qcms_transform_data_graya_bgra_out_precache)
                 }
             }
-        } else if out_type == QCMS_DATA_RGB_8 {
+        } else if out_type == DATA_RGB_8 {
             (*transform).transform_fn = Some(qcms_transform_data_gray_out_lut)
-        } else if out_type == QCMS_DATA_RGBA_8 {
-            if in_type == QCMS_DATA_GRAY_8 {
+        } else if out_type == DATA_RGBA_8 {
+            if in_type == DATA_GRAY_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_gray_rgba_out_lut)
             } else {
                 (*transform).transform_fn = Some(qcms_transform_data_graya_rgba_out_lut)
             }
-        } else if out_type == QCMS_DATA_BGRA_8 {
-            if in_type == QCMS_DATA_GRAY_8 {
+        } else if out_type == DATA_BGRA_8 {
+            if in_type == DATA_GRAY_8 {
                 (*transform).transform_fn = Some(qcms_transform_data_gray_bgra_out_lut)
             } else {
                 (*transform).transform_fn = Some(qcms_transform_data_graya_bgra_out_lut)
