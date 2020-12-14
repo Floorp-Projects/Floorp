@@ -137,3 +137,22 @@ TEST(FOG, TestCppEventWorks)
   test_only_ipc::an_event.Record(std::move(extra));
   ASSERT_TRUE(test_only_ipc::an_event.TestGetValue("store1"_ns).isSome());
 }
+
+TEST(FOG, TestCppMemoryDistWorks)
+{
+  test_only::do_you_remember.Accumulate(7);
+  test_only::do_you_remember.Accumulate(17);
+
+  DistributionData data =
+      test_only::do_you_remember.TestGetValue("test-ping"_ns).ref();
+  // Sum is in bytes, test_only::do_you_remember is in megabytes. So
+  // multiplication ahoy!
+  ASSERT_EQ(data.sum, 24UL * 1024 * 1024);
+  for (auto iter = data.values.Iter(); !iter.Done(); iter.Next()) {
+    const uint64_t bucket = iter.Key();
+    const uint64_t count = iter.UserData();
+    ASSERT_TRUE(count == 0 ||
+                (count == 1 && (bucket == 17520006 || bucket == 7053950)))
+    << "Only two occupied buckets";
+  }
+}

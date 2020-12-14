@@ -147,3 +147,18 @@ add_task(async function test_fog_event_works() {
   // FIXME(bug 1678567): Check that the value was recorded when we can.
   // Assert.ok(Glean.test_only_ipc.an_event.testGetValue("store1"));
 });
+
+add_task(async function test_fog_memory_distribution_works() {
+  Glean.test_only.do_you_remember.accumulate(7);
+  Glean.test_only.do_you_remember.accumulate(17);
+
+  let data = Glean.test_only.do_you_remember.testGetValue("test-ping");
+  // `data.sum` is in bytes, but the metric is in MB.
+  Assert.equal(24 * 1024 * 1024, data.sum, "Sum's correct");
+  for (let [bucket, count] of Object.entries(data.values)) {
+    Assert.ok(
+      count == 0 || (count == 1 && (bucket == 17520006 || bucket == 7053950)),
+      "Only two buckets have a sample"
+    );
+  }
+});

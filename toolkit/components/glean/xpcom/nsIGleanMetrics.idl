@@ -88,6 +88,38 @@ interface nsIGleanCounter : nsISupports
   jsval testGetValue(in AUTF8String aStorageName);
 };
 
+[scriptable, uuid(eea5ed46-16ba-46cd-bb1f-504581987fe1)]
+interface nsIGleanMemoryDistribution : nsISupports
+{
+  /*
+   * Accumulates the provided sample in the metric.
+   *
+   * @param aSample The sample to be recorded by the metric. The sample is
+   *                assumed to be in the confgured memory unit of the metric.
+   *
+   * Notes: Values bigger than 1 Terabyte (2^40 bytes) are truncated and an
+   * InvalidValue error is recorded.
+   */
+	void accumulate(in uint64_t aSample);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as a DistributionData.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @return value of the stored metric, or Nothing() if there is no value.
+   */
+  [implicit_jscontext]
+	jsval testGetValue(in ACString aStorageName);
+};
+
 [scriptable, uuid(d84a3555-46f1-48c1-9122-e8e88b069d2b)]
 interface nsIGleanString : nsISupports
 {

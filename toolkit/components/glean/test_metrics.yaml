@@ -111,6 +111,24 @@ test_only:
     send_in_pings:
       - test-ping
 
+  do_you_remember:
+    type: memory_distribution
+    memory_unit: megabyte
+    description: |
+      They say it's the second thing to go.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1673648
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1673648#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+
 test_only.ipc:
   a_counter:
     type: counter

@@ -4,6 +4,7 @@
 
 #![cfg(feature = "with_gecko")]
 
+use thin_vec::ThinVec;
 use {nsstring::nsACString, uuid::Uuid};
 
 #[macro_use]
@@ -151,4 +152,34 @@ pub extern "C" fn fog_datetime_set(
 ) {
     let metric = metric_get!(DATETIME_MAP, id);
     metric.set_with_details(year, month, day, hour, minute, second, nano, offset_seconds);
+}
+
+#[no_mangle]
+pub extern "C" fn fog_memory_distribution_test_has_value(
+    id: u32,
+    storage_name: &nsACString,
+) -> bool {
+    test_has!(MEMORY_DISTRIBUTION_MAP, id, storage_name)
+}
+
+#[no_mangle]
+pub extern "C" fn fog_memory_distribution_test_get_value(
+    id: u32,
+    storage_name: &nsACString,
+    sum: &mut u64,
+    buckets: &mut ThinVec<u64>,
+    counts: &mut ThinVec<u64>,
+) {
+    let val = test_get!(MEMORY_DISTRIBUTION_MAP, id, storage_name);
+    *sum = val.sum;
+    for (&bucket, &count) in val.values.iter() {
+        buckets.push(bucket);
+        counts.push(count)
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn fog_memory_distribution_accumulate(id: u32, sample: u64) {
+    let metric = metric_get!(MEMORY_DISTRIBUTION_MAP, id);
+    metric.accumulate(sample);
 }
