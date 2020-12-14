@@ -78,6 +78,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1579159-m.tailieu.vn-pdfjs-worker-disable.js",
     "injections/js/bug1605611-maps.google.com-directions-time.js",
     "injections/js/bug1610358-pcloud.com-appVersion-change.js",
+    "injections/js/bug1682238-gamearter.com-ua-change.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
