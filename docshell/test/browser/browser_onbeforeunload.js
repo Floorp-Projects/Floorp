@@ -2,7 +2,7 @@
 
 // We need to test a lot of permutations here, and there isn't any sensible way
 // to split them up or run them faster.
-requestLongerTimeout(2);
+requestLongerTimeout(4);
 
 const BASE_URL = "http://mochi.test:8888/browser/docshell/test/browser/";
 
@@ -123,7 +123,7 @@ function* generatePermutations(depth) {
   }
 }
 
-const PERMUTATIONS = Array.from(generatePermutations(3));
+const PERMUTATIONS = Array.from(generatePermutations(4));
 
 const FRAMES = [
   { process: 0 },

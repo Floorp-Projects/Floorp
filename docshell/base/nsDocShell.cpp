@@ -3993,10 +3993,19 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     bool forceReload = IsForceReloadType(loadType);
     if (!XRE_IsParentProcess()) {
       RefPtr<nsDocShell> docShell(this);
+      nsCOMPtr<nsIContentViewer> cv(mContentViewer);
+
+      bool okToUnload = true;
+      MOZ_TRY(cv->PermitUnload(&okToUnload));
+      if (!okToUnload) {
+        return NS_OK;
+      }
+
       RefPtr<Document> doc(GetDocument());
       RefPtr<BrowsingContext> browsingContext(mBrowsingContext);
       nsCOMPtr<nsIURI> currentURI(mCurrentURI);
       nsCOMPtr<nsIReferrerInfo> referrerInfo(mReferrerInfo);
+
       ContentChild::GetSingleton()->SendNotifyOnHistoryReload(
           mBrowsingContext, forceReload,
           [docShell, doc, loadType, browsingContext, currentURI, referrerInfo](
@@ -4016,16 +4025,18 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
               MOZ_LOG(
                   gSHLog, LogLevel::Debug,
                   ("nsDocShell %p Reload - LoadHistoryEntry", docShell.get()));
+              loadState.ref()->SetNotifiedBeforeUnloadListeners(true);
               docShell->LoadHistoryEntry(loadState.ref(), loadType,
                                          reloadingActiveEntry.ref());
             } else {
               MOZ_LOG(gSHLog, LogLevel::Debug,
                       ("nsDocShell %p ReloadDocument", docShell.get()));
               ReloadDocument(docShell, doc, loadType, browsingContext,
-                             currentURI, referrerInfo);
+                             currentURI, referrerInfo,
+                             /* aNotifiedBeforeUnloadListeners */ true);
             }
           },
-          [](ResponseRejectReason) {});
+          [](mozilla::ipc::ResponseRejectReason) {});
     } else {
       // Parent process
       bool canReload = false;
@@ -4079,7 +4090,8 @@ nsresult nsDocShell::ReloadDocument(nsDocShell* aDocShell, Document* aDocument,
                                     uint32_t aLoadType,
                                     BrowsingContext* aBrowsingContext,
                                     nsIURI* aCurrentURI,
-                                    nsIReferrerInfo* aReferrerInfo) {
+                                    nsIReferrerInfo* aReferrerInfo,
+                                    bool aNotifiedBeforeUnloadListeners) {
   if (!aDocument) {
     return NS_OK;
   }
@@ -4152,6 +4164,7 @@ nsresult nsDocShell::ReloadDocument(nsDocShell* aDocShell, Document* aDocument,
   loadState->SetBaseURI(baseURI);
   loadState->SetHasValidUserGestureActivation(
       context && context->HasValidTransientUserGestureActivation());
+  loadState->SetNotifiedBeforeUnloadListeners(aNotifiedBeforeUnloadListeners);
   return aDocShell->InternalLoad(loadState);
 }
 
@@ -9194,7 +9207,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   }
   // Check if the page doesn't want to be unloaded. The javascript:
   // protocol handler deals with this for javascript: URLs.
-  if (!isJavaScript && isNotDownload && mContentViewer) {
+  if (!isJavaScript && isNotDownload &&
+      !aLoadState->NotifiedBeforeUnloadListeners() && mContentViewer) {
     bool okToUnload;
     rv = mContentViewer->PermitUnload(&okToUnload);
 
