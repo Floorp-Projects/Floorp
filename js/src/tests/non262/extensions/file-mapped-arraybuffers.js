@@ -21,6 +21,23 @@ function test() {
     view = new Uint8Array(buffer3);
     assertEq(viewToString(view), "01234567");
 
+    // Test detaching during subarray creation.
+    var nasty = {
+      valueOf: function () {
+        print("detaching...");
+        serialize(buffer3, [buffer3]);
+        print("detached");
+        return 3000;
+      }
+    };
+
+    var a = new Uint8Array(buffer3);
+    assertThrowsInstanceOf(() => {
+        var aa = a.subarray(0, nasty);
+        for (i = 0; i < 3000; i++)
+            aa[i] = 17;
+    }, TypeError);
+
     // Check that invalid sizes and offsets are caught
     assertThrowsInstanceOf(() => createMappedArrayBuffer("empty.txt", 8), RangeError);
     assertThrowsInstanceOf(() => createMappedArrayBuffer("empty.txt", 0, 8), Error);
