@@ -1127,19 +1127,20 @@ impl SwCompositor {
                 } else {
                     return;
                 };
-                let framebuffer = self.locked_framebuffer.clone().unwrap();
-                composite_thread.queue_composite(
-                    source,
-                    framebuffer,
-                    src_rect,
-                    dst_rect,
-                    *clip_rect,
-                    surface.is_opaque,
-                    flip_y,
-                    filter,
-                    tile.graph_node.clone(),
-                    job_queue,
-                );
+                if let Some(ref framebuffer) = self.locked_framebuffer {
+                    composite_thread.queue_composite(
+                        source,
+                        framebuffer.clone(),
+                        src_rect,
+                        dst_rect,
+                        *clip_rect,
+                        surface.is_opaque,
+                        flip_y,
+                        filter,
+                        tile.graph_node.clone(),
+                        job_queue,
+                    );
+                }
             }
         }
     }

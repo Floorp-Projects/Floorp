@@ -314,6 +314,7 @@ typedef Texture LockedTexture;
 LockedTexture* LockTexture(GLuint texId) {
   Texture& tex = ctx->textures[texId];
   if (!tex.buf) {
+    assert(tex.buf != nullptr);
     return nullptr;
   }
   if (__sync_fetch_and_add(&tex.locked, 1) == 0) {
@@ -329,6 +330,8 @@ LockedTexture* LockFramebuffer(GLuint fboId) {
   // Only allow locking a framebuffer if it has a valid color attachment and
   // only if targeting the first layer.
   if (!fb.color_attachment || fb.layer > 0) {
+    assert(fb.color_attachment != 0);
+    assert(fb.layer == 0);
     return nullptr;
   }
   return LockTexture(fb.color_attachment);
