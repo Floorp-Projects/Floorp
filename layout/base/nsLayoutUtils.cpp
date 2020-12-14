@@ -8045,6 +8045,9 @@ nsRect nsLayoutUtils::CalculateScrollableRectForFrame(
     contentBounds.height += aScrollableFrame->GetScrollPortRect().height;
   } else {
     contentBounds = aRootFrame->GetRect();
+    // Clamp to (0, 0) if there is no corresponding scrollable frame for the
+    // given |aRootFrame|.
+    contentBounds.MoveTo(0, 0);
   }
   return contentBounds;
 }
