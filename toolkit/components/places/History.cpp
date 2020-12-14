@@ -1816,10 +1816,7 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
 
   nsresult rv;
   if (XRE_IsContentProcess()) {
-    bool canAddURI = false;
-    rv = nsNavHistory::CanAddURIToHistory(aURI, &canAddURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!canAddURI) {
+    if (!BaseHistory::CanStore(aURI)) {
       return NS_OK;
     }
 
