@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import sys
 import threading
 from io import BytesIO
-from multiprocessing import Queue
 
 
 class LogThread(threading.Thread):
@@ -61,17 +60,20 @@ class LoggingWrapper(BytesIO):
 
 
 class CaptureIO(object):
-    def __init__(self, logger, do_capture):
+    def __init__(self, logger, do_capture, mp_context=None):
+        if mp_context is None:
+            import multiprocessing as mp_context
         self.logger = logger
         self.do_capture = do_capture
         self.logging_queue = None
         self.logging_thread = None
         self.original_stdio = None
+        self.mp_context = mp_context
 
     def __enter__(self):
         if self.do_capture:
             self.original_stdio = (sys.stdout, sys.stderr)
-            self.logging_queue = Queue()
+            self.logging_queue = self.mp_context.Queue()
             self.logging_thread = LogThread(self.logging_queue, self.logger, "info")
             sys.stdout = LoggingWrapper(self.logging_queue, prefix="STDOUT")
             sys.stderr = LoggingWrapper(self.logging_queue, prefix="STDERR")
