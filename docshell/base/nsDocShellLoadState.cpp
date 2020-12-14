@@ -38,7 +38,8 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
 
 nsDocShellLoadState::nsDocShellLoadState(
     const DocShellLoadStateInit& aLoadState)
-    : mLoadIdentifier(aLoadState.LoadIdentifier()) {
+    : mNotifiedBeforeUnloadListeners(false),
+      mLoadIdentifier(aLoadState.LoadIdentifier()) {
   MOZ_ASSERT(aLoadState.URI(), "Cannot create a LoadState with a null URI!");
   mResultPrincipalURI = aLoadState.ResultPrincipalURI();
   mResultPrincipalURIIsSome = aLoadState.ResultPrincipalURIIsSome();
@@ -94,6 +95,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mLoadReplace(aOther.mLoadReplace),
       mInheritPrincipal(aOther.mInheritPrincipal),
       mPrincipalIsExplicit(aOther.mPrincipalIsExplicit),
+      mNotifiedBeforeUnloadListeners(aOther.mNotifiedBeforeUnloadListeners),
       mPrincipalToInherit(aOther.mPrincipalToInherit),
       mPartitionedPrincipalToInherit(aOther.mPartitionedPrincipalToInherit),
       mForceAllowDataURI(aOther.mForceAllowDataURI),
@@ -133,6 +135,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mLoadReplace(false),
       mInheritPrincipal(false),
       mPrincipalIsExplicit(false),
+      mNotifiedBeforeUnloadListeners(false),
       mForceAllowDataURI(false),
       mOriginalFrameSrc(false),
       mIsFormSubmission(false),
@@ -463,6 +466,15 @@ bool nsDocShellLoadState::PrincipalIsExplicit() const {
 
 void nsDocShellLoadState::SetPrincipalIsExplicit(bool aPrincipalIsExplicit) {
   mPrincipalIsExplicit = aPrincipalIsExplicit;
+}
+
+bool nsDocShellLoadState::NotifiedBeforeUnloadListeners() const {
+  return mNotifiedBeforeUnloadListeners;
+}
+
+void nsDocShellLoadState::SetNotifiedBeforeUnloadListeners(
+    bool aNotifiedBeforeUnloadListeners) {
+  mNotifiedBeforeUnloadListeners = aNotifiedBeforeUnloadListeners;
 }
 
 bool nsDocShellLoadState::ForceAllowDataURI() const {
