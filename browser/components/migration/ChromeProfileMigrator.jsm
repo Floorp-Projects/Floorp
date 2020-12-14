@@ -165,9 +165,10 @@ ChromeProfileMigrator.prototype.getSourceProfiles = async function Chrome_getSou
     return [];
   }
 
+  let localState;
   let profiles = [];
   try {
-    let localState = await ChromeMigrationUtils.getLocalState(
+    localState = await ChromeMigrationUtils.getLocalState(
       this._chromeUserDataPathSuffix
     );
     let info_cache = localState.profile.info_cache;
@@ -178,10 +179,13 @@ ChromeProfileMigrator.prototype.getSourceProfiles = async function Chrome_getSou
       });
     }
   } catch (e) {
-    Cu.reportError("Error detecting Chrome profiles: " + e);
+    // Avoid reporting NotFoundErrors from trying to get local state.
+    if (localState || e.name != "NotFoundError") {
+      Cu.reportError("Error detecting Chrome profiles: " + e);
+    }
     // If we weren't able to detect any profiles above, fallback to the Default profile.
-    let defaultProfilePath = OS.Path.join(chromeUserDataPath, "Default");
-    if (await OS.File.exists(defaultProfilePath)) {
+    let defaultProfilePath = PathUtils.join(chromeUserDataPath, "Default");
+    if (await IOUtils.exists(defaultProfilePath)) {
       profiles = [
         {
           id: "Default",
