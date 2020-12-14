@@ -262,11 +262,22 @@ export type TargetList = {
   unwatchTargets: (Array<string>, Function, Function) => void,
   getAllTargets: (Array<string>) => Array<Target>,
   targetFront: Target,
+  hasTargetWatcherSupport: string => boolean,
+  watcherFront: WatcherFront,
   TYPES: {
     FRAME: string,
     PROCESS: string,
     WORKER: string,
   },
+};
+
+export type BreakpointListActor = {
+  setBreakpoint: (BreakpointLocation, BreakpointOptions) => Promise<*>,
+  removeBreakpoint: PendingLocation => Promise<*>,
+};
+
+export type WatcherFront = {
+  getBreakpointListActor: () => BreakpointListActor,
 };
 
 /**

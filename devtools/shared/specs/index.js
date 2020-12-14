@@ -43,6 +43,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/array-buffer",
   },
   {
+    types: ["breakpoint-list"],
+    spec: "devtools/shared/specs/breakpoint-list",
+    front: "devtools/client/fronts/breakpoint-list",
+  },
+  {
     types: ["changes"],
     spec: "devtools/shared/specs/changes",
     front: "devtools/client/fronts/changes",

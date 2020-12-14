@@ -52,6 +52,13 @@ const watcherSpecPrototype = {
         network: RetVal("networkParent"),
       },
     },
+
+    getBreakpointListActor: {
+      request: {},
+      response: {
+        breakpointList: RetVal("breakpoint-list"),
+      },
+    },
   },
 
   events: {
