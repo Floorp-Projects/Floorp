@@ -827,6 +827,14 @@ void RenderThread::HandleDeviceReset(const char* aWhere,
   gfx::GPUProcessManager::RecordDeviceReset(GLenumToResetReason(aReason));
 #endif
 
+  {
+    MutexAutoLock lock(mRenderTextureMapLock);
+    mRenderTexturesDeferred.clear();
+    for (const auto& entry : mRenderTextures) {
+      entry.second->ClearCachedResources();
+    }
+  }
+
   // On some platforms (i.e. Linux), we may get a device reset just for purging
   // video memory with NVIDIA devices, because the driver has edge cases it
   // needs to clear all of it.
@@ -857,14 +865,6 @@ void RenderThread::HandleDeviceReset(const char* aWhere,
             gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(guilty);
           }));
 #endif
-    }
-  }
-
-  {
-    MutexAutoLock lock(mRenderTextureMapLock);
-    mRenderTexturesDeferred.clear();
-    for (const auto& entry : mRenderTextures) {
-      entry.second->ClearCachedResources();
     }
   }
 }

@@ -66,4 +66,9 @@ void RenderDMABUFTextureHost::DeleteTextureHandle() {
   mSurface->ReleaseTextures();
 }
 
+void RenderDMABUFTextureHost::ClearCachedResources() {
+  DeleteTextureHandle();
+  mGL = nullptr;
+}
+
 }  // namespace mozilla::wr

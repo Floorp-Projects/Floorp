@@ -26,6 +26,7 @@ class RenderDMABUFTextureHost final : public RenderTextureHost {
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
+  void ClearCachedResources() override;
 
  private:
   virtual ~RenderDMABUFTextureHost();
