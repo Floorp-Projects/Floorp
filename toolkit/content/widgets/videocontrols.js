@@ -970,6 +970,32 @@ this.VideoControlsImplWidget = class {
           case "media-videoCasting":
             this.updateCasting(aEvent.detail);
             break;
+          case "focusin":
+            // Show the controls to highlight the focused control, but only
+            // under certain conditions:
+            if (
+              this.prefs["media.videocontrols.keyboard-tab-to-all-controls"] &&
+              // The click-to-play overlay must already be hidden (we don't
+              // hide controls when the overlay is visible).
+              this.clickToPlay.hidden &&
+              // Don't do this if the controls are static.
+              this.dynamicControls &&
+              // If the mouse is hovering over the control bar, the controls
+              // are already showing and they shouldn't hide, so don't mess
+              // with them.
+              // We use "div:hover" instead of just ":hover" so this works in
+              // quirks mode documents. See
+              // https://quirks.spec.whatwg.org/#the-active-and-hover-quirk
+              !this.controlBar.matches("div:hover")
+            ) {
+              this.startFadeIn(this.controlBar);
+              this.window.clearTimeout(this._hideControlsTimeout);
+              this._hideControlsTimeout = this.window.setTimeout(
+                () => this._hideControlsFn(),
+                this.HIDE_CONTROLS_TIMEOUT_MS
+              );
+            }
+            break;
           default:
             this.log("!!! control event " + aEvent.type + " not handled!");
         }
@@ -2467,6 +2493,8 @@ this.VideoControlsImplWidget = class {
           { el: this.video.textTracks, type: "change" },
 
           { el: this.video, type: "media-videoCasting", touchOnly: true },
+
+          { el: this.controlBar, type: "focusin" },
         ];
 
         for (let {
