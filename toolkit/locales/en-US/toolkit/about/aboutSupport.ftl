@@ -311,8 +311,6 @@ support-blocklisted-bug = Blocklisted due to known issues: <a data-l10n-name="bu
 unknown-failure = Blocklisted; failure code { $failureCode }
 
 d3d11layers-crash-guard = D3D11 Compositor
-d3d11video-crash-guard = D3D11 Video Decoder
-d3d9video-crash-guard = D3D9 Video Decoder
 glcontext-crash-guard = OpenGL
 wmfvpxvideo-crash-guard = WMF VPX Video Decoder
 
