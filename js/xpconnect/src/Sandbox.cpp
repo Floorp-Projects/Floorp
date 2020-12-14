@@ -77,7 +77,7 @@
 #include "mozilla/dom/FormDataBinding.h"
 #include "mozilla/dom/nsCSPContext.h"
 #ifdef MOZ_GLEAN
-#  include "mozilla/glean/Glean.h"
+#  include "mozilla/glean/bindings/Glean.h"
 #endif
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DeferredFinalize.h"
