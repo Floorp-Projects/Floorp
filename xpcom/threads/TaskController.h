@@ -18,7 +18,6 @@
 #include "nsIEventTarget.h"
 
 #include <atomic>
-#include <thread>
 #include <memory>
 #include <vector>
 #include <set>
@@ -236,7 +235,7 @@ class Task {
 };
 
 struct PoolThread {
-  std::unique_ptr<std::thread> mThread;
+  PRThread* mThread;
   RefPtr<Task> mCurrentTask;
   // This may be higher than mCurrentTask's priority due to priority
   // propagation. This is -only- valid when mCurrentTask != nullptr.
@@ -325,7 +324,7 @@ class TaskController {
   bool MTTaskRunnableProcessedTask() { return mMTTaskRunnableProcessedTask; }
 
  private:
-  friend void ThreadFuncPoolThread(TaskController* aController, size_t aIndex);
+  friend void ThreadFuncPoolThread(void* aIndex);
 
   bool InitializeInternal();
 
