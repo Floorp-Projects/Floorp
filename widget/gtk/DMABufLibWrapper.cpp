@@ -240,7 +240,8 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
-         StaticPrefs::media_ffmpeg_vaapi_enabled();
+         StaticPrefs::media_ffmpeg_vaapi_enabled() &&
+         gfx::gfxVars::CanUseHardwareVideoDecoding();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
