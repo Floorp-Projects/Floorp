@@ -8,10 +8,16 @@ import android.content.ComponentCallbacks2
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.SystemAction
+import mozilla.components.browser.state.selector.allTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.log.logger.Logger
+
+// The number of tabs we keep active and do not suspend (in addition to the selected tab)
+private const val MIN_ACTIVE_TABS = 3
 
 /**
  * [Middleware] responsible for suspending [EngineSession] instances on low memory.
@@ -32,24 +38,42 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
     }
 
     private fun trimMemory(
-        store: MiddlewareContext<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         action: SystemAction.LowMemoryAction
     ) {
         if (!shouldCloseEngineSessions(action.level)) {
             return
         }
 
-        logger.info("Suspending tabs to trim memory")
+        val suspendTabs = determineTabsToSuspend(context.state)
+
+        logger.info("Trim memory (tabs=${context.state.allTabs.size}, suspending=${suspendTabs.size})")
 
         // This is not the most efficient way of doing this. We are looping over all tabs and then
         // dispatching a SuspendEngineSessionAction for each tab that is no longer needed.
-        (store.state.tabs + store.state.customTabs).forEach { tab ->
-            if (tab.id != store.state.selectedTabId) {
-                store.dispatch(
-                    EngineAction.SuspendEngineSessionAction(tab.id)
-                )
-            }
+        suspendTabs.forEach { tab ->
+            context.dispatch(EngineAction.SuspendEngineSessionAction(tab.id))
         }
+    }
+
+    private fun determineTabsToSuspend(
+        state: BrowserState
+    ): List<SessionState> {
+        return state.allTabs.filter { tab ->
+            // We never suspend the currently selected tab
+            tab.id != state.selectedTabId
+        }.filter { tab ->
+            // Only tabs with an engine session can get suspended
+            tab.engineState.engineSession != null
+        }.sortedByDescending { tab ->
+            if (tab is TabSessionState) {
+                // We want to suspend the tabs that haven't been access for a while first
+                tab.lastAccess
+            } else {
+                // We are more aggressive with custom tabs an always consider them for suspension
+                0
+            }
+        }.drop(MIN_ACTIVE_TABS) // Keep the first tabs and suspend the rest
     }
 }
 
