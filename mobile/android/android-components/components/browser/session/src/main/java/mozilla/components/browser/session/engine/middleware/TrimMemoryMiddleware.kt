@@ -67,13 +67,13 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
             tab.engineState.engineSession != null
         }.sortedByDescending { tab ->
             if (tab is TabSessionState) {
-                // We want to suspend the tabs that haven't been access for a while first
+                // We want to suspend the tabs that haven't been accessed for a while first
                 tab.lastAccess
             } else {
                 // We are more aggressive with custom tabs an always consider them for suspension
                 0
             }
-        }.drop(MIN_ACTIVE_TABS) // Keep the first tabs and suspend the rest
+        }.drop(MIN_ACTIVE_TABS) // Keep n [MIN_ACTIVE_TABS] most recently accessed tabs.
     }
 }
 
@@ -83,11 +83,8 @@ private fun shouldCloseEngineSessions(level: Int): Boolean {
         // process, but the system will begin killing background processes if apps do not release resources.
         ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> true
 
-        // Background: The system is running low on memory and our process is near the middle of the LRU list.
-        // If the system becomes further constrained for memory, there's a chance our process will be killed.
-        ComponentCallbacks2.TRIM_MEMORY_MODERATE,
-            // Background: The system is running low on memory and our process is one of the first to be killed
-            // if the system does not recover memory now.
+        // Background: The system is running low on memory and our process is one of the first to be killed
+        // if the system does not recover memory now.
         ComponentCallbacks2.TRIM_MEMORY_COMPLETE -> true
 
         else -> false
