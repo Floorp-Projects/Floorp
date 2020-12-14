@@ -59,7 +59,7 @@ mozilla::ipc::IPCResult MessagePortParent::RecvPostMessages(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (!mService->PostMessages(this, messages)) {
+  if (!mService->PostMessages(this, std::move(messages))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -83,7 +83,7 @@ mozilla::ipc::IPCResult MessagePortParent::RecvDisentangle(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (!mService->DisentanglePort(this, messages)) {
+  if (!mService->DisentanglePort(this, std::move(messages))) {
     return IPC_FAIL_NO_REASON(this);
   }
 
