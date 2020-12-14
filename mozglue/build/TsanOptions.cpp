@@ -187,23 +187,6 @@ extern "C" const char* __tsan_default_suppressions() {
 
 
 
-         // Benign read/write races on bitfields
-         //
-         // WARNING: Bitfield races are only benign if one of the concurrent
-         // accesses is a read. Write/write races on different parts of a
-         // bitfield can have severe side-effects.
-         //
-         // These should all still be fixed because the compiler is incentivized
-         // to combine/cache these accesses without proper atomic annotations.
-
-         // Bug 1614697
-         "race:nsHttpChannel::OnCacheEntryCheck\n"
-         "race:~AutoCacheWaitFlags\n"
-
-
-
-
-
          // The rest of these suppressions are miscellaneous issues in gecko
          // that should be investigated and ideally fixed.
 
