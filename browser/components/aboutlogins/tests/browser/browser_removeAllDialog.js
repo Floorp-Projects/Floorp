@@ -27,6 +27,10 @@ async function openRemoveAllDialog(browser) {
 
 async function activateLoginItemEdit(browser) {
   await SimpleTest.promiseFocus(browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    ok(loginItem, "Login item should exist");
+  });
   function getLoginItemEditButton() {
     let loginItem = window.document.querySelector("login-item");
     return loginItem.shadowRoot.querySelector(".edit-button");
@@ -36,7 +40,28 @@ async function activateLoginItemEdit(browser) {
     {},
     browser
   );
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    loginItem.shadowRoot.querySelector(".edit-button").click();
+    await ContentTaskUtils.waitForCondition(
+      () => loginItem.dataset.editing,
+      "Waiting for login-item to enter edit mode"
+    );
+  });
   info("login-item should be in edit mode");
+}
+
+async function activateCreateNewLogin(browser) {
+  await SimpleTest.promiseFocus(browser);
+  function getCreateNewLoginButton() {
+    let loginList = window.document.querySelector("login-list");
+    return loginList.shadowRoot.querySelector(".create-login-button");
+  }
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    getCreateNewLoginButton,
+    {},
+    browser
+  );
 }
 
 async function waitForRemoveAllLogins() {
@@ -53,13 +78,17 @@ async function waitForRemoveAllLogins() {
 }
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[OS_REAUTH_PREF, false]],
+  });
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
   });
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     Services.logins.removeAllUserFacingLogins();
+    await SpecialPowers.popPrefEnv();
   });
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
 });
@@ -361,21 +390,158 @@ add_task(async function test_remove_all_dialog_remove_logins() {
   });
 });
 
-add_task(async function test_ensure_edit_mode_reset_login_item() {
-  // Preferences.set(OS_REAUTH_PREF, false);
-  await SpecialPowers.pushPrefEnv({
-    set: [[OS_REAUTH_PREF, false]],
-  });
+add_task(async function test_edit_mode_resets_on_remove_all_with_login() {
   TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
+  let removeAllPromise = waitForRemoveAllLogins();
   let browser = gBrowser.selectedBrowser;
   await activateLoginItemEdit(browser);
   await openRemoveAllDialog(browser);
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
     ok(
-      !loginItem.dataset.editing,
-      "Login item is no longer in edit mode due to remove all dialog being present"
+      loginItem.dataset.editing,
+      "Login item is still in edit mode when the remove all dialog opens"
     );
   });
-  await SpecialPowers.popPrefEnv();
+  function getDialogCancelButton() {
+    let dialog = window.document.querySelector("remove-logins-dialog");
+    return dialog.shadowRoot.querySelector(".cancel-button");
+  }
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    getDialogCancelButton,
+    {},
+    browser
+  );
+  await TestUtils.waitForTick();
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    ok(
+      loginItem.dataset.editing,
+      "Login item should be in editing mode after activating the cancel button in the remove all dialog"
+    );
+  });
+
+  await openRemoveAllDialog(browser);
+  function activateConfirmCheckbox() {
+    let dialog = window.document.querySelector("remove-logins-dialog");
+    return dialog.shadowRoot.querySelector(".checkbox");
+  }
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    activateConfirmCheckbox,
+    {},
+    browser
+  );
+  await SpecialPowers.spawn(browser, [], async () => {
+    let dialog = Cu.waiveXrays(
+      content.document.querySelector("remove-logins-dialog")
+    );
+    let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
+    is(
+      removeAllButton.disabled,
+      false,
+      "Remove all should be enabled after clicking the checkbox"
+    );
+  });
+  function getDialogRemoveAllButton() {
+    let dialog = window.document.querySelector("remove-logins-dialog");
+    return dialog.shadowRoot.querySelector(".confirm-button");
+  }
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    getDialogRemoveAllButton,
+    {},
+    browser
+  );
+  await TestUtils.waitForTick();
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    ok(
+      !loginItem.dataset.editing,
+      "Login item should not be in editing mode after activating the confirm button in the remove all dialog"
+    );
+  });
+  await removeAllPromise;
+});
+
+add_task(async function test_remove_all_when_creating_new_login() {
+  TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
+  let removeAllPromise = waitForRemoveAllLogins();
+  let browser = gBrowser.selectedBrowser;
+  await activateCreateNewLogin(browser);
+  await openRemoveAllDialog(browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    ok(
+      loginItem.dataset.editing,
+      "Login item should be in edit mode when the remove all dialog opens"
+    );
+    ok(
+      loginItem.dataset.isNewLogin,
+      "Login item should be in the 'new login' state when the remove all dialog opens"
+    );
+  });
+  function getDialogCancelButton() {
+    let dialog = window.document.querySelector("remove-logins-dialog");
+    return dialog.shadowRoot.querySelector(".cancel-button");
+  }
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    getDialogCancelButton,
+    {},
+    browser
+  );
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    ok(
+      loginItem.dataset.editing,
+      "Login item is still in edit mode after cancelling out of the remove all dialog"
+    );
+    ok(
+      loginItem.dataset.isNewLogin,
+      "Login item should be in the 'newLogin' state after cancelling out of the remove all dialog"
+    );
+  });
+
+  await openRemoveAllDialog(browser);
+  function activateConfirmCheckbox() {
+    let dialog = window.document.querySelector("remove-logins-dialog");
+    return dialog.shadowRoot.querySelector(".checkbox");
+  }
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    activateConfirmCheckbox,
+    {},
+    browser
+  );
+  await SpecialPowers.spawn(browser, [], async () => {
+    let dialog = Cu.waiveXrays(
+      content.document.querySelector("remove-logins-dialog")
+    );
+    let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
+    is(
+      removeAllButton.disabled,
+      false,
+      "Remove all should be enabled after clicking the checkbox"
+    );
+  });
+  function getDialogRemoveAllButton() {
+    let dialog = window.document.querySelector("remove-logins-dialog");
+    return dialog.shadowRoot.querySelector(".confirm-button");
+  }
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    getDialogRemoveAllButton,
+    {},
+    browser
+  );
+  await SpecialPowers.spawn(browser, [], async () => {
+    let loginItem = content.document.querySelector("login-item");
+    ok(
+      !loginItem.dataset.editing,
+      "Login item should not be in editing mode after activating the confirm button in the remove all dialog"
+    );
+    ok(
+      !loginItem.dataset.isNewLogin,
+      "Login item should not be in 'new login' mode after activating the confirm button in the remove all dialog"
+    );
+  });
+  await removeAllPromise;
 });
