@@ -24,17 +24,33 @@ module.exports = function(targetType, targetActorSpec, implementation) {
      * @param Array<Object> entries
      *        The values to be added to this type of data
      */
-    addWatcherDataEntry(type, entries) {
+    async addWatcherDataEntry(type, entries) {
       if (type == "resources") {
-        return this._watchTargetResources(entries);
-      }
+        await this._watchTargetResources(entries);
+      } else if (type == "breakpoints") {
+        // Breakpoints require the target to be attached,
+        // mostly to have the thread actor instantiated
+        // (content process targets don't have attach method,
+        //  instead they instantiate their ThreadActor immediately)
+        if (typeof this.attach == "function") {
+          this.attach();
+        }
 
-      return Promise.resolve();
+        await Promise.all(
+          entries.map(({ location, options }) =>
+            this.threadActor.setBreakpoint(location, options)
+          )
+        );
+      }
     },
 
     removeWatcherDataEntry(type, entries) {
       if (type == "resources") {
         return this._unwatchTargetResources(entries);
+      } else if (type == "breakpoints") {
+        for (const { location } of entries) {
+          this.threadActor.removeBreakpoint(location);
+        }
       }
 
       return Promise.resolve();

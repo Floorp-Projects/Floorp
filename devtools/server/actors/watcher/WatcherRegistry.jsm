@@ -206,6 +206,19 @@ const WatcherRegistry = {
   },
 
   /**
+   * Cleanup everything about a given watcher actor.
+   * Remove it from any registry so that we stop interacting with it.
+   *
+   * The watcher would be automatically unregistered from removeWatcherEntry,
+   * if we remove all entries. But we aren't removing all breakpoints.
+   * So here, we force clearing any reference to the watcher actor when it destroys.
+   */
+  unregisterWatcher(watcher) {
+    watchedDataByWatcherActor.delete(watcher.actorID);
+    watcherActors.delete(watcher.actorID);
+  },
+
+  /**
    * Notify that a given watcher starts observing a new target type.
    *
    * @param WatcherActor watcher

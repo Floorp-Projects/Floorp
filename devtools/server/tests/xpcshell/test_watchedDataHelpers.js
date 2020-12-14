@@ -28,11 +28,11 @@ function run_test() {
     "the two elements were added"
   );
 
-  Assert.throws(
-    () =>
-      WatchedDataHelpers.addWatchedDataEntry(watchedData, TARGETS, ["frame"]),
-    /targets:frame already exists/,
-    "addWatchedDataEntry should throw on duplicates"
+  WatchedDataHelpers.addWatchedDataEntry(watchedData, TARGETS, ["frame"]);
+  deepEqual(
+    watchedData[TARGETS],
+    ["frame", "worker"],
+    "addWatchedDataEntry ignore duplicates"
   );
 
   WatchedDataHelpers.addWatchedDataEntry(watchedData, TARGETS, ["process"]);
