@@ -147,6 +147,16 @@ class KnowsCompositor {
                WebRenderBackend::SOFTWARE;
   }
 
+  bool UsingSoftwareWebRenderD3D11() const {
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mParentBackend ==
+               layers::LayersBackend::LAYERS_WR &&
+           lock.ref().mTextureFactoryIdentifier.mWebRenderBackend ==
+               WebRenderBackend::SOFTWARE &&
+           lock.ref().mTextureFactoryIdentifier.mWebRenderCompositor ==
+               layers::WebRenderCompositor::D3D11;
+  }
+
   TextureFactoryIdentifier GetTextureFactoryIdentifier() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier;
