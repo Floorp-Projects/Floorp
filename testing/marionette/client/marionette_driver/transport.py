@@ -160,7 +160,7 @@ class TcpTransport(object):
             try:
                 chunk = self._sock.recv(bytes_to_recv)
                 data += chunk
-            except socket.timeout:
+            except (TimeoutError, socket.timeout):
                 pass
             else:
                 if not chunk:
