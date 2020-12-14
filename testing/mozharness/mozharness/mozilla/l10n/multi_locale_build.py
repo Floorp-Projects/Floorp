@@ -9,6 +9,7 @@
 This should be a mostly generic multilocale build script.
 """
 
+from __future__ import absolute_import
 import os
 import sys
 

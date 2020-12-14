@@ -4,6 +4,7 @@
 
 # Default configuration as used by Release Engineering for testing release/beta builds
 
+from __future__ import absolute_import
 import os
 import sys
 

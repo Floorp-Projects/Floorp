@@ -23,6 +23,7 @@ When Firefox changes its version, profiles from the previous version
 should work as expected. Each profile tarball comes with a metadata file
 that keep track of the Firefox version that was used and the profile age.
 """
+from __future__ import absolute_import
 import os
 
 from arsenic import get_session

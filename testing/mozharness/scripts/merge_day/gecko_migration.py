@@ -16,6 +16,7 @@ and
 http://hg.mozilla.org/build/tools/file/084bc4e2fc76/release/merge_helper.py
 """
 
+from __future__ import absolute_import
 import os
 import pprint
 import subprocess

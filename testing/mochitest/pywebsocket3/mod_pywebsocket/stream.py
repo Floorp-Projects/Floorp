@@ -33,7 +33,7 @@ Specification:
 http://tools.ietf.org/html/rfc6455
 """
 
-from __future__ import division
+from __future__ import absolute_import, division
 
 from collections import deque
 import logging

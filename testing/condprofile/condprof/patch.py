@@ -5,6 +5,7 @@
 
 # patch for https://bugzilla.mozilla.org/show_bug.cgi?id=1655869
 # see https://github.com/HDE/arsenic/issues/85
+from __future__ import absolute_import
 from arsenic.connection import *
 
 
