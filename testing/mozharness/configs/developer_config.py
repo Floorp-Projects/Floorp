@@ -14,6 +14,7 @@ Using this config file should be accompanied with using
 --test-url and --installer-url where appropiate
 """
 
+from __future__ import absolute_import
 import os
 
 LOCAL_WORKDIR = os.path.expanduser("~/.mozilla/releng")

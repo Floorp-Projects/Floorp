@@ -13,6 +13,7 @@
     This is to allow for `mach taskgraph` to reference specific l10n revisions
     without having to resort to task.extra or commandline base64 json hacks.
 """
+from __future__ import absolute_import
 import codecs
 import os
 import pprint

@@ -12,6 +12,7 @@ Further tests to verify validity would be desirable.
 This is also a good example script to look at to understand mozharness.
 """
 
+from __future__ import absolute_import
 import os
 import pprint
 import sys

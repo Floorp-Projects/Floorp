@@ -5,6 +5,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 
+from __future__ import absolute_import
 import copy
 import json
 import os

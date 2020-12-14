@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import mock
 import unittest
 from mozharness.base.diskutils import convert_to, DiskutilsError, DiskSize, DiskInfo

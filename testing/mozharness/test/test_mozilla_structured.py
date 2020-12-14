@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.base.log import INFO, WARNING
