@@ -24,18 +24,22 @@ if CONFIG["MOZ_GLEAN"]:
 
     EXPORTS.mozilla.glean += [
         "!GleanMetrics.h",
+        "!GleanPings.h",
     ]
 
     EXPORTS.mozilla.glean.bindings += [
         "!GleanJSMetricsLookup.h",
+        "!GleanJSPingsLookup.h",
         "bindings/Category.h",
         "bindings/Glean.h",
+        "bindings/GleanPings.h",
         "bindings/MetricTypes.h",
         "bindings/private/Boolean.h",
         "bindings/private/Counter.h",
         "bindings/private/Datetime.h",
         "bindings/private/Event.h",
         "bindings/private/MemoryDistribution.h",
+        "bindings/private/Ping.h",
         "bindings/private/String.h",
         "bindings/private/Timespan.h",
         "bindings/private/Uuid.h",
@@ -51,12 +55,14 @@ if CONFIG["MOZ_GLEAN"]:
     UNIFIED_SOURCES += [
         "bindings/Category.cpp",
         "bindings/Glean.cpp",
+        "bindings/GleanPings.cpp",
         "bindings/private/Boolean.cpp",
         "bindings/private/Common.cpp",
         "bindings/private/Counter.cpp",
         "bindings/private/Datetime.cpp",
         "bindings/private/Event.cpp",
         "bindings/private/MemoryDistribution.cpp",
+        "bindings/private/Ping.cpp",
         "bindings/private/String.cpp",
         "bindings/private/Timespan.cpp",
         "bindings/private/Uuid.cpp",
@@ -101,6 +107,22 @@ if CONFIG["MOZ_GLEAN"]:
     GeneratedFile(
         "api/src/pings.rs",
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
+        flags=[CONFIG["MOZ_APP_VERSION"]],
+        inputs=["metrics_index.py"] + pings_yamls,
+    )
+
+    GeneratedFile(
+        "GleanPings.h",
+        script="build_scripts/glean_parser_ext/run_glean_parser.py",
+        entry_point="cpp_metrics",
+        flags=[CONFIG["MOZ_APP_VERSION"]],
+        inputs=["metrics_index.py"] + pings_yamls,
+    )
+
+    GeneratedFile(
+        "GleanJSPingsLookup.h",
+        script="build_scripts/glean_parser_ext/run_glean_parser.py",
+        entry_point="js_metrics",
         flags=[CONFIG["MOZ_APP_VERSION"]],
         inputs=["metrics_index.py"] + pings_yamls,
     )

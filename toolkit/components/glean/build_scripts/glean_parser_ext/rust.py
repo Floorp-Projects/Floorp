@@ -13,7 +13,7 @@ import json
 
 import jinja2
 
-from util import generate_metric_ids
+from util import generate_metric_ids, generate_ping_ids
 from glean_parser import util
 
 
@@ -140,6 +140,7 @@ def output_rust(objs, output_fd, options={}):
 
     util.get_jinja2_template = get_local_template
     get_metric_id = generate_metric_ids(objs)
+    get_ping_id = generate_ping_ids(objs)
 
     # Map from a tuple (const, typ) to an array of tuples (id, path)
     # where:
@@ -198,6 +199,7 @@ def output_rust(objs, output_fd, options={}):
             ("ctor", ctor),
             ("extra_keys", extra_keys),
             ("metric_id", get_metric_id),
+            ("ping_id", get_ping_id),
         ),
     )
 

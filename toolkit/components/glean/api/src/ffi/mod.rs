@@ -4,6 +4,7 @@
 
 #![cfg(feature = "with_gecko")]
 
+use crate::pings;
 use thin_vec::ThinVec;
 use {nsstring::nsACString, uuid::Uuid};
 
@@ -182,4 +183,14 @@ pub extern "C" fn fog_memory_distribution_test_get_value(
 pub extern "C" fn fog_memory_distribution_accumulate(id: u32, sample: u64) {
     let metric = metric_get!(MEMORY_DISTRIBUTION_MAP, id);
     metric.accumulate(sample);
+}
+
+#[no_mangle]
+pub extern "C" fn fog_submit_ping_by_id(id: u32, reason: &nsACString) {
+    let reason = if reason.is_empty() {
+        None
+    } else {
+        Some(reason.to_utf8())
+    };
+    pings::submit_ping_by_id(id, reason.as_deref());
 }

@@ -24,3 +24,16 @@ pub static {{ obj.name|snake_case }}: Lazy<Ping> = Lazy::new(|| {
 });
 
 {% endfor %}
+
+#[cfg(feature = "with_gecko")]
+pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
+    match id {
+{% for obj in all_objs['pings'].values() %}
+        {{ obj.name|ping_id }} => {{ obj.name | snake_case }}.submit(reason),
+{% endfor %}
+        _ => {
+            // TODO: instrument this error.
+            log::error!("Cannot submit unknown ping {} by id.", id);
+        }
+    }
+}

@@ -17,7 +17,7 @@ import jinja2
 from perfecthash import PerfectHash
 from string_table import StringTable
 
-from util import generate_metric_ids, is_implemented_metric_type
+from util import generate_metric_ids, generate_ping_ids, is_implemented_metric_type
 from glean_parser import util
 
 """
@@ -44,6 +44,17 @@ and adjust the constants below.
 ENTRY_WIDTH = 64
 INDEX_BITS = 32
 ID_BITS = 27
+
+PING_INDEX_BITS = 16
+
+
+def ping_entry(ping_id, ping_string_index):
+    """
+    The 2 pieces of information of a ping encoded into a single 32-bit integer.
+    """
+    assert ping_id < 2 ** (32 - PING_INDEX_BITS)
+    assert ping_string_index < 2 ** PING_INDEX_BITS
+    return ping_id << PING_INDEX_BITS | ping_string_index
 
 
 def create_entry(metric_id, type_id, idx):
@@ -94,7 +105,18 @@ def output_js(objs, output_fd, options={}):
         return env.get_template(template_name)
 
     util.get_jinja2_template = get_local_template
-    template_filename = "js.jinja2"
+
+    if len(objs) == 1 and "pings" in objs:
+        write_pings(objs, output_fd, "js_pings.jinja2")
+    else:
+        write_metrics(objs, output_fd, "js.jinja2")
+
+
+def write_metrics(objs, output_fd, template_filename):
+    """
+    Given a tree of objects `objs`, output metrics-only code for the JS API to the
+    file-like object `output_fd` using template `template_filename`
+    """
 
     template = util.get_jinja2_template(
         template_filename,
@@ -181,6 +203,54 @@ def output_js(objs, output_fd, options={}):
             category_by_name_lookup=category_by_name_lookup,
             metric_string_table=metric_string_table,
             metric_by_name_lookup=metric_by_name_lookup,
+        )
+    )
+    output_fd.write("\n")
+
+
+def write_pings(objs, output_fd, template_filename):
+    """
+    Given a tree of objects `objs`, output pings-only code for the JS API to the
+    file-like object `output_fd` using template `template_filename`
+    """
+
+    template = util.get_jinja2_template(
+        template_filename,
+        filters=(),
+    )
+
+    ping_string_table = StringTable()
+    get_ping_id = generate_ping_ids(objs)
+    # The map of a ping's name to its entry (a combination of a monotonic
+    # integer and its index in the string table)
+    pings = {}
+    for ping_name in objs["pings"].keys():
+        ping_id = get_ping_id(ping_name)
+        ping_name = util.camelize(ping_name)
+        pings[ping_name] = ping_entry(ping_id, ping_string_table.stringIndex(ping_name))
+
+    ping_map = [
+        (bytearray(ping_name, "ascii"), ping_entry)
+        for (ping_name, ping_entry) in pings.items()
+    ]
+    ping_string_table = ping_string_table.writeToString("gPingStringTable")
+    ping_phf = PerfectHash(ping_map, 64)
+    ping_by_name_lookup = ping_phf.cxx_codegen(
+        name="PingByNameLookup",
+        entry_type="ping_entry_t",
+        lower_entry=lambda x: str(x[1]),
+        key_type="const nsACString&",
+        key_bytes="aKey.BeginReading()",
+        key_length="aKey.Length()",
+        return_type="static Maybe<uint32_t>",
+        return_entry="return ping_result_check(aKey, entry);",
+    )
+
+    output_fd.write(
+        template.render(
+            ping_index_bits=PING_INDEX_BITS,
+            ping_by_name_lookup=ping_by_name_lookup,
+            ping_string_table=ping_string_table,
         )
     )
     output_fd.write("\n")

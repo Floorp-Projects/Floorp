@@ -26,3 +26,4 @@ class FOGDocTypePingFilter(FOGPingFilter):
 
 
 FOG_DELETION_REQUEST_PING = FOGDocTypePingFilter("deletion-request")
+FOG_ONE_PING_ONLY_PING = FOGDocTypePingFilter("one-ping-only")

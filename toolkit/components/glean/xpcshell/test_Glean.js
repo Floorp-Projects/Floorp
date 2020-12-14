@@ -9,7 +9,7 @@
 /* global add_task, Assert, do_get_profile */
 "use strict";
 
-Cu.importGlobalProperties(["Glean"]);
+Cu.importGlobalProperties(["Glean", "GleanPings"]);
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
@@ -161,4 +161,10 @@ add_task(async function test_fog_memory_distribution_works() {
       "Only two buckets have a sample"
     );
   }
+});
+
+add_task(function test_fog_custom_pings() {
+  Assert.ok("onePingOnly" in GleanPings);
+  // Don't bother sending it, we'll test that in the integration suite.
+  // See also bug 1681742.
 });
