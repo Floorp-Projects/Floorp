@@ -527,8 +527,12 @@ class ScriptPreloader : public nsIObserver,
   Atomic<JS::OffThreadToken*, ReleaseAcquire> mToken{nullptr};
 
   // True if a runnable has been dispatched to the main thread to finish an
-  // off-thread decode operation.
+  // off-thread decode operation. Access only while 'mMonitor' is held.
   bool mFinishDecodeRunnablePending = false;
+
+  // True is main-thread is blocked and we should notify with Monitor. Access
+  // only while `mMonitor` is held.
+  bool mWaitingForDecode = false;
 
   // The process type of the current process.
   static ProcessType sProcessType;

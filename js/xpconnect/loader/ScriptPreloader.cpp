@@ -930,7 +930,9 @@ JSScript* ScriptPreloader::WaitForCachedScript(
           FinishOffThreadDecode(token);
         } else {
           MOZ_ASSERT(!mParsingScripts.empty());
+          mWaitingForDecode = true;
           mal.Wait();
+          mWaitingForDecode = false;
         }
       }
     }
@@ -955,13 +957,12 @@ void ScriptPreloader::OffThreadDecodeCallback(JS::OffThreadToken* token,
   cache->mMonitor.AssertNotCurrentThreadOwns();
   MonitorAutoLock mal(cache->mMonitor);
 
-  // First notify any tasks that are already waiting on scripts, since they'll
-  // be blocking the main thread, and prevent any runnables from executing.
-  mal.NotifyAll();
-
-  // If we don't already have a pending runnable, then dispatch a new one to
-  // finish the processing on the main thread as soon as possible.
-  if (!cache->mFinishDecodeRunnablePending) {
+  if (cache->mWaitingForDecode) {
+    // Wake up the blocked main thread.
+    mal.Notify();
+  } else if (!cache->mFinishDecodeRunnablePending) {
+    // Issue a Runnable to ensure batches continue to decode even if the next
+    // WaitForCachedScript call has not happened yet.
     cache->mFinishDecodeRunnablePending = true;
     NS_DispatchToMainThread(
         NewRunnableMethod("ScriptPreloader::DoFinishOffThreadDecode", cache,
@@ -981,13 +982,18 @@ void ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal) {
       MonitorAutoUnlock mau(mMonitor);
       FinishOffThreadDecode(token);
     } else {
+      mWaitingForDecode = true;
       aMal.Wait();
+      mWaitingForDecode = false;
     }
   }
 }
 
 void ScriptPreloader::DoFinishOffThreadDecode() {
-  mFinishDecodeRunnablePending = false;
+  {
+    MonitorAutoLock mal(mMonitor);
+    mFinishDecodeRunnablePending = false;
+  }
 
   if (JS::OffThreadToken* token = mToken.exchange(nullptr)) {
     FinishOffThreadDecode(token);
