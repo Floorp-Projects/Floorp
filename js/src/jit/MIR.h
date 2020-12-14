@@ -5525,6 +5525,8 @@ class MSub : public MBinaryArithInstruction {
     return ret;
   }
 
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
   double getIdentity() override { return 0; }
 
   bool isFloat32Commutative() const override { return true; }
