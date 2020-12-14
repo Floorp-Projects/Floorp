@@ -1389,17 +1389,20 @@
         tab._sharingState = {};
       }
       tab._sharingState = Object.assign(tab._sharingState, aState);
-      if (aState.webRTC && aState.webRTC.sharing) {
-        if (aState.webRTC.paused) {
-          tab.removeAttribute("sharing");
+
+      if ("webRTC" in aState) {
+        if (tab._sharingState.webRTC?.sharing) {
+          if (tab._sharingState.webRTC.paused) {
+            tab.removeAttribute("sharing");
+          } else {
+            tab.setAttribute("sharing", aState.webRTC.sharing);
+          }
         } else {
-          tab.setAttribute("sharing", aState.webRTC.sharing);
+          tab._sharingState.webRTC = null;
+          tab.removeAttribute("sharing");
         }
-      } else {
-        tab._sharingState.webRTC = null;
-        tab.removeAttribute("sharing");
+        this._tabAttrModified(tab, ["sharing"]);
       }
-      this._tabAttrModified(tab, ["sharing"]);
 
       if (aBrowser == this.selectedBrowser) {
         gIdentityHandler.updateSharingIndicator();
