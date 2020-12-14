@@ -191,11 +191,9 @@ void InternalRequest::OverrideContentPolicyType(
 /* static */
 RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     nsContentPolicyType aContentPolicyType) {
-  RequestDestination destination = RequestDestination::_empty;
   switch (aContentPolicyType) {
     case nsIContentPolicy::TYPE_OTHER:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_MODULE:
@@ -205,115 +203,86 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     case nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT:
     case nsIContentPolicy::TYPE_SCRIPT:
-      destination = RequestDestination::Script;
-      break;
+      return RequestDestination::Script;
     case nsIContentPolicy::TYPE_INTERNAL_WORKER:
-      destination = RequestDestination::Worker;
-      break;
+      return RequestDestination::Worker;
     case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
-      destination = RequestDestination::Sharedworker;
-      break;
+      return RequestDestination::Sharedworker;
     case nsIContentPolicy::TYPE_IMAGESET:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
     case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
     case nsIContentPolicy::TYPE_IMAGE:
-      destination = RequestDestination::Image;
-      break;
+      return RequestDestination::Image;
     case nsIContentPolicy::TYPE_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
-      destination = RequestDestination::Style;
-      break;
+      return RequestDestination::Style;
     case nsIContentPolicy::TYPE_OBJECT:
     case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
-      destination = RequestDestination::Object;
-      break;
+      return RequestDestination::Object;
     case nsIContentPolicy::TYPE_INTERNAL_EMBED:
-      destination = RequestDestination::Embed;
-      break;
+      return RequestDestination::Embed;
     case nsIContentPolicy::TYPE_DOCUMENT:
+      return RequestDestination::Document;
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
     case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
-      destination = RequestDestination::Document;
-      break;
+      return RequestDestination::Iframe;
     case nsIContentPolicy::TYPE_INTERNAL_FRAME:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::Frame;
     case nsIContentPolicy::TYPE_REFRESH:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_PING:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
     case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_DTD:
     case nsIContentPolicy::TYPE_INTERNAL_DTD:
     case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_FONT:
     case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
-      destination = RequestDestination::Font;
-      break;
+      return RequestDestination::Font;
     case nsIContentPolicy::TYPE_MEDIA:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_INTERNAL_AUDIO:
-      destination = RequestDestination::Audio;
-      break;
+      return RequestDestination::Audio;
     case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
-      destination = RequestDestination::Video;
-      break;
+      return RequestDestination::Video;
     case nsIContentPolicy::TYPE_INTERNAL_TRACK:
-      destination = RequestDestination::Track;
-      break;
+      return RequestDestination::Track;
     case nsIContentPolicy::TYPE_WEBSOCKET:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_CSP_REPORT:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::Report;
     case nsIContentPolicy::TYPE_XSLT:
-      destination = RequestDestination::Xslt;
-      break;
+      return RequestDestination::Xslt;
     case nsIContentPolicy::TYPE_BEACON:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_FETCH:
     case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_WEB_MANIFEST:
-      destination = RequestDestination::Manifest;
-      break;
+      return RequestDestination::Manifest;
     case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_SPECULATIVE:
-      destination = RequestDestination::_empty;
-      break;
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_INTERNAL_AUDIOWORKLET:
-      destination = RequestDestination::Audioworklet;
-      break;
+      return RequestDestination::Audioworklet;
     case nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET:
-      destination = RequestDestination::Paintworklet;
-      break;
-    default:
-      MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
+      return RequestDestination::Paintworklet;
+    case nsIContentPolicy::TYPE_INVALID:
       break;
   }
 
-  return destination;
+  MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
+  return RequestDestination::_empty;
 }
 
 // static
