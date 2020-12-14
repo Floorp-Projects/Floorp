@@ -24,7 +24,7 @@ add_task(async function run_test() {
         Assert.ok("AvailableVirtualMemory" in extra);
         Assert.ok("TotalPageFile" in extra);
         Assert.ok("AvailablePageFile" in extra);
-      } else if (mozinfo.so == "linux") {
+      } else if (mozinfo.os == "linux") {
         Assert.ok("TotalPageFile" in extra);
         Assert.ok("AvailablePageFile" in extra);
       }
