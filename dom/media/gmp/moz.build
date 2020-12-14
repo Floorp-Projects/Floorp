@@ -78,7 +78,6 @@ UNIFIED_SOURCES += [
     "GMPChild.cpp",
     "GMPContentChild.cpp",
     "GMPContentParent.cpp",
-    "GMPCrashHelper.cpp",
     "GMPCrashHelperHolder.cpp",
     "GMPDiskStorage.cpp",
     "GMPLoader.cpp",

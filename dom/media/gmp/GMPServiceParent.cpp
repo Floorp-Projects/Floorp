@@ -1586,19 +1586,6 @@ GMPServiceParent::~GMPServiceParent() {
   mService->ServiceUserDestroyed(this);
 }
 
-void GMPServiceParent::Destroy() {
-  // Ensures we only delete the GMPServiceParent on the main thread.
-  if (NS_IsMainThread()) {
-    delete this;
-    return;
-  }
-  nsresult rv = SchedulerGroup::Dispatch(
-      TaskCategory::Other,
-      NewNonOwningRunnableMethod("GMPServiceParent::Destroy", this,
-                                 &GMPServiceParent::Destroy));
-  MOZ_ALWAYS_SUCCEEDS(rv);
-}
-
 mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
     const nsCString& aNodeId, const nsCString& aAPI,
     nsTArray<nsCString>&& aTags, nsTArray<ProcessId>&& aAlreadyBridgedTo,
