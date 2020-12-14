@@ -79,6 +79,10 @@ void BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
     MOZ_ASSERT(aLink, "Must pass a non-null Link!");
   }
 
+  if (!CanStore(aURI)) {
+    return aLink->VisitedQueryFinished(/* visited = */ false);
+  }
+
   // Obtain our array of observers for this URI.
   auto entry = mTrackedURIs.LookupForAdd(aURI);
   MOZ_DIAGNOSTIC_ASSERT(!entry || !entry.Data().mLinks.IsEmpty(),
@@ -137,7 +141,9 @@ void BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   // Get the array, and remove the item from it.
   auto entry = mTrackedURIs.Lookup(aURI);
   if (!entry) {
-    MOZ_ASSERT_UNREACHABLE("Trying to unregister URI that wasn't registered!");
+    MOZ_ASSERT(!CanStore(aURI),
+               "Trying to unregister URI that wasn't registered, "
+               "and that could be visited!");
     return;
   }
 
