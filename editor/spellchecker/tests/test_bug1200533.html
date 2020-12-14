@@ -29,9 +29,10 @@ var tests = [
     // Result: Element language.
     [ "en-GB", "", "en-GB" ],
     [ "en-gb", "", "en-GB" ],
-    // Result: Random en-*.
+    // Result: Random en-* or en-US (if application locale is en-US).
     [ "en-ZA-not-avail", "", "*" ],
     [ "en-generic",      "", "*" ],
+    [ "en",              "", "*" ],
     // Result: Locale.
     [ "ko-not-avail",    "", "en-US" ],
 
@@ -103,6 +104,7 @@ function continueTest(evt) {
   var editor = SpecialPowers.wrap(elem).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
+  const is_en_US = SpecialPowers.Services.locale.appLocaleAsBCP47 == "en-US";
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
@@ -122,6 +124,10 @@ function continueTest(evt) {
     } else {
       if (tests[loadCount][2] != "*") {
         is(dict, tests[loadCount][2], "expected " + tests[loadCount][2]);
+      } else if (is_en_US && tests[loadCount][0].startsWith("en")) {
+        // Current application locale is en-US and content lang is en or
+        // en-unknown, so we should use en-US dictionary as default.
+        is(dict, "en-US", "expected en-US that is application locale");
       } else {
         var gotEn = (dict == "en-GB" || dict == "en-AU" || dict == "en-US");
         is(gotEn, true, "expected en-AU or en-GB or en-US");
