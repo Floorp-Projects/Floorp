@@ -99,10 +99,10 @@ impl GlobalDesc {
         unsafe {
             let v = low_level::global_constantValue(self.0);
             match v.t {
-                TypeCode::I32 => Ok(pos.ins().iconst(ir::types::I32, i64::from(v.u.i32))),
-                TypeCode::I64 => Ok(pos.ins().iconst(ir::types::I64, v.u.i64)),
-                TypeCode::F32 => Ok(pos.ins().f32const(Ieee32::with_bits(v.u.i32 as u32))),
-                TypeCode::F64 => Ok(pos.ins().f64const(Ieee64::with_bits(v.u.i64 as u64))),
+                TypeCode::I32 => Ok(pos.ins().iconst(ir::types::I32, i64::from(v.u.i32_))),
+                TypeCode::I64 => Ok(pos.ins().iconst(ir::types::I64, v.u.i64_)),
+                TypeCode::F32 => Ok(pos.ins().f32const(Ieee32::with_bits(v.u.i32_ as u32))),
+                TypeCode::F64 => Ok(pos.ins().f64const(Ieee64::with_bits(v.u.i64_ as u64))),
                 TypeCode::V128 => {
                     let c = pos
                         .func
