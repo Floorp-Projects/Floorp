@@ -4,9 +4,18 @@
 
 package org.mozilla.fenix.shortcut
 
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
-import mozilla.components.browser.session.Session
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.pwa.WebAppUseCases
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.nav
@@ -15,22 +24,41 @@ import org.mozilla.fenix.utils.Settings
 /**
  * Displays the [PwaOnboardingDialogFragment] info dialog when a PWA is opened in the browser for the third time.
  */
+@ExperimentalCoroutinesApi
 class PwaOnboardingObserver(
+    private val store: BrowserStore,
+    private val lifecycleOwner: LifecycleOwner,
     private val navController: NavController,
     private val settings: Settings,
     private val webAppUseCases: WebAppUseCases
-) : Session.Observer {
+) {
 
-    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-        if (!loading && webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
-            settings.incrementVisitedInstallableCount()
-            if (settings.shouldShowPwaCfr) {
-                val directions =
-                    BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment()
-                navController.nav(R.id.browserFragment, directions)
-                settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
-                settings.userKnowsAboutPwas = true
+    private var scope: CoroutineScope? = null
+
+    fun start() {
+        scope = store.flowScoped(lifecycleOwner) { flow ->
+            flow.mapNotNull { state ->
+                state.selectedTab
+            }
+            .ifChanged {
+                it.content.webAppManifest
+            }
+            .collect {
+                if (webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
+                    settings.incrementVisitedInstallableCount()
+                    if (settings.shouldShowPwaCfr) {
+                        val directions =
+                            BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment()
+                        navController.nav(R.id.browserFragment, directions)
+                        settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
+                        settings.userKnowsAboutPwas = true
+                    }
+                }
             }
         }
+    }
+
+    fun stop() {
+        scope?.cancel()
     }
 }

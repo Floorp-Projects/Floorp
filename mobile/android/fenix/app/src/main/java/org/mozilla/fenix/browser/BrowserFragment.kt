@@ -53,6 +53,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private var readerModeAvailable = false
     private var openInAppOnboardingObserver: OpenInAppOnboardingObserver? = null
+    private var pwaOnboardingObserver: PwaOnboardingObserver? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -179,17 +180,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
 
         if (!settings.userKnowsAboutPwas) {
-            @Suppress("DEPRECATION")
-            // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16946
-            session?.register(
-                PwaOnboardingObserver(
-                    navController = findNavController(),
-                    settings = settings,
-                    webAppUseCases = context.components.useCases.webAppUseCases
-                ),
-                owner = this,
-                autoPause = true
-            )
+            pwaOnboardingObserver = PwaOnboardingObserver(
+                store = context.components.core.store,
+                lifecycleOwner = this,
+                navController = findNavController(),
+                settings = settings,
+                webAppUseCases = context.components.useCases.webAppUseCases
+            ).also {
+                it.start()
+            }
         }
 
         subscribeToTabCollections()
@@ -205,6 +204,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             getSessionById()?.unregister(openInAppOnboardingObserver!!)
             openInAppOnboardingObserver = null
         }
+
+        pwaOnboardingObserver?.stop()
     }
 
     private fun subscribeToTabCollections() {
