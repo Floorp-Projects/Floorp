@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Transform Overflow Bug</title>
+    <style>
+    .container {
+        width: 100px;
+        height: 100px;
+        overflow: scroll;
+        scrollbar-width: none;
+        perspective: 1px;
+    }
+
+    .inner {
+        background-color: red;
+        width: 200px;
+        height: 200px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <p class="inner"></p>
+    </div>
+</body>
+</html>
