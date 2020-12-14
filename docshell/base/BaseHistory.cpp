@@ -10,18 +10,43 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Link.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 namespace mozilla {
 
 using mozilla::dom::ContentParent;
-using mozilla::dom::Document;
-using mozilla::dom::Element;
 using mozilla::dom::Link;
 
 BaseHistory::BaseHistory() : mTrackedURIs(kTrackedUrisInitialSize) {}
 
 BaseHistory::~BaseHistory() = default;
+
+static constexpr nsLiteralCString kDisallowedSchemes[] = {
+    "about"_ns,         "blob"_ns,       "data"_ns,     "chrome"_ns,
+    "imap"_ns,          "javascript"_ns, "mailbox"_ns,  "moz-anno"_ns,
+    "news"_ns,          "page-icon"_ns,  "resource"_ns, "view-source"_ns,
+    "moz-extension"_ns,
+};
+
+bool BaseHistory::CanStore(nsIURI* aURI) {
+  nsAutoCString scheme;
+  if (NS_WARN_IF(NS_FAILED(aURI->GetScheme(scheme)))) {
+    return false;
+  }
+
+  if (!scheme.EqualsLiteral("http") && !scheme.EqualsLiteral("https")) {
+    for (const nsLiteralCString& disallowed : kDisallowedSchemes) {
+      if (scheme.Equals(disallowed)) {
+        return false;
+      }
+    }
+  }
+
+  nsAutoCString spec;
+  aURI->GetSpec(spec);
+  return spec.Length() <= StaticPrefs::browser_history_maxUrlLength();
+}
 
 void BaseHistory::ScheduleVisitedQuery(nsIURI* aURI) {
   mPendingQueries.PutEntry(aURI);

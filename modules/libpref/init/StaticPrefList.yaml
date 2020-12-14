@@ -1017,6 +1017,22 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# The max url length we'll store in history.
+#
+# The default value is mostly a guess based on various facts:
+#
+# * IE didn't support urls longer than 2083 chars
+# * Sitemaps protocol used to support a maximum of 2048 chars
+# * Various SEO guides suggest to not go over 2000 chars
+# * Various apps/services are known to have issues over 2000 chars
+# * RFC 2616 - HTTP/1.1 suggests being cautious about depending
+#   on URI lengths above 255 bytes
+#
+- name: browser.history.maxUrlLength
+  type: uint32_t
+  value: 2000
+  mirror: always
+
 # Render animations and videos as a solid color
 - name: browser.measurement.render_anims_and_video_solid
   type: RelaxedAtomicBool
