@@ -80,7 +80,10 @@ void BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   }
 
   if (!CanStore(aURI)) {
-    return aLink->VisitedQueryFinished(/* visited = */ false);
+    if (aLink) {
+      aLink->VisitedQueryFinished(/* visited = */ false);
+    }
+    return;
   }
 
   // Obtain our array of observers for this URI.
