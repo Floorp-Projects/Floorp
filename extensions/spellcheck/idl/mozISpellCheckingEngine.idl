@@ -23,7 +23,7 @@ interface mozISpellCheckingEngine : nsISupports {
    * If the dictionary is changed to no dictionary (the empty string), an
    * observer is allowed to set another dictionary before it returns.
    */
-  attribute AString dictionary;
+  attribute ACString dictionary;
 
   /**
    * the personal dictionary
@@ -33,7 +33,7 @@ interface mozISpellCheckingEngine : nsISupports {
   /**
    * Get the list of dictionaries
    */
-  Array<AString> getDictionaryList();
+  Array<ACString> getDictionaryList();
 
   /**
    * check a word

@@ -20,7 +20,7 @@ class RemoteSpellcheckEngineChild
   virtual ~RemoteSpellcheckEngineChild();
 
   RefPtr<GenericPromise> SetCurrentDictionaryFromList(
-      const nsTArray<nsString>& aList);
+      const nsTArray<nsCString>& aList);
 
   RefPtr<CheckWordPromise> CheckWords(const nsTArray<nsString>& aWords);
 

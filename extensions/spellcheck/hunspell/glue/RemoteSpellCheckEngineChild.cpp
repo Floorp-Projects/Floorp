@@ -19,12 +19,12 @@ RemoteSpellcheckEngineChild::~RemoteSpellcheckEngineChild() {
 
 RefPtr<GenericPromise>
 RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
-    const nsTArray<nsString>& aList) {
+    const nsTArray<nsCString>& aList) {
   RefPtr<mozSpellChecker> spellChecker = mOwner;
 
   return SendSetDictionaryFromList(aList)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [spellChecker](Tuple<bool, nsString>&& aParam) {
+      [spellChecker](Tuple<bool, nsCString>&& aParam) {
         if (!Get<0>(aParam)) {
           spellChecker->mCurrentDictionary.Truncate();
           return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,

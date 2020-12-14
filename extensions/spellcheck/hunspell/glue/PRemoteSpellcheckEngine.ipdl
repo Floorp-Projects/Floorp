@@ -16,7 +16,7 @@ parent:
 
   sync CheckAndSuggest(nsString aWord) returns (bool aIsMisspelled, nsString[] aSuggestions);
 
-  sync SetDictionary(nsString aDictionary) returns (bool success);
+  sync SetDictionary(nsCString aDictionary) returns (bool success);
 
   /*
    * Set current dictionary from list of dictionary name.
@@ -26,8 +26,8 @@ parent:
    * @aSuccess      true if setting dictionary is successful
    * @aDictionary   Return current dictionary name that set by this method.
    */
-  async SetDictionaryFromList(nsString[] aList)
-           returns (bool aSuccess, nsString aDictionary);
+  async SetDictionaryFromList(nsCString[] aList)
+           returns (bool aSuccess, nsCString aDictionary);
 };
 
 } // namespace mozilla

@@ -315,7 +315,7 @@ struct XPCOMInitData
     int32_t captivePortalState;
     bool isLangRTL;
     bool haveBidiKeyboards;
-    nsString[] dictionaries;
+    nsCString[] dictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
     nsIURI userContentSheetURL;
@@ -600,7 +600,7 @@ child:
 
     async GeolocationError(uint16_t errorCode);
 
-    async UpdateDictionaryList(nsString[] dictionaries);
+    async UpdateDictionaryList(nsCString[] dictionaries);
 
     async UpdateFontList(SystemFontListEntry[] fontList);
 
