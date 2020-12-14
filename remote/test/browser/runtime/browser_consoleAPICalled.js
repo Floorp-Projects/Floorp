@@ -163,7 +163,6 @@ add_task(async function consoleMessageByContent({ client }) {
 
 async function runConsoleTest(client, eventCount, callback, options = {}) {
   const { Runtime } = client;
-  const { timeout = 250 } = options;
 
   const EVENT_CONSOLE_API_CALLED = "Runtime.consoleAPICalled";
 
@@ -178,7 +177,7 @@ async function runConsoleTest(client, eventCount, callback, options = {}) {
   const timeBefore = Date.now();
   await callback();
 
-  const consoleAPIentries = await history.record(timeout);
+  const consoleAPIentries = await history.record();
   is(consoleAPIentries.length, eventCount, "Got expected amount of events");
 
   if (eventCount == 0) {
