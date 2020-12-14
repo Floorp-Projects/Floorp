@@ -3328,11 +3328,20 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
 
   if (aDeep && aNode->IsElement()) {
     if (aClone) {
-      if (clone->OwnerDoc()->IsStaticDocument()) {
+      if (nodeInfo->GetDocument()->IsStaticDocument()) {
         // Clone any animations to the node in the static document, including
         // the current timing. They will need to be paused later after the new
         // document's pres shell gets initialized.
+        //
+        // This might be a bit cleaner from Element::CopyInnerTo.
         clone->AsElement()->CloneAnimationsFrom(*aNode->AsElement());
+
+        // Propagate :defined state to the static clone. This needs to happen
+        // here rather than in Element::CopyInnerTo because otherwise we might
+        // clobber the custom element state above in this same function.
+        if (aNode->AsElement()->State().HasState(NS_EVENT_STATE_DEFINED)) {
+          clone->AsElement()->SetDefined(true);
+        }
 
         // Clone the Shadow DOM
         ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
