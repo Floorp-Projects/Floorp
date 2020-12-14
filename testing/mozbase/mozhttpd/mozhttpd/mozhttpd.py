@@ -20,7 +20,7 @@ import time
 import traceback
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from six import iteritems
+from six import iteritems, ensure_binary
 from six.moves.socketserver import ThreadingMixIn
 from six.moves.BaseHTTPServer import HTTPServer
 
@@ -104,7 +104,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 for (keyword, value) in iteritems(headerdict):
                     self.send_header(keyword, value)
                 self.end_headers()
-                self.wfile.write(data)
+                self.wfile.write(ensure_binary(data))
 
                 return True
 

@@ -7,9 +7,11 @@
 from __future__ import absolute_import
 
 import mozhttpd
-import urllib2
 import os
 import re
+
+from six.moves.urllib.request import urlopen
+from six import ensure_str
 
 import pytest
 
@@ -39,7 +41,7 @@ def fixture_httpd(docroot):
     ],
 )
 def test_filelist(httpd, docroot, path):
-    f = urllib2.urlopen(
+    f = urlopen(
         "http://{host}:{port}/{path}".format(
             host="127.0.0.1", port=httpd.httpd.server_port, path=path
         )
@@ -47,13 +49,17 @@ def test_filelist(httpd, docroot, path):
 
     filelist = os.listdir(docroot)
 
-    pattern = "\<[a-zA-Z0-9\-\_\.\=\"'\/\\\%\!\@\#\$\^\&\*\(\) ]*\>"
+    pattern = "\<[a-zA-Z0-9\-\_\.\=\"'\/\\\%\!\@\#\$\^\&\*\(\) :;]*\>"
 
     for line in f.readlines():
-        subbed_lined = re.sub(pattern, "", line.strip("\n"))
+        subbed_lined = re.sub(pattern, "", ensure_str(line).strip("\n"))
         webline = subbed_lined.strip("/").strip().strip("@")
 
-        if webline and not webline.startswith("Directory listing for"):
+        if (
+            webline
+            and not webline.startswith("Directory listing for")
+            and not webline.startswith("<!DOCTYPE")
+        ):
             msg = "File {} in dir listing corresponds to a file".format(webline)
             assert webline in filelist, msg
             filelist.remove(webline)
