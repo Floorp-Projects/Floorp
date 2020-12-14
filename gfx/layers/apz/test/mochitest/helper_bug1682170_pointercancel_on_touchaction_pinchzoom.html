@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var body = document.body;
+
+  // Event listeners just for logging/debugging purposes
+  body.addEventListener("pointerdown", function(e) {
+    dump(`Got pointerdown, pointer id ${e.pointerId}\n`);
+  });
+  body.addEventListener("touchstart", function(e) {
+    dump(`Got touchstart with ${e.touches.length} touches\n`);
+  }, {passive: true});
+
+
+  // Event listeners relevant to the test. We want to make sure that a
+  // pointercancel event is dispatched to web content, so we listen for that.
+  // Also we want to ensure the main thread TouchActionHelper code is run and
+  // used, so we add a non-passive touchmove listener that ensures the body has
+  // a d-t-c region.
+  var gotPointerCancel = false;
+  body.addEventListener("pointercancel", function(e) {
+    dump(`Got pointercancel, pointer id ${e.pointerId}\n`);
+    gotPointerCancel = true;
+  });
+  body.addEventListener("touchmove", function(e) {
+    dump(`Got touchmove with ${e.touches.length} touches\n`);
+  }, {passive: false});
+
+  let touchEndPromise = new Promise(resolve => {
+    // This listener is just to catch the end of the touch sequence so we can
+    // end the test at the right time.
+    body.addEventListener("touchend", function(e) {
+      dump(`Got touchend with ${e.touches.length} touches\n`);
+      if (e.touches.length == 0) {
+        resolve();
+      }
+    });
+  });
+
+  // We can't await this call, because this pinch action doesn't generate a
+  // APZ:TransformEnd. Instead we await the touchend.
+  pinchZoomOutWithTouchAtCenter();
+  await touchEndPromise;
+
+  ok(gotPointerCancel, "Checking that we definitely cancelled the pointerevents");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    body {
+        height: 5000px;
+        touch-action: pinch-zoom;
+    }
+  </style>
+</head>
+<body>
+  A two-finger pinch action here should trigger browser zoom and trigger a pointercancel to content.
+  Note that the code does a zoom-out and the page is already at min zoom, so
+  the zoom doesn't produce any visual effect. But the DOM events should be the
+  same either way.
+</body>
+</html>
