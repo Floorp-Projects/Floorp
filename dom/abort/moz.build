@@ -11,6 +11,7 @@ TEST_DIRS += ["tests"]
 
 EXPORTS.mozilla.dom += [
     "AbortController.h",
+    "AbortFollower.h",
     "AbortSignal.h",
 ]
 
