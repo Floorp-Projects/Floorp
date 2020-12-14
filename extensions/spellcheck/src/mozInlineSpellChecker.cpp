@@ -1518,7 +1518,7 @@ nsresult mozInlineSpellChecker::ResumeCheck(
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString currentDictionary;
+  nsAutoCString currentDictionary;
   rv = mSpellCheck->GetCurrentDictionary(currentDictionary);
   if (NS_FAILED(rv)) {
     // no active dictionary

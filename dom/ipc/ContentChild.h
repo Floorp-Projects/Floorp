@@ -361,7 +361,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvGeolocationError(const uint16_t& errorCode);
 
   mozilla::ipc::IPCResult RecvUpdateDictionaryList(
-      nsTArray<nsString>&& aDictionaries);
+      nsTArray<nsCString>&& aDictionaries);
 
   mozilla::ipc::IPCResult RecvUpdateFontList(
       nsTArray<SystemFontListEntry>&& aFontList);
@@ -504,7 +504,7 @@ class ContentChild final : public PContentChild,
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentChild)
 
-  void GetAvailableDictionaries(nsTArray<nsString>& aDictionaries);
+  void GetAvailableDictionaries(nsTArray<nsCString>& aDictionaries);
 
   PWebrtcGlobalChild* AllocPWebrtcGlobalChild();
 
@@ -850,7 +850,7 @@ class ContentChild final : public PContentChild,
 
   nsTHashtable<nsPtrHashKey<nsIObserver>> mIdleObservers;
 
-  nsTArray<nsString> mAvailableDictionaries;
+  nsTArray<nsCString> mAvailableDictionaries;
 
   // Temporary storage for a list of available fonts, passed from the
   // parent process and used to initialize gfx in the child. Currently used
