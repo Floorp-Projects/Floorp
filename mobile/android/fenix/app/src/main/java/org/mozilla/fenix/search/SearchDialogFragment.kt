@@ -150,7 +150,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 clearToolbarFocus = {
                     toolbarView.view.hideKeyboard()
                     toolbarView.view.clearFocus()
-                }
+                },
+                focusToolbar = { toolbarView.view.edit.focus() }
             )
         )
 
