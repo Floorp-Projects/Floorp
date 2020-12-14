@@ -21,6 +21,7 @@ dictionary EventListenerOptions {
 dictionary AddEventListenerOptions : EventListenerOptions {
   boolean passive;
   boolean once = false;
+  AbortSignal? signal; //XXX Spec PR is unclear whether this should be nullable.
   [ChromeOnly]
   boolean wantUntrusted;
 };
