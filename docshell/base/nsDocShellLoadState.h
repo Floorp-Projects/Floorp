@@ -120,6 +120,14 @@ class nsDocShellLoadState final {
 
   void SetPrincipalIsExplicit(bool aPrincipalIsExplicit);
 
+
+  // If true, "beforeunload" event listeners were notified by the creater of the
+  // LoadState and given the chance to abort the navigation, and should not be
+  // notified again.
+  bool NotifiedBeforeUnloadListeners() const;
+
+  void SetNotifiedBeforeUnloadListeners(bool aNotifiedBeforeUnloadListeners);
+
   bool ForceAllowDataURI() const;
 
   void SetForceAllowDataURI(bool aForceAllowDataURI);
@@ -359,6 +367,8 @@ class nsDocShellLoadState final {
   // as trying to use a systemprincipal as the triggeringPrincipal
   // for a content docshell the load fails.
   bool mPrincipalIsExplicit;
+
+  bool mNotifiedBeforeUnloadListeners;
 
   // Principal we're inheriting. If null, this means the principal should be
   // inherited from the current document. If set to NullPrincipal, the channel
