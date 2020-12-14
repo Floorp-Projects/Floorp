@@ -141,7 +141,7 @@ class VideoInfo : public TrackInfo {
   };
   VideoInfo() : VideoInfo(-1, -1) {}
 
-  explicit VideoInfo(int32_t aWidth, int32_t aHeight)
+  VideoInfo(int32_t aWidth, int32_t aHeight)
       : VideoInfo(gfx::IntSize(aWidth, aHeight)) {}
 
   explicit VideoInfo(const gfx::IntSize& aSize)
@@ -151,8 +151,7 @@ class VideoInfo : public TrackInfo {
         mImage(aSize),
         mCodecSpecificConfig(new MediaByteBuffer),
         mExtraData(new MediaByteBuffer),
-        mRotation(kDegree_0),
-        mImageRect(gfx::IntRect(gfx::IntPoint(), aSize)) {}
+        mRotation(kDegree_0) {}
 
   VideoInfo(const VideoInfo& aOther) = default;
 
@@ -175,13 +174,14 @@ class VideoInfo : public TrackInfo {
   bool HasAlpha() const { return mAlphaPresent; }
 
   gfx::IntRect ImageRect() const {
-    if (mImageRect.Width() < 0 || mImageRect.Height() < 0) {
+    if (!mImageRect) {
       return gfx::IntRect(0, 0, mImage.width, mImage.height);
     }
-    return mImageRect;
+    return *mImageRect;
   }
 
-  void SetImageRect(const gfx::IntRect& aRect) { mImageRect = aRect; }
+  void SetImageRect(const gfx::IntRect& aRect) { mImageRect = Some(aRect); }
+  void ResetImageRect() { mImageRect.reset(); }
 
   // Returned the crop rectangle scaled to aWidth/aHeight size relative to
   // mImage size.
@@ -254,9 +254,11 @@ class VideoInfo : public TrackInfo {
   void SetFrameRate(int32_t aRate) { mFrameRate = Some(aRate); }
 
  private:
+  friend struct IPC::ParamTraits<VideoInfo>;
+
   // mImage may be cropped; currently only used with the WebM container.
-  // A negative width or height indicate that no cropping is to occur.
-  gfx::IntRect mImageRect;
+  // If unset, no cropping is to occur.
+  Maybe<gfx::IntRect> mImageRect;
 
   // Indicates whether or not frames may contain alpha information.
   bool mAlphaPresent = false;

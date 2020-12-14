@@ -27,7 +27,7 @@ struct ParamTraits<mozilla::VideoInfo> {
     WriteParam(aMsg, aParam.mDisplay);
     WriteParam(aMsg, aParam.mStereoMode);
     WriteParam(aMsg, aParam.mImage);
-    WriteParam(aMsg, aParam.ImageRect());
+    WriteParam(aMsg, aParam.mImageRect);
     WriteParam(aMsg, *aParam.mCodecSpecificConfig);
     WriteParam(aMsg, *aParam.mExtraData);
     WriteParam(aMsg, aParam.mRotation);
@@ -45,7 +45,7 @@ struct ParamTraits<mozilla::VideoInfo> {
         ReadParam(aMsg, aIter, &aResult->mDisplay) &&
         ReadParam(aMsg, aIter, &aResult->mStereoMode) &&
         ReadParam(aMsg, aIter, &aResult->mImage) &&
-        ReadParam(aMsg, aIter, &imageRect) &&
+        ReadParam(aMsg, aIter, &aResult->mImageRect) &&
         ReadParam(aMsg, aIter, aResult->mCodecSpecificConfig.get()) &&
         ReadParam(aMsg, aIter, aResult->mExtraData.get()) &&
         ReadParam(aMsg, aIter, &aResult->mRotation) &&
@@ -53,7 +53,6 @@ struct ParamTraits<mozilla::VideoInfo> {
         ReadParam(aMsg, aIter, &aResult->mColorSpace) &&
         ReadParam(aMsg, aIter, &aResult->mColorRange) &&
         ReadParam(aMsg, aIter, &alphaPresent)) {
-      aResult->SetImageRect(imageRect);
       aResult->SetAlpha(alphaPresent);
       return true;
     }
