@@ -887,6 +887,10 @@ enum class FieldFlags { Mutable = 0x01, AllowedMask = 0x01 };
 // requires the size of linear memory to always be a multiple of 64KiB.
 
 static const unsigned PageSize = 64 * 1024;
+static const unsigned PageBits = 16;
+static_assert(PageSize == (1u << PageBits));
+
+static const unsigned PageMask = ((1u << PageBits) - 1);
 
 // These limits are agreed upon with other engines for consistency.
 
