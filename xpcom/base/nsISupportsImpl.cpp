@@ -7,9 +7,10 @@
 #include "nsISupportsImpl.h"
 
 #include "mozilla/Assertions.h"
-#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+#ifndef XPCOM_GLUE_AVOID_NSPR
+#  include "nsPrintfCString.h"
 #  include "nsThreadUtils.h"
-#endif  // MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+#endif
 
 using namespace mozilla;
 
@@ -32,7 +33,8 @@ nsresult NS_FASTCALL NS_TableDrivenQI(void* aThis, REFNSIID aIID,
   return NS_ERROR_NO_INTERFACE;
 }
 
-#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+#ifndef XPCOM_GLUE_AVOID_NSPR
+#  ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 nsAutoOwningThread::nsAutoOwningThread() : mThread(PR_GetCurrentThread()) {}
 
 void nsAutoOwningThread::AssertCurrentThreadOwnsMe(const char* msg) const {
@@ -67,4 +69,76 @@ bool nsAutoOwningEventTarget::IsCurrentThread() const {
   return mTarget->IsOnCurrentThread();
 }
 
+#  endif
+
+namespace mozilla::detail {
+class ProxyDeleteVoidRunnable final : public CancelableRunnable {
+ public:
+  ProxyDeleteVoidRunnable(const char* aName, void* aPtr,
+                          DeleteVoidFunction* aDeleteFunc)
+      : CancelableRunnable(aName), mPtr(aPtr), mDeleteFunc(aDeleteFunc) {}
+
+  NS_IMETHOD Run() override {
+    if (mPtr) {
+      mDeleteFunc(mPtr);
+      mPtr = nullptr;
+    }
+    return NS_OK;
+  }
+
+  // Mimics the behaviour in `ProxyRelease`, freeing the resource when
+  // cancelled.
+  nsresult Cancel() override { return Run(); }
+
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  NS_IMETHOD GetName(nsACString& aName) override {
+    if (mName) {
+      aName.Append(mName);
+    } else {
+      aName.AssignLiteral("ProxyDeleteVoidRunnable");
+    }
+    return NS_OK;
+  }
+#  endif
+
+ private:
+  ~ProxyDeleteVoidRunnable() {
+    if (mPtr) {
+#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+      NS_WARNING(
+          nsPrintfCString(
+              "ProxyDeleteVoidRunnable for '%s' never run, leaking!", mName)
+              .get());
+#  else
+      NS_WARNING("ProxyDeleteVoidRunnable never run, leaking!");
+#  endif
+    }
+  }
+
+  void* mPtr;
+  DeleteVoidFunction* mDeleteFunc;
+};
+
+void ProxyDeleteVoid(const char* aName, nsISerialEventTarget* aTarget,
+                     void* aPtr, DeleteVoidFunction* aDeleteFunc) {
+  MOZ_ASSERT(aName);
+  MOZ_ASSERT(aPtr);
+  MOZ_ASSERT(aDeleteFunc);
+  if (!aTarget) {
+    NS_WARNING(nsPrintfCString("no target for '%s', leaking!", aName).get());
+    return;
+  }
+
+  if (aTarget->IsOnCurrentThread()) {
+    aDeleteFunc(aPtr);
+    return;
+  }
+  nsresult rv = aTarget->Dispatch(
+      MakeAndAddRef<ProxyDeleteVoidRunnable>(aName, aPtr, aDeleteFunc),
+      NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(nsPrintfCString("failed to post '%s', leaking!", aName).get());
+  }
+}
+}  // namespace mozilla::detail
 #endif
