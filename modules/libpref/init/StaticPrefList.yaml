@@ -569,7 +569,7 @@
 
 - name: apz.popups.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Whether to print the APZC tree for debugging.
