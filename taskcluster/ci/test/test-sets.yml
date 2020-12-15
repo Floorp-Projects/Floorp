@@ -551,6 +551,7 @@ android-hw-arm7-browsertime:
     - browsertime-unity-webgl-mobile
 
 linux-tsan-tests:
+    - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-media
     - mochitest-plain
