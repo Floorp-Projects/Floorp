@@ -1022,7 +1022,7 @@ input:is([type="date"], [type="time"]):is(:disabled, :read-only) {
   color: GrayText;
 }
 
-input:-moz-autofill, input:-moz-autofill-preview {
+input:autofill, input:-moz-autofill-preview {
   filter: grayscale(21%) brightness(88%) contrast(161%) invert(10%) sepia(40%) saturate(206%);
 }
 
