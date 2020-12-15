@@ -151,6 +151,7 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['release_type'] = "release"
 
     parameters['pull_request_number'] = None
+    parameters['tasks_for'] = 'action'
 
     # make parameters read-only
     parameters = Parameters(**parameters)
