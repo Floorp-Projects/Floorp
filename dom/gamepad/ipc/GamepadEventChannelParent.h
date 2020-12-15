@@ -41,6 +41,7 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
   GamepadEventChannelParent();
   ~GamepadEventChannelParent() = default;
 
+  bool mShutdown{false};
   nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 };
 
