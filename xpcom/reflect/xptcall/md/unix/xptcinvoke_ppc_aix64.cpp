@@ -60,4 +60,3 @@ invoke_copy_to_stack(uint64_t* d, uint32_t paramCount, nsXPTCVariant* s, double 
     }
 }
 #endif
-

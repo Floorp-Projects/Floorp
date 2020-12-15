@@ -50,4 +50,3 @@ struct MOZ_TRIVIAL_DTOR BadNonTrivialDtorInMember { // expected-error {{class 'B
 struct MOZ_TRIVIAL_DTOR OkVirtualMemberInMember {
   VirtualMember m;
 };
-
