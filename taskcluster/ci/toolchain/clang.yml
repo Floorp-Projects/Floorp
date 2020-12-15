@@ -120,49 +120,6 @@ linux64-clang-11-mingw-x64:
             - linux64-gcc-7
             - linux64-binutils
 
-linux64-clang-9-android-cross:
-    description: "Clang 9 toolchain build"
-    treeherder:
-        symbol: TL(clang9-android)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-android.json'
-        resources:
-            - 'build/build-clang/clang-android.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-9
-        toolchain:
-            - linux64-binutils
-            - linux64-gcc-7
-            - linux64-android-ndk-linux-repack
-
-linux64-clang-9-aarch64-cross:
-    description: "Clang 9 toolchain build with aarch64 runtime"
-    treeherder:
-        symbol: TL(clang9-aarch64)
-    worker-type: b-linux
-    worker:
-        max-run-time: 5400
-        docker-image: {in-tree: toolchain-arm64-build}
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-linux64-aarch64-cross.json'
-        resources:
-            - 'build/build-clang/clang-linux64-aarch64-cross.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-9
-        toolchain:
-            - linux64-binutils
-            - linux64-gcc-7
-
 linux64-clang-9-macosx-cross:
     description: "Clang 9 toolchain repack with MacOS Compiler RT libs"
     treeherder:
@@ -182,28 +139,6 @@ linux64-clang-9-macosx-cross:
             # Put this into a new directory so it doesn't conflict with the linux toolchain
             - artifact: clang.tar.zst
               dest: clang-mac
-
-linux64-clang-9-win-cross:
-    description: "Clang 9 toolchain repack with Windows Compiler RT libs"
-    treeherder:
-        symbol: TL(clang9-win-cross)
-    worker-type: b-linux
-    worker:
-        max-run-time: 600
-    run:
-        script: repack-clang-linux-win-cross.sh
-        toolchain-artifact: public/build/clang.tar.zst
-    dependencies:
-        win64-clang-cl-9-2stage: toolchain-win64-clang-cl-9-2stage
-    fetches:
-        toolchain:
-            - linux64-clang-9
-        win64-clang-cl-9-2stage:
-            # Put this into a new directory so it doesn't conflict with the linux toolchain
-            - artifact: clang.tar.zst
-              dest: clang-cl
-              extract: false
-
 
 linux64-clang-10:
     description: "Clang 10 toolchain build"
@@ -256,56 +191,6 @@ macosx64-clang-9:
             - linux64-clang-9
             - linux64-gcc-7
             - linux64-node
-
-win64-clang-cl-9:
-    description: "Clang-cl 9 toolchain build"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TW64(clang-cl-9)
-    worker-type: b-win2012
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
-    run-on-projects:
-        - trunk
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-win64.json'
-        resources:
-            - 'build/build-clang/clang-win64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang.tar.zst
-        tooltool-downloads: internal
-    fetches:
-        fetch:
-            - clang-9
-            - cmake
-            - ninja
-
-win64-clang-cl-9-2stage:
-    description: "Clang-cl 9 toolchain 2-stage quick build"
-    treeherder:
-        symbol: TW64(clang-cl-9-2stage)
-    worker-type: b-win2012
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-win64-2stage.json'
-        resources:
-            - 'build/build-clang/clang-win64-2stage.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang.tar.zst
-        tooltool-downloads: internal
-    fetches:
-        fetch:
-            - clang-9
-            - cmake
-            - ninja
 
 linux64-clang-11:
     description: "Clang 11 toolchain build"
