@@ -146,7 +146,7 @@ const char* const XPCJSRuntime::mStrings[] = {
 class AsyncFreeSnowWhite : public Runnable {
  public:
   NS_IMETHOD Run() override {
-    AUTO_PROFILER_LABEL("AsyncFreeSnowWhite::Run", GCCC);
+    AUTO_PROFILER_LABEL("AsyncFreeSnowWhite::Run", GCCC_FreeSnowWhite);
 
     TimeStamp start = TimeStamp::Now();
     // 2 ms budget, given that kICCSliceBudget is only 3 ms
