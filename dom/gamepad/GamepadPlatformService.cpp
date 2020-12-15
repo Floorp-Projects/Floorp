@@ -11,6 +11,7 @@
 #include "mozilla/dom/GamepadTestChannelParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
 
 #include "nsCOMPtr.h"
@@ -24,6 +25,7 @@ namespace {
 
 // This is the singleton instance of GamepadPlatformService, can be called
 // by both background and monitor thread.
+static StaticMutex gGamepadPlatformServiceSingletonMutex;
 static StaticRefPtr<GamepadPlatformService> gGamepadPlatformServiceSingleton;
 
 }  // namespace
@@ -103,9 +105,13 @@ GamepadPlatformService::GetParentService() {
   // GamepadPlatformService can only be accessed in parent process
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  MOZ_RELEASE_ASSERT(
-      gGamepadPlatformServiceSingleton,
-      "Impossible for monitor thread to be running with no platform service");
+  // TODO - Remove this mutex once Bug 1682554 is fixed
+  StaticMutexAutoLock lock(gGamepadPlatformServiceSingletonMutex);
+
+  // TODO - Turn this back into an assertion after Bug 1682554 is fixed
+  if (!gGamepadPlatformServiceSingleton) {
+    return nullptr;
+  }
 
   return RefPtr<GamepadPlatformService>(gGamepadPlatformServiceSingleton)
       .forget();
@@ -299,13 +305,17 @@ void GamepadPlatformService::AddChannelParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
 
-  if (gGamepadPlatformServiceSingleton) {
-    gGamepadPlatformServiceSingleton->AddChannelParentInternal(aParent);
-    return;
-  }
+  {
+    StaticMutexAutoLock lock(gGamepadPlatformServiceSingletonMutex);
 
-  gGamepadPlatformServiceSingleton =
-      RefPtr<GamepadPlatformService>(new GamepadPlatformService{aParent});
+    if (gGamepadPlatformServiceSingleton) {
+      gGamepadPlatformServiceSingleton->AddChannelParentInternal(aParent);
+      return;
+    }
+
+    gGamepadPlatformServiceSingleton =
+        RefPtr<GamepadPlatformService>(new GamepadPlatformService{aParent});
+  }
 
   StartGamepadMonitoring();
   GamepadMonitoringState::GetSingleton().Set(true);
@@ -319,18 +329,23 @@ void GamepadPlatformService::RemoveChannelParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
 
-  MOZ_RELEASE_ASSERT(gGamepadPlatformServiceSingleton);
+  {
+    StaticMutexAutoLock lock(gGamepadPlatformServiceSingletonMutex);
 
-  // RemoveChannelParentInternal will refuse to remove the last channel
-  // In that case, we should destroy the singleton
-  if (gGamepadPlatformServiceSingleton->RemoveChannelParentInternal(aParent)) {
-    return;
+    MOZ_RELEASE_ASSERT(gGamepadPlatformServiceSingleton);
+
+    // RemoveChannelParentInternal will refuse to remove the last channel
+    // In that case, we should destroy the singleton
+    if (gGamepadPlatformServiceSingleton->RemoveChannelParentInternal(
+            aParent)) {
+      return;
+    }
   }
 
   GamepadMonitoringState::GetSingleton().Set(false);
   StopGamepadMonitoring();
-  // At this point, any monitor threads should be stopped so we don't need
-  // synchronization
+
+  StaticMutexAutoLock lock(gGamepadPlatformServiceSingletonMutex);
 
   // We should never be destroying the singleton with event channels left in it
   MOZ_RELEASE_ASSERT(
