@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - taskgraph.transforms.release_notifications:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -27,3 +28,42 @@ jobs:
             using: run-task
             cwd: '{checkout}'
             command: $GECKO_PATH/taskcluster/scripts/misc/verify-updatebot.py
+        notifications:
+            subject: 'updatebot verify job failed'
+            message: 'updatebot verify job failed'
+            status-types:
+                - on-failed
+                - on-exception
+            emails: ["tom@mozilla.com", "jewilde@mozilla.com"]
+
+    cron:
+        description: Cron Job for Updatebot
+        run-on-projects: ['holly']
+        treeherder:
+            kind: other
+            platform: updatebot/all
+            symbol: cron
+            tier: 1
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: updatebot}
+            max-run-time: 3600
+            taskcluster-proxy: true
+        scopes:
+            - secrets:get:project/updatebot/{level}/try-sshkey
+            - secrets:get:project/updatebot/{level}/phabricator-token
+            - secrets:get:project/updatebot/{level}/bugzilla-api-key
+            - secrets:get:project/updatebot/{level}/database-password
+            - secrets:get:project/updatebot/{level}/sentry-url
+            - secrets:get:project/updatebot/{level}/sql-proxy-config
+            - hooks:trigger-hook:project-gecko/in-tree-action-1-generic/*
+        run:
+            using: run-task
+            command: /builds/worker/run.py
+        notifications:
+            subject: 'updatebot cron failed'
+            message: 'updatebot cron failed'
+            status-types:
+                - on-failed
+                - on-exception
+            emails: ["tom@mozilla.com", "jewilde@mozilla.com"]
