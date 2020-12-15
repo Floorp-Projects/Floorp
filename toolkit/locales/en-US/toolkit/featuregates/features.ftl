@@ -118,3 +118,7 @@ experimental-features-fission-description = Fission (site isolation) is an exper
 experimental-features-multi-pip =
     .label = Multiple Picture-in-Picture Support
 experimental-features-multi-pip-description = Experimental support for allowing multiple Picture-in-Picture windows to be open at the same time.
+
+experimental-features-http3 =
+    .label = HTTP/3 protocol
+experimental-features-http3-description = Experimental support for the HTTP/3 protocol.
