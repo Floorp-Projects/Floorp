@@ -497,17 +497,6 @@ Section "-Application" APP_IDX
   ${EndIf}
 !endif
 
-!ifdef MOZ_UPDATE_AGENT
-  ${PushRegisterUpdateAgentTaskCommand} "register"
-  Pop $0
-  ${If} "$0" != ""
-    ${LogMsg} "Registering update agent task: $0"
-    nsExec::Exec $0
-    Pop $0
-    ${LogMsg} "nsExec::Exec returned $0"
-  ${EndIf}
-!endif
-
   ; These need special handling on uninstall since they may be overwritten by
   ; an install into a different location.
   StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"

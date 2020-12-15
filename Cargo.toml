@@ -13,7 +13,6 @@ members = [
   "netwerk/test/http3server",
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
-  "toolkit/components/updateagent",
   "toolkit/crashreporter/rust",
   "toolkit/library/gtest/rust",
   "toolkit/library/rust/",

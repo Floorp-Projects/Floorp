@@ -595,11 +595,6 @@ Section "Uninstall"
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry"
 !endif
 
-!ifdef MOZ_UPDATE_AGENT
-  ; Unregister the update agent
-  nsExec::Exec '"$INSTDIR\updateagent.exe" unregister-task "${UpdateAgentFullName} $AppUserModelID"'
-!endif
-
   ; Uninstall the default browser agent scheduled task.
   ; This also removes the registry entries it creates.
   ExecWait '"$INSTDIR\default-browser-agent.exe" uninstall $AppUserModelID'
