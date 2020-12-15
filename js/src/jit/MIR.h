@@ -11812,6 +11812,19 @@ class MGeneratorReturn : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+class MAsyncAwait : public MBinaryInstruction,
+                    public MixPolicy<BoxPolicy<0>, ObjectPolicy<1>>::Data {
+  explicit MAsyncAwait(MDefinition* value, MDefinition* gen)
+      : MBinaryInstruction(classOpcode, value, gen) {
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(AsyncAwait)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value), (1, generator))
+};
+
 class MCheckThisReinit : public MUnaryInstruction,
                          public BoxInputsPolicy::Data {
   explicit MCheckThisReinit(MDefinition* thisVal)

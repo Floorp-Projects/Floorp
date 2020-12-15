@@ -14267,6 +14267,19 @@ void CodeGenerator::visitAsyncResolve(LAsyncResolve* lir) {
   callVM<Fn, js::AsyncFunctionResolve>(lir);
 }
 
+void CodeGenerator::visitAsyncAwait(LAsyncAwait* lir) {
+  ValueOperand value = ToValue(lir, LAsyncAwait::ValueInput);
+  Register generator = ToRegister(lir->generator());
+
+  pushArg(value);
+  pushArg(generator);
+
+  using Fn = JSObject* (*)(JSContext * cx,
+                           Handle<AsyncFunctionGeneratorObject*> genObj,
+                           HandleValue value);
+  callVM<Fn, js::AsyncFunctionAwait>(lir);
+}
+
 void CodeGenerator::visitDebugCheckSelfHosted(LDebugCheckSelfHosted* ins) {
   ValueOperand checkValue = ToValue(ins, LDebugCheckSelfHosted::CheckValue);
   pushArg(checkValue);
