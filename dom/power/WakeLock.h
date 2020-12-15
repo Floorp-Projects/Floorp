@@ -21,6 +21,7 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
+class Document;
 
 class WakeLock final : public nsIDOMEventListener,
                        public nsIObserver,
@@ -60,6 +61,9 @@ class WakeLock final : public nsIDOMEventListener,
   void DoLock();
   void AttachEventListener();
   void DetachEventListener();
+
+  // Return true if all parts of the given document are regarded as invisible.
+  bool IsDocumentInvisible(const Document& aDocument) const;
 
   bool mLocked;
   bool mHidden;
