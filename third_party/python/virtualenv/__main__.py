@@ -4,7 +4,7 @@ import sys
 import zipfile
 
 ABS_HERE = os.path.abspath(os.path.dirname(__file__))
-NEW_IMPORT_SYSTEM = sys.version_info[0:2] > (3, 4)
+NEW_IMPORT_SYSTEM = sys.version_info[0] == 3
 
 
 class VersionPlatformSelect(object):
