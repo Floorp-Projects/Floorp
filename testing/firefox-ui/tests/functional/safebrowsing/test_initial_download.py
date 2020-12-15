@@ -61,7 +61,10 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
             base_names = self.marionette.get_pref(pref_name).split(",")
 
             # moztest- lists are not saved to disk
-            base_names = filter(lambda x: not x.startswith("moztest-"), base_names)
+            # pylint --py3k: W1639
+            base_names = list(
+                filter(lambda x: not x.startswith("moztest-"), base_names)
+            )
 
             for ext in my_file_extensions:
                 files.extend(
