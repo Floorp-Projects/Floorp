@@ -264,7 +264,7 @@ void GamepadPlatformService::AddChannelParentInternal(
     const RefPtr<GamepadEventChannelParent>& aParent) {
   MutexAutoLock autoLock(mMutex);
 
-  MOZ_ASSERT(!mChannelParents.Contains(aParent));
+  MOZ_RELEASE_ASSERT(!mChannelParents.Contains(aParent));
   mChannelParents.AppendElement(aParent);
 
   // Inform the new channel of all the gamepads that have already been added
@@ -279,7 +279,7 @@ bool GamepadPlatformService::RemoveChannelParentInternal(
     GamepadEventChannelParent* aParent) {
   MutexAutoLock autoLock(mMutex);
 
-  MOZ_ASSERT(mChannelParents.Contains(aParent));
+  MOZ_RELEASE_ASSERT(mChannelParents.Contains(aParent));
 
   // If there is only one channel left, we destroy the singleton instead of
   // unregistering the channel
@@ -318,7 +318,8 @@ void GamepadPlatformService::RemoveChannelParent(
   // is created or removed in Background thread
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
-  MOZ_ASSERT(gGamepadPlatformServiceSingleton);
+
+  MOZ_RELEASE_ASSERT(gGamepadPlatformServiceSingleton);
 
   // RemoveChannelParentInternal will refuse to remove the last channel
   // In that case, we should destroy the singleton
@@ -328,9 +329,14 @@ void GamepadPlatformService::RemoveChannelParent(
 
   GamepadMonitoringState::GetSingleton().Set(false);
   StopGamepadMonitoring();
+  // At this point, any monitor threads should be stopped so we don't need
+  // synchronization
 
-  // At this point, any monitor threads should be stopped and the only
-  // reference to the singleton should be the global one
+  // We should never be destroying the singleton with event channels left in it
+  MOZ_RELEASE_ASSERT(
+      gGamepadPlatformServiceSingleton->mChannelParents.Length() == 1);
+
+  // The only reference to the singleton should be the global one
   MOZ_RELEASE_ASSERT(gGamepadPlatformServiceSingleton->mRefCnt.get() == 1);
 
   gGamepadPlatformServiceSingleton = nullptr;
