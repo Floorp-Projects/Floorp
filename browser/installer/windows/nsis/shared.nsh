@@ -159,25 +159,6 @@
   ${EndIf}
 !endif
 
-!ifdef MOZ_UPDATE_AGENT
-  ; This macro runs the update agent with the update-task-local-service
-  ; command, if it detects the needed admin privileges. Otherwise it
-  ; runs with update-task.
-  ; Both commands attempt to remove the scheduled task, then register
-  ; a new one. If the task was registered by an elevated user, it won't
-  ; be removable when not elevated, so the unelevated attempt will fail
-  ; harmlessly.
-  ; Therefore it is safe to run this in both elevated and nonelevated
-  ; PostUpdate: The highest privileged run will win out, so the task can
-  ; run as Local Service if it was ever possible to register it that way.
-  ${PushRegisterUpdateAgentTaskCommand} "update"
-  Pop $0
-  ${If} "$0" != ""
-    nsExec::Exec $0
-    Pop $0
-  ${EndIf}
-!endif
-
 !ifdef MOZ_LAUNCHER_PROCESS
   ${ResetLauncherProcessDefaults}
 !endif
@@ -1512,7 +1493,6 @@ ${RemoveDefaultBrowserAgentShortcut}
   Push "minidump-analyzer.exe"
   Push "pingsender.exe"
   Push "updater.exe"
-  Push "updateagent.exe"
   Push "${FileMainEXE}"
 !macroend
 !define PushFilesToCheck "!insertmacro PushFilesToCheck"
@@ -1791,45 +1771,4 @@ FunctionEnd
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Browser"
 !macroend
 !define ResetLauncherProcessDefaults "!insertmacro ResetLauncherProcessDefaults"
-!endif
-
-!ifdef MOZ_UPDATE_AGENT
-; Push, onto the stack, the command line used to register (or update) the
-; update agent scheduled task.
-;
-; InitHashAppModelId must have already been called to set $AppUserModelID,
-; if that is empty then an empty string will be pushed instead.
-;
-; COMMAND_BASE must be "register" or "update". Both will remove any
-; pre-existing task and register a new one, but "update" will first attempt
-; to copy some settings.
-!macro PushRegisterUpdateAgentTaskCommand COMMAND_BASE
-  Push $0
-  Push $1
-
-  Call IsUserAdmin
-  Pop $0
-  ; Register the update agent to run as Local Service if the user is an admin...
-  ${If} $0 == "true"
-  ; ...and if we have HKLM write access
-  ${AndIf} $TmpVal == "HKLM"
-    StrCpy $1 "${COMMAND_BASE}-task-local-service"
-  ${Else}
-    ; Otherwise attempt to register the task for the current user.
-    ; If we had previously registered the task while elevated, then we shouldn't
-    ; be able to replace it now with another task of the same name, so this
-    ; will fail harmlessly.
-    StrCpy $1 "${COMMAND_BASE}-task"
-  ${EndIf}
-
-  ${If} "$AppUserModelID" != ""
-    StrCpy $0 '"$INSTDIR\updateagent.exe" $1 "${UpdateAgentFullName} $AppUserModelID" "$AppUserModelID" "$INSTDIR"'
-  ${Else}
-    StrCpy $0 ''
-  ${EndIf}
-
-  Pop $1
-  Exch $0
-!macroend
-!define PushRegisterUpdateAgentTaskCommand "!insertmacro PushRegisterUpdateAgentTaskCommand"
 !endif

@@ -1,8 +1,0 @@
-RUST_PROGRAMS += ["updateagent"]
-RCINCLUDE = "updateagent.rc"
-
-GENERATED_FILES += ["url_constants.rs"]
-GENERATED_FILES["url_constants.rs"].script = "UpdateUrlConstants.py"
-
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Application Update")
