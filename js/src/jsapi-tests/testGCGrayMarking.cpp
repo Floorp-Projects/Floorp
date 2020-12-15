@@ -497,10 +497,14 @@ bool TestCCWs() {
   CHECK(IsMarkedGray(wrapper));
   CHECK(IsMarkedBlack(target));
 
+  JSRuntime* rt = cx->runtime();
   JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
   JS::PrepareForFullGC(cx);
   js::SliceBudget budget(js::WorkBudget(1));
-  cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
+  rt->gc.startDebugGC(GC_NORMAL, budget);
+  while (rt->gc.state() == gc::State::Prepare) {
+    rt->gc.debugGCSlice(budget);
+  }
   CHECK(JS::IsIncrementalGCInProgress(cx));
 
   CHECK(!IsMarkedBlack(wrapper));
@@ -526,7 +530,10 @@ bool TestCCWs() {
   JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
   JS::PrepareZoneForGC(cx, wrapper->zone());
   budget = js::SliceBudget(js::WorkBudget(1));
-  cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
+  rt->gc.startDebugGC(GC_NORMAL, budget);
+  while (rt->gc.state() == gc::State::Prepare) {
+    rt->gc.debugGCSlice(budget);
+  }
   CHECK(JS::IsIncrementalGCInProgress(cx));
   CHECK(wrapper->zone()->isGCMarkingBlackOnly());
   CHECK(!target->zone()->wasGCStarted());

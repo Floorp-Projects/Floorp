@@ -3639,6 +3639,8 @@ void Debugger::traceCrossCompartmentEdges(JSTracer* trc) {
  */
 /* static */
 void DebugAPI::traceCrossCompartmentEdges(JSTracer* trc) {
+  MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
+
   JSRuntime* rt = trc->runtime();
   gc::State state = rt->gc.state();
 
