@@ -14089,6 +14089,13 @@ void CodeGenerator::visitThrowRuntimeLexicalError(
   callVM<Fn, jit::ThrowRuntimeLexicalError>(ins);
 }
 
+void CodeGenerator::visitThrowMsg(LThrowMsg* ins) {
+  pushArg(Imm32(static_cast<int32_t>(ins->mir()->throwMsgKind())));
+
+  using Fn = bool (*)(JSContext*, unsigned);
+  callVM<Fn, js::ThrowMsgOperation>(ins);
+}
+
 void CodeGenerator::visitGlobalDeclInstantiation(
     LGlobalDeclInstantiation* ins) {
   pushArg(ImmPtr(ins->mir()->resumePoint()->pc()));

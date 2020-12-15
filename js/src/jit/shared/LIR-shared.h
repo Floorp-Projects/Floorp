@@ -7849,6 +7849,15 @@ class LThrowRuntimeLexicalError : public LCallInstructionHelper<0, 0, 0> {
   }
 };
 
+class LThrowMsg : public LCallInstructionHelper<0, 0, 0> {
+ public:
+  LIR_HEADER(ThrowMsg)
+
+  LThrowMsg() : LCallInstructionHelper(classOpcode) {}
+
+  MThrowMsg* mir() { return mir_->toThrowMsg(); }
+};
+
 class LGlobalDeclInstantiation : public LInstructionHelper<0, 0, 0> {
  public:
   LIR_HEADER(GlobalDeclInstantiation)

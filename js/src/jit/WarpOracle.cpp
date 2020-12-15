@@ -128,11 +128,14 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
     mode = "Compiling";
   }
   JitSpew(JitSpew_IonScripts,
-          "Warp %s script %s:%u:%u (%p) (warmup-counter=%" PRIu32 ", level=%s)",
+          "Warp %s script %s:%u:%u (%p) (warmup-counter=%" PRIu32
+          ", level=%s%s%s)",
           mode, outerScript_->filename(), outerScript_->lineno(),
           outerScript_->column(), static_cast<JSScript*>(outerScript_),
           outerScript_->getWarmUpCount(),
-          OptimizationLevelString(mirGen_.optimizationInfo().level()));
+          OptimizationLevelString(mirGen_.optimizationInfo().level()),
+          outerScript_->isGenerator() ? " isGenerator" : "",
+          outerScript_->isAsync() ? " isAsync" : "");
 #endif
 
   MOZ_ASSERT(outerScript_->hasJitScript());
@@ -711,6 +714,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::RetRval:
       case JSOp::InitialYield:
       case JSOp::Yield:
+      case JSOp::ResumeKind:
+      case JSOp::ThrowMsg:
         // Supported by WarpBuilder. Nothing to do.
         break;
 

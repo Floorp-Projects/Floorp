@@ -6724,6 +6724,27 @@ class MThrowRuntimeLexicalError : public MNullaryInstruction {
   }
 };
 
+// Unconditionally throw a known error number.
+class MThrowMsg : public MNullaryInstruction {
+  const ThrowMsgKind throwMsgKind_;
+
+  explicit MThrowMsg(ThrowMsgKind throwMsgKind)
+      : MNullaryInstruction(classOpcode), throwMsgKind_(throwMsgKind) {
+    setGuard();
+    setResultType(MIRType::None);
+  }
+
+ public:
+  INSTRUCTION_HEADER(ThrowMsg)
+  TRIVIAL_NEW_WRAPPERS
+
+  ThrowMsgKind throwMsgKind() const { return throwMsgKind_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::ExceptionState);
+  }
+};
+
 // In the prologues of global and eval scripts, check for redeclarations and
 // initialize bindings.
 class MGlobalDeclInstantiation : public MNullaryInstruction {
