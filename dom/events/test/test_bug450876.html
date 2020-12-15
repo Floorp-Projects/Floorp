@@ -31,7 +31,7 @@ function doTest() {
   is(document.activeElement, document.getElementById('a'), "link should have focus");
   is(document.hasFocus(), true, "document should be focused");
   synthesizeKey("KEY_Tab");
-  is(document.activeElement, document.getElementById('a'), "body element should be focused");
+  is(document.activeElement, document.body, "body element should be focused");
   is(document.hasFocus(), false, "document should not be focused");
 
   SimpleTest.finish();

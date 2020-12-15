@@ -1626,13 +1626,6 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     }
     // return if blurring fails or the focus changes during the blur
     if (focusedBrowsingContext) {
-      // if the focus is being moved to another element in the same document,
-      // or to a descendant, pass the existing window to Blur so that the
-      // current node in the existing window is cleared. If moving to a
-      // window elsewhere, we want to maintain the current node in the
-      // window but still blur it.
-      bool currentIsSameOrAncestor =
-          IsSameOrAncestor(focusedBrowsingContext, newWindow);
       // find the common ancestor of the currently focused window and the new
       // window. The ancestor will need to have its currently focused node
       // cleared once the document has been blurred. Otherwise, we'll be in a
@@ -1650,8 +1643,14 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
         commonAncestor = GetCommonAncestor(newWindow, focusedBrowsingContext);
       }
 
+      // XXX for the case that we try to focus an already-focused-remote-frame,
+      // we would still send blur and focus IPC to it, but they will not
+      // generate blur or focus event, we don't want to reset activeElement on
+      // the remote frame.
       if (!Blur(
-              currentIsSameOrAncestor ? focusedBrowsingContext.get() : nullptr,
+              (focusMovesToDifferentBC || focusedBrowsingContext->IsInProcess())
+                  ? focusedBrowsingContext.get()
+                  : nullptr,
               commonAncestor ? commonAncestor.get() : nullptr,
               focusMovesToDifferentBC, aAdjustWidget, aActionId,
               elementToFocus)) {
@@ -3545,11 +3544,12 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
         docShell->TabToTreeOwner(forward, forDocumentNavigation, &tookFocus);
         // If the tree owner took the focus, blur the current element.
         if (tookFocus) {
-          nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
-          if (window->GetFocusedElement() == mFocusedElement) {
+          if (GetFocusedBrowsingContext() &&
+              GetFocusedBrowsingContext()->IsInProcess()) {
             Blur(GetFocusedBrowsingContext(), nullptr, true, true,
                  GenerateFocusActionId());
           } else {
+            nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
             window->SetFocusedElement(nullptr);
           }
           return NS_OK;
