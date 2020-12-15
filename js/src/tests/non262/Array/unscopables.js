@@ -1,3 +1,9 @@
+if (typeof getBuildConfiguration === "undefined") {
+  var getBuildConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getBuildConfiguration;
+}
+
+var isNightly = !getBuildConfiguration().release_or_beta;
+
 let Array_unscopables = Array.prototype[Symbol.unscopables];
 
 let desc = Reflect.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables);
@@ -21,6 +27,8 @@ assertDeepEq(desc2, {
 let keys = Reflect.ownKeys(Array_unscopables);
 
 assertDeepEq(keys, [
+    ...(isNightly ? ["at"] : []),
+    ...[
     "copyWithin",
     "entries",
     "fill",
@@ -31,7 +39,7 @@ assertDeepEq(keys, [
     "includes",
     "keys",
     "values"
-]);
+]]);
 
 for (let key of keys)
     assertEq(Array_unscopables[key], true);

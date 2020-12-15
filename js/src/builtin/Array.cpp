@@ -3846,6 +3846,12 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
   }
 
   RootedValue value(cx, BooleanValue(true));
+#ifdef NIGHTLY_BUILD
+  if (!DefineDataProperty(cx, unscopables, cx->names().at, value)) {
+    return false;
+  }
+#endif
+
   if (!DefineDataProperty(cx, unscopables, cx->names().copyWithin, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().entries, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().fill, value) ||

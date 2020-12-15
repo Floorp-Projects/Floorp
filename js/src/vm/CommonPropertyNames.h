@@ -14,6 +14,7 @@
 // for the parser and VM to use.
 #define FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(MACRO) \
   MACRO(as, as, "as")                               \
+  MACRO(at, at, "at")                               \
   MACRO(by, by, "by")                               \
   MACRO(comma, comma, ",")                          \
   MACRO(do, do_, "do")                              \
