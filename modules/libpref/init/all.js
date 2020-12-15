@@ -79,8 +79,9 @@ pref("security.enterprise_roots.enabled", false);
 
 // If true, attempt to load the osclientcerts PKCS#11 module at startup on a
 // background thread. This module allows Firefox to use client certificates
-// stored in OS certificate storage. Currently only available for Windows.
-#ifdef NIGHTLY_BUILD
+// stored in OS certificate storage. Currently only available for Windows and
+// macOS.
+#ifdef EARLY_BETA_OR_EARLIER
   pref("security.osclientcerts.autoload", true);
 #else
   pref("security.osclientcerts.autoload", false);
