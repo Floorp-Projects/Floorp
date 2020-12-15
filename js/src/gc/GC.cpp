@@ -3141,7 +3141,7 @@ bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,
   }
 
   stats().recordTrigger(used, threshold);
-  PrepareZoneForGC(zone);
+  zone->scheduleGC();
   requestMajorGC(reason);
   return true;
 }
@@ -3561,6 +3561,10 @@ void Compartment::destroy(JSFreeOp* fop) {
 
 void Zone::destroy(JSFreeOp* fop) {
   MOZ_ASSERT(compartments().empty());
+  JSRuntime* rt = fop->runtime();
+  if (auto callback = rt->destroyZoneCallback) {
+    callback(fop, this);
+  }
   // Bug 1560019: Malloc memory associated with a zone but not with a specific
   // GC thing is not currently tracked.
   fop->deleteUntracked(this);
@@ -8265,27 +8269,53 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
 }
 #endif
 
-JS_PUBLIC_API void JS::PrepareZoneForGC(Zone* zone) { zone->scheduleGC(); }
+#ifdef DEBUG
+bool GCRuntime::hasZone(Zone* target) {
+  for (AllZonesIter zone(this); !zone.done(); zone.next()) {
+    if (zone == target) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
+JS_PUBLIC_API void JS::PrepareZoneForGC(JSContext* cx, Zone* zone) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  MOZ_ASSERT(cx->runtime()->gc.hasZone(zone));
+
+  zone->scheduleGC();
+}
 
 JS_PUBLIC_API void JS::PrepareForFullGC(JSContext* cx) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
   for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
     zone->scheduleGC();
   }
 }
 
 JS_PUBLIC_API void JS::PrepareForIncrementalGC(JSContext* cx) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
   if (!JS::IsIncrementalGCInProgress(cx)) {
     return;
   }
 
   for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
     if (zone->wasGCStarted()) {
-      PrepareZoneForGC(zone);
+      zone->scheduleGC();
     }
   }
 }
 
 JS_PUBLIC_API bool JS::IsGCScheduled(JSContext* cx) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
   for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
     if (zone->isGCScheduled()) {
       return true;
@@ -8295,38 +8325,60 @@ JS_PUBLIC_API bool JS::IsGCScheduled(JSContext* cx) {
   return false;
 }
 
-JS_PUBLIC_API void JS::SkipZoneForGC(Zone* zone) { zone->unscheduleGC(); }
+JS_PUBLIC_API void JS::SkipZoneForGC(JSContext* cx, Zone* zone) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  MOZ_ASSERT(cx->runtime()->gc.hasZone(zone));
+
+  zone->unscheduleGC();
+}
 
 JS_PUBLIC_API void JS::NonIncrementalGC(JSContext* cx,
                                         JSGCInvocationKind gckind,
                                         GCReason reason) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
   MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
+
   cx->runtime()->gc.gc(gckind, reason);
 }
 
 JS_PUBLIC_API void JS::StartIncrementalGC(JSContext* cx,
                                           JSGCInvocationKind gckind,
                                           GCReason reason, int64_t millis) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
   MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
+
   cx->runtime()->gc.startGC(gckind, reason, millis);
 }
 
 JS_PUBLIC_API void JS::IncrementalGCSlice(JSContext* cx, GCReason reason,
                                           int64_t millis) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
   cx->runtime()->gc.gcSlice(reason, millis);
 }
 
 JS_PUBLIC_API bool JS::IncrementalGCHasForegroundWork(JSContext* cx) {
-  MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
+  AssertHeapIsIdle();
   CHECK_THREAD(cx);
+
   return cx->runtime()->gc.hasForegroundWork();
 }
 
 JS_PUBLIC_API void JS::FinishIncrementalGC(JSContext* cx, GCReason reason) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
   cx->runtime()->gc.finishGC(reason);
 }
 
 JS_PUBLIC_API void JS::AbortIncrementalGC(JSContext* cx) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
   if (IsIncrementalGCInProgress(cx)) {
     cx->runtime()->gc.abortGC();
   }
