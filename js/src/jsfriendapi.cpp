@@ -22,7 +22,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/experimental/CodeCoverage.h"
 #include "js/experimental/CTypes.h"  // JS::AutoCTypesActivityCallback, JS::SetCTypesActivityCallback
-#include "js/experimental/Intl.h"  // JS::Add{,Moz}DisplayNamesConstructor, JS::AddMozDateTimeFormatConstructor
+#include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // JS_STACK_GROWTH_DIRECTION
 #include "js/friend/WindowProxy.h"    // js::ToWindowIfWindowProxy
@@ -812,10 +812,6 @@ bool JS::AddMozDateTimeFormatConstructor(JSContext* cx, JS::HandleObject intl) {
 }
 
 bool JS::AddMozDisplayNamesConstructor(JSContext* cx, JS::HandleObject intl) {
-  return IntlNotEnabled(cx);
-}
-
-bool JS::AddDisplayNamesConstructor(JSContext* cx, JS::HandleObject intl) {
   return IntlNotEnabled(cx);
 }
 

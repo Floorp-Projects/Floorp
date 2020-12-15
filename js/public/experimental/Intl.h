@@ -45,17 +45,6 @@ extern JS_FRIEND_API bool AddMozDateTimeFormatConstructor(
 extern JS_FRIEND_API bool AddMozDisplayNamesConstructor(JSContext* cx,
                                                         Handle<JSObject*> intl);
 
-/**
- * Create and add the Intl.DisplayNames constructor function to the provided
- * object, implementing standardized behavior (that isn't yet shippable because
- * we're not *quite* comfortable with the spec's progress yet).
- *
- * If JS was built without JS_HAS_INTL_API, this function will throw an
- * exception.
- */
-extern JS_FRIEND_API bool AddDisplayNamesConstructor(JSContext* cx,
-                                                     Handle<JSObject*> intl);
-
 }  // namespace JS
 
 #endif  // js_experimental_Intl_h
