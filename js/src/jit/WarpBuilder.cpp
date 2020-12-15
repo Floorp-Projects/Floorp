@@ -2197,12 +2197,22 @@ bool WarpBuilder::build_MaybeExtractAwaitValue(BytecodeLocation loc) {
   return resumeAfter(extracted, loc);
 }
 
+bool WarpBuilder::build_InitialYield(BytecodeLocation loc) {
+  MDefinition* gen = current->pop();
+  return buildSuspend(loc, gen, gen);
+}
+
 bool WarpBuilder::build_Await(BytecodeLocation loc) {
   MDefinition* gen = current->pop();
   MDefinition* promiseOrGenerator = current->pop();
 
-  int32_t slotsToCopy = current->stackDepth() - info().firstLocalSlot();
+  return buildSuspend(loc, gen, promiseOrGenerator);
+}
+bool WarpBuilder::build_Yield(BytecodeLocation loc) { return build_Await(loc); }
 
+bool WarpBuilder::buildSuspend(BytecodeLocation loc, MDefinition* gen,
+                               MDefinition* retVal) {
+  int32_t slotsToCopy = current->stackDepth() - info().firstLocalSlot();
   MOZ_ASSERT(slotsToCopy >= 0);
   if (slotsToCopy > 0) {
     auto* arraySlot = MLoadFixedSlot::New(
@@ -2252,7 +2262,7 @@ bool WarpBuilder::build_Await(BytecodeLocation loc) {
 
   // GeneratorReturn will return from the method, however to support MIR
   // generation isn't treated like the end of a block
-  MGeneratorReturn* ret = MGeneratorReturn::New(alloc(), promiseOrGenerator);
+  MGeneratorReturn* ret = MGeneratorReturn::New(alloc(), retVal);
   current->add(ret);
 
   // To ensure the rest of the MIR generation looks correct, fill the stack with

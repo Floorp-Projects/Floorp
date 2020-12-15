@@ -709,6 +709,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::GetRval:
       case JSOp::Return:
       case JSOp::RetRval:
+      case JSOp::InitialYield:
+      case JSOp::Yield:
         // Supported by WarpBuilder. Nothing to do.
         break;
 
