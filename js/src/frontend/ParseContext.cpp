@@ -396,7 +396,7 @@ bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
         if (DeclarationKindIsParameter(declaredKind)) {
           redeclaredKind = Some(declaredKind);
         } else {
-          MOZ_ASSERT(FunctionScope::isSpecialName(sc()->cx_, name));
+          MOZ_ASSERT(FunctionScope::isSpecialName(sc()->cx_, name->toIndex()));
         }
       }
     }

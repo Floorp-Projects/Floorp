@@ -515,11 +515,17 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
     }
 
     NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-    if (!putNameInCache(bce, bi.name(), loc)) {
+    if (!putNameInCache(
+            bce,
+            bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name()),
+            loc)) {
       return false;
     }
 
-    if (!tdzCache->noteTDZCheck(bce, bi.name(), CheckTDZ)) {
+    if (!tdzCache->noteTDZCheck(
+            bce,
+            bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name()),
+            CheckTDZ)) {
       return false;
     }
   }
@@ -576,7 +582,9 @@ bool EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox) {
   // The lambda name, if not closed over, is accessed via JSOp::Callee and
   // not a frame slot. Do not update frame slot information.
   NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-  if (!putNameInCache(bce, bi.name(), loc)) {
+  if (!putNameInCache(
+          bce, bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name()),
+          loc)) {
     return false;
   }
 
@@ -624,7 +632,8 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
       }
 
       NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-      NameLocationMap::AddPtr p = cache.lookupForAdd(bi.name());
+      NameLocationMap::AddPtr p = cache.lookupForAdd(
+          bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name()));
 
       // The only duplicate bindings that occur are simple formal
       // parameters, in which case the last position counts, so update the
@@ -637,7 +646,10 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
         continue;
       }
 
-      if (!cache.add(p, bi.name(), loc)) {
+      if (!cache.add(
+              p,
+              bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name()),
+              loc)) {
         ReportOutOfMemory(bce->cx);
         return false;
       }
@@ -718,7 +730,10 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
 
       NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
       MOZ_ASSERT(bi.kind() == BindingKind::Var);
-      if (!putNameInCache(bce, bi.name(), loc)) {
+      if (!putNameInCache(
+              bce,
+              bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name()),
+              loc)) {
         return false;
       }
     }
@@ -826,7 +841,8 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
   if (globalsc->bindings) {
     for (ParserBindingIter bi(*globalsc->bindings); bi; bi++) {
       NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-      const ParserAtom* name = bi.name();
+      const ParserAtom* name =
+          bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name());
       if (!putNameInCache(bce, name, loc)) {
         return false;
       }
@@ -912,7 +928,10 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
       }
 
       NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-      if (!putNameInCache(bce, bi.name(), loc)) {
+      if (!putNameInCache(
+              bce,
+              bce->compilationInfo.stencil.getParserAtomAt(bce->cx, bi.name()),
+              loc)) {
         return false;
       }
 
@@ -922,7 +941,11 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
           firstLexicalFrameSlot = Some(loc.frameSlot());
         }
 
-        if (!tdzCache->noteTDZCheck(bce, bi.name(), CheckTDZ)) {
+        if (!tdzCache->noteTDZCheck(
+                bce,
+                bce->compilationInfo.stencil.getParserAtomAt(bce->cx,
+                                                             bi.name()),
+                CheckTDZ)) {
           return false;
         }
       }

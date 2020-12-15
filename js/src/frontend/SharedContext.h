@@ -110,21 +110,6 @@ class EvalSharedContext;
 class ModuleSharedContext;
 class SuspendableContext;
 
-using ParserBindingName = AbstractBindingName<const ParserAtom>;
-using ParserBindingIter = AbstractBindingIter<const ParserAtom>;
-
-using BaseParserScopeData = AbstractBaseScopeData<const ParserAtom>;
-
-template <typename Scope>
-using ParserScopeData = typename Scope::template AbstractData<const ParserAtom>;
-
-using ParserGlobalScopeData = ParserScopeData<GlobalScope>;
-using ParserEvalScopeData = ParserScopeData<EvalScope>;
-using ParserLexicalScopeData = ParserScopeData<LexicalScope>;
-using ParserFunctionScopeData = ParserScopeData<FunctionScope>;
-using ParserModuleScopeData = ParserScopeData<ModuleScope>;
-using ParserVarScopeData = ParserScopeData<VarScope>;
-
 #define FLAG_GETTER(enumName, enumEntry, lowerName, name) \
  public:                                                  \
   bool lowerName() const { return hasFlag(enumName::enumEntry); }
