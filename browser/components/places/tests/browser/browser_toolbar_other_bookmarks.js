@@ -215,7 +215,7 @@ add_task(async function no_errors_when_bookmarks_placed_in_palette() {
 
   let errorListener = {
     observe(error) {
-      ok(false, error.message);
+      ok(false, `${error.message}, ${error.stack}, ${JSON.stringify(error)}`);
       consoleErrors++;
     },
   };
