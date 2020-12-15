@@ -444,7 +444,9 @@ MOZ_MUST_USE bool DebugEpilogueOnBaselineReturn(JSContext* cx,
                                                 jsbytecode* pc);
 void FrameIsDebuggeeCheck(BaselineFrame* frame);
 
-JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame);
+JSObject* CreateGeneratorFromFrame(JSContext* cx, BaselineFrame* frame);
+JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
+                          HandleObject, HandleObject);
 
 MOZ_MUST_USE bool NormalSuspend(JSContext* cx, HandleObject obj,
                                 BaselineFrame* frame, uint32_t frameSize,

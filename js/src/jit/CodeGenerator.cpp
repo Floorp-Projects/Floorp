@@ -14234,6 +14234,35 @@ void CodeGenerator::visitCheckThisReinit(LCheckThisReinit* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitGenerator(LGenerator* lir) {
+  Register callee = ToRegister(lir->callee());
+  Register environmentChain = ToRegister(lir->environmentChain());
+  Register argsObject = ToRegister(lir->argsObject());
+
+  pushArg(argsObject);
+  pushArg(environmentChain);
+  pushArg(ImmGCPtr(current->mir()->info().script()));
+  pushArg(callee);
+
+  using Fn = JSObject* (*)(JSContext * cx, HandleFunction, HandleScript,
+                           HandleObject, HandleObject);
+  callVM<Fn, CreateGenerator>(lir);
+}
+
+void CodeGenerator::visitAsyncResolve(LAsyncResolve* lir) {
+  Register generator = ToRegister(lir->generator());
+  ValueOperand valueOrReason = ToValue(lir, LAsyncResolve::ValueOrReasonInput);
+  AsyncFunctionResolveKind resolveKind = lir->mir()->resolveKind();
+
+  pushArg(Imm32(static_cast<int32_t>(resolveKind)));
+  pushArg(valueOrReason);
+  pushArg(generator);
+
+  using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
+                           HandleValue, AsyncFunctionResolveKind);
+  callVM<Fn, js::AsyncFunctionResolve>(lir);
+}
+
 void CodeGenerator::visitDebugCheckSelfHosted(LDebugCheckSelfHosted* ins) {
   ValueOperand checkValue = ToValue(ins, LDebugCheckSelfHosted::CheckValue);
   pushArg(checkValue);

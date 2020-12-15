@@ -4168,7 +4168,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(Generator) {
       MOZ_ASSERT(!cx->isExceptionPending());
       MOZ_ASSERT(REGS.stackDepth() == 0);
-      JSObject* obj = AbstractGeneratorObject::create(cx, REGS.fp());
+      JSObject* obj = AbstractGeneratorObject::createFromFrame(cx, REGS.fp());
       if (!obj) {
         goto error;
       }

@@ -9,6 +9,7 @@
 
 #include "frontend/NameAnalysisTypes.h"
 #include "js/TypeDecls.h"
+#include "vm/AsyncFunctionResolveKind.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/CheckIsObjectKind.h"   // CheckIsObjectKind
@@ -205,6 +206,10 @@ class BytecodeLocation {
   bool isGetPropOp() const { return IsGetPropOp(getOp()); }
 
   bool isSetPropOp() const { return IsSetPropOp(getOp()); }
+
+  AsyncFunctionResolveKind getAsyncFunctionResolveKind() {
+    return AsyncFunctionResolveKind(GET_UINT8(rawBytecode_));
+  }
 
   bool resultIsPopped() const {
     MOZ_ASSERT(StackDefs(rawBytecode_) == 1);

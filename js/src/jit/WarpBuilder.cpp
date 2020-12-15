@@ -2103,6 +2103,51 @@ bool WarpBuilder::build_CheckThisReinit(BytecodeLocation) {
   return true;
 }
 
+bool WarpBuilder::build_Generator(BytecodeLocation loc) {
+  MDefinition* callee = getCallee();
+  MDefinition* environmentChain = current->environmentChain();
+  MDefinition* argsObj = info().needsArgsObj() ? current->argumentsObject()
+                                               : constant(Int32Value(0));
+
+  MGenerator* generator =
+      MGenerator::New(alloc(), callee, environmentChain, argsObj);
+
+  current->add(generator);
+  current->push(generator);
+  return resumeAfter(generator, loc);
+}
+
+bool WarpBuilder::build_FinalYieldRval(BytecodeLocation loc) {
+  MDefinition* gen = current->pop();
+
+  auto setSlotNull = [this, gen](size_t slot) {
+    auto* ins = MStoreFixedSlot::New(alloc(), gen, slot, constant(NullValue()));
+    current->add(ins);
+  };
+
+  // Close the generator
+  setSlotNull(AbstractGeneratorObject::calleeSlot());
+  setSlotNull(AbstractGeneratorObject::envChainSlot());
+  setSlotNull(AbstractGeneratorObject::argsObjectSlot());
+  setSlotNull(AbstractGeneratorObject::stackStorageSlot());
+  setSlotNull(AbstractGeneratorObject::resumeIndexSlot());
+
+  // Return
+  return build_RetRval(loc);
+}
+
+bool WarpBuilder::build_AsyncResolve(BytecodeLocation loc) {
+  MDefinition* generator = current->pop();
+  MDefinition* valueOrReason = current->pop();
+  auto resolveKind = loc.getAsyncFunctionResolveKind();
+
+  MAsyncResolve* resolve =
+      MAsyncResolve::New(alloc(), generator, valueOrReason, resolveKind);
+  current->add(resolve);
+  current->push(resolve);
+  return resumeAfter(resolve, loc);
+}
+
 bool WarpBuilder::build_CheckReturn(BytecodeLocation) {
   MOZ_ASSERT(!script_->noScriptRval());
 

@@ -5308,6 +5308,22 @@ void LIRGenerator::visitCheckThisReinit(MCheckThisReinit* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitGenerator(MGenerator* ins) {
+  auto* lir =
+      new (alloc()) LGenerator(useRegisterAtStart(ins->callee()),
+                               useRegisterAtStart(ins->environmentChain()),
+                               useRegisterAtStart(ins->argsObject()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitAsyncResolve(MAsyncResolve* ins) {
+  auto* lir = new (alloc()) LAsyncResolve(useRegisterAtStart(ins->generator()),
+                                          useBoxAtStart(ins->valueOrReason()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins) {
   MDefinition* checkVal = ins->checkValue();
   MOZ_ASSERT(checkVal->type() == MIRType::Value);

@@ -90,6 +90,7 @@ namespace jit {
   _(CreateBigIntFromInt64, js::jit::CreateBigIntFromInt64)                     \
   _(CreateBigIntFromUint64, js::jit::CreateBigIntFromUint64)                   \
   _(CreateGenerator, js::jit::CreateGenerator)                                 \
+  _(CreateGeneratorFromFrame, js::jit::CreateGeneratorFromFrame)               \
   _(CreateThisForFunctionWithProto, js::CreateThisForFunctionWithProto)        \
   _(CreateThisFromIC, js::jit::CreateThisFromIC)                               \
   _(CreateThisFromIon, js::jit::CreateThisFromIon)                             \
@@ -114,6 +115,7 @@ namespace jit {
   _(DoStringToInt64, js::jit::DoStringToInt64)                                 \
   _(DoTrialInlining, js::jit::DoTrialInlining)                                 \
   _(EnterWith, js::jit::EnterWith)                                             \
+  _(ExtractAwaitValue, js::ExtractAwaitValue)                                  \
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
   _(FinishBoundFunctionInit, JSFunction::finishBoundFunctionInit)              \
   _(FreshenLexicalEnv, js::jit::FreshenLexicalEnv)                             \
@@ -178,7 +180,6 @@ namespace jit {
   _(LooselyEqual, js::jit::LooselyEqual<js::jit::EqualityKind::Equal>)         \
   _(LooselyNotEqual, js::jit::LooselyEqual<js::jit::EqualityKind::NotEqual>)   \
   _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
-  _(ExtractAwaitValue, js::ExtractAwaitValue)                                  \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
     js::NamedLambdaObject::createTemplateObject)                               \

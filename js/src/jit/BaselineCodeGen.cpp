@@ -5597,7 +5597,7 @@ bool BaselineCodeGen<Handler>::emit_Generator() {
   pushArg(R0.scratchReg());
 
   using Fn = JSObject* (*)(JSContext*, BaselineFrame*);
-  if (!callVM<Fn, jit::CreateGenerator>()) {
+  if (!callVM<Fn, jit::CreateGeneratorFromFrame>()) {
     return false;
   }
 
