@@ -2838,6 +2838,10 @@ toolbar#nav-bar {
                 "serviceworker_e10s": self.extraPrefs.get(
                     "dom.serviceWorkers.parent_intercept", True
                 ),
+                "sessionHistoryInParent": self.extraPrefs.get(
+                    "fission.sessionHistoryInParent", False
+                )
+                or self.extraPrefs.get("fission.autostart", False),
                 "socketprocess_e10s": self.extraPrefs.get(
                     "network.process.enabled", False
                 ),
