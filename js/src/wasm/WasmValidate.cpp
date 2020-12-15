@@ -2009,7 +2009,7 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-static bool EventIsJSCompatible(Decoder& d, ResultType type) {
+static bool EventIsJSCompatible(Decoder& d, const ValTypeVector& type) {
   for (uint32_t i = 0; i < type.length(); i++) {
     if (type[i].isTypeIndex()) {
       return d.fail("cannot expose indexed reference type");
@@ -2125,14 +2125,17 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!DecodeEvent(d, env, &eventKind, &funcTypeIndex)) {
         return false;
       }
-      ResultType args =
-          ResultType::Vector(env->types[funcTypeIndex].funcType().args());
+      const ValTypeVector& args = env->types[funcTypeIndex].funcType().args();
 #  ifdef WASM_PRIVATE_REFTYPES
       if (!EventIsJSCompatible(d, args)) {
         return false;
       }
 #  endif
-      if (!env->events.append(EventDesc(eventKind, args))) {
+      ValTypeVector eventArgs;
+      if (!eventArgs.appendAll(args)) {
+        return false;
+      }
+      if (!env->events.emplaceBack(eventKind, std::move(eventArgs))) {
         return false;
       }
       if (env->events.length() > MaxEvents) {
@@ -2490,9 +2493,12 @@ static bool DecodeEventSection(Decoder& d, ModuleEnvironment* env) {
     if (!DecodeEvent(d, env, &eventKind, &funcTypeIndex)) {
       return false;
     }
-    ResultType args =
-        ResultType::Vector(env->types[funcTypeIndex].funcType().args());
-    env->events.infallibleAppend(EventDesc(eventKind, args));
+    const ValTypeVector& args = env->types[funcTypeIndex].funcType().args();
+    ValTypeVector eventArgs;
+    if (!eventArgs.appendAll(args)) {
+      return false;
+    }
+    env->events.infallibleEmplaceBack(eventKind, std::move(eventArgs));
   }
 
   return d.finishSection(*range, "event");

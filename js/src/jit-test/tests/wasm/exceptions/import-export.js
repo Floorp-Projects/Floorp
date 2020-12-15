@@ -25,12 +25,21 @@ function testImports() {
 }
 
 function testExports() {
-  var exports = wasmEvalText(`
+  var exports1 = wasmEvalText(`
     (module (type (func)) (event (export "exn") (type 0)))
   `).exports;
 
-  assertEq(typeof exports.exn, "object");
-  assertEq(exports.exn instanceof WebAssembly.Exception, true);
+  assertEq(typeof exports1.exn, "object");
+  assertEq(exports1.exn instanceof WebAssembly.Exception, true);
+
+  var exports2 = wasmEvalText(`
+    (module
+      (type (func (param i32 i32)))
+      (event (export "exn") (type 0)))
+  `).exports;
+
+  assertEq(typeof exports2.exn, "object");
+  assertEq(exports2.exn instanceof WebAssembly.Exception, true);
 }
 
 function testImportExport() {
