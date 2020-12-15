@@ -11,9 +11,8 @@
 #include <utility>
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
 
 enum struct UsageKind { Database, File };
 
@@ -99,6 +98,6 @@ class UsageInfo final {
   FileUsageType mFileUsage;
 };
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota
 
 #endif  // mozilla_dom_quota_usageinfo_h__

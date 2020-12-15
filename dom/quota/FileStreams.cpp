@@ -19,7 +19,7 @@
 #include "nsDebug.h"
 #include "prio.h"
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
 
 template <class FileStreamBase>
 NS_IMETHODIMP FileQuotaStream<FileStreamBase>::SetEOF() {
@@ -124,4 +124,4 @@ already_AddRefed<FileStream> CreateFileStream(
   return stream.forget();
 }
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota

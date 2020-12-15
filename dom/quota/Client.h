@@ -7,20 +7,19 @@
 #ifndef mozilla_dom_quota_client_h__
 #define mozilla_dom_quota_client_h__
 
-#include <cstdint>
 #include "ErrorList.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/Result.h"
-#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/quota/PersistenceType.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaInfo.h"
-#include "mozilla/fallible.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
+
+// XXX Remove this dependency.
+#include "mozilla/dom/LocalStorageCommon.h"
 
 class nsIFile;
 
@@ -37,7 +36,7 @@ template <typename T>
 struct Nullable;
 }
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
 
 class OriginScope;
 class QuotaManager;
@@ -192,6 +191,6 @@ class Client {
   virtual ~Client() = default;
 };
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota
 
 #endif  // mozilla_dom_quota_client_h__
