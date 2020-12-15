@@ -44,7 +44,6 @@ namespace jit {
   /* Generators / Async (bug 1317690) */ \
   _(IsGenClosing)                        \
   _(Resume)                              \
-  _(ResumeKind)                          \
   /* try-finally */                      \
   _(Finally)                             \
   _(Gosub)                               \
@@ -52,7 +51,6 @@ namespace jit {
   /* Misc */                             \
   _(DelName)                             \
   _(SetIntrinsic)                        \
-  _(ThrowMsg)                            \
   /* Private Fields */                   \
   _(InitLockedElem)                      \
   // === !! WARNING WARNING WARNING !! ===

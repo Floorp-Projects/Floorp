@@ -5230,6 +5230,12 @@ void LIRGenerator::visitThrowRuntimeLexicalError(
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitThrowMsg(MThrowMsg* ins) {
+  LThrowMsg* lir = new (alloc()) LThrowMsg();
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitGlobalDeclInstantiation(MGlobalDeclInstantiation* ins) {
   LGlobalDeclInstantiation* lir = new (alloc()) LGlobalDeclInstantiation();
   add(lir, ins);

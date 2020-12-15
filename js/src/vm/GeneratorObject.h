@@ -10,6 +10,7 @@
 #include "js/Class.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/GeneratorResumeKind.h"  // GeneratorResumeKind
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -224,16 +225,6 @@ bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
  */
 AbstractGeneratorObject* GetGeneratorObjectForFrame(JSContext* cx,
                                                     AbstractFramePtr frame);
-
-inline GeneratorResumeKind IntToResumeKind(int32_t value) {
-  MOZ_ASSERT(uint32_t(value) <= uint32_t(GeneratorResumeKind::Return));
-  return static_cast<GeneratorResumeKind>(value);
-}
-
-inline GeneratorResumeKind ResumeKindFromPC(jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::ResumeKind);
-  return IntToResumeKind(GET_UINT8(pc));
-}
 
 GeneratorResumeKind ParserAtomToResumeKind(JSContext* cx,
                                            const frontend::ParserAtom* atom);
