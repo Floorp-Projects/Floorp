@@ -2080,6 +2080,12 @@ void TextControlState::SetSelectionRange(
   nsresult rv = NS_OK;  // For the ScrollSelectionIntoView() return value.
   if (IsSelectionCached()) {
     SelectionProperties& props = GetSelectionProperties();
+    if (!props.HasMaxLength()) {
+      // A clone without a dirty value flag may not have a max length yet
+      nsAutoString value;
+      GetValue(value, false);
+      props.SetMaxLength(value.Length());
+    }
     changed |= props.SetStart(aStart);
     changed |= props.SetEnd(aEnd);
     changed |= props.SetDirection(aDirection);
@@ -2483,7 +2489,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
   if (mHandlingState &&
       mHandlingState->IsHandling(TextControlAction::CommitComposition)) {
     aValue = mHandlingState->GetSettingValue();
-    MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
+    MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
     return;
   }
 
@@ -2491,7 +2497,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
       (mEditorInitialized || !IsSingleLineTextControl())) {
     if (aIgnoreWrap && !mBoundFrame->CachedValue().IsVoid()) {
       aValue = mBoundFrame->CachedValue();
-      MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
+      MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
       return;
     }
 
@@ -2526,7 +2532,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
       AutoNoJSAPI nojsapi;
 
       DebugOnly<nsresult> rv = mTextEditor->ComputeTextValue(flags, aValue);
-      MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
+      MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get value");
     }
     // Only when the result doesn't include line breaks caused by hard-wrap,
@@ -2546,7 +2552,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
       aValue = value;
     } else {
       aValue = *mValue;
-      MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
+      MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
     }
   }
 }
