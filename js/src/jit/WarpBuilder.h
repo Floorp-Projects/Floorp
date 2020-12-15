@@ -45,7 +45,6 @@ namespace jit {
   _(IsGenClosing)                        \
   _(InitialYield)                        \
   _(Yield)                               \
-  _(FinalYieldRval)                      \
   _(Resume)                              \
   _(ResumeKind)                          \
   _(CheckResumeKind)                     \
@@ -53,9 +52,7 @@ namespace jit {
   _(Await)                               \
   _(CanSkipAwait)                        \
   _(MaybeExtractAwaitValue)              \
-  _(Generator)                           \
   _(AsyncAwait)                          \
-  _(AsyncResolve)                        \
   /* try-finally */                      \
   _(Finally)                             \
   _(Gosub)                               \

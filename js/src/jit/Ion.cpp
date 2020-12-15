@@ -61,6 +61,7 @@
 #include "js/UniquePtr.h"
 #include "util/Memory.h"
 #include "util/Windows.h"
+#include "vm/BytecodeIterator.h"
 #include "vm/HelperThreadState.h"
 #include "vm/Realm.h"
 #include "vm/TraceLogging.h"
@@ -74,6 +75,7 @@
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SafepointIndex-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
+#include "vm/BytecodeIterator-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
@@ -1770,7 +1772,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
 
 static bool CheckFrame(JSContext* cx, BaselineFrame* frame) {
   MOZ_ASSERT(!frame->script()->isGenerator());
-  MOZ_ASSERT(!frame->script()->isAsync());
   MOZ_ASSERT(!frame->isDebuggerEvalFrame());
   MOZ_ASSERT(!frame->isEvalFrame());
 
@@ -1828,7 +1829,7 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
   }
 
   return true;
-}
+}  // namespace jit
 
 static bool ScriptIsTooLarge(JSContext* cx, JSScript* script) {
   if (!JitOptions.limitScriptSize) {
