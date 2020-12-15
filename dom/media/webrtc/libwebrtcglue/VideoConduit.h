@@ -581,7 +581,7 @@ class WebrtcVideoConduit
   int mMinBitrate = 0;
   int mStartBitrate = 0;
   int mPrefMaxBitrate = 0;
-  // int mNegotiatedMaxBitrate = 0;
+  int mNegotiatedMaxBitrate = 0;
   int mMinBitrateEstimate = 0;
 
   // Set to true to force denoising on.
