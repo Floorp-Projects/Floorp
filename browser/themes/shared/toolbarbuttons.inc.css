@@ -23,6 +23,8 @@
 
   --toolbarseparator-color: var(--lwt-toolbar-vertical-separator, rgba(0,0,0,.3));
 
+  --bookmark-block-padding: 4px;
+
   /* This default value of --toolbarbutton-height is defined to prevent
      CSS errors for an invalid variable. The value should not get used,
      as a more specific value should be set when the value will be used. */
@@ -31,10 +33,12 @@
 
 :root[uidensity=compact] {
   --toolbarbutton-outer-padding: 1px;
+  --bookmark-block-padding: 1px;
 }
 
 :root[uidensity=touch] {
   --toolbarbutton-inner-padding: 9px;
+  --bookmark-block-padding: 7px;
 }
 
 /* We use :-moz-lwtheme-* for toolbarbuttons that aren't inside a toolbar, and
@@ -307,7 +311,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
 #personal-toolbar-empty-description,
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin: 0 2px;
-  padding: 4px;
+  padding: var(--bookmark-block-padding) 4px;
 }
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
@@ -317,11 +321,14 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 
 :root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin-inline: 1px;
-  padding-block: 1px;
 }
 
-:root[uidensity=touch] toolbarbutton.bookmark-item:not(.subviewbutton) {
-  padding-block: 7px;
+/**
+ * Ensure that the description is always at least as big as a bookmarks item,
+ * where its icon is 16px (which may be more than inline text height);
+ */
+#personal-toolbar-empty-description {
+  min-height: calc(16px + 2 * var(--bookmark-block-padding));
 }
 
 #bookmarks-toolbar-placeholder {
