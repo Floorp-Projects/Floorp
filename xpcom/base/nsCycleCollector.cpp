@@ -2594,6 +2594,8 @@ bool nsCycleCollector::FreeSnowWhite(bool aUntilNoSWInPurpleBuffer) {
     return false;
   }
 
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(GCCC_FreeSnowWhite);
+
   AutoRestore<bool> ar(mFreeingSnowWhite);
   mFreeingSnowWhite = true;
 
@@ -2616,6 +2618,7 @@ bool nsCycleCollector::FreeSnowWhiteWithBudget(js::SliceBudget& aBudget) {
     return false;
   }
 
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(GCCC_FreeSnowWhite);
   AutoRestore<bool> ar(mFreeingSnowWhite);
   mFreeingSnowWhite = true;
 
@@ -2662,6 +2665,7 @@ MOZ_NEVER_INLINE void nsCycleCollector::MarkRoots(SliceBudget& aBudget) {
   mScanInProgress = true;
   MOZ_ASSERT(mIncrementalPhase == GraphBuildingPhase);
 
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(GCCC_BuildGraph);
   JS::AutoEnterCycleCollection autocc(Runtime()->Runtime());
   bool doneBuilding = mBuilder->BuildGraph(aBudget);
 
@@ -3427,10 +3431,16 @@ bool nsCycleCollector::Collect(ccType aCCType, SliceBudget& aBudget,
         // that we won't unlink a live object if a weak reference is
         // promoted to a strong reference after ScanRoots has finished.
         // See bug 926533.
-        PrintPhase("ScanRoots");
-        ScanRoots(startedIdle);
-        PrintPhase("CollectWhite");
-        collectedAny = CollectWhite();
+        {
+          AUTO_PROFILER_LABEL_CATEGORY_PAIR(GCCC_ScanRoots);
+          PrintPhase("ScanRoots");
+          ScanRoots(startedIdle);
+        }
+        {
+          AUTO_PROFILER_LABEL_CATEGORY_PAIR(GCCC_CollectWhite);
+          PrintPhase("CollectWhite");
+          collectedAny = CollectWhite();
+        }
         break;
       case CleanupPhase:
         PrintPhase("CleanupAfterCollection");

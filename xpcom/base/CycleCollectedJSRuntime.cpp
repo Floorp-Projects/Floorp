@@ -1594,6 +1594,9 @@ void IncrementalFinalizeRunnable::ReleaseNow(bool aLimited) {
     return;
   }
   {
+    AUTO_PROFILER_LABEL("IncrementalFinalizeRunnable::ReleaseNow",
+                        GCCC_Finalize);
+
     mozilla::AutoRestore<bool> ar(mReleasing);
     mReleasing = true;
     MOZ_ASSERT(mDeferredFinalizeFunctions.Length() != 0,
@@ -1643,8 +1646,6 @@ void IncrementalFinalizeRunnable::ReleaseNow(bool aLimited) {
 
 NS_IMETHODIMP
 IncrementalFinalizeRunnable::Run() {
-  AUTO_PROFILER_LABEL("IncrementalFinalizeRunnable::Run", GCCC);
-
   if (!mDeferredFinalizeFunctions.Length()) {
     /* These items were already processed synchronously in JSGC_END. */
     MOZ_ASSERT(!mRuntime);
