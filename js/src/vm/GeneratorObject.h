@@ -98,7 +98,6 @@ class AbstractGeneratorObject : public NativeObject {
   void setStackStorage(ArrayObject& stackStorage) {
     setFixedSlot(STACK_STORAGE_SLOT, ObjectValue(stackStorage));
   }
-  void clearStackStorage() { setFixedSlot(STACK_STORAGE_SLOT, NullValue()); }
 
   // The resumeIndex slot is abused for a few purposes.  It's undefined if
   // it hasn't been set yet (before the initial yield), and null if the
