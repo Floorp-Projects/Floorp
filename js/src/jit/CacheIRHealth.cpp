@@ -79,7 +79,7 @@ CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
   while (stub && !stub->isFallback()) {
     spew->beginObject();
     {
-      uint32_t count = stub->getEnteredCount();
+      uint32_t count = stub->enteredCount();
       Happiness stubHappiness = spewStubHealth(spew, stub->toCacheIRStub());
       if (stubHappiness < entryHappiness) {
         entryHappiness = stubHappiness;
@@ -97,7 +97,7 @@ CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
     }
 
     spew->endObject();
-    stub = stub->next();
+    stub = stub->toCacheIRStub()->next();
   }
   spew->endList();  // stubs
 
