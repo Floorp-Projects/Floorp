@@ -12,12 +12,18 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 84.0
+    * `browser-engine-gecko-beta`: GeckoView 85.0
+    * `browser-engine-gecko-nightly`: GeckoView 86.0
+
 * **browser-toolbar**
   * 🌟 Added API to show site permission indicators for more information see [#9131](https://github.com/mozilla-mobile/android-components/issues/9131).
 
 * **browser-awesomebar**:
     * Awesomebar can now be customized for bottom toolbar using the [customizeForBottomToolbar] property
-    
+
 # 69.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v68.0.0...v69.0.0)
