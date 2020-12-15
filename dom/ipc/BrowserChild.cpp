@@ -3623,6 +3623,13 @@ NS_IMETHODIMP BrowserChild::OnStateChange(nsIWebProgress* aWebProgress,
       stateChangeData->contentType().SetIsVoid(true);
       stateChangeData->charset().SetIsVoid(true);
     }
+
+    if (NS_FAILED(aStatus) && mRenderLayers && mPuppetWidget &&
+        mPuppetWidget->HasLayerManager()) {
+      // Since the page load failed, some cached resources might still refer
+      // to the page previously loaded in this browser.
+      ClearCachedResources();
+    }
   }
 
   Unused << SendOnStateChange(webProgressData, requestData, aStateFlags,
