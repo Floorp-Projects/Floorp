@@ -13,7 +13,7 @@
 
 var g7 = newGlobal({newCompartment: true});
 g7.parent = this;
-g7.eval("Debugger(parent)");
+g7.eval("var dbg = Debugger(parent)");
 assertEq(typeof WebAssembly, "object");
 
 // Test that validation works even if compilers are not available.
