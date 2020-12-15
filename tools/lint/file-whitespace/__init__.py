@@ -23,13 +23,28 @@ def lint(paths, config, fix=None, **lintargs):
                 if lines[:].__len__() != 0 and lines[-1:][0].strip().__len__() == 0:
                     # return file pointer to first
                     open_file.seek(0)
-                    res = {
-                        "path": f,
-                        "message": "Empty Lines at end of file",
-                        "level": "error",
-                        "lineno": open_file.readlines()[:].__len__(),
-                    }
-                    results.append(result.from_config(config, **res))
+                    if fix:
+                        # fix Empty lines at end of file
+                        for i, line in reversed(list(enumerate(open_file))):
+                            # determine if line is empty
+                            if line.strip() != b"":
+                                with open(f, "wb") as write_file:
+                                    # determine if file's last line have \n, if not then add a \n
+                                    if not lines[i].endswith(b"\n"):
+                                        lines[i] = lines[i] + b"\n"
+                                    # write content to file
+                                    for e in lines[: i + 1]:
+                                        write_file.write(e)
+                                # end the loop
+                                break
+                    else:
+                        res = {
+                            "path": f,
+                            "message": "Empty Lines at end of file",
+                            "level": "error",
+                            "lineno": open_file.readlines()[:].__len__(),
+                        }
+                        results.append(result.from_config(config, **res))
             except Exception as ex:
                 log.debug("Error: " + str(ex) + ", in file: " + f)
 
