@@ -2158,22 +2158,37 @@
      */ \
     MACRO(Await, await, NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
-     * Decide whether awaiting 'value' can be skipped.
+     * Test if the re-entry to the microtask loop may be skipped.
      *
      * This is part of an optimization for `await` expressions. Programs very
      * often await values that aren't promises, or promises that are already
      * resolved. We can then sometimes skip suspending the current frame and
      * returning to the microtask loop. If the circumstances permit the
-     * optimization, `TrySkipAwait` replaces `value` with the result of the
-     * `await` expression (unwrapping the resolved promise, if any) and pushes
-     * `true`. Otherwise, it leaves `value` unchanged and pushes 'false'.
+     * optimization, `CanSkipAwait` pushes true if the optimization is allowed,
+     * and false otherwise.
      *
      *   Category: Functions
      *   Type: Generators and async functions
      *   Operands:
-     *   Stack: value => value_or_resolved, can_skip
+     *   Stack: value => value, can_skip
      */ \
-    MACRO(TrySkipAwait, try_skip_await, NULL, 1, 1, 2, JOF_BYTE) \
+    MACRO(CanSkipAwait, can_skip_await, NULL, 1, 1, 2, JOF_BYTE) \
+    /*
+     * Potentially extract an awaited value, if the await is skippable
+     *
+     * If re-entering the microtask loop is skippable (as checked by CanSkipAwait)
+     * if can_skip is true,  `MaybeExtractAwaitValue` replaces `value` with the result of the
+     * `await` expression (unwrapping the resolved promise, if any). Otherwise, value remains
+     * as is.
+     *
+     * In both cases, can_skip remains the same.
+     *
+     *   Category: Functions
+     *   Type: Generators and async functions
+     *   Operands:
+     *   Stack: value, can_skip => value_or_resolved, can_skip
+     */ \
+    MACRO(MaybeExtractAwaitValue, maybe_extract_await_value, NULL, 1, 2, 2, JOF_BYTE) \
     /*
      * Pushes one of the GeneratorResumeKind values as Int32Value.
      *
@@ -3564,7 +3579,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(229)                                   \
   MACRO(230)                                   \
   MACRO(231)                                   \
   MACRO(232)                                   \
