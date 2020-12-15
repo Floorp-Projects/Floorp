@@ -12,11 +12,10 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsStringFlags.h"
 #include "nsStringFwd.h"
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
 
 class OriginScope {
   class Origin {
@@ -340,6 +339,6 @@ class OriginScope {
   bool operator==(const OriginScope& aOther) = delete;
 };
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota
 
 #endif  // mozilla_dom_quota_originorpatternstring_h__

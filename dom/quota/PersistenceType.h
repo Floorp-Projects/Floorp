@@ -11,11 +11,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/StorageTypeBinding.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/fallible.h"
 #include "nsStringFwd.h"
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
 
 enum PersistenceType {
   PERSISTENCE_TYPE_PERSISTENT = 0,
@@ -63,6 +62,6 @@ inline PersistenceType ComplementaryPersistenceType(
   return PERSISTENCE_TYPE_DEFAULT;
 }
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota
 
 #endif  // mozilla_dom_quota_persistencetype_h__

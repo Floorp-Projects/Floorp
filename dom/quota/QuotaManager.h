@@ -57,7 +57,7 @@ class PrincipalInfo;
 
 }  // namespace mozilla
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
 
 class ClientUsageArray;
 class DirectoryLockImpl;
@@ -642,6 +642,6 @@ class QuotaManager final : public BackgroundThreadObject {
   bool mCacheUsable;
 };
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota
 
 #endif /* mozilla_dom_quota_quotamanager_h__ */
