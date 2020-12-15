@@ -3800,8 +3800,12 @@ void CodeGenerator::visitReturn(LReturn* lir) {
   DebugOnly<LAllocation*> result = lir->getOperand(0);
   MOZ_ASSERT(ToRegister(result) == JSReturnReg);
 #endif
-  // Don't emit a jump to the return label if this is the last block.
-  if (current->mir() != *gen->graph().poBegin()) {
+  // Don't emit a jump to the return label if this is the last block, as
+  // it'll fall through to the epilogue.
+  //
+  // This is -not- true however for a Generator-return, which may appear in the
+  // middle of the last block, so we should always emit the jump there.
+  if (current->mir() != *gen->graph().poBegin() || lir->isGenerator()) {
     masm.jump(&returnLabel_);
   }
 }
