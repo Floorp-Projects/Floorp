@@ -20,11 +20,6 @@ if CONFIG['MOZ_MAINTENANCE_SERVICE']:
         '/toolkit/components/maintenanceservice'
     ]
 
-if CONFIG['MOZ_UPDATE_AGENT']:
-    DIRS += [
-        '/toolkit/components/updateagent',
-    ]
-
 if CONFIG['MOZ_UPDATER']:
     # NSS (and NSPR).
     DIRS += [

@@ -410,11 +410,6 @@ bin/libfreebl_64int_3.so
 @BINPATH@/maintenanceservice_installer.exe
 #endif
 
-; [Background Update Agent]
-#ifdef MOZ_UPDATE_AGENT
-@BINPATH@/updateagent@BIN_SUFFIX@
-#endif
-
 ; [Crash Reporter]
 ;
 #ifdef MOZ_CRASHREPORTER

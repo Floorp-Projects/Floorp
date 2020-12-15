@@ -39,9 +39,6 @@ if CONFIG["MOZ_MAINTENANCE_SERVICE"] or CONFIG["MOZ_UPDATER"]:
 if CONFIG["MOZ_MAINTENANCE_SERVICE"]:
     DIRS += ["components/maintenanceservice"]
 
-if CONFIG["MOZ_UPDATE_AGENT"]:
-    DIRS += ["components/updateagent"]
-
 DIRS += ["xre"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
