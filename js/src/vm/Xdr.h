@@ -761,6 +761,10 @@ template <XDRMode mode>
 XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 template <XDRMode mode>
+XDRResult XDRParserAtom(XDRState<mode>* xdr,
+                        const frontend::ParserAtom** atomp);
+
+template <XDRMode mode>
 XDRResult XDRTaggedParserAtomIndex(
     XDRState<mode>* xdr, frontend::TaggedParserAtomIndex* taggedIndex);
 
@@ -768,6 +772,10 @@ template <XDRMode mode>
 XDRResult XDRParserAtomDataAt(XDRState<mode>* xdr,
                               const frontend::ParserAtom** atomp,
                               frontend::ParserAtomIndex index);
+
+template <XDRMode mode>
+XDRResult XDRParserAtomOrNull(XDRState<mode>* xdr,
+                              const frontend::ParserAtom** atomp);
 
 template <XDRMode mode>
 XDRResult XDRCompilationInput(XDRState<mode>* xdr,

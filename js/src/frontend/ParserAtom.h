@@ -133,15 +133,6 @@ class TaggedParserAtomIndex {
   static TaggedParserAtomIndex star() {
     return TaggedParserAtomIndex(StaticParserString1('*'));
   }
-  static TaggedParserAtomIndex arguments() {
-    return TaggedParserAtomIndex(WellKnownAtomId::arguments);
-  }
-  static TaggedParserAtomIndex dotThis() {
-    return TaggedParserAtomIndex(WellKnownAtomId::dotThis);
-  }
-  static TaggedParserAtomIndex dotGenerator() {
-    return TaggedParserAtomIndex(WellKnownAtomId::dotGenerator);
-  }
   static TaggedParserAtomIndex null() { return TaggedParserAtomIndex(); }
 
 #ifdef DEBUG
