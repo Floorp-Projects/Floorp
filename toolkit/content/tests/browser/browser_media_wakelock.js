@@ -73,15 +73,6 @@ add_task(async function testCheckWakelockWhenChangeTabVisibility() {
     lockAudio: true,
     lockVideo: true,
   });
-  await checkWakelockWhenChangeTabVisibility({
-    description: "playing a PIP video",
-    url: "file_video.html",
-    additionalParams: {
-      elementIdForEnteringPIPMode: "v",
-    },
-    lockAudio: true,
-    lockVideo: true,
-  });
 });
 
 /**
@@ -114,14 +105,13 @@ async function checkWakelockWhenChangeTabVisibility({
 
   info(`switch media tab to background`);
   await BrowserTestUtils.switchTab(window.gBrowser, originalTab);
-  const isPageConsideredAsForeground = !!additionalParams?.elementIdForEnteringPIPMode;
   await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
     needLock: lockAudio,
-    isForegroundLock: isPageConsideredAsForeground,
+    isForegroundLock: false,
   });
   await waitForExpectedWakeLockState(VIDEO_WAKELOCK_NAME, {
     needLock: lockVideo,
-    isForegroundLock: isPageConsideredAsForeground,
+    isForegroundLock: false,
   });
 
   info(`switch media tab to foreground again`);
@@ -142,10 +132,7 @@ async function checkWakelockWhenChangeTabVisibility({
   BrowserTestUtils.removeTab(mediaTab);
 }
 
-async function waitUntilVideoStarted(
-  tab,
-  { muted, volume, elementIdForEnteringPIPMode } = {}
-) {
+async function waitUntilVideoStarted(tab, { muted, volume } = {}) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [muted, volume],
@@ -170,10 +157,4 @@ async function waitUntilVideoStarted(
       );
     }
   );
-  if (elementIdForEnteringPIPMode) {
-    tab.PIPWindow = await triggerPictureInPicture(
-      tab.linkedBrowser,
-      elementIdForEnteringPIPMode
-    );
-  }
 }
