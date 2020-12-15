@@ -794,7 +794,6 @@ package org.mozilla.geckoview {
     method @UiThread default public void onCloseRequest(@NonNull GeckoSession);
     method @UiThread default public void onContextMenu(@NonNull GeckoSession, int, int, @NonNull GeckoSession.ContentDelegate.ContextElement);
     method @UiThread default public void onCrash(@NonNull GeckoSession);
-    method @Deprecated @DeprecationSchedule(version=85,id="on-external-response") @UiThread default public void onExternalResponse(@NonNull GeckoSession, @NonNull GeckoSession.WebResponseInfo);
     method @UiThread default public void onExternalResponse(@NonNull GeckoSession, @NonNull WebResponse);
     method @UiThread default public void onFirstComposite(@NonNull GeckoSession);
     method @UiThread default public void onFirstContentfulPaint(@NonNull GeckoSession);
