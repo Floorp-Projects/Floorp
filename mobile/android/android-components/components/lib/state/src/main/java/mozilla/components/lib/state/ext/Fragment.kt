@@ -78,6 +78,7 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
  * to at least STARTED state then the latest [State] and further will be passed to the [Flow] again.
  * By default, the fragment itself is used as a [LifecycleOwner].
  */
+@MainThread
 @ExperimentalCoroutinesApi // Flow
 fun <S : State, A : Action> Fragment.consumeFlow(
     from: Store<S, A>,
