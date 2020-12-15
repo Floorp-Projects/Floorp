@@ -38,7 +38,7 @@ jobs:
 
     cron:
         description: Cron Job for Updatebot
-        run-on-projects: ['holly']
+        run-on-projects: []
         treeherder:
             kind: other
             platform: updatebot/all
