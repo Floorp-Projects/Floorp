@@ -1771,7 +1771,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
 }
 
 static bool CheckFrame(JSContext* cx, BaselineFrame* frame) {
-  MOZ_ASSERT(!frame->script()->isGenerator());
   MOZ_ASSERT(!frame->isDebuggerEvalFrame());
   MOZ_ASSERT(!frame->isEvalFrame());
 
