@@ -5887,6 +5887,37 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   Register scratch2 = regs.takeAny();
   Label loop, loopDone;
   masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch2);
+
+  static_assert(sizeof(Value) == 8);
+  static_assert(JitStackAlignment == 16 || JitStackAlignment == 8);
+  // If JitStackValueAlignment == 1, then we were already correctly aligned on
+  // entry, as guaranteed by the assertStackAlignment at the entry to this
+  // function.
+  if (JitStackValueAlignment > 1) {
+    Register alignment = regs.takeAny();
+    masm.moveStackPtrTo(alignment);
+    masm.alignJitStackBasedOnNArgs(scratch2, false);
+
+    // Compute alignment adjustment.
+    masm.subStackPtrFrom(alignment);
+
+    // Some code, like BaselineFrame::trace, will inspect the whole range of
+    // the stack frame. In order to ensure that garbage data left behind from
+    // previous activations doesn't confuse other machinery, we zero out the
+    // alignment bytes.
+    Label alignmentZero;
+    masm.branchPtr(Assembler::Equal, alignment, ImmWord(0), &alignmentZero);
+
+    // Since we know prior to the stack alignment that the stack was 8 byte
+    // aligned, and JitStackAlignment is 8 or 16 bytes, if we are doing an
+    // alignment then we -must- have aligned by subtracting 8 bytes from
+    // the stack pointer.
+    //
+    // So we can freely store a valid double here.
+    masm.storeValue(DoubleValue(0), Address(masm.getStackPointer(), 0));
+    masm.bind(&alignmentZero);
+  }
+
   masm.branchTest32(Assembler::Zero, scratch2, scratch2, &loopDone);
   masm.bind(&loop);
   {
