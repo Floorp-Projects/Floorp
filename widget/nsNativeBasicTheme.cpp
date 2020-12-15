@@ -107,18 +107,19 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
                                                       NS_EVENT_STATE_ACTIVE);
   bool isHovered = !isDisabled && aState.HasState(NS_EVENT_STATE_HOVER);
   bool isChecked = aState.HasState(NS_EVENT_STATE_CHECKED);
+  bool isIndeterminate = aState.HasState(NS_EVENT_STATE_INDETERMINATE);
 
   sRGBColor backgroundColor = sColorWhite;
   sRGBColor borderColor = sColorGrey40;
   if (isDisabled) {
-    if (isChecked) {
+    if (isChecked || isIndeterminate) {
       backgroundColor = borderColor = sColorGrey40Alpha50;
     } else {
       backgroundColor = sColorWhiteAlpha50;
       borderColor = sColorGrey40Alpha50;
     }
   } else {
-    if (isChecked) {
+    if (isChecked || isIndeterminate) {
       if (isPressed) {
         backgroundColor = borderColor = sColorAccentDarker;
       } else if (isHovered) {
