@@ -248,9 +248,7 @@ class PromptFeature private constructor(
                         } else if (!it.loading) {
                             promptAbuserDetector.resetJSAlertAbuseState()
                         } else if (it.loading) {
-                            if (activePromptRequest is SelectLoginPrompt) {
-                                loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
-                            }
+                            dismissLoginSelectPrompt()
                         }
                         activePromptRequest = it.promptRequest
                     }
@@ -265,9 +263,8 @@ class PromptFeature private constructor(
                     state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url
                 )
             }.collect {
-                if (activePromptRequest is SelectLoginPrompt) {
-                    loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
-                }
+                dismissLoginSelectPrompt()
+
                 val prompt = activePrompt?.get()
                 if (prompt?.shouldDismissOnLoad() == true) {
                     prompt.dismiss()
