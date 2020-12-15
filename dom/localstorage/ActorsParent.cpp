@@ -46,7 +46,6 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
-#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -4832,15 +4831,8 @@ void Datastore::NoteFinishedPrepareDatastoreOp(
 
   mPrepareDatastoreOps.RemoveEntry(aPrepareDatastoreOp);
 
-  // XXX Can we store a strong reference to the quota client ourselves to avoid
-  // going through mConnection?
-  if (mConnection) {
-    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
-        "PrepareDatastoreOp finished"_ns);
-  } else {
-    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
-    // which resolves this case.
-  }
+  QuotaManager::GetRef().MaybeRecordShutdownStep(
+      quota::Client::LS, "PrepareDatastoreOp finished"_ns);
 
   MaybeClose();
 }
@@ -4862,15 +4854,8 @@ void Datastore::NoteFinishedPrivateDatastore() {
 
   mHasLivePrivateDatastore = false;
 
-  // XXX Can we store a strong reference to the quota client ourselves to avoid
-  // going through mConnection?
-  if (mConnection) {
-    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
-        "PrivateDatastore finished"_ns);
-  } else {
-    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
-    // which resolves this case.
-  }
+  QuotaManager::GetRef().MaybeRecordShutdownStep(
+      quota::Client::LS, "PrivateDatastore finished"_ns);
 
   MaybeClose();
 }
@@ -4896,15 +4881,8 @@ void Datastore::NoteFinishedPreparedDatastore(
 
   mPreparedDatastores.RemoveEntry(aPreparedDatastore);
 
-  // XXX Can we store a strong reference to the quota client ourselves to avoid
-  // going through mConnection?
-  if (mConnection) {
-    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
-        "PreparedDatastore finished"_ns);
-  } else {
-    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
-    // which resolves this case.
-  }
+  QuotaManager::GetRef().MaybeRecordShutdownStep(
+      quota::Client::LS, "PreparedDatastore finished"_ns);
 
   MaybeClose();
 }
@@ -4929,15 +4907,8 @@ void Datastore::NoteFinishedDatabase(Database* aDatabase) {
 
   mDatabases.RemoveEntry(aDatabase);
 
-  // XXX Can we store a strong reference to the quota client ourselves to avoid
-  // going through mConnection?
-  if (mConnection) {
-    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
-        "Database finished"_ns);
-  } else {
-    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
-    // which resolves this case.
-  }
+  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
+                                                 "Database finished"_ns);
 
   MaybeClose();
 }
@@ -5598,15 +5569,8 @@ void Datastore::CleanupMetadata() {
   MOZ_ASSERT(gDatastores->Get(mGroupAndOrigin.mOrigin));
   gDatastores->Remove(mGroupAndOrigin.mOrigin);
 
-  // XXX Can we store a strong reference to the quota client ourselves to avoid
-  // going through mConnection?
-  if (mConnection) {
-    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
-        "Datastore removed"_ns);
-  } else {
-    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
-    // which resolves this case.
-  }
+  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
+                                                 "Datastore removed"_ns);
 
   if (!gDatastores->Count()) {
     gDatastores = nullptr;
@@ -5805,8 +5769,8 @@ void Database::AllowToClose() {
   MOZ_ASSERT(gLiveDatabases);
   gLiveDatabases->RemoveElement(this);
 
-  // XXX Record removal from gLiveDatabase here as well, once we have an easy
-  // way to record a shutdown step here.
+  QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
+                                                 "Live database removed"_ns);
 
   if (gLiveDatabases->IsEmpty()) {
     gLiveDatabases = nullptr;
@@ -8040,15 +8004,8 @@ void PrepareDatastoreOp::CleanupMetadata() {
   MOZ_ASSERT(gPrepareDatastoreOps);
   gPrepareDatastoreOps->RemoveElement(this);
 
-  // XXX Can we store a strong reference to the quota client ourselves to avoid
-  // going through mConnection?
-  if (mConnection) {
-    mConnection->GetQuotaClient()->MaybeRecordShutdownStep(
-        "PrepareDatastoreOp completed"_ns);
-  } else {
-    // XXX Bug 1681670 will change reporting to go to the quota manager instead,
-    // which resolves this case.
-  }
+  QuotaManager::GetRef().MaybeRecordShutdownStep(
+      quota::Client::LS, "PrepareDatastoreOp completed"_ns);
 
   if (gPrepareDatastoreOps->IsEmpty()) {
     gPrepareDatastoreOps = nullptr;
