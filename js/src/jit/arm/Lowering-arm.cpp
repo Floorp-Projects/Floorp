@@ -129,11 +129,10 @@ void LIRGenerator::visitUnbox(MUnbox* unbox) {
   defineReuseInput(lir, unbox, 0);
 }
 
-void LIRGenerator::visitReturn(MReturn* ret) {
-  MDefinition* opd = ret->getOperand(0);
+void LIRGenerator::visitReturnImpl(MDefinition* opd, bool isGenerator) {
   MOZ_ASSERT(opd->type() == MIRType::Value);
 
-  LReturn* ins = new (alloc()) LReturn;
+  LReturn* ins = new (alloc()) LReturn(isGenerator);
   ins->setOperand(0, LUse(JSReturnReg_Type));
   ins->setOperand(1, LUse(JSReturnReg_Data));
   fillBoxUses(ins, 0, opd);
