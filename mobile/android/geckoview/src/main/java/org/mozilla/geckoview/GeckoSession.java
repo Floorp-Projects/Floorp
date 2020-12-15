@@ -399,9 +399,7 @@ public class GeckoSession {
                     delegate.onFullScreen(GeckoSession.this, true);
                 } else if ("GeckoView:FullScreenExit".equals(event)) {
                     delegate.onFullScreen(GeckoSession.this, false);
-                } else if ("GeckoView:ExternalResponse".equals(event)) {
-                    delegate.onExternalResponse(GeckoSession.this, new WebResponseInfo(message));
-                } else if ("GeckoView:WebAppManifest".equals(event)) {
+                }  else if ("GeckoView:WebAppManifest".equals(event)) {
                     final GeckoBundle manifest = message.getBundle("manifest");
                     if (manifest == null) {
                         return;
@@ -3479,17 +3477,6 @@ public class GeckoSession {
         default void onContextMenu(@NonNull GeckoSession session,
                                    int screenX, int screenY,
                                    @NonNull ContextElement element) {}
-
-        /**
-         * @deprecated Use {@link ContentDelegate#onExternalResponse(GeckoSession, WebResponse)}
-         * instead. This method will be removed in GeckoView 85.
-         */
-        @Deprecated // Bug 1530022
-        @DeprecationSchedule(version = 85, id = "on-external-response")
-        @SuppressWarnings("checkstyle:javadocmethod")
-        @UiThread
-        default void onExternalResponse(@NonNull GeckoSession session,
-                                        @NonNull WebResponseInfo response) {}
 
         /**
          * This is fired when there is a response that cannot be handled

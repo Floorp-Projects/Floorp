@@ -44,40 +44,6 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
-    @Test fun download() {
-        // disable test on pgo for frequently failing Bug 1543355
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
-
-        val executor = GeckoWebExecutor(sessionRule.runtime)
-        sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
-
-        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
-
-            @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
-                return null
-            }
-
-            @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
-                return null
-            }
-
-            @AssertCalled(count = 1)
-            override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
-                assertThat("Uri should start with data:", response.uri, startsWith("blob:"))
-                assertThat("Content type should match", response.contentType, equalTo("text/plain"))
-                assertThat("Content length should be non-zero", response.contentLength, greaterThan(0L))
-                assertThat("Filename should match", response.filename, equalTo("download.txt"))
-
-                val req = WebRequest.Builder(response.uri).addHeader("Accept", "text/plain").build()
-
-                val res = sessionRule.waitForResult(executor.fetch(req))
-                assertThat("We should download the thing", String(res.body?.readBytes()!!), equalTo("Downloaded Data"))
-            }
-        })
-    }
-
     @Test fun downloadOneRequest() {
         // disable test on pgo for frequently failing Bug 1543355
         assumeThat(sessionRule.env.isDebugBuild, equalTo(true))

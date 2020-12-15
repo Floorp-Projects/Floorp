@@ -16,9 +16,6 @@
 
 #include "JavaBuiltins.h"
 
-static const char16_t kExternalResponseMessage[] =
-    u"GeckoView:ExternalResponse";
-
 class StreamListener final : public mozilla::GeckoViewStreamListener {
  public:
   explicit StreamListener(nsWindow* aWindow)
@@ -84,62 +81,6 @@ NS_IMETHODIMP GeckoViewExternalAppService::CreateListener(
 
   RefPtr<nsWindow> window = nsWindow::From(widget);
   MOZ_ASSERT(window);
-
-  widget::EventDispatcher* dispatcher = window->GetEventDispatcher();
-  MOZ_ASSERT(dispatcher);
-
-  if (!dispatcher->HasListener(kExternalResponseMessage)) {
-    return NS_ERROR_ABORT;
-  }
-
-  AutoTArray<jni::String::LocalRef, 4> keys;
-  AutoTArray<jni::Object::LocalRef, 4> values;
-
-  nsCOMPtr<nsIURI> uri;
-  if (NS_WARN_IF(NS_FAILED(channel->GetURI(getter_AddRefs(uri))))) {
-    return NS_ERROR_ABORT;
-  }
-
-  nsAutoCString uriSpec;
-  if (NS_WARN_IF(NS_FAILED(uri->GetDisplaySpec(uriSpec)))) {
-    return NS_ERROR_ABORT;
-  }
-
-  keys.AppendElement(jni::StringParam(u"uri"_ns));
-  values.AppendElement(jni::StringParam(uriSpec));
-
-  nsCString contentType;
-  if (NS_WARN_IF(NS_FAILED(channel->GetContentType(contentType)))) {
-    return NS_ERROR_ABORT;
-  }
-
-  keys.AppendElement(jni::StringParam(u"contentType"_ns));
-  values.AppendElement(jni::StringParam(contentType));
-
-  int64_t contentLength = 0;
-  if (NS_WARN_IF(NS_FAILED(channel->GetContentLength(&contentLength)))) {
-    return NS_ERROR_ABORT;
-  }
-
-  keys.AppendElement(jni::StringParam(u"contentLength"_ns));
-  values.AppendElement(java::sdk::Long::ValueOf(contentLength));
-
-  nsString filename;
-  if (NS_SUCCEEDED(channel->GetContentDispositionFilename(filename))) {
-    keys.AppendElement(jni::StringParam(u"filename"_ns));
-    values.AppendElement(jni::StringParam(filename));
-  }
-
-  auto bundleKeys = jni::ObjectArray::New<jni::String>(keys.Length());
-  auto bundleValues = jni::ObjectArray::New<jni::Object>(values.Length());
-  for (size_t i = 0; i < keys.Length(); ++i) {
-    bundleKeys->SetElement(i, keys[i]);
-    bundleValues->SetElement(i, values[i]);
-  }
-  auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
-
-  Unused << NS_WARN_IF(
-      NS_FAILED(dispatcher->Dispatch(kExternalResponseMessage, bundle)));
 
   RefPtr<StreamListener> listener = new StreamListener(window);
 
