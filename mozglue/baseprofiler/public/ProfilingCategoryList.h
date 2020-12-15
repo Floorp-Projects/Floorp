@@ -66,6 +66,11 @@
     SUBCATEGORY(GCCC, GCCC_MajorGC_Compact, "Major GC (Compact)") \
     SUBCATEGORY(GCCC, GCCC_UnmarkGray, "Unmark Gray") \
     SUBCATEGORY(GCCC, GCCC_Barrier, "Barrier") \
+    SUBCATEGORY(GCCC, GCCC_FreeSnowWhite, "CC (Free Snow White)") \
+    SUBCATEGORY(GCCC, GCCC_BuildGraph, "CC (Build Graph)") \
+    SUBCATEGORY(GCCC, GCCC_ScanRoots, "CC (Scan Roots)") \
+    SUBCATEGORY(GCCC, GCCC_CollectWhite, "CC (Collect White)") \
+    SUBCATEGORY(GCCC, GCCC_Finalize, "CC (Finalize)") \
   END_CATEGORY \
   BEGIN_CATEGORY(NETWORK, "Network", "lightblue") \
     SUBCATEGORY(NETWORK, NETWORK, "Other") \
