@@ -197,3 +197,13 @@ type = "boolean"
 bug-numbers = [1676162]
 is-public = true
 default-value = false
+
+[http3]
+title = "experimental-features-http3"
+description = "experimental-features-http3-description"
+restart-required = false
+preference = "network.http.http3.enabled"
+type = "boolean"
+bug-numbers = [1682539]
+is-public = true
+default-value = false
