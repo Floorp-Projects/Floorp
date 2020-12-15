@@ -3109,6 +3109,21 @@ download_notification:
       - fenix-core@mozilla.com
     expires: "2021-04-01"
 
+downloads_misc:
+  download_added:
+    type: event
+    description:
+      A counter for how many times something is downloaded in the app.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11578
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16730
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-04-01"
+
 user_specified_search_engines:
   custom_engine_added:
     type: event

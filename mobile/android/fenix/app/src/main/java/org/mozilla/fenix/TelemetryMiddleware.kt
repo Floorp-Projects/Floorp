@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
@@ -48,7 +49,7 @@ class TelemetryMiddleware(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
+    @Suppress("TooGenericExceptionCaught", "ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -85,6 +86,9 @@ class TelemetryMiddleware(
                         redirectChains.remove(action.sessionId)
                     }
                 }
+            }
+            is DownloadAction.AddDownloadAction -> {
+                metrics.track(Event.DownloadAdded)
             }
         }
 

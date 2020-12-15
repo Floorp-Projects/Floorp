@@ -7,11 +7,13 @@ package org.mozilla.fenix
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -215,5 +217,12 @@ class TelemetryMiddlewareTest {
 
         store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://mozilla.org")).joinBlocking()
         assertNull(telemetryMiddleware.redirectChains[tab.id])
+    }
+
+    @Test
+    fun `WHEN a download is added THEN the downloads count is updated`() {
+        store.dispatch(DownloadAction.AddDownloadAction(mock())).joinBlocking()
+
+        verify { metrics.track(Event.DownloadAdded) }
     }
 }

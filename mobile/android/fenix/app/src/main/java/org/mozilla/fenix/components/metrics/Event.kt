@@ -113,6 +113,7 @@ sealed class Event {
     object NotificationDownloadPause : Event()
     object NotificationDownloadResume : Event()
     object NotificationDownloadTryAgain : Event()
+    object DownloadAdded : Event()
     object NotificationMediaPlay : Event()
     object NotificationMediaPause : Event()
     object TopSiteOpenDefault : Event()
