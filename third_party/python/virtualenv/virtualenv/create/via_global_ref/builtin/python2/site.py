@@ -52,7 +52,8 @@ def load_host_site():
     add_site_dir = sys.modules["site"].addsitedir
     for path in json.loads(site_packages):
         full_path = os.path.abspath(os.path.join(here, path.encode("utf-8")))
-        add_site_dir(full_path)
+        if full_path not in sys.path:
+            add_site_dir(full_path)
 
 
 sep = "\\" if sys.platform == "win32" else "/"  # no os module here yet - poor mans version
