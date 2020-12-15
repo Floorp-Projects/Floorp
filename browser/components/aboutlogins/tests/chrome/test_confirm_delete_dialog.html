@@ -109,15 +109,15 @@ add_task(async function test_dialog_focus_trap() {
   ok(displayElChildSpan.tabIndex === -1, "The tabIndex value for elements with a hardcoded tabIndex attribute should be reset to '-1'.")
   ok(displayElChildSpan.dataset.oldTabIndex === "0", "Existing tabIndex values should be stored in `dataset.oldTabIndex`.")
 
-  const isActiveElemDialogOrHTML = (elemTagName) => {
-    return (["HTML", "CONFIRMATION-DIALOG"].includes(elemTagName));
+  const isActiveElemDialogOrHTMLorBODY = (elemTagName) => {
+    return (["HTML", "BODY", "CONFIRMATION-DIALOG"].includes(elemTagName));
   }
 
   let iterator = 0;
   while(iterator < 20) {
     sendKey("TAB");
     isnot(document.activeElement.id, "display-child", "The display-child element should not gain focus when the dialog is showing");
-    is(isActiveElemDialogOrHTML(document.activeElement.tagName), true, "The confirmation-dialog should always have focus when the dialog is showing");
+    ok(isActiveElemDialogOrHTMLorBODY(document.activeElement.tagName), "The confirmation-dialog should always have focus when the dialog is showing");
     iterator++;
   }
 });
