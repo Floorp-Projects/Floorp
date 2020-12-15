@@ -108,6 +108,12 @@ add_task(async function() {
       "{\n\tx: 1,\n\ty: 2\n}",
       "{\n    x: 1,\n    y: 2\n}",
     ],
+    [
+      "async function test() {await new Promise(res => {})}",
+      "async function test() {\n  await new Promise(res => {})\n}",
+      "async function test() {\n\tawait new Promise(res => {})\n}",
+      "async function test() {\n    await new Promise(res => {})\n}",
+    ],
   ];
 
   const prettyPrintButton = toolbar.querySelector(
