@@ -123,6 +123,9 @@ extern bool enableWasmMultiValue;
 #ifdef ENABLE_WASM_SIMD
 extern bool enableWasmSimd;
 #endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+extern bool enableWasmSimdWormhole;
+#endif
 #ifdef ENABLE_WASM_EXCEPTIONS
 extern bool enableWasmExceptions;
 #endif

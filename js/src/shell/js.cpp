@@ -516,6 +516,9 @@ bool shell::enableWasmMultiValue = true;
 #ifdef ENABLE_WASM_SIMD
 bool shell::enableWasmSimd = true;
 #endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+bool shell::enableWasmSimdWormhole = false;
+#endif
 bool shell::enableWasmVerbose = false;
 bool shell::enableTestWasmAwaitTier2 = false;
 bool shell::enableSourcePragmas = true;
@@ -10412,6 +10415,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_SIMD
   enableWasmSimd = !op.getBoolOption("no-wasm-simd");
 #endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+  enableWasmSimdWormhole = op.getBoolOption("wasm-simd-wormhole");
+#endif
 #ifdef ENABLE_WASM_EXCEPTIONS
   enableWasmExceptions = op.getBoolOption("wasm-exceptions");
 #endif
@@ -10459,6 +10465,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
+#endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+      .setWasmSimdWormhole(enableWasmSimdWormhole)
 #endif
 #ifdef ENABLE_WASM_EXCEPTIONS
       .setWasmExceptions(enableWasmExceptions)
@@ -10851,6 +10860,9 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
+#endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+      .setWasmSimdWormhole(enableWasmSimdWormhole)
 #endif
 #ifdef ENABLE_WASM_EXCEPTIONS
       .setWasmExceptions(enableWasmExceptions)
@@ -11299,6 +11311,12 @@ int main(int argc, char** argv, char** envp) {
                         "Disable experimental wasm SIMD features") ||
 #else
       !op.addBoolOption('\0', "no-wasm-simd", "No-op") ||
+#endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+      !op.addBoolOption('\0', "wasm-simd-wormhole",
+                        "Enable wasm SIMD wormhole (UTSL)") ||
+#else
+      !op.addBoolOption('\0', "wasm-simd-wormhole", "No-op") ||
 #endif
 #ifdef ENABLE_WASM_EXCEPTIONS
       !op.addBoolOption('\0', "wasm-exceptions",

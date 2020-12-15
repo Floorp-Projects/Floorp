@@ -575,6 +575,12 @@ class BaseAssembler : public GenericAssembler {
     m_formatter.twoByteOp(OP2_XADD_EvGv, offset, base, index, scale, srcdest);
   }
 
+  void vpmaddubsw_rr(XMMRegisterID src1, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    threeByteOpSimd("vpmaddubsw", VEX_PD, OP3_PMADDUBSW_VdqWdq, ESCAPE_38, src1,
+                    src0, dst);
+  }
+
   void vpaddb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vpaddb", VEX_PD, OP2_PADDB_VdqWdq, src1, src0, dst);
   }
