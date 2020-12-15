@@ -7360,10 +7360,6 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
   Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS,
                         NS_SUCCEEDED(mStatus));
 
-  nsAutoCString key = (mTransaction->IsHttp3Used()) ? "http3"_ns : "no_http3"_ns;
-  Telemetry::Accumulate(Telemetry::HTTP3_CHANNEL_ONSTART_SUCCESS, key,
-                        NS_SUCCEEDED(mStatus));
-
   if (gTRRService && gTRRService->IsConfirmed()) {
     Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_TRR,
                           TRRService::AutoDetectedKey(), NS_SUCCEEDED(mStatus));
