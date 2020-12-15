@@ -11,7 +11,7 @@
 
 /* globals exportFunction */
 
-if (navigator.userAgent.includes("Mac OS X 11.0;")) {
+if (navigator.userAgent.includes("Mac OS X 11.")) {
   console.info(
     "The user agent has been overridden for compatibility reasons. See https://bugzilla.mozilla.org/show_bug.cgi?id=1680516 for details."
   );
@@ -19,7 +19,7 @@ if (navigator.userAgent.includes("Mac OS X 11.0;")) {
   let originalUA = navigator.userAgent;
   Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
     get: exportFunction(function() {
-      return originalUA.replace("Mac OS X 11.0;", "Mac OS X 10.16;");
+      return originalUA.replace(/Mac OS X 11\.(\d)+;/, "Mac OS X 10.16;");
     }, window),
 
     set: exportFunction(function() {}, window),
