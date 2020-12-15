@@ -15,6 +15,10 @@ ac_add_options --disable-elf-hack
 # to analyze fuzzing bugs with rr.
 ac_add_options --enable-fuzzing
 
+# Enable ASan for rust code. This is done for specific build tasks rather than
+# globally in mozconfig.asan because it requires an unstable -Z flag.
+export RUSTFLAGS="$RUSTFLAGS -Zsanitizer=address"
+
 export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
 
 # Include 'SourceRepository' in application.ini which
