@@ -2331,13 +2331,14 @@ nsresult nsUrlClassifierDBService::Shutdown() {
   //    is to avoid racing for Classifier::mUpdateThread
   //    between main thread and the worker thread. (Both threads
   //    would access Classifier::mUpdateThread.)
-  if (mWorker->IsDBOpened()) {
-    using Worker = nsUrlClassifierDBServiceWorker;
-    RefPtr<nsIRunnable> r = NewRunnableMethod(
-        "nsUrlClassifierDBServiceWorker::FlushAndDisableAsyncUpdate", mWorker,
-        &Worker::FlushAndDisableAsyncUpdate);
-    SyncRunnable::DispatchToThread(gDbBackgroundThread, r);
-  }
+  //    This event is dispatched unconditionally to avoid
+  //    accessing mWorker->mClassifier on the main thread, which
+  //    would be a race.
+  using Worker = nsUrlClassifierDBServiceWorker;
+  RefPtr<nsIRunnable> r = NewRunnableMethod(
+      "nsUrlClassifierDBServiceWorker::FlushAndDisableAsyncUpdate", mWorker,
+      &Worker::FlushAndDisableAsyncUpdate);
+  SyncRunnable::DispatchToThread(gDbBackgroundThread, r);
   // At this point the update thread has been shut down and
   // the worker thread should only have at most one event,
   // which is the callback event.
