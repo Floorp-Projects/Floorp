@@ -13,6 +13,11 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v86
+- Removed deprecated [`ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`].
+  Use [`ContentDelegate#onExternalResponse(GeckoSession, WebResponse)`][82.2] instead.
+  ([bug 1665157]({{bugzilla}}1665157))
+
 ## v85
 - Added [`WebExtension.BrowsingDataDelegate`][85.1] that can be used to
   implement the WebExtension `browsingData` API.
@@ -855,4 +860,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e31b1976d9efcce57d7e46996f807b68160a4943
+[api-version]: 71df230eba3e3e1bda47ea54767d81aaf592b115
