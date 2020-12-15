@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
 ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 const { PermissionTestUtils } = ChromeUtils.import(
@@ -66,6 +68,12 @@ async function testIdentityPopupGeoContainer(
   containerVisible,
   timestampVisible
 ) {
+  // The container holds the timestamp element, therefore we can't have a
+  // visible timestamp without the container.
+  if (timestampVisible && !containerVisible) {
+    ok(false, "Can't have timestamp without container");
+  }
+
   // Only call openIdentityPopup if popup is closed, otherwise it does not resolve
   if (!gIdentityHandler._identityBox.hasAttribute("open")) {
     await openIdentityPopup();
@@ -74,25 +82,27 @@ async function testIdentityPopupGeoContainer(
   let checkContainer = checkForDOMElement(
     containerVisible,
     "identity-popup-geo-container"
-  ).then(container => {
-    if (containerVisible && timestampVisible) {
-      is(
-        container.childElementCount,
-        2,
-        "identity-popup-geo-container should have two elements."
-      );
-      is(
-        container.childNodes[0].classList[0],
-        "identity-popup-permission-item",
-        "Geo container should have permission item."
-      );
-      is(
-        container.childNodes[1].id,
-        "geo-access-indicator-item",
-        "Geo container should have indicator item."
-      );
-    }
-  });
+  );
+
+  if (containerVisible && timestampVisible) {
+    // Wait for the geo container to be fully populated.
+    // The time label is computed async.
+    let container = await checkContainer;
+    await BrowserTestUtils.waitForCondition(
+      () => container.childElementCount == 2,
+      "identity-popup-geo-container should have two elements."
+    );
+    is(
+      container.childNodes[0].classList[0],
+      "identity-popup-permission-item",
+      "Geo container should have permission item."
+    );
+    is(
+      container.childNodes[1].id,
+      "geo-access-indicator-item",
+      "Geo container should have indicator item."
+    );
+  }
   let checkAccessIndicator = checkForDOMElement(
     timestampVisible,
     "geo-access-indicator-item"
