@@ -4,8 +4,10 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.util.JsonReader
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -51,6 +53,64 @@ class GeckoEngineSessionStateTest {
         }
 
         val state = GeckoEngineSessionState.fromJSON(json)
+
+        assertNull(state.actualState)
+    }
+
+    @Test
+    fun `from - deserializes state`() {
+        val json = JSONObject().apply {
+            put("GECKO_STATE", "{ 'foo': 'bar' }")
+        }
+
+        val reader = JsonReader(json.toString().reader())
+        val state = GeckoEngineSessionState.from(reader)
+
+        assertEquals("""{"foo":"bar"}""", state.actualState.toString())
+    }
+
+    @Test
+    fun `from - invalid JSON returns empty state`() {
+        val json = JSONObject().apply {
+            put("nothing", "helpful")
+        }
+
+        val reader = JsonReader(json.toString().reader())
+        val state = GeckoEngineSessionState.from(reader)
+
+        assertNull(state.actualState)
+    }
+
+    @Test
+    fun `from - invalid complex JSON returns empty state`() {
+        val json = JSONObject().apply {
+            put("nothing", "helpful")
+
+            val child = JSONObject().apply {
+                put("a", 1)
+                put("b", "hellow")
+            }
+            put("something", child)
+
+            put("What", JSONObject.NULL)
+            put("things", JSONArray(arrayOf("A", "B", "C")))
+        }
+
+        val reader = JsonReader(json.toString().reader())
+        val state = GeckoEngineSessionState.from(reader)
+
+        assertNull(state.actualState)
+    }
+
+    @Test
+    fun `from - broken JSON returns empty state`() {
+        val json = """
+            {
+                "nothing": "sure
+        """.trimIndent()
+
+        val reader = JsonReader(json.reader())
+        val state = GeckoEngineSessionState.from(reader)
 
         assertNull(state.actualState)
     }
