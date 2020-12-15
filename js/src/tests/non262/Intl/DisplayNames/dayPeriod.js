@@ -1,4 +1,6 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.DisplayNames&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.hasOwnProperty('addIntlExtras'))
+
+addMozIntlDisplayNames(this);
 
 const tests = {
   "en": {

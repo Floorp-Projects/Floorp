@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.DisplayNames&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
 
 const tests = {
   "en": {
@@ -67,14 +67,11 @@ const tests = {
 };
 
 for (let [locale, localeTests] of Object.entries(tests)) {
-  let defaultCalendar = new Intl.DateTimeFormat(locale).resolvedOptions().calendar;
-
   for (let [style, styleTests] of Object.entries(localeTests)) {
     let dn = new Intl.DisplayNames(locale, {type: "script", style});
 
     let resolved = dn.resolvedOptions();
     assertEq(resolved.locale, locale);
-    assertEq(resolved.calendar, defaultCalendar);
     assertEq(resolved.style, style);
     assertEq(resolved.type, "script");
     assertEq(resolved.fallback, "code");
