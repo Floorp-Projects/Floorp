@@ -398,10 +398,13 @@ add_task(async function ensure_fullscreen_cursor() {
   const controlsSpacer = getElementWithinVideo(video, "controlsSpacer");
   is(controlsSpacer.hasAttribute("hideCursor"), true, "Cursor is hidden");
 
-  // Wiggle the mouse a bit
-  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { type: "mousemove" });
-
-  await SimpleTest.promiseWaitForCondition(() => !controlsSpacer.hasAttribute("hideCursor"), "Waiting for hideCursor attribute to disappear");
+  let delta = 1;
+  await SimpleTest.promiseWaitForCondition(() => {
+    // Wiggle the mouse a bit
+    synthesizeMouse(video, playButtonCenterX  + delta, playButtonCenterY + delta, { type: "mousemove" });
+    delta = !delta;
+    return !controlsSpacer.hasAttribute("hideCursor");
+  }, "Waiting for hideCursor attribute to disappear");
   is(controlsSpacer.hasAttribute("hideCursor"), false, "Cursor is shown");
 
   // Restore
