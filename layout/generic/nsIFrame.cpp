@@ -1800,7 +1800,9 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
 
   return ShouldApplyOverflowClipping(disp) == PhysicalAxes::None &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
-         !SVGIntegrationUtils::UsingEffectsForFrame(this);
+         !SVGIntegrationUtils::UsingEffectsForFrame(this) &&
+         !effects->HasMixBlendMode() &&
+         disp->mIsolation != StyleIsolation::Isolate;
 }
 
 bool nsIFrame::Combines3DTransformWithAncestors(
