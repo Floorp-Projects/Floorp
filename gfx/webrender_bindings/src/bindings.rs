@@ -531,6 +531,8 @@ extern "C" {
     fn gfx_critical_error(msg: *const c_char);
     fn gfx_critical_note(msg: *const c_char);
     fn record_telemetry_time(probe: TelemetryProbe, time_ns: u64);
+    fn gfx_wr_set_crash_annotation(annotation: CrashAnnotation, value: *const c_char);
+    fn gfx_wr_clear_crash_annotation(annotation: CrashAnnotation);
 }
 
 struct CppNotifier {
@@ -581,6 +583,29 @@ impl RenderNotifier for CppNotifier {
         unsafe {
             wr_notifier_external_event(self.window_id, event.unwrap());
         }
+    }
+}
+
+struct MozCrashAnnotator;
+
+unsafe impl Send for MozCrashAnnotator {}
+
+impl CrashAnnotator for MozCrashAnnotator {
+    fn set(&self, annotation: CrashAnnotation, value: &str) {
+        let value = CString::new(value).unwrap();
+        unsafe {
+            gfx_wr_set_crash_annotation(annotation, value.as_ptr());
+        }
+    }
+
+    fn clear(&self, annotation: CrashAnnotation) {
+        unsafe {
+            gfx_wr_clear_crash_annotation(annotation);
+        }
+    }
+
+    fn box_clone(&self) -> Box<dyn CrashAnnotator> {
+        Box::new(MozCrashAnnotator)
     }
 }
 
@@ -1183,6 +1208,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>) -> De
 
     Device::new(
         gl,
+        Some(Box::new(MozCrashAnnotator)),
         resource_override_path,
         use_optimized_shaders,
         upload_method,
@@ -1564,6 +1590,7 @@ pub extern "C" fn wr_window_new(
             workers.clone(),
             workers_low_priority,
         ))),
+        crash_annotator: Some(Box::new(MozCrashAnnotator)),
         workers: Some(workers),
         thread_listener: Some(Box::new(GeckoProfilerThreadListener::new())),
         size_of_op: Some(size_of_op),

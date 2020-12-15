@@ -5,6 +5,7 @@
 use super::super::shader_source::{OPTIMIZED_SHADERS, UNOPTIMIZED_SHADERS};
 use api::{ColorF, ImageDescriptor, ImageFormat};
 use api::{MixBlendMode, ImageBufferKind, VoidPtrToSizeFn};
+use api::{CrashAnnotator, CrashAnnotation, CrashAnnotatorGuard};
 use api::units::*;
 use euclid::default::Transform3D;
 use gleam::gl;
@@ -687,7 +688,7 @@ impl ProgramSourceInfo {
         // Hash the renderer name.
         hasher.write(device.capabilities.renderer_name.as_bytes());
 
-        let full_name = &Self::full_name(name, features);
+        let full_name = &Self::make_full_name(name, features);
 
         let optimized_source = if device.use_optimized_shaders {
             OPTIMIZED_SHADERS.get(&(gl_version, full_name)).or_else(|| {
@@ -769,7 +770,7 @@ impl ProgramSourceInfo {
     }
 
     fn compute_source(&self, device: &Device, kind: ShaderKind) -> String {
-        let full_name = Self::full_name(self.base_filename, &self.features);
+        let full_name = self.full_name();
         match self.source_type {
             ProgramSourceType::Optimized(gl_version) => {
                 let shader = OPTIMIZED_SHADERS
@@ -794,12 +795,16 @@ impl ProgramSourceInfo {
         }
     }
 
-    fn full_name(base_filename: &'static str, features: &[&'static str]) -> String {
+    fn make_full_name(base_filename: &'static str, features: &[&'static str]) -> String {
         if features.is_empty() {
             base_filename.to_string()
         } else {
             format!("{}_{}", base_filename, features.join("_"))
         }
+    }
+
+    fn full_name(&self) -> String {
+        Self::make_full_name(self.base_filename, &self.features)
     }
 }
 
@@ -1072,6 +1077,7 @@ pub struct Device {
 
     // debug
     inside_frame: bool,
+    crash_annotator: Option<Box<dyn CrashAnnotator>>,
 
     // resources
     resource_override_path: Option<PathBuf>,
@@ -1320,6 +1326,7 @@ impl From<DrawTarget> for ReadTarget {
 impl Device {
     pub fn new(
         mut gl: Rc<dyn gl::Gl>,
+        crash_annotator: Option<Box<dyn CrashAnnotator>>,
         resource_override_path: Option<PathBuf>,
         use_optimized_shaders: bool,
         upload_method: UploadMethod,
@@ -1591,6 +1598,7 @@ impl Device {
         Device {
             gl,
             base_gl: None,
+            crash_annotator,
             resource_override_path,
             use_optimized_shaders,
             upload_method,
@@ -2039,6 +2047,12 @@ impl Device {
         program: &mut Program,
         descriptor: &VertexDescriptor,
     ) -> Result<(), ShaderError> {
+        let _guard = CrashAnnotatorGuard::new(
+            &self.crash_annotator,
+            CrashAnnotation::CompileShader,
+            &program.source_info.full_name()
+        );
+
         assert!(!program.is_initialized());
         let mut build_program = true;
         let info = &program.source_info;

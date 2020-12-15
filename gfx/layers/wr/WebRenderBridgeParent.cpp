@@ -8,6 +8,7 @@
 
 #include "CompositableHost.h"
 #include "gfxEnv.h"
+#include "gfxPlatform.h"
 #include "gfxOTSUtils.h"
 #include "GeckoProfiler.h"
 #include "GLContext.h"
@@ -117,11 +118,7 @@ bool is_glcontext_angle(void* glcontext_ptr) {
 }
 
 const char* gfx_wr_resource_path_override() {
-  const char* resourcePath = PR_GetEnv("WR_RESOURCE_PATH");
-  if (!resourcePath || resourcePath[0] == '\0') {
-    return nullptr;
-  }
-  return resourcePath;
+  return gfxPlatform::WebRenderResourcePathOverride();
 }
 
 bool gfx_wr_use_optimized_shaders() {
@@ -175,6 +172,41 @@ void record_telemetry_time(mozilla::wr::TelemetryProbe aProbe,
       MOZ_ASSERT(false);
       break;
   }
+}
+
+static CrashReporter::Annotation FromWrCrashAnnotation(
+    mozilla::wr::CrashAnnotation aAnnotation) {
+  switch (aAnnotation) {
+    case mozilla::wr::CrashAnnotation::CompileShader:
+      return CrashReporter::Annotation::GraphicsCompileShader;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled annotation!");
+      return CrashReporter::Annotation::Count;
+  }
+}
+
+extern "C" {
+
+void gfx_wr_set_crash_annotation(mozilla::wr::CrashAnnotation aAnnotation,
+                                 const char* aValue) {
+  MOZ_ASSERT(aValue);
+
+  auto annotation = FromWrCrashAnnotation(aAnnotation);
+  if (annotation == CrashReporter::Annotation::Count) {
+    return;
+  }
+
+  CrashReporter::AnnotateCrashReport(annotation, nsDependentCString(aValue));
+}
+
+void gfx_wr_clear_crash_annotation(mozilla::wr::CrashAnnotation aAnnotation) {
+  auto annotation = FromWrCrashAnnotation(aAnnotation);
+  if (annotation == CrashReporter::Annotation::Count) {
+    return;
+  }
+
+  CrashReporter::RemoveCrashReportAnnotation(annotation);
+}
 }
 
 namespace mozilla {
