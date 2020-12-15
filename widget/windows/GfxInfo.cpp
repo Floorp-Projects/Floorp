@@ -1206,6 +1206,9 @@ static bool OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_GPU_PROCESS:
     // We can mostly assume that ANGLE will work
     case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
+    // Software WebRender is our Basic compositor replacement. It needs to
+    // always work.
+    case nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE:
       return false;
     default:
       return true;
