@@ -161,31 +161,40 @@ template <XDRMode mode>
   return Ok();
 };
 
-template <typename NameType>
-struct CanEncodeNameType {
-  static constexpr bool value = false;
-};
+template <XDRMode mode>
+static XDRResult XDRParserBindingName(XDRState<mode>* xdr,
+                                      ParserBindingName& bnamep) {
+  // We'll be encoding the binding-name flags in a byte.
+  uint8_t flags = 0;
+  const ParserAtom* atom = nullptr;
 
-template <>
-struct CanEncodeNameType<TaggedParserAtomIndex> {
-  static constexpr bool value = true;
-};
+  if (mode == XDR_ENCODE) {
+    flags = bnamep.flagsForXDR();
+    atom = bnamep.name();
+  }
+
+  // Handle the binding name flags.
+  MOZ_TRY(xdr->codeUint8(&flags));
+
+  // Handle the atom itself, which may be null.
+  MOZ_TRY(XDRParserAtomOrNull(xdr, &atom));
+
+  if (mode == XDR_ENCODE) {
+    return Ok();
+  }
+
+  MOZ_ASSERT(mode == XDR_DECODE);
+  bnamep = ParserBindingName::fromXDR(atom, flags);
+  return Ok();
+}
 
 template <typename ScopeDataT, XDRMode mode>
 static XDRResult XDRParserTrailingNames(XDRState<mode>* xdr, ScopeDataT& data,
                                         uint32_t length) {
-#ifdef __cpp_lib_has_unique_object_representations
-  // We check endianess before decoding so if structures are fully packed, we
-  // may transcode them directly as raw bytes.
-  static_assert(std::has_unique_object_representations<
-                    AbstractTrailingNamesArray<TaggedParserAtomIndex>>(),
-                "trailingNames structure must be fully packed");
-#endif
-  static_assert(CanEncodeNameType<typename ScopeDataT::NameType>::value);
-
-  MOZ_TRY(xdr->codeBytes(
-      data.trailingNames.start(),
-      sizeof(AbstractBindingName<TaggedParserAtomIndex>) * length));
+  // Handle each atom in turn.
+  for (uint32_t i = 0; i < length; i++) {
+    MOZ_TRY(XDRParserBindingName(xdr, data.trailingNames[i]));
+  }
 
   return Ok();
 }

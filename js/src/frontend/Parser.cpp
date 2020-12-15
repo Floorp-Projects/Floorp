@@ -1020,22 +1020,21 @@ Maybe<ParserGlobalScopeData*> NewGlobalScopeData(JSContext* cx,
         bool isTopLevelFunction =
             bi.declarationKind() == DeclarationKind::BodyLevelFunction;
 
-        ParserBindingName binding(bi.name()->toIndex(), closedOver,
-                                  isTopLevelFunction);
+        ParserBindingName binding(bi.name(), closedOver, isTopLevelFunction);
         if (!vars.append(binding)) {
           return Nothing();
         }
         break;
       }
       case BindingKind::Let: {
-        ParserBindingName binding(bi.name()->toIndex(), closedOver);
+        ParserBindingName binding(bi.name(), closedOver);
         if (!lets.append(binding)) {
           return Nothing();
         }
         break;
       }
       case BindingKind::Const: {
-        ParserBindingName binding(bi.name()->toIndex(), closedOver);
+        ParserBindingName binding(bi.name(), closedOver);
         if (!consts.append(binding)) {
           return Nothing();
         }
@@ -1081,7 +1080,7 @@ Maybe<ParserModuleScopeData*> NewModuleScopeData(JSContext* cx,
   bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
     // Imports are indirect bindings and must not be given known slots.
-    ParserBindingName binding(bi.name()->toIndex(),
+    ParserBindingName binding(bi.name(),
                               (allBindingsClosedOver || bi.closedOver()) &&
                                   bi.kind() != BindingKind::Import);
     switch (bi.kind()) {
@@ -1148,7 +1147,7 @@ Maybe<ParserEvalScopeData*> NewEvalScopeData(JSContext* cx,
     bool isTopLevelFunction =
         bi.declarationKind() == DeclarationKind::BodyLevelFunction;
 
-    ParserBindingName binding(bi.name()->toIndex(), true, isTopLevelFunction);
+    ParserBindingName binding(bi.name(), true, isTopLevelFunction);
     if (!vars.append(binding)) {
       return Nothing();
     }
@@ -1217,7 +1216,7 @@ Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
         }
       }
 
-      bindName = ParserBindingName(name->toIndex(), closedOver);
+      bindName = ParserBindingName(name, closedOver);
     }
 
     if (!positionalFormals.append(bindName)) {
@@ -1226,7 +1225,7 @@ Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
   }
 
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-    ParserBindingName binding(bi.name()->toIndex(),
+    ParserBindingName binding(bi.name(),
                               allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
       case BindingKind::FormalParameter:
@@ -1242,7 +1241,7 @@ Maybe<ParserFunctionScopeData*> NewFunctionScopeData(JSContext* cx,
         // exprs, which induces a separate var environment, should be the
         // special bindings.
         MOZ_ASSERT_IF(hasParameterExprs,
-                      FunctionScope::isSpecialName(cx, bi.name()->toIndex()));
+                      FunctionScope::isSpecialName(cx, bi.name()));
         if (!vars.append(binding)) {
           return Nothing();
         }
@@ -1316,7 +1315,7 @@ Maybe<ParserVarScopeData*> NewVarScopeData(JSContext* cx,
 
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
     if (bi.kind() == BindingKind::Var) {
-      ParserBindingName binding(bi.name()->toIndex(),
+      ParserBindingName binding(bi.name(),
                                 allBindingsClosedOver || bi.closedOver());
       if (!vars.append(binding)) {
         return Nothing();
@@ -1367,7 +1366,7 @@ Maybe<ParserLexicalScopeData*> NewLexicalScopeData(JSContext* cx,
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
 
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-    ParserBindingName binding(bi.name()->toIndex(),
+    ParserBindingName binding(bi.name(),
                               allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
       case BindingKind::Let:

@@ -38,8 +38,6 @@ class JSONPrinter {
 
   ~JSONPrinter();
 
-  void setIndentLevel(int indentLevel) { indentLevel_ = indentLevel; }
-
   void beginObject();
   void beginList();
   void beginObjectProperty(const char* name);

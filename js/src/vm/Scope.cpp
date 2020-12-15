@@ -151,8 +151,8 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
 
 Shape* js::CreateEnvironmentShape(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
-    AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
-    const JSClass* cls, uint32_t numSlots, uint32_t baseShapeFlags) {
+    AbstractBindingIter<const frontend::ParserAtom>& bi, const JSClass* cls,
+    uint32_t numSlots, uint32_t baseShapeFlags) {
   RootedShape shape(cx,
                     EmptyEnvironmentShape(cx, cls, numSlots, baseShapeFlags));
   if (!shape) {
@@ -164,7 +164,7 @@ Shape* js::CreateEnvironmentShape(
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
-      name = atomCache.getExistingAtomAt(cx, bi.name());
+      name = bi.name()->toExistingJSAtom(cx, atomCache);
       MOZ_ASSERT(name);
       cx->markAtom(name);
       shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), stackBase,
@@ -213,17 +213,13 @@ static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
 }
 
 template <typename ConcreteScope>
-static void MarkParserScopeData(JSContext* cx,
-                                ParserScopeData<ConcreteScope>* data,
-                                frontend::CompilationStencil& stencil) {
+static void MarkParserScopeData(ParserScopeData<ConcreteScope>* data) {
   auto* names = data->trailingNames.start();
   uint32_t length = data->length;
   for (size_t i = 0; i < length; i++) {
-    auto index = names[i].name();
-    if (!index) {
-      continue;
+    if (const ParserAtom* name = names[i].name()) {
+      name->markUsedByStencil();
     }
-    stencil.getParserAtomAt(cx, index)->markUsedByStencil();
   }
 }
 
@@ -326,7 +322,7 @@ static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
   for (size_t i = 0; i < length; i++) {
     JSAtom* jsatom = nullptr;
     if (names[i].name()) {
-      jsatom = atomCache.getExistingAtomAt(cx, names[i].name());
+      jsatom = names[i].name()->toExistingJSAtom(cx, atomCache);
       MOZ_ASSERT(jsatom);
     }
     jsatoms.infallibleAppend(jsatom);
@@ -340,19 +336,14 @@ static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
   }
 
   // Memcopy the head of the structure directly, no translation needed.
-  //
-  // NOTE: Parser and VM scope-data should have the same fields and layout for
-  //       the head of the structure, but unfortunately it's hard to assert
-  //       that the head of the structure has the same size, because the
-  //       padding before `trailingNames` can be different for parser (uint32_t)
-  //       and VM (JSAtom pointer).
-  memcpy(scopeData.get(), data,
-         offsetof(ParserScopeData<ConcreteScope>, trailingNames));
+  static_assert(sizeof(ConcreteData) == sizeof(ParserScopeData<ConcreteScope>),
+                "Parser and VM scope-data structures should be same size.");
+  memcpy(scopeData.get(), data, offsetof(ConcreteData, trailingNames));
 
   // Initialize new scoped names.
   auto* namesOut = scopeData->trailingNames.start();
   for (size_t i = 0; i < length; i++) {
-    namesOut[i] = names[i].copyWithNewAtom(jsatoms[i].get());
+    namesOut[i] = names[i].transformName(jsatoms[i].get());
   }
 
   return scopeData;
@@ -950,11 +941,10 @@ bool FunctionScope::isSpecialName(JSContext* cx, JSAtom* name) {
 }
 
 /* static */
-bool FunctionScope::isSpecialName(JSContext* cx,
-                                  frontend::TaggedParserAtomIndex name) {
-  return name == frontend::TaggedParserAtomIndex::arguments() ||
-         name == frontend::TaggedParserAtomIndex::dotThis() ||
-         name == frontend::TaggedParserAtomIndex::dotGenerator();
+bool FunctionScope::isSpecialName(JSContext* cx, const ParserAtom* name) {
+  return name == cx->parserNames().arguments ||
+         name == cx->parserNames().dotThis ||
+         name == cx->parserNames().dotGenerator;
 }
 
 /* static */
@@ -1353,7 +1343,7 @@ template
                    HandleScope enclosing, MutableHandleScope scope);
 
 template <>
-Zone* ModuleScope::AbstractData<JSAtom>::zone() const {
+Zone* ModuleScope::AbstractData<BindingName>::zone() const {
   return module ? module->zone() : nullptr;
 }
 
@@ -1666,9 +1656,8 @@ void BaseAbstractBindingIter<NameT>::init(
 
 template void BaseAbstractBindingIter<JSAtom>::init(
     LexicalScope::AbstractData<JSAtom>&, uint32_t, uint8_t);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    LexicalScope::AbstractData<frontend::TaggedParserAtomIndex>&, uint32_t,
-    uint8_t);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    LexicalScope::AbstractData<const ParserAtom>&, uint32_t, uint8_t);
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
@@ -1690,8 +1679,8 @@ void BaseAbstractBindingIter<NameT>::init(
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     FunctionScope::AbstractData<JSAtom>&, uint8_t);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    FunctionScope::AbstractData<frontend::TaggedParserAtomIndex>&, uint8_t);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    FunctionScope::AbstractData<const ParserAtom>&, uint8_t);
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(VarScope::AbstractData<NameT>& data,
@@ -1709,8 +1698,8 @@ void BaseAbstractBindingIter<NameT>::init(VarScope::AbstractData<NameT>& data,
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     VarScope::AbstractData<JSAtom>&, uint32_t);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    VarScope::AbstractData<frontend::TaggedParserAtomIndex>&, uint32_t);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    VarScope::AbstractData<const ParserAtom>&, uint32_t);
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
@@ -1726,8 +1715,8 @@ void BaseAbstractBindingIter<NameT>::init(
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     GlobalScope::AbstractData<JSAtom>&);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    GlobalScope::AbstractData<frontend::TaggedParserAtomIndex>&);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    GlobalScope::AbstractData<const ParserAtom>&);
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(EvalScope::AbstractData<NameT>& data,
@@ -1756,8 +1745,8 @@ void BaseAbstractBindingIter<NameT>::init(EvalScope::AbstractData<NameT>& data,
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     EvalScope::AbstractData<JSAtom>&, bool);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    EvalScope::AbstractData<frontend::TaggedParserAtomIndex>&, bool);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    EvalScope::AbstractData<const ParserAtom>&, bool);
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
@@ -1775,8 +1764,8 @@ void BaseAbstractBindingIter<NameT>::init(
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     ModuleScope::AbstractData<JSAtom>&);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    ModuleScope::AbstractData<frontend::TaggedParserAtomIndex>&);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    ModuleScope::AbstractData<const ParserAtom>&);
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
@@ -1793,8 +1782,8 @@ void BaseAbstractBindingIter<NameT>::init(
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     WasmInstanceScope::AbstractData<JSAtom>&);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    WasmInstanceScope::AbstractData<frontend::TaggedParserAtomIndex>&);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    WasmInstanceScope::AbstractData<const ParserAtom>&);
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
@@ -1811,8 +1800,8 @@ void BaseAbstractBindingIter<NameT>::init(
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     WasmFunctionScope::AbstractData<JSAtom>&);
-template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
-    WasmFunctionScope::AbstractData<frontend::TaggedParserAtomIndex>&);
+template void BaseAbstractBindingIter<const ParserAtom>::init(
+    WasmFunctionScope::AbstractData<const ParserAtom>&);
 
 PositionalFormalParameterIter::PositionalFormalParameterIter(Scope* scope)
     : BindingIter(scope) {
@@ -1928,7 +1917,7 @@ bool ScopeStencil::createForFunctionScope(
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<FunctionScope>(cx, data, stencil);
+    MarkParserScopeData<FunctionScope>(data);
   } else {
     data = NewEmptyParserScopeData<FunctionScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -1942,7 +1931,7 @@ bool ScopeStencil::createForFunctionScope(
 
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
-  if (!FunctionScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
+  if (!FunctionScope::prepareForScopeCreation<const ParserAtom>(
           cx, &data, hasParameterExprs, needsEnvironment, fun, &envShape)) {
     return false;
   }
@@ -1968,7 +1957,7 @@ bool ScopeStencil::createForLexicalScope(
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<LexicalScope>(cx, data, stencil);
+    MarkParserScopeData<LexicalScope>(data);
   } else {
     data = NewEmptyParserScopeData<LexicalScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -1977,7 +1966,7 @@ bool ScopeStencil::createForLexicalScope(
   }
 
   mozilla::Maybe<uint32_t> envShape;
-  if (!LexicalScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
+  if (!LexicalScope::prepareForScopeCreation<const ParserAtom>(
           cx, kind, firstFrameSlot, &data, &envShape)) {
     return false;
   }
@@ -2001,7 +1990,7 @@ bool ScopeStencil::createForVarScope(
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<VarScope>(cx, data, stencil);
+    MarkParserScopeData<VarScope>(data);
   } else {
     data = NewEmptyParserScopeData<VarScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2010,7 +1999,7 @@ bool ScopeStencil::createForVarScope(
   }
 
   mozilla::Maybe<uint32_t> envShape;
-  if (!VarScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
+  if (!VarScope::prepareForScopeCreation<const ParserAtom>(
           cx, kind, &data, firstFrameSlot, needsEnvironment, &envShape)) {
     return false;
   }
@@ -2034,7 +2023,7 @@ bool ScopeStencil::createForGlobalScope(
     ParserGlobalScopeData* data, ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<GlobalScope>(cx, data, stencil);
+    MarkParserScopeData<GlobalScope>(data);
   } else {
     data = NewEmptyParserScopeData<GlobalScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2071,7 +2060,7 @@ bool ScopeStencil::createForEvalScope(
     ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<EvalScope>(cx, data, stencil);
+    MarkParserScopeData<EvalScope>(data);
   } else {
     data = NewEmptyParserScopeData<EvalScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2081,8 +2070,8 @@ bool ScopeStencil::createForEvalScope(
 
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
-  if (!EvalScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, kind, &data, &envShape)) {
+  if (!EvalScope::prepareForScopeCreation<const ParserAtom>(cx, kind, &data,
+                                                            &envShape)) {
     return false;
   }
 
@@ -2106,7 +2095,7 @@ bool ScopeStencil::createForModuleScope(
     ScopeIndex* index) {
   frontend::CompilationStencil& stencil = compilationInfo.stencil;
   if (data) {
-    MarkParserScopeData<ModuleScope>(cx, data, stencil);
+    MarkParserScopeData<ModuleScope>(data);
   } else {
     data = NewEmptyParserScopeData<ModuleScope>(cx, compilationInfo.alloc);
     if (!data) {
@@ -2124,8 +2113,8 @@ bool ScopeStencil::createForModuleScope(
   // Copy it now that we're creating a permanent VM scope.
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
-  if (!ModuleScope::prepareForScopeCreation<frontend::TaggedParserAtomIndex>(
-          cx, &data, module, &envShape)) {
+  if (!ModuleScope::prepareForScopeCreation<const ParserAtom>(cx, &data, module,
+                                                              &envShape)) {
     return false;
   }
 
