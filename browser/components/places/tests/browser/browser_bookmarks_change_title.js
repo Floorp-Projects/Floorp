@@ -120,8 +120,15 @@ add_task(async function test_change_title_from_Toolbar() {
       EventUtils.synthesizeMouseAtCenter(properties, {});
     },
     async function test(dialogWin) {
+      // Ensure the dialog has initialized.
+      await TestUtils.waitForCondition(() => dialogWin.document.title);
+
       let namepicker = dialogWin.document.getElementById(
         "editBMPanel_namePicker"
+      );
+      Assert.ok(
+        dialogWin.document.title.includes(titleAfterFirstUpdate),
+        "Dialog window title should include bookmark title."
       );
       Assert.equal(
         namepicker.value,
