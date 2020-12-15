@@ -11,15 +11,12 @@ const FORMATTED_HTML = `<body>
     div {
       color: red;
     }
+
     span {
       text-decoration: underline;
     }
   </style>
-  <div>
-    <span>
-      <em>Hello</em>
-    </span>
-  </div>
+  <div><span><em>Hello</em></span></div>
   <script>
     console.log("Hello!");
   </script>
