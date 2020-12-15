@@ -15,7 +15,7 @@ from .py_spec import PythonSpec
 class Builtin(Discover):
     def __init__(self, options):
         super(Builtin, self).__init__(options)
-        self.python_spec = options.python if options.python else [sys.executable]
+        self.python_spec = options.python
         self.app_data = options.app_data
 
     @classmethod
@@ -25,26 +25,18 @@ class Builtin(Discover):
             "--python",
             dest="python",
             metavar="py",
-            type=str,
-            action="append",
-            default=[],
-            help="interpreter based on what to create environment (path/identifier) "
-            "- by default use the interpreter where the tool is installed - first found wins",
+            help="target interpreter for which to create a virtual (either absolute path or identifier string)",
+            default=sys.executable,
         )
 
     def run(self):
-        for python_spec in self.python_spec:
-            result = get_interpreter(python_spec, self.app_data)
-            if result is not None:
-                return result
-        return None
+        return get_interpreter(self.python_spec, self.app_data)
 
     def __repr__(self):
         return ensure_str(self.__unicode__())
 
     def __unicode__(self):
-        spec = self.python_spec[0] if len(self.python_spec) == 1 else self.python_spec
-        return "{} discover of python_spec={!r}".format(self.__class__.__name__, spec)
+        return "{} discover of python_spec={!r}".format(self.__class__.__name__, self.python_spec)
 
 
 def get_interpreter(key, app_data=None):
