@@ -25,7 +25,7 @@ def register(graph_config):
     Import all modules that are siblings of this one, triggering decorators in
     the process.
     """
-    _import_modules(["job", "routes", "target_tasks", "worker_types"])
+    _import_modules(["job", "routes", "target_tasks", "worker_types", "release_promotion"])
     _fill_treeherder_groups(graph_config)
 
 

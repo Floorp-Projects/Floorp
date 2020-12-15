@@ -69,3 +69,8 @@ workers:
 
 scriptworker:
     scope-prefix: project:mobile:android-components:releng
+
+release-promotion:
+    flavors:
+        ship:
+            target-tasks-method: release
