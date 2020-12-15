@@ -76,10 +76,6 @@ var ModuleManager = {
 
     window.document.documentElement.appendChild(aBrowser);
 
-    // TODO: Bug 1635914 remove workaround. In theory this should not be needed
-    // as docShell should be active by default, but this is not currently the
-    // case so we force it here.
-    aBrowser.docShellIsActive = true;
     // By default all layers are discarded when a browser is set to inactive.
     // GeckoView by default sets browsers to inactive every time they're not
     // visible. To avoid flickering when changing tabs, we preserve layers for
