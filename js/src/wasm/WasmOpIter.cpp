@@ -519,6 +519,12 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_SIMD_OP(OpKind::Load);
         case SimdOp::V128Store:
           WASM_SIMD_OP(OpKind::Store);
+#  ifdef ENABLE_WASM_SIMD_WORMHOLE
+        case SimdOp::MozWHSELFTEST:
+        case SimdOp::MozWHPMADDUBSW:
+        case SimdOp::MozWHPMADDWD:
+          MOZ_CRASH("Should not be seen");
+#  endif
       }
       break;
     }

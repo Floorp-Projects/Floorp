@@ -1088,6 +1088,7 @@ struct FeatureArgs {
         multiValue(false),
         v128(false),
         hugeMemory(false),
+        simdWormhole(false),
         exceptions(false) {}
   FeatureArgs(const FeatureArgs&) = default;
   FeatureArgs& operator=(const FeatureArgs&) = default;
@@ -1108,6 +1109,7 @@ struct FeatureArgs {
   bool multiValue;
   bool v128;
   bool hugeMemory;
+  bool simdWormhole;
   bool exceptions;
 };
 
