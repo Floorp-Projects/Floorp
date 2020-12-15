@@ -21,6 +21,9 @@ class RenderBufferTextureHost final : public RenderTextureHost {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
+  size_t Bytes() override {
+    return mSize.width * mSize.height * BytesPerPixel(mFormat);
+  }
   class RenderBufferData {
    public:
     RenderBufferData(uint8_t* aData, size_t aBufferSize)

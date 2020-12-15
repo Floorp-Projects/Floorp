@@ -145,6 +145,11 @@ wr::WrExternalImage RenderAndroidHardwareBufferTextureHost::Lock(
 
 void RenderAndroidHardwareBufferTextureHost::Unlock() {}
 
+size_t RenderAndroidHardwareBufferTextureHost::Bytes() {
+  return GetSize().width * GetSize().height
+    * BytesPerPixel(mAndroidHardwareBuffer->mFormat);
+}
+
 void RenderAndroidHardwareBufferTextureHost::DeleteTextureHandle() {
   if (!mTextureHandle) {
     return;

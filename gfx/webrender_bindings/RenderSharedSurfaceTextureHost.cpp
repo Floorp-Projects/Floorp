@@ -45,5 +45,9 @@ void RenderSharedSurfaceTextureHost::Unlock() {
   }
 }
 
+size_t RenderSharedSurfaceTextureHost::Bytes() {
+  return mSurface->Stride() * mSurface->GetSize().height;
+}
+
 }  // namespace wr
 }  // namespace mozilla

@@ -175,6 +175,15 @@ void RenderThread::DoAccumulateMemoryReport(
         mProgramCache->Raw(), &WebRenderRendererMallocSizeOf);
   }
 
+  size_t renderTextureMemory = 0;
+  {
+    MutexAutoLock lock(mRenderTextureMapLock);
+    for (const auto& entry : mRenderTextures) {
+      renderTextureMemory += entry.second->Bytes();
+    }
+  }
+  aReport.render_texture_hosts = renderTextureMemory;
+
   aPromise->Resolve(aReport, __func__);
 }
 
