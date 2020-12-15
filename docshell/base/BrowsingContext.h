@@ -63,6 +63,7 @@ class CanonicalBrowsingContext;
 class ChildSHistory;
 class ContentParent;
 class Element;
+struct LoadingSessionHistoryInfo;
 template <typename>
 struct Nullable;
 template <typename T>
@@ -721,6 +722,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // Check if it is allowed to open a popup from the current browsing
   // context or any of its ancestors.
   bool IsPopupAllowed();
+
+  void SessionHistoryCommit(const LoadingSessionHistoryInfo& aInfo,
+                            uint32_t aLoadType, bool aHadActiveEntry,
+                            bool aPersist, bool aCloneEntryChildren);
 
   // Set a new active entry on this browsing context. This is used for
   // implementing history.pushState/replaceState and same document navigations.

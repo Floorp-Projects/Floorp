@@ -2921,6 +2921,44 @@ bool BrowsingContext::IsPopupAllowed() {
   return false;
 }
 
+void BrowsingContext::SessionHistoryCommit(
+    const LoadingSessionHistoryInfo& aInfo, uint32_t aLoadType,
+    bool aHadActiveEntry, bool aPersist, bool aCloneEntryChildren) {
+  nsID changeID = {};
+  if (XRE_IsContentProcess()) {
+    RefPtr<ChildSHistory> rootSH = Top()->GetChildSessionHistory();
+    if (rootSH) {
+      if (!aInfo.mLoadIsFromSessionHistory) {
+        // We try to mimic as closely as possible what will happen in
+        // CanonicalBrowsingContext::SessionHistoryCommit. We'll be
+        // incrementing the session history length if we're not replacing,
+        // this is a top-level load or it's not the initial load in an iframe,
+        // and ShouldUpdateSessionHistory(loadType) returns true.
+        // It is possible that this leads to wrong length temporarily, but
+        // so would not having the check for replace.
+        if (!LOAD_TYPE_HAS_FLAGS(
+                aLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY) &&
+            (IsTop() || aHadActiveEntry) &&
+            ShouldUpdateSessionHistory(aLoadType)) {
+          changeID = rootSH->AddPendingHistoryChange();
+        }
+      } else {
+        // This is a load from session history, so we can update
+        // index and length immediately.
+        rootSH->SetIndexAndLength(aInfo.mRequestedIndex,
+                                  aInfo.mSessionHistoryLength, changeID);
+      }
+    }
+    ContentChild* cc = ContentChild::GetSingleton();
+    mozilla::Unused << cc->SendHistoryCommit(this, aInfo.mLoadId, changeID,
+                                             aLoadType, aPersist,
+                                             aCloneEntryChildren);
+  } else {
+    Canonical()->SessionHistoryCommit(aInfo.mLoadId, changeID, aLoadType,
+                                      aPersist, aCloneEntryChildren);
+  }
+}
+
 void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
     uint32_t aLoadType, uint32_t aUpdatedCacheKey) {
