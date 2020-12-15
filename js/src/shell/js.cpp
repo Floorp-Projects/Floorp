@@ -10706,6 +10706,22 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.baselineJit = false;
   }
 
+  if (op.getBoolOption("no-warp-async")) {
+    jit::JitOptions.warpAsync = false;
+  }
+
+  if (op.getBoolOption("no-warp-generator")) {
+    jit::JitOptions.warpGenerator = false;
+  }
+
+  if (op.getBoolOption("warp-async")) {
+    jit::JitOptions.warpAsync = true;
+  }
+
+  if (op.getBoolOption("warp-generator")) {
+    jit::JitOptions.warpGenerator = true;
+  }
+
   if (op.getBoolOption("no-ion")) {
     jit::JitOptions.ion = false;
   }
@@ -11458,6 +11474,13 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "baseline",
                         "Enable baseline compiler (default)") ||
       !op.addBoolOption('\0', "no-baseline", "Disable baseline compiler") ||
+      !op.addBoolOption('\0', "no-warp-async",
+                        "Don't Warp compile Async Functions") ||
+      !op.addBoolOption('\0', "no-warp-generator",
+                        "Warp compile Generator Functions") ||
+      !op.addBoolOption('\0', "warp-async", "Warp compile Async Functions") ||
+      !op.addBoolOption('\0', "warp-generator",
+                        "Don't Warp compile Generator Functions") ||
       !op.addBoolOption('\0', "baseline-eager",
                         "Always baseline-compile methods") ||
       !op.addIntOption(

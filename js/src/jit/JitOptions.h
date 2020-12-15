@@ -58,6 +58,8 @@ struct DefaultJitOptions {
   bool baselineJit;
   bool ion;
   bool warpBuilder;
+  bool warpAsync;
+  bool warpGenerator;
   bool jitForTrustedPrincipals;
   bool nativeRegExp;
   bool forceInlineCaches;
