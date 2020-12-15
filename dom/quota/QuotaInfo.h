@@ -8,10 +8,9 @@
 #define dom_quota_quotainfo_h__
 
 #include <utility>
-#include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsString.h"
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
 
 struct GroupAndOrigin {
   nsCString mGroup;
@@ -27,6 +26,6 @@ struct QuotaInfo : GroupAndOrigin {
         mSuffix{std::move(aSuffix)} {}
 };
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota
 
 #endif

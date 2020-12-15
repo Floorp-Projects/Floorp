@@ -12,17 +12,13 @@
 
 // Global includes
 #include <cstdint>
-#include "ErrorList.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/quota/PersistenceType.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaInfo.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "nsFileStreams.h"
 #include "nsISupports.h"
-#include "nsStringFwd.h"
 #include "nscore.h"
 
 class nsIFile;
@@ -31,7 +27,9 @@ namespace mozilla {
 class Runnable;
 }
 
-BEGIN_QUOTA_NAMESPACE
+namespace mozilla::dom::quota {
+
+class QuotaObject;
 
 template <class FileStreamBase>
 class FileQuotaStream : public FileStreamBase {
@@ -134,6 +132,6 @@ already_AddRefed<FileStream> CreateFileStream(
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
-END_QUOTA_NAMESPACE
+}  // namespace mozilla::dom::quota
 
 #endif /* mozilla_dom_quota_filestreams_h__ */
