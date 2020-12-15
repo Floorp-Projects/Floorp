@@ -883,6 +883,12 @@ static bool WasmSimdExperimentalEnabled(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool WasmSimdWormholeEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(wasm::SimdWormholeAvailable(cx));
+  return true;
+}
+
 static bool WasmCompilersPresent(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6830,6 +6836,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmSimdExperimentalEnabled", WasmSimdExperimentalEnabled, 0, 0,
 "wasmSimdExperimentalEnabled()",
 "  Returns a boolean indicating whether WebAssembly SIMD experimental instructions\n"
+"  are supported by the compilers and runtime."),
+
+    JS_FN_HELP("wasmSimdWormholeEnabled", WasmSimdWormholeEnabled, 0, 0,
+"wasmSimdWormholeEnabled()",
+"  Returns a boolean indicating whether WebAssembly SIMD wormhole instructions\n"
 "  are supported by the compilers and runtime."),
 
     JS_FN_HELP("wasmReftypesEnabled", WasmReftypesEnabled, 1, 0,

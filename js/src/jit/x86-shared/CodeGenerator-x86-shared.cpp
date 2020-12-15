@@ -2585,6 +2585,20 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::I32x4DotSI16x8:
       masm.widenDotInt16x8(rhs, lhsDest);
       break;
+#  ifdef ENABLE_WASM_SIMD_WORMHOLE
+    case wasm::SimdOp::MozWHSELFTEST: {
+      static const int8_t mask[16] = {0xD, 0xE, 0xA, 0xD, 0xD, 0,   0,   0xD,
+                                      0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE};
+      masm.loadConstantSimd128(SimdConstant::CreateX16(mask), lhsDest);
+      break;
+    }
+    case wasm::SimdOp::MozWHPMADDUBSW:
+      masm.vpmaddubsw(rhs, lhsDest, lhsDest);
+      break;
+    case wasm::SimdOp::MozWHPMADDWD:
+      masm.vpmaddwd(Operand(rhs), lhsDest, lhsDest);
+      break;
+#  endif
     default:
       MOZ_CRASH("Binary SimdOp not implemented");
   }
