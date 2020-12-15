@@ -37,6 +37,9 @@ extern bool RuntimeFromMainThreadIsHeapMajorCollecting(
 extern bool CurrentThreadIsIonCompiling();
 
 extern bool CurrentThreadIsGCMarking();
+extern bool CurrentThreadIsGCSweeping();
+extern bool CurrentThreadIsGCFinalizing();
+extern bool RuntimeIsVerifyingPreBarriers(JSRuntime* runtime);
 
 #endif
 
@@ -500,8 +503,6 @@ MOZ_ALWAYS_INLINE void ReadBarrierImpl(Cell* thing) {
   }
 }
 
-void AssertSafeToSkipPreWriteBarrier(TenuredCell* thing);
-
 MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(TenuredCell* thing) {
   MOZ_ASSERT(!CurrentThreadIsIonCompiling());
   MOZ_ASSERT(!CurrentThreadIsGCMarking());
@@ -510,33 +511,35 @@ MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(TenuredCell* thing) {
     return;
   }
 
-#ifdef JS_GC_ZEAL
-  // When verifying pre barriers we need to switch on all barriers, even
-  // those on the Atoms Zone. Normally, we never enter a parse task when
-  // collecting in the atoms zone, so will filter out atoms below.
-  // Unfortuantely, If we try that when verifying pre-barriers, we'd never be
-  // able to handle off thread parse tasks at all as we switch on the verifier
-  // any time we're not doing GC. This would cause us to deadlock, as off thread
-  // parsing is meant to resume after GC work completes. Instead we filter out
-  // any off thread barriers that reach us and assert that they would normally
-  // not be possible.
-  if (!CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread())) {
-    AssertSafeToSkipPreWriteBarrier(thing);
-    return;
-  }
-#endif
-
   // Barriers can be triggered on the main thread while collecting, but are
   // disabled. For example, this happens when destroying HeapPtr wrappers.
 
-  JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
-  if (shadowZone->needsIncrementalBarrier()) {
-    MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
-    Cell* tmp = thing;
-    TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp,
-                                             "pre barrier");
-    MOZ_ASSERT(tmp == thing);
+  JS::shadow::Zone* zone = thing->shadowZoneFromAnyThread();
+  if (!zone->needsIncrementalBarrier()) {
+    return;
   }
+
+  // Barriers can be triggered on off the main thread in two situations:
+  //  - background finalization of HeapPtrs to the atoms zone
+  //  - while we are verifying pre-barriers for a worker runtime
+  // The barrier is not required in either case.
+  bool checkThread = zone->isAtomsZone();
+#ifdef JS_GC_ZEAL
+  checkThread = checkThread || zone->isSelfHostingZone();
+#endif
+  JSRuntime* runtime = thing->runtimeFromAnyThread();
+  if (checkThread && !CurrentThreadCanAccessRuntime(runtime)) {
+    MOZ_ASSERT(CurrentThreadIsGCFinalizing() ||
+               RuntimeIsVerifyingPreBarriers(runtime));
+    return;
+  }
+
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+  MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(zone));
+  Cell* tmp = thing;
+  TraceManuallyBarrieredGenericPointerEdge(zone->barrierTracer(), &tmp,
+                                           "pre barrier");
+  MOZ_ASSERT(tmp == thing);
 }
 
 MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(Cell* thing) {
