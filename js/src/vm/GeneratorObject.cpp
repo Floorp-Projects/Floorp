@@ -56,7 +56,14 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   if (frame.script()->needsArgsObj()) {
     genObj->setArgsObj(frame.argsObj());
   }
-  genObj->clearStackStorage();
+
+  RootedScript script(cx, frame.script());
+  ArrayObject* stack = NewDenseFullyAllocatedArray(cx, script->nslots());
+  if (!stack) {
+    return nullptr;
+  }
+
+  genObj->setStackStorage(*stack);
 
   if (!DebugAPI::onNewGenerator(cx, frame, genObj)) {
     return nullptr;
@@ -89,7 +96,14 @@ JSObject* AbstractGeneratorObject::createModuleGenerator(
 
   genObj->setCallee(*handlerFun);
   genObj->setEnvironmentChain(*frame.environmentChain());
-  genObj->clearStackStorage();
+
+  ArrayObject* stack =
+      NewDenseFullyAllocatedArray(cx, module->script()->nslots());
+  if (!stack) {
+    return nullptr;
+  }
+
+  genObj->setStackStorage(*stack);
 
   if (!DebugAPI::onNewGenerator(cx, frame, genObj)) {
     return nullptr;
@@ -115,15 +129,9 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
 
   if (nvalues > 0) {
     ArrayObject* stack = nullptr;
-    if (genObj->hasStackStorage()) {
-      stack = &genObj->stackStorage();
-    } else {
-      stack = NewDenseEmptyArray(cx);
-      if (!stack) {
-        return false;
-      }
-      genObj->setStackStorage(*stack);
-    }
+    MOZ_ASSERT(genObj->hasStackStorage());
+    stack = &genObj->stackStorage();
+    MOZ_ASSERT(stack->getDenseCapacity() >= nvalues);
     if (!frame.saveGeneratorSlots(cx, nvalues, stack)) {
       return false;
     }
