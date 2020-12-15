@@ -149,8 +149,8 @@ class Context final : public SafeRefCounted<Context> {
   // Only callable from the thread that created the Context.
   void CancelForCacheId(CacheId aCacheId);
 
-  void AddActivity(Activity* aActivity);
-  void RemoveActivity(Activity* aActivity);
+  void AddActivity(Activity& aActivity);
+  void RemoveActivity(Activity& aActivity);
 
   const QuotaInfo& GetQuotaInfo() const { return mQuotaInfo; }
 
@@ -200,7 +200,7 @@ class Context final : public SafeRefCounted<Context> {
 
   // Weak refs since activites must remove themselves from this list before
   // being destroyed by calling RemoveActivity().
-  nsTObserverArray<Activity*> mActivityList;
+  nsTObserverArray<NotNull<Activity*>> mActivityList;
 
   // The ThreadsafeHandle may have a strong ref back to us.  This creates
   // a ref-cycle that keeps the Context alive.  The ref-cycle is broken
