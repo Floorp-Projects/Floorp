@@ -564,7 +564,7 @@ class Context::ActionRunnable final : public nsIRunnable,
     NS_ASSERT_OWNINGTHREAD(ActionRunnable);
     MOZ_DIAGNOSTIC_ASSERT(mContext);
     MOZ_DIAGNOSTIC_ASSERT(mAction);
-    mContext->RemoveActivity(this);
+    mContext->RemoveActivity(*this);
     mContext = nullptr;
     mAction = nullptr;
   }
@@ -863,7 +863,7 @@ void Context::CancelAll() {
 
   mState = STATE_CONTEXT_CANCELED;
   mPendingActions.Clear();
-  for (auto* activity : mActivityList.ForwardRange()) {
+  for (const auto& activity : mActivityList.ForwardRange()) {
     activity->Cancel();
   }
   AllowToClose();
@@ -896,7 +896,7 @@ void Context::CancelForCacheId(CacheId aCacheId) {
   });
 
   // Cancel activities and let them remove themselves
-  for (auto* activity : mActivityList.ForwardRange()) {
+  for (const auto& activity : mActivityList.ForwardRange()) {
     if (activity->MatchesCacheId(aCacheId)) {
       activity->Cancel();
     }
@@ -984,7 +984,7 @@ void Context::DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData) {
     // for this invariant violation.
     MOZ_CRASH("Failed to dispatch ActionRunnable to target thread.");
   }
-  AddActivity(runnable.unsafeGetRawPtr());
+  AddActivity(*runnable);
 }
 
 void Context::OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
@@ -1028,18 +1028,16 @@ void Context::OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
   mPendingActions.Clear();
 }
 
-void Context::AddActivity(Activity* aActivity) {
+void Context::AddActivity(Activity& aActivity) {
   NS_ASSERT_OWNINGTHREAD(Context);
-  MOZ_DIAGNOSTIC_ASSERT(aActivity);
-  MOZ_ASSERT(!mActivityList.Contains(aActivity));
-  mActivityList.AppendElement(aActivity);
+  MOZ_ASSERT(!mActivityList.Contains(&aActivity));
+  mActivityList.AppendElement(WrapNotNullUnchecked(&aActivity));
 }
 
-void Context::RemoveActivity(Activity* aActivity) {
+void Context::RemoveActivity(Activity& aActivity) {
   NS_ASSERT_OWNINGTHREAD(Context);
-  MOZ_DIAGNOSTIC_ASSERT(aActivity);
-  MOZ_ALWAYS_TRUE(mActivityList.RemoveElement(aActivity));
-  MOZ_ASSERT(!mActivityList.Contains(aActivity));
+  MOZ_ALWAYS_TRUE(mActivityList.RemoveElement(&aActivity));
+  MOZ_ASSERT(!mActivityList.Contains(&aActivity));
 }
 
 void Context::NoteOrphanedData() {
