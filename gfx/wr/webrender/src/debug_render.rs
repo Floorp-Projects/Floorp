@@ -140,7 +140,7 @@ impl DebugRenderer {
         let tri_vao = device.create_vao(&DESC_COLOR);
 
         let font_texture = device.create_texture(
-            ImageBufferKind::Texture2DArray,
+            ImageBufferKind::Texture2D,
             ImageFormat::R8,
             debug_font_data::BMP_WIDTH,
             debug_font_data::BMP_HEIGHT,

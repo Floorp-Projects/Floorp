@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define VECS_PER_SPECIFIC_BRUSH 3
+#define WR_FEATURE_TEXTURE_2D
 
 #define COMPONENT_TRANSFER_IDENTITY 0
 #define COMPONENT_TRANSFER_TABLE 1
@@ -37,9 +38,8 @@ flat varying vec4 v_uv_sample_bounds;
 
 flat varying vec4 v_color_offset;
 
-// x: Layer index to sample.
-// y: Flag to allow perspective interpolation of UV.
-flat varying vec2 v_layer_and_perspective;
+// Flag to allow perspective interpolation of UV.
+flat varying float v_perspective;
 
 flat varying float v_amount;
 
@@ -75,8 +75,7 @@ void brush_vs(
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
 
     v_uv = uv * inv_texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
-    v_layer_and_perspective.x = res.layer;
-    v_layer_and_perspective.y = perspective_interpolate;
+    v_perspective = perspective_interpolate;
 
     v_uv_sample_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) * inv_texture_size.xyxy;
 
@@ -245,12 +244,12 @@ vec4 ComponentTransfer(vec4 colora) {
 }
 
 Fragment brush_fs() {
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_layer_and_perspective.y);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_perspective);
     vec2 uv = v_uv * perspective_divisor;
     // Clamp the uvs to avoid sampling artifacts.
     uv = clamp(uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
 
-    vec4 Cs = texture(sColor0, vec3(uv, v_layer_and_perspective.x));
+    vec4 Cs = texture(sColor0, uv);
 
     // Un-premultiply the input.
     float alpha = Cs.a;
