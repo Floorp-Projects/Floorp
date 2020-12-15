@@ -14,12 +14,17 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.helpers.perf.TestStrictModeManager
 import org.mozilla.fenix.onboarding.FenixOnboarding.Companion.CURRENT_ONBOARDING_VERSION
 import org.mozilla.fenix.onboarding.FenixOnboarding.Companion.LAST_VERSION_ONBOARDING_KEY
+import org.mozilla.fenix.perf.StrictModeManager
 
+@RunWith(FenixRobolectricTestRunner::class)
 class FenixOnboardingTest {
 
     private lateinit var onboarding: FenixOnboarding
@@ -36,6 +41,7 @@ class FenixOnboardingTest {
         every { preferences.edit() } returns preferencesEditor
         every { metrics.track(any()) } returns Unit
         every { context.components.analytics.metrics } returns metrics
+        every { context.components.strictMode } returns TestStrictModeManager() as StrictModeManager
         every { context.getSharedPreferences(any(), MODE_PRIVATE) } returns preferences
 
         onboarding = FenixOnboarding(context)

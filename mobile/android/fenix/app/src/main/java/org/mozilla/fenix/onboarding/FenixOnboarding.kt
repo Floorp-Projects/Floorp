@@ -6,6 +6,7 @@ package org.mozilla.fenix.onboarding
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.intPreference
@@ -15,10 +16,13 @@ import org.mozilla.fenix.ext.components
 class FenixOnboarding(context: Context) : PreferencesHolder {
 
     private val metrics = context.components.analytics.metrics
-    override val preferences: SharedPreferences = context.getSharedPreferences(
-        PREF_NAME_ONBOARDING_KEY,
-        Context.MODE_PRIVATE
-    )
+    private val strictMode = context.components.strictMode
+    override val preferences: SharedPreferences = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        context.getSharedPreferences(
+            PREF_NAME_ONBOARDING_KEY,
+            Context.MODE_PRIVATE
+        )
+    }
 
     private var onboardedVersion by intPreference(LAST_VERSION_ONBOARDING_KEY, default = 0)
 
@@ -27,7 +31,11 @@ class FenixOnboarding(context: Context) : PreferencesHolder {
         metrics.track(Event.DismissedOnboarding)
     }
 
-    fun userHasBeenOnboarded() = onboardedVersion == CURRENT_ONBOARDING_VERSION
+    fun userHasBeenOnboarded(): Boolean {
+        return strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            onboardedVersion == CURRENT_ONBOARDING_VERSION
+        }
+    }
 
     companion object {
         /**
