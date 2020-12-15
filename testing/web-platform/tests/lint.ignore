@@ -74,7 +74,6 @@ AHEM COPY: fonts/ahem-extra/AHEM_*.TTF
 # https://github.com/web-platform-tests/wpt/issues/8615
 AHEM COPY: css/vendor-imports/mozilla/mozilla-central-reftests/*/Ahem.ttf
 CSS-COLLIDING-SUPPORT-NAME: css/vendor-imports/mozilla/mozilla-central-reftests/*/ahem.css
-CSS-COLLIDING-SUPPORT-NAME: css/css-flexbox/support/ahem.css
 
 ## Test exclusions ##
 
