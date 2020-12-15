@@ -1,5 +1,5 @@
 use crate::ast::{self, kw};
-use crate::parser::{Parse, Parser, Result};
+use crate::parser::{Lookahead1, Parse, Parser, Peek, Result};
 
 /// A defined WebAssembly memory instance inside of a module.
 #[derive(Debug)]
@@ -33,7 +33,7 @@ pub enum MemoryKind<'a> {
         /// Whether or not this will be creating a 32-bit memory
         is_32: bool,
         /// The inline data specified for this memory
-        data: Vec<&'a [u8]>,
+        data: Vec<DataVal<'a>>,
     },
 }
 
@@ -99,7 +99,7 @@ pub struct Data<'a> {
 
     /// Bytes for this `Data` segment, viewed as the concatenation of all the
     /// contained slices.
-    pub data: Vec<&'a [u8]>,
+    pub data: Vec<DataVal<'a>>,
 }
 
 /// Different kinds of data segments, either passive or active.
@@ -168,5 +168,85 @@ impl<'a> Parse<'a> for Data<'a> {
             kind,
             data,
         })
+    }
+}
+
+/// Differnet ways the value of a data segment can be defined.
+#[derive(Debug)]
+#[allow(missing_docs)]
+pub enum DataVal<'a> {
+    String(&'a [u8]),
+    Integral(Vec<u8>),
+}
+
+impl DataVal<'_> {
+    /// Returns the length, in bytes, of the memory used to represent this data
+    /// value.
+    pub fn len(&self) -> usize {
+        match self {
+            DataVal::String(s) => s.len(),
+            DataVal::Integral(s) => s.len(),
+        }
+    }
+
+    /// Pushes the value of this data value onto the provided list of bytes.
+    pub fn push_onto(&self, dst: &mut Vec<u8>) {
+        match self {
+            DataVal::String(s) => dst.extend_from_slice(s),
+            DataVal::Integral(s) => dst.extend_from_slice(s),
+        }
+    }
+}
+
+impl<'a> Parse<'a> for DataVal<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        if !parser.peek::<ast::LParen>() {
+            return Ok(DataVal::String(parser.parse()?));
+        }
+
+        return parser.parens(|p| {
+            let mut result = Vec::new();
+            let mut lookahead = p.lookahead1();
+            let l = &mut lookahead;
+            let r = &mut result;
+            if consume::<kw::i8, i8, _>(p, l, r, |u, v| v.push(u as u8))?
+                || consume::<kw::i16, i16, _>(p, l, r, |u, v| v.extend(&u.to_le_bytes()))?
+                || consume::<kw::i32, i32, _>(p, l, r, |u, v| v.extend(&u.to_le_bytes()))?
+                || consume::<kw::i64, i64, _>(p, l, r, |u, v| v.extend(&u.to_le_bytes()))?
+                || consume::<kw::f32, ast::Float32, _>(p, l, r, |u, v| {
+                    v.extend(&u.bits.to_le_bytes())
+                })?
+                || consume::<kw::f64, ast::Float64, _>(p, l, r, |u, v| {
+                    v.extend(&u.bits.to_le_bytes())
+                })?
+                || consume::<kw::v128, ast::V128Const, _>(p, l, r, |u, v| {
+                    v.extend(&u.to_le_bytes())
+                })?
+            {
+                Ok(DataVal::Integral(result))
+            } else {
+                Err(lookahead.error())
+            }
+        });
+
+        fn consume<'a, T: Peek + Parse<'a>, U: Parse<'a>, F>(
+            parser: Parser<'a>,
+            lookahead: &mut Lookahead1<'a>,
+            dst: &mut Vec<u8>,
+            push: F,
+        ) -> Result<bool>
+        where
+            F: Fn(U, &mut Vec<u8>),
+        {
+            if !lookahead.peek::<T>() {
+                return Ok(false);
+            }
+            parser.parse::<T>()?;
+            while !parser.is_empty() {
+                let val = parser.parse::<U>()?;
+                push(val, dst);
+            }
+            Ok(true)
+        }
     }
 }
