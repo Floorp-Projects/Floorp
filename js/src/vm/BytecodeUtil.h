@@ -27,6 +27,7 @@
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "vm/BytecodeFormatFlags.h"  // JOF_*
+#include "vm/GeneratorResumeKind.h"
 #include "vm/Opcodes.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
@@ -687,6 +688,16 @@ class PCCounts {
 
 static inline jsbytecode* GetNextPc(jsbytecode* pc) {
   return pc + GetBytecodeLength(pc);
+}
+
+inline GeneratorResumeKind IntToResumeKind(int32_t value) {
+  MOZ_ASSERT(uint32_t(value) <= uint32_t(GeneratorResumeKind::Return));
+  return static_cast<GeneratorResumeKind>(value);
+}
+
+inline GeneratorResumeKind ResumeKindFromPC(jsbytecode* pc) {
+  MOZ_ASSERT(JSOp(*pc) == JSOp::ResumeKind);
+  return IntToResumeKind(GET_UINT8(pc));
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)

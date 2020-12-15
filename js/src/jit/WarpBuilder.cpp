@@ -2155,6 +2155,13 @@ bool WarpBuilder::build_AsyncResolve(BytecodeLocation loc) {
   return resumeAfter(resolve, loc);
 }
 
+bool WarpBuilder::build_ResumeKind(BytecodeLocation loc) {
+  GeneratorResumeKind resumeKind = loc.resumeKind();
+
+  current->push(constant(Int32Value(static_cast<int32_t>(resumeKind))));
+  return true;
+}
+
 bool WarpBuilder::build_CheckResumeKind(BytecodeLocation loc) {
   // This comes after a yield, so from the perspective of -warp-
   // this is unreachable code; we do want to manipulate the stack
@@ -3036,6 +3043,19 @@ bool WarpBuilder::build_Throw(BytecodeLocation loc) {
 
 bool WarpBuilder::build_ThrowSetConst(BytecodeLocation loc) {
   auto* ins = MThrowRuntimeLexicalError::New(alloc(), JSMSG_BAD_CONST_ASSIGN);
+  current->add(ins);
+  if (!resumeAfter(ins, loc)) {
+    return false;
+  }
+
+  // Terminate the block.
+  current->end(MUnreachable::New(alloc()));
+  setTerminatedBlock();
+  return true;
+}
+
+bool WarpBuilder::build_ThrowMsg(BytecodeLocation loc) {
+  auto* ins = MThrowMsg::New(alloc(), loc.throwMsgKind());
   current->add(ins);
   if (!resumeAfter(ins, loc)) {
     return false;

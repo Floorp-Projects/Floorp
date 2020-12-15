@@ -14,6 +14,7 @@
 #include "vm/BytecodeUtil.h"
 #include "vm/CheckIsObjectKind.h"   // CheckIsObjectKind
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
+#include "vm/GeneratorResumeKind.h"
 #include "vm/StringType.h"
 
 namespace js {
@@ -324,6 +325,13 @@ class BytecodeLocation {
   Value getInlineValue() const {
     MOZ_ASSERT(is(JSOp::Double));
     return GET_INLINE_VALUE(rawBytecode_);
+  }
+
+  GeneratorResumeKind resumeKind() { return ResumeKindFromPC(rawBytecode_); }
+
+  ThrowMsgKind throwMsgKind() {
+    MOZ_ASSERT(is(JSOp::ThrowMsg));
+    return static_cast<ThrowMsgKind>(GET_UINT8(rawBytecode_));
   }
 
 #ifdef DEBUG
