@@ -1800,11 +1800,12 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
     return false;
   }
 
-  if (script->isGenerator()) {
+  if (script->isGenerator() && !JitOptions.warpGenerator) {
     *reason = "generator script";
     return false;
   }
-  if (script->isAsync()) {
+
+  if (script->isAsync() && !JitOptions.warpAsync) {
     *reason = "async script";
     return false;
   }
