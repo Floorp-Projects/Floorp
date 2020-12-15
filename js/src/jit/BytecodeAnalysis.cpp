@@ -231,7 +231,12 @@ void BytecodeAnalysis::checkWarpSupport(JSOp op) {
 #define DEF_CASE(OP) case JSOp::OP:
     WARP_UNSUPPORTED_OPCODE_LIST(DEF_CASE)
 #undef DEF_CASE
-    script_->disableIon();
+    if (script_->canIonCompile()) {
+      JitSpew(JitSpew_IonAbort, "Disabling Warp support for %s:%d:%d due to %s",
+              script_->filename(), script_->lineno(), script_->column(),
+              CodeName(op));
+      script_->disableIon();
+    }
     break;
     default:
       break;
