@@ -1325,7 +1325,7 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* eventIndex,
     block.switchToCatch();
   }
 
-  return push(env_.events[*eventIndex].type);
+  return push(env_.events[*eventIndex].resultType());
 }
 
 template <typename Policy>
@@ -1340,7 +1340,7 @@ inline bool OpIter<Policy>::readThrow(uint32_t* eventIndex,
     return fail("event index out of range");
   }
 
-  if (!popWithType(env_.events[*eventIndex].type, argValues)) {
+  if (!popWithType(env_.events[*eventIndex].resultType(), argValues)) {
     return false;
   }
 

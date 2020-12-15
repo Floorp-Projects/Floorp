@@ -627,8 +627,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
         // Checks whether the signature of the imported exception object matches
         // the signature declared in the exception import's EventDesc.
-        ResultType args = ResultType::Vector(obj->valueTypes());
-        if (args != events[index].type) {
+        if (obj->resultType() != events[index].resultType()) {
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                    JSMSG_WASM_BAD_EXN_SIG, import.module.get(),
                                    import.field.get());
@@ -3357,7 +3356,8 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /* static */
-WasmExceptionObject* WasmExceptionObject::create(JSContext* cx, ResultType type,
+WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
+                                                 const ValTypeVector& type,
                                                  HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmExceptionObject obj(
@@ -3406,6 +3406,10 @@ const JSFunctionSpec WasmExceptionObject::static_methods[] = {JS_FS_END};
 wasm::ValTypeVector& WasmExceptionObject::valueTypes() const {
   return *(ValTypeVector*)getFixedSlot(TYPE_SLOT).toPrivate();
 };
+
+wasm::ResultType WasmExceptionObject::resultType() const {
+  return wasm::ResultType::Vector(valueTypes());
+}
 
 ExceptionTag& WasmExceptionObject::tag() const {
   return *(ExceptionTag*)getReservedSlot(TAG_SLOT).toPrivate();
