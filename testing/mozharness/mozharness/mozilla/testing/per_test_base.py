@@ -246,7 +246,8 @@ class SingleTestMixin(object):
         paths_file = os.path.join(
             dirs["abs_wpttest_dir"], "tests", "tools", "localpaths.py"
         )
-        execfile(paths_file, {"__file__": paths_file})
+        with open(paths_file, "r") as f:
+            exec(f.read(), {"__file__": paths_file})
         import manifest as wptmanifest
 
         tests_root = os.path.join(dirs["abs_wpttest_dir"], "tests")
