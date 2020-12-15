@@ -774,10 +774,6 @@ XDRResult XDRParserAtomDataAt(XDRState<mode>* xdr,
                               frontend::ParserAtomIndex index);
 
 template <XDRMode mode>
-XDRResult XDRParserAtomOrNull(XDRState<mode>* xdr,
-                              const frontend::ParserAtom** atomp);
-
-template <XDRMode mode>
 XDRResult XDRCompilationInput(XDRState<mode>* xdr,
                               frontend::CompilationInput& input);
 
