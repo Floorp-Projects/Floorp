@@ -1,4 +1,6 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.DisplayNames&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.hasOwnProperty('addIntlExtras'))
+
+addMozIntlDisplayNames(this);
 
 let dn1 = new Intl.DisplayNames("en", {type: "month", calendar: "gregory"});
 assertEq(dn1.of(1), "January");

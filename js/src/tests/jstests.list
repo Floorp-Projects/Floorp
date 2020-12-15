@@ -49,9 +49,6 @@ skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/
 # Skip intl402 tests when Intl isn't available.
 skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list
 
-# Skip Intl.DisplayNames tests when the addIntlExtras helper isn't available.
-skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/DisplayNames/jstests.list
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1415303
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
@@ -676,16 +673,6 @@ fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/inte
 fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/internals/Delete/indexed-value-sab-strict-strict.js
 fails-if(!xulRuntime.shell) script test262/language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js
 fails-if(!xulRuntime.shell) script test262/language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js
-
-# Can be enabled when Intl.DisplayNames is no longer installed through addIntlExtras.
-skip script test262/intl402/DisplayNames/proto-from-ctor-realm.js
-skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js
-
-# Can also be enabled when Intl.DisplayNames is no longer installed through addIntlExtras.
-# addIntlExtras exposes the mozIntl.DisplayNames constructor, which supports date-time types. This
-# tests expects that date-time types throw a TypeError.
-# https://github.com/tc39/proposal-intl-displaynames/issues/75
-skip script test262/intl402/DisplayNames/options-type-invalid-throws.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
 skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
