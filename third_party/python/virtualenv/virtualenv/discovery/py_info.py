@@ -120,7 +120,7 @@ class PythonInfo(object):
 
     @staticmethod
     def _distutils_install():
-        # follow https://github.com/pypa/pip/blob/master/src/pip/_internal/locations.py#L95
+        # follow https://github.com/pypa/pip/blob/main/src/pip/_internal/locations.py#L95
         # note here we don't import Distribution directly to allow setuptools to patch it
         d = dist.Distribution({"script_args": "--no-user-cfg"})  # conf files not parsed so they do not hijack paths
         if hasattr(sys, "_framework"):
@@ -198,7 +198,8 @@ class PythonInfo(object):
 
     def __repr__(self):
         return "{}({!r})".format(
-            self.__class__.__name__, {k: v for k, v in self.__dict__.items() if not k.startswith("_")},
+            self.__class__.__name__,
+            {k: v for k, v in self.__dict__.items() if not k.startswith("_")},
         )
 
     def __str__(self):
