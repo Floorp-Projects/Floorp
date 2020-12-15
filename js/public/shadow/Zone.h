@@ -36,14 +36,14 @@ struct Zone {
  protected:
   JSRuntime* const runtime_;
   JSTracer* const barrierTracer_;  // A pointer to the JSRuntime's |gcMarker|.
-  uint32_t needsIncrementalBarrier_;
-  GCState gcState_;
+  uint32_t needsIncrementalBarrier_ = 0;
+  GCState gcState_ = NoGC;
+  bool isAtomsZone_ = false;
+  bool isSelfHostingZone_ = false;
+  bool isSystemZone_ = false;
 
   Zone(JSRuntime* runtime, JSTracer* barrierTracerArg)
-      : runtime_(runtime),
-        barrierTracer_(barrierTracerArg),
-        needsIncrementalBarrier_(0),
-        gcState_(NoGC) {}
+      : runtime_(runtime), barrierTracer_(barrierTracerArg) {}
 
  public:
   bool needsIncrementalBarrier() const { return needsIncrementalBarrier_; }
@@ -80,6 +80,10 @@ struct Zone {
   bool isGCSweepingOrCompacting() const {
     return gcState_ == Sweep || gcState_ == Compact;
   }
+
+  bool isAtomsZone() const { return isAtomsZone_; }
+  bool isSelfHostingZone() const { return isSelfHostingZone_; }
+  bool isSystemZone() const { return isSystemZone_; }
 
   static shadow::Zone* from(JS::Zone* zone) {
     return reinterpret_cast<shadow::Zone*>(zone);

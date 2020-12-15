@@ -534,7 +534,7 @@ class GCRuntime {
   void startVerifyPreBarriers();
   void endVerifyPreBarriers();
   void finishVerifier();
-  bool isVerifyPreBarriersEnabled() const { return verifyPreData; }
+  bool isVerifyPreBarriersEnabled() const { return verifyPreData.refNoCheck(); }
   bool shouldYieldForZeal(ZealMode mode);
 #else
   bool isVerifyPreBarriersEnabled() const { return false; }
