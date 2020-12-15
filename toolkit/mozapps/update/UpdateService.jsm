@@ -21,7 +21,6 @@ const {
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -35,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CertUtils: "resource://gre/modules/CertUtils.jsm",
   ctypes: "resource://gre/modules/ctypes.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
@@ -271,8 +269,8 @@ var gUpdateMutexHandle = null;
 // The permissions of the update directory should be fixed no more than once per
 // session
 var gUpdateDirPermissionFixAttempted = false;
-// This is used for serializing writes to the update log file
-var gLogfileWritePromise;
+// This is the file stream used for the log file.
+var gLogfileOutputStream;
 // This value will be set to true if it appears that BITS is being used by
 // another user to download updates. We don't really want two users using BITS
 // at once. Computers with many users (ex: a school computer), should not end
@@ -880,39 +878,22 @@ function LOG(string) {
     }
 
     if (gLogfileEnabled) {
-      if (!gLogfileWritePromise) {
+      if (!gLogfileOutputStream) {
         let logfile = Services.dirsvc.get(KEY_PROFILE_DIR, Ci.nsIFile);
         logfile.append(FILE_UPDATE_MESSAGES);
-        gLogfileWritePromise = OS.File.open(logfile.path, {
-          write: true,
-          append: true,
-        }).catch(error => {
-          dump("*** AUS:SVC Unable to open messages file: " + error + "\n");
-          Services.console.logStringMessage(
-            "AUS:SVC Unable to open messages file: " + error
-          );
-          // Reject on failure so that writes are not attempted without a file
-          // handle.
-          return Promise.reject(error);
-        });
+        gLogfileOutputStream = FileUtils.openAtomicFileOutputStream(logfile);
       }
-      gLogfileWritePromise = gLogfileWritePromise.then(async logfile => {
-        // Catch failures from write promises and always return the logfile.
-        // This allows subsequent write attempts and ensures that the file
-        // handle keeps getting passed down the promise chain so that it will
-        // be properly closed on shutdown.
-        try {
-          let encoded = new TextEncoder().encode(string + "\n");
-          await logfile.write(encoded);
-          await logfile.flush();
-        } catch (e) {
-          dump("*** AUS:SVC Unable to write to messages file: " + e + "\n");
-          Services.console.logStringMessage(
-            "AUS:SVC Unable to write to messages file: " + e
-          );
-        }
-        return logfile;
-      });
+
+      try {
+        let encoded = new TextEncoder().encode(string + "\n");
+        gLogfileOutputStream.write(encoded, encoded.length);
+        gLogfileOutputStream.flush();
+      } catch (e) {
+        dump("*** AUS:SVC Unable to write to messages file: " + e + "\n");
+        Services.console.logStringMessage(
+          "AUS:SVC Unable to write to messages file: " + e
+        );
+      }
     }
   }
 }
@@ -2403,16 +2384,8 @@ UpdateService.prototype = {
           .createInstance(Ci.nsIUpdateChecker)
           .stopCurrentCheck();
 
-        if (gLogfileWritePromise) {
-          // Intentionally passing a null function for the failure case, which
-          // occurs when the file was not opened successfully.
-          gLogfileWritePromise = gLogfileWritePromise.then(
-            logfile => {
-              logfile.close();
-            },
-            () => {}
-          );
-          await gLogfileWritePromise;
+        if (gLogfileOutputStream) {
+          gLogfileOutputStream.close();
         }
         break;
       case "test-close-handle-update-mutex":
@@ -3891,7 +3864,7 @@ UpdateManager.prototype = {
           file.path
       );
       try {
-        await OS.File.remove(file.path, { ignoreAbsent: true });
+        await IOUtils.remove(file.path);
       } catch (e) {
         LOG(
           "UpdateManager:_writeUpdatesToXMLFile - Delete file exception: " + e
@@ -3922,13 +3895,10 @@ UpdateManager.prototype = {
       // If the destination file existed and is removed while the following is
       // being performed the copy of the tmp file to the destination file will
       // fail.
-      await OS.File.writeAtomic(file.path, xml, {
-        encoding: "utf-8",
+      await IOUtils.writeUTF8(file.path, xml, {
         tmpPath: file.path + ".tmp",
       });
-      await OS.File.setPermissions(file.path, {
-        unixMode: FileUtils.PERMS_FILE,
-      });
+      await IOUtils.setPermissions(file.path, FileUtils.PERMS_FILE);
     } catch (e) {
       LOG("UpdateManager:_writeUpdatesToXMLFile - Exception: " + e);
       return false;
