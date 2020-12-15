@@ -470,7 +470,8 @@ void CanonicalBrowsingContext::CallOnAllTopDescendants(
 void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
                                                     const nsID& aChangeID,
                                                     uint32_t aLoadType,
-                                                    bool aPersist) {
+                                                    bool aPersist,
+                                                    bool aCloneEntryChildren) {
   MOZ_LOG(gSHLog, LogLevel::Verbose,
           ("CanonicalBrowsingContext::SessionHistoryCommit %p %" PRIu64, this,
            aLoadId));
@@ -553,9 +554,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
             } else {
               // AddChildSHEntryHelper does update the index of the session
               // history!
-              // FIXME Need to figure out the right value for aCloneChildren.
               shistory->AddChildSHEntryHelper(mActiveEntry, newActiveEntry,
-                                              Top(), true);
+                                              Top(), aCloneEntryChildren);
               mActiveEntry = newActiveEntry;
             }
           } else {

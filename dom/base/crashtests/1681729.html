@@ -1,0 +1,30 @@
+<html class="reftest-wait">
+<head>
+<script>
+  async function test() {
+    // We need to go through the event loop first, so we're running this from 
+    // a timeout set from the load event. If we were adding a load from the load
+    // event directly we'd just replace the iframe's session history entry
+    // instead of cloning it (and replacing its children).
+    let frame = document.getElementById("frame");
+
+    let p = new Promise((r) => {
+      frame.addEventListener("load", r, { once: true });
+    });
+    frame.src = "1681729-inner2.html";
+    await p;
+
+    p = new Promise((r) => {
+      frame.contentWindow.addEventListener("pageshow", r, { once: true });
+    });
+    history.back();
+    await p;
+
+    document.documentElement.removeAttribute("class");
+  }
+</script>
+</head>
+<body onload="setTimeout(test, 0);">
+<iframe id="frame" src="1681729-inner1.html"></iframe>
+</body>
+</html>

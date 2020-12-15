@@ -8856,29 +8856,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
           ("Moving the loading entry to the active entry on nsDocShell %p to "
            "%s",
            this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
+      bool hadActiveEntry = !!mActiveEntry;
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
-      nsID changeID = {};
-      if (XRE_IsParentProcess()) {
-        // Persist value for session history commit doesn't matter here
-        // since the load is from session history.
-        mBrowsingContext->Canonical()->SessionHistoryCommit(
-            mLoadingEntry->mLoadId, changeID, mLoadType, true);
-      } else {
-        RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-        if (rootSH) {
-          // This is a load from session history, so we can update
-          // index and length immediately.
-          rootSH->SetIndexAndLength(mLoadingEntry->mRequestedIndex,
-                                    mLoadingEntry->mSessionHistoryLength,
-                                    changeID);
-        }
-        ContentChild* cc = ContentChild::GetSingleton();
-        // Persist value for session history commit doesn't matter here
-        // since the load is from session history.
-        mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
-                                                 mLoadingEntry->mLoadId,
-                                                 changeID, mLoadType, true);
-      }
+      mBrowsingContext->SessionHistoryCommit(*mLoadingEntry, mLoadType,
+                                             hadActiveEntry, true , true);
       // FIXME Need to set postdata.
       SetCacheKeyOnHistoryEntry(nullptr, cacheKey);
 
@@ -13274,41 +13255,9 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist) {
 
   if (mActiveEntry) {
     MOZ_ASSERT(loadingEntry);
-    nsID changeID = {};
     uint32_t loadType =
         mLoadType == LOAD_ERROR_PAGE ? mFailedLoadType : mLoadType;
-    if (XRE_IsParentProcess()) {
-      mBrowsingContext->Canonical()->SessionHistoryCommit(
-          loadingEntry->mLoadId, changeID, loadType, aPersist);
-    } else {
-      RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-      if (rootSH) {
-        if (!loadingEntry->mLoadIsFromSessionHistory) {
-          // We try to mimic as closely as possible what will happen in
-          // CanonicalBrowsingContext::SessionHistoryCommit. We'll be
-          // incrementing the session history length if we're not replacing,
-          // this is a top-level load or it's not the initial load in an iframe,
-          // and ShouldUpdateSessionHistory(loadType) returns true.
-          // It is possible that this leads to wrong length temporarily, but
-          // so would not having the check for replace.
-          if (!LOAD_TYPE_HAS_FLAGS(
-                  mLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY) &&
-              (mBrowsingContext->IsTop() || hadActiveEntry) &&
-              mBrowsingContext->ShouldUpdateSessionHistory(loadType)) {
-            changeID = rootSH->AddPendingHistoryChange();
-          }
-        } else {
-          // This is a load from session history, so we can update
-          // index and length immediately.
-          rootSH->SetIndexAndLength(loadingEntry->mRequestedIndex,
-                                    loadingEntry->mSessionHistoryLength,
-                                    changeID);
-        }
-      }
-      ContentChild* cc = ContentChild::GetSingleton();
-      mozilla::Unused << cc->SendHistoryCommit(mBrowsingContext,
-                                               loadingEntry->mLoadId, changeID,
-                                               loadType, aPersist);
-    }
+    mBrowsingContext->SessionHistoryCommit(*loadingEntry, loadType,
+                                           hadActiveEntry, aPersist, false);
   }
 }

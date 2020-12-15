@@ -6994,10 +6994,11 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
 
 mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
     const MaybeDiscarded<BrowsingContext>& aContext, const uint64_t& aLoadID,
-    const nsID& aChangeID, const uint32_t& aLoadType, const bool& aPersist) {
+    const nsID& aChangeID, const uint32_t& aLoadType, const bool& aPersist,
+    const bool& aCloneEntryChildren) {
   if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->SessionHistoryCommit(aLoadID, aChangeID,
-                                                   aLoadType, aPersist);
+    aContext.get_canonical()->SessionHistoryCommit(
+        aLoadID, aChangeID, aLoadType, aPersist, aCloneEntryChildren);
   }
 
   return IPC_OK();
