@@ -5332,6 +5332,19 @@ void LIRGenerator::visitAsyncAwait(MAsyncAwait* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitCanSkipAwait(MCanSkipAwait* ins) {
+  auto* lir = new (alloc()) LCanSkipAwait(useBoxAtStart(ins->value()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitMaybeExtractAwaitValue(MMaybeExtractAwaitValue* ins) {
+  auto* lir = new (alloc()) LMaybeExtractAwaitValue(
+      useBoxAtStart(ins->value()), useRegisterAtStart(ins->canSkip()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins) {
   MDefinition* checkVal = ins->checkValue();
   MOZ_ASSERT(checkVal->type() == MIRType::Value);

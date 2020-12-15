@@ -14280,6 +14280,35 @@ void CodeGenerator::visitAsyncAwait(LAsyncAwait* lir) {
   callVM<Fn, js::AsyncFunctionAwait>(lir);
 }
 
+void CodeGenerator::visitCanSkipAwait(LCanSkipAwait* lir) {
+  ValueOperand value = ToValue(lir, LCanSkipAwait::ValueInput);
+
+  pushArg(value);
+
+  using Fn = bool (*)(JSContext*, HandleValue, bool* canSkip);
+  callVM<Fn, js::CanSkipAwait>(lir);
+}
+
+void CodeGenerator::visitMaybeExtractAwaitValue(LMaybeExtractAwaitValue* lir) {
+  ValueOperand value = ToValue(lir, LMaybeExtractAwaitValue::ValueInput);
+  ValueOperand output = ToOutValue(lir);
+  Register canSkip = ToRegister(lir->canSkip());
+
+  Label cantExtract, finished;
+  masm.branchIfFalseBool(canSkip, &cantExtract);
+
+  pushArg(value);
+
+  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
+  callVM<Fn, js::ExtractAwaitValue>(lir);
+  masm.jump(&finished);
+  masm.bind(&cantExtract);
+
+  masm.moveValue(value, output);
+
+  masm.bind(&finished);
+}
+
 void CodeGenerator::visitDebugCheckSelfHosted(LDebugCheckSelfHosted* ins) {
   ValueOperand checkValue = ToValue(ins, LDebugCheckSelfHosted::CheckValue);
   pushArg(checkValue);

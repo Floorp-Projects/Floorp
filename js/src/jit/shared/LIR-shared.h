@@ -8065,6 +8065,43 @@ class LAsyncAwait
   const LAllocation* generator() { return getOperand(GenInput); }
 };
 
+class LCanSkipAwait
+    : public LCallInstructionHelper</* defs= */ 1, /* defs= */ BOX_PIECES,
+                                    /* temps = */ 0> {
+ public:
+  LIR_HEADER(CanSkipAwait)
+
+  static const size_t ValueInput = 0;
+
+  explicit LCanSkipAwait(const LBoxAllocation& value)
+      : LCallInstructionHelper(classOpcode) {
+    setBoxOperand(ValueInput, value);
+  }
+
+  MCanSkipAwait* mir() { return mir_->toCanSkipAwait(); }
+};
+
+class LMaybeExtractAwaitValue
+    : public LCallInstructionHelper</* defs= */ BOX_PIECES,
+                                    /* defs= */ BOX_PIECES + 1,
+                                    /* temps = */ 0> {
+ public:
+  LIR_HEADER(MaybeExtractAwaitValue);
+
+  static const size_t ValueInput = 0;
+  static const size_t CanSkipInput = BOX_PIECES;
+
+  explicit LMaybeExtractAwaitValue(const LBoxAllocation& value,
+                                   const LAllocation& canSkip)
+      : LCallInstructionHelper(classOpcode) {
+    setBoxOperand(ValueInput, value);
+    setOperand(CanSkipInput, canSkip);
+  }
+
+  MMaybeExtractAwaitValue* mir() { return mir_->toMaybeExtractAwaitValue(); }
+  const LAllocation* canSkip() { return getOperand(CanSkipInput); }
+};
+
 class LDebugCheckSelfHosted : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DebugCheckSelfHosted)

@@ -11857,6 +11857,31 @@ class MGenerator : public MTernaryInstruction,
   NAMED_OPERANDS((0, callee), (1, environmentChain), (2, argsObject))
 };
 
+class MCanSkipAwait : public MUnaryInstruction, public BoxPolicy<0>::Data {
+  explicit MCanSkipAwait(MDefinition* generator)
+      : MUnaryInstruction(classOpcode, generator) {
+    setResultType(MIRType::Boolean);
+  }
+
+ public:
+  INSTRUCTION_HEADER(CanSkipAwait)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value))
+};
+
+class MMaybeExtractAwaitValue : public MBinaryInstruction,
+                                public BoxPolicy<0>::Data {
+  explicit MMaybeExtractAwaitValue(MDefinition* value, MDefinition* canSkip)
+      : MBinaryInstruction(classOpcode, value, canSkip) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(MaybeExtractAwaitValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value), (1, canSkip))
+};
+
 // Increase the warm-up counter of the provided script upon execution and test
 // if the warm-up counter surpasses the threshold. Upon hit it will recompile
 // the outermost script (i.e. not the inlined script).
