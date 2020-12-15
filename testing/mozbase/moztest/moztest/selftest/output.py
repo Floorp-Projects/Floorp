@@ -50,4 +50,5 @@ def get_mozharness_status(suite, lines, status, formatter=None, buf=None):
 def filter_action(actions, lines):
     if isinstance(actions, string_types):
         actions = (actions,)
-    return filter(lambda x: x["action"] in actions, lines)
+    # pylint --py3k: W1639
+    return list(filter(lambda x: x["action"] in actions, lines))

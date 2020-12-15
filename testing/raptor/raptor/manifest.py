@@ -77,8 +77,12 @@ def filter_live_sites(tests, values):
                 yield test
 
             # can run with live sites when white-listed
-            elif filter(
-                lambda name: test["name"].startswith(name), whitelist_live_site_tests
+            # pylint --py3k: W1639
+            elif list(
+                filter(
+                    lambda name: test["name"].startswith(name),
+                    whitelist_live_site_tests,
+                )
             ):
                 yield test
 
@@ -293,8 +297,9 @@ def write_test_settings_json(args, test_details, oskey):
             threads.extend(["Renderer", "WR"])
 
         if test_details.get("gecko_profile_threads"):
-            test_threads = filter(
-                None, test_details["gecko_profile_threads"].split(",")
+            # pylint --py3k: W1639
+            test_threads = list(
+                filter(None, test_details["gecko_profile_threads"].split(","))
             )
             threads.extend(test_threads)
 
@@ -437,8 +442,9 @@ def get_raptor_test_list(args, oskey):
                 "gecko_profile_threads" in args
                 and args.gecko_profile_threads is not None
             ):
-                threads = filter(
-                    None, next_test.get("gecko_profile_threads", "").split(",")
+                # pylint --py3k: W1639
+                threads = list(
+                    filter(None, next_test.get("gecko_profile_threads", "").split(","))
                 )
                 threads.extend(args.gecko_profile_threads)
                 next_test["gecko_profile_threads"] = ",".join(threads)
