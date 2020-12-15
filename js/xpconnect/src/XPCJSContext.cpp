@@ -977,6 +977,10 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #ifdef ENABLE_WASM_SIMD
   bool useWasmSimd = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_simd");
 #endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+  bool useWasmSimdWormhole =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_simd_wormhole");
+#endif
   bool useWasmVerbose = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_verbose");
   bool throwOnAsmJSValidationFailure = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "throw_on_asmjs_validation_failure");
@@ -1065,6 +1069,9 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(useWasmSimd)
+#endif
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+      .setWasmSimdWormhole(useWasmSimdWormhole)
 #endif
       .setWasmVerbose(useWasmVerbose)
       .setThrowOnAsmJSValidationFailure(throwOnAsmJSValidationFailure)

@@ -132,6 +132,11 @@ const F64x2PMaxCode = 0xf7;
 const V128Load32ZeroCode = 0xfc;
 const V128Load64ZeroCode = 0xfd;
 
+// SIMD wormhole opcodes.
+const WORMHOLE_SELFTEST = 0;
+const WORMHOLE_PMADDUBSW = 1;
+const WORMHOLE_PMADDWD = 2;
+
 const FirstInvalidOpcode = 0xc5;
 const LastInvalidOpcode = 0xfa;
 const GcPrefix = 0xfb;

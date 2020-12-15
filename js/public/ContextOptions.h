@@ -30,6 +30,7 @@ class JS_PUBLIC_API ContextOptions {
         wasmGc_(false),
         wasmMultiValue_(false),
         wasmSimd_(false),
+        wasmSimdWormhole_(false),
         wasmExceptions_(false),
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
@@ -126,6 +127,10 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmSimd() const { return wasmSimd_; }
   // Defined out-of-line because it depends on a compile-time option
   ContextOptions& setWasmSimd(bool flag);
+
+  bool wasmSimdWormhole() const { return wasmSimdWormhole_; }
+  // Defined out-of-line because it depends on a compile-time option
+  ContextOptions& setWasmSimdWormhole(bool flag);
 
   bool wasmExceptions() const { return wasmExceptions_; }
   // Defined out-of-line because it depends on a compile-time option
@@ -263,6 +268,7 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmGc_ : 1;
   bool wasmMultiValue_ : 1;
   bool wasmSimd_ : 1;
+  bool wasmSimdWormhole_ : 1;
   bool wasmExceptions_ : 1;
   bool testWasmAwaitTier2_ : 1;
   bool throwOnAsmJSValidationFailure_ : 1;
