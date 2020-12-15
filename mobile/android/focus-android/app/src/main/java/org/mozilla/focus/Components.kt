@@ -32,6 +32,7 @@ import org.mozilla.focus.search.HiddenSearchEngineFilter
 class Components {
     val sessionManager by lazy {
         SessionManager(DummyEngine(), store).apply {
+            @Suppress("DEPRECATION")
             register(SessionSetupObserver())
         }
     }

@@ -94,6 +94,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     private fun registerSessionObserver() {
+        @Suppress("DEPRECATION")
         components.sessionManager.register(object : SessionManager.Observer {
             override fun onSessionSelected(session: Session) {
                 showBrowserScreenForCurrentSession()

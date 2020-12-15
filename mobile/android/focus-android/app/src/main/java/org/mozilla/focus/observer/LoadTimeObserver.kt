@@ -21,6 +21,7 @@ object LoadTimeObserver {
         var startLoadTime: Long = 0
         var urlLoading: String? = null
 
+        @Suppress("DEPRECATION")
         session.register(object : Session.Observer {
             override fun onUrlChanged(session: Session, url: String) {
                 if ((urlLoading != null && urlLoading != url) || urlLoading == null) {

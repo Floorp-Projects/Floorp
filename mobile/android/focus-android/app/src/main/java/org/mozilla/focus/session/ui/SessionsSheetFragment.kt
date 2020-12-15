@@ -43,6 +43,7 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
         val sessionManager = requireComponents.sessionManager
 
         val sessionsAdapter = SessionsAdapter(this, sessionManager.sessions)
+        @Suppress("DEPRECATION")
         sessionManager.register(sessionsAdapter, owner = this)
 
         view.findViewById<RecyclerView>(R.id.sessions).let {

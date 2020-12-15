@@ -337,6 +337,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        @Suppress("DEPRECATION")
         session.register(sessionObserver, owner = this)
 
         // We need to update the views with the initial values. Other than LiveData an Observer doesn't get the initial
@@ -360,6 +361,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         tabsButton.setOnClickListener(this)
 
         val sessionManager = requireComponents.sessionManager
+        @Suppress("DEPRECATION")
         sessionManager.register(object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) {
                 tabsButton.updateSessionsCount(sessionManager.sessions.size)

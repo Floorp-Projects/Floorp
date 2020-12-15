@@ -79,8 +79,11 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
 
         components.sessionManager.apply {
+            @Suppress("DEPRECATION")
             register(NotificationSessionObserver(this@FocusApplication))
+            @Suppress("DEPRECATION")
             register(TelemetrySessionObserver(components.store))
+            @Suppress("DEPRECATION")
             register(CleanupSessionObserver(this@FocusApplication))
         }
 
