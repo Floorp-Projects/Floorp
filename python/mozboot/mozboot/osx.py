@@ -230,14 +230,15 @@ class OSXBootstrapper(BaseBootstrapper):
         )
 
     def generate_mobile_android_mozconfig(self):
-        return getattr(
-            self, "generate_%s_mobile_android_mozconfig" % self.package_manager
-        )()
+        return self._generate_mobile_android_mozconfig()
 
     def generate_mobile_android_artifact_mode_mozconfig(self):
-        return getattr(
-            self, "generate_%s_mobile_android_mozconfig" % self.package_manager
-        )(artifact_mode=True)
+        return self._generate_mobile_android_mozconfig(artifact_mode=True)
+
+    def _generate_mobile_android_mozconfig(self, artifact_mode=False):
+        from mozboot import android
+
+        return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
 
     def ensure_xcode(self):
         if self.os_version < StrictVersion("10.7"):
@@ -426,11 +427,6 @@ class OSXBootstrapper(BaseBootstrapper):
             "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
         )
 
-    def generate_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
-        from mozboot import android
-
-        return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
-
     def _ensure_macports_packages(self, packages):
         self.port = which("port")
         assert self.port is not None
@@ -502,11 +498,6 @@ class OSXBootstrapper(BaseBootstrapper):
         android.ensure_android(
             "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
         )
-
-    def generate_macports_mobile_android_mozconfig(self, artifact_mode=False):
-        from mozboot import android
-
-        return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
 
     def ensure_package_manager(self):
         """
