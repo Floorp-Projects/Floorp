@@ -9,6 +9,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.BrowserStateSerializer
 import mozilla.components.browser.session.storage.SnapshotSerializer
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
@@ -55,6 +56,18 @@ fun AtomicFile.readSnapshotItem(
     return readAndDeserialize { json ->
         serializer.itemFromJSON(engine, JSONObject(json))
     }
+}
+
+/**
+ * Reads a single [RecoverableTab] from this [AtomicFile]. Returns `null` if no tab could be read.
+ */
+fun AtomicFile.readTab(
+    engine: Engine,
+    restoreSessionId: Boolean = true,
+    restoreParentId: Boolean = true,
+    serializer: BrowserStateSerializer = BrowserStateSerializer()
+): RecoverableTab? {
+    return serializer.readTab(engine, this, restoreSessionId, restoreParentId)
 }
 
 /**
