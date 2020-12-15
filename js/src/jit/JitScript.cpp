@@ -409,29 +409,27 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& entry = icEntry(i);
     ICStub* lastStub = entry.firstStub();
-    while (lastStub->next()) {
-      lastStub = lastStub->next();
+    while (!lastStub->isFallback()) {
+      lastStub = lastStub->toCacheIRStub()->next();
     }
-
-    MOZ_ASSERT(lastStub->isFallback());
 
     // Unlink all stubs allocated in the optimized space.
     ICStub* stub = entry.firstStub();
-    ICStub* prev = nullptr;
+    ICCacheIRStub* prev = nullptr;
 
-    while (stub->next()) {
-      if (!stub->allocatedInFallbackSpace()) {
+    while (stub != lastStub) {
+      if (!stub->toCacheIRStub()->allocatedInFallbackSpace()) {
         // Note: this is called when discarding JIT code, after invalidating
         // all Warp code, so we don't need to check for that here.
         lastStub->toFallbackStub()->clearUsedByTranspiler();
-        lastStub->toFallbackStub()->unlinkStubDontInvalidateWarp(zone, prev,
-                                                                 stub);
-        stub = stub->next();
+        lastStub->toFallbackStub()->unlinkStubDontInvalidateWarp(
+            zone, prev, stub->toCacheIRStub());
+        stub = stub->toCacheIRStub()->next();
         continue;
       }
 
-      prev = stub;
-      stub = stub->next();
+      prev = stub->toCacheIRStub();
+      stub = stub->toCacheIRStub()->next();
     }
   }
 
@@ -440,9 +438,9 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& entry = icEntry(i);
     ICStub* stub = entry.firstStub();
-    while (stub->next()) {
-      MOZ_ASSERT(stub->allocatedInFallbackSpace());
-      stub = stub->next();
+    while (!stub->isFallback()) {
+      MOZ_ASSERT(stub->toCacheIRStub()->allocatedInFallbackSpace());
+      stub = stub->toCacheIRStub()->next();
     }
   }
 #endif
@@ -586,9 +584,9 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
     spew->beginListProperty("counts");
     ICStub* stub = entry.firstStub();
     while (stub && !stub->isFallback()) {
-      uint32_t count = stub->getEnteredCount();
+      uint32_t count = stub->enteredCount();
       spew->value(count);
-      stub = stub->next();
+      stub = stub->toCacheIRStub()->next();
     }
     spew->endList();
     spew->property("fallback_count", entry.fallbackStub()->enteredCount());
