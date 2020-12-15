@@ -322,7 +322,7 @@ class LoginManagerParent extends JSWindowActorParent {
         const profiles = await migrator.getSourceProfiles();
         if (
           profiles.length == 1 &&
-          ExperimentAPI.getFeatureValue("password-autocomplete")
+          ExperimentAPI.getFeatureValue({ featureId: "password-autocomplete" })
             ?.directMigrateSingleProfile
         ) {
           const loginAdded = new Promise(resolve => {
