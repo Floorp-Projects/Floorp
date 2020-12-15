@@ -128,7 +128,8 @@ class PromptFeature private constructor(
     // These three scopes have identical lifetimes. We do not yet have a way of combining scopes
     private var handlePromptScope: CoroutineScope? = null
     private var dismissPromptScope: CoroutineScope? = null
-    private var activePromptRequest: PromptRequest? = null
+    @VisibleForTesting
+    var activePromptRequest: PromptRequest? = null
 
     internal val promptAbuserDetector = PromptAbuserDetector()
     private val logger = Logger("PromptFeature")
@@ -283,12 +284,13 @@ class PromptFeature private constructor(
         }
     }
 
-    /**
-     * Stops observing the selected session for incoming prompt requests.
-     */
     override fun stop() {
+        // Stops observing the selected session for incoming prompt requests.
         handlePromptScope?.cancel()
         dismissPromptScope?.cancel()
+
+        // Dismisses the logins prompt so that it can appear on another tab
+        dismissLoginSelectPrompt()
     }
 
     /**
@@ -671,6 +673,16 @@ class PromptFeature private constructor(
             is SelectLoginPrompt,
             is Share -> true
             is Alert, is TextPrompt, is Confirm, is Repost -> promptAbuserDetector.shouldShowMoreDialogs
+        }
+    }
+
+    /**
+     * Dismisses the select login prompt if it is active.
+     */
+    @VisibleForTesting
+    fun dismissLoginSelectPrompt() {
+        (activePromptRequest as? SelectLoginPrompt)?.let {
+            loginPicker?.dismissCurrentLoginSelect(it)
         }
     }
 }

@@ -254,6 +254,43 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `Calling onStop will attempt to dismiss the login prompt`() {
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                fragmentManager = fragmentManager
+            ) { }
+        )
+
+        feature.stop()
+
+        verify(feature).dismissLoginSelectPrompt()
+    }
+
+    @Test
+    fun `Calling dismissLoginSelectPrompt should dismiss the login picker if the login prompt is active`() {
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                fragmentManager = fragmentManager
+            ) { }
+        )
+        val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
+
+        feature.loginPicker = loginPicker
+        feature.activePromptRequest = mock()
+        feature.dismissLoginSelectPrompt()
+        verify(feature.loginPicker!!, never()).dismissCurrentLoginSelect(any())
+
+        feature.loginPicker = loginPicker
+        feature.activePromptRequest = selectLoginPrompt
+        feature.dismissLoginSelectPrompt()
+        verify(feature.loginPicker!!).dismissCurrentLoginSelect(selectLoginPrompt)
+    }
+
+    @Test
     fun `Calling onCancel will consume promptRequest`() {
         val feature =
             PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
