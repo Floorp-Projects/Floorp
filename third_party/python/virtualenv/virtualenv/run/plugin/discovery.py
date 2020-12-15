@@ -10,7 +10,8 @@ class Discovery(PluginLoader):
 def get_discover(parser, args):
     discover_types = Discovery.entry_points_for("virtualenv.discovery")
     discovery_parser = parser.add_argument_group(
-        title="discovery", description="discover and provide a target interpreter",
+        title="discovery",
+        description="discover and provide a target interpreter",
     )
     discovery_parser.add_argument(
         "--discovery",

@@ -7,7 +7,7 @@ import os
 import platform
 import subprocess
 from ctypes import Structure, WinError, byref, c_char_p, c_void_p, c_wchar, c_wchar_p, sizeof, windll
-from ctypes.wintypes import BOOL, BYTE, DWORD, HANDLE, LPVOID, LPWSTR, WORD
+from ctypes.wintypes import BOOL, BYTE, DWORD, HANDLE, LPCWSTR, LPVOID, LPWSTR, WORD
 
 import _subprocess
 
@@ -63,8 +63,8 @@ class DUMMY_HANDLE(ctypes.c_void_p):
 
 CreateProcessW = windll.kernel32.CreateProcessW
 CreateProcessW.argtypes = [
-    LPCTSTR, LPTSTR, LPSECURITY_ATTRIBUTES,
-    LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCTSTR,
+    LPCWSTR, LPWSTR, LPSECURITY_ATTRIBUTES,
+    LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCWSTR,
     LPSTARTUPINFOW, LPPROCESS_INFORMATION,
 ]
 CreateProcessW.restype = BOOL
@@ -107,13 +107,17 @@ def CreateProcess(
         wenv = (c_wchar * len(env))()
         wenv.value = env
 
+    wcwd = None
+    if cwd is not None:
+        wcwd = unicode(cwd)
+
     pi = PROCESS_INFORMATION()
     creation_flags |= CREATE_UNICODE_ENVIRONMENT
 
     if CreateProcessW(
         executable, args, None, None,
         inherit_handles, creation_flags,
-        wenv, cwd, byref(si), byref(pi),
+        wenv, wcwd, byref(si), byref(pi),
     ):
         return (
             DUMMY_HANDLE(pi.hProcess), DUMMY_HANDLE(pi.hThread),

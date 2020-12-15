@@ -4,7 +4,7 @@ from abc import ABCMeta
 
 from six import add_metaclass
 
-from virtualenv.create.via_global_ref.builtin.ref import ExePathRefToDest
+from virtualenv.create.via_global_ref.builtin.ref import ExePathRefToDest, RefMust, RefWhen
 from virtualenv.util.path import ensure_dir
 
 from ..api import ViaGlobalRefApi, ViaGlobalRefMeta
@@ -27,26 +27,37 @@ class ViaGlobalRefVirtualenvBuiltin(ViaGlobalRefApi, VirtualenvBuiltin):
     def can_create(cls, interpreter):
         """By default all built-in methods assume that if we can describe it we can create it"""
         # first we must be able to describe it
-        if cls.can_describe(interpreter):
-            meta = cls.setup_meta(interpreter)
-            if meta is not None and meta:
-                for src in cls.sources(interpreter):
-                    if src.exists:
-                        if meta.can_copy and not src.can_copy:
-                            meta.copy_error = "cannot copy {}".format(src)
-                        if meta.can_symlink and not src.can_symlink:
-                            meta.symlink_error = "cannot symlink {}".format(src)
-                        if not meta.can_copy and not meta.can_symlink:
-                            meta.error = "neither copy or symlink supported, copy: {} symlink: {}".format(
-                                meta.copy_error, meta.symlink_error,
-                            )
-                    else:
-                        meta.error = "missing required file {}".format(src)
-                    if meta.error:
-                        break
-                    meta.sources.append(src)
-            return meta
-        return None
+        if not cls.can_describe(interpreter):
+            return None
+        meta = cls.setup_meta(interpreter)
+        if meta is not None and meta:
+            cls._sources_can_be_applied(interpreter, meta)
+        return meta
+
+    @classmethod
+    def _sources_can_be_applied(cls, interpreter, meta):
+        for src in cls.sources(interpreter):
+            if src.exists:
+                if meta.can_copy and not src.can_copy:
+                    meta.copy_error = "cannot copy {}".format(src)
+                if meta.can_symlink and not src.can_symlink:
+                    meta.symlink_error = "cannot symlink {}".format(src)
+            else:
+                msg = "missing required file {}".format(src)
+                if src.when == RefMust.NA:
+                    meta.error = msg
+                elif src.when == RefMust.COPY:
+                    meta.copy_error = msg
+                elif src.when == RefMust.SYMLINK:
+                    meta.symlink_error = msg
+            if not meta.can_copy and not meta.can_symlink:
+                meta.error = "neither copy or symlink supported, copy: {} symlink: {}".format(
+                    meta.copy_error,
+                    meta.symlink_error,
+                )
+            if meta.error:
+                break
+            meta.sources.append(src)
 
     @classmethod
     def setup_meta(cls, interpreter):
@@ -54,9 +65,8 @@ class ViaGlobalRefVirtualenvBuiltin(ViaGlobalRefApi, VirtualenvBuiltin):
 
     @classmethod
     def sources(cls, interpreter):
-        is_py2 = interpreter.version_info.major == 2
-        for host_exe, targets in cls._executables(interpreter):
-            yield ExePathRefToDest(host_exe, dest=cls.to_bin, targets=targets, must_copy=is_py2)
+        for host_exe, targets, must, when in cls._executables(interpreter):
+            yield ExePathRefToDest(host_exe, dest=cls.to_bin, targets=targets, must=must, when=when)
 
     def to_bin(self, src):
         return self.bin_dir / src.name
@@ -79,7 +89,12 @@ class ViaGlobalRefVirtualenvBuiltin(ViaGlobalRefApi, VirtualenvBuiltin):
         try:
             self.enable_system_site_package = False
             for src in self._sources:
-                src.run(self, self.symlinks)
+                if (
+                    src.when == RefWhen.ANY
+                    or (src.when == RefWhen.SYMLINK and self.symlinks is True)
+                    or (src.when == RefWhen.COPY and self.symlinks is False)
+                ):
+                    src.run(self, self.symlinks)
         finally:
             if true_system_site != self.enable_system_site_package:
                 self.enable_system_site_package = true_system_site
@@ -92,7 +107,7 @@ class ViaGlobalRefVirtualenvBuiltin(ViaGlobalRefApi, VirtualenvBuiltin):
         """
         We directly inject the base prefix and base exec prefix to avoid site.py needing to discover these
         from home (which usually is done within the interpreter itself)
-         """
+        """
         super(ViaGlobalRefVirtualenvBuiltin, self).set_pyenv_cfg()
         self.pyenv_cfg["base-prefix"] = self.interpreter.system_prefix
         self.pyenv_cfg["base-exec-prefix"] = self.interpreter.system_exec_prefix
