@@ -4941,7 +4941,7 @@ bool nsGlobalWindowOuter::AlertOrConfirm(bool aAlert, const nsAString& aMessage,
   }
 
   bool result = false;
-  nsAutoSyncOperation sync(mDoc);
+  nsAutoSyncOperation sync(mDoc, SyncOperationBehavior::eSuspendInput);
   if (ShouldPromptToBlockDialogs()) {
     bool disallowDialog = false;
     nsAutoString label;
@@ -5041,7 +5041,7 @@ void nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
         nsContentUtils::eCOMMON_DIALOG_PROPERTIES, "ScriptDialogLabel", label);
   }
 
-  nsAutoSyncOperation sync(mDoc);
+  nsAutoSyncOperation sync(mDoc, SyncOperationBehavior::eSuspendInput);
   bool ok;
   aError = prompt->Prompt(title.get(), fixedMessage.get(), &inoutValue,
                           label.IsVoid() ? nullptr : label.get(),
@@ -5285,7 +5285,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     return nullptr;
   }
 
-  nsAutoSyncOperation sync(docToPrint);
+  nsAutoSyncOperation sync(docToPrint, SyncOperationBehavior::eAllowInput);
   EnterModalState();
   auto exitModal = MakeScopeExit([&] { LeaveModalState(); });
 

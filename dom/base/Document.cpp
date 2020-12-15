@@ -70,6 +70,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/IdentifierMapEntry.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
@@ -15616,7 +15617,9 @@ static CallState MarkDocumentTreeToBeInSyncOperation(
   return CallState::Continue;
 }
 
-nsAutoSyncOperation::nsAutoSyncOperation(Document* aDoc) {
+nsAutoSyncOperation::nsAutoSyncOperation(Document* aDoc,
+                                         SyncOperationBehavior aSyncBehavior)
+    : mSyncBehavior(aSyncBehavior) {
   mMicroTaskLevel = 0;
   CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
   if (ccjs) {
@@ -15631,6 +15634,13 @@ nsAutoSyncOperation::nsAutoSyncOperation(Document* aDoc) {
         }
       }
     }
+
+    mBrowsingContext = aDoc->GetBrowsingContext();
+    if (mBrowsingContext &&
+        mSyncBehavior == SyncOperationBehavior::eSuspendInput &&
+        InputTaskManager::CanSuspendInputEvent()) {
+      mBrowsingContext->Group()->IncInputEventSuspensionLevel();
+    }
   }
 }
 
@@ -15644,6 +15654,12 @@ nsAutoSyncOperation::~nsAutoSyncOperation() {
   CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
   if (ccjs) {
     ccjs->SetMicroTaskLevel(mMicroTaskLevel);
+  }
+
+  if (mBrowsingContext &&
+      mSyncBehavior == SyncOperationBehavior::eSuspendInput &&
+      InputTaskManager::CanSuspendInputEvent()) {
+    mBrowsingContext->Group()->DecInputEventSuspensionLevel();
   }
 }
 
