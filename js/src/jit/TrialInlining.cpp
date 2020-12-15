@@ -106,8 +106,8 @@ ICCacheIRStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
   if (stub->isFallback()) {
     return nullptr;
   }
-  ICStub* next = stub->next();
-  if (next->getEnteredCount() != 0) {
+  ICStub* next = stub->toCacheIRStub()->next();
+  if (next->enteredCount() != 0) {
     return nullptr;
   }
 
@@ -115,8 +115,8 @@ ICCacheIRStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
   if (next->isFallback()) {
     fallback = next->toFallbackStub();
   } else {
-    ICStub* nextNext = next->next();
-    if (!nextNext->isFallback() || nextNext->getEnteredCount() != 0) {
+    ICStub* nextNext = next->toCacheIRStub()->next();
+    if (!nextNext->isFallback() || nextNext->enteredCount() != 0) {
       return nullptr;
     }
     fallback = nextNext->toFallbackStub();
@@ -427,7 +427,7 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
     return false;
   }
 
-  uint32_t entryCount = stub->getEnteredCount();
+  uint32_t entryCount = stub->enteredCount();
   if (entryCount < JitOptions.inliningEntryThreshold) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: Entry count is %u (minimum %u)",
             unsigned(entryCount), unsigned(JitOptions.inliningEntryThreshold));

@@ -35,10 +35,10 @@ class ICState {
   enum class Mode : uint8_t { Specialized = 0, Megamorphic, Generic };
 
  private:
-  uint32_t mode_ : 2;
+  uint8_t mode_ : 2;
 
   // The TrialInliningState for a Baseline IC.
-  uint32_t trialInliningState_ : 2;
+  uint8_t trialInliningState_ : 2;
 
   // Whether WarpOracle created a snapshot based on stubs attached to this
   // Baseline IC.

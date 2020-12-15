@@ -69,7 +69,7 @@ inline void EmitPreBarrier(MacroAssembler& masm, const AddrType& addr,
 
 inline void EmitStubGuardFailure(MacroAssembler& masm) {
   // Load next stub into ICStubReg
-  masm.loadPtr(Address(ICStubReg, ICStub::offsetOfNext()), ICStubReg);
+  masm.loadPtr(Address(ICStubReg, ICCacheIRStub::offsetOfNext()), ICStubReg);
 
   // Return address is already loaded, just jump to the next stubcode.
   masm.jmp(Operand(ICStubReg, ICStub::offsetOfStubCode()));
