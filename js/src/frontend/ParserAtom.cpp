@@ -971,27 +971,6 @@ template XDRResult XDRParserAtomDataAt(XDRState<XDR_DECODE>* xdr,
                                        const ParserAtom** atomp,
                                        ParserAtomIndex index);
 
-template <XDRMode mode>
-XDRResult XDRParserAtom(XDRState<mode>* xdr, const ParserAtom** atomp) {
-  TaggedParserAtomIndex taggedIndex;
-  if (mode == XDR_ENCODE) {
-    taggedIndex = (*atomp)->toIndex();
-  }
-  MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &taggedIndex));
-  if (mode == XDR_DECODE) {
-    MOZ_ASSERT(xdr->hasAtomTable());
-    *atomp = xdr->frontendAtoms().getParserAtom(taggedIndex);
-  }
-
-  return Ok();
-}
-
-template XDRResult XDRParserAtom(XDRState<XDR_ENCODE>* xdr,
-                                 const ParserAtom** atomp);
-
-template XDRResult XDRParserAtom(XDRState<XDR_DECODE>* xdr,
-                                 const ParserAtom** atomp);
-
 } /* namespace js */
 
 bool JSRuntime::initializeParserAtoms(JSContext* cx) {
