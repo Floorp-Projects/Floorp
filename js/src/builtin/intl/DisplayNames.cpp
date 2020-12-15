@@ -453,9 +453,10 @@ static JSString* GetScriptDisplayName(JSContext* cx,
       return nullptr;
     }
 
-    // Return the canonicalized input when no localized script name was found.
+    // Return the case-canonicalized input when no localized name was found.
     if (str->empty() && fallback == DisplayNamesFallback::Code) {
-      return NewStringCopy(cx, tag.script().span());
+      script.toTitleCase();
+      return NewStringCopy(cx, script.span());
     }
 
     return str;
@@ -490,9 +491,10 @@ static JSString* GetScriptDisplayName(JSContext* cx,
     return nullptr;
   }
 
-  // Return the canonicalized input when no localized script name was found.
+  // Return the case-canonicalized input when no localized name was found.
   if (str->empty() && fallback == DisplayNamesFallback::Code) {
-    return NewStringCopy(cx, tag.script().span());
+    script.toTitleCase();
+    return NewStringCopy(cx, script.span());
   }
 
   return str;
@@ -551,9 +553,10 @@ static JSString* GetRegionDisplayName(JSContext* cx,
     return nullptr;
   }
 
-  // Return the canonicalized input when no localized region name was found.
+  // Return the case-canonicalized input when no localized name was found.
   if (str->empty() && fallback == DisplayNamesFallback::Code) {
-    return NewStringCopy(cx, tag.region().span());
+    region.toUpperCase();
+    return NewStringCopy(cx, region.span());
   }
 
   return str;
