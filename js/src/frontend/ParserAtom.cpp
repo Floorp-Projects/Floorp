@@ -992,32 +992,6 @@ template XDRResult XDRParserAtom(XDRState<XDR_ENCODE>* xdr,
 template XDRResult XDRParserAtom(XDRState<XDR_DECODE>* xdr,
                                  const ParserAtom** atomp);
 
-template <XDRMode mode>
-XDRResult XDRParserAtomOrNull(XDRState<mode>* xdr, const ParserAtom** atomp) {
-  uint8_t isNull = false;
-  if (mode == XDR_ENCODE) {
-    if (!*atomp) {
-      isNull = true;
-    }
-  }
-
-  MOZ_TRY(xdr->codeUint8(&isNull));
-
-  if (!isNull) {
-    MOZ_TRY(XDRParserAtom(xdr, atomp));
-  } else if (mode == XDR_DECODE) {
-    *atomp = nullptr;
-  }
-
-  return Ok();
-}
-
-template XDRResult XDRParserAtomOrNull(XDRState<XDR_ENCODE>* xdr,
-                                       const ParserAtom** atomp);
-
-template XDRResult XDRParserAtomOrNull(XDRState<XDR_DECODE>* xdr,
-                                       const ParserAtom** atomp);
-
 } /* namespace js */
 
 bool JSRuntime::initializeParserAtoms(JSContext* cx) {
