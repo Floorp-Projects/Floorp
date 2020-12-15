@@ -126,6 +126,9 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   void FlushPostMessageEvents();
 
+  // Increase or decrease the suspension level in InputTaskManager
+  void UpdateInputTaskManagerIfNeeded(bool aIsActive);
+
   static BrowsingContextGroup* GetChromeGroup();
 
   void GetDocGroups(nsTArray<DocGroup*>& aDocGroups);
@@ -149,6 +152,9 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   static void GetAllGroups(nsTArray<RefPtr<BrowsingContextGroup>>& aGroups);
 
+  void IncInputEventSuspensionLevel();
+  void DecInputEventSuspensionLevel();
+
  private:
   friend class CanonicalBrowsingContext;
 
@@ -159,6 +165,10 @@ class BrowsingContextGroup final : public nsWrapperCache {
   void Destroy();
 
   bool ShouldSuspendAllTopLevelContexts() const;
+
+  bool HasActiveBC();
+  void DecInputTaskManagerSuspensionLevel();
+  void IncInputTaskManagerSuspensionLevel();
 
   uint64_t mId;
 
@@ -206,8 +216,16 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   RefPtr<mozilla::ThrottledEventQueue> mTimerEventQueue;
   RefPtr<mozilla::ThrottledEventQueue> mWorkerEventQueue;
-};
 
+  // A counter to keep track of the input event suspension level of this BCG
+  //
+  // We use BrowsingContextGroup to emulate process isolation in Fission, so
+  // documents within the same the same BCG will behave like they share
+  // the same input task queue.
+  uint32_t mInputEventSuspensionLevel = 0;
+  // Whether this BCG has increased the suspension level in InputTaskManager
+  bool mHasIncreasedInputTaskManagerSuspensionLevel = false;
+};
 }  // namespace dom
 }  // namespace mozilla
 

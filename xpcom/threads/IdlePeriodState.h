@@ -172,7 +172,7 @@ class IdlePeriodState {
 
   // If we're in a content process, we use mIdleScheduler to communicate with
   // the parent process for purposes of cross-process idle tracking.
-  RefPtr<ipc::IdleSchedulerChild> mIdleScheduler;
+  RefPtr<mozilla::ipc::IdleSchedulerChild> mIdleScheduler;
 
   // Our cached idle deadline.  This is set by UpdateCachedIdleDeadline() and
   // cleared by ClearCachedIdleDeadline().  Consumers should do the former while

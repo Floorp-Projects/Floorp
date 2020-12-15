@@ -5221,14 +5221,19 @@ class MOZ_STACK_CLASS mozAutoSubtreeModified {
   RefPtr<Document> mSubtreeOwner;
 };
 
+enum class SyncOperationBehavior { eSuspendInput, eAllowInput };
+
 class MOZ_STACK_CLASS nsAutoSyncOperation {
  public:
-  explicit nsAutoSyncOperation(Document* aDocument);
+  explicit nsAutoSyncOperation(Document* aDocument,
+                               SyncOperationBehavior aSyncBehavior);
   ~nsAutoSyncOperation();
 
  private:
   nsTArray<RefPtr<Document>> mDocuments;
   uint32_t mMicroTaskLevel;
+  const SyncOperationBehavior mSyncBehavior;
+  RefPtr<BrowsingContext> mBrowsingContext;
 };
 
 class MOZ_RAII AutoSetThrowOnDynamicMarkupInsertionCounter final {

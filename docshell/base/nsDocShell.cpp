@@ -4828,6 +4828,10 @@ void nsDocShell::ActivenessMaybeChanged() {
       SuspendRefreshURIs();
     }
   }
+
+  if (InputTaskManager::CanSuspendInputEvent()) {
+    mBrowsingContext->Group()->UpdateInputTaskManagerIfNeeded(isActive);
+  }
 }
 
 NS_IMETHODIMP

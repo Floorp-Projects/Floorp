@@ -9,6 +9,7 @@
 
 #include "TaskController.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {
 
@@ -45,6 +46,39 @@ class InputTaskManager : public TaskManager {
   static void Cleanup() { gInputTaskManager = nullptr; }
   static void Init();
 
+  bool IsSuspended(const MutexAutoLock& aProofOfLock) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mSuspensionLevel > 0;
+  }
+
+  bool IsSuspended() {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mSuspensionLevel > 0;
+  }
+
+  void IncSuspensionLevel() {
+    MOZ_ASSERT(NS_IsMainThread());
+    ++mSuspensionLevel;
+  }
+
+  void DecSuspensionLevel() {
+    MOZ_ASSERT(NS_IsMainThread());
+    --mSuspensionLevel;
+  }
+
+  static bool CanSuspendInputEvent() {
+    // Ensure it's content process because InputTaskManager only
+    // works in e10s.
+    //
+    // Input tasks will have nullptr as their task manager when the
+    // event queue state is STATE_DISABLED, so we can't suspend
+    // input events.
+    return XRE_IsContentProcess() &&
+           StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup() &&
+           InputTaskManager::Get()->State() !=
+               InputEventQueueState::STATE_DISABLED;
+  }
+
  private:
   InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
 
@@ -53,6 +87,9 @@ class InputTaskManager : public TaskManager {
   AutoTArray<TimeStamp, 4> mStartTimes;
 
   static StaticRefPtr<InputTaskManager> gInputTaskManager;
+
+  // Number of BCGs have asked InputTaskManager to suspend input events
+  uint32_t mSuspensionLevel = 0;
 };
 
 }  // namespace mozilla
