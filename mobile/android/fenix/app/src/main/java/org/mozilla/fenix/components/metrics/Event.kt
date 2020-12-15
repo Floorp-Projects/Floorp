@@ -106,6 +106,8 @@ sealed class Event {
     object MediaPlayState : Event()
     object MediaPauseState : Event()
     object MediaStopState : Event()
+    object MediaFullscreenState : Event()
+    object MediaPictureInPictureState : Event()
     object InAppNotificationDownloadOpen : Event()
     object InAppNotificationDownloadTryAgain : Event()
     object NotificationDownloadCancel : Event()

@@ -1185,6 +1185,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     }
 
     final override fun onPictureInPictureModeChanged(enabled: Boolean) {
+        if (enabled) requireComponents.analytics.metrics.track(Event.MediaPictureInPictureState)
         pipFeature?.onPictureInPictureModeChanged(enabled)
     }
 
@@ -1217,6 +1218,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
             browserToolbarView.expand()
             // Without this, fullscreen has a margin at the top.
             engineView.setVerticalClipping(0)
+
+            requireComponents.analytics.metrics.track(Event.MediaFullscreenState)
         } else {
             activity?.exitImmersiveModeIfNeeded()
             (activity as? HomeActivity)?.let { activity ->

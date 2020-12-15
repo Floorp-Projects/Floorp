@@ -2932,6 +2932,32 @@ media_state:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+  fullscreen:
+    type: event
+    description: |
+      Video set to fullscreen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15368
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16833
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  picture_in_picture:
+    type: event
+    description: |
+      Video set to picture in picture mode.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15368
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16833
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
 
 logins:
   open_logins:

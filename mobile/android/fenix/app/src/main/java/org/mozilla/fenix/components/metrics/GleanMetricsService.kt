@@ -404,6 +404,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.MediaStopState -> EventWrapper<NoExtraKeys>(
             { MediaState.stop.record(it) }
         )
+        is Event.MediaFullscreenState -> EventWrapper<NoExtraKeys>(
+            { MediaState.fullscreen.record(it) }
+        )
+        is Event.MediaPictureInPictureState -> EventWrapper<NoExtraKeys>(
+            { MediaState.pictureInPicture.record(it) }
+        )
         is Event.InAppNotificationDownloadOpen -> EventWrapper<NoExtraKeys>(
             { DownloadNotification.inAppOpen.record(it) }
         )
