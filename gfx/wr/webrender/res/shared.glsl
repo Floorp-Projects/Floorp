@@ -163,7 +163,7 @@ uniform sampler2DRect sColor2;
 uniform samplerExternalOES sColor0;
 uniform samplerExternalOES sColor1;
 uniform samplerExternalOES sColor2;
-#else
+#elif defined WR_FEATURE_TEXTURE_2D_ARRAY
 uniform sampler2DArray sColor0;
 uniform sampler2DArray sColor1;
 uniform sampler2DArray sColor2;
