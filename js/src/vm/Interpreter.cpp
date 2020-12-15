@@ -3789,23 +3789,28 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(ToAsyncIter)
 
-    CASE(TrySkipAwait) {
+    CASE(CanSkipAwait) {
       ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
-      ReservedRooted<Value> resolved(&rootValue1);
       bool canSkip;
-
-      if (!TrySkipAwait(cx, val, &canSkip, &resolved)) {
+      if (!CanSkipAwait(cx, val, &canSkip)) {
         goto error;
       }
 
-      if (canSkip) {
-        REGS.sp[-1] = resolved;
-        PUSH_BOOLEAN(true);
-      } else {
-        PUSH_BOOLEAN(false);
+      PUSH_BOOLEAN(canSkip);
+    }
+    END_CASE(CanSkipAwait)
+
+    CASE(MaybeExtractAwaitValue) {
+      MutableHandleValue val = REGS.stackHandleAt(-2);
+      ReservedRooted<Value> canSkip(&rootValue0, REGS.sp[-1]);
+
+      if (canSkip.toBoolean()) {
+        if (!ExtractAwaitValue(cx, val, val)) {
+          goto error;
+        }
       }
     }
-    END_CASE(TrySkipAwait)
+    END_CASE(MaybeExtractAwaitValue)
 
     CASE(AsyncAwait) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);

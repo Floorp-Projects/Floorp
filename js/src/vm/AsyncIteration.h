@@ -54,7 +54,7 @@
 // `await`.
 //
 // The bytecode is the following:
-// (ignoring TrySkipAwait; see the comment in AsyncFunction.h for more details)
+// (ignoring CanSkipAwait; see the comment in AsyncFunction.h for more details)
 //
 // ```
 //   (operand here)                  # VALUE
@@ -85,7 +85,7 @@
 // # Yield
 //
 // `yield` is implemented with the following bytecode sequence:
-// (Ignoring TrySkipAwait for simplicity)
+// (Ignoring CanSkipAwait for simplicity)
 //
 // ```
 //   (operand here)                  # VALUE
@@ -154,7 +154,7 @@
 // # Return
 //
 // `return` with operand is implemented with the following bytecode sequence:
-// (Ignoring TrySkipAwait for simplicity)
+// (Ignoring CanSkipAwait for simplicity)
 //
 // ```
 //   (operand here)                  # VALUE

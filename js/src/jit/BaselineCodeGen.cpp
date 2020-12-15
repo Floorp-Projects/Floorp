@@ -5046,33 +5046,44 @@ bool BaselineCodeGen<Handler>::emit_ToAsyncIter() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_TrySkipAwait() {
+bool BaselineCodeGen<Handler>::emit_CanSkipAwait() {
   frame.syncStack(0);
   masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   prepareVMCall();
   pushArg(R0);
 
-  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
-  if (!callVM<Fn, jit::TrySkipAwait>()) {
+  using Fn = bool (*)(JSContext*, HandleValue, bool* canSkip);
+  if (!callVM<Fn, js::CanSkipAwait>()) {
     return false;
   }
 
-  Label cannotSkip, done;
-  masm.branchTestMagicValue(Assembler::Equal, R0, JS_CANNOT_SKIP_AWAIT,
-                            &cannotSkip);
-  masm.moveValue(BooleanValue(true), R1);
-  masm.jump(&done);
-
-  masm.bind(&cannotSkip);
-  masm.loadValue(frame.addressOfStackValue(-1), R0);
-  masm.moveValue(BooleanValue(false), R1);
-
-  masm.bind(&done);
-
-  frame.pop();
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
   frame.push(R0);
-  frame.push(R1);
+  return true;
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_MaybeExtractAwaitValue() {
+  frame.syncStack(0);
+  masm.loadValue(frame.addressOfStackValue(-2), R0);
+
+  masm.unboxBoolean(frame.addressOfStackValue(-1), R1.scratchReg());
+
+  Label cantExtract;
+  masm.branchIfFalseBool(R1.scratchReg(), &cantExtract);
+
+  prepareVMCall();
+  pushArg(R0);
+
+  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
+  if (!callVM<Fn, js::ExtractAwaitValue>()) {
+    return false;
+  }
+
+  masm.storeValue(R0, frame.addressOfStackValue(-2));
+  masm.bind(&cantExtract);
+
   return true;
 }
 

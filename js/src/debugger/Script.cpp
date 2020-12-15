@@ -1575,7 +1575,8 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::CheckResumeKind:
     case JSOp::AfterYield:
     case JSOp::Await:
-    case JSOp::TrySkipAwait:
+    case JSOp::CanSkipAwait:
+    case JSOp::MaybeExtractAwaitValue:
     case JSOp::Generator:
     case JSOp::AsyncAwait:
     case JSOp::AsyncResolve:

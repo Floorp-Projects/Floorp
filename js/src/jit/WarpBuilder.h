@@ -51,7 +51,8 @@ namespace jit {
   _(CheckResumeKind)                     \
   _(AfterYield)                          \
   _(Await)                               \
-  _(TrySkipAwait)                        \
+  _(CanSkipAwait)                        \
+  _(MaybeExtractAwaitValue)              \
   _(Generator)                           \
   _(AsyncAwait)                          \
   _(AsyncResolve)                        \
