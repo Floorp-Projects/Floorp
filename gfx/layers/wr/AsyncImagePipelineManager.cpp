@@ -36,6 +36,7 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
     : mInitialised(false),
       mIsChanged(false),
       mUseExternalImage(false),
+      mRotation(VideoInfo::Rotation::kDegree_0),
       mFilter(wr::ImageRendering::Auto),
       mMixBlendMode(wr::MixBlendMode::Normal) {}
 
