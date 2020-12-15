@@ -3141,7 +3141,7 @@ bool RangeAnalysis::truncate() {
       // code within the current JSScript, we no longer attempt to make
       // this kind of eager optimizations.
       if (kind <= MDefinition::TruncateAfterBailouts &&
-          block->info().hadEagerTruncationBailout()) {
+          mir->outerInfo().hadEagerTruncationBailout()) {
         continue;
       }
 
