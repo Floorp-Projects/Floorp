@@ -9,7 +9,7 @@
 // Global includes
 #include "BackgroundParent.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 
 namespace mozilla::dom::quota {
 
@@ -21,27 +21,6 @@ const char kIDBPrefix = 'I';
 const char kDOMCachePrefix = 'C';
 const char kSDBPrefix = 'S';
 const char kLSPrefix = 'L';
-
-/**
- * If shutdown takes this long, kill actors of a quota client, to avoid reaching
- * the crash timeout.
- */
-#define SHUTDOWN_FORCE_KILL_TIMEOUT_MS 5000
-
-/**
- * Automatically crash the browser if shutdown of a quota client takes this
- * long. We've chosen a value that is longer than the value for QuotaManager
- * shutdown timer which is currently set to 30 seconds, so that the QuotaManager
- * abort may still make the quota client's shutdown complete in time.  We've
- * also chosen a value that is long enough that it is unlikely for the problem
- * to be falsely triggered by slow system I/O.  We've also chosen a value long
- * enough so that automated tests should time out and fail if shutdown of a
- * quota client takes too long.  Also, this value is long enough so that testers
- * can notice the timeout; we want to know about the timeouts, not hide them. On
- * the other hand this value is less than 60 seconds which is used by
- * nsTerminator to crash a hung main process.
- */
-#define SHUTDOWN_FORCE_CRASH_TIMEOUT_MS 45000
 
 template <Client::Type type>
 struct ClientTypeTraits;
@@ -251,99 +230,18 @@ bool Client::TypeFromPrefix(char aPrefix, Type& aType, const fallible_t&) {
   return true;
 }
 
-void Client::MaybeRecordShutdownStep(const nsACString& aStepDescription) {
-  AssertIsOnBackgroundThread();
-
-  if (!mShutdownStartedAt) {
-    // We are not shutting down yet, we intentionally ignore this here to avoid
-    // that every caller has to make a distinction for shutdown vs. non-shutdown
-    // situations.
-    return;
-  }
-
-  const TimeDuration elapsedSinceShutdownStart =
-      TimeStamp::NowLoRes() - *mShutdownStartedAt;
-
-  const auto stepString =
-      nsPrintfCString("%fs: %s", elapsedSinceShutdownStart.ToSeconds(),
-                      nsPromiseFlatCString(aStepDescription).get());
-
-  mShutdownSteps.Append(stepString + "\n"_ns);
-
-#ifdef DEBUG
-  // XXX Probably this isn't the mechanism that should be used here.
-
-  NS_DebugBreak(
-      NS_DEBUG_WARNING,
-      nsAutoCString(TypeToText(GetType()) + " shutdown step"_ns).get(),
-      stepString.get(), __FILE__, __LINE__);
-#endif
-}
-
 bool Client::InitiateShutdownWorkThreads() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mShutdownTimer);
-  MOZ_ASSERT(mShutdownSteps.IsEmpty());
 
-  mShutdownStartedAt.init(TimeStamp::NowLoRes());
-
-  MaybeRecordShutdownStep("starting"_ns);
+  QuotaManager::GetRef().MaybeRecordShutdownStep(GetType(), "starting"_ns);
 
   InitiateShutdown();
 
-  if (!IsShutdownCompleted()) {
-    mShutdownTimer = NS_NewTimer();
-
-    MOZ_ALWAYS_SUCCEEDS(mShutdownTimer->InitWithNamedFuncCallback(
-        [](nsITimer* aTimer, void* aClosure) {
-          auto* const quotaClient = static_cast<Client*>(aClosure);
-
-          quotaClient->ForceKillActors();
-
-          MOZ_ALWAYS_SUCCEEDS(aTimer->InitWithNamedFuncCallback(
-              [](nsITimer* aTimer, void* aClosure) {
-                auto* const quotaClient = static_cast<Client*>(aClosure);
-
-                if (quotaClient->IsShutdownCompleted()) {
-                  // Apparently, the shutdown did complete between the timer
-                  // fired and we processed the event. So there's no reason to
-                  // crash, just do nothing.
-
-                  return;
-                }
-
-                const auto type = TypeToText(quotaClient->GetType());
-
-                CrashReporter::AnnotateCrashReport(
-                    CrashReporter::Annotation::QuotaManagerShutdownTimeout,
-                    nsPrintfCString("%s: %s\nIntermediate steps:\n%s",
-                                    type.get(),
-                                    quotaClient->GetShutdownStatus().get(),
-                                    quotaClient->mShutdownSteps.get()));
-
-                MOZ_CRASH_UNSAFE_PRINTF("%s shutdown timed out", type.get());
-              },
-              aClosure, SHUTDOWN_FORCE_CRASH_TIMEOUT_MS,
-              nsITimer::TYPE_ONE_SHOT,
-              "quota::Client::ShutdownWorkThreads::ForceCrashTimer"));
-        },
-        this, SHUTDOWN_FORCE_KILL_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
-        "quota::Client::ShutdownWorkThreads::ForceKillTimer"));
-
-    return true;
-  }
-
-  return false;
+  return IsShutdownCompleted();
 }
 
 void Client::FinalizeShutdownWorkThreads() {
-  MOZ_ASSERT(mShutdownStartedAt);
-
-  if (mShutdownTimer) {
-    MOZ_ALWAYS_SUCCEEDS(mShutdownTimer->Cancel());
-  }
-
-  MaybeRecordShutdownStep("completed"_ns);
+  QuotaManager::GetRef().MaybeRecordShutdownStep(GetType(), "completed"_ns);
 
   FinalizeShutdown();
 }
