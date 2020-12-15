@@ -2149,6 +2149,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
         !JitOptions.eagerIonCompilation()) {
       return Method_Skipped;
     }
+    JitSpew(JitSpew_IonScripts, "Forcing OSR Mismatch Compilation");
     force = true;
   }
 
