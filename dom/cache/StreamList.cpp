@@ -30,7 +30,7 @@ StreamList::StreamList(SafeRefPtr<Manager> aManager,
       mStreamControl(nullptr),
       mActivated(false) {
   MOZ_DIAGNOSTIC_ASSERT(mManager);
-  mContext->AddActivity(this);
+  mContext->AddActivity(*this);
 }
 
 Manager& StreamList::GetManager() const {
@@ -155,7 +155,7 @@ StreamList::~StreamList() {
     }
     mManager->ReleaseCacheId(mCacheId);
   }
-  mContext->RemoveActivity(this);
+  mContext->RemoveActivity(*this);
 }
 
 }  // namespace mozilla::dom::cache
