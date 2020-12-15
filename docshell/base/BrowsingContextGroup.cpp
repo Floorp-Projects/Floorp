@@ -7,6 +7,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
@@ -315,6 +316,66 @@ void BrowsingContextGroup::FlushPostMessageEvents() {
       while ((event = mPostMessageEventQueue->GetEvent())) {
         NS_DispatchToMainThread(event.forget());
       }
+    }
+  }
+}
+
+bool BrowsingContextGroup::HasActiveBC() {
+  for (auto& topLevelBC : Toplevels()) {
+    if (topLevelBC->IsActive()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void BrowsingContextGroup::IncInputEventSuspensionLevel() {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  if (!mHasIncreasedInputTaskManagerSuspensionLevel && HasActiveBC()) {
+    IncInputTaskManagerSuspensionLevel();
+  }
+  ++mInputEventSuspensionLevel;
+}
+
+void BrowsingContextGroup::DecInputEventSuspensionLevel() {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  --mInputEventSuspensionLevel;
+  if (!mInputEventSuspensionLevel &&
+      mHasIncreasedInputTaskManagerSuspensionLevel) {
+    DecInputTaskManagerSuspensionLevel();
+  }
+}
+
+void BrowsingContextGroup::DecInputTaskManagerSuspensionLevel() {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  MOZ_ASSERT(mHasIncreasedInputTaskManagerSuspensionLevel);
+
+  InputTaskManager::Get()->DecSuspensionLevel();
+  mHasIncreasedInputTaskManagerSuspensionLevel = false;
+}
+
+void BrowsingContextGroup::IncInputTaskManagerSuspensionLevel() {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  MOZ_ASSERT(!mHasIncreasedInputTaskManagerSuspensionLevel);
+  MOZ_ASSERT(HasActiveBC());
+
+  InputTaskManager::Get()->IncSuspensionLevel();
+  mHasIncreasedInputTaskManagerSuspensionLevel = true;
+}
+
+void BrowsingContextGroup::UpdateInputTaskManagerIfNeeded(bool aIsActive) {
+  MOZ_ASSERT(StaticPrefs::dom_input_events_canSuspendInBCG_enabled_AtStartup());
+  if (!aIsActive) {
+    if (mHasIncreasedInputTaskManagerSuspensionLevel) {
+      MOZ_ASSERT(mInputEventSuspensionLevel > 0);
+      if (!HasActiveBC()) {
+        DecInputTaskManagerSuspensionLevel();
+      }
+    }
+  } else {
+    if (mInputEventSuspensionLevel &&
+        !mHasIncreasedInputTaskManagerSuspensionLevel) {
+      IncInputTaskManagerSuspensionLevel();
     }
   }
 }

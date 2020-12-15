@@ -828,6 +828,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean isMozAfterPaintPending;
 
   /**
+   * Returns true if the InputTaskManager is suspended.
+   */
+  readonly attribute boolean isInputTaskManagerSuspended;
+
+  /**
    * Suppresses/unsuppresses user initiated event handling in window's document
    * and subdocuments.
    *
