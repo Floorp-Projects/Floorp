@@ -152,9 +152,6 @@ bool ThreadsAvailable(JSContext* cx);
 // SIMD data and operations.
 bool SimdAvailable(JSContext* cx);
 
-// Very experimental SIMD operations.
-bool SimdWormholeAvailable(JSContext* cx);
-
 #if defined(ENABLE_WASM_SIMD) && defined(DEBUG)
 // Report the result of a Simd simplification to the testing infrastructure.
 void ReportSimdAnalysis(const char* data);
@@ -205,6 +202,7 @@ WasmInstanceObject* ExportedFunctionToInstanceObject(JSFunction* fun);
 uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
 
 bool IsSharedWasmMemoryObject(JSObject* obj);
+
 
 // Abstractions that clarify that we are working on a 32-bit memory and check
 // that the buffer length does not exceed that's memory's fixed limits.

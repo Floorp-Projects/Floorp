@@ -120,14 +120,6 @@ static inline bool WasmSimdFlag(JSContext* cx) {
 #endif
 }
 
-static inline bool WasmSimdWormholeFlag(JSContext* cx) {
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-  return cx->options().wasmSimdWormhole();
-#else
-  return false;
-#endif
-}
-
 static inline bool WasmReftypesFlag(JSContext* cx) {
 #ifdef ENABLE_WASM_REFTYPES
   return cx->options().wasmReftypes();
@@ -406,11 +398,6 @@ bool wasm::MultiValuesAvailable(JSContext* cx) {
 bool wasm::SimdAvailable(JSContext* cx) {
   return WasmSimdFlag(cx) &&
          (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
-}
-
-bool wasm::SimdWormholeAvailable(JSContext* cx) {
-  return WasmSimdWormholeFlag(cx) && SimdAvailable(cx) && IonAvailable(cx) &&
-         !BaselineAvailable(cx) && !CraneliftAvailable(cx);
 }
 
 bool wasm::ThreadsAvailable(JSContext* cx) {
