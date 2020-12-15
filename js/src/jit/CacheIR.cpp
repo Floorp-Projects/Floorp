@@ -146,8 +146,8 @@ StubField CacheIRWriter::readStubFieldForIon(uint32_t offset,
   return stubFields_[index];
 }
 
-CacheIRCloner::CacheIRCloner(ICStub* stub)
-    : stubInfo_(stub->cacheIRStubInfo()), stubData_(stub->cacheIRStubData()) {}
+CacheIRCloner::CacheIRCloner(ICCacheIRStub* stub)
+    : stubInfo_(stub->stubInfo()), stubData_(stub->stubDataStart()) {}
 
 void CacheIRCloner::cloneOp(CacheOp op, CacheIRReader& reader,
                             CacheIRWriter& writer) {

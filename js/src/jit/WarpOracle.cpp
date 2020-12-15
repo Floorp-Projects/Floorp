@@ -64,10 +64,10 @@ class MOZ_STACK_CLASS WarpScriptOracle {
   AbortReasonOr<Ok> maybeInlineIC(WarpOpSnapshotList& snapshots,
                                   BytecodeLocation loc);
   AbortReasonOr<bool> maybeInlineCall(WarpOpSnapshotList& snapshots,
-                                      BytecodeLocation loc, ICStub* stub,
+                                      BytecodeLocation loc, ICCacheIRStub* stub,
                                       ICFallbackStub* fallbackStub,
                                       uint8_t* stubDataCopy);
-  MOZ_MUST_USE bool replaceNurseryPointers(ICStub* stub,
+  MOZ_MUST_USE bool replaceNurseryPointers(ICCacheIRStub* stub,
                                            const CacheIRStubInfo* stubInfo,
                                            uint8_t* stubDataCopy);
 
@@ -770,7 +770,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   }
 
   const ICEntry& entry = getICEntry(loc);
-  ICStub* stub = entry.firstStub();
+  ICStub* firstStub = entry.firstStub();
   ICFallbackStub* fallbackStub = entry.fallbackStub();
 
   uint32_t offset = loc.bytecodeToOffset(script_);
@@ -780,7 +780,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   // invalidating.
   fallbackStub->clearUsedByTranspiler();
 
-  if (stub == fallbackStub) {
+  if (firstStub == fallbackStub) {
     [[maybe_unused]] unsigned line, column;
     LineNumberAndColumn(script_, loc, &line, &column);
 
@@ -803,6 +803,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     return Ok();
   }
 
+  ICCacheIRStub* stub = firstStub->toCacheIRStub();
+
   // Don't optimize if there are other stubs with entered-count > 0. Counters
   // are reset when a new stub is attached so this means the stub that was added
   // most recently didn't handle all cases.
@@ -820,8 +822,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     return Ok();
   }
 
-  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
-  const uint8_t* stubData = stub->cacheIRStubData();
+  const CacheIRStubInfo* stubInfo = stub->stubInfo();
+  const uint8_t* stubData = stub->stubDataStart();
 
   // Only create a snapshot if all opcodes are supported by the transpiler.
   CacheIRReader reader(stubInfo);
@@ -924,7 +926,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 }
 
 AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
-    WarpOpSnapshotList& snapshots, BytecodeLocation loc, ICStub* stub,
+    WarpOpSnapshotList& snapshots, BytecodeLocation loc, ICCacheIRStub* stub,
     ICFallbackStub* fallbackStub, uint8_t* stubDataCopy) {
   Maybe<InlinableOpData> inlineData = FindInlinableOpData(stub, loc);
   if (inlineData.isNothing() || !inlineData->icScript) {
@@ -960,7 +962,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
   // Take a snapshot of the CacheIR.
   uint32_t offset = loc.bytecodeToOffset(script_);
   JitCode* jitCode = stub->jitCode();
-  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
+  const CacheIRStubInfo* stubInfo = stub->stubInfo();
   WarpCacheIR* cacheIRSnapshot = new (alloc_.fallible())
       WarpCacheIR(offset, jitCode, stubInfo, stubDataCopy);
   if (!cacheIRSnapshot) {
@@ -1008,7 +1010,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
   return true;
 }
 
-bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
+bool WarpScriptOracle::replaceNurseryPointers(ICCacheIRStub* stub,
                                               const CacheIRStubInfo* stubInfo,
                                               uint8_t* stubDataCopy) {
   // If the stub data contains nursery object pointers, replace them with the
@@ -1042,7 +1044,8 @@ bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
                       "Code assumes scripts are tenured");
         break;
       case StubField::Type::JSObject: {
-        JSObject* obj = stubInfo->getStubField<ICStub, JSObject*>(stub, offset);
+        JSObject* obj =
+            stubInfo->getStubField<ICCacheIRStub, JSObject*>(stub, offset);
         if (IsInsideNursery(obj)) {
           uint32_t nurseryIndex;
           if (!oracle_->registerNurseryObject(obj, &nurseryIndex)) {
@@ -1057,7 +1060,8 @@ bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
       }
       case StubField::Type::String: {
 #ifdef DEBUG
-        JSString* str = stubInfo->getStubField<ICStub, JSString*>(stub, offset);
+        JSString* str =
+            stubInfo->getStubField<ICCacheIRStub, JSString*>(stub, offset);
         MOZ_ASSERT(!IsInsideNursery(str));
 #endif
         break;
@@ -1065,7 +1069,7 @@ bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
       case StubField::Type::Id: {
 #ifdef DEBUG
         // jsid never contains nursery-allocated things.
-        jsid id = stubInfo->getStubField<ICStub, jsid>(stub, offset);
+        jsid id = stubInfo->getStubField<ICCacheIRStub, jsid>(stub, offset);
         MOZ_ASSERT_IF(id.isGCThing(),
                       !IsInsideNursery(id.toGCCellPtr().asCell()));
 #endif
@@ -1073,7 +1077,8 @@ bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
       }
       case StubField::Type::Value: {
 #ifdef DEBUG
-        Value v = stubInfo->getStubField<ICStub, JS::Value>(stub, offset);
+        Value v =
+            stubInfo->getStubField<ICCacheIRStub, JS::Value>(stub, offset);
         MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
 #endif
         break;

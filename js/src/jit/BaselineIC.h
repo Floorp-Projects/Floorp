@@ -416,9 +416,6 @@ class ICStub {
     MOZ_ASSERT(next());
     return makesGCCalls();
   }
-
-  const CacheIRStubInfo* cacheIRStubInfo() const;
-  const uint8_t* cacheIRStubData();
 };
 
 class ICFallbackStub : public ICStub {
