@@ -5,14 +5,12 @@
 package mozilla.components.browser.engine.gecko
 
 import android.util.JsonReader
-import android.util.JsonToken
 import android.util.JsonWriter
 import mozilla.components.concept.engine.EngineSessionState
 import org.json.JSONException
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoSession
 import java.io.IOException
-import java.lang.IllegalStateException
 
 private const val GECKO_STATE_KEY = "GECKO_STATE"
 
@@ -58,36 +56,19 @@ class GeckoEngineSessionState internal constructor(
             reader.beginObject()
 
             val key = reader.nextName()
-
-            val rawState = if (key == GECKO_STATE_KEY) {
-                reader.nextString()
-            } else {
-                reader.consumeObject()
-                null
+            if (key != GECKO_STATE_KEY) {
+                throw AssertionError("Unknown state key: $key")
             }
+
+            val rawState = reader.nextString()
 
             reader.endObject()
 
-            if (rawState != null) {
-                GeckoEngineSessionState(GeckoSession.SessionState.fromString(rawState))
-            } else {
-                GeckoEngineSessionState(null)
-            }
+            GeckoEngineSessionState(
+                GeckoSession.SessionState.fromString(rawState)
+            )
         } catch (e: IOException) {
             GeckoEngineSessionState(null)
-        } catch (e: AssertionError) {
-            GeckoEngineSessionState(null)
-        } catch (e: IllegalStateException) {
-            GeckoEngineSessionState(null)
-        }
-    }
-}
-
-private fun JsonReader.consumeObject() {
-    while (true) {
-        when (peek()) {
-            JsonToken.END_OBJECT -> return
-            else -> skipValue()
         }
     }
 }

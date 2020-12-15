@@ -98,7 +98,7 @@ interface Engine : WebExtensionRuntime, DataCleanable {
     fun createSessionState(json: JSONObject): EngineSessionState
 
     /**
-     * Creates a new [EngineSessionState] instance from the serialized JSON representation.
+     * Creates a new [EngineSessionState] instances from the serialized JSON representation.
      */
     fun createSessionStateFrom(reader: JsonReader): EngineSessionState
 
