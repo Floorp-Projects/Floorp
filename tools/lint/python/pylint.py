@@ -96,6 +96,14 @@ def parse_issues(log, config, issues_json, path):
     return results
 
 
+def get_pylint_version(binary):
+    return subprocess.check_output(
+        [binary, "--version"],
+        universal_newlines=True,
+        stderr=subprocess.STDOUT,
+    )
+
+
 def lint(paths, config, **lintargs):
     log = lintargs["log"]
 
@@ -118,6 +126,7 @@ def lint(paths, config, **lintargs):
 
     base_command = cmd_args + paths
     log.debug("Command: {}".format(" ".join(cmd_args)))
+    log.debug("pylint version: {}".format(get_pylint_version(binary)))
     output = " ".join(run_process(config, base_command))
     results = parse_issues(log, config, str(output), [])
 
