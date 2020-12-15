@@ -2172,24 +2172,29 @@ bool WarpBuilder::build_CheckResumeKind(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_CanSkipAwait(BytecodeLocation loc) {
-  // From the WarpBuilder perspective we're consuming the top of stack and then
-  // re-pushing; but really, this is an implicit use.
-  current->peek(-1)->setImplicitlyUsedUnchecked();
+  MDefinition* val = current->pop();
 
-  // Initial Implementation: Disable the CanSkipAwait optimization
-  // by returning false here.
-  pushConstant(BooleanValue(false));
-  return true;
+  MCanSkipAwait* canSkip = MCanSkipAwait::New(alloc(), val);
+  current->add(canSkip);
+
+  current->push(val);
+  current->push(canSkip);
+
+  return resumeAfter(canSkip, loc);
 }
 
 bool WarpBuilder::build_MaybeExtractAwaitValue(BytecodeLocation loc) {
-  // From the WarpBuilder perspective we're consuming the top two elements of
-  // the stack and then re-pushing; but we consider these implicit uses.
-  current->peek(-1)->setImplicitlyUsedUnchecked();
-  current->peek(-2)->setImplicitlyUsedUnchecked();
+  MDefinition* canSkip = current->pop();
+  MDefinition* value = current->pop();
 
-  // While the opt is disabled we can just do nothing here.
-  return true;
+  MMaybeExtractAwaitValue* extracted =
+      MMaybeExtractAwaitValue::New(alloc(), value, canSkip);
+  current->add(extracted);
+
+  current->push(extracted);
+  current->push(canSkip);
+
+  return resumeAfter(extracted, loc);
 }
 
 bool WarpBuilder::build_Await(BytecodeLocation loc) {
