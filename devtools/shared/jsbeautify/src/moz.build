@@ -7,6 +7,5 @@
 DevToolsModules(
     'beautify-css.js',
     'beautify-html.js',
-    'beautify-js.js',
-    'beautify-tests.js'
+    'beautify-js.js'
 )
