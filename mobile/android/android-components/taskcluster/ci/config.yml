@@ -6,15 +6,133 @@ treeherder:
         I: Docker Image Builds
         TL: Toolchain builds for Linux 64-bits
 
-        # Groups are generated off buildconfig.yml, except these ones:
-        samples-browser: samples-browser
+        # This list is based on .buildconfig.yml except the exceptions down below
+        browser-awesomebar: browser-awesomebar
+        browser-domains: browser-domains
+        browser-engine-gecko-beta: browser-engine-gecko-beta
+        browser-engine-gecko: browser-engine-gecko
+        browser-engine-system: browser-engine-system
+        browser-errorpages: browser-errorpages
+        browser-icons: browser-icons
+        browser-menu: browser-menu
+        browser-menu2: browser-menu2
+        browser-search: browser-search
+        browser-session: browser-session
+        browser-state: browser-state
+        browser-storage-memory: browser-storage-memory
+        browser-storage-sync: browser-storage-sync
+        browser-tabstray: browser-tabstray
+        browser-thumbnails: browser-thumbnails
+        browser-toolbar: browser-toolbar
+        concept-awesomebar: concept-awesomebar
+        concept-base: concept-base
+        concept-engine: concept-engine
+        concept-fetch: concept-fetch
+        concept-menu: concept-menu
+        concept-push: concept-push
+        concept-storage: concept-storage
+        concept-sync: concept-sync
+        concept-tabstray: concept-tabstray
+        concept-toolbar: concept-toolbar
+        feature-accounts-push: feature-accounts-push
+        feature-accounts: feature-accounts
+        feature-addons: feature-addons
+        feature-app-links: feature-app-links
+        feature-awesomebar: feature-awesomebar
+        feature-containers: feature-containers
+        feature-contextmenu: feature-contextmenu
+        feature-customtabs: feature-customtabs
+        feature-downloads: feature-downloads
+        feature-findinpage: feature-findinpage
+        feature-intent: feature-intent
+        feature-logins: feature-logins
+        feature-media: feature-media
+        feature-p2p: feature-p2p
+        feature-privatemode: feature-privatemode
+        feature-prompts: feature-prompts
+        feature-push: feature-push
+        feature-pwa: feature-pwa
+        feature-qr: feature-qr
+        feature-readerview: feature-readerview
+        feature-recentlyclosed: feature-recentlyclosed
+        feature-search: feature-search
+        feature-session: feature-session
+        feature-share: feature-share
+        feature-sitepermissions: feature-sitepermissions
+        feature-syncedtabs: feature-syncedtabs
+        feature-tab-collections: feature-tab-collections
+        feature-tabs: feature-tabs
+        feature-toolbar: feature-toolbar
+        feature-top-sites: feature-top-sites
+        feature-webcompat: feature-webcompat
+        feature-webnotifications: feature-webnotifications
+        lib-crash: lib-crash
+        lib-dataprotect: lib-dataprotect
+        lib-fetch-okhttp: lib-fetch-okhttp
+        lib-jexl: lib-jexl
+        lib-nearby: lib-nearby
+        lib-publicsuffixlist: lib-publicsuffixlist
+        lib-push-amazon: lib-push-amazon
+        lib-push-firebase: lib-push-firebase
+        lib-state: lib-state
         samples-browser-beta: samples-browser-beta
         samples-browser-release: samples-browser-release
         samples-browser-system: samples-browser-system
+        samples-browser: samples-browser
+        samples-crash: samples-crash
+        samples-dataprotect: samples-dataprotect
+        samples-firefox-accounts: samples-firefox-accounts
+        samples-glean-library: samples-glean-library
+        samples-glean: samples-glean
+        samples-nearby-chat: samples-nearby-chat
+        samples-sync-logins: samples-sync-logins
+        samples-sync: samples-sync
+        samples-toolbar: samples-toolbar
+        service-digitalassetlinks: service-digitalassetlinks
+        service-experiments: service-experiments
+        service-firefox-accounts: service-firefox-accounts
+        service-fretboard: service-fretboard
+        service-glean: service-glean
+        service-location: service-location
+        service-nimbus: service-nimbus
+        service-pocket: service-pocket
+        service-sync-logins: service-sync-logins
+        support-android-test: support-android-test
+        support-base: support-base
+        support-images: support-images
+        support-ktx: support-ktx
+        support-locale: support-locale
+        support-migration: support-migration
+        support-rusthttp: support-rusthttp
+        support-rustlog: support-rustlog
+        support-sync-telemetry: support-sync-telemetry
+        support-test-appservices: support-test-appservices
+        support-test-libstate: support-test-libstate
+        support-test: support-test
+        support-utils: support-utils
+        support-webextensions: support-webextensions
+        tooling-detekt: tooling-detekt
+        tooling-fetch-tests: tooling-fetch-tests
+        tooling-glean-gradle: tooling-glean-gradle
+        tooling-lint: tooling-lint
+        ui-autocomplete: ui-autocomplete
+        ui-colors: ui-colors
+        ui-fonts: ui-fonts
+        ui-icons: ui-icons
+        ui-tabcounter: ui-tabcounter
+        ui-widgets: ui-widgets
+
         # These ones are too long to fit in 25 chars
         browser-engine-gecko-nigh: browser-engine-gecko-nightly
         lib-fetch-httpurlconnect: lib-fetch-httpurlconnection
         feature-webcompat-report: feature-webcompat-reporter
+
+        # Groups aren't generated off buildconfig.yml:
+        samples-browser: samples-browser
+        samples-browser-beta: samples-browser-beta
+        samples-browser-release: samples-browser-release
+        samples-browser-system: samples-browser-system
+
 
 task-priority: highest
 

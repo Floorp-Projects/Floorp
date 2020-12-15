@@ -26,20 +26,11 @@ def register(graph_config):
     the process.
     """
     _import_modules(["job", "routes", "target_tasks", "worker_types", "release_promotion"])
-    _fill_treeherder_groups(graph_config)
 
 
 def _import_modules(modules):
     for module in modules:
         import_module(".{}".format(module), package=__name__)
-
-
-def _fill_treeherder_groups(graph_config):
-    group_names = {
-        component["name"]: component["name"]
-        for component in get_components()
-    }
-    graph_config['treeherder']['group-names'].update(group_names)
 
 
 def get_decision_parameters(graph_config, parameters):
