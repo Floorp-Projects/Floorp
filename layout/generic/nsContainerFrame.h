@@ -327,18 +327,6 @@ class nsContainerFrame : public nsSplittableFrame {
    * See nsBlockFrame::Reflow for a sample implementation.
    *
    * For more information, see https://wiki.mozilla.org/Gecko:Continuation_Model
-   *
-   * Note that Flex/GridContainerFrame doesn't use nsOverflowContinuationTracker
-   * so the above doesn't apply.  Flex/Grid containers may have items that
-   * aren't in document order between fragments, due to the 'order' property,
-   * but they do maintain the invariant that children in the same nsFrameList
-   * are in document order.  This means that when pushing/pulling items or
-   * merging lists, the result needs to be sorted to restore the order.
-   * However, given that lists are individually sorted, it's a simple merge
-   * operation of the two lists to make the result sorted.
-   * DrainExcessOverflowContainersList takes a merging function to perform that
-   * operation.  (By "document order" here we mean normal frame tree order,
-   * which is approximately flattened DOM tree order.)
    */
 
   friend class nsOverflowContinuationTracker;
@@ -805,19 +793,6 @@ class nsContainerFrame : public nsSplittableFrame {
   static void ReparentFloatsForInlineChild(nsIFrame* aOurBlock,
                                            nsIFrame* aFrame,
                                            bool aReparentSiblings);
-
-  /**
-   * Try to remove aChildToRemove from the frame list stored in aProp.
-   * If aChildToRemove was removed from the aProp list and that list became
-   * empty, then aProp is removed from this frame and deleted.
-   * @note if aChildToRemove isn't on the aProp frame list, it might still be
-   * removed from whatever list it happens to be on, so use this method
-   * carefully.  This method is primarily meant for removing frames from the
-   * [Excess]OverflowContainers lists.
-   * @return true if aChildToRemove was removed from some list
-   */
-  bool TryRemoveFrame(FrameListPropertyDescriptor aProp,
-                      nsIFrame* aChildToRemove);
 
   // ==========================================================================
   /*
