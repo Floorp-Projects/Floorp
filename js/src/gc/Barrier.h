@@ -305,12 +305,6 @@ void CellPtrPreWriteBarrier(JS::GCCellPtr thing);
 
 #ifdef DEBUG
 
-// Barriers can't be triggered during backend Ion compilation, which may run on
-// a helper thread.
-bool CurrentThreadIsIonCompiling();
-
-bool CurrentThreadIsGCSweeping();
-bool CurrentThreadIsGCFinalizing();
 bool CurrentThreadIsTouchingGrayThings();
 
 bool IsMarkedBlack(JSObject* obj);
