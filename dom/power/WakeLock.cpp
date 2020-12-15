@@ -67,29 +67,6 @@ nsresult WakeLock::Init(const nsAString& aTopic, nsPIDOMWindowInner* aWindow) {
   return NS_OK;
 }
 
-nsresult WakeLock::Init(const nsAString& aTopic,
-                        ContentParent* aContentParent) {
-  // Don't Init() a WakeLock twice.
-  MOZ_ASSERT(mTopic.IsEmpty());
-  MOZ_ASSERT(aContentParent);
-
-  if (aTopic.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mTopic.Assign(aTopic);
-  mContentParentID = aContentParent->ChildID();
-  mHidden = false;
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->AddObserver(this, "ipc:content-shutdown", /* ownsWeak */ true);
-  }
-
-  DoLock();
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 WakeLock::Observe(nsISupports* aSubject, const char* aTopic,
                   const char16_t* data) {
