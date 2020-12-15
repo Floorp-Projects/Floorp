@@ -11774,6 +11774,25 @@ class MCheckThis : public MUnaryInstruction, public BoxInputsPolicy::Data {
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
+class MAsyncResolve : public MBinaryInstruction,
+                      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
+  AsyncFunctionResolveKind resolveKind_;
+
+  explicit MAsyncResolve(MDefinition* generator, MDefinition* valueOrReason,
+                         AsyncFunctionResolveKind resolveKind)
+      : MBinaryInstruction(classOpcode, generator, valueOrReason),
+        resolveKind_(resolveKind) {
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(AsyncResolve)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, generator), (1, valueOrReason))
+
+  AsyncFunctionResolveKind resolveKind() { return resolveKind_; }
+};
+
 class MCheckThisReinit : public MUnaryInstruction,
                          public BoxInputsPolicy::Data {
   explicit MCheckThisReinit(MDefinition* thisVal)
@@ -11789,6 +11808,21 @@ class MCheckThisReinit : public MUnaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   MDefinition* foldsTo(TempAllocator& alloc) override;
+};
+
+// Allocate the generator object for a frame.
+class MGenerator : public MTernaryInstruction,
+                   public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {
+  explicit MGenerator(MDefinition* callee, MDefinition* environmentChain,
+                      MDefinition* argsObject)
+      : MTernaryInstruction(classOpcode, callee, environmentChain, argsObject) {
+    setResultType(MIRType::Object);
+  };
+
+ public:
+  INSTRUCTION_HEADER(Generator)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, callee), (1, environmentChain), (2, argsObject))
 };
 
 // Increase the warm-up counter of the provided script upon execution and test

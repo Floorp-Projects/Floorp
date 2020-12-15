@@ -7997,6 +7997,48 @@ class LCheckThisReinit : public LInstructionHelper<0, BOX_PIECES, 0> {
   }
 };
 
+class LGenerator
+    : public LCallInstructionHelper</* defs = */ 1, /* operands = */ 3,
+                                    /* temps = */ 0> {
+ public:
+  LIR_HEADER(Generator)
+
+  static const size_t CalleeInput = 0;
+  static const size_t EnvInput = 1;
+  static const size_t ArgsInput = 2;
+
+  LGenerator(const LAllocation& callee, const LAllocation& environmentChain,
+             const LAllocation& argsObject)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(CalleeInput, callee);
+    setOperand(EnvInput, environmentChain);
+    setOperand(ArgsInput, argsObject);
+  }
+
+  MGenerator* mir() const { return mir_->toGenerator(); }
+  const LAllocation* callee() { return getOperand(CalleeInput); }
+  const LAllocation* environmentChain() { return getOperand(EnvInput); }
+  const LAllocation* argsObject() { return getOperand(ArgsInput); }
+};
+
+class LAsyncResolve : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(AsyncResolve)
+
+  static const size_t GeneratorInput = 0;
+  static const size_t ValueOrReasonInput = 1;
+
+  LAsyncResolve(const LAllocation& generator,
+                const LBoxAllocation& valueOrReason)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(GeneratorInput, generator);
+    setBoxOperand(ValueOrReasonInput, valueOrReason);
+  }
+
+  MAsyncResolve* mir() const { return mir_->toAsyncResolve(); }
+  const LAllocation* generator() { return getOperand(GeneratorInput); }
+};
+
 class LDebugCheckSelfHosted : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DebugCheckSelfHosted)
