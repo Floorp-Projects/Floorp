@@ -28,7 +28,9 @@ class RenderExternalTextureHost final : public RenderTextureHost {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
   void PrepareForUse() override;
-
+  size_t Bytes() override {
+    return mSize.width * mSize.height * BytesPerPixel(mFormat);
+  }
  private:
   ~RenderExternalTextureHost();
 

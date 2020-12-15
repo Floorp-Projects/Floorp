@@ -58,6 +58,13 @@ class RenderTextureHostSWGL : public RenderTextureHost {
   bool LockSWGLCompositeSurface(void* aContext,
                                 wr::WrSWGLCompositeSurfaceInfo* aInfo);
 
+  size_t Bytes() override {
+    size_t bytes = 0;
+    for (auto &plane : mPlanes) {
+      bytes += plane.mStride * plane.mSize.height;
+    }
+    return bytes;
+  }
  protected:
   bool mLocked = false;
   void* mContext = nullptr;

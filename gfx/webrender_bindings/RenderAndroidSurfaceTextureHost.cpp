@@ -18,6 +18,7 @@ RenderAndroidSurfaceTextureHost::RenderAndroidSurfaceTextureHost(
     gfx::SurfaceFormat aFormat, bool aContinuousUpdate)
     : mSurfTex(aSurfTex),
       mSize(aSize),
+      mFormat(aFormat),
       mContinuousUpdate(aContinuousUpdate),
       mPrepareStatus(STATUS_NONE),
       mAttachedToGLContext(false) {

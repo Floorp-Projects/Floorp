@@ -23,7 +23,10 @@ class RenderEGLImageTextureHost final : public RenderTextureHost {
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
-
+  size_t Bytes() override {
+    // XXX: we don't have a format so we can't get bpp.
+    return mSize.width * mSize.height;
+  }
  private:
   virtual ~RenderEGLImageTextureHost();
   void DeleteTextureHandle();
