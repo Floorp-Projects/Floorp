@@ -78,23 +78,29 @@ function findUnicodeExtensionKeys(locale) {
 // the resolved locale are sorted alphabetically.
 
 for (let IntlService of IntlServices) {
+    let options = undefined;
+    if (IntlService === Intl.DisplayNames) {
+        // Intl.DisplayNames requires the "type" option to be set.
+        options = {type: "language"};
+    }
+
     // sort() modifies the input array, so create a copy.
     let ext = unicodeExtensions.slice(0);
 
     let locale, keys;
 
     // Input keys unsorted.
-    locale = new IntlService(`de-u-${ext.join("-")}`).resolvedOptions().locale;
+    locale = new IntlService(`de-u-${ext.join("-")}`, options).resolvedOptions().locale;
     keys = findUnicodeExtensionKeys(locale);
     assertEqArray(keys, keys.slice(0).sort());
 
     // Input keys sorted alphabetically.
-    locale = new IntlService(`de-u-${ext.sort().join("-")}`).resolvedOptions().locale;
+    locale = new IntlService(`de-u-${ext.sort().join("-")}`, options).resolvedOptions().locale;
     keys = findUnicodeExtensionKeys(locale);
     assertEqArray(keys, keys.slice(0).sort());
 
     // Input keys sorted alphabetically in reverse order.
-    locale = new IntlService(`de-u-${ext.sort(reverse).join("-")}`).resolvedOptions().locale;
+    locale = new IntlService(`de-u-${ext.sort(reverse).join("-")}`, options).resolvedOptions().locale;
     keys = findUnicodeExtensionKeys(locale);
     assertEqArray(keys, keys.slice(0).sort());
 }

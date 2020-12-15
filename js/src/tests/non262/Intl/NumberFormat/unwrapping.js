@@ -31,15 +31,21 @@ function IsPrimitive(o) {
 }
 
 function intlObjects(ctor) {
+    let args = [];
+    if (ctor === Intl.DisplayNames) {
+        // Intl.DisplayNames can't be constructed without any arguments.
+        args = [undefined, {type: "language"}];
+    }
+
     return [
         // Instance of an Intl constructor.
-        new ctor(),
+        new ctor(...args),
 
         // Instance of a subclassed Intl constructor.
-        new class extends ctor {},
+        new class extends ctor {}(...args),
 
         // Intl object not inheriting from its default prototype.
-        Object.setPrototypeOf(new ctor(), Object.prototype),
+        Object.setPrototypeOf(new ctor(...args), Object.prototype),
     ];
 }
 
