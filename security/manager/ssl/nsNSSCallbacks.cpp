@@ -723,11 +723,6 @@ static void PreliminaryHandshakeDone(PRFileDesc* fd) {
       infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
       infoObject->mIsDelegatedCredential = channelInfo.peerDelegCred;
       infoObject->mIsAcceptedEch = channelInfo.echAccepted;
-
-      if (infoObject->mIsDelegatedCredential) {
-        Telemetry::ScalarAdd(
-            Telemetry::ScalarID::SECURITY_TLS_DELEGATED_CREDENTIALS_TXN, 1);
-      }
     }
   }
 

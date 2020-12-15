@@ -1253,22 +1253,6 @@ security:
       - 'fennec'
     record_in_processes:
       - main
-  tls_delegated_credentials_txn:
-    bug_numbers:
-      - 1564179
-      - 1645082
-    description: >-
-      Count of how many transactions used delegated credentials (ietf-draft-tls-subcerts)
-    expires: "86"
-    kind: uint
-    notification_emails:
-      - seceng-telemetry@mozilla.com
-      - kjacobs@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
   https_only_mode_enabled:
     bug_numbers:
       - 1620244
