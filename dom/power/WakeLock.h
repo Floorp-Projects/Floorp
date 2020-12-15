@@ -22,8 +22,6 @@ class ErrorResult;
 
 namespace dom {
 
-class ContentParent;
-
 class WakeLock final : public nsIDOMEventListener,
                        public nsIObserver,
                        public nsSupportsWeakReference,
@@ -46,11 +44,6 @@ class WakeLock final : public nsIDOMEventListener,
   // allowed; a lock without an associated window is always considered
   // invisible.
   nsresult Init(const nsAString& aTopic, nsPIDOMWindowInner* aWindow);
-
-  // Initialize this wake lock on behalf of the given process.  If the process
-  // dies, the lock is released.  A wake lock initialized via this method is
-  // always considered visible.
-  nsresult Init(const nsAString& aTopic, ContentParent* aContentParent);
 
   // WebIDL methods
 

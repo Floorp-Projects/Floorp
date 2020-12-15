@@ -135,14 +135,6 @@ PowerManagerService::NewWakeLock(const nsAString& aTopic,
   return NS_OK;
 }
 
-already_AddRefed<WakeLock> PowerManagerService::NewWakeLockOnBehalfOfProcess(
-    const nsAString& aTopic, ContentParent* aContentParent) {
-  RefPtr<WakeLock> wakelock = new WakeLock();
-  nsresult rv = wakelock->Init(aTopic, aContentParent);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return wakelock.forget();
-}
-
 }  // namespace mozilla::dom::power
 
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
