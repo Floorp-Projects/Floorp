@@ -130,7 +130,7 @@ class CodeCoverageMixin(SingleTestMixin):
         else:
             raise Exception("Unexpected OS: {}".format(mozinfo.os))
 
-        strip_count = len(filter(None, self.prefix.split("/")))
+        strip_count = len(list(filter(None, self.prefix.split("/"))))
         os.environ["GCOV_PREFIX_STRIP"] = str(strip_count)
 
         # Download the gcno archive from the build machine.
