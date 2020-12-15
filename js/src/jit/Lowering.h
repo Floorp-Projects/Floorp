@@ -64,6 +64,8 @@ class LIRGenerator final : public LIRGeneratorSpecific {
   friend class LIRGeneratorShared;
   void visitInstructionDispatch(MInstruction* ins);
 
+  void visitReturnImpl(MDefinition* def, bool isGenerator = false);
+
   MOZ_MUST_USE bool visitInstruction(MInstruction* ins);
   MOZ_MUST_USE bool visitBlock(MBasicBlock* block);
 

@@ -5396,6 +5396,14 @@ void LIRGenerator::visitBuiltinObject(MBuiltinObject* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitReturn(MReturn* ret) {
+  return visitReturnImpl(ret->getOperand(0));
+}
+
+void LIRGenerator::visitGeneratorReturn(MGeneratorReturn* ret) {
+  return visitReturnImpl(ret->getOperand(0), true);
+}
+
 void LIRGenerator::visitSuperFunction(MSuperFunction* ins) {
   MOZ_ASSERT(ins->callee()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Value);
@@ -6008,3 +6016,7 @@ void LIRGenerator::visitWasmFence(MWasmFence* ins) {
 
 static_assert(!std::is_polymorphic_v<LIRGenerator>,
               "LIRGenerator should not have any virtual methods");
+
+#ifdef JS_CODEGEN_NONE
+void LIRGenerator::visitReturnImpl(MDefinition*, bool) { MOZ_CRASH(); }
+#endif
