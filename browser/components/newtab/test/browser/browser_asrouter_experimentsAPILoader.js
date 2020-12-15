@@ -148,7 +148,7 @@ const client = RemoteSettings("nimbus-desktop-experiments");
 
 // no `add_task` because we want to run this setup before each test not before
 // the entire test suite.
-async function setup() {
+async function setup(getPayload = EXPERIMENT_PAYLOAD) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["app.shield.optoutstudies.enabled", true],
@@ -164,7 +164,7 @@ async function setup() {
     42,
     [
       // Modify targeting to ensure the messages always show up
-      { ...EXPERIMENT_PAYLOAD() },
+      { ...getPayload() },
     ],
     { clear: true }
   );
@@ -244,5 +244,25 @@ add_task(async function test_exposure_ping() {
   );
 
   exposureSpy.restore();
+  await cleanup();
+});
+
+add_task(async function test_featureless_experiment() {
+  const payload = () => {
+    let experiment = EXPERIMENT_PAYLOAD();
+    // Remove the feature property from the branch
+    experiment.branches.forEach(branch => delete branch.feature);
+    return experiment;
+  };
+  Assert.ok(ExperimentAPI._store.getAllActive().length === 0, "Empty store");
+  await setup(payload);
+  // Fetch the new recipe from RS
+  await RemoteSettingsExperimentLoader.updateRecipes();
+  // Enrollment was successful; featureless experiments shouldn't break anything
+  await BrowserTestUtils.waitForCondition(
+    () => ExperimentAPI._store.getAllActive().length === 1,
+    "ExperimentAPI should return an experiment"
+  );
+
   await cleanup();
 });
