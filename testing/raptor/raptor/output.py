@@ -1223,7 +1223,7 @@ class RaptorOutput(PerftestOutput):
             page_cycle_results = page_cycle[0]
 
             # TODO: this assumes a single suite is run
-            suite = page_cycle_results.keys()[0]
+            suite = list(page_cycle_results.keys())[0]
             for sub in page_cycle_results[suite].keys():
                 try:
                     replicate = round(
