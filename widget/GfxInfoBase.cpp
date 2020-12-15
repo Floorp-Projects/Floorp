@@ -1057,7 +1057,8 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 #endif
 
     if (match || info[i].mDriverVersion == GfxDriverInfo::allDriverVersions) {
-      if (info[i].mFeature == GfxDriverInfo::allFeatures ||
+      if ((info[i].mFeature == GfxDriverInfo::allFeatures &&
+           aFeature != nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE) ||
           info[i].mFeature == aFeature) {
         status = info[i].mFeatureStatus;
         if (!info[i].mRuleId.IsEmpty()) {
