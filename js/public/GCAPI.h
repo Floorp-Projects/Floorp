@@ -579,7 +579,7 @@ extern JS_PUBLIC_API bool InternalGCReason(JS::GCReason reason);
 /**
  * Schedule the given zone to be collected as part of the next GC.
  */
-extern JS_PUBLIC_API void PrepareZoneForGC(Zone* zone);
+extern JS_PUBLIC_API void PrepareZoneForGC(JSContext* cx, Zone* zone);
 
 /**
  * Schedule all zones to be collected in the next GC.
@@ -603,7 +603,7 @@ extern JS_PUBLIC_API bool IsGCScheduled(JSContext* cx);
  * Undoes the effect of the Prepare methods above. The given zone will not be
  * collected in the next GC.
  */
-extern JS_PUBLIC_API void SkipZoneForGC(Zone* zone);
+extern JS_PUBLIC_API void SkipZoneForGC(JSContext* cx, Zone* zone);
 
 /*
  * Non-Incremental GC:
