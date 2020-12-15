@@ -33,16 +33,31 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: b-linux-large
-        images:
-            provisioner: 'mobile-{level}'
-            implementation: docker-worker
-            os: linux
-            worker-type: images
+        beetmover:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-beetmover
+            os: scriptworker
+            worker-type: 'mobile-{level}-beetmover'
         dep-signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: scriptworker
             worker-type: mobile-t-signing
+        github:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-github
+            os: scriptworker
+            worker-type: 'mobile-{level}-github'
+        images:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: images
+        ship-it:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-shipit
+            os: scriptworker
+            worker-type: 'mobile-{level}-shipit'
         signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
@@ -51,16 +66,6 @@ workers:
                 by-level:
                     "3": mobile-3-signing
                     default: mobile-t-signing
-        beetmover:
-            provisioner: scriptworker-k8s
-            implementation: scriptworker-beetmover
-            os: scriptworker
-            worker-type: 'mobile-{level}-beetmover'
-        github:
-            provisioner: scriptworker-k8s
-            implementation: scriptworker-github
-            os: scriptworker
-            worker-type: 'mobile-{level}-github'
         tree:
             provisioner: scriptworker-k8s
             implementation: scriptworker-tree
