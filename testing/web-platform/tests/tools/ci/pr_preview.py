@@ -64,6 +64,8 @@ def gh_request(method_name, url, body=None, media_type=None):
 
     resp.raise_for_status()
 
+    if resp.status_code == 204:
+        return None
     return resp.json()
 
 class GitHubRateLimitException(Exception):

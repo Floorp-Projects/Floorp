@@ -549,9 +549,9 @@ def test_update_mirror_refs_delete_collaborator():
             }
         )),
         (Requests.get_rate, Responses.no_limit),
-        (Requests.ref_delete_trusted, (200, {})),
+        (Requests.ref_delete_trusted, (204, None)),
         (Requests.get_rate, Responses.no_limit),
-        (Requests.ref_delete_open, (200, {})),
+        (Requests.ref_delete_open, (204, None)),
     ]
 
     method_threw, actual_traffic = update_mirror_refs(
