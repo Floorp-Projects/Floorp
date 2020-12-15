@@ -187,4 +187,3 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 
     return method(that, d_gpr[0], d_gpr[1], d_gpr[2], d_gpr[3], d_fpr[0], d_fpr[1], d_fpr[2], d_fpr[3]);
 }
-

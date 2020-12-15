@@ -96,4 +96,3 @@ abuse-report-unwanted-reason-v2 = I never wanted it and don’t know how to get 
 abuse-report-unwanted-example = Example: An application installed it without my permission
 
 abuse-report-other-reason = Something else
-
