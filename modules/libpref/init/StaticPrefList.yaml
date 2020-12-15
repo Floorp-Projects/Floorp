@@ -5276,17 +5276,8 @@
   #else
   value: false
   #endif
-  mirror: always
 #endif
-
-#if defined(ENABLE_WASM_SIMD_WORMHOLE)
-# This is x64-only nightly-only and it would break unified macOS builds if
-# it were in all.js
-- name: javascript.options.wasm_simd_wormhole
-  type: bool
-  value: false
   mirror: always
-#endif
 
 #---------------------------------------------------------------------------
 # Prefs starting with "layers."
