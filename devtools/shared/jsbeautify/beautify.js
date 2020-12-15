@@ -1,7 +1,9 @@
-var { cssBeautify } = require("devtools/shared/jsbeautify/src/beautify-css");
-var { htmlBeautify } = require("devtools/shared/jsbeautify/src/beautify-html");
-var { jsBeautify } = require("devtools/shared/jsbeautify/src/beautify-js");
+const { css_beautify } = require("devtools/shared/jsbeautify/src/beautify-css");
+const {
+  html_beautify,
+} = require("devtools/shared/jsbeautify/src/beautify-html");
+const { js_beautify } = require("devtools/shared/jsbeautify/src/beautify-js");
 
-exports.css = cssBeautify;
-exports.html = htmlBeautify;
-exports.js = jsBeautify;
+exports.css = css_beautify;
+exports.html = html_beautify;
+exports.js = js_beautify;
