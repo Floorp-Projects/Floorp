@@ -2222,7 +2222,7 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
   return script->zone()->jitZone()->optimizedStubSpace();
 }
 
-ICStub* js::jit::AttachBaselineCacheIRStub(
+ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
     JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
     JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub,
     bool* attached) {

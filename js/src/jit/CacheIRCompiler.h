@@ -1219,15 +1219,15 @@ class CacheIRStubInfo {
   js::GCPtr<T>& getStubField(Stub* stub, uint32_t offset) const;
 
   template <class T>
-  js::GCPtr<T>& getStubField(ICStub* stub, uint32_t offset) const {
-    return getStubField<ICStub, T>(stub, offset);
+  js::GCPtr<T>& getStubField(ICCacheIRStub* stub, uint32_t offset) const {
+    return getStubField<ICCacheIRStub, T>(stub, offset);
   }
 
   uintptr_t getStubRawWord(const uint8_t* stubData, uint32_t offset) const;
-  uintptr_t getStubRawWord(ICStub* stub, uint32_t offset) const;
+  uintptr_t getStubRawWord(ICCacheIRStub* stub, uint32_t offset) const;
 
   int64_t getStubRawInt64(const uint8_t* stubData, uint32_t offset) const;
-  int64_t getStubRawInt64(ICStub* stub, uint32_t offset) const;
+  int64_t getStubRawInt64(ICCacheIRStub* stub, uint32_t offset) const;
 
   void replaceStubRawWord(uint8_t* stubData, uint32_t offset, uintptr_t oldWord,
                           uintptr_t newWord) const;

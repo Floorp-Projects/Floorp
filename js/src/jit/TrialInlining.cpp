@@ -63,9 +63,10 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
   return inliner.tryInlining();
 }
 
-void TrialInliner::cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
+void TrialInliner::cloneSharedPrefix(ICCacheIRStub* stub,
+                                     const uint8_t* endOfPrefix,
                                      CacheIRWriter& writer) {
-  CacheIRReader reader(stub->cacheIRStubInfo());
+  CacheIRReader reader(stub->stubInfo());
   CacheIRCloner cloner(stub);
   while (reader.currentPosition() < endOfPrefix) {
     CacheOp op = reader.readOp();
@@ -82,8 +83,8 @@ bool TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
 
   // Note: AttachBaselineCacheIRStub never throws an exception.
   bool attached = false;
-  ICStub* newStub = AttachBaselineCacheIRStub(cx(), writer, kind, script_,
-                                              icScript_, fallback, &attached);
+  auto* newStub = AttachBaselineCacheIRStub(cx(), writer, kind, script_,
+                                            icScript_, fallback, &attached);
   if (!newStub) {
     MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Candidate);
     ReportOutOfMemory(cx());
@@ -96,7 +97,7 @@ bool TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
   return true;
 }
 
-ICStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
+ICCacheIRStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
   // Look for a single non-fallback stub followed by stubs with entered-count 0.
   // Allow one optimized stub before the fallback stub to support the
   // CallIRGenerator::emitCalleeGuard optimization where we first try a
@@ -125,10 +126,11 @@ ICStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
     return nullptr;
   }
 
-  return stub;
+  return stub->toCacheIRStub();
 }
 
-Maybe<InlinableOpData> FindInlinableOpData(ICStub* stub, BytecodeLocation loc) {
+Maybe<InlinableOpData> FindInlinableOpData(ICCacheIRStub* stub,
+                                           BytecodeLocation loc) {
   if (loc.isInvokeOp()) {
     Maybe<InlinableCallData> call = FindInlinableCallData(stub);
     if (call.isSome()) {
@@ -150,11 +152,11 @@ Maybe<InlinableOpData> FindInlinableOpData(ICStub* stub, BytecodeLocation loc) {
   return mozilla::Nothing();
 }
 
-Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
+Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub) {
   Maybe<InlinableCallData> data;
 
-  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
-  const uint8_t* stubData = stub->cacheIRStubData();
+  const CacheIRStubInfo* stubInfo = stub->stubInfo();
+  const uint8_t* stubData = stub->stubDataStart();
 
   ObjOperandId calleeGuardOperand;
   CallFlags flags;
@@ -242,11 +244,11 @@ Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
   return data;
 }
 
-Maybe<InlinableGetterData> FindInlinableGetterData(ICStub* stub) {
+Maybe<InlinableGetterData> FindInlinableGetterData(ICCacheIRStub* stub) {
   Maybe<InlinableGetterData> data;
 
-  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
-  const uint8_t* stubData = stub->cacheIRStubData();
+  const CacheIRStubInfo* stubInfo = stub->stubInfo();
+  const uint8_t* stubData = stub->stubDataStart();
 
   CacheIRReader reader(stubInfo);
   while (reader.more()) {
@@ -307,11 +309,11 @@ Maybe<InlinableGetterData> FindInlinableGetterData(ICStub* stub) {
   return data;
 }
 
-Maybe<InlinableSetterData> FindInlinableSetterData(ICStub* stub) {
+Maybe<InlinableSetterData> FindInlinableSetterData(ICCacheIRStub* stub) {
   Maybe<InlinableSetterData> data;
 
-  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
-  const uint8_t* stubData = stub->cacheIRStubData();
+  const CacheIRStubInfo* stubInfo = stub->stubInfo();
+  const uint8_t* stubData = stub->stubDataStart();
 
   CacheIRReader reader(stubInfo);
   while (reader.more()) {
@@ -393,7 +395,7 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
   return true;
 }
 
-bool TrialInliner::shouldInline(JSFunction* target, ICStub* stub,
+bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
                                 BytecodeLocation loc) {
   if (!canInline(target, script_)) {
     return false;
@@ -508,7 +510,7 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
 }
 
 bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
-  ICStub* stub = maybeSingleStub(entry);
+  ICCacheIRStub* stub = maybeSingleStub(entry);
   if (!stub) {
     return true;
   }
@@ -555,7 +557,7 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
 
 bool TrialInliner::maybeInlineGetter(const ICEntry& entry,
                                      BytecodeLocation loc) {
-  ICStub* stub = maybeSingleStub(entry);
+  ICCacheIRStub* stub = maybeSingleStub(entry);
   if (!stub) {
     return true;
   }
@@ -597,7 +599,7 @@ bool TrialInliner::maybeInlineGetter(const ICEntry& entry,
 
 bool TrialInliner::maybeInlineSetter(const ICEntry& entry,
                                      BytecodeLocation loc) {
-  ICStub* stub = maybeSingleStub(entry);
+  ICCacheIRStub* stub = maybeSingleStub(entry);
   if (!stub) {
     return true;
   }

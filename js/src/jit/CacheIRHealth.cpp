@@ -33,8 +33,8 @@ CacheIRHealth::Happiness CacheIRHealth::determineStubHappiness(
 }
 
 CacheIRHealth::Happiness CacheIRHealth::spewStubHealth(
-    AutoStructuredSpewer& spew, ICStub* stub) {
-  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
+    AutoStructuredSpewer& spew, ICCacheIRStub* stub) {
+  const CacheIRStubInfo* stubInfo = stub->stubInfo();
   CacheIRReader stubReader(stubInfo);
   uint32_t totalStubHealth = 0;
 
@@ -80,7 +80,7 @@ CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
     spew->beginObject();
     {
       uint32_t count = stub->getEnteredCount();
-      Happiness stubHappiness = spewStubHealth(spew, stub);
+      Happiness stubHappiness = spewStubHealth(spew, stub->toCacheIRStub());
       if (stubHappiness < entryHappiness) {
         entryHappiness = stubHappiness;
       }

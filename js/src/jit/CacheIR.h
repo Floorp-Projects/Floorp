@@ -35,7 +35,7 @@ namespace jit {
 enum class BaselineCacheIRStubKind;
 enum class InlinableNative : uint16_t;
 
-class ICStub;
+class ICCacheIRStub;
 class ICScript;
 class Label;
 class MacroAssembler;
@@ -1201,7 +1201,7 @@ class MOZ_RAII CacheIRReader {
 
 class MOZ_RAII CacheIRCloner {
  public:
-  explicit CacheIRCloner(ICStub* stubInfo);
+  explicit CacheIRCloner(ICCacheIRStub* stubInfo);
 
   void cloneOp(CacheOp op, CacheIRReader& reader, CacheIRWriter& writer);
 
@@ -1634,11 +1634,7 @@ class MOZ_RAII OptimizeSpreadCallIRGenerator : public IRGenerator {
 };
 
 enum class StringChar { CodeAt, At };
-enum class ScriptedThisResult {
-  NoAction,
-  UninitializedThis,
-  TemplateObject
-};
+enum class ScriptedThisResult { NoAction, UninitializedThis, TemplateObject };
 
 class MOZ_RAII CallIRGenerator : public IRGenerator {
  private:

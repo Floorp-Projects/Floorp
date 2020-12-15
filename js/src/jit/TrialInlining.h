@@ -104,12 +104,14 @@ class InlinableSetterData : public InlinableOpData {
   bool sameRealm = false;
 };
 
-mozilla::Maybe<InlinableOpData> FindInlinableOpData(ICStub* stub,
+mozilla::Maybe<InlinableOpData> FindInlinableOpData(ICCacheIRStub* stub,
                                                     BytecodeLocation loc);
 
-mozilla::Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub);
-mozilla::Maybe<InlinableGetterData> FindInlinableGetterData(ICStub* stub);
-mozilla::Maybe<InlinableSetterData> FindInlinableSetterData(ICStub* stub);
+mozilla::Maybe<InlinableCallData> FindInlinableCallData(ICCacheIRStub* stub);
+mozilla::Maybe<InlinableGetterData> FindInlinableGetterData(
+    ICCacheIRStub* stub);
+mozilla::Maybe<InlinableSetterData> FindInlinableSetterData(
+    ICCacheIRStub* stub);
 
 class MOZ_RAII TrialInliner {
  public:
@@ -129,14 +131,15 @@ class MOZ_RAII TrialInliner {
   static bool canInline(JSFunction* target, HandleScript caller);
 
  private:
-  ICStub* maybeSingleStub(const ICEntry& entry);
-  void cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
+  ICCacheIRStub* maybeSingleStub(const ICEntry& entry);
+  void cloneSharedPrefix(ICCacheIRStub* stub, const uint8_t* endOfPrefix,
                          CacheIRWriter& writer);
   ICScript* createInlinedICScript(JSFunction* target, BytecodeLocation loc);
   MOZ_MUST_USE bool replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
                                   CacheKind kind);
 
-  bool shouldInline(JSFunction* target, ICStub* stub, BytecodeLocation loc);
+  bool shouldInline(JSFunction* target, ICCacheIRStub* stub,
+                    BytecodeLocation loc);
 
   JSContext* cx_;
   HandleScript script_;
