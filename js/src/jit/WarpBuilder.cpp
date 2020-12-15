@@ -18,6 +18,7 @@
 #include "jit/WarpCacheIRTranspiler.h"
 #include "jit/WarpSnapshot.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_BAD_CONST_ASSIGN
+#include "vm/GeneratorObject.h"
 #include "vm/Opcodes.h"
 
 #include "jit/JitScript-inl.h"
@@ -2117,6 +2118,12 @@ bool WarpBuilder::build_Generator(BytecodeLocation loc) {
   return resumeAfter(generator, loc);
 }
 
+bool WarpBuilder::build_AfterYield(BytecodeLocation loc) {
+  // This comes after a yield, so from the perspective of -warp-
+  // this is unreachable code.
+  return true;
+}
+
 bool WarpBuilder::build_FinalYieldRval(BytecodeLocation loc) {
   MDefinition* gen = current->pop();
 
@@ -2146,6 +2153,131 @@ bool WarpBuilder::build_AsyncResolve(BytecodeLocation loc) {
   current->add(resolve);
   current->push(resolve);
   return resumeAfter(resolve, loc);
+}
+
+bool WarpBuilder::build_CheckResumeKind(BytecodeLocation loc) {
+  // This comes after a yield, so from the perspective of -warp-
+  // this is unreachable code; we do want to manipulate the stack
+  // appropriately though.
+  MDefinition* resumeKind = current->pop();
+  MDefinition* gen = current->pop();
+  MDefinition* rval = current->peek(-1);
+
+  // Mark operands as implicitly used.
+  resumeKind->setImplicitlyUsedUnchecked();
+  gen->setImplicitlyUsedUnchecked();
+  rval->setImplicitlyUsedUnchecked();
+
+  return true;
+}
+
+bool WarpBuilder::build_CanSkipAwait(BytecodeLocation loc) {
+  // From the WarpBuilder perspective we're consuming the top of stack and then
+  // re-pushing; but really, this is an implicit use.
+  current->peek(-1)->setImplicitlyUsedUnchecked();
+
+  // Initial Implementation: Disable the CanSkipAwait optimization
+  // by returning false here.
+  pushConstant(BooleanValue(false));
+  return true;
+}
+
+bool WarpBuilder::build_MaybeExtractAwaitValue(BytecodeLocation loc) {
+  // From the WarpBuilder perspective we're consuming the top two elements of
+  // the stack and then re-pushing; but we consider these implicit uses.
+  current->peek(-1)->setImplicitlyUsedUnchecked();
+  current->peek(-2)->setImplicitlyUsedUnchecked();
+
+  // While the opt is disabled we can just do nothing here.
+  return true;
+}
+
+bool WarpBuilder::build_Await(BytecodeLocation loc) {
+  MDefinition* gen = current->pop();
+  MDefinition* promiseOrGenerator = current->pop();
+
+  int32_t slotsToCopy = current->stackDepth() - info().firstLocalSlot();
+
+  MOZ_ASSERT(slotsToCopy >= 0);
+  if (slotsToCopy > 0) {
+    auto* arraySlot = MLoadFixedSlot::New(
+        alloc(), gen, AbstractGeneratorObject::stackStorageSlot());
+    current->add(arraySlot);
+
+    auto* arrayObj = MUnbox::New(alloc(), arraySlot, MIRType::Object,
+                                 MUnbox::Mode::Infallible);
+    current->add(arrayObj);
+
+    auto* stackStorage = MElements::New(alloc(), arrayObj);
+    current->add(stackStorage);
+
+    for (int32_t i = 0; i < slotsToCopy; i++) {
+      if (!alloc().ensureBallast()) {
+        return false;
+      }
+      // Use peekUnchecked because we're also writing out the argument slots
+      int32_t peek = -slotsToCopy + i;
+      MDefinition* stackElem = current->peekUnchecked(peek);
+      auto* store = MStoreElement::New(alloc(), stackStorage,
+                                       constant(Int32Value(i)), stackElem,
+                                       /* needsHoleCheck = */ false);
+
+      current->add(store);
+      current->add(MPostWriteBarrier::New(alloc(), arrayObj, stackElem));
+    }
+
+    auto* len = constant(Int32Value(slotsToCopy - 1));
+
+    auto* setInitLength =
+        MSetInitializedLength::New(alloc(), stackStorage, len);
+    current->add(setInitLength);
+
+    auto* setLength = MSetArrayLength::New(alloc(), stackStorage, len);
+    current->add(setLength);
+  }
+
+  // Update Generator Object state
+  uint32_t resumeIndex = loc.getResumeIndex();
+  current->add(MStoreFixedSlot::New(alloc(), gen,
+                                    AbstractGeneratorObject::resumeIndexSlot(),
+                                    constant(Int32Value(resumeIndex))));
+  current->add(MStoreFixedSlot::New(alloc(), gen,
+                                    AbstractGeneratorObject::envChainSlot(),
+                                    current->environmentChain()));
+
+  // GeneratorReturn will return from the method, however to support MIR
+  // generation isn't treated like the end of a block
+  MGeneratorReturn* ret = MGeneratorReturn::New(alloc(), promiseOrGenerator);
+  current->add(ret);
+
+  // To ensure the rest of the MIR generation looks correct, fill the stack with
+  // the appropriately typed MUnreachable's for the stack pushes from this
+  // opcode.
+  auto* unreachableResumeKind =
+      MUnreachableResult::New(alloc(), MIRType::Int32);
+  current->add(unreachableResumeKind);
+  current->push(unreachableResumeKind);
+
+  auto* unreachableGenerator =
+      MUnreachableResult::New(alloc(), MIRType::Object);
+  current->add(unreachableGenerator);
+  current->push(unreachableGenerator);
+
+  auto* unreachableRval = MUnreachableResult::New(alloc(), MIRType::Value);
+  current->add(unreachableRval);
+  current->push(unreachableRval);
+
+  return true;
+}
+
+bool WarpBuilder::build_AsyncAwait(BytecodeLocation loc) {
+  MDefinition* gen = current->pop();
+  MDefinition* value = current->pop();
+
+  MAsyncAwait* asyncAwait = MAsyncAwait::New(alloc(), value, gen);
+  current->add(asyncAwait);
+  current->push(asyncAwait);
+  return resumeAfter(asyncAwait, loc);
 }
 
 bool WarpBuilder::build_CheckReturn(BytecodeLocation) {

@@ -8044,6 +8044,27 @@ class LAsyncResolve : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0> {
   const LAllocation* generator() { return getOperand(GeneratorInput); }
 };
 
+class LAsyncAwait
+    : public LCallInstructionHelper</* defs= */ 1,
+                                    /*operands = */ BOX_PIECES + 1,
+                                    /* temps = */ 0> {
+ public:
+  LIR_HEADER(AsyncAwait)
+
+  static const size_t ValueInput = 0;
+  static const size_t GenInput = BOX_PIECES;
+
+  explicit LAsyncAwait(const LBoxAllocation& value,
+                       const LAllocation& generator)
+      : LCallInstructionHelper(classOpcode) {
+    setBoxOperand(ValueInput, value);
+    setOperand(GenInput, generator);
+  }
+
+  MAsyncAwait* mir() { return mir_->toAsyncAwait(); }
+  const LAllocation* generator() { return getOperand(GenInput); }
+};
+
 class LDebugCheckSelfHosted : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DebugCheckSelfHosted)
