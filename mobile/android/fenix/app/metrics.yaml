@@ -3124,6 +3124,51 @@ downloads_misc:
       - fenix-core@mozilla.com
     expires: "2021-04-01"
 
+downloads_management:
+  downloads_screen_opened:
+    type: event
+    description: >
+      A counter for the number of times users access the "Downloads" folder
+      inside the app.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15367
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16728
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-04-01"
+
+  item_opened:
+    type: event
+    description: >
+      A counter for how often a user tap to opens a download from inside the
+      "Downloads" folder.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15367
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16728
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-04-01"
+
+  item_deleted:
+    type: event
+    description: >
+      A counter for how often a user deletes one / more downloads at a time.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/15367
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16728
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-04-01"
+
 user_specified_search_engines:
   custom_engine_added:
     type: event

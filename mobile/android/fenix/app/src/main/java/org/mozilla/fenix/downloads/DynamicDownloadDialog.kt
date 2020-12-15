@@ -14,6 +14,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 
@@ -26,6 +27,7 @@ import org.mozilla.fenix.ext.settings
 class DynamicDownloadDialog(
     private val container: ViewGroup,
     private val downloadState: DownloadState?,
+    private val metrics: MetricController,
     private val didFail: Boolean,
     private val tryAgain: (String) -> Unit,
     private val onCannotOpenFile: () -> Unit,
@@ -99,6 +101,8 @@ class DynamicDownloadDialog(
                     mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_open
                 )
                 setOnClickListener {
+                    metrics.track(Event.DownloadsItemOpened)
+
                     val fileWasOpened = AbstractFetchDownloadService.openFile(
                         context = context,
                         contentType = downloadState.contentType,

@@ -472,6 +472,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                     val dynamicDownloadDialog = DynamicDownloadDialog(
                         container = view.browserLayout,
                         downloadState = downloadState,
+                        metrics = requireComponents.analytics.metrics,
                         didFail = downloadJobStatus == DownloadState.Status.FAILED,
                         tryAgain = downloadFeature::tryAgain,
                         onCannotOpenFile = {
@@ -786,6 +787,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         DynamicDownloadDialog(
             container = view.browserLayout,
             downloadState = savedDownloadState.first,
+            metrics = requireComponents.analytics.metrics,
             didFail = savedDownloadState.second,
             tryAgain = onTryAgain,
             onCannotOpenFile = onCannotOpenFile,

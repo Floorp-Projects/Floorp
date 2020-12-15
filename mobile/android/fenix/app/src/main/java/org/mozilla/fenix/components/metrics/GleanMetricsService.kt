@@ -26,6 +26,7 @@ import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.DownloadNotification
 import org.mozilla.fenix.GleanMetrics.DownloadsMisc
+import org.mozilla.fenix.GleanMetrics.DownloadsManagement
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
@@ -426,6 +427,15 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.DownloadAdded -> EventWrapper<NoExtraKeys>(
             { DownloadsMisc.downloadAdded.record(it) }
+        )
+        is Event.DownloadsScreenOpened -> EventWrapper<NoExtraKeys>(
+            { DownloadsManagement.downloadsScreenOpened.record(it) }
+        )
+        is Event.DownloadsItemOpened -> EventWrapper<NoExtraKeys>(
+            { DownloadsManagement.itemOpened.record(it) }
+        )
+        is Event.DownloadsItemDeleted -> EventWrapper<NoExtraKeys>(
+            { DownloadsManagement.itemDeleted.record(it) }
         )
         is Event.NotificationMediaPlay -> EventWrapper<NoExtraKeys>(
             { MediaNotification.play.record(it) }
