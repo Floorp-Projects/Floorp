@@ -146,7 +146,9 @@ let executeScriptFn = dispatch(executeScript);
 let sendKeysToElementFn = dispatch(sendKeysToElement);
 
 function startListeners() {
-  eventDispatcher.enable();
+  if (!MarionettePrefs.useActors) {
+    eventDispatcher.enable();
+  }
 
   addMessageListener("Marionette:actionChain", actionChainFn);
   addMessageListener("Marionette:clearElement", clearElementFn);
@@ -188,7 +190,9 @@ function startListeners() {
 }
 
 function deregister() {
-  eventDispatcher.disable();
+  if (!MarionettePrefs.useActors) {
+    eventDispatcher.disable();
+  }
 
   removeMessageListener("Marionette:actionChain", actionChainFn);
   removeMessageListener("Marionette:clearElement", clearElementFn);
