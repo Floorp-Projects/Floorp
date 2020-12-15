@@ -206,17 +206,8 @@ internal class ConstellationObserver(
             logger.info("Proceeding to renew registration")
         }
 
-        logger.info("Our push subscription either doesn't exist or is expired; re-subscribing.")
-        push.unsubscribe(
-            scope = scope,
-            onUnsubscribeError = ::onUnsubscribeError,
-            onUnsubscribe = ::onUnsubscribeResult
-        )
-        push.subscribe(
-            scope = scope,
-            onSubscribeError = ::onSubscribeError,
-            onSubscribe = { onSubscribe(constellation, it) }
-        )
+        logger.info("Our push subscription either doesn't exist or is expired; renewing registration.")
+        push.renewRegistration()
 
         logger.info("Incrementing verifier")
         logger.info("Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")

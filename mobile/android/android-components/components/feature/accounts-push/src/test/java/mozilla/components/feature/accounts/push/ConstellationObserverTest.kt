@@ -91,7 +91,6 @@ class ConstellationObserverTest {
     }
 
     @Test
-    @Ignore("Disabling the test until we revert the changes from #8846 and fix #7143")
     fun `invoke registration renewal`() {
         val observer = ConstellationObserver(context, push, "testScope", account, verifier, crashReporter)
 
@@ -109,6 +108,7 @@ class ConstellationObserverTest {
      * Remove this test in the future. See [invoke registration renewal] test.
      */
     @Test
+    @Ignore("If we don't fix #7143, we may need this.")
     fun `re-subscribe for push in onDevicesUpdate`() {
         val observer = ConstellationObserver(context, push, "testScope", account, verifier, crashReporter)
 
