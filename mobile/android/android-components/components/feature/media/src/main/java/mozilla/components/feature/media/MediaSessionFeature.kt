@@ -40,7 +40,7 @@ class MediaSessionFeature(
             }.map { tab ->
                 tab.none {
                     it.mediaSessionState != null &&
-                        it.mediaSessionState!!.playbackState != MediaSession.PlaybackState.UNKNOWN
+                        it.mediaSessionState!!.playbackState == MediaSession.PlaybackState.PLAYING
                 }
             }.ifChanged().collect { isEmpty ->
                 process(isEmpty)

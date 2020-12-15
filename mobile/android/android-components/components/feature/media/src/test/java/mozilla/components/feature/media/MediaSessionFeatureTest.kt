@@ -108,7 +108,7 @@ class MediaSessionFeatureTest {
     }
 
     @Test
-    fun `feature only starts foreground service when there were no previous media session`() {
+    fun `feature only starts foreground service when there were no previous playing media session`() {
         val mockApplicationContext: Context = mock()
         val initialState = BrowserState(
             tabs = listOf(createTab(
@@ -152,6 +152,12 @@ class MediaSessionFeatureTest {
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
         store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(store.state.tabs[0].id, mock()))
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+        verify(mockApplicationContext, times(1)).startForegroundService(any())
+
+        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction(store.state.tabs[0].id,
+            MediaSession.PlaybackState.PAUSED))
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())

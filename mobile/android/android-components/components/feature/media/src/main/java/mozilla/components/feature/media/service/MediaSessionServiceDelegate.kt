@@ -9,6 +9,7 @@ import android.content.Intent
 import android.media.AudioManager
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -65,8 +66,7 @@ internal class MediaSessionServiceDelegate(
     }
 
     fun onDestroy() {
-        scope?.cancel()
-
+        destroy()
         logger.debug("Service destroyed")
     }
 
@@ -163,8 +163,14 @@ internal class MediaSessionServiceDelegate(
         }
     }
 
-    private fun shutdown() {
+    @VisibleForTesting
+    internal fun destroy() {
+        scope?.cancel()
         audioFocus.abandon()
+    }
+
+    @VisibleForTesting
+    internal fun shutdown() {
         mediaSession.release()
         service.stopSelf()
     }
