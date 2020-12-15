@@ -77,6 +77,7 @@ namespace jit {
   _(CallDOMSetter, js::jit::CallDOMSetter)                                     \
   _(CallNativeGetter, js::jit::CallNativeGetter)                               \
   _(CallNativeSetter, js::jit::CallNativeSetter)                               \
+  _(CanSkipAwait, js::CanSkipAwait)                                            \
   _(CharCodeAt, js::jit::CharCodeAt)                                           \
   _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
@@ -177,6 +178,7 @@ namespace jit {
   _(LooselyEqual, js::jit::LooselyEqual<js::jit::EqualityKind::Equal>)         \
   _(LooselyNotEqual, js::jit::LooselyEqual<js::jit::EqualityKind::NotEqual>)   \
   _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
+  _(ExtractAwaitValue, js::ExtractAwaitValue)                                  \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
     js::NamedLambdaObject::createTemplateObject)                               \
@@ -258,8 +260,7 @@ namespace jit {
   _(ThrowUninitializedThis, js::ThrowUninitializedThis)                        \
   _(ToBigInt, js::ToBigInt)                                                    \
   _(ToObjectSlow, js::ToObjectSlow)                                            \
-  _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
-  _(TrySkipAwait, js::jit::TrySkipAwait)
+  _(ToStringSlow, js::ToStringSlow<CanGC>)
 
 // The list below is for tail calls. The third argument specifies the number of
 // non-argument Values the VM wrapper should pop from the stack. This is used

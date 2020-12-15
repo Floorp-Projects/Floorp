@@ -1,9 +1,9 @@
-// JSOP_TRYSKIPAWAIT with plain objects when attaching onEnterFrame
+// CanSkipAwait with plain objects when attaching onEnterFrame
 // after the initial call into the async function.
 
 load(libdir + "array-compare.js");
 
-let g = newGlobal({newCompartment: true});
+let g = newGlobal({ newCompartment: true });
 let dbg = new Debugger(g);
 
 let log = [];

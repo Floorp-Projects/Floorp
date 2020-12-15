@@ -2336,20 +2336,6 @@ bool DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
-                               MutableHandleValue resolved) {
-  bool canSkip;
-  if (!TrySkipAwait(cx, val, &canSkip, resolved)) {
-    return false;
-  }
-
-  if (!canSkip) {
-    resolved.setMagic(JS_CANNOT_SKIP_AWAIT);
-  }
-
-  return true;
-}
-
 bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
   JSObject* unwrapped = CheckedUnwrapDynamic(obj, cx);
   if (!unwrapped) {

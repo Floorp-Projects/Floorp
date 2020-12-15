@@ -6284,7 +6284,12 @@ bool BytecodeEmitter::emitAwaitInInnermostScope(UnaryNode* awaitNode) {
 }
 
 bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
-  if (!emit1(JSOp::TrySkipAwait)) {
+  if (!emit1(JSOp::CanSkipAwait)) {
+    //              [stack] VALUE CANSKIP
+    return false;
+  }
+
+  if (!emit1(JSOp::MaybeExtractAwaitValue)) {
     //              [stack] VALUE_OR_RESOLVED CANSKIP
     return false;
   }
