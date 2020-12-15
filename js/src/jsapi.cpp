@@ -510,6 +510,11 @@ JS_PUBLIC_API const char* JS_GetImplementationVersion(void) {
   return "JavaScript-C" MOZILLA_VERSION;
 }
 
+JS_PUBLIC_API void JS_SetDestroyZoneCallback(JSContext* cx,
+                                             JSDestroyZoneCallback callback) {
+  cx->runtime()->destroyZoneCallback = callback;
+}
+
 JS_PUBLIC_API void JS_SetDestroyCompartmentCallback(
     JSContext* cx, JSDestroyCompartmentCallback callback) {
   cx->runtime()->destroyCompartmentCallback = callback;
