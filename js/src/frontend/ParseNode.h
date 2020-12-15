@@ -65,12 +65,6 @@ class FullParseHandler;
 
 class FunctionBox;
 
-// This typedef unfortunately needs to be replicated here.
-using ParserBindingName = AbstractBindingName<const ParserAtom>;
-
-template <typename Scope>
-using ParserScopeData = typename Scope::template AbstractData<const ParserAtom>;
-
 #define FOR_EACH_PARSE_NODE_KIND(F)                              \
   F(EmptyStmt, NullaryNode)                                      \
   F(ExpressionStmt, UnaryNode)                                   \
