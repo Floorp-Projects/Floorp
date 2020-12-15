@@ -2429,7 +2429,10 @@ void GCMarker::stop() {
   MOZ_ASSERT(isDrained());
   MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(markLaterArenas == 0);
-  MOZ_ASSERT(state != MarkingState::NotActive);
+
+  if (state == MarkingState::NotActive) {
+    return;
+  }
   state = MarkingState::NotActive;
 
   stack.clear();
@@ -3729,7 +3732,8 @@ static inline bool ShouldCheckMarkState(JSRuntime* rt, T** thingp) {
 
   TenuredCell& thing = (*thingp)->asTenured();
   Zone* zone = thing.zoneFromAnyThread();
-  if (!zone->isCollectingFromAnyThread() || zone->isGCFinished()) {
+
+  if (zone->gcState() <= Zone::Prepare || zone->isGCFinished()) {
     return false;
   }
 
@@ -3996,12 +4000,18 @@ void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   }
 
   TenuredCell& tenured = cell->asTenured();
+  Zone* zone = tenured.zone();
+
+  // If the cell is in a zone whose mark bits are being cleared, then it will
+  // end up white.
+  if (zone->isGCPreparing()) {
+    return;
+  }
 
   // If the cell is in a zone that we're currently marking, then it's possible
   // that it is currently white but will end up gray. To handle this case, push
   // any cells in zones that are currently being marked onto the mark stack and
   // they will eventually get marked black.
-  Zone* zone = tenured.zone();
   if (zone->isGCMarking()) {
     if (!cell->isMarkedBlack()) {
       Cell* tmp = cell;
@@ -4061,6 +4071,11 @@ JS_FRIEND_API bool JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCycleCollecting());
 
   JSRuntime* rt = thing.asCell()->runtimeFromMainThread();
+  if (thing.asCell()->zone()->isGCPreparing()) {
+    // Mark bits are being cleared in preparation for GC.
+    return false;
+  }
+
   gcstats::AutoPhase outerPhase(rt->gc.stats(), gcstats::PhaseKind::BARRIER);
   gcstats::AutoPhase innerPhase(rt->gc.stats(),
                                 gcstats::PhaseKind::UNMARK_GRAY);
