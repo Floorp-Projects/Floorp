@@ -218,7 +218,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             val filesUris = uris.map {
                 it.toFileUri(context)
             }.toTypedArray()
-
             if (!prompt.isComplete) {
                 geckoResult.complete(prompt.confirm(context, filesUris))
             }
