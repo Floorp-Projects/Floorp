@@ -32,7 +32,7 @@ pull_request_rules:
   - name: Release automation
     conditions:
       - base~=releases/.*
-      - author=st3fan
+      - author=github-actions[bot]
       - status-success=pr-complete
       - files~=(AndroidComponents.kt)
     actions:
