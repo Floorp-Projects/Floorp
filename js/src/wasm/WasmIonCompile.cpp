@@ -4321,6 +4321,34 @@ static bool EmitShuffleSimd128(FunctionCompiler& f) {
     return false;
   }
 
+#  ifdef ENABLE_WASM_SIMD_WORMHOLE
+  static const uint8_t trigger[] = {31, 0, 30, 2,  29, 4,  28, 6,
+                                    27, 8, 26, 10, 25, 12, 24};
+  static_assert(sizeof(trigger) == 15);
+
+  if (f.moduleEnv().features.simdWormhole &&
+      memcmp(control.bytes, trigger, sizeof(trigger)) == 0) {
+    switch (control.bytes[15]) {
+      case 0:
+        f.iter().setResult(
+            f.binarySimd128(v1, v2, false, wasm::SimdOp::MozWHSELFTEST));
+        return true;
+#    if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+      case 1:
+        f.iter().setResult(
+            f.binarySimd128(v1, v2, false, wasm::SimdOp::MozWHPMADDUBSW));
+        return true;
+      case 2:
+        f.iter().setResult(
+            f.binarySimd128(v1, v2, false, wasm::SimdOp::MozWHPMADDWD));
+        return true;
+#    endif
+      default:
+        return f.iter().fail("Unrecognized wormhole opcode");
+    }
+  }
+#  endif
+
   f.iter().setResult(f.shuffleSimd128(v1, v2, control));
   return true;
 }

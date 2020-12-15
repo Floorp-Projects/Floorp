@@ -791,6 +791,40 @@ def wasm_simd_experimental(value, wasm_simd):
 set_config("ENABLE_WASM_SIMD_EXPERIMENTAL", wasm_simd_experimental)
 set_define("ENABLE_WASM_SIMD_EXPERIMENTAL", wasm_simd_experimental)
 
+# Wormhole opcodes are experimental *and* x64-only
+
+
+@depends("--enable-wasm-simd-experimental", target)
+def default_wasm_simd_wormhole(wasm_simd_experimental, target):
+    if wasm_simd_experimental and target.cpu == "x86_64":
+        return True
+
+
+option(
+    "--enable-wasm-simd-wormhole",
+    default=default_wasm_simd_wormhole,
+    help="{Enable|Disable} WebAssembly SIMD wormhole opcodes",
+)
+
+
+@depends("--enable-wasm-simd-wormhole", "--enable-wasm-simd-experimental", target)
+def wasm_simd_wormhole(value, wasm_simd_experimental, target):
+    if not value:
+        return
+
+    if not wasm_simd_experimental:
+        die("SIMD wormhole also requires --enable-wasm-simd-experimental.")
+
+    if target.cpu != "x86_64":
+        die("SIMD wormhole is only available on x86_64.")
+
+    return True
+
+
+set_config("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
+set_define("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
+
+
 # Options for generating the shell as a script
 # ============================================
 option("--with-qemu-exe", nargs=1, help="Use path as an arm emulator on host platforms")

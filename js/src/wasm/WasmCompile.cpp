@@ -88,6 +88,7 @@ FeatureArgs FeatureArgs::build(JSContext* cx) {
   features.multiValue = wasm::MultiValuesAvailable(cx);
   features.v128 = wasm::SimdAvailable(cx);
   features.hugeMemory = wasm::IsHugeMemoryEnabled();
+  features.simdWormhole = wasm::SimdWormholeAvailable(cx);
   features.exceptions = wasm::ExceptionsAvailable(cx);
   return features;
 }

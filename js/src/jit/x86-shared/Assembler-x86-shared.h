@@ -2689,6 +2689,10 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
+  void vpmaddubsw(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    MOZ_ASSERT(HasSSSE3());
+    masm.vpmaddubsw_rr(src1.encoding(), src0.encoding(), dest.encoding());
+  }
   void vpaddb(const Operand& src1, FloatRegister src0, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     switch (src1.kind()) {

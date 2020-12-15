@@ -141,6 +141,8 @@ function codegenTestX64_adhoc(module_text, export_name, expected, options = {}) 
     assertEq(hasDisassembler(), true);
 
     let ins = wasmEvalText(module_text);
+    if (options.instanceBox)
+        options.instanceBox.value = ins;
     let output = wasmDis(ins.exports[export_name], "ion", true);
     if (!options.no_prefix)
         expected = x64_prefix + '\n' + expected;
