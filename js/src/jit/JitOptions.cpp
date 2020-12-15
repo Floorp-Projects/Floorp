@@ -134,7 +134,7 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(warpBuilder, true);
 
   // Warp compile Async functions
-  SET_DEFAULT(warpAsync, true);
+  SET_DEFAULT(warpAsync, false);
 
   // Warp compile Generator functions
   SET_DEFAULT(warpGenerator, true);
