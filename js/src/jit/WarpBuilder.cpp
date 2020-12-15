@@ -910,6 +910,13 @@ bool WarpBuilder::build_SetRval(BytecodeLocation) {
   return true;
 }
 
+bool WarpBuilder::build_GetRval(BytecodeLocation) {
+  MOZ_ASSERT(!script_->noScriptRval());
+  MDefinition* rval = current->getSlot(info().returnValueSlot());
+  current->push(rval);
+  return true;
+}
+
 bool WarpBuilder::build_GetLocal(BytecodeLocation loc) {
   current->pushLocal(loc.local());
   return true;

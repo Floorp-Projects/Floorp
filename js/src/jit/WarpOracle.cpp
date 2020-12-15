@@ -697,6 +697,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::Throw:
       case JSOp::ThrowSetConst:
       case JSOp::SetRval:
+      case JSOp::GetRval:
       case JSOp::Return:
       case JSOp::RetRval:
         // Supported by WarpBuilder. Nothing to do.
