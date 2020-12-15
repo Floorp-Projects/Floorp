@@ -16,13 +16,14 @@
 namespace js {
 namespace jit {
 
+class ICCacheIRStub;
 class ICFallbackStub;
-class ICStub;
 
-ICStub* AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
-                                  CacheKind kind, JSScript* outerScript,
-                                  ICScript* icScript, ICFallbackStub* stub,
-                                  bool* attached);
+ICCacheIRStub* AttachBaselineCacheIRStub(JSContext* cx,
+                                         const CacheIRWriter& writer,
+                                         CacheKind kind, JSScript* outerScript,
+                                         ICScript* icScript,
+                                         ICFallbackStub* stub, bool* attached);
 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
 class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {

@@ -1047,7 +1047,8 @@ uintptr_t CacheIRStubInfo::getStubRawWord(const uint8_t* stubData,
   return *reinterpret_cast<const uintptr_t*>(stubData + offset);
 }
 
-uintptr_t CacheIRStubInfo::getStubRawWord(ICStub* stub, uint32_t offset) const {
+uintptr_t CacheIRStubInfo::getStubRawWord(ICCacheIRStub* stub,
+                                          uint32_t offset) const {
   uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
   return getStubRawWord(stubData, offset);
 }
@@ -1058,7 +1059,8 @@ int64_t CacheIRStubInfo::getStubRawInt64(const uint8_t* stubData,
   return *reinterpret_cast<const int64_t*>(stubData + offset);
 }
 
-int64_t CacheIRStubInfo::getStubRawInt64(ICStub* stub, uint32_t offset) const {
+int64_t CacheIRStubInfo::getStubRawInt64(ICCacheIRStub* stub,
+                                         uint32_t offset) const {
   uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
   return getStubRawInt64(stubData, offset);
 }
@@ -1080,26 +1082,26 @@ GCPtr<T>& CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const {
   return *AsGCPtr<T>((uintptr_t*)(stubData + offset));
 }
 
-template GCPtr<Shape*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<ObjectGroup*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<JSObject*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<JSString*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<JSFunction*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<JS::Symbol*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<JS::Value>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<jsid>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<JSClass*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
-template GCPtr<ArrayObject*>& CacheIRStubInfo::getStubField<ICStub>(
-    ICStub* stub, uint32_t offset) const;
+template GCPtr<Shape*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<ObjectGroup*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<JSObject*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<JSString*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<JSFunction*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<JS::Symbol*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<JS::Value>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<jsid>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<JSClass*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<ArrayObject*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
 
 template <typename T, typename V>
 static void InitGCPtr(uintptr_t* ptr, V val) {
@@ -1204,7 +1206,7 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
   }
 }
 
-template void jit::TraceCacheIRStub(JSTracer* trc, ICStub* stub,
+template void jit::TraceCacheIRStub(JSTracer* trc, ICCacheIRStub* stub,
                                     const CacheIRStubInfo* stubInfo);
 
 template void jit::TraceCacheIRStub(JSTracer* trc, IonICStub* stub,

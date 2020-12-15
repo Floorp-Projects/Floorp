@@ -56,7 +56,7 @@ class CacheIRHealth {
   // Get happiness from health score.
   Happiness determineStubHappiness(uint32_t stubHealthScore);
   // Health of an individual stub.
-  Happiness spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub);
+  Happiness spewStubHealth(AutoStructuredSpewer& spew, ICCacheIRStub* stub);
   // Health of all the stubs in an individual CacheIR Entry.
   Happiness spewHealthForStubsInCacheIREntry(AutoStructuredSpewer& spew,
                                              ICEntry* entry);

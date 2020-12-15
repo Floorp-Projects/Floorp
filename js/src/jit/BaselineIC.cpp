@@ -641,7 +641,7 @@ void ICCacheIRStub::trace(JSTracer* trc) {
   JitCode* stubJitCode = jitCode();
   TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
 
-  TraceCacheIRStub(trc, static_cast<ICStub*>(this), stubInfo());
+  TraceCacheIRStub(trc, this, stubInfo());
 }
 
 void ICFallbackStub::trace(JSTracer* trc) {
@@ -2783,15 +2783,6 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
 
   fallbackCode.initCode(code);
   return true;
-}
-
-// TODO(no-TI): no longer need this and cacheIRStubData in base class.
-const CacheIRStubInfo* ICStub::cacheIRStubInfo() const {
-  return toCacheIRStub()->stubInfo();
-}
-
-const uint8_t* ICStub::cacheIRStubData() {
-  return toCacheIRStub()->stubDataStart();
 }
 
 }  // namespace jit
