@@ -524,7 +524,7 @@ bool TestCCWs() {
 
   // Incremental zone GC started: the source is now unmarked.
   JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
-  JS::PrepareZoneForGC(wrapper->zone());
+  JS::PrepareZoneForGC(cx, wrapper->zone());
   budget = js::SliceBudget(js::WorkBudget(1));
   cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
   CHECK(JS::IsIncrementalGCInProgress(cx));
@@ -786,7 +786,7 @@ void EvictNursery() { cx->runtime()->gc.evictNursery(); }
 bool ZoneGC(JS::Zone* zone) {
   uint32_t oldMode = JS_GetGCParameter(cx, JSGC_MODE);
   JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE);
-  JS::PrepareZoneForGC(zone);
+  JS::PrepareZoneForGC(cx, zone);
   cx->runtime()->gc.gc(GC_NORMAL, JS::GCReason::API);
   CHECK(!cx->runtime()->gc.isFullGc());
   JS_SetGCParameter(cx, JSGC_MODE, oldMode);

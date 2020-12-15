@@ -536,6 +536,8 @@ class GCRuntime {
   // Crawl the heap to check whether an arbitary pointer is within a cell of
   // the given kind.
   bool isPointerWithinTenuredCell(void* ptr, JS::TraceKind traceKind);
+
+  bool hasZone(Zone* target);
 #endif
 
   // Queue memory memory to be freed on a background thread if possible.
