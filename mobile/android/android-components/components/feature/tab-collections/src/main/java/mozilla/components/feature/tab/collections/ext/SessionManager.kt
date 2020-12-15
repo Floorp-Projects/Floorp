@@ -5,16 +5,16 @@
 package mozilla.components.feature.tab.collections.ext
 
 import android.content.Context
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.feature.tabs.TabsUseCases
 
 /**
  * Restores the given [Tab] from a [TabCollection]. Will invoke [onTabRestored] on successful restore
  * and [onFailure] otherwise.
  */
-operator fun TabsUseCases.RestoreUseCase.invoke(
+fun SessionManager.restore(
     context: Context,
     engine: Engine,
     tab: Tab,
@@ -31,8 +31,11 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
         // We were unable to restore the tab. Let the app know so that it can workaround that
         onFailure()
     } else {
-        invoke(listOf(item), item.id)
-
+        add(
+            session = item.session,
+            selected = true,
+            engineSessionState = item.engineSessionState
+        )
         onTabRestored()
     }
 }
@@ -41,24 +44,28 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
  * Restores the given [TabCollection]. Will invoke [onFailure] if restoring a single [Tab] of the
  * collection failed. The URL of the tab will be passed to [onFailure].
  */
-operator fun TabsUseCases.RestoreUseCase.invoke(
+fun SessionManager.restore(
     context: Context,
     engine: Engine,
     collection: TabCollection,
     onFailure: (String) -> Unit
 ) {
-    val tabs = collection.tabs.reversed().mapNotNull { tab ->
-        val recoverableTab = tab.restore(context, engine, restoreSessionId = false)
-        if (recoverableTab == null) {
+    collection.tabs.reversed().forEach { tab ->
+        val item = tab.restore(
+            context = context,
+            engine = engine,
+            restoreSessionId = false
+        )
+
+        if (item == null) {
             // We were unable to restore the tab. Let the app know so that it can workaround that
             onFailure(tab.url)
+        } else {
+            add(
+                session = item.session,
+                selected = selectedSession == null,
+                engineSessionState = item.engineSessionState
+            )
         }
-        recoverableTab
     }
-
-    if (tabs.isEmpty()) {
-        return
-    }
-
-    invoke(tabs, selectTabId = tabs.firstOrNull()?.id)
 }

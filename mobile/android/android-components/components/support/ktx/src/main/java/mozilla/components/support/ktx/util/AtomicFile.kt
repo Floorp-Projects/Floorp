@@ -5,12 +5,10 @@
 package mozilla.components.support.ktx.util
 
 import android.util.AtomicFile
-import android.util.JsonReader
 import android.util.JsonWriter
 import org.json.JSONException
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStream
 import java.io.OutputStreamWriter
 
 /**
@@ -54,25 +52,6 @@ inline fun AtomicFile.streamJSON(block: JsonWriter.() -> Unit): Boolean {
         val jsonWriter = JsonWriter(writer)
         block(jsonWriter)
         jsonWriter.flush()
-    }
-}
-
-/**
- * Opens the [AtomicFile] for reading and provides a [JsonReader] to [block] for reading JSON from
- * the file.
- */
-inline fun <R> AtomicFile.readJSON(block: JsonReader.() -> R): R? {
-    var reader: InputStream? = null
-
-    return try {
-        reader = openRead()
-
-        val jsonReader = JsonReader(reader.bufferedReader())
-        block(jsonReader)
-    } catch (e: IOException) {
-        null
-    } finally {
-        reader?.close()
     }
 }
 

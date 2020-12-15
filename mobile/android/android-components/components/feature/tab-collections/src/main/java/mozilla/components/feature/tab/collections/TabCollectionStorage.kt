@@ -8,8 +8,9 @@ import android.content.Context
 import androidx.paging.DataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mozilla.components.browser.session.storage.BrowserStateSerializer
-import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.ext.writeSnapshotItem
 import mozilla.components.feature.tab.collections.adapter.TabAdapter
 import mozilla.components.feature.tab.collections.adapter.TabCollectionAdapter
 import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
@@ -24,15 +25,15 @@ import java.util.UUID
  */
 class TabCollectionStorage(
     context: Context,
-    private val serializer: BrowserStateSerializer = BrowserStateSerializer(),
+    private val sessionManager: SessionManager,
     private val filesDir: File = context.filesDir
 ) {
     internal var database: Lazy<TabCollectionDatabase> = lazy { TabCollectionDatabase.get(context) }
 
     /**
-     * Creates a new [TabCollection] and save the state of the given [TabSessionState]s in it.
+     * Creates a new [TabCollection] and save the state of the given [Session]s in it.
      */
-    fun createCollection(title: String, sessions: List<TabSessionState> = emptyList()): Long? {
+    fun createCollection(title: String, sessions: List<Session> = emptyList()): Long? {
         val entity = TabCollectionEntity(
             title = title,
             updatedAt = System.currentTimeMillis(),
@@ -46,26 +47,28 @@ class TabCollectionStorage(
     }
 
     /**
-     * Adds the state of the given [TabSessionState]s to the [TabCollection].
+     * Adds the state of the given [Session]s to the [TabCollection].
      */
-    fun addTabsToCollection(collection: TabCollection, sessions: List<TabSessionState>) {
+    fun addTabsToCollection(collection: TabCollection, sessions: List<Session>) {
         val collectionEntity = (collection as TabCollectionAdapter).entity.collection
         addTabsToCollection(collectionEntity, sessions)
     }
 
-    private fun addTabsToCollection(collection: TabCollectionEntity, sessions: List<TabSessionState>) {
+    private fun addTabsToCollection(collection: TabCollectionEntity, sessions: List<Session>) {
         sessions.forEach { session ->
             val fileName = UUID.randomUUID().toString()
 
             val entity = TabEntity(
-                title = session.content.title,
-                url = session.content.url,
+                title = session.title,
+                url = session.url,
                 stateFile = fileName,
                 tabCollectionId = collection.id!!,
                 createdAt = System.currentTimeMillis()
             )
 
-            val success = serializer.writeTab(session, entity.getStateFile(filesDir))
+            val snapshot = sessionManager.createSessionSnapshot(session)
+
+            val success = entity.getStateFile(filesDir).writeSnapshotItem(snapshot)
             if (success) {
                 database.value.tabDao().insertTab(entity)
             }

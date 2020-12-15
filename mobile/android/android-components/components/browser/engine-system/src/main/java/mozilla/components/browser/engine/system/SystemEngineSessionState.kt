@@ -5,8 +5,6 @@
 package mozilla.components.browser.engine.system
 
 import android.os.Bundle
-import android.util.JsonReader
-import android.util.JsonToken
 import android.util.JsonWriter
 import mozilla.components.concept.engine.EngineSessionState
 import org.json.JSONObject
@@ -49,37 +47,7 @@ class SystemEngineSessionState(
         fun fromJSON(json: JSONObject): SystemEngineSessionState {
             return SystemEngineSessionState(json.toBundle())
         }
-
-        /**
-         * Creates a [SystemEngineSessionState] from the given [JsonReader].
-         */
-        fun from(reader: JsonReader): SystemEngineSessionState {
-            return SystemEngineSessionState(reader.toBundle())
-        }
     }
-}
-
-private fun JsonReader.toBundle(): Bundle {
-    beginObject()
-
-    val bundle = Bundle()
-
-    while (peek() != JsonToken.END_OBJECT) {
-        val name = nextName()
-
-        when (peek()) {
-            JsonToken.NULL -> nextNull()
-            JsonToken.BOOLEAN -> bundle.putBoolean(name, nextBoolean())
-            JsonToken.STRING -> bundle.putString(name, nextString())
-            JsonToken.NUMBER -> bundle.putDouble(name, nextDouble())
-            JsonToken.BEGIN_OBJECT -> bundle.putBundle(name, toBundle())
-            else -> skipValue()
-        }
-    }
-
-    endObject()
-
-    return bundle
 }
 
 private fun shouldSerialize(value: Any?): Boolean {

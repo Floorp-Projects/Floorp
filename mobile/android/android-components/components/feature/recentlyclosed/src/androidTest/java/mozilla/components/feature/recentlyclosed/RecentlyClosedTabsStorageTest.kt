@@ -6,7 +6,6 @@ package mozilla.components.feature.recentlyclosed
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.JsonReader
 import android.util.JsonWriter
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
@@ -217,12 +216,6 @@ class RecentlyClosedTabsStorageTest {
             throw UnsupportedOperationException()
 
         override fun createSessionState(json: JSONObject) = FakeEngineSessionState()
-
-        override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
-            reader.beginObject()
-            reader.endObject()
-            return FakeEngineSessionState()
-        }
 
         override fun name(): String =
             throw UnsupportedOperationException()

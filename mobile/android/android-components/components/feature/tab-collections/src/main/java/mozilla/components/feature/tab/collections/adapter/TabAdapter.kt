@@ -5,8 +5,8 @@
 package mozilla.components.feature.tab.collections.adapter
 
 import android.content.Context
-import mozilla.components.browser.session.ext.readTab
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.ext.readSnapshotItem
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.db.TabEntity
@@ -27,12 +27,9 @@ internal class TabAdapter(
         context: Context,
         engine: Engine,
         restoreSessionId: Boolean
-    ): RecoverableTab? {
-        return entity.getStateFile(context.filesDir).readTab(
-            engine,
-            restoreSessionId,
-            restoreParentId = false
-        )
+    ): SessionManager.Snapshot.Item? {
+        return entity.getStateFile(context.filesDir)
+            .readSnapshotItem(engine, restoreSessionId, false)
     }
 
     override fun equals(other: Any?): Boolean {

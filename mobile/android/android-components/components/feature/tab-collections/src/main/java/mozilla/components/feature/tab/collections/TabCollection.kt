@@ -5,7 +5,8 @@
 package mozilla.components.feature.tab.collections
 
 import android.content.Context
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 
 /**
@@ -28,30 +29,31 @@ interface TabCollection {
     val tabs: List<Tab>
 
     /**
-     * Restores all tabs in this collection and returns a matching list of [RecoverableTab] objects.
+     * Restores all tabs in this collection and returns a matching list of
+     * [SessionManager.Snapshot.Item] objects.
      *
-     * @param restoreSessionId If true the original ID of the tabs will be restored. Otherwise a new ID
-     * will be generated. An app may prefer to use a new ID if it expects tab to get restored multiple times -
-     * otherwise breaking the promise of a unique ID per tab.
+     * @param restoreSessionId If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID
+     * will be generated. An app may prefer to use a new ID if it expects sessions to get restored multiple times -
+     * otherwise breaking the promise of a unique ID per [Session].
      */
     fun restore(
         context: Context,
         engine: Engine,
         restoreSessionId: Boolean = false
-    ): List<RecoverableTab>
+    ): List<SessionManager.Snapshot.Item>
 
     /**
      * Restores a subset of the tabs in this collection and returns a matching list of
-     * [RecoverableTab] objects.
+     * [SessionManager.Snapshot.Item] objects.
      *
-     * @param restoreSessionId If true the original ID of the tabs will be restored. Otherwise a new ID
-     * will be generated. An app may prefer to use a new ID if it expects tab to get restored multiple times -
-     * otherwise breaking the promise of a unique ID per tab.
+     * @param restoreSessionId If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID
+     * will be generated. An app may prefer to use a new ID if it expects sessions to get restored multiple times -
+     * otherwise breaking the promise of a unique ID per [Session].
      */
     fun restoreSubset(
         context: Context,
         engine: Engine,
         tabs: List<Tab>,
         restoreSessionId: Boolean = false
-    ): List<RecoverableTab>
+    ): List<SessionManager.Snapshot.Item>
 }

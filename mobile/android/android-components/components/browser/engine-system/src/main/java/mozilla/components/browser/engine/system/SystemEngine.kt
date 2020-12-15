@@ -6,7 +6,6 @@ package mozilla.components.browser.engine.system
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.JsonReader
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.annotation.VisibleForTesting
@@ -92,10 +91,6 @@ class SystemEngine(
 
     override fun createSessionState(json: JSONObject): EngineSessionState {
         return SystemEngineSessionState.fromJSON(json)
-    }
-
-    override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
-        return SystemEngineSessionState.from(reader)
     }
 
     /**
