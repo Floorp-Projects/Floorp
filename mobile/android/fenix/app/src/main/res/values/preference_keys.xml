@@ -237,4 +237,6 @@
     <string name="pref_key_secret_debug_info" translatable="false">pref_key_secret_debug_info</string>
     <string name="pref_key_leanplum_user_id" translatable="false">pref_key_leanplum_user_id</string>
     <string name="pref_key_leanplum_device_id" translatable="false">pref_key_leanplum_device_id</string>
+    <string name="pref_key_search_region_home" translatable="false">pref_key_search_region_home</string>
+    <string name="pref_key_search_region_current" translatable="false">pref_key_search_region_current</string>
 </resources>

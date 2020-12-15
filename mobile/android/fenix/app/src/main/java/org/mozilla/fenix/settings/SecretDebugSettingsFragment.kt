@@ -9,6 +9,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.leanplum.Leanplum
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 
 class SecretDebugSettingsFragment : PreferenceFragmentCompat() {
@@ -20,6 +21,8 @@ class SecretDebugSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.secret_info_settings_preferences, rootKey)
+
+        val store = requireComponents.core.store
 
         requirePreference<Preference>(R.string.pref_key_leanplum_user_id).apply {
             summary = Leanplum.getUserId().let {
@@ -39,6 +42,14 @@ class SecretDebugSettingsFragment : PreferenceFragmentCompat() {
                     it
                 }
             }
+        }
+
+        requirePreference<Preference>(R.string.pref_key_search_region_home).apply {
+            summary = store.state.search.region?.home ?: "Unknown"
+        }
+
+        requirePreference<Preference>(R.string.pref_key_search_region_current).apply {
+            summary = store.state.search.region?.current ?: "Unknown"
         }
     }
 }
