@@ -355,6 +355,8 @@ add_task(async () => {
           "Video is on right edge after video is changed"
         );
       }
+
+      await ensureMessageAndClosePiP(browser, "with-controls", pipWin, true);
     }
   );
 });
