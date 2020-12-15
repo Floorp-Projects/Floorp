@@ -336,6 +336,8 @@ class CycleCollectedJSRuntime {
     mZonesWaitingForGC.PutEntry(aZone);
   }
 
+  static void OnZoneDestroyed(JSFreeOp* aFop, JS::Zone* aZone);
+
   // Prepare any zones for GC that have been passed to AddZoneWaitingForGC()
   // since the last GC or since the last call to PrepareWaitingZonesForGC(),
   // whichever was most recent. If there were no such zones, prepare for a
