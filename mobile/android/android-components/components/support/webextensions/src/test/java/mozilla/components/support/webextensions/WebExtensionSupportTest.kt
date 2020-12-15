@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.WebExtensionAction
@@ -17,6 +18,7 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
+import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -36,12 +38,14 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
+import mozilla.components.support.webextensions.WebExtensionSupport.toState
 import mozilla.components.support.webextensions.facts.WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -209,6 +213,39 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `reacts to custom tab being closed by removing tab from store`() {
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("test")
+        whenever(ext.isEnabled()).thenReturn(true)
+        whenever(ext.hasTabHandler(any())).thenReturn(false, true)
+        val engineSession: EngineSession = mock()
+        val tabId = "testTabId"
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    customTabs = listOf(
+                        createCustomTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession)
+                    )
+                )
+            )
+        )
+        val installedList = mutableListOf(ext)
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(installedList)
+        }
+
+        val tabHandlerCaptor = argumentCaptor<TabHandler>()
+        WebExtensionSupport.initialize(engine, store)
+
+        store.waitUntilIdle()
+        verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
+        tabHandlerCaptor.value.onCloseTab(ext, engineSession)
+        verify(store).dispatch(CustomTabListAction.RemoveCustomTabAction(tabId))
+    }
+
+    @Test
     fun `allows overriding onCloseTab behaviour`() {
         val engine: Engine = mock()
         val ext: WebExtension = mock()
@@ -290,14 +327,61 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `reacts to custom tab being updated`() {
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("test")
+        whenever(ext.isEnabled()).thenReturn(true)
+        whenever(ext.hasTabHandler(any())).thenReturn(false, true)
+        val engineSession: EngineSession = mock()
+        val tabId = "testTabId"
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(
+                    createCustomTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession)
+                )
+            )
+        )
+
+        val installedList = mutableListOf(ext)
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(installedList)
+        }
+
+        val tabHandlerCaptor = argumentCaptor<TabHandler>()
+        WebExtensionSupport.initialize(engine, store)
+
+        // Update tab to select it
+        verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
+        assertNull(store.state.selectedTabId)
+        assertTrue(tabHandlerCaptor.value.onUpdateTab(ext, engineSession, true, null))
+        store.waitUntilIdle()
+
+        // Update URL of tab
+        assertTrue(tabHandlerCaptor.value.onUpdateTab(ext, engineSession, false, "url"))
+        verify(engineSession).loadUrl("url")
+
+        // Update non-existing tab
+        store.dispatch(CustomTabListAction.RemoveCustomTabAction(tabId)).joinBlocking()
+        assertFalse(tabHandlerCaptor.value.onUpdateTab(ext, engineSession, true, "url"))
+    }
+
+    @Test
     fun `reacts to new extension being installed`() {
         val engineSession: EngineSession = mock()
+        val tab =
+            createTab(id = "1", url = "https://www.mozilla.org", engineSession = engineSession)
+
+        val customTabEngineSession: EngineSession = mock()
+        val customTab =
+            createCustomTab(id = "2", url = "https://www.mozilla.org", engineSession = customTabEngineSession)
+
         val store = spy(
             BrowserStore(
                 BrowserState(
-                    tabs = listOf(
-                        createTab(id = "1", url = "https://www.mozilla.org", engineSession = engineSession)
-                    )
+                    tabs = listOf(tab),
+                    customTabs = listOf(customTab)
                 )
             )
         )
@@ -326,12 +410,15 @@ class WebExtensionSupportTest {
         val webExtensionActionCaptor = argumentCaptor<WebExtensionAction>()
         val tabHandlerCaptor = argumentCaptor<TabHandler>()
         val selectTabActionCaptor = argumentCaptor<TabListAction.SelectTabAction>()
+        verify(ext).registerActionHandler(eq(customTabEngineSession), actionHandlerCaptor.capture())
+        verify(ext).registerTabHandler(eq(customTabEngineSession), tabHandlerCaptor.capture())
         verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
+
+        // Verify we only register the handlers once
         whenever(ext.hasActionHandler(engineSession)).thenReturn(true)
         whenever(ext.hasTabHandler(engineSession)).thenReturn(true)
 
-        // Verify we only register the handlers once
         store.dispatch(ContentAction.UpdateUrlAction(sessionId = "1", url = "https://www.firefox.com")).joinBlocking()
         verify(ext, times(1)).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
         verify(ext, times(1)).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
@@ -431,12 +518,13 @@ class WebExtensionSupportTest {
 
     @Test
     fun `observes store and registers handlers on new engine sessions`() {
+        val tab = createTab(id = "1", url = "https://www.mozilla.org")
+        val customTab = createCustomTab(id = "2", url = "https://www.mozilla.org")
         val store = spy(
             BrowserStore(
                 BrowserState(
-                    tabs = listOf(
-                        createTab(id = "1", url = "https://www.mozilla.org")
-                    )
+                    tabs = listOf(tab),
+                    customTabs = listOf(customTab)
                 )
             )
         )
@@ -454,14 +542,20 @@ class WebExtensionSupportTest {
         delegateCaptor.value.onInstalled(ext)
 
         // Verify that action/tab handler is registered when a new engine session is created
-        val engineSession: EngineSession = mock()
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
         val tabHandlerCaptor = argumentCaptor<TabHandler>()
         verify(ext, never()).registerActionHandler(any(), any())
         verify(ext, never()).registerTabHandler(any(), any())
-        store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession)).joinBlocking()
-        verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
-        verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
+
+        val engineSession1: EngineSession = mock()
+        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession1)).joinBlocking()
+        verify(ext).registerActionHandler(eq(engineSession1), actionHandlerCaptor.capture())
+        verify(ext).registerTabHandler(eq(engineSession1), tabHandlerCaptor.capture())
+
+        val engineSession2: EngineSession = mock()
+        store.dispatch(EngineAction.LinkEngineSessionAction(customTab.id, engineSession2)).joinBlocking()
+        verify(ext).registerActionHandler(eq(engineSession2), actionHandlerCaptor.capture())
+        verify(ext).registerTabHandler(eq(engineSession2), tabHandlerCaptor.capture())
     }
 
     @Test
@@ -731,7 +825,7 @@ class WebExtensionSupportTest {
     }
 
     @Test
-    fun `closes unsupported extension`() {
+    fun `closes tabs from unsupported extensions`() {
         val store = BrowserStore(BrowserState(
             tabs = listOf(
                 createTab(id = "1", url = "https://www.mozilla.org", source = SessionState.Source.RESTORED),
@@ -774,5 +868,42 @@ class WebExtensionSupportTest {
 
         store.waitUntilIdle()
         assertNotNull(store.state.findTab("4"))
+    }
+
+    @Test
+    fun `marks extensions as updated`() {
+        val engineSession: EngineSession = mock()
+        val tab =
+            createTab(id = "1", url = "https://www.mozilla.org", engineSession = engineSession)
+
+        val customTabEngineSession: EngineSession = mock()
+        val customTab =
+            createCustomTab(id = "2", url = "https://www.mozilla.org", engineSession = customTabEngineSession)
+
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    customTabs = listOf(customTab)
+                )
+            )
+        )
+
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("extensionId")
+        whenever(ext.url).thenReturn("url")
+        whenever(ext.supportActions).thenReturn(true)
+
+        WebExtensionSupport.markExtensionAsUpdated(store, ext)
+        assertSame(ext, WebExtensionSupport.installedExtensions[ext.id])
+        verify(store).dispatch(WebExtensionAction.UpdateWebExtensionAction(ext.toState()))
+
+        // Verify that we register new action and tab handlers for the updated extension
+        val actionHandlerCaptor = argumentCaptor<ActionHandler>()
+        val tabHandlerCaptor = argumentCaptor<TabHandler>()
+        verify(ext).registerActionHandler(eq(customTabEngineSession), actionHandlerCaptor.capture())
+        verify(ext).registerTabHandler(eq(customTabEngineSession), tabHandlerCaptor.capture())
+        verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
+        verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
     }
 }
