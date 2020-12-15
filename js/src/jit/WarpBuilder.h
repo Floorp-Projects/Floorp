@@ -47,12 +47,6 @@ namespace jit {
   _(Yield)                               \
   _(Resume)                              \
   _(ResumeKind)                          \
-  _(CheckResumeKind)                     \
-  _(AfterYield)                          \
-  _(Await)                               \
-  _(CanSkipAwait)                        \
-  _(MaybeExtractAwaitValue)              \
-  _(AsyncAwait)                          \
   /* try-finally */                      \
   _(Finally)                             \
   _(Gosub)                               \

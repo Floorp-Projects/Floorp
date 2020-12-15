@@ -670,8 +670,14 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::CheckThis:
       case JSOp::CheckThisReinit:
       case JSOp::Generator:
+      case JSOp::AfterYield:
       case JSOp::FinalYieldRval:
       case JSOp::AsyncResolve:
+      case JSOp::CheckResumeKind:
+      case JSOp::CanSkipAwait:
+      case JSOp::MaybeExtractAwaitValue:
+      case JSOp::AsyncAwait:
+      case JSOp::Await:
       case JSOp::CheckReturn:
       case JSOp::CheckLexical:
       case JSOp::CheckAliasedLexical:

@@ -5324,6 +5324,14 @@ void LIRGenerator::visitAsyncResolve(MAsyncResolve* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitAsyncAwait(MAsyncAwait* ins) {
+  MOZ_ASSERT(ins->generator()->type() == MIRType::Object);
+  auto* lir = new (alloc()) LAsyncAwait(useBoxAtStart(ins->value()),
+                                        useRegisterAtStart(ins->generator()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins) {
   MDefinition* checkVal = ins->checkValue();
   MOZ_ASSERT(checkVal->type() == MIRType::Value);

@@ -156,6 +156,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   MDefinition* peek(int32_t depth) {
     MOZ_ASSERT(depth < 0);
     MOZ_ASSERT(stackPosition_ + depth >= info_.firstStackSlot());
+    return peekUnchecked(depth);
+  }
+
+  MDefinition* peekUnchecked(int32_t depth) {
+    MOZ_ASSERT(depth < 0);
     return getSlot(stackPosition_ + depth);
   }
 
