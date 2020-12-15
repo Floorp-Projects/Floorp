@@ -459,13 +459,6 @@ JS::ContextOptions& JS::ContextOptions::setWasmSimd(bool flag) {
   return *this;
 }
 
-JS::ContextOptions& JS::ContextOptions::setWasmSimdWormhole(bool flag) {
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-  wasmSimdWormhole_ = flag;
-#endif
-  return *this;
-}
-
 JS::ContextOptions& JS::ContextOptions::setWasmExceptions(bool flag) {
 #ifdef ENABLE_WASM_EXCEPTIONS
   wasmExceptions_ = flag;
