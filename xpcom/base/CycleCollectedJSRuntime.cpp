@@ -1797,7 +1797,7 @@ void CycleCollectedJSRuntime::PrepareWaitingZonesForGC() {
     JS::PrepareForFullGC(cx);
   } else {
     for (auto iter = mZonesWaitingForGC.Iter(); !iter.Done(); iter.Next()) {
-      JS::PrepareZoneForGC(iter.Get()->GetKey());
+      JS::PrepareZoneForGC(cx, iter.Get()->GetKey());
     }
     mZonesWaitingForGC.Clear();
   }
