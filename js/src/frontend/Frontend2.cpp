@@ -85,9 +85,8 @@ void CopyBindingNames(JSContext* cx, CVec<SmooshBindingName>& from,
   size_t numBindings = from.len;
   for (size_t i = 0; i < numBindings; i++) {
     SmooshBindingName& name = from.data[i];
-    new (mozilla::KnownNotNull, &to[i])
-        ParserBindingName(allAtoms[name.name]->toIndex(), name.is_closed_over,
-                          name.is_top_level_function);
+    new (mozilla::KnownNotNull, &to[i]) ParserBindingName(
+        allAtoms[name.name], name.is_closed_over, name.is_top_level_function);
   }
 }
 
@@ -102,12 +101,11 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
     COption<SmooshBindingName>& maybeName = from.data[i];
     if (maybeName.IsSome()) {
       SmooshBindingName& name = maybeName.AsSome();
-      new (mozilla::KnownNotNull, &to[i])
-          ParserBindingName(allAtoms[name.name]->toIndex(), name.is_closed_over,
-                            name.is_top_level_function);
+      new (mozilla::KnownNotNull, &to[i]) ParserBindingName(
+          allAtoms[name.name], name.is_closed_over, name.is_top_level_function);
     } else {
       new (mozilla::KnownNotNull, &to[i])
-          ParserBindingName(TaggedParserAtomIndex::null(), false, false);
+          ParserBindingName(nullptr, false, false);
     }
   }
 }
