@@ -678,7 +678,7 @@ linux64-asan/opt:
         toolchain:
             - linux64-binutils
             - linux64-clang
-            - linux64-rust
+            - linux64-rust-nightly
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
@@ -810,7 +810,7 @@ linux64-asan-fuzzing/opt:
         toolchain:
             - linux64-binutils
             - linux64-clang
-            - linux64-rust
+            - linux64-rust-nightly
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
@@ -998,7 +998,7 @@ linux64-asan/debug:
         toolchain:
             - linux64-binutils
             - linux64-clang
-            - linux64-rust
+            - linux64-rust-nightly
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
