@@ -747,6 +747,82 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: never
+  mobile_bookmarks_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates how many bookmarks a user has in the mobile
+      folder. This value will only be set if the user has at least *one*
+      bookmark. If they have 0, this ping will not get sent, resulting in
+      a null value. To disambiguate between a failed `mobile_bookmarks_count`
+      ping and 0 bookmarks, please see `has_mobile_bookmarks`.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16941
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16942
+      - https://github.com/mozilla-mobile/fenix/pull/16942#issuecomment-742794701
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  has_mobile_bookmarks:
+    type: boolean
+    lifetime: application
+    description: |
+      A boolean that indicates if the user has bookmarks in the mobile folder
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16941
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16942
+      - https://github.com/mozilla-mobile/fenix/pull/16942#issuecomment-742794701
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  desktop_bookmarks_count:
+    type: counter
+    lifetime: application
+    description: |
+      A counter that indicates how many bookmarks a user has in the desktop
+      folder. This value will only be set if the user has at least *one*
+      bookmark. If they have 0, this ping will not get sent, resulting in a
+      null value. To disambiguate between a failed `desktop_bookmarks_count`
+      ping and 0 bookmarks, please see `has_desktop_bookmarks`.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16941
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16942
+      - https://github.com/mozilla-mobile/fenix/pull/16942#issuecomment-742794701
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  has_desktop_bookmarks:
+    type: boolean
+    lifetime: application
+    description: |
+      A boolean that indicates if the user has bookmarks in the desktop folder
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/16941
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/16942
+      - https://github.com/mozilla-mobile/fenix/pull/16942#issuecomment-742794701
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
   top_sites_count:
     type: counter
     lifetime: application

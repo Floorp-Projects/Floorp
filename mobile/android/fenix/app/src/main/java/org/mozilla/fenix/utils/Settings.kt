@@ -906,6 +906,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         0
     )
 
+    var mobileBookmarksSize by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_mobile_bookmarks_size),
+        0
+    )
+
+    var desktopBookmarksSize by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_desktop_bookmarks_size),
+        0
+    )
+
     private var savedLoginsSortingStrategyString by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_saved_logins_sorting_strategy),
         default = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort.strategyString

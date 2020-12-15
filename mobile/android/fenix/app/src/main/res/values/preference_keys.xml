@@ -214,6 +214,9 @@
 
     <string name="pref_key_search_count" translatable="false">pref_key_search_count</string>
 
+    <string name="pref_key_mobile_bookmarks_size" translatable="false">pref_key_mobile_bookmarks_size</string>
+    <string name="pref_key_desktop_bookmarks_size" translatable="false">pref_key_desktop_bookmarks_size</string>
+
     <string name="pref_key_default_browser" translatable="false">pref_key_default_browser</string>
 
     <string name="pref_key_login_exceptions" translatable="false">pref_key_login_exceptions</string>

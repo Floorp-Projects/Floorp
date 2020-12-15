@@ -789,6 +789,18 @@ class GleanMetricsService(
                 topSitesCount.add(topSitesSize)
             }
 
+            val desktopBookmarksSize = context.settings().desktopBookmarksSize
+            hasDesktopBookmarks.set(desktopBookmarksSize > 0)
+            if (desktopBookmarksSize > 0) {
+                desktopBookmarksCount.add(desktopBookmarksSize)
+            }
+
+            val mobileBookmarksSize = context.settings().mobileBookmarksSize
+            hasMobileBookmarks.set(mobileBookmarksSize > 0)
+            if (mobileBookmarksSize > 0) {
+                mobileBookmarksCount.add(mobileBookmarksSize)
+            }
+
             toolbarPosition.set(
                 when (context.settings().toolbarPosition) {
                     ToolbarPosition.BOTTOM -> Event.ToolbarPositionChanged.Position.BOTTOM.name

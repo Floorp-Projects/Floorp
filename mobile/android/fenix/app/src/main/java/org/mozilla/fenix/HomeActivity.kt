@@ -37,12 +37,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
@@ -82,6 +85,7 @@ import org.mozilla.fenix.home.intent.OpenSpecificTabIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
+import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.perf.Performance
@@ -340,6 +344,20 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // https://github.com/mozilla-mobile/android-components/issues/8679
         settings().topSitesSize = components.core.topSitesStorage.cachedTopSites.size
 
+        lifecycleScope.launch(IO) {
+            components.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)?.let {
+                val desktopRootNode = DesktopFolders(
+                    applicationContext,
+                    showMobileRoot = false
+                ).withOptionalDesktopFolders(it)
+                settings().desktopBookmarksSize = getBookmarkCount(desktopRootNode)
+            }
+
+            components.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id, true)?.let {
+                settings().mobileBookmarksSize = getBookmarkCount(it)
+            }
+        }
+
         super.onPause()
 
         // Diagnostic breadcrumb for "Display already aquired" crash:
@@ -357,6 +375,25 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         //
         // NB: There are ways for the user to install new products without leaving the browser.
         BrowsersCache.resetAll()
+    }
+
+    private fun getBookmarkCount(node: BookmarkNode): Int {
+        val children = node.children
+        return if (children == null) {
+            0
+        } else {
+            var count = 0
+
+            for (child in children) {
+                if (child.type == BookmarkNodeType.FOLDER) {
+                    count += getBookmarkCount(child)
+                } else if (child.type == BookmarkNodeType.ITEM) {
+                    count++
+                }
+            }
+
+            count
+        }
     }
 
     override fun onDestroy() {
