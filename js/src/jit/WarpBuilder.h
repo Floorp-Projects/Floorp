@@ -62,7 +62,6 @@ namespace jit {
   _(Retsub)                              \
   /* Misc */                             \
   _(DelName)                             \
-  _(GetRval)                             \
   _(SetIntrinsic)                        \
   _(ThrowMsg)                            \
   /* Private Fields */                   \
