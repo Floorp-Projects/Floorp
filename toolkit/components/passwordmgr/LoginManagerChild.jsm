@@ -18,7 +18,7 @@ const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 // popup from a focus event in ms. This matches the threshold in
 // toolkit/components/satchel/nsFormFillController.cpp
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
-const AUTOFILL_STATE = "-moz-autofill";
+const AUTOFILL_STATE = "autofill";
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
