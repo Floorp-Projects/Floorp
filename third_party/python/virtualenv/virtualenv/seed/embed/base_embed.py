@@ -109,7 +109,8 @@ class BaseEmbed(Seeder):
             if getattr(self, "no_{}".format(distribution)):
                 continue
             result += " {}{},".format(
-                distribution, "={}".format(getattr(self, "{}_version".format(distribution), None) or "latest"),
+                distribution,
+                "={}".format(getattr(self, "{}_version".format(distribution), None) or "latest"),
             )
         return result[:-1] + ")"
 
