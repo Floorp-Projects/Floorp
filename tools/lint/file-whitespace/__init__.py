@@ -10,11 +10,32 @@ results = []
 
 def lint(paths, config, fix=None, **lintargs):
     files = list(expand_exclusions(paths, config, lintargs["root"]))
+    log = lintargs["log"]
 
     for f in files:
         with open(f, "rb") as open_file:
             hasFix = False
             content_to_write = []
+
+            try:
+                lines = open_file.readlines()
+                # Check for Empty spaces or newline character at end of file
+                if lines[:].__len__() != 0 and lines[-1:][0].strip().__len__() == 0:
+                    # return file pointer to first
+                    open_file.seek(0)
+                    res = {
+                        "path": f,
+                        "message": "Empty Lines at end of file",
+                        "level": "error",
+                        "lineno": open_file.readlines()[:].__len__(),
+                    }
+                    results.append(result.from_config(config, **res))
+            except Exception as ex:
+                log.debug("Error: " + str(ex) + ", in file: " + f)
+
+            # return file pointer to first
+            open_file.seek(0)
+
             for i, line in enumerate(open_file):
                 if line.endswith(b" \n"):
                     # We found a trailing whitespace
