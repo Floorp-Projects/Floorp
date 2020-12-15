@@ -424,20 +424,17 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
   }
   newEntry->SetDocshellID(GetHistoryID());
   newEntry->SetIsDynamicallyAdded(CreatedDynamically());
+  newEntry->SetForInitialLoad(true);
 
   // Replacing the old entry.
   SessionHistoryEntry::SetByLoadId(aInfo->mLoadId, newEntry);
 
-  bool forInitialLoad = true;
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i].mLoadId == aInfo->mLoadId) {
-      forInitialLoad = mLoadingEntries[i].mEntry->ForInitialLoad();
       mLoadingEntries[i].mEntry = newEntry;
       break;
     }
   }
-
-  newEntry->SetForInitialLoad(forInitialLoad);
 
   return MakeUnique<LoadingSessionHistoryInfo>(newEntry, aInfo->mLoadId);
 }
