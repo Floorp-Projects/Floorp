@@ -3438,17 +3438,6 @@
     "bug_numbers": [1655566],
     "description": "HTTP3: number of times when a stream is blocked by the flow control while sendnig data."
   },
-  "HTTP3_CHANNEL_ONSTART_SUCCESS" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Successfully started HTTP channels when HTTP3 is used",
-    "bug_numbers": [1677987],
-    "releaseChannelCollection": "opt-out",
-    "keyed": true,
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"]
-  },
   "HTTP_CONTENT_ENCODING": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
