@@ -2675,6 +2675,14 @@ bool gfxPlatform::WebRenderEnvvarDisabled() {
   return (env && *env == '0');
 }
 
+/* static */ const char* gfxPlatform::WebRenderResourcePathOverride() {
+  const char* resourcePath = PR_GetEnv("WR_RESOURCE_PATH");
+  if (!resourcePath || resourcePath[0] == '\0') {
+    return nullptr;
+  }
+  return resourcePath;
+}
+
 void gfxPlatform::InitWebRenderConfig() {
   bool prefEnabled = WebRenderPrefEnabled();
   bool envvarEnabled = WebRenderEnvvarEnabled();
@@ -2756,6 +2764,11 @@ void gfxPlatform::InitWebRenderConfig() {
         WebRenderBatchingPrefChangeCallback,
         nsDependentCString(
             StaticPrefs::GetPrefName_gfx_webrender_batching_lookback()));
+
+    if (WebRenderResourcePathOverride()) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::IsWebRenderResourcePathOverridden, true);
+    }
 
     UpdateForceSubpixelAAWherePossible();
   }

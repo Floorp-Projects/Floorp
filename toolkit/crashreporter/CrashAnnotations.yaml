@@ -373,6 +373,12 @@ GPUProcessStatus:
     Status of the GPU process, can be set to "Running" or "Destroyed"
   type: string
 
+GraphicsCompileShader:
+  description: >
+    Name of the shader we are in the process of compiling, if applicable. See
+    file names in gfx/wr/webrender/res/* for the possible values.
+  type: string
+
 GraphicsCriticalError:
   description: >
     Information of a critical error that occurred within the graphics code.
@@ -545,6 +551,11 @@ IsWayland:
 IsWaylandDRM:
   description: >
     If true then the Wayland DRM backend was in use.
+  type: boolean
+
+IsWebRenderResourcePathOverridden:
+  description: >
+    If true then the WebRender resources (i.e. shaders) are loaded from a user specified path.
   type: boolean
 
 JavaException:

@@ -36,6 +36,7 @@
 
 use api::{BlobImageHandler, ColorF, ColorU, MixBlendMode};
 use api::{DocumentId, Epoch, ExternalImageHandler};
+use api::CrashAnnotator;
 #[cfg(feature = "replay")]
 use api::ExternalImageId;
 use api::{ExternalImageSource, ExternalImageType, FontRenderMode, ImageFormat};
@@ -2172,6 +2173,7 @@ impl Renderer {
 
         let mut device = Device::new(
             gl,
+            options.crash_annotator.clone(),
             options.resource_override_path.clone(),
             options.use_optimized_shaders,
             options.upload_method.clone(),
@@ -6893,6 +6895,7 @@ pub struct RendererOptions {
     pub workers: Option<Arc<ThreadPool>>,
     pub enable_multithreading: bool,
     pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
+    pub crash_annotator: Option<Box<dyn CrashAnnotator>>,
     pub thread_listener: Option<Box<dyn ThreadListener + Send + Sync>>,
     pub size_of_op: Option<VoidPtrToSizeFn>,
     pub enclosing_size_of_op: Option<VoidPtrToSizeFn>,
@@ -6975,6 +6978,7 @@ impl Default for RendererOptions {
             workers: None,
             enable_multithreading: true,
             blob_image_handler: None,
+            crash_annotator: None,
             thread_listener: None,
             size_of_op: None,
             enclosing_size_of_op: None,
