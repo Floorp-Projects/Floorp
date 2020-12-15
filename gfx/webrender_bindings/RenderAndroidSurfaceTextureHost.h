@@ -25,6 +25,10 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHost {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
+  size_t Bytes() override {
+    return mSize.width * mSize.height * BytesPerPixel(mFormat);
+  }
+
   void PrepareForUse() override;
   void NotifyForUse() override;
   void NotifyNotUsed() override;
@@ -42,6 +46,7 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHost {
 
   const mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
+  const gfx::SurfaceFormat mFormat;
   // mContinuousUpdate was used for rendering video in the past.
   // It is not used on current gecko.
   const bool mContinuousUpdate;

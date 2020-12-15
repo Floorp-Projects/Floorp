@@ -27,6 +27,7 @@ class RenderAndroidHardwareBufferTextureHost final : public RenderTextureHost {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
+  size_t Bytes() override;
  private:
   virtual ~RenderAndroidHardwareBufferTextureHost();
   bool EnsureLockable(wr::ImageRendering aRendering);

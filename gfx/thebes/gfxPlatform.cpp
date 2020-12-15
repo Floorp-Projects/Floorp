@@ -792,6 +792,7 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.ReportTexture(aReport.texture_upload_pbos,
                              "texture-upload-pbos");
         helper.ReportTexture(aReport.swap_chain, "swap-chains");
+        helper.ReportTexture(aReport.render_texture_hosts, "render-texture-hosts");
 
         FinishAsyncMemoryReport();
       },

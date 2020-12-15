@@ -70,6 +70,8 @@ class RenderTextureHost {
   // call, before its usage.
   virtual bool SyncObjectNeeded() { return false; }
 
+  virtual size_t Bytes() = 0;
+
   virtual RenderDXGITextureHost* AsRenderDXGITextureHost() { return nullptr; }
   virtual RenderDXGIYCbCrTextureHost* AsRenderDXGIYCbCrTextureHost() {
     return nullptr;

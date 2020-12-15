@@ -28,6 +28,10 @@ class RenderDMABUFTextureHost final : public RenderTextureHost {
   void Unlock() override;
   void ClearCachedResources() override;
 
+  size_t Bytes() override {
+    return mSurface->GetWidth() * mSurface->GetHeight()
+      * BytesPerPixel(mSurface->GetFormat());
+  }
  private:
   virtual ~RenderDMABUFTextureHost();
   void DeleteTextureHandle();
