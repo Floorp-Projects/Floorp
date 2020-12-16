@@ -2,23 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-html {
-  height: 100%;
-}
-
-body {
-  display: flex;
-  align-items: stretch;
-  height: 100%;
-}
-
 #sectionTitle {
   float: inline-start;
+  display: none;
 }
 
 #refreshDiv {
   justify-content: flex-end;
   margin-bottom: 0.5em;
+}
+
+#refreshDiv > * {
+  font-size: 2em;
+  vertical-align: middle;
+}
+
+#refreshDiv > input {
+  height: 1em;
+  width: 1em;
 }
 
 #refreshButton {
@@ -27,7 +28,14 @@ body {
 
 /** Categories **/
 
+#categories {
+  display: inline-flex;
+}
+
 .category {
+  font-size: 2em;
+  padding: 0.2em;
+  text-align: center;
   cursor: pointer;
   /* Center category names */
   display: flex;
@@ -38,6 +46,10 @@ body {
   pointer-events: none;
 }
 
+.category[selected] {
+  font-weight: bold;
+}
+
 /** Content area **/
 
 .main-content {
@@ -46,6 +58,7 @@ body {
 
 .tab {
   padding: 0.5em 0;
+  overflow-x: auto;
 }
 
 .tab table {
@@ -60,10 +73,11 @@ th, td, table {
 
 th {
   padding-bottom: 0.5em;
+  padding-inline: 1em;
   font-size: larger;
+  white-space: nowrap;
 }
 
 td {
   padding-bottom: 0.25em;
-  border-bottom: 1px solid var(--in-content-box-border-color);
 }
