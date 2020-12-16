@@ -28,19 +28,26 @@ class JitFrameLayout;
 struct SafepointSlotEntry;
 struct VMFunctionData;
 
+// [SMDOC] JIT Frame Layout
+//
+// Frame Headers:
+//
 // In between every two frames lies a small header describing both frames. This
-// header, minimally, contains a returnAddress word and a descriptor word. The
-// descriptor describes the size and type of the previous frame, whereas the
-// returnAddress describes the address the newer frame (the callee) will return
-// to. The exact mechanism in which frames are laid out is architecture
-// dependent.
+// header, minimally, contains a returnAddress word and a descriptor word (See
+// CommonFrameLayout). The descriptor describes the size and type of the older
+// (caller) frame, whereas the returnAddress describes the address the newer
+// (callee) frame will return to.
+//
+// Special Frames:
 //
 // Two special frame types exist:
 // - Entry frames begin a JitActivation, and therefore there is exactly one
-// per activation of EnterIon or EnterBaseline. These reuse JitFrameLayout.
+//   per activation of EnterJit or EnterBaseline. These reuse JitFrameLayout.
 // - Exit frames are necessary to leave JIT code and enter C++, and thus,
-// C++ code will always begin iterating from the topmost exit frame.
-
+//   C++ code will always begin iterating from the topmost exit frame.
+//
+// Approximate Layout:
+//
 // The layout of an Ion frame on the C stack is roughly:
 //      argN     _
 //      ...       \ - These are jsvals
@@ -51,9 +58,23 @@ struct VMFunctionData;
 //    0 returnAddress
 //   .. locals ..
 
-// The descriptor is organized into four sections:
-// [ frame size | has cached saved frame bit | frame header size | frame type ]
-// < highest - - - - - - - - - - - - - - lowest >
+// [SMDOC] Frame Descriptor Layout
+//
+// A frame descriptor word is organized into four sections:
+//
+//    high bits: [ frame size |
+//                 has-cached-saved-frame bit |
+///                frame header size|
+//    low bits:    frame type ]
+//
+// * Frame Size: Size of caller frame
+// * Has-cache-saved-frame bit: Used to power the LiveSavedFrameCache
+//   optimization. See the comment in Activation.h
+// * Frame header size: The number of words in a frame header (see
+//   FrameLayout::Size())
+// * Frame Type: BaselineJS, Exit, etc. (jit::FrameType)
+//
+
 static const uintptr_t FRAMETYPE_BITS = 4;
 static const uintptr_t FRAMETYPE_MASK = (1 << FRAMETYPE_BITS) - 1;
 static const uintptr_t FRAME_HEADER_SIZE_SHIFT = FRAMETYPE_BITS;
