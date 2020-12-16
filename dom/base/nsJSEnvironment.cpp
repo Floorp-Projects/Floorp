@@ -114,6 +114,12 @@ static TimeDuration sGCUnnotifiedTotalTime;
 
 static CCGCScheduler sScheduler;
 
+inline TimeStamp mozilla::CCGCScheduler::Now() { return TimeStamp::Now(); }
+
+inline uint32_t mozilla::CCGCScheduler::SuspectedCCObjects() {
+  return nsCycleCollector_suspectedCount();
+}
+
 struct CycleCollectorStats {
   constexpr CycleCollectorStats() = default;
   void Init();
@@ -1120,14 +1126,14 @@ static void FinishAnyIncrementalGC() {
   }
 }
 
-static void FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
-                                TimeStamp aDeadline) {
+static void FireForgetSkippable(bool aRemoveChildless, TimeStamp aDeadline) {
   AUTO_PROFILER_TRACING_MARKER(
       "CC", aDeadline.IsNull() ? "ForgetSkippable" : "IdleForgetSkippable",
       GCCC);
   TimeStamp startTimeStamp = TimeStamp::Now();
   FinishAnyIncrementalGC();
 
+  uint32_t suspectedBefore = nsCycleCollector_suspectedCount();
   js::SliceBudget budget =
       sScheduler.ComputeForgetSkippableBudget(startTimeStamp, aDeadline);
   bool earlyForgetSkippable = sScheduler.IsEarlyForgetSkippable();
@@ -1135,7 +1141,7 @@ static void FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
                                    earlyForgetSkippable);
   TimeStamp now = TimeStamp::Now();
   uint32_t removedPurples =
-      sScheduler.NoteForgetSkippableComplete(now, aSuspected);
+      sScheduler.NoteForgetSkippableComplete(now, suspectedBefore);
 
   TimeDuration duration = now - startTimeStamp;
 
@@ -1485,8 +1491,7 @@ void nsJSContext::BeginCycleCollectionCallback() {
   // is particularly useful if we recently finished a GC.
   if (sScheduler.IsEarlyForgetSkippable()) {
     while (sScheduler.IsEarlyForgetSkippable()) {
-      FireForgetSkippable(nsCycleCollector_suspectedCount(), false,
-                          TimeStamp());
+      FireForgetSkippable(false, TimeStamp());
     }
     sCCStats.AfterSyncForgetSkippable(startTime);
   }
@@ -1628,15 +1633,14 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
   // `Yield` in step.mYield.
   CCRunnerStep step;
   do {
-    uint32_t suspected = nsCycleCollector_suspectedCount();
-    step = sScheduler.GetNextCCRunnerAction(aDeadline, suspected);
+    step = sScheduler.GetNextCCRunnerAction(aDeadline);
     switch (step.mAction) {
       case CCRunnerAction::None:
         break;
 
       case CCRunnerAction::ForgetSkippable:
         // 'Forget skippable' only, then end this invocation.
-        FireForgetSkippable(suspected, bool(step.mRemoveChildless), aDeadline);
+        FireForgetSkippable(bool(step.mRemoveChildless), aDeadline);
         break;
 
       case CCRunnerAction::CleanupContentUnbinder:
@@ -1952,7 +1956,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sScheduler.SetNeedsFullGC(false);
       }
 
-      if (sScheduler.IsCCNeeded(nsCycleCollector_suspectedCount())) {
+      if (sScheduler.IsCCNeeded()) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
@@ -1984,7 +1988,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
             [] { return sShuttingDown; });
       }
 
-      if (sScheduler.IsCCNeeded(nsCycleCollector_suspectedCount())) {
+      if (sScheduler.IsCCNeeded()) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
