@@ -1352,9 +1352,8 @@ PlacesToolbar.prototype = {
         bubbles: true,
       });
       this._viewElt.dispatchEvent(event);
+      this._updatingNodesVisibility = false;
     });
-
-    this._updatingNodesVisibility = false;
   },
 
   nodeInserted: function PT_nodeInserted(
