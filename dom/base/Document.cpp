@@ -7524,15 +7524,17 @@ void Document::DispatchContentLoadedEvents() {
   // target_frame is the [i]frame element that will be used as the
   // target for the event. It's the [i]frame whose content is done
   // loading.
-  nsCOMPtr<EventTarget> target_frame;
+  nsCOMPtr<Element> target_frame;
 
-  if (mParentDocument) {
-    target_frame = mParentDocument->FindContentForSubDocument(this);
+  if (BrowsingContext* bc = GetBrowsingContext()) {
+    if (!bc->IsCached()) {
+      target_frame = bc->GetEmbedderElement();
+    }
   }
 
-  if (target_frame) {
-    nsCOMPtr<Document> parent = mParentDocument;
-    do {
+  if (target_frame && target_frame->IsInComposedDoc()) {
+    nsCOMPtr<Document> parent = target_frame->OwnerDoc();
+    while (parent) {
       RefPtr<Event> event;
       if (parent) {
         IgnoredErrorResult ignored;
@@ -7563,7 +7565,7 @@ void Document::DispatchContentLoadedEvents() {
       }
 
       parent = parent->GetInProcessParentDocument();
-    } while (parent);
+    }
   }
 
   // If the document has a manifest attribute, fire a MozApplicationManifest
@@ -14497,7 +14499,10 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
       break;
     }
     Document* parent = child->GetInProcessParentDocument();
-    Element* element = parent->FindContentForSubDocument(child);
+    BrowsingContext* bc = child->GetBrowsingContext();
+    Element* element =
+        bc && !bc->IsCached() ? bc->GetEmbedderElement() : nullptr;
+
     if (!element) {
       // We've reached the root.No more changes need to be made
       // to the top layer stacks of documents further up the tree.
