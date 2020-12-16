@@ -1120,13 +1120,27 @@ void nsLookAndFeel::EnsureInit() {
 
     // Colors that we pass to content processes through the LookAndFeelCache.
     if (ShouldHonorThemeScrollbarColors()) {
-      style = GetStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
+      // Some themes style the <trough>, while others style the <scrollbar>
+      // itself, so we look at both and compose the colors.
+      style = GetStyleContext(MOZ_GTK_SCROLLBAR_VERTICAL);
       gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
                                              &color);
-      mMozScrollbar = mThemedScrollbar = GDK_RGBA_TO_NS_RGBA(color);
+      mThemedScrollbar = GDK_RGBA_TO_NS_RGBA(color);
       gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
                                              &color);
       mThemedScrollbarInactive = GDK_RGBA_TO_NS_RGBA(color);
+
+      style = GetStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
+      gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
+                                             &color);
+      mThemedScrollbar =
+          NS_ComposeColors(mThemedScrollbar, GDK_RGBA_TO_NS_RGBA(color));
+      gtk_style_context_get_background_color(style, GTK_STATE_FLAG_BACKDROP,
+                                             &color);
+      mThemedScrollbarInactive = NS_ComposeColors(mThemedScrollbarInactive,
+                                                  GDK_RGBA_TO_NS_RGBA(color));
+
+      mMozScrollbar = mThemedScrollbar;
 
       style = GetStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
       gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
