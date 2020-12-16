@@ -3137,27 +3137,6 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
       return nullptr;
     }
 
-    if (clone->IsHTMLElement() || clone->IsXULElement()) {
-      // The cloned node may be a custom element that may require
-      // enqueing upgrade reaction.
-      Element* cloneElem = clone->AsElement();
-      CustomElementData* data = elem->GetCustomElementData();
-      RefPtr<nsAtom> typeAtom = data ? data->GetCustomElementType() : nullptr;
-
-      if (typeAtom) {
-        cloneElem->SetCustomElementData(new CustomElementData(typeAtom));
-
-        MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
-        CustomElementDefinition* definition =
-            nsContentUtils::LookupCustomElementDefinition(
-                nodeInfo->GetDocument(), nodeInfo->NameAtom(),
-                nodeInfo->NamespaceID(), typeAtom);
-        if (definition) {
-          nsContentUtils::EnqueueUpgradeReaction(cloneElem, definition);
-        }
-      }
-    }
-
     if (aParent) {
       // If we're cloning we need to insert the cloned children into the cloned
       // parent.
@@ -3333,15 +3312,10 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
         // the current timing. They will need to be paused later after the new
         // document's pres shell gets initialized.
         //
-        // This might be a bit cleaner from Element::CopyInnerTo.
+        // This needs to be done here rather than in Element::CopyInnerTo
+        // because the animations clone code relies on the target (that is,
+        // `clone`) being connected already.
         clone->AsElement()->CloneAnimationsFrom(*aNode->AsElement());
-
-        // Propagate :defined state to the static clone. This needs to happen
-        // here rather than in Element::CopyInnerTo because otherwise we might
-        // clobber the custom element state above in this same function.
-        if (aNode->AsElement()->State().HasState(NS_EVENT_STATE_DEFINED)) {
-          clone->AsElement()->SetDefined(true);
-        }
 
         // Clone the Shadow DOM
         ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
