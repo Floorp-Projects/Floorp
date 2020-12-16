@@ -2320,9 +2320,8 @@ nsINode* nsContentUtils::GetCrossDocParentNode(nsINode* aChild) {
     return parent;
   }
 
-  Document* doc = aChild->AsDocument();
-  Document* parentDoc = doc->GetInProcessParentDocument();
-  return parentDoc ? parentDoc->FindContentForSubDocument(doc) : nullptr;
+  BrowsingContext* bc = aChild->AsDocument()->GetBrowsingContext();
+  return bc && !bc->IsCached() ? bc->GetEmbedderElement() : nullptr;
 }
 
 nsINode* nsContentUtils::GetNearestInProcessCrossDocParentNode(
