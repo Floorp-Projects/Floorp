@@ -333,14 +333,15 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   return disabled;
 }
 
-bool StorageDisabledByAntiTracking(dom::Document* aDocument, nsIURI* aURI) {
-  uint32_t rejectedReason = 0;
+bool StorageDisabledByAntiTracking(dom::Document* aDocument, nsIURI* aURI,
+                                   uint32_t& aRejectedReason) {
+  aRejectedReason = 0;
   // Note that GetChannel() below may return null, but that's OK, since the
   // callee is able to deal with a null channel argument, and if passed null,
   // will only fail to notify the UI in case storage gets blocked.
   return StorageDisabledByAntiTracking(
       aDocument->GetInnerWindow(), aDocument->GetChannel(),
-      aDocument->NodePrincipal(), aURI, rejectedReason);
+      aDocument->NodePrincipal(), aURI, aRejectedReason);
 }
 
 bool ShouldPartitionStorage(StorageAccess aAccess) {
