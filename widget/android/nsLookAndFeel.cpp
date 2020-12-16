@@ -20,7 +20,11 @@ using mozilla::dom::ContentChild;
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
-nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel() {}
+nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache) {
+  if (aCache) {
+    DoSetCache(*aCache);
+  }
+}
 
 nsLookAndFeel::~nsLookAndFeel() {}
 
@@ -505,6 +509,10 @@ widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
 }
 
 void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
+  DoSetCache(aCache);
+}
+
+void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
   for (const auto& entry : aCache.mInts()) {
     switch (entry.id()) {
       case IntID::PrefersReducedMotion:

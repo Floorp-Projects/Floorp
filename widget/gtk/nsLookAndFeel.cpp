@@ -59,7 +59,11 @@ extern mozilla::LazyLogModule gWidgetLog;
   ((nscolor)NS_RGBA((int)((c).red * 255), (int)((c).green * 255), \
                     (int)((c).blue * 255), (int)((c).alpha * 255)))
 
-nsLookAndFeel::nsLookAndFeel() = default;
+nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache) {
+  if (aCache) {
+    DoSetCache(*aCache);
+  }
+}
 
 nsLookAndFeel::~nsLookAndFeel() = default;
 
@@ -295,6 +299,10 @@ widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
 }
 
 void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
+  DoSetCache(aCache);
+}
+
+void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
   for (const auto& entry : aCache.mInts()) {
     switch (entry.id()) {
       case IntID::SystemUsesDarkTheme:

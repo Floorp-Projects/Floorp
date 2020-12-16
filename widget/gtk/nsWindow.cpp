@@ -4744,6 +4744,21 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                            G_CALLBACK(settings_changed_cb), this);
     g_signal_connect_after(default_settings, "notify::gtk-xft-dpi",
                            G_CALLBACK(settings_xft_dpi_changed_cb), this);
+    // For remote LookAndFeel, to refresh the content processes' copies:
+    g_signal_connect_after(default_settings, "notify::gtk-cursor-blink-time",
+                           G_CALLBACK(settings_changed_cb), this);
+    g_signal_connect_after(default_settings, "notify::gtk-cursor-blink",
+                           G_CALLBACK(settings_changed_cb), this);
+    g_signal_connect_after(default_settings,
+                           "notify::gtk-entry-select-on-focus",
+                           G_CALLBACK(settings_changed_cb), this);
+    g_signal_connect_after(default_settings,
+                           "notify::gtk-primary-button-warps-slider",
+                           G_CALLBACK(settings_changed_cb), this);
+    g_signal_connect_after(default_settings, "notify::gtk-menu-popup-delay",
+                           G_CALLBACK(settings_changed_cb), this);
+    g_signal_connect_after(default_settings, "notify::gtk-dnd-drag-threshold",
+                           G_CALLBACK(settings_changed_cb), this);
   }
 
   if (mContainer) {

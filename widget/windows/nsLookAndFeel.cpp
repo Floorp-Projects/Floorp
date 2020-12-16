@@ -89,7 +89,7 @@ static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
   return rv;
 }
 
-nsLookAndFeel::nsLookAndFeel()
+nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
     : nsXPLookAndFeel(),
       mUseAccessibilityTheme(0),
       mUseDefaultTheme(0),
@@ -103,6 +103,9 @@ nsLookAndFeel::nsLookAndFeel()
       mInitialized(false) {
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::TOUCH_ENABLED_DEVICE,
                                  WinUtils::IsTouchDeviceSupportPresent());
+  if (aCache) {
+    DoSetCache(*aCache);
+  }
 }
 
 nsLookAndFeel::~nsLookAndFeel() {}
@@ -839,6 +842,10 @@ LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
 }
 
 void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
+  DoSetCache(aCache);
+}
+
+void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
   MOZ_ASSERT(XRE_IsContentProcess());
   MOZ_RELEASE_ASSERT(aCache.mFonts().Length() == mFontCache.length());
 
