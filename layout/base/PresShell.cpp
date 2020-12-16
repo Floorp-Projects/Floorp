@@ -6423,7 +6423,8 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 }
 
 // static
-void PresShell::SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags) {
+void PresShell::SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags,
+                                    WidgetEvent* aEvent) {
   // If capture was set for pointer lock, don't unlock unless we are coming
   // out of pointer lock explicitly.
   if (!aContent && sCapturingContentInfo.mPointerLock &&
@@ -6432,6 +6433,7 @@ void PresShell::SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags) {
   }
 
   sCapturingContentInfo.mContent = nullptr;
+  sCapturingContentInfo.mRemoteTarget = nullptr;
 
   // only set capturing content if allowed or the
   // CaptureFlags::IgnoreAllowedState or CaptureFlags::PointerLock are used.
@@ -6439,6 +6441,13 @@ void PresShell::SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags) {
       sCapturingContentInfo.mAllowed || (aFlags & CaptureFlags::PointerLock)) {
     if (aContent) {
       sCapturingContentInfo.mContent = aContent;
+    }
+    if (aEvent) {
+      MOZ_ASSERT(XRE_IsParentProcess());
+      MOZ_ASSERT(aEvent->mMessage == eMouseDown);
+      MOZ_ASSERT(aEvent->mLayersId.IsValid());
+      sCapturingContentInfo.mRemoteTarget =
+          BrowserParent::GetBrowserParentFromLayersId(aEvent->mLayersId);
     }
     // CaptureFlags::PointerLock is the same as
     // CaptureFlags::RetargetToElement & CaptureFlags::IgnoreAllowedState.
