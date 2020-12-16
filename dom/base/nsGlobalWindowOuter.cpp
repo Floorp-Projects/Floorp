@@ -5148,13 +5148,10 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
       }
       return;
     }
-    nsCOMPtr<Document> parentdoc = parent->GetDocument();
-    if (!parentdoc) {
-      return;
-    }
-
-    if (Element* frame = parentdoc->FindContentForSubDocument(mDoc)) {
-      nsContentUtils::RequestFrameFocus(*frame, canFocus, aCallerType);
+    if (!bc->IsCached()) {
+      if (Element* frame = bc->GetEmbedderElement()) {
+        nsContentUtils::RequestFrameFocus(*frame, canFocus, aCallerType);
+      }
     }
     return;
   }
