@@ -139,7 +139,9 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
   // access is granted for this image.
   if (nsContentUtils::IsThirdPartyWindowOrChannel(aDocument->GetInnerWindow(),
                                                   nullptr, nullptr)) {
-    return StorageDisabledByAntiTracking(aDocument, aURI)
+    uint32_t rejectedReason = 0;
+    Unused << rejectedReason;
+    return StorageDisabledByAntiTracking(aDocument, aURI, rejectedReason)
                ? aDocument->GetBaseDomain()
                : ""_ns;
   }
