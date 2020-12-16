@@ -3273,8 +3273,6 @@ downloads_management:
     description: >
       A counter for the number of times users access the "Downloads" folder
       inside the app.
-    send_in_pings:
-      - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/15367
     data_reviews:
@@ -3288,8 +3286,6 @@ downloads_management:
     description: >
       A counter for how often a user tap to opens a download from inside the
       "Downloads" folder.
-    send_in_pings:
-      - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/15367
     data_reviews:
@@ -3302,8 +3298,6 @@ downloads_management:
     type: event
     description: >
       A counter for how often a user deletes one / more downloads at a time.
-    send_in_pings:
-      - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/15367
     data_reviews:
