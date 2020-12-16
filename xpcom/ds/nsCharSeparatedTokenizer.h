@@ -146,35 +146,31 @@ class nsTCharSeparatedTokenizer {
  private:
   mozilla::RangedPtr<const CharType> mIter;
   const mozilla::RangedPtr<const CharType> mEnd;
-  CharType mSeparatorChar;
+  const CharType mSeparatorChar;
   bool mWhitespaceBeforeFirstToken;
   bool mWhitespaceAfterCurrentToken;
   bool mSeparatorAfterCurrentToken;
   bool mSeparatorOptional;
 };
 
-template <bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
-class nsCharSeparatedTokenizerTemplate
-    : public nsTCharSeparatedTokenizer<nsDependentSubstring, IsWhitespace> {
- public:
-  nsCharSeparatedTokenizerTemplate(const nsAString& aSource,
-                                   char16_t aSeparatorChar, uint32_t aFlags = 0)
-      : nsTCharSeparatedTokenizer<nsDependentSubstring, IsWhitespace>(
-            aSource, aSeparatorChar, aFlags) {}
-};
+constexpr bool NS_TokenizerIgnoreNothing(char16_t) { return false; }
 
-typedef nsCharSeparatedTokenizerTemplate<> nsCharSeparatedTokenizer;
+template <bool IsWhitespace(char16_t), typename CharType>
+using nsTCharSeparatedTokenizerTemplate =
+    nsTCharSeparatedTokenizer<nsTDependentSubstring<CharType>, IsWhitespace>;
 
-template <bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
-class nsCCharSeparatedTokenizerTemplate
-    : public nsTCharSeparatedTokenizer<nsDependentCSubstring, IsWhitespace> {
- public:
-  nsCCharSeparatedTokenizerTemplate(const nsACString& aSource,
-                                    char aSeparatorChar, uint32_t aFlags = 0)
-      : nsTCharSeparatedTokenizer<nsDependentCSubstring, IsWhitespace>(
-            aSource, aSeparatorChar, aFlags) {}
-};
+template <bool IsWhitespace(char16_t)>
+using nsCharSeparatedTokenizerTemplate =
+    nsTCharSeparatedTokenizerTemplate<IsWhitespace, char16_t>;
 
-typedef nsCCharSeparatedTokenizerTemplate<> nsCCharSeparatedTokenizer;
+using nsCharSeparatedTokenizer =
+    nsCharSeparatedTokenizerTemplate<NS_IsAsciiWhitespace>;
+
+template <bool IsWhitespace(char16_t)>
+using nsCCharSeparatedTokenizerTemplate =
+    nsTCharSeparatedTokenizerTemplate<IsWhitespace, char>;
+
+using nsCCharSeparatedTokenizer =
+    nsCCharSeparatedTokenizerTemplate<NS_IsAsciiWhitespace>;
 
 #endif /* __nsCharSeparatedTokenizer_h */

@@ -2213,9 +2213,8 @@ class MOZ_STACK_CLASS OriginParser final {
   enum ResultType { InvalidOrigin, ObsoleteOrigin, ValidOrigin };
 
  private:
-  static bool IgnoreWhitespace(char16_t /* aChar */) { return false; }
-
-  typedef nsCCharSeparatedTokenizerTemplate<IgnoreWhitespace> Tokenizer;
+  using Tokenizer =
+      nsCCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing>;
 
   enum SchemeType { eNone, eFile, eAbout, eChrome };
 
