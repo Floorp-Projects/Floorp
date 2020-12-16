@@ -123,6 +123,7 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(FeaturePolicy, RefPtr<mozilla::dom::FeaturePolicy>)                  \
   /* See nsSandboxFlags.h for the possible flags. */                         \
   FIELD(SandboxFlags, uint32_t)                                              \
+  FIELD(InitialSandboxFlags, uint32_t)                                       \
   /* A non-zero unique identifier for the browser element that is hosting    \
    * this                                                                    \
    * BrowsingContext tree. Every BrowsingContext in the element's tree will  \
