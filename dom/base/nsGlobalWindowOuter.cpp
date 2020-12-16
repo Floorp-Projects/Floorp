@@ -5123,9 +5123,6 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType) {
     return;
   }
 
-  // Don't look for a presshell if we're a root chrome window that's got
-  // about:blank loaded.  We don't want to focus our widget in that case.
-  // XXXbz should we really be checking for IsInitialDocument() instead?
   RefPtr<BrowsingContext> parent;
   BrowsingContext* bc = GetBrowsingContext();
   if (bc) {
