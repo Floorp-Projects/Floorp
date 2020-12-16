@@ -363,8 +363,6 @@ events:
     description: |
       An event that indicates that a user has selected
       copy option when long pressing on url bar.
-    send_in_pings:
-      - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/16827
     data_reviews:
