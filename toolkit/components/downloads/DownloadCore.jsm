@@ -1006,6 +1006,15 @@ Download.prototype = {
           if (!this.stopped || this._finalized) {
             return;
           }
+          // In case we've blocked the Download becasue its
+          // insecure, we should not set hasBlockedData to
+          // false as its required to show the Unblock option.
+          if (
+            this.error.reputationCheckVerdict ==
+            DownloadError.BLOCK_VERDICT_INSECURE
+          ) {
+            return;
+          }
 
           this.hasBlockedData = false;
           this.hasPartialData = false;
