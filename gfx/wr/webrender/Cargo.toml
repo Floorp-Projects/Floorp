@@ -13,8 +13,8 @@ default = ["freetype-lib"]
 freetype-lib = ["freetype/freetype-sys"]
 profiler = ["tracy-rs/enable_profiler"]
 debugger = ["ws", "serde_json", "serde", "image_loader", "base64"]
-capture = ["api/serialize", "ron", "serde", "smallvec/serde"]
-replay = ["api/deserialize", "ron", "serde", "smallvec/serde"]
+capture = ["api/serialize", "ron", "serde", "smallvec/serde", "etagere/serialization"]
+replay = ["api/deserialize", "ron", "serde", "smallvec/serde", "etagere/serialization"]
 display_list_stats = ["api/display_list_stats"]
 serialize_program = ["serde", "webrender_build/serialize_program"]
 no_static_freetype = []
@@ -56,6 +56,7 @@ ws = { optional = true, version = "0.9" }
 svg_fmt = "0.4"
 tracy-rs = "0.1.2"
 derive_more = "0.99"
+etagere = "0.2.3"
 
 [dev-dependencies]
 mozangle = "0.3.2"

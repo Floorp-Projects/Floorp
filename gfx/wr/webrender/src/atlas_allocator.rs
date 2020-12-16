@@ -7,6 +7,9 @@ use crate::internal_types::CacheTextureId;
 use euclid::{point2, size2, default::Box2D};
 use smallvec::SmallVec;
 
+pub use etagere::AllocatorOptions as ShelfAllocatorOptions;
+pub use etagere::BucketedAtlasAllocator as BucketedShelfAllocator;
+
 /// ID of an allocation within a given allocator.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -206,5 +209,35 @@ for AllocatorList<Allocator, TextureParameters> {
 
     fn texture_parameters(&self) -> &TextureParameters {
         &self.texture_parameters
+    }
+}
+
+impl AtlasAllocator for BucketedShelfAllocator {
+    type Parameters = ShelfAllocatorOptions;
+
+    fn new(size: i32, options: &Self::Parameters) -> Self {
+        BucketedShelfAllocator::with_options(size2(size, size), options)
+    }
+
+    fn allocate(&mut self, size: DeviceIntSize) -> Option<(AllocId, DeviceIntRect)> {
+        self.allocate(size.to_untyped()).map(|alloc| {
+            (AllocId(alloc.id.serialize()), alloc.rectangle.to_rect().cast_unit())
+        })
+    }
+
+    fn deallocate(&mut self, id: AllocId) {
+        self.deallocate(etagere::AllocId::deserialize(id.0));
+    }
+
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn allocated_space(&self) -> i32 {
+        self.allocated_space()
+    }
+
+    fn dump_into_svg(&self, rect: &Box2D<f32>, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+        self.dump_into_svg(Some(&rect.to_i32().cast_unit()), output)
     }
 }
