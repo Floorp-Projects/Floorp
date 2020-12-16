@@ -36,8 +36,8 @@ needs-focus == autofocus-02b.svg pass.svg
 
 == baseline-middle-01.svg pass.svg
 
-== blend-color-burn.svg blend-color-burn-ref.svg
-== blend-color-dodge.svg blend-color-dodge-ref.svg
+fails-if(Android&&webrender&&device) == blend-color-burn.svg blend-color-burn-ref.svg
+fails-if(Android&&webrender&&device) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # == blend-color.svg blend-color-ref.svg
 random-if(Android&&webrender) == blend-darken.svg blend-darken-ref.svg
 random-if(Android&&webrender) == blend-difference.svg blend-difference-ref.svg
