@@ -9,7 +9,6 @@
 #include "GetDirectoryListingTask.h"
 #include "GetFilesTask.h"
 
-#include "nsCharSeparatedTokenizer.h"
 #include "nsIFile.h"
 #include "nsString.h"
 #include "mozilla/dom/BlobImpl.h"
