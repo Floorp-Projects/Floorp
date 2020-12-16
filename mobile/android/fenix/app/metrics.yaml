@@ -335,8 +335,6 @@ events:
     type: event
     description: >
       An event that indicates that a synced tab was opened.
-    send_in_pings:
-      - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/15369
     data_reviews:
