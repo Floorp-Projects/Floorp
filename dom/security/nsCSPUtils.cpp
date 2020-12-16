@@ -487,9 +487,8 @@ nsresult CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
   // concatenated into one comma-separated list of policies.
   // See RFC2616 section 4.2 (last paragraph)
   nsresult rv = NS_OK;
-  nsCharSeparatedTokenizer tokenizer(aHeaderValue, ',');
-  while (tokenizer.hasMoreTokens()) {
-    const nsAString& policy = tokenizer.nextToken();
+  for (const nsAString& policy :
+       nsCharSeparatedTokenizer(aHeaderValue, ',').ToRange()) {
     rv = aCsp->AppendPolicy(policy, aReportOnly, false);
     NS_ENSURE_SUCCESS(rv, rv);
     {

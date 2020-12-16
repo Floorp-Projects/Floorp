@@ -231,9 +231,8 @@ void SessionStoreUtils::RestoreDocShellCapabilities(
   aDocShell->SetAllowContentRetargeting(true);
   aDocShell->SetAllowContentRetargetingOnChildren(true);
 
-  nsCCharSeparatedTokenizer tokenizer(aDisallowCapabilities, ',');
-  while (tokenizer.hasMoreTokens()) {
-    const nsACString& token = tokenizer.nextToken();
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(aDisallowCapabilities, ',').ToRange()) {
     if (token.EqualsLiteral("Plugins")) {
       aDocShell->SetAllowPlugins(false);
     } else if (token.EqualsLiteral("Javascript")) {

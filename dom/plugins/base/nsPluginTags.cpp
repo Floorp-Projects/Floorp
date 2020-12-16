@@ -57,9 +57,8 @@ static bool sInitializedSandboxingInfo = false;
 // check comma delimited extensions
 static bool ExtensionInList(const nsCString& aExtensionList,
                             const nsACString& aExtension) {
-  nsCCharSeparatedTokenizer extensions(aExtensionList, ',');
-  while (extensions.hasMoreTokens()) {
-    const nsACString& extension = extensions.nextToken();
+  for (const nsACString& extension :
+       nsCCharSeparatedTokenizer(aExtensionList, ',').ToRange()) {
     if (extension.Equals(aExtension, nsCaseInsensitiveCStringComparator)) {
       return true;
     }

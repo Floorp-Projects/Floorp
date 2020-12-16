@@ -489,9 +489,8 @@ nsresult Http2Decompressor::DecodeInteger(uint32_t prefixLen, uint32_t& accum) {
 }
 
 static bool HasConnectionBasedAuth(const nsACString& headerValue) {
-  nsCCharSeparatedTokenizer t(headerValue, '\n');
-  while (t.hasMoreTokens()) {
-    const nsDependentCSubstring& authMethod = t.nextToken();
+  for (const nsACString& authMethod :
+       nsCCharSeparatedTokenizer(headerValue, '\n').ToRange()) {
     if (authMethod.LowerCaseEqualsLiteral("ntlm")) {
       return true;
     }

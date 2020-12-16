@@ -1085,10 +1085,9 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
   // list of method names.
   Unused << aHttpChannel->GetResponseHeader("Access-Control-Expose-Headers"_ns,
                                             headerVal);
-  nsCCharSeparatedTokenizer exposeTokens(headerVal, ',');
   bool isSafe = false;
-  while (exposeTokens.hasMoreTokens()) {
-    const nsDependentCSubstring& token = exposeTokens.nextToken();
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(headerVal, ',').ToRange()) {
     if (token.IsEmpty()) {
       continue;
     }

@@ -360,11 +360,12 @@ nsresult TRRService::ReadPrefs(const char* name) {
         return;
       }
 
-      nsCCharSeparatedTokenizerTemplate<NS_IsAsciiWhitespace,
-                                        nsTokenizerFlags::SeparatorOptional>
-          tokenizer(excludedDomains, ',');
-      while (tokenizer.hasMoreTokens()) {
-        nsAutoCString token(tokenizer.nextToken());
+      for (const nsACString& tokenSubstring :
+           nsCCharSeparatedTokenizerTemplate<
+               NS_IsAsciiWhitespace, nsTokenizerFlags::SeparatorOptional>(
+               excludedDomains, ',')
+               .ToRange()) {
+        nsCString token{tokenSubstring};
         LOG(("TRRService::ReadPrefs %s host:[%s]\n", aPrefName, token.get()));
         mExcludedDomains.PutEntry(token);
       }

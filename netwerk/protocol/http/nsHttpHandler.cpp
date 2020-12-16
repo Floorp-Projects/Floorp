@@ -2047,9 +2047,9 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetCString(HTTP_PREF("http3.alt-svc-mapping-for-testing"),
                                  altSvcMappings);
     if (NS_SUCCEEDED(rv)) {
-      nsCCharSeparatedTokenizer tokenizer(altSvcMappings, ',');
-      while (tokenizer.hasMoreTokens()) {
-        nsAutoCString token(tokenizer.nextToken());
+      for (const nsACString& tokenSubstring :
+           nsCCharSeparatedTokenizer(altSvcMappings, ',').ToRange()) {
+        nsAutoCString token{tokenSubstring};
         int32_t index = token.Find(";");
         if (index != kNotFound) {
           auto* map = new nsCString(Substring(token, index + 1));

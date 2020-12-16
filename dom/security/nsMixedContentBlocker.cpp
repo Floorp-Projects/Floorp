@@ -357,9 +357,8 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
 
   nsAutoCString allowlist;
   GetSecureContextAllowList(allowlist);
-  nsCCharSeparatedTokenizer tokenizer(allowlist, ',');
-  while (tokenizer.hasMoreTokens()) {
-    const nsACString& allowedHost = tokenizer.nextToken();
+  for (const nsACString& allowedHost :
+       nsCCharSeparatedTokenizer(allowlist, ',').ToRange()) {
     if (host.Equals(allowedHost)) {
       return true;
     }

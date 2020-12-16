@@ -2637,16 +2637,16 @@ void ProcessServerWebSocketExtensions(const nsACString& aExtensions,
     }
   }
 
-  nsCCharSeparatedTokenizer extList(aExtensions, ',');
-  while (extList.hasMoreTokens()) {
+  for (const auto& ext :
+       nsCCharSeparatedTokenizer(aExtensions, ',').ToRange()) {
     bool clientNoContextTakeover;
     bool serverNoContextTakeover;
     int32_t clientMaxWindowBits;
     int32_t serverMaxWindowBits;
 
     nsresult rv = ParseWebSocketExtension(
-        extList.nextToken(), eParseServerSide, clientNoContextTakeover,
-        serverNoContextTakeover, clientMaxWindowBits, serverMaxWindowBits);
+        ext, eParseServerSide, clientNoContextTakeover, serverNoContextTakeover,
+        clientMaxWindowBits, serverMaxWindowBits);
     if (NS_FAILED(rv)) {
       // Ignore extensions that we can't parse
       continue;

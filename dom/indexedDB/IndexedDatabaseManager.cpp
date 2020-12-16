@@ -323,10 +323,10 @@ nsresult IndexedDatabaseManager::Init() {
   Preferences::GetLocalizedCString("intl.accept_languages", acceptLang);
 
   // Split values on commas.
-  nsCCharSeparatedTokenizer langTokenizer(acceptLang, ',');
-  while (langTokenizer.hasMoreTokens()) {
-    nsAutoCString lang(langTokenizer.nextToken());
-    icu::Locale locale = icu::Locale::createCanonical(lang.get());
+  for (const auto& lang :
+       nsCCharSeparatedTokenizer(acceptLang, ',').ToRange()) {
+    icu::Locale locale =
+        icu::Locale::createCanonical(PromiseFlatCString(lang).get());
     if (!locale.isBogus()) {
       // icu::Locale::getBaseName is always ASCII as per BCP 47
       mLocale.AssignASCII(locale.getBaseName());

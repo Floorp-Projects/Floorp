@@ -260,9 +260,8 @@ bool nsChannelClassifier::IsHostnameEntitylisted(
   }
   ToLowerCase(host);
 
-  nsCCharSeparatedTokenizer tokenizer(aEntitylisted, ',');
-  while (tokenizer.hasMoreTokens()) {
-    const nsACString& token = tokenizer.nextToken();
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(aEntitylisted, ',').ToRange()) {
     if (token.Equals(host)) {
       UC_LOG(
           ("nsChannelClassifier::StartInternal - skipping %s (entitylisted) "
