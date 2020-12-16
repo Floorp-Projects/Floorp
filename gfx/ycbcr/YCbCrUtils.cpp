@@ -92,11 +92,11 @@ ConvertYCbCr16to8Line(uint8_t* aDst,
 }
 
 void
-ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
-                  const SurfaceFormat& aDestFormat,
-                  const IntSize& aDestSize,
-                  unsigned char* aDestBuffer,
-                  int32_t aStride)
+ConvertYCbCrToRGBInternal(const layers::PlanarYCbCrData& aData,
+                          const SurfaceFormat& aDestFormat,
+                          const IntSize& aDestSize,
+                          unsigned char* aDestBuffer,
+                          int32_t aStride)
 {
   // ConvertYCbCrToRGB et al. assume the chroma planes are rounded up if the
   // luma plane is odd sized. Monochrome images have 0-sized CbCr planes
@@ -247,6 +247,14 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                           yuvtype,
                           srcData.mYUVColorSpace);
   }
+}
+
+void ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
+                       const SurfaceFormat& aDestFormat,
+                       const IntSize& aDestSize, unsigned char* aDestBuffer,
+                       int32_t aStride) {
+  ConvertYCbCrToRGBInternal(aData, aDestFormat, aDestSize, aDestBuffer,
+                            aStride);
 #if MOZ_BIG_ENDIAN()
   // libyuv makes endian-correct result, which needs to be swapped to BGRX
   if (aDestFormat != SurfaceFormat::R5G6B5_UINT16)
@@ -256,25 +264,87 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
 #endif
 }
 
-void
-ConvertYCbCrAToARGB(const uint8_t* aSrcY,
-                    const uint8_t* aSrcU,
-                    const uint8_t* aSrcV,
-                    const uint8_t* aSrcA,
-                    int aSrcStrideYA, int aSrcStrideUV,
-                    uint8_t* aDstARGB, int aDstStrideARGB,
-                    int aWidth, int aHeight) {
+void FillAlphaToRGBA(const uint8_t* aAlpha, const int32_t aAlphaStride,
+                     uint8_t* aBuffer, const int32_t aWidth,
+                     const int32_t aHeight, const gfx::SurfaceFormat& aFormat) {
+  MOZ_ASSERT(aAlphaStride >= aWidth);
+  MOZ_ASSERT(aFormat ==
+             SurfaceFormat::B8G8R8A8);  // required for SurfaceFormatBit::OS_A
 
-  ConvertYCbCrAToARGB32(aSrcY,
-                        aSrcU,
-                        aSrcV,
-                        aSrcA,
-                        aDstARGB,
-                        aWidth,
-                        aHeight,
-                        aSrcStrideYA,
-                        aSrcStrideUV,
-                        aDstStrideARGB);
+  const int bpp = BytesPerPixel(aFormat);
+  const size_t rgbaStride = aWidth * bpp;
+  const uint8_t* src = aAlpha;
+  for (int32_t h = 0; h < aHeight; ++h) {
+    size_t offset = static_cast<size_t>(SurfaceFormatBit::OS_A) / 8;
+    for (int32_t w = 0; w < aWidth; ++w) {
+      aBuffer[offset] = src[w];
+      offset += bpp;
+    }
+    src += aAlphaStride;
+    aBuffer += rgbaStride;
+  }
+}
+
+void ConvertYCbCrAToARGB(const layers::PlanarYCbCrAData& aData,
+                         const SurfaceFormat& aDestFormat,
+                         const IntSize& aDestSize, unsigned char* aDestBuffer,
+                         int32_t aStride) {
+  // libyuv makes endian-correct result, so the format needs to be B8G8R8A8.
+  MOZ_ASSERT(aDestFormat == SurfaceFormat::B8G8R8A8);
+
+  MOZ_ASSERT(aData.mAlphaSize == aData.mYSize);
+
+  YUVType yuvtype = TypeFromSize(aData.mYSize.width, aData.mYSize.height,
+                                 aData.mCbCrSize.width, aData.mCbCrSize.height);
+
+  if (yuvtype == YV12) {
+    // Currently this function only has support for I420 type
+    ConvertI420AlphaToARGB(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
+                           aData.mAlphaChannel, aData.mYStride,
+                           aData.mCbCrStride, aDestBuffer, aStride,
+                           aData.mPicSize.width, aData.mPicSize.height);
+    return;
+  }
+
+  // This function converts non-8-bpc images to 8-bpc. (Bug 1682322)
+  ConvertYCbCrToRGBInternal(aData, aDestFormat, aDestSize, aDestBuffer,
+                            aStride);
+
+  // Note alpha stride is equal to Y stride.
+  FillAlphaToRGBA(aData.mAlphaChannel, aData.mYStride, aDestBuffer,
+                  aData.mPicSize.width, aData.mPicSize.height, aDestFormat);
+
+  // Do preattenuate as what ConvertI420AlphaToARGB does
+  ARGBAttenuate(aDestBuffer, aStride, aDestBuffer, aStride,
+                aData.mPicSize.width, aData.mPicSize.height);
+
+#if MOZ_BIG_ENDIAN()
+  // libyuv makes endian-correct result, which needs to be swapped to BGRA
+  gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::A8R8G8B8,
+                   aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8A8,
+                   aData.mPicSize);
+#endif
+}
+
+void
+ConvertI420AlphaToARGB(const uint8_t* aSrcY,
+                       const uint8_t* aSrcU,
+                       const uint8_t* aSrcV,
+                       const uint8_t* aSrcA,
+                       int aSrcStrideYA, int aSrcStrideUV,
+                       uint8_t* aDstARGB, int aDstStrideARGB,
+                       int aWidth, int aHeight) {
+
+  ConvertI420AlphaToARGB32(aSrcY,
+                           aSrcU,
+                           aSrcV,
+                           aSrcA,
+                           aDstARGB,
+                           aWidth,
+                           aHeight,
+                           aSrcStrideYA,
+                           aSrcStrideUV,
+                           aDstStrideARGB);
 #if MOZ_BIG_ENDIAN()
   // libyuv makes endian-correct result, which needs to be swapped to BGRA
   gfx::SwizzleData(aDstARGB, aDstStrideARGB, gfx::SurfaceFormat::A8R8G8B8,

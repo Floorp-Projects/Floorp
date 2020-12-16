@@ -24,15 +24,20 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                   unsigned char* aDestBuffer,
                   int32_t aStride);
 
-// Currently this function only has support for I420 type.
+void ConvertYCbCrAToARGB(const layers::PlanarYCbCrAData& aData,
+                         const SurfaceFormat& aDestFormat,
+                         const IntSize& aDestSize,
+                         unsigned char* aDestBuffer,
+                         int32_t aStride);
+
 void
-ConvertYCbCrAToARGB(const uint8_t* aSrcY,
-                    const uint8_t* aSrcU,
-                    const uint8_t* aSrcV,
-                    const uint8_t* aSrcA,
-                    int aSrcStrideYA, int aSrcStrideUV,
-                    uint8_t* aDstARGB, int aDstStrideARGB,
-                    int aWidth, int aHeight);
+ConvertI420AlphaToARGB(const uint8_t* aSrcY,
+                       const uint8_t* aSrcU,
+                       const uint8_t* aSrcV,
+                       const uint8_t* aSrcA,
+                       int aSrcStrideYA, int aSrcStrideUV,
+                       uint8_t* aDstARGB, int aDstStrideARGB,
+                       int aWidth, int aHeight);
 
 } // namespace gfx
 } // namespace mozilla
