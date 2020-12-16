@@ -147,6 +147,7 @@ EXPORTS.mozilla.dom += [
     "BodyStream.h",
     "BodyUtil.h",
     "BorrowedAttrInfo.h",
+    "CCGCScheduler.h",
     "CharacterData.h",
     "ChildIterator.h",
     "ChildProcessMessageManager.h",
