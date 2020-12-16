@@ -2017,7 +2017,6 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
     {
         use selectors::matching::*;
         match *pseudo_class {
-            NonTSPseudoClass::Autofill |
             NonTSPseudoClass::Defined |
             NonTSPseudoClass::Focus |
             NonTSPseudoClass::Enabled |
@@ -2063,6 +2062,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozDirAttrLTR |
             NonTSPseudoClass::MozDirAttrRTL |
             NonTSPseudoClass::MozDirAttrLikeAuto |
+            NonTSPseudoClass::MozAutofill |
             NonTSPseudoClass::MozModalDialog |
             NonTSPseudoClass::MozTopmostModalDialog |
             NonTSPseudoClass::Active |
