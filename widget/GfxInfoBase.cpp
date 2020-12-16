@@ -340,7 +340,7 @@ static OperatingSystem BlocklistOSToOperatingSystem(const nsAString& os) {
     return OperatingSystem::OSX11_0;
   } else if (os.EqualsLiteral("Android")) {
     return OperatingSystem::Android;
-  // For historical reasons, "All" in blocklist means "All Windows"
+    // For historical reasons, "All" in blocklist means "All Windows"
   } else if (os.EqualsLiteral("All")) {
     return OperatingSystem::Windows;
   } else if (os.EqualsLiteral("Darwin")) {
@@ -1057,8 +1057,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 #endif
 
     if (match || info[i].mDriverVersion == GfxDriverInfo::allDriverVersions) {
-      if ((info[i].mFeature == GfxDriverInfo::allFeatures &&
-           aFeature != nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE) ||
+      if (info[i].mFeature == GfxDriverInfo::allFeatures ||
           info[i].mFeature == aFeature) {
         status = info[i].mFeatureStatus;
         if (!info[i].mRuleId.IsEmpty()) {
