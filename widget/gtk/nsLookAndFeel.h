@@ -18,7 +18,7 @@ struct _GtkStyle;
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
-  nsLookAndFeel();
+  explicit nsLookAndFeel(const LookAndFeelCache* aCache);
   virtual ~nsLookAndFeel();
 
   void NativeInit() final;
@@ -41,6 +41,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static const nscolor kWhite = NS_RGB(255, 255, 255);
 
  protected:
+  void DoSetCache(const LookAndFeelCache& aCache);
   bool WidgetUsesImage(WidgetNodeType aNodeType);
   void RecordLookAndFeelSpecificTelemetry() override;
   bool ShouldHonorThemeScrollbarColors();

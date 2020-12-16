@@ -15,7 +15,7 @@ namespace widget {
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
-HeadlessLookAndFeel::HeadlessLookAndFeel() = default;
+HeadlessLookAndFeel::HeadlessLookAndFeel(const LookAndFeelCache* aCache) {}
 
 HeadlessLookAndFeel::~HeadlessLookAndFeel() = default;
 

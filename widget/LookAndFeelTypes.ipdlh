@@ -16,7 +16,7 @@ struct LookAndFeelInt {
     int32_t value;
 };
 
-struct LookAndFeelFont {
+comparable struct LookAndFeelFont {
     bool haveFont;
     nsString name;
     float size;
@@ -33,6 +33,46 @@ struct LookAndFeelCache {
     LookAndFeelInt[] mInts;
     LookAndFeelFont[] mFonts;
     LookAndFeelColor[] mColors;
+};
+
+/**
+ * Stores the entirety of a LookAndFeel's data.
+ *
+ * The format allows for some compression compared with having fixed
+ * length arrays for each value type and some indication of whether
+ * a value is present.  This is because not all values are present on
+ * a given platform, and because there is also substantial repetition
+ * of specific values.
+ *
+ * Each of ints, floats, colors, and fonts is an array that stores the
+ * unique values that occur in the LookAndFeel.  intMap, floatMap,
+ * colorMap, and fontMap map from value IDs (LookAndFeel::IntID, etc.)
+ * to indexes into the value arrays.  The map arrays are of fixed
+ * length, determined by the maximum ID value.  If a value for a
+ * particular ID is not present, the entry in the map is set to -1.
+ *
+ * (Note that fontMap is different from the others since it maps from a
+ * LookAndFeel::FontID value minus 1, as 1 is the minimum value of that
+ * enum.)
+ */
+struct FullLookAndFeel {
+    int32_t[] ints;
+    float[] floats;
+    nscolor[] colors;
+    LookAndFeelFont[] fonts;
+
+    uint8_t[] intMap;
+    uint8_t[] floatMap;
+    uint8_t[] colorMap;
+    uint8_t[] fontMap;
+
+    uint16_t passwordChar;
+    bool passwordEcho;
+};
+
+union LookAndFeelData {
+    LookAndFeelCache;
+    FullLookAndFeel;
 };
 
 } // namespace widget

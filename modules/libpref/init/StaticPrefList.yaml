@@ -9579,9 +9579,9 @@
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   # Run content processes in headless mode and disallow connections to
   # the X server.  Experimental; breaks WebGL and Flash, and requires
-  # `widget.disable-native-theme-for-content`.  Changing it requires a
-  # restart because sandbox policy information dependent on it is cached.
-  # See bug 1640345 for details.
+  # `widget.disable-native-theme-for-content` and `widget.remote-look-and-feel`.
+  # Changing it requires a restart because sandbox policy information dependent
+  # on it is cached.  See bug 1640345 for details.
 - name: security.sandbox.content.headless
   type: bool
   value: false
@@ -10416,6 +10416,19 @@
   value: true
   mirror: always
 #endif
+
+# Enable the RemoteLookAndFeel in content processes, which will cause all
+# LookAndFeel values to be queried in the parent process and sent to content
+# processes using IPC.  This is required for widgets to paint and behave
+# correctly when `security.sandbox.content.headless` is enabled.
+- name: widget.remote-look-and-feel
+  type: bool
+#ifdef MOZ_WIDGET_GTK
+  value: true
+#else
+  value: false
+#endif
+  mirror: once
 
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
