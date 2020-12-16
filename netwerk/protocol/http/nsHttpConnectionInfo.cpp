@@ -17,7 +17,6 @@
 
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoChannelParams.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsICryptoHash.h"
 #include "nsIDNSByTypeRecord.h"

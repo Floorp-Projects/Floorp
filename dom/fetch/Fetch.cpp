@@ -9,7 +9,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
 
-#include "nsCharSeparatedTokenizer.h"
 #include "nsDOMString.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
