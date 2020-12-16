@@ -87,6 +87,27 @@ const HIGHLIGHTER_EVENTS = {
   },
 };
 
+// Tool IDs mapped by highlighter type. Used to log telemetry for opening & closing tools.
+const TELEMETRY_TOOL_IDS = {
+  [TYPES.FLEXBOX]: "FLEXBOX_HIGHLIGHTER",
+  [TYPES.GRID]: "GRID_HIGHLIGHTER",
+};
+
+// Scalars mapped by highlighter type. Used to log telemetry about highlighter triggers.
+const TELEMETRY_SCALARS = {
+  [TYPES.FLEXBOX]: {
+    layout: "devtools.layout.flexboxhighlighter.opened",
+    markup: "devtools.markup.flexboxhighlighter.opened",
+    rule: "devtools.rules.flexboxhighlighter.opened",
+  },
+
+  [TYPES.GRID]: {
+    grid: "devtools.grid.gridinspector.opened",
+    markup: "devtools.markup.gridinspector.opened",
+    rule: "devtools.rules.gridinspector.opened",
+  },
+};
+
 /**
  * HighlightersOverlay manages the visibility of highlighters in the Inspector.
  */
@@ -128,11 +149,6 @@ class HighlightersOverlay {
     //  parentGridHighlighter: {CustomHighlighterFront|null}
     // }
     this.gridHighlighters = new Map();
-    // Boolean flag to keep track of whether or not the telemetry timer for the grid
-    // highlighter active time is active. We keep track of this to avoid re-starting a
-    // new timer when an additional grid highlighter is turned on.
-    this.isGridHighlighterTimerActive = false;
-
     // Collection of instantiated in-context editors, like ShapesInContextEditor, which
     // behave like highlighters but with added editing capabilities that need to map value
     // changes to properties in the Rule view.
@@ -233,28 +249,31 @@ class HighlightersOverlay {
    *          Node front of the element that was highlighted.
    * @param  {Options} options
    *          Optional object with options passed to the highlighter.
-   * @return {Promise}
    */
-  async _afterShowHighlighterTypeForNode(type, nodeFront, options) {
-    // Log telemetry for showing the flexbox highlighter.
+  _afterShowHighlighterTypeForNode(type, nodeFront, options) {
+    switch (type) {
+      // Log telemetry for showing the flexbox and grid highlighters.
+      case TYPES.FLEXBOX:
+      case TYPES.GRID:
+        const toolID = TELEMETRY_TOOL_IDS[type];
+        if (toolID) {
+          this.telemetry.toolOpened(
+            toolID,
+            this.inspector.toolbox.sessionId,
+            this
+          );
+        }
+
+        const scalar = TELEMETRY_SCALARS[type]?.[options?.trigger];
+        if (scalar) {
+          this.telemetry.scalarAdd(scalar, 1);
+        }
+
+        break;
+    }
+
     // Set metadata necessary to restore the active highlighter upon page refresh.
     if (type === TYPES.FLEXBOX) {
-      this.telemetry.toolOpened(
-        "FLEXBOX_HIGHLIGHTER",
-        this.inspector.toolbox.sessionId,
-        this
-      );
-
-      const scalars = {
-        layout: "devtools.layout.flexboxhighlighter.opened",
-        markup: "devtools.markup.flexboxhighlighter.opened",
-        rule: "devtools.rules.flexboxhighlighter.opened",
-      };
-
-      if (scalars[options.trigger]) {
-        this.telemetry.scalarAdd(scalars[options.trigger], 1);
-      }
-
       const { url } = this.target;
       const selectors = [...this.inspector.selectionCssSelectors];
 
@@ -343,17 +362,32 @@ class HighlightersOverlay {
    *         highlighter type
    * @return {Promise}
    */
-  async _beforeHideHighlighterType(type) {
-    // Remove any metadata used to restore this highlighter type on page refresh.
-    this._restorableHighlighters.delete(type);
+  _beforeHideHighlighterType(type) {
+    switch (type) {
+      // Log telemetry for hiding the flexbox and grid highlighters.
+      case TYPES.FLEXBOX:
+      case TYPES.GRID:
+        const toolID = TELEMETRY_TOOL_IDS[type];
+        const conditions = {
+          [TYPES.FLEXBOX]: () => {
+            // always stop the timer when the flexbox highlighter is about to be hidden.
+            return true;
+          },
+          [TYPES.GRID]: () => {
+            // stop the timer only once the last grid highlighter is about to be hidden.
+            return this.gridHighlighters.size === 1;
+          },
+        };
 
-    // Log telemetry for hiding the flexbox highlighter.
-    if (type === TYPES.FLEXBOX) {
-      this.telemetry.toolClosed(
-        "FLEXBOX_HIGHLIGHTER",
-        this.inspector.toolbox.sessionId,
-        this
-      );
+        if (toolID && conditions[type].call(this)) {
+          this.telemetry.toolClosed(
+            toolID,
+            this.inspector.toolbox.sessionId,
+            this
+          );
+        }
+
+        break;
     }
   }
 
@@ -537,7 +571,7 @@ class HighlightersOverlay {
       timer,
     });
     await highlighter.show(nodeFront, options);
-    await this._afterShowHighlighterTypeForNode(type, nodeFront, options);
+    this._afterShowHighlighterTypeForNode(type, nodeFront, options);
 
     // Emit any type-specific highlighter shown event for tests
     // which have not yet been updated to listen for the generic event
@@ -591,8 +625,10 @@ class HighlightersOverlay {
     const { highlighter, nodeFront, timer } = data;
     // Clear any autohide timer associated with this highlighter type.
     clearTimeout(timer);
+    // Remove any metadata used to restore this highlighter type on page refresh.
+    this._restorableHighlighters.delete(type);
     this._activeHighlighters.delete(type);
-    await this._beforeHideHighlighterType(type);
+    this._beforeHideHighlighterType(type);
     await highlighter.hide();
 
     // Emit any type-specific highlighter hidden event for tests
@@ -1003,24 +1039,11 @@ class HighlightersOverlay {
     options = { ...options, ...this.getGridHighlighterSettings(node) };
     await highlighter.show(node, options);
 
+    this._afterShowHighlighterTypeForNode(TYPES.GRID, node, {
+      ...options,
+      trigger,
+    });
     this._toggleRuleViewIcon(node, true, ".ruleview-grid");
-
-    if (!this.isGridHighlighterTimerActive) {
-      this.telemetry.toolOpened(
-        "grid_highlighter",
-        this.inspector.toolbox.sessionId,
-        this
-      );
-      this.isGridHighlighterTimerActive = true;
-    }
-
-    if (trigger === "grid") {
-      this.telemetry.scalarAdd("devtools.grid.gridinspector.opened", 1);
-    } else if (trigger === "markup") {
-      this.telemetry.scalarAdd("devtools.markup.gridinspector.opened", 1);
-    } else if (trigger === "rule") {
-      this.telemetry.scalarAdd("devtools.rules.gridinspector.opened", 1);
-    }
 
     try {
       // Save grid highlighter state.
@@ -1162,6 +1185,7 @@ class HighlightersOverlay {
       await this.hideParentGridHighlighter(parentGridNode);
     }
 
+    this._beforeHideHighlighterType(TYPES.GRID);
     // Don't just hide the highlighter, destroy the front instance to release memory.
     // If another highlighter is shown later, a new front will be created.
     highlighter.destroy();
@@ -1173,15 +1197,6 @@ class HighlightersOverlay {
     await this.restoreParentGridHighlighter(node);
 
     this._toggleRuleViewIcon(node, false, ".ruleview-grid");
-
-    if (this.isGridHighlighterTimerActive && !this.gridHighlighters.size) {
-      this.telemetry.toolClosed(
-        "grid_highlighter",
-        this.inspector.toolbox.sessionId,
-        this
-      );
-      this.isGridHighlighterTimerActive = false;
-    }
 
     // Emit the NodeFront of the grid container element that the grid highlighter was
     // hidden for.
