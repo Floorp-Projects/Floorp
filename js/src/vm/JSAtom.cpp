@@ -1406,7 +1406,7 @@ XDRResult js::XDRAtomData(XDRState<mode>* xdr, MutableHandleAtom atomp) {
     if (length) {
       const uint8_t* ptr;
       size_t nbyte = length * sizeof(Latin1Char);
-      MOZ_TRY(xdr->peekData(&ptr, nbyte));
+      MOZ_TRY(xdr->readData(&ptr, nbyte));
       chars = reinterpret_cast<const Latin1Char*>(ptr);
     }
     atom = AtomizeChars(cx, chars, length);
@@ -1414,7 +1414,7 @@ XDRResult js::XDRAtomData(XDRState<mode>* xdr, MutableHandleAtom atomp) {
     const uint8_t* twoByteCharsLE = nullptr;
     if (length) {
       size_t nbyte = length * sizeof(char16_t);
-      MOZ_TRY(xdr->peekData(&twoByteCharsLE, nbyte));
+      MOZ_TRY(xdr->readData(&twoByteCharsLE, nbyte));
     }
     atom = AtomizeLittleEndianTwoByteChars(cx, twoByteCharsLE, length);
   }
