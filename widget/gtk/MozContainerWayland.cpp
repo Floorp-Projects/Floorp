@@ -22,6 +22,7 @@
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
+#  include "nsWindow.h"
 extern mozilla::LazyLogModule gWidgetWaylandLog;
 #  define LOGWAYLAND(args) \
     MOZ_LOG(gWidgetWaylandLog, mozilla::LogLevel::Debug, args)
@@ -343,21 +344,19 @@ static void moz_container_wayland_set_opaque_region(MozContainer* container) {
   moz_container_wayland_set_opaque_region_locked(container);
 }
 
-static int moz_gtk_widget_get_scale_factor(MozContainer* container) {
-  static auto sGtkWidgetGetScaleFactor =
-      (gint(*)(GtkWidget*))dlsym(RTLD_DEFAULT, "gtk_widget_get_scale_factor");
-  return sGtkWidgetGetScaleFactor
-             ? sGtkWidgetGetScaleFactor(GTK_WIDGET(container))
-             : 1;
-}
-
 static void moz_container_wayland_set_scale_factor_locked(
     MozContainer* container) {
   if (!container->wl_container.surface) {
     return;
   }
-  wl_surface_set_buffer_scale(container->wl_container.surface,
-                              moz_gtk_widget_get_scale_factor(container));
+  gpointer user_data = g_object_get_data(G_OBJECT(container), "nsWindow");
+  nsWindow* wnd = static_cast<nsWindow*>(user_data);
+
+  int scale = 1;
+  if (wnd) {
+    scale = wnd->GdkScaleFactor();
+  }
+  wl_surface_set_buffer_scale(container->wl_container.surface, scale);
 }
 
 void moz_container_wayland_set_scale_factor(MozContainer* container) {
