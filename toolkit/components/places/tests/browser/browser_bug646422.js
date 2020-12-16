@@ -13,27 +13,11 @@ add_task(async function() {
     "http://example.com"
   );
 
-  let newTitlePromise = new Promise(resolve => {
-    let observer = {
-      onTitleChanged(uri, title) {
-        // If the uri of the page whose title is changing ends with 'new_page',
-        // then it's the result of our pushState.
-        if (/new_page$/.test(uri.spec)) {
-          resolve(title);
-          PlacesUtils.history.removeObserver(observer);
-        }
-      },
-
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
-      onDeleteURI() {},
-      onClearHistory() {},
-      onDeleteVisits() {},
-      QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
-    };
-
-    PlacesUtils.history.addObserver(observer);
-  });
+  const newTitlePromise = PlacesTestUtils.waitForNotification(
+    "page-title-changed",
+    events => /new_page$/.test(events[0].url),
+    "places"
+  );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let title = content.document.title;
@@ -41,7 +25,8 @@ add_task(async function() {
     Assert.ok(title, "Content window should initially have a title.");
   });
 
-  let newtitle = await newTitlePromise;
+  const events = await newTitlePromise;
+  const newtitle = events[0].title;
 
   await SpecialPowers.spawn(tab.linkedBrowser, [{ newtitle }], async function(
     args

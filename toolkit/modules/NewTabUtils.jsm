@@ -613,7 +613,10 @@ var PlacesProvider = {
     this._placesObserver = new PlacesWeakCallbackWrapper(
       this.handlePlacesEvents.bind(this)
     );
-    PlacesObservers.addListener(["page-visited"], this._placesObserver);
+    PlacesObservers.addListener(
+      ["page-visited", "page-title-changed"],
+      this._placesObserver
+    );
   },
 
   /**
@@ -724,10 +727,25 @@ var PlacesProvider = {
   },
 
   handlePlacesEvents(aEvents) {
-    if (!this._batchProcessingDepth) {
-      for (let event of aEvents) {
-        if (event.visitCount == 1 && event.lastKnownTitle) {
-          this.onTitleChanged(event.url, event.lastKnownTitle, event.pageGuid);
+    if (this._batchProcessingDepth) {
+      return;
+    }
+
+    for (let event of aEvents) {
+      switch (event.type) {
+        case "page-visited": {
+          if (event.visitCount == 1 && event.lastKnownTitle) {
+            this.onTitleChanged(
+              event.url,
+              event.lastKnownTitle,
+              event.pageGuid
+            );
+          }
+          break;
+        }
+        case "page-title-changed": {
+          this.onTitleChanged(event.url, event.title, event.pageGuid);
+          break;
         }
       }
     }
@@ -780,21 +798,8 @@ var PlacesProvider = {
     this._callObservers("onManyLinksChanged");
   },
 
-  /**
-   * Called by the history service.
-   */
-  onTitleChanged: function PlacesProvider_onTitleChanged(
-    aURI,
-    aNewTitle,
-    aGUID
-  ) {
-    if (aURI instanceof Ci.nsIURI) {
-      aURI = aURI.spec;
-    }
-    this._callObservers("onLinkChanged", {
-      url: aURI,
-      title: aNewTitle,
-    });
+  onTitleChanged(url, title, guid) {
+    this._callObservers("onLinkChanged", { url, title });
   },
 
   _callObservers: function PlacesProvider__callObservers(aMethodName, aArg) {

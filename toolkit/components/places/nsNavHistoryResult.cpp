@@ -19,6 +19,7 @@
 #include "nsQueryObject.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
+#include "mozilla/dom/PlacesVisitTitle.h"
 
 #include "nsCycleCollectionParticipant.h"
 
@@ -3504,7 +3505,7 @@ nsNavHistoryResult::~nsNavHistoryResult() {
 }
 
 void nsNavHistoryResult::StopObserving() {
-  AutoTArray<PlacesEventType, 4> events;
+  AutoTArray<PlacesEventType, 5> events;
   events.AppendElement(PlacesEventType::Favicon_changed);
   if (mIsBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -3529,6 +3530,7 @@ void nsNavHistoryResult::StopObserving() {
   }
   if (mIsHistoryDetailsObserver) {
     events.AppendElement(PlacesEventType::Page_visited);
+    events.AppendElement(PlacesEventType::Page_title_changed);
     mIsHistoryDetailsObserver = false;
   }
 
@@ -3558,8 +3560,9 @@ void nsNavHistoryResult::AddHistoryObserver(
     history->AddObserver(this, true);
     mIsHistoryObserver = true;
     if (!mIsHistoryDetailsObserver) {
-      AutoTArray<PlacesEventType, 1> events;
+      AutoTArray<PlacesEventType, 2> events;
       events.AppendElement(PlacesEventType::Page_visited);
+      events.AppendElement(PlacesEventType::Page_title_changed);
       PlacesObservers::AddListener(events, this);
       mIsHistoryDetailsObserver = true;
     }
@@ -3777,15 +3780,17 @@ bool nsNavHistoryResult::UpdateHistoryDetailsObservers() {
   // If one observer wants history details we may have to add the listener.
   if (!CanSkipHistoryDetailsNotifications()) {
     if (!mIsHistoryDetailsObserver) {
-      AutoTArray<PlacesEventType, 1> events;
+      AutoTArray<PlacesEventType, 2> events;
       events.AppendElement(PlacesEventType::Page_visited);
+      events.AppendElement(PlacesEventType::Page_title_changed);
       PlacesObservers::AddListener(events, this);
       mIsHistoryDetailsObserver = true;
       return true;
     }
   } else {
-    AutoTArray<PlacesEventType, 1> events;
+    AutoTArray<PlacesEventType, 2> events;
     events.AppendElement(PlacesEventType::Page_visited);
+    events.AppendElement(PlacesEventType::Page_title_changed);
     PlacesObservers::RemoveListener(events, this);
     mIsHistoryDetailsObserver = false;
   }
@@ -4188,6 +4193,22 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
         ENUMERATE_HISTORY_OBSERVERS(OnItemRemoved(
             item->mId, item->mParentId, item->mIndex, item->mItemType, uri,
             item->mGuid, item->mParentGuid, item->mSource));
+        break;
+      }
+      case PlacesEventType::Page_title_changed: {
+        const PlacesVisitTitle* titleEvent = event->AsPlacesVisitTitle();
+        if (NS_WARN_IF(!titleEvent)) {
+          continue;
+        }
+
+        nsCOMPtr<nsIURI> uri;
+        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), titleEvent->mUrl));
+        if (!uri) {
+          continue;
+        }
+
+        ENUMERATE_HISTORY_OBSERVERS(
+            OnTitleChanged(uri, titleEvent->mTitle, titleEvent->mPageGuid));
         break;
       }
       default: {
