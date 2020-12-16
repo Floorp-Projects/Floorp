@@ -153,6 +153,10 @@ void nsHTTPSOnlyStreamListener::RecordUpgradeTelemetry(nsIRequest* request,
       case nsIContentPolicy::TYPE_INTERNAL_VIDEO:
         typeKey = "video"_ns;
         break;
+
+      default:
+        MOZ_ASSERT_UNREACHABLE();
+        break;
     }
   } else {
     switch (externalType) {
@@ -220,6 +224,9 @@ void nsHTTPSOnlyStreamListener::RecordUpgradeTelemetry(nsIRequest* request,
 
       case nsIContentPolicy::TYPE_XSLT:
         typeKey = "xslt"_ns;
+        break;
+
+      default:
         break;
     }
   }

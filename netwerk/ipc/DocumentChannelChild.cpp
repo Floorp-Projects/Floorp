@@ -135,6 +135,10 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
       args.elementCreationArgs() = objectArgs;
       break;
     }
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("unsupported content policy type");
+      return NS_ERROR_FAILURE;
   }
 
   switch (mLoadInfo->GetExternalContentPolicyType()) {

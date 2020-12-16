@@ -6,6 +6,7 @@
 include protocol PWebBrowserPersistDocument;
 
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+using nsContentPolicyType from "nsIContentPolicy.h";
 
 namespace mozilla {
 
@@ -14,7 +15,7 @@ protocol PWebBrowserPersistResources {
   manager PWebBrowserPersistDocument;
 
 parent:
-  async VisitResource(nsCString aURI, uint32_t aContentPolicyType);
+  async VisitResource(nsCString aURI, nsContentPolicyType aContentPolicyType);
 
   // The actor sent here is in the START state; the parent-side
   // receiver will have to wait for it to enter the MAIN state

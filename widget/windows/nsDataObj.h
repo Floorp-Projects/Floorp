@@ -221,7 +221,7 @@ class nsDataObj : public IDataObject, public IDataObjectAsyncCapability {
 
    public:
     CStream();
-    nsresult Init(nsIURI* pSourceURI, uint32_t aContentPolicyType,
+    nsresult Init(nsIURI* pSourceURI, nsContentPolicyType aContentPolicyType,
                   nsIPrincipal* aRequestingPrincipal);
 
     NS_DECL_ISUPPORTS

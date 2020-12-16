@@ -1450,7 +1450,7 @@ bool nsObjectLoadingContent::CheckProcessPolicy(int16_t* aContentPolicy) {
 
   Document* doc = thisContent->OwnerDoc();
 
-  int32_t objectType;
+  nsContentPolicyType objectType;
   switch (mType) {
     case eType_Image:
       objectType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;

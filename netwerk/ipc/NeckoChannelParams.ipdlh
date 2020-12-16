@@ -27,6 +27,7 @@ using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class nsIPropertyBag2 from "nsIPropertyBag2.h";
 using refcounted class nsDOMNavigationTiming from "nsDOMNavigationTiming.h";
+using nsContentPolicyType from "nsIContentPolicy.h";
 using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
 using class mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 
@@ -88,7 +89,7 @@ struct LoadInfoArgs
   uint32_t                    securityFlags;
   uint32_t                    sandboxFlags;
   uint32_t                    triggeringSandboxFlags;
-  uint32_t                    contentPolicyType;
+  nsContentPolicyType         contentPolicyType;
   uint32_t                    tainting;
   bool                        blockAllMixedContent;
   bool                        upgradeInsecureRequests;
@@ -436,7 +437,7 @@ struct DocumentCreationArgs {
 struct ObjectCreationArgs {
   uint64_t embedderInnerWindowId;
   uint32_t loadFlags;
-  uint8_t contentPolicyType;
+  nsContentPolicyType contentPolicyType;
   bool isUrgentStart;
 };
 

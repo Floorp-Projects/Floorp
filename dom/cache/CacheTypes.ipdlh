@@ -22,6 +22,7 @@ using RequestCache from "mozilla/dom/RequestBinding.h";
 using RequestRedirect from "mozilla/dom/RequestBinding.h";
 using ResponseType from "mozilla/dom/ResponseBinding.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+using nsContentPolicyType from "nsIContentPolicy.h";
 using struct nsID from "nsID.h";
 using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
 
@@ -63,7 +64,7 @@ struct CacheRequest
   RequestMode mode;
   RequestCredentials credentials;
   CacheReadStream? body;
-  uint32_t contentPolicyType;
+  nsContentPolicyType contentPolicyType;
   RequestCache requestCache;
   RequestRedirect requestRedirect;
   nsString integrity;

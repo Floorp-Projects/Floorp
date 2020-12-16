@@ -23,7 +23,7 @@ nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                       int16_t* aShouldLoad) {
   MOZ_ASSERT(aShouldLoad, "Null out param");
 
-  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
   MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
                                 contentType),
              "We should only see external content policy types here.");
@@ -73,7 +73,7 @@ nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                          int16_t* aShouldProcess) {
   MOZ_ASSERT(aShouldProcess, "Null out param");
 
-  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
   MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
                                 contentType),
              "We should only see external content policy types here.");

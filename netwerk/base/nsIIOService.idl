@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
 
 interface nsIProtocolHandler;
 interface nsIChannel;
@@ -115,7 +116,7 @@ interface nsIIOService : nsISupports
                                  in nsIPrincipal aLoadingPrincipal,
                                  in nsIPrincipal aTriggeringPrincipal,
                                  in unsigned long aSecurityFlags,
-                                 in unsigned long aContentPolicyType);
+                                 in nsContentPolicyType aContentPolicyType);
 
     [noscript, nostdcall, notxpcom]
     nsresult NewChannelFromURIWithClientAndController(in nsIURI aURI,
@@ -125,7 +126,7 @@ interface nsIIOService : nsISupports
                                                       in const_MaybeClientInfoRef aLoadingClientInfo,
                                                       in const_MaybeServiceWorkerDescriptorRef aController,
                                                       in unsigned long aSecurityFlags,
-                                                      in unsigned long aContentPolicyType,
+                                                      in nsContentPolicyType aContentPolicyType,
                                                       in unsigned long aSandboxFlags,
                                                       out nsIChannel aResult);
 
@@ -145,7 +146,7 @@ interface nsIIOService : nsISupports
                           in nsIPrincipal aLoadingPrincipal,
                           in nsIPrincipal aTriggeringPrincipal,
                           in unsigned long aSecurityFlags,
-                          in unsigned long aContentPolicyType);
+                          in nsContentPolicyType aContentPolicyType);
 
     /**
      * Returns true if networking is in "offline" mode. When in offline mode,
@@ -251,7 +252,7 @@ interface nsIIOService : nsISupports
                                                in nsIPrincipal aLoadingPrincipal,
                                                in nsIPrincipal aTriggeringPrincipal,
                                                in unsigned long aSecurityFlags,
-                                               in unsigned long aContentPolicyType);
+                                               in nsContentPolicyType aContentPolicyType);
 
     /**
      * Return true if socket process is launched.

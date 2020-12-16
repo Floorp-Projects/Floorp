@@ -3001,10 +3001,10 @@ bool BrowserParent::SendSelectionEvent(WidgetSelectionEvent& aEvent) {
   return true;
 }
 
-bool BrowserParent::SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
-                                          const bool& aIsPrivateData,
-                                          nsIPrincipal* aRequestingPrincipal,
-                                          const uint32_t& aContentPolicyType) {
+bool BrowserParent::SendPasteTransferable(
+    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+    nsIPrincipal* aRequestingPrincipal,
+    const nsContentPolicyType& aContentPolicyType) {
   return PBrowserParent::SendPasteTransferable(
       aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType);
 }

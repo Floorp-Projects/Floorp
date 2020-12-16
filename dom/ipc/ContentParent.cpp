@@ -3133,7 +3133,8 @@ void ContentParent::OnVarChanged(const GfxVarUpdate& aVar) {
 mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     const IPC::Principal& aRequestingPrincipal,
-    const uint32_t& aContentPolicyType, const int32_t& aWhichClipboard) {
+    const nsContentPolicyType& aContentPolicyType,
+    const int32_t& aWhichClipboard) {
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   NS_ENSURE_SUCCESS(rv, IPC_OK());

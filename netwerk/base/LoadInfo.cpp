@@ -146,7 +146,7 @@ LoadInfo::LoadInfo(
     mSecurityFlags &= ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
-  uint32_t externalType =
+  nsContentPolicyType externalType =
       nsContentUtils::InternalContentPolicyTypeToExternal(aContentPolicyType);
 
   if (aLoadingContext) {

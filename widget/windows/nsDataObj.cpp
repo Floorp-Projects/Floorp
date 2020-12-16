@@ -69,7 +69,7 @@ nsDataObj::CStream::~CStream() {}
 //-----------------------------------------------------------------------------
 // helper - initializes the stream
 nsresult nsDataObj::CStream::Init(nsIURI* pSourceURI,
-                                  uint32_t aContentPolicyType,
+                                  nsContentPolicyType aContentPolicyType,
                                   nsIPrincipal* aRequestingPrincipal) {
   // we can not create a channel without a requestingPrincipal
   if (!aRequestingPrincipal) {
@@ -313,7 +313,7 @@ HRESULT nsDataObj::CreateStream(IStream** outStream) {
       mTransferable->GetRequestingPrincipal();
   MOZ_ASSERT(requestingPrincipal, "can not create channel without a principal");
 
-  uint32_t contentPolicyType = mTransferable->GetContentPolicyType();
+  nsContentPolicyType contentPolicyType = mTransferable->GetContentPolicyType();
   rv = pStream->Init(sourceURI, contentPolicyType, requestingPrincipal);
   if (NS_FAILED(rv)) {
     pStream->Release();

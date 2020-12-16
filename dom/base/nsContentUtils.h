@@ -954,7 +954,8 @@ class nsContentUtils {
       nsIReferrerInfo* aReferrerInfo, imgINotificationObserver* aObserver,
       int32_t aLoadFlags, const nsAString& initiatorType,
       imgRequestProxy** aRequest,
-      uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE,
+      nsContentPolicyType aContentPolicyType =
+          nsIContentPolicy::TYPE_INTERNAL_IMAGE,
       bool aUseUrgentStartForChannel = false, bool aLinkPreload = false);
 
   /**

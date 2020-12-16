@@ -58,13 +58,13 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
                                 nsIPrincipal* aTriggeringPrincipal,
                                 nsICookieJarSettings* aCookieJarSettings,
                                 uint32_t aSecurityFlags,
-                                uint32_t aContentPolicyType,
+                                nsContentPolicyType aContentPolicyType,
                                 uint32_t aSandboxFlags) override;
   NS_IMETHOD InitLoadInfo(nsINode* aLoadingNode,
                           nsIPrincipal* aLoadingPrincipal,
                           nsIPrincipal* aTriggeringPrincipal,
                           uint32_t aSecurityFlags,
-                          uint32_t aContentPolicyType) override;
+                          nsContentPolicyType aContentPolicyType) override;
   NS_IMETHOD GetSerial(uint32_t* aSerial) override;
   NS_IMETHOD SetSerial(uint32_t aSerial) override;
   NS_IMETHOD SetServerParameters(
