@@ -49,7 +49,7 @@ dependencies {
     implementation project(':concept-engine')
 
     implementation project(':browser-state')
-    implementation project(':browser-session')
+    implementation project(':browser-session-storage')
 
     implementation project(':support-ktx')
     implementation project(':support-base')

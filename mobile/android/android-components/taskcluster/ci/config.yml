@@ -18,6 +18,7 @@ treeherder:
         browser-menu2: browser-menu2
         browser-search: browser-search
         browser-session: browser-session
+        browser-session-storage: browser-session-storage
         browser-state: browser-state
         browser-storage-memory: browser-storage-memory
         browser-storage-sync: browser-storage-sync

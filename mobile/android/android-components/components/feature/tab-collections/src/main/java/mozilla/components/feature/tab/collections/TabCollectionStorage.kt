@@ -8,7 +8,8 @@ import android.content.Context
 import androidx.paging.DataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mozilla.components.browser.session.storage.BrowserStateSerializer
+import mozilla.components.browser.session.storage.serialize.BrowserStateReader
+import mozilla.components.browser.session.storage.serialize.BrowserStateWriter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.adapter.TabAdapter
 import mozilla.components.feature.tab.collections.adapter.TabCollectionAdapter
@@ -24,7 +25,8 @@ import java.util.UUID
  */
 class TabCollectionStorage(
     context: Context,
-    private val serializer: BrowserStateSerializer = BrowserStateSerializer(),
+    private val reader: BrowserStateReader = BrowserStateReader(),
+    private val writer: BrowserStateWriter = BrowserStateWriter(),
     private val filesDir: File = context.filesDir
 ) {
     internal var database: Lazy<TabCollectionDatabase> = lazy { TabCollectionDatabase.get(context) }
@@ -65,7 +67,7 @@ class TabCollectionStorage(
                 createdAt = System.currentTimeMillis()
             )
 
-            val success = serializer.writeTab(session, entity.getStateFile(filesDir))
+            val success = writer.writeTab(session, entity.getStateFile(filesDir))
             if (success) {
                 database.value.tabDao().insertTab(entity)
             }

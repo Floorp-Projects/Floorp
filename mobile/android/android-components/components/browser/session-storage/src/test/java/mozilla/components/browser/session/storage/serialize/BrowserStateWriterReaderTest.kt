@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.session.storage
+package mozilla.components.browser.session.storage.serialize
 
 import android.util.AtomicFile
 import android.util.JsonReader
@@ -16,18 +16,14 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
-class BrowserStateSerializerTest {
+class BrowserStateWriterReaderTest {
     @Test
     fun `Read and write single tab`() {
         val engineState = createFakeEngineState()
@@ -41,22 +37,24 @@ class BrowserStateSerializerTest {
             engineState = EngineState(engineSessionState = engineState)
         )
 
-        val serializer = BrowserStateSerializer()
+        val writer = BrowserStateWriter()
+        val reader = BrowserStateReader()
+
         val file = AtomicFile(
             File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
         )
 
-        assertTrue(serializer.writeTab(tab, file))
+        Assert.assertTrue(writer.writeTab(tab, file))
 
-        val restoredTab = serializer.readTab(engine, file)
-        assertNotNull(restoredTab!!)
+        val restoredTab = reader.readTab(engine, file)
+        Assert.assertNotNull(restoredTab!!)
 
-        assertEquals("https://www.mozilla.org", restoredTab.url)
-        assertEquals("Mozilla", restoredTab.title)
-        assertEquals("work", restoredTab.contextId)
-        assertEquals(engineState, restoredTab.state)
-        assertFalse(restoredTab.readerState.active)
-        assertNull(restoredTab.readerState.activeUrl)
+        Assert.assertEquals("https://www.mozilla.org", restoredTab.url)
+        Assert.assertEquals("Mozilla", restoredTab.title)
+        Assert.assertEquals("work", restoredTab.contextId)
+        Assert.assertEquals(engineState, restoredTab.state)
+        Assert.assertFalse(restoredTab.readerState.active)
+        Assert.assertNull(restoredTab.readerState.activeUrl)
     }
 
     @Test
@@ -71,18 +69,20 @@ class BrowserStateSerializerTest {
             readerState = ReaderState(active = true, activeUrl = "https://www.example.org")
         )
 
-        val serializer = BrowserStateSerializer()
+        val writer = BrowserStateWriter()
+        val reader = BrowserStateReader()
+
         val file = AtomicFile(
             File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
         )
 
-        assertTrue(serializer.writeTab(tab, file))
+        Assert.assertTrue(writer.writeTab(tab, file))
 
-        val restoredTab = serializer.readTab(engine, file)
-        assertNotNull(restoredTab!!)
+        val restoredTab = reader.readTab(engine, file)
+        Assert.assertNotNull(restoredTab!!)
 
-        assertTrue(restoredTab.readerState.active)
-        assertEquals("https://www.example.org", restoredTab.readerState.activeUrl)
+        Assert.assertTrue(restoredTab.readerState.active)
+        Assert.assertEquals("https://www.example.org", restoredTab.readerState.activeUrl)
     }
 }
 

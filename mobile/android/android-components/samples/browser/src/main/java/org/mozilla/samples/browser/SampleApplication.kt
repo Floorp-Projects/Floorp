@@ -25,6 +25,7 @@ import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
+import java.util.concurrent.TimeUnit
 
 class SampleApplication : Application() {
     private val logger = Logger("SampleApplication")
@@ -55,6 +56,7 @@ class SampleApplication : Application() {
         Facts.registerProcessor(LogFactProcessor())
 
         components.engine.warmUp()
+        restoreBrowsingSession()
 
         GlobalScope.launch(Dispatchers.IO) {
             components.webAppManifestStorage.warmUpScopes(System.currentTimeMillis())
@@ -92,6 +94,15 @@ class SampleApplication : Application() {
             // Web extension support is only available for engine gecko
             Logger.error("Failed to initialize web extension support", e)
         }
+    }
+
+    private fun restoreBrowsingSession() = GlobalScope.launch(Dispatchers.Main) {
+        components.tabsUseCases.restore(components.sessionStorage)
+
+        components.sessionStorage.autoSave(components.store)
+            .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
+            .whenGoingToBackground()
+            .whenSessionsChange()
     }
 
     override fun onTrimMemory(level: Int) {

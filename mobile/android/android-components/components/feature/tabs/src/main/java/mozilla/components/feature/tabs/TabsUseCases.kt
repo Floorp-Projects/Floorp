@@ -4,8 +4,12 @@
 
 package mozilla.components.feature.tabs
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.BrowsingSession
+import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.state.CustomTabConfig
@@ -299,16 +303,32 @@ class TabsUseCases(
      * Use case for restoring tabs.
      */
     class RestoreUseCase(
-        private val sessionManager: SessionManager,
-        private val select: SelectTabUseCase
+        private val sessionManager: SessionManager
     ) {
         /**
          * Restores the given list of [RecoverableTab]s.
          */
         operator fun invoke(tabs: List<RecoverableTab>, selectTabId: String? = null) {
-            sessionManager.restore(tabs)
+            sessionManager.restore(tabs, selectTabId)
+        }
 
-            selectTabId?.let { id -> select(id) }
+        /**
+         * Restores the given [BrowsingSession].
+         */
+        operator fun invoke(browsingSession: BrowsingSession) {
+            invoke(browsingSession.tabs, browsingSession.selectedTabId)
+        }
+
+        /**
+         * Restores the browsing session from the given [SessionStorage].
+         */
+        suspend operator fun invoke(storage: SessionStorage) = withContext(Dispatchers.IO) {
+            val browsingSession = storage.restore()
+            if (browsingSession != null) {
+                withContext(Dispatchers.Main) {
+                    invoke(browsingSession)
+                }
+            }
         }
     }
 
@@ -321,5 +341,5 @@ class TabsUseCases(
     val removeNormalTabs: RemoveNormalTabsUseCase by lazy { RemoveNormalTabsUseCase(sessionManager) }
     val removePrivateTabs: RemovePrivateTabsUseCase by lazy { RemovePrivateTabsUseCase(sessionManager) }
     val undo by lazy { UndoTabRemovalUseCase(store) }
-    val restore: RestoreUseCase by lazy { RestoreUseCase(sessionManager, selectTab) }
+    val restore: RestoreUseCase by lazy { RestoreUseCase(sessionManager) }
 }

@@ -223,6 +223,10 @@ projects:
     path: components/browser/session
     description: 'An abstract layer hiding the actual browser engine implementation.'
     publish: true
+  browser-session-storage:
+    path: components/browser/session-storage
+    description: 'Component for saving and restoring a browsing session.'
+    publish: true
   browser-state:
     path: components/browser/state
     description: 'Component responsible for maintaining the centralized state of a browser engine.'

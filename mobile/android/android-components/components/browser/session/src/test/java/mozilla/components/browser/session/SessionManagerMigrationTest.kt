@@ -5,7 +5,6 @@
 package mozilla.components.browser.session
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
@@ -20,7 +19,6 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -404,38 +402,6 @@ class SessionManagerMigrationTest {
 
         assertEquals("https://www.firefox.com", manager.sessions[2].url)
         assertEquals("https://www.firefox.com", store.state.tabs[2].content.url)
-    }
-
-    @Test
-    fun `Restoring snapshot with reader state`() {
-        val session1 = Session(id = "1", initialUrl = "https://www.mozilla.org")
-        val session2 = Session(id = "2", initialUrl = "https://www.firefox.com")
-        val store = BrowserStore()
-        val manager = SessionManager(engine = mock(), store = store).apply {
-            add(session1)
-            add(session2)
-        }
-
-        store.dispatch(ReaderAction.UpdateReaderActiveAction(session2.id, true)).joinBlocking()
-        store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(session2.id, "blog.mozilla.org/1")).joinBlocking()
-        assertEquals(ReaderState(active = true, activeUrl = "blog.mozilla.org/1"),
-            store.state.findTab(session2.id)?.readerState
-        )
-
-        val storage = SessionStorage(testContext, mock())
-        assertTrue(storage.save(store.state))
-
-        val snapshot = storage.restore()!!
-
-        manager.removeAll()
-        assertEquals(0, manager.size)
-        assertEquals(0, store.state.tabs.size)
-
-        manager.restore(snapshot)
-        assertEquals(ReaderState(active = false), store.state.findTab(session1.id)?.readerState)
-        assertEquals(ReaderState(active = true, activeUrl = "blog.mozilla.org/1"),
-            store.state.findTab(session2.id)?.readerState
-        )
     }
 
     @Test

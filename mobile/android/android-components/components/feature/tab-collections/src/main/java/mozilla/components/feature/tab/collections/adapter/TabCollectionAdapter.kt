@@ -5,7 +5,7 @@
 package mozilla.components.feature.tab.collections.adapter
 
 import android.content.Context
-import mozilla.components.browser.session.ext.readTab
+import mozilla.components.browser.session.storage.serialize.BrowserStateReader
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
@@ -55,12 +55,10 @@ internal class TabCollectionAdapter(
         tabs: List<TabEntity>,
         restoreSessionId: Boolean
     ): List<RecoverableTab> {
+        val reader = BrowserStateReader()
         return tabs.mapNotNull { tab ->
-            tab.getStateFile(context.filesDir).readTab(
-                engine,
-                restoreSessionId,
-                restoreParentId = false
-            )
+            val file = tab.getStateFile(context.filesDir)
+            reader.readTab(engine, file, restoreSessionId, restoreParentId = false)
         }
     }
 

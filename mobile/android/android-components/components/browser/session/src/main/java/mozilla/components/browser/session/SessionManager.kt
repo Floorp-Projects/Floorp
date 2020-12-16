@@ -172,29 +172,18 @@ class SessionManager(
     /**
      * Restores the given list of [RecoverableTab].
      */
-    fun restore(tabs: List<RecoverableTab>) {
+    fun restore(tabs: List<RecoverableTab>, selectTabId: String? = null) {
         // As a workaround we squint here and pretend this is a Snapshot..
+        val items = tabs.map { tab -> tab.toSnapshotItem() }
 
-        val items = tabs.map {
-            Snapshot.Item(
-                session = Session(
-                    id = it.id,
-                    initialUrl = it.url,
-                    contextId = it.contextId,
-                    private = it.private
-                ).apply {
-                    title = it.title
-                    parentId = it.parentId
-                },
-                engineSessionState = it.state,
-                readerState = it.readerState,
-                lastAccess = it.lastAccess
-            )
+        val selectedIndex = if (selectTabId != null) {
+            tabs.indexOfFirst { tab -> tab.id == selectTabId }
+        } else {
+            NO_SELECTION
         }
+        val snapshot = Snapshot(items, selectedIndex)
 
-        val snapshot = Snapshot(items, NO_SELECTION)
-
-        restore(snapshot, updateSelection = false)
+        restore(snapshot, updateSelection = selectedIndex != NO_SELECTION)
     }
 
     /**
@@ -457,5 +446,22 @@ private fun Session.toRestoredTabSessionState(snapshot: SessionManager.Snapshot.
         engineState = engineState,
         readerState = snapshot.readerState ?: ReaderState(),
         lastAccess = snapshot.lastAccess
+    )
+}
+
+private fun RecoverableTab.toSnapshotItem(): SessionManager.Snapshot.Item {
+    return SessionManager.Snapshot.Item(
+        session = Session(
+            id = id,
+            initialUrl = url,
+            contextId = contextId,
+            private = private
+        ).also {
+            it.title = title
+            it.parentId = parentId
+        },
+        engineSessionState = state,
+        readerState = readerState,
+        lastAccess = lastAccess
     )
 }

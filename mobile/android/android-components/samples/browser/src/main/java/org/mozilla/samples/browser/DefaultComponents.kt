@@ -125,7 +125,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val lazyHistoryStorage = lazy { PlacesHistoryStorage(applicationContext) }
     val historyStorage by lazy { lazyHistoryStorage.value }
 
-    private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
+    val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 
     val permissionStorage by lazy { SitePermissionsStorage(applicationContext) }
 
@@ -158,19 +158,6 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val sessionManager by lazy {
         SessionManager(engine, store).apply {
-            sessionStorage.restore()?.let {
-                snapshot -> restore(snapshot)
-            }
-
-            if (size == 0) {
-                add(Session("about:blank"))
-            }
-
-            sessionStorage.autoSave(store)
-                .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
-                .whenGoingToBackground()
-                .whenSessionsChange()
-
             icons.install(engine, store)
 
             WebNotificationFeature(applicationContext, engine, icons, R.drawable.ic_notification,
