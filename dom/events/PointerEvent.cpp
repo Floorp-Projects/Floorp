@@ -213,10 +213,11 @@ void PointerEvent::GetCoalescedEvents(
   if (mCoalescedEvents.IsEmpty() && widgetEvent &&
       widgetEvent->mCoalescedWidgetEvents &&
       !widgetEvent->mCoalescedWidgetEvents->mEvents.IsEmpty()) {
+    nsCOMPtr<EventTarget> owner = do_QueryInterface(mOwner);
     for (WidgetPointerEvent& event :
          widgetEvent->mCoalescedWidgetEvents->mEvents) {
       RefPtr<PointerEvent> domEvent =
-          NS_NewDOMPointerEvent(nullptr, nullptr, &event);
+          NS_NewDOMPointerEvent(owner, nullptr, &event);
 
       // The dom event is derived from an OS generated widget event. Setup
       // mWidget and mPresContext since they are necessary to calculate
