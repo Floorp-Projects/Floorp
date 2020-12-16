@@ -432,9 +432,13 @@ class RaptorControlServer:
         if self.device is not None:
             self.device.stop_application(self.app_name)
         else:
-            self.browser_proc.wait(timeout)
-            if self.browser_proc.poll() is None:
-                self.browser_proc.kill()
+            try:
+                self.browser_proc.wait(timeout)
+            except OSError:
+                LOG.warning("OSError while shutting down browser", exc_info=True)
+            finally:
+                if self.browser_proc.poll() is None:
+                    self.browser_proc.kill()
 
         self._finished = True
         time.sleep(0.25)
