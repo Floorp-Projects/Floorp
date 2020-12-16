@@ -51,9 +51,9 @@ import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
+    private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
 
     private var readerModeAvailable = false
-    private var openInAppOnboardingObserver: OpenInAppOnboardingObserver? = null
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
 
     override fun onCreateView(
@@ -142,6 +142,22 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 owner = this,
                 view = view
             )
+
+            if (context.settings().shouldShowOpenInAppCfr) {
+                openInAppOnboardingObserver.set(
+                    feature = OpenInAppOnboardingObserver(
+                        context = context,
+                        store = context.components.core.store,
+                        lifecycleOwner = this,
+                        navController = findNavController(),
+                        settings = context.settings(),
+                        appLinksUseCases = context.components.useCases.appLinksUseCases,
+                        container = browserLayout as ViewGroup
+                    ),
+                    owner = this,
+                    view = view
+                )
+            }
         }
     }
 
@@ -163,23 +179,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16945
         session?.register(toolbarSessionObserver, viewLifecycleOwner, autoPause = true)
 
-        if (settings.shouldShowOpenInAppCfr && session != null) {
-            openInAppOnboardingObserver = OpenInAppOnboardingObserver(
-                context = context,
-                navController = findNavController(),
-                settings = settings,
-                appLinksUseCases = context.components.useCases.appLinksUseCases,
-                container = browserLayout as ViewGroup
-            )
-            @Suppress("DEPRECATION")
-            // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16949
-            session.register(
-                openInAppOnboardingObserver!!,
-                owner = this,
-                autoPause = true
-            )
-        }
-
         if (!settings.userKnowsAboutPwas) {
             pwaOnboardingObserver = PwaOnboardingObserver(
                 store = context.components.core.store,
@@ -197,14 +196,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     override fun onStop() {
         super.onStop()
-        // This observer initialized in onStart has a reference to fragment's view.
-        // Prevent it leaking the view after the latter onDestroyView.
-        if (openInAppOnboardingObserver != null) {
-            @Suppress("DEPRECATION")
-            // TODO Use browser store instead of session observer: https://github.com/mozilla-mobile/fenix/issues/16949
-            getSessionById()?.unregister(openInAppOnboardingObserver!!)
-            openInAppOnboardingObserver = null
-        }
 
         pwaOnboardingObserver?.stop()
     }

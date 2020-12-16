@@ -5,16 +5,26 @@
 package org.mozilla.fenix.browser
 
 import android.content.Context
-import io.mockk.MockKAnnotations
+import android.view.ViewGroup
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.navigation.NavController
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.session.Session
-import mozilla.components.feature.app.links.AppLinkRedirect
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.app.links.AppLinksUseCases
+import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -24,90 +34,124 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class OpenInAppOnboardingObserverTest {
 
-    @MockK(relaxed = true) private lateinit var context: Context
-    @MockK(relaxed = true) private lateinit var settings: Settings
-    @MockK(relaxed = true) private lateinit var session: Session
-    @MockK(relaxed = true) private lateinit var appLinksUseCases: AppLinksUseCases
-    @MockK(relaxed = true) private lateinit var applinksRedirect: AppLinkRedirect
-    @MockK(relaxed = true) private lateinit var getAppLinkRedirect: AppLinksUseCases.GetAppLinkRedirect
-    @MockK(relaxed = true) private lateinit var infoBanner: InfoBanner
+    private lateinit var store: BrowserStore
+    private lateinit var lifecycleOwner: MockedLifecycleOwner
+    private lateinit var openInAppOnboardingObserver: OpenInAppOnboardingObserver
+    private lateinit var navigationController: NavController
+    private lateinit var settings: Settings
+    private lateinit var appLinksUseCases: AppLinksUseCases
+    private lateinit var context: Context
+    private lateinit var container: ViewGroup
+    private lateinit var infoBanner: InfoBanner
+
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
-    fun setup() {
-        MockKAnnotations.init(this)
+    fun setUp() {
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(url = "https://www.mozilla.org", id = "1")
+                ), selectedTabId = "1"
+            )
+        )
+        lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+        navigationController = mockk(relaxed = true)
+        settings = mockk(relaxed = true)
+        appLinksUseCases = mockk(relaxed = true)
+        container = mockk(relaxed = true)
+        context = mockk(relaxed = true)
+        infoBanner = mockk(relaxed = true)
+        openInAppOnboardingObserver = spyk(OpenInAppOnboardingObserver(
+            context = context,
+            store = store,
+            lifecycleOwner = lifecycleOwner,
+            navController = navigationController,
+            settings = settings,
+            appLinksUseCases = appLinksUseCases,
+            container = container
+        ))
+        every { openInAppOnboardingObserver.createInfoBanner() } returns infoBanner
     }
 
     @Test
-    fun `do not show banner when openLinksInExternalApp is set to true`() {
+    fun `GIVEN user configured to open links in external app WHEN page finishes loading THEN do not show banner`() {
         every { settings.openLinksInExternalApp } returns true
         every { settings.shouldShowOpenInAppCfr } returns true
+        every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
 
-        val observer = OpenInAppOnboardingObserver(context, mockk(), settings, appLinksUseCases, mockk())
-        observer.onLoadingStateChanged(session, false)
-
-        verify(exactly = 0) { appLinksUseCases.appLinkRedirect }
-
-        every { settings.openLinksInExternalApp } returns false
-        observer.onLoadingStateChanged(session, false)
-
-        verify(exactly = 1) { appLinksUseCases.appLinkRedirect }
+        openInAppOnboardingObserver.start()
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", false)).joinBlocking()
+        verify(exactly = 0) { infoBanner.showBanner() }
     }
 
     @Test
-    fun `do not show banner when shouldShowOpenInAppCfr is set to false`() {
+    fun `GIVEN user has not configured to open links in external app WHEN page finishes loading THEN show banner`() {
+        every { settings.openLinksInExternalApp } returns false
+        every { settings.shouldShowOpenInAppCfr } returns true
+        every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
+
+        openInAppOnboardingObserver.start()
+
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", false)).joinBlocking()
+        verify(exactly = 1) { infoBanner.showBanner() }
+    }
+
+    @Test
+    fun `GIVEN banner was already displayed WHEN page finishes loading THEN do not show banner`() {
         every { settings.openLinksInExternalApp } returns false
         every { settings.shouldShowOpenInAppCfr } returns false
+        every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
 
-        val observer = OpenInAppOnboardingObserver(context, mockk(), settings, appLinksUseCases, mockk())
-        observer.onLoadingStateChanged(session, false)
-
-        verify(exactly = 0) { appLinksUseCases.appLinkRedirect }
-
-        every { settings.shouldShowOpenInAppCfr } returns true
-        observer.onLoadingStateChanged(session, false)
-
-        verify(exactly = 1) { appLinksUseCases.appLinkRedirect }
+        openInAppOnboardingObserver.start()
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", false)).joinBlocking()
+        verify(exactly = 0) { infoBanner.showBanner() }
     }
 
     @Test
-    fun `do not show banner when URL is loading`() {
+    fun `GIVEN banner should be displayed WHEN no application found THEN do not show banner`() {
         every { settings.openLinksInExternalApp } returns false
         every { settings.shouldShowOpenInAppCfr } returns true
+        every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns false
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
 
-        val observer = OpenInAppOnboardingObserver(context, mockk(), settings, appLinksUseCases, mockk())
+        openInAppOnboardingObserver.start()
 
-        observer.onLoadingStateChanged(session, true)
-
-        verify(exactly = 0) { appLinksUseCases.appLinkRedirect }
-
-        observer.onLoadingStateChanged(session, false)
-
-        verify(exactly = 1) { appLinksUseCases.appLinkRedirect }
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", false)).joinBlocking()
+        verify(exactly = 0) { infoBanner.showBanner() }
     }
 
     @Test
-    fun `do not show banner when external app is not found`() {
+    fun `GIVEN banner is displayed WHEN user navigates to different domain THEN banner is dismissed`() {
         every { settings.openLinksInExternalApp } returns false
         every { settings.shouldShowOpenInAppCfr } returns true
-        every { appLinksUseCases.appLinkRedirect } returns getAppLinkRedirect
-        every { getAppLinkRedirect.invoke(any()) } returns applinksRedirect
+        every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
 
-        val observer = OpenInAppOnboardingObserver(context, mockk(), settings, appLinksUseCases, mockk())
-        observer.onLoadingStateChanged(session, false)
+        openInAppOnboardingObserver.start()
 
-        verify(exactly = 0) { settings.shouldShowOpenInAppBanner }
-    }
-
-    @Test
-    fun `do not dismiss banner when URL is the same`() {
-        val observer = OpenInAppOnboardingObserver(context, mockk(), settings, appLinksUseCases, mockk())
-        observer.infoBanner = infoBanner
-        observer.sessionDomainForDisplayedBanner = "mozilla.com"
-        observer.onUrlChanged(session, "https://mozilla.com")
-
+        store.dispatch(ContentAction.UpdateLoadingStateAction("1", false)).joinBlocking()
+        verify(exactly = 1) { infoBanner.showBanner() }
         verify(exactly = 0) { infoBanner.dismiss() }
 
-        observer.onUrlChanged(session, "https://abc.com")
+        store.dispatch(ContentAction.UpdateUrlAction("1", "https://www.mozilla.org/en-US/")).joinBlocking()
+        verify(exactly = 0) { infoBanner.dismiss() }
+
+        store.dispatch(ContentAction.UpdateUrlAction("1", "https://www.firefox.com")).joinBlocking()
         verify(exactly = 1) { infoBanner.dismiss() }
+    }
+
+    internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
+        val lifecycleRegistry = LifecycleRegistry(this).apply {
+            currentState = initialState
+        }
+
+        override fun getLifecycle(): Lifecycle = lifecycleRegistry
     }
 }
