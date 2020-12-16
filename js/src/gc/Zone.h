@@ -346,7 +346,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     return static_cast<Zone*>(zoneAlloc);
   }
 
-  explicit Zone(JSRuntime* rt);
+  explicit Zone(JSRuntime* rt, Kind kind = NormalZone);
   ~Zone();
 
   MOZ_MUST_USE bool init();
@@ -472,10 +472,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     return jitZone_ ? jitZone_ : createJitZone(cx);
   }
   js::jit::JitZone* jitZone() { return jitZone_; }
-
-  void setIsAtomsZone();
-  void setIsSelfHostingZone();
-  void setIsSystemZone();
 
   void prepareForCompacting();
 

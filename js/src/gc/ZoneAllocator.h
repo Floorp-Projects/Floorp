@@ -42,7 +42,7 @@ void MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc,
 class ZoneAllocator : public JS::shadow::Zone,
                       public js::MallocProvider<JS::Zone> {
  protected:
-  explicit ZoneAllocator(JSRuntime* rt);
+  explicit ZoneAllocator(JSRuntime* rt, Kind kind);
   ~ZoneAllocator();
   void fixupAfterMovingGC();
 
