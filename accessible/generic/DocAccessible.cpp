@@ -1925,8 +1925,10 @@ class InsertIterator final {
 
 bool InsertIterator::Next() {
   if (mNodesIdx > 0) {
+    // If we already processed the first node in the mNodes list,
+    // check if we can just use the walker to get its next sibling.
     Accessible* nextChild = mWalker.Next();
-    if (nextChild) {
+    if (nextChild && mProcessedNodes.EnsureInserted(nextChild->GetContent())) {
       mChildBefore = mChild;
       mChild = nextChild;
       return true;
@@ -1934,16 +1936,6 @@ bool InsertIterator::Next() {
   }
 
   while (mNodesIdx < mNodes->Length()) {
-    // Ignore nodes that are not contained by the container anymore.
-
-    // The container might be changed, for example, because of the subsequent
-    // overlapping content insertion (i.e. other content was inserted between
-    // this inserted content and its container or the content was reinserted
-    // into different container of unrelated part of tree). To avoid a double
-    // processing of the content insertion ignore this insertion notification.
-    // Note, the inserted content might be not in tree at all at this point
-    // what means there's no container. Ignore the insertion too.
-    nsIContent* prevNode = mNodes->SafeElementAt(mNodesIdx - 1);
     nsIContent* node = mNodes->ElementAt(mNodesIdx++);
     // Check to see if we already processed this node with this iterator.
     // this can happen if we get two redundant insertions in the case of a
@@ -1954,6 +1946,14 @@ bool InsertIterator::Next() {
 
     Accessible* container = Document()->AccessibleOrTrueContainer(
         node->GetFlattenedTreeParentNode(), true);
+    // Ignore nodes that are not contained by the container anymore.
+    // The container might be changed, for example, because of the subsequent
+    // overlapping content insertion (i.e. other content was inserted between
+    // this inserted content and its container or the content was reinserted
+    // into different container of unrelated part of tree). To avoid a double
+    // processing of the content insertion ignore this insertion notification.
+    // Note, the inserted content might be not in tree at all at this point
+    // what means there's no container. Ignore the insertion too.
     if (container != Context()) {
       continue;
     }
@@ -1973,8 +1973,9 @@ bool InsertIterator::Next() {
                       "container", container, "node", node);
 #endif
 
-    // If inserted nodes are siblings then just move the walker next.
-    if (mChild && prevNode && prevNode->GetNextSibling() == node) {
+    nsIContent* prevNode = mChild ? mChild->GetContent() : nullptr;
+    if (prevNode && prevNode->GetNextSibling() == node) {
+      // If inserted nodes are siblings then just move the walker next.
       Accessible* nextChild = mWalker.Scope(node);
       if (nextChild) {
         mChildBefore = mChild;
@@ -1982,6 +1983,8 @@ bool InsertIterator::Next() {
         return true;
       }
     } else {
+      // Otherwise use a new walker to find this node in the container's
+      // subtree, and retrieve its preceding sibling.
       TreeWalker finder(container);
       if (finder.Seek(node)) {
         mChild = mWalker.Scope(node);
