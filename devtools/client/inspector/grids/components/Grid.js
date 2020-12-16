@@ -42,7 +42,6 @@ class Grid extends PureComponent {
       highlighterSettings: PropTypes.shape(Types.highlighterSettings)
         .isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
-      onShowGridOutlineHighlight: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
       onToggleShowGridAreas: PropTypes.func.isRequired,
       onToggleShowGridLineNumbers: PropTypes.func.isRequired,
@@ -65,7 +64,6 @@ class Grid extends PureComponent {
       grids,
       highlighterSettings,
       onSetGridOverlayColor,
-      onShowGridOutlineHighlight,
       onToggleShowGridAreas,
       onToggleGridHighlighter,
       onToggleShowGridLineNumbers,
@@ -95,8 +93,8 @@ class Grid extends PureComponent {
       ),
       highlightedGrids.length === 1
         ? GridOutline({
+            dispatch,
             grids,
-            onShowGridOutlineHighlight,
           })
         : null
     );

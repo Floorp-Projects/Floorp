@@ -63,7 +63,6 @@ class LayoutView {
     );
     const {
       onSetGridOverlayColor,
-      onShowGridOutlineHighlight,
       onToggleGridHighlighter,
       onToggleShowGridAreas,
       onToggleShowGridLineNumbers,
@@ -76,7 +75,6 @@ class LayoutView {
       onSetGridOverlayColor,
       onShowBoxModelEditor,
       onShowRulePreviewTooltip,
-      onShowGridOutlineHighlight,
       onToggleGeometryEditor,
       onToggleGridHighlighter,
       onToggleShowGridAreas,
