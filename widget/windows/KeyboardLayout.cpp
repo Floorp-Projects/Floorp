@@ -21,7 +21,6 @@
 #include "nsMemory.h"
 #include "nsPrintfCString.h"
 #include "nsQuickSort.h"
-#include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsToolkit.h"
 #include "nsUnicharUtils.h"
@@ -449,32 +448,38 @@ static const nsCString GetKeyLocationName(uint32_t aLocation) {
   }
 }
 
-static const nsCString GetCharacterCodeNames(const char16_t* aChars,
-                                             uint32_t aLength) {
+static const nsCString GetCharacterCodeName(const char16_t* aChars,
+                                            uint32_t aLength) {
   if (!aLength) {
     return ""_ns;
   }
   nsCString result;
-  result.AssignLiteral("\"");
-  StringJoinAppend(result, ", "_ns, Span{aChars, aLength},
-                   [](nsACString& dest, const char16_t charValue) {
-                     dest.Append(GetCharacterCodeName(charValue));
-                   });
+  for (uint32_t i = 0; i < aLength; ++i) {
+    if (!result.IsEmpty()) {
+      result.AppendLiteral(", ");
+    } else {
+      result.AssignLiteral("\"");
+    }
+    result.Append(GetCharacterCodeName(aChars[i]));
+  }
   result.AppendLiteral("\"");
   return result;
 }
 
-static const nsCString GetCharacterCodeNames(
+static const nsCString GetCharacterCodeName(
     const UniCharsAndModifiers& aUniCharsAndModifiers) {
   if (aUniCharsAndModifiers.IsEmpty()) {
     return ""_ns;
   }
   nsCString result;
-  result.AssignLiteral("\"");
-  StringJoinAppend(result, ", "_ns, Span{aUniCharsAndModifiers.ToString()},
-                   [](nsACString& dest, const char16_t charValue) {
-                     dest.Append(GetCharacterCodeName(charValue));
-                   });
+  for (uint32_t i = 0; i < aUniCharsAndModifiers.Length(); i++) {
+    if (!result.IsEmpty()) {
+      result.AppendLiteral(", ");
+    } else {
+      result.AssignLiteral("\"");
+    }
+    result.Append(GetCharacterCodeName(aUniCharsAndModifiers.CharAt(i)));
+  }
   result.AppendLiteral("\"");
   return result;
 }
@@ -4466,7 +4471,7 @@ void KeyboardLayout::LoadLayout(HKL aLayout) {
                 ("  %s (%d): DeadChar(%s, %s) (ret=%d)",
                  kVirtualKeyName[virtualKey], vki,
                  GetShiftStateName(shiftState).get(),
-                 GetCharacterCodeNames(deadChar, 1).get(), ret));
+                 GetCharacterCodeName(deadChar, 1).get(), ret));
       } else {
         if (ret == 1) {
           // dead-key can pair only with exactly one base character.
@@ -4477,7 +4482,7 @@ void KeyboardLayout::LoadLayout(HKL aLayout) {
                 ("  %s (%d): NormalChar(%s, %s) (ret=%d)",
                  kVirtualKeyName[virtualKey], vki,
                  GetShiftStateName(shiftState).get(),
-                 GetCharacterCodeNames(uniChars, ret).get(), ret));
+                 GetCharacterCodeName(uniChars, ret).get(), ret));
       }
 
       // If the key inputs at least one character with AltGr modifier,
@@ -4489,11 +4494,11 @@ void KeyboardLayout::LoadLayout(HKL aLayout) {
         MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Info,
                 ("  Found a key (%s) changed by AltGr: %s -> %s (%s) (ret=%d)",
                  kVirtualKeyName[virtualKey],
-                 GetCharacterCodeNames(
+                 GetCharacterCodeName(
                      mVirtualKeys[vki].GetNativeUniChars(
                          shiftState - VirtualKey::ShiftStateIndex::eAltGr))
                      .get(),
-                 GetCharacterCodeNames(
+                 GetCharacterCodeName(
                      mVirtualKeys[vki].GetNativeUniChars(shiftState))
                      .get(),
                  GetShiftStateName(shiftState).get(), ret));
@@ -4800,10 +4805,10 @@ uint32_t KeyboardLayout::GetDeadKeyCombinations(
                 sKeyboardLayoutLogger, LogLevel::Debug,
                 ("  %s -> %s (%d): DeadKeyEntry(%s, %s) (ret=%d)",
                  kVirtualKeyName[aDeadKey], kVirtualKeyName[virtualKey], vki,
-                 GetCharacterCodeNames(compositeChars, 1).get(),
+                 GetCharacterCodeName(compositeChars, 1).get(),
                  ret <= 0
                      ? "''"
-                     : GetCharacterCodeNames(baseChars, std::min(ret, 5)).get(),
+                     : GetCharacterCodeName(baseChars, std::min(ret, 5)).get(),
                  ret));
             break;
           }
@@ -4818,7 +4823,7 @@ uint32_t KeyboardLayout::GetDeadKeyCombinations(
                  kVirtualKeyName[aDeadKey], kVirtualKeyName[virtualKey], vki,
                  ret <= 0
                      ? "''"
-                     : GetCharacterCodeNames(compositeChars, std::min(ret, 5))
+                     : GetCharacterCodeName(compositeChars, std::min(ret, 5))
                            .get(),
                  ret));
             break;

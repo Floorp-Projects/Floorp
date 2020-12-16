@@ -546,7 +546,14 @@ void nsNSSCertificate::GetSubjectAltNames() {
 
 NS_IMETHODIMP
 nsNSSCertificate::GetSubjectAltNames(nsAString& _subjectAltNames) {
-  _subjectAltNames = StringJoin(u","_ns, mSubjectAltNames);
+  _subjectAltNames.Truncate();
+
+  for (auto altName : mSubjectAltNames) {
+    if (!_subjectAltNames.IsEmpty()) {
+      _subjectAltNames.Append(',');
+    }
+    _subjectAltNames.Append(altName);
+  }
   return NS_OK;
 }
 

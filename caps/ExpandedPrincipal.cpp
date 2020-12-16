@@ -6,7 +6,6 @@
 
 #include "ExpandedPrincipal.h"
 #include "nsIClassInfoImpl.h"
-#include "nsReadableUtils.h"
 #include "mozilla/Base64.h"
 
 using namespace mozilla;
@@ -62,14 +61,16 @@ already_AddRefed<ExpandedPrincipal> ExpandedPrincipal::Create(
 
   nsAutoCString origin;
   origin.AssignLiteral("[Expanded Principal [");
-  StringJoinAppend(
-      origin, ", "_ns, ep->mPrincipals,
-      [](nsACString& dest, const nsCOMPtr<nsIPrincipal>& principal) {
-        nsAutoCString subOrigin;
-        DebugOnly<nsresult> rv = principal->GetOrigin(subOrigin);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-        dest.Append(subOrigin);
-      });
+  for (size_t i = 0; i < ep->mPrincipals.Length(); ++i) {
+    if (i != 0) {
+      origin.AppendLiteral(", ");
+    }
+
+    nsAutoCString subOrigin;
+    DebugOnly<nsresult> rv = ep->mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    origin.Append(subOrigin);
+  }
   origin.AppendLiteral("]]");
 
   ep->FinishInit(origin, aAttrs);

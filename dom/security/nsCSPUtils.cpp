@@ -1085,10 +1085,13 @@ void nsCSPDirective::toString(nsAString& outStr) const {
   outStr.AppendLiteral(" ");
 
   // Append srcs
-  StringJoinAppend(outStr, u" "_ns, mSrcs,
-                   [](nsAString& dest, nsCSPBaseSrc* cspBaseSrc) {
-                     cspBaseSrc->toString(dest);
-                   });
+  uint32_t length = mSrcs.Length();
+  for (uint32_t i = 0; i < length; i++) {
+    mSrcs[i]->toString(outStr);
+    if (i != (length - 1)) {
+      outStr.AppendLiteral(" ");
+    }
+  }
 }
 
 void nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const {
@@ -1471,10 +1474,13 @@ bool nsCSPPolicy::allows(nsContentPolicyType aContentType,
 }
 
 void nsCSPPolicy::toString(nsAString& outStr) const {
-  StringJoinAppend(outStr, u"; "_ns, mDirectives,
-                   [](nsAString& dest, nsCSPDirective* cspDirective) {
-                     cspDirective->toString(dest);
-                   });
+  uint32_t length = mDirectives.Length();
+  for (uint32_t i = 0; i < length; ++i) {
+    mDirectives[i]->toString(outStr);
+    if (i != (length - 1)) {
+      outStr.AppendLiteral("; ");
+    }
+  }
 }
 
 void nsCSPPolicy::toDomCSPStruct(mozilla::dom::CSP& outCSP) const {
