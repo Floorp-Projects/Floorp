@@ -28,6 +28,7 @@ import mozilla.components.feature.media.facts.emitStatePlayFact
 import mozilla.components.feature.media.facts.emitStateStopFact
 import mozilla.components.feature.media.notification.MediaNotification
 import mozilla.components.feature.media.focus.AudioFocus
+import mozilla.components.feature.media.session.MediaSessionCallback
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
@@ -54,6 +55,8 @@ internal class MediaSessionServiceDelegate(
 
     fun onCreate() {
         logger.debug("Service created")
+        mediaSession.setCallback(MediaSessionCallback(store))
+
         scope = store.flowScoped { flow ->
             flow.map { state -> state.findActiveMediaTab() }
                 .ifChanged { tab -> tab?.mediaSessionState }
