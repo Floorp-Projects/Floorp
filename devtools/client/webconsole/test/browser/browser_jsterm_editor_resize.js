@@ -66,7 +66,7 @@ async function resize(resizer, clientX) {
   await waitFor(() => doc.querySelector(".dragging"));
 
   const event = new MouseEvent("mousemove", { clientX });
-  resizer.ownerDocument.dispatchEvent(event);
+  resizer.dispatchEvent(event);
 
   info("Mouse up to stop resizing");
   EventUtils.synthesizeMouseAtCenter(

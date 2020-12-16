@@ -27,9 +27,10 @@ class Draggable extends Component {
     this.draggableEl = createRef();
 
     this.startDragging = this.startDragging.bind(this);
+    this.stopDragging = this.stopDragging.bind(this);
     this.onDoubleClick = this.onDoubleClick.bind(this);
     this.onMove = this.onMove.bind(this);
-    this.onUp = this.onUp.bind(this);
+
     this.mouseX = 0;
     this.mouseY = 0;
   }
@@ -49,9 +50,10 @@ class Draggable extends Component {
     }
     this.isDragging = true;
     ev.preventDefault();
-    const doc = this.draggableEl.current.ownerDocument;
-    doc.addEventListener("mousemove", this.onMove);
-    doc.addEventListener("mouseup", this.onUp);
+
+    this.draggableEl.current.addEventListener("mousemove", this.onMove);
+    this.draggableEl.current.setPointerCapture(ev.pointerId);
+
     this.props.onStart && this.props.onStart();
   }
 
@@ -72,16 +74,15 @@ class Draggable extends Component {
     this.props.onMove(ev.clientX, ev.clientY);
   }
 
-  onUp(ev) {
+  stopDragging(ev) {
     if (!this.isDragging) {
       return;
     }
     this.isDragging = false;
-
     ev.preventDefault();
-    const doc = this.draggableEl.current.ownerDocument;
-    doc.removeEventListener("mousemove", this.onMove);
-    doc.removeEventListener("mouseup", this.onUp);
+
+    this.draggableEl.current.removeEventListener("mousemove", this.onMove);
+    this.draggableEl.current.releasePointerCapture(ev.pointerId);
     this.props.onStop && this.props.onStop();
   }
 
@@ -93,6 +94,7 @@ class Draggable extends Component {
       title: this.props.title,
       className: this.props.className,
       onMouseDown: this.startDragging,
+      onMouseUp: this.stopDragging,
       onDoubleClick: this.onDoubleClick,
     });
   }
