@@ -41,7 +41,6 @@ pub enum TargetShader {
 
 /// The size of each region in shared cache texture arrays.
 pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
-pub const GLYPH_TEXTURE_REGION_DIMENSIONS: i32 = 128;
 
 const PICTURE_TEXTURE_SLICE_COUNT: usize = 8;
 
@@ -254,7 +253,6 @@ impl SharedTextures {
                 1024,
                 SlabAllocatorParameters {
                     region_size: TEXTURE_REGION_DIMENSIONS,
-                    slab_sizes: SlabSizes::Default,
                 },
                 TextureParameters {
                     formats: TextureFormatPair::from(ImageFormat::R8),
@@ -267,7 +265,6 @@ impl SharedTextures {
                 TEXTURE_REGION_DIMENSIONS,
                 SlabAllocatorParameters {
                     region_size: TEXTURE_REGION_DIMENSIONS,
-                    slab_sizes: SlabSizes::Default,
                 },
                 TextureParameters {
                     formats: TextureFormatPair::from(ImageFormat::R16),
@@ -279,7 +276,6 @@ impl SharedTextures {
                 2048,
                 SlabAllocatorParameters {
                     region_size: TEXTURE_REGION_DIMENSIONS,
-                    slab_sizes: SlabSizes::Default,
                 },
                 TextureParameters {
                     formats: color_formats.clone(),
@@ -306,7 +302,6 @@ impl SharedTextures {
                 TEXTURE_REGION_DIMENSIONS,
                 SlabAllocatorParameters {
                     region_size: TEXTURE_REGION_DIMENSIONS,
-                    slab_sizes: SlabSizes::Default,
                 },
                 TextureParameters {
                     formats: color_formats,
@@ -331,7 +326,7 @@ impl SharedTextures {
 
     /// Returns a mutable borrow for the shared texture array matching the parameters.
     fn select(
-        &mut self, size: DeviceIntSize, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
+        &mut self, external_format: ImageFormat, filter: TextureFilter, shader: TargetShader,
     ) -> &mut dyn AtlasAllocatorList<TextureParameters> {
         match external_format {
             ImageFormat::R8 => {
@@ -344,11 +339,8 @@ impl SharedTextures {
             }
             ImageFormat::RGBA8 |
             ImageFormat::BGRA8 => {
-                let max = size.width.max(size.height);
                 match (filter, shader) {
-                    (TextureFilter::Linear, TargetShader::Text) if max <= GLYPH_TEXTURE_REGION_DIMENSIONS => {
-                        &mut self.color8_glyphs
-                    }
+                    (TextureFilter::Linear, TargetShader::Text) => &mut self.color8_glyphs,
                     (TextureFilter::Linear, _) => &mut self.color8_linear,
                     (TextureFilter::Nearest, _) => &mut self.color8_nearest,
                     _ => panic!("Unexpexcted filter {:?}", filter),
@@ -1021,7 +1013,6 @@ impl TextureCache {
             }
             EntryDetails::Cache { origin, alloc_id, .. } => {
                 let allocator_list = self.shared_textures.select(
-                    entry.size,
                     entry.input_format,
                     entry.filter,
                     entry.shader,
@@ -1058,7 +1049,6 @@ impl TextureCache {
         params: &CacheAllocParams,
     ) -> CacheEntry {
         let allocator_list = self.shared_textures.select(
-            params.descriptor.size,
             params.descriptor.format,
             params.filter,
             params.shader,

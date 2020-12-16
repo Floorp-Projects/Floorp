@@ -27,23 +27,23 @@ fn unpack_alloc_id(id: AllocId) -> (usize, TextureLocation) {
     )
 }
 
-#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum SlabSizes {
-    Default,
-    Glyphs,
+#[derive(Copy, Clone, PartialEq)]
+struct SlabSize {
+    width: i32,
+    height: i32,
 }
 
-impl SlabSizes {
-    fn get(&self, requested_size: DeviceIntSize) -> SlabSize {
-        match *self {
-            SlabSizes::Default => Self::default_slab_size(requested_size),
-            SlabSizes::Glyphs => Self::glyphs_slab_size(requested_size),
+impl SlabSize {
+    fn invalid() -> SlabSize {
+        SlabSize {
+            width: 0,
+            height: 0,
         }
     }
 
-    fn default_slab_size(size: DeviceIntSize) -> SlabSize {
+    fn get(size: DeviceIntSize) -> SlabSize {
         fn quantize_dimension(size: i32) -> i32 {
             match size {
                 0 => unreachable!(),
@@ -80,58 +80,6 @@ impl SlabSizes {
         SlabSize {
             width,
             height,
-        }
-    }
-
-    fn glyphs_slab_size(size: DeviceIntSize) -> SlabSize {
-        fn quantize_dimension(size: i32) -> i32 {
-            match size {
-                0 => unreachable!(),
-                1..=8 => 8,
-                9..=16 => 16,
-                17..=32 => 32,
-                33..=64 => 64,
-                65..=128 => 128,
-                _ => panic!("Invalid dimensions for cache!"),
-            }
-        }
-
-
-        let x_size = quantize_dimension(size.width);
-        let y_size = quantize_dimension(size.height);
-
-        let (width, height) = match (x_size, y_size) {
-            // Special cased rectangular slab pages.
-            (8, 16) => (8, 16),
-            (16, 32) => (16, 32),
-
-            // If none of those fit, use a square slab size.
-            (x_size, y_size) => {
-                let square_size = cmp::max(x_size, y_size);
-                (square_size, square_size)
-            }
-        };
-
-        SlabSize {
-            width,
-            height,
-        }
-    }
-}
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Copy, Clone, PartialEq)]
-struct SlabSize {
-    width: i32,
-    height: i32,
-}
-
-impl SlabSize {
-    fn invalid() -> SlabSize {
-        SlabSize {
-            width: 0,
-            height: 0,
         }
     }
 }
@@ -233,7 +181,6 @@ impl TextureRegion {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SlabAllocatorParameters {
     pub region_size: i32,
-    pub slab_sizes: SlabSizes,
 }
 
 /// A 2D texture divided into regions.
@@ -244,7 +191,6 @@ pub struct SlabAllocator {
     size: i32,
     region_size: i32,
     empty_regions: usize,
-    slab_sizes: SlabSizes,
     allocated_space: i32,
 }
 
@@ -269,7 +215,6 @@ impl SlabAllocator {
             size,
             region_size: options.region_size,
             empty_regions: num_regions,
-            slab_sizes: options.slab_sizes,
             allocated_space: 0,
         }
     }
@@ -284,7 +229,7 @@ impl SlabAllocator {
 
     // Returns the region index and allocated rect.
     pub fn allocate(&mut self, size: DeviceIntSize) -> Option<(AllocId, DeviceIntRect)> {
-        let slab_size = self.slab_sizes.get(size);
+        let slab_size = SlabSize::get(size);
 
         // Keep track of the location of an empty region,
         // in case we need to select a new empty region
