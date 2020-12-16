@@ -6,6 +6,7 @@
 ../tools/wpt_third_party/h2
 ../tools/wpt_third_party/hyperframe
 ../tools/wpt_third_party/hpack
+../tools/wpt_third_party/pywebsocket3
 
 ../marionette/client
 ../marionette/harness
