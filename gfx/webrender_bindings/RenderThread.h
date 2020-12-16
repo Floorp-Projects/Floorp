@@ -170,11 +170,8 @@ class RenderThread final {
 
   /// Automatically forwarded to the render thread. Will trigger a render for
   /// the current pending frame once one call per document in that pending
-  // frame has been received.
+  /// frame has been received.
   void HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender);
-
-  /// Automatically forwarded to the render thread.
-  void WakeUp(wr::WindowId aWindowId);
 
   /// Automatically forwarded to the render thread.
   void SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor);

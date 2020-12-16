@@ -356,32 +356,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
                                           frame.mStartTime);
 }
 
-void RenderThread::WakeUp(wr::WindowId aWindowId) {
-  if (mHasShutdown) {
-    return;
-  }
-
-  if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<wr::WindowId>(
-        "wr::RenderThread::WakeUp", this, &RenderThread::WakeUp, aWindowId));
-    return;
-  }
-
-  if (IsDestroyed(aWindowId)) {
-    return;
-  }
-
-  if (mHandlingDeviceReset) {
-    return;
-  }
-
-  auto it = mRenderers.find(aWindowId);
-  MOZ_ASSERT(it != mRenderers.end());
-  if (it != mRenderers.end()) {
-    it->second->Update();
-  }
-}
-
 void RenderThread::SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor) {
   if (mHasShutdown) {
     return;
@@ -530,11 +504,11 @@ void RenderThread::UpdateAndRender(
     // and for avoiding GPU queue is filled with too much tasks.
     // WaitForGPU's implementation is different for each platform.
     renderer->WaitForGPU();
-  }
-
-  if (!aRender) {
+  } else {
     // Update frame id for NotifyPipelinesUpdated() when rendering does not
-    // happen.
+    // happen, either because rendering was not requested or the frame was
+    // canceled. Rendering can sometimes be canceled if UpdateAndRender is
+    // called when the window is not yet ready (not mapped or 0 size).
     latestFrameId = renderer->UpdateFrameId();
   }
 
@@ -1170,8 +1144,13 @@ static already_AddRefed<gl::GLContext> CreateGLContext(nsACString& aError) {
 
 extern "C" {
 
-void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId) {
-  mozilla::wr::RenderThread::Get()->WakeUp(aWindowId);
+void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId,
+                         bool aCompositeNeeded) {
+  mozilla::wr::RenderThread::Get()->IncPendingFrameCount(aWindowId, VsyncId(),
+                                                         TimeStamp::Now());
+  mozilla::wr::RenderThread::Get()->DecPendingFrameBuildCount(aWindowId);
+  mozilla::wr::RenderThread::Get()->HandleFrameOneDoc(aWindowId,
+                                                      aCompositeNeeded);
 }
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId) {
