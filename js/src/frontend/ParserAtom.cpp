@@ -823,28 +823,32 @@ XDRResult XDRParserAtomEntry(XDRState<mode>* xdr, ParserAtomEntry** entryp) {
 #endif
 
   constexpr size_t HeaderSize = sizeof(ParserAtomEntry);
-
-  const ParserAtomEntry* headerSource;
-  if (mode == XDR_ENCODE) {
-    headerSource = *entryp;
-  } else {
-    const uint8_t* cursor = nullptr;
-    MOZ_TRY(xdr->peekData(&cursor, sizeof(ParserAtomEntry)));
-    headerSource = reinterpret_cast<const ParserAtomEntry*>(cursor);
-  }
-
-  bool latin1 = headerSource->hasLatin1Chars();
-  size_t length = headerSource->length();
-  size_t totalLength =
-      HeaderSize +
-      (latin1 ? sizeof(JS::Latin1Char) : sizeof(char16_t)) * length;
+  auto ComputeTotalLength = [](bool hasLatin1Chars, size_t length) {
+    const size_t CharSize =
+        hasLatin1Chars ? sizeof(JS::Latin1Char) : sizeof(char16_t);
+    return HeaderSize + (CharSize * length);
+  };
 
   if (mode == XDR_ENCODE) {
+    size_t totalLength =
+        ComputeTotalLength((*entryp)->hasLatin1Chars(), (*entryp)->length());
     MOZ_TRY(xdr->codeBytes(*entryp, totalLength));
   } else {
+    // Peek the header bytes without consuming buffer yet. Once we compute the
+    // total length, we will read the entire atom at once.
+    ParserAtomEntry header;
+    const uint8_t* cursor = nullptr;
+    MOZ_TRY(xdr->peekData(&cursor, HeaderSize));
+    memcpy(&header, cursor, HeaderSize);
+
+    // Get the entire atom at once. The `raw` pointer is into the XDR buffer and
+    // has no particular alignment.
     const uint8_t* raw = nullptr;
+    size_t totalLength =
+        ComputeTotalLength(header.hasLatin1Chars(), header.length());
     MOZ_TRY(xdr->readData(&raw, totalLength));
 
+    // Copy into the LifoAlloc and properly align the data.
     (*entryp) = ParserAtomEntry::allocateRaw(xdr->cx(), xdr->stencilAlloc(),
                                              raw, totalLength);
     if (!*entryp) {
