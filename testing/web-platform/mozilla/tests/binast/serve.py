@@ -2,24 +2,28 @@
 
 import re
 import os.path
-import urlparse
 
-JavaScriptMimeType = "application/javascript"
-BinASTMimeType = "application/javascript-binast"
+try:
+    from urllib import parse
+except ImportError:
+    import urlparse as parse
+
+JavaScriptMimeType = b"application/javascript"
+BinASTMimeType = b"application/javascript-binast"
 
 SourceTextExtension = ".js"
 BinASTExtension = ".binjs"
 
 
 def clientAcceptsBinAST(request):
-    if "accept" not in request.headers:
+    if b"accept" not in request.headers:
         return False
 
-    encodings = [s.strip().lower() for s in request.headers["accept"].split(",")]
+    encodings = [s.strip().lower() for s in request.headers[b"accept"].split(b",")]
     return BinASTMimeType in encodings
 
 
-def get_mine_type_and_extension(request, params):
+def get_mime_type_and_extension(request, params):
     accept_binast = clientAcceptsBinAST(request)
 
     if "expect_accept" in params:
@@ -43,13 +47,13 @@ def get_mine_type_and_extension(request, params):
 
 
 def main(request, response):
-    params = urlparse.parse_qs(request.url_parts[3])
+    params = parse.parse_qs(request.url_parts[3])
     name = params["name"][0]
     if not re.match(r"\w+$", name):
         raise Exception("Bad name parameter: " + name)
 
-    mimeType, extension = get_mine_type_and_extension(request, params)
+    mimeType, extension = get_mime_type_and_extension(request, params)
 
     scriptDir = os.path.dirname(__file__)
     contentPath = os.path.join(scriptDir, name + extension)
-    return [("Content-Type", mimeType)], open(contentPath, "rb")
+    return [(b"Content-Type", mimeType)], open(contentPath, "rb")
