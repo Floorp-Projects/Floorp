@@ -776,8 +776,8 @@ static void RecordStackFrame(uint32_t /*aFrameNumber*/, void* aPC,
 }
 }
 
-void nsTraceRefcnt::WalkTheStack(FILE* aStream) {
-  MozStackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0, aStream);
+void nsTraceRefcnt::WalkTheStack(FILE* aStream, uint32_t aMaxFrames) {
+  MozStackWalk(PrintStackFrame, /* skipFrames */ 2, aMaxFrames, aStream);
 }
 
 #ifdef ANDROID
