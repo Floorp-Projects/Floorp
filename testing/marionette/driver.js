@@ -51,16 +51,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   reftest: "chrome://marionette/content/reftest.js",
   registerCommandsActor:
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
-  registerEventsActor:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   Sandboxes: "chrome://marionette/content/evaluate.js",
   TimedPromise: "chrome://marionette/content/sync.js",
   Timeouts: "chrome://marionette/content/capabilities.js",
   UnhandledPromptBehavior: "chrome://marionette/content/capabilities.js",
   unregisterCommandsActor:
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
-  unregisterEventsActor:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   waitForEvent: "chrome://marionette/content/sync.js",
   waitForLoadEvent: "chrome://marionette/content/sync.js",
   waitForObserverTopic: "chrome://marionette/content/sync.js",
@@ -146,12 +142,10 @@ this.GeckoDriver = function(server) {
   this.capabilities = new Capabilities();
 
   this.mm = globalMessageManager;
-  if (!MarionettePrefs.useActors) {
-    this.listener = proxy.toListener(
-      this.sendAsync.bind(this),
-      () => this.curBrowser
-    );
-  }
+  this.listener = proxy.toListener(
+    this.sendAsync.bind(this),
+    () => this.curBrowser
+  );
 
   // used for modal dialogs or tab modal alerts
   this.dialog = null;
@@ -283,7 +277,7 @@ GeckoDriver.prototype.QueryInterface = ChromeUtils.generateQI([
 
 GeckoDriver.prototype.init = function() {
   if (MarionettePrefs.useActors) {
-    // When using JSWindowActors, we are not relying on framescript events
+    // When using JSWindowActors, we should not rely on framescript events
     return;
   }
 
@@ -553,11 +547,6 @@ GeckoDriver.prototype.startBrowser = function(window, isNewSession = false) {
  *     True if this is the first time we're talking to this browser.
  */
 GeckoDriver.prototype.whenBrowserStarted = function(window, isNewSession) {
-  // Do not load the framescript when actors are used.
-  if (MarionettePrefs.useActors) {
-    return;
-  }
-
   let mm = window.messageManager;
   if (mm) {
     if (!isNewSession) {
@@ -813,6 +802,12 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     logger.info("Preemptively starting accessibility service in Chrome");
   }
 
+  let registerBrowsers, browserListening;
+  if (!MarionettePrefs.useActors) {
+    registerBrowsers = this.registerPromise();
+    browserListening = this.listeningPromise();
+  }
+
   let waitForWindow = function() {
     let windowTypes;
     switch (this.appId) {
@@ -864,17 +859,6 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     }
   };
 
-  let registerBrowsers;
-  let browserListening;
-
-  if (MarionettePrefs.useActors) {
-    registerCommandsActor();
-    registerEventsActor();
-  } else {
-    registerBrowsers = this.registerPromise();
-    browserListening = this.listeningPromise();
-  }
-
   if (!MarionettePrefs.contentListener) {
     waitForWindow.call(this);
   } else if (this.appId != APP_ID_FIREFOX && this.curBrowser === null) {
@@ -900,6 +884,10 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   } else {
     await registerBrowsers;
     await browserListening;
+  }
+
+  if (MarionettePrefs.useActors) {
+    registerCommandsActor();
   }
 
   if (this.mainFrame) {
@@ -3076,13 +3064,7 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
 
 /** Delete Marionette session. */
 GeckoDriver.prototype.deleteSession = function() {
-  if (MarionettePrefs.useActors) {
-    clearActionInputState();
-    clearElementIdCache();
-
-    unregisterCommandsActor();
-    unregisterEventsActor();
-  } else if (this.curBrowser !== null) {
+  if (this.curBrowser !== null) {
     // frame scripts can be safely reused
     MarionettePrefs.contentListener = false;
 
@@ -3098,6 +3080,13 @@ GeckoDriver.prototype.deleteSession = function() {
         );
       }
     }
+  }
+
+  if (MarionettePrefs.useActors) {
+    clearElementIdCache();
+    clearActionInputState();
+
+    unregisterCommandsActor();
   }
 
   // reset to the top-most frame, and clear browsing context references
@@ -3716,6 +3705,10 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       return { frameId: message.json.frameId };
 
     case "Marionette:ListenersAttached":
+      if (MarionettePrefs.useActors) {
+        return;
+      }
+
       if (message.json.frameId === this.curBrowser.curFrameId) {
         const browsingContext = BrowsingContext.get(message.json.frameId);
 
