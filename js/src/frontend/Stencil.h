@@ -95,13 +95,16 @@ class RegExpStencil {
   friend class StencilXDR;
 
   TaggedParserAtomIndex atom_;
-  JS::RegExpFlags flags_;
+  // Use uint32_t to make this struct fully-packed.
+  uint32_t flags_;
 
  public:
   RegExpStencil() = default;
 
   RegExpStencil(TaggedParserAtomIndex atom, JS::RegExpFlags flags)
-      : atom_(atom), flags_(flags) {}
+      : atom_(atom), flags_(flags.value()) {}
+
+  JS::RegExpFlags flags() const { return JS::RegExpFlags(flags_); }
 
   RegExpObject* createRegExp(JSContext* cx,
                              CompilationAtomCache& atomCache) const;
