@@ -80,7 +80,7 @@ class FormAutofillSection {
       // not themed
       [FIELD_STATES.NORMAL]: null,
       // highlighted
-      [FIELD_STATES.AUTO_FILLED]: "-moz-autofill",
+      [FIELD_STATES.AUTO_FILLED]: "autofill",
       // highlighted && grey color text
       [FIELD_STATES.PREVIEW]: "-moz-autofill-preview",
     };
