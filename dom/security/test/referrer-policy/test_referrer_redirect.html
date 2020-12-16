@@ -66,7 +66,7 @@
           RP_HEADER: "origin",
           NAME: "no-referrer-with-no-meta-origin-RP-header",
           DESC: "no-referrer (img/iframe) with no meta, origin Referrer-Policy redirect header",
-          RESULT: "origin"
+          RESULT: "none"
         },
         {
           ATTRIBUTE_POLICY: "origin",
@@ -101,14 +101,14 @@
           RP_HEADER: "origin",
           NAME: "no-referrer-in-meta-origin-RP-header",
           DESC: "no-referrer in meta, origin Referrer-Policy redirect header",
-          RESULT: "origin"
+          RESULT: "none"
         },
         {
           META_POLICY: "origin-when-cross-origin",
           RP_HEADER: "unsafe-url",
           NAME: "origin-when-cross-origin-in-meta-unsafe-url-RP-header",
           DESC: "origin-when-cross-origin in meta, unsafe-url Referrer-Policy redirect header",
-          RESULT: "full"
+          RESULT: "origin"
         }
       ]
     }
