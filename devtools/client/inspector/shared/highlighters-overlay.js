@@ -201,6 +201,10 @@ class HighlightersOverlay {
       this.showHighlighterTypeForNode.bind(this),
       () => this.destroyed
     );
+    this.showGridHighlighter = safeAsyncMethod(
+      this.showGridHighlighter.bind(this),
+      () => this.destroyed
+    );
     this.restoreState = safeAsyncMethod(
       this.restoreState.bind(this),
       () => this.destroyed

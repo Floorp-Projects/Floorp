@@ -84,9 +84,6 @@ class GridInspector {
     this.onNavigate = this.onNavigate.bind(this);
     this.onReflow = throttle(this.onReflow, 500, this);
     this.onSetGridOverlayColor = this.onSetGridOverlayColor.bind(this);
-    this.onShowGridOutlineHighlight = this.onShowGridOutlineHighlight.bind(
-      this
-    );
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onToggleGridHighlighter = this.onToggleGridHighlighter.bind(this);
     this.onToggleShowGridAreas = this.onToggleShowGridAreas.bind(this);
@@ -197,7 +194,6 @@ class GridInspector {
   getComponentProps() {
     return {
       onSetGridOverlayColor: this.onSetGridOverlayColor,
-      onShowGridOutlineHighlight: this.onShowGridOutlineHighlight,
       onToggleGridHighlighter: this.onToggleGridHighlighter,
       onToggleShowGridAreas: this.onToggleShowGridAreas,
       onToggleShowGridLineNumbers: this.onToggleShowGridLineNumbers,
@@ -635,30 +631,6 @@ class GridInspector {
         }
       }
     }
-  }
-
-  /**
-   * Highlights the grid area and cell in the CSS Grid Highlighter for the given grid
-   * container element and selected grid area and cell options.
-   *
-   * @param  {NodeFront} node
-   *         The NodeFront of the grid container element for which the grid highlighter
-   *         is highlighted for.
-   * @param  {Object} options
-   *         The options object has the following properties which corresponds to the
-   *         required parameters for showing the grid cell or area highlights.
-   *         See css-grid.js.
-   *         {
-   *           showGridCell: {
-   *             gridFragmentIndex: Number,
-   *             rowNumber: Number,
-   *             columnNumber: Number,
-   *           },
-   *           showGridArea: String,
-   *         }
-   */
-  onShowGridOutlineHighlight(node, options) {
-    this.highlighters.showGridHighlighter(node, options);
   }
 
   /**

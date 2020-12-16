@@ -32,7 +32,9 @@ add_task(async function() {
 
   const { inspector, gridInspector } = await openLayoutView();
   const { document: doc } = gridInspector;
-  const { highlighters, store } = inspector;
+  const { store } = inspector;
+  const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   // Don't track reflows since this might cause intermittent failures.
   inspector.off("reflow-in-selected-target", gridInspector.onReflow);
@@ -41,7 +43,7 @@ add_task(async function() {
   const checkbox = gridList.children[0].querySelector("input");
 
   info("Toggling ON the CSS grid highlighter from the layout panel.");
-  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   const onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group rect", 2);
   const onCheckboxChange = waitUntilState(
     store,
@@ -55,28 +57,24 @@ add_task(async function() {
   const gridCellA = elements[0];
 
   info("Hovering over grid cell A in the grid outline.");
-  const onCellAHighlight = highlighters.once(
-    "grid-highlighter-shown",
-    (nodeFront, options) => {
-      info(
-        "Checking the grid highlighter options for the show grid area" +
-          "and cell parameters."
-      );
-      const { showGridCell, showGridArea } = options;
-      const { gridFragmentIndex, rowNumber, columnNumber } = showGridCell;
+  const onCellAHighlight = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
 
-      is(gridFragmentIndex, "0", "Should be the first grid fragment index.");
-      is(rowNumber, "1", "Should be the first grid row.");
-      is(columnNumber, "1", "Should be the first grid column.");
-      is(showGridArea, "header", "Grid area name should be 'header'.");
-    }
-  );
-  EventUtils.synthesizeMouse(
+  EventUtils.synthesizeMouseAtCenter(
     gridCellA,
-    1,
-    1,
     { type: "mouseover" },
     doc.defaultView
   );
-  await onCellAHighlight;
+
+  const { options } = await onCellAHighlight;
+
+  info(
+    "Checking the grid highlighter options for the show grid area and cell parameters."
+  );
+  const { showGridCell, showGridArea } = options;
+  const { gridFragmentIndex, rowNumber, columnNumber } = showGridCell;
+
+  is(gridFragmentIndex, "0", "Should be the first grid fragment index.");
+  is(rowNumber, "1", "Should be the first grid row.");
+  is(columnNumber, "1", "Should be the first grid column.");
+  is(showGridArea, "header", "Grid area name should be 'header'.");
 });
