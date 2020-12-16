@@ -842,6 +842,23 @@ auto ReduceEach(InputGenerator aInputGenerator, T aInit,
   return std::move(res);
 }
 
+// This is like std::reduce with a to-be-defined execution policy (we don't want
+// to std::terminate on an error, but probably it's fine to just propagate any
+// error that occurred).
+template <typename Range, typename T, typename BinaryOp>
+auto Reduce(Range&& aRange, T aInit, const BinaryOp& aBinaryOp) {
+  using std::begin;
+  using std::end;
+  return ReduceEach(
+      [it = begin(aRange), end = end(aRange)]() mutable {
+        auto res = ToMaybeRef(it != end ? &*it++ : nullptr);
+        return Result<decltype(res), typename std::invoke_result_t<
+                                         BinaryOp, T, decltype(res)>::err_type>(
+            res);
+      },
+      aInit, aBinaryOp);
+}
+
 template <typename Range, typename Body>
 auto CollectEachInRange(const Range& aRange, const Body& aBody)
     -> Result<mozilla::Ok, nsresult> {
