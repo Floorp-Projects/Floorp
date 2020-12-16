@@ -2216,6 +2216,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     sandboxFlags = iframe->GetSandboxFlags();
   }
   ApplySandboxFlags(sandboxFlags);
+  MOZ_ALWAYS_SUCCEEDS(mPendingBrowsingContext->SetInitialSandboxFlags(
+      mPendingBrowsingContext->GetSandboxFlags()));
 
   if (OwnerIsMozBrowserFrame()) {
     // For inproc frames, set the docshell properties.
