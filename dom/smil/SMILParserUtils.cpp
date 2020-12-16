@@ -435,9 +435,9 @@ bool SMILParserUtils::ParseKeySplines(
   nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
       controlPointTokenizer(aSpec, ';');
   while (controlPointTokenizer.hasMoreTokens()) {
-    nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-        tokenizer(controlPointTokenizer.nextToken(), ',',
-                  nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+    nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
+                                     nsTokenizerFlags::SeparatorOptional>
+        tokenizer(controlPointTokenizer.nextToken(), ',');
 
     double values[4];
     for (auto& value : values) {
