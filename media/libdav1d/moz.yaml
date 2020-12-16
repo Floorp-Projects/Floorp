@@ -35,7 +35,7 @@ origin:
   license-file: COPYING
 
 updatebot:
-    enabled: False
+    enabled: True
     maintainer-phab: tjr
     maintainer-bz: tom@mozilla.com
 
