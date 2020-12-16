@@ -4,16 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from taskgraph.target_tasks import _target_task, filter_for_tasks_for
-
-
-@_target_task('default')
-def target_tasks_default(full_task_graph, parameters, graph_config):
-    """Target the tasks which have indicated they should be run on this project
-    via the `run_on_projects` attributes."""
-
-    filter = filter_for_tasks_for
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter_for_tasks_for(t, parameters)]
+from taskgraph.target_tasks import _target_task
 
 
 @_target_task('release')
