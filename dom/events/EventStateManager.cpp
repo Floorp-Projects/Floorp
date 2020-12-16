@@ -4501,12 +4501,15 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   // content associated with our subdocument.
   EnsureDocument(mPresContext);
   if (Document* parentDoc = mDocument->GetInProcessParentDocument()) {
-    if (nsCOMPtr<nsIContent> docContent =
-            parentDoc->FindContentForSubDocument(mDocument)) {
-      if (PresShell* parentPresShell = parentDoc->GetPresShell()) {
-        RefPtr<EventStateManager> parentESM =
-            parentPresShell->GetPresContext()->EventStateManager();
-        parentESM->NotifyMouseOver(aMouseEvent, docContent);
+    if (RefPtr<BrowsingContext> bc = mDocument->GetBrowsingContext()) {
+      if (!bc->IsCached()) {
+        if (nsCOMPtr<nsIContent> docContent = bc->GetEmbedderElement()) {
+          if (PresShell* parentPresShell = parentDoc->GetPresShell()) {
+            RefPtr<EventStateManager> parentESM =
+                parentPresShell->GetPresContext()->EventStateManager();
+            parentESM->NotifyMouseOver(aMouseEvent, docContent);
+          }
+        }
       }
     }
   }
