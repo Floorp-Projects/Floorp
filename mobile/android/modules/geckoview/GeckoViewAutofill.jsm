@@ -220,7 +220,7 @@ class GeckoViewAutofill {
         // `responses` is an object with IDs as keys.
         debug`Performing auto-fill ${Object.keys(responses)}`;
 
-        const AUTOFILL_STATE = "-moz-autofill";
+        const AUTOFILL_STATE = "autofill";
         const winUtils = window.windowUtils;
 
         for (const id in responses) {
