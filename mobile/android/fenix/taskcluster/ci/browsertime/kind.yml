@@ -84,6 +84,7 @@ job-defaults:
             - '--app=fenix'
             - '--browsertime'
             - '--cold'
+            - '--no-conditioned-profile'
             - '--binary=org.mozilla.fenix'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
