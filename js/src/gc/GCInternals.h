@@ -292,11 +292,11 @@ inline bool IsOOMReason(JS::GCReason reason) {
          reason == JS::GCReason::MEM_PRESSURE;
 }
 
+// TODO: Bug 1650075. Adding XPCONNECT_SHUTDOWN seems to cause crash.
 inline bool IsShutdownReason(JS::GCReason reason) {
   return reason == JS::GCReason::WORKER_SHUTDOWN ||
          reason == JS::GCReason::SHUTDOWN_CC ||
-         reason == JS::GCReason::DESTROY_RUNTIME ||
-         reason == JS::GCReason::XPCONNECT_SHUTDOWN;
+         reason == JS::GCReason::DESTROY_RUNTIME;
 }
 
 TenuredCell* AllocateCellInGC(JS::Zone* zone, AllocKind thingKind);
