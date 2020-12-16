@@ -539,6 +539,7 @@ class HomeFragment : Fragment() {
 
         _sessionControlInteractor = null
         sessionControlView = null
+        appBarLayout = null
         bundleArgs.clear()
         requireActivity().window.clearFlags(FLAG_SECURE)
     }
