@@ -637,8 +637,6 @@ class nsIFrame : public nsQueryFrame {
   using ReflowInput = mozilla::ReflowInput;
   using ReflowOutput = mozilla::ReflowOutput;
   using Visibility = mozilla::Visibility;
-  using StyleFlexBasis = mozilla::StyleFlexBasis;
-  using StyleSize = mozilla::StyleSize;
   using LengthPercentage = mozilla::LengthPercentage;
   using StyleExtremumLength = mozilla::StyleExtremumLength;
 

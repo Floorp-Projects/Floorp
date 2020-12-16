@@ -58,9 +58,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   using StyleGeometryBox = mozilla::StyleGeometryBox;
   using Element = mozilla::dom::Element;
   using Document = mozilla::dom::Document;
-  using StyleFlexBasis = mozilla::StyleFlexBasis;
-  using StyleSize = mozilla::StyleSize;
-  using StyleMaxSize = mozilla::StyleMaxSize;
   using LengthPercentage = mozilla::LengthPercentage;
   using LengthPercentageOrAuto = mozilla::LengthPercentageOrAuto;
   using StyleExtremumLength = mozilla::StyleExtremumLength;
@@ -295,7 +292,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
                                   const LengthPercentage&,
                                   bool aClampNegativeCalc);
 
-  void SetValueToMaxSize(nsROCSSPrimitiveValue* aValue, const StyleMaxSize&);
+  void SetValueToMaxSize(nsROCSSPrimitiveValue* aValue,
+                         const mozilla::StyleMaxSize&);
 
   void SetValueToExtremumLength(nsROCSSPrimitiveValue* aValue,
                                 StyleExtremumLength);
