@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use euclid::{point2, size2, default::Box2D};
-use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use std::cmp;
+#![deny(unconditional_recursion)]
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct AllocId(u32);
+use crate::atlas_allocator::{AtlasAllocator, AllocId};
+use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use euclid::{point2, size2, default::Box2D};
+use std::cmp;
 
 fn pack_alloc_id(region_index: usize, location: TextureLocation) -> AllocId {
     AllocId(
@@ -231,6 +229,13 @@ impl TextureRegion {
     }
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct SlabAllocatorParameters {
+    pub region_size: i32,
+    pub slab_sizes: SlabSizes,
+}
+
 /// A 2D texture divided into regions.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -240,19 +245,20 @@ pub struct SlabAllocator {
     region_size: i32,
     empty_regions: usize,
     slab_sizes: SlabSizes,
+    allocated_space: i32,
 }
 
 impl SlabAllocator {
-    pub fn new(size: i32, region_size: i32, slab_sizes: SlabSizes) -> Self {
-        let regions_per_row = size / region_size;
+    pub fn new(size: i32, options: &SlabAllocatorParameters) -> Self {
+        let regions_per_row = size / options.region_size;
         let num_regions = (regions_per_row * regions_per_row) as usize;
 
         let mut regions = Vec::with_capacity(num_regions);
 
         for index in 0..num_regions {
             let offset = point2(
-                (index as i32 % regions_per_row) * region_size,
-                (index as i32 / regions_per_row) * region_size,
+                (index as i32 % regions_per_row) * options.region_size,
+                (index as i32 / regions_per_row) * options.region_size,
             );
 
             regions.push(TextureRegion::new(index, offset));
@@ -260,15 +266,20 @@ impl SlabAllocator {
 
         SlabAllocator {
             regions,
-            region_size,
             size,
+            region_size: options.region_size,
             empty_regions: num_regions,
-            slab_sizes,
+            slab_sizes: options.slab_sizes,
+            allocated_space: 0,
         }
     }
 
     pub fn is_empty(&self) -> bool {
         self.empty_regions == self.regions.len()
+    }
+
+    pub fn allocated_space(&self) -> i32 {
+        self.allocated_space
     }
 
     // Returns the region index and allocated rect.
@@ -317,22 +328,16 @@ impl SlabAllocator {
         None
     }
 
-    pub fn deallocate(&mut self, id: AllocId) -> DeviceIntSize {
+    pub fn deallocate(&mut self, id: AllocId) {
         let (region_index, location) = unpack_alloc_id(id);
 
         let region = &mut self.regions[region_index];
-        let size = size2(region.slab_size.width, region.slab_size.height);
-
         region.free(location, &mut self.empty_regions);
 
-        size
+        self.allocated_space -= region.slab_size.width * region.slab_size.height;
     }
 
-    pub fn num_regions(&self) -> usize {
-        self.regions.len()
-    }
-
-    pub fn dump_as_svg(&self, rect: &Box2D<f32>, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+    pub fn dump_into_svg(&self, rect: &Box2D<f32>, output: &mut dyn std::io::Write) -> std::io::Result<()> {
         use svg_fmt::*;
 
         let region_spacing = 5.0;
@@ -374,5 +379,33 @@ impl SlabAllocator {
         }
 
         Ok(())
+    }
+}
+
+impl AtlasAllocator for SlabAllocator {
+    type Parameters = SlabAllocatorParameters;
+
+    fn new(size: i32, options: &Self::Parameters) -> Self {
+        SlabAllocator::new(size, options)
+    }
+
+    fn allocate(&mut self, size: DeviceIntSize) -> Option<(AllocId, DeviceIntRect)> {
+        self.allocate(size)
+    }
+
+    fn deallocate(&mut self, id: AllocId) {
+        self.deallocate(id);
+    }
+
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn allocated_space(&self) -> i32 {
+        self.allocated_space()
+    }
+
+    fn dump_into_svg(&self, rect: &Box2D<f32>, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+        self.dump_into_svg(rect, output)
     }
 }

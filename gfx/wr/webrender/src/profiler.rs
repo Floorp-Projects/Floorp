@@ -68,6 +68,8 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     (&"Frame times", &"Frame CPU total,Frame building,Visibility,Prepare,Batching,Glyph resolve,Texture cache update,Renderer,GPU"),
     // Stats about the content of the frame.
     (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
+    // Texture cache allocation stats.
+    (&"Texture cache stats", &"Texture cache RGBA8 linear pixels, Texture cache RGBA8 linear textures, Texture cache glyphs pixels, Texture cache glyphs textures, Texture cache A8 pixels, Texture cache A8 textures, Texture cache A16 pixels, Texture cache A16 textures, Texture cache RGBA8 nearest pixels, Texture cache RGBA8 nearest textures, Texture cache shared mem, Texture cache standalone mem"),
 
     // Graphs:
 
@@ -150,14 +152,14 @@ pub const GPU_CACHE_BLOCKS_TOTAL: usize = 38;
 pub const GPU_CACHE_BLOCKS_UPDATED: usize = 39;
 pub const GPU_CACHE_BLOCKS_SAVED: usize = 40;
 
-pub const TEXTURE_CACHE_A8_REGIONS: usize = 41;
-pub const TEXTURE_CACHE_A8_MEM: usize = 42;
-pub const TEXTURE_CACHE_A16_REGIONS: usize = 43;
-pub const TEXTURE_CACHE_A16_MEM: usize = 44;
-pub const TEXTURE_CACHE_RGBA8_LINEAR_REGIONS: usize = 45;
-pub const TEXTURE_CACHE_RGBA8_LINEAR_MEM: usize = 46;
-pub const TEXTURE_CACHE_RGBA8_NEAREST_REGIONS: usize = 47;
-pub const TEXTURE_CACHE_RGBA8_NEAREST_MEM: usize = 48;
+pub const TEXTURE_CACHE_A8_PIXELS: usize = 41;
+pub const TEXTURE_CACHE_A8_TEXTURES: usize = 42;
+pub const TEXTURE_CACHE_A16_PIXELS: usize = 43;
+pub const TEXTURE_CACHE_A16_TEXTURES: usize = 44;
+pub const TEXTURE_CACHE_RGBA8_LINEAR_PIXELS: usize = 45;
+pub const TEXTURE_CACHE_RGBA8_LINEAR_TEXTURES: usize = 46;
+pub const TEXTURE_CACHE_RGBA8_NEAREST_PIXELS: usize = 47;
+pub const TEXTURE_CACHE_RGBA8_NEAREST_TEXTURES: usize = 48;
 pub const TEXTURE_CACHE_SHARED_MEM: usize = 49;
 pub const TEXTURE_CACHE_STANDALONE_MEM: usize = 50;
 
@@ -189,8 +191,8 @@ pub const INTERNED_PICTURES: usize = 71;
 pub const INTERNED_FILTER_DATA: usize = 72;
 pub const INTERNED_BACKDROPS: usize = 73;
 
-pub const TEXTURE_CACHE_RGBA8_GLYPHS_REGIONS: usize = 74;
-pub const TEXTURE_CACHE_RGBA8_GLYPHS_MEM: usize = 75;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS: usize = 74;
+pub const TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES: usize = 75;
 
 pub const NUM_PROFILER_EVENTS: usize = 76;
 
@@ -276,14 +278,14 @@ impl Profiler {
             int("GPU blocks updated", "", GPU_CACHE_BLOCKS_UPDATED, expected(0..1000)),
             int("GPU blocks saved", "", GPU_CACHE_BLOCKS_SAVED, expected(0..50_000)),
 
-            int("Texture cache A8 regions", "", TEXTURE_CACHE_A8_REGIONS, expected(0..100)),
-            float("Texture cache A8 mem", "MB", TEXTURE_CACHE_A8_MEM, expected(0.0..100.0)),
-            int("Texture cache A16 regions", "", TEXTURE_CACHE_A16_REGIONS, expected(0..100)),
-            float("Texture cache A16 mem", "MB", TEXTURE_CACHE_A16_MEM, expected(0.0..100.0)),
-            int("Texture cache RGBA8 linear regions", "", TEXTURE_CACHE_RGBA8_LINEAR_REGIONS, expected(0..100)),
-            float("Texture cache RGBA8 linear mem", "MB", TEXTURE_CACHE_RGBA8_LINEAR_MEM, expected(0.0..100.0)),
-            int("Texture cache RGBA8 nearest regions", "", TEXTURE_CACHE_RGBA8_NEAREST_REGIONS, expected(0..100)),
-            float("Texture cache RGBA8 nearest mem", "MB", TEXTURE_CACHE_RGBA8_NEAREST_MEM, expected(0.0..100.0)),
+            int("Texture cache A8 pixels", "px", TEXTURE_CACHE_A8_PIXELS, expected(0..1_000_000)),
+            int("Texture cache A8 textures", "", TEXTURE_CACHE_A8_TEXTURES, expected(0..2)),
+            int("Texture cache A16 pixels", "px", TEXTURE_CACHE_A16_PIXELS, expected(0..260_000)),
+            int("Texture cache A16 textures", "", TEXTURE_CACHE_A16_TEXTURES, expected(0..2)),
+            int("Texture cache RGBA8 linear pixels", "px", TEXTURE_CACHE_RGBA8_LINEAR_PIXELS, expected(0..8_000_000)),
+            int("Texture cache RGBA8 linear textures", "", TEXTURE_CACHE_RGBA8_LINEAR_TEXTURES, expected(0..3)),
+            int("Texture cache RGBA8 nearest pixels", "px", TEXTURE_CACHE_RGBA8_NEAREST_PIXELS, expected(0..260_000)),
+            int("Texture cache RGBA8 nearest textures", "", TEXTURE_CACHE_RGBA8_NEAREST_TEXTURES, expected(0..2)),
             float("Texture cache shared mem", "MB", TEXTURE_CACHE_SHARED_MEM, expected(0.0..100.0)),
             float("Texture cache standalone mem", "MB", TEXTURE_CACHE_STANDALONE_MEM, expected(0.0..100.0)),
 
@@ -316,8 +318,8 @@ impl Profiler {
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
             int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
 
-            int("Texture cache glyphs regions", "", TEXTURE_CACHE_RGBA8_GLYPHS_REGIONS, expected(0..257)),
-            float("Texture cache glyphs mem", "MB", TEXTURE_CACHE_RGBA8_GLYPHS_MEM, expected(0.0..100.0)),
+            int("Texture cache glyphs pixels", "px", TEXTURE_CACHE_RGBA8_GLYPHS_PIXELS, expected(0..4_000_000)),
+            int("Texture cache glyphs textures", "", TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES, expected(0..2)),
         ];
 
 
