@@ -1058,7 +1058,7 @@ static bool IsItemProbablyActive(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder, bool aParentActive = true);
+    nsDisplayListBuilder* aDisplayListBuilder, bool aSiblingActive);
 
 static bool HasActiveChildren(const nsDisplayList& aList,
                               mozilla::wr::DisplayListBuilder& aBuilder,
@@ -1087,7 +1087,8 @@ static bool IsItemProbablyActive(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder, bool aParentActive) {
+    nsDisplayListBuilder* aDisplayListBuilder,
+    bool aHasActivePrecedingSibling) {
   switch (aItem->GetType()) {
     case DisplayItemType::TYPE_TRANSFORM: {
       nsDisplayTransform* transformItem =
@@ -1120,9 +1121,8 @@ static bool IsItemProbablyActive(
     }
     case DisplayItemType::TYPE_BLEND_MODE: {
       /* BLEND_MODE needs to be active if it might have a previous sibling
-       * that is active. We use the activeness of the parent as a rough
-       * proxy for this situation. */
-      return aParentActive ||
+       * that is active so that it's able to blend with that content. */
+      return aHasActivePrecedingSibling ||
              HasActiveChildren(*aItem->GetChildren(), aBuilder, aResources, aSc,
                                aManager, aDisplayListBuilder);
     }
@@ -1160,9 +1160,12 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
   nsDisplayItem* startOfCurrentGroup = item;
   RenderRootStateManager* manager =
       aCommandBuilder->mManager->GetRenderRootStateManager();
+  // We need to track whether we have active siblings for mixed blend mode.
+  bool encounteredActiveItem = false;
   while (item) {
     if (IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
-                             mDisplayListBuilder)) {
+                             mDisplayListBuilder, encounteredActiveItem)) {
+      encounteredActiveItem = true;
       // We're going to be starting a new group.
       RefPtr<WebRenderGroupData> groupData =
           aCommandBuilder->CreateOrRecycleWebRenderUserData<WebRenderGroupData>(
