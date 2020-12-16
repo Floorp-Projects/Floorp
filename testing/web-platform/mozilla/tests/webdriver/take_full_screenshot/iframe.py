@@ -2,7 +2,6 @@ import pytest
 
 from tests.support.asserts import assert_success
 from tests.support.image import png_dimensions
-from tests.support.inline import iframe, inline
 
 from . import document_dimensions
 
@@ -31,7 +30,7 @@ def take_full_screenshot(session):
 
 
 @pytest.mark.parametrize("domain", ["", "alt"], ids=["same_origin", "cross_origin"])
-def test_source_origin(session, url, domain):
+def test_source_origin(session, url, domain, inline, iframe):
     session.url = inline("""{0}{1}""".format(DEFAULT_CSS_STYLE, DEFAULT_CONTENT))
 
     response = take_full_screenshot(session)
