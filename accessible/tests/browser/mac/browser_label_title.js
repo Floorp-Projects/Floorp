@@ -58,3 +58,22 @@ addAccessibleTask(
     is(styledItem.getAttributeValue("AXTitle"), "");
   }
 );
+
+/**
+ * Test that we fire a title changed notification
+ */
+addAccessibleTask(
+  `<article id="article" aria-label="Hello world"></article>`,
+  async (browser, accDoc) => {
+    let article = getNativeInterface(accDoc, "article");
+    is(article.getAttributeValue("AXTitle"), "Hello world");
+    let evt = waitForMacEvent("AXTitleChanged", "article");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("article")
+        .setAttribute("aria-label", "Hello universe");
+    });
+    await evt;
+    is(article.getAttributeValue("AXTitle"), "Hello universe");
+  }
+);

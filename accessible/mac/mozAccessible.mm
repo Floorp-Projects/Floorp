@@ -1042,9 +1042,15 @@ struct RoleDescrComparator {
       mIsLiveRegion = false;
       break;
     case nsIAccessibleEvent::EVENT_REORDER:
-    case nsIAccessibleEvent::EVENT_NAME_CHANGE:
       [self maybePostLiveRegionChanged];
       break;
+    case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
+      if (![self providesLabelNotTitle]) {
+        [self moxPostNotification:NSAccessibilityTitleChangedNotification];
+      }
+      [self maybePostLiveRegionChanged];
+      break;
+    }
   }
 }
 
