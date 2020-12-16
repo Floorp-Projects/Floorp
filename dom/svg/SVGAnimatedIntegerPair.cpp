@@ -69,8 +69,9 @@ static SVGAttrTearoffTable<SVGAnimatedIntegerPair,
 
 static nsresult ParseIntegerOptionalInteger(const nsAString& aValue,
                                             int32_t aValues[2]) {
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
-      aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
+                                   nsTokenizerFlags::SeparatorOptional>
+      tokenizer(aValue, ',');
   uint32_t i;
   for (i = 0; i < 2 && tokenizer.hasMoreTokens(); ++i) {
     if (!SVGContentUtils::ParseInteger(tokenizer.nextToken(), aValues[i])) {

@@ -245,8 +245,9 @@ void SVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
 
 int32_t SVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
     const nsAString& aSpec, float* aVars, int32_t aNVars) {
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
-      aSpec, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
+                                   nsTokenizerFlags::SeparatorOptional>
+      tokenizer(aSpec, ',');
 
   int numArgsFound = 0;
 

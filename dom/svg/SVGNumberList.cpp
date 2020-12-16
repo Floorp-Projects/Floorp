@@ -42,8 +42,9 @@ void SVGNumberList::GetValueAsString(nsAString& aValue) const {
 nsresult SVGNumberList::SetValueFromString(const nsAString& aValue) {
   SVGNumberList temp;
 
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
-      aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
+                                   nsTokenizerFlags::SeparatorOptional>
+      tokenizer(aValue, ',');
 
   while (tokenizer.hasMoreTokens()) {
     float num;

@@ -741,8 +741,9 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
     MutexAutoLock lock(mLock);
     mLocalDomains.Clear();
     if (!localDomains.IsEmpty()) {
-      nsCCharSeparatedTokenizer tokenizer(
-          localDomains, ',', nsCCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+      nsCCharSeparatedTokenizerTemplate<NS_IsAsciiWhitespace,
+                                        nsTokenizerFlags::SeparatorOptional>
+          tokenizer(localDomains, ',');
       while (tokenizer.hasMoreTokens()) {
         mLocalDomains.PutEntry(tokenizer.nextToken());
       }
