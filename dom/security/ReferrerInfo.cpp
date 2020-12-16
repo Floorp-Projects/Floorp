@@ -1054,7 +1054,7 @@ ReferrerInfo::CreateFromOtherAndPolicyOverride(
                                   ? aPolicyOverride
                                   : aOther->ReferrerPolicy();
 
-  nsCOMPtr<nsIURI> referrer = aOther->GetComputedReferrer();
+  nsCOMPtr<nsIURI> referrer = aOther->GetOriginalReferrer();
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       new ReferrerInfo(referrer, policy, aOther->GetSendReferrer());
   return referrerInfo.forget();
