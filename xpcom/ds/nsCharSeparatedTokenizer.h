@@ -7,6 +7,7 @@
 #ifndef __nsCharSeparatedTokenizer_h
 #define __nsCharSeparatedTokenizer_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 
 #include "nsDependentSubstring.h"
@@ -30,15 +31,17 @@
  * The function used for whitespace detection is a template argument.
  * By default, it is NS_IsAsciiWhitespace.
  */
-template <typename DependentSubstringType, bool IsWhitespace(char16_t)>
+template <typename TDependentSubstringType, bool IsWhitespace(char16_t)>
 class nsTCharSeparatedTokenizer {
-  typedef typename DependentSubstringType::char_type CharType;
-  typedef typename DependentSubstringType::substring_type SubstringType;
+  using CharType = typename TDependentSubstringType::char_type;
+  using SubstringType = typename TDependentSubstringType::substring_type;
 
  public:
   // Flags -- only one for now. If we need more, they should be defined to
   // be 1 << 1, 1 << 2, etc. (They're masks, and aFlags is a bitfield.)
   enum { SEPARATOR_OPTIONAL = 1 };
+
+  using DependentSubstringType = TDependentSubstringType;
 
   nsTCharSeparatedTokenizer(const SubstringType& aSource,
                             CharType aSeparatorChar, uint32_t aFlags = 0)
@@ -143,6 +146,8 @@ class nsTCharSeparatedTokenizer {
     return Substring(tokenStart.get(), tokenEnd.get());
   }
 
+  auto ToRange() const;
+
  private:
   mozilla::RangedPtr<const CharType> mIter;
   const mozilla::RangedPtr<const CharType> mEnd;
@@ -172,5 +177,67 @@ using nsCCharSeparatedTokenizerTemplate =
 
 using nsCCharSeparatedTokenizer =
     nsCCharSeparatedTokenizerTemplate<NS_IsAsciiWhitespace>;
+
+/**
+ * Adapts a char separated tokenizer for use in a range-based for loop.
+ *
+ * Use this typically only indirectly, e.g. like
+ *
+ * for (const auto& token : nsCharSeparatedTokenizer(aText, ' ').ToRange()) {
+ *    // ...
+ * }
+ */
+template <typename Tokenizer>
+class nsTokenizedRange {
+ public:
+  using DependentSubstringType = typename Tokenizer::DependentSubstringType;
+
+  explicit nsTokenizedRange(Tokenizer&& aTokenizer)
+      : mTokenizer(std::move(aTokenizer)) {}
+
+  struct EndSentinel {};
+  struct Iterator {
+    explicit Iterator(const Tokenizer& aTokenizer) : mTokenizer(aTokenizer) {
+      Next();
+    }
+
+    const DependentSubstringType& operator*() const { return *mCurrentToken; }
+
+    Iterator& operator++() {
+      Next();
+      return *this;
+    }
+
+    bool operator==(const EndSentinel&) const {
+      return mCurrentToken.isNothing();
+    }
+
+    bool operator!=(const EndSentinel&) const { return mCurrentToken.isSome(); }
+
+   private:
+    void Next() {
+      mCurrentToken.reset();
+
+      if (mTokenizer.hasMoreTokens()) {
+        mCurrentToken.emplace(mTokenizer.nextToken());
+      }
+    }
+
+    Tokenizer mTokenizer;
+    mozilla::Maybe<DependentSubstringType> mCurrentToken;
+  };
+
+  auto begin() const { return Iterator{mTokenizer}; }
+  auto end() const { return EndSentinel{}; }
+
+ private:
+  const Tokenizer mTokenizer;
+};
+
+template <typename TDependentSubstringType, bool IsWhitespace(char16_t)>
+auto nsTCharSeparatedTokenizer<TDependentSubstringType, IsWhitespace>::ToRange()
+    const {
+  return nsTokenizedRange{nsTCharSeparatedTokenizer{*this}};
+}
 
 #endif /* __nsCharSeparatedTokenizer_h */
