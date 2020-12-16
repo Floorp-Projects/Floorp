@@ -537,11 +537,14 @@ DownloadsViewUI.DownloadElementShell.prototype = {
             // Downloads View, the interface depends on the threat severity.
             switch (verdict) {
               case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
-                this.showButton("askOpenOrRemoveFile");
-                break;
               case Downloads.Error.BLOCK_VERDICT_INSECURE:
               case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
-                this.showButton("askRemoveFileOrAllow");
+                // Keep the option the user chose on the save dialogue
+                if (this.download.launchWhenSucceeded) {
+                  this.showButton("askOpenOrRemoveFile");
+                } else {
+                  this.showButton("askRemoveFileOrAllow");
+                }
                 break;
               default:
                 // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
@@ -684,6 +687,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     return this.download.unblock().then(() => this.downloadsCmd_open());
   },
 
+  unblockAndSave() {
+    return this.download.unblock();
+  },
   /**
    * Returns the name of the default command to use for the current state of the
    * download, when there is a double click or another default interaction. If
@@ -731,6 +737,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_chooseUnblock":
       case "downloadsCmd_chooseOpen":
       case "downloadsCmd_unblock":
+      case "downloadsCmd_unblockAndSave":
       case "downloadsCmd_unblockAndOpen":
         return this.download.hasBlockedData;
       case "downloadsCmd_cancel":
