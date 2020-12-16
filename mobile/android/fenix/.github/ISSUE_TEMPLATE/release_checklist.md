@@ -26,26 +26,24 @@ There are two releases this covers: the current sprint that is going out to Beta
 ## Start of Sprint X.1 [Thursday, 1st week of sprint]
 - [ ] [Create an issue](https://github.com/mozilla-mobile/fenix/issues/new?template=release_checklist.md&title=Releng+for+) "Releng for v[release]" to track the current sprint.
 
-## Sprint X.1 End [Wednesday, 2nd week] Cutting a Beta 
+## Sprint X.1 End [Wednesday, 2nd week] Cutting a Beta
 - [ ] Make a new Beta
-    - [ ] Create a branch off of master (DO NOT PUSH YET) for the *current* milestone of format `releases/v85.0.0`.  After that, anything landing in master will be part of the next release.
+    - [ ] Create a branch off of master (DO NOT PUSH YET) for the *current* milestone of format `releases_v85.0.0`. After that, anything landing in master will be part of the next release.
+       - ⚠️ Please **do not** use `/` in branch names anymore: Taskcluster silently ignores them and doesn't output tasks at the right index.
+    - [ ] Bump `version.txt` to match the new version number
+    - [ ] Grant [mozilla-release-automation-bot](https://github.com/mozilla-release-automation-bot) write access to this branch.
     - [ ] On the new Beta branch, pin the AC version to the stable version ([example](https://github.com/mozilla-mobile/fenix/commit/e413da29f6a7a7d4a765817a9cd5687abbf27619)) with commit message "Issue #`<this releng issue>`: Pin to stable AC `<version>` for release v85"
         - [ ] Update the title to include this AC version "Releng for v[release] with AC [version]"
     - Note: You will need code review to make changes to the release branch after this point, because it is a protected branch.
         - [ ] Push the branch.
 
-    - [ ] Create a GitHub pre-release [Release](https://github.com/mozilla-mobile/fenix/releases) with:
-        - [ ] Tag of the format `vX.X.X-beta.1` (v85.0.0-beta.1)
-        - [ ] The Target branch is the release branch (releases/v85.0.0)
-        - [ ] For the description of the release, look at the [Jira boards](https://jira.mozilla.com/secure/RapidBoard.jspa?rapidView=299&projectKey=FNX&view=reporting&chart=sprintRetrospective&sprint=883) for the X.1 and previous Y.2 sprints and list the major features that were added. This will help with the release notes later on.
-        - [ ] Click "Publish release". This will kick off a build of the branch. You can see it in the mouseover of the CI badge of the branch in the commits view. Builds are found under `signing-*` task.
-                - If you need to trigger a new RC build, you **MUST** draft and publish a new (pre-release) release (optionally deleting both the release and the tag). Editing an existing release and creating a new tag will **not** trigger a new build.
+    - [ ] Tell Release Management the first beta is ready to be shipped. They'll use https://shipit.mozilla-releng.net/new to kick off a new release. This replaces the process that involved GitHub releases. Now Github releases are automatically created by [mozilla-release-automation-bot](https://github.com/mozilla-release-automation-bot)
     - [ ] Send an email to QA at mozilla-mobile-qa@softvision.com with a link to the Taskcluster build (subdirectory of the [Fenix CI](https://firefox-ci-tc.services.mozilla.com/tasks/index/mobile.v2.fenix.beta))
 
 ### Bugfix uplifts / Beta Product Integrity (Beta Release until PI green signoff)
 - [ ] If bugs are considered release blocker then find someone to fix them on master and the milestone branch (cherry-pick / uplift)
     - [ ] Add the uplift request to the appropriate row in the [Uplifts document](https://docs.google.com/spreadsheets/d/1qIvHpcQ3BqJtlzV5T4M1MhbWVxkNiG-ToeYnWEBW4-I/edit#gid=0).
-- [ ] If needed tag a new beta version (e.g. v1.0-beta.2) and follow the submission checklist again.
+- [ ] If needed, ship a new beta version (e.g. v1.0-beta.2) and follow the submission checklist again.
 - [ ] Once there is GREEN QA signoff, file a [release management bugzilla for rollout](https://bugzilla.mozilla.org/show_bug.cgi?id=1664366)
     - [ ] Check Sentry each day for issues on [Firefox Beta](https://sentry.prod.mozaws.net/operations/firefox-beta/) and if nothing concerning, bump release in the bugzilla (5%, 20%, 100%)
 
@@ -59,18 +57,13 @@ There are two releases this covers: the current sprint that is going out to Beta
 ### Production Release Candidate [Tuesday, 3 weeks after X.1 Beta was cut]
 - [ ] In android-components: Create a dot release with the GeckoView Production release candidate.
 - [ ] Open a PR against the release branch (releases/v85.0.0) with the AC version bump "Pin to stable AC `<version>` for release v85`. You will need code review.
-- [ ] Create a GitHub pre-release [Release](https://github.com/mozilla-mobile/fenix/releases) with:
-    - [ ] Tag of the format `vX.X.X-rc.1` (v85.0.0-rc.1)
-    - [ ] The Target branch is the release branch (releases/v85.0.0)
-    - [ ] For the description, copy the beta description
+- [ ] Modify `version.txt` to now follow the pattern: `vX.X.X-rc.1` (e.g.: v85.0.0-rc.1)
+- [ ] Tell Release Management you would like to ship a new release.
 - [ ] Send an email to QA at mozilla-mobile-qa@softvision.com with a link to the Taskcluster build (subdirectory of the [Fenix CI](https://firefox-ci-tc.services.mozilla.com/tasks/index/mobile.v2.fenix.release))
 
 ### Production Release [Release day, from [release calendar](https://docs.google.com/spreadsheets/d/1HotjliSCGOp2nTkfXrxv8qYcurNpkqLWBKbbId6ovTY/edit#gid=0)]
-- [ ] Create a GitHub [Release](https://github.com/mozilla-mobile/fenix/releases) with:
-    - [ ] Tag of the format `vX.1.X` (v85.1.0) (increment the minor version for new cuts)
-    - [ ] The Target branch is the release branch (releases/v85.0.0)
-    - [ ] For the description, copy the beta description
-    - [ ] file Bugzilla ticket for [release manament](https://bugzilla.mozilla.org/show_bug.cgi?id=1672212)
+- [ ] Modify `version.txt` to now follow the pattern: `vX.1.X` (e.g.: v85.1.0)
+- [ ] File Bugzilla ticket for [release management](https://bugzilla.mozilla.org/show_bug.cgi?id=1672212)
 
 - [ ] Check Sentry for new crashes. File issues and triage.
 - [ ] Each day, bump the release rollout if nothing concerning (5%, 20%, 100%)
