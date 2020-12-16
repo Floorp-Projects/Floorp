@@ -91,6 +91,10 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual void NativeInit() = 0;
 
+  virtual void WithThemeConfiguredForContent(const std::function<void()>& aFn) {
+    aFn();
+  }
+
  protected:
   nsXPLookAndFeel() = default;
 
