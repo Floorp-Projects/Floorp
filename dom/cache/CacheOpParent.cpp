@@ -260,20 +260,17 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
   const ContentPrincipalInfo& contentPrincipalInfo =
       principalInfo.ref().get_ContentPrincipalInfo();
 
-  nsAutoCString corp;
   for (auto it = aResponses.cbegin(); it != aResponses.cend(); ++it) {
     if (it->mValue.type() != ResponseType::Opaque &&
         it->mValue.type() != ResponseType::Opaqueredirect) {
       continue;
     }
-    corp.Assign(""_ns);
-    for (auto headerIt = it->mValue.headers().cbegin();
-         headerIt != it->mValue.headers().cend(); ++headerIt) {
-      if (headerIt->name().Equals("Cross-Origin-Resource-Policy"_ns)) {
-        corp = headerIt->value();
-        break;
-      }
-    }
+
+    const auto& headers = it->mValue.headers();
+    const auto corpHeaderIt =
+        std::find_if(headers.cbegin(), headers.cend(), [](const auto& header) {
+          return header.name().EqualsLiteral("Cross-Origin-Resource-Policy");
+        });
 
     // According to https://github.com/w3c/ServiceWorker/issues/1490, the cache
     // response is expected with CORP header, otherwise, throw the type error.
@@ -281,7 +278,7 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
     // https://wicg.github.io/cross-origin-embedder-policy/#corp-check.
     // For fetch, if the response has no CORP header, "same-origin" checking
     // will be performed.
-    if (corp.IsEmpty() &&
+    if (corpHeaderIt == headers.cend() &&
         loadingCOEP == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
       aRv.ThrowTypeError("Response is expected with CORP header.");
       return;
@@ -297,6 +294,9 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
 
     const ContentPrincipalInfo& responseContentPrincipalInfo =
         it->mValue.principalInfo().ref().get_ContentPrincipalInfo();
+
+    const auto& corp =
+        corpHeaderIt == headers.cend() ? EmptyCString() : corpHeaderIt->value();
 
     if (corp.EqualsLiteral("same-origin")) {
       if (responseContentPrincipalInfo == contentPrincipalInfo) {

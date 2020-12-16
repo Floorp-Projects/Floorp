@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/TypeUtils.h"
 
+#include <algorithm>
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
@@ -59,17 +60,20 @@ static bool HasVaryStar(mozilla::dom::InternalHeaders* aHeaders) {
   return false;
 }
 
-void ToHeadersEntryList(nsTArray<HeadersEntry>& aOut,
-                        InternalHeaders* aHeaders) {
+nsTArray<HeadersEntry> ToHeadersEntryList(InternalHeaders* aHeaders) {
   MOZ_DIAGNOSTIC_ASSERT(aHeaders);
 
   AutoTArray<InternalHeaders::Entry, 16> entryList;
   aHeaders->GetEntries(entryList);
 
-  for (uint32_t i = 0; i < entryList.Length(); ++i) {
-    InternalHeaders::Entry& entry = entryList[i];
-    aOut.AppendElement(HeadersEntry(entry.mName, entry.mValue));
-  }
+  nsTArray<HeadersEntry> result;
+  result.SetCapacity(entryList.Length());
+  std::transform(entryList.cbegin(), entryList.cend(), MakeBackInserter(result),
+                 [](const auto& entry) {
+                   return HeadersEntry(entry.mName, entry.mValue);
+                 });
+
+  return result;
 }
 
 }  // namespace
@@ -135,7 +139,7 @@ void TypeUtils::ToCacheRequest(
   aOut.referrerPolicy() = aIn.ReferrerPolicy_();
   RefPtr<InternalHeaders> headers = aIn.Headers();
   MOZ_DIAGNOSTIC_ASSERT(headers);
-  ToHeadersEntryList(aOut.headers(), headers);
+  aOut.headers() = ToHeadersEntryList(headers);
   aOut.headersGuard() = headers->Guard();
   aOut.mode() = aIn.Mode();
   aOut.credentials() = aIn.GetCredentialsMode();
@@ -190,7 +194,7 @@ void TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
     aRv.ThrowTypeError("Invalid Response object with a 'Vary: *' header.");
     return;
   }
-  ToHeadersEntryList(aOut.headers(), headers);
+  aOut.headers() = ToHeadersEntryList(headers);
   aOut.headersGuard() = headers->Guard();
   aOut.channelInfo() = aIn.GetChannelInfo().AsIPCChannelInfo();
   if (aIn.GetPrincipalInfo()) {
@@ -358,13 +362,13 @@ SafeRefPtr<Request> TypeUtils::ToRequest(const CacheRequest& aIn) {
 // static
 already_AddRefed<InternalHeaders> TypeUtils::ToInternalHeaders(
     const nsTArray<HeadersEntry>& aHeadersEntryList, HeadersGuardEnum aGuard) {
-  nsTArray<InternalHeaders::Entry> entryList(aHeadersEntryList.Length());
-
-  for (uint32_t i = 0; i < aHeadersEntryList.Length(); ++i) {
-    const HeadersEntry& headersEntry = aHeadersEntryList[i];
-    entryList.AppendElement(
-        InternalHeaders::Entry(headersEntry.name(), headersEntry.value()));
-  }
+  nsTArray<InternalHeaders::Entry> entryList;
+  entryList.SetCapacity(aHeadersEntryList.Length());
+  std::transform(aHeadersEntryList.cbegin(), aHeadersEntryList.cend(),
+                 MakeBackInserter(entryList), [](const auto& headersEntry) {
+                   return InternalHeaders::Entry(headersEntry.name(),
+                                                 headersEntry.value());
+                 });
 
   RefPtr<InternalHeaders> ref =
       new InternalHeaders(std::move(entryList), aGuard);
