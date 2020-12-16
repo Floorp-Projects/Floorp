@@ -180,6 +180,20 @@ add_task(async function test_removeVisitsByFilter() {
     };
     PlacesUtils.history.addObserver(observer);
 
+    const placesEventListener = events => {
+      for (const event of events) {
+        switch (event.type) {
+          case "page-title-changed": {
+            this.deferred.reject(
+              "Unexpected page-title-changed event happens on " + event.url
+            );
+            break;
+          }
+        }
+      }
+    };
+    PlacesObservers.addListener(["page-title-changed"], placesEventListener);
+
     let cbarg;
     if (options.useCallback) {
       info("Setting up callback");
@@ -256,6 +270,7 @@ add_task(async function test_removeVisitsByFilter() {
     info("Checking frecency change promises.");
     await Promise.all(Array.from(frecencyChangePromises.values()));
     PlacesUtils.history.removeObserver(observer);
+    PlacesObservers.removeListener(["page-title-changed"], placesEventListener);
   };
 
   let size = 20;

@@ -28,9 +28,9 @@ add_task(async function test() {
   });
 
   let promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged",
-    (uri, title) => uri.spec == TEST_URL,
-    "history"
+    "page-title-changed",
+    events => events[0].url == TEST_URL,
+    "places"
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
@@ -40,9 +40,9 @@ add_task(async function test() {
   }, "The page should be loaded without any cookie for the first time");
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged",
-    (uri, title) => uri.spec == TEST_URL,
-    "history"
+    "page-title-changed",
+    events => events[0].url == TEST_URL,
+    "places"
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
@@ -54,9 +54,9 @@ add_task(async function test() {
   await cleanup();
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged",
-    (uri, title) => uri.spec == TEST_URL,
-    "history"
+    "page-title-changed",
+    events => events[0].url == TEST_URL,
+    "places"
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;

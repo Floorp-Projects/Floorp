@@ -190,18 +190,25 @@ add_task(async function test_onDeleteVisits() {
   await promiseNotify;
 });
 
-add_task(async function test_onTitleChanged() {
-  let promiseNotify = onNotify(function onTitleChanged(aURI, aTitle, aGUID) {
-    Assert.ok(aURI.equals(testuri));
-    Assert.equal(aTitle, title);
-    do_check_guid_for_uri(aURI, aGUID);
-  });
+add_task(async function test_pageTitleChanged() {
+  const [testuri] = await task_add_visit();
+  const title = "test-title";
 
-  let [testuri] = await task_add_visit();
-  let title = "test-title";
+  const promiseNotify = PlacesTestUtils.waitForNotification(
+    "page-title-changed",
+    () => true,
+    "places"
+  );
+
   await PlacesTestUtils.addVisits({
     uri: testuri,
     title,
   });
-  await promiseNotify;
+
+  const events = await promiseNotify;
+  Assert.equal(events.length, 1, "Right number of title changed notified");
+  Assert.equal(events[0].type, "page-title-changed");
+  Assert.equal(events[0].url, testuri.spec);
+  Assert.equal(events[0].title, title);
+  do_check_guid_for_uri(testuri, events[0].pageGuid);
 });

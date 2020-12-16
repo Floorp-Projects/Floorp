@@ -58,9 +58,14 @@ add_task(async function test_removeByFilter() {
     await checkBeforeRemove();
 
     // Take care of any observers (due to bookmarks)
-    let { observer, promiseObserved } = getObserverPromise(bookmarkedUri);
+    let { observer, placesEventListener, promiseObserved } = getObserverPromise(
+      bookmarkedUri
+    );
     if (observer) {
       PlacesUtils.history.addObserver(observer, false);
+    }
+    if (placesEventListener) {
+      PlacesObservers.addListener(["page-title-changed"], placesEventListener);
     }
     // Perfom delete operation on database
     let removed = false;
@@ -87,6 +92,12 @@ add_task(async function test_removeByFilter() {
       PlacesUtils.history.removeObserver(observer);
       // Remove the added bookmarks as they interfere with following tests
       await PlacesUtils.bookmarks.eraseEverything();
+    }
+    if (placesEventListener) {
+      PlacesObservers.removeListener(
+        ["page-title-changed"],
+        placesEventListener
+      );
     }
     Assert.ok(
       await PlacesTestUtils.isPageInDB(witnessURI),
@@ -445,6 +456,7 @@ function getObserverPromise(bookmarkedUri) {
     return { observer: null, promiseObserved: Promise.resolve() };
   }
   let observer;
+  let placesEventListener;
   let promiseObserved = new Promise((resolve, reject) => {
     observer = {
       onBeginUpdateBatch() {},
@@ -485,6 +497,17 @@ function getObserverPromise(bookmarkedUri) {
         }
       },
     };
+
+    placesEventListener = events => {
+      for (const event of events) {
+        switch (event.type) {
+          case "page-title-changed": {
+            reject(new Error("Unexpected page-title-changed event happens"));
+            break;
+          }
+        }
+      }
+    };
   });
-  return { observer, promiseObserved };
+  return { observer, placesEventListener, promiseObserved };
 }

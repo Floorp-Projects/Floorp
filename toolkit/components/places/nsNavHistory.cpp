@@ -604,8 +604,6 @@ void nsNavHistory::UpdateDaysOfHistory(PRTime visitTime) {
 void nsNavHistory::NotifyTitleChange(nsIURI* aURI, const nsString& aTitle,
                                      const nsACString& aGUID) {
   MOZ_ASSERT(!aGUID.IsEmpty());
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
-                   OnTitleChanged(aURI, aTitle, aGUID));
 }
 
 void nsNavHistory::NotifyFrecencyChanged(const nsACString& aSpec,

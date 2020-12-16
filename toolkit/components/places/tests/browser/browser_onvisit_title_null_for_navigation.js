@@ -5,37 +5,39 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 add_task(async function checkTitleNotificationForNavigation() {
   const EXPECTED_URL = Services.io.newURI(TEST_PATH + "empty_page.html");
-  let promiseTitleChanged = new Promise(resolve => {
-    function onVisits(aEvents) {
-      Assert.equal(aEvents.length, 1, "Right number of visits notified");
-      Assert.equal(aEvents[0].type, "page-visited");
-      let { url, lastKnownTitle } = aEvents[0];
-      info("'page-visited': " + url);
-      if (url == EXPECTED_URL.spec) {
-        Assert.equal(lastKnownTitle, null, "Should not have a title");
-      }
-      PlacesObservers.removeListener(["page-visited"], onVisits);
-    }
-    let obs = {
-      onTitleChanged(aURI, aTitle, aGuid) {
-        if (aURI.equals(EXPECTED_URL)) {
-          is(
-            aTitle,
-            "I am an empty page",
-            "Should have correct title in titlechanged notification"
-          );
-          PlacesUtils.history.removeObserver(obs);
-          resolve();
-        }
-      },
-    };
-    PlacesUtils.history.addObserver(obs);
-    PlacesObservers.addListener(["page-visited"], onVisits);
-  });
+
+  const promiseVisit = PlacesTestUtils.waitForNotification(
+    "page-visited",
+    events => events[0].url === EXPECTED_URL.spec,
+    "places"
+  );
+
+  const promiseTitle = PlacesTestUtils.waitForNotification(
+    "page-title-changed",
+    events => events[0].url === EXPECTED_URL.spec,
+    "places"
+  );
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     EXPECTED_URL.spec
   );
-  await promiseTitleChanged;
+
+  const visitEvents = await promiseVisit;
+  Assert.equal(visitEvents.length, 1, "Right number of visits notified");
+  Assert.equal(visitEvents[0].type, "page-visited");
+  info("'page-visited': " + visitEvents[0].url);
+  Assert.equal(visitEvents[0].lastKnownTitle, null, "Should not have a title");
+
+  const titleEvents = await promiseTitle;
+  Assert.equal(titleEvents.length, 1, "Right number of title changed notified");
+  Assert.equal(titleEvents[0].type, "page-title-changed");
+  info("'page-title-changed': " + titleEvents[0].url);
+  Assert.equal(
+    titleEvents[0].title,
+    "I am an empty page",
+    "Should have correct title in titlechanged notification"
+  );
+
   BrowserTestUtils.removeTab(tab);
 });

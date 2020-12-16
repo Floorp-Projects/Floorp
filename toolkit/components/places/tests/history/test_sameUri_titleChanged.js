@@ -4,26 +4,21 @@
 add_task(async function test() {
   let uri = "http://test.com/";
 
-  let promiseTitleChangedNotifications = new Promise(resolve => {
-    let historyObserver = {
-      _count: 0,
-      __proto__: NavHistoryObserver.prototype,
-      onTitleChanged(aURI, aTitle, aGUID) {
-        Assert.equal(aURI.spec, uri, "Should notify the proper url");
-        if (++this._count == 1) {
-          PlacesUtils.history.removeObserver(historyObserver);
-          resolve();
-        }
-      },
-    };
-    PlacesUtils.history.addObserver(historyObserver);
-  });
+  const promiseTitleChangedNotifications = PlacesTestUtils.waitForNotification(
+    "page-title-changed",
+    () => true,
+    "places"
+  );
 
   // This repeats the url on purpose, don't merge it into a single place entry.
   await PlacesTestUtils.addVisits([
     { uri, title: "test" },
     { uri, referrer: uri, title: "test2" },
   ]);
+
+  const events = await promiseTitleChangedNotifications;
+  Assert.equal(events.length, 1, "Right number of title changed notified");
+  Assert.equal(events[0].url, uri, "Should notify the proper url");
 
   let options = PlacesUtils.history.getNewQueryOptions();
   let query = PlacesUtils.history.getNewQuery();
@@ -59,6 +54,4 @@ add_task(async function test() {
   Assert.equal(child.title, "test2", "Should have the correct title");
 
   root.containerOpen = false;
-
-  await promiseTitleChangedNotifications;
 });

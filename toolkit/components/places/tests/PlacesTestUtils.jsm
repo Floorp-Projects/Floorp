@@ -424,7 +424,7 @@ var PlacesTestUtils = Object.freeze({
         function listener(events) {
           if (!conditionFn || conditionFn(events)) {
             PlacesObservers.removeListener([notification], listener);
-            resolve();
+            resolve(events);
           }
         }
         PlacesObservers.addListener([notification], listener);

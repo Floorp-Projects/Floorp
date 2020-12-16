@@ -14,32 +14,24 @@ add_task(async function() {
   ].getService(Ci.nsINavHistoryService);
 
   let fragmentPromise = new Promise(resolve => {
-    /* Global history observer that triggers for the two test URLs above. */
-    var historyObserver = {
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
-      onTitleChanged(aURI, aPageTitle) {
-        aURI = aURI.spec;
-        switch (aURI) {
-          case pageurl:
-            is(aPageTitle, pagetitle, "Correct page title for " + aURI);
-            return;
-          case fragmenturl:
-            is(aPageTitle, pagetitle, "Correct page title for " + aURI);
-            // If titles for fragment URLs aren't set, this code
-            // branch won't be called and the test will timeout,
-            // resulting in a failure
-            historyService.removeObserver(historyObserver, false);
-            resolve();
-        }
-      },
-      onDeleteURI(aURI) {},
-      onClearHistory() {},
-      onDeleteVisits() {},
-      QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
+    const listener = events => {
+      const { url, title } = events[0];
+
+      switch (url) {
+        case pageurl:
+          is(title, pagetitle, "Correct page title for " + url);
+          return;
+        case fragmenturl:
+          is(title, pagetitle, "Correct page title for " + url);
+          // If titles for fragment URLs aren't set, this code
+          // branch won't be called and the test will timeout,
+          // resulting in a failure
+          PlacesObservers.removeListener(["page-title-changed"], listener);
+          resolve();
+      }
     };
 
-    historyService.addObserver(historyObserver);
+    PlacesObservers.addListener(["page-title-changed"], listener);
   });
 
   /* Queries nsINavHistoryService and returns a single history entry

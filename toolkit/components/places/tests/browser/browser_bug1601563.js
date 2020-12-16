@@ -4,15 +4,15 @@ const PREFIX =
 function titleUpdate(pageUrl) {
   let lastTitle = null;
   return PlacesTestUtils.waitForNotification(
-    "onTitleChanged",
-    (uri, title) => {
-      if (pageUrl != uri.spec) {
+    "page-title-changed",
+    events => {
+      if (pageUrl != events[0].url) {
         return false;
       }
-      lastTitle = title;
+      lastTitle = events[0].title;
       return true;
     },
-    "history"
+    "places"
   ).then(() => {
     return lastTitle;
   });

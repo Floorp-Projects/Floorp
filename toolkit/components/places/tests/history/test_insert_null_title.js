@@ -30,9 +30,9 @@ add_task(async function() {
 
   // This is shared by the next tests.
   let promiseTitleChange = PlacesTestUtils.waitForNotification(
-    "onTitleChanged",
+    "page-title-changed",
     () => (notified = true),
-    "history"
+    "places"
   );
 
   info("Insert a visit with a null title, should not clear the previous title");

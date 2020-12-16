@@ -16,9 +16,9 @@ add_task(async function test() {
   await PlacesUtils.history.clear();
 
   let promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged",
-    (uri, title) => uri.spec == TEST_URL,
-    "history"
+    "page-title-changed",
+    events => events[0].url == TEST_URL,
+    "places"
   );
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   registerCleanupFunction(async () => {
@@ -32,9 +32,9 @@ add_task(async function test() {
   }, "The title matches the original title after first visit");
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
-    "onTitleChanged",
-    (uri, title) => uri.spec == TEST_URL,
-    "history"
+    "page-title-changed",
+    events => events[0].url == TEST_URL,
+    "places"
   );
   await PlacesTestUtils.addVisits({ uri: TEST_URL, title: TITLE_2 });
   info("Wait for a title change notification.");
