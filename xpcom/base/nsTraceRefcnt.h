@@ -17,7 +17,7 @@ class nsTraceRefcnt {
 
   static void ResetStatistics();
 
-  static void WalkTheStack(FILE* aStream);
+  static void WalkTheStack(FILE* aStream, uint32_t aMaxFrames = 0);
 #ifdef ANDROID
   static void WalkTheStack(void (*aWriter)(uint32_t, void*, void*, void*));
 #endif
