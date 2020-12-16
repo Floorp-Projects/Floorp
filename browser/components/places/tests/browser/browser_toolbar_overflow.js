@@ -7,12 +7,12 @@
  */
 
 var gToolbar = document.getElementById("PersonalToolbar");
-var gToolbarContent = document.getElementById("PlacesToolbarItems");
 var gChevron = document.getElementById("PlacesChevron");
 
 const BOOKMARKS_COUNT = 250;
 
 add_task(async function setup() {
+  let wasCollapsed = gToolbar.collapsed;
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Add bookmarks.
@@ -23,20 +23,14 @@ add_task(async function setup() {
       .map((_, i) => ({ url: `http://test.places.${i}/` })),
   });
 
-  // Uncollapse the personal toolbar if needed.
-  let wasCollapsed = gToolbar.collapsed;
-  Assert.ok(wasCollapsed, "The toolbar is collapsed by default");
-  if (wasCollapsed) {
-    let promiseReady = BrowserTestUtils.waitForEvent(
-      gToolbar,
-      "BookmarksToolbarVisibilityUpdated"
-    );
-    await promiseSetToolbarVisibility(gToolbar, true);
-    await promiseReady;
-  }
+  // Toggle the bookmarks toolbar so that we start from a stable situation and
+  // are not affected by all bookmarks removal.
+  await toggleToolbar(false);
+  await toggleToolbar(true);
+
   registerCleanupFunction(async () => {
     if (wasCollapsed) {
-      await promiseSetToolbarVisibility(gToolbar, false);
+      await toggleToolbar(false);
     }
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
@@ -46,19 +40,20 @@ add_task(async function setup() {
 add_task(async function test_overflow() {
   // Check that the overflow chevron is visible.
   Assert.ok(!gChevron.collapsed, "The overflow chevron should be visible");
+  let children = getPlacesChildren();
   Assert.ok(
-    gToolbarContent.children.length < BOOKMARKS_COUNT,
+    children.length < BOOKMARKS_COUNT,
     "Not all the nodes should be built by default"
   );
   let visibleNodes = [];
-  for (let node of gToolbarContent.children) {
+  for (let node of children) {
     if (node.style.visibility == "visible") {
       visibleNodes.push(node);
     }
   }
   Assert.ok(
-    visibleNodes.length < gToolbarContent.children.length,
-    `The number of visible nodes (${visibleNodes.length}) should be smaller than the number of built nodes (${gToolbarContent.children.length})`
+    visibleNodes.length < children.length,
+    `The number of visible nodes (${visibleNodes.length}) should be smaller than the number of built nodes (${children.length})`
   );
 
   await test_index(
@@ -71,16 +66,8 @@ add_task(async function test_overflow() {
     visibleNodes.length,
     "hidden"
   );
-  await test_index(
-    "First non-built node",
-    gToolbarContent.children.length,
-    undefined
-  );
-  await test_index(
-    "Later non-built node",
-    gToolbarContent.children.length + 1,
-    undefined
-  );
+  await test_index("First non-built node", children.length, undefined);
+  await test_index("Later non-built node", children.length + 1, undefined);
 
   await test_move_index(
     "Move node from last visible to first hidden",
@@ -92,20 +79,21 @@ add_task(async function test_overflow() {
   await test_move_index(
     "Move node from fist visible to last built",
     0,
-    gToolbarContent.children.length - 1,
+    children.length - 1,
     "visible",
     "hidden"
   );
   await test_move_index(
     "Move node from fist visible to first non built",
     0,
-    gToolbarContent.children.length,
+    children.length,
     "visible",
     undefined
   );
 });
 
 add_task(async function test_separator_first() {
+  await toggleToolbar(false);
   // Check that if a separator is the first node, we still calculate overflow
   // properly.
   let bm = await PlacesUtils.bookmarks.insert({
@@ -113,21 +101,9 @@ add_task(async function test_separator_first() {
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     index: 0,
   });
-  // Hide and show the toolbar to cause a rebuild.
-  let promiseReady = BrowserTestUtils.waitForEvent(
-    gToolbar,
-    "BookmarksToolbarVisibilityUpdated"
-  );
-  await promiseSetToolbarVisibility(gToolbar, false);
-  await promiseReady;
-  promiseReady = BrowserTestUtils.waitForEvent(
-    gToolbar,
-    "BookmarksToolbarVisibilityUpdated"
-  );
-  await promiseSetToolbarVisibility(gToolbar, true);
-  await promiseReady;
+  await toggleToolbar(true, 2);
 
-  let children = gToolbarContent.children;
+  let children = getPlacesChildren();
   Assert.greater(children.length, 2, "Multiple elements are visible");
   Assert.equal(
     children[1]._placesNode.uri,
@@ -147,7 +123,7 @@ add_task(async function test_newWindow_noOverflow() {
   info(
     "Check toolbar in a new widow when it was already visible and not overflowed"
   );
-  ok(!gToolbar.collapsed, "Toolbar is not collapsed in original window");
+  Assert.ok(!gToolbar.collapsed, "Toolbar is not collapsed in original window");
   await PlacesUtils.bookmarks.eraseEverything();
   // Add a single bookmark.
   await PlacesUtils.bookmarks.insert({
@@ -183,25 +159,23 @@ add_task(async function test_newWindow_noOverflow() {
 
 async function test_index(desc, index, expected) {
   info(desc);
-  let children = gToolbarContent.children;
+  let children = getPlacesChildren();
   let originalLen = children.length;
   let nodeExisted = children.length > index;
   let previousNodeIsVisible =
     nodeExisted && children[index - 1].style.visibility == "visible";
-  let promiseUpdateVisibility =
+  let promise = promiseUpdateVisibility(
     expected == "visible" || previousNodeIsVisible
-      ? BrowserTestUtils.waitForEvent(
-          gToolbar,
-          "BookmarksToolbarVisibilityUpdated"
-        )
-      : Promise.resolve();
+  );
+
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: "http://test.places.added/",
     index,
   });
   Assert.equal(bm.index, index, "Sanity check the bookmark index");
-  await promiseUpdateVisibility;
+  await promise;
+  children = getPlacesChildren();
 
   if (!expected) {
     Assert.ok(
@@ -227,15 +201,11 @@ async function test_index(desc, index, expected) {
   );
 
   info("Remove the node");
-  promiseUpdateVisibility =
-    expected == "visible"
-      ? BrowserTestUtils.waitForEvent(
-          gToolbar,
-          "BookmarksToolbarVisibilityUpdated"
-        )
-      : Promise.resolve();
+  promise = promiseUpdateVisibility(expected == "visible");
+
   await PlacesUtils.bookmarks.remove(bm);
-  await promiseUpdateVisibility;
+  await promise;
+  children = getPlacesChildren();
 
   if (expected && nodeExisted) {
     Assert.equal(
@@ -258,7 +228,7 @@ async function test_index(desc, index, expected) {
 
 async function test_move_index(desc, fromIndex, toIndex, original, expected) {
   info(desc);
-  let children = gToolbarContent.children;
+  let children = getPlacesChildren();
   let originalLen = children.length;
   let movedGuid = children[fromIndex]._placesNode.bookmarkGuid;
   let existingGuid = children[toIndex]
@@ -271,18 +241,16 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
     original,
     `The bookmark node should be ${original}`
   );
-  let promiseUpdateVisibility =
+  let promise = promiseUpdateVisibility(
     original == "visible" || expected == "visible"
-      ? BrowserTestUtils.waitForEvent(
-          gToolbar,
-          "BookmarksToolbarVisibilityUpdated"
-        )
-      : Promise.resolve();
+  );
+
   await PlacesUtils.bookmarks.update({
     guid: movedGuid,
     index: toIndex,
   });
-  await promiseUpdateVisibility;
+  await promise;
+  children = getPlacesChildren();
 
   if (!expected) {
     Assert.ok(
@@ -324,18 +292,16 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
   );
 
   info("Moving back the node");
-  promiseUpdateVisibility =
+  promise = promiseUpdateVisibility(
     original == "visible" || expected == "visible"
-      ? BrowserTestUtils.waitForEvent(
-          gToolbar,
-          "BookmarksToolbarVisibilityUpdated"
-        )
-      : Promise.resolve();
+  );
+
   await PlacesUtils.bookmarks.update({
     guid: movedGuid,
     index: fromIndex,
   });
-  await promiseUpdateVisibility;
+  await promise;
+  children = getPlacesChildren();
 
   Assert.equal(
     children[fromIndex]._placesNode.bookmarkGuid,
@@ -370,8 +336,8 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
 
 add_task(async function test_separator_first() {
   // Check that if there are only separators, we still show nodes properly.
+  await toggleToolbar(false);
   await PlacesUtils.bookmarks.eraseEverything();
-
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
@@ -382,21 +348,9 @@ add_task(async function test_separator_first() {
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     index: 0,
   });
-  // Hide and show the toolbar to cause a rebuild.
-  let promiseReady = BrowserTestUtils.waitForEvent(
-    gToolbar,
-    "BookmarksToolbarVisibilityUpdated"
-  );
-  await promiseSetToolbarVisibility(gToolbar, false);
-  await promiseReady;
-  promiseReady = BrowserTestUtils.waitForEvent(
-    gToolbar,
-    "BookmarksToolbarVisibilityUpdated"
-  );
-  await promiseSetToolbarVisibility(gToolbar, true);
-  await promiseReady;
+  await toggleToolbar(true, 2);
 
-  let children = gToolbarContent.children;
+  let children = getPlacesChildren();
   Assert.equal(children.length, 2, "The expected elements are visible");
   Assert.equal(
     children[0].style.visibility,
@@ -409,5 +363,70 @@ add_task(async function test_separator_first() {
     "The second bookmark is visible"
   );
 
+  await toggleToolbar(false);
   await PlacesUtils.bookmarks.eraseEverything();
 });
+
+/**
+ * If the passed-in condition is fulfilled, awaits for the toolbar nodes
+ * visibility to have been updated.
+ * @param [condition] Awaits for visibility only if this condition is true.
+ * @returns {Promise} resolved when the condition is not fulfilled or the
+ *          visilibily update happened.
+ */
+function promiseUpdateVisibility(condition = true) {
+  if (condition) {
+    return BrowserTestUtils.waitForEvent(
+      gToolbar,
+      "BookmarksToolbarVisibilityUpdated"
+    );
+  }
+  return Promise.resolve();
+}
+
+/**
+ * Returns an array of toolbar children that are Places nodes, ignoring things
+ * like the chevron or other additional buttons.
+ * @returns {Array} An array of Places element nodes.
+ */
+function getPlacesChildren() {
+  return Array.prototype.filter.call(
+    document.getElementById("PlacesToolbarItems").children,
+    c => c._placesNode?.itemId
+  );
+}
+
+/**
+ * Toggles the toolbar on or off.
+ * @param {boolean} show Whether to show or hide the toolbar.
+ * @param {number} [expectedMinChildCount] Optional number of Places nodes that
+ *        should be visible on the toolbar.
+ */
+async function toggleToolbar(show, expectedMinChildCount = 0) {
+  let promiseReady = Promise.resolve();
+  if (show) {
+    promiseReady = promiseUpdateVisibility();
+  }
+
+  await promiseSetToolbarVisibility(gToolbar, show);
+  await promiseReady;
+
+  if (show) {
+    if (getPlacesChildren().length < expectedMinChildCount) {
+      await new Promise(resolve => {
+        info("Waiting for bookmark elements to appear");
+        let mut = new MutationObserver(mutations => {
+          let children = getPlacesChildren();
+          info(`${children.length} bookmark elements appeared`);
+          if (children.length >= expectedMinChildCount) {
+            resolve();
+            mut.disconnect();
+          }
+        });
+        mut.observe(document.getElementById("PlacesToolbarItems"), {
+          childList: true,
+        });
+      });
+    }
+  }
+}
