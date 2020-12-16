@@ -51,12 +51,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   reftest: "chrome://marionette/content/reftest.js",
   registerCommandsActor:
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
+  registerEventsActor:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   Sandboxes: "chrome://marionette/content/evaluate.js",
   TimedPromise: "chrome://marionette/content/sync.js",
   Timeouts: "chrome://marionette/content/capabilities.js",
   UnhandledPromptBehavior: "chrome://marionette/content/capabilities.js",
   unregisterCommandsActor:
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
+  unregisterEventsActor:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   waitForEvent: "chrome://marionette/content/sync.js",
   waitForLoadEvent: "chrome://marionette/content/sync.js",
   waitForObserverTopic: "chrome://marionette/content/sync.js",
@@ -888,6 +892,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
 
   if (MarionettePrefs.useActors) {
     registerCommandsActor();
+    registerEventsActor();
   }
 
   if (this.mainFrame) {
@@ -3087,6 +3092,7 @@ GeckoDriver.prototype.deleteSession = function() {
     clearActionInputState();
 
     unregisterCommandsActor();
+    unregisterEventsActor();
   }
 
   // reset to the top-most frame, and clear browsing context references
