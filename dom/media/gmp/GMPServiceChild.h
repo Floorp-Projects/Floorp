@@ -56,18 +56,9 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService,
     // Nothing to do here.
   }
 
-  template <typename Func>
-  RefPtr<GetGMPContentParentPromise> GetContentParentImpl(
-      GMPCrashHelper* aHelper, const nsCString& aAPI,
-      const nsTArray<nsCString>& aTags, Func aSendLaunchGMPFunc);
-
   RefPtr<GetGMPContentParentPromise> GetContentParent(
-      GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
+      GMPCrashHelper* aHelper, const NodeIdVariant& aNodeIdVariant,
       const nsCString& aAPI, const nsTArray<nsCString>& aTags) override;
-
-  RefPtr<GetGMPContentParentPromise> GetContentParent(
-      GMPCrashHelper* aHelper, const NodeId& aNodeId, const nsCString& aAPI,
-      const nsTArray<nsCString>& aTags) override;
 
  private:
   friend class OpenPGMPServiceChild;

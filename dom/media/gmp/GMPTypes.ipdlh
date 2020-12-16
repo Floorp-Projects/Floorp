@@ -15,16 +15,27 @@ namespace gmp {
 // which have the same node ID will use the same GMP process. Depending on the
 // use case, the node ID may be represented by a string (such as when used for
 // WebRTC) or by this structure, which is populated according to the origin
-// initiating the request. Both behave similarly but communicate their request
-// for a GMP via PGMPServiceChild::SendLaunchGMP or
-// PGMPServiceChild::SendLaunchGMPForNodeId respectively. In either case the
-// node ID is eventually converted to a string to pass over IPC. For this
-// structure, the process ensures the strings are unique for the combination of
-// origin, top level origin and GMP name.
-struct NodeIdData {
+// initiating the request. This structure will eventually be converted to a
+// string representing a node ID.  For this structure, the process ensures the
+// strings are unique for the combination of origin, top level origin and GMP
+// name.
+struct NodeIdParts {
   nsString mOrigin;
   nsString mTopLevelOrigin;
   nsString mGMPName;
+};
+
+// A NodeIdVariant should contain either
+// - A string representing an already computed node ID.
+// - A NodeIdParts representing a node ID that still needs to be computed by
+//   processing those parts.
+// This union is used to simplify passing of node ID information. Some
+// GMP use cases can hard code their node ID, while others need to compute
+// the node ID later. This lets us avoid having overloads to handle
+// the two different paths.
+union NodeIdVariant {
+  nsCString;
+  NodeIdParts;
 };
 
 struct GMPVideoEncodedFrameData {

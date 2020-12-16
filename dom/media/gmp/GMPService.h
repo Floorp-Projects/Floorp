@@ -10,6 +10,7 @@
 #include "GMPCrashHelper.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/gmp/GMPTypes.h"
 #include "mozilla/MozPromise.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
@@ -34,17 +35,6 @@ extern LogModule* GetGMPLog();
 
 namespace gmp {
 
-struct NodeId {
-  NodeId(const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
-         const nsAString& aGMPName)
-      : mOrigin(aOrigin),
-        mTopLevelOrigin(aTopLevelOrigin),
-        mGMPName(aGMPName) {}
-  nsString mOrigin;
-  nsString mTopLevelOrigin;
-  nsString mGMPName;
-};
-
 typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>, MediaResult,
                    /* IsExclusive = */ true>
     GetGMPContentParentPromise;
@@ -61,7 +51,7 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  RefPtr<GetCDMParentPromise> GetCDM(const NodeId& aNodeId,
+  RefPtr<GetCDMParentPromise> GetCDM(const NodeIdParts& aNodeIdParts,
                                      nsTArray<nsCString> aTags,
                                      GMPCrashHelper* aHelper);
 
@@ -104,12 +94,8 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
   virtual void InitializePlugins(nsISerialEventTarget* aGMPThread) = 0;
 
   virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
-      GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
+      GMPCrashHelper* aHelper, const NodeIdVariant& aNodeIdVariant,
       const nsCString& aAPI, const nsTArray<nsCString>& aTags) = 0;
-
-  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
-      GMPCrashHelper* aHelper, const NodeId& aNodeId, const nsCString& aAPI,
-      const nsTArray<nsCString>& aTags) = 0;
 
   nsresult GMPDispatch(nsIRunnable* event, uint32_t flags = NS_DISPATCH_NORMAL);
   nsresult GMPDispatch(already_AddRefed<nsIRunnable> event,

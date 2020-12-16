@@ -213,9 +213,9 @@ class TestGetNodeIdCallback : public GetNodeIdCallback {
   nsresult& mResult;
 };
 
-static NodeId GetNodeId(const nsAString& aOrigin,
-                        const nsAString& aTopLevelOrigin,
-                        const nsAString& aGmpName, bool aInPBMode) {
+static NodeIdParts GetNodeIdParts(const nsAString& aOrigin,
+                                  const nsAString& aTopLevelOrigin,
+                                  const nsAString& aGmpName, bool aInPBMode) {
   OriginAttributes attrs;
   attrs.mPrivateBrowsingId = aInPBMode ? 1 : 0;
 
@@ -229,7 +229,7 @@ static NodeId GetNodeId(const nsAString& aOrigin,
   nsAutoString topLevelOrigin;
   topLevelOrigin.Assign(aTopLevelOrigin);
   topLevelOrigin.Append(NS_ConvertUTF8toUTF16(suffix));
-  return NodeId(origin, topLevelOrigin, aGmpName);
+  return NodeIdParts{origin, topLevelOrigin, nsString(aGmpName)};
 }
 
 static nsCString GetNodeId(const nsAString& aOrigin,
@@ -376,11 +376,12 @@ class CDMStorageTest {
                        const nsAString& aTopLevelOrigin, bool aInPBMode,
                        nsTArray<nsCString>&& aUpdates) {
     CreateDecryptor(
-        GetNodeId(aOrigin, aTopLevelOrigin, u"gmp-fake"_ns, aInPBMode),
+        GetNodeIdParts(aOrigin, aTopLevelOrigin, u"gmp-fake"_ns, aInPBMode),
         std::move(aUpdates));
   }
 
-  void CreateDecryptor(const NodeId& aNodeId, nsTArray<nsCString>&& aUpdates) {
+  void CreateDecryptor(const NodeIdParts& aNodeId,
+                       nsTArray<nsCString>&& aUpdates) {
     RefPtr<GeckoMediaPluginService> service =
         GeckoMediaPluginService::GetGeckoMediaPluginService();
     EXPECT_TRUE(service);

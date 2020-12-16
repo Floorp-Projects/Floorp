@@ -117,12 +117,8 @@ class GeckoMediaPluginServiceParent final
   RefPtr<GenericPromise> AddOnGMPThread(nsString aDirectory);
 
   RefPtr<GetGMPContentParentPromise> GetContentParent(
-      GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
+      GMPCrashHelper* aHelper, const NodeIdVariant& aNodeIdVariant,
       const nsCString& aAPI, const nsTArray<nsCString>& aTags) override;
-
-  RefPtr<GetGMPContentParentPromise> GetContentParent(
-      GMPCrashHelper* aHelper, const NodeId& aNodeId, const nsCString& aAPI,
-      const nsTArray<nsCString>& aTags) override;
 
  private:
   // Creates a copy of aOriginal. Note that the caller is responsible for
@@ -130,6 +126,12 @@ class GeckoMediaPluginServiceParent final
   already_AddRefed<GMPParent> ClonePlugin(const GMPParent* aOriginal);
   nsresult EnsurePluginsOnDiskScanned();
   nsresult InitStorage();
+
+  // Get a string based node ID from a NodeIdVariant. This will
+  // either fetch the internal string, or convert the internal NodeIdParts to a
+  // string. The conversion process is fallible, so the return value should be
+  // checked.
+  nsresult GetNodeId(const NodeIdVariant& aNodeIdVariant, nsACString& aOutId);
 
   class PathRunnable : public Runnable {
    public:
@@ -232,21 +234,12 @@ class GMPServiceParent final : public PGMPServiceParent {
 
   static bool Create(Endpoint<PGMPServiceParent>&& aGMPService);
 
-  ipc::IPCResult RecvLaunchGMP(const nsCString& aNodeId, const nsCString& aAPI,
-                               nsTArray<nsCString>&& aTags,
-                               nsTArray<ProcessId>&& aAlreadyBridgedTo,
-                               uint32_t* aOutPluginId, ProcessId* aOutID,
-                               nsCString* aOutDisplayName,
-                               Endpoint<PGMPContentParent>* aOutEndpoint,
-                               nsresult* aOutRv,
-                               nsCString* aOutErrorDescription) override;
-
-  ipc::IPCResult RecvLaunchGMPForNodeId(
-      const NodeIdData& nodeId, const nsCString& aAPI,
+  ipc::IPCResult RecvLaunchGMP(
+      const NodeIdVariant& aNodeIdVariant, const nsCString& aAPI,
       nsTArray<nsCString>&& aTags, nsTArray<ProcessId>&& aAlreadyBridgedTo,
-      uint32_t* aOutPluginId, ProcessId* aOutID, nsCString* aOutDisplayName,
-      Endpoint<PGMPContentParent>* aOutEndpoint, nsresult* aOutRv,
-      nsCString* aOutErrorDescription) override;
+      uint32_t* aOutPluginId, ProcessId* aOutProcessId,
+      nsCString* aOutDisplayName, Endpoint<PGMPContentParent>* aOutEndpoint,
+      nsresult* aOutRv, nsCString* aOutErrorDescription) override;
 
  private:
   ~GMPServiceParent();
