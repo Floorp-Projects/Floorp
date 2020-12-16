@@ -965,7 +965,7 @@ static bool IsGtkThemeCompatibleWithHTMLColors() {
 static nsCString GetGtkTheme() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   nsCString ret;
-  GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
+  GtkSettings* settings = gtk_settings_get_default();
   char* themeName = nullptr;
   g_object_get(settings, "gtk-theme-name", &themeName, nullptr);
   if (themeName) {
@@ -983,8 +983,7 @@ void nsLookAndFeel::WithThemeConfiguredForContent(
         (void (*)(GtkSettings*, const gchar*))dlsym(
             RTLD_DEFAULT, "gtk_settings_reset_property");
 
-    GtkSettings* settings =
-        gtk_settings_get_for_screen(gdk_screen_get_default());
+    GtkSettings* settings = gtk_settings_get_default();
 
     nsCString themeName;
     gboolean preferDarkTheme = FALSE;
@@ -1026,7 +1025,7 @@ void nsLookAndFeel::WithThemeConfiguredForContent(
 bool nsLookAndFeel::ConfigureContentGtkTheme() {
   bool changed = false;
 
-  GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
+  GtkSettings* settings = gtk_settings_get_default();
 
   nsAutoCString themeOverride;
   mozilla::Preferences::GetCString("widget.content.gtk-theme-override",
@@ -1075,12 +1074,7 @@ void nsLookAndFeel::EnsureInit() {
   // Gtk manages a screen's CSS in the settings object so we
   // ask Gtk to create it explicitly. Otherwise we may end up
   // with wrong color theme, see Bug 972382
-  GdkScreen* screen = gdk_screen_get_default();
-  if (MOZ_UNLIKELY(!screen)) {
-    NS_WARNING("EnsureInit: No screen");
-    return;
-  }
-  GtkSettings* settings = gtk_settings_get_for_screen(screen);
+  GtkSettings* settings = gtk_settings_get_default();
   if (MOZ_UNLIKELY(!settings)) {
     NS_WARNING("EnsureInit: No settings");
     return;
