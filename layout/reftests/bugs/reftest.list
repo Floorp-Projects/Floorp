@@ -1546,7 +1546,7 @@ asserts(1-2) == 582146-1.html about:blank
 == 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
-fuzzy-if(Android,0-2,0-48) == 585598-2.xhtml 585598-2-ref.xhtml
+fuzzy-if(Android,0-2,0-48) fuzzy-if(webrender&&winWidget,0-1,0-33) == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
 fuzzy-if(d2d,0-52,0-1051) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
