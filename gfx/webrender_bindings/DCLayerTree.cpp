@@ -352,6 +352,13 @@ void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
     return;
   }
 
+  // Tile size needs to be positive.
+  if (aTileSize.width <= 0 || aTileSize.height <= 0) {
+    gfxCriticalNote << "TileSize is not positive aId: " << wr::AsUint64(aId)
+                    << " aTileSize(" << aTileSize.width << ","
+                    << aTileSize.height << ")";
+  }
+
   auto surface =
       MakeUnique<DCSurface>(aTileSize, aVirtualOffset, aIsOpaque, this);
   if (!surface->Initialize()) {
