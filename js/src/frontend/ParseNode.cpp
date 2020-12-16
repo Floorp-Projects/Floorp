@@ -400,7 +400,7 @@ const ParserAtom* NumericLiteral::toAtom(JSContext* cx,
 RegExpObject* RegExpStencil::createRegExp(
     JSContext* cx, CompilationAtomCache& atomCache) const {
   RootedAtom atom(cx, atomCache.getExistingAtomAt(cx, atom_));
-  return RegExpObject::createSyntaxChecked(cx, atom, flags_, TenuredObject);
+  return RegExpObject::createSyntaxChecked(cx, atom, flags(), TenuredObject);
 }
 
 RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
@@ -412,7 +412,7 @@ RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
   if (!atom) {
     return nullptr;
   }
-  return RegExpObject::createSyntaxChecked(cx, atom, flags_, TenuredObject);
+  return RegExpObject::createSyntaxChecked(cx, atom, flags(), TenuredObject);
 }
 
 RegExpObject* RegExpLiteral::create(JSContext* cx,

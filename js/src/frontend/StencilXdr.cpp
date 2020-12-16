@@ -758,18 +758,13 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::RegExp(XDRState<mode>* xdr,
                                           RegExpStencil& stencil) {
-  uint8_t flags;
-
-  if (mode == XDR_ENCODE) {
-    flags = stencil.flags_.value();
-  }
+#ifdef __cpp_lib_has_unique_object_representations
+  static_assert(std::has_unique_object_representations<RegExpStencil>(),
+                "RegExpStencil structure must be fully packed");
+#endif
 
   MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &stencil.atom_));
-  MOZ_TRY(xdr->codeUint8(&flags));
-
-  if (mode == XDR_DECODE) {
-    stencil.flags_ = JS::RegExpFlags(flags);
-  }
+  MOZ_TRY(xdr->codeUint32(&stencil.flags_));
 
   return Ok();
 }

@@ -1026,22 +1026,22 @@ void RegExpStencil::dumpFields(js::JSONPrinter& json,
 
   GenericPrinter& out = json.beginStringProperty("flags");
 
-  if (flags_.global()) {
+  if (flags().global()) {
     out.put("g");
   }
-  if (flags_.ignoreCase()) {
+  if (flags().ignoreCase()) {
     out.put("i");
   }
-  if (flags_.multiline()) {
+  if (flags().multiline()) {
     out.put("m");
   }
-  if (flags_.dotAll()) {
+  if (flags().dotAll()) {
     out.put("s");
   }
-  if (flags_.unicode()) {
+  if (flags().unicode()) {
     out.put("u");
   }
-  if (flags_.sticky()) {
+  if (flags().sticky()) {
     out.put("y");
   }
 
