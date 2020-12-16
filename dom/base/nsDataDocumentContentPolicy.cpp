@@ -50,7 +50,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
     }
   });
 
-  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
 
   MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(

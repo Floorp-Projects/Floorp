@@ -16,7 +16,7 @@ NS_IMPL_ISUPPORTS(ImageBlocker, nsIContentPolicy)
 NS_IMETHODIMP
 ImageBlocker::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
                          const nsACString& aMimeGuess, int16_t* aShouldLoad) {
-  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
   MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
                                 contentType),
              "We should only see external content policy types here.");
@@ -51,7 +51,7 @@ ImageBlocker::ShouldProcess(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
                             const nsACString& aMimeGuess,
                             int16_t* aShouldProcess) {
 #ifdef DEBUG
-  uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
+  nsContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
   MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
                                 contentType),
              "We should only see external content policy types here.");

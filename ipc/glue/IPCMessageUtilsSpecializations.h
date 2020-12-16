@@ -35,6 +35,7 @@
 #include "nsCSSPropertyID.h"
 #include "nsDebug.h"
 #include "nsHashKeys.h"
+#include "nsIContentPolicy.h"
 #include "nsID.h"
 #include "nsILoadInfo.h"
 #include "nsIThread.h"
@@ -622,6 +623,12 @@ struct ParamTraits<nsID> {
     aLog->append(L"}");
   }
 };
+
+template <>
+struct ParamTraits<nsContentPolicyType>
+    : public ContiguousEnumSerializerInclusive<
+          nsContentPolicyType, nsIContentPolicy::TYPE_INVALID,
+          nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD> {};
 
 template <>
 struct ParamTraits<mozilla::TimeDuration> {

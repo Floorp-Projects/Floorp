@@ -895,7 +895,7 @@ child:
     async PasteTransferable(IPCDataTransfer aDataTransfer,
                             bool aIsPrivateData,
                             nsIPrincipal aRequestingPrincipal,
-                            uint32_t aContentPolicyType);
+                            nsContentPolicyType aContentPolicyType);
 
     /**
      * Activate event forwarding from client to parent.

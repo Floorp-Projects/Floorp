@@ -871,8 +871,9 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
   }
 
   TabId id = browserChild->GetTabId();
-  nsCOMPtr<nsILoadInfo> loadInfo = new net::LoadInfo(
-      nsContentUtils::GetSystemPrincipal(), nullptr, nullptr, 0, 0);
+  nsCOMPtr<nsILoadInfo> loadInfo =
+      new net::LoadInfo(nsContentUtils::GetSystemPrincipal(), nullptr, nullptr,
+                        0, nsIContentPolicy::TYPE_INVALID);
 
   Maybe<net::LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(
