@@ -15,6 +15,8 @@ const ZipReader = new Components.Constructor(
   "open"
 );
 
+const IS_ALPHA = /^[a-z]+$/i;
+
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
@@ -170,4 +172,22 @@ async function throttledMapPromises(iterable, task, limit = 64) {
   }
 
   await Promise.all(promises);
+}
+
+/**
+ * Returns whether or not a word (presumably in en-US) is capitalized per
+ * expectations.
+ *
+ * @param {String} word The single word to check.
+ * @param {boolean} expectCapitalized True if the word should be capitalized.
+ * @returns {boolean} True if the word matches the expected capitalization.
+ */
+function hasExpectedCapitalization(word, expectCapitalized) {
+  let firstChar = word[0];
+  if (!IS_ALPHA.test(firstChar)) {
+    return true;
+  }
+
+  let isCapitalized = firstChar == firstChar.toLocaleUpperCase("en-US");
+  return isCapitalized == expectCapitalized;
 }
