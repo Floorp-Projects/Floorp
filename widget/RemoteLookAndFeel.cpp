@@ -133,61 +133,63 @@ FullLookAndFeel RemoteLookAndFeel::ExtractData() {
 
   nsXPLookAndFeel* impl = nsXPLookAndFeel::GetInstance();
 
-  for (auto id : MakeEnumeratedRange(IntID::End)) {
-    int32_t theInt;
-    nsresult rv = impl->NativeGetInt(id, theInt);
-    AddToMap(&lf.ints(), &lf.intMap(),
-             NS_SUCCEEDED(rv) ? Some(theInt) : Nothing{});
-  }
-
-  for (auto id : MakeEnumeratedRange(FloatID::End)) {
-    float theFloat;
-    nsresult rv = impl->NativeGetFloat(id, theFloat);
-    AddToMap(&lf.floats(), &lf.floatMap(),
-             NS_SUCCEEDED(rv) ? Some(theFloat) : Nothing{});
-  }
-
-  for (auto id : MakeEnumeratedRange(ColorID::End)) {
-    nscolor theColor;
-    nsresult rv = impl->NativeGetColor(id, theColor);
-    AddToMap(&lf.colors(), &lf.colorMap(),
-             NS_SUCCEEDED(rv) ? Some(theColor) : Nothing{});
-  }
-
-  for (auto id :
-       MakeInclusiveEnumeratedRange(FontID::MINIMUM, FontID::MAXIMUM)) {
-    LookAndFeelFont font{};
-    gfxFontStyle fontStyle{};
-
-    bool rv = impl->NativeGetFont(id, font.name(), fontStyle);
-    Maybe<LookAndFeelFont> maybeFont;
-    if (rv) {
-      font.haveFont() = true;
-      font.size() = fontStyle.size;
-      font.weight() = fontStyle.weight.ToFloat();
-      font.italic() = fontStyle.style.IsItalic();
-      MOZ_ASSERT(fontStyle.style.IsNormal() || fontStyle.style.IsItalic(),
-                 "Cannot handle oblique font style");
-#ifdef DEBUG
-      {
-        // Assert that all the remaining font style properties have their
-        // default values.
-        gfxFontStyle candidate = fontStyle;
-        gfxFontStyle defaults{};
-        candidate.size = defaults.size;
-        candidate.weight = defaults.weight;
-        candidate.style = defaults.style;
-        MOZ_ASSERT(candidate.Equals(defaults),
-                   "Some font style properties not supported");
-      }
-#endif
-      maybeFont = Some(std::move(font));
+  impl->WithThemeConfiguredForContent([&]() {
+    for (auto id : MakeEnumeratedRange(IntID::End)) {
+      int32_t theInt;
+      nsresult rv = impl->NativeGetInt(id, theInt);
+      AddToMap(&lf.ints(), &lf.intMap(),
+               NS_SUCCEEDED(rv) ? Some(theInt) : Nothing{});
     }
-    AddToMap(&lf.fonts(), &lf.fontMap(), std::move(maybeFont));
-  }
 
-  lf.passwordChar() = impl->GetPasswordCharacterImpl();
-  lf.passwordEcho() = impl->GetEchoPasswordImpl();
+    for (auto id : MakeEnumeratedRange(FloatID::End)) {
+      float theFloat;
+      nsresult rv = impl->NativeGetFloat(id, theFloat);
+      AddToMap(&lf.floats(), &lf.floatMap(),
+               NS_SUCCEEDED(rv) ? Some(theFloat) : Nothing{});
+    }
+
+    for (auto id : MakeEnumeratedRange(ColorID::End)) {
+      nscolor theColor;
+      nsresult rv = impl->NativeGetColor(id, theColor);
+      AddToMap(&lf.colors(), &lf.colorMap(),
+               NS_SUCCEEDED(rv) ? Some(theColor) : Nothing{});
+    }
+
+    for (auto id :
+         MakeInclusiveEnumeratedRange(FontID::MINIMUM, FontID::MAXIMUM)) {
+      LookAndFeelFont font{};
+      gfxFontStyle fontStyle{};
+
+      bool rv = impl->NativeGetFont(id, font.name(), fontStyle);
+      Maybe<LookAndFeelFont> maybeFont;
+      if (rv) {
+        font.haveFont() = true;
+        font.size() = fontStyle.size;
+        font.weight() = fontStyle.weight.ToFloat();
+        font.italic() = fontStyle.style.IsItalic();
+        MOZ_ASSERT(fontStyle.style.IsNormal() || fontStyle.style.IsItalic(),
+                   "Cannot handle oblique font style");
+#ifdef DEBUG
+        {
+          // Assert that all the remaining font style properties have their
+          // default values.
+          gfxFontStyle candidate = fontStyle;
+          gfxFontStyle defaults{};
+          candidate.size = defaults.size;
+          candidate.weight = defaults.weight;
+          candidate.style = defaults.style;
+          MOZ_ASSERT(candidate.Equals(defaults),
+                     "Some font style properties not supported");
+        }
+#endif
+        maybeFont = Some(std::move(font));
+      }
+      AddToMap(&lf.fonts(), &lf.fontMap(), std::move(maybeFont));
+    }
+
+    lf.passwordChar() = impl->GetPasswordCharacterImpl();
+    lf.passwordEcho() = impl->GetEchoPasswordImpl();
+  });
 
   return lf;
 }

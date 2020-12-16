@@ -35,6 +35,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   LookAndFeelCache GetCacheImpl() override;
   void SetCacheImpl(const LookAndFeelCache& aCache) override;
 
+  void WithThemeConfiguredForContent(const std::function<void()>& aFn) override;
+
   bool IsCSDAvailable() const { return mCSDAvailable; }
 
   static const nscolor kBlack = NS_RGB(0, 0, 0);
@@ -117,7 +119,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mCSDCloseButtonPosition = 0;
 
   void EnsureInit();
-  void ConfigureContentGtkTheme();
+  // Returns whether the current theme or theme variant was changed.
+  bool ConfigureContentGtkTheme();
 
  private:
   nsresult InitCellHighlightColors();

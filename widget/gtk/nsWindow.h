@@ -237,6 +237,8 @@ class nsWindow final : public nsBaseWidget {
 
   RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() override;
 
+  static void WithSettingsChangesIgnored(const std::function<void()>& aFn);
+
  private:
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
