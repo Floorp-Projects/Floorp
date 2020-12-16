@@ -1676,15 +1676,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
   mDownloadClassification =
       nsContentSecurityUtils::ClassifyDownload(aChannel, MIMEType);
-  if (mDownloadClassification != nsITransfer::DOWNLOAD_ACCEPTABLE) {
+
+  if (mDownloadClassification == nsITransfer::DOWNLOAD_FORBIDDEN) {
     // If the download is rated as forbidden,
-    // we need to silently cancel the request to make sure
-    // it wont show up in the download ui.
+    // cancel the request so no ui knows about this.
     mCanceled = true;
     request->Cancel(NS_ERROR_ABORT);
-    if (mDownloadClassification != nsITransfer::DOWNLOAD_FORBIDDEN) {
-      CreateFailedTransfer();
-    }
     return NS_OK;
   }
 
@@ -1918,6 +1915,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     }
   }
 
+  if (mDownloadClassification != nsITransfer::DOWNLOAD_ACCEPTABLE) {
+    request->Suspend();
+  }
   return NS_OK;
 }
 

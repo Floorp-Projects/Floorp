@@ -337,12 +337,7 @@ DownloadLegacyTransfer.prototype = {
     browsingContextId = 0,
     handleInternally = false
   ) {
-    if (aDownloadClassification == Ci.nsITransfer.DOWNLOAD_ACCEPTABLE) {
-      // Only keep a refrence if it acceptable, as the download was canceled
-      // already if it isn't.
-      this._cancelable = aCancelable;
-    }
-
+    this._cancelable = aCancelable;
     let launchWhenSucceeded = false,
       contentType = null,
       launcherPath = null;
@@ -397,6 +392,12 @@ DownloadLegacyTransfer.prototype = {
       // is already closed. A copy saver would create a new channel once
       // start() is called.
       serialisedDownload.saver = "copy";
+
+      // Since we now have the new Download reported in the list, we can
+      // cancel the original request.
+      this._download = null;
+      this._cancelable.cancel(Cr.NS_ERROR_ABORT);
+      this._cancelable = null;
     }
 
     Downloads.createDownload(serialisedDownload)
