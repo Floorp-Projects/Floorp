@@ -1126,7 +1126,7 @@ parent:
     async SetClipboard(IPCDataTransfer aDataTransfer,
                        bool aIsPrivateData,
                        Principal aRequestingPrincipal,
-                       uint32_t aContentPolicyType,
+                       nsContentPolicyType aContentPolicyType,
                        int32_t aWhichClipboard);
 
     // Given a list of supported types, returns the clipboard data for the

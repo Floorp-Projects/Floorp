@@ -62,8 +62,9 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
 
   RequestDestination Destination() const { return mRequest->Destination(); }
 
-  void OverrideContentPolicyType(nsContentPolicyType aContentPolicyType) {
-    mRequest->OverrideContentPolicyType(aContentPolicyType);
+  void OverrideContentPolicyType(uint32_t aContentPolicyType) {
+    mRequest->OverrideContentPolicyType(
+        static_cast<nsContentPolicyType>(aContentPolicyType));
   }
 
   bool IsContentPolicyTypeOverridden() const {

@@ -395,7 +395,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
             ("  - contentLocation: %s", asciiUrl.get()));
   }
 
-  uint32_t contentType = aLoadInfo->InternalContentPolicyType();
+  nsContentPolicyType contentType = aLoadInfo->InternalContentPolicyType();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->GetLoadingPrincipal();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
 

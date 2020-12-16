@@ -1003,7 +1003,7 @@ class nsDocShell final : public nsDocLoader,
   // nsIContentPolicy::TYPE_INTERNAL_IFRAME, or
   // nsIContentPolicy::TYPE_INTERNAL_FRAME depending on who is responsible for
   // this docshell.
-  uint32_t DetermineContentType();
+  nsContentPolicyType DetermineContentType();
 
   // If this is an iframe, and the embedder is OOP, then notifes the
   // embedder that loading has finished and we shouldn't be blocking

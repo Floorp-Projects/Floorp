@@ -205,7 +205,7 @@ BaseWebSocketChannel::InitLoadInfoNative(
     nsINode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
     nsIPrincipal* aTriggeringPrincipal,
     nsICookieJarSettings* aCookieJarSettings, uint32_t aSecurityFlags,
-    uint32_t aContentPolicyType, uint32_t aSandboxFlags) {
+    nsContentPolicyType aContentPolicyType, uint32_t aSandboxFlags) {
   mLoadInfo = new LoadInfo(
       aLoadingPrincipal, aTriggeringPrincipal, aLoadingNode, aSecurityFlags,
       aContentPolicyType, Maybe<mozilla::dom::ClientInfo>(),
@@ -221,7 +221,7 @@ BaseWebSocketChannel::InitLoadInfo(nsINode* aLoadingNode,
                                    nsIPrincipal* aLoadingPrincipal,
                                    nsIPrincipal* aTriggeringPrincipal,
                                    uint32_t aSecurityFlags,
-                                   uint32_t aContentPolicyType) {
+                                   nsContentPolicyType aContentPolicyType) {
   return InitLoadInfoNative(aLoadingNode, aLoadingPrincipal,
                             aTriggeringPrincipal, nullptr, aSecurityFlags,
                             aContentPolicyType, 0);

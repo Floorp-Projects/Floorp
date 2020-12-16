@@ -3527,7 +3527,7 @@ nsresult nsContentUtils::LoadImage(
     nsIPrincipal* aLoadingPrincipal, uint64_t aRequestContextID,
     nsIReferrerInfo* aReferrerInfo, imgINotificationObserver* aObserver,
     int32_t aLoadFlags, const nsAString& initiatorType,
-    imgRequestProxy** aRequest, uint32_t aContentPolicyType,
+    imgRequestProxy** aRequest, nsContentPolicyType aContentPolicyType,
     bool aUseUrgentStartForChannel, bool aLinkPreload) {
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aContext, "Must have a context");
