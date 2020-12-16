@@ -10,6 +10,9 @@ path:build/mach_bootstrap.py
 path:build/build_virtualenv_packages.txt
 path:build/common_virtualenv_packages.txt
 path:build/mach_virtualenv_packages.txt
+path:build/glean_requirements.txt
+path:build/psutil_requirements.txt
+path:build/zstandard_requirements.txt
 path:mach
 # Various dependencies. There is room to trim fat, especially in
 # third_party/python.

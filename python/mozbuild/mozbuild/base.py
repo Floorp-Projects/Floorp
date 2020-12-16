@@ -918,7 +918,9 @@ class MozbuildObject(ProcessExecutionMixin):
             import zstandard  # noqa: F401
         except (ImportError, AttributeError):
             self.activate_virtualenv()
-            self.virtualenv_manager.install_pip_package("zstandard>=0.9.0,<=0.13.0")
+            self.virtualenv_manager.install_pip_requirements(
+                os.path.join(self.topsrcdir, "build", "zstandard_requirements.txt")
+            )
 
 
 class MachCommandBase(MozbuildObject):
