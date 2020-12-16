@@ -1012,6 +1012,11 @@ void nsXPLookAndFeel::RefreshImpl() {
   for (i = 0; i < uint32_t(ColorID::End); ++i) {
     InitColorFromPref(i);
   }
+
+  // Clear any cached FullLookAndFeel data, which is now invalid.
+  if (XRE_IsParentProcess()) {
+    widget::RemoteLookAndFeel::ClearCachedData();
+  }
 }
 
 widget::LookAndFeelCache nsXPLookAndFeel::GetCacheImpl() {
