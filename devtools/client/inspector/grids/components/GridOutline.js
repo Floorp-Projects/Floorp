@@ -38,11 +38,15 @@ const GRID_CELL_SCALE_FACTOR = 50;
 const VIEWPORT_MIN_HEIGHT = 100;
 const VIEWPORT_MAX_HEIGHT = 150;
 
+const {
+  showGridHighlighter,
+} = require("devtools/client/inspector/grids/actions/grid-highlighter");
+
 class GridOutline extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
-      onShowGridOutlineHighlight: PropTypes.func.isRequired,
     };
   }
 
@@ -95,27 +99,40 @@ class GridOutline extends PureComponent {
   }
 
   doHighlightCell(target, hide) {
-    const { grids, onShowGridOutlineHighlight } = this.props;
+    const { dispatch, grids } = this.props;
     const name = target.dataset.gridAreaName;
     const id = target.dataset.gridId;
     const gridFragmentIndex = target.dataset.gridFragmentIndex;
     const rowNumber = target.dataset.gridRow;
     const columnNumber = target.dataset.gridColumn;
+    const nodeFront = grids[id].nodeFront;
 
-    onShowGridOutlineHighlight(grids[id].nodeFront);
-
-    if (hide) {
-      return;
-    }
-
-    onShowGridOutlineHighlight(grids[id].nodeFront, {
+    // The options object has the following properties which corresponds to the
+    // required parameters for showing the grid cell or area highlights.
+    // See devtools/server/actors/highlighters/css-grid.js
+    // {
+    //   showGridArea: String,
+    //   showGridCell: {
+    //     gridFragmentIndex: Number,
+    //     rowNumber: Number,
+    //     columnNumber: Number,
+    //   },
+    // }
+    const options = {
       showGridArea: name,
       showGridCell: {
         gridFragmentIndex,
         rowNumber,
         columnNumber,
       },
-    });
+    };
+
+    if (hide) {
+      // Reset the grid highlighter to default state; no options = hide cell/area outline.
+      dispatch(showGridHighlighter(nodeFront));
+    } else {
+      dispatch(showGridHighlighter(nodeFront, options));
+    }
   }
 
   /**
