@@ -33,7 +33,19 @@ pull_request_rules:
     conditions:
       - base~=releases/.*
       - author=github-actions[bot]
-      - status-success=pr-complete
+      # Listing checks manually beause we do not have a "push complete" check yet.
+      - check-success=build-android-test-debug
+      - check-success=build-debug
+      - check-success=build-nightly-simulation
+      - check-success=lint-compare-locales
+      - check-success=lint-detekt
+      - check-success=lint-ktlint
+      - check-success=lint-lint
+      - check-success=signing-android-test-debug
+      - check-success=signing-debug
+      - check-success=signing-nightly-simulation
+      - check-success=test-debug
+      - check-success=ui-test-x86-debug
       - files~=(AndroidComponents.kt)
     actions:
       review:
