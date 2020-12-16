@@ -457,7 +457,7 @@ class Typedef(object):
         parent.setName(self)
         self.realtype = parent.getName(self.type, self.location)
 
-        if not isinstance(self.realtype, (Builtin, Native, Typedef)):
+        if not isinstance(self.realtype, (Builtin, CEnum, Native, Typedef)):
             raise IDLError("Unsupported typedef target type", self.location)
 
     def nativeType(self, calltype):
