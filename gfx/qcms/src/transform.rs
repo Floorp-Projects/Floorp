@@ -371,15 +371,15 @@ pub fn set_rgb_colorants(
         return false;
     }
     /* note: there's a transpose type of operation going on here */
-    (*profile).redColorant.X = double_to_s15Fixed16Number(colorants.m[0][0] as f64);
-    (*profile).redColorant.Y = double_to_s15Fixed16Number(colorants.m[1][0] as f64);
-    (*profile).redColorant.Z = double_to_s15Fixed16Number(colorants.m[2][0] as f64);
-    (*profile).greenColorant.X = double_to_s15Fixed16Number(colorants.m[0][1] as f64);
-    (*profile).greenColorant.Y = double_to_s15Fixed16Number(colorants.m[1][1] as f64);
-    (*profile).greenColorant.Z = double_to_s15Fixed16Number(colorants.m[2][1] as f64);
-    (*profile).blueColorant.X = double_to_s15Fixed16Number(colorants.m[0][2] as f64);
-    (*profile).blueColorant.Y = double_to_s15Fixed16Number(colorants.m[1][2] as f64);
-    (*profile).blueColorant.Z = double_to_s15Fixed16Number(colorants.m[2][2] as f64);
+    profile.redColorant.X = double_to_s15Fixed16Number(colorants.m[0][0] as f64);
+    profile.redColorant.Y = double_to_s15Fixed16Number(colorants.m[1][0] as f64);
+    profile.redColorant.Z = double_to_s15Fixed16Number(colorants.m[2][0] as f64);
+    profile.greenColorant.X = double_to_s15Fixed16Number(colorants.m[0][1] as f64);
+    profile.greenColorant.Y = double_to_s15Fixed16Number(colorants.m[1][1] as f64);
+    profile.greenColorant.Z = double_to_s15Fixed16Number(colorants.m[2][1] as f64);
+    profile.blueColorant.X = double_to_s15Fixed16Number(colorants.m[0][2] as f64);
+    profile.blueColorant.Y = double_to_s15Fixed16Number(colorants.m[1][2] as f64);
+    profile.blueColorant.Z = double_to_s15Fixed16Number(colorants.m[2][2] as f64);
     return true;
 }
 pub fn get_rgb_colorants(
@@ -1058,49 +1058,48 @@ fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
 #[no_mangle]
 pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_profile) {
     /* we only support precaching on rgb profiles */
-    if (*profile).color_space != RGB_SIGNATURE {
+    if profile.color_space != RGB_SIGNATURE {
         return;
     }
     if qcms_supports_iccv4.load(Ordering::Relaxed) {
         /* don't precache since we will use the B2A LUT */
-        if !(*profile).B2A0.is_none() {
+        if !profile.B2A0.is_none() {
             return;
         }
         /* don't precache since we will use the mBA LUT */
-        if !(*profile).mBA.is_none() {
+        if !profile.mBA.is_none() {
             return;
         }
     }
     /* don't precache if we do not have the TRC curves */
-    if (*profile).redTRC.is_none() || (*profile).greenTRC.is_none() || (*profile).blueTRC.is_none()
-    {
+    if profile.redTRC.is_none() || profile.greenTRC.is_none() || profile.blueTRC.is_none() {
         return;
     }
-    if (*profile).output_table_r.is_none() {
+    if profile.output_table_r.is_none() {
         let mut output_table_r = precache_create();
         if compute_precache(
-            (*profile).redTRC.as_deref().unwrap(),
+            profile.redTRC.as_deref().unwrap(),
             &mut Arc::get_mut(&mut output_table_r).unwrap().data,
         ) {
-            (*profile).output_table_r = Some(output_table_r);
+            profile.output_table_r = Some(output_table_r);
         }
     }
-    if (*profile).output_table_g.is_none() {
+    if profile.output_table_g.is_none() {
         let mut output_table_g = precache_create();
         if compute_precache(
-            (*profile).greenTRC.as_deref().unwrap(),
+            profile.greenTRC.as_deref().unwrap(),
             &mut Arc::get_mut(&mut output_table_g).unwrap().data,
         ) {
-            (*profile).output_table_g = Some(output_table_g);
+            profile.output_table_g = Some(output_table_g);
         }
     }
-    if (*profile).output_table_b.is_none() {
+    if profile.output_table_b.is_none() {
         let mut output_table_b = precache_create();
         if compute_precache(
-            (*profile).blueTRC.as_deref().unwrap(),
+            profile.blueTRC.as_deref().unwrap(),
             &mut Arc::get_mut(&mut output_table_b).unwrap().data,
         ) {
-            (*profile).output_table_b = Some(output_table_b);
+            profile.output_table_b = Some(output_table_b);
         }
     };
 }
@@ -1203,22 +1202,20 @@ pub fn transform_create(
         return result;
     }
     if precache {
-        (*transform).output_table_r = Some(Arc::clone((*out).output_table_r.as_ref().unwrap()));
-        (*transform).output_table_g = Some(Arc::clone((*out).output_table_g.as_ref().unwrap()));
-        (*transform).output_table_b = Some(Arc::clone((*out).output_table_b.as_ref().unwrap()));
+        transform.output_table_r = Some(Arc::clone((*out).output_table_r.as_ref().unwrap()));
+        transform.output_table_g = Some(Arc::clone((*out).output_table_g.as_ref().unwrap()));
+        transform.output_table_b = Some(Arc::clone((*out).output_table_b.as_ref().unwrap()));
     } else {
         if (*out).redTRC.is_none() || (*out).greenTRC.is_none() || (*out).blueTRC.is_none() {
             return None;
         }
-        (*transform).output_gamma_lut_r = Some(build_output_lut((*out).redTRC.as_deref().unwrap()));
-        (*transform).output_gamma_lut_g =
-            Some(build_output_lut((*out).greenTRC.as_deref().unwrap()));
-        (*transform).output_gamma_lut_b =
-            Some(build_output_lut((*out).blueTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_r = Some(build_output_lut((*out).redTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_g = Some(build_output_lut((*out).greenTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_b = Some(build_output_lut((*out).blueTRC.as_deref().unwrap()));
 
-        if (*transform).output_gamma_lut_r.is_none()
-            || (*transform).output_gamma_lut_g.is_none()
-            || (*transform).output_gamma_lut_b.is_none()
+        if transform.output_gamma_lut_r.is_none()
+            || transform.output_gamma_lut_g.is_none()
+            || transform.output_gamma_lut_b.is_none()
         {
             return None;
         }
@@ -1231,11 +1228,11 @@ pub fn transform_create(
                 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
                 {
                     if in_type == DATA_RGB_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_avx)
+                        transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_avx)
                     } else if in_type == DATA_RGBA_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_avx)
+                        transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_avx)
                     } else if in_type == DATA_BGRA_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_avx)
+                        transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_avx)
                     }
                 }
             } else if cfg!(all(
@@ -1246,11 +1243,11 @@ pub fn transform_create(
                 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
                 {
                     if in_type == DATA_RGB_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_sse2)
+                        transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_sse2)
                     } else if in_type == DATA_RGBA_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_sse2)
+                        transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_sse2)
                     } else if in_type == DATA_BGRA_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_sse2)
+                        transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_sse2)
                     }
                 }
             } else if cfg!(any(target_arch = "arm", target_arch = "aarch64"))
@@ -1259,34 +1256,34 @@ pub fn transform_create(
                 #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
                 {
                     if in_type == DATA_RGB_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_neon)
+                        transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_neon)
                     } else if in_type == DATA_RGBA_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_neon)
+                        transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_neon)
                     } else if in_type == DATA_BGRA_8 {
-                        (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_neon)
+                        transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_neon)
                     }
                 }
             } else if in_type == DATA_RGB_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut_precache)
+                transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_precache)
             } else if in_type == DATA_RGBA_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut_precache)
+                transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_precache)
             } else if in_type == DATA_BGRA_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut_precache)
+                transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_precache)
             }
         } else if in_type == DATA_RGB_8 {
-            (*transform).transform_fn = Some(qcms_transform_data_rgb_out_lut)
+            transform.transform_fn = Some(qcms_transform_data_rgb_out_lut)
         } else if in_type == DATA_RGBA_8 {
-            (*transform).transform_fn = Some(qcms_transform_data_rgba_out_lut)
+            transform.transform_fn = Some(qcms_transform_data_rgba_out_lut)
         } else if in_type == DATA_BGRA_8 {
-            (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut)
+            transform.transform_fn = Some(qcms_transform_data_bgra_out_lut)
         }
         //XXX: avoid duplicating tables if we can
-        (*transform).input_gamma_table_r = build_input_gamma_table((*in_0).redTRC.as_deref());
-        (*transform).input_gamma_table_g = build_input_gamma_table((*in_0).greenTRC.as_deref());
-        (*transform).input_gamma_table_b = build_input_gamma_table((*in_0).blueTRC.as_deref());
-        if (*transform).input_gamma_table_r.is_none()
-            || (*transform).input_gamma_table_g.is_none()
-            || (*transform).input_gamma_table_b.is_none()
+        transform.input_gamma_table_r = build_input_gamma_table((*in_0).redTRC.as_deref());
+        transform.input_gamma_table_g = build_input_gamma_table((*in_0).greenTRC.as_deref());
+        transform.input_gamma_table_b = build_input_gamma_table((*in_0).blueTRC.as_deref());
+        if transform.input_gamma_table_r.is_none()
+            || transform.input_gamma_table_g.is_none()
+            || transform.input_gamma_table_b.is_none()
         {
             return None;
         }
@@ -1313,56 +1310,56 @@ pub fn transform_create(
         }
         /* store the results in column major mode
          * this makes doing the multiplication with sse easier */
-        (*transform).matrix[0][0] = result_0.m[0][0];
-        (*transform).matrix[1][0] = result_0.m[0][1];
-        (*transform).matrix[2][0] = result_0.m[0][2];
-        (*transform).matrix[0][1] = result_0.m[1][0];
-        (*transform).matrix[1][1] = result_0.m[1][1];
-        (*transform).matrix[2][1] = result_0.m[1][2];
-        (*transform).matrix[0][2] = result_0.m[2][0];
-        (*transform).matrix[1][2] = result_0.m[2][1];
-        (*transform).matrix[2][2] = result_0.m[2][2]
+        transform.matrix[0][0] = result_0.m[0][0];
+        transform.matrix[1][0] = result_0.m[0][1];
+        transform.matrix[2][0] = result_0.m[0][2];
+        transform.matrix[0][1] = result_0.m[1][0];
+        transform.matrix[1][1] = result_0.m[1][1];
+        transform.matrix[2][1] = result_0.m[1][2];
+        transform.matrix[0][2] = result_0.m[2][0];
+        transform.matrix[1][2] = result_0.m[2][1];
+        transform.matrix[2][2] = result_0.m[2][2]
     } else if (*in_0).color_space == 0x47524159 {
-        (*transform).input_gamma_table_gray = build_input_gamma_table((*in_0).grayTRC.as_deref());
-        if (*transform).input_gamma_table_gray.is_none() {
+        transform.input_gamma_table_gray = build_input_gamma_table((*in_0).grayTRC.as_deref());
+        if transform.input_gamma_table_gray.is_none() {
             return None;
         }
         if precache {
             if out_type == DATA_RGB_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_gray_out_precache)
+                transform.transform_fn = Some(qcms_transform_data_gray_out_precache)
             } else if out_type == DATA_RGBA_8 {
                 if in_type == DATA_GRAY_8 {
-                    (*transform).transform_fn = Some(qcms_transform_data_gray_rgba_out_precache)
+                    transform.transform_fn = Some(qcms_transform_data_gray_rgba_out_precache)
                 } else {
-                    (*transform).transform_fn = Some(qcms_transform_data_graya_rgba_out_precache)
+                    transform.transform_fn = Some(qcms_transform_data_graya_rgba_out_precache)
                 }
             } else if out_type == DATA_BGRA_8 {
                 if in_type == DATA_GRAY_8 {
-                    (*transform).transform_fn = Some(qcms_transform_data_gray_bgra_out_precache)
+                    transform.transform_fn = Some(qcms_transform_data_gray_bgra_out_precache)
                 } else {
-                    (*transform).transform_fn = Some(qcms_transform_data_graya_bgra_out_precache)
+                    transform.transform_fn = Some(qcms_transform_data_graya_bgra_out_precache)
                 }
             }
         } else if out_type == DATA_RGB_8 {
-            (*transform).transform_fn = Some(qcms_transform_data_gray_out_lut)
+            transform.transform_fn = Some(qcms_transform_data_gray_out_lut)
         } else if out_type == DATA_RGBA_8 {
             if in_type == DATA_GRAY_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_gray_rgba_out_lut)
+                transform.transform_fn = Some(qcms_transform_data_gray_rgba_out_lut)
             } else {
-                (*transform).transform_fn = Some(qcms_transform_data_graya_rgba_out_lut)
+                transform.transform_fn = Some(qcms_transform_data_graya_rgba_out_lut)
             }
         } else if out_type == DATA_BGRA_8 {
             if in_type == DATA_GRAY_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_gray_bgra_out_lut)
+                transform.transform_fn = Some(qcms_transform_data_gray_bgra_out_lut)
             } else {
-                (*transform).transform_fn = Some(qcms_transform_data_graya_bgra_out_lut)
+                transform.transform_fn = Some(qcms_transform_data_graya_bgra_out_lut)
             }
         }
     } else {
         debug_assert!(false, "unexpected colorspace");
         return None;
     }
-    debug_assert!((*transform).transform_fn.is_some());
+    debug_assert!(transform.transform_fn.is_some());
     return Some(transform);
 }
 #[no_mangle]

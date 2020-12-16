@@ -221,40 +221,40 @@ fn be16_to_cpu(mut v: be16) -> u16 {
     u16::from_be(v)
 }
 fn invalid_source(mut mem: &mut mem_source, reason: &'static str) {
-    (*mem).valid = false;
-    (*mem).invalid_reason = Some(reason);
+    mem.valid = false;
+    mem.invalid_reason = Some(reason);
 }
 fn read_u32(mut mem: &mut mem_source, mut offset: usize) -> u32 {
     /* Subtract from mem->size instead of the more intuitive adding to offset.
      * This avoids overflowing offset. The subtraction is safe because
      * mem->size is guaranteed to be > 4 */
-    if offset > (*mem).buf.len() - 4 {
+    if offset > mem.buf.len() - 4 {
         invalid_source(mem, "Invalid offset");
         return 0;
     } else {
         let k = unsafe {
-            std::ptr::read_unaligned((*mem).buf.as_ptr().offset(offset as isize) as *const be32)
+            std::ptr::read_unaligned(mem.buf.as_ptr().offset(offset as isize) as *const be32)
         };
         return be32_to_cpu(k);
     };
 }
 fn read_u16(mut mem: &mut mem_source, mut offset: usize) -> u16 {
-    if offset > (*mem).buf.len() - 2 {
+    if offset > mem.buf.len() - 2 {
         invalid_source(mem, "Invalid offset");
         return 0u16;
     } else {
         let k = unsafe {
-            std::ptr::read_unaligned((*mem).buf.as_ptr().offset(offset as isize) as *const be16)
+            std::ptr::read_unaligned(mem.buf.as_ptr().offset(offset as isize) as *const be16)
         };
         return be16_to_cpu(k);
     };
 }
 fn read_u8(mut mem: &mut mem_source, mut offset: usize) -> u8 {
-    if offset > (*mem).buf.len() - 1 {
+    if offset > mem.buf.len() - 1 {
         invalid_source(mem, "Invalid offset");
         return 0u8;
     } else {
-        return unsafe { *((*mem).buf.as_ptr().offset(offset as isize) as *mut u8) };
+        return unsafe { *(mem.buf.as_ptr().offset(offset as isize) as *mut u8) };
     };
 }
 fn read_s15Fixed16Number(mut mem: &mut mem_source, mut offset: usize) -> s15Fixed16Number {
@@ -310,8 +310,8 @@ const ABSTRACT_PROFILE: u32 = 0x61627374; // 'abst'
 const NAMED_COLOR_PROFILE: u32 = 0x6e6d636c; // 'nmcl'
 
 fn read_class_signature(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
-    (*profile).class_type = read_u32(mem, 12);
-    match (*profile).class_type {
+    profile.class_type = read_u32(mem, 12);
+    match profile.class_type {
         DISPLAY_DEVICE_PROFILE
         | INPUT_DEVICE_PROFILE
         | OUTPUT_DEVICE_PROFILE
@@ -322,8 +322,8 @@ fn read_class_signature(mut profile: &mut qcms_profile, mut mem: &mut mem_source
     };
 }
 fn read_color_space(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
-    (*profile).color_space = read_u32(mem, 16);
-    match (*profile).color_space {
+    profile.color_space = read_u32(mem, 16);
+    match profile.color_space {
         RGB_SIGNATURE | GRAY_SIGNATURE => {}
         _ => {
             invalid_source(mem, "Unsupported colorspace");
@@ -331,8 +331,8 @@ fn read_color_space(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
     };
 }
 fn read_pcs(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
-    (*profile).pcs = read_u32(mem, 20);
-    match (*profile).pcs {
+    profile.pcs = read_u32(mem, 20);
+    match profile.pcs {
         XYZ_SIGNATURE | LAB_SIGNATURE => {}
         _ => {
             invalid_source(mem, "Unsupported pcs");
@@ -449,25 +449,25 @@ pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut qcms_profile) -> bool 
     let mut negative: bool;
     let mut i: libc::c_uint;
     // We currently only check the bogosity of RGB profiles
-    if (*profile).color_space != RGB_SIGNATURE {
+    if profile.color_space != RGB_SIGNATURE {
         return false;
     }
-    if !(*profile).A2B0.is_none()
-        || !(*profile).B2A0.is_none()
-        || !(*profile).mAB.is_none()
-        || !(*profile).mBA.is_none()
+    if !profile.A2B0.is_none()
+        || !profile.B2A0.is_none()
+        || !profile.mAB.is_none()
+        || !profile.mBA.is_none()
     {
         return false;
     }
-    rX = s15Fixed16Number_to_float((*profile).redColorant.X);
-    rY = s15Fixed16Number_to_float((*profile).redColorant.Y);
-    rZ = s15Fixed16Number_to_float((*profile).redColorant.Z);
-    gX = s15Fixed16Number_to_float((*profile).greenColorant.X);
-    gY = s15Fixed16Number_to_float((*profile).greenColorant.Y);
-    gZ = s15Fixed16Number_to_float((*profile).greenColorant.Z);
-    bX = s15Fixed16Number_to_float((*profile).blueColorant.X);
-    bY = s15Fixed16Number_to_float((*profile).blueColorant.Y);
-    bZ = s15Fixed16Number_to_float((*profile).blueColorant.Z);
+    rX = s15Fixed16Number_to_float(profile.redColorant.X);
+    rY = s15Fixed16Number_to_float(profile.redColorant.Y);
+    rZ = s15Fixed16Number_to_float(profile.redColorant.Z);
+    gX = s15Fixed16Number_to_float(profile.greenColorant.X);
+    gY = s15Fixed16Number_to_float(profile.greenColorant.Y);
+    gZ = s15Fixed16Number_to_float(profile.greenColorant.Z);
+    bX = s15Fixed16Number_to_float(profile.blueColorant.X);
+    bY = s15Fixed16Number_to_float(profile.blueColorant.Y);
+    bZ = s15Fixed16Number_to_float(profile.blueColorant.Z);
     // Sum the values; they should add up to something close to white
     sum[0] = rX + gX + bX;
     sum[1] = rY + gY + bY;
@@ -561,7 +561,7 @@ fn read_tag_s15Fixed16ArrayType(
     };
     if let Some(tag) = tag {
         let mut i: u8;
-        let mut offset: u32 = (*tag).offset;
+        let mut offset: u32 = tag.offset;
         let mut type_0: u32 = read_u32(src, offset as usize);
         // Check mandatory type signature for s16Fixed16ArrayType
         if type_0 != CHROMATIC_TYPE {
@@ -588,7 +588,7 @@ fn read_tag_XYZType(mut src: &mut mem_source, mut index: &tag_index, mut tag_id:
     };
     let mut tag = find_tag(&index, tag_id);
     if let Some(tag) = tag {
-        let mut offset: u32 = (*tag).offset;
+        let mut offset: u32 = tag.offset;
         let mut type_0: u32 = read_u32(src, offset as usize);
         if type_0 != XYZ_TYPE {
             invalid_source(src, "unexpected type, expected XYZ");
@@ -663,7 +663,7 @@ fn read_tag_curveType(
     let mut tag = find_tag(index, tag_id);
     if let Some(tag) = tag {
         let mut len: u32 = 0;
-        return read_curveType(src, (*tag).offset, &mut len);
+        return read_curveType(src, tag.offset, &mut len);
     } else {
         invalid_source(src, "missing curvetag");
     }
@@ -681,9 +681,8 @@ fn read_nested_curveType(
     i = 0;
     while i < num_channels as i32 {
         let mut tag_len: u32 = 0;
-        (*curveArray)[i as usize] =
-            read_curveType(src, curve_offset + channel_offset, &mut tag_len);
-        if (*curveArray)[i as usize].is_none() {
+        curveArray[i as usize] = read_curveType(src, curve_offset + channel_offset, &mut tag_len);
+        if curveArray[i as usize].is_none() {
             invalid_source(src, "invalid nested curveType curve");
             break;
         } else {
@@ -699,7 +698,7 @@ fn read_nested_curveType(
 
 /* See section 10.10 for specs */
 fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutmABType>> {
-    let mut offset: u32 = (*tag).offset;
+    let mut offset: u32 = tag.offset;
     let mut a_curve_offset: u32;
     let mut b_curve_offset: u32;
     let mut m_curve_offset: u32;
@@ -837,13 +836,13 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
             invalid_source(src, "Invalid clut precision");
         }
     }
-    if !(*src).valid {
+    if !src.valid {
         return None;
     }
     return Some(lut);
 }
 fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutType>> {
-    let mut offset: u32 = (*tag).offset;
+    let mut offset: u32 = tag.offset;
     let mut type_0: u32 = read_u32(src, offset as usize);
     let mut num_input_table_entries: u16;
     let mut num_output_table_entries: u16;
@@ -995,8 +994,8 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
     }))
 }
 fn read_rendering_intent(mut profile: &mut qcms_profile, mut src: &mut mem_source) {
-    (*profile).rendering_intent = read_u32(src, 64);
-    match (*profile).rendering_intent {
+    profile.rendering_intent = read_u32(src, 64);
+    match profile.rendering_intent {
         0 | 2 | 1 | 3 => {}
         _ => {
             invalid_source(src, "unknown rendering intent");
@@ -1224,7 +1223,7 @@ pub fn profile_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
     length = read_u32(src, 0);
     if length as usize <= mem.len() {
         // shrink the area that we can read if appropriate
-        (*src).buf = &(*src).buf[0..length as usize];
+        src.buf = &src.buf[0..length as usize];
     } else {
         return None;
     }
@@ -1241,68 +1240,68 @@ pub fn profile_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
     read_color_space(&mut profile, src);
     read_pcs(&mut profile, src);
     //TODO read rest of profile stuff
-    if !(*src).valid {
+    if !src.valid {
         return None;
     }
 
     index = read_tag_table(&mut profile, src);
-    if !(*src).valid || index.is_empty() {
+    if !src.valid || index.is_empty() {
         return None;
     }
 
     if find_tag(&index, TAG_CHAD).is_some() {
-        (*profile).chromaticAdaption = read_tag_s15Fixed16ArrayType(src, &index, TAG_CHAD)
+        profile.chromaticAdaption = read_tag_s15Fixed16ArrayType(src, &index, TAG_CHAD)
     } else {
-        (*profile).chromaticAdaption.invalid = true //Signal the data is not present
+        profile.chromaticAdaption.invalid = true //Signal the data is not present
     }
 
-    if (*profile).class_type == DISPLAY_DEVICE_PROFILE
-        || (*profile).class_type == INPUT_DEVICE_PROFILE
-        || (*profile).class_type == OUTPUT_DEVICE_PROFILE
-        || (*profile).class_type == COLOR_SPACE_PROFILE
+    if profile.class_type == DISPLAY_DEVICE_PROFILE
+        || profile.class_type == INPUT_DEVICE_PROFILE
+        || profile.class_type == OUTPUT_DEVICE_PROFILE
+        || profile.class_type == COLOR_SPACE_PROFILE
     {
-        if (*profile).color_space == RGB_SIGNATURE {
+        if profile.color_space == RGB_SIGNATURE {
             if let Some(A2B0) = find_tag(&index, TAG_A2B0) {
                 let lut_type = read_u32(src, A2B0.offset as usize);
                 if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
-                    (*profile).A2B0 = read_tag_lutType(src, A2B0)
+                    profile.A2B0 = read_tag_lutType(src, A2B0)
                 } else if lut_type == LUT_MAB_TYPE {
-                    (*profile).mAB = read_tag_lutmABType(src, A2B0)
+                    profile.mAB = read_tag_lutmABType(src, A2B0)
                 }
             }
             if let Some(B2A0) = find_tag(&index, TAG_B2A0) {
                 let lut_type = read_u32(src, B2A0.offset as usize);
                 if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
-                    (*profile).B2A0 = read_tag_lutType(src, B2A0)
+                    profile.B2A0 = read_tag_lutType(src, B2A0)
                 } else if lut_type == LUT_MBA_TYPE {
-                    (*profile).mBA = read_tag_lutmABType(src, B2A0)
+                    profile.mBA = read_tag_lutmABType(src, B2A0)
                 }
             }
             if find_tag(&index, TAG_rXYZ).is_some() || !qcms_supports_iccv4.load(Ordering::Relaxed)
             {
-                (*profile).redColorant = read_tag_XYZType(src, &index, TAG_rXYZ);
-                (*profile).greenColorant = read_tag_XYZType(src, &index, TAG_gXYZ);
-                (*profile).blueColorant = read_tag_XYZType(src, &index, TAG_bXYZ)
+                profile.redColorant = read_tag_XYZType(src, &index, TAG_rXYZ);
+                profile.greenColorant = read_tag_XYZType(src, &index, TAG_gXYZ);
+                profile.blueColorant = read_tag_XYZType(src, &index, TAG_bXYZ)
             }
-            if !(*src).valid {
+            if !src.valid {
                 return None;
             }
 
             if find_tag(&index, TAG_rTRC).is_some() || !qcms_supports_iccv4.load(Ordering::Relaxed)
             {
-                (*profile).redTRC = read_tag_curveType(src, &index, TAG_rTRC);
-                (*profile).greenTRC = read_tag_curveType(src, &index, TAG_gTRC);
-                (*profile).blueTRC = read_tag_curveType(src, &index, TAG_bTRC);
-                if (*profile).redTRC.is_none()
-                    || (*profile).blueTRC.is_none()
-                    || (*profile).greenTRC.is_none()
+                profile.redTRC = read_tag_curveType(src, &index, TAG_rTRC);
+                profile.greenTRC = read_tag_curveType(src, &index, TAG_gTRC);
+                profile.blueTRC = read_tag_curveType(src, &index, TAG_bTRC);
+                if profile.redTRC.is_none()
+                    || profile.blueTRC.is_none()
+                    || profile.greenTRC.is_none()
                 {
                     return None;
                 }
             }
-        } else if (*profile).color_space == GRAY_SIGNATURE {
-            (*profile).grayTRC = read_tag_curveType(src, &index, TAG_kTRC);
-            if (*profile).grayTRC.is_none() {
+        } else if profile.color_space == GRAY_SIGNATURE {
+            profile.grayTRC = read_tag_curveType(src, &index, TAG_kTRC);
+            if profile.grayTRC.is_none() {
                 return None;
             }
         } else {
@@ -1313,7 +1312,7 @@ pub fn profile_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
         return None;
     }
 
-    if !(*src).valid {
+    if !src.valid {
         return None;
     }
     Some(profile)
