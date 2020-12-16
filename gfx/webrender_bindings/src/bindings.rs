@@ -542,7 +542,7 @@ struct CppNotifier {
 unsafe impl Send for CppNotifier {}
 
 extern "C" {
-    fn wr_notifier_wake_up(window_id: WrWindowId);
+    fn wr_notifier_wake_up(window_id: WrWindowId, composite_needed: bool);
     fn wr_notifier_new_frame_ready(window_id: WrWindowId);
     fn wr_notifier_nop_frame_done(window_id: WrWindowId);
     fn wr_notifier_external_event(window_id: WrWindowId, raw_event: usize);
@@ -560,9 +560,9 @@ impl RenderNotifier for CppNotifier {
         })
     }
 
-    fn wake_up(&self, _composite_needed: bool) {
+    fn wake_up(&self, composite_needed: bool) {
         unsafe {
-            wr_notifier_wake_up(self.window_id);
+            wr_notifier_wake_up(self.window_id, composite_needed);
         }
     }
 
