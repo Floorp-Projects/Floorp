@@ -272,6 +272,13 @@ static SystemTimeConverter<guint32>& TimeConverter() {
 
 nsWindow::CSDSupportLevel nsWindow::sCSDSupportLevel = CSD_SUPPORT_UNKNOWN;
 bool nsWindow::sTransparentMainWindow = false;
+static bool sIgnoreChangedSettings = false;
+
+void nsWindow::WithSettingsChangesIgnored(const std::function<void()>& aFn) {
+  AutoRestore ar(sIgnoreChangedSettings);
+  sIgnoreChangedSettings = true;
+  aFn();
+}
 
 namespace mozilla {
 
@@ -6889,6 +6896,9 @@ static gboolean window_state_event_cb(GtkWidget* widget,
 
 static void settings_changed_cb(GtkSettings* settings, GParamSpec* pspec,
                                 nsWindow* data) {
+  if (sIgnoreChangedSettings) {
+    return;
+  }
   RefPtr<nsWindow> window = data;
   window->ThemeChanged();
 }
