@@ -42,7 +42,6 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsProxyRelease.h"
-#include "nsReadableUtils.h"
 #include "mozilla/ConsoleTimelineMarker.h"
 #include "mozilla/TimestampTimelineMarker.h"
 
@@ -2059,21 +2058,24 @@ static void ComposeAndStoreGroupName(JSContext* aCx,
                                      const Sequence<JS::Value>& aData,
                                      nsAString& aName,
                                      nsTArray<nsString>* aGroupStack) {
-  StringJoinAppend(
-      aName, u" "_ns, aData, [aCx](nsAString& dest, const JS::Value& valueRef) {
-        JS::Rooted<JS::Value> value(aCx, valueRef);
-        JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
-        if (!jsString) {
-          return;
-        }
+  for (uint32_t i = 0; i < aData.Length(); ++i) {
+    if (i != 0) {
+      aName.AppendLiteral(" ");
+    }
 
-        nsAutoJSString string;
-        if (!string.init(aCx, jsString)) {
-          return;
-        }
+    JS::Rooted<JS::Value> value(aCx, aData[i]);
+    JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+    if (!jsString) {
+      return;
+    }
 
-        dest.Append(string);
-      });
+    nsAutoJSString string;
+    if (!string.init(aCx, jsString)) {
+      return;
+    }
+
+    aName.Append(string);
+  }
 
   aGroupStack->AppendElement(aName);
 }

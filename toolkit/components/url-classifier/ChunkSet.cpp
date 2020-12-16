@@ -5,25 +5,24 @@
 
 #include "ChunkSet.h"
 
-#include "nsReadableUtils.h"
-
 namespace mozilla {
 namespace safebrowsing {
 
 const size_t ChunkSet::IO_BUFFER_SIZE;
 
 nsresult ChunkSet::Serialize(nsACString& aChunkStr) {
-  // Truncate and append rather than assigning because that's more efficient if
-  // aString is an nsAutoCString.
   aChunkStr.Truncate();
-  StringJoinAppend(aChunkStr, ","_ns, mRanges,
-                   [](nsACString& dst, const Range& range) {
-                     dst.AppendInt((int32_t)range.Begin());
-                     if (range.Begin() != range.End()) {
-                       dst.Append('-');
-                       dst.AppendInt((int32_t)range.End());
-                     }
-                   });
+  for (const Range& range : mRanges) {
+    if (&range != &mRanges[0]) {
+      aChunkStr.Append(',');
+    }
+
+    aChunkStr.AppendInt((int32_t)range.Begin());
+    if (range.Begin() != range.End()) {
+      aChunkStr.Append('-');
+      aChunkStr.AppendInt((int32_t)range.End());
+    }
+  }
 
   return NS_OK;
 }

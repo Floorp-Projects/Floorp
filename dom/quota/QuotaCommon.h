@@ -28,7 +28,6 @@
 #include "nsIEventTarget.h"
 #include "nsLiteralString.h"
 #include "nsPrintfCString.h"
-#include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTLiteralString.h"
@@ -967,9 +966,18 @@ inline auto AnonymizedOriginString(const nsACString& aOriginString) {
 
 template <typename T>
 void StringifyTableKeys(const T& aTable, nsACString& aResult) {
-  StringJoinAppend(
-      aResult, ", "_ns, aTable,
-      [](nsACString& dest, const auto& entry) { dest.Append(entry.GetKey()); });
+  bool first = true;
+  for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
+    if (first) {
+      first = false;
+    } else {
+      aResult.Append(", "_ns);
+    }
+
+    const auto& key = iter.Get()->GetKey();
+
+    aResult.Append(key);
+  }
 }
 
 #ifdef XP_WIN

@@ -17,7 +17,6 @@
 #include "ThreadLocal.h"
 
 #include "mozilla/dom/Event.h"
-#include "nsReadableUtils.h"
 
 namespace mozilla::dom::indexedDB {
 
@@ -107,12 +106,17 @@ LoggingString::LoggingString(const IDBTransaction& aTransaction)
     : nsAutoCString(kOpenBracket) {
   constexpr auto kCommaSpace = ", "_ns;
 
-  StringJoinAppend(*this, kCommaSpace, aTransaction.ObjectStoreNamesInternal(),
-                   [](nsACString& dest, const auto& store) {
-                     dest.Append(kQuote);
-                     AppendUTF16toUTF8(store, dest);
-                     dest.Append(kQuote);
-                   });
+  const nsTArray<nsString>& stores = aTransaction.ObjectStoreNamesInternal();
+
+  for (uint32_t count = stores.Length(), index = 0; index < count; index++) {
+    Append(kQuote);
+    AppendUTF16toUTF8(stores[index], *this);
+    Append(kQuote);
+
+    if (index != count - 1) {
+      Append(kCommaSpace);
+    }
+  }
 
   Append(kCloseBracket);
   Append(kCommaSpace);

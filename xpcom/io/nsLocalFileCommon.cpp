@@ -347,14 +347,13 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult) {
   for (nodeIndex = branchIndex; nodeIndex < fromNodes.Length(); ++nodeIndex) {
     aResult.AppendLiteral("../");
   }
-  StringJoinAppend(aResult, "/"_ns, mozilla::Span{thisNodes}.From(branchIndex),
-                   [](nsACString& dest, const auto& thisNode) {
-                     // XXX(Bug 1682869) We wouldn't need to reconstruct a
-                     // nsDependentString here if SplitPath already returned
-                     // nsDependentString. In fact, it seems SplitPath might be
-                     // replaced by ParseString?
-                     AppendUTF16toUTF8(nsDependentString{thisNode}, dest);
-                   });
+  for (nodeIndex = branchIndex; nodeIndex < thisNodes.Length(); ++nodeIndex) {
+    NS_ConvertUTF16toUTF8 nodeStr(thisNodes[nodeIndex]);
+    aResult.Append(nodeStr);
+    if (nodeIndex + 1 < thisNodes.Length()) {
+      aResult.Append('/');
+    }
+  }
 
   return NS_OK;
 }

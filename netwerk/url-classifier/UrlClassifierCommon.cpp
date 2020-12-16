@@ -31,7 +31,6 @@
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
-#include "nsReadableUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -607,10 +606,14 @@ bool UrlClassifierCommon::IsCryptominingClassificationFlag(uint32_t aFlag) {
 
 void UrlClassifierCommon::TablesToString(const nsTArray<nsCString>& aList,
                                          nsACString& aString) {
-  // Truncate and append rather than assigning because that's more efficient if
-  // aString is an nsAutoCString.
   aString.Truncate();
-  StringJoinAppend(aString, ","_ns, aList);
+
+  for (const nsCString& table : aList) {
+    if (!aString.IsEmpty()) {
+      aString.Append(",");
+    }
+    aString.Append(table);
+  }
 }
 
 uint32_t UrlClassifierCommon::TablesToClassificationFlags(
