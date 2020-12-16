@@ -392,7 +392,7 @@ static void CalculateToolbarButtonSpacing(WidgetNodeType aAppearance,
 size_t GetGtkHeaderBarButtonLayout(Span<ButtonLayout> aButtonLayout,
                                    bool* aReversedButtonsPlacement) {
   gchar* decorationLayoutSetting = nullptr;
-  GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
+  GtkSettings* settings = gtk_settings_get_default();
   g_object_get(settings, "gtk-decoration-layout", &decorationLayoutSetting,
                nullptr);
   auto free = mozilla::MakeScopeExit([&] { g_free(decorationLayoutSetting); });
