@@ -102,6 +102,7 @@ TEST_HARNESS_FILES.gtest += [
     "transparent-ico-with-and-mask.ico",
     "transparent-if-within-ico.bmp",
     "transparent-no-alpha-header.webp",
+    "transparent.avif",
     "transparent.gif",
     "transparent.png",
     "transparent.webp",

@@ -540,6 +540,11 @@ ImageTestCase CorruptAVIFTestCase() {
                        TEST_CASE_HAS_ERROR);
 }
 
+ImageTestCase TransparentAVIFTestCase() {
+  return ImageTestCase("transparent.avif", "image/avif", IntSize(1200, 1200),
+                       TEST_CASE_IS_TRANSPARENT);
+}
+
 ImageTestCase TransparentPNGTestCase() {
   return ImageTestCase("transparent.png", "image/png", IntSize(32, 32),
                        TEST_CASE_IS_TRANSPARENT);
