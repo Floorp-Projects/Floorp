@@ -36,11 +36,11 @@ needs-focus == autofocus-02b.svg pass.svg
 
 == baseline-middle-01.svg pass.svg
 
-fails-if(Android&&webrender&&device) == blend-color-burn.svg blend-color-burn-ref.svg
-fails-if(Android&&webrender&&device) == blend-color-dodge.svg blend-color-dodge-ref.svg
+== blend-color-burn.svg blend-color-burn-ref.svg
+== blend-color-dodge.svg blend-color-dodge-ref.svg
 # == blend-color.svg blend-color-ref.svg
-random-if(Android&&webrender) == blend-darken.svg blend-darken-ref.svg
-random-if(Android&&webrender) == blend-difference.svg blend-difference-ref.svg
+== blend-darken.svg blend-darken-ref.svg
+== blend-difference.svg blend-difference-ref.svg
 fuzzy-if(skiaContent,0-1,0-1600) fuzzy-if(geckoview&&webrender,0-5,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
 # == blend-hard-light.svg blend-hard-light-ref.svg
 # == blend-hue.svg blend-hue-ref.svg
