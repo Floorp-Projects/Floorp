@@ -1245,20 +1245,17 @@ function runTests() {
 
     // :-moz-any()
     let parseable_if_any_is_is_and_has_better_error_recovery =
-      SpecialPowers.getBoolPref("layout.css.moz-any-is-is.enabled") &&
       SpecialPowers.getBoolPref("layout.css.is-and-where-better-error-recovery.enabled")
       ? test_parseable : test_balanced_unparseable;
     parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any()");
     parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any('foo')");
-    let parseable_if_any_is_is = SpecialPowers.getBoolPref("layout.css.moz-any-is-is.enabled")
-      ? test_parseable : test_balanced_unparseable;
-    parseable_if_any_is_is(":-moz-any(div p)");
-    parseable_if_any_is_is(":-moz-any(div ~ p)");
-    parseable_if_any_is_is(":-moz-any(div~p)");
-    parseable_if_any_is_is(":-moz-any(div + p)");
-    parseable_if_any_is_is(":-moz-any(div+p)");
-    parseable_if_any_is_is(":-moz-any(div > p)");
-    parseable_if_any_is_is(":-moz-any(div>p)");
+    test_parseable(":-moz-any(div p)");
+    test_parseable(":-moz-any(div ~ p)");
+    test_parseable(":-moz-any(div~p)");
+    test_parseable(":-moz-any(div + p)");
+    test_parseable(":-moz-any(div+p)");
+    test_parseable(":-moz-any(div > p)");
+    test_parseable(":-moz-any(div>p)");
     test_parseable(":-moz-any(div, p)");
     test_parseable(":-moz-any( div , p  )");
     test_parseable(":-moz-any(div,p)");
