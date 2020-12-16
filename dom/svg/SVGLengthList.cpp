@@ -40,8 +40,9 @@ void SVGLengthList::GetValueAsString(nsAString& aValue) const {
 nsresult SVGLengthList::SetValueFromString(const nsAString& aValue) {
   SVGLengthList temp;
 
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
-      aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
+                                   nsTokenizerFlags::SeparatorOptional>
+      tokenizer(aValue, ',');
 
   while (tokenizer.hasMoreTokens()) {
     SVGLength length;

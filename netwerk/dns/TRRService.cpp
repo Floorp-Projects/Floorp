@@ -360,8 +360,9 @@ nsresult TRRService::ReadPrefs(const char* name) {
         return;
       }
 
-      nsCCharSeparatedTokenizer tokenizer(
-          excludedDomains, ',', nsCCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+      nsCCharSeparatedTokenizerTemplate<NS_IsAsciiWhitespace,
+                                        nsTokenizerFlags::SeparatorOptional>
+          tokenizer(excludedDomains, ',');
       while (tokenizer.hasMoreTokens()) {
         nsAutoCString token(tokenizer.nextToken());
         LOG(("TRRService::ReadPrefs %s host:[%s]\n", aPrefName, token.get()));
