@@ -109,6 +109,13 @@ if (Services.prefs.getBoolPref("layout.css.file-selector-button.enabled")) {
   });
 }
 
+// Reserved to UA sheets, behind a pref for content.
+whitelist.push({
+  sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+  errorMessage: /Unknown pseudo-.*autofill/i,
+  isFromDevTools: false,
+});
+
 if (!Services.prefs.getBoolPref("layout.css.scroll-anchoring.enabled")) {
   whitelist.push({
     sourceName: /webconsole\.css$/i,
