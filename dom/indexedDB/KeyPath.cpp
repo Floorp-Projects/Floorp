@@ -32,12 +32,8 @@ using KeyPathTokenizer =
 bool IsValidKeyPathString(const nsAString& aKeyPath) {
   NS_ASSERTION(!aKeyPath.IsVoid(), "What?");
 
-  KeyPathTokenizer tokenizer(aKeyPath, '.');
-
-  while (tokenizer.hasMoreTokens()) {
-    const auto& token = tokenizer.nextToken();
-
-    if (!token.Length()) {
+  for (const auto& token : KeyPathTokenizer(aKeyPath, '.').ToRange()) {
+    if (token.IsEmpty()) {
       return false;
     }
 

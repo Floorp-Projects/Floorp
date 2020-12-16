@@ -34,13 +34,7 @@ nsresult URLDecorationStripper::StripTrackingIdentifiers(nsIURI* aURI,
   int32_t queryBegins = path.FindChar('?');
   // Only positive values are valid since the path must begin with a '/'.
   if (queryBegins > 0) {
-    typedef nsCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing>
-        Tokenizer;
-
-    Tokenizer tokenizer(tokenList, ' ');
-    nsAutoString token;
-    while (tokenizer.hasMoreTokens()) {
-      token = tokenizer.nextToken();
+    for (const nsAString& token : tokenList.Split(' ')) {
       if (token.IsEmpty()) {
         continue;
       }

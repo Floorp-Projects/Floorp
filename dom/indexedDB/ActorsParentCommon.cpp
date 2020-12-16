@@ -65,8 +65,6 @@ using mozilla::ipc::IsOnBackgroundThread;
 
 namespace {
 
-bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
-
 constexpr StructuredCloneFileBase::FileType ToStructuredCloneFileType(
     const char16_t aTag) {
   switch (aTag) {
@@ -695,12 +693,10 @@ DeserializeStructuredCloneFiles(const FileManager& aFileManager,
                                 const nsAString& aText) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing> tokenizer(aText,
-                                                                     ' ');
-
   nsTArray<StructuredCloneFileParent> result;
-  while (tokenizer.hasMoreTokens()) {
-    const auto& token = tokenizer.nextToken();
+  for (const auto& token :
+       nsCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing>(aText, ' ')
+           .ToRange()) {
     MOZ_ASSERT(!token.IsEmpty());
 
     IDB_TRY_UNWRAP(auto structuredCloneFile,

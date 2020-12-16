@@ -432,12 +432,13 @@ const nsDependentSubstring SMILParserUtils::TrimWhitespace(
 
 bool SMILParserUtils::ParseKeySplines(
     const nsAString& aSpec, FallibleTArray<SMILKeySpline>& aKeySplines) {
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-      controlPointTokenizer(aSpec, ';');
-  while (controlPointTokenizer.hasMoreTokens()) {
+  for (const auto& controlPoint :
+       nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>(aSpec,
+                                                                          ';')
+           .ToRange()) {
     nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
                                      nsTokenizerFlags::SeparatorOptional>
-        tokenizer(controlPointTokenizer.nextToken(), ',');
+        tokenizer(controlPoint, ',');
 
     double values[4];
     for (auto& value : values) {

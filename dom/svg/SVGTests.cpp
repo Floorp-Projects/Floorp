@@ -68,10 +68,9 @@ int32_t SVGTests::GetBestLanguagePreferenceRank(
   int32_t lowestRank = -1;
 
   for (uint32_t i = 0; i < mStringListAttributes[LANGUAGE].Length(); i++) {
-    nsCharSeparatedTokenizer languageTokenizer(aAcceptLangs, ',');
     int32_t index = 0;
-    while (languageTokenizer.hasMoreTokens()) {
-      const nsAString& languageToken = languageTokenizer.nextToken();
+    for (const nsAString& languageToken :
+         nsCharSeparatedTokenizer(aAcceptLangs, ',').ToRange()) {
       bool exactMatch = languageToken.Equals(mStringListAttributes[LANGUAGE][i],
                                              nsCaseInsensitiveStringComparator);
       bool prefixOnlyMatch =
