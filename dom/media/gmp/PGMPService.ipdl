@@ -14,21 +14,10 @@ namespace gmp {
 sync refcounted protocol PGMPService
 {
 parent:
-  sync LaunchGMP(nsCString nodeId,
+  sync LaunchGMP(NodeIdVariant nodeIdVariant,
                  nsCString api,
                  nsCString[] tags,
                  ProcessId[] alreadyBridgedTo)
-    returns (uint32_t pluginId,
-             ProcessId id,
-             nsCString displayName,
-             Endpoint<PGMPContentParent> endpoint,
-             nsresult aResult,
-             nsCString aErrorDescription);
-
-  sync LaunchGMPForNodeId(NodeIdData nodeId,
-                          nsCString api,
-                          nsCString[] tags,
-                          ProcessId[] alreadyBridgedTo)
     returns (uint32_t pluginId,
              ProcessId id,
              nsCString displayName,

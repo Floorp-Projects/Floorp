@@ -326,10 +326,21 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::EnsureInitialized() {
 
 RefPtr<GetGMPContentParentPromise>
 GeckoMediaPluginServiceParent::GetContentParent(
-    GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
+    GMPCrashHelper* aHelper, const NodeIdVariant& aNodeIdVariant,
     const nsCString& aAPI, const nsTArray<nsCString>& aTags) {
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
+
   nsCOMPtr<nsISerialEventTarget> thread(GetGMPThread());
   if (!thread) {
+    MOZ_ASSERT_UNREACHABLE(
+        "We should always be called on GMP thread, so it should be live");
+    return GetGMPContentParentPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                       __func__);
+  }
+
+  nsCString nodeIdString;
+  nsresult rv = GetNodeId(aNodeIdVariant, nodeIdString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return GetGMPContentParentPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
   }
@@ -339,7 +350,7 @@ GeckoMediaPluginServiceParent::GetContentParent(
   EnsureInitialized()->Then(
       thread, __func__,
       [self = RefPtr<GeckoMediaPluginServiceParent>(this),
-       nodeIdString = nsCString(aNodeIdString), api = nsCString(aAPI),
+       nodeIdString = std::move(nodeIdString), api = nsCString(aAPI),
        tags = aTags.Clone(), helper = RefPtr<GMPCrashHelper>(aHelper),
        holder = std::move(holder)](
           const GenericPromise::ResolveOrRejectValue& aValue) mutable -> void {
@@ -363,22 +374,6 @@ GeckoMediaPluginServiceParent::GetContentParent(
       });
 
   return promise;
-}
-
-RefPtr<GetGMPContentParentPromise>
-GeckoMediaPluginServiceParent::GetContentParent(
-    GMPCrashHelper* aHelper, const NodeId& aNodeId, const nsCString& aAPI,
-    const nsTArray<nsCString>& aTags) {
-  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
-
-  nsCString nodeIdString;
-  nsresult rv = GetNodeId(aNodeId.mOrigin, aNodeId.mTopLevelOrigin,
-                          aNodeId.mGMPName, nodeIdString);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return GetGMPContentParentPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                       __func__);
-  }
-  return GetContentParent(aHelper, nodeIdString, aAPI, aTags);
 }
 
 void GeckoMediaPluginServiceParent::InitializePlugins(
@@ -1216,6 +1211,19 @@ GeckoMediaPluginServiceParent::GetNodeId(
   return rv;
 }
 
+nsresult GeckoMediaPluginServiceParent::GetNodeId(
+    const NodeIdVariant& aNodeIdVariant, nsACString& aOutId) {
+  if (aNodeIdVariant.type() == NodeIdVariant::TnsCString) {
+    // The union already contains a node ID as a string, use that.
+    aOutId = aNodeIdVariant.get_nsCString();
+    return NS_OK;
+  }
+  // The union contains a NodeIdParts, convert it to a node ID string.
+  NodeIdParts nodeIdParts{aNodeIdVariant.get_NodeIdParts()};
+  return GetNodeId(nodeIdParts.mOrigin(), nodeIdParts.mTopLevelOrigin(),
+                   nodeIdParts.mGMPName(), aOutId);
+}
+
 static bool ExtractHostName(const nsACString& aOrigin, nsACString& aOutData) {
   nsCString str;
   str.Assign(aOrigin);
@@ -1587,7 +1595,7 @@ GMPServiceParent::~GMPServiceParent() {
 }
 
 mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
-    const nsCString& aNodeId, const nsCString& aAPI,
+    const NodeIdVariant& aNodeIdVariant, const nsCString& aAPI,
     nsTArray<nsCString>&& aTags, nsTArray<ProcessId>&& aAlreadyBridgedTo,
     uint32_t* aOutPluginId, ProcessId* aOutProcessId,
     nsCString* aOutDisplayName, Endpoint<PGMPContentParent>* aOutEndpoint,
@@ -1598,7 +1606,16 @@ mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
     return IPC_OK();
   }
 
-  RefPtr<GMPParent> gmp = mService->SelectPluginForAPI(aNodeId, aAPI, aTags);
+  nsCString nodeIdString;
+  nsresult rv = mService->GetNodeId(aNodeIdVariant, nodeIdString);
+  if (!NS_SUCCEEDED(rv)) {
+    *aOutRv = rv;
+    *aOutErrorDescription = "GetNodeId failed."_ns;
+    return IPC_OK();
+  }
+
+  RefPtr<GMPParent> gmp =
+      mService->SelectPluginForAPI(nodeIdString, aAPI, aTags);
   if (gmp) {
     *aOutPluginId = gmp->GetPluginId();
   } else {
@@ -1623,7 +1640,7 @@ mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
 
   Endpoint<PGMPContentParent> parent;
   Endpoint<PGMPContentChild> child;
-  nsresult rv =
+  rv =
       PGMPContent::CreateEndpoints(OtherPid(), *aOutProcessId, &parent, &child);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     *aOutRv = rv;
@@ -1643,26 +1660,6 @@ mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
 
   *aOutRv = NS_OK;
   return IPC_OK();
-}
-
-mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMPForNodeId(
-    const NodeIdData& aNodeId, const nsCString& aApi,
-    nsTArray<nsCString>&& aTags, nsTArray<ProcessId>&& aAlreadyBridgedTo,
-    uint32_t* aOutPluginId, ProcessId* aOutId, nsCString* aOutDisplayName,
-    Endpoint<PGMPContentParent>* aOutEndpoint, nsresult* aOutRv,
-    nsCString* aOutErrorDescription) {
-  nsCString nodeId;
-  nsresult rv = mService->GetNodeId(
-      aNodeId.mOrigin(), aNodeId.mTopLevelOrigin(), aNodeId.mGMPName(), nodeId);
-  if (!NS_SUCCEEDED(rv)) {
-    *aOutRv = rv;
-    *aOutErrorDescription = "GetNodeId failed."_ns;
-    return IPC_OK();
-  }
-  return RecvLaunchGMP(nodeId, aApi, std::move(aTags),
-                       std::move(aAlreadyBridgedTo), aOutPluginId, aOutId,
-                       aOutDisplayName, aOutEndpoint, aOutRv,
-                       aOutErrorDescription);
 }
 
 mozilla::ipc::IPCResult GMPServiceParent::RecvGetGMPNodeId(

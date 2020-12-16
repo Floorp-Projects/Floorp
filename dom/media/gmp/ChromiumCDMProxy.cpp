@@ -63,13 +63,14 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
     return;
   }
 
-  gmp::NodeId nodeId(aOrigin, aTopLevelOrigin, aGMPName);
+  gmp::NodeIdParts nodeIdParts{nsString(aOrigin), nsString(aTopLevelOrigin),
+                               nsString(aGMPName)};
   nsCOMPtr<nsISerialEventTarget> thread = mGMPThread;
   RefPtr<ChromiumCDMProxy> self(this);
   nsCString keySystem = NS_ConvertUTF16toUTF8(mKeySystem);
   RefPtr<Runnable> task(NS_NewRunnableFunction(
       "ChromiumCDMProxy::Init",
-      [self, nodeId, helper, aPromiseId, thread, keySystem]() -> void {
+      [self, nodeIdParts, helper, aPromiseId, thread, keySystem]() -> void {
         MOZ_ASSERT(self->IsOnOwnerThread());
 
         RefPtr<gmp::GeckoMediaPluginService> service =
@@ -82,7 +83,7 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
           return;
         }
         RefPtr<gmp::GetCDMParentPromise> promise =
-            service->GetCDM(nodeId, {keySystem}, helper);
+            service->GetCDM(nodeIdParts, {keySystem}, helper);
         promise->Then(
             thread, __func__,
             [self, aPromiseId, thread](RefPtr<gmp::ChromiumCDMParent> cdm) {
