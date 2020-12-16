@@ -10,7 +10,6 @@
 #include "mozilla/dom/SVGViewElement.h"
 #include "mozilla/SVGOuterSVGFrame.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsContentUtils.h"  // for nsCharSeparatedTokenizerTemplate
 #include "SVGAnimatedTransformList.h"
 
 namespace mozilla {
@@ -24,8 +23,6 @@ static bool IsMatchingParameter(const nsAString& aString,
   return StringBeginsWith(aString, aParameterName) && aString.Last() == ')' &&
          aString.CharAt(aParameterName.Length()) == '(';
 }
-
-inline bool IgnoreWhitespace(char16_t aChar) { return false; }
 
 static SVGViewElement* GetViewElement(Document* aDocument,
                                       const nsAString& aId) {
@@ -130,7 +127,7 @@ bool SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
   // Each token is a SVGViewAttribute
   int32_t bracketPos = aViewSpec.FindChar('(');
   uint32_t lengthOfViewSpec = aViewSpec.Length() - bracketPos - 2;
-  nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> tokenizer(
+  nsCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing> tokenizer(
       Substring(aViewSpec, bracketPos + 1, lengthOfViewSpec), ';');
 
   if (!tokenizer.hasMoreTokens()) {

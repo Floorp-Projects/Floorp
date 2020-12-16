@@ -396,10 +396,9 @@ nsresult TRR::DohDecodeQuery(const nsCString& query, nsCString& host,
   LOG(("TRR::DohDecodeQuery %s!\n", query.get()));
 
   // extract "dns=" from the query string
-  nsCCharSeparatedTokenizer tokenizer(query, '&');
   nsAutoCString data;
-  while (tokenizer.hasMoreTokens()) {
-    const nsACString& token = tokenizer.nextToken();
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(query, '&').ToRange()) {
     nsDependentCSubstring dns = Substring(token, 0, 4);
     nsAutoCString check(dns);
     if (check.Equals("dns=")) {

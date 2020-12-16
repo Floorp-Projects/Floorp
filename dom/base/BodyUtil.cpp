@@ -123,10 +123,9 @@ class MOZ_STACK_CLASS FormDataParser {
     }
 
     if (headerName.LowerCaseEqualsLiteral("content-disposition")) {
-      nsCCharSeparatedTokenizer tokenizer(headerValue, ';');
       bool seenFormData = false;
-      while (tokenizer.hasMoreTokens()) {
-        const nsDependentCSubstring& token = tokenizer.nextToken();
+      for (const nsACString& token :
+           nsCCharSeparatedTokenizer(headerValue, ';').ToRange()) {
         if (token.IsEmpty()) {
           continue;
         }

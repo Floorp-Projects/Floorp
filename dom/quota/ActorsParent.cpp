@@ -7769,17 +7769,12 @@ void ClientUsageArray::Serialize(nsACString& aText) const {
   }
 }
 
-bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
-
 nsresult ClientUsageArray::Deserialize(const nsACString& aText) {
   nsresult rv;
 
-  nsCCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing> tokenizer(aText,
-                                                                      ' ');
-
-  while (tokenizer.hasMoreTokens()) {
-    const nsDependentCSubstring& token = tokenizer.nextToken();
-
+  for (const auto& token :
+       nsCCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing>(aText, ' ')
+           .ToRange()) {
     if (NS_WARN_IF(token.Length() < 2)) {
       return NS_ERROR_FAILURE;
     }

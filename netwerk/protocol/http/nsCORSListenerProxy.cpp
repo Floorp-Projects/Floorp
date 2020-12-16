@@ -1148,9 +1148,8 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
   Unused << http->GetResponseHeader("Access-Control-Allow-Methods"_ns,
                                     headerVal);
 
-  nsCCharSeparatedTokenizer methods(headerVal, ',');
-  while (methods.hasMoreTokens()) {
-    const nsDependentCSubstring& method = methods.nextToken();
+  for (const nsACString& method :
+       nsCCharSeparatedTokenizer(headerVal, ',').ToRange()) {
     if (method.IsEmpty()) {
       continue;
     }
@@ -1177,9 +1176,8 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
   Unused << http->GetResponseHeader("Access-Control-Allow-Headers"_ns,
                                     headerVal);
 
-  nsCCharSeparatedTokenizer headers(headerVal, ',');
-  while (headers.hasMoreTokens()) {
-    const nsDependentCSubstring& header = headers.nextToken();
+  for (const nsACString& header :
+       nsCCharSeparatedTokenizer(headerVal, ',').ToRange()) {
     if (header.IsEmpty()) {
       continue;
     }
@@ -1292,9 +1290,8 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
   bool foundMethod = mPreflightMethod.EqualsLiteral("GET") ||
                      mPreflightMethod.EqualsLiteral("HEAD") ||
                      mPreflightMethod.EqualsLiteral("POST");
-  nsCCharSeparatedTokenizer methodTokens(headerVal, ',');
-  while (methodTokens.hasMoreTokens()) {
-    const nsDependentCSubstring& method = methodTokens.nextToken();
+  for (const nsACString& method :
+       nsCCharSeparatedTokenizer(headerVal, ',').ToRange()) {
     if (method.IsEmpty()) {
       continue;
     }
@@ -1324,10 +1321,9 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
   Unused << http->GetResponseHeader("Access-Control-Allow-Headers"_ns,
                                     headerVal);
   nsTArray<nsCString> headers;
-  nsCCharSeparatedTokenizer headerTokens(headerVal, ',');
   bool allowAllHeaders = false;
-  while (headerTokens.hasMoreTokens()) {
-    const nsDependentCSubstring& header = headerTokens.nextToken();
+  for (const nsACString& header :
+       nsCCharSeparatedTokenizer(headerVal, ',').ToRange()) {
     if (header.IsEmpty()) {
       continue;
     }

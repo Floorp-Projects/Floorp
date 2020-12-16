@@ -245,15 +245,15 @@ void SVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
 
 int32_t SVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
     const nsAString& aSpec, float* aVars, int32_t aNVars) {
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
-                                   nsTokenizerFlags::SeparatorOptional>
-      tokenizer(aSpec, ',');
-
   int numArgsFound = 0;
 
-  while (tokenizer.hasMoreTokens()) {
+  for (const auto& token :
+       nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace,
+                                        nsTokenizerFlags::SeparatorOptional>(
+           aSpec, ',')
+           .ToRange()) {
     float f;
-    if (!SVGContentUtils::ParseNumber(tokenizer.nextToken(), f)) {
+    if (!SVGContentUtils::ParseNumber(token, f)) {
       return -1;
     }
     if (numArgsFound < aNVars) {
