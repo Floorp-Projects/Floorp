@@ -276,6 +276,10 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
                                    InflatedChar16Sequence<SeqCharT> seq,
                                    uint32_t length, HashNumber hash);
 
+  static ParserAtomEntry* allocateRaw(JSContext* cx, LifoAlloc& alloc,
+                                      const uint8_t* srcRaw,
+                                      size_t totalLength);
+
   ParserAtom* asAtom() { return reinterpret_cast<ParserAtom*>(this); }
   const ParserAtom* asAtom() const {
     return reinterpret_cast<const ParserAtom*>(this);
@@ -729,30 +733,17 @@ class ParserAtomsTable {
 class ParserAtomVectorBuilder {
  private:
   const WellKnownParserAtoms& wellKnownTable_;
-  LifoAlloc* alloc_;
   ParserAtomVector& entries_;
 
  public:
-  ParserAtomVectorBuilder(JSRuntime* rt, LifoAlloc& alloc,
-                          ParserAtomVector& entries);
+  ParserAtomVectorBuilder(JSRuntime* rt, ParserAtomVector& entries);
 
   bool resize(JSContext* cx, size_t count);
   size_t length() const { return entries_.length(); }
 
-  const ParserAtom* internLatin1At(JSContext* cx,
-                                   const JS::Latin1Char* latin1Ptr,
-                                   HashNumber hash, uint32_t length,
-                                   ParserAtomIndex index);
-
-  const ParserAtom* internChar16At(JSContext* cx,
-                                   const LittleEndianChars twoByteLE,
-                                   HashNumber hash, uint32_t length,
-                                   ParserAtomIndex index);
-
- private:
-  template <typename CharT, typename SeqCharT, typename InputCharsT>
-  const ParserAtom* internAt(JSContext* cx, InputCharsT chars, HashNumber hash,
-                             uint32_t length, ParserAtomIndex index);
+  void set(ParserAtomIndex index, const ParserAtomEntry* atom) {
+    entries_[index] = const_cast<ParserAtomEntry*>(atom);
+  }
 
  public:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;

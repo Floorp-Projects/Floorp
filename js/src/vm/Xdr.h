@@ -98,6 +98,11 @@ class XDRBuffer<XDR_ENCODE> : public XDRBufferBase {
     return nullptr;
   }
 
+  const uint8_t* peek(size_t n) {
+    MOZ_CRASH("Should never read in encode mode");
+    return nullptr;
+  }
+
  private:
   JS::TranscodeBuffer& buffer_;
 };
@@ -118,6 +123,18 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
 
     // Don't let buggy code read past our buffer
     if (cursor_ > buffer_.length()) {
+      return nullptr;
+    }
+
+    return ptr;
+  }
+
+  const uint8_t* peek(size_t n) {
+    MOZ_ASSERT(cursor_ < buffer_.length());
+    uint8_t* ptr = &buffer_[cursor_];
+
+    // Don't let buggy code read past our buffer
+    if (cursor_ + n > buffer_.length()) {
       return nullptr;
     }
 
@@ -296,8 +313,17 @@ class XDRState : public XDRCoderBase {
     return mozilla::Err(code);
   }
 
-  XDRResult peekData(const uint8_t** pptr, size_t length) {
+  XDRResult readData(const uint8_t** pptr, size_t length) {
     const uint8_t* ptr = buf->read(length);
+    if (!ptr) {
+      return fail(JS::TranscodeResult_Failure_BadDecode);
+    }
+    *pptr = ptr;
+    return Ok();
+  }
+
+  XDRResult peekData(const uint8_t** pptr, size_t length) {
+    const uint8_t* ptr = buf->peek(length);
     if (!ptr) {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
@@ -765,9 +791,8 @@ XDRResult XDRTaggedParserAtomIndex(
     XDRState<mode>* xdr, frontend::TaggedParserAtomIndex* taggedIndex);
 
 template <XDRMode mode>
-XDRResult XDRParserAtomDataAt(XDRState<mode>* xdr,
-                              const frontend::ParserAtom** atomp,
-                              frontend::ParserAtomIndex index);
+XDRResult XDRParserAtomEntry(XDRState<mode>* xdr,
+                             frontend::ParserAtomEntry** atomp);
 
 template <XDRMode mode>
 XDRResult XDRCompilationInput(XDRState<mode>* xdr,
