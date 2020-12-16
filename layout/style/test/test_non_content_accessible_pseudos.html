@@ -14,7 +14,6 @@ const NON_CONTENT_ACCESIBLE_PSEUDOS = [
   "::-moz-number-spin-box",
   "::-moz-search-clear-button",
 
-  ":autofill",
   ":-moz-native-anonymous",
   ":-moz-use-shadow-tree-root",
   ":-moz-table-border-nonzero",
@@ -36,6 +35,10 @@ const NON_CONTENT_ACCESIBLE_PSEUDOS = [
   "::-moz-tree-row",
   "::-moz-tree-row(foo)",
 ];
+
+if (!SpecialPowers.getBoolPref("layout.css.autofill.enabled")) {
+  NON_CONTENT_ACCESIBLE_PSEUDOS.push(":autofill", ":-webkit-autofill");
+}
 
 test(function() {
   sheet.textContent = `div { color: initial }`;
