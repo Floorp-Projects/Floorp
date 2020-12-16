@@ -19,12 +19,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MarionettePrefs: "chrome://marionette/content/prefs.js",
   modal: "chrome://marionette/content/modal.js",
   PageLoadStrategy: "chrome://marionette/content/capabilities.js",
-  registerEventsActor:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   TimedPromise: "chrome://marionette/content/sync.js",
   truncate: "chrome://marionette/content/format.js",
-  unregisterEventsActor:
-    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -355,8 +351,6 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   );
 
   if (MarionettePrefs.useActors) {
-    // Register the JSWindowActor pair for events as used by Marionette
-    registerEventsActor();
     EventDispatcher.on("page-load", onNavigation);
   } else {
     driver.mm.addMessageListener(
@@ -409,7 +403,6 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
     if (MarionettePrefs.useActors) {
       EventDispatcher.off("page-load", onNavigation);
-      unregisterEventsActor();
     } else {
       driver.mm.removeMessageListener(
         "Marionette:NavigationEvent",
