@@ -527,7 +527,21 @@ class Context {
    * @param {Error|string} error
    */
   logError(error) {
-    Cu.reportError(error);
+    if (this.cloneScope) {
+      Cu.reportError(
+        // Error objects logged using Cu.reportError are not associated
+        // to the related innerWindowID. This results in a leaked docshell
+        // since consoleService cannot release the error object when the
+        // extension global is destroyed.
+        typeof error == "string" ? error : String(error),
+        // Report the error with the appropriate stack trace when the
+        // is related to an actual extension global (instead of being
+        // related to a manifest validation).
+        this.principal && ChromeUtils.getCallerLocation(this.principal)
+      );
+    } else {
+      Cu.reportError(error);
+    }
   }
 
   /**
