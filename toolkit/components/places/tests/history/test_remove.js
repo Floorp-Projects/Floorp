@@ -40,6 +40,7 @@ add_task(async function test_remove_single() {
 
     let shouldRemove = !options.addBookmark;
     let observer;
+    let placesEventListener;
     let promiseObserved = new Promise((resolve, reject) => {
       observer = {
         onBeginUpdateBatch() {},
@@ -89,8 +90,22 @@ add_task(async function test_remove_single() {
           );
         },
       };
+
+      placesEventListener = events => {
+        for (const event of events) {
+          switch (event.type) {
+            case "page-title-changed": {
+              reject(
+                "Unexpected page-title-changed event happens on " + event.url
+              );
+              break;
+            }
+          }
+        }
+      };
     });
     PlacesUtils.history.addObserver(observer);
+    PlacesObservers.addListener(["page-title-changed"], placesEventListener);
 
     info("Performing removal");
     let removed = false;
@@ -115,6 +130,7 @@ add_task(async function test_remove_single() {
 
     await promiseObserved;
     PlacesUtils.history.removeObserver(observer);
+    PlacesObservers.removeListener(["page-title-changed"], placesEventListener);
 
     Assert.equal(visits_in_database(uri), 0, "History entry has disappeared");
     Assert.notEqual(

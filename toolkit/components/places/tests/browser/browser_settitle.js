@@ -19,32 +19,11 @@ function getColumn(table, column, url) {
 add_task(async function() {
   // Make sure titles are correctly saved for a URI with the proper
   // notifications.
-
-  // Create and add history observer.
-  let titleChangedPromise = new Promise(resolve => {
-    var historyObserver = {
-      data: [],
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
-      onTitleChanged(aURI, aPageTitle, aGUID) {
-        this.data.push({ uri: aURI, title: aPageTitle, guid: aGUID });
-
-        // We only expect one title change.
-        //
-        // Although we are loading two different pages, the first page does not
-        // have a title.  Since the title starts out as empty and then is set
-        // to empty, there is no title change notification.
-
-        PlacesUtils.history.removeObserver(this);
-        resolve(this.data);
-      },
-      onDeleteURI() {},
-      onClearHistory() {},
-      onDeleteVisits() {},
-      QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
-    };
-    PlacesUtils.history.addObserver(historyObserver);
-  });
+  const titleChangedPromise = PlacesTestUtils.waitForNotification(
+    "page-title-changed",
+    () => true,
+    "places"
+  );
 
   const url1 =
     "http://example.com/tests/toolkit/components/places/tests/browser/title1.html";
@@ -56,18 +35,16 @@ add_task(async function() {
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url2);
   await loadPromise;
 
-  let data = await titleChangedPromise;
+  const events = await titleChangedPromise;
   is(
-    data[0].uri.spec,
+    events[0].url,
     "http://example.com/tests/toolkit/components/places/tests/browser/title2.html"
   );
-  is(data[0].title, "Some title");
-  is(data[0].guid, getColumn("moz_places", "guid", data[0].uri.spec));
+  is(events[0].title, "Some title");
+  is(events[0].pageGuid, getColumn("moz_places", "guid", events[0].url));
 
-  data.forEach(function(item) {
-    var title = getColumn("moz_places", "title", data[0].uri.spec);
-    is(title, item.title);
-  });
+  const title = getColumn("moz_places", "title", events[0].url);
+  is(title, events[0].title);
 
   gBrowser.removeCurrentTab();
   await PlacesUtils.history.clear();

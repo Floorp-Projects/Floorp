@@ -130,6 +130,14 @@ add_task(async function test_remove_many() {
   };
   PlacesUtils.history.addObserver(observer);
 
+  const pageTitleChangedListener = aEvents => {
+    Assert.ok(
+      false,
+      "Unexpected page-title-changed event happens on " + aEvents[0].url
+    );
+  };
+  PlacesObservers.addListener(["page-title-changed"], pageTitleChangedListener);
+
   info("Removing the pages and checking the callbacks");
 
   let removed = await PlacesUtils.history.remove(keys, page => {
@@ -145,6 +153,10 @@ add_task(async function test_remove_many() {
   Assert.ok(removed, "Something was removed");
 
   PlacesUtils.history.removeObserver(observer);
+  PlacesObservers.removeListener(
+    ["page-title-changed"],
+    pageTitleChangedListener
+  );
 
   info("Checking out results");
   // By now the observers should have been called.
