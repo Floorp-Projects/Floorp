@@ -137,7 +137,7 @@ extern const nsCString kHttp3Versions[];
 #define NS_HTTP_DEFAULT_PORT 80
 #define NS_HTTPS_DEFAULT_PORT 443
 
-#define NS_HTTP_HEADER_SEPS ", \t"
+#define NS_HTTP_HEADER_SEP ','
 
 //-----------------------------------------------------------------------------
 // http atoms...

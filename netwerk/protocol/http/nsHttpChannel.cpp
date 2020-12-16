@@ -69,6 +69,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "sslt.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsContentSecurityManager.h"
 #include "nsIClassOfService.h"
@@ -89,7 +90,6 @@
 #include "nsIStreamConverterService.h"
 #include "nsISiteSecurityService.h"
 #include "nsString.h"
-#include "nsCRT.h"
 #include "CacheObserver.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/Telemetry.h"
@@ -3114,84 +3114,81 @@ bool nsHttpChannel::ResponseWouldVary(nsICacheEntry* entry) {
   nsresult rv;
   nsAutoCString buf, metaKey;
   Unused << mCachedResponseHead->GetHeader(nsHttp::Vary, buf);
-  if (!buf.IsEmpty()) {
-    constexpr auto prefix = "request-"_ns;
 
-    // enumerate the elements of the Vary header...
-    char* val = buf.BeginWriting();  // going to munge buf
-    char* token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
-    while (token) {
-      LOG(
-          ("nsHttpChannel::ResponseWouldVary [channel=%p] "
-           "processing %s\n",
-           this, token));
-      //
-      // if "*", then assume response would vary.  technically speaking,
-      // "Vary: header, *" is not permitted, but we allow it anyways.
-      //
-      // We hash values of cookie-headers for the following reasons:
-      //
-      //   1- cookies can be very large in size
-      //
-      //   2- cookies may contain sensitive information.  (for parity with
-      //      out policy of not storing Set-cookie headers in the cache
-      //      meta data, we likewise do not want to store cookie headers
-      //      here.)
-      //
-      if (*token == '*')
-        return true;  // if we encounter this, just get out of here
+  constexpr auto prefix = "request-"_ns;
 
-      // build cache meta data key...
-      metaKey = prefix + nsDependentCString(token);
+  // enumerate the elements of the Vary header...
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(buf, NS_HTTP_HEADER_SEP).ToRange()) {
+    LOG(
+        ("nsHttpChannel::ResponseWouldVary [channel=%p] "
+         "processing %s\n",
+         this, nsPromiseFlatCString(token).get()));
+    //
+    // if "*", then assume response would vary.  technically speaking,
+    // "Vary: header, *" is not permitted, but we allow it anyways.
+    //
+    // We hash values of cookie-headers for the following reasons:
+    //
+    //   1- cookies can be very large in size
+    //
+    //   2- cookies may contain sensitive information.  (for parity with
+    //      out policy of not storing Set-cookie headers in the cache
+    //      meta data, we likewise do not want to store cookie headers
+    //      here.)
+    //
+    if (token.EqualsLiteral("*")) {
+      return true;  // if we encounter this, just get out of here
+    }
 
-      // check the last value of the given request header to see if it has
-      // since changed.  if so, then indeed the cached response is invalid.
-      nsCString lastVal;
-      entry->GetMetaDataElement(metaKey.get(), getter_Copies(lastVal));
-      LOG(
-          ("nsHttpChannel::ResponseWouldVary [channel=%p] "
-           "stored value = \"%s\"\n",
-           this, lastVal.get()));
+    // build cache meta data key...
+    metaKey = prefix + token;
 
-      // Look for value of "Cookie" in the request headers
-      nsHttpAtom atom = nsHttp::ResolveAtom(token);
-      nsAutoCString newVal;
-      bool hasHeader = NS_SUCCEEDED(mRequestHead.GetHeader(atom, newVal));
-      if (!lastVal.IsEmpty()) {
-        // value for this header in cache, but no value in request
-        if (!hasHeader) {
-          return true;  // yes - response would vary
-        }
+    // check the last value of the given request header to see if it has
+    // since changed.  if so, then indeed the cached response is invalid.
+    nsCString lastVal;
+    entry->GetMetaDataElement(metaKey.get(), getter_Copies(lastVal));
+    LOG(
+        ("nsHttpChannel::ResponseWouldVary [channel=%p] "
+         "stored value = \"%s\"\n",
+         this, lastVal.get()));
 
-        // If this is a cookie-header, stored metadata is not
-        // the value itself but the hash. So we also hash the
-        // outgoing value here in order to compare the hashes
-        nsAutoCString hash;
-        if (atom == nsHttp::Cookie) {
-          rv = Hash(newVal.get(), hash);
-          // If hash failed, be conservative (the cached hash
-          // exists at this point) and claim response would vary
-          if (NS_FAILED(rv)) return true;
-          newVal = hash;
-
-          LOG(
-              ("nsHttpChannel::ResponseWouldVary [this=%p] "
-               "set-cookie value hashed to %s\n",
-               this, newVal.get()));
-        }
-
-        if (!newVal.Equals(lastVal)) {
-          return true;  // yes, response would vary
-        }
-
-      } else if (hasHeader) {  // old value is empty, but newVal is set
-        return true;
+    // Look for value of "Cookie" in the request headers
+    nsHttpAtom atom = nsHttp::ResolveAtom(token);
+    nsAutoCString newVal;
+    bool hasHeader = NS_SUCCEEDED(mRequestHead.GetHeader(atom, newVal));
+    if (!lastVal.IsEmpty()) {
+      // value for this header in cache, but no value in request
+      if (!hasHeader) {
+        return true;  // yes - response would vary
       }
 
-      // next token...
-      token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
+      // If this is a cookie-header, stored metadata is not
+      // the value itself but the hash. So we also hash the
+      // outgoing value here in order to compare the hashes
+      nsAutoCString hash;
+      if (atom == nsHttp::Cookie) {
+        rv = Hash(newVal.get(), hash);
+        // If hash failed, be conservative (the cached hash
+        // exists at this point) and claim response would vary
+        if (NS_FAILED(rv)) return true;
+        newVal = hash;
+
+        LOG(
+            ("nsHttpChannel::ResponseWouldVary [this=%p] "
+             "set-cookie value hashed to %s\n",
+             this, newVal.get()));
+      }
+
+      if (!newVal.Equals(lastVal)) {
+        return true;  // yes, response would vary
+      }
+
+    } else if (hasHeader) {  // old value is empty, but newVal is set
+      return true;
     }
   }
+
   return false;
 }
 
@@ -5366,52 +5363,49 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
   {
     nsAutoCString buf, metaKey;
     Unused << responseHead->GetHeader(nsHttp::Vary, buf);
-    if (!buf.IsEmpty()) {
-      constexpr auto prefix = "request-"_ns;
 
-      char* bufData = buf.BeginWriting();  // going to munge buf
-      char* token = nsCRT::strtok(bufData, NS_HTTP_HEADER_SEPS, &bufData);
-      while (token) {
-        LOG(
-            ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
-             "processing %s",
-             self, token));
-        if (*token != '*') {
-          nsHttpAtom atom = nsHttp::ResolveAtom(token);
-          nsAutoCString val;
-          nsAutoCString hash;
-          if (NS_SUCCEEDED(requestHead->GetHeader(atom, val))) {
-            // If cookie-header, store a hash of the value
-            if (atom == nsHttp::Cookie) {
-              LOG(
-                  ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
-                   "cookie-value %s",
-                   self, val.get()));
-              rv = Hash(val.get(), hash);
-              // If hash failed, store a string not very likely
-              // to be the result of subsequent hashes
-              if (NS_FAILED(rv)) {
-                val = "<hash failed>"_ns;
-              } else {
-                val = hash;
-              }
+    constexpr auto prefix = "request-"_ns;
 
-              LOG(("   hashed to %s\n", val.get()));
-            }
-
-            // build cache meta data key and set meta data element...
-            metaKey = prefix + nsDependentCString(token);
-            entry->SetMetaDataElement(metaKey.get(), val.get());
-          } else {
+    for (const nsACString& token :
+         nsCCharSeparatedTokenizer(buf, NS_HTTP_HEADER_SEP).ToRange()) {
+      LOG(
+          ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
+           "processing %s",
+           self, nsPromiseFlatCString(token).get()));
+      if (!token.EqualsLiteral("*")) {
+        nsHttpAtom atom = nsHttp::ResolveAtom(token);
+        nsAutoCString val;
+        nsAutoCString hash;
+        if (NS_SUCCEEDED(requestHead->GetHeader(atom, val))) {
+          // If cookie-header, store a hash of the value
+          if (atom == nsHttp::Cookie) {
             LOG(
                 ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
-                 "clearing metadata for %s",
-                 self, token));
-            metaKey = prefix + nsDependentCString(token);
-            entry->SetMetaDataElement(metaKey.get(), nullptr);
+                 "cookie-value %s",
+                 self, val.get()));
+            rv = Hash(val.get(), hash);
+            // If hash failed, store a string not very likely
+            // to be the result of subsequent hashes
+            if (NS_FAILED(rv)) {
+              val = "<hash failed>"_ns;
+            } else {
+              val = hash;
+            }
+
+            LOG(("   hashed to %s\n", val.get()));
           }
+
+          // build cache meta data key and set meta data element...
+          metaKey = prefix + token;
+          entry->SetMetaDataElement(metaKey.get(), val.get());
+        } else {
+          LOG(
+              ("nsHttpChannel::AddCacheEntryHeaders [this=%p] "
+               "clearing metadata for %s",
+               self, nsPromiseFlatCString(token).get()));
+          metaKey = prefix + token;
+          entry->SetMetaDataElement(metaKey.get(), nullptr);
         }
-        token = nsCRT::strtok(bufData, NS_HTTP_HEADER_SEPS, &bufData);
       }
     }
   }
