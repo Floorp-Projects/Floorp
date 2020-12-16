@@ -16564,7 +16564,17 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   //         user for explicit permission. Reject if some rule is not fulfilled.
   if (CookieJarSettings()->GetRejectThirdPartyContexts()) {
     // Only do something special for third-party tracking content.
-    if (StorageDisabledByAntiTracking(this, nullptr)) {
+    uint32_t antiTrackingRejectedReason = 0;
+    if (StorageDisabledByAntiTracking(this, nullptr,
+                                      antiTrackingRejectedReason)) {
+      // If storage is disabled because of a custom cookie permission for the
+      // site, reject.
+      if (antiTrackingRejectedReason ==
+          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
+        promise->MaybeRejectWithUndefined();
+        return promise.forget();
+      }
+
       // Note: If this has returned true, the top-level document is guaranteed
       // to not be on the Content Blocking allow list.
       MOZ_ASSERT(!CookieJarSettings()->GetIsOnContentBlockingAllowList());
