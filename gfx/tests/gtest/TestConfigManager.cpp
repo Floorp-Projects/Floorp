@@ -653,7 +653,7 @@ TEST_F(GfxConfigManager, WebRenderIntelHighRefreshRateNotNightly) {
 
 TEST_F(GfxConfigManager, WebRenderIntelAtRefreshRateThreshold) {
   mIsNightly = false;
-  mMockGfxInfo->mMaxRefreshRate = 60;
+  mMockGfxInfo->mMaxRefreshRate = 75;
   mMockGfxInfo->mVendorId = "0x8086";
   ConfigureWebRender();
 

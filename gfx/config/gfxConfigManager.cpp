@@ -204,7 +204,7 @@ void gfxConfigManager::ConfigureWebRenderQualified() {
     if (adapterVendorID == u"0x8086") {
       bool mixed;
       int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate(&mixed);
-      if (maxRefreshRate > 60) {
+      if (maxRefreshRate > 75) {
         mFeatureWrQualified->Disable(FeatureStatus::Blocked,
                                      "Monitor refresh rate too high",
                                      "REFRESH_RATE_TOO_HIGH"_ns);
