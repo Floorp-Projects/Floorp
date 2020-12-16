@@ -307,6 +307,40 @@
       ] });
     }
 
+    // Slack seems to often restyle containers and change children
+    // simultaneously, this results in an insertion queue filled with
+    // redundant insertions and unparented nodes.
+    // This test duplicates some of this.
+    async function testSlack() {
+      let msg = "testSlack";
+      info(msg);
+
+      window.windowUtils.advanceTimeAndRefresh(100);
+      let event = waitForEvent(EVENT_REORDER, "c14", "testSlack");
+
+      let keyContainer = document.querySelector("#c14 .intermediate");
+      keyContainer.style.display = "inline-block";
+      document.body.offsetTop; // Flush layout.
+
+      let one = document.querySelector("#c14 [aria-label='one']");
+      let three = document.querySelector("#c14 [aria-label='three']");
+      one.remove();
+      three.remove();
+      // insert one first
+      keyContainer.firstChild.before(one.cloneNode());
+      // insert three last
+      keyContainer.lastChild.after(three.cloneNode());
+
+      keyContainer.style.display = "flex";
+      document.body.offsetTop; // Flush layout.
+
+      window.windowUtils.restoreNormalRefresh();
+
+      await event;
+
+      is(getAccessible("c14").name, "one two three", "subtree has correct order");
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -334,6 +368,7 @@
 
       await testCSSGeneratedContentRemovedFromButton();
 
+      await testSlack();
       SimpleTest.finish();
     }
 
@@ -404,6 +439,13 @@
     .before::before { content: 'before' }
     </style>
     <button id="b13" class="before" onclick="this.className = ''; this.insertAdjacentElement('afterend', document.createElement('hr'))">go</button>
+  </div>
+
+  <div role="heading" id="c14" data-qa="virtual-list-item">
+    <div class="intermediate">
+      <div role="img" aria-label="one"></div> two <div role="img"
+        aria-label="three"></div>
+    </div>
   </div>
 
   <div id="eventdump"></div>
