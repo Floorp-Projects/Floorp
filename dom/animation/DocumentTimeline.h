@@ -68,8 +68,6 @@ class DocumentTimeline final : public AnimationTimeline,
 
   Document* GetDocument() const override { return mDocument; }
 
-  void UpdateLastRefreshDriverTime();
-
  protected:
   TimeStamp GetCurrentTimeStamp() const;
   nsRefreshDriver* GetRefreshDriver() const;
@@ -83,7 +81,7 @@ class DocumentTimeline final : public AnimationTimeline,
   // The most recently used refresh driver time. This is used in cases where
   // we don't have a refresh driver (e.g. because we are in a display:none
   // iframe).
-  TimeStamp mLastRefreshDriverTime;
+  mutable TimeStamp mLastRefreshDriverTime;
   bool mIsObservingRefreshDriver;
 
   TimeDuration mOriginTime;
