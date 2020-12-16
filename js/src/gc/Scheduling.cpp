@@ -367,6 +367,12 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
   }
 }
 
+// GC thresholds may exceed the range of size_t on 32-bit platforms, so these
+// are calculated using 64-bit integers and clamped.
+static inline size_t ToClampedSize(uint64_t bytes) {
+  return std::min(bytes, uint64_t(SIZE_MAX));
+}
+
 void HeapThreshold::setIncrementalLimitFromStartBytes(
     size_t retainedBytes, const GCSchedulingTunables& tunables) {
   // Calculate the incremental limit for a heap based on its size and start
@@ -388,8 +394,11 @@ void HeapThreshold::setIncrementalLimitFromStartBytes(
       tunables.smallHeapIncrementalLimit(), tunables.largeHeapSizeMinBytes(),
       tunables.largeHeapIncrementalLimit());
 
-  incrementalLimitBytes_ = std::max(size_t(double(startBytes_) * factor),
-                                    startBytes_ + tunables.gcMaxNurseryBytes());
+  uint64_t bytes =
+      std::max(uint64_t(double(startBytes_) * factor),
+               uint64_t(startBytes_) + tunables.gcMaxNurseryBytes());
+  incrementalLimitBytes_ = ToClampedSize(bytes);
+  MOZ_ASSERT(incrementalLimitBytes_ >= startBytes_);
 }
 
 double HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
@@ -402,8 +411,9 @@ double HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
 void HeapThreshold::setSliceThreshold(ZoneAllocator* zone,
                                       const HeapSize& heapSize,
                                       const GCSchedulingTunables& tunables) {
-  sliceBytes_ = std::min(heapSize.bytes() + tunables.zoneAllocDelayBytes(),
-                         incrementalLimitBytes_);
+  sliceBytes_ = ToClampedSize(
+      std::min(uint64_t(heapSize.bytes()) + tunables.zoneAllocDelayBytes(),
+               uint64_t(incrementalLimitBytes_)));
 }
 
 /* static */
@@ -450,7 +460,7 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
   double trigger = double(base) * growthFactor;
   double triggerMax =
       double(tunables.gcMaxBytes()) / tunables.largeHeapIncrementalLimit();
-  return size_t(std::min(triggerMax, trigger));
+  return ToClampedSize(std::min(triggerMax, trigger));
 }
 
 void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
@@ -479,7 +489,7 @@ size_t MallocHeapThreshold::computeZoneTriggerBytes(double growthFactor,
                                                     size_t lastBytes,
                                                     size_t baseBytes,
                                                     const AutoLockGC& lock) {
-  return size_t(double(std::max(lastBytes, baseBytes)) * growthFactor);
+  return ToClampedSize(double(std::max(lastBytes, baseBytes)) * growthFactor);
 }
 
 void MallocHeapThreshold::updateStartThreshold(
