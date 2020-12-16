@@ -449,9 +449,8 @@ template <XDRMode mode>
   return Ok();
 }
 
-template <XDRMode mode, typename VecType, typename... ConstructArgs>
-static XDRResult XDRVector(XDRState<mode>* xdr, VecType& vec,
-                           ConstructArgs&&... args) {
+template <XDRMode mode, typename VecType>
+static XDRResult XDRVector(XDRState<mode>* xdr, VecType& vec) {
   uint32_t length;
 
   if (mode == XDR_ENCODE) {
@@ -463,12 +462,9 @@ static XDRResult XDRVector(XDRState<mode>* xdr, VecType& vec,
 
   if (mode == XDR_DECODE) {
     MOZ_ASSERT(vec.empty());
-    if (!vec.reserve(length)) {
+    if (!vec.resize(length)) {
       js::ReportOutOfMemory(xdr->cx());
       return xdr->fail(JS::TranscodeResult_Throw);
-    }
-    for (uint64_t i = 0; i < length; ++i) {
-      vec.infallibleEmplaceBack(std::forward<ConstructArgs>(args)...);
     }
   }
 
