@@ -14,7 +14,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsHttpRequestHead.h"
