@@ -22,8 +22,8 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsHttp.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsPromiseFlatString.h"
@@ -48,11 +48,8 @@ static bool HasVaryStar(mozilla::dom::InternalHeaders* aHeaders) {
   aHeaders->Get("vary"_ns, varyHeaders, rv);
   MOZ_ALWAYS_TRUE(!rv.Failed());
 
-  char* rawBuffer = varyHeaders.BeginWriting();
-  char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
-  for (; token;
-       token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
-    nsDependentCString header(token);
+  for (const nsACString& header :
+       nsCCharSeparatedTokenizer(varyHeaders, NS_HTTP_HEADER_SEP).ToRange()) {
     if (header.EqualsLiteral("*")) {
       return true;
     }

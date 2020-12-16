@@ -17,7 +17,7 @@
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundParent.h"
-#include "nsCRT.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsHttp.h"
 
 using mozilla::Maybe;
@@ -219,11 +219,8 @@ bool MatchInPutList(const InternalRequest& aRequest,
     // Assume the vary headers match until we find a conflict
     bool varyHeadersMatch = true;
 
-    char* rawBuffer = varyHeaders.BeginWriting();
-    char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
-    for (; token;
-         token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
-      nsDependentCString header(token);
+    for (const nsACString& header :
+         nsCCharSeparatedTokenizer(varyHeaders, NS_HTTP_HEADER_SEP).ToRange()) {
       MOZ_DIAGNOSTIC_ASSERT(!header.EqualsLiteral("*"),
                             "We should have already caught this in "
                             "TypeUtils::ToPCacheResponseWithoutBody()");

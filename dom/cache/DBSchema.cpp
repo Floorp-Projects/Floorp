@@ -24,9 +24,9 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsCRT.h"
 #include "nsHttp.h"
 #include "nsIContentPolicy.h"
 #include "nsICryptoHash.h"
@@ -1324,14 +1324,11 @@ Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
   // Assume the vary headers match until we find a conflict
   bool varyHeadersMatch = true;
 
-  for (auto& varyValue : varyValues) {
+  for (const auto& varyValue : varyValues) {
     // Extract the header names inside the Vary header value.
-    char* rawBuffer = varyValue.BeginWriting();
-    char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
     bool bailOut = false;
-    for (; token;
-         token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
-      nsDependentCString header(token);
+    for (const nsACString& header :
+         nsCCharSeparatedTokenizer(varyValue, NS_HTTP_HEADER_SEP).ToRange()) {
       MOZ_DIAGNOSTIC_ASSERT(!header.EqualsLiteral("*"),
                             "We should have already caught this in "
                             "TypeUtils::ToPCacheResponseWithoutBody()");
