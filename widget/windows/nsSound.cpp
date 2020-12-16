@@ -34,6 +34,27 @@ using mozilla::LogLevel;
 
 static mozilla::LazyLogModule gWin32SoundLog("nsSound");
 
+// Hackaround for bug 1644240
+// When we call PlaySound for the first time in the process, winmm.dll creates
+// a new thread and starts a message loop in winmm!mciwindow.  After that,
+// every call of PlaySound communicates with that thread via Window messages.
+// It seems that Warsaw application hooks USER32!GetMessageA, and there is
+// a timing window where they free their trampoline region without reverting
+// the hook on USER32!GetMessageA, resulting in crash when winmm!mciwindow
+// receives a message because it tries to jump to a freed buffer.
+// Based on the crash reports, it happened on all versions of Windows x64, and
+// the possible condition was wslbdhm64.dll was loaded but wslbscrwh64.dll was
+// unloaded.  Therefore we suppress playing a sound under such a condition.
+static bool ShouldSuppressPlaySound() {
+#if defined(_M_AMD64)
+  if (::GetModuleHandle(L"wslbdhm64.dll") &&
+      !::GetModuleHandle(L"wslbscrwh64.dll")) {
+    return true;
+  }
+#endif  // defined(_M_AMD64)
+  return false;
+}
+
 class nsSoundPlayer : public mozilla::Runnable {
  public:
   explicit nsSoundPlayer(const nsAString& aSoundName)
@@ -62,6 +83,10 @@ class nsSoundPlayer : public mozilla::Runnable {
 
 NS_IMETHODIMP
 nsSoundPlayer::Run() {
+  if (ShouldSuppressPlaySound()) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(!mSoundName.IsEmpty() || mSoundData,
              "Sound name or sound data should be specified");
   DWORD flags = SND_NODEFAULT | SND_ASYNC;
@@ -123,6 +148,9 @@ void nsSound::PurgeLastSound() {
                                    // PlaySoundW(nullptr, nullptr, SND_PURGE)
                                    // will be called before freeing the
                                    // nsSoundPlayer.
+                                   if (ShouldSuppressPlaySound()) {
+                                     return;
+                                   }
                                    ::PlaySoundW(nullptr, nullptr, SND_PURGE);
                                  }),
           NS_DISPATCH_NORMAL);
@@ -247,8 +275,13 @@ NS_IMETHODIMP nsSound::Init() {
   // This should be done in player thread otherwise it will block main thread
   // at the first time loading sound library.
   mPlayerThread->Dispatch(
-      NS_NewRunnableFunction(
-          "nsSound::Init", []() { ::PlaySoundW(nullptr, nullptr, SND_PURGE); }),
+      NS_NewRunnableFunction("nsSound::Init",
+                             []() {
+                               if (ShouldSuppressPlaySound()) {
+                                 return;
+                               }
+                               ::PlaySoundW(nullptr, nullptr, SND_PURGE);
+                             }),
       NS_DISPATCH_NORMAL);
 
   mInited = true;
