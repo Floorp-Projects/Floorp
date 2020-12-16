@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsASCIIMask.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
@@ -2034,6 +2035,66 @@ TEST_F(Strings, ConvertToSpan) {
   {
     auto span = Span{cstring};
     static_assert(std::is_same_v<decltype(span), Span<char>>);
+  }
+}
+
+TEST_F(Strings, TokenizedRangeEmpty) {
+  // 8-bit strings
+  {
+    for (const auto& token : nsCCharSeparatedTokenizer(""_ns, ',').ToRange()) {
+      (void)token;
+      ADD_FAILURE();
+    }
+  }
+
+  // 16-bit strings
+  {
+    for (const auto& token : nsCharSeparatedTokenizer(u""_ns, ',').ToRange()) {
+      (void)token;
+      ADD_FAILURE();
+    }
+  }
+}
+
+TEST_F(Strings, TokenizedRangeWhitespaceOnly) {
+  // 8-bit strings
+  {
+    for (const auto& token : nsCCharSeparatedTokenizer(" "_ns, ',').ToRange()) {
+      (void)token;
+      ADD_FAILURE();
+    }
+  }
+
+  // 16-bit strings
+  {
+    for (const auto& token : nsCharSeparatedTokenizer(u" "_ns, ',').ToRange()) {
+      (void)token;
+      ADD_FAILURE();
+    }
+  }
+}
+
+TEST_F(Strings, TokenizedRangeNonEmpty) {
+  // 8-bit strings
+  {
+    nsTArray<nsCString> res;
+    for (const auto& token :
+         nsCCharSeparatedTokenizer("foo,bar"_ns, ',').ToRange()) {
+      res.EmplaceBack(token);
+    }
+
+    EXPECT_EQ(res, (nsTArray<nsCString>{"foo"_ns, "bar"_ns}));
+  }
+
+  // 16-bit strings
+  {
+    nsTArray<nsString> res;
+    for (const auto& token :
+         nsCharSeparatedTokenizer(u"foo,bar"_ns, ',').ToRange()) {
+      res.EmplaceBack(token);
+    }
+
+    EXPECT_EQ(res, (nsTArray<nsString>{u"foo"_ns, u"bar"_ns}));
   }
 }
 
