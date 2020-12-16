@@ -847,45 +847,7 @@ namespace js {
 template <XDRMode mode>
 XDRResult XDRTaggedParserAtomIndex(XDRState<mode>* xdr,
                                    TaggedParserAtomIndex* taggedIndex) {
-  MOZ_TRY(xdr->codeUint32(taggedIndex->rawData()));
-
-  if (mode == XDR_ENCODE) {
-    return Ok();
-  }
-
-  if (taggedIndex->isParserAtomIndex()) {
-    auto index = taggedIndex->toParserAtomIndex();
-    if (size_t(index) >= xdr->frontendAtoms().length()) {
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-    }
-    return Ok();
-  }
-
-  if (taggedIndex->isWellKnownAtomId()) {
-    auto index = taggedIndex->toWellKnownAtomId();
-    if (size_t(index) >= uint32_t(WellKnownAtomId::Limit)) {
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-    }
-    return Ok();
-  }
-
-  if (taggedIndex->isStaticParserString1()) {
-    auto index = taggedIndex->toStaticParserString1();
-    if (size_t(index) >= WellKnownParserAtoms_ROM::ASCII_STATIC_LIMIT) {
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-    }
-    return Ok();
-  }
-
-  if (taggedIndex->isStaticParserString2()) {
-    auto index = taggedIndex->toStaticParserString2();
-    if (size_t(index) >= WellKnownParserAtoms_ROM::NUM_LENGTH2_ENTRIES) {
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-    }
-    return Ok();
-  }
-
-  return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+  return xdr->codeUint32(taggedIndex->rawData());
 }
 
 template XDRResult XDRTaggedParserAtomIndex(XDRState<XDR_ENCODE>* xdr,
