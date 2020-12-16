@@ -13,6 +13,7 @@
 #include "TextUpdater.h"
 
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Telemetry.h"
@@ -766,11 +767,10 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       continue;
     }
 
-    nsIContent* ownerContent =
-        mDocument->DocumentNode()->FindContentForSubDocument(
-            childDoc->DocumentNode());
-    if (ownerContent) {
-      Accessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
+    BrowsingContext* bc = childDoc->DocumentNode()->GetBrowsingContext();
+    if (bc && !bc->IsCached() && bc->GetEmbedderElement()) {
+      Accessible* outerDocAcc =
+          mDocument->GetAccessible(bc->GetEmbedderElement());
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
         if (mDocument->AppendChildDocument(childDoc)) {
           newChildDocs.AppendElement(std::move(mHangingChildDocuments[idx]));
