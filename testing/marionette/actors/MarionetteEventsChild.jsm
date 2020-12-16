@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  event: "chrome://marionette/content/event.js",
   Log: "chrome://marionette/content/log.js",
 });
 
@@ -58,16 +57,6 @@ class MarionetteEventsChild extends JSWindowActorChild {
           type,
           windowId: this.innerWindowId,
         });
-        break;
-
-      // Listen for click event to indicate one click has happened, so actions
-      // code can send dblclick event
-      case "click":
-        event.DoubleClickTracker.setClick();
-        break;
-      case "dblclick":
-      case "unload":
-        event.DoubleClickTracker.resetClick();
         break;
     }
   }

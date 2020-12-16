@@ -30,7 +30,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   Log: "chrome://marionette/content/log.js",
+  registerEventsActor:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   truncate: "chrome://marionette/content/format.js",
+  unregisterEventsActor:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -550,6 +554,9 @@ function waitForLoadEvent(eventName, browsingContextFn) {
       }
     };
     EventDispatcher.on("page-load", onPageLoad);
+    registerEventsActor();
+  }).finally(() => {
+    unregisterEventsActor();
   });
 }
 
