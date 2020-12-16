@@ -104,30 +104,30 @@ class SetupAction final : public SyncDBAction {
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
       // Clean up orphaned Cache objects
-      AutoTArray<CacheId, 8> orphanedCacheIdList;
-      CACHE_TRY_UNWRAP(orphanedCacheIdList, db::FindOrphanedCacheIds(*aConn));
+      CACHE_TRY_INSPECT(const auto& orphanedCacheIdList,
+                        db::FindOrphanedCacheIds(*aConn));
 
-      int64_t overallDeletedPaddingSize = 0;
-      for (uint32_t i = 0; i < orphanedCacheIdList.Length(); ++i) {
-        DeletionInfo deletionInfo;
-        CACHE_TRY_UNWRAP(deletionInfo,
-                         db::DeleteCacheId(*aConn, orphanedCacheIdList[i]));
+      CACHE_TRY_INSPECT(
+          const CheckedInt64& overallDeletedPaddingSize,
+          Reduce(
+              orphanedCacheIdList, CheckedInt64(0),
+              [aConn, &aQuotaInfo, &aDBDir](
+                  CheckedInt64 oldValue, const Maybe<const CacheId&>& element)
+                  -> Result<CheckedInt64, nsresult> {
+                DeletionInfo deletionInfo;
+                CACHE_TRY_UNWRAP(deletionInfo,
+                                 db::DeleteCacheId(*aConn, *element));
 
-        rv = BodyDeleteFiles(aQuotaInfo, aDBDir,
-                             deletionInfo.mDeletedBodyIdList);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+                CACHE_TRY(BodyDeleteFiles(aQuotaInfo, aDBDir,
+                                          deletionInfo.mDeletedBodyIdList));
 
-        if (deletionInfo.mDeletedPaddingSize > 0) {
-          DecreaseUsageForQuotaInfo(aQuotaInfo,
-                                    deletionInfo.mDeletedPaddingSize);
-        }
+                if (deletionInfo.mDeletedPaddingSize > 0) {
+                  DecreaseUsageForQuotaInfo(aQuotaInfo,
+                                            deletionInfo.mDeletedPaddingSize);
+                }
 
-        MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - deletionInfo.mDeletedPaddingSize >=
-                              overallDeletedPaddingSize);
-        overallDeletedPaddingSize += deletionInfo.mDeletedPaddingSize;
-      }
+                return oldValue + deletionInfo.mDeletedPaddingSize;
+              }));
 
       // Clean up orphaned body objects
       AutoTArray<nsID, 64> knownBodyIdList;
@@ -140,9 +140,10 @@ class SetupAction final : public SyncDBAction {
 
       // Commit() explicitly here, because we want to ensure the padding file
       // has the correct content.
-      rv = MaybeUpdatePaddingFile(
-          aDBDir, aConn, /* aIncreaceSize */ 0, overallDeletedPaddingSize,
-          [&trans]() mutable { return trans.Commit(); });
+      rv =
+          MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
+                                 overallDeletedPaddingSize.value(),
+                                 [&trans]() mutable { return trans.Commit(); });
       // We'll restore padding file below, so just warn here if failure happens.
       Unused << NS_WARN_IF(NS_FAILED(rv));
     }
@@ -217,6 +218,14 @@ bool IsHeadRequest(const Maybe<CacheRequest>& aRequest,
            aRequest.ref().method().LowerCaseEqualsLiteral("head");
   }
   return false;
+}
+
+auto MatchByCacheId(CacheId aCacheId) {
+  return [aCacheId](const auto& entry) { return entry.mCacheId == aCacheId; };
+}
+
+auto MatchByBodyId(const nsID& aBodyId) {
+  return [&aBodyId](const auto& entry) { return entry.mBodyId == aBodyId; };
 }
 
 }  // namespace
@@ -1667,18 +1676,12 @@ void Manager::RemoveContext(Context& aContext) {
   // Before forgetting the Context, check to see if we have any outstanding
   // cache or body objects waiting for deletion.  If so, note that we've
   // orphaned data so it will be cleaned up on the next open.
-  for (uint32_t i = 0; i < mCacheIdRefs.Length(); ++i) {
-    if (mCacheIdRefs[i].mOrphaned) {
-      aContext.NoteOrphanedData();
-      break;
-    }
-  }
-
-  for (uint32_t i = 0; i < mBodyIdRefs.Length(); ++i) {
-    if (mBodyIdRefs[i].mOrphaned) {
-      aContext.NoteOrphanedData();
-      break;
-    }
+  if (std::any_of(
+          mCacheIdRefs.cbegin(), mCacheIdRefs.cend(),
+          [](const auto& cacheIdRef) { return cacheIdRef.mOrphaned; }) ||
+      std::any_of(mBodyIdRefs.cbegin(), mBodyIdRefs.cend(),
+                  [](const auto& bodyIdRef) { return bodyIdRef.mOrphaned; })) {
+    aContext.NoteOrphanedData();
   }
 
   mContext = nullptr;
@@ -1702,94 +1705,100 @@ Manager::State Manager::GetState() const {
 
 void Manager::AddRefCacheId(CacheId aCacheId) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  for (uint32_t i = 0; i < mCacheIdRefs.Length(); ++i) {
-    if (mCacheIdRefs[i].mCacheId == aCacheId) {
-      mCacheIdRefs[i].mCount += 1;
-      return;
-    }
+
+  const auto end = mCacheIdRefs.end();
+  const auto foundIt =
+      std::find_if(mCacheIdRefs.begin(), end, MatchByCacheId(aCacheId));
+  if (foundIt != end) {
+    foundIt->mCount += 1;
+    return;
   }
-  CacheIdRefCounter* entry = mCacheIdRefs.AppendElement();
-  entry->mCacheId = aCacheId;
-  entry->mCount = 1;
-  entry->mOrphaned = false;
+
+  mCacheIdRefs.AppendElement(CacheIdRefCounter{aCacheId, 1, false});
 }
 
 void Manager::ReleaseCacheId(CacheId aCacheId) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  for (uint32_t i = 0; i < mCacheIdRefs.Length(); ++i) {
-    if (mCacheIdRefs[i].mCacheId == aCacheId) {
+
+  const auto end = mCacheIdRefs.end();
+  const auto foundIt =
+      std::find_if(mCacheIdRefs.begin(), end, MatchByCacheId(aCacheId));
+  if (foundIt != end) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      uint32_t oldRef = mCacheIdRefs[i].mCount;
+    const uint32_t oldRef = foundIt->mCount;
 #endif
-      mCacheIdRefs[i].mCount -= 1;
-      MOZ_DIAGNOSTIC_ASSERT(mCacheIdRefs[i].mCount < oldRef);
-      if (mCacheIdRefs[i].mCount == 0) {
-        bool orphaned = mCacheIdRefs[i].mOrphaned;
-        mCacheIdRefs.RemoveElementAt(i);
-        const auto pinnedContext =
-            SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
-        // If the context is already gone, then orphan flag should have been
-        // set in RemoveContext().
-        if (orphaned && pinnedContext) {
-          if (pinnedContext->IsCanceled()) {
-            pinnedContext->NoteOrphanedData();
-          } else {
-            pinnedContext->CancelForCacheId(aCacheId);
-            pinnedContext->Dispatch(MakeSafeRefPtr<DeleteOrphanedCacheAction>(
-                SafeRefPtrFromThis(), aCacheId));
-          }
+    foundIt->mCount -= 1;
+    MOZ_DIAGNOSTIC_ASSERT(foundIt->mCount < oldRef);
+    if (foundIt->mCount == 0) {
+      const bool orphaned = foundIt->mOrphaned;
+      mCacheIdRefs.RemoveElementAt(foundIt);
+      const auto pinnedContext =
+          SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+      // If the context is already gone, then orphan flag should have been
+      // set in RemoveContext().
+      if (orphaned && pinnedContext) {
+        if (pinnedContext->IsCanceled()) {
+          pinnedContext->NoteOrphanedData();
+        } else {
+          pinnedContext->CancelForCacheId(aCacheId);
+          pinnedContext->Dispatch(MakeSafeRefPtr<DeleteOrphanedCacheAction>(
+              SafeRefPtrFromThis(), aCacheId));
         }
       }
-      MaybeAllowContextToClose();
-      return;
     }
+    MaybeAllowContextToClose();
+    return;
   }
+
   MOZ_ASSERT_UNREACHABLE("Attempt to release CacheId that is not referenced!");
 }
 
 void Manager::AddRefBodyId(const nsID& aBodyId) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  for (uint32_t i = 0; i < mBodyIdRefs.Length(); ++i) {
-    if (mBodyIdRefs[i].mBodyId == aBodyId) {
-      mBodyIdRefs[i].mCount += 1;
-      return;
-    }
+
+  const auto end = mBodyIdRefs.end();
+  const auto foundIt =
+      std::find_if(mBodyIdRefs.begin(), end, MatchByBodyId(aBodyId));
+  if (foundIt != end) {
+    foundIt->mCount += 1;
+    return;
   }
-  BodyIdRefCounter* entry = mBodyIdRefs.AppendElement();
-  entry->mBodyId = aBodyId;
-  entry->mCount = 1;
-  entry->mOrphaned = false;
+
+  mBodyIdRefs.AppendElement(BodyIdRefCounter{aBodyId, 1, false});
 }
 
 void Manager::ReleaseBodyId(const nsID& aBodyId) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  for (uint32_t i = 0; i < mBodyIdRefs.Length(); ++i) {
-    if (mBodyIdRefs[i].mBodyId == aBodyId) {
+
+  const auto end = mBodyIdRefs.end();
+  const auto foundIt =
+      std::find_if(mBodyIdRefs.begin(), end, MatchByBodyId(aBodyId));
+  if (foundIt != end) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      uint32_t oldRef = mBodyIdRefs[i].mCount;
+    const uint32_t oldRef = foundIt->mCount;
 #endif
-      mBodyIdRefs[i].mCount -= 1;
-      MOZ_DIAGNOSTIC_ASSERT(mBodyIdRefs[i].mCount < oldRef);
-      if (mBodyIdRefs[i].mCount < 1) {
-        bool orphaned = mBodyIdRefs[i].mOrphaned;
-        mBodyIdRefs.RemoveElementAt(i);
-        const auto pinnedContext =
-            SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
-        // If the context is already gone, then orphan flag should have been
-        // set in RemoveContext().
-        if (orphaned && pinnedContext) {
-          if (pinnedContext->IsCanceled()) {
-            pinnedContext->NoteOrphanedData();
-          } else {
-            pinnedContext->Dispatch(
-                MakeSafeRefPtr<DeleteOrphanedBodyAction>(aBodyId));
-          }
+    foundIt->mCount -= 1;
+    MOZ_DIAGNOSTIC_ASSERT(foundIt->mCount < oldRef);
+    if (foundIt->mCount < 1) {
+      const bool orphaned = foundIt->mOrphaned;
+      mBodyIdRefs.RemoveElementAt(foundIt);
+      const auto pinnedContext =
+          SafeRefPtr{mContext, AcquireStrongRefFromRawPtr{}};
+      // If the context is already gone, then orphan flag should have been
+      // set in RemoveContext().
+      if (orphaned && pinnedContext) {
+        if (pinnedContext->IsCanceled()) {
+          pinnedContext->NoteOrphanedData();
+        } else {
+          pinnedContext->Dispatch(
+              MakeSafeRefPtr<DeleteOrphanedBodyAction>(aBodyId));
         }
       }
-      MaybeAllowContextToClose();
-      return;
     }
+    MaybeAllowContextToClose();
+    return;
   }
+
   MOZ_ASSERT_UNREACHABLE("Attempt to release BodyId that is not referenced!");
 }
 
@@ -2069,14 +2078,17 @@ Manager::Listener* Manager::GetListener(ListenerId aListenerId) const {
 
 bool Manager::SetCacheIdOrphanedIfRefed(CacheId aCacheId) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  for (uint32_t i = 0; i < mCacheIdRefs.Length(); ++i) {
-    if (mCacheIdRefs[i].mCacheId == aCacheId) {
-      MOZ_DIAGNOSTIC_ASSERT(mCacheIdRefs[i].mCount > 0);
-      MOZ_DIAGNOSTIC_ASSERT(!mCacheIdRefs[i].mOrphaned);
-      mCacheIdRefs[i].mOrphaned = true;
-      return true;
-    }
+
+  const auto end = mCacheIdRefs.end();
+  const auto foundIt =
+      std::find_if(mCacheIdRefs.begin(), end, MatchByCacheId(aCacheId));
+  if (foundIt != end) {
+    MOZ_DIAGNOSTIC_ASSERT(foundIt->mCount > 0);
+    MOZ_DIAGNOSTIC_ASSERT(!foundIt->mOrphaned);
+    foundIt->mOrphaned = true;
+    return true;
   }
+
   return false;
 }
 
@@ -2085,14 +2097,17 @@ bool Manager::SetCacheIdOrphanedIfRefed(CacheId aCacheId) {
 
 bool Manager::SetBodyIdOrphanedIfRefed(const nsID& aBodyId) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  for (uint32_t i = 0; i < mBodyIdRefs.Length(); ++i) {
-    if (mBodyIdRefs[i].mBodyId == aBodyId) {
-      MOZ_DIAGNOSTIC_ASSERT(mBodyIdRefs[i].mCount > 0);
-      MOZ_DIAGNOSTIC_ASSERT(!mBodyIdRefs[i].mOrphaned);
-      mBodyIdRefs[i].mOrphaned = true;
-      return true;
-    }
+
+  const auto end = mBodyIdRefs.end();
+  const auto foundIt =
+      std::find_if(mBodyIdRefs.begin(), end, MatchByBodyId(aBodyId));
+  if (foundIt != end) {
+    MOZ_DIAGNOSTIC_ASSERT(foundIt->mCount > 0);
+    MOZ_DIAGNOSTIC_ASSERT(!foundIt->mOrphaned);
+    foundIt->mOrphaned = true;
+    return true;
   }
+
   return false;
 }
 
@@ -2105,11 +2120,11 @@ void Manager::NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList) {
   DeleteOrphanedBodyAction::DeletedBodyIdList deleteNowList;
   deleteNowList.SetCapacity(aDeletedBodyIdList.Length());
 
-  for (uint32_t i = 0; i < aDeletedBodyIdList.Length(); ++i) {
-    if (!SetBodyIdOrphanedIfRefed(aDeletedBodyIdList[i])) {
-      deleteNowList.AppendElement(aDeletedBodyIdList[i]);
-    }
-  }
+  std::copy_if(aDeletedBodyIdList.cbegin(), aDeletedBodyIdList.cend(),
+               MakeBackInserter(deleteNowList),
+               [this](const auto& deletedBodyId) {
+                 return !SetBodyIdOrphanedIfRefed(deletedBodyId);
+               });
 
   // TODO: note that we need to check these bodies for staleness on startup (bug
   // 1110446)

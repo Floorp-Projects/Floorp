@@ -1393,6 +1393,19 @@ TEST(QuotaCommon_ReduceEach, GeneratorError)
   MOZ_RELEASE_ASSERT(2 == generatorExecutions);
 }
 
+TEST(QuotaCommon_Reduce, Success)
+{
+  const auto range = std::vector{0, 1, 2, 3, 4, 5};
+  const auto result = Reduce(
+      range, 0, [](int val, Maybe<const int&> add) -> Result<int, Failed> {
+        return val + add.ref();
+      });
+  static_assert(std::is_same_v<decltype(result), const Result<int, Failed>>);
+
+  MOZ_RELEASE_ASSERT(result.isOk());
+  MOZ_RELEASE_ASSERT(15 == result.inspect());
+}
+
 TEST(QuotaCommon_ScopedLogExtraInfo, AddAndRemove)
 {
   static constexpr auto text = "foo"_ns;
