@@ -122,10 +122,6 @@ input[type="checkbox"] {
   margin-inline-end: 8px;
 }
 
-input[type="checkbox"]:checked {
-  fill: #3485ff !important;
-}
-
 input[type="radio"] {
   appearance: none;
   width: 20px;
