@@ -27,7 +27,7 @@
 @property(readonly) BOOL accessibilityDisplayShouldReduceMotion;
 @end
 
-nsLookAndFeel::nsLookAndFeel()
+nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
     : nsXPLookAndFeel(),
       mUseOverlayScrollbars(-1),
       mUseOverlayScrollbarsCached(false),
@@ -69,7 +69,11 @@ nsLookAndFeel::nsLookAndFeel()
       mColorEvenTreeRow(0),
       mColorOddTreeRow(0),
       mColorActiveSourceListSelection(0),
-      mInitialized(false) {}
+      mInitialized(false) {
+  if (aCache) {
+    DoSetCache(*aCache);
+  }
+}
 
 nsLookAndFeel::~nsLookAndFeel() {}
 
@@ -671,7 +675,9 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   return cache;
 }
 
-void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
+void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) { DoSetCache(aCache); }
+
+void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
   for (auto entry : aCache.mInts()) {
     switch (entry.id()) {
       case IntID::UseOverlayScrollbars:

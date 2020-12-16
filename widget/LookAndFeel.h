@@ -21,6 +21,7 @@ struct gfxFontStyle;
 namespace mozilla {
 
 namespace widget {
+class FullLookAndFeel;
 class LookAndFeelCache;
 }  // namespace widget
 
@@ -400,6 +401,9 @@ class LookAndFeel {
     // The width/height ratio of the cursor. If used, the CaretWidth int metric
     // should be added to the calculated caret width.
     CaretAspectRatio,
+
+    // Not an ID; used to define the range of valid IDs.  Must be last.
+    End,
   };
 
   // These constants must be kept in 1:1 correspondence with the
@@ -555,6 +559,7 @@ class LookAndFeel {
    */
   static widget::LookAndFeelCache GetCache();
   static void SetCache(const widget::LookAndFeelCache& aCache);
+  static void SetData(widget::FullLookAndFeel&& aTables);
   static void NotifyChangedAllWindows(widget::ThemeChangeKind);
 };
 
