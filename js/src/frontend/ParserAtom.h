@@ -215,6 +215,10 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
 
   static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
+  // Bit flags inside flags_.
+  static constexpr uint32_t HasTwoByteCharsFlag = 1 << 0;
+  static constexpr uint32_t UsedByStencilFlag = 1 << 1;
+
   // Helper routine to read some sequence of two-byte chars, and write them
   // into a target buffer of a particular character width.
   //
@@ -246,18 +250,16 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
 
   TaggedParserAtomIndex index_;
 
-  // Encoding type.
-  bool hasTwoByteChars_ = false;
-
-  // Mutable flags.
-  bool usedByStencil_ = false;
+  uint32_t flags_ = 0;
 
   // End of fields.
 
   static const uint32_t MAX_LENGTH = JSString::MAX_LENGTH;
 
   ParserAtomEntry(uint32_t length, HashNumber hash, bool hasTwoByteChars)
-      : hash_(hash), length_(length), hasTwoByteChars_(hasTwoByteChars) {}
+      : hash_(hash),
+        length_(length),
+        flags_(hasTwoByteChars ? HasTwoByteCharsFlag : 0) {}
 
  protected:
   // The constexpr constructor is used by StaticParserAtomEntry.
@@ -282,8 +284,8 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   inline ParserName* asName();
   inline const ParserName* asName() const;
 
-  bool hasLatin1Chars() const { return !hasTwoByteChars_; }
-  bool hasTwoByteChars() const { return hasTwoByteChars_; }
+  bool hasLatin1Chars() const { return !(flags_ & HasTwoByteCharsFlag); }
+  bool hasTwoByteChars() const { return flags_ & HasTwoByteCharsFlag; }
 
   template <typename CharT>
   const CharT* chars() const {
@@ -327,12 +329,12 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   HashNumber hash() const { return hash_; }
   uint32_t length() const { return length_; }
 
-  bool isUsedByStencil() const { return usedByStencil_; }
+  bool isUsedByStencil() const { return flags_ & UsedByStencilFlag; }
   void markUsedByStencil() const {
     if (isParserAtomIndex()) {
       // Use const method + const_cast here to avoid marking static strings'
       // field mutable.
-      const_cast<ParserAtomEntry*>(this)->usedByStencil_ = true;
+      const_cast<ParserAtomEntry*>(this)->flags_ |= UsedByStencilFlag;
     }
   }
 
@@ -375,11 +377,9 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   constexpr void setStaticParserString2(StaticParserString2 s) {
     index_ = TaggedParserAtomIndex(s);
   }
-  constexpr void setHashAndLength(HashNumber hash, uint32_t length,
-                                  bool hasTwoByteChars = false) {
+  constexpr void setHashAndLength(HashNumber hash, uint32_t length) {
     hash_ = hash;
     length_ = length;
-    hasTwoByteChars_ = hasTwoByteChars;
   }
 
  public:
