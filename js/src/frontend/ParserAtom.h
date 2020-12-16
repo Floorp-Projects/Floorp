@@ -261,11 +261,10 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
         length_(length),
         flags_(hasTwoByteChars ? HasTwoByteCharsFlag : 0) {}
 
- protected:
-  // The constexpr constructor is used by StaticParserAtomEntry.
+ public:
+  // The constexpr constructor is used by StaticParserAtomEntry and XDR
   constexpr ParserAtomEntry() = default;
 
- public:
   // ParserAtomEntries may own their content buffers in variant_, and thus
   // cannot be copy-constructed - as a new chars would need to be allocated.
   ParserAtomEntry(const ParserAtomEntry&) = delete;
