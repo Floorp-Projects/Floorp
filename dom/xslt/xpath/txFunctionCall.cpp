@@ -8,10 +8,6 @@
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
 
-#ifdef TX_TO_STRING
-#  include "nsReadableUtils.h"
-#endif
-
 /**
  * This class represents a FunctionCall as defined by the XSL Working Draft
  **/
@@ -102,9 +98,12 @@ bool FunctionCall::argsSensitiveTo(ContextSensitivity aContext) {
 void FunctionCall::toString(nsAString& aDest) {
   appendName(aDest);
   aDest.AppendLiteral("(");
-  StringJoinAppend(
-      aDest, u","_ns, mParams,
-      [](nsAString& dest, const auto& param) { param->toString(dest); });
+  for (uint32_t i = 0; i < mParams.Length(); ++i) {
+    if (i != 0) {
+      aDest.Append(char16_t(','));
+    }
+    mParams[i]->toString(aDest);
+  }
   aDest.Append(char16_t(')'));
 }
 #endif

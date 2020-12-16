@@ -9,7 +9,6 @@
 #include "nsAtom.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
-#include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsTArray.h"
@@ -277,11 +276,16 @@ class FontFamilyList {
 
   void ToString(nsACString& aFamilyList, bool aQuotes = true,
                 bool aIncludeDefault = false) const {
-    aFamilyList =
-        StringJoin(","_ns, mFontlist->mNames,
-                   [aQuotes](nsACString& dst, const FontFamilyName& name) {
-                     name.AppendToString(dst, aQuotes);
-                   });
+    const nsTArray<FontFamilyName>& names = mFontlist->mNames;
+    aFamilyList.Truncate();
+    uint32_t len = names.Length();
+    for (uint32_t i = 0; i < len; i++) {
+      if (i != 0) {
+        aFamilyList.Append(',');
+      }
+      const FontFamilyName& name = names[i];
+      name.AppendToString(aFamilyList, aQuotes);
+    }
     if (aIncludeDefault && mDefaultFontType != StyleGenericFontFamily::None) {
       if (!aFamilyList.IsEmpty()) {
         aFamilyList.Append(',');

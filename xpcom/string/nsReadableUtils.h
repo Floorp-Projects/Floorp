@@ -453,7 +453,7 @@ void StringJoinAppend(
     const nsTLiteralString<CharType>& aSeparator, const InputRange& aInputRange,
     Func&& aFunc = mozilla::detail::kStringJoinAppendDefault) {
   bool first = true;
-  for (auto&& item : aInputRange) {
+  for (const auto& item : aInputRange) {
     if (first) {
       first = false;
     } else {

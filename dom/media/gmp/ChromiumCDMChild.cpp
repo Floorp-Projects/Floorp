@@ -16,7 +16,6 @@
 #include "GMPUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "CDMStorageIdProvider.h"
-#include "nsReadableUtils.h"
 
 #include <type_traits>
 
@@ -106,10 +105,15 @@ class CDMShmemBuffer : public CDMBuffer {
   void operator=(const CDMShmemBuffer&);
 };
 
-static auto ToString(const nsTArray<ipc::Shmem>& aBuffers) {
-  return StringJoin(","_ns, aBuffers, [](auto& s, const ipc::Shmem& shmem) {
+static nsCString ToString(const nsTArray<ipc::Shmem>& aBuffers) {
+  nsCString s;
+  for (const ipc::Shmem& shmem : aBuffers) {
+    if (!s.IsEmpty()) {
+      s.AppendLiteral(",");
+    }
     s.AppendInt(static_cast<uint32_t>(shmem.Size<uint8_t>()));
-  });
+  }
+  return s;
 }
 
 cdm::Buffer* ChromiumCDMChild::Allocate(uint32_t aCapacity) {
@@ -268,14 +272,19 @@ void ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
                           static_cast<uint32_t>(aMessageType), message);
 }
 
-static auto ToString(const cdm::KeyInformation* aKeysInfo,
-                     uint32_t aKeysInfoCount) {
-  return StringJoin(","_ns, Span{aKeysInfo, aKeysInfoCount},
-                    [](auto& str, const cdm::KeyInformation& key) {
-                      str.Append(ToHexString(key.key_id, key.key_id_size));
-                      str.AppendLiteral("=");
-                      str.AppendInt(key.status);
-                    });
+static nsCString ToString(const cdm::KeyInformation* aKeysInfo,
+                          uint32_t aKeysInfoCount) {
+  nsCString str;
+  for (uint32_t i = 0; i < aKeysInfoCount; i++) {
+    if (!str.IsEmpty()) {
+      str.AppendLiteral(",");
+    }
+    const cdm::KeyInformation& key = aKeysInfo[i];
+    str.Append(ToHexString(key.key_id, key.key_id_size));
+    str.AppendLiteral("=");
+    str.AppendInt(key.status);
+  }
+  return str;
 }
 
 void ChromiumCDMChild::OnSessionKeysChange(const char* aSessionId,
