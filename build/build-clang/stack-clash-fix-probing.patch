@@ -1,7 +1,7 @@
 From a1e0363c7402f7aa58e24e0e6dfa447ebabc1910 Mon Sep 17 00:00:00 2001
 From: serge-sans-paille <sguelton@redhat.com>
 Date: Wed, 30 Sep 2020 11:35:00 +0200
-Subject: [PATCH 1/3] Fix limit behavior of dynamic alloca
+Subject: [PATCH] Fix limit behavior of dynamic alloca
 
 When the allocation size is 0, we shouldn't probe. Within [1,  PAGE_SIZE], we
 should probe once etc.
@@ -11,94 +11,19 @@ This fixes https://bugs.llvm.org/show_bug.cgi?id=47657
 Differential Revision: https://reviews.llvm.org/D88548
 
 (cherry picked from commit 9573c9f2a363da71b2c07a3add4e52721e6028a0)
----
- llvm/lib/Target/X86/X86ISelLowering.cpp             | 2 +-
- llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/llvm/lib/Target/X86/X86ISelLowering.cpp b/llvm/lib/Target/X86/X86ISelLowering.cpp
-index fd1e6517dfa..f68ae4461fe 100644
---- a/llvm/lib/Target/X86/X86ISelLowering.cpp
-+++ b/llvm/lib/Target/X86/X86ISelLowering.cpp
-@@ -31876,7 +31876,7 @@ X86TargetLowering::EmitLoweredProbedAlloca(MachineInstr &MI,
- 
-   BuildMI(testMBB, DL, TII->get(X86::JCC_1))
-       .addMBB(tailMBB)
--      .addImm(X86::COND_L);
-+      .addImm(X86::COND_LE);
-   testMBB->addSuccessor(blockMBB);
-   testMBB->addSuccessor(tailMBB);
- 
-diff --git a/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll b/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
-index bc467856408..82fd67842c8 100644
---- a/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
-+++ b/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
-@@ -24,12 +24,12 @@ attributes #0 =  {"probe-stack"="inline-asm"}
- ; CHECK-X86-64-NEXT:  	andq	$-16, %rcx
- ; CHECK-X86-64-NEXT:  	subq	%rcx, %rax
- ; CHECK-X86-64-NEXT:  	cmpq	%rsp, %rax
--; CHECK-X86-64-NEXT:  	jl	.LBB0_3
-+; CHECK-X86-64-NEXT:  	jle	.LBB0_3
- ; CHECK-X86-64-NEXT:  .LBB0_2: # =>This Inner Loop Header: Depth=1
- ; CHECK-X86-64-NEXT:  	movq	$0, (%rsp)
- ; CHECK-X86-64-NEXT:  	subq	$4096, %rsp # imm = 0x1000
- ; CHECK-X86-64-NEXT:  	cmpq	%rsp, %rax
--; CHECK-X86-64-NEXT:  	jge	.LBB0_2
-+; CHECK-X86-64-NEXT:  	jg	.LBB0_2
- ; CHECK-X86-64-NEXT:  .LBB0_3:
- ; CHECK-X86-64-NEXT:  	movq	%rax, %rsp
- ; CHECK-X86-64-NEXT:  	movl	$1, 4792(%rax)
-@@ -54,12 +54,12 @@ attributes #0 =  {"probe-stack"="inline-asm"}
- ; CHECK-X86-32-NEXT:    andl    $-16, %ecx
- ; CHECK-X86-32-NEXT:    subl    %ecx, %eax
- ; CHECK-X86-32-NEXT:    cmpl    %esp, %eax
--; CHECK-X86-32-NEXT:    jl  .LBB0_3
-+; CHECK-X86-32-NEXT:    jle  .LBB0_3
- ; CHECK-X86-32-NEXT:  .LBB0_2: # =>This Inner Loop Header: Depth=1
- ; CHECK-X86-32-NEXT:    movl    $0, (%esp)
- ; CHECK-X86-32-NEXT:    subl    $4096, %esp # imm = 0x1000
- ; CHECK-X86-32-NEXT:    cmpl    %esp, %eax
--; CHECK-X86-32-NEXT:    jge .LBB0_2
-+; CHECK-X86-32-NEXT:    jg .LBB0_2
- ; CHECK-X86-32-NEXT:  .LBB0_3:
- ; CHECK-X86-32-NEXT:    movl    %eax, %esp
- ; CHECK-X86-32-NEXT:    movl    $1, 4792(%eax)
--- 
-2.29.2
+Also contains the patches:
+https://github.com/llvm/llvm-project/commit/aac36687f7978f33751daf2870b5c812124ebfaf
+https://github.com/llvm/llvm-project/commit/bbe6cbbed8c7460a7e8477373b9250543362e771
 
 
-From aac36687f7978f33751daf2870b5c812124ebfaf Mon Sep 17 00:00:00 2001
-From: serge-sans-paille <sguelton@redhat.com>
-Date: Thu, 23 Jul 2020 16:22:48 +0200
-Subject: [PATCH 2/3] Fix interaction between stack alignment and inline-asm
- stack clash protection
-
-As reported in https://github.com/rust-lang/rust/issues/70143 alignment is not
-taken into account when doing the probing. Fix that by adjusting the first probe
-if the stack align is small, or by extending the dynamic probing if the
-alignment is large.
-
-Differential Revision: https://reviews.llvm.org/D84419
-
-(cherry picked from commit f2c6bfa350de142e4d63808d03335f69bd136d6a)
----
- llvm/lib/Target/X86/X86FrameLowering.cpp      | 222 ++++++++++++++++--
- llvm/lib/Target/X86/X86FrameLowering.h        |   8 +-
- .../X86/stack-clash-large-large-align.ll      |  88 +++++++
- .../CodeGen/X86/stack-clash-no-free-probe.ll  |  27 ---
- .../stack-clash-small-alloc-medium-align.ll   | 135 +++++++++++
- .../X86/stack-clash-small-large-align.ll      |  83 +++++++
- 6 files changed, 512 insertions(+), 51 deletions(-)
- create mode 100644 llvm/test/CodeGen/X86/stack-clash-large-large-align.ll
- delete mode 100644 llvm/test/CodeGen/X86/stack-clash-no-free-probe.ll
- create mode 100644 llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
- create mode 100644 llvm/test/CodeGen/X86/stack-clash-small-large-align.ll
-
-diff --git a/llvm/lib/Target/X86/X86FrameLowering.cpp b/llvm/lib/Target/X86/X86FrameLowering.cpp
-index c7ca6fb2a4f..db6b6865949 100644
---- a/llvm/lib/Target/X86/X86FrameLowering.cpp
-+++ b/llvm/lib/Target/X86/X86FrameLowering.cpp
-@@ -586,29 +586,55 @@ void X86FrameLowering::emitStackProbeInlineGeneric(
+These 3 patches have been merged in the 11 branch
+and should be part of the 11.0.1 release
+Index: llvm-toolchain-11-11.0.0/llvm/lib/Target/X86/X86FrameLowering.cpp
+===================================================================
+--- llvm-toolchain-11-11.0.0.orig/llvm/lib/Target/X86/X86FrameLowering.cpp
++++ llvm-toolchain-11-11.0.0/llvm/lib/Target/X86/X86FrameLowering.cpp
+@@ -586,29 +586,55 @@ void X86FrameLowering::emitStackProbeInl
    const uint64_t StackProbeSize = TLI.getStackProbeSize(MF);
    uint64_t ProbeChunk = StackProbeSize * 8;
  
@@ -107,7 +32,7 @@ index c7ca6fb2a4f..db6b6865949 100644
 +
    // Synthesize a loop or unroll it, depending on the number of iterations.
 +  // BuildStackAlignAND ensures that only MaxAlign % StackProbeSize bits left
-+  // between the unaligned rsp and current rsp.
++  // between the unaligned rsp and current rsp
    if (Offset > ProbeChunk) {
 -    emitStackProbeInlineGenericLoop(MF, MBB, MBBI, DL, Offset);
 +    emitStackProbeInlineGenericLoop(MF, MBB, MBBI, DL, Offset,
@@ -161,7 +86,7 @@ index c7ca6fb2a4f..db6b6865949 100644
    // natural probes but it implies much more logic and there was very few
    // interesting natural probes to interleave.
    while (CurrentOffset + StackProbeSize < Offset) {
-@@ -626,9 +652,9 @@ void X86FrameLowering::emitStackProbeInlineGenericBlock(
+@@ -626,9 +652,9 @@ void X86FrameLowering::emitStackProbeInl
          .setMIFlag(MachineInstr::FrameSetup);
      NumFrameExtraProbe++;
      CurrentOffset += StackProbeSize;
@@ -172,7 +97,7 @@ index c7ca6fb2a4f..db6b6865949 100644
    uint64_t ChunkSize = Offset - CurrentOffset;
    MachineInstr *MI = BuildMI(MBB, MBBI, DL, TII.get(Opc), StackPtr)
                           .addReg(StackPtr)
-@@ -639,8 +665,8 @@ void X86FrameLowering::emitStackProbeInlineGenericBlock(
+@@ -639,8 +665,8 @@ void X86FrameLowering::emitStackProbeInl
  
  void X86FrameLowering::emitStackProbeInlineGenericLoop(
      MachineFunction &MF, MachineBasicBlock &MBB,
@@ -183,7 +108,7 @@ index c7ca6fb2a4f..db6b6865949 100644
    assert(Offset && "null offset");
  
    const X86Subtarget &STI = MF.getSubtarget<X86Subtarget>();
-@@ -648,6 +674,26 @@ void X86FrameLowering::emitStackProbeInlineGenericLoop(
+@@ -648,6 +674,26 @@ void X86FrameLowering::emitStackProbeInl
    const unsigned MovMIOpc = Is64Bit ? X86::MOV64mi32 : X86::MOV32mi;
    const uint64_t StackProbeSize = TLI.getStackProbeSize(MF);
  
@@ -210,7 +135,7 @@ index c7ca6fb2a4f..db6b6865949 100644
    // Synthesize a loop
    NumFrameLoopProbe++;
    const BasicBlock *LLVM_BB = MBB.getBasicBlock();
-@@ -666,8 +712,8 @@ void X86FrameLowering::emitStackProbeInlineGenericLoop(
+@@ -666,8 +712,8 @@ void X86FrameLowering::emitStackProbeInl
  
    // save loop bound
    {
@@ -221,7 +146,7 @@ index c7ca6fb2a4f..db6b6865949 100644
          .addReg(FinalStackProbed)
          .addImm(Offset / StackProbeSize * StackProbeSize)
          .setMIFlag(MachineInstr::FrameSetup);
-@@ -675,8 +721,8 @@ void X86FrameLowering::emitStackProbeInlineGenericLoop(
+@@ -675,8 +721,8 @@ void X86FrameLowering::emitStackProbeInl
  
    // allocate a page
    {
@@ -232,7 +157,7 @@ index c7ca6fb2a4f..db6b6865949 100644
          .addReg(StackPtr)
          .addImm(StackProbeSize)
          .setMIFlag(MachineInstr::FrameSetup);
-@@ -1052,13 +1098,149 @@ void X86FrameLowering::BuildStackAlignAND(MachineBasicBlock &MBB,
+@@ -1052,13 +1098,149 @@ void X86FrameLowering::BuildStackAlignAN
                                            uint64_t MaxAlign) const {
    uint64_t Val = -MaxAlign;
    unsigned AndOp = getANDriOpcode(Uses64BitFramePtr, Val);
@@ -388,10 +313,10 @@ index c7ca6fb2a4f..db6b6865949 100644
  }
  
  bool X86FrameLowering::has128ByteRedZone(const MachineFunction& MF) const {
-diff --git a/llvm/lib/Target/X86/X86FrameLowering.h b/llvm/lib/Target/X86/X86FrameLowering.h
-index c0b4be95f88..bb2e83205e7 100644
---- a/llvm/lib/Target/X86/X86FrameLowering.h
-+++ b/llvm/lib/Target/X86/X86FrameLowering.h
+Index: llvm-toolchain-11-11.0.0/llvm/lib/Target/X86/X86FrameLowering.h
+===================================================================
+--- llvm-toolchain-11-11.0.0.orig/llvm/lib/Target/X86/X86FrameLowering.h
++++ llvm-toolchain-11-11.0.0/llvm/lib/Target/X86/X86FrameLowering.h
 @@ -213,14 +213,14 @@ private:
    void emitStackProbeInlineGenericBlock(MachineFunction &MF,
                                          MachineBasicBlock &MBB,
@@ -411,11 +336,10 @@ index c0b4be95f88..bb2e83205e7 100644
  
    /// Emit a stub to later inline the target stack probe.
    MachineInstr *emitStackProbeInlineStub(MachineFunction &MF,
-diff --git a/llvm/test/CodeGen/X86/stack-clash-large-large-align.ll b/llvm/test/CodeGen/X86/stack-clash-large-large-align.ll
-new file mode 100644
-index 00000000000..6c981cb4ac9
+Index: llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-large-large-align.ll
+===================================================================
 --- /dev/null
-+++ b/llvm/test/CodeGen/X86/stack-clash-large-large-align.ll
++++ llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-large-large-align.ll
 @@ -0,0 +1,88 @@
 +; RUN: llc < %s | FileCheck %s
 +
@@ -505,10 +429,9 @@ index 00000000000..6c981cb4ac9
 +}
 +
 +attributes #0 =  {"probe-stack"="inline-asm"}
-diff --git a/llvm/test/CodeGen/X86/stack-clash-no-free-probe.ll b/llvm/test/CodeGen/X86/stack-clash-no-free-probe.ll
-deleted file mode 100644
-index 652acbdf00b..00000000000
---- a/llvm/test/CodeGen/X86/stack-clash-no-free-probe.ll
+Index: llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-no-free-probe.ll
+===================================================================
+--- llvm-toolchain-11-11.0.0.orig/llvm/test/CodeGen/X86/stack-clash-no-free-probe.ll
 +++ /dev/null
 @@ -1,27 +0,0 @@
 -; RUN: llc < %s | FileCheck %s
@@ -538,11 +461,10 @@ index 652acbdf00b..00000000000
 -
 -attributes #0 =  {"probe-stack"="inline-asm"}
 -
-diff --git a/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll b/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
-new file mode 100644
-index 00000000000..eafa86f1eba
+Index: llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
+===================================================================
 --- /dev/null
-+++ b/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
++++ llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
 @@ -0,0 +1,135 @@
 +; RUN: llc < %s | FileCheck %s
 +
@@ -652,12 +574,12 @@ index 00000000000..eafa86f1eba
 +; CHECK-NEXT:	andq	$-16, %rcx
 +; CHECK-NEXT:	subq	%rcx, %rax
 +; CHECK-NEXT:	cmpq	%rsp, %rax
-+; CHECK-NEXT:	jle	.LBB3_3
++; CHECK-NEXT:	jge	.LBB3_3
 +; CHECK-NEXT:.LBB3_2:                                # =>This Inner Loop Header: Depth=1
-+; CHECK-NEXT:	movq	$0, (%rsp)
++; CHECK-NEXT:	xorq	$0, (%rsp)
 +; CHECK-NEXT:	subq	$4096, %rsp                     # imm = 0x1000
 +; CHECK-NEXT:	cmpq	%rsp, %rax
-+; CHECK-NEXT:	jg	.LBB3_2
++; CHECK-NEXT:	jl	.LBB3_2
 +; CHECK-NEXT:.LBB3_3:
 +; CHECK-NEXT:	andq	$-64, %rax
 +; CHECK-NEXT:	movq	%rax, %rsp
@@ -679,11 +601,10 @@ index 00000000000..eafa86f1eba
 +
 +attributes #0 =  {"probe-stack"="inline-asm"}
 +
-diff --git a/llvm/test/CodeGen/X86/stack-clash-small-large-align.ll b/llvm/test/CodeGen/X86/stack-clash-small-large-align.ll
-new file mode 100644
-index 00000000000..e608bab9041
+Index: llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-small-large-align.ll
+===================================================================
 --- /dev/null
-+++ b/llvm/test/CodeGen/X86/stack-clash-small-large-align.ll
++++ llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-small-large-align.ll
 @@ -0,0 +1,83 @@
 +; RUN: llc < %s | FileCheck %s
 +
@@ -768,44 +689,20 @@ index 00000000000..e608bab9041
 +}
 +
 +attributes #0 =  {"probe-stack"="inline-asm"}
--- 
-2.29.2
-
-
-From bbe6cbbed8c7460a7e8477373b9250543362e771 Mon Sep 17 00:00:00 2001
-From: serge-sans-paille <sguelton@redhat.com>
-Date: Tue, 27 Oct 2020 10:59:42 +0100
-Subject: [PATCH 3/3] [stack-clash] Fix probing of dynamic alloca
-
-- Perform the probing in the correct direction.
-  Related to https://github.com/rust-lang/rust/pull/77885#issuecomment-711062924
-
-- The first touch on a dynamic alloca cannot use a mov because it clobbers
-  existing space. Use a xor 0 instead
-
-Differential Revision: https://reviews.llvm.org/D90216
-
-(cherry picked from commit 0f60bcc36c34522618bd1425a45f8c6006568fb6)
----
- llvm/lib/Target/X86/X86ISelLowering.cpp              |  8 ++++----
- llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll  | 12 ++++++------
- .../X86/stack-clash-small-alloc-medium-align.ll      |  6 +++---
- 3 files changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/llvm/lib/Target/X86/X86ISelLowering.cpp b/llvm/lib/Target/X86/X86ISelLowering.cpp
-index f68ae4461fe..afe470cc6e0 100644
---- a/llvm/lib/Target/X86/X86ISelLowering.cpp
-+++ b/llvm/lib/Target/X86/X86ISelLowering.cpp
-@@ -31876,7 +31876,7 @@ X86TargetLowering::EmitLoweredProbedAlloca(MachineInstr &MI,
+Index: llvm-toolchain-11-11.0.0/llvm/lib/Target/X86/X86ISelLowering.cpp
+===================================================================
+--- llvm-toolchain-11-11.0.0.orig/llvm/lib/Target/X86/X86ISelLowering.cpp
++++ llvm-toolchain-11-11.0.0/llvm/lib/Target/X86/X86ISelLowering.cpp
+@@ -31876,7 +31876,7 @@ X86TargetLowering::EmitLoweredProbedAllo
  
    BuildMI(testMBB, DL, TII->get(X86::JCC_1))
        .addMBB(tailMBB)
--      .addImm(X86::COND_LE);
+-      .addImm(X86::COND_L);
 +      .addImm(X86::COND_GE);
    testMBB->addSuccessor(blockMBB);
    testMBB->addSuccessor(tailMBB);
  
-@@ -31892,9 +31892,9 @@ X86TargetLowering::EmitLoweredProbedAlloca(MachineInstr &MI,
+@@ -31892,9 +31892,9 @@ X86TargetLowering::EmitLoweredProbedAllo
    //
    // The property we want to enforce is to never have more than [page alloc] between two probes.
  
@@ -818,62 +715,39 @@ index f68ae4461fe..afe470cc6e0 100644
        .addImm(0);
  
    BuildMI(blockMBB, DL,
-diff --git a/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll b/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
-index 82fd67842c8..6dd8b6ab589 100644
---- a/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
-+++ b/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
-@@ -24,12 +24,12 @@ attributes #0 =  {"probe-stack"="inline-asm"}
+Index: llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
+===================================================================
+--- llvm-toolchain-11-11.0.0.orig/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
++++ llvm-toolchain-11-11.0.0/llvm/test/CodeGen/X86/stack-clash-dynamic-alloca.ll
+@@ -24,12 +24,12 @@ attributes #0 =  {"probe-stack"="inline-
  ; CHECK-X86-64-NEXT:  	andq	$-16, %rcx
  ; CHECK-X86-64-NEXT:  	subq	%rcx, %rax
  ; CHECK-X86-64-NEXT:  	cmpq	%rsp, %rax
--; CHECK-X86-64-NEXT:  	jle	.LBB0_3
-+; CHECK-X86-64-NEXT:  	jge	.LBB0_3
+-; CHECK-X86-64-NEXT:  	jl	.LBB0_3
++; CHECK-X86-64-NEXT:  	jge .LBB0_3
  ; CHECK-X86-64-NEXT:  .LBB0_2: # =>This Inner Loop Header: Depth=1
 -; CHECK-X86-64-NEXT:  	movq	$0, (%rsp)
-+; CHECK-X86-64-NEXT:  	xorq	$0, (%rsp)
++; CHECK-X86-64-NEXT:  	xorq  $0, (%rsp)
  ; CHECK-X86-64-NEXT:  	subq	$4096, %rsp # imm = 0x1000
  ; CHECK-X86-64-NEXT:  	cmpq	%rsp, %rax
--; CHECK-X86-64-NEXT:  	jg	.LBB0_2
+-; CHECK-X86-64-NEXT:  	jge	.LBB0_2
 +; CHECK-X86-64-NEXT:  	jl	.LBB0_2
  ; CHECK-X86-64-NEXT:  .LBB0_3:
  ; CHECK-X86-64-NEXT:  	movq	%rax, %rsp
  ; CHECK-X86-64-NEXT:  	movl	$1, 4792(%rax)
-@@ -54,12 +54,12 @@ attributes #0 =  {"probe-stack"="inline-asm"}
+@@ -54,12 +54,12 @@ attributes #0 =  {"probe-stack"="inline-
  ; CHECK-X86-32-NEXT:    andl    $-16, %ecx
  ; CHECK-X86-32-NEXT:    subl    %ecx, %eax
  ; CHECK-X86-32-NEXT:    cmpl    %esp, %eax
--; CHECK-X86-32-NEXT:    jle  .LBB0_3
+-; CHECK-X86-32-NEXT:    jl  .LBB0_3
 +; CHECK-X86-32-NEXT:    jge  .LBB0_3
  ; CHECK-X86-32-NEXT:  .LBB0_2: # =>This Inner Loop Header: Depth=1
 -; CHECK-X86-32-NEXT:    movl    $0, (%esp)
 +; CHECK-X86-32-NEXT:    xorl    $0, (%esp)
  ; CHECK-X86-32-NEXT:    subl    $4096, %esp # imm = 0x1000
  ; CHECK-X86-32-NEXT:    cmpl    %esp, %eax
--; CHECK-X86-32-NEXT:    jg .LBB0_2
+-; CHECK-X86-32-NEXT:    jge .LBB0_2
 +; CHECK-X86-32-NEXT:    jl .LBB0_2
  ; CHECK-X86-32-NEXT:  .LBB0_3:
  ; CHECK-X86-32-NEXT:    movl    %eax, %esp
  ; CHECK-X86-32-NEXT:    movl    $1, 4792(%eax)
-diff --git a/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll b/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
-index eafa86f1eba..39b6c3640a6 100644
---- a/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
-+++ b/llvm/test/CodeGen/X86/stack-clash-small-alloc-medium-align.ll
-@@ -106,12 +106,12 @@ define i32 @foo4(i64 %i) local_unnamed_addr #0 {
- ; CHECK-NEXT:	andq	$-16, %rcx
- ; CHECK-NEXT:	subq	%rcx, %rax
- ; CHECK-NEXT:	cmpq	%rsp, %rax
--; CHECK-NEXT:	jle	.LBB3_3
-+; CHECK-NEXT:	jge	.LBB3_3
- ; CHECK-NEXT:.LBB3_2:                                # =>This Inner Loop Header: Depth=1
--; CHECK-NEXT:	movq	$0, (%rsp)
-+; CHECK-NEXT:	xorq	$0, (%rsp)
- ; CHECK-NEXT:	subq	$4096, %rsp                     # imm = 0x1000
- ; CHECK-NEXT:	cmpq	%rsp, %rax
--; CHECK-NEXT:	jg	.LBB3_2
-+; CHECK-NEXT:	jl	.LBB3_2
- ; CHECK-NEXT:.LBB3_3:
- ; CHECK-NEXT:	andq	$-64, %rax
- ; CHECK-NEXT:	movq	%rax, %rsp
--- 
-2.29.2
-
