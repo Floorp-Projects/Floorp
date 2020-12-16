@@ -10,6 +10,7 @@
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
 #include "nsIStringEnumerator.h"
+#include "nsReadableUtils.h"
 
 using mozilla::dom::ContentChild;
 using mozilla::dom::HandlerInfo;
@@ -135,22 +136,10 @@ static inline void CopyHanderInfoTonsIHandlerInfo(
   possibleHandlers->AppendElement(preferredApp);
 
   if (info.isMIMEInfo()) {
-    const auto& fileExtensions = info.extensions();
-    bool first = true;
-    nsAutoCString extensionsStr;
-    for (const auto& extension : fileExtensions) {
-      if (!first) {
-        extensionsStr.Append(',');
-      }
-
-      extensionsStr.Append(extension);
-      first = false;
-    }
-
     nsCOMPtr<nsIMIMEInfo> mimeInfo(do_QueryInterface(aHandlerInfo));
     MOZ_ASSERT(mimeInfo,
                "parent and child don't agree on whether this is a MIME info");
-    mimeInfo->SetFileExtensions(extensionsStr);
+    mimeInfo->SetFileExtensions(StringJoin(","_ns, info.extensions()));
   }
 }
 
