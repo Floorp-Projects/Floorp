@@ -1,0 +1,18 @@
+<!doctype html>
+<title>CSS Test Reference</title>
+<style>
+  input {
+    text-overflow: ellipsis;
+    width: 100px;
+    font-size: 16px;
+    display: none;
+  }
+</style>
+<input value="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+<script>
+  let input = document.querySelector("input");
+  input.style.display = "revert";
+  let computed = getComputedStyle(input);
+  for (let prop of ["padding-top", "padding-right", "padding-bottom", "padding-left"])
+    input.style[prop] = computed[prop];
+</script>
