@@ -1795,6 +1795,13 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setNewCompartmentAndZone() {
   return *this;
 }
 
+JS::RealmCreationOptions&
+JS::RealmCreationOptions::setNewCompartmentInSelfHostingZone() {
+  compSpec_ = CompartmentSpecifier::NewCompartmentInSelfHostingZone;
+  comp_ = nullptr;
+  return *this;
+}
+
 const JS::RealmCreationOptions& JS::RealmCreationOptionsRef(Realm* realm) {
   return realm->creationOptions();
 }

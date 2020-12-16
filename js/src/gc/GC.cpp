@@ -7896,24 +7896,26 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
       zone = comp->zone();
       break;
     case JS::CompartmentSpecifier::NewCompartmentAndZone:
+    case JS::CompartmentSpecifier::NewCompartmentInSelfHostingZone:
       break;
   }
 
   if (!zone) {
-    zoneHolder = MakeUnique<Zone>(cx->runtime());
+    Zone::Kind kind = Zone::NormalZone;
+    const JSPrincipals* trusted = rt->trustedPrincipals();
+    if (compSpec == JS::CompartmentSpecifier::NewCompartmentInSelfHostingZone) {
+      MOZ_ASSERT(!rt->hasInitializedSelfHosting());
+      kind = Zone::SelfHostingZone;
+    } else if (compSpec ==
+                   JS::CompartmentSpecifier::NewCompartmentInSystemZone ||
+               (principals && principals == trusted)) {
+      kind = Zone::SystemZone;
+    }
+
+    zoneHolder = MakeUnique<Zone>(cx->runtime(), kind);
     if (!zoneHolder || !zoneHolder->init()) {
       ReportOutOfMemory(cx);
       return nullptr;
-    }
-
-    const JSPrincipals* trusted = rt->trustedPrincipals();
-    bool isSystem = principals && principals == trusted;
-    // If this is a NewCompartmentInSystemZone request, we're going to call
-    // `setIsSystemZone` below when we store the new zone in `gc.systemZone`, so
-    // don't do it here too.
-    if (isSystem &&
-        compSpec != JS::CompartmentSpecifier::NewCompartmentInSystemZone) {
-      zoneHolder->setIsSystemZone();
     }
 
     zone = zoneHolder.get();
@@ -7969,8 +7971,8 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
     // Lazily set the runtime's system zone.
     if (compSpec == JS::CompartmentSpecifier::NewCompartmentInSystemZone) {
       MOZ_RELEASE_ASSERT(!rt->gc.systemZone);
+      MOZ_ASSERT(zone->isSystemZone());
       rt->gc.systemZone = zone;
-      zone->setIsSystemZone();
     }
   }
 
