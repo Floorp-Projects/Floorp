@@ -42,10 +42,28 @@ class RemoteLookAndFeel final : public nsXPLookAndFeel {
   //
   // This is called in the parent process to obtain the data to send down to
   // content processes when they are created (and when the OS theme changes).
-  static FullLookAndFeel ExtractData();
+  //
+  // Note that the pointer returned from here is only valid until the next time
+  // ClearCachedData is called.
+  static const FullLookAndFeel* ExtractData();
+
+  // Clears any cached extracted data from the platform's default LookAndFeel
+  // implementation.
+  //
+  // This is called in the parent process when the default LookAndFeel is
+  // refreshed, to invalidate sCachedTables.
+  static void ClearCachedData();
 
  private:
   FullLookAndFeel mTables;
+
+  // A cached copy of the data extracted by ExtractData.
+  //
+  // Storing this lets us avoid doing most of the work of ExtractData each
+  // time we create a new content process.
+  //
+  // Only used in the parent process.
+  static StaticAutoPtr<FullLookAndFeel> sCachedTables;
 };
 
 }  // namespace mozilla::widget

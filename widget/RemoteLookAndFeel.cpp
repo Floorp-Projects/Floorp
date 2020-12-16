@@ -126,32 +126,42 @@ char16_t RemoteLookAndFeel::GetPasswordCharacterImpl() {
 bool RemoteLookAndFeel::GetEchoPasswordImpl() { return mTables.passwordEcho(); }
 
 // static
-FullLookAndFeel RemoteLookAndFeel::ExtractData() {
+const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Only parent processes should be extracting LookAndFeel data");
-  FullLookAndFeel lf{};
 
+  if (sCachedTables) {
+    return sCachedTables;
+  }
+
+  static bool sInitialized = false;
+  if (!sInitialized) {
+    sInitialized = true;
+    ClearOnShutdown(&sCachedTables);
+  }
+
+  FullLookAndFeel* lf = new FullLookAndFeel{};
   nsXPLookAndFeel* impl = nsXPLookAndFeel::GetInstance();
 
   impl->WithThemeConfiguredForContent([&]() {
     for (auto id : MakeEnumeratedRange(IntID::End)) {
       int32_t theInt;
       nsresult rv = impl->NativeGetInt(id, theInt);
-      AddToMap(&lf.ints(), &lf.intMap(),
+      AddToMap(&lf->ints(), &lf->intMap(),
                NS_SUCCEEDED(rv) ? Some(theInt) : Nothing{});
     }
 
     for (auto id : MakeEnumeratedRange(FloatID::End)) {
       float theFloat;
       nsresult rv = impl->NativeGetFloat(id, theFloat);
-      AddToMap(&lf.floats(), &lf.floatMap(),
+      AddToMap(&lf->floats(), &lf->floatMap(),
                NS_SUCCEEDED(rv) ? Some(theFloat) : Nothing{});
     }
 
     for (auto id : MakeEnumeratedRange(ColorID::End)) {
       nscolor theColor;
       nsresult rv = impl->NativeGetColor(id, theColor);
-      AddToMap(&lf.colors(), &lf.colorMap(),
+      AddToMap(&lf->colors(), &lf->colorMap(),
                NS_SUCCEEDED(rv) ? Some(theColor) : Nothing{});
     }
 
@@ -184,14 +194,25 @@ FullLookAndFeel RemoteLookAndFeel::ExtractData() {
 #endif
         maybeFont = Some(std::move(font));
       }
-      AddToMap(&lf.fonts(), &lf.fontMap(), std::move(maybeFont));
+      AddToMap(&lf->fonts(), &lf->fontMap(), std::move(maybeFont));
     }
 
-    lf.passwordChar() = impl->GetPasswordCharacterImpl();
-    lf.passwordEcho() = impl->GetEchoPasswordImpl();
+    lf->passwordChar() = impl->GetPasswordCharacterImpl();
+    lf->passwordEcho() = impl->GetEchoPasswordImpl();
   });
 
-  return lf;
+  // This assignment to sCachedTables must be done after the
+  // WithThemeConfiguredForContent call, since it can end up calling RefreshImpl
+  // on the LookAndFeel, which will clear out sCachedTables.
+  sCachedTables = lf;
+  return sCachedTables;
 }
+
+void RemoteLookAndFeel::ClearCachedData() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  sCachedTables = nullptr;
+}
+
+StaticAutoPtr<FullLookAndFeel> RemoteLookAndFeel::sCachedTables;
 
 }  // namespace mozilla::widget
