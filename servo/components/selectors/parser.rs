@@ -416,22 +416,6 @@ where
     )
 }
 
-/// Parse a comma separated list of compound selectors.
-pub fn parse_compound_selector_list<'i, 't, P, Impl>(
-    parser: &P,
-    input: &mut CssParser<'i, 't>,
-) -> Result<Box<[Selector<Impl>]>, ParseError<'i, P::Error>>
-where
-    P: Parser<'i, Impl = Impl>,
-    Impl: SelectorImpl,
-{
-    input
-        .parse_comma_separated(|input| {
-            parse_inner_compound_selector(parser, input, SelectorParsingState::empty())
-        })
-        .map(|selectors| selectors.into_boxed_slice())
-}
-
 /// Ancestor hashes for the bloom filter. We precompute these and store them
 /// inline with selectors to optimize cache performance during matching.
 /// This matters a lot.
