@@ -808,6 +808,8 @@ avif:
       - out_of_memory
       - pipe_init_error
       - write_buffer_error
+      - alpha_y_sz_mismatch
+      - alpha_y_bpc_mismatch
     gecko_datapoint: AVIF_DECODE_RESULT
     description: >
       Decode result of AVIF image.

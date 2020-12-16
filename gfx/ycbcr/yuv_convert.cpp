@@ -560,16 +560,16 @@ void ScaleYCbCrToRGB32_deprecated(const uint8* y_buf,
   if (has_mmx)
     EMMS();
 }
-void ConvertYCbCrAToARGB32(const uint8* y_buf,
-                           const uint8* u_buf,
-                           const uint8* v_buf,
-                           const uint8* a_buf,
-                           uint8* argb_buf,
-                           int pic_width,
-                           int pic_height,
-                           int ya_pitch,
-                           int uv_pitch,
-                           int argb_pitch) {
+void ConvertI420AlphaToARGB32(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              const uint8* a_buf,
+                              uint8* argb_buf,
+                              int pic_width,
+                              int pic_height,
+                              int ya_pitch,
+                              int uv_pitch,
+                              int argb_pitch) {
 
   // The downstream graphics stack expects an attenuated input, hence why the
   // attenuation parameter is set.
@@ -579,6 +579,14 @@ void ConvertYCbCrAToARGB32(const uint8* y_buf,
                                                a_buf, ya_pitch,
                                                argb_buf, argb_pitch,
                                                pic_width, pic_height, 1);
+  MOZ_ASSERT(!err);
+}
+
+void ARGBAttenuate(const uint8_t* src_argb, int src_stride_argb,
+                   uint8_t* dst_argb, int dst_stride_argb, int width,
+                   int height) {
+  DebugOnly<int> err = libyuv::ARGBAttenuate(
+      src_argb, src_stride_argb, dst_argb, dst_stride_argb, width, height);
   MOZ_ASSERT(!err);
 }
 

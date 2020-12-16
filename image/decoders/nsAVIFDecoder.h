@@ -32,6 +32,7 @@ class nsAVIFDecoder final : public Decoder {
 
  private:
   friend class DecoderFactory;
+  friend class AVIFDecoderInterface;
 
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsAVIFDecoder(RasterImage* aImage);
@@ -39,17 +40,9 @@ class nsAVIFDecoder final : public Decoder {
   static intptr_t ReadSource(uint8_t* aDestBuf, uintptr_t aDestBufSize,
                              void* aUserData);
 
-  static void FreeDav1dData(const uint8_t* buf, void* cookie);
-
   typedef int Dav1dResult;
-  Dav1dResult DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
-                              layers::PlanarYCbCrData& aDecodedData);
-
   enum class NonAOMCodecError { NoFrame, SizeOverflow };
   typedef Variant<aom_codec_err_t, NonAOMCodecError> AOMResult;
-  AOMResult DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
-                          layers::PlanarYCbCrData& aDecodedData);
-
   enum class NonDecoderResult {
     NeedMoreData,
     MetadataOk,
@@ -58,19 +51,16 @@ class nsAVIFDecoder final : public Decoder {
     SizeOverflow,
     OutOfMemory,
     PipeInitError,
-    WriteBufferError
+    WriteBufferError,
+    AlphaYSizeMismatch,
+    AlphaYColorDepthMismatch
   };
   using DecodeResult = Variant<NonDecoderResult, Dav1dResult, AOMResult>;
   DecodeResult Decode(SourceBufferIterator& aIterator, IResumable* aOnResume);
 
-  bool IsDecodeSuccess(const DecodeResult& aResult);
+  static bool IsDecodeSuccess(const DecodeResult& aResult);
 
   void RecordDecodeResultTelemetry(const DecodeResult& aResult);
-
-  Mp4parseAvifParser* mParser;
-  Maybe<Variant<aom_codec_ctx_t, Dav1dContext*>> mCodecContext;
-
-  Maybe<Dav1dPicture> mDav1dPicture;
 
   Vector<uint8_t> mBufferedData;
 

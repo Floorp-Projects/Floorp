@@ -136,6 +136,10 @@ class ImageDecoderMetadata : public ::testing::Test {
   AutoInitializeImageLib mInit;
 };
 
+TEST_F(ImageDecoderMetadata, TransparentAVIF) {
+  CheckMetadata(TransparentAVIFTestCase());
+}
+
 TEST_F(ImageDecoderMetadata, PNG) { CheckMetadata(GreenPNGTestCase()); }
 TEST_F(ImageDecoderMetadata, TransparentPNG) {
   CheckMetadata(TransparentPNGTestCase());
