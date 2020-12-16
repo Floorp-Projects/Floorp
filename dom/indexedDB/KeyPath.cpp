@@ -26,9 +26,8 @@ namespace mozilla::dom::indexedDB {
 
 namespace {
 
-inline bool IgnoreWhitespace(char16_t c) { return false; }
-
-typedef nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> KeyPathTokenizer;
+using KeyPathTokenizer =
+    nsCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing>;
 
 bool IsValidKeyPathString(const nsAString& aKeyPath) {
   NS_ASSERTION(!aKeyPath.IsVoid(), "What?");
@@ -463,7 +462,8 @@ KeyPath KeyPath::DeserializeFromString(const nsAString& aString) {
     // We use a comma in the beginning to indicate that it's an array of
     // key paths. This is to be able to tell a string-keypath from an
     // array-keypath which contains only one item.
-    nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> tokenizer(aString, ',');
+    nsCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing> tokenizer(
+        aString, ',');
     tokenizer.nextToken();
     while (tokenizer.hasMoreTokens()) {
       keyPath.mStrings.AppendElement(tokenizer.nextToken());
