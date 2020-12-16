@@ -25,6 +25,8 @@ const PREF_ACCEPTED_POLICY_VERSION =
 const PREF_ACCEPTED_POLICY_DATE =
   PREF_BRANCH + "dataSubmissionPolicyNotifiedTime";
 
+const PREF_TELEMETRY_LOG_LEVEL = "toolkit.telemetry.log.level";
+
 const TEST_POLICY_VERSION = 37;
 
 function fakeShowPolicyTimeout(set, clear) {
@@ -124,10 +126,13 @@ add_task(async function setup() {
     Preferences.set(PREF_FIRST_RUN, isFirstRun);
     Preferences.set(PREF_BYPASS_NOTIFICATION, bypassNotification);
     Preferences.set(PREF_CURRENT_POLICY_VERSION, currentPolicyVersion);
+    Preferences.reset(PREF_TELEMETRY_LOG_LEVEL);
 
     return closeAllNotifications();
   });
 
+  // bug 1571932
+  Preferences.set(PREF_TELEMETRY_LOG_LEVEL, "Trace");
   // Don't skip the infobar visualisation.
   Preferences.set(PREF_BYPASS_NOTIFICATION, false);
   // Set the current policy version.
