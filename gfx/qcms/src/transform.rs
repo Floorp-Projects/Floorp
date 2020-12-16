@@ -1159,19 +1159,21 @@ pub fn transform_create(
     mut intent: qcms_intent,
 ) -> Option<Box<qcms_transform>> {
     // Ensure the requested input and output types make sense.
-    let mut match_0: bool = false;
-    if in_type == DATA_RGB_8 {
-        match_0 = out_type == DATA_RGB_8
-    } else if in_type == DATA_RGBA_8 {
-        match_0 = out_type == DATA_RGBA_8
-    } else if in_type == DATA_BGRA_8 {
-        match_0 = out_type == DATA_BGRA_8
-    } else if in_type == DATA_GRAY_8 {
-        match_0 = out_type == DATA_RGB_8 || out_type == DATA_RGBA_8 || out_type == DATA_BGRA_8
-    } else if in_type == DATA_GRAYA_8 {
-        match_0 = out_type == DATA_RGBA_8 || out_type == DATA_BGRA_8
-    }
-    if !match_0 {
+    let matching_format = match (in_type, out_type) {
+        (DATA_RGB_8, DATA_RGB_8) => true,
+        (DATA_RGBA_8, DATA_RGBA_8) => true,
+        (DATA_BGRA_8, DATA_BGRA_8) => true,
+        (DATA_GRAY_8, out_type) => match out_type {
+            DATA_RGB_8 | DATA_RGBA_8 | DATA_BGRA_8 => true,
+            _ => false,
+        },
+        (DATA_GRAYA_8, out_type) => match out_type {
+            DATA_RGBA_8 | DATA_BGRA_8 => true,
+            _ => false,
+        },
+        _ => false,
+    };
+    if !matching_format {
         debug_assert!(false, "input/output type");
         return None;
     }
