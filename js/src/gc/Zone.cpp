@@ -34,8 +34,8 @@ using namespace js::gc;
 
 Zone* const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
-ZoneAllocator::ZoneAllocator(JSRuntime* rt)
-    : JS::shadow::Zone(rt, &rt->gc.marker),
+ZoneAllocator::ZoneAllocator(JSRuntime* rt, Kind kind)
+    : JS::shadow::Zone(rt, &rt->gc.marker, kind),
       gcHeapSize(&rt->gc.heapSize),
       mallocHeapSize(nullptr),
       jitHeapSize(nullptr),
@@ -140,8 +140,8 @@ void ZoneAllocPolicy::decMemory(size_t nbytes) {
                         cx->defaultFreeOp()->isCollecting());
 }
 
-JS::Zone::Zone(JSRuntime* rt)
-    : ZoneAllocator(rt),
+JS::Zone::Zone(JSRuntime* rt, Kind kind)
+    : ZoneAllocator(rt, kind),
       // Note: don't use |this| before initializing helperThreadUse_!
       // ProtectedData checks in CheckZone::check may read this field.
       helperThreadUse_(HelperThreadUse::None),
@@ -189,6 +189,8 @@ JS::Zone::Zone(JSRuntime* rt)
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
              static_cast<JS::shadow::Zone*>(this));
+  MOZ_ASSERT_IF(isAtomsZone(), !rt->unsafeAtomsZone());
+  MOZ_ASSERT_IF(isSelfHostingZone(), !rt->hasInitializedSelfHosting());
 
   // We can't call updateGCStartThresholds until the Zone has been constructed.
   AutoLockGC lock(rt);
@@ -212,25 +214,6 @@ Zone::~Zone() {
 bool Zone::init() {
   regExps_.ref() = make_unique<RegExpZone>(this);
   return regExps_.ref() && gcWeakKeys().init() && gcNurseryWeakKeys().init();
-}
-
-void Zone::setIsAtomsZone() {
-  MOZ_ASSERT(!isAtomsZone_);
-  MOZ_ASSERT(runtimeFromAnyThread()->isAtomsZone(this));
-  isAtomsZone_ = true;
-  setIsSystemZone();
-}
-
-void Zone::setIsSelfHostingZone() {
-  MOZ_ASSERT(!isSelfHostingZone_);
-  MOZ_ASSERT(runtimeFromAnyThread()->isSelfHostingZone(this));
-  isSelfHostingZone_ = true;
-  setIsSystemZone();
-}
-
-void Zone::setIsSystemZone() {
-  MOZ_ASSERT(!isSystemZone_);
-  isSystemZone_ = true;
 }
 
 void Zone::setNeedsIncrementalBarrier(bool needs) {

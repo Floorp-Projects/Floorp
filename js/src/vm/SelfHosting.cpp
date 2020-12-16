@@ -2721,7 +2721,7 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
   MOZ_ASSERT(!cx->realm());
 
   JS::RealmOptions options;
-  options.creationOptions().setNewCompartmentAndZone();
+  options.creationOptions().setNewCompartmentInSelfHostingZone();
   // Debugging the selfHosted zone is not supported because CCWs are not
   // allowed in that zone.
   options.creationOptions().setInvisibleToDebugger(true);
@@ -2756,7 +2756,7 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
   }
 
   cx->runtime()->selfHostingGlobal_ = shg;
-  realm->zone()->setIsSelfHostingZone();
+  MOZ_ASSERT(realm->zone()->isSelfHostingZone());
   realm->setIsSelfHostingRealm();
 
   if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions)) {
