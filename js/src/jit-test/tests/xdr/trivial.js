@@ -40,3 +40,7 @@ evalWithCache(test, { assertEqBytecode: true });
 // code call site object
 test = "function f(a) { return a; }; f`a${4}b`;";
 evalWithCache(test, { assertEqBytecode: true, checkFrozen: true});
+
+// code RegExp constants.
+test = "'fooooooo'.match(/(f.+)/)[1].replace(/o/g, 'O')";
+evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });
