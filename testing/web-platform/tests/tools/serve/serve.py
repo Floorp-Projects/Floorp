@@ -1001,7 +1001,7 @@ def run(config_cls=ConfigBuilder, route_builder=None, mp_context=None, **kwargs)
         routes = route_builder(config.aliases, config).get_routes()
 
         if config["check_subdomains"]:
-            check_subdomains(config, routes)
+            check_subdomains(config, routes, mp_context)
 
         stash_address = None
         if bind_address:
