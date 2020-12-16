@@ -2,6 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# NOTE: For English locales, strings in this file should be in APA-style Title Case.
+# See https://apastyle.apa.org/style-grammar-guidelines/capitalization/title-case
+#
+# NOTE: For Engineers, please don't re-use these strings outside of the menubar.
+
 ## File Menu
 
 menu-file =
@@ -49,7 +54,7 @@ menu-file-print =
     .label = Print…
     .accesskey = P
 menu-file-import-from-another-browser =
-    .label = Import from Another Browser…
+    .label = Import From Another Browser…
     .accesskey = I
 menu-file-go-offline =
     .label = Work Offline
@@ -246,7 +251,7 @@ menu-help-show-tour =
     .label = { -brand-shorter-name } Tour
     .accesskey = o
 menu-help-import-from-another-browser =
-    .label = Import from Another Browser…
+    .label = Import From Another Browser…
     .accesskey = I
 menu-help-keyboard-shortcuts =
     .label = Keyboard Shortcuts
@@ -258,10 +263,10 @@ menu-help-feedback-page =
     .label = Submit Feedback…
     .accesskey = S
 menu-help-safe-mode-without-addons =
-    .label = Restart with Add-ons Disabled…
+    .label = Restart With Add-ons Disabled…
     .accesskey = R
 menu-help-safe-mode-with-addons =
-    .label = Restart with Add-ons Enabled
+    .label = Restart With Add-ons Enabled
     .accesskey = R
 # Label of the Help menu item. Either this or
 # menu-help-notdeceptive is shown.
@@ -269,5 +274,5 @@ menu-help-report-deceptive-site =
     .label = Report Deceptive Site…
     .accesskey = D
 menu-help-not-deceptive =
-    .label = This isn’t a deceptive site…
-    .accesskey = d
+    .label = This Isn’t a Deceptive Site…
+    .accesskey = D
