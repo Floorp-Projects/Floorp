@@ -191,7 +191,7 @@ window.onload = async function () {
     ok(true, "The dragging class is set on the root element");
 
     const event = new MouseEvent("mousemove", { clientX });
-    resizer.ownerDocument.dispatchEvent(event);
+    resizer.dispatchEvent(event);
 
     info("Mouse up to stop resizing");
     synthesizeMouseAtCenter(document.body, { button: 0, type: "mouseup" }, window);
