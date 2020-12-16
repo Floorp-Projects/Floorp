@@ -345,10 +345,20 @@ class Include(object):
             if not os.path.exists(file):
                 continue
 
-            self.IDL = parent.parser.parse(
-                open(file, encoding="utf-8").read(), filename=file
-            )
-            self.IDL.resolve(parent.incdirs, parent.parser, parent.webidlconfig)
+            if file in parent.includeCache:
+                self.IDL = parent.includeCache[file]
+            else:
+                self.IDL = parent.parser.parse(
+                    open(file, encoding="utf-8").read(), filename=file
+                )
+                self.IDL.resolve(
+                    parent.incdirs,
+                    parent.parser,
+                    parent.webidlconfig,
+                    parent.includeCache,
+                )
+                parent.includeCache[file] = self.IDL
+
             for type in self.IDL.getNames():
                 parent.setName(type)
             parent.deps.extend(self.IDL.deps)
@@ -390,11 +400,12 @@ class IDL(object):
     def __str__(self):
         return "".join([str(p) for p in self.productions])
 
-    def resolve(self, incdirs, parser, webidlconfig):
+    def resolve(self, incdirs, parser, webidlconfig, includeCache=None):
         self.namemap = NameMap()
         self.incdirs = incdirs
         self.parser = parser
         self.webidlconfig = webidlconfig
+        self.includeCache = {} if includeCache is None else includeCache
         for p in self.productions:
             p.resolve(self)
 
