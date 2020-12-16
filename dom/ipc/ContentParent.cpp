@@ -1488,7 +1488,7 @@ void ContentParent::BroadcastFontListChanged() {
 
 static LookAndFeelData GetLookAndFeelData() {
   if (StaticPrefs::widget_remote_look_and_feel_AtStartup()) {
-    return RemoteLookAndFeel::ExtractData();
+    return *RemoteLookAndFeel::ExtractData();
   }
   return LookAndFeel::GetCache();
 }
