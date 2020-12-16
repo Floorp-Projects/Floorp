@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProxyUtils.h"
+
+#include "mozilla/IntegerRange.h"
+#include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "prnetdb.h"
 #include "prtypes.h"
@@ -19,17 +22,14 @@ namespace system {
 static void NormalizeAddr(const nsACString& aAddr, nsCString& aNormalized) {
   nsTArray<nsCString> addr;
   ParseString(aAddr, '.', addr);
-  aNormalized = "";
-  for (uint32_t i = 0; i < 4; ++i) {
-    if (i != 0) {
-      aNormalized.AppendLiteral(".");
-    }
-    if (i < addr.Length()) {
-      aNormalized.Append(addr[i]);
-    } else {
-      aNormalized.AppendLiteral("0");
-    }
-  }
+  aNormalized = StringJoin("."_ns, IntegerRange(4),
+                           [&addr](nsACString& dst, const int i) {
+                             if (i < addr.Length()) {
+                               dst.Append(addr[i]);
+                             } else {
+                               dst.Append('0');
+                             }
+                           });
 }
 
 static PRUint32 MaskIPv4Addr(PRUint32 aAddr, uint16_t aMaskLen) {

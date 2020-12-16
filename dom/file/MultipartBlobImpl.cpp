@@ -11,6 +11,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIMultiplexInputStream.h"
+#include "nsReadableUtils.h"
 #include "nsRFPService.h"
 #include "nsStringStream.h"
 #include "nsTArray.h"
@@ -320,16 +321,13 @@ size_t MultipartBlobImpl::GetAllocationSize(
 void MultipartBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {
   aBlobImplType.AssignLiteral("MultipartBlobImpl[");
 
-  for (uint32_t i = 0; i < mBlobImpls.Length(); ++i) {
-    if (i != 0) {
-      aBlobImplType.AppendLiteral(", ");
-    }
+  StringJoinAppend(aBlobImplType, u", "_ns, mBlobImpls,
+                   [](nsAString& dest, BlobImpl* subBlobImpl) {
+                     nsAutoString blobImplType;
+                     subBlobImpl->GetBlobImplType(blobImplType);
 
-    nsAutoString blobImplType;
-    mBlobImpls[i]->GetBlobImplType(blobImplType);
-
-    aBlobImplType.Append(blobImplType);
-  }
+                     dest.Append(blobImplType);
+                   });
 
   aBlobImplType.AppendLiteral("]");
 }

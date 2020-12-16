@@ -23,6 +23,7 @@
 #include "nsDOMString.h"
 #include "nsIObserverService.h"
 #include "nsMimeTypes.h"
+#include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "VideoUtils.h"
@@ -1194,12 +1195,10 @@ template <class Type>
 static nsCString ToCString(const Sequence<Type>& aSequence) {
   nsCString str;
   str.AppendLiteral("[");
-  for (size_t i = 0; i < aSequence.Length(); i++) {
-    if (i != 0) {
-      str.AppendLiteral(",");
-    }
-    str.Append(ToCString(aSequence[i]));
-  }
+  StringJoinAppend(str, ","_ns, aSequence,
+                   [](nsACString& dest, const Type& element) {
+                     dest.Append(ToCString(element));
+                   });
   str.AppendLiteral("]");
   return str;
 }

@@ -24,6 +24,7 @@
 #include "nsGtkUtils.h"
 #include "nsIBidiKeyboard.h"
 #include "nsPrintfCString.h"
+#include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWindow.h"
 #include "gfxPlatformGtk.h"
@@ -193,14 +194,11 @@ static const nsCString GetCharacterCodeNames(const char16_t* aChars,
     return "\"\""_ns;
   }
   nsCString result;
-  for (uint32_t i = 0; i < aLength; ++i) {
-    if (!result.IsEmpty()) {
-      result.AppendLiteral(", ");
-    } else {
-      result.AssignLiteral("\"");
-    }
-    result.Append(GetCharacterCodeName(aChars[i]));
-  }
+  result.AssignLiteral("\"");
+  StringJoinAppend(result, ", "_ns, Span{aChars, aLength},
+                   [](nsACString& dest, const char16_t charValue) {
+                     dest.Append(GetCharacterCodeName(charValue));
+                   });
   result.AppendLiteral("\"");
   return result;
 }

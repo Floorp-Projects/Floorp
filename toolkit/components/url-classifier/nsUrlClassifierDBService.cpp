@@ -1428,13 +1428,7 @@ nsresult nsUrlClassifierLookupCallback::HandleResults() {
   mDBService->CacheCompletions(mCacheResults);
   mCacheResults.Clear();
 
-  nsAutoCString tableStr;
-  for (uint32_t i = 0; i < tables.Length(); i++) {
-    if (i != 0) tableStr.Append(',');
-    tableStr.Append(tables[i]);
-  }
-
-  return mCallback->HandleEvent(tableStr);
+  return mCallback->HandleEvent(StringJoin(","_ns, tables));
 }
 
 nsresult nsUrlClassifierLookupCallback::CacheMisses() {

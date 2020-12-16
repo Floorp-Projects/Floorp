@@ -631,19 +631,18 @@ static void LogPrincipal(nsIPrincipal* aPrincipal,
     }
     if (aPrincipal->GetIsExpandedPrincipal()) {
       nsCOMPtr<nsIExpandedPrincipal> expanded(do_QueryInterface(aPrincipal));
-      const nsTArray<nsCOMPtr<nsIPrincipal>>& allowList = expanded->AllowList();
       nsAutoCString origin;
       origin.AssignLiteral("[Expanded Principal [");
-      for (size_t i = 0; i < allowList.Length(); ++i) {
-        if (i != 0) {
-          origin.AppendLiteral(", ");
-        }
 
-        nsAutoCString subOrigin;
-        DebugOnly<nsresult> rv = allowList.ElementAt(i)->GetOrigin(subOrigin);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-        origin.Append(subOrigin);
-      }
+      StringJoinAppend(origin, ", "_ns, expanded->AllowList(),
+                       [](nsACString& dest, nsIPrincipal* principal) {
+                         nsAutoCString subOrigin;
+                         DebugOnly<nsresult> rv =
+                             principal->GetOrigin(subOrigin);
+                         MOZ_ASSERT(NS_SUCCEEDED(rv));
+                         dest.Append(subOrigin);
+                       });
+
       origin.AppendLiteral("]]");
 
       MOZ_LOG(sCSMLog, LogLevel::Debug,
