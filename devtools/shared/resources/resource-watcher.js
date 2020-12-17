@@ -446,13 +446,6 @@ class ResourceWatcher {
         continue;
       }
 
-      if (watcherFront) {
-        targetFront = await this._getTargetForWatcherResource(existingResource);
-        if (!targetFront) {
-          continue;
-        }
-      }
-
       if (resourceUpdates) {
         Object.assign(existingResource, resourceUpdates);
       }
@@ -483,13 +476,6 @@ class ResourceWatcher {
   async _onResourceDestroyed({ targetFront, watcherFront }, resources) {
     for (const resource of resources) {
       const { resourceType, resourceId } = resource;
-
-      if (watcherFront) {
-        targetFront = await this._getTargetForWatcherResource(resource);
-        if (!targetFront) {
-          continue;
-        }
-      }
 
       let index = -1;
       if (resourceId) {
@@ -768,7 +754,9 @@ class ResourceWatcher {
     // If the server supports the Watcher API and the Watcher supports
     // this resource type, use this API
     if (this.hasResourceWatcherSupport(resourceType)) {
-      this.watcherFront.unwatchResources([resourceType]);
+      if (!this.watcherFront.isDestroyed()) {
+        this.watcherFront.unwatchResources([resourceType]);
+      }
 
       // See comment in `_startListening`
       const shouldRunLegacyListeners =
