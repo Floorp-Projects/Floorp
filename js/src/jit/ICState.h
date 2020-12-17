@@ -110,6 +110,7 @@ class ICState {
     transition(Mode::Megamorphic);
     return true;
   }
+
   void reset() {
     setMode(Mode::Specialized);
     trialInliningState_ = uint32_t(TrialInliningState::Initial);
