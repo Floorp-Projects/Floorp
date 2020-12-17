@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.source_test:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - fetch
+    - toolchain
+    - build
+
+job-defaults:
+    platform: linux64-shippable/opt
+    require-build:
+        linux64-shippable/opt: build-linux64-shippable/opt
+    dependencies:
+        linux64-opt: build-linux64/opt
+    worker-type: b-linux
+    worker:
+        max-run-time: 3600
+        docker-image: {in-tree: debian10-amd64-build}
+        env:
+            LD_LIBRARY_PATH: /builds/worker/fetches
+            JSSHELL: ./js
+    treeherder:
+        kind: test
+        tier: 3
+    fetches:
+        build:
+            - target.jsshell.zip
+            - target.fuzztest.tests.tar.gz
+
+jobs:
+    simple:
+        description: Simple Fuzzing Test
+        treeherder:
+            symbol: simple-fuzzing
+        run:
+            using: run-task
+            command: >-
+                cd $MOZ_FETCHES_DIR &&
+                python tools/fuzzing/smoke/smoke.py

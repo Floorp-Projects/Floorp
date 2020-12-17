@@ -98,6 +98,7 @@ ARCHIVE_FILES = {
                 "jit-test/**",
                 "jittest/**",  # To make the ignore checker happy
                 "perftests/**",
+                "fuzztest/**",
             ],
         },
         {
@@ -668,6 +669,12 @@ ARCHIVE_FILES = {
             "source": STAGE,
             "base": "",
             "pattern": "jsreftest/**",
+        },
+    ],
+    "fuzztest": [
+        {
+            "source": buildconfig.topsrcdir,
+            "pattern": "tools/fuzzing/smoke/**",
         },
     ],
     "jittest": [
