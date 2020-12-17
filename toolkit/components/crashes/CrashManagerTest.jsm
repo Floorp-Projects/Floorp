@@ -114,6 +114,16 @@ TestingCrashManager.prototype = {
     })();
   },
 
+  deleteEventsDirs() {
+    let dirs = this._eventsDirs;
+
+    return (async function() {
+      for (let dir of dirs) {
+        await OS.File.removeDir(dir);
+      }
+    })();
+  },
+
   /**
    * Overwrite event file handling to process our test file type.
    *

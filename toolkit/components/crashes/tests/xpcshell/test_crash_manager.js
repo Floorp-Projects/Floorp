@@ -119,6 +119,15 @@ add_task(async function test_store_expires() {
   Assert.ok(!m._store, "Store has gone away.");
 });
 
+// Ensure errors are handled when the events dir is missing.
+add_task(async function test_empty_events_dir() {
+  let m = await getManager();
+  await m.deleteEventsDirs();
+
+  let paths = await m._getUnprocessedEventsFiles();
+  Assert.equal(paths.length, 0);
+});
+
 // Ensure discovery of unprocessed events files works.
 add_task(async function test_unprocessed_events_files() {
   let m = await getManager();
