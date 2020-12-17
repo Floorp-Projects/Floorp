@@ -93,7 +93,6 @@ mozilla::ipc::IPCResult PluginWidgetParent::RecvCreate(
 
   nsWidgetInitData initData;
   initData.mWindowType = eWindowType_plugin_ipc_chrome;
-  initData.mUnicode = false;
   initData.clipChildren = true;
   initData.clipSiblings = true;
   *aResult = mWidget->Create(parentWidget.get(), nullptr,
