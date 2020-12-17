@@ -5074,70 +5074,6 @@ MDefinition::AliasType MGetPropertyPolymorphic::mightAlias(
   return AliasType::NoAlias;
 }
 
-bool MGetPropertyPolymorphic::appendRoots(MRootList& roots) const {
-  if (!roots.append(name_)) {
-    return false;
-  }
-
-  for (const PolymorphicEntry& entry : receivers_) {
-    if (!entry.appendRoots(roots)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool MSetPropertyPolymorphic::appendRoots(MRootList& roots) const {
-  if (!roots.append(name_)) {
-    return false;
-  }
-
-  for (const PolymorphicEntry& entry : receivers_) {
-    if (!entry.appendRoots(roots)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool MGuardReceiverPolymorphic::appendRoots(MRootList& roots) const {
-  for (const ReceiverGuard& guard : receivers_) {
-    if (!roots.append(guard)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool MConstant::appendRoots(MRootList& roots) const {
-  switch (type()) {
-    case MIRType::String:
-      return roots.append(toString());
-    case MIRType::Symbol:
-      return roots.append(toSymbol());
-    case MIRType::BigInt:
-      return roots.append(toBigInt());
-    case MIRType::Object:
-      return roots.append(&toObject());
-    case MIRType::Undefined:
-    case MIRType::Null:
-    case MIRType::Boolean:
-    case MIRType::Int32:
-    case MIRType::Double:
-    case MIRType::Float32:
-    case MIRType::MagicOptimizedArguments:
-    case MIRType::MagicOptimizedOut:
-    case MIRType::MagicHole:
-    case MIRType::MagicIsConstructing:
-    case MIRType::MagicUninitializedLexical:
-      return true;
-    default:
-      MOZ_CRASH("Unexpected type");
-  }
-}
-
 MDefinition* MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc) {
   if (input()->isConstant() && input()->type() == MIRType::Int32) {
     return MConstant::New(
@@ -5829,10 +5765,6 @@ MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
     return nullptr;
   }
   return ins;
-}
-
-bool MIonToWasmCall::appendRoots(MRootList& roots) const {
-  return roots.append(instanceObj_);
 }
 
 #ifdef DEBUG
