@@ -326,53 +326,28 @@ function setupDisplayport(contentRootElement) {
 
 // Returns whether any offsets were updated
 function setupAsyncScrollOffsets(options) {
-    var currentDoc = content.document;
-    var contentRootElement = currentDoc ? currentDoc.documentElement : null;
+    let currentDoc = content.document;
+    let contentRootElement = currentDoc ? currentDoc.documentElement : null;
 
-    if (!contentRootElement) {
+    if (!contentRootElement || !contentRootElement.hasAttribute("reftest-async-scroll")) {
+        return Promise.resolve(false);
+    }
+
+    let allowFailure = options.allowFailure;
+    let promise = content.windowGlobalChild.getActor("ReftestFission").sendQuery("SetupAsyncScrollOffsets", {allowFailure});
+    return promise.then(function(result) {
+        for (let errorString of result.errorStrings) {
+            LogError(errorString);
+        }
+        for (let infoString of result.infoStrings) {
+            LogInfo(infoString);
+        }
+        return result.updatedAny;
+    },
+    function(reason) {
+        LogError("SetupAsyncScrollOffsets SendQuery to parent promise rejected: " + reason);
         return false;
-    }
-
-    function setupAsyncScrollOffsetsForElement(element, winUtils) {
-        var sx = attrOrDefault(element, "reftest-async-scroll-x", 0);
-        var sy = attrOrDefault(element, "reftest-async-scroll-y", 0);
-        if (sx != 0 || sy != 0) {
-            try {
-                // This might fail when called from RecordResult since layers
-                // may not have been constructed yet
-                winUtils.setAsyncScrollOffset(element, sx, sy);
-                return true;
-            } catch (e) {
-                if (!options.allowFailure) {
-                    throw e;
-                }
-            }
-        }
-        return false;
-    }
-
-    function setupAsyncScrollOffsetsForElementSubtree(element, winUtils) {
-        var updatedAny = setupAsyncScrollOffsetsForElement(element, winUtils);
-        for (var c = element.firstElementChild; c; c = c.nextElementSibling) {
-            if (setupAsyncScrollOffsetsForElementSubtree(c, winUtils)) {
-                updatedAny = true;
-            }
-        }
-        if (element.contentDocument) {
-            LogInfo("Descending into subdocument (async offsets)");
-            if (setupAsyncScrollOffsetsForElementSubtree(element.contentDocument.documentElement,
-                                                         windowUtilsForWindow(element.contentWindow))) {
-                updatedAny = true;
-            }
-        }
-        return updatedAny;
-    }
-
-    var asyncScroll = contentRootElement.hasAttribute("reftest-async-scroll");
-    if (asyncScroll) {
-        return setupAsyncScrollOffsetsForElementSubtree(contentRootElement, windowUtils());
-    }
-    return false;
+    });
 }
 
 function setupAsyncZoom(options) {
@@ -1207,7 +1182,7 @@ function CheckForProcessCrashExpectation(contentRootElement)
     }
 }
 
-function RecordResult(forURL)
+async function RecordResult(forURL)
 {
     if (forURL != gCurrentURL) {
         LogInfo("RecordResult fired for previous document");
@@ -1278,10 +1253,7 @@ function RecordResult(forURL)
     // Setup async scroll offsets now in case SynchronizeForSnapshot is not
     // called (due to reftest-no-sync-layers being supplied, or in the single
     // process case).
-    var changedAsyncScrollZoom = false;
-    if (setupAsyncScrollOffsets({allowFailure:true})) {
-        changedAsyncScrollZoom = true;
-    }
+    let changedAsyncScrollZoom = await setupAsyncScrollOffsets({allowFailure:true});
     if (setupAsyncZoom({allowFailure:true})) {
         changedAsyncScrollZoom = true;
     }
@@ -1394,8 +1366,9 @@ function SynchronizeForSnapshot(flags)
 
         // Setup async scroll offsets now, because any scrollable layers should
         // have had their AsyncPanZoomControllers created.
-        setupAsyncScrollOffsets({allowFailure:false});
-        setupAsyncZoom({allowFailure:false});
+        return setupAsyncScrollOffsets({allowFailure:false}).then(function(result) {
+            setupAsyncZoom({allowFailure:false});
+        });
     }, function(reason) {
         // We expect actors to go away causing sendQuery's to fail, so
         // just note it.
@@ -1403,8 +1376,9 @@ function SynchronizeForSnapshot(flags)
 
         // Setup async scroll offsets now, because any scrollable layers should
         // have had their AsyncPanZoomControllers created.
-        setupAsyncScrollOffsets({allowFailure:false});
-        setupAsyncZoom({allowFailure:false});
+        return setupAsyncScrollOffsets({allowFailure:false}).then(function(result) {
+            setupAsyncZoom({allowFailure:false});
+        });
     });
 }
 
