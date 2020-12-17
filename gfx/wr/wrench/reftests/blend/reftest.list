@@ -21,4 +21,4 @@ fuzzy(3,397) == isolated-2.yaml isolated-2-ref.yaml
 fuzzy(1,2502) == transparent-composite-1.yaml transparent-composite-1-ref.yaml
 fuzzy(1,2502) == transparent-composite-2.yaml transparent-composite-2-ref.yaml
 
-fuzzy(2,324) == multi-mix-blend-mode.yaml multi-mix-blend-mode-ref.yaml
+fuzzy(2,420) == multi-mix-blend-mode.yaml multi-mix-blend-mode-ref.yaml
