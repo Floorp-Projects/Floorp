@@ -201,6 +201,28 @@ class RegistryMutex {
   }
 };
 
+// Returns false (without setting aResult) if reading last run time failed.
+static bool CheckIfAppRanRecently(bool* aResult) {
+  const ULONGLONG kTaskExpirationDays = 90;
+  const ULONGLONG kTaskExpirationSeconds = kTaskExpirationDays * 24 * 60 * 60;
+
+  MaybeQwordResult lastRunTimeResult =
+      RegistryGetValueQword(IsPrefixed::Prefixed, L"AppLastRunTime");
+  if (lastRunTimeResult.isErr()) {
+    return false;
+  }
+  mozilla::Maybe<ULONGLONG> lastRunTimeMaybe = lastRunTimeResult.unwrap();
+  if (!lastRunTimeMaybe.isSome()) {
+    return false;
+  }
+
+  ULONGLONG secondsSinceLastRunTime =
+      SecondsPassedSince(lastRunTimeMaybe.value());
+
+  *aResult = secondsSinceLastRunTime < kTaskExpirationSeconds;
+  return true;
+}
+
 // We expect to be given a command string in argv[1], perhaps followed by other
 // arguments depending on the command. The valid commands are:
 // register-task [unique-token]
@@ -333,6 +355,14 @@ int wmain(int argc, wchar_t** argv) {
     // So we'll just bail if we can't get the mutex quickly.
     if (!regMutex.Acquire()) {
       return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
+    }
+
+    // Check that Firefox ran recently, if not then stop here.
+    // Also stop if no timestamp was found, which most likely indicates
+    // that Firefox was not yet run.
+    bool ranRecently = false;
+    if (!CheckIfAppRanRecently(&ranRecently) || !ranRecently) {
+      return SCHED_E_TASK_ATTEMPTED;
     }
 
     // Check for remote disable and (re-)enable before (potentially)
