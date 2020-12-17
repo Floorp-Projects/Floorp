@@ -1485,7 +1485,7 @@ describe("Top Sites Feed", () => {
         { aliases: ["@google"] },
         { aliases: ["@amazon"] },
       ];
-      global.Services.search.getAppProvidedEngines = async () => searchEngines;
+      global.Services.search.getDefaultEngines = async () => searchEngines;
       fakeNewTabUtils.pinnedLinks.pin = sinon
         .stub()
         .callsFake((site, index) => {
@@ -1737,7 +1737,7 @@ describe("Top Sites Feed", () => {
 
       it("should not pin a shortcut if the corresponding search engine is not available", async () => {
         // Make Amazon search engine unavailable
-        global.Services.search.getAppProvidedEngines = async () => [
+        global.Services.search.getDefaultEngines = async () => [
           { aliases: ["@google"] },
         ];
         fakeNewTabUtils.pinnedLinks.links.fill(null);
