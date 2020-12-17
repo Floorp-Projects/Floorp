@@ -64,7 +64,7 @@ pub enum RenderTaskLocation {
     /// build phase, we invoke `RenderTargetList::alloc()` and store the
     /// resulting location in the first member. That location identifies the
     /// render target and the offset of the allocated region within that target.
-    Dynamic(Option<(DeviceIntPoint, CacheTextureId, RenderTargetIndex)>, DeviceIntSize),
+    Dynamic(Option<(DeviceIntPoint, CacheTextureId)>, DeviceIntSize),
     /// The output of the `RenderTask` will be persisted beyond this frame, and
     /// thus should be drawn into the `TextureCache`.
     TextureCache {
@@ -106,7 +106,7 @@ impl RenderTaskLocation {
     pub fn to_source_rect(&self) -> (DeviceIntRect, LayerIndex) {
         match *self {
             RenderTaskLocation::Dynamic(None, _) => panic!("Expected position to be set for the task!"),
-            RenderTaskLocation::Dynamic(Some((origin, _, layer)), size) => (DeviceIntRect::new(origin, size), layer.0 as LayerIndex),
+            RenderTaskLocation::Dynamic(Some((origin, _)), size) => (DeviceIntRect::new(origin, size), 0),
             RenderTaskLocation::TextureCache { rect, layer, .. } => (rect, layer),
             RenderTaskLocation::PictureCache { .. } => {
                 panic!("bug: picture cache tasks should never be a source!");
@@ -1340,7 +1340,7 @@ impl RenderTask {
 
     pub fn get_target_texture(&self) -> CacheTextureId {
         match self.location {
-            RenderTaskLocation::Dynamic(Some((_, texture_id, _)), _) => {
+            RenderTaskLocation::Dynamic(Some((_, texture_id)), _) => {
                 assert_ne!(texture_id, CacheTextureId::INVALID);
                 texture_id
             }
@@ -1368,8 +1368,8 @@ impl RenderTask {
             // TODO(gw): Consider some kind of tag or other method
             //           to mark a task as unused explicitly. This
             //           would allow us to restore this debug check.
-            RenderTaskLocation::Dynamic(Some((origin, _, target_index)), size) => {
-                (DeviceIntRect::new(origin, size), target_index)
+            RenderTaskLocation::Dynamic(Some((origin, _)), size) => {
+                (DeviceIntRect::new(origin, size), RenderTargetIndex(0))
             }
             RenderTaskLocation::Dynamic(None, _) => {
                 (DeviceIntRect::zero(), RenderTargetIndex(0))

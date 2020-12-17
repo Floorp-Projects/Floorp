@@ -833,7 +833,6 @@ impl TextureCache {
             uv_rect_handle,
             texture_id: TextureSource::TextureCache(
                 texture_id,
-                ImageBufferKind::Texture2D,
                 swizzle,
             ),
             uv_rect,
@@ -1149,7 +1148,6 @@ impl TextureCache {
     pub fn alloc_render_target(
         &mut self,
         size: DeviceIntSize,
-        num_layers: usize,
         format: ImageFormat,
     ) -> CacheTextureId {
         let texture_id = self.next_id;
@@ -1157,12 +1155,12 @@ impl TextureCache {
 
         // Push a command to allocate device storage of the right size / format.
         let info = TextureCacheAllocInfo {
-            target: ImageBufferKind::Texture2DArray,
+            target: ImageBufferKind::Texture2D,
             width: size.width,
             height: size.height,
             format,
             filter: TextureFilter::Linear,
-            layer_count: num_layers as i32,
+            layer_count: 1,
             is_shared_cache: false,
             has_depth: false,
         };

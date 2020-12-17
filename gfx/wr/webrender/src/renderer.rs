@@ -1171,7 +1171,7 @@ impl TextureResolver {
     fn new(device: &mut Device) -> TextureResolver {
         let dummy_cache_texture = device
             .create_texture(
-                ImageBufferKind::Texture2DArray,
+                ImageBufferKind::Texture2D,
                 ImageFormat::RGBA8,
                 1,
                 1,
@@ -1234,7 +1234,7 @@ impl TextureResolver {
                 device.bind_external_texture(sampler, texture);
                 Swizzle::default()
             }
-            TextureSource::TextureCache(index, _, swizzle) => {
+            TextureSource::TextureCache(index, swizzle) => {
                 let texture = &self.texture_cache_map[&index];
                 device.bind_texture(sampler, texture, swizzle);
                 swizzle
@@ -1254,7 +1254,7 @@ impl TextureResolver {
             TextureSource::External(..) => {
                 panic!("BUG: External textures cannot be resolved, they can only be bound.");
             }
-            TextureSource::TextureCache(index, _, swizzle) => {
+            TextureSource::TextureCache(index, swizzle) => {
                 Some((&self.texture_cache_map[&index], swizzle))
             }
         }
@@ -4119,7 +4119,6 @@ impl Renderer {
 
         let texture_source = TextureSource::TextureCache(
             readback.get_target_texture(),
-            ImageBufferKind::Texture2DArray,
             Swizzle::default(),
         );
         let (cache_texture, _) = self.texture_resolver
@@ -4212,7 +4211,6 @@ impl Renderer {
                     let (source_rect, layer) = source.get_target_rect();
                     let source_texture = TextureSource::TextureCache(
                         source.get_target_texture(),
-                        ImageBufferKind::Texture2DArray,
                         Swizzle::default(),
                     );
                     (source_texture, layer.0, source_rect)
@@ -6029,13 +6027,10 @@ impl Renderer {
                 }
             }
 
-            for (target_index, target) in pass.alpha.targets.iter().enumerate() {
+            for target in &pass.alpha.targets {
                 results.stats.alpha_target_count += 1;
 
-                let texture_id = pass
-                    .alpha
-                    .texture_id
-                    .expect("bug: no surface for pass");
+                let texture_id = target.texture_id();
 
                 let alpha_tex = self.texture_resolver
                     .texture_cache_map
@@ -6044,7 +6039,7 @@ impl Renderer {
 
                 let draw_target = DrawTarget::from_texture(
                     alpha_tex,
-                    target_index,
+                    0,
                     false,
                 );
 
@@ -6068,13 +6063,10 @@ impl Renderer {
 
             let color_rt_info = RenderTargetInfo { has_depth: pass.color.needs_depth() };
 
-            for (target_index, target) in pass.color.targets.iter().enumerate() {
+            for target in &pass.color.targets {
                 results.stats.color_target_count += 1;
 
-                let texture_id = pass
-                    .color
-                    .texture_id
-                    .expect("bug: no surface for pass");
+                let texture_id = target.texture_id();
 
                 let color_tex = self.texture_resolver
                     .texture_cache_map
@@ -6088,7 +6080,7 @@ impl Renderer {
 
                 let draw_target = DrawTarget::from_texture(
                     color_tex,
-                    target_index,
+                    0,
                     target.needs_depth(),
                 );
 
@@ -7094,6 +7086,7 @@ struct PlainTexture {
     format: ImageFormat,
     filter: TextureFilter,
     has_depth: bool,
+    is_array: bool,
 }
 
 
@@ -7201,6 +7194,7 @@ impl Renderer {
             format: texture.get_format(),
             filter: texture.get_filter(),
             has_depth: texture.supports_depth(),
+            is_array: texture.is_array(),
         }
     }
 
@@ -7439,6 +7433,7 @@ impl Renderer {
                             format: descriptor.format,
                             filter,
                             has_depth: false,
+                            is_array: false,
                         };
                         let t = Self::load_texture(
                             target,
@@ -7468,8 +7463,13 @@ impl Renderer {
             }
             for (id, texture) in renderer.textures {
                 info!("\t{}", texture.data);
+                let target = if texture.is_array {
+                    ImageBufferKind::Texture2DArray
+                } else {
+                    ImageBufferKind::Texture2D
+                };
                 let t = Self::load_texture(
-                    ImageBufferKind::Texture2DArray,
+                    target,
                     &texture,
                     Some(RenderTargetInfo { has_depth: texture.has_depth }),
                     &root,

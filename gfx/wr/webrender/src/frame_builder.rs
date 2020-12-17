@@ -12,7 +12,7 @@ use crate::debug_render::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
-use crate::internal_types::{CacheTextureId, FastHashMap, PlaneSplitter};
+use crate::internal_types::{FastHashMap, PlaneSplitter};
 use crate::picture::{DirtyRegion, PictureUpdateState, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX};
 use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
@@ -593,23 +593,6 @@ impl FrameBuilder {
                 has_texture_cache_tasks |= !pass.texture_cache.is_empty();
                 has_texture_cache_tasks |= !pass.picture_cache.is_empty();
 
-                // Check which textures in this pass need to be saved until the end of
-                // the frame. This will all disappear once render task graph is a full DAG.
-                let mut save_color = false;
-                let mut save_alpha = false;
-
-                for task_id in &pass.tasks {
-                    let task = &render_tasks[*task_id];
-                    match task.target_kind() {
-                        RenderTargetKind::Color => {
-                            save_color |= task.save_target;
-                        }
-                        RenderTargetKind::Alpha => {
-                            save_alpha |= task.save_target;
-                        }
-                    }
-                }
-
                 // Return previous frame's textures to the target pool, so they are available
                 // for use on subsequent passes. Also include these in the list for the renderer
                 // to immediately invalidate once they are no longer used.
@@ -618,16 +601,18 @@ impl FrameBuilder {
                     pass.textures_to_invalidate.push(texture_id);
                 }
 
-                if let Some(texture_id) = pass.color.texture_id {
-                    if save_color {
+                for target in &pass.color.targets {
+                    let texture_id = target.texture_id();
+                    if target.save_target() {
                         saved_texture_ids.push(texture_id);
                     } else {
                         active_texture_ids.push(texture_id);
                     }
                 }
 
-                if let Some(texture_id) = pass.alpha.texture_id {
-                    if save_alpha {
+                for target in &pass.alpha.targets {
+                    let texture_id = target.texture_id();
+                    if target.save_target() {
                         saved_texture_ids.push(texture_id);
                     } else {
                         active_texture_ids.push(texture_id);
@@ -807,12 +792,12 @@ pub fn build_render_pass(
                     (Some(texture), layer)
                 }
                 RenderTaskLocation::Dynamic(ref mut origin, size) => {
-                    let (target_index, alloc_origin) =  match target_kind {
-                        RenderTargetKind::Color => pass.color.allocate(size),
-                        RenderTargetKind::Alpha => pass.alpha.allocate(size),
+                    let (target_index, texture_id, alloc_origin) =  match target_kind {
+                        RenderTargetKind::Color => pass.color.allocate(size, ctx.resource_cache),
+                        RenderTargetKind::Alpha => pass.alpha.allocate(size, ctx.resource_cache),
                     };
-                    *origin = Some((alloc_origin, CacheTextureId::INVALID, target_index));
-                    (None, target_index.0)
+                    *origin = Some((alloc_origin, texture_id));
+                    (None, target_index)
                 }
                 RenderTaskLocation::PictureCache { .. } => {
                     // For picture cache tiles, just store them in the map
@@ -1040,47 +1025,6 @@ pub fn build_render_pass(
         z_generator,
         composite_state,
     );
-
-    // Now that the passes have been built, we know what the texture_id is for this surface
-    // (since we know the layer count and texture size). Step through the tasks on this
-    // texture and store that in the task location. This is used so that tasks that get added
-    // on following passes can directly access and reference the texture_id, rather than
-    // referring to PrevPassAlpha/Color. Again, this will become a lot simpler once we
-    // have the full DAG in place (and once sub-passes are individual textures rather than
-    // a single texture array).
-
-    for &task_id in &pass.tasks {
-        let task = &mut render_tasks[task_id];
-        let target_kind = task.target_kind();
-
-        match task.location {
-            RenderTaskLocation::TextureCache { .. } |
-            RenderTaskLocation::PictureCache { .. } => {}
-
-            RenderTaskLocation::Dynamic(None, _) => {
-                unreachable!();
-            }
-
-            RenderTaskLocation::Dynamic(Some((_, ref mut texture_id, _)), _) => {
-                assert_eq!(*texture_id, CacheTextureId::INVALID);
-
-                match target_kind {
-                    RenderTargetKind::Color => {
-                        *texture_id = pass
-                            .color
-                            .texture_id
-                            .expect("bug: color texture must be allocated by now");
-                    }
-                    RenderTargetKind::Alpha => {
-                        *texture_id = pass
-                            .alpha
-                            .texture_id
-                            .expect("bug: alpha texture must be allocated by now");
-                    }
-                }
-            }
-        }
-    }
 }
 
 /// A rendering-oriented representation of the frame built by the render backend
