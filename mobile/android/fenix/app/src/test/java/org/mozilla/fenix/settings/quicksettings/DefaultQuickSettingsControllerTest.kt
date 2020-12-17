@@ -13,6 +13,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.MockKAnnotations
+import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -21,10 +23,12 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.PermissionStorage
@@ -39,33 +43,64 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultQuickSettingsControllerTest {
     private val context = testContext
-    private val store = mockk<QuickSettingsFragmentStore>()
+    @MockK
+    private lateinit var store: QuickSettingsFragmentStore
     private val coroutinesScope = TestCoroutineScope()
-    private val navController = mockk<NavController>(relaxed = true)
-    private val browserSession = mockk<Session>()
-    private val sitePermissions: SitePermissions = SitePermissions(origin = "", savedAt = 123)
-    private val appSettings = mockk<Settings>(relaxed = true)
-    private val permissionStorage = mockk<PermissionStorage>(relaxed = true)
-    private val reload = mockk<SessionUseCases.ReloadUrlUseCase>(relaxed = true)
-    private val addNewTab = mockk<TabsUseCases.AddNewTabUseCase>(relaxed = true)
-    private val requestPermissions = mockk<(Array<String>) -> Unit>(relaxed = true)
-    private val displayPermissions = mockk<() -> Unit>(relaxed = true)
-    private val dismiss = mockk<() -> Unit>(relaxed = true)
-    private val controller = spyk(DefaultQuickSettingsController(
-        context = context,
-        quickSettingsStore = store,
-        ioScope = coroutinesScope,
-        navController = navController,
-        session = browserSession,
-        sitePermissions = sitePermissions,
-        settings = appSettings,
-        permissionStorage = permissionStorage,
-        reload = reload,
-        addNewTab = addNewTab,
-        requestRuntimePermissions = requestPermissions,
-        displayPermissions = displayPermissions,
-        dismiss = dismiss
-    ))
+
+    @MockK(relaxed = true)
+    private lateinit var navController: NavController
+
+    @MockK(relaxed = true)
+    private lateinit var browserSession: Session
+    private lateinit var sitePermissions: SitePermissions
+
+    @MockK(relaxed = true)
+    private lateinit var appSettings: Settings
+
+    @MockK(relaxed = true)
+    private lateinit var permissionStorage: PermissionStorage
+
+    @MockK(relaxed = true)
+    private lateinit var reload: SessionUseCases.ReloadUrlUseCase
+
+    @MockK(relaxed = true)
+    private lateinit var addNewTab: TabsUseCases.AddNewTabUseCase
+
+    @MockK(relaxed = true)
+    private lateinit var requestPermissions: (Array<String>) -> Unit
+
+    @MockK(relaxed = true)
+    private lateinit var displayPermissions: () -> Unit
+
+    @MockK(relaxed = true)
+    private lateinit var dismiss: () -> Unit
+
+    private lateinit var controller: DefaultQuickSettingsController
+
+    @Before
+    fun setUp() {
+        MockKAnnotations.init(this)
+
+        sitePermissions = SitePermissions(origin = "", savedAt = 123)
+
+        controller = spyk(
+            DefaultQuickSettingsController(
+                context = context,
+                quickSettingsStore = store,
+                ioScope = coroutinesScope,
+                navController = navController,
+                session = browserSession,
+                sitePermissions = sitePermissions,
+                settings = appSettings,
+                permissionStorage = permissionStorage,
+                reload = reload,
+                addNewTab = addNewTab,
+                requestRuntimePermissions = requestPermissions,
+                displayPermissions = displayPermissions,
+                dismiss = dismiss
+            )
+        )
+    }
 
     @After
     fun cleanUp() {
@@ -150,6 +185,41 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
+    fun `handleAutoplayChanged will add autoplay permission`() {
+        val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
+
+        every { store.dispatch(any()) } returns mockk()
+        every { browserSession.url } returns "https://www.mozilla.org"
+        every { controller.handleAutoplayAdd(any()) } returns Unit
+
+        controller.sitePermissions = null
+
+        controller.handleAutoplayChanged(autoplayValue)
+
+        verify {
+            controller.handleAutoplayAdd(any())
+            store.dispatch(any())
+        }
+    }
+
+    @Test
+    fun `handleAutoplayChanged will update autoplay permission`() {
+        val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
+
+        every { store.dispatch(any()) } returns mockk()
+        every { browserSession.url } returns "https://www.mozilla.org"
+        every { controller.handleAutoplayAdd(any()) } returns Unit
+        every { controller.handlePermissionsChange(any()) } returns Unit
+        every { autoplayValue.updateSitePermissions(any()) } returns mock()
+
+        controller.handleAutoplayChanged(autoplayValue)
+
+        verify {
+            autoplayValue.updateSitePermissions(any())
+            store.dispatch(any())
+        }
+    }
+    @Test
     fun `handleAndroidPermissionGranted should update the View's state`() {
         val featureGranted = PhoneFeature.CAMERA
         val permissionStatus = featureGranted.getActionLabel(context, sitePermissions, appSettings)
@@ -178,7 +248,6 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    @ExperimentalCoroutinesApi
     fun `handlePermissionsChange should store the updated permission and reload webpage`() = coroutinesScope.runBlockingTest {
         val testPermissions = mockk<SitePermissions>()
 
@@ -187,6 +256,19 @@ class DefaultQuickSettingsControllerTest {
 
         coVerifyOrder {
             permissionStorage.updateSitePermissions(testPermissions)
+            reload(browserSession)
+        }
+    }
+
+    @Test
+    fun `handleAutoplayAdd should store the updated permission and reload webpage`() = coroutinesScope.runBlockingTest {
+        val testPermissions = mockk<SitePermissions>()
+
+        controller.handleAutoplayAdd(testPermissions)
+        advanceUntilIdle()
+
+        coVerifyOrder {
+            permissionStorage.add(testPermissions)
             reload(browserSession)
         }
     }

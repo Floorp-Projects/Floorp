@@ -23,4 +23,8 @@ class QuickSettingsInteractor(
     override fun onPermissionToggled(permissionState: WebsitePermission) {
         controller.handlePermissionToggled(permissionState)
     }
+
+    override fun onAutoplayChanged(value: AutoplayValue) {
+        controller.handleAutoplayChanged(value)
+    }
 }

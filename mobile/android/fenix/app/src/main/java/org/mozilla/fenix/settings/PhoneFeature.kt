@@ -29,6 +29,7 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
     LOCATION(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)),
     MICROPHONE(arrayOf(RECORD_AUDIO)),
     NOTIFICATION(emptyArray()),
+    AUTOPLAY(emptyArray()),
     AUTOPLAY_AUDIBLE(emptyArray()),
     AUTOPLAY_INAUDIBLE(emptyArray()),
     PERSISTENT_STORAGE(emptyArray()),
@@ -82,7 +83,8 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
             NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
             PERSISTENT_STORAGE -> context.getString(R.string.preference_phone_feature_persistent_storage)
             MEDIA_KEY_SYSTEM_ACCESS -> context.getString(R.string.preference_phone_feature_media_key_system_access)
-            AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE -> context.getString(R.string.preference_browser_feature_autoplay)
+            AUTOPLAY, AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE ->
+                context.getString(R.string.preference_browser_feature_autoplay)
         }
     }
 
@@ -97,6 +99,7 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
             LOCATION -> R.string.pref_key_phone_feature_location
             MICROPHONE -> R.string.pref_key_phone_feature_microphone
             NOTIFICATION -> R.string.pref_key_phone_feature_notification
+            AUTOPLAY -> R.string.pref_key_browser_feature_autoplay_audible
             AUTOPLAY_AUDIBLE -> R.string.pref_key_browser_feature_autoplay_audible
             AUTOPLAY_INAUDIBLE -> R.string.pref_key_browser_feature_autoplay_inaudible
             PERSISTENT_STORAGE -> R.string.pref_key_browser_feature_persistent_storage

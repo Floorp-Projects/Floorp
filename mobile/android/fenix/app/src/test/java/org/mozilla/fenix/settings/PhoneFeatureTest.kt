@@ -65,6 +65,7 @@ class PhoneFeatureTest {
         assertEquals("Notification", PhoneFeature.NOTIFICATION.getLabel(testContext))
         assertEquals("Autoplay", PhoneFeature.AUTOPLAY_AUDIBLE.getLabel(testContext))
         assertEquals("Autoplay", PhoneFeature.AUTOPLAY_INAUDIBLE.getLabel(testContext))
+        assertEquals("Autoplay", PhoneFeature.AUTOPLAY.getLabel(testContext))
     }
 
     @Test
@@ -75,6 +76,7 @@ class PhoneFeatureTest {
         assertEquals(R.string.pref_key_phone_feature_notification, PhoneFeature.NOTIFICATION.getPreferenceId())
         assertEquals(R.string.pref_key_browser_feature_autoplay_audible, PhoneFeature.AUTOPLAY_AUDIBLE.getPreferenceId())
         assertEquals(R.string.pref_key_browser_feature_autoplay_inaudible, PhoneFeature.AUTOPLAY_INAUDIBLE.getPreferenceId())
+        assertEquals(R.string.pref_key_browser_feature_autoplay_audible, PhoneFeature.AUTOPLAY.getPreferenceId())
 
         assertEquals(
             "pref_key_browser_feature_autoplay_inaudible",

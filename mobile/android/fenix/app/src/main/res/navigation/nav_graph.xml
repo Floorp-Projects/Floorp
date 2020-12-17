@@ -756,6 +756,9 @@
             android:name="certificateName"
             android:defaultValue=" "
             app:argType="string" />
+        <argument
+            android:name="permissionHighlights"
+            app:argType="mozilla.components.browser.state.state.content.PermissionHighlightsState"/>
     </dialog>
     <fragment
         android:id="@+id/accountProblemFragment"

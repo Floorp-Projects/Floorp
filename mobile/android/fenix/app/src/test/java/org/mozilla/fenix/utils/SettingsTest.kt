@@ -578,7 +578,7 @@ class SettingsTest {
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_AUDIBLE, ALLOWED)
 
         assertEquals(
-            defaultPermissions.copy(autoplayAudible = ALLOWED),
+            defaultPermissions.copy(autoplayAudible = AutoplayAction.ALLOWED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
@@ -588,7 +588,7 @@ class SettingsTest {
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_INAUDIBLE, ALLOWED)
 
         assertEquals(
-            defaultPermissions.copy(autoplayInaudible = ALLOWED),
+            defaultPermissions.copy(autoplayInaudible = AutoplayAction.ALLOWED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }

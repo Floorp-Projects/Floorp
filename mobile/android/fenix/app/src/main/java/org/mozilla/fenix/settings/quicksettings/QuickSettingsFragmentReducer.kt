@@ -35,14 +35,24 @@ object WebsitePermissionsStateReducer {
         state: WebsitePermissionsState,
         action: WebsitePermissionAction
     ): WebsitePermissionsState {
+        val key = action.updatedFeature
+        val value = state.getValue(key)
+
         return when (action) {
             is WebsitePermissionAction.TogglePermission -> {
-                val key = action.updatedFeature
-                val newWebsitePermission = state.getValue(key).copy(
+                val toggleable = value as WebsitePermission.Toggleable
+                val newWebsitePermission = toggleable.copy(
                     status = action.updatedStatus,
                     isEnabled = action.updatedEnabledStatus
                 )
 
+                state + Pair(key, newWebsitePermission)
+            }
+            is WebsitePermissionAction.ChangeAutoplay -> {
+                val autoplay = value as WebsitePermission.Autoplay
+                val newWebsitePermission = autoplay.copy(
+                    autoplayValue = action.autoplayValue
+                )
                 state + Pair(key, newWebsitePermission)
             }
         }

@@ -20,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -220,16 +221,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         return readerViewFeature.onBackPressed() || super.onBackPressed()
     }
 
-    override fun navToQuickSettingsSheet(session: Session, sitePermissions: SitePermissions?) {
+    override fun navToQuickSettingsSheet(tab: SessionState, sitePermissions: SitePermissions?) {
         val directions =
             BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
-                sessionId = session.id,
-                url = session.url,
-                title = session.title,
-                isSecured = session.securityInfo.secure,
+                sessionId = tab.id,
+                url = tab.content.url,
+                title = tab.content.title,
+                isSecured = tab.content.securityInfo.secure,
                 sitePermissions = sitePermissions,
                 gravity = getAppropriateLayoutGravity(),
-                certificateName = session.securityInfo.issuer
+                certificateName = tab.content.securityInfo.issuer,
+                permissionHighlights = tab.content.permissionHighlights
             )
         nav(R.id.browserFragment, directions)
     }

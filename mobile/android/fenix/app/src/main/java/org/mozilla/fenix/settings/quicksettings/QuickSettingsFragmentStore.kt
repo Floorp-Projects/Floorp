@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Reducer
@@ -57,13 +58,20 @@ class QuickSettingsFragmentStore(
             certificateName: String,
             isSecured: Boolean,
             permissions: SitePermissions?,
+            permissionHighlights: PermissionHighlightsState,
             settings: Settings
         ) = QuickSettingsFragmentStore(
             QuickSettingsFragmentState(
-                webInfoState = createWebsiteInfoState(websiteUrl, websiteTitle, isSecured, certificateName),
+                webInfoState = createWebsiteInfoState(
+                    websiteUrl,
+                    websiteTitle,
+                    isSecured,
+                    certificateName
+                ),
                 websitePermissionsState = createWebsitePermissionState(
                     context,
                     permissions,
+                    permissionHighlights,
                     settings
                 )
             )
@@ -90,7 +98,8 @@ class QuickSettingsFragmentStore(
         }
 
         /**
-         * Construct an initial [WebsitePermissionsState] to be rendered by [WebsitePermissionsView]
+         * Construct an initial [WebsitePermissions
+         * State] to be rendered by [WebsitePermissionsView]
          * containing the permissions requested by the current website.
          *
          * Users can modify the returned [WebsitePermissionsState] after it is initially displayed.
@@ -103,11 +112,17 @@ class QuickSettingsFragmentStore(
         fun createWebsitePermissionState(
             context: Context,
             permissions: SitePermissions?,
+            permissionHighlights: PermissionHighlightsState,
             settings: Settings
         ): WebsitePermissionsState {
             val state = EnumMap<PhoneFeature, WebsitePermission>(PhoneFeature::class.java)
             for (feature in PhoneFeature.values()) {
-                state[feature] = feature.toWebsitePermission(context, permissions, settings)
+                state[feature] = feature.toWebsitePermission(
+                    context,
+                    permissions,
+                    permissionHighlights,
+                    settings
+                )
             }
             return state
         }
@@ -119,15 +134,31 @@ class QuickSettingsFragmentStore(
         fun PhoneFeature.toWebsitePermission(
             context: Context,
             permissions: SitePermissions?,
+            permissionHighlights: PermissionHighlightsState,
             settings: Settings
         ): WebsitePermission {
-            return WebsitePermission(
-                phoneFeature = this,
-                status = getActionLabel(context, permissions, settings),
-                isVisible = shouldBeVisible(permissions, settings),
-                isEnabled = shouldBeEnabled(context, permissions, settings),
-                isBlockedByAndroid = !isAndroidPermissionGranted(context)
-            )
+            return if (this == PhoneFeature.AUTOPLAY) {
+                val autoplayValues = AutoplayValue.values(context, settings, permissions)
+                val selected =
+                    autoplayValues.firstOrNull { it.isSelected() } ?: AutoplayValue.getFallbackValue(
+                        context,
+                        settings,
+                        permissions
+                    )
+                WebsitePermission.Autoplay(
+                    autoplayValue = selected,
+                    options = autoplayValues,
+                    isVisible = permissionHighlights.isAutoPlayBlocking || permissions !== null
+                )
+            } else {
+                WebsitePermission.Toggleable(
+                    phoneFeature = this,
+                    status = getActionLabel(context, permissions, settings),
+                    isVisible = shouldBeVisible(permissions, settings),
+                    isEnabled = shouldBeEnabled(context, permissions, settings),
+                    isBlockedByAndroid = !isAndroidPermissionGranted(context)
+                )
+            }
         }
     }
 }

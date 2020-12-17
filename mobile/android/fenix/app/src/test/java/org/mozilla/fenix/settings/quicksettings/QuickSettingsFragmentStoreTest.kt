@@ -6,12 +6,18 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.content.pm.PackageManager
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.MockKAnnotations
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -19,6 +25,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
@@ -33,16 +40,34 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class QuickSettingsFragmentStoreTest {
     private val context = spyk(testContext)
-    private val permissions = mockk<SitePermissions>()
-    private val appSettings = mockk<Settings>()
+
+    @MockK(relaxed = true)
+    private lateinit var permissions: SitePermissions
+
+    @MockK(relaxed = true)
+    private lateinit var permissionHighlights: PermissionHighlightsState
+
+    @MockK(relaxed = true)
+    private lateinit var appSettings: Settings
+
+    @Before
+    fun setup() {
+        MockKAnnotations.init(this)
+
+        every { appSettings.getSitePermissionsCustomSettingsRules() } returns getRules()
+    }
 
     @Test
     fun `createStore constructs a QuickSettingsFragmentState`() {
-        val settings = mockk<Settings>(relaxed = true)
-        val permissions = mockk<SitePermissions>(relaxed = true)
-
         val store = QuickSettingsFragmentStore.createStore(
-            context, "url", "Hello", "issuer", true, permissions, settings
+            context = context,
+            websiteUrl = "url",
+            websiteTitle = "Hello",
+            certificateName = "issuer",
+            isSecured = true,
+            permissions = permissions,
+            permissionHighlights = permissionHighlights,
+            settings = appSettings
         )
 
         assertNotNull(store)
@@ -83,6 +108,8 @@ class QuickSettingsFragmentStoreTest {
 
     @Test
     fun `createWebsitePermissionState helps in constructing an initial WebsitePermissionState for it's Store`() {
+        val permissionHighlights = mockk<PermissionHighlightsState>(relaxed = true)
+
         every {
             context.checkPermission(
                 any(),
@@ -96,12 +123,12 @@ class QuickSettingsFragmentStoreTest {
         every { permissions.location } returns SitePermissions.Status.ALLOWED
         every { permissions.localStorage } returns SitePermissions.Status.ALLOWED
         every { permissions.mediaKeySystemAccess } returns SitePermissions.Status.NO_DECISION
-        every { permissions.autoplayAudible } returns SitePermissions.Status.BLOCKED
-        every { permissions.autoplayInaudible } returns SitePermissions.Status.BLOCKED
+        every { permissions.autoplayAudible } returns SitePermissions.AutoplayStatus.ALLOWED
+        every { permissions.autoplayInaudible } returns SitePermissions.AutoplayStatus.BLOCKED
         every { appSettings.getAutoplayUserSetting(any()) } returns AUTOPLAY_BLOCK_ALL
 
         val state = QuickSettingsFragmentStore.createWebsitePermissionState(
-            context, permissions, appSettings
+            context, permissions, permissionHighlights, appSettings
         )
 
         // Just need to know that the WebsitePermissionsState properties are initialized.
@@ -115,6 +142,7 @@ class QuickSettingsFragmentStoreTest {
         assertNotNull(state[PhoneFeature.AUTOPLAY_INAUDIBLE])
         assertNotNull(state[PhoneFeature.PERSISTENT_STORAGE])
         assertNotNull(state[PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS])
+        assertNotNull(state[PhoneFeature.AUTOPLAY])
     }
 
     @Test
@@ -129,8 +157,14 @@ class QuickSettingsFragmentStoreTest {
             )
         }.returns(PackageManager.PERMISSION_GRANTED)
         every { permissions.camera } returns SitePermissions.Status.ALLOWED
+        every { permissionHighlights.isAutoPlayBlocking } returns true
 
-        val websitePermission = cameraFeature.toWebsitePermission(context, permissions, appSettings)
+        val websitePermission = cameraFeature.toWebsitePermission(
+            context = context,
+            permissions = permissions,
+            permissionHighlights = permissionHighlights,
+            settings = appSettings
+        )
 
         assertNotNull(websitePermission)
         assertEquals(cameraFeature, websitePermission.phoneFeature)
@@ -138,14 +172,33 @@ class QuickSettingsFragmentStoreTest {
         assertTrue(websitePermission.isVisible)
         assertTrue(websitePermission.isEnabled)
         assertFalse(websitePermission.isBlockedByAndroid)
+
+        val autoplayPermission = PhoneFeature.AUTOPLAY.toWebsitePermission(
+            context = context,
+            permissions = permissions,
+            permissionHighlights = permissionHighlights,
+            settings = appSettings
+        ) as WebsitePermission.Autoplay
+
+        assertNotNull(autoplayPermission)
+        assertNotNull(autoplayPermission.autoplayValue)
+        assertEquals(PhoneFeature.AUTOPLAY, autoplayPermission.phoneFeature)
+        assertTrue(websitePermission.isVisible)
+        assertTrue(websitePermission.isEnabled)
     }
 
     @Test
     fun `PhoneFeature#getPermissionStatus gets the permission properties from delegates`() {
+        val permissionHighlights = mockk<PermissionHighlightsState>(relaxed = true)
         val phoneFeature = PhoneFeature.CAMERA
         every { permissions.camera } returns SitePermissions.Status.NO_DECISION
 
-        val permissionsStatus = phoneFeature.toWebsitePermission(context, permissions, appSettings)
+        val permissionsStatus = phoneFeature.toWebsitePermission(
+            context,
+            permissions,
+            permissionHighlights,
+            appSettings
+        )
 
         verify {
             // Verifying phoneFeature.getActionLabel gets "Status(child of #2#4).ordinal()) was not called"
@@ -177,7 +230,7 @@ class QuickSettingsFragmentStoreTest {
             val defaultEnabledStatus = true
             val defaultBlockedByAndroidStatus = true
             val websiteInfoState = mockk<WebsiteInfoState>()
-            val baseWebsitePermission = WebsitePermission(
+            val baseWebsitePermission = WebsitePermission.Toggleable(
                 phoneFeature = PhoneFeature.CAMERA,
                 status = "",
                 isVisible = true,
@@ -259,4 +312,15 @@ class QuickSettingsFragmentStoreTest {
             assertEquals(defaultEnabledStatus, store.state.websitePermissionsState.getValue(PhoneFeature.LOCATION).isEnabled)
             assertEquals(defaultBlockedByAndroidStatus, store.state.websitePermissionsState.getValue(PhoneFeature.LOCATION).isBlockedByAndroid)
         }
+
+    private fun getRules() = SitePermissionsRules(
+        camera = Action.ASK_TO_ALLOW,
+        location = Action.ASK_TO_ALLOW,
+        microphone = Action.ASK_TO_ALLOW,
+        notification = Action.ASK_TO_ALLOW,
+        autoplayAudible = AutoplayAction.BLOCKED,
+        autoplayInaudible = AutoplayAction.BLOCKED,
+        persistentStorage = Action.ASK_TO_ALLOW,
+        mediaKeySystemAccess = Action.ASK_TO_ALLOW
+    )
 }

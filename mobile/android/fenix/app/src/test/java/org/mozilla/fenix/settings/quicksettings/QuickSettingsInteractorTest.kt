@@ -38,4 +38,19 @@ class QuickSettingsInteractorTest {
         assertTrue(permission.isCaptured)
         assertEquals(websitePermission, permission.captured)
     }
+
+    @Test
+    fun `onAutoplayChanged should delegate the controller`() {
+        val websitePermission = mockk<AutoplayValue>()
+        val permission = slot<AutoplayValue>()
+
+        interactor.onAutoplayChanged(websitePermission)
+
+        verify {
+            controller.handleAutoplayChanged(capture(permission))
+        }
+
+        assertTrue(permission.isCaptured)
+        assertEquals(websitePermission, permission.captured)
+    }
 }

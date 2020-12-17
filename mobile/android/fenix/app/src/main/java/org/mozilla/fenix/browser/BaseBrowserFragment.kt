@@ -126,8 +126,6 @@ import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
 import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
-import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragmentDirections
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -368,7 +366,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
             }
 
             browserToolbarView.view.display.setOnPermissionIndicatorClickedListener {
-                navigateToAutoplaySetting()
+                showQuickSettingsDialog()
             }
 
             browserToolbarView.view.display.setOnTrackingProtectionClickedListener {
@@ -1054,7 +1052,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     }
 
     protected abstract fun navToQuickSettingsSheet(
-        session: Session,
+        tab: SessionState,
         sitePermissions: SitePermissions?
     )
 
@@ -1082,15 +1080,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
      * which lets the user control tracking protection and site settings.
      */
     private fun showQuickSettingsDialog() {
-        val session = getSessionById() ?: return
+        val tab = getCurrentTab() ?: return
         viewLifecycleOwner.lifecycleScope.launch(Main) {
-            val sitePermissions: SitePermissions? = session.url.toUri().host?.let { host ->
+            val sitePermissions: SitePermissions? = tab.content.url.toUri().host?.let { host ->
                 val storage = requireComponents.core.permissionStorage
                 storage.findSitePermissionsBy(host)
             }
 
             view?.let {
-                navToQuickSettingsSheet(session, sitePermissions)
+                navToQuickSettingsSheet(tab, sitePermissions)
             }
         }
     }
@@ -1122,6 +1120,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         } else {
             sessionManager.selectedSession
         }
+    }
+
+    protected fun getCurrentTab(): SessionState? {
+        return requireComponents.core.store.state.findCustomTabOrSelectedTab(customTabSessionId)
     }
 
     private suspend fun bookmarkTapped(sessionUrl: String, sessionTitle: String) = withContext(IO) {
@@ -1292,11 +1294,5 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         if (_browserToolbarView != null) {
             browserToolbarView.setScrollFlags(enabled)
         }
-    }
-
-    private fun navigateToAutoplaySetting() {
-        val directions = QuickSettingsSheetDialogFragmentDirections
-            .actionGlobalSitePermissionsManagePhoneFeature(PhoneFeature.AUTOPLAY_AUDIBLE)
-        findNavController().navigate(directions)
     }
 }

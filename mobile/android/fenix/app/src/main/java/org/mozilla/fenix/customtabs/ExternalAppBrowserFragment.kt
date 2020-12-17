@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.manifest.getOrNull
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -34,7 +35,6 @@ import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -181,16 +181,17 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         return customTabsIntegration.onBackPressed() || super.removeSessionIfNeeded()
     }
 
-    override fun navToQuickSettingsSheet(session: Session, sitePermissions: SitePermissions?) {
+    override fun navToQuickSettingsSheet(tab: SessionState, sitePermissions: SitePermissions?) {
         val directions = ExternalAppBrowserFragmentDirections
             .actionGlobalQuickSettingsSheetDialogFragment(
-                sessionId = session.id,
-                url = session.url,
-                title = session.title,
-                isSecured = session.securityInfo.secure,
+                sessionId = tab.id,
+                url = tab.content.url,
+                title = tab.content.title,
+                isSecured = tab.content.securityInfo.secure,
                 sitePermissions = sitePermissions,
                 gravity = getAppropriateLayoutGravity(),
-                certificateName = session.securityInfo.issuer
+                certificateName = tab.content.securityInfo.issuer,
+                permissionHighlights = tab.content.permissionHighlights
             )
         nav(R.id.externalAppBrowserFragment, directions)
     }
