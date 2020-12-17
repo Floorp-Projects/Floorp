@@ -594,19 +594,24 @@ CrashManager.prototype = Object.freeze({
    */
   _getUnprocessedEventsFiles() {
     return (async () => {
-      let entries = [];
+      try {
+        let entries = [];
 
-      for (let dir of this._eventsDirs) {
-        for (let e of await this._getDirectoryEntries(dir, this.ALL_REGEX)) {
-          entries.push(e);
+        for (let dir of this._eventsDirs) {
+          for (let e of await this._getDirectoryEntries(dir, this.ALL_REGEX)) {
+            entries.push(e);
+          }
         }
+
+        entries.sort((a, b) => {
+          return a.date - b.date;
+        });
+
+        return entries;
+      } catch (e) {
+        Cu.reportError(e);
+        return [];
       }
-
-      entries.sort((a, b) => {
-        return a.date - b.date;
-      });
-
-      return entries;
     })();
   },
 
