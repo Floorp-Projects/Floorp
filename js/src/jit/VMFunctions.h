@@ -576,7 +576,6 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp);
 bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
                           Value* vp);
 
-template <bool NeedsTypeBarrier>
 bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* val);
 

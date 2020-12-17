@@ -6873,8 +6873,7 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
 
 bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
                                                uint32_t nameOffset,
-                                               ValOperandId rhsId,
-                                               bool needsTypeBarrier) {
+                                               ValOperandId rhsId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   StubFieldOffset name(nameOffset, StubField::Type::String);
@@ -6907,11 +6906,8 @@ bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
   emitLoadStubField(name, scratch2);
   masm.passABIArg(scratch2);
   masm.passABIArg(val.scratchReg());
-  if (needsTypeBarrier) {
-    masm.callWithABI<Fn, SetNativeDataPropertyPure<true>>();
-  } else {
-    masm.callWithABI<Fn, SetNativeDataPropertyPure<false>>();
-  }
+  masm.callWithABI<Fn, SetNativeDataPropertyPure>();
+
   masm.mov(ReturnReg, scratch1);
   masm.PopRegsInMask(volatileRegs);
 

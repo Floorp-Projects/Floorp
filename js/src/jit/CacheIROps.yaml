@@ -750,7 +750,6 @@
     obj: ObjId
     name: PropertyNameField
     rhs: ValId
-    needsTypeBarrier: BoolImm
 
 - name: MegamorphicSetElement
   shared: false
