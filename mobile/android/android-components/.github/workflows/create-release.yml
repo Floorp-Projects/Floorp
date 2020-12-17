@@ -30,6 +30,6 @@ jobs:
         if: github.repository == 'mozilla-mobile/android-components'
         with:
           project: android-components
-          command: create-release
+          command: create-releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
