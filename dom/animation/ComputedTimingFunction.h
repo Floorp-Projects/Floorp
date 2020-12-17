@@ -94,7 +94,7 @@ class ComputedTimingFunction {
     return !(*this == aOther);
   }
   int32_t Compare(const ComputedTimingFunction& aRhs) const;
-  void AppendToString(nsAString& aResult) const;
+  void AppendToString(nsACString& aResult) const;
 
   static double GetPortion(const Maybe<ComputedTimingFunction>& aFunction,
                            double aPortion, BeforeFlag aBeforeFlag) {

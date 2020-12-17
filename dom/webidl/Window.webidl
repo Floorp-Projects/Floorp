@@ -323,7 +323,7 @@ dictionary ScrollToOptions : ScrollOptions {
 
 partial interface Window {
   //[Throws, NewObject, NeedsCallerType] MediaQueryList matchMedia(DOMString query);
-  [Throws, NewObject, NeedsCallerType] MediaQueryList? matchMedia(DOMString query);
+  [Throws, NewObject, NeedsCallerType] MediaQueryList? matchMedia(UTF8String query);
   // Per spec, screen is SameObject, but we don't actually guarantee that given
   // nsGlobalWindow::Cleanup.  :(
   //[SameObject, Replaceable, Throws] readonly attribute Screen screen;

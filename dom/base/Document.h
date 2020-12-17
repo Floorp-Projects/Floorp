@@ -2471,7 +2471,7 @@ class Document : public nsINode,
    * Support for window.matchMedia()
    */
 
-  already_AddRefed<MediaQueryList> MatchMedia(const nsAString& aMediaQueryList,
+  already_AddRefed<MediaQueryList> MatchMedia(const nsACString& aMediaQueryList,
                                               CallerType aCallerType);
 
   LinkedList<MediaQueryList>& MediaQueryLists() { return mDOMMediaQueryLists; }

@@ -10,6 +10,6 @@
 // https://drafts.csswg.org/css-animations/#interface-csskeyframerule
 [Exposed=Window]
 interface CSSKeyframeRule : CSSRule {
-  attribute DOMString keyText;
+  attribute UTF8String keyText;
   [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
 };

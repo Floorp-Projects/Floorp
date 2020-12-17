@@ -20,7 +20,7 @@ namespace mozilla {
 namespace dom {
 
 MediaQueryList::MediaQueryList(Document* aDocument,
-                               const nsAString& aMediaQueryList,
+                               const nsACString& aMediaQueryList,
                                CallerType aCallerType)
     : DOMEventTargetHelper(aDocument->GetInnerWindow()),
       mDocument(aDocument),
@@ -56,7 +56,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(MediaQueryList, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaQueryList, DOMEventTargetHelper)
 
-void MediaQueryList::GetMedia(nsAString& aMedia) {
+void MediaQueryList::GetMedia(nsACString& aMedia) {
   mMediaList->GetText(aMedia);
 }
 

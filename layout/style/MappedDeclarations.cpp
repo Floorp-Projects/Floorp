@@ -31,11 +31,12 @@ void MappedDeclarations::SetBackgroundImage(const nsAttrValue& aValue) {
   if (aValue.Type() != nsAttrValue::eURL) {
     return;
   }
-  // FIXME(emilio): Going through URL parsing again seems slightly wasteful.
   nsAutoString str;
   aValue.ToString(str);
+  nsAutoCString utf8;
+  CopyUTF16toUTF8(str, utf8);
   Servo_DeclarationBlock_SetBackgroundImage(
-      mDecl, &str, mDocument->DefaultStyleAttrURLData());
+      mDecl, &utf8, mDocument->DefaultStyleAttrURLData());
 }
 
 }  // namespace mozilla

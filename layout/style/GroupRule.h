@@ -69,7 +69,7 @@ class GroupRule : public Rule {
 
   // WebIDL API
   dom::CSSRuleList* CssRules() { return mRuleList; }
-  uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
+  uint32_t InsertRule(const nsACString& aRule, uint32_t aIndex,
                       ErrorResult& aRv);
   void DeleteRule(uint32_t aIndex, ErrorResult& aRv);
 
@@ -83,8 +83,8 @@ class ConditionRule : public GroupRule {
   using GroupRule::GroupRule;
 
  public:
-  virtual void GetConditionText(nsAString& aConditionText) = 0;
-  virtual void SetConditionText(const nsAString& aConditionText,
+  virtual void GetConditionText(nsACString& aConditionText) = 0;
+  virtual void SetConditionText(const nsACString& aConditionText,
                                 ErrorResult& aRv) = 0;
 };
 

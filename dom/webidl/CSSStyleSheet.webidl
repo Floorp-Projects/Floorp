@@ -15,7 +15,7 @@ enum CSSStyleSheetParsingMode {
 };
 
 dictionary CSSStyleSheetInit {
-  (MediaList or DOMString) media = "";
+  (MediaList or UTF8String) media = "";
   boolean disabled = false;
   UTF8String baseURL;
 };
@@ -31,7 +31,7 @@ interface CSSStyleSheet : StyleSheet {
   [ChromeOnly, BinaryName="parsingModeDOM"]
   readonly attribute CSSStyleSheetParsingMode parsingMode;
   [Throws, NeedsSubjectPrincipal]
-  unsigned long insertRule(DOMString rule, optional unsigned long index = 0);
+  unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Throws, NeedsSubjectPrincipal]
   void deleteRule(unsigned long index);
   [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
@@ -45,5 +45,5 @@ interface CSSStyleSheet : StyleSheet {
   [Throws, NeedsSubjectPrincipal, BinaryName="deleteRule"]
   void removeRule(optional unsigned long index = 0);
   [Throws, NeedsSubjectPrincipal]
-  long addRule(optional DOMString selector = "undefined", optional DOMString style = "undefined", optional unsigned long index);
+  long addRule(optional UTF8String selector = "undefined", optional UTF8String style = "undefined", optional unsigned long index);
 };

@@ -298,7 +298,7 @@ static void SetOpacityOnElement(nsIContent* aContent, double aOpacity) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoCString str;
     str.AppendFloat(aOpacity);
-    decl->SetProperty("opacity"_ns, str, u""_ns, IgnoreErrors());
+    decl->SetProperty("opacity"_ns, str, EmptyCString(), IgnoreErrors());
   }
 }
 
@@ -327,7 +327,7 @@ static void UnsetOpacityOnElement(nsIContent* aContent) {
   if (RefPtr<nsStyledElement> inlineStyleContent =
           nsStyledElement::FromNodeOrNull(aContent)) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
-    nsAutoString dummy;
+    nsAutoCString dummy;
     decl->RemoveProperty("opacity"_ns, dummy, IgnoreErrors());
   }
 }

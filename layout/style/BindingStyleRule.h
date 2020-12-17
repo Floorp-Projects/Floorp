@@ -46,7 +46,7 @@ class BindingStyleRule : public css::Rule {
 
   virtual uint32_t GetSelectorCount() = 0;
   virtual nsresult GetSelectorText(uint32_t aSelectorIndex,
-                                   nsAString& aText) = 0;
+                                   nsACString& aText) = 0;
   virtual nsresult GetSpecificity(uint32_t aSelectorIndex,
                                   uint64_t* aSpecificity) = 0;
   virtual nsresult SelectorMatchesElement(dom::Element* aElement,
@@ -57,8 +57,8 @@ class BindingStyleRule : public css::Rule {
   virtual NotNull<DeclarationBlock*> GetDeclarationBlock() const = 0;
 
   // WebIDL API
-  virtual void GetSelectorText(nsAString& aSelectorText) = 0;
-  virtual void SetSelectorText(const nsAString& aSelectorText) = 0;
+  virtual void GetSelectorText(nsACString& aSelectorText) = 0;
+  virtual void SetSelectorText(const nsACString& aSelectorText) = 0;
   virtual nsICSSDeclaration* Style() = 0;
 
   virtual JSObject* WrapObject(JSContext* aCx,

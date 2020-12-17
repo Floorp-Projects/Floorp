@@ -62,7 +62,7 @@ class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
 
   uint32_t GetSelectorCount() override;
-  nsresult GetSelectorText(uint32_t aSelectorIndex, nsAString& aText) override;
+  nsresult GetSelectorText(uint32_t aSelectorIndex, nsACString& aText) override;
   nsresult GetSpecificity(uint32_t aSelectorIndex,
                           uint64_t* aSpecificity) override;
   nsresult SelectorMatchesElement(dom::Element* aElement,
@@ -74,9 +74,9 @@ class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
 
   // WebIDL interface
   uint16_t Type() const final { return dom::CSSRule_Binding::STYLE_RULE; }
-  void GetCssText(nsAString& aCssText) const final;
-  void GetSelectorText(nsAString& aSelectorText) final;
-  void SetSelectorText(const nsAString& aSelectorText) final;
+  void GetCssText(nsACString& aCssText) const final;
+  void GetSelectorText(nsACString& aSelectorText) final;
+  void SetSelectorText(const nsACString& aSelectorText) final;
   nsICSSDeclaration* Style() final;
 
   RawServoStyleRule* Raw() const { return mRawRule; }

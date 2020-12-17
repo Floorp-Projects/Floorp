@@ -31,14 +31,14 @@ enum CompositeOperationOrAuto { "replace", "add", "accumulate", "auto" };
 [GenerateInit]
 dictionary BasePropertyIndexedKeyframe {
   (double? or sequence<double?>) offset = [];
-  (DOMString or sequence<DOMString>) easing = [];
+  (UTF8String or sequence<UTF8String>) easing = [];
   (CompositeOperationOrAuto or sequence<CompositeOperationOrAuto>) composite = [];
 };
 
 [GenerateInit]
 dictionary BaseKeyframe {
   double? offset = null;
-  DOMString easing = "linear";
+  UTF8String easing = "linear";
   [Pref="dom.animations-api.compositing.enabled"]
   CompositeOperationOrAuto composite = "auto";
 

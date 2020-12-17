@@ -31,7 +31,7 @@ uint16_t CSSCounterStyleRule::Type() const {
   return CSSRule_Binding::COUNTER_STYLE_RULE;
 }
 
-void CSSCounterStyleRule::GetCssText(nsAString& aCssText) const {
+void CSSCounterStyleRule::GetCssText(nsACString& aCssText) const {
   Servo_CounterStyleRule_GetCssText(mRawRule, &aCssText);
 }
 
@@ -54,23 +54,22 @@ void CSSCounterStyleRule::SetName(const nsAString& aName) {
   }
 }
 
-#define CSS_COUNTER_DESC(name_, method_)                            \
-  void CSSCounterStyleRule::Get##method_(nsAString& aValue) {       \
-    aValue.Truncate();                                              \
-    Servo_CounterStyleRule_GetDescriptorCssText(                    \
-        mRawRule, eCSSCounterDesc_##method_, &aValue);              \
-  }                                                                 \
-  void CSSCounterStyleRule::Set##method_(const nsAString& aValue) { \
-    if (IsReadOnly()) {                                             \
-      return;                                                       \
-    }                                                               \
-    NS_ConvertUTF16toUTF8 value(aValue);                            \
-    if (Servo_CounterStyleRule_SetDescriptor(                       \
-            mRawRule, eCSSCounterDesc_##method_, &value)) {         \
-      if (StyleSheet* sheet = GetStyleSheet()) {                    \
-        sheet->RuleChanged(this, StyleRuleChangeKind::Generic);     \
-      }                                                             \
-    }                                                               \
+#define CSS_COUNTER_DESC(name_, method_)                             \
+  void CSSCounterStyleRule::Get##method_(nsACString& aValue) {       \
+    MOZ_ASSERT(aValue.IsEmpty());                                    \
+    Servo_CounterStyleRule_GetDescriptorCssText(                     \
+        mRawRule, eCSSCounterDesc_##method_, &aValue);               \
+  }                                                                  \
+  void CSSCounterStyleRule::Set##method_(const nsACString& aValue) { \
+    if (IsReadOnly()) {                                              \
+      return;                                                        \
+    }                                                                \
+    if (Servo_CounterStyleRule_SetDescriptor(                        \
+            mRawRule, eCSSCounterDesc_##method_, &aValue)) {         \
+      if (StyleSheet* sheet = GetStyleSheet()) {                     \
+        sheet->RuleChanged(this, StyleRuleChangeKind::Generic);      \
+      }                                                              \
+    }                                                                \
   }
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC

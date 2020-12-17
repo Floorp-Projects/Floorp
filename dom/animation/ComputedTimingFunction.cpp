@@ -167,7 +167,7 @@ int32_t ComputedTimingFunction::Compare(
   return 0;
 }
 
-void ComputedTimingFunction::AppendToString(nsAString& aResult) const {
+void ComputedTimingFunction::AppendToString(nsACString& aResult) const {
   nsTimingFunction timing;
   switch (mType) {
     case Type::CubicBezier:

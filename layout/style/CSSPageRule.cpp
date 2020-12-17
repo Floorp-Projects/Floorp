@@ -143,7 +143,7 @@ void CSSPageRule::List(FILE* out, int32_t aIndent) const {
 
 /* CSSRule implementation */
 
-void CSSPageRule::GetCssText(nsAString& aCssText) const {
+void CSSPageRule::GetCssText(nsACString& aCssText) const {
   Servo_PageRule_GetCssText(mRawRule, &aCssText);
 }
 

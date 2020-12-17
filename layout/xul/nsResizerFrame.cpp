@@ -406,26 +406,8 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
                                    const Direction& aDirection,
                                    const SizeInfo& aSizeInfo,
                                    SizeInfo* aOriginalSizeInfo) {
-  // for XUL elements, just set the width and height attributes. For
-  // other elements, set style.width and style.height
-  if (aContent->IsXULElement()) {
-    if (aOriginalSizeInfo) {
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::width,
-                                     aOriginalSizeInfo->width);
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::height,
-                                     aOriginalSizeInfo->height);
-    }
-    // only set the property if the element could have changed in that direction
-    if (aDirection.mHorizontal) {
-      aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::width,
-                                     aSizeInfo.width, true);
-    }
-    if (aDirection.mVertical) {
-      aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::height,
-                                     aSizeInfo.height, true);
-    }
-  } else if (RefPtr<nsStyledElement> inlineStyleContent =
-                 nsStyledElement::FromNode(aContent)) {
+  if (RefPtr<nsStyledElement> inlineStyleContent =
+          nsStyledElement::FromNode(aContent)) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
 
     if (aOriginalSizeInfo) {
@@ -436,18 +418,18 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
     // only set the property if the element could have changed in that
     // direction
     if (aDirection.mHorizontal) {
-      NS_ConvertUTF16toUTF8 widthstr(aSizeInfo.width);
+      nsAutoCString widthstr(aSizeInfo.width);
       if (!widthstr.IsEmpty() &&
           !Substring(widthstr, widthstr.Length() - 2, 2).EqualsLiteral("px"))
         widthstr.AppendLiteral("px");
-      decl->SetProperty("width"_ns, widthstr, u""_ns, IgnoreErrors());
+      decl->SetProperty("width"_ns, widthstr, ""_ns, IgnoreErrors());
     }
     if (aDirection.mVertical) {
-      NS_ConvertUTF16toUTF8 heightstr(aSizeInfo.height);
+      nsAutoCString heightstr(aSizeInfo.height);
       if (!heightstr.IsEmpty() &&
           !Substring(heightstr, heightstr.Length() - 2, 2).EqualsLiteral("px"))
         heightstr.AppendLiteral("px");
-      decl->SetProperty("height"_ns, heightstr, u""_ns, IgnoreErrors());
+      decl->SetProperty("height"_ns, heightstr, ""_ns, IgnoreErrors());
     }
   }
 }

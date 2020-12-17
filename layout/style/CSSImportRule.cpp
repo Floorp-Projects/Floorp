@@ -88,7 +88,7 @@ void CSSImportRule::GetHref(nsAString& aHref) const {
 }
 
 /* virtual */
-void CSSImportRule::GetCssText(nsAString& aCssText) const {
+void CSSImportRule::GetCssText(nsACString& aCssText) const {
   Servo_ImportRule_GetCssText(mRawRule, &aCssText);
 }
 

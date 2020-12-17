@@ -3539,7 +3539,7 @@ void nsGlobalWindowInner::CancelAnimationFrame(int32_t aHandle,
 }
 
 already_AddRefed<MediaQueryList> nsGlobalWindowInner::MatchMedia(
-    const nsAString& aMediaQueryList, CallerType aCallerType,
+    const nsACString& aMediaQueryList, CallerType aCallerType,
     ErrorResult& aError) {
   ENSURE_ACTIVE_DOCUMENT(aError, nullptr);
   return mDoc->MatchMedia(aMediaQueryList, aCallerType);

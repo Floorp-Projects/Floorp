@@ -7,12 +7,12 @@
 
 [Exposed=Window]
 interface MediaList {
-  stringifier attribute [TreatNullAs=EmptyString] DOMString        mediaText;
+  stringifier attribute [TreatNullAs=EmptyString] UTF8String mediaText;
 
   readonly attribute unsigned long    length;
-  getter DOMString?  item(unsigned long index);
+  getter UTF8String? item(unsigned long index);
   [Throws]
-  void               deleteMedium(DOMString oldMedium);
+  void               deleteMedium(UTF8String oldMedium);
   [Throws]
-  void               appendMedium(DOMString newMedium);
+  void               appendMedium(UTF8String newMedium);
 };

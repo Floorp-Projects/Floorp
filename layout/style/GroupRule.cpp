@@ -74,7 +74,7 @@ void GroupRule::DropSheetReference() {
   Rule::DropSheetReference();
 }
 
-uint32_t GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex,
+uint32_t GroupRule::InsertRule(const nsACString& aRule, uint32_t aIndex,
                                ErrorResult& aRv) {
   if (IsReadOnly()) {
     return 0;

@@ -133,8 +133,8 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
   sheet->mConstructorDocument = constructorDocument;
 
   // 2. Set the sheet's media according to aOptions.
-  if (aOptions.mMedia.IsString()) {
-    sheet->SetMedia(MediaList::Create(aOptions.mMedia.GetAsString()));
+  if (aOptions.mMedia.IsUTF8String()) {
+    sheet->SetMedia(MediaList::Create(aOptions.mMedia.GetAsUTF8String()));
   } else {
     sheet->SetMedia(aOptions.mMedia.GetAsMediaList()->Clone());
   }
@@ -582,7 +582,7 @@ css::Rule* StyleSheet::GetDOMOwnerRule() const { return mOwnerRule; }
 
 // https://drafts.csswg.org/cssom/#dom-cssstylesheet-insertrule
 // https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-insertrule
-uint32_t StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
+uint32_t StyleSheet::InsertRule(const nsACString& aRule, uint32_t aIndex,
                                 nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv) {
   if (IsReadOnly() || !AreRulesAvailable(aSubjectPrincipal, aRv)) {
@@ -616,14 +616,15 @@ void StyleSheet::DeleteRule(uint32_t aIndex, nsIPrincipal& aSubjectPrincipal,
   return DeleteRuleInternal(aIndex, aRv);
 }
 
-int32_t StyleSheet::AddRule(const nsAString& aSelector, const nsAString& aBlock,
+int32_t StyleSheet::AddRule(const nsACString& aSelector,
+                            const nsACString& aBlock,
                             const Optional<uint32_t>& aIndex,
                             nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (IsReadOnly() || !AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return -1;
   }
 
-  nsAutoString rule;
+  nsAutoCString rule;
   rule.Append(aSelector);
   rule.AppendLiteral(" { ");
   if (!aBlock.IsEmpty()) {
@@ -832,7 +833,7 @@ StyleSheet::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
 
 #undef NOTIFY
 
-nsresult StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
+nsresult StyleSheet::InsertRuleIntoGroup(const nsACString& aRule,
                                          css::GroupRule* aGroup,
                                          uint32_t aIndex) {
   NS_ASSERTION(IsComplete(), "No inserting into an incomplete sheet!");
@@ -1032,12 +1033,12 @@ void StyleSheet::List(FILE* aOut, int32_t aIndent) {
   }
 
   if (mMedia) {
-    nsString buffer;
+    nsAutoCString buffer;
     mMedia->GetText(buffer);
 
     if (!buffer.IsEmpty()) {
       line.AppendLiteral(", ");
-      AppendUTF16toUTF8(buffer, line);
+      line.Append(buffer);
     }
   }
 
@@ -1053,14 +1054,12 @@ void StyleSheet::List(FILE* aOut, int32_t aIndent) {
 
   ServoCSSRuleList* ruleList = GetCssRulesInternal();
   for (uint32_t i = 0, len = ruleList->Length(); i < len; ++i) {
-    nsString cssText;
     css::Rule* rule = ruleList->GetRule(i);
+
+    nsAutoCString cssText;
     rule->GetCssText(cssText);
-
-    NS_ConvertUTF16toUTF8 s(cssText);
-    s.ReplaceSubstring("\n"_ns, newlineIndent);
-
-    fprintf_stderr(aOut, "%s\n", s.get());
+    cssText.ReplaceSubstring("\n"_ns, newlineIndent);
+    fprintf_stderr(aOut, "%s\n", cssText.get());
   }
 
   if (ruleList->Length() != 0) {
@@ -1085,7 +1084,7 @@ void StyleSheet::DropMedia() {
 
 dom::MediaList* StyleSheet::Media() {
   if (!mMedia) {
-    mMedia = dom::MediaList::Create(nsString());
+    mMedia = dom::MediaList::Create(EmptyCString());
     mMedia->SetStyleSheet(this);
   }
 
@@ -1376,8 +1375,8 @@ ServoCSSRuleList* StyleSheet::GetCssRulesInternal() {
   return mRuleList;
 }
 
-uint32_t StyleSheet::InsertRuleInternal(const nsAString& aRule, uint32_t aIndex,
-                                        ErrorResult& aRv) {
+uint32_t StyleSheet::InsertRuleInternal(const nsACString& aRule,
+                                        uint32_t aIndex, ErrorResult& aRv) {
   MOZ_ASSERT(!IsReadOnly());
   MOZ_ASSERT(!ModificationDisallowed());
 
@@ -1421,7 +1420,7 @@ void StyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv) {
   }
 }
 
-nsresult StyleSheet::InsertRuleIntoGroupInternal(const nsAString& aRule,
+nsresult StyleSheet::InsertRuleIntoGroupInternal(const nsACString& aRule,
                                                  css::GroupRule* aGroup,
                                                  uint32_t aIndex) {
   MOZ_ASSERT(!IsReadOnly());

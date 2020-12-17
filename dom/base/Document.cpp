@@ -8736,7 +8736,7 @@ void Document::DoNotifyPossibleTitleChange() {
 }
 
 already_AddRefed<MediaQueryList> Document::MatchMedia(
-    const nsAString& aMediaQueryList, CallerType aCallerType) {
+    const nsACString& aMediaQueryList, CallerType aCallerType) {
   RefPtr<MediaQueryList> result =
       new MediaQueryList(this, aMediaQueryList, aCallerType);
 

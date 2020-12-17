@@ -46,8 +46,8 @@ typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOr
     CanvasImageSource;
 class ImageBitmap;
 class ImageData;
-class StringOrCanvasGradientOrCanvasPattern;
-class OwningStringOrCanvasGradientOrCanvasPattern;
+class UTF8StringOrCanvasGradientOrCanvasPattern;
+class OwningUTF8StringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
 class CanvasGradient;
 class CanvasPath;
@@ -130,22 +130,22 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
                                    mozilla::ErrorResult& aError) override;
 
   void GetStrokeStyle(
-      OwningStringOrCanvasGradientOrCanvasPattern& aValue) override {
+      OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
     GetStyleAsUnion(aValue, Style::STROKE);
   }
 
   void SetStrokeStyle(
-      const StringOrCanvasGradientOrCanvasPattern& aValue) override {
+      const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
     SetStyleFromUnion(aValue, Style::STROKE);
   }
 
   void GetFillStyle(
-      OwningStringOrCanvasGradientOrCanvasPattern& aValue) override {
+      OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
     GetStyleAsUnion(aValue, Style::FILL);
   }
 
   void SetFillStyle(
-      const StringOrCanvasGradientOrCanvasPattern& aValue) override {
+      const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
     SetStyleFromUnion(aValue, Style::FILL);
   }
 
@@ -179,14 +179,14 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     }
   }
 
-  void GetShadowColor(nsAString& aShadowColor) override {
+  void GetShadowColor(nsACString& aShadowColor) override {
     StyleColorToString(CurrentState().shadowColor, aShadowColor);
   }
 
-  void GetFilter(nsAString& aFilter) { aFilter = CurrentState().filterString; }
+  void GetFilter(nsACString& aFilter) { aFilter = CurrentState().filterString; }
 
-  void SetShadowColor(const nsAString& aShadowColor) override;
-  void SetFilter(const nsAString& aFilter, mozilla::ErrorResult& aError);
+  void SetShadowColor(const nsACString& aShadowColor) override;
+  void SetFilter(const nsACString& aFilter, mozilla::ErrorResult& aError);
   void ClearRect(double aX, double aY, double aW, double aH) override;
   void FillRect(double aX, double aY, double aW, double aH) override;
   void StrokeRect(double aX, double aY, double aW, double aH) override;
@@ -277,9 +277,9 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     }
   }
 
-  void GetFont(nsAString& aFont) { aFont = GetFont(); }
+  void GetFont(nsACString& aFont) { aFont = GetFont(); }
 
-  void SetFont(const nsAString& aFont, mozilla::ErrorResult& aError);
+  void SetFont(const nsACString& aFont, mozilla::ErrorResult& aError);
   void GetTextAlign(nsAString& aTextAlign);
   void SetTextAlign(const nsAString& aTextAlign);
   void GetTextBaseline(nsAString& aTextBaseline);
@@ -371,9 +371,9 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   void SetLineDashOffset(double aOffset) override;
   double LineDashOffset() const override;
 
-  void GetMozTextStyle(nsAString& aMozTextStyle) { GetFont(aMozTextStyle); }
+  void GetMozTextStyle(nsACString& aMozTextStyle) { GetFont(aMozTextStyle); }
 
-  void SetMozTextStyle(const nsAString& aMozTextStyle,
+  void SetMozTextStyle(const nsACString& aMozTextStyle,
                        mozilla::ErrorResult& aError) {
     SetFont(aMozTextStyle, aError);
   }
@@ -543,9 +543,10 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   void SetTransformInternal(const mozilla::gfx::Matrix& aTransform);
 
   // Some helpers.  Doesn't modify a color on failure.
-  void SetStyleFromUnion(const StringOrCanvasGradientOrCanvasPattern& aValue,
-                         Style aWhichStyle);
-  void SetStyleFromString(const nsAString& aStr, Style aWhichStyle);
+  void SetStyleFromUnion(
+      const UTF8StringOrCanvasGradientOrCanvasPattern& aValue,
+      Style aWhichStyle);
+  void SetStyleFromString(const nsACString& aStr, Style aWhichStyle);
 
   void SetStyleFromGradient(CanvasGradient& aGradient, Style aWhichStyle) {
     CurrentState().SetGradientStyle(aWhichStyle, &aGradient);
@@ -555,21 +556,21 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     CurrentState().SetPatternStyle(aWhichStyle, &aPattern);
   }
 
-  void GetStyleAsUnion(OwningStringOrCanvasGradientOrCanvasPattern& aValue,
+  void GetStyleAsUnion(OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue,
                        Style aWhichStyle);
 
   // Returns whether a color was successfully parsed.
   bool ParseColor(const nsACString& aString, nscolor* aColor);
 
-  static void StyleColorToString(const nscolor& aColor, nsAString& aStr);
+  static void StyleColorToString(const nscolor& aColor, nsACString& aStr);
 
   // Returns whether a filter was successfully parsed.
-  bool ParseFilter(const nsAString& aString,
+  bool ParseFilter(const nsACString& aString,
                    StyleOwnedSlice<StyleFilter>& aFilterChain,
                    ErrorResult& aError);
 
   // Returns whether the font was successfully updated.
-  bool SetFontInternal(const nsAString& aFont, mozilla::ErrorResult& aError);
+  bool SetFontInternal(const nsACString& aFont, mozilla::ErrorResult& aError);
 
   // Clears the target and updates mOpaque based on mOpaqueAttrValue and
   // mContextAttributesHasAlpha.
@@ -682,7 +683,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
                             mozilla::gfx::Rect aDest, mozilla::gfx::Rect aSrc,
                             gfx::IntSize aImgSize);
 
-  nsString& GetFont() {
+  nsCString& GetFont() {
     /* will initilize the value if not set, else does nothing */
     GetCurrentFontStyle();
 
@@ -931,7 +932,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     EnumeratedArray<Style, Style::MAX, RefPtr<CanvasPattern>> patternStyles;
     EnumeratedArray<Style, Style::MAX, nscolor> colorStyles;
 
-    nsString font;
+    nsCString font;
     TextAlign textAlign = TextAlign::START;
     TextBaseline textBaseline = TextBaseline::ALPHABETIC;
 
@@ -952,7 +953,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     mozilla::gfx::CapStyle lineCap = mozilla::gfx::CapStyle::BUTT;
     mozilla::gfx::JoinStyle lineJoin = mozilla::gfx::JoinStyle::MITER_OR_BEVEL;
 
-    nsString filterString = nsString(u"none");
+    nsCString filterString{"none"};
     StyleOwnedSlice<StyleFilter> filterChain;
     // RAII object that we obtain when we start to observer SVG filter elements
     // for rendering changes.  When released we stop observing the SVG elements.

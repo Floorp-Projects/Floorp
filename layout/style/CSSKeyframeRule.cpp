@@ -151,16 +151,16 @@ void CSSKeyframeRule::UpdateRule(Func aCallback) {
   }
 }
 
-void CSSKeyframeRule::GetKeyText(nsAString& aKeyText) {
+void CSSKeyframeRule::GetKeyText(nsACString& aKeyText) {
   Servo_Keyframe_GetKeyText(mRaw, &aKeyText);
 }
 
-void CSSKeyframeRule::SetKeyText(const nsAString& aKeyText) {
-  NS_ConvertUTF16toUTF8 keyText(aKeyText);
-  UpdateRule([this, &keyText]() { Servo_Keyframe_SetKeyText(mRaw, &keyText); });
+void CSSKeyframeRule::SetKeyText(const nsACString& aKeyText) {
+  UpdateRule(
+      [this, &aKeyText]() { Servo_Keyframe_SetKeyText(mRaw, &aKeyText); });
 }
 
-void CSSKeyframeRule::GetCssText(nsAString& aCssText) const {
+void CSSKeyframeRule::GetCssText(nsACString& aCssText) const {
   Servo_Keyframe_GetCssText(mRaw, &aCssText);
 }
 

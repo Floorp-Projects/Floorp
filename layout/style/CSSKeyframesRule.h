@@ -35,7 +35,7 @@ class CSSKeyframesRule final : public css::Rule {
   uint16_t Type() const final { return CSSRule_Binding::KEYFRAMES_RULE; }
   const RawServoKeyframesRule* Raw() const { return mRawRule.get(); }
 
-  void GetCssText(nsAString& aCssText) const final;
+  void GetCssText(nsACString& aCssText) const final;
   void GetName(nsAString& aName) const;
   void SetName(const nsAString& aName);
   CSSRuleList* CssRules();

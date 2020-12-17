@@ -13,7 +13,7 @@
  Exposed=Window]
 interface CSSStyleDeclaration {
   [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
-  attribute DOMString cssText;
+  attribute UTF8String cssText;
 
   readonly attribute unsigned long length;
   getter UTF8String item(unsigned long index);
@@ -22,12 +22,12 @@ interface CSSStyleDeclaration {
   sequence<UTF8String> getCSSImageURLs(UTF8String property);
 
   [Throws]
-  DOMString getPropertyValue(UTF8String property);
-  DOMString getPropertyPriority(UTF8String property);
+  UTF8String getPropertyValue(UTF8String property);
+  UTF8String getPropertyPriority(UTF8String property);
   [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
-  void setProperty(UTF8String property, [TreatNullAs=EmptyString] UTF8String value, optional [TreatNullAs=EmptyString] DOMString priority = "");
+  void setProperty(UTF8String property, [TreatNullAs=EmptyString] UTF8String value, optional [TreatNullAs=EmptyString] UTF8String priority = "");
   [CEReactions, Throws]
-  DOMString removeProperty(UTF8String property);
+  UTF8String removeProperty(UTF8String property);
 
   readonly attribute CSSRule? parentRule;
 };

@@ -176,9 +176,9 @@ class FontFaceSet final : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(loading)
   IMPL_EVENT_HANDLER(loadingdone)
   IMPL_EVENT_HANDLER(loadingerror)
-  already_AddRefed<dom::Promise> Load(JSContext* aCx, const nsAString& aFont,
+  already_AddRefed<dom::Promise> Load(JSContext* aCx, const nsACString& aFont,
                                       const nsAString& aText, ErrorResult& aRv);
-  bool Check(const nsAString& aFont, const nsAString& aText, ErrorResult& aRv);
+  bool Check(const nsACString& aFont, const nsAString& aText, ErrorResult& aRv);
   dom::Promise* GetReady(ErrorResult& aRv);
   dom::FontFaceSetLoadStatus Status();
 
@@ -298,11 +298,11 @@ class FontFaceSet final : public DOMEventTargetHelper,
   // Helper function for HasLoadingFontFaces.
   void UpdateHasLoadingFontFaces();
 
-  void ParseFontShorthandForMatching(const nsAString& aFont,
+  void ParseFontShorthandForMatching(const nsACString& aFont,
                                      RefPtr<SharedFontList>& aFamilyList,
                                      FontWeight& aWeight, FontStretch& aStretch,
                                      FontSlantStyle& aStyle, ErrorResult& aRv);
-  void FindMatchingFontFaces(const nsAString& aFont, const nsAString& aText,
+  void FindMatchingFontFaces(const nsACString& aFont, const nsAString& aText,
                              nsTArray<FontFace*>& aFontFaces, ErrorResult& aRv);
 
   void DispatchLoadingEventAndReplaceReadyPromise();

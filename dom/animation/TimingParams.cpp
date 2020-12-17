@@ -190,11 +190,10 @@ TimingParams TimingParams::MergeOptionalEffectTiming(
 
 /* static */
 Maybe<ComputedTimingFunction> TimingParams::ParseEasing(
-    const nsAString& aEasing, ErrorResult& aRv) {
+    const nsACString& aEasing, ErrorResult& aRv) {
   nsTimingFunction timingFunction;
   if (!ServoCSSParser::ParseEasing(aEasing, timingFunction)) {
-    aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(
-        NS_ConvertUTF16toUTF8(aEasing));
+    aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
     return Nothing();
   }
 

@@ -1017,7 +1017,7 @@ Loader::MediaMatched Loader::PrepareSheet(
   if (!aMediaString.IsEmpty()) {
     NS_ASSERTION(!aMediaList,
                  "must not provide both aMediaString and aMediaList");
-    mediaList = MediaList::Create(aMediaString);
+    mediaList = MediaList::Create(NS_ConvertUTF16toUTF8(aMediaString));
   }
 
   aSheet.SetMedia(do_AddRef(mediaList));

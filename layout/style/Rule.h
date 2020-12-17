@@ -95,8 +95,8 @@ class Rule : public nsISupports, public nsWrapperCache {
 
   // WebIDL interface
   virtual uint16_t Type() const = 0;
-  virtual void GetCssText(nsAString& aCssText) const = 0;
-  void SetCssText(const nsAString& aCssText);
+  virtual void GetCssText(nsACString& aCssText) const = 0;
+  void SetCssText(const nsACString& aCssText);
   Rule* GetParentRule() const;
   StyleSheet* GetParentStyleSheet() const { return GetStyleSheet(); }
   nsINode* GetParentObject() const {
