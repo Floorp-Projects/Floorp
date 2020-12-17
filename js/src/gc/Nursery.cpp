@@ -1192,8 +1192,9 @@ void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   bool pretenureBigInt = false;
   if (tunables().attemptPretenuring()) {
     // Should we check for pretenuring regardless of GCReason?
+    // Use 3MB as the threshold so the pretenuring can be applied on Android.
     bool pretenureAll =
-        highPromotionRate && previousGC.nurseryUsedBytes >= 4 * 1024 * 1024;
+        highPromotionRate && previousGC.nurseryUsedBytes >= 3 * 1024 * 1024;
 
     pretenureStr =
         pretenureAll ||
