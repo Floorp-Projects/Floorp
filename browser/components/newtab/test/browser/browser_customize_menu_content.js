@@ -27,24 +27,34 @@ test_newtab({
     let customizeButton = content.document.querySelector(".personalize-button");
     customizeButton.click();
 
+    let defaultPos = "matrix(1, 0, 0, 1, 0, 0)";
     await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector(".customize-menu"),
-      "Customize Menu should be rendered now"
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform === defaultPos,
+      "Customize Menu should be visible on screen"
     );
 
     // Test close button.
     let closeButton = content.document.querySelector(".close-button");
     closeButton.click();
     await ContentTaskUtils.waitForCondition(
-      () => !content.document.querySelector(".customize-menu"),
-      "Customize Menu should not be rendered anymore"
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform !== defaultPos,
+      "Customize Menu should not be visible anymore"
     );
 
     // Reopen the customize menu
     customizeButton.click();
     await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector(".customize-menu"),
-      "Customize Menu should be rendered now"
+      () =>
+        content.getComputedStyle(
+          content.document.querySelector(".customize-menu")
+        ).transform === defaultPos,
+      "Customize Menu should be visible on screen now"
     );
 
     // Test that clicking the shortcuts toggle will make the section appear on the newtab page.
