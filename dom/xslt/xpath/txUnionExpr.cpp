@@ -7,6 +7,10 @@
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
 
+#ifdef TX_TO_STRING
+#  include "nsReadableUtils.h"
+#endif
+
 //-------------/
 //- UnionExpr -/
 //-------------/
@@ -74,11 +78,8 @@ bool UnionExpr::isSensitiveTo(ContextSensitivity aContext) {
 }
 
 #ifdef TX_TO_STRING
-void UnionExpr::toString(nsAString& dest) {
-  uint32_t i;
-  for (i = 0; i < mExpressions.Length(); ++i) {
-    if (i > 0) dest.AppendLiteral(" | ");
-    mExpressions[i]->toString(dest);
-  }
+void UnionExpr::toString(nsAString& aDest) {
+  StringJoinAppend(aDest, u" | "_ns, mExpressions,
+                   [](nsAString& dest, Expr* expr) { expr->toString(dest); });
 }
 #endif

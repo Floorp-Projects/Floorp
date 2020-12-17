@@ -11,6 +11,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "nsReadableUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,16 +20,11 @@ namespace syncedcontext {
 template <typename Context>
 nsCString FormatValidationError(IndexSet aFailedFields, const char* prefix) {
   MOZ_ASSERT(!aFailedFields.isEmpty());
-  nsCString error(prefix);
-  bool first = true;
-  for (auto idx : aFailedFields) {
-    if (!first) {
-      error.Append(", ");
-    }
-    first = false;
-    error.Append(Context::FieldIndexToName(idx));
-  }
-  return error;
+  return nsDependentCString{prefix} +
+         StringJoin(", "_ns, aFailedFields,
+                    [](nsACString& dest, const auto& idx) {
+                      dest.Append(Context::FieldIndexToName(idx));
+                    });
 }
 
 template <typename Context>

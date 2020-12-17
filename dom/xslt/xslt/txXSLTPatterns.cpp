@@ -15,6 +15,10 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsIContent.h"
 
+#ifdef TX_TO_STRING
+#  include "nsReadableUtils.h"
+#endif
+
 using mozilla::UniquePtr;
 using mozilla::Unused;
 using mozilla::WrapUnique;
@@ -72,10 +76,9 @@ void txUnionPattern::toString(nsAString& aDest) {
 #  ifdef DEBUG
   aDest.AppendLiteral("txUnionPattern{");
 #  endif
-  for (uint32_t i = 0; i < mLocPathPatterns.Length(); ++i) {
-    if (i != 0) aDest.AppendLiteral(" | ");
-    mLocPathPatterns[i]->toString(aDest);
-  }
+  StringJoinAppend(
+      aDest, u" | "_ns, mLocPathPatterns,
+      [](nsAString& dest, txPattern* pattern) { pattern->toString(dest); });
 #  ifdef DEBUG
   aDest.Append(char16_t('}'));
 #  endif
