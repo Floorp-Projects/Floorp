@@ -162,7 +162,7 @@ body {
     --customize-menu-secondary-action-background-active: #6F6F74;
     --customize-menu-seperator-line-color: #53515F;
     --customize-menu-first-shadow: rgba(21, 20, 26, 0.5);
-    --customize-menu-second-shadow: gba(21, 20, 26, 0.75);
+    --customize-menu-second-shadow: rgba(21, 20, 26, 0.75);
     --customize-menu-primary-action-text: #E0E0E6;
     --customize-menu-line-color: #B9B7CC; }
 
@@ -1416,29 +1416,6 @@ main {
   font-size: 15px;
   z-index: 11002; }
 
-.customize-animate-appear,
-.customize-animate-enter {
-  transform: translateX(435px); }
-  .customize-animate-appear:dir(rtl),
-  .customize-animate-enter:dir(rtl) {
-    transform: translateX(-435px); }
-
-.customize-animate-appear-active,
-.customize-animate-enter-active {
-  transform: translateX(0);
-  transition: transform cubic-bezier(0.46, 0.03, 0.52, 0.96); }
-
-.customize-animate-exit {
-  transform: translateX(0); }
-
-.customize-animate-exit-active,
-.customize-animate-exit-done {
-  transform: translateX(435px);
-  transition: transform cubic-bezier(0.46, 0.03, 0.52, 0.96); }
-  .customize-animate-exit-active:dir(rtl),
-  .customize-animate-exit-done:dir(rtl) {
-    transform: translateX(-435px); }
-
 .customize-menu {
   color: var(--customize-menu-primary-text-color);
   background-color: var(--customize-menu-background);
@@ -1448,10 +1425,20 @@ main {
   inset-block: 0;
   inset-inline-end: 0;
   z-index: 1001;
-  box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow);
   padding: 16px;
-  transition: 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96);
-  overflow: auto; }
+  transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96);
+  overflow: auto;
+  transform: translateX(435px); }
+  .customize-menu:dir(rtl) {
+    transform: translateX(-435px); }
+  .customize-menu.customize-animate-enter-done {
+    transform: translateX(0); }
+  .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-enter-active, .customize-menu.customize-animate-exit-active {
+    box-shadow: 0 0 64px var(--customize-menu-first-shadow), 0 0 24px var(--customize-menu-second-shadow); }
+  .customize-menu.customize-animate-exit-done {
+    transform: translateX(435px); }
+    .customize-menu.customize-animate-exit-done:dir(rtl) {
+      transform: translateX(-435px); }
   .customize-menu .close-button {
     margin-inline-start: auto;
     margin-bottom: 28px;
