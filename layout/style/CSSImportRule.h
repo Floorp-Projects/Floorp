@@ -33,7 +33,7 @@ class CSSImportRule final : public css::Rule {
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRule_Binding::IMPORT_RULE; }
-  void GetCssText(nsAString& aCssText) const override;
+  void GetCssText(nsACString& aCssText) const override;
   void GetHref(nsAString& aHref) const;
   dom::MediaList* GetMedia() const;
   StyleSheet* GetStyleSheet() const { return mChildSheet; }

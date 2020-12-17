@@ -541,7 +541,7 @@ void MathMLElement::MapMathMLAttributesInto(
   }
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty_font_family)) {
-    aDecls.SetFontFamily(value->GetStringValue());
+    aDecls.SetFontFamily(NS_ConvertUTF16toUTF8(value->GetStringValue()));
   }
 
   // fontstyle

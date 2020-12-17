@@ -25,7 +25,7 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
   void IndexedGetter(uint32_t aIndex, bool& aFound,
                      nsACString& aPropName) final;
 
-  void GetPropertyValue(nsCSSFontDesc aFontDescID, nsAString& aResult) const;
+  void GetPropertyValue(nsCSSFontDesc aFontDescID, nsACString& aResult) const;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
@@ -66,7 +66,7 @@ class CSSFontFaceRule final : public css::Rule {
 
   // WebIDL interface
   uint16_t Type() const final;
-  void GetCssText(nsAString& aCssText) const final;
+  void GetCssText(nsACString& aCssText) const final;
   nsICSSDeclaration* Style();
 
   // Methods of mozilla::css::Rule

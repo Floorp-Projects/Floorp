@@ -73,7 +73,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
   nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
-                            nsAString& aValue) override;
+                            nsACString& aValue) override;
   void SetPropertyValue(const nsCSSPropertyID aPropID, const nsACString& aValue,
                         nsIPrincipal* aSubjectPrincipal,
                         mozilla::ErrorResult& aRv) override;
@@ -139,7 +139,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
  private:
   nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
                             const nsACString& aMaybeCustomPropertyNme,
-                            nsAString& aValue);
+                            nsACString& aValue);
 
   virtual ~nsComputedDOMStyle();
 

@@ -65,7 +65,7 @@ class ComputedStyle {
                 ServoComputedDataForgotten aComputedValues);
 
   // Returns the computed (not resolved) value of the given property.
-  void GetComputedPropertyValue(nsCSSPropertyID aId, nsAString& aOut) const {
+  void GetComputedPropertyValue(nsCSSPropertyID aId, nsACString& aOut) const {
     Servo_GetPropertyValue(this, aId, &aOut);
   }
 

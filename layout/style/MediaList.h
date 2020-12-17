@@ -35,27 +35,27 @@ class MediaList final : public nsISupports, public nsWrapperCache {
       : mRawList(aRawList) {}
 
   static already_AddRefed<MediaList> Create(
-      const nsAString& aMedia, CallerType aCallerType = CallerType::NonSystem);
+      const nsACString& aMedia, CallerType aCallerType = CallerType::NonSystem);
 
   already_AddRefed<MediaList> Clone();
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
   nsISupports* GetParentObject() const;
 
-  void GetText(nsAString& aMediaText);
-  void SetText(const nsAString& aMediaText);
+  void GetText(nsACString& aMediaText);
+  void SetText(const nsACString& aMediaText);
   bool Matches(const Document&) const;
 
   void SetStyleSheet(StyleSheet* aSheet);
 
   // WebIDL
-  void GetMediaText(nsAString& aMediaText);
-  void SetMediaText(const nsAString& aMediaText);
+  void GetMediaText(nsACString& aMediaText);
+  void SetMediaText(const nsACString& aMediaText);
   uint32_t Length();
-  void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aReturn);
-  void Item(uint32_t aIndex, nsAString& aResult);
-  void DeleteMedium(const nsAString& aMedium, ErrorResult& aRv);
-  void AppendMedium(const nsAString& aMedium, ErrorResult& aRv);
+  void IndexedGetter(uint32_t aIndex, bool& aFound, nsACString& aReturn);
+  void Item(uint32_t aIndex, nsACString& aResult);
+  void DeleteMedium(const nsACString& aMedium, ErrorResult& aRv);
+  void AppendMedium(const nsACString& aMedium, ErrorResult& aRv);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -64,13 +64,13 @@ class MediaList final : public nsISupports, public nsWrapperCache {
   }
 
  protected:
-  MediaList(const nsAString& aMedia, CallerType);
+  MediaList(const nsACString& aMedia, CallerType);
   MediaList();
 
-  void SetTextInternal(const nsAString& aMediaText, CallerType);
+  void SetTextInternal(const nsACString& aMediaText, CallerType);
 
-  void Delete(const nsAString& aOldMedium, ErrorResult& aRv);
-  void Append(const nsAString& aNewMedium, ErrorResult& aRv);
+  void Delete(const nsACString& aOldMedium, ErrorResult& aRv);
+  void Append(const nsACString& aNewMedium, ErrorResult& aRv);
 
   ~MediaList() {
     MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");

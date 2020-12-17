@@ -33,18 +33,17 @@ bool ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
 
 /* static */
 already_AddRefed<RawServoDeclarationBlock> ServoCSSParser::ParseProperty(
-    nsCSSPropertyID aProperty, const nsAString& aValue,
+    nsCSSPropertyID aProperty, const nsACString& aValue,
     const ParsingEnvironment& aParsingEnvironment, ParsingMode aParsingMode) {
-  NS_ConvertUTF16toUTF8 value(aValue);
   return Servo_ParseProperty(
-             aProperty, &value, aParsingEnvironment.mUrlExtraData, aParsingMode,
-             aParsingEnvironment.mCompatMode, aParsingEnvironment.mLoader,
-             aParsingEnvironment.mRuleType)
+             aProperty, &aValue, aParsingEnvironment.mUrlExtraData,
+             aParsingMode, aParsingEnvironment.mCompatMode,
+             aParsingEnvironment.mLoader, aParsingEnvironment.mRuleType)
       .Consume();
 }
 
 /* static */
-bool ServoCSSParser::ParseEasing(const nsAString& aValue,
+bool ServoCSSParser::ParseEasing(const nsACString& aValue,
                                  nsTimingFunction& aResult) {
   return Servo_ParseEasing(&aValue, &aResult);
 }
@@ -59,7 +58,7 @@ bool ServoCSSParser::ParseTransformIntoMatrix(const nsACString& aValue,
 
 /* static */
 bool ServoCSSParser::ParseFontShorthandForMatching(
-    const nsAString& aValue, URLExtraData* aUrl, RefPtr<SharedFontList>& aList,
+    const nsACString& aValue, URLExtraData* aUrl, RefPtr<SharedFontList>& aList,
     StyleComputedFontStyleDescriptor& aStyle, float& aStretch, float& aWeight) {
   return Servo_ParseFontShorthandForMatching(&aValue, aUrl, &aList, &aStyle,
                                              &aStretch, &aWeight);

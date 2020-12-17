@@ -32,11 +32,11 @@ class CSSFontFeatureValuesRule final : public css::Rule {
     return CSSRule_Binding::FONT_FEATURE_VALUES_RULE;
   }
 
-  void GetCssText(nsAString& aCssText) const override;
-  void GetFontFamily(nsAString& aFamily);
-  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv);
-  void GetValueText(nsAString& aValueText);
-  void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv);
+  void GetCssText(nsACString& aCssText) const override;
+  void GetFontFamily(nsACString& aFamily);
+  void SetFontFamily(const nsACString& aFamily, mozilla::ErrorResult& aRv);
+  void GetValueText(nsACString& aValueText);
+  void SetValueText(const nsACString& aValueText, mozilla::ErrorResult& aRv);
 
   size_t SizeOfIncludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override;

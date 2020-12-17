@@ -2171,11 +2171,14 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
     ENSURE_SUCCESS(rv, rv.StealNSResult());
   }
 
+  nsAutoCString result;
+
   static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(true);
   nsresult rv =
-      decl->GetPropertyValue(NS_ConvertUTF16toUTF8(aPropertyName), aResult);
+      decl->GetPropertyValue(NS_ConvertUTF16toUTF8(aPropertyName), result);
   static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(false);
 
+  CopyUTF8toUTF16(result, aResult);
   return rv;
 }
 
@@ -2822,8 +2825,10 @@ nsDOMWindowUtils::ComputeAnimationDistance(Element* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  AnimationValue v1 = AnimationValue::FromString(property, aValue1, aElement);
-  AnimationValue v2 = AnimationValue::FromString(property, aValue2, aElement);
+  AnimationValue v1 = AnimationValue::FromString(
+      property, NS_ConvertUTF16toUTF8(aValue1), aElement);
+  AnimationValue v2 = AnimationValue::FromString(
+      property, NS_ConvertUTF16toUTF8(aValue2), aElement);
   if (v1.IsNull() || v2.IsNull()) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -2883,8 +2888,10 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
   if (!aElement->GetComposedDoc()) {
     return NS_ERROR_FAILURE;
   }
+  nsAutoCString result;
   Servo_AnimationValue_Serialize(value, propertyID,
-                                 presShell->StyleSet()->RawSet(), &aResult);
+                                 presShell->StyleSet()->RawSet(), &result);
+  CopyUTF8toUTF16(result, aResult);
   return NS_OK;
 }
 

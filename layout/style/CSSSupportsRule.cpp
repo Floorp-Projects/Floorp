@@ -41,11 +41,11 @@ void CSSSupportsRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-void CSSSupportsRule::GetConditionText(nsAString& aConditionText) {
+void CSSSupportsRule::GetConditionText(nsACString& aConditionText) {
   Servo_SupportsRule_GetConditionText(mRawRule, &aConditionText);
 }
 
-void CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
+void CSSSupportsRule::SetConditionText(const nsACString& aConditionText,
                                        ErrorResult& aRv) {
   if (IsReadOnly()) {
     return;
@@ -55,7 +55,7 @@ void CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
 }
 
 /* virtual */
-void CSSSupportsRule::GetCssText(nsAString& aCssText) const {
+void CSSSupportsRule::GetCssText(nsACString& aCssText) const {
   Servo_SupportsRule_GetCssText(mRawRule, &aCssText);
 }
 

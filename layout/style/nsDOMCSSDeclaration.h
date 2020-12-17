@@ -66,7 +66,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
    * which obeys all the same restrictions.
    */
   virtual nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
-                                    nsAString& aValue);
+                                    nsACString& aValue);
 
   /**
    * Method analogous to CSSStyleDeclaration::SetProperty.  This
@@ -80,33 +80,30 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
 
   // Require subclasses to implement |GetParentRule|.
   // NS_DECL_NSIDOMCSSSTYLEDECLARATION
-  void GetCssText(nsAString& aCssText) override;
-  void SetCssText(const nsAString& aCssText, nsIPrincipal* aSubjectPrincipal,
+  void GetCssText(nsACString& aCssText) override;
+  void SetCssText(const nsACString& aCssText, nsIPrincipal* aSubjectPrincipal,
                   mozilla::ErrorResult& aRv) override;
   NS_IMETHOD GetPropertyValue(const nsACString& propertyName,
-                              nsAString& _retval) override;
-  void RemoveProperty(const nsACString& propertyName, nsAString& _retval,
+                              nsACString& _retval) override;
+  void RemoveProperty(const nsACString& propertyName, nsACString& _retval,
                       mozilla::ErrorResult& aRv) override;
   void GetPropertyPriority(const nsACString& propertyName,
-                           nsAString& aPriority) override;
+                           nsACString& aPriority) override;
   void SetProperty(const nsACString& propertyName, const nsACString& value,
-                   const nsAString& priority, nsIPrincipal* aSubjectPrincipal,
+                   const nsACString& priority, nsIPrincipal* aSubjectPrincipal,
                    mozilla::ErrorResult& aRv) override;
   uint32_t Length() override;
 
   // WebIDL interface for CSS2Properties
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
-#define CSS_PROP(id_, method_)                                                \
-  void Get##method_(nsAString& aValue, mozilla::ErrorResult& rv) {            \
-    rv = GetPropertyValue(eCSSProperty_##id_, aValue);                        \
-  }                                                                           \
-                                                                              \
-  void Set##method_(const nsAString& aValue, nsIPrincipal* aSubjectPrincipal, \
-                    mozilla::ErrorResult& aRv) {                              \
-    /* FIXME: Should switch to UTF8String in the IDL, either by switching the \
-     * serialization code to it too, or by something like bug 862800. */      \
-    NS_ConvertUTF16toUTF8 v(aValue);                                          \
-    SetPropertyValue(eCSSProperty_##id_, v, aSubjectPrincipal, aRv);          \
+#define CSS_PROP(id_, method_)                                                 \
+  void Get##method_(nsACString& aValue, mozilla::ErrorResult& rv) {            \
+    rv = GetPropertyValue(eCSSProperty_##id_, aValue);                         \
+  }                                                                            \
+                                                                               \
+  void Set##method_(const nsACString& aValue, nsIPrincipal* aSubjectPrincipal, \
+                    mozilla::ErrorResult& aRv) {                               \
+    SetPropertyValue(eCSSProperty_##id_, aValue, aSubjectPrincipal, aRv);      \
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL

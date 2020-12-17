@@ -562,7 +562,9 @@ void nsAttrValue::ToString(nsAString& aResult) const {
       aResult.Truncate();
       MiscContainer* container = GetMiscContainer();
       if (DeclarationBlock* decl = container->mValue.mCSSDeclaration) {
-        decl->ToString(aResult);
+        nsAutoCString result;
+        decl->ToString(result);
+        CopyUTF8toUTF16(result, aResult);
       }
 
       // This can be reached during parallel selector matching with attribute

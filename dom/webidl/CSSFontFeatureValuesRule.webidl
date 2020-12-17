@@ -12,7 +12,7 @@
 [Exposed=Window]
 interface CSSFontFeatureValuesRule : CSSRule {
   [SetterThrows]
-  attribute DOMString fontFamily;
+  attribute UTF8String fontFamily;
 
   // Not yet implemented
   //  readonly attribute CSSFontFeatureValuesMap annotation;
@@ -26,5 +26,5 @@ interface CSSFontFeatureValuesRule : CSSRule {
 partial interface CSSFontFeatureValuesRule {
   // Gecko addition?
   [SetterThrows]
-  attribute DOMString valueText;
+  attribute UTF8String valueText;
 };

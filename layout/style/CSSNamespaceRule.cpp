@@ -34,7 +34,7 @@ void CSSNamespaceRule::GetURLSpec(nsString& aURLSpec) const {
   atom->ToString(aURLSpec);
 }
 
-void CSSNamespaceRule::GetCssText(nsAString& aCssText) const {
+void CSSNamespaceRule::GetCssText(nsACString& aCssText) const {
   Servo_NamespaceRule_GetCssText(mRawRule, &aCssText);
 }
 

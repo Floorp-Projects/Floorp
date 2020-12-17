@@ -1054,12 +1054,12 @@ void CanvasRenderingContext2D::RemoveShutdownObserver() {
   }
 }
 
-void CanvasRenderingContext2D::SetStyleFromString(const nsAString& aStr,
+void CanvasRenderingContext2D::SetStyleFromString(const nsACString& aStr,
                                                   Style aWhichStyle) {
   MOZ_ASSERT(!aStr.IsVoid());
 
   nscolor color;
-  if (!ParseColor(NS_ConvertUTF16toUTF8(aStr), &color)) {
+  if (!ParseColor(aStr, &color)) {
     return;
   }
 
@@ -1067,30 +1067,31 @@ void CanvasRenderingContext2D::SetStyleFromString(const nsAString& aStr,
 }
 
 void CanvasRenderingContext2D::GetStyleAsUnion(
-    OwningStringOrCanvasGradientOrCanvasPattern& aValue, Style aWhichStyle) {
+    OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue,
+    Style aWhichStyle) {
   const ContextState& state = CurrentState();
   if (state.patternStyles[aWhichStyle]) {
     aValue.SetAsCanvasPattern() = state.patternStyles[aWhichStyle];
   } else if (state.gradientStyles[aWhichStyle]) {
     aValue.SetAsCanvasGradient() = state.gradientStyles[aWhichStyle];
   } else {
-    StyleColorToString(state.colorStyles[aWhichStyle], aValue.SetAsString());
+    StyleColorToString(state.colorStyles[aWhichStyle],
+                       aValue.SetAsUTF8String());
   }
 }
 
 // static
 void CanvasRenderingContext2D::StyleColorToString(const nscolor& aColor,
-                                                  nsAString& aStr) {
+                                                  nsACString& aStr) {
+  aStr.Truncate();
   // We can't reuse the normal CSS color stringification code,
   // because the spec calls for a different algorithm for canvas.
   if (NS_GET_A(aColor) == 255) {
-    CopyUTF8toUTF16(nsPrintfCString("#%02x%02x%02x", NS_GET_R(aColor),
-                                    NS_GET_G(aColor), NS_GET_B(aColor)),
-                    aStr);
+    aStr.AppendPrintf("#%02x%02x%02x", NS_GET_R(aColor), NS_GET_G(aColor),
+                      NS_GET_B(aColor));
   } else {
-    CopyUTF8toUTF16(nsPrintfCString("rgba(%d, %d, %d, ", NS_GET_R(aColor),
-                                    NS_GET_G(aColor), NS_GET_B(aColor)),
-                    aStr);
+    aStr.AppendPrintf("rgba(%d, %d, %d, ", NS_GET_R(aColor), NS_GET_G(aColor),
+                      NS_GET_B(aColor));
     aStr.AppendFloat(nsStyleUtil::ColorComponentToFloat(NS_GET_A(aColor)));
     aStr.Append(')');
   }
@@ -1991,9 +1992,10 @@ void CanvasRenderingContext2D::GetMozCurrentTransformInverse(
 //
 
 void CanvasRenderingContext2D::SetStyleFromUnion(
-    const StringOrCanvasGradientOrCanvasPattern& aValue, Style aWhichStyle) {
-  if (aValue.IsString()) {
-    SetStyleFromString(aValue.GetAsString(), aWhichStyle);
+    const UTF8StringOrCanvasGradientOrCanvasPattern& aValue,
+    Style aWhichStyle) {
+  if (aValue.IsUTF8String()) {
+    SetStyleFromString(aValue.GetAsUTF8String(), aWhichStyle);
     return;
   }
 
@@ -2193,9 +2195,9 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
 //
 // shadows
 //
-void CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor) {
+void CanvasRenderingContext2D::SetShadowColor(const nsACString& aShadowColor) {
   nscolor color;
-  if (!ParseColor(NS_ConvertUTF16toUTF8(aShadowColor), &color)) {
+  if (!ParseColor(aShadowColor, &color)) {
     return;
   }
 
@@ -2207,7 +2209,7 @@ void CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor) {
 //
 
 static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
-    nsCSSPropertyID aProperty, const nsAString& aPropertyValue,
+    nsCSSPropertyID aProperty, const nsACString& aPropertyValue,
     Document* aDocument) {
   ServoCSSParser::ParsingEnvironment env{aDocument->DefaultStyleAttrURLData(),
                                          aDocument->GetCompatibilityMode(),
@@ -2234,13 +2236,13 @@ static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
 }
 
 static already_AddRefed<RawServoDeclarationBlock> CreateFontDeclarationForServo(
-    const nsAString& aFont, Document* aDocument) {
+    const nsACString& aFont, Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
 }
 
 static already_AddRefed<ComputedStyle> GetFontStyleForServo(
-    Element* aElement, const nsAString& aFont, PresShell* aPresShell,
-    nsAString& aOutUsedFont, ErrorResult& aError) {
+    Element* aElement, const nsACString& aFont, PresShell* aPresShell,
+    nsACString& aOutUsedFont, ErrorResult& aError) {
   RefPtr<RawServoDeclarationBlock> declarations =
       CreateFontDeclarationForServo(aFont, aPresShell->GetDocument());
   if (!declarations) {
@@ -2271,7 +2273,7 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
     }
   } else {
     RefPtr<RawServoDeclarationBlock> declarations =
-        CreateFontDeclarationForServo(u"10px sans-serif"_ns,
+        CreateFontDeclarationForServo("10px sans-serif"_ns,
                                       aPresShell->GetDocument());
     MOZ_ASSERT(declarations);
 
@@ -2297,12 +2299,13 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
 }
 
 static already_AddRefed<RawServoDeclarationBlock>
-CreateFilterDeclarationForServo(const nsAString& aFilter, Document* aDocument) {
+CreateFilterDeclarationForServo(const nsACString& aFilter,
+                                Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
 }
 
 static already_AddRefed<ComputedStyle> ResolveFilterStyleForServo(
-    const nsAString& aFilterString, const ComputedStyle* aParentStyle,
+    const nsACString& aFilterString, const ComputedStyle* aParentStyle,
     PresShell* aPresShell, ErrorResult& aError) {
   RefPtr<RawServoDeclarationBlock> declarations =
       CreateFilterDeclarationForServo(aFilterString, aPresShell->GetDocument());
@@ -2326,7 +2329,7 @@ static already_AddRefed<ComputedStyle> ResolveFilterStyleForServo(
 }
 
 bool CanvasRenderingContext2D::ParseFilter(
-    const nsAString& aString, StyleOwnedSlice<StyleFilter>& aFilterChain,
+    const nsACString& aString, StyleOwnedSlice<StyleFilter>& aFilterChain,
     ErrorResult& aError) {
   if (!mCanvasElement && !mDocShell) {
     NS_WARNING(
@@ -2341,7 +2344,7 @@ bool CanvasRenderingContext2D::ParseFilter(
     return false;
   }
 
-  nsAutoString usedFont;  // unused
+  nsAutoCString usedFont;  // unused
 
   RefPtr<ComputedStyle> parentStyle = GetFontStyleForServo(
       mCanvasElement, GetFont(), presShell, usedFont, aError);
@@ -2359,7 +2362,7 @@ bool CanvasRenderingContext2D::ParseFilter(
   return true;
 }
 
-void CanvasRenderingContext2D::SetFilter(const nsAString& aFilter,
+void CanvasRenderingContext2D::SetFilter(const nsACString& aFilter,
                                          ErrorResult& aError) {
   StyleOwnedSlice<StyleFilter> filterChain;
   if (ParseFilter(aFilter, filterChain, aError)) {
@@ -3182,12 +3185,12 @@ void CanvasRenderingContext2D::TransformWillUpdate() {
 // text
 //
 
-void CanvasRenderingContext2D::SetFont(const nsAString& aFont,
+void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
                                        ErrorResult& aError) {
   SetFontInternal(aFont, aError);
 }
 
-bool CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
+bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
                                                ErrorResult& aError) {
   /*
    * If font is defined with relative units (e.g. ems) and the parent
@@ -3210,7 +3213,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
     return false;
   }
 
-  nsString usedFont;
+  nsCString usedFont;
   RefPtr<ComputedStyle> sc =
       GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
   if (!sc) {
@@ -4010,7 +4013,7 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
   // use lazy initilization for the font group since it's rather expensive
   if (!CurrentState().fontGroup) {
     ErrorResult err;
-    constexpr auto kDefaultFontStyle = u"10px sans-serif"_ns;
+    constexpr auto kDefaultFontStyle = "10px sans-serif"_ns;
     static float kDefaultFontSize = 10.0;
     RefPtr<PresShell> presShell = GetPresShell();
     bool fontUpdated = SetFontInternal(kDefaultFontStyle, err);

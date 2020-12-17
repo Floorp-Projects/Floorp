@@ -300,7 +300,7 @@ uint32_t InspectorUtils::GetSelectorCount(GlobalObject& aGlobal,
 /* static */
 void InspectorUtils::GetSelectorText(GlobalObject& aGlobal,
                                      BindingStyleRule& aRule,
-                                     uint32_t aSelectorIndex, nsString& aText,
+                                     uint32_t aSelectorIndex, nsACString& aText,
                                      ErrorResult& aRv) {
   aRv = aRule.GetSelectorText(aSelectorIndex, aText);
 }

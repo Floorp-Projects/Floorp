@@ -69,8 +69,8 @@ class ChangeStyleTransaction final : public EditTransactionBase {
    * @param aValue          [IN] the value to look for in the list
    * @return                true if the value is in the list of values
    */
-  static bool ValueIncludes(const nsAString& aValueList,
-                            const nsAString& aValue);
+  static bool ValueIncludes(const nsACString& aValueList,
+                            const nsACString& aValue);
 
  private:
   virtual ~ChangeStyleTransaction() = default;
@@ -82,8 +82,8 @@ class ChangeStyleTransaction final : public EditTransactionBase {
    * @param aNewValue       [IN] a value this code adds to aValues if it is not
    *                        already in
    */
-  void AddValueToMultivalueProperty(nsAString& aValues,
-                                    const nsAString& aNewValue);
+  void AddValueToMultivalueProperty(nsACString& aValues,
+                                    const nsACString& aNewValue);
 
   /**
    * Returns true if the property accepts more than one value.
@@ -98,8 +98,8 @@ class ChangeStyleTransaction final : public EditTransactionBase {
    * @param aValues         [IN] a list of white-space separated values
    * @param aRemoveValue    [IN] the value to remove from the list
    */
-  void RemoveValueFromListOfValues(nsAString& aValues,
-                                   const nsAString& aRemoveValue);
+  void RemoveValueFromListOfValues(nsACString& aValues,
+                                   const nsACString& aRemoveValue);
 
   /**
    * If the boolean is true and if the value is not the empty string,
@@ -108,7 +108,7 @@ class ChangeStyleTransaction final : public EditTransactionBase {
    * is false, just remove the style attribute.
    */
   MOZ_CAN_RUN_SCRIPT nsresult SetStyle(bool aAttributeWasSet,
-                                       nsAString& aValue);
+                                       nsACString& aValue);
 
   // The element to operate upon.
   RefPtr<nsStyledElement> mStyledElement;
@@ -117,12 +117,12 @@ class ChangeStyleTransaction final : public EditTransactionBase {
   RefPtr<nsAtom> mProperty;
 
   // The value to set the property to (ignored if mRemoveProperty==true).
-  nsString mValue;
+  nsCString mValue;
 
   // The value to set the property to for undo.
-  nsString mUndoValue;
+  nsCString mUndoValue;
   // The value to set the property to for redo.
-  nsString mRedoValue;
+  nsCString mRedoValue;
 
   // true if the operation is to remove mProperty from mElement.
   bool mRemoveProperty;

@@ -53,17 +53,18 @@ bool HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
     return true;
   }
 
-  RefPtr<MediaList> mediaList = MediaList::Create(aMedia);
+  RefPtr<MediaList> mediaList =
+      MediaList::Create(NS_ConvertUTF16toUTF8(aMedia));
   return mediaList->Matches(*aDocument);
 }
 
 void HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue) {
   mMediaList = nullptr;
-  nsString mediaStr;
-  if (!aValue || (mediaStr = aValue->GetStringValue()).IsEmpty()) {
+  if (!aValue) {
     return;
   }
 
+  NS_ConvertUTF16toUTF8 mediaStr(aValue->GetStringValue());
   mMediaList = MediaList::Create(mediaStr);
 }
 

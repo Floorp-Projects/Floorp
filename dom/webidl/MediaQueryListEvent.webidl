@@ -11,11 +11,11 @@ interface MediaQueryListEvent : Event {
   constructor(DOMString type,
               optional MediaQueryListEventInit eventInitDict = {});
 
-  readonly attribute DOMString media;
+  readonly attribute UTF8String media;
   readonly attribute boolean matches;
 };
 
 dictionary MediaQueryListEventInit : EventInit {
-  DOMString media = "";
+  UTF8String media = "";
   boolean matches = false;
 };

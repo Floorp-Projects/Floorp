@@ -21,12 +21,16 @@ StyleInfo::StyleInfo(dom::Element* aElement) : mElement(aElement) {
 
 void StyleInfo::Display(nsAString& aValue) {
   aValue.Truncate();
-  mComputedStyle->GetComputedPropertyValue(eCSSProperty_display, aValue);
+  nsAutoCString value;
+  mComputedStyle->GetComputedPropertyValue(eCSSProperty_display, value);
+  CopyUTF8toUTF16(value, aValue);
 }
 
 void StyleInfo::TextAlign(nsAString& aValue) {
   aValue.Truncate();
-  mComputedStyle->GetComputedPropertyValue(eCSSProperty_text_align, aValue);
+  nsAutoCString value;
+  mComputedStyle->GetComputedPropertyValue(eCSSProperty_text_align, value);
+  CopyUTF8toUTF16(value, aValue);
 }
 
 void StyleInfo::TextIndent(nsAString& aValue) {

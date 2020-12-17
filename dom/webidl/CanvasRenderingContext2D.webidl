@@ -50,7 +50,7 @@ interface CanvasRenderingContext2D {
   attribute object mozCurrentTransformInverse;
 
   [SetterThrows]
-  attribute DOMString mozTextStyle;
+  attribute UTF8String mozTextStyle;
 
   // image smoothing mode -- if disabled, images won't be smoothed
   // if scaled.
@@ -183,8 +183,8 @@ interface mixin CanvasImageSmoothing {
 
 interface mixin CanvasFillStrokeStyles {
   // colors and styles (see also the CanvasPathDrawingStyles interface)
-  attribute (DOMString or CanvasGradient or CanvasPattern) strokeStyle; // (default black)
-  attribute (DOMString or CanvasGradient or CanvasPattern) fillStyle; // (default black)
+  attribute (UTF8String or CanvasGradient or CanvasPattern) strokeStyle; // (default black)
+  attribute (UTF8String or CanvasGradient or CanvasPattern) fillStyle; // (default black)
   [NewObject]
   CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
   [NewObject, Throws]
@@ -200,12 +200,12 @@ interface mixin CanvasShadowStyles {
   attribute double shadowOffsetY; // (default 0)
   [LenientFloat]
   attribute double shadowBlur; // (default 0)
-  attribute DOMString shadowColor; // (default transparent black)
+  attribute UTF8String shadowColor; // (default transparent black)
 };
 
 interface mixin CanvasFilters {
   [Pref="canvas.filters.enabled", SetterThrows]
-  attribute DOMString filter; // (default empty string = no filter)
+  attribute UTF8String filter; // (default empty string = no filter)
 };
 
 interface mixin CanvasRect {
@@ -295,7 +295,7 @@ interface mixin CanvasPathDrawingStyles {
 interface mixin CanvasTextDrawingStyles {
   // text
   [SetterThrows]
-  attribute DOMString font; // (default 10px sans-serif)
+  attribute UTF8String font; // (default 10px sans-serif)
   attribute DOMString textAlign; // "start", "end", "left", "right", "center" (default: "start")
   attribute DOMString textBaseline; // "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" (default: "alphabetic")
 };

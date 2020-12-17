@@ -99,11 +99,11 @@ void CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-void CSSMozDocumentRule::GetConditionText(nsAString& aConditionText) {
+void CSSMozDocumentRule::GetConditionText(nsACString& aConditionText) {
   Servo_MozDocumentRule_GetConditionText(mRawRule, &aConditionText);
 }
 
-void CSSMozDocumentRule::SetConditionText(const nsAString& aConditionText,
+void CSSMozDocumentRule::SetConditionText(const nsACString& aConditionText,
                                           ErrorResult& aRv) {
   if (IsReadOnly()) {
     return;
@@ -113,7 +113,7 @@ void CSSMozDocumentRule::SetConditionText(const nsAString& aConditionText,
 }
 
 /* virtual */
-void CSSMozDocumentRule::GetCssText(nsAString& aCssText) const {
+void CSSMozDocumentRule::GetCssText(nsACString& aCssText) const {
   Servo_MozDocumentRule_GetCssText(mRawRule, &aCssText);
 }
 

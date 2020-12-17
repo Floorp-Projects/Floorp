@@ -54,7 +54,7 @@ void HTMLFontElement::MapAttributesIntoRule(
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::face);
     if (value && value->Type() == nsAttrValue::eString &&
         !value->IsEmptyString()) {
-      aDecls.SetFontFamily(value->GetStringValue());
+      aDecls.SetFontFamily(NS_ConvertUTF16toUTF8(value->GetStringValue()));
     }
   }
   // size: int

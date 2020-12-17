@@ -57,7 +57,7 @@ static int32_t GetCSSFloatValue(nsComputedDOMStyle* aComputedStyle,
   MOZ_ASSERT(aComputedStyle);
 
   // get the computed CSSValue of the property
-  nsAutoString value;
+  nsAutoCString value;
   nsresult rv = aComputedStyle->GetPropertyValue(aProperty, value);
   if (NS_FAILED(rv)) {
     NS_WARNING("nsComputedDOMStyle::GetPropertyValue() failed");
