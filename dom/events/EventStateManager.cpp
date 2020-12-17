@@ -1387,9 +1387,6 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
                      PointerEventHandler::GetPointerCapturingRemoteTarget(
                          mouseEvent->pointerId)) {
         remote = pointerCapturedRemote;
-      } else if (BrowserParent* capturingRemote =
-                     PresShell::GetCapturingRemoteTarget()) {
-        remote = capturingRemote;
       }
 
       // If a mouse is over a remote target A, and then moves to
@@ -3257,7 +3254,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           !PresShell::GetCapturingContent()) {
         if (nsIContent* content =
                 mCurrentTarget ? mCurrentTarget->GetContent() : nullptr) {
-          PresShell::SetCapturingContent(content, CaptureFlags::None, aEvent);
+          PresShell::SetCapturingContent(content, CaptureFlags::None);
         } else {
           PresShell::ReleaseCapturingContent();
         }
@@ -3428,10 +3425,6 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       break;
     }
     case eMouseUp: {
-      // We can unconditionally stop capturing because
-      // we should never be capturing when the mouse button is up
-      PresShell::ReleaseCapturingContent();
-
       ClearGlobalActiveContent(this);
       WidgetMouseEvent* mouseUpEvent = aEvent->AsMouseEvent();
       if (mouseUpEvent && EventCausesClickEvents(*mouseUpEvent)) {
