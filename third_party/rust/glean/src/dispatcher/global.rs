@@ -59,13 +59,7 @@ pub fn flush_init() -> Result<(), DispatchError> {
     guard().flush_init()
 }
 
-/// Shuts down the dispatch queue.
-///
-/// This will initiate a shutdown of the worker thread
-/// and no new tasks will be processed after this.
-pub fn shutdown() -> Result<(), DispatchError> {
-    guard().shutdown()?;
-
+fn join_dispatcher_thread() -> Result<(), DispatchError> {
     // After we issue the shutdown command, make sure to wait for the
     // worker thread to join.
     let mut lock = GLOBAL_DISPATCHER.write().unwrap();
@@ -76,6 +70,25 @@ pub fn shutdown() -> Result<(), DispatchError> {
     }
 
     Ok(())
+}
+
+/// Kill the blocked dispatcher without processing the queue.
+///
+/// This will immediately shutdown the worker thread
+/// and no other tasks will be processed.
+/// This only has an effect when the queue is still blocked.
+pub fn kill() -> Result<(), DispatchError> {
+    guard().kill()?;
+    join_dispatcher_thread()
+}
+
+/// Shuts down the dispatch queue.
+///
+/// This will initiate a shutdown of the worker thread
+/// and no new tasks will be processed after this.
+pub fn shutdown() -> Result<(), DispatchError> {
+    guard().shutdown()?;
+    join_dispatcher_thread()
 }
 
 /// TEST ONLY FUNCTION.

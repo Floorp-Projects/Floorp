@@ -225,6 +225,7 @@ impl ExperimentMetric {
             glean.storage(),
             INTERNAL_STORAGE,
             &self.meta.identifier(glean),
+            self.meta.lifetime,
         ) {
             Some(Metric::Experiment(e)) => Some(json!(e).to_string()),
             _ => None,
