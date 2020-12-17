@@ -45,6 +45,9 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
     mTextureId = sNextRecordedTextureId++;
     mCanvasChild->RecordEvent(RecordedNextTextureId(mTextureId));
     mDT = mCanvasChild->CreateDrawTarget(mSize, mFormat);
+    if (!mDT) {
+      return false;
+    }
 
     // We lock the TextureData when we create it to get the remote DrawTarget.
     mCanvasChild->OnTextureWriteLock();
