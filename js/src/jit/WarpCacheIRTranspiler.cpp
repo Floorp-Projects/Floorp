@@ -619,12 +619,9 @@ bool WarpCacheIRTranspiler::emitGuardDOMExpandoMissingOrGuardShape(
 }
 
 bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
-                                                          uint32_t nameOffset,
-                                                          bool handleMissing) {
+                                                          uint32_t nameOffset) {
   MDefinition* obj = getOperand(objId);
   PropertyName* name = stringStubField(nameOffset)->asAtom().asPropertyName();
-
-  MOZ_ASSERT(handleMissing);
 
   auto* ins = MMegamorphicLoadSlot::New(alloc(), obj, name);
   add(ins);
@@ -634,11 +631,9 @@ bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
 }
 
 bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotByValueResult(
-    ObjOperandId objId, ValOperandId idId, bool handleMissing) {
+    ObjOperandId objId, ValOperandId idId) {
   MDefinition* obj = getOperand(objId);
   MDefinition* id = getOperand(idId);
-
-  MOZ_ASSERT(handleMissing);
 
   auto* ins = MMegamorphicLoadSlotByValue::New(alloc(), obj, id);
   add(ins);

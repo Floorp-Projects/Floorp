@@ -724,7 +724,6 @@
   args:
     obj: ObjId
     name: PropertyNameField
-    handleMissing: BoolImm
 
 - name: MegamorphicLoadSlotByValueResult
   shared: true
@@ -733,7 +732,6 @@
   args:
     obj: ObjId
     id: ValId
-    handleMissing: BoolImm
 
 - name: MegamorphicStoreSlot
   shared: true
