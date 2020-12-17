@@ -2065,8 +2065,6 @@ template bool GetNativeDataPropertyByValuePure<true>(JSContext* cx,
 template bool GetNativeDataPropertyByValuePure<false>(JSContext* cx,
                                                       JSObject* obj, Value* vp);
 
-// TODO(no-TI): remove NeedsTypeBarrier.
-template <bool NeedsTypeBarrier>
 bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* val) {
   AutoUnsafeCallWithABI unsafe;
@@ -2084,12 +2082,6 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
   nobj->setSlot(shape->slot(), *val);
   return true;
 }
-
-template bool SetNativeDataPropertyPure<true>(JSContext* cx, JSObject* obj,
-                                              PropertyName* name, Value* val);
-
-template bool SetNativeDataPropertyPure<false>(JSContext* cx, JSObject* obj,
-                                               PropertyName* name, Value* val);
 
 bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg,
                                Shape* propShape) {

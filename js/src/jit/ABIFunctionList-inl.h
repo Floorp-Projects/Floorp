@@ -148,8 +148,7 @@ namespace jit {
   _(js::jit::PostWriteElementBarrier<IndexInBounds::Maybe>)           \
   _(js::jit::Printf0)                                                 \
   _(js::jit::Printf1)                                                 \
-  _(js::jit::SetNativeDataPropertyPure<false>)                        \
-  _(js::jit::SetNativeDataPropertyPure<true>)                         \
+  _(js::jit::SetNativeDataPropertyPure)                               \
   _(js::jit::StringFromCharCodeNoGC)                                  \
   _(js::jit::TypeOfObject)                                            \
   _(js::jit::WrapObjectPure)                                          \
