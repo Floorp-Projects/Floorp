@@ -5053,7 +5053,7 @@
 # Whether we attempt to decode AVIF images or not.
 - name: image.avif.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Whether we use dav1d (true) or libaom (false) to decode AVIF image
