@@ -124,7 +124,9 @@ export const DEFAULT_WELCOME_CONTENT = {
       order: 1,
       content: {
         zap: true,
-        disclaimer: { string_id: "onboarding-import-sites-disclaimer" },
+        help_text: {
+          text: { string_id: "onboarding-import-sites-disclaimer" },
+        },
         title: { string_id: "onboarding-multistage-import-header" },
         subtitle: { string_id: "onboarding-multistage-import-subtitle" },
         tiles: {
