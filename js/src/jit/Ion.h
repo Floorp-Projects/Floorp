@@ -138,10 +138,6 @@ inline bool IsIonEnabled(JSContext* cx) {
     return false;
   }
 
-  if (!JitOptions.warpBuilder) {
-    return false;
-  }
-
   if (MOZ_LIKELY(JitOptions.ion)) {
     return true;
   }

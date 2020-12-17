@@ -569,11 +569,9 @@ bool BaselineStackBuilder::initFrame() {
 void BaselineStackBuilder::setNextCallee(JSFunction* nextCallee) {
   nextCallee_ = nextCallee;
 
-  if (JitOptions.warpBuilder) {
-    // Update icScript_ to point to the icScript of nextCallee
-    const uint32_t pcOff = script_->pcToOffset(pc_);
-    icScript_ = icScript_->findInlinedChild(pcOff);
-  }
+  // Update icScript_ to point to the icScript of nextCallee
+  const uint32_t pcOff = script_->pcToOffset(pc_);
+  icScript_ = icScript_->findInlinedChild(pcOff);
 }
 
 bool BaselineStackBuilder::done() {

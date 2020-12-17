@@ -2436,7 +2436,7 @@ void js::ArrayShiftMoveElements(ArrayObject* arr) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(arr->isExtensible());
   MOZ_ASSERT(arr->lengthIsWritable());
-  MOZ_ASSERT_IF(jit::JitOptions.warpBuilder, IsPackedArray(arr));
+  MOZ_ASSERT(IsPackedArray(arr));
   MOZ_ASSERT(!arr->denseElementsHaveMaybeInIterationFlag());
 
   size_t initlen = arr->getDenseInitializedLength();
@@ -3555,7 +3555,7 @@ static bool ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr,
 
 JSObject* js::ArraySliceDense(JSContext* cx, HandleObject obj, int32_t begin,
                               int32_t end, HandleObject result) {
-  MOZ_ASSERT_IF(jit::JitOptions.warpBuilder, IsPackedArray(obj));
+  MOZ_ASSERT(IsPackedArray(obj));
 
   if (result && IsArraySpecies(cx, obj)) {
     if (!ArraySliceDenseKernel(cx, &obj->as<ArrayObject>(), begin, end,

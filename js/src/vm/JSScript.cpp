@@ -4842,7 +4842,7 @@ void JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
 
   // Warp code depends on the NeedsArgsObj flag so invalidate the script
   // (including compilations inlining the script).
-  if (jit::JitOptions.warpBuilder) {
+  {
     jit::RecompileInfoVector invalid;
     AddPendingInvalidation(invalid, script);
     Invalidate(cx, invalid);

@@ -117,22 +117,15 @@ void BaselineFrame::setInterpreterFields(JSScript* script, jsbytecode* pc) {
   uint32_t pcOffset = script->pcToOffset(pc);
   interpreterScript_ = script;
   interpreterPC_ = pc;
-  if (JitOptions.warpBuilder) {
-    MOZ_ASSERT(icScript_);
-    interpreterICEntry_ = icScript_->interpreterICEntryFromPCOffset(pcOffset);
-  } else {
-    JitScript* jitScript = script->jitScript();
-    interpreterICEntry_ = jitScript->interpreterICEntryFromPCOffset(pcOffset);
-  }
+  MOZ_ASSERT(icScript_);
+  interpreterICEntry_ = icScript_->interpreterICEntryFromPCOffset(pcOffset);
 }
 
 void BaselineFrame::setInterpreterFieldsForPrologue(JSScript* script) {
   interpreterScript_ = script;
   interpreterPC_ = script->code();
-  ICScript* icScript =
-      JitOptions.warpBuilder ? icScript_ : script->jitScript()->icScript();
-  if (icScript->numICEntries() > 0) {
-    interpreterICEntry_ = &icScript->icEntry(0);
+  if (icScript_->numICEntries() > 0) {
+    interpreterICEntry_ = &icScript_->icEntry(0);
   } else {
     // If the script does not have any ICEntries (possible for non-function
     // scripts) the interpreterICEntry_ field won't be used. Just set it to
@@ -159,9 +152,7 @@ bool BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues) {
     setReturnValue(fp->returnValue());
   }
 
-  if (JitOptions.warpBuilder) {
-    icScript_ = fp->script()->jitScript()->icScript();
-  }
+  icScript_ = fp->script()->jitScript()->icScript();
 
   JSContext* cx =
       fp->script()->runtimeFromMainThread()->mainContextFromOwnThread();
