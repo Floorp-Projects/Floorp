@@ -110,6 +110,22 @@ class ReftestFissionParent extends JSWindowActorParent {
     return {errorStrings, infoStrings};
   }
 
+  tellChildrenToSetupDisplayport(browsingContext, promises) {
+    let cwg = browsingContext.currentWindowGlobal;
+    if (cwg && cwg.isProcessRoot) {
+      let a = cwg.getActor("ReftestFission");
+      if (a) {
+        let responsePromise = a.sendQuery("SetupDisplayport");
+        promises.push(responsePromise);
+      }
+    }
+
+    for (let context of browsingContext.children) {
+      this.tellChildrenToSetupDisplayport(context, promises);
+    }
+  }
+
+
   receiveMessage(msg) {
     switch (msg.name) {
       case "ForwardAfterPaintEvent":
@@ -152,6 +168,27 @@ class ReftestFissionParent extends JSWindowActorParent {
       case "UpdateLayerTree":
       {
         return this.tellChildrenToUpdateLayerTree(msg.data.browsingContext);
+      }
+      case "TellChildrenToSetupDisplayport":
+      {
+        let promises = [];
+        this.tellChildrenToSetupDisplayport(msg.data.browsingContext, promises);
+        return Promise.allSettled(promises).then(function (results) {
+          let errorStrings = [];
+          let infoStrings = [];
+          for (let r of results) {
+            if (r.status != "fulfilled") {
+              // We expect actors to go away causing sendQuery's to fail, so
+              // just note it.
+              infoStrings.push("SetupDisplayport sendQuery to child promise rejected: " + r.reason);
+              continue;
+            }
+
+            errorStrings.push(...r.value.errorStrings);
+            infoStrings.push(...r.value.infoStrings);
+          }
+          return {errorStrings, infoStrings}
+        });
       }
 
     }
