@@ -316,8 +316,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
 pub struct ColorRenderTarget {
     pub alpha_batch_containers: Vec<AlphaBatchContainer>,
     // List of blur operations to apply for this render target.
-    pub vertical_blurs: Vec<BlurInstance>,
-    pub horizontal_blurs: Vec<BlurInstance>,
+    pub vertical_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
+    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub svg_filters: Vec<(BatchTextures, Vec<SvgFilterInstance>)>,
     pub blits: Vec<BlitJob>,
@@ -336,8 +336,8 @@ impl RenderTarget for ColorRenderTarget {
     ) -> Self {
         ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
-            vertical_blurs: Vec::new(),
-            horizontal_blurs: Vec::new(),
+            vertical_blurs: FastHashMap::default(),
+            horizontal_blurs: FastHashMap::default(),
             scalings: FastHashMap::default(),
             svg_filters: Vec::new(),
             blits: Vec::new(),
@@ -474,7 +474,8 @@ impl RenderTarget for ColorRenderTarget {
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
@@ -482,7 +483,8 @@ impl RenderTarget for ColorRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::Picture(..) => {
@@ -591,8 +593,8 @@ impl RenderTarget for ColorRenderTarget {
 pub struct AlphaRenderTarget {
     pub clip_batcher: ClipBatcher,
     // List of blur operations to apply for this render target.
-    pub vertical_blurs: Vec<BlurInstance>,
-    pub horizontal_blurs: Vec<BlurInstance>,
+    pub vertical_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
+    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub zero_clears: Vec<RenderTaskId>,
     pub one_clears: Vec<RenderTaskId>,
@@ -609,8 +611,8 @@ impl RenderTarget for AlphaRenderTarget {
     ) -> Self {
         AlphaRenderTarget {
             clip_batcher: ClipBatcher::new(gpu_supports_fast_clears),
-            vertical_blurs: Vec::new(),
-            horizontal_blurs: Vec::new(),
+            vertical_blurs: FastHashMap::default(),
+            horizontal_blurs: FastHashMap::default(),
             scalings: FastHashMap::default(),
             zero_clears: Vec::new(),
             one_clears: Vec::new(),
@@ -648,7 +650,8 @@ impl RenderTarget for AlphaRenderTarget {
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
@@ -657,7 +660,8 @@ impl RenderTarget for AlphaRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
@@ -740,7 +744,7 @@ pub struct PictureCacheTarget {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCacheRenderTarget {
     pub target_kind: RenderTargetKind,
-    pub horizontal_blurs: Vec<BlurInstance>,
+    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
     pub blits: Vec<BlitJob>,
     pub border_segments_complex: Vec<BorderInstance>,
     pub border_segments_solid: Vec<BorderInstance>,
@@ -753,7 +757,7 @@ impl TextureCacheRenderTarget {
     pub fn new(target_kind: RenderTargetKind) -> Self {
         TextureCacheRenderTarget {
             target_kind,
-            horizontal_blurs: vec![],
+            horizontal_blurs: FastHashMap::default(),
             blits: vec![],
             border_segments_complex: vec![],
             border_segments_solid: vec![],
@@ -770,9 +774,6 @@ impl TextureCacheRenderTarget {
     ) {
         profile_scope!("add_task");
         let task_address = task_id.into();
-        let src_task_address = render_tasks[task_id].children.get(0).map(|&src_task_id| {
-            src_task_id.into()
-        });
 
         let task = &mut render_tasks[task_id];
         let target_rect = task.get_target_rect();
@@ -797,7 +798,8 @@ impl TextureCacheRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_address,
-                    src_task_address.unwrap(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::Blit(ref task_info) => {
@@ -871,18 +873,28 @@ impl TextureCacheRenderTarget {
 }
 
 fn add_blur_instances(
-    instances: &mut Vec<BlurInstance>,
+    instances: &mut FastHashMap<TextureSource, Vec<BlurInstance>>,
     blur_direction: BlurDirection,
     task_address: RenderTaskAddress,
-    src_task_address: RenderTaskAddress,
+    src_task_id: RenderTaskId,
+    render_tasks: &RenderTaskGraph,
 ) {
+    let source = TextureSource::TextureCache(
+        render_tasks[src_task_id].get_target_texture(),
+        ImageBufferKind::Texture2DArray,
+        Swizzle::default(),
+    );
+
     let instance = BlurInstance {
         task_address,
-        src_task_address,
+        src_task_address: src_task_id.into(),
         blur_direction,
     };
 
-    instances.push(instance);
+    instances
+        .entry(source)
+        .or_insert(Vec::new())
+        .push(instance);
 }
 
 fn add_scaling_instances(
@@ -931,10 +943,11 @@ fn add_scaling_instances(
         }
         None => {
             (
-                match task.target_kind {
-                    RenderTargetKind::Color => TextureSource::PrevPassColor,
-                    RenderTargetKind::Alpha => TextureSource::PrevPassAlpha,
-                },
+                TextureSource::TextureCache(
+                    source_task.unwrap().get_target_texture(),
+                    ImageBufferKind::Texture2DArray,
+                    Swizzle::default(),
+                ),
                 source_task.unwrap().location.to_source_rect(),
             )
         }
@@ -964,29 +977,21 @@ fn add_svg_filter_instances(
     if let Some(id) = input_1_task {
         let task = &render_tasks[id];
 
-        textures.input.colors[0] = if task.save_target {
-            TextureSource::TextureCache(
-                task.get_target_texture(),
-                ImageBufferKind::Texture2DArray,
-                Swizzle::default(),
-            )
-        } else {
-            TextureSource::PrevPassColor
-        };
+        textures.input.colors[0] = TextureSource::TextureCache(
+            task.get_target_texture(),
+            ImageBufferKind::Texture2DArray,
+            Swizzle::default(),
+        );
     }
 
     if let Some(id) = input_2_task {
         let task = &render_tasks[id];
 
-        textures.input.colors[1] = if task.save_target {
-            TextureSource::TextureCache(
-                task.get_target_texture(),
-                ImageBufferKind::Texture2DArray,
-                Swizzle::default(),
-            )
-        } else {
-            TextureSource::PrevPassColor
-        };
+        textures.input.colors[1] = TextureSource::TextureCache(
+            task.get_target_texture(),
+            ImageBufferKind::Texture2DArray,
+            Swizzle::default(),
+        );
     }
 
     let kind = match filter {
