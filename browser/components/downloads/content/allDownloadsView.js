@@ -103,9 +103,6 @@ HistoryDownloadElementShell.prototype = {
   downloadsCmd_unblock() {
     this.confirmUnblock(window, "unblock");
   },
-  downloadsCmd_unblockAndSave() {
-    this.confirmUnblock(window, "unblock");
-  },
 
   downloadsCmd_chooseUnblock() {
     this.confirmUnblock(window, "chooseUnblock");
