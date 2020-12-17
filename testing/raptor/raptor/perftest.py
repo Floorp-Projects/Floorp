@@ -206,6 +206,11 @@ class Perftest(object):
             else:
                 self.post_startup_delay = post_startup_delay
 
+        if self.config["enable_webrender"]:
+            self.config["environment"]["MOZ_WEBRENDER"] = "1"
+        else:
+            self.config["environment"]["MOZ_WEBRENDER"] = "0"
+
         LOG.info("Post startup delay set to %d ms" % self.post_startup_delay)
         LOG.info("main raptor init, config is: %s" % str(self.config))
         self.build_browser_profile()
@@ -677,6 +682,11 @@ class PerftestAndroid(Perftest):
 
 class PerftestDesktop(Perftest):
     """Mixin class for Desktop-specific Perftest subclasses"""
+
+    def __init__(self, *args, **kwargs):
+        super(PerftestDesktop, self).__init__(*args, **kwargs)
+        if self.config["enable_webrender"]:
+            self.config["environment"]["MOZ_ACCELERATED"] = "1"
 
     def setup_chrome_args(self, test):
         """Sets up chrome/chromium cmd-line arguments.
