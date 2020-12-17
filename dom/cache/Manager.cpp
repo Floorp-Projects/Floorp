@@ -1804,16 +1804,14 @@ void Manager::ReleaseBodyId(const nsID& aBodyId) {
 
 const ManagerId& Manager::GetManagerId() const { return *mManagerId; }
 
-void Manager::AddStreamList(StreamList* aStreamList) {
+void Manager::AddStreamList(StreamList& aStreamList) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  MOZ_DIAGNOSTIC_ASSERT(aStreamList);
-  mStreamLists.AppendElement(aStreamList);
+  mStreamLists.AppendElement(WrapNotNullUnchecked(&aStreamList));
 }
 
-void Manager::RemoveStreamList(StreamList* aStreamList) {
+void Manager::RemoveStreamList(StreamList& aStreamList) {
   NS_ASSERT_OWNINGTHREAD(Manager);
-  MOZ_DIAGNOSTIC_ASSERT(aStreamList);
-  mStreamLists.RemoveElement(aStreamList);
+  mStreamLists.RemoveElement(&aStreamList);
 }
 
 void Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
