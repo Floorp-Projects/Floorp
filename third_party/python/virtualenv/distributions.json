@@ -21,8 +21,8 @@
       "distlib": "__virtualenv__/distlib-0.3.1-py2.py3-none-any/distlib-0.3.1.dist-info",
       "filelock": "__virtualenv__/filelock-3.0.12-py3-none-any/filelock-3.0.12.dist-info",
       "six": "__virtualenv__/six-1.15.0-py2.py3-none-any/six-1.15.0.dist-info",
-      "importlib_metadata": "__virtualenv__/importlib_metadata-1.7.0-py2.py3-none-any/importlib_metadata-1.7.0.dist-info",
-      "zipp": "__virtualenv__/zipp-3.1.0-py3-none-any/zipp-3.1.0.dist-info"
+      "importlib_metadata": "__virtualenv__/importlib_metadata-3.1.1-py3-none-any/importlib_metadata-3.1.1.dist-info",
+      "zipp": "__virtualenv__/zipp-3.4.0-py3-none-any/zipp-3.4.0.dist-info"
     }
   },
   "3.6": {
@@ -31,9 +31,9 @@
       "distlib": "__virtualenv__/distlib-0.3.1-py2.py3-none-any/distlib-0.3.1.dist-info",
       "filelock": "__virtualenv__/filelock-3.0.12-py3-none-any/filelock-3.0.12.dist-info",
       "six": "__virtualenv__/six-1.15.0-py2.py3-none-any/six-1.15.0.dist-info",
-      "importlib_metadata": "__virtualenv__/importlib_metadata-1.7.0-py2.py3-none-any/importlib_metadata-1.7.0.dist-info",
-      "zipp": "__virtualenv__/zipp-3.1.0-py3-none-any/zipp-3.1.0.dist-info",
-      "importlib_resources": "__virtualenv__/importlib_resources-3.0.0-py2.py3-none-any/importlib_resources-3.0.0.dist-info"
+      "importlib_metadata": "__virtualenv__/importlib_metadata-3.1.1-py3-none-any/importlib_metadata-3.1.1.dist-info",
+      "zipp": "__virtualenv__/zipp-3.4.0-py3-none-any/zipp-3.4.0.dist-info",
+      "importlib_resources": "__virtualenv__/importlib_resources-3.3.0-py2.py3-none-any/importlib_resources-3.3.0.dist-info"
     }
   },
   "3.5": {
@@ -42,9 +42,9 @@
       "distlib": "__virtualenv__/distlib-0.3.1-py2.py3-none-any/distlib-0.3.1.dist-info",
       "filelock": "__virtualenv__/filelock-3.0.12-py3-none-any/filelock-3.0.12.dist-info",
       "six": "__virtualenv__/six-1.15.0-py2.py3-none-any/six-1.15.0.dist-info",
-      "importlib_metadata": "__virtualenv__/importlib_metadata-1.7.0-py2.py3-none-any/importlib_metadata-1.7.0.dist-info",
+      "importlib_metadata": "__virtualenv__/importlib_metadata-2.1.1-py2.py3-none-any/importlib_metadata-2.1.1.dist-info",
       "zipp": "__virtualenv__/zipp-1.2.0-py2.py3-none-any/zipp-1.2.0.dist-info",
-      "importlib_resources": "__virtualenv__/importlib_resources-3.0.0-py2.py3-none-any/importlib_resources-3.0.0.dist-info"
+      "importlib_resources": "__virtualenv__/importlib_resources-3.2.1-py2.py3-none-any/importlib_resources-3.2.1.dist-info"
     }
   },
   "3.4": {
@@ -58,7 +58,7 @@
       "importlib_resources": "__virtualenv__/importlib_resources-1.0.2-py2.py3-none-any/importlib_resources-1.0.2.dist-info",
       "typing": "__virtualenv__/typing-3.7.4.1-py3-none-any/typing-3.7.4.1.dist-info",
       "pathlib2": "__virtualenv__/pathlib2-2.3.5-py2.py3-none-any/pathlib2-2.3.5.dist-info",
-      "scandir": "__virtualenv__/scandir-1.10.0-cp38-cp38-macosx_10_15_x86_64/scandir-1.10.0.dist-info"
+      "scandir": "__virtualenv__/scandir-1.10.0-cp39-cp39-macosx_10_15_x86_64/scandir-1.10.0.dist-info"
     }
   },
   "2.7": {
@@ -72,7 +72,7 @@
       "importlib_resources": "__virtualenv__/importlib_resources-1.0.2-py2.py3-none-any/importlib_resources-1.0.2.dist-info",
       "typing": "__virtualenv__/typing-3.7.4.3-py2-none-any/typing-3.7.4.3.dist-info",
       "pathlib2": "__virtualenv__/pathlib2-2.3.5-py2.py3-none-any/pathlib2-2.3.5.dist-info",
-      "scandir": "__virtualenv__/scandir-1.10.0-cp38-cp38-macosx_10_15_x86_64/scandir-1.10.0.dist-info",
+      "scandir": "__virtualenv__/scandir-1.10.0-cp39-cp39-macosx_10_15_x86_64/scandir-1.10.0.dist-info",
       "contextlib2": "__virtualenv__/contextlib2-0.6.0.post1-py2.py3-none-any/contextlib2-0.6.0.post1.dist-info",
       "configparser": "__virtualenv__/configparser-4.0.2-py2.py3-none-any/configparser-4.0.2.dist-info"
     },

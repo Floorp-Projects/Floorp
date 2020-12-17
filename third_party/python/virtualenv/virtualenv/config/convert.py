@@ -46,15 +46,32 @@ class ListType(TypeData):
         """"""
 
     def convert(self, value, flatten=True):
-        if isinstance(value, (str, bytes)):
-            value = filter(None, [x.strip() for x in value.splitlines()])
-        values = list(value)
+        values = self.split_values(value)
         result = []
         for value in values:
             sub_values = value.split(os.pathsep)
             result.extend(sub_values)
         converted = [self.as_type(i) for i in result]
         return converted
+
+    def split_values(self, value):
+        """Split the provided value into a list.
+
+        First this is done by newlines. If there were no newlines in the text,
+        then we next try to split by comma.
+        """
+        if isinstance(value, (str, bytes)):
+            # Use `splitlines` rather than a custom check for whether there is
+            # more than one line. This ensures that the full `splitlines()`
+            # logic is supported here.
+            values = value.splitlines()
+            if len(values) <= 1:
+                values = value.split(",")
+            values = filter(None, [x.strip() for x in values])
+        else:
+            values = list(value)
+
+        return values
 
 
 def convert(value, as_type, source):

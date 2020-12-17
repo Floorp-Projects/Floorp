@@ -1,7 +1,5 @@
 from __future__ import absolute_import, unicode_literals
 
-from virtualenv.app_data import AppDataDiskFolder, TempAppData
-
 from ..wheels.embed import get_embed_wheel
 from .periodic_update import periodic_update
 from .util import Version, Wheel, discover_wheels
@@ -16,7 +14,7 @@ def from_bundle(distribution, version, for_py_version, search_dirs, app_data, do
 
     if version != Version.embed:
         # 2. check if we have upgraded embed
-        if isinstance(app_data, AppDataDiskFolder) and not isinstance(app_data, TempAppData):
+        if app_data.can_update:
             wheel = periodic_update(distribution, for_py_version, wheel, search_dirs, app_data, do_periodic_update)
 
         # 3. acquire from extra search dir
