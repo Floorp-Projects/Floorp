@@ -360,10 +360,15 @@ function isOtherInstanceRunning(callback) {
     return false;
   }
 
-  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
-    Ci.nsIUpdateSyncManager
-  );
-  return syncManager.isOtherInstanceRunning();
+  try {
+    let syncManager = Cc[
+      "@mozilla.org/updates/update-sync-manager;1"
+    ].getService(Ci.nsIUpdateSyncManager);
+    return syncManager.isOtherInstanceRunning();
+  } catch (ex) {
+    LOG(`isOtherInstanceRunning - sync manager failed with exception: ${ex}`);
+    return false;
+  }
 }
 
 /**
