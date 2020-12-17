@@ -109,6 +109,21 @@ fn build_mAB_matrix(lut: &lutmABType) -> matrix {
     return result;
 }
 //Based on lcms cmsLab2XYZ
+fn f(t: f32) -> f32 {
+    if t <= 24. / 116. * (24. / 116.) * (24. / 116.) {
+        (841. / 108. * t) + 16. / 116.
+    } else {
+        t.powf(1. / 3.)
+    }
+}
+fn f_1(t: f32) -> f32 {
+    if t <= 24.0 / 116.0 {
+        (108.0 / 841.0) * (t - 16.0 / 116.0)
+    } else {
+        t * t * t
+    }
+}
+
 unsafe fn transform_module_LAB_to_XYZ(
     mut transform: *const qcms_modular_transform,
     mut src: *mut f32,
@@ -131,23 +146,11 @@ unsafe fn transform_module_LAB_to_XYZ(
         src = src.offset(1);
         let mut device_b: f32 = *fresh2 * 255.0 - 128.0;
         let mut y: f32 = (device_L + 16.0) / 116.0;
-        let mut X: f32 = if y + 0.002 * device_a <= 24.0 / 116.0 {
-            (108.0f64 / 841.0f64) * ((y + 0.002 * device_a) as f64 - 16.0f64 / 116.0f64)
-        } else {
-            ((y + 0.002 * device_a) * (y + 0.002 * device_a) * (y + 0.002 * device_a) * WhitePointX)
-                as f64
-        } as f32;
-        let mut Y: f32 = if y <= 24.0 / 116.0 {
-            (108.0f64 / 841.0f64) * (y as f64 - 16.0f64 / 116.0f64)
-        } else {
-            (y * y * y * WhitePointY) as f64
-        } as f32;
-        let mut Z: f32 = if y - 0.005 * device_b <= 24.0 / 116.0 {
-            (108.0f64 / 841.0f64) * ((y - 0.005 * device_b) as f64 - 16.0f64 / 116.0f64)
-        } else {
-            ((y - 0.005 * device_b) * (y - 0.005 * device_b) * (y - 0.005 * device_b) * WhitePointZ)
-                as f64
-        } as f32;
+
+        let mut X = f_1(y + 0.002 * device_a) * WhitePointX;
+        let mut Y = f_1(y) * WhitePointY;
+        let mut Z = f_1(y - 0.005 * device_b) * WhitePointZ;
+
         let fresh3 = dest;
         dest = dest.offset(1);
         *fresh3 = (X as f64 / (1.0f64 + 32767.0f64 / 32768.0f64)) as f32;
@@ -185,21 +188,11 @@ unsafe fn transform_module_XYZ_to_LAB(
         src = src.offset(1);
         let mut device_z: f32 =
             (*fresh8 as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointZ as f64) as f32;
-        let mut fx: f32 = if device_x <= 24.0 / 116.0 * (24.0 / 116.0) * (24.0 / 116.0) {
-            (841.0f64 / 108.0f64 * device_x as f64) + 16.0f64 / 116.0f64
-        } else {
-            (device_x as f64).powf(1.0f64 / 3.0f64)
-        } as f32;
-        let mut fy: f32 = if device_y <= 24.0 / 116.0 * (24.0 / 116.0) * (24.0 / 116.0) {
-            (841.0f64 / 108.0f64 * device_y as f64) + 16.0f64 / 116.0f64
-        } else {
-            (device_y as f64).powf(1.0f64 / 3.0f64)
-        } as f32;
-        let mut fz: f32 = if device_z <= 24.0 / 116.0 * (24.0 / 116.0) * (24.0 / 116.0) {
-            (841.0f64 / 108.0f64 * device_z as f64) + 16.0f64 / 116.0f64
-        } else {
-            (device_z as f64).powf(1.0f64 / 3.0f64)
-        } as f32;
+
+        let mut fx = f(device_x);
+        let mut fy = f(device_y);
+        let mut fz = f(device_z);
+
         let mut L: f32 = 116.0 * fy - 16.0;
         let mut a: f32 = 500.0 * (fx - fy);
         let mut b: f32 = 200.0 * (fy - fz);
