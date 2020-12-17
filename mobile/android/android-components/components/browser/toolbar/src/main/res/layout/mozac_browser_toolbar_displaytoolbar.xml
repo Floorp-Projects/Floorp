@@ -85,7 +85,7 @@
 
     <mozilla.components.browser.toolbar.display.PermissionHighlightsIconView
         android:id="@+id/mozac_browser_toolbar_permission_indicator"
-        android:layout_width="40dp"
+        android:layout_width="30dp"
         android:layout_height="40dp"
         android:layout_marginTop="8dp"
         android:importantForAccessibility="no"
@@ -93,6 +93,8 @@
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_security_indicator"
         app:layout_constraintTop_toTopOf="parent"
+        android:paddingStart="0dp"
+        android:paddingEnd="8dp"
         app:layout_goneMarginStart="8dp"
         app:srcCompat="@drawable/mozac_ic_autoplay_blocked" />
 
