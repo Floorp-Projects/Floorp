@@ -17,7 +17,11 @@ class SeederSelector(ComponentBuilder):
             help="seed packages install method",
         )
         self.parser.add_argument(
-            "--no-seed", "--without-pip", help="do not install seed packages", action="store_true", dest="no_seed",
+            "--no-seed",
+            "--without-pip",
+            help="do not install seed packages",
+            action="store_true",
+            dest="no_seed",
         )
 
     @staticmethod

@@ -9,7 +9,7 @@ from textwrap import dedent
 
 from six import add_metaclass
 
-from virtualenv.create.via_global_ref.builtin.ref import ExePathRefToDest, PathRefToDest
+from virtualenv.create.via_global_ref.builtin.ref import ExePathRefToDest, PathRefToDest, RefMust
 from virtualenv.util.path import Path
 from virtualenv.util.six import ensure_text
 
@@ -29,7 +29,8 @@ class CPythonmacOsFramework(CPython):
         for src in super(CPythonmacOsFramework, cls).sources(interpreter):
             yield src
         # add a symlink to the host python image
-        ref = PathRefToDest(cls.image_ref(interpreter), dest=lambda self, _: self.dest / ".Python", must_symlink=True)
+        exe = cls.image_ref(interpreter)
+        ref = PathRefToDest(exe, dest=lambda self, _: self.dest / ".Python", must=RefMust.SYMLINK)
         yield ref
 
     def create(self):
@@ -40,7 +41,7 @@ class CPythonmacOsFramework(CPython):
         current = self.current_mach_o_image_path()
         for src in self._sources:
             if isinstance(src, ExePathRefToDest):
-                if src.must_copy or not self.symlinks:
+                if src.must == RefMust.COPY or not self.symlinks:
                     exes = [self.bin_dir / src.base]
                     if not self.symlinks:
                         exes.extend(self.bin_dir / a for a in src.aliases)
@@ -49,12 +50,12 @@ class CPythonmacOsFramework(CPython):
 
     @classmethod
     def _executables(cls, interpreter):
-        for _, targets in super(CPythonmacOsFramework, cls)._executables(interpreter):
+        for _, targets, must, when in super(CPythonmacOsFramework, cls)._executables(interpreter):
             # Make sure we use the embedded interpreter inside the framework, even if sys.executable points to the
             # stub executable in ${sys.prefix}/bin.
             # See http://groups.google.com/group/python-virtualenv/browse_thread/thread/17cab2f85da75951
             fixed_host_exe = Path(interpreter.prefix) / "Resources" / "Python.app" / "Contents" / "MacOS" / "Python"
-            yield fixed_host_exe, targets
+            yield fixed_host_exe, targets, must, when
 
     @abstractmethod
     def current_mach_o_image_path(self):
@@ -241,7 +242,7 @@ def _builtin_change_mach_o(maxint):
 
     def mach_o_change(at_path, what, value):
         """Replace a given name (what) in any LC_LOAD_DYLIB command found in the given binary with a new name (value),
-         provided it's shorter."""
+        provided it's shorter."""
 
         def do_macho(file, bits, endian):
             # Read Mach-O header (the magic number is assumed read by the caller)

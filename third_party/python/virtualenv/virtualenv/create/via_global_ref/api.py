@@ -8,6 +8,7 @@ from six import add_metaclass
 
 from virtualenv.info import fs_supports_symlink
 from virtualenv.util.path import Path
+from virtualenv.util.six import ensure_text
 
 from ..creator import Creator, CreatorMeta
 
@@ -91,10 +92,10 @@ class ViaGlobalRefApi(Creator):
         text = self.env_patch_text()
         if text:
             pth = self.purelib / "_virtualenv.pth"
-            logging.debug("create virtualenv import hook file %s", pth)
+            logging.debug("create virtualenv import hook file %s", ensure_text(str(pth)))
             pth.write_text("import _virtualenv")
             dest_path = self.purelib / "_virtualenv.py"
-            logging.debug("create %s", dest_path)
+            logging.debug("create %s", ensure_text(str(dest_path)))
             dest_path.write_text(text)
 
     def env_patch_text(self):

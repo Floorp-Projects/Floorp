@@ -56,7 +56,7 @@ def copy(src, dest):
 def copytree(src, dest):
     for root, _, files in os.walk(src):
         dest_dir = os.path.join(dest, os.path.relpath(root, src))
-        if not os.path.exists(dest_dir):
+        if not os.path.isdir(dest_dir):
             os.makedirs(dest_dir)
         for name in files:
             src_f = os.path.join(root, name)
@@ -82,7 +82,9 @@ class _Debug(object):
 
     def __str__(self):
         return "{}{} to {}".format(
-            "directory " if self.src.is_dir() else "", ensure_text(str(self.src)), ensure_text(str(self.dest)),
+            "directory " if self.src.is_dir() else "",
+            ensure_text(str(self.src)),
+            ensure_text(str(self.dest)),
         )
 
 

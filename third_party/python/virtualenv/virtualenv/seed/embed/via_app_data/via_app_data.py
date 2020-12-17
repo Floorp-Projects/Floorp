@@ -8,14 +8,10 @@ from contextlib import contextmanager
 from subprocess import CalledProcessError
 from threading import Lock, Thread
 
-import six
-
 from virtualenv.info import fs_supports_symlink
 from virtualenv.seed.embed.base_embed import BaseEmbed
 from virtualenv.seed.wheels import get_wheel
-from virtualenv.util.lock import _CountedFileLock
 from virtualenv.util.path import Path
-from virtualenv.util.six import ensure_text
 
 from .pip_install.copy import CopyPipInstall
 from .pip_install.symlink import SymlinkPipInstall
@@ -54,7 +50,8 @@ class FromAppData(BaseEmbed):
                     key = Path(installer_class.__name__) / wheel.path.stem
                     wheel_img = self.app_data.wheel_image(creator.interpreter.version_release_str, key)
                     installer = installer_class(wheel.path, creator, wheel_img)
-                    with _CountedFileLock(ensure_text(str(wheel_img.parent / "{}.lock".format(wheel_img.name)))):
+                    parent = self.app_data.lock / wheel_img.parent
+                    with parent.non_reentrant_lock_for_key(wheel_img.name):
                         if not installer.has_image():
                             installer.build_image()
                     installer.install(creator.interpreter.version_info)
@@ -104,7 +101,7 @@ class FromAppData(BaseEmbed):
                     if version is not None:
                         msg += " version {}".format(version)
                     msg += ", pip download exit code {}".format(failure.returncode)
-                    output = failure.output if six.PY2 else (failure.output + failure.stderr)
+                    output = failure.output if sys.version_info < (3, 5) else (failure.output + failure.stderr)
                     if output:
                         msg += "\n"
                         msg += output
