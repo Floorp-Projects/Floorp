@@ -133,8 +133,9 @@
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
-#include "js/Warnings.h"    // JS::SetWarningReporter
-#include "js/WasmModule.h"  // JS::WasmModule
+#include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange
+#include "js/Warnings.h"     // JS::SetWarningReporter
+#include "js/WasmModule.h"   // JS::WasmModule
 #include "js/Wrapper.h"
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"
@@ -495,6 +496,8 @@ struct MOZ_STACK_CLASS EnvironmentPreparer
   void invoke(JS::HandleObject global, Closure& closure) override;
 };
 
+const char* shell::selfHostedXDRPath = nullptr;
+bool shell::encodeSelfHostedCode = false;
 bool shell::enableCodeCoverage = false;
 bool shell::enableDisassemblyDumps = false;
 bool shell::offthreadCompilation = false;
@@ -11215,6 +11218,56 @@ class AutoLibraryLoader {
 };
 #endif
 
+static bool ReadSelfHostedXDRFile(JSContext* cx, FileContents& buf) {
+  FILE* file = fopen(selfHostedXDRPath, "rb");
+  if (!file) {
+    JS_ReportErrorUTF8(cx, "Can't open self-hosted stencil XDR file.");
+    return false;
+  }
+  AutoCloseFile autoClose(file);
+
+  struct stat st;
+  if (fstat(fileno(file), &st) < 0) {
+    JS_ReportErrorASCII(cx, "Unable to stat file");
+    return false;
+  }
+
+  if (st.st_size >= INT32_MAX) {
+    JS_ReportErrorASCII(cx, "Stencil XDR file too large.");
+    return false;
+  }
+  uint32_t filesize = uint32_t(st.st_size);
+
+  if (!buf.growBy(filesize)) {
+    return false;
+  }
+  size_t cc = fread(buf.begin(), 1, filesize, file);
+  if (cc != filesize) {
+    JS_ReportErrorUTF8(cx, "Short read on self-hosted stencil XDR file.");
+    return false;
+  }
+
+  return true;
+}
+
+static bool WriteSelfHostedXDRFile(JSContext* cx,
+                                   const JS::TranscodeBuffer& buffer) {
+  FILE* file = fopen(selfHostedXDRPath, "wb");
+  if (!file) {
+    JS_ReportErrorUTF8(cx, "Can't open self-hosted stencil XDR file.");
+    return false;
+  }
+  AutoCloseFile autoClose(file);
+
+  size_t cc = fwrite(buffer.begin(), 1, buffer.length(), file);
+  if (cc != buffer.length()) {
+    JS_ReportErrorUTF8(cx, "Short write on self-hosted stencil XDR file.");
+    return false;
+  }
+
+  return true;
+}
+
 int main(int argc, char** argv, char** envp) {
   PreInit();
 
@@ -11267,6 +11320,12 @@ int main(int argc, char** argv, char** envp) {
           "then parsing that") ||
       !op.addMultiStringOption('m', "module", "PATH", "Module path to run") ||
       !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run") ||
+      !op.addStringOption('\0', "selfhosted-xdr-path", "[filename]",
+                          "Read/Write selfhosted script data from/to the given "
+                          "XDR file") ||
+      !op.addStringOption('\0', "selfhosted-xdr-mode", "(encode,decode,off)",
+                          "Whether to encode/decode data of the file provided"
+                          "with --selfhosted-xdr-path.") ||
       !op.addBoolOption('i', "shell", "Enter prompt after running code") ||
       !op.addBoolOption('c', "compileonly",
                         "Only compile, don't run (syntax checking mode)") ||
@@ -11749,6 +11808,23 @@ int main(int argc, char** argv, char** envp) {
     js::EnableCodeCoverage();
   }
 
+  if (const char* xdr = op.getStringOption("selfhosted-xdr-path")) {
+    shell::selfHostedXDRPath = xdr;
+  }
+  if (const char* opt = op.getStringOption("selfhosted-xdr-mode")) {
+    if (strcmp(opt, "encode") == 0) {
+      shell::encodeSelfHostedCode = true;
+    } else if (strcmp(opt, "decode") == 0) {
+      shell::encodeSelfHostedCode = false;
+    } else if (strcmp(opt, "off") == 0) {
+      shell::selfHostedXDRPath = nullptr;
+    } else {
+      MOZ_CRASH(
+          "invalid option value for --selfhosted-xdr-mode, must be "
+          "encode/decode");
+    }
+  }
+
 #ifdef JS_WITHOUT_NSPR
   if (!op.getMultiStringOption("dll").empty()) {
     fprintf(stderr, "Error: --dll requires NSPR support!\n");
@@ -11889,6 +11965,22 @@ int main(int argc, char** argv, char** envp) {
     } else {
       MOZ_CRASH("invalid option value for --nursery-bigints, must be on/off");
     }
+  }
+
+  // The file content should stay alive as long as Worker thread can be
+  // initialized.
+  Maybe<FileContents> buffer;
+  if (selfHostedXDRPath && !encodeSelfHostedCode) {
+    buffer.emplace(cx);
+    if (!ReadSelfHostedXDRFile(cx, *buffer)) {
+      MOZ_CRASH("Could not read self-hosted stencil XDR file.");
+    }
+    MOZ_ASSERT(buffer->length() > 0);
+    mozilla::Span<uint8_t> xdrSpan = buffer.ref();
+    cx->runtime()->setSelfHostedXDR(xdrSpan);
+  }
+  if (selfHostedXDRPath && encodeSelfHostedCode) {
+    cx->runtime()->setSelfHostedXDRWriterCallback(&WriteSelfHostedXDRFile);
   }
 
   if (!JS::InitSelfHostedCode(cx)) {

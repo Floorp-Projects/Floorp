@@ -42,7 +42,9 @@
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"
 #include "builtin/WeakMapObject.h"
-#include "frontend/ParserAtom.h"  // js::frontend::ParserAtom
+#include "frontend/BytecodeCompilation.h"  // CompileGlobalScriptToStencil
+#include "frontend/CompilationInfo.h"      // js::frontend::CompilationInfo
+#include "frontend/ParserAtom.h"           // js::frontend::ParserAtom
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
@@ -59,6 +61,7 @@
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/SourceText.h"  // JS::SourceText
 #include "js/StableStringChars.h"
+#include "js/Transcoding.h"
 #include "js/Warnings.h"  // JS::{,Set}WarningReporter
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -2838,6 +2841,37 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   return true;
 }
 
+bool JSRuntime::initSelfHostingFromXDR(JSContext* cx,
+                                       const CompileOptions& options,
+                                       frontend::CompilationInfoVector& ciVec,
+                                       MutableHandle<JSScript*> scriptOut) {
+  MOZ_ASSERT(selfHostingGlobal_);
+  MOZ_ASSERT(selfHostedXDR.length() > 0);
+  scriptOut.set(nullptr);
+
+  // Deserialize the stencil from XDR.
+  JS::TranscodeRange xdrRange(selfHostedXDR);
+  bool decodeOk = false;
+  if (!ciVec.deserializeStencils(cx, xdrRange, &decodeOk)) {
+    return false;
+  }
+  // If XDR decode failed, it's not a propagated error.
+  // Fall back to regular text parse.
+  if (!decodeOk) {
+    return true;
+  }
+
+  // Instantiate the stencil.
+  Rooted<frontend::CompilationGCOutput> output(cx);
+  if (!frontend::CompilationInfo::instantiateStencils(cx, ciVec.initial,
+                                                      output.get())) {
+    return false;
+  }
+
+  scriptOut.set(output.get().script);
+  return true;
+}
+
 bool JSRuntime::initSelfHosting(JSContext* cx) {
   MOZ_ASSERT(!selfHostingGlobal_);
 
@@ -2869,27 +2903,83 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
    */
   AutoSelfHostingErrorReporter errorReporter(cx);
 
-  uint32_t srcLen = GetRawScriptsSize();
-
-  const unsigned char* compressed = compressedSources;
-  uint32_t compressedLen = GetCompressedSize();
-  auto src = cx->make_pod_array<char>(srcLen);
-  if (!src ||
-      !DecompressString(compressed, compressedLen,
-                        reinterpret_cast<unsigned char*>(src.get()), srcLen)) {
-    return false;
-  }
-
+  // Variables used to instantiate scripts.
   CompileOptions options(cx);
   FillSelfHostingCompileOptions(options);
 
-  JS::SourceText<mozilla::Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, std::move(src), srcLen)) {
-    return false;
+  RootedScript script(cx);
+
+  // Try initializing from Stencil XDR.
+  if (selfHostedXDR.length() > 0) {
+    // Initialize the compilation info that houses the stencil.
+    Rooted<frontend::CompilationInfoVector> ciVec(
+        cx, frontend::CompilationInfoVector(cx, options));
+    if (!ciVec.get().initial.input.initForSelfHostingGlobal(cx)) {
+      return false;
+    }
+
+    if (!initSelfHostingFromXDR(cx, options, ciVec.get(), &script)) {
+      return false;
+    }
   }
 
-  RootedValue rv(cx);
-  if (!JS::Evaluate(cx, options, srcBuf, &rv)) {
+  // If script wasn't generated, it means XDR was either not provided or that it
+  // failed the decoding phase. Parse from text as before.
+  if (!script) {
+    Rooted<frontend::CompilationInfo> compilationInfo(
+        cx, frontend::CompilationInfo(cx, options));
+    if (!compilationInfo.get().input.initForSelfHostingGlobal(cx)) {
+      return false;
+    }
+
+    uint32_t srcLen = GetRawScriptsSize();
+    const unsigned char* compressed = compressedSources;
+    uint32_t compressedLen = GetCompressedSize();
+    auto src = cx->make_pod_array<char>(srcLen);
+    if (!src) {
+      return false;
+    }
+    if (!DecompressString(compressed, compressedLen,
+                          reinterpret_cast<unsigned char*>(src.get()),
+                          srcLen)) {
+      return false;
+    }
+
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    if (!srcBuf.init(cx, std::move(src), srcLen)) {
+      return false;
+    }
+
+    if (!frontend::CompileGlobalScriptToStencil(cx, compilationInfo.get(),
+                                                srcBuf, ScopeKind::Global)) {
+      return false;
+    }
+
+    // Serialize the stencil to XDR.
+    if (selfHostedXDRWriter) {
+      JS::TranscodeBuffer xdrBuffer;
+      if (!compilationInfo.get().serializeStencils(cx, xdrBuffer)) {
+        return false;
+      }
+
+      if (!selfHostedXDRWriter(cx, xdrBuffer)) {
+        return false;
+      }
+    }
+
+    // Instantiate the stencil.
+    Rooted<frontend::CompilationGCOutput> output(cx);
+    if (!frontend::CompilationInfo::instantiateStencils(
+            cx, compilationInfo.get(), output.get())) {
+      return false;
+    }
+
+    script.set(output.get().script);
+  }
+
+  MOZ_ASSERT(script);
+  RootedValue rval(cx);
+  if (!JS_ExecuteScript(cx, script, &rval)) {
     return false;
   }
 
