@@ -111,38 +111,38 @@ class GamepadPlatformService final {
   void NewMultiTouchEvent(GamepadHandle aHandle, uint32_t aTouchArrayIndex,
                           const GamepadTouchState& aState);
 
+  // When shutting down the platform communications for gamepad, also reset the
+  // indexes.
+  void ResetGamepadIndexes();
+
   // Add IPDL parent instance
-  static void AddChannelParent(
-      const RefPtr<GamepadEventChannelParent>& aParent);
+  void AddChannelParent(GamepadEventChannelParent* aParent);
 
   // Remove IPDL parent instance
-  static void RemoveChannelParent(GamepadEventChannelParent* aParent);
+  void RemoveChannelParent(GamepadEventChannelParent* aParent);
+
+  void MaybeShutdown();
 
  private:
-  explicit GamepadPlatformService(RefPtr<GamepadEventChannelParent> aParent);
+  GamepadPlatformService();
   ~GamepadPlatformService();
-
-  void AddChannelParentInternal(
-      const RefPtr<GamepadEventChannelParent>& aParent);
-  bool RemoveChannelParentInternal(GamepadEventChannelParent* aParent);
-
   template <class T>
-  void NotifyGamepadChange(GamepadHandle aHandle, const T& aInfo,
-                           const MutexAutoLock& aProofOfLock);
+  void NotifyGamepadChange(GamepadHandle aHandle, const T& aInfo);
+
+  void Cleanup();
 
   // mNextGamepadHandleValue can only be accessed by monitor thread
   uint32_t mNextGamepadHandleValue;
 
-  // This mutex protects mChannelParents and mGamepadAdded from race condition
+  // mChannelParents stores all the GamepadEventChannelParent instances
+  // which may be accessed by both background thread and monitor thread
+  // simultaneously, so we have a mutex to prevent race condition
+  nsTArray<RefPtr<GamepadEventChannelParent>> mChannelParents;
+
+  // This mutex protects mChannelParents from race condition
   // between background and monitor thread
   Mutex mMutex;
 
-  // mChannelParents stores all the
-  // GamepadEventChannelParent instances which may be
-  // accessed by both background thread and monitor
-  // thread simultaneously, so we have a mutex to
-  // prevent race condition
-  nsTArray<RefPtr<GamepadEventChannelParent>> mChannelParents;
   std::map<GamepadHandle, GamepadAdded> mGamepadAdded;
 };
 
