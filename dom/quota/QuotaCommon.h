@@ -16,6 +16,7 @@
 #include "mozIStorageStatement.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
 #include "mozilla/Result.h"
@@ -440,9 +441,11 @@ class NotNull;
   } while (0)
 
 #ifdef DEBUG
-#  define QM_HANDLE_ERROR(expr) HandleError(#  expr, __FILE__, __LINE__)
+#  define QM_HANDLE_ERROR(expr, error) \
+    HandleError(#expr, error, __FILE__, __LINE__)
 #else
-#  define QM_HANDLE_ERROR(expr) HandleError("Unavailable", __FILE__, __LINE__)
+#  define QM_HANDLE_ERROR(expr, error) \
+    HandleError("Unavailable", error, __FILE__, __LINE__)
 #endif
 
 // QM_TRY_PROPAGATE_ERR, QM_TRY_CUSTOM_RET_VAL,
@@ -454,7 +457,7 @@ class NotNull;
   auto tryResult = ::mozilla::ToResult(expr);                            \
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>); \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
-    ns::QM_HANDLE_ERROR(expr);                                           \
+    ns::QM_HANDLE_ERROR(expr, tryResult.inspectErr());                   \
     return tryResult.propagateErr();                                     \
   }
 
@@ -465,7 +468,7 @@ class NotNull;
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>); \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
     auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();          \
-    ns::QM_HANDLE_ERROR(expr);                                           \
+    ns::QM_HANDLE_ERROR(expr, tryTempError);                             \
     return customRetVal;                                                 \
   }
 
@@ -477,7 +480,7 @@ class NotNull;
   static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);      \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                      \
     auto tryTempError = tryResult.unwrapErr();                                \
-    ns::QM_HANDLE_ERROR(expr);                                                \
+    ns::QM_HANDLE_ERROR(expr, tryTempError);                                  \
     cleanup(tryTempError);                                                    \
     return customRetVal;                                                      \
   }
@@ -522,7 +525,7 @@ class NotNull;
                                     expr)                                  \
   auto tryResult = (expr);                                                 \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                   \
-    ns::QM_HANDLE_ERROR(expr);                                             \
+    ns::QM_HANDLE_ERROR(expr, tryResult.inspectErr());                     \
     return tryResult.propagateErr();                                       \
   }                                                                        \
   MOZ_REMOVE_PAREN(target) = tryResult.accessFunction();
@@ -534,7 +537,7 @@ class NotNull;
   auto tryResult = (expr);                                                  \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                    \
     auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();             \
-    ns::QM_HANDLE_ERROR(expr);                                              \
+    ns::QM_HANDLE_ERROR(expr, tryTempError);                                \
     return customRetVal;                                                    \
   }                                                                         \
   MOZ_REMOVE_PAREN(target) = tryResult.accessFunction();
@@ -546,7 +549,7 @@ class NotNull;
   auto tryResult = (expr);                                              \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
     auto tryTempError = tryResult.unwrapErr();                          \
-    ns::QM_HANDLE_ERROR(expr);                                          \
+    ns::QM_HANDLE_ERROR(expr, tryTempError);                            \
     cleanup(tryTempError);                                              \
     return customRetVal;                                                \
   }                                                                     \
@@ -606,7 +609,7 @@ class NotNull;
 #define QM_TRY_RETURN_PROPAGATE_ERR(ns, tryResult, expr) \
   auto tryResult = (expr);                               \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                 \
-    ns::QM_HANDLE_ERROR(expr);                           \
+    ns::QM_HANDLE_ERROR(expr, tryResult.inspectErr());   \
   }                                                      \
   return tryResult;
 
@@ -616,7 +619,7 @@ class NotNull;
   auto tryResult = (expr);                                              \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
     auto tryTempError MOZ_MAYBE_UNUSED = tryResult.unwrapErr();         \
-    ns::QM_HANDLE_ERROR(expr);                                          \
+    ns::QM_HANDLE_ERROR(expr, tryResult.inspectErr());                  \
     return customRetVal;                                                \
   }                                                                     \
   return tryResult.unwrap();
@@ -628,7 +631,7 @@ class NotNull;
   auto tryResult = (expr);                                               \
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
     auto tryTempError = tryResult.unwrapErr();                           \
-    ns::QM_HANDLE_ERROR(expr);                                           \
+    ns::QM_HANDLE_ERROR(expr, tryTempError);                             \
     cleanup(tryTempError);                                               \
     return customRetVal;                                                 \
   }                                                                      \
@@ -667,13 +670,13 @@ class NotNull;
 
 // Handles the two arguments case when just an error is returned
 #define QM_FAIL_RET_VAL(ns, retVal) \
-  ns::QM_HANDLE_ERROR(Failure);     \
+  ns::QM_HANDLE_ERROR(Failure, 0);  \
   return retVal;
 
 // Handles the three arguments case when a cleanup function needs to be called
 // before a return value is returned
 #define QM_FAIL_RET_VAL_WITH_CLEANUP(ns, retVal, cleanup) \
-  ns::QM_HANDLE_ERROR(Failure);                           \
+  ns::QM_HANDLE_ERROR(Failure, 0);                        \
   cleanup();                                              \
   return retVal;
 
@@ -1079,17 +1082,35 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
 };
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-#  define QM_META_HANDLE_ERROR(module)                                     \
-    MOZ_COLD inline void HandleError(                                      \
-        const char* aExpr, const char* aSourceFile, int32_t aSourceLine) { \
-      mozilla::dom::quota::LogError(module, nsDependentCString(aExpr),     \
-                                    nsDependentCString(aSourceFile),       \
-                                    aSourceLine);                          \
+#  define QM_META_HANDLE_ERROR(module)                                   \
+    template <typename T>                                                \
+    MOZ_COLD inline void HandleError(const char* aExpr, const T& aRv,    \
+                                     const char* aSourceFile,            \
+                                     int32_t aSourceLine) {              \
+      if constexpr (std::is_same_v<T, nsresult>) {                       \
+        const char* name = mozilla::GetStaticErrorName(aRv);             \
+        const auto msg = nsPrintfCString{                                \
+            "%s failed with "                                            \
+            "result 0x%" PRIX32 "%s%s%s",                                \
+            aExpr,                                                       \
+            static_cast<uint32_t>(aRv),                                  \
+            name ? " (" : "",                                            \
+            name ? name : "",                                            \
+            name ? ")" : ""};                                            \
+        mozilla::dom::quota::LogError(                                   \
+            module, msg, nsDependentCString(aSourceFile), aSourceLine);  \
+      } else {                                                           \
+        mozilla::dom::quota::LogError(module, nsDependentCString(aExpr), \
+                                      nsDependentCString(aSourceFile),   \
+                                      aSourceLine);                      \
+      }                                                                  \
     }
 #else
-#  define QM_META_HANDLE_ERROR(module)            \
-    MOZ_ALWAYS_INLINE constexpr void HandleError( \
-        const char* aExpr, const char* aSourceFile, int32_t aSourceLine) {}
+#  define QM_META_HANDLE_ERROR(module)                            \
+    template <typename T>                                         \
+    MOZ_ALWAYS_INLINE constexpr void HandleError(                 \
+        const char* aExpr, const T& aRv, const char* aSourceFile, \
+        int32_t aSourceLine) {}
 #endif
 
 // As this is a function that will only be called in error cases, this is marked
