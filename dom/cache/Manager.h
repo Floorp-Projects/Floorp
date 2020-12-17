@@ -177,8 +177,8 @@ class Manager final : public SafeRefCounted<Manager> {
 
   // Methods to allow a StreamList to register themselves with the Manager.
   // StreamList objects must call RemoveStreamList() before they are destroyed.
-  void AddStreamList(StreamList* aStreamList);
-  void RemoveStreamList(StreamList* aStreamList);
+  void AddStreamList(StreamList& aStreamList);
+  void RemoveStreamList(StreamList& aStreamList);
 
   void ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
                       const CacheOpArgs& aOpArgs);
@@ -268,7 +268,7 @@ class Manager final : public SafeRefCounted<Manager> {
   static ListenerId sNextListenerId;
 
   // Weak references cleared by RemoveStreamList() in StreamList destructors.
-  nsTArray<StreamList*> mStreamLists;
+  nsTArray<NotNull<StreamList*>> mStreamLists;
 
   bool mShuttingDown;
   State mState;
