@@ -1109,10 +1109,6 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
     DownloadsPanel.hidePanel();
     this.unblockAndOpenDownload().catch(Cu.reportError);
   }
-  downloadsCmd_unblockAndSave() {
-    DownloadsPanel.hidePanel();
-    this.unblockAndSave();
-  }
 
   downloadsCmd_open(openWhere) {
     super.downloadsCmd_open(openWhere);
@@ -1213,11 +1209,7 @@ var DownloadsViewController = {
     // The currently supported commands depend on whether the blocked subview is
     // showing.  If it is, then take the following path.
     if (DownloadsView.subViewOpen) {
-      let blockedSubviewCmds = [
-        "downloadsCmd_unblockAndOpen",
-        "cmd_delete",
-        "downloadsCmd_unblockAndSave",
-      ];
+      let blockedSubviewCmds = ["downloadsCmd_unblockAndOpen", "cmd_delete"];
       return blockedSubviewCmds.includes(aCommand);
     }
     // If the blocked subview is not showing, then determine if focus is on a
@@ -1543,7 +1535,7 @@ var DownloadsBlockedSubview = {
       "title",
       "details1",
       "details2",
-      "unblockButton",
+      "openButton",
       "deleteButton",
     ];
     let elements = idSuffixes.reduce((memo, s) => {
@@ -1573,22 +1565,13 @@ var DownloadsBlockedSubview = {
   toggle(element, title, details) {
     DownloadsView.subViewOpen = true;
     DownloadsViewController.updateCommands();
-    const { download } = DownloadsView.itemForElement(element);
 
     let e = this.elements;
     let s = DownloadsCommon.strings;
     e.title.textContent = title;
     e.details1.textContent = details[0];
     e.details2.textContent = details[1];
-
-    if (download.launchWhenSucceeded) {
-      e.unblockButton.label = s.unblockButtonOpen;
-      e.unblockButton.command = "downloadsCmd_unblockAndOpen";
-    } else {
-      e.unblockButton.label = s.unblockButtonUnblock;
-      e.unblockButton.command = "downloadsCmd_unblockAndSave";
-    }
-
+    e.openButton.label = s.unblockButtonOpen;
     e.deleteButton.label = s.unblockButtonConfirmBlock;
 
     let verdict = element.getAttribute("verdict");

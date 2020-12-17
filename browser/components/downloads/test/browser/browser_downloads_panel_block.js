@@ -48,7 +48,7 @@ add_task(async function mainTest() {
     let unblockOpenPromise = promiseUnblockAndOpenDownloadCalled(item);
     let hidePromise = promisePanelHidden();
     EventUtils.synthesizeMouse(
-      DownloadsBlockedSubview.elements.unblockButton,
+      DownloadsBlockedSubview.elements.openButton,
       10,
       10,
       {},
