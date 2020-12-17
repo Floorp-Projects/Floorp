@@ -53,20 +53,12 @@ impl Into<RenderTaskAddress> for RenderTaskId {
     }
 }
 
-/// Identifies the output buffer location for a given `RenderTask`.
+/// A render task location that targets a persistent output buffer which
+/// will be retained over multiple frames.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum RenderTaskLocation {
-    /// The `RenderTask` should be drawn to a target provided by the atlas
-    /// allocator. This is the most common case.
-    ///
-    /// The second member specifies the width and height of the task
-    /// output, and the first member is initially left as `None`. During the
-    /// build phase, we invoke `RenderTargetList::alloc()` and store the
-    /// resulting location in the first member. That location identifies the
-    /// render target and the offset of the allocated region within that target.
-    Dynamic(Option<(DeviceIntPoint, CacheTextureId)>, DeviceIntSize),
+pub enum StaticRenderTaskSurface {
     /// The output of the `RenderTask` will be persisted beyond this frame, and
     /// thus should be drawn into the `TextureCache`.
     TextureCache {
@@ -74,17 +66,39 @@ pub enum RenderTaskLocation {
         texture: CacheTextureId,
         /// The target layer in the above texture.
         layer: LayerIndex,
-        /// The target region within the above layer.
-        rect: DeviceIntRect,
-
     },
     /// This render task will be drawn to a picture cache texture that is
     /// persisted between both frames and scenes, if the content remains valid.
     PictureCache {
         /// Describes either a WR texture or a native OS compositor target
         surface: ResolvedSurfaceTexture,
-        /// Size in device pixels of this picture cache tile.
+    },
+}
+
+/// Identifies the output buffer location for a given `RenderTask`.
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum RenderTaskLocation {
+    /// A dynamic task that has not yet been allocated a texture and rect.
+    Unallocated {
+        /// Requested size of this render task
         size: DeviceIntSize,
+    },
+    /// The `RenderTask` should be drawn to a target provided by the atlas
+    /// allocator. This is the most common case.
+    Dynamic {
+        /// Texture that this task was allocated to render on
+        texture_id: CacheTextureId,
+        /// Rectangle in the texture this task occupies
+        rect: DeviceIntRect,
+    },
+    /// A task that is output to a persistent / retained target.
+    Static {
+        /// Target to draw to
+        surface: StaticRenderTaskSurface,
+        /// Rectangle in the texture this task occupies
+        rect: DeviceIntRect,
     },
 }
 
@@ -92,26 +106,28 @@ impl RenderTaskLocation {
     /// Returns true if this is a dynamic location.
     pub fn is_dynamic(&self) -> bool {
         match *self {
-            RenderTaskLocation::Dynamic(..) => true,
+            RenderTaskLocation::Dynamic { .. } => true,
             _ => false,
         }
     }
 
     pub fn size(&self) -> DeviceIntSize {
         match self {
-            RenderTaskLocation::Dynamic(_, size) => *size,
-            RenderTaskLocation::TextureCache { rect, .. } => rect.size,
-            RenderTaskLocation::PictureCache { size, .. } => *size,
+            RenderTaskLocation::Unallocated { size } => *size,
+            RenderTaskLocation::Dynamic { rect, .. } => rect.size,
+            RenderTaskLocation::Static { rect, .. } => rect.size,
         }
     }
 
     pub fn to_source_rect(&self) -> (DeviceIntRect, LayerIndex) {
         match *self {
-            RenderTaskLocation::Dynamic(None, _) => panic!("Expected position to be set for the task!"),
-            RenderTaskLocation::Dynamic(Some((origin, _)), size) => (DeviceIntRect::new(origin, size), 0),
-            RenderTaskLocation::TextureCache { rect, layer, .. } => (rect, layer),
-            RenderTaskLocation::PictureCache { .. } => {
+            RenderTaskLocation::Unallocated { .. } => panic!("Expected position to be set for the task!"),
+            RenderTaskLocation::Dynamic { rect, .. } => (rect, 0),
+            RenderTaskLocation::Static { surface: StaticRenderTaskSurface::PictureCache { .. }, .. } => {
                 panic!("bug: picture cache tasks should never be a source!");
+            }
+            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
+                (rect, layer)
             }
         }
     }
@@ -743,7 +759,7 @@ impl RenderTask {
         kind: RenderTaskKind,
     ) -> Self {
         RenderTask::new(
-            RenderTaskLocation::Dynamic(None, size),
+            RenderTaskLocation::Unallocated { size },
             kind,
         )
     }
@@ -757,7 +773,7 @@ impl RenderTask {
         render_task_sanity_check(&size);
 
         RenderTask {
-            location: RenderTaskLocation::Dynamic(None, size),
+            location: RenderTaskLocation::Unallocated { size },
             children,
             kind,
             save_target: false,
@@ -1342,13 +1358,12 @@ impl RenderTask {
 
     pub fn get_target_texture(&self) -> CacheTextureId {
         match self.location {
-            RenderTaskLocation::Dynamic(Some((_, texture_id)), _) => {
+            RenderTaskLocation::Dynamic { texture_id, .. } => {
                 assert_ne!(texture_id, CacheTextureId::INVALID);
                 texture_id
             }
-            RenderTaskLocation::Dynamic(None, _) |
-            RenderTaskLocation::TextureCache { .. } |
-            RenderTaskLocation::PictureCache { .. } => {
+            RenderTaskLocation::Unallocated { .. } |
+            RenderTaskLocation::Static { .. } => {
                 unreachable!();
             }
         }
@@ -1370,28 +1385,25 @@ impl RenderTask {
             // TODO(gw): Consider some kind of tag or other method
             //           to mark a task as unused explicitly. This
             //           would allow us to restore this debug check.
-            RenderTaskLocation::Dynamic(Some((origin, _)), size) => {
-                (DeviceIntRect::new(origin, size), RenderTargetIndex(0))
+            RenderTaskLocation::Dynamic { rect, .. } => {
+                (rect, RenderTargetIndex(0))
             }
-            RenderTaskLocation::Dynamic(None, _) => {
-                (DeviceIntRect::zero(), RenderTargetIndex(0))
+            RenderTaskLocation::Unallocated { .. } => {
+                panic!("bug: get_target_rect called before allocating");
             }
-            RenderTaskLocation::TextureCache {layer, rect, .. } => {
-                (rect, RenderTargetIndex(layer as usize))
-            }
-            RenderTaskLocation::PictureCache { ref surface, size, .. } => {
+            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::PictureCache { ref surface, .. } } => {
                 let layer = match surface {
                     ResolvedSurfaceTexture::TextureCache { layer, .. } => *layer,
                     ResolvedSurfaceTexture::Native { .. } => 0,
                 };
 
                 (
-                    DeviceIntRect::new(
-                        DeviceIntPoint::zero(),
-                        size,
-                    ),
+                    rect,
                     RenderTargetIndex(layer as usize),
                 )
+            }
+            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
+                (rect, RenderTargetIndex(layer as usize))
             }
         }
     }
@@ -1494,11 +1506,11 @@ impl RenderTask {
     #[inline]
     pub fn mark_for_saving(&mut self) {
         match self.location {
-            RenderTaskLocation::Dynamic(..) => {
+            RenderTaskLocation::Dynamic { .. } |
+            RenderTaskLocation::Unallocated { .. } => {
                 self.save_target = true;
             }
-            RenderTaskLocation::TextureCache { .. } |
-            RenderTaskLocation::PictureCache { .. } => {
+            RenderTaskLocation::Static { .. } => {
                 panic!("Unable to mark a permanently cached task for saving!");
             }
         }
