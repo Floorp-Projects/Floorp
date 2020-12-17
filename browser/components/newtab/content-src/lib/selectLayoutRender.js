@@ -11,9 +11,6 @@ export const selectLayoutRender = ({
   const { layout, feeds, spocs } = state;
   let spocIndexMap = {};
   let bufferRollCache = [];
-  // Records the chosen and unchosen spocs by the probability selection.
-  let chosenSpocs = new Set();
-  let unchosenSpocs = new Set();
 
   function rollForSpocs(data, spocsConfig, spocsData, placementName) {
     if (!spocIndexMap[placementName] && spocIndexMap[placementName] !== 0) {
@@ -40,10 +37,7 @@ export const selectLayoutRender = ({
         spocIndexMap[placementName]++;
         if (!spocs.blocked.includes(spoc.url)) {
           results.splice(position.index, 0, spoc);
-          chosenSpocs.add(spoc);
         }
-      } else {
-        unchosenSpocs.add(spoc);
       }
     }
 
@@ -263,47 +257,5 @@ export const selectLayoutRender = ({
     rollCache.push(...bufferRollCache);
   }
 
-  // Generate the payload for the SPOCS Fill ping. Note that a SPOC could be rejected
-  // by the `probability_selection` first, then gets chosen for the next position. For
-  // all other SPOCS that never went through the probabilistic selection, its reason will
-  // be "out_of_position".
-  let spocsFill = [];
-  if (
-    spocs.loaded &&
-    feeds.loaded &&
-    spocs.data.spocs &&
-    spocs.data.spocs.items
-  ) {
-    const chosenSpocsFill = [...chosenSpocs].map(spoc => ({
-      id: spoc.id,
-      reason: "n/a",
-      displayed: 1,
-      full_recalc: 0,
-    }));
-    const unchosenSpocsFill = [...unchosenSpocs]
-      .filter(spoc => !chosenSpocs.has(spoc))
-      .map(spoc => ({
-        id: spoc.id,
-        reason: "probability_selection",
-        displayed: 0,
-        full_recalc: 0,
-      }));
-    const outOfPositionSpocsFill = spocs.data.spocs.items
-      .slice(spocIndexMap.spocs)
-      .filter(spoc => !unchosenSpocs.has(spoc))
-      .map(spoc => ({
-        id: spoc.id,
-        reason: "out_of_position",
-        displayed: 0,
-        full_recalc: 0,
-      }));
-
-    spocsFill = [
-      ...chosenSpocsFill,
-      ...unchosenSpocsFill,
-      ...outOfPositionSpocsFill,
-    ];
-  }
-
-  return { spocsFill, layoutRender };
+  return { layoutRender };
 };

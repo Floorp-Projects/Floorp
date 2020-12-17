@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { actionCreators as ac } from "common/Actions.jsm";
 import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
 import { CollectionCardGrid } from "content-src/components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid";
 import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
@@ -260,27 +259,13 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
   render() {
     // Select layout render data by adding spocs and position to recommendations
-    const { layoutRender, spocsFill } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: this.props.DiscoveryStream,
       prefs: this.props.Prefs.values,
       rollCache,
       locale: this.props.locale,
     });
-    const { config, spocs, feeds } = this.props.DiscoveryStream;
-
-    // Send SPOCS Fill if any. Note that it should not send it again if the same
-    // page gets re-rendered by state changes.
-    if (
-      spocs.loaded &&
-      feeds.loaded &&
-      spocsFill.length &&
-      !this._spocsFillSent
-    ) {
-      this.props.dispatch(
-        ac.DiscoveryStreamSpocsFill({ spoc_fills: spocsFill })
-      );
-      this._spocsFillSent = true;
-    }
+    const { config } = this.props.DiscoveryStream;
 
     // Allow rendering without extracting special components
     if (!config.collapsible) {
