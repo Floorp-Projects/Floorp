@@ -1408,8 +1408,14 @@ toolbarpaletteitem > toolbaritem {
 }
 
 .printPreviewBrowser {
+  display: none;
   opacity: 1;
   transition: opacity 60ms;
+}
+
+.previewStack[previewtype="primary"] > .printPreviewBrowser[previewtype="primary"],
+.previewStack[previewtype="selection"] > .printPreviewBrowser[previewtype="selection"] {
+  display: block;
 }
 
 .previewStack[rendering=true] > .printPreviewBrowser {
