@@ -63,7 +63,7 @@ impl<K: traits::ExtraKeys> traits::Event for EventMetric<K> {
         &self,
         ping_name: S,
     ) -> Option<Vec<RecordedEvent>> {
-        dispatcher::block_on_queue();
+        crate::block_on_dispatcher();
 
         let queried_ping_name = ping_name
             .into()
@@ -77,7 +77,7 @@ impl<K: traits::ExtraKeys> traits::Event for EventMetric<K> {
         error: ErrorType,
         ping_name: S,
     ) -> i32 {
-        dispatcher::block_on_queue();
+        crate::block_on_dispatcher();
 
         crate::with_glean_mut(|glean| {
             glean_core::test_get_num_recorded_errors(
