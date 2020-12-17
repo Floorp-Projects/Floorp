@@ -594,7 +594,6 @@ class nsWindow final : public nsWindowBase {
   bool mIsTopWidgetWindow;
   bool mInDtor;
   bool mIsVisible;
-  bool mUnicodeWidget;
   bool mPainting;
   bool mTouchWindow;
   bool mDisplayPanFeedback;
