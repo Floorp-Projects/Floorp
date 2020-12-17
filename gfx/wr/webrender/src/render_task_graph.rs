@@ -11,18 +11,127 @@ use crate::render_target::{RenderTargetList, ColorRenderTarget};
 use crate::render_target::{PictureCacheTarget, TextureCacheRenderTarget, AlphaRenderTarget};
 use crate::render_task::{BlitSource, RenderTask, RenderTaskKind, RenderTaskData};
 use crate::util::{VecHelper, Allocation};
-use std::{usize, f32, i32, u32};
+use std::{usize, f32, i32, u32, mem};
+
+/// Interface that allows building a render task graph. This is typically
+/// created once and retained, to avoid extra heap allocations.
+pub struct RenderTaskGraphBuilder {
+    tasks: Vec<RenderTask>,
+    cacheable_render_tasks: Vec<RenderTaskId>,
+    root_render_tasks: Vec<RenderTaskId>,
+    frame_id: FrameId,
+}
+
+impl RenderTaskGraphBuilder {
+    pub fn new() -> Self {
+        RenderTaskGraphBuilder {
+            tasks: Vec::new(),
+            cacheable_render_tasks: Vec::new(),
+            root_render_tasks: Vec::new(),
+            frame_id: FrameId::INVALID,
+        }
+    }
+
+    pub fn begin_frame(
+        &mut self,
+        frame_id: FrameId,
+    ) {
+        assert!(self.tasks.is_empty());
+        assert!(self.cacheable_render_tasks.is_empty());
+        assert!(self.root_render_tasks.is_empty());
+
+        self.frame_id = frame_id;
+    }
+
+    pub fn add(&mut self) -> RenderTaskAllocation {
+        RenderTaskAllocation {
+            alloc: self.tasks.alloc(),
+        }
+    }
+
+    pub fn add_root_render_task(
+        &mut self,
+        task_id: RenderTaskId,
+    ) {
+        self.root_render_tasks.push(task_id);
+    }
+
+    pub fn add_cacheable_render_task(
+        &mut self,
+        task_id: RenderTaskId,
+    ) {
+        self.cacheable_render_tasks.push(task_id);
+    }
+
+    // TODO(gw): There's only a couple of places that existing code needs to access
+    //           a task during the building step. Perhaps we can remove this?
+    pub fn get_task(
+        &self,
+        task_id: RenderTaskId,
+    ) -> &RenderTask {
+        &self.tasks[task_id.index as usize]
+    }
+
+    // TODO(gw): There's only a couple of places that existing code needs to access
+    //           a task during the building step. Perhaps we can remove this?
+    pub fn get_task_mut(
+        &mut self,
+        task_id: RenderTaskId,
+    ) -> &mut RenderTask {
+        &mut self.tasks[task_id.index as usize]
+    }
+
+    /// Express a render task dependency between a parent and child task.
+    /// This is used to assign tasks to render passes.
+    pub fn add_dependency(
+        &mut self,
+        parent_id: RenderTaskId,
+        child_id: RenderTaskId,
+    ) {
+        let parent = &mut self.tasks[parent_id.index as usize];
+        parent.children.push(child_id);
+    }
+
+    #[cfg(debug_assertions)]
+    pub fn frame_id(&self) -> FrameId {
+        self.frame_id
+    }
+
+    pub fn end_frame(
+        &mut self,
+        screen_size: DeviceIntSize,
+        gpu_supports_fast_clears: bool,
+    ) -> (RenderTaskGraph, Vec<RenderPass>) {
+
+        let passes = self.generate_passes(
+            screen_size,
+            gpu_supports_fast_clears,
+        );
+
+        // Try to avoid doing too many heap allocations in the builder
+        // next frame
+        let task_count = self.tasks.len();
+        let tasks = mem::replace(&mut self.tasks, Vec::with_capacity(task_count));
+        let task_data = Vec::with_capacity(task_count);
+
+        let graph = RenderTaskGraph {
+            tasks,
+            task_data,
+            frame_id: self.frame_id,
+        };
+
+        self.cacheable_render_tasks.clear();
+        self.root_render_tasks.clear();
+
+        (graph, passes)
+    }
+}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskGraph {
     pub tasks: Vec<RenderTask>,
     pub task_data: Vec<RenderTaskData>,
-    /// Tasks that don't have dependencies, and that may be shared between
-    /// picture tasks.
-    ///
-    /// We render these unconditionally before-rendering the rest of the tree.
-    pub cacheable_render_tasks: Vec<RenderTaskId>,
     frame_id: FrameId,
 }
 
@@ -44,49 +153,11 @@ impl<'l> RenderTaskAllocation<'l> {
     }
 }
 
-impl RenderTaskGraph {
-    pub fn new(frame_id: FrameId, counters: &RenderTaskGraphCounters) -> Self {
-        // Preallocate a little more than what we needed in the previous frame so that small variations
-        // in the number of items don't cause us to constantly reallocate.
-        let extra_items = 8;
-        RenderTaskGraph {
-            tasks: Vec::with_capacity(counters.tasks_len + extra_items),
-            task_data: Vec::with_capacity(counters.task_data_len + extra_items),
-            cacheable_render_tasks: Vec::with_capacity(counters.cacheable_render_tasks_len + extra_items),
-            frame_id,
-        }
-    }
-
-    pub fn counters(&self) -> RenderTaskGraphCounters {
-        RenderTaskGraphCounters {
-            tasks_len: self.tasks.len(),
-            task_data_len: self.task_data.len(),
-            cacheable_render_tasks_len: self.cacheable_render_tasks.len(),
-        }
-    }
-
-    pub fn add(&mut self) -> RenderTaskAllocation {
-        RenderTaskAllocation {
-            alloc: self.tasks.alloc(),
-        }
-    }
-
-    /// Express a render task dependency between a parent and child task.
-    /// This is used to assign tasks to render passes.
-    pub fn add_dependency(
-        &mut self,
-        parent_id: RenderTaskId,
-        child_id: RenderTaskId,
-    ) {
-        let parent = &mut self[parent_id];
-        parent.children.push(child_id);
-    }
-
+impl RenderTaskGraphBuilder {
     /// Assign this frame's render tasks to render passes ordered so that passes appear
     /// earlier than the ones that depend on them.
-    pub fn generate_passes(
+    fn generate_passes(
         &mut self,
-        render_task_roots: &[RenderTaskId],
         screen_size: DeviceIntSize,
         gpu_supports_fast_clears: bool,
     ) -> Vec<RenderPass> {
@@ -95,7 +166,7 @@ impl RenderTaskGraph {
 
         if !self.cacheable_render_tasks.is_empty() {
             self.generate_passes_impl(
-                &self.cacheable_render_tasks[..],
+                &self.cacheable_render_tasks,
                 screen_size,
                 gpu_supports_fast_clears,
                 &mut passes,
@@ -103,7 +174,7 @@ impl RenderTaskGraph {
         }
 
         self.generate_passes_impl(
-            render_task_roots,
+            &self.root_render_tasks,
             screen_size,
             gpu_supports_fast_clears,
             &mut passes,
@@ -316,7 +387,9 @@ impl RenderTaskGraph {
             }
         }
     }
+}
 
+impl RenderTaskGraph {
     pub fn write_task_data(&mut self) {
         profile_scope!("write_task_data");
         for task in &self.tasks {
@@ -354,23 +427,6 @@ impl std::ops::IndexMut<RenderTaskId> for RenderTaskGraph {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskId {
     pub index: u32,
-}
-
-#[derive(Debug)]
-pub struct RenderTaskGraphCounters {
-    tasks_len: usize,
-    task_data_len: usize,
-    cacheable_render_tasks_len: usize,
-}
-
-impl RenderTaskGraphCounters {
-    pub fn new() -> Self {
-        RenderTaskGraphCounters {
-            tasks_len: 0,
-            task_data_len: 0,
-            cacheable_render_tasks_len: 0,
-        }
-    }
 }
 
 impl RenderTaskId {
@@ -664,25 +720,26 @@ fn diamond_task_graph() {
 
     let color = RenderTargetKind::Color;
 
-    let counters = RenderTaskGraphCounters::new();
-    let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
+    let mut builder = RenderTaskGraphBuilder::new();
+    builder.begin_frame(FrameId::INVALID);
 
-    let a = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let b1 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
-    let b2 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
+    let a = builder.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let b1 = builder.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
+    let b2 = builder.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
 
-    let main_pic = tasks.add().init(RenderTask::new_test(
+    let main_pic = builder.add().init(RenderTask::new_test(
         color,
         pic_cache_location(0, 0, 0),
         smallvec![b1, b2],
     ));
+    builder.add_root_render_task(main_pic);
 
-    let initial_number_of_tasks = tasks.tasks.len();
+    let initial_number_of_tasks = builder.tasks.len();
 
-    let passes = tasks.generate_passes(&[main_pic], size2(3200, 1800), true);
+    let (graph, passes) = builder.end_frame(size2(3200, 1800), true);
 
     // We should not have added any blits.
-    assert_eq!(tasks.tasks.len(), initial_number_of_tasks);
+    assert_eq!(graph.tasks.len(), initial_number_of_tasks);
 
     assert_eq!(passes.len(), 3);
     assert_eq!(passes[0].tasks, vec![a]);
@@ -701,51 +758,52 @@ fn blur_task_graph() {
 
     let color = RenderTargetKind::Color;
 
-    let counters = RenderTaskGraphCounters::new();
-    let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
+    let mut builder = RenderTaskGraphBuilder::new();
+    builder.begin_frame(FrameId::INVALID);
 
-    let pic = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let scale1 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![pic]));
-    let scale2 = tasks.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale1]));
-    let scale3 = tasks.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale2]));
-    let scale4 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale3]));
+    let pic = builder.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let scale1 = builder.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![pic]));
+    let scale2 = builder.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale1]));
+    let scale3 = builder.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale2]));
+    let scale4 = builder.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale3]));
 
-    let vblur1 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
-    let hblur1 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur1]));
+    let vblur1 = builder.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
+    let hblur1 = builder.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur1]));
 
-    let vblur2 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
-    let hblur2 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur2]));
+    let vblur2 = builder.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
+    let hblur2 = builder.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur2]));
 
     // Insert a task that is an even number of passes away from its dependency.
     // This means the source and destination are on the same target and we have to resolve
     // this conflict by automatically inserting a blit task.
-    let vblur3 = tasks.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale3]));
-    let hblur3 = tasks.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![vblur3]));
+    let vblur3 = builder.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale3]));
+    let hblur3 = builder.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![vblur3]));
 
     // Insert a task that is an odd number > 1 of passes away from its dependency.
     // This should force us to mark the dependency "for saving" to keep its content valid
     // until the task can access it.
-    let vblur4 = tasks.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale2]));
-    let hblur4 = tasks.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![vblur4]));
+    let vblur4 = builder.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale2]));
+    let hblur4 = builder.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![vblur4]));
 
-    let main_pic = tasks.add().init(RenderTask::new_test(
+    let main_pic = builder.add().init(RenderTask::new_test(
         color,
         pic_cache_location(0, 0, 0),
         smallvec![hblur1, hblur2, hblur3, hblur4],
     ));
+    builder.add_root_render_task(main_pic);
 
-    let initial_number_of_tasks = tasks.tasks.len();
+    let initial_number_of_tasks = builder.tasks.len();
 
-    let passes = tasks.generate_passes(&[main_pic], size2(3200, 1800), true);
+    let (graph, passes) = builder.end_frame(size2(3200, 1800), true);
 
     // We should have added a single blit task.
-    assert_eq!(tasks.tasks.len(), initial_number_of_tasks + 1);
+    assert_eq!(graph.tasks.len(), initial_number_of_tasks + 1);
 
     // vblur3's dependency to scale3 should be replaced by a blit.
-    let blit = tasks[vblur3].children[0];
+    let blit = graph[vblur3].children[0];
     assert!(blit != scale3);
 
-    match tasks[blit].kind {
+    match graph[blit].kind {
         RenderTaskKind::Blit(..) => {}
         _ => { panic!("This should be a blit task."); }
     }
@@ -776,7 +834,7 @@ fn blur_task_graph() {
     assert_eq!(passes[7].tasks, vec![main_pic]);
 
     // See vblur4's comment above.
-    assert!(tasks[scale2].save_target);
+    assert!(graph[scale2].save_target);
 }
 
 #[test]
@@ -786,28 +844,29 @@ fn culled_tasks() {
 
     let color = RenderTargetKind::Color;
 
-    let counters = RenderTaskGraphCounters::new();
-    let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
+    let mut builder = RenderTaskGraphBuilder::new();
+    builder.begin_frame(FrameId::INVALID);
 
-    let a1 = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let _a2 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a1]));
+    let a1 = builder.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let _a2 = builder.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a1]));
 
-    let b1 = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let b2 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b1]));
-    let _b3 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b2]));
+    let b1 = builder.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let b2 = builder.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b1]));
+    let _b3 = builder.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b2]));
 
-    let main_pic = tasks.add().init(RenderTask::new_test(
+    let main_pic = builder.add().init(RenderTask::new_test(
         color,
         pic_cache_location(0, 0, 0),
         smallvec![b2],
     ));
+    builder.add_root_render_task(main_pic);
 
-    let initial_number_of_tasks = tasks.tasks.len();
+    let initial_number_of_tasks = builder.tasks.len();
 
-    let passes = tasks.generate_passes(&[main_pic], size2(3200, 1800), true);
+    let (graph, passes) = builder.end_frame(size2(3200, 1800), true);
 
     // We should not have added any blits.
-    assert_eq!(tasks.tasks.len(), initial_number_of_tasks);
+    assert_eq!(graph.tasks.len(), initial_number_of_tasks);
 
     assert_eq!(passes.len(), 3);
     assert_eq!(passes[0].tasks, vec![b1]);
