@@ -258,11 +258,10 @@ export class BaseContent extends React.PureComponent {
           </main>
         </div>
         <CSSTransition
-          timeout={250}
+          timeout={0}
           classNames="customize-animate"
           in={showCustomizationMenu}
           appear={true}
-          unmountOnExit={true}
         >
           <CustomizeMenu
             onClose={this.closeCustomizationMenu}
