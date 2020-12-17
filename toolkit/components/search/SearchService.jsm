@@ -1417,7 +1417,7 @@ SearchService.prototype = {
     return this._getSortedEngines(false);
   },
 
-  async getAppProvidedEngines() {
+  async getDefaultEngines() {
     await this.init();
 
     return this._sortEnginesByDefaults(
