@@ -1212,8 +1212,12 @@ impl BatchBuilder {
                     render_tasks,
                 ).unwrap();
 
+                // The run.used_font.clone() is here instead of instead of inline in the `fetch_glyph`
+                // function call to work around a miscompilation.
+                // https://github.com/rust-lang/rust/issues/80111
+                let font = run.used_font.clone();
                 ctx.resource_cache.fetch_glyphs(
-                    run.used_font.clone(),
+                    font,
                     &glyph_keys,
                     &mut self.glyph_fetch_buffer,
                     gpu_cache,
