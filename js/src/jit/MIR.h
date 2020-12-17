@@ -3095,7 +3095,11 @@ class MSameValue : public MBinaryInstruction, public SameValuePolicy::Data {
 
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
-  MBox(TempAllocator& alloc, MDefinition* ins);
+  MBox(TempAllocator& alloc, MDefinition* ins)
+      : MUnaryInstruction(classOpcode, ins) {
+    setResultType(MIRType::Value);
+    setMovable();
+  }
 
  public:
   INSTRUCTION_HEADER(Box)
