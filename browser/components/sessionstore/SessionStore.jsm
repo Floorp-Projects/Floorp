@@ -213,7 +213,6 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   gScreenManager: ["@mozilla.org/gfx/screenmanager;1", "nsIScreenManager"],
-  Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -746,9 +745,9 @@ var SessionStoreInternal = {
     this._initialized = true;
     this._closedTabCache = new WeakMap();
 
-    Telemetry.getHistogramById("FX_SESSION_RESTORE_PRIVACY_LEVEL").add(
-      Services.prefs.getIntPref("browser.sessionstore.privacy_level")
-    );
+    Services.telemetry
+      .getHistogramById("FX_SESSION_RESTORE_PRIVACY_LEVEL")
+      .add(Services.prefs.getIntPref("browser.sessionstore.privacy_level"));
   },
 
   /**
@@ -786,15 +785,24 @@ var SessionStoreInternal = {
           if (remainingState.windows.length) {
             LastSession.setState(remainingState);
           }
+          Services.telemetry.keyedScalarAdd(
+            "browser.engagement.sessionrestore_interstitial",
+            "deferred_restore",
+            1
+          );
         } else {
           // Get the last deferred session in case the user still wants to
           // restore it
           LastSession.setState(state.lastSessionState);
 
-          if (ss.willRestoreAsCrashed()) {
+          let restoreAsCrashed = ss.willRestoreAsCrashed();
+          if (restoreAsCrashed) {
             this._recentCrashes =
               ((state.session && state.session.recentCrashes) || 0) + 1;
 
+            // _needsRestorePage will record sessionrestore_interstitial,
+            // including the specific reason we decided we needed to show
+            // about:sessionrestore, if that's what we do.
             if (this._needsRestorePage(state, this._recentCrashes)) {
               // replace the crashed session with a restore-page-only session
               let url = "about:sessionrestore";
@@ -808,12 +816,28 @@ var SessionStoreInternal = {
             } else if (
               this._hasSingleTabWithURL(state.windows, "about:welcomeback")
             ) {
+              Services.telemetry.keyedScalarAdd(
+                "browser.engagement.sessionrestore_interstitial",
+                "shown_only_about_welcomeback",
+                1
+              );
               // On a single about:welcomeback URL that crashed, replace about:welcomeback
               // with about:sessionrestore, to make clear to the user that we crashed.
               state.windows[0].tabs[0].entries[0].url = "about:sessionrestore";
               state.windows[0].tabs[0].entries[0].triggeringPrincipal_base64 =
                 E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
+            } else {
+              restoreAsCrashed = false;
             }
+          }
+
+          // If we didn't use about:sessionrestore, record that:
+          if (!restoreAsCrashed) {
+            Services.telemetry.keyedScalarAdd(
+              "browser.engagement.sessionrestore_interstitial",
+              "autorestore",
+              1
+            );
           }
 
           // Update the session start time using the restored session state.
@@ -5389,11 +5413,28 @@ var SessionStoreInternal = {
       aState.session.lastUpdate &&
       Date.now() - aState.session.lastUpdate;
 
-    return (
+    let decision =
       max_resumed_crashes != -1 &&
       (aRecentCrashes > max_resumed_crashes ||
-        (sessionAge && sessionAge >= SIX_HOURS_IN_MS))
-    );
+        (sessionAge && sessionAge >= SIX_HOURS_IN_MS));
+    if (decision) {
+      let key;
+      if (aRecentCrashes > max_resumed_crashes) {
+        if (sessionAge && sessionAge >= SIX_HOURS_IN_MS) {
+          key = "shown_many_crashes_old_session";
+        } else {
+          key = "shown_many_crashes";
+        }
+      } else {
+        key = "shown_old_session";
+      }
+      Services.telemetry.keyedScalarAdd(
+        "browser.engagement.sessionrestore_interstitial",
+        key,
+        1
+      );
+    }
+    return decision;
   },
 
   /**

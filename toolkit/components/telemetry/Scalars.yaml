@@ -377,6 +377,30 @@ browser.engagement:
     record_in_processes:
       - 'main'
 
+  sessionrestore_interstitial:
+    bug_numbers:
+      - 1671271
+    description: >
+      Whether we show about:sessionrestore or not. Split by key, which indicates
+      why we showed the item or not. Specifically, 'deferred_restore' means we
+      didn't autorestore and thus didn't show the interstitial; 'autorestore'
+      indicates we autorestored without showing the interstitial.
+      'shown_old_session', 'shown_only_about_welcomeback',
+      'shown_many_crashes', 'shown_many_crashes_old_session' all indicate we did
+      show the interstitial because of a crash, and the text after 'shown'
+      indicates what secondary reason there was to show this page (as we don't
+      show it for 'just' one crash).
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - gijs@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:
   urlbar:
