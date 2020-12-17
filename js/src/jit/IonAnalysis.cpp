@@ -4401,29 +4401,6 @@ bool jit::MakeLoopsContiguous(MIRGraph& graph) {
   return true;
 }
 
-MRootList::MRootList(TempAllocator& alloc) {
-#define INIT_VECTOR(name, _0, _1, _2) roots_[JS::RootKind::name].emplace(alloc);
-  JS_FOR_EACH_TRACEKIND(INIT_VECTOR)
-#undef INIT_VECTOR
-}
-
-template <typename T>
-static void TraceVector(JSTracer* trc, const MRootList::RootVector& vector,
-                        const char* name) {
-  for (auto ptr : vector) {
-    T ptrT = static_cast<T>(ptr);
-    TraceManuallyBarrieredEdge(trc, &ptrT, name);
-    MOZ_ASSERT(ptr == ptrT, "Shouldn't move without updating MIR pointers");
-  }
-}
-
-void MRootList::trace(JSTracer* trc) {
-#define TRACE_ROOTS(name, type, _, _1) \
-  TraceVector<type*>(trc, *roots_[JS::RootKind::name], "mir-root-" #name);
-  JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
-#undef TRACE_ROOTS
-}
-
 #ifdef JS_JITSPEW
 static void DumpDefinition(GenericPrinter& out, MDefinition* def,
                            size_t depth) {
