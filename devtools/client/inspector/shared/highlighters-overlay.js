@@ -7,6 +7,7 @@
 const Services = require("Services");
 const { safeAsyncMethod } = require("devtools/shared/async-utils");
 const EventEmitter = require("devtools/shared/event-emitter");
+const WalkerEventListener = require("devtools/client/inspector/shared/walker-event-listener");
 const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE,
@@ -100,7 +101,6 @@ class HighlightersOverlay {
     this.store = this.inspector.store;
     this.target = this.inspector.currentTarget;
     this.telemetry = this.inspector.telemetry;
-    this.walker = this.inspector.walker;
     this.maxGridHighlighters = Services.prefs.getIntPref(
       "devtools.gridinspector.maxHighlighters"
     );
@@ -200,7 +200,9 @@ class HighlightersOverlay {
     );
 
     this.target.on("will-navigate", this.onWillNavigate);
-    this.walker.on("display-change", this.onDisplayChange);
+    this.walkerEventListener = new WalkerEventListener(this.inspector, {
+      "display-change": this.onDisplayChange,
+    });
 
     EventEmitter.decorate(this);
   }
@@ -883,6 +885,15 @@ class HighlightersOverlay {
     const color = grid ? grid.color : DEFAULT_HIGHLIGHTER_COLOR;
     const zIndex = grid ? grid.zIndex : 0;
     return Object.assign({}, highlighterSettings, { color, zIndex });
+  }
+
+  /**
+   * Return a list of all node fronts that are highlighted with a Grid highlighter.
+   *
+   * @return {Array}
+   */
+  getHighlightedGridNodes() {
+    return [...Array.from(this.gridHighlighters.keys())];
   }
 
   /**
@@ -1648,7 +1659,7 @@ class HighlightersOverlay {
   }
 
   /**
-   * Handler for "display-change" events from the walker. Hides the flexbox or
+   * Handler for "display-change" events from walker fronts. Hides the flexbox or
    * grid highlighter if their respective node is no longer a flex container or
    * grid container.
    *
@@ -1656,11 +1667,12 @@ class HighlightersOverlay {
    *         An array of nodeFronts
    */
   async onDisplayChange(nodes) {
+    const highlightedGridNodes = this.getHighlightedGridNodes();
+
     for (const node of nodes) {
       const display = node.displayType;
 
-      // Hide the flexbox highlighter if the node is no longer a flexbox
-      // container.
+      // Hide the flexbox highlighter if the node is no longer a flexbox container.
       if (
         display !== "flex" &&
         display !== "inline-flex" &&
@@ -1674,15 +1686,9 @@ class HighlightersOverlay {
       if (
         display !== "grid" &&
         display !== "inline-grid" &&
-        (this.gridHighlighters.has(node) ||
-          this.parentGridHighlighters.has(node))
+        display !== "subgrid" &&
+        highlightedGridNodes.includes(node)
       ) {
-        await this.hideGridHighlighter(node);
-        return;
-      }
-
-      // Hide the grid highlighter if the node is no longer a subgrid.
-      if (display !== "subgrid" && this.subgridToParentMap.has(node)) {
         await this.hideGridHighlighter(node);
         return;
       }
@@ -1812,14 +1818,6 @@ class HighlightersOverlay {
    * @return {Promise}
    */
   async _hideOrphanedHighlighters() {
-    for (const node of this.gridHighlighters.keys()) {
-      await this._hideHighlighterIfDeadNode(node, this.hideGridHighlighter);
-    }
-
-    for (const node of this.parentGridHighlighters.keys()) {
-      await this._hideHighlighterIfDeadNode(node, this.hideGridHighlighter);
-    }
-
     await this._hideHighlighterIfDeadNode(
       this.shapesHighlighterShown,
       this.hideShapesHighlighter
@@ -1832,6 +1830,13 @@ class HighlightersOverlay {
         this._hideHighlighterIfDeadNode(data.nodeFront, () => {
           return this.hideHighlighterType(type);
         })
+      );
+    }
+
+    const highlightedGridNodes = this.getHighlightedGridNodes();
+    for (const node of highlightedGridNodes) {
+      promises.push(
+        this._hideHighlighterIfDeadNode(node, this.hideGridHighlighter)
       );
     }
 
@@ -1919,7 +1924,8 @@ class HighlightersOverlay {
     );
 
     this.target.off("will-navigate", this.onWillNavigate);
-    this.walker.off("display-change", this.onDisplayChange);
+    this.walkerEventListener.destroy();
+    this.walkerEventListener = null;
 
     this.destroyEditors();
     this.destroyHighlighters();
@@ -1932,7 +1938,6 @@ class HighlightersOverlay {
     this.store = null;
     this.target = null;
     this.telemetry = null;
-    this.walker = null;
 
     this.geometryEditorHighlighterShown = null;
     this.hoveredHighlighterShown = null;
