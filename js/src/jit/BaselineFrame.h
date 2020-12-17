@@ -299,7 +299,7 @@ class BaselineFrame {
   // argument type check ICs).
   void setInterpreterFieldsForPrologue(JSScript* script);
 
-  ICScript* icScript() const;
+  ICScript* icScript() const { return icScript_; }
   void setICScript(ICScript* icScript) { icScript_ = icScript; }
 
   JSScript* invalidationScript() const;

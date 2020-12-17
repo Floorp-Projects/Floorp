@@ -61,15 +61,9 @@ void IonCompileTask::trace(JSTracer* trc) {
     return;
   }
 
-  if (JitOptions.warpBuilder) {
-    MOZ_ASSERT(snapshot_);
-    MOZ_ASSERT(!rootList_);
-    snapshot_->trace(trc);
-  } else {
-    MOZ_ASSERT(!snapshot_);
-    MOZ_ASSERT(rootList_);
-    rootList_->trace(trc);
-  }
+  MOZ_ASSERT(snapshot_);
+  MOZ_ASSERT(!rootList_);
+  snapshot_->trace(trc);
 }
 
 IonCompileTask::IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,

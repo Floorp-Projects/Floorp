@@ -21,8 +21,6 @@ namespace js {
 namespace jit {
 
 bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
-  MOZ_ASSERT(JitOptions.warpBuilder);
-
   RootedScript script(cx, frame->script());
   ICScript* icScript = frame->icScript();
   bool isRecursive = icScript->depth() > 0;

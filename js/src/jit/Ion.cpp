@@ -1556,9 +1556,7 @@ CodeGenerator* CompileBackEnd(MIRGenerator* mir, WarpSnapshot* snapshot) {
   AutoEnterIonBackend enter;
   AutoSpewEndFunction spewEndFunction(mir);
 
-  MOZ_ASSERT(!!snapshot == JitOptions.warpBuilder);
-
-  if (snapshot) {
+  {
     WarpCompilation comp(mir->alloc());
     WarpBuilder builder(*snapshot, *mir, &comp);
     if (!builder.build()) {
@@ -1720,12 +1718,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
         alloc->new_<IonCompileTask>(*mirGen, scriptHasIonScript, snapshot);
     if (!task) {
       return AbortReason::Alloc;
-    }
-
-    if (!JitOptions.warpBuilder) {
-      if (!CreateMIRRootList(*task)) {
-        return AbortReason::Alloc;
-      }
     }
 
     AutoLockHelperThreadState lock;

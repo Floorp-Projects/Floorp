@@ -2522,7 +2522,6 @@ class WrappedFunction : public TempObject {
   js::FunctionFlags flags_;
 
  public:
-  explicit WrappedFunction(JSFunction* fun);
   WrappedFunction(JSFunction* nativeFun, uint16_t nargs, FunctionFlags flags);
 
   // Note: When adding new accessors be sure to add consistency asserts
@@ -6396,16 +6395,14 @@ class MPhi final : public MDefinition,
 
   // Use only if capacity has been reserved by reserveLength
   void addInput(MDefinition* ins) {
-    MOZ_ASSERT_IF(JitOptions.warpBuilder && type() != MIRType::Value,
-                  ins->type() == type());
+    MOZ_ASSERT_IF(type() != MIRType::Value, ins->type() == type());
     inputs_.infallibleEmplaceBack(ins, this);
   }
 
   // Appends a new input to the input vector. May perform reallocation.
   // Prefer reserveLength() and addInput() instead, where possible.
   MOZ_MUST_USE bool addInputSlow(MDefinition* ins) {
-    MOZ_ASSERT_IF(JitOptions.warpBuilder && type() != MIRType::Value,
-                  ins->type() == type());
+    MOZ_ASSERT_IF(type() != MIRType::Value, ins->type() == type());
     return inputs_.emplaceBack(ins, this);
   }
 
@@ -11528,10 +11525,6 @@ class MIsCallable : public MUnaryInstruction,
                     public BoxExceptPolicy<0, MIRType::Object>::Data {
   explicit MIsCallable(MDefinition* object)
       : MUnaryInstruction(classOpcode, object) {
-    MOZ_ASSERT_IF(
-        !JitOptions.warpBuilder,
-        object->type() == MIRType::Object || object->type() == MIRType::Value);
-
     setResultType(MIRType::Boolean);
     setMovable();
   }

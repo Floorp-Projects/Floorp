@@ -57,7 +57,6 @@ struct DefaultJitOptions {
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;
-  bool warpBuilder;
   bool warpAsync;
   bool warpGenerator;
   bool jitForTrustedPrincipals;

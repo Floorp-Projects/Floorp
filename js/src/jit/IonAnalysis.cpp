@@ -1249,21 +1249,9 @@ bool js::jit::DeadIfUnused(const MDefinition* def) {
     return false;
   }
 
-  // Guard instructions by definition are live if they have no uses, however,
-  // in the OSR block we are able to eliminate these guards, as some are
-  // artificially created and superceeded by failible unboxes. If WarpBuilder
-  // is enabled we never eliminate guard instructions (we don't want to
-  // eliminate MGuardValue).
+  // Never eliminate guard instructions.
   if (def->isGuard()) {
-    if (JitOptions.warpBuilder) {
-      return false;
-    }
-    if (def->isImplicitlyUsed()) {
-      return false;
-    }
-    if (def->block() != def->block()->graph().osrBlock()) {
-      return false;
-    }
+    return false;
   }
 
   // Required to be preserved, as the type guard related to this instruction
@@ -1556,15 +1544,11 @@ class TypeAnalyzer {
 } /* anonymous namespace */
 
 bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
-  // [SMDOC] WarpBuilder OSR Phi Type Specialization
+  // [SMDOC] OSR Phi Type Specialization
   //
-  // IonBuilder does type specialization while building MIR. This includes
-  // adding type guards and unboxing for Values flowing in from the OSR block.
-  //
-  // WarpBuilder doesn't do this. This means that without special handling for
-  // these OSR phis, we end up with unspecialized phis (MIRType::Value) in the
-  // loop (pre)header and other blocks, resulting in unnecessary boxing and
-  // unboxing in the loop body.
+  // Without special handling for OSR phis, we end up with unspecialized phis
+  // (MIRType::Value) in the loop (pre)header and other blocks, resulting in
+  // unnecessary boxing and unboxing in the loop body.
   //
   // To fix this, phi type specialization needs special code to deal with the
   // OSR entry block. Recall that OSR results in the following basic block
@@ -1610,7 +1594,7 @@ bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
   //
   //     * TypeAnalyzer::replaceRedundantPhi: adds a type guard for values that
   //       can't be unboxed (null/undefined/magic Values).
-  return JitOptions.warpBuilder && !mir->outerInfo().hadSpeculativePhiBailout();
+  return !mir->outerInfo().hadSpeculativePhiBailout();
 }
 
 // Try to specialize this phi based on its non-cyclic inputs.
