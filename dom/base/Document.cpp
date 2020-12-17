@@ -6724,6 +6724,22 @@ Document* Document::GetSubDocumentFor(nsIContent* aContent) const {
   return nullptr;
 }
 
+Element* Document::FindContentForSubDocument(Document* aDocument) const {
+  NS_ENSURE_TRUE(aDocument, nullptr);
+
+  if (!mSubDocuments) {
+    return nullptr;
+  }
+
+  for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<SubDocMapEntry*>(iter.Get());
+    if (entry->mSubDocument == aDocument) {
+      return entry->mKey;
+    }
+  }
+  return nullptr;
+}
+
 bool Document::IsNodeOfType(uint32_t aFlags) const { return false; }
 
 Element* Document::GetRootElement() const {
@@ -7508,17 +7524,15 @@ void Document::DispatchContentLoadedEvents() {
   // target_frame is the [i]frame element that will be used as the
   // target for the event. It's the [i]frame whose content is done
   // loading.
-  nsCOMPtr<Element> target_frame;
+  nsCOMPtr<EventTarget> target_frame;
 
-  if (BrowsingContext* bc = GetBrowsingContext()) {
-    if (!bc->IsCached()) {
-      target_frame = bc->GetEmbedderElement();
-    }
+  if (mParentDocument) {
+    target_frame = mParentDocument->FindContentForSubDocument(this);
   }
 
-  if (target_frame && target_frame->IsInComposedDoc()) {
-    nsCOMPtr<Document> parent = target_frame->OwnerDoc();
-    while (parent) {
+  if (target_frame) {
+    nsCOMPtr<Document> parent = mParentDocument;
+    do {
       RefPtr<Event> event;
       if (parent) {
         IgnoredErrorResult ignored;
@@ -7549,7 +7563,7 @@ void Document::DispatchContentLoadedEvents() {
       }
 
       parent = parent->GetInProcessParentDocument();
-    }
+    } while (parent);
   }
 
   // If the document has a manifest attribute, fire a MozApplicationManifest
@@ -14483,10 +14497,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
       break;
     }
     Document* parent = child->GetInProcessParentDocument();
-    BrowsingContext* bc = child->GetBrowsingContext();
-    Element* element =
-        bc && !bc->IsCached() ? bc->GetEmbedderElement() : nullptr;
-
+    Element* element = parent->FindContentForSubDocument(child);
     if (!element) {
       // We've reached the root.No more changes need to be made
       // to the top layer stacks of documents further up the tree.
