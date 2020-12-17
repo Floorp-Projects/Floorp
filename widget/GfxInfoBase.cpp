@@ -618,32 +618,26 @@ static bool BlocklistEntryToDriverInfo(const nsACString& aBlocklistEntry,
   return true;
 }
 
-static void BlocklistEntriesToDriverInfo(
-    const nsTSubstringSplitter<char>& aBlocklistEntries,
-    nsTArray<GfxDriverInfo>& aDriverInfo) {
-  aDriverInfo.Clear();
-  const uint32_t n =
-      std::distance(aBlocklistEntries.begin(), aBlocklistEntries.end());
-  aDriverInfo.SetLength(n);
-
-  for (uint32_t i = 0; i < n; ++i) {
-    const nsDependentCSubstring& blocklistEntry = aBlocklistEntries.Get(i);
-    GfxDriverInfo di;
-    if (BlocklistEntryToDriverInfo(blocklistEntry, di)) {
-      aDriverInfo[i] = di;
-      // Prevent di falling out of scope from destroying the devices.
-      di.mDeleteDevices = false;
-    }
-  }
-}
-
 NS_IMETHODIMP
 GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) {
   if (strcmp(aTopic, "blocklist-data-gfxItems") == 0) {
     nsTArray<GfxDriverInfo> driverInfo;
     NS_ConvertUTF16toUTF8 utf8Data(aData);
-    BlocklistEntriesToDriverInfo(utf8Data.Split('\n'), driverInfo);
+
+    for (const auto& blocklistEntry : utf8Data.Split('\n')) {
+      GfxDriverInfo di;
+      if (BlocklistEntryToDriverInfo(blocklistEntry, di)) {
+        // XXX Changing this to driverInfo.AppendElement(di) causes leaks.
+        // Probably some non-standard semantics of the copy/move operations?
+        *driverInfo.AppendElement() = di;
+        // Prevent di falling out of scope from destroying the devices.
+        di.mDeleteDevices = false;
+      } else {
+        driverInfo.AppendElement();
+      }
+    }
+
     EvaluateDownloadedBlocklist(driverInfo);
   }
 

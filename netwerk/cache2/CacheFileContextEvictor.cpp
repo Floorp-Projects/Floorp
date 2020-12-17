@@ -399,8 +399,10 @@ nsresult CacheFileContextEvictor::LoadEvictInfoFromDisk() {
       auto split = decoded.Split('\t');
       MOZ_ASSERT(decoded.CountChar('\t') == 1);
 
-      origin = split.Get(0);
-      decoded = split.Get(1);
+      auto splitIt = split.begin();
+      origin = *splitIt;
+      ++splitIt;
+      decoded = *splitIt;
     }
 
     nsCOMPtr<nsILoadContextInfo> info;

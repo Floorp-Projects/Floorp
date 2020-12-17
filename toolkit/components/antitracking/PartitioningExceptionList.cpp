@@ -123,15 +123,18 @@ PartitioningExceptionList::OnExceptionListUpdate(const nsACString& aList) {
   nsresult rv;
   for (const nsACString& item : aList.Split(';')) {
     auto origins = item.Split(',');
+    auto originsIt = origins.begin();
 
     nsAutoCString firstPartyOrigin;
-    rv = CreateUnifiedOriginString(origins.Get(0), firstPartyOrigin);
+    rv = CreateUnifiedOriginString(*originsIt, firstPartyOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
+    ++originsIt;
+
     nsAutoCString thirdPartyOrigin;
-    rv = CreateUnifiedOriginString(origins.Get(1), thirdPartyOrigin);
+    rv = CreateUnifiedOriginString(*originsIt, thirdPartyOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
