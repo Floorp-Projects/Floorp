@@ -931,7 +931,7 @@ const CFR_MESSAGES = [
         ],
       },
     },
-    targeting: "pageLoad >= 1",
+    targeting: "pageLoad >= 4",
     frequency: {
       lifetime: 7, // Length of privacy.contentBlocking.cfr-milestone.milestones pref
     },

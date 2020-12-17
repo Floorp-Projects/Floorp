@@ -557,7 +557,7 @@ this.ASRouterTriggerListeners = new Map([
                     pageLoad: this._sessionPageLoad,
                   },
                   param: {
-                    type: aSubject.wrappedJSObject.event,
+                    host: aSubject.wrappedJSObject.event,
                   },
                 }
               );
