@@ -11168,6 +11168,11 @@ edgestack.me
 // Submitted by Peter Palfrader / Debian Sysadmin Team <dsa-publicsuffixlist@debian.org>
 debian.net
 
+// Deno Land Inc : https://deno.com/
+// Submitted by Luca Casonato <hostmaster@deno.com>
+deno.dev
+deno-staging.dev
+
 // deSEC : https://desec.io/
 // Submitted by Peter Thomassen <peter@desec.io>
 dedyn.io
@@ -12014,6 +12019,11 @@ graphox.us
 // Group 53, LLC : https://www.group53.com
 // Submitted by Tyler Todd <noc@nova53.net>
 awsmppl.com
+
+// GünstigBestellen : https://günstigbestellen.de
+// Submitted by Furkan Akkoc <info@hendelzon.de>
+günstigbestellen.de
+günstigliefern.de
 
 // Hakaran group: http://hakaran.cz
 // Submited by Arseniy Sokolov <security@hakaran.cz>
@@ -13409,6 +13419,7 @@ daemon.panel.gg
 
 // WoltLab GmbH : https://www.woltlab.com
 // Submitted by Tim Düsterhus <security@woltlab.cloud>
+woltlab-demo.com
 myforum.community
 community-pro.de
 diskussionsbereich.de
