@@ -49,20 +49,20 @@ GamepadEventChannelParent::GamepadEventChannelParent() {
 
   mBackgroundEventTarget = GetCurrentEventTarget();
 
-  GamepadPlatformService::AddChannelParent(
-      RefPtr<GamepadEventChannelParent>(this));
+  RefPtr<GamepadPlatformService> service =
+      GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  service->AddChannelParent(this);
 }
 
 void GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 
-  // TODO - This is here because I suspect that IPDL is calling ActorDestroy
-  // multiple times. If this fixes the random crashes in Bug 1681750, it might
-  // be worth investigating further.
-  if (!mShutdown) {
-    GamepadPlatformService::RemoveChannelParent(this);
-    mShutdown = true;
-  }
+  RefPtr<GamepadPlatformService> service =
+      GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+  service->RemoveChannelParent(this);
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvVibrateHaptic(
