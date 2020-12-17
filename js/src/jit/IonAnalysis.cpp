@@ -717,19 +717,6 @@ static bool BlockComputesConstant(MBasicBlock* block, MDefinition* value,
   return value->toConstant()->valueToBoolean(constBool);
 }
 
-// Find phis that are redudant:
-//
-// 1) phi(a, a)
-//     can get replaced by a
-static bool IsPhiRedudantFilter(MPhi* phi) {
-  // TODO(no-TI): clean up.
-  if (phi->operandIfRedundant()) {
-    return true;
-  }
-
-  return false;
-}
-
 // Determine whether phiBlock/testBlock simply compute a phi and perform a
 // test on it.
 static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
@@ -774,15 +761,9 @@ static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
 
   for (MPhiIterator iter = phiBlock->phisBegin(); iter != phiBlock->phisEnd();
        ++iter) {
-    if (*iter == phi) {
-      continue;
+    if (*iter != phi) {
+      return false;
     }
-
-    if (IsPhiRedudantFilter(*iter)) {
-      continue;
-    }
-
-    return false;
   }
 
   if (phiBlock != testBlock && !testBlock->phisEmpty()) {
@@ -944,23 +925,6 @@ static bool MaybeFoldConditionBlock(MIRGraph& graph,
       phi->getOperand(phiBlock->indexForPredecessor(falseBranch));
 
   // OK, we found the desired pattern, now transform the graph.
-
-  // Patch up phis that filter their input.
-  for (MPhiIterator iter = phiBlock->phisBegin(); iter != phiBlock->phisEnd();
-       ++iter) {
-    if (*iter == phi) {
-      continue;
-    }
-
-    MOZ_ASSERT(IsPhiRedudantFilter(*iter));
-    MDefinition* redundant = (*iter)->operandIfRedundant();
-
-    if (!redundant) {
-      redundant = (*iter)->getOperand(0);
-    }
-
-    (*iter)->replaceAllUsesWith(redundant);
-  }
 
   // Remove the phi from phiBlock.
   phiBlock->discardPhi(*phiBlock->phisBegin());
