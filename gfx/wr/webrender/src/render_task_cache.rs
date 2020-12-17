@@ -19,7 +19,7 @@ use std::{mem, usize, f32, i32};
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTask, RenderTaskLocation};
-use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
+use crate::render_task_graph::{RenderTaskGraphBuilder, RenderTaskId};
 use euclid::Scale;
 
 const MAX_CACHE_TASK_SIZE: f32 = 4096.0;
@@ -182,13 +182,13 @@ impl RenderTaskCache {
         key: RenderTaskCacheKey,
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskGraph,
+        rg_builder: &mut RenderTaskGraphBuilder,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
         f: F,
     ) -> Result<RenderTaskCacheEntryHandle, ()>
     where
-        F: FnOnce(&mut RenderTaskGraph) -> Result<RenderTaskId, ()>,
+        F: FnOnce(&mut RenderTaskGraphBuilder) -> Result<RenderTaskId, ()>,
     {
         // Get the texture cache handle for this cache key,
         // or create one.
@@ -207,17 +207,22 @@ impl RenderTaskCache {
         if texture_cache.request(&cache_entry.handle, gpu_cache) {
             // Invoke user closure to get render task chain
             // to draw this into the texture cache.
-            let render_task_id = f(render_tasks)?;
-            render_tasks.cacheable_render_tasks.push(render_task_id);
+            let render_task_id = f(rg_builder)?;
 
             cache_entry.user_data = user_data;
             cache_entry.is_opaque = is_opaque;
 
+            let render_task = rg_builder.get_task_mut(render_task_id);
+
             RenderTaskCache::alloc_render_task(
-                &mut render_tasks[render_task_id],
+                render_task,
                 cache_entry,
                 gpu_cache,
                 texture_cache,
+            );
+
+            rg_builder.add_cacheable_render_task(
+                render_task_id,
             );
         }
 
