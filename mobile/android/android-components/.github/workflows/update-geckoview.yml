@@ -26,7 +26,7 @@ on:
 jobs:
   main:
     name: "Update GeckoView"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: "Update GV (On Master)"
         uses: mozilla-mobile/relbot@master
