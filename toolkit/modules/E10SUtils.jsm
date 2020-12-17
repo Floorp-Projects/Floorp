@@ -225,8 +225,9 @@ function validatedWebRemoteType(
     // as it's already isolated.
     if (
       aPreferredRemoteType &&
-      aPreferredRemoteType ==
+      aPreferredRemoteType.startsWith(
         `${WEB_REMOTE_COOP_COEP_TYPE_PREFIX}${targetPrincipal.siteOrigin}`
+      )
     ) {
       return aPreferredRemoteType;
     }
