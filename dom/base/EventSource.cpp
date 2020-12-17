@@ -1796,10 +1796,13 @@ class WorkerRunnableDispatcher final : public WorkerRunnable {
 }  // namespace
 
 bool EventSourceImpl::CreateWorkerRef(WorkerPrivate* aWorkerPrivate) {
-  MOZ_ASSERT(!IsShutDown());
   MOZ_ASSERT(!mWorkerRef);
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (IsShutDown()) {
+    return false;
+  }
 
   RefPtr<EventSourceImpl> self = this;
   RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
@@ -1837,6 +1840,9 @@ EventSourceImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent,
   }
 
   if (IsShutDown()) {
+    // We want to avoid clutter about errors in our shutdown logs,
+    // so just report NS_OK (we have no explicit return value
+    // for shutdown).
     return NS_OK;
   }
 
