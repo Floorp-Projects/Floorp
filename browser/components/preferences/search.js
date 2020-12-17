@@ -643,7 +643,7 @@ function EngineStore() {
   this._defaultEngines = [];
   Promise.all([
     Services.search.getVisibleEngines(),
-    Services.search.getDefaultEngines(),
+    Services.search.getAppProvidedEngines(),
   ]).then(([visibleEngines, defaultEngines]) => {
     for (let engine of visibleEngines) {
       this.addEngine(engine);
