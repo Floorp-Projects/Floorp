@@ -31,6 +31,10 @@ class AppData(object):
     def py_info_clear(self):
         raise NotImplementedError
 
+    @property
+    def can_update(self):
+        raise NotImplementedError
+
     @abstractmethod
     def embed_update_log(self, distribution, for_py_version):
         raise NotImplementedError

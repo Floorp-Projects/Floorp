@@ -1,8 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 import logging
+from functools import partial
 
-from ..app_data import AppDataAction, AppDataDisabled, TempAppData
+from ..app_data import make_app_data
 from ..config.cli.parser import VirtualEnvConfigParser
 from ..report import LEVELS, setup_report
 from ..run.session import Session
@@ -88,32 +89,31 @@ def handle_extra_commands(options):
 
 
 def load_app_data(args, parser, options):
+    parser.add_argument(
+        "--read-only-app-data",
+        action="store_true",
+        help="use app data folder in read-only mode (write operations will fail with error)",
+    )
+    options, _ = parser.parse_known_args(args, namespace=options)
+
     # here we need a write-able application data (e.g. the zipapp might need this for discovery cache)
-    default_app_data = AppDataAction.default()
     parser.add_argument(
         "--app-data",
-        dest="app_data",
-        action=AppDataAction,
-        default="<temp folder>" if isinstance(default_app_data, AppDataDisabled) else default_app_data,
         help="a data folder used as cache by the virtualenv",
+        type=partial(make_app_data, read_only=options.read_only_app_data),
+        default=make_app_data(None, read_only=options.read_only_app_data),
     )
     parser.add_argument(
         "--reset-app-data",
-        dest="reset_app_data",
         action="store_true",
         help="start with empty app data folder",
-        default=False,
     )
     parser.add_argument(
         "--upgrade-embed-wheels",
-        dest="upgrade_embed_wheels",
         action="store_true",
         help="trigger a manual update of the embedded wheels",
-        default=False,
     )
     options, _ = parser.parse_known_args(args, namespace=options)
-    if options.app_data == "<temp folder>":
-        options.app_data = TempAppData()
     if options.reset_app_data:
         options.app_data.reset()
     return options
@@ -134,7 +134,8 @@ def _do_report_setup(parser, args, setup_logging):
     level_map = ", ".join("{}={}".format(logging.getLevelName(l), c) for c, l in sorted(list(LEVELS.items())))
     msg = "verbosity = verbose - quiet, default {}, mapping => {}"
     verbosity_group = parser.add_argument_group(
-        title="verbosity", description=msg.format(logging.getLevelName(LEVELS[3]), level_map),
+        title="verbosity",
+        description=msg.format(logging.getLevelName(LEVELS[3]), level_map),
     )
     verbosity = verbosity_group.add_mutually_exclusive_group()
     verbosity.add_argument("-v", "--verbose", action="count", dest="verbose", help="increase verbosity", default=2)
