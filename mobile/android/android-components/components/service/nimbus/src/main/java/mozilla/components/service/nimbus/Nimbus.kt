@@ -129,6 +129,13 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
     fun optOut(experimentId: String) = Unit
 
     /**
+     *  Reset internal state in response to application-level telemetry reset.
+     *  Consumers should call this method when the user resets the telemetry state of the
+     *  consuming application, such as by opting out of (or in to) submitting telemetry.
+     */
+    fun resetTelemetryIdentifiers() = Unit
+
+    /**
      * Control the opt out for all experiments at once. This is likely a user action.
      */
     var globalUserParticipation: Boolean
@@ -365,6 +372,19 @@ class Nimbus(
     override fun optOut(experimentId: String) {
         dbScope.launch {
             withCatchAll { nimbus.optOut(experimentId) }
+        }
+    }
+
+    override fun resetTelemetryIdentifiers() {
+        // The "dummy" field here is required for obscure reasons when generating code on desktop,
+        // so we just automatically set it to a dummy value.
+        val aru = AvailableRandomizationUnits(clientId = null, dummy = 0)
+        dbScope.launch {
+            withCatchAll {
+                nimbus.resetTelemetryIdentifiers(aru).also { enrollmentChangeEvents ->
+                    recordExperimentTelemetryEvents(enrollmentChangeEvents)
+                }
+            }
         }
     }
 
