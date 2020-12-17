@@ -7369,7 +7369,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     MOZ_ASSERT(hasUsage);
 
     // XXX Change type of mUsage to UsageInfo or DatabaseUsageType.
-    mUsage = usageInfo.DatabaseUsage().value();
+    mUsage = usageInfo.DatabaseUsage().valueOr(0);
   } else {
     // The database doesn't exist.
     MOZ_ASSERT(!hasUsage);
