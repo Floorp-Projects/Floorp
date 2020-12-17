@@ -22,6 +22,7 @@
 
   const UNRECOGNIZED_PATH = /Could not initialize path: NS_ERROR_FILE_UNRECOGNIZED_PATH/;
   const EMPTY_PATH = /PathUtils does not support empty paths/;
+  const JOIN = /Could not append to path/;
 
   add_task(function test_filename() {
     Assert.throws(
@@ -195,6 +196,34 @@
         PathUtils.join("/", "home", "example"),
         "/home/example",
         "PathUtils.join() with a root path and two additional components"
+      );
+    }
+  });
+
+  add_task(function test_join_relative() {
+    if (Services.appinfo.OS === "WINNT") {
+      is(
+        PathUtils.joinRelative("C:", ""),
+        "C:",
+        "PathUtils.joinRelative() with an empty relative path"
+      );
+
+      is(
+        PathUtils.joinRelative("C:", "foo\\bar\\baz"),
+        "C:\\foo\\bar\\baz",
+        "PathUtils.joinRelative() with a relative path containing path separators"
+      );
+    } else {
+      is(
+        PathUtils.joinRelative("/", ""),
+        "/",
+        "PathUtils.joinRelative() with an empty relative path"
+      );
+
+      is(
+        PathUtils.joinRelative("/", "foo/bar/baz"),
+        "/foo/bar/baz",
+        "PathUtils.joinRelative() with a relative path containing path separators"
       );
     }
   });
