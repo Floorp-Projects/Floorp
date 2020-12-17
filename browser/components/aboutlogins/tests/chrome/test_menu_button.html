@@ -215,6 +215,21 @@ add_task(async function test_menu_keyboard_cycling() {
     sendKey("DOWN");
   }
 
+
+  await waitForElementFocus("." + allItems[0]);
+  ok(
+    getFocusedMenuItem().classList.contains(allItems[0]),
+    "Focused item should not change if left arrow is pressed"
+  )
+  sendKey("LEFT");
+
+  await waitForElementFocus("." + allItems[0]);
+  ok(
+    getFocusedMenuItem().classList.contains(allItems[0]),
+    "Focused item should not change if right arrow is pressed"
+  )
+  sendKey("RIGHT");
+
   await waitForElementFocus("." + allItems[0]);
   ok(
     getFocusedMenuItem().classList.contains(allItems[0]),
