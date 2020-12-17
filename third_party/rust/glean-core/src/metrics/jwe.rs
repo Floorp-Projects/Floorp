@@ -294,6 +294,7 @@ impl JweMetric {
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
+            self.meta.lifetime,
         ) {
             Some(Metric::Jwe(b)) => Some(b),
             _ => None,

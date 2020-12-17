@@ -61,6 +61,7 @@ impl BooleanMetric {
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
+            self.meta.lifetime,
         ) {
             Some(Metric::Boolean(b)) => Some(b),
             _ => None,

@@ -162,6 +162,7 @@ impl CustomDistributionMetric {
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
+            self.meta.lifetime,
         ) {
             // Boxing the value, in order to return either of the possible buckets
             Some(Metric::CustomDistributionExponential(hist)) => Some(snapshot(&hist)),

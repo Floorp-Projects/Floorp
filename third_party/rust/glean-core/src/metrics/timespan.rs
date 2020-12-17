@@ -108,7 +108,7 @@ impl TimespanMetric {
             }
         };
         let duration = Duration::from_nanos(duration);
-        self.set_raw(glean, duration, false);
+        self.set_raw(glean, duration);
     }
 
     /// Aborts a previous [`set_start`](TimespanMetric::set_start) call. No
@@ -132,8 +132,7 @@ impl TimespanMetric {
     /// # Arguments
     ///
     /// * `elapsed` - The elapsed time to record.
-    /// * `overwrite` - Whether or not to overwrite existing data.
-    pub fn set_raw(&self, glean: &Glean, elapsed: Duration, overwrite: bool) {
+    pub fn set_raw(&self, glean: &Glean, elapsed: Duration) {
         if !self.should_record(glean) {
             return;
         }
@@ -151,19 +150,15 @@ impl TimespanMetric {
 
         let mut report_value_exists: bool = false;
         glean.storage().record_with(glean, &self.meta, |old_value| {
-            if overwrite {
-                Metric::Timespan(elapsed, self.time_unit)
-            } else {
-                match old_value {
-                    Some(old @ Metric::Timespan(..)) => {
-                        // If some value already exists, report an error.
-                        // We do this out of the storage since recording an
-                        // error accesses the storage as well.
-                        report_value_exists = true;
-                        old
-                    }
-                    _ => Metric::Timespan(elapsed, self.time_unit),
+            match old_value {
+                Some(old @ Metric::Timespan(..)) => {
+                    // If some value already exists, report an error.
+                    // We do this out of the storage since recording an
+                    // error accesses the storage as well.
+                    report_value_exists = true;
+                    old
                 }
+                _ => Metric::Timespan(elapsed, self.time_unit),
             }
         });
 
@@ -188,6 +183,7 @@ impl TimespanMetric {
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
+            self.meta.lifetime,
         ) {
             Some(Metric::Timespan(time, time_unit)) => Some(time_unit.duration_convert(time)),
             _ => None,

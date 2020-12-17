@@ -42,25 +42,6 @@ impl PingType {
 
 #[inherent(pub)]
 impl glean_core::traits::Ping for PingType {
-    /// Collect and submit the ping for eventual upload.
-    ///
-    /// This will collect all stored data to be included in the ping.
-    /// Data with lifetime `ping` will then be reset.
-    ///
-    /// If the ping is configured with `send_if_empty = false`
-    /// and the ping currently contains no content,
-    /// it will not be queued for upload.
-    /// If the ping is configured with `send_if_empty = true`
-    /// it will be queued for upload even if otherwise empty.
-    ///
-    /// Pings always contain the `ping_info` and `client_info` sections.
-    /// See [ping sections](https://mozilla.github.io/glean/book/user/pings/index.html#ping-sections)
-    /// for details.
-    ///
-    /// # Arguments
-    ///
-    /// * `reason` - The reason the ping is being submitted.
-    ///              Must be one of the configured `reason_codes`.
     fn submit(&self, reason: Option<&str>) {
         crate::submit_ping(self, reason)
     }

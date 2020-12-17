@@ -52,7 +52,6 @@ pub(crate) fn new_glean(
         },
     };
 
-    crate::shutdown();
     crate::test_reset_glean(cfg, ClientInfoMetrics::unknown(), clear_stores);
     dir
 }
