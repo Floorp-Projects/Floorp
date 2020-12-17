@@ -483,9 +483,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   _canShowOverlay() {
-    // Accept only browsing context target, which expose a `window` attribute,
-    // but ignore privileged document (top level window, special about:* pages, …)
-    return this._parent.window && !this._parent.window.isChromeWindow;
+    // The CanvasFrameAnonymousContentHelper class we're using to create the paused overlay
+    // need to have access to a documentElement.
+    // Accept only browsing context target which exposes such element, but ignore
+    // privileged document (top level window, special about:* pages, …).
+    return (
+      // We might have access to a non-chrome window getter that is a Sandox (e.g. in the
+      // case of ContentProcessTargetActor).
+      this._parent.window?.document?.documentElement &&
+      !this._parent.window.isChromeWindow
+    );
   },
 
   async showOverlay() {
