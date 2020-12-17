@@ -18,7 +18,6 @@
 #include "jit/CompileInfo.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
-#include "jit/MIRBuilderShared.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/WarpBuilder.h"
