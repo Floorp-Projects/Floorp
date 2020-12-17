@@ -25,6 +25,7 @@ ALL_HARNESSES = [
     "updater-dep",
     "jsreftest",
     "perftests",
+    "fuzztest",
 ]
 
 PACKAGE_SPECIFIED_HARNESSES = [
@@ -41,6 +42,7 @@ PACKAGE_SPECIFIED_HARNESSES = [
     "jittest",
     "jsreftest",
     "perftests",
+    "fuzztest",
 ]
 
 # These packages are not present for every build configuration.

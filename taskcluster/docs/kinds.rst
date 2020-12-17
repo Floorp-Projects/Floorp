@@ -716,3 +716,8 @@ Push tasks to try to test new scriptworker deployments.
 updatebot
 ------------------
 Check for updates to (supported) third party libraries, and manage their lifecycle.
+
+fuzzing
+-------
+
+Performs fuzzing smoke tests
