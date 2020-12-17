@@ -26,9 +26,6 @@ StaticRefPtr<CacheObserver> CacheObserver::sSelf;
 static float const kDefaultHalfLifeHours = 24.0F;  // 24 hours
 float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
-// Cache of the calculated memory capacity based on the system memory size in KB
-int32_t CacheObserver::sAutoMemoryCacheCapacity = -1;
-
 // The default value will be overwritten as soon as the correct smart size is
 // calculated by CacheFileIOManager::UpdateSmartCacheSize(). It's limited to 1GB
 // just for case the size is never calculated which might in theory happen if
@@ -95,32 +92,40 @@ uint32_t CacheObserver::MemoryCacheCapacity() {
     return StaticPrefs::browser_cache_memory_capacity();
   }
 
-  if (sAutoMemoryCacheCapacity != -1) return sAutoMemoryCacheCapacity;
+  // Cache of the calculated memory capacity based on the system memory size in
+  // KB (C++11 guarantees local statics will be initialized once and in a
+  // thread-safe way.)
+  static int32_t sAutoMemoryCacheCapacity = ([] {
+    uint64_t bytes = PR_GetPhysicalMemorySize();
+    // If getting the physical memory failed, arbitrarily assume
+    // 32 MB of RAM. We use a low default to have a reasonable
+    // size on all the devices we support.
+    if (bytes == 0) {
+      bytes = 32 * 1024 * 1024;
+    }
+    // Conversion from unsigned int64_t to double doesn't work on all platforms.
+    // We need to truncate the value at INT64_MAX to make sure we don't
+    // overflow.
+    if (bytes > INT64_MAX) {
+      bytes = INT64_MAX;
+    }
+    uint64_t kbytes = bytes >> 10;
+    double kBytesD = double(kbytes);
+    double x = log(kBytesD) / log(2.0) - 14;
 
-  static uint64_t bytes = PR_GetPhysicalMemorySize();
-  // If getting the physical memory failed, arbitrarily assume
-  // 32 MB of RAM. We use a low default to have a reasonable
-  // size on all the devices we support.
-  if (bytes == 0) bytes = 32 * 1024 * 1024;
+    int32_t capacity = 0;
+    if (x > 0) {
+      // 0.1 is added here for rounding
+      capacity = (int32_t)(x * x / 3.0 + x + 2.0 / 3 + 0.1);
+      if (capacity > 32) {
+        capacity = 32;
+      }
+      capacity <<= 10;
+    }
+    return capacity;
+  })();
 
-  // Conversion from unsigned int64_t to double doesn't work on all platforms.
-  // We need to truncate the value at INT64_MAX to make sure we don't
-  // overflow.
-  if (bytes > INT64_MAX) bytes = INT64_MAX;
-
-  uint64_t kbytes = bytes >> 10;
-  double kBytesD = double(kbytes);
-  double x = log(kBytesD) / log(2.0) - 14;
-
-  int32_t capacity = 0;
-  if (x > 0) {
-    capacity = (int32_t)(x * x / 3.0 + x + 2.0 / 3 + 0.1);  // 0.1 for rounding
-    if (capacity > 32) capacity = 32;
-    capacity <<= 10;
-  }
-
-  // Result is in kilobytes.
-  return sAutoMemoryCacheCapacity = capacity;
+  return sAutoMemoryCacheCapacity;
 }
 
 // static
