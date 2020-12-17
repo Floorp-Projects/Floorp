@@ -35,6 +35,14 @@ class CustomHighlighterFront extends FrontClassWithSpec(customHighlighterSpec) {
   isShown() {
     return this._isShown;
   }
+
+  destroy() {
+    if (this.isDestroyed()) {
+      return;
+    }
+    super.finalize(); // oneway call, doesn't expect a response.
+    super.destroy();
+  }
 }
 
 exports.CustomHighlighterFront = CustomHighlighterFront;
