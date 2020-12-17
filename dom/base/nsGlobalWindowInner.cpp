@@ -116,7 +116,6 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Gamepad.h"
-#include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/HashChangeEventBinding.h"
@@ -341,7 +340,6 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
-using mozilla::dom::GamepadHandle;
 using mozilla::dom::cache::CacheStorage;
 
 #define FORWARD_TO_OUTER(method, args, err_rval)                     \
@@ -6565,7 +6563,7 @@ void nsGlobalWindowInner::AddSizeOfIncludingThis(
   }
 }
 
-void nsGlobalWindowInner::AddGamepad(GamepadHandle aHandle, Gamepad* aGamepad) {
+void nsGlobalWindowInner::AddGamepad(uint32_t aIndex, Gamepad* aGamepad) {
   // Create the index we will present to content based on which indices are
   // already taken, as required by the spec.
   // https://w3c.github.io/gamepad/gamepad.html#widl-Gamepad-index
@@ -6575,17 +6573,17 @@ void nsGlobalWindowInner::AddGamepad(GamepadHandle aHandle, Gamepad* aGamepad) {
   }
   mGamepadIndexSet.Put(index);
   aGamepad->SetIndex(index);
-  mGamepads.Put(aHandle, RefPtr{aGamepad});
+  mGamepads.Put(aIndex, RefPtr{aGamepad});
 }
 
-void nsGlobalWindowInner::RemoveGamepad(GamepadHandle aHandle) {
+void nsGlobalWindowInner::RemoveGamepad(uint32_t aIndex) {
   RefPtr<Gamepad> gamepad;
-  if (!mGamepads.Get(aHandle, getter_AddRefs(gamepad))) {
+  if (!mGamepads.Get(aIndex, getter_AddRefs(gamepad))) {
     return;
   }
   // Free up the index we were using so it can be reused
   mGamepadIndexSet.Remove(gamepad->Index());
-  mGamepads.Remove(aHandle);
+  mGamepads.Remove(aIndex);
 }
 
 void nsGlobalWindowInner::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads) {
@@ -6606,11 +6604,10 @@ void nsGlobalWindowInner::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads) {
   }
 }
 
-already_AddRefed<Gamepad> nsGlobalWindowInner::GetGamepad(
-    GamepadHandle aHandle) {
+already_AddRefed<Gamepad> nsGlobalWindowInner::GetGamepad(uint32_t aIndex) {
   RefPtr<Gamepad> gamepad;
 
-  if (mGamepads.Get(aHandle, getter_AddRefs(gamepad))) {
+  if (mGamepads.Get(aIndex, getter_AddRefs(gamepad))) {
     return gamepad.forget();
   }
 

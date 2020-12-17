@@ -53,8 +53,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 
-using mozilla::dom::GamepadHandle;
-
 namespace mozilla::gfx {
 
 /**
@@ -866,9 +864,8 @@ void VRManager::StopAllHaptics() {
   PushState();
 }
 
-void VRManager::VibrateHaptic(GamepadHandle aGamepadHandle,
-                              uint32_t aHapticIndex, double aIntensity,
-                              double aDuration,
+void VRManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                              double aIntensity, double aDuration,
                               const VRManagerPromise& aPromise)
 
 {
@@ -880,7 +877,7 @@ void VRManager::VibrateHaptic(GamepadHandle aGamepadHandle,
   // understood by VRDisplayExternal.
   uint32_t controllerBaseIndex =
       kVRControllerMaxCount * mDisplayInfo.mDisplayID;
-  uint32_t controllerIndex = aGamepadHandle.GetValue() - controllerBaseIndex;
+  uint32_t controllerIndex = aControllerIdx - controllerBaseIndex;
 
   TimeStamp now = TimeStamp::Now();
   size_t bestSlotIndex = 0;
@@ -937,7 +934,7 @@ void VRManager::VibrateHaptic(GamepadHandle aGamepadHandle,
   PushState();
 }
 
-void VRManager::StopVibrateHaptic(GamepadHandle aGamepadHandle) {
+void VRManager::StopVibrateHaptic(uint32_t aControllerIdx) {
   if (mState != VRManagerState::Active) {
     return;
   }
@@ -946,7 +943,7 @@ void VRManager::StopVibrateHaptic(GamepadHandle aGamepadHandle) {
   // understood by VRDisplayExternal.
   uint32_t controllerBaseIndex =
       kVRControllerMaxCount * mDisplayInfo.mDisplayID;
-  uint32_t controllerIndex = aGamepadHandle.GetValue() - controllerBaseIndex;
+  uint32_t controllerIndex = aControllerIdx - controllerBaseIndex;
 
   for (size_t i = 0; i < mozilla::ArrayLength(mBrowserState.hapticState); i++) {
     VRHapticState& state = mBrowserState.hapticState[i];

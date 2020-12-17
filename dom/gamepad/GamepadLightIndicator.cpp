@@ -22,11 +22,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GamepadLightIndicator, mParent)
 
 GamepadLightIndicator::GamepadLightIndicator(nsISupports* aParent,
-                                             GamepadHandle aGamepadHandle,
+                                             uint32_t aGamepadId,
                                              uint32_t aIndex)
     : mParent(aParent),
       mType(DefaultType()),
-      mGamepadHandle(aGamepadHandle),
+      mGamepadId(aGamepadId),
       mIndex(aIndex) {}
 
 GamepadLightIndicator::~GamepadLightIndicator() {
@@ -49,8 +49,7 @@ already_AddRefed<Promise> GamepadLightIndicator::SetColor(
   MOZ_ASSERT(gamepadManager);
 
   RefPtr<Promise> promise = gamepadManager->SetLightIndicatorColor(
-      mGamepadHandle, mIndex, color.mRed, color.mGreen, color.mBlue, global,
-      aRv);
+      mGamepadId, mIndex, color.mRed, color.mGreen, color.mBlue, global, aRv);
   if (!promise) {
     return nullptr;
   }
@@ -61,7 +60,7 @@ GamepadLightIndicatorType GamepadLightIndicator::Type() const { return mType; }
 
 void GamepadLightIndicator::Set(const GamepadLightIndicator* aOther) {
   MOZ_ASSERT(aOther);
-  mGamepadHandle = aOther->mGamepadHandle;
+  mGamepadId = aOther->mGamepadId;
   mType = aOther->mType;
   mIndex = aOther->mIndex;
 }
