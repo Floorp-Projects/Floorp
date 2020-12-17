@@ -471,6 +471,24 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
     panel.api.on(EVENTS.RECEIVED_EVENT_TIMINGS, onEventTimings);
   });
 }
+/**
+ * Waits for the avalibilty of network resources on the frontend
+ * @param {object} toolbox
+ * @param {number} noOfExpectedResources
+ * @return {object} Promise
+ */
+async function waitForNetworkResource(toolbox, noOfExpectedResources = 1) {
+  let countOfAvailableResources = 0;
+  return waitForNextResource(
+    toolbox.resourceWatcher,
+    toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate: resource =>
+        ++countOfAvailableResources >= noOfExpectedResources,
+    }
+  );
+}
 
 function verifyRequestItemTarget(
   document,
