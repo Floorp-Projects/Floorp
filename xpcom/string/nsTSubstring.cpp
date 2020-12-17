@@ -1422,50 +1422,11 @@ size_t nsTSubstring<T>::SizeOfIncludingThisEvenIfShared(
 }
 
 template <typename T>
-inline nsTSubstringSplitter<T>::nsTSubstringSplitter(
-    const nsTSubstring<T>* aStr, char_type aDelim)
-    : mStr(aStr), mArray(nullptr), mDelim(aDelim) {
-  if (mStr->IsEmpty()) {
-    mArraySize = 0;
-    return;
-  }
-
-  size_type delimCount = mStr->CountChar(aDelim);
-  mArraySize = delimCount + 1;
-  mArray.reset(new nsTDependentSubstring<T>[mArraySize]);
-
-  size_t seenParts = 0;
-  size_type start = 0;
-  do {
-    MOZ_ASSERT(seenParts < mArraySize);
-    int32_t offset = mStr->FindChar(aDelim, start);
-    if (offset != -1) {
-      size_type length = static_cast<size_type>(offset) - start;
-      mArray[seenParts++].Rebind(mStr->Data() + start, length);
-      start = static_cast<size_type>(offset) + 1;
-    } else {
-      // Get the remainder
-      mArray[seenParts++].Rebind(mStr->Data() + start, mStr->Length() - start);
-      break;
-    }
-  } while (start < mStr->Length());
-}
-
-template <typename T>
 nsTSubstringSplitter<T> nsTSubstring<T>::Split(const char_type aChar) const {
-  return nsTSubstringSplitter<T>(this, aChar);
-}
-
-template <typename T>
-const nsTDependentSubstring<T>&
-nsTSubstringSplitter<T>::nsTSubstringSplit_Iter::operator*() const {
-  return mObj->Get(mPos);
-}
-
-template <typename T>
-const nsTDependentSubstring<T>*
-nsTSubstringSplitter<T>::nsTSubstringSplit_Iter::operator->() const {
-  return &mObj->Get(mPos);
+  return nsTSubstringSplitter<T>(
+      nsTCharSeparatedTokenizerTemplate<
+          NS_TokenizerIgnoreNothing, T,
+          nsTokenizerFlags::IncludeEmptyTokenAtEnd>(*this, aChar));
 }
 
 // Common logic for nsTSubstring<T>::ToInteger and nsTSubstring<T>::ToInteger64.
