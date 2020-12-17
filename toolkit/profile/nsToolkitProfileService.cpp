@@ -949,6 +949,10 @@ nsresult nsToolkitProfileService::Init() {
 NS_IMETHODIMP
 nsToolkitProfileService::SetStartWithLastProfile(bool aValue) {
   if (mStartWithLast != aValue) {
+    // Note: the skeleton ui (see PreXULSkeletonUI.cpp) depends on this
+    // having this name and being under General. If that ever changes,
+    // the skeleton UI will just need to be updated. If it changes frequently,
+    // it's probably best we just mirror the value to the registry here.
     nsresult rv = mProfileDB.SetString("General", "StartWithLastProfile",
                                        aValue ? "1" : "0");
     NS_ENSURE_SUCCESS(rv, rv);
