@@ -124,10 +124,8 @@ namespace jit {
   _(js::jit::GetDynamicNamePure)                                      \
   _(js::jit::GetIndexFromString)                                      \
   _(js::jit::GetInt32FromStringPure)                                  \
-  _(js::jit::GetNativeDataPropertyByValuePure<false>)                 \
-  _(js::jit::GetNativeDataPropertyByValuePure<true>)                  \
-  _(js::jit::GetNativeDataPropertyPure<false>)                        \
-  _(js::jit::GetNativeDataPropertyPure<true>)                         \
+  _(js::jit::GetNativeDataPropertyByValuePure)                        \
+  _(js::jit::GetNativeDataPropertyPure)                               \
   _(js::jit::GlobalHasLiveOnDebuggerStatement)                        \
   _(js::jit::HandleCodeCoverageAtPC)                                  \
   _(js::jit::HandleCodeCoverageAtPrologue)                            \
