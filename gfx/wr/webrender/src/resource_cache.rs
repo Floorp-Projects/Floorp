@@ -425,7 +425,6 @@ pub struct BlobImageRasterizerEpoch(usize);
 /// Internal information about allocated render targets in the pool
 struct RenderTarget {
     size: DeviceIntSize,
-    num_layers: usize,
     format: ImageFormat,
     texture_id: CacheTextureId,
     /// If true, this is currently leant out, and not available to other passes
@@ -436,7 +435,7 @@ struct RenderTarget {
 impl RenderTarget {
     fn size_in_bytes(&self) -> usize {
         let bpp = self.format.bytes_per_pixel() as usize;
-        self.num_layers * (self.size.width * self.size.height) as usize * bpp
+        (self.size.width * self.size.height) as usize * bpp
     }
 
     /// Returns true if this texture was used within `threshold` frames of
@@ -1578,12 +1577,10 @@ impl ResourceCache {
     pub fn get_or_create_render_target_from_pool(
         &mut self,
         size: DeviceIntSize,
-        num_layers: usize,
         format: ImageFormat,
     ) -> CacheTextureId {
         for target in &mut self.render_target_pool {
             if target.size == size &&
-               target.num_layers == num_layers &&
                target.format == format &&
                !target.is_active {
                 // Found a target that's not currently in use which matches. Update
@@ -1598,13 +1595,11 @@ impl ResourceCache {
 
         let texture_id = self.texture_cache.alloc_render_target(
             size,
-            num_layers,
             format,
         );
 
         self.render_target_pool.push(RenderTarget {
             size,
-            num_layers,
             format,
             texture_id,
             is_active: true,
