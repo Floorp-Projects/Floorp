@@ -4537,7 +4537,7 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.movePtr(ImmGCPtr(lir->mir()->name()), temp3);
   masm.passABIArg(temp3);
   masm.passABIArg(temp1);
-  masm.callWithABI<Fn, SetNativeDataPropertyPure<false>>();
+  masm.callWithABI<Fn, SetNativeDataPropertyPure>();
 
   MOZ_ASSERT(!rhs.aliases(temp1));
   masm.mov(ReturnReg, temp1);
