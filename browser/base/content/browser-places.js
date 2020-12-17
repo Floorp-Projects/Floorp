@@ -2416,31 +2416,36 @@ var BookmarkingUI = {
   },
 
   async maybeShowOtherBookmarksFolder() {
-    // otherBookmarks may be null if personal-bookmarks is in the palette.
-    let otherBookmarks = document.getElementById("OtherBookmarks");
+    // PlacesToolbar._placesView can be undefined if the toolbar isn't initialized,
+    // collapsed, or hidden in some other way.
+    let toolbar = document.getElementById("PlacesToolbar");
 
     // Only show the "Other Bookmarks" folder in the toolbar if pref is enabled.
-    if (!gBookmarksToolbar2h2020 || !otherBookmarks) {
+    if (!gBookmarksToolbar2h2020 || !toolbar?._placesView) {
       return;
     }
 
     let unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
     let numberOfBookmarks = PlacesUtils.getChildCountForFolder(unfiledGuid);
     let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
+    let otherBookmarks = document.getElementById("OtherBookmarks");
 
     if (
       numberOfBookmarks > 0 &&
       SHOW_OTHER_BOOKMARKS &&
       placement?.area == CustomizableUI.AREA_BOOKMARKS
     ) {
-      let otherBookmarksPopup = document.getElementById("OtherBookmarksPopup");
       let result = PlacesUtils.getFolderContents(unfiledGuid);
       let node = result.root;
-      otherBookmarksPopup._placesNode = PlacesUtils.asContainer(node);
-      otherBookmarks._placesNode = PlacesUtils.asContainer(node);
 
+      // Build the "Other Bookmarks" button if it doesn't exist.
+      if (!otherBookmarks) {
+        this.buildOtherBookmarksFolder(node);
+      }
+
+      otherBookmarks = document.getElementById("OtherBookmarks");
       otherBookmarks.hidden = false;
-    } else {
+    } else if (otherBookmarks) {
       otherBookmarks.hidden = true;
     }
   },
@@ -2474,6 +2479,41 @@ var BookmarkingUI = {
     });
 
     return menuItem;
+  },
+
+  buildOtherBookmarksFolder(node) {
+    let otherBookmarksButton = document.createXULElement("toolbarbutton");
+    otherBookmarksButton.setAttribute("type", "menu");
+    otherBookmarksButton.setAttribute("container", "true");
+    otherBookmarksButton.setAttribute(
+      "onpopupshowing",
+      "document.getElementById('PlacesToolbar')._placesView._onOtherBookmarksPopupShowing(event);"
+    );
+    otherBookmarksButton.id = "OtherBookmarks";
+    otherBookmarksButton.className = "bookmark-item";
+    otherBookmarksButton.hidden = "true";
+
+    MozXULElement.insertFTLIfNeeded("browser/places.ftl");
+    document.l10n.setAttributes(otherBookmarksButton, "other-bookmarks-folder");
+
+    let otherBookmarksPopup = document.createXULElement("menupopup", {
+      is: "places-popup",
+    });
+    otherBookmarksPopup.setAttribute("placespopup", "true");
+    otherBookmarksPopup.setAttribute("context", "placesContext");
+    otherBookmarksPopup.id = "OtherBookmarksPopup";
+
+    otherBookmarksPopup._placesNode = PlacesUtils.asContainer(node);
+    otherBookmarksButton._placesNode = PlacesUtils.asContainer(node);
+
+    otherBookmarksButton.appendChild(otherBookmarksPopup);
+
+    let chevronButton = document.getElementById("PlacesChevron");
+    chevronButton.parentNode.append(otherBookmarksButton);
+
+    let placesToolbar = document.getElementById("PlacesToolbar");
+    placesToolbar._placesView._otherBookmarks = otherBookmarksButton;
+    placesToolbar._placesView._otherBookmarksPopup = otherBookmarksPopup;
   },
 
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
