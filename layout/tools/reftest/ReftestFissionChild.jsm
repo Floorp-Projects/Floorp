@@ -48,6 +48,69 @@ class ReftestFissionChild extends JSWindowActorChild {
     return quad.getBounds();
   }
 
+  SetupDisplayportRoot() {
+    let returnStrings = {infoStrings: [], errorStrings: []};
+
+    let contentRootElement = this.contentWindow.document.documentElement;
+    if (!contentRootElement) {
+      return Promise.resolve(returnStrings);
+    }
+
+    // If we don't have the reftest-async-scroll attribute we only look at
+    // the root element for potential display ports to set.
+    if (!contentRootElement.hasAttribute("reftest-async-scroll")) {
+      let winUtils = this.contentWindow.windowUtils;
+      this.setupDisplayportForElement(contentRootElement, winUtils, returnStrings);
+      return Promise.resolve(returnStrings);
+    }
+
+    // Send a msg to the parent side to get the parent side to tell all
+    // process roots to do the displayport setting.
+    let browsingContext = this.browsingContext;
+    let promise = this.sendQuery("TellChildrenToSetupDisplayport", {browsingContext});
+    return promise.then(function(result) {
+      for (let errorString of result.errorStrings) {
+          returnStrings.errorStrings.push(errorString);
+      }
+      for (let infoString of result.infoStrings) {
+          returnStrings.infoStrings.push(infoString);
+      }
+      return returnStrings;
+    },
+    function(reason) {
+      returnStrings.errorStrings.push("SetupDisplayport SendQuery to parent promise rejected: " + reason);
+      return returnStrings;
+    });
+  }
+
+  attrOrDefault(element, attr, def) {
+    return element.hasAttribute(attr) ? Number(element.getAttribute(attr)) : def;
+  }
+
+  setupDisplayportForElement(element, winUtils, returnStrings) {
+    var dpw = this.attrOrDefault(element, "reftest-displayport-w", 0);
+    var dph = this.attrOrDefault(element, "reftest-displayport-h", 0);
+    var dpx = this.attrOrDefault(element, "reftest-displayport-x", 0);
+    var dpy = this.attrOrDefault(element, "reftest-displayport-y", 0);
+    if (dpw !== 0 || dph !== 0 || dpx != 0 || dpy != 0) {
+      returnStrings.infoStrings.push("Setting displayport to <x="+ dpx +", y="+ dpy +", w="+ dpw +", h="+ dph +">");
+      winUtils.setDisplayPortForElement(dpx, dpy, dpw, dph, element, 1);
+    }
+  }
+
+  setupDisplayportForElementSubtree(element, winUtils, returnStrings) {
+    this.setupDisplayportForElement(element, winUtils, returnStrings);
+    for (let c = element.firstElementChild; c; c = c.nextElementSibling) {
+      this.setupDisplayportForElementSubtree(c, winUtils, returnStrings);
+    }
+    if (typeof element.contentDocument !== "undefined" &&
+        element.contentDocument) {
+      returnStrings.infoStrings.push("setupDisplayportForElementSubtree descending into subdocument");
+      this.setupDisplayportForElementSubtree(element.contentDocument.documentElement,
+        element.contentWindow.windowUtils, returnStrings);
+    }
+  }
+
   receiveMessage(msg) {
     switch (msg.name) {
       case "ForwardAfterPaintEventToSelfAndParent":
@@ -155,6 +218,19 @@ class ReftestFissionChild extends JSWindowActorChild {
         }
         return Promise.resolve({errorStrings, warningStrings, infoStrings});
       }
+
+      case "SetupDisplayport":
+      {
+        let contentRootElement = this.document.documentElement;
+        let winUtils = this.contentWindow.windowUtils;
+        let returnStrings = {infoStrings: [], errorStrings: []};
+        if (!contentRootElement) {
+          return Promise.resolve(returnStrings);
+        }
+        this.setupDisplayportForElementSubtree(contentRootElement, winUtils, returnStrings);
+        return Promise.resolve(returnStrings);
+      }
+
     }
   }
 }
