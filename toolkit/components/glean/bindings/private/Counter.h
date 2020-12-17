@@ -38,13 +38,16 @@ class CounterMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<int32_t> TestGetValue(const nsACString& aStorageName) const {
-    if (!fog_counter_test_has_value(mId, &aStorageName)) {
+  Maybe<int32_t> TestGetValue(const nsACString& aPingName = nsCString()) const {
+    if (!fog_counter_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
-    return Some(fog_counter_test_get_value(mId, &aStorageName));
+    return Some(fog_counter_test_get_value(mId, &aPingName));
   }
 
  private:

@@ -40,7 +40,7 @@ class Ping {
    * @param aReason - Optional. The reason the ping is being submitted.
    *                  Must match one of the configured `reason_codes`.
    */
-  void Submit(const nsACString& aReason) const {
+  void Submit(const nsACString& aReason = nsCString()) const {
     fog_submit_ping_by_id(mId, &aReason);
   }
 

@@ -38,13 +38,16 @@ class BooleanMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric.
    */
-  Maybe<bool> TestGetValue(const nsACString& aStorageName) const {
-    if (!fog_boolean_test_has_value(mId, &aStorageName)) {
+  Maybe<bool> TestGetValue(const nsACString& aPingName = nsCString()) const {
+    if (!fog_boolean_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
-    return Some(fog_boolean_test_get_value(mId, &aStorageName));
+    return Some(fog_boolean_test_get_value(mId, &aPingName));
   }
 
  private:

@@ -135,6 +135,8 @@ add_task({ skip_if: () => true }, function test_fog_datetime_works() {
 add_task(function test_fog_boolean_works() {
   Glean.test_only.can_we_flag_it.set(false);
   Assert.equal(false, Glean.test_only.can_we_flag_it.testGetValue("test-ping"));
+  // While you're here, might as well test that the ping name's optional.
+  Assert.equal(false, Glean.test_only.can_we_flag_it.testGetValue());
 });
 
 add_task(async function test_fog_event_works() {
