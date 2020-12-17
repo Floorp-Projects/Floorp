@@ -1143,6 +1143,7 @@ class EngineObserverTest {
         val observer = EngineObserver(session, store)
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = false)
 
+        store.waitUntilIdle()
         middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
     }
 
@@ -1175,8 +1176,6 @@ class EngineObserverTest {
 
         val observer = EngineObserver(session, store)
         observer.onNavigateBack()
-        store.waitUntilIdle()
-
         store.waitUntilIdle()
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->

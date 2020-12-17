@@ -49,6 +49,7 @@ class CaptureActionsMiddleware<S : State, A : Action> : Middleware<S, A> {
      * with the first action of type [clazz] that was dispatched on the store. Throws [AssertionError]
      * if no such action was dispatched.
      */
+    @Synchronized
     fun <X : A> assertFirstAction(clazz: KClass<X>, block: (X) -> Unit = {}) {
         val action = findFirstAction(clazz)
         block(action)
@@ -58,6 +59,7 @@ class CaptureActionsMiddleware<S : State, A : Action> : Middleware<S, A> {
      * Executes the given [block] with the last action of type [clazz] that was dispatched on the
      * store. Throws [AssertionError] if no such action was dispatched.
      */
+    @Synchronized
     fun <X : A> assertLastAction(clazz: KClass<X>, block: (X) -> Unit) {
         val action = findLastAction(clazz)
         block(action)
@@ -67,6 +69,7 @@ class CaptureActionsMiddleware<S : State, A : Action> : Middleware<S, A> {
      * Asserts that no action of type [clazz] was dispatched. Throws [AssertionError] if a matching
      * action was found.
      */
+    @Synchronized
     fun <X : A> assertNotDispatched(clazz: KClass<X>) {
         if (!capturedActions.none { it.javaClass == clazz.java }) {
             throw AssertionError("Action of type $clazz was dispatched: ${findFirstAction(clazz)}")
