@@ -93,6 +93,7 @@
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_security_indicator"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginStart="8dp"
         app:srcCompat="@drawable/mozac_ic_autoplay_blocked" />
 
     <!-- URL & Title -->
@@ -105,7 +106,6 @@
         app:layout_constraintEnd_toStartOf="@+id/mozac_browser_toolbar_page_actions"
         app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_permission_indicator"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_goneMarginStart="8dp"
         app:layout_goneMarginTop="8dp" />
 
     <!-- Page actions -->
