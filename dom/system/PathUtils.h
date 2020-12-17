@@ -32,6 +32,10 @@ class PathUtils final {
   static void Join(const GlobalObject&, const Sequence<nsString>& aComponents,
                    nsString& aResult, ErrorResult& aErr);
 
+  static void JoinRelative(const GlobalObject&, const nsAString& aBasePath,
+                           const nsAString& aRelativePath, nsString& aResult,
+                           ErrorResult& aErr);
+
   static void Normalize(const GlobalObject&, const nsAString& aPath,
                         nsString& aResult, ErrorResult& aErr);
 

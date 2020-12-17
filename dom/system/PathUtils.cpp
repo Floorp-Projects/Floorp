@@ -35,6 +35,7 @@ static constexpr auto ERROR_EMPTY_PATH =
     "PathUtils does not support empty paths"_ns;
 static constexpr auto ERROR_INITIALIZE_PATH = "Could not initialize path"_ns;
 static constexpr auto ERROR_GET_PARENT = "Could not get parent path"_ns;
+static constexpr auto ERROR_JOIN = "Could not append to path"_ns;
 
 static void ThrowError(ErrorResult& aErr, const nsresult aResult,
                        const nsCString& aMessage) {
@@ -163,9 +164,31 @@ void PathUtils::Join(const GlobalObject&, const Sequence<nsString>& aComponents,
   const auto components = Span<const nsString>(aComponents).Subspan(1);
   for (const auto& component : components) {
     if (nsresult rv = path->Append(component); NS_FAILED(rv)) {
-      ThrowError(aErr, rv, "Could not append to path"_ns);
+      ThrowError(aErr, rv, ERROR_JOIN);
       return;
     }
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
+}
+
+void PathUtils::JoinRelative(const GlobalObject&, const nsAString& aBasePath,
+                             const nsAString& aRelativePath, nsString& aResult,
+                             ErrorResult& aErr) {
+  if (aRelativePath.IsEmpty()) {
+    aResult = aBasePath;
+    return;
+  }
+
+  nsCOMPtr<nsIFile> path = new nsLocalFile();
+  if (nsresult rv = path->InitWithPath(aBasePath); NS_FAILED(rv)) {
+    ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
+    return;
+  }
+
+  if (nsresult rv = path->AppendRelativePath(aRelativePath); NS_FAILED(rv)) {
+    ThrowError(aErr, rv, ERROR_JOIN);
+    return;
   }
 
   MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
