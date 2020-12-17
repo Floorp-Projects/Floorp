@@ -102,6 +102,8 @@ extern int sArgc;
 extern char** sArgv;
 
 // Shell state set once at startup.
+extern const char* selfHostedXDRPath;
+extern bool encodeSelfHostedCode;
 extern bool enableCodeCoverage;
 extern bool enableDisassemblyDumps;
 extern bool offthreadCompilation;
