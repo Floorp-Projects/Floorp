@@ -663,14 +663,19 @@ void ICFallbackStub::trace(JSTracer* trc) {
   }
 }
 
+static void MaybeTransition(JSContext* cx, BaselineFrame* frame,
+                            ICFallbackStub* stub) {
+  if (stub->state().maybeTransition()) {
+    stub->discardStubs(cx, frame->invalidationScript());
+  }
+}
+
 // This helper handles ICState updates/transitions while attaching CacheIR
 // stubs.
 template <typename IRGenerator, typename... Args>
 static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
                           ICFallbackStub* stub, Args&&... args) {
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
+  MaybeTransition(cx, frame, stub);
 
   if (stub->state().canAttachStub()) {
     RootedScript script(cx, frame->script());
@@ -1043,9 +1048,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   DeferType deferType = DeferType::None;
   bool attached = false;
 
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
+  MaybeTransition(cx, frame, stub);
 
   if (stub->state().canAttachStub() && !mayThrow) {
     ICScript* icScript = frame->icScript();
@@ -1105,9 +1108,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   // The SetObjectElement call might have entered this IC recursively, so try
   // to transition.
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
+  MaybeTransition(cx, frame, stub);
 
   bool canAttachStub = stub->state().canAttachStub();
 
@@ -1622,9 +1623,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
   DeferType deferType = DeferType::None;
   bool attached = false;
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
+  MaybeTransition(cx, frame, stub);
 
   if (stub->state().canAttachStub()) {
     RootedValue idVal(cx, StringValue(name));
@@ -1692,9 +1691,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
   // The SetProperty call might have entered this IC recursively, so try
   // to transition.
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
+  MaybeTransition(cx, frame, stub);
 
   bool canAttachStub = stub->state().canAttachStub();
 
@@ -1808,9 +1805,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   }
 
   // Transition stub state to megamorphic or generic if warranted.
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
+  MaybeTransition(cx, frame, stub);
 
   bool canAttachStub = stub->state().canAttachStub();
   bool handled = false;
@@ -1896,9 +1891,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   RootedValue newTarget(cx, constructing ? vp[3] : NullValue());
 
   // Transition stub state to megamorphic or generic if warranted.
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx, frame->invalidationScript());
-  }
+  MaybeTransition(cx, frame, stub);
 
   // Try attaching a call stub.
   bool handled = false;
