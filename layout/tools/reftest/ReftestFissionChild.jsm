@@ -111,6 +111,44 @@ class ReftestFissionChild extends JSWindowActorChild {
     }
   }
 
+    setupAsyncScrollOffsetsForElement(element, winUtils, allowFailure, returnStrings) {
+      let sx = this.attrOrDefault(element, "reftest-async-scroll-x", 0);
+      let sy = this.attrOrDefault(element, "reftest-async-scroll-y", 0);
+      if (sx != 0 || sy != 0) {
+        try {
+          // This might fail when called from RecordResult since layers
+          // may not have been constructed yet
+          winUtils.setAsyncScrollOffset(element, sx, sy);
+          return true;
+        } catch (e) {
+          if (allowFailure) {
+            returnStrings.infoStrings.push("setupAsyncScrollOffsetsForElement error calling setAsyncScrollOffset: " + e);
+          } else {
+            returnStrings.errorStrings.push("setupAsyncScrollOffsetsForElement error calling setAsyncScrollOffset: " + e);
+          }
+        }
+      }
+      return false;
+    }
+
+    setupAsyncScrollOffsetsForElementSubtree(element, winUtils, allowFailure, returnStrings) {
+      let updatedAny = this.setupAsyncScrollOffsetsForElement(element, winUtils, returnStrings);
+      for (let c = element.firstElementChild; c; c = c.nextElementSibling) {
+        if (this.setupAsyncScrollOffsetsForElementSubtree(c, winUtils, allowFailure, returnStrings)) {
+          updatedAny = true;
+        }
+      }
+      if (typeof element.contentDocument !== "undefined" &&
+          element.contentDocument) {
+        returnStrings.infoStrings.push("setupAsyncScrollOffsetsForElementSubtree Descending into subdocument");
+        if (this.setupAsyncScrollOffsetsForElementSubtree(element.contentDocument.documentElement,
+              element.contentWindow.windowUtils, allowFailure, returnStrings)) {
+          updatedAny = true;
+        }
+      }
+      return updatedAny;
+    }
+
   receiveMessage(msg) {
     switch (msg.name) {
       case "ForwardAfterPaintEventToSelfAndParent":
@@ -229,6 +267,21 @@ class ReftestFissionChild extends JSWindowActorChild {
         }
         this.setupDisplayportForElementSubtree(contentRootElement, winUtils, returnStrings);
         return Promise.resolve(returnStrings);
+      }
+
+      case "SetupAsyncScrollOffsets":
+      {
+        let returns = {infoStrings: [], errorStrings: [], updatedAny: false};
+        let contentRootElement = this.document.documentElement;
+
+        if (!contentRootElement) {
+          return returns;
+        }
+
+        let winUtils = this.contentWindow.windowUtils;
+
+        returns.updatedAny = this.setupAsyncScrollOffsetsForElementSubtree(contentRootElement, winUtils, msg.data.allowFailure, returns);
+        return returns;
       }
 
     }

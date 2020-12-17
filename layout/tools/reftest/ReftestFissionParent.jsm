@@ -125,6 +125,21 @@ class ReftestFissionParent extends JSWindowActorParent {
     }
   }
 
+  tellChildrenToSetupAsyncScrollOffsets(browsingContext, allowFailure, promises) {
+    let cwg = browsingContext.currentWindowGlobal;
+    if (cwg && cwg.isProcessRoot) {
+      let a = cwg.getActor("ReftestFission");
+      if (a) {
+        let responsePromise = a.sendQuery("SetupAsyncScrollOffsets", {allowFailure});
+        promises.push(responsePromise);
+      }
+    }
+
+    for (let context of browsingContext.children) {
+      this.tellChildrenToSetupAsyncScrollOffsets(context, allowFailure, promises);
+    }
+  }
+
 
   receiveMessage(msg) {
     switch (msg.name) {
@@ -188,6 +203,32 @@ class ReftestFissionParent extends JSWindowActorParent {
             infoStrings.push(...r.value.infoStrings);
           }
           return {errorStrings, infoStrings}
+        });
+      }
+
+      case "SetupAsyncScrollOffsets":
+      {
+        let promises = [];
+        this.tellChildrenToSetupAsyncScrollOffsets(this.manager.browsingContext, msg.data.allowFailure, promises);
+        return Promise.allSettled(promises).then(function (results) {
+          let errorStrings = [];
+          let infoStrings = [];
+          let updatedAny = false;
+          for (let r of results) {
+            if (r.status != "fulfilled") {
+              // We expect actors to go away causing sendQuery's to fail, so
+              // just note it.
+              infoStrings.push("SetupAsyncScrollOffsets sendQuery to child promise rejected: " + r.reason);
+              continue;
+            }
+
+            errorStrings.push(...r.value.errorStrings);
+            infoStrings.push(...r.value.infoStrings);
+            if (r.value.updatedAny) {
+              updatedAny = true;
+            }
+          }
+          return {errorStrings, infoStrings, updatedAny};
         });
       }
 
