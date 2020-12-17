@@ -49,18 +49,24 @@ GamepadEventChannelParent::GamepadEventChannelParent() {
 
   mBackgroundEventTarget = GetCurrentEventTarget();
 
-  GamepadPlatformService::AddChannelParent(
-      RefPtr<GamepadEventChannelParent>(this));
+  RefPtr<GamepadPlatformService> service =
+      GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  service->AddChannelParent(this);
 }
 
 void GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 
-  GamepadPlatformService::RemoveChannelParent(this);
+  RefPtr<GamepadPlatformService> service =
+      GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+  service->RemoveChannelParent(this);
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvVibrateHaptic(
-    const Tainted<GamepadHandle>& aHandle,
+    const Tainted<uint32_t>& aControllerIdx,
     const Tainted<uint32_t>& aHapticIndex, const Tainted<double>& aIntensity,
     const Tainted<double>& aDuration, const Tainted<uint32_t>& aPromiseID) {
   // TODO: Bug 680289, implement for standard gamepads
@@ -76,17 +82,18 @@ mozilla::ipc::IPCResult GamepadEventChannelParent::RecvVibrateHaptic(
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvStopVibrateHaptic(
-    const Tainted<GamepadHandle>& aHandle) {
+    const Tainted<uint32_t>& aControllerIdx) {
   // TODO: Bug 680289, implement for standard gamepads
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvLightIndicatorColor(
-    const Tainted<GamepadHandle>& aHandle,
+    const Tainted<uint32_t>& aControllerIdx,
     const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
     const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue,
     const Tainted<uint32_t>& aPromiseID) {
-  SetGamepadLightIndicatorColor(aHandle, aLightColorIndex, aRed, aGreen, aBlue);
+  SetGamepadLightIndicatorColor(aControllerIdx, aLightColorIndex, aRed, aGreen,
+                                aBlue);
 
   // TODO: simplify tainted validation, see 1610570
   if (SendReplyGamepadPromise(MOZ_NO_VALIDATE(

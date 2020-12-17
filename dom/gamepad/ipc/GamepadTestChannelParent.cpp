@@ -19,12 +19,20 @@ already_AddRefed<GamepadTestChannelParent> GamepadTestChannelParent::Create() {
 
 GamepadTestChannelParent::GamepadTestChannelParent() {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  GamepadMonitoringState::GetSingleton().AddObserver(this);
+  RefPtr<GamepadPlatformService> service =
+      GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  service->GetMonitoringState().AddObserver(this);
 }
 
 GamepadTestChannelParent::~GamepadTestChannelParent() {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  GamepadMonitoringState::GetSingleton().RemoveObserver(this);
+  RefPtr<GamepadPlatformService> service =
+      GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  service->GetMonitoringState().RemoveObserver(this);
 }
 
 void GamepadTestChannelParent::AddGamepadToPlatformService(
@@ -38,12 +46,12 @@ void GamepadTestChannelParent::AddGamepadToPlatformService(
   const GamepadAdded& a = aGamepadAdded;
   nsCString gamepadID;
   LossyCopyUTF16toASCII(a.id(), gamepadID);
-  GamepadHandle handle = service->AddGamepad(
+  uint32_t index = service->AddGamepad(
       gamepadID.get(), static_cast<GamepadMappingType>(a.mapping()), a.hand(),
       a.num_buttons(), a.num_axes(), a.num_haptics(), a.num_lights(),
       a.num_touches());
 
-  Unused << SendReplyGamepadHandle(aPromiseId, handle);
+  Unused << SendReplyGamepadIndex(aPromiseId, index);
 }
 
 void GamepadTestChannelParent::OnMonitoringStateChanged(bool aNewState) {
@@ -72,7 +80,7 @@ mozilla::ipc::IPCResult GamepadTestChannelParent::RecvGamepadTestEvent(
   // started. Everything else won't be deferred and will fail if monitoring
   // isn't running
   if (body.type() == GamepadChangeEventBody::TGamepadAdded) {
-    if (GamepadMonitoringState::GetSingleton().IsMonitoring()) {
+    if (service->GetMonitoringState().IsMonitoring()) {
       AddGamepadToPlatformService(aID, body.get_GamepadAdded());
     } else {
       mDeferredGamepadAdded.AppendElement(
@@ -81,35 +89,35 @@ mozilla::ipc::IPCResult GamepadTestChannelParent::RecvGamepadTestEvent(
     return IPC_OK();
   }
 
-  if (!GamepadMonitoringState::GetSingleton().IsMonitoring()) {
+  if (!service->GetMonitoringState().IsMonitoring()) {
     return IPC_FAIL(this, "Simulated message received while not monitoring");
   }
 
-  GamepadHandle handle = aEvent.handle();
+  const uint32_t index = aEvent.index();
 
   if (body.type() == GamepadChangeEventBody::TGamepadRemoved) {
-    service->RemoveGamepad(handle);
+    service->RemoveGamepad(index);
     return IPC_OK();
   }
   if (body.type() == GamepadChangeEventBody::TGamepadButtonInformation) {
     const GamepadButtonInformation& a = body.get_GamepadButtonInformation();
-    service->NewButtonEvent(handle, a.button(), a.pressed(), a.touched(),
+    service->NewButtonEvent(index, a.button(), a.pressed(), a.touched(),
                             a.value());
     return IPC_OK();
   }
   if (body.type() == GamepadChangeEventBody::TGamepadAxisInformation) {
     const GamepadAxisInformation& a = body.get_GamepadAxisInformation();
-    service->NewAxisMoveEvent(handle, a.axis(), a.value());
+    service->NewAxisMoveEvent(index, a.axis(), a.value());
     return IPC_OK();
   }
   if (body.type() == GamepadChangeEventBody::TGamepadPoseInformation) {
     const GamepadPoseInformation& a = body.get_GamepadPoseInformation();
-    service->NewPoseEvent(handle, a.pose_state());
+    service->NewPoseEvent(index, a.pose_state());
     return IPC_OK();
   }
   if (body.type() == GamepadChangeEventBody::TGamepadTouchInformation) {
     const GamepadTouchInformation& a = body.get_GamepadTouchInformation();
-    service->NewMultiTouchEvent(handle, a.index(), a.touch_state());
+    service->NewMultiTouchEvent(index, a.index(), a.touch_state());
     return IPC_OK();
   }
 

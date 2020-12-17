@@ -6,7 +6,6 @@
 
 #ifndef mozilla_dom_GamepadMonitoring_h_
 #define mozilla_dom_GamepadMonitoring_h_
-#include "mozilla/dom/GamepadHandle.h"
 
 namespace mozilla {
 namespace dom {
@@ -15,7 +14,7 @@ namespace dom {
 // (linux/LinuxGamepad.cpp, cocoa/CocoaGamepad.cpp, etc)
 void StartGamepadMonitoring();
 void StopGamepadMonitoring();
-void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
+void SetGamepadLightIndicatorColor(const Tainted<uint32_t>& aControllerIdx,
                                    const Tainted<uint32_t>& aLightColorIndex,
                                    const Tainted<uint8_t>& aRed,
                                    const Tainted<uint8_t>& aGreen,
