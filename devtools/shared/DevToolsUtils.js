@@ -618,13 +618,15 @@ function mainThreadFetch(
 
         // Look for any source map URL in the response.
         let sourceMapURL;
-        try {
-          sourceMapURL = request.getResponseHeader("SourceMap");
-        } catch (e) {}
-        if (!sourceMapURL) {
+        if (request instanceof Ci.nsIHttpChannel) {
           try {
-            sourceMapURL = request.getResponseHeader("X-SourceMap");
+            sourceMapURL = request.getResponseHeader("SourceMap");
           } catch (e) {}
+          if (!sourceMapURL) {
+            try {
+              sourceMapURL = request.getResponseHeader("X-SourceMap");
+            } catch (e) {}
+          }
         }
 
         resolve({
