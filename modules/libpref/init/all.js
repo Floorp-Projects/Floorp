@@ -3885,9 +3885,6 @@ pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.
 // unless other process sandboxing and extension remoting prefs are changed.
 pref("extensions.webextensions.protocol.remote", true);
 
-// Enable tab hiding API by default.
-pref("extensions.webextensions.tabhide.enabled", true);
-
 // Enable userScripts API by default.
 pref("extensions.webextensions.userScripts.enabled", true);
 
