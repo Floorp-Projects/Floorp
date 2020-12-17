@@ -3558,22 +3558,6 @@ bool CacheIRCompiler::emitGuardNoAllocationMetadataBuilder() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardObjectGroupNotPretenured(uint32_t groupOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoScratchRegister scratch(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  StubFieldOffset group(groupOffset, StubField::Type::ObjectGroup);
-  emitLoadStubField(group, scratch);
-
-  masm.branchIfPretenuredGroup(scratch, failure->label());
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
                                                    bool constructing) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
