@@ -33,9 +33,6 @@ class MOZ_STACK_CLASS CallInfo {
   MDefinition* thisArg_ = nullptr;
   MDefinition* newTargetArg_ = nullptr;
   MDefinitionVector args_;
-  // If non-empty, this corresponds to the stack prior any implicit inlining
-  // such as before JSOp::FunApply.
-  MDefinitionVector priorArgs_;
 
   bool constructing_;
 
@@ -63,28 +60,9 @@ class MOZ_STACK_CLASS CallInfo {
   CallInfo(TempAllocator& alloc, jsbytecode* pc, bool constructing,
            bool ignoresReturnValue)
       : args_(alloc),
-        priorArgs_(alloc),
         constructing_(constructing),
         ignoresReturnValue_(ignoresReturnValue),
         apply_(JSOp(*pc) == JSOp::FunApply) {}
-
-  MOZ_MUST_USE bool init(CallInfo& callInfo) {
-    MOZ_ASSERT(constructing_ == callInfo.constructing());
-
-    callee_ = callInfo.callee();
-    thisArg_ = callInfo.thisArg();
-    ignoresReturnValue_ = callInfo.ignoresReturnValue();
-
-    if (constructing()) {
-      newTargetArg_ = callInfo.getNewTarget();
-    }
-
-    if (!args_.appendAll(callInfo.argv())) {
-      return false;
-    }
-
-    return true;
-  }
 
   MOZ_MUST_USE bool init(MBasicBlock* current, uint32_t argc) {
     MOZ_ASSERT(args_.empty());
@@ -145,28 +123,6 @@ class MOZ_STACK_CLASS CallInfo {
     MOZ_ALWAYS_TRUE(args_.append(rhs));
   }
 
-  // Before doing any pop to the stack, capture whatever flows into the
-  // instruction, such that we can restore it later.
-  MOZ_MUST_USE bool savePriorCallStack(MBasicBlock* current, size_t peekDepth);
-
-  void popPriorCallStack(MBasicBlock* current) {
-    if (priorArgs_.empty()) {
-      popCallStack(current);
-    } else {
-      current->popn(priorArgs_.length());
-    }
-  }
-
-  MOZ_MUST_USE bool pushPriorCallStack(MBasicBlock* current) {
-    if (priorArgs_.empty()) {
-      return pushCallStack(current);
-    }
-    for (MDefinition* def : priorArgs_) {
-      current->push(def);
-    }
-    return true;
-  }
-
   void popCallStack(MBasicBlock* current) { current->popn(numFormals()); }
 
   MOZ_MUST_USE bool pushCallStack(MBasicBlock* current) {
@@ -213,14 +169,6 @@ class MOZ_STACK_CLASS CallInfo {
   MDefinition* getArg(uint32_t i) const {
     MOZ_ASSERT(i < argc());
     return args_[i];
-  }
-
-  MDefinition* getArgWithDefault(uint32_t i, MDefinition* defaultValue) const {
-    if (i < argc()) {
-      return args_[i];
-    }
-
-    return defaultValue;
   }
 
   void setArg(uint32_t i, MDefinition* def) {
