@@ -11,7 +11,6 @@
 #include "nsWrapperCache.h"
 #include "mozilla/dom/GamepadHapticActuatorBinding.h"
 #include "mozilla/dom/Gamepad.h"
-#include "mozilla/dom/GamepadHandle.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +18,7 @@ class Promise;
 
 class GamepadHapticActuator : public nsISupports, public nsWrapperCache {
  public:
-  GamepadHapticActuator(nsISupports* aParent, GamepadHandle aGamepadHandle,
+  GamepadHapticActuator(nsISupports* aParent, uint32_t aGamepadId,
                         uint32_t aIndex);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -42,7 +41,7 @@ class GamepadHapticActuator : public nsISupports, public nsWrapperCache {
 
  protected:
   nsCOMPtr<nsISupports> mParent;
-  GamepadHandle mGamepadHandle;
+  uint32_t mGamepadId;
   GamepadHapticActuatorType mType;
   uint32_t mIndex;
 };

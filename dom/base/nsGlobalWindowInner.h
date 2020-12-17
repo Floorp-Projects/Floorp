@@ -35,7 +35,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/DebuggerNotificationManager.h"
-#include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/StorageEvent.h"
@@ -489,12 +488,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                                           const double aDuration);
 
   // Inner windows only.
-  void AddGamepad(mozilla::dom::GamepadHandle aHandle,
-                  mozilla::dom::Gamepad* aGamepad);
-  void RemoveGamepad(mozilla::dom::GamepadHandle aHandle);
+  void AddGamepad(uint32_t aIndex, mozilla::dom::Gamepad* aGamepad);
+  void RemoveGamepad(uint32_t aIndex);
   void GetGamepads(nsTArray<RefPtr<mozilla::dom::Gamepad>>& aGamepads);
-  already_AddRefed<mozilla::dom::Gamepad> GetGamepad(
-      mozilla::dom::GamepadHandle aHandle);
+  already_AddRefed<mozilla::dom::Gamepad> GetGamepad(uint32_t aIndex);
   void SetHasSeenGamepadInput(bool aHasSeen);
   bool HasSeenGamepadInput();
   void SyncGamepadState();
@@ -1334,9 +1331,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool mHasOpenedExternalProtocolFrame : 1;
 
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
-  nsRefPtrHashtable<nsGenericHashKey<mozilla::dom::GamepadHandle>,
-                    mozilla::dom::Gamepad>
-      mGamepads;
+  nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
 
   RefPtr<nsScreen> mScreen;
 

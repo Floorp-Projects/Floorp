@@ -7,7 +7,6 @@
 // mostly derived from the Allegro source code at:
 // http://alleg.svn.sourceforge.net/viewvc/alleg/allegro/branches/4.9/src/macosx/hidjoy.m?revision=13760&view=markup
 
-#include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsITimer.h"
@@ -83,7 +82,7 @@ class Gamepad {
   nsTArray<Axis> axes;
 
  public:
-  Gamepad() : mDevice(nullptr) {}
+  Gamepad() : mDevice(nullptr), mSuperIndex(-1) {}
 
   bool operator==(IOHIDDeviceRef device) const { return mDevice == device; }
   bool empty() const { return mDevice == nullptr; }
@@ -91,7 +90,7 @@ class Gamepad {
     mDevice = nullptr;
     buttons.Clear();
     axes.Clear();
-    mHandle = GamepadHandle{};
+    mSuperIndex = -1;
   }
   void init(IOHIDDeviceRef device, bool defaultRemapper);
   void ReportChanged(uint8_t* report, CFIndex report_length);
@@ -114,7 +113,8 @@ class Gamepad {
     return nullptr;
   }
 
-  GamepadHandle mHandle;
+  // Index given by our superclass.
+  uint32_t mSuperIndex;
   RefPtr<GamepadRemapper> mRemapper;
   std::vector<uint8_t> mInputReport;
 };
@@ -207,7 +207,7 @@ class DarwinGamepadService {
 
   void Startup();
   void Shutdown();
-  void SetLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
+  void SetLightIndicatorColor(const Tainted<uint32_t>& aControllerIdx,
                               const Tainted<uint32_t>& aLightColorIndex,
                               const Tainted<uint8_t>& aRed,
                               const Tainted<uint8_t>& aGreen,
@@ -304,7 +304,7 @@ void DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device) {
   remapper->SetAxisCount(mGamepads[slot].numAxes());
   remapper->SetButtonCount(mGamepads[slot].numButtons());
 
-  GamepadHandle handle = service->AddGamepad(
+  uint32_t index = service->AddGamepad(
       buffer, remapper->GetMappingType(), mozilla::dom::GamepadHand::_empty,
       remapper->GetButtonCount(), remapper->GetAxisCount(),
       0,  // TODO: Bug 680289, implement gamepad haptics for cocoa.
@@ -314,11 +314,11 @@ void DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device) {
   remapper->GetLightIndicators(lightTypes);
   for (uint32_t i = 0; i < lightTypes.Length(); ++i) {
     if (lightTypes[i] != GamepadLightIndicator::DefaultType()) {
-      service->NewLightIndicatorTypeEvent(handle, i, lightTypes[i]);
+      service->NewLightIndicatorTypeEvent(index, i, lightTypes[i]);
     }
   }
 
-  mGamepads[slot].mHandle = handle;
+  mGamepads[slot].mSuperIndex = index;
   mGamepads[slot].mInputReport.resize(remapper->GetMaxInputReportLength());
   mGamepads[slot].mRemapper = remapper.forget();
 
@@ -339,7 +339,7 @@ void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
       IOHIDDeviceRegisterInputReportCallback(
           device, mGamepads[i].mInputReport.data(), 0, NULL, &mGamepads[i]);
 
-      service->RemoveGamepad(mGamepads[i].mHandle);
+      service->RemoveGamepad(mGamepads[i].mSuperIndex);
       mGamepads[i].clear();
       return;
     }
@@ -357,7 +357,7 @@ void DarwinGamepadService::ReportChangedCallback(
 
 void Gamepad::ReportChanged(uint8_t* report, CFIndex report_len) {
   MOZ_RELEASE_ASSERT(report_len <= mRemapper->GetMaxInputReportLength());
-  mRemapper->ProcessTouchData(mHandle, report);
+  mRemapper->ProcessTouchData(mSuperIndex, report);
 }
 
 size_t Gamepad::WriteOutputReport(const std::vector<uint8_t>& aReport) const {
@@ -394,14 +394,15 @@ void DarwinGamepadService::InputValueChanged(IOHIDValueRef value) {
         const double v =
             2.0f * (d - axis->min) / (double)(axis->max - axis->min) - 1.0f;
         if (axis->value != v) {
-          gamepad.mRemapper->RemapAxisMoveEvent(gamepad.mHandle, axis->id, v);
+          gamepad.mRemapper->RemapAxisMoveEvent(gamepad.mSuperIndex, axis->id,
+                                                v);
           axis->value = v;
         }
       } else if (Button* button = gamepad.lookupButton(element)) {
         const int iv = IOHIDValueGetIntegerValue(value);
         const bool pressed = iv != 0;
         if (button->pressed != pressed) {
-          gamepad.mRemapper->RemapButtonEvent(gamepad.mHandle, button->id,
+          gamepad.mRemapper->RemapButtonEvent(gamepad.mSuperIndex, button->id,
                                               pressed);
           button->pressed = pressed;
         }
@@ -568,13 +569,13 @@ void DarwinGamepadService::Shutdown() {
 }
 
 void DarwinGamepadService::SetLightIndicatorColor(
-    const Tainted<GamepadHandle>& aGamepadHandle,
+    const Tainted<uint32_t>& aControllerIdx,
     const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
     const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue) {
   // We get aControllerIdx from GamepadPlatformService::AddGamepad(),
   // It begins from 1 and is stored at Gamepad.id.
   const Gamepad* gamepad = MOZ_FIND_AND_VALIDATE(
-      aGamepadHandle, list_item.mHandle == aGamepadHandle, mGamepads);
+      aControllerIdx, list_item.mSuperIndex == aControllerIdx, mGamepads);
   if (!gamepad) {
     MOZ_ASSERT(false);
     return;
@@ -624,7 +625,7 @@ void StopGamepadMonitoring() {
   gService->Shutdown();
 }
 
-void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
+void SetGamepadLightIndicatorColor(const Tainted<uint32_t>& aControllerIdx,
                                    const Tainted<uint32_t>& aLightColorIndex,
                                    const Tainted<uint8_t>& aRed,
                                    const Tainted<uint8_t>& aGreen,
@@ -633,7 +634,7 @@ void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
   if (!gService) {
     return;
   }
-  gService->SetLightIndicatorColor(aGamepadHandle, aLightColorIndex, aRed,
+  gService->SetLightIndicatorColor(aControllerIdx, aLightColorIndex, aRed,
                                    aGreen, aBlue);
 }
 
