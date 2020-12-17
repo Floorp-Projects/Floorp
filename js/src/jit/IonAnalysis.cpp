@@ -1533,7 +1533,7 @@ class TypeAnalyzer {
   bool tryEmitFloatOperations();
 
   bool shouldSpecializeOsrPhis() const;
-  MIRType guessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) const;
+  MIRType guessPhiType(MPhi* phi) const;
 
  public:
   TypeAnalyzer(MIRGenerator* mir, MIRGraph& graph) : mir(mir), graph(graph) {}
@@ -1598,8 +1598,7 @@ bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
 }
 
 // Try to specialize this phi based on its non-cyclic inputs.
-MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
-                                   bool* hasInputsWithEmptyTypes) const {
+MIRType TypeAnalyzer::guessPhiType(MPhi* phi) const {
 #ifdef DEBUG
   // Check that different magic constants aren't flowing together. Ignore
   // JS_OPTIMIZED_OUT, since an operand could be legitimately optimized
@@ -1618,11 +1617,9 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
   }
 #endif
 
-  *hasInputsWithEmptyTypes = false;
-
   MIRType type = MIRType::None;
   bool convertibleToFloat32 = false;
-  bool hasPhiInputs = false;
+  DebugOnly<bool> hasPhiInputs = false;
   for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
     MDefinition* in = phi->getOperand(i);
     if (in->isPhi()) {
@@ -1637,8 +1634,6 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
         continue;
       }
     }
-
-    // TODO(no-TI): remove hasInputsWithEmptyTypes.
 
     // See shouldSpecializeOsrPhis comment. This is the first step mentioned
     // there.
@@ -1679,12 +1674,7 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi,
     }
   }
 
-  if (type == MIRType::None && !hasPhiInputs) {
-    // All inputs are non-phis with empty typesets. Use MIRType::Value
-    // in this case, as it's impossible to get better type information.
-    MOZ_ASSERT(*hasInputsWithEmptyTypes);
-    type = MIRType::Value;
-  }
+  MOZ_ASSERT_IF(type == MIRType::None, hasPhiInputs);
 
   return type;
 }
@@ -1766,8 +1756,6 @@ bool TypeAnalyzer::propagateAllPhiSpecializations() {
 }
 
 bool TypeAnalyzer::specializePhis() {
-  Vector<MPhi*, 0, SystemAllocPolicy> phisWithEmptyInputTypes;
-
   for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
        block++) {
     if (mir->shouldCancel("Specialize Phis (main loop)")) {
@@ -1779,22 +1767,13 @@ bool TypeAnalyzer::specializePhis() {
         return false;
       }
 
-      bool hasInputsWithEmptyTypes;
-      MIRType type = guessPhiType(*phi, &hasInputsWithEmptyTypes);
+      MIRType type = guessPhiType(*phi);
       phi->specialize(type);
       if (type == MIRType::None) {
         // We tried to guess the type but failed because all operands are
         // phis we still have to visit. Set the triedToSpecialize flag but
         // don't propagate the type to other phis, propagateSpecialization
         // will do that once we know the type of one of the operands.
-
-        // Edge case: when this phi has a non-phi input with an empty
-        // typeset, it's possible for two phis to have a cyclic
-        // dependency and they will both have MIRType::None. Specialize
-        // such phis to MIRType::Value later on.
-        if (hasInputsWithEmptyTypes && !phisWithEmptyInputTypes.append(*phi)) {
-          return false;
-        }
         continue;
       }
       if (!propagateSpecialization(*phi)) {
@@ -1803,28 +1782,9 @@ bool TypeAnalyzer::specializePhis() {
     }
   }
 
-  do {
-    if (!propagateAllPhiSpecializations()) {
-      return false;
-    }
-
-    // When two phis have a cyclic dependency and inputs that have an empty
-    // typeset (which are ignored by guessPhiType), we may still have to
-    // specialize these to MIRType::Value.
-    while (!phisWithEmptyInputTypes.empty()) {
-      if (mir->shouldCancel("Specialize Phis (phisWithEmptyInputTypes)")) {
-        return false;
-      }
-
-      MPhi* phi = phisWithEmptyInputTypes.popCopy();
-      if (phi->type() == MIRType::None) {
-        phi->specialize(MIRType::Value);
-        if (!propagateSpecialization(phi)) {
-          return false;
-        }
-      }
-    }
-  } while (!phiWorklist_.empty());
+  if (!propagateAllPhiSpecializations()) {
+    return false;
+  }
 
   if (shouldSpecializeOsrPhis() && graph.osrBlock()) {
     // See shouldSpecializeOsrPhis comment. This is the second step, propagating
