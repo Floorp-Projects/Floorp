@@ -109,7 +109,7 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     }
 
     // Image brush shaders
-    let mut texture_types = vec!["", "TEXTURE_2D"];
+    let mut texture_types = vec!["TEXTURE_2D_ARRAY", "TEXTURE_2D"];
     if flags.contains(ShaderFeatureFlags::GL) {
         texture_types.push("TEXTURE_RECT");
     }

@@ -265,7 +265,7 @@ pub enum TextureSource {
     /// Equivalent to `None`, allowing us to avoid using `Option`s everywhere.
     Invalid,
     /// An entry in the texture cache.
-    TextureCache(CacheTextureId, ImageBufferKind, Swizzle),
+    TextureCache(CacheTextureId, Swizzle),
     /// An external image texture, mananged by the embedding.
     External(DeferredResolveIndex, ImageBufferKind),
     /// Select a dummy 1x1 white texture. This can be used by image
@@ -276,12 +276,12 @@ pub enum TextureSource {
 impl TextureSource {
     pub fn image_buffer_kind(&self) -> ImageBufferKind {
         match *self {
-            TextureSource::TextureCache(_, image_buffer_kind, _) => image_buffer_kind,
+            TextureSource::TextureCache(..) => ImageBufferKind::Texture2D,
 
             TextureSource::External(_, image_buffer_kind) => image_buffer_kind,
 
             // Render tasks use texture arrays for now.
-            TextureSource::Dummy => ImageBufferKind::Texture2DArray,
+            TextureSource::Dummy => ImageBufferKind::Texture2D,
 
             TextureSource::Invalid => ImageBufferKind::Texture2D,
         }

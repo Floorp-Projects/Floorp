@@ -1611,7 +1611,7 @@ impl BatchBuilder {
                                         ).unwrap();
 
                                         let kind = BatchKind::Brush(
-                                            BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
+                                            BrushBatchKind::Image(ImageBufferKind::Texture2D)
                                         );
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
                                             surface_task.expect("bug: surface must be allocated by now"),
@@ -1658,7 +1658,7 @@ impl BatchBuilder {
 
                                         // The shadows and the content get drawn as a brush image.
                                         let kind = BatchKind::Brush(
-                                            BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                            BrushBatchKind::Image(ImageBufferKind::Texture2D),
                                         );
 
                                         // Gets the saved render task ID of the content, which is
@@ -1669,7 +1669,6 @@ impl BatchBuilder {
                                             let texture_id = secondary_task.get_target_texture();
                                             TextureSource::TextureCache(
                                                 texture_id,
-                                                ImageBufferKind::Texture2DArray,
                                                 Swizzle::default(),
                                             )
                                         };
@@ -1948,7 +1947,7 @@ impl BatchBuilder {
                                 );
                                 let key = BatchKey::new(
                                     BatchKind::Brush(
-                                        BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                        BrushBatchKind::Image(ImageBufferKind::Texture2D),
                                     ),
                                     BlendMode::Advanced(mode),
                                     textures,
@@ -2008,12 +2007,10 @@ impl BatchBuilder {
                                             colors: [
                                                 TextureSource::TextureCache(
                                                     color0,
-                                                    ImageBufferKind::Texture2DArray,
                                                     Swizzle::default(),
                                                 ),
                                                 TextureSource::TextureCache(
                                                     color1,
-                                                    ImageBufferKind::Texture2DArray,
                                                     Swizzle::default(),
                                                 ),
                                                 TextureSource::Invalid,
@@ -2056,7 +2053,6 @@ impl BatchBuilder {
                                     colors: [
                                         TextureSource::TextureCache(
                                             texture_id,
-                                            ImageBufferKind::Texture2DArray,
                                             Swizzle::default(),
                                         ),
                                         TextureSource::Invalid,
@@ -2064,7 +2060,7 @@ impl BatchBuilder {
                                     ],
                                 };
                                 let batch_params = BrushBatchParameters::shared(
-                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                    BrushBatchKind::Image(ImageBufferKind::Texture2D),
                                     textures,
                                     ImageBrushData {
                                         color_mode: ShaderColorMode::Image,
@@ -2130,7 +2126,7 @@ impl BatchBuilder {
                                 ).unwrap();
 
                                 let kind = BatchKind::Brush(
-                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
+                                    BrushBatchKind::Image(ImageBufferKind::Texture2D)
                                 );
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
                                     surface_task.expect("bug: surface must be allocated by now"),
@@ -2987,7 +2983,7 @@ impl BatchBuilder {
                 );
 
                 let batch_key = BatchKey::new(
-                    BatchKind::Brush(BrushBatchKind::Image(ImageBufferKind::Texture2DArray)),
+                    BatchKind::Brush(BrushBatchKind::Image(ImageBufferKind::Texture2D)),
                     BlendMode::PremultipliedAlpha,
                     textures,
                 );
@@ -3349,7 +3345,6 @@ impl RenderTaskGraph {
             BatchTextures::prim_textured(
                 TextureSource::TextureCache(
                     task.get_target_texture(),
-                    ImageBufferKind::Texture2DArray,
                     Swizzle::default(),
                 ),
                 clip_mask,
@@ -3832,7 +3827,6 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
                     task_id.into(),
                     TextureSource::TextureCache(
                         render_tasks[task_id].get_target_texture(),
-                        ImageBufferKind::Texture2DArray,
                         Swizzle::default(),
                     )
                 ))

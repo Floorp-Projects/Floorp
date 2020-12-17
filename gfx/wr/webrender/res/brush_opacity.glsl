@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define VECS_PER_SPECIFIC_BRUSH 3
+#define WR_FEATURE_TEXTURE_2D
 
 #include shared,prim_shared,brush
 
@@ -16,7 +17,7 @@ flat varying vec4 v_uv_sample_bounds;
 
 // Layer index to sample.
 // Flag to allow perspective interpolation of UV.
-flat varying vec2 v_layer_and_perspective;
+flat varying float v_perspective;
 
 flat varying float v_opacity;
 
@@ -44,8 +45,7 @@ void brush_vs(
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
 
     v_uv = uv / texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
-    v_layer_and_perspective.x = res.layer;
-    v_layer_and_perspective.y = perspective_interpolate;
+    v_perspective = perspective_interpolate;
 
     v_uv_sample_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
 
@@ -59,13 +59,13 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 Fragment brush_fs() {
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_layer_and_perspective.y);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_perspective);
     vec2 uv = v_uv * perspective_divisor;
     // Clamp the uvs to avoid sampling artifacts.
     uv = clamp(uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
 
     // No need to un-premultiply since we'll only apply a factor to the alpha.
-    vec4 color = texture(sColor0, vec3(uv, v_layer_and_perspective.x));
+    vec4 color = texture(sColor0, uv);
 
     float alpha = v_opacity;
 
@@ -83,9 +83,7 @@ void swgl_drawSpanRGBA8() {
         return;
     }
 
-    int layer = swgl_textureLayerOffset(sColor0, v_layer_and_perspective.x);
-
-    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_layer_and_perspective.y);
+    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_perspective);
 
     vec2 uv = swgl_linearQuantize(sColor0, v_uv * perspective_divisor);
     vec2 min_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.xy);
@@ -99,7 +97,7 @@ void swgl_drawSpanRGBA8() {
                 alpha *= init_transform_fs(v_local_pos);
                 v_local_pos += swgl_interpStep(v_local_pos);
             #endif
-            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, layer);
+            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
             uv += step_uv;
             vClipMaskUv += swgl_interpStep(vClipMaskUv);
         }
@@ -110,7 +108,7 @@ void swgl_drawSpanRGBA8() {
                 alpha *= init_transform_fs(v_local_pos);
                 v_local_pos += swgl_interpStep(v_local_pos);
             #endif
-            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, layer);
+            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
             uv += step_uv;
         }
     }
