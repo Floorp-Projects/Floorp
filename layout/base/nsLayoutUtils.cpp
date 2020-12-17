@@ -4539,54 +4539,6 @@ static bool GetIntrinsicCoord(const SizeOrMaxSize& aStyle,
 static int32_t gNoiseIndent = 0;
 #endif
 
-// Return true for form controls whose minimum intrinsic inline-size
-// shrinks to 0 when they have a percentage inline-size (but not
-// percentage max-inline-size).  (Proper replaced elements, whose
-// intrinsic minimium inline-size shrinks to 0 for both percentage
-// inline-size and percentage max-inline-size, are handled elsewhere.)
-inline static bool FormControlShrinksForPercentISize(nsIFrame* aFrame) {
-  if (!aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
-    // Quick test to reject most frames.
-    return false;
-  }
-
-  LayoutFrameType fType = aFrame->Type();
-  if (fType == LayoutFrameType::Meter || fType == LayoutFrameType::Progress ||
-      fType == LayoutFrameType::Range) {
-    // progress, meter and range do have this shrinking behavior
-    // FIXME: Maybe these should be nsIFormControlFrame?
-    return true;
-  }
-
-  if (!static_cast<nsIFormControlFrame*>(do_QueryFrame(aFrame))) {
-    // Not a form control.  This includes fieldsets, which do not
-    // shrink.
-    return false;
-  }
-
-  if (fType == LayoutFrameType::GfxButtonControl ||
-      fType == LayoutFrameType::HTMLButtonControl) {
-    // Buttons don't have this shrinking behavior.  (Note that color
-    // inputs do, even though they inherit from button, so we can't use
-    // do_QueryFrame here.)
-    return false;
-  }
-
-  return true;
-}
-
-// https://drafts.csswg.org/css-sizing-3/#percentage-sizing
-// Return true if the above spec's rule for replaced boxes applies.
-// XXX bug 1463700 will make this match the spec...
-static bool IsReplacedBoxResolvedAgainstZero(
-    nsIFrame* aFrame, const StyleSize& aStyleSize,
-    const StyleMaxSize& aStyleMaxSize) {
-  const bool sizeHasPercent = aStyleSize.HasPercent();
-  return ((sizeHasPercent || aStyleMaxSize.HasPercent()) &&
-          aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) ||
-         (sizeHasPercent && FormControlShrinksForPercentISize(aFrame));
-}
-
 /**
  * Add aOffsets which describes what to add on outside of the content box
  * aContentSize (controlled by 'box-sizing') and apply min/max properties.
@@ -4639,7 +4591,7 @@ static nscoord AddIntrinsicSizeOffset(
 
   nscoord size;
   if (aType == IntrinsicISizeType::MinISize &&
-      ::IsReplacedBoxResolvedAgainstZero(aFrame, aStyleSize, aStyleMaxSize)) {
+      aFrame->IsPercentageResolvedAgainstZero(aStyleSize, aStyleMaxSize)) {
     // XXX bug 1463700: this doesn't handle calc() according to spec
     result = 0;  // let |min| handle padding/border/margin
   } else if (GetAbsoluteCoord(aStyleSize, size) ||
@@ -5047,7 +4999,7 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
         // We have a definite width/height.  This is the "specified size" in:
         // https://drafts.csswg.org/css-grid/#min-size-auto
         fixedMinSize = &minSize;
-      } else if (::IsReplacedBoxResolvedAgainstZero(aFrame, size, maxSize)) {
+      } else if (aFrame->IsPercentageResolvedAgainstZero(size, maxSize)) {
         // XXX bug 1463700: this doesn't handle calc() according to spec
         minSize = 0;
         fixedMinSize = &minSize;

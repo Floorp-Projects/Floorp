@@ -3300,6 +3300,24 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
+   * Return true if this frame's preferred size property or max size property
+   * contains a percentage value that should be resolved against zero when
+   * calculating its min-content contribution in the corresponding axis.
+   *
+   * This is a special case for webcompat required by CSS Sizing 3 §5.2.1c
+   * https://drafts.csswg.org/css-sizing-3/#replaced-percentage-min-contribution,
+   * and applies only to some replaced elements and form control elements. See
+   * CSS Sizing 3 §5.2.2 for the list of elements this rule applies to.
+   * https://drafts.csswg.org/css-sizing-3/#min-content-zero
+   *
+   * Bug 1463700: some callers may not match the spec by resolving the entire
+   * preferred size property or max size property against zero.
+   */
+  bool IsPercentageResolvedAgainstZero(
+      const mozilla::StyleSize& aStyleSize,
+      const mozilla::StyleMaxSize& aStyleMaxSize) const;
+
+  /**
    * Returns true if the frame is a block wrapper.
    */
   bool IsBlockWrapper() const;
