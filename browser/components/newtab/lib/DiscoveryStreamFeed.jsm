@@ -97,35 +97,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return impressionId;
   }
 
-  /**
-   * Send SPOCS Fill telemetry.
-   * @param {object} filteredItems An object keyed on filter reasons, and the value
-   *                 is a list of SPOCS.
-   *                 reasons: blocked_by_user, frequency_cap, below_min_score, flight_duplicate
-   * @param {boolean} fullRecalc A boolean indicating if it's a full recalculation.
-   *                  Calling `loadSpocs` will be treated as a full recalculation.
-   *                  Whereas responding the action "DISCOVERY_STREAM_SPOC_IMPRESSION"
-   *                  is not a full recalculation.
-   */
-  _sendSpocsFill(filteredItems, fullRecalc) {
-    const full_recalc = fullRecalc ? 1 : 0;
-    const spocsFill = [];
-    for (const [reason, items] of Object.entries(filteredItems)) {
-      items.forEach(item => {
-        // Only send SPOCS (i.e. it has a flight_id)
-        if (item.flight_id) {
-          spocsFill.push({ reason, full_recalc, id: item.id, displayed: 0 });
-        }
-      });
-    }
-
-    if (spocsFill.length) {
-      this.store.dispatch(
-        ac.DiscoveryStreamSpocsFill({ spoc_fills: spocsFill })
-      );
-    }
-  }
-
   finalLayoutEndpoint(url, apiKey) {
     if (url.includes("$apiKey") && !apiKey) {
       throw new Error(
@@ -692,10 +663,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     const cachedData = (await this.cache.get()) || {};
     let spocsState;
 
-    let frequencyCapped = [];
-    let blockedItems = [];
-    let belowMinScore = [];
-
     const { placements } = this.store.getState().DiscoveryStream.spocs;
 
     if (this.showSpocs) {
@@ -775,24 +742,14 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
                 normalizedSpocsItems
               );
 
-              const {
-                data: capResult,
-                filtered: caps,
-              } = this.frequencyCapSpocs(migratedSpocs);
-              frequencyCapped = [...frequencyCapped, ...caps];
+              const { data: capResult } = this.frequencyCapSpocs(migratedSpocs);
 
-              const {
-                data: blockedResults,
-                filtered: blocks,
-              } = this.filterBlocked(capResult);
-              blockedItems = [...blockedItems, ...blocks];
+              const { data: blockedResults } = this.filterBlocked(capResult);
 
-              const {
-                data: scoredResults,
-                filtered: minScoreFilter,
-              } = await this.scoreItems(blockedResults, "spocs");
-
-              belowMinScore = [...belowMinScore, ...minScoreFilter];
+              const { data: scoredResults } = await this.scoreItems(
+                blockedResults,
+                "spocs"
+              );
 
               spocsState.spocs = {
                 ...spocsState.spocs,
@@ -813,14 +770,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             lastUpdated: spocsState.lastUpdated,
             spocs: spocsState.spocs,
           });
-          this._sendSpocsFill(
-            {
-              frequency_cap: frequencyCapped,
-              blocked_by_user: blockedItems,
-              below_min_score: belowMinScore,
-            },
-            true
-          );
         } else {
           Cu.reportError("No response for spocs_endpoint prop");
         }
@@ -987,7 +936,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   async scoreItems(items, type) {
-    const filtered = [];
     const spocsPersonalized = this.store.getState().Prefs.values[
       PREF_SPOCS_PERSONALIZED
     ];
@@ -1007,13 +955,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         if (s.score >= s.min_score) {
           return true;
         }
-        filtered.push(s);
         return false;
       })
       // Sort by highest scores.
       .sort(this.sortItem);
 
-    return { data, filtered };
+    return { data };
   }
 
   async scoreItem(item, personalizedByType) {
@@ -1029,24 +976,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   filterBlocked(data) {
-    const filtered = [];
     if (data && data.length) {
       let flights = this.readDataPref(PREF_FLIGHT_BLOCKS);
       const filteredItems = data.filter(item => {
         const blocked =
           NewTabUtils.blockedLinks.isBlocked({ url: item.url }) ||
           flights[item.flight_id];
-        if (blocked) {
-          filtered.push(item);
-        }
         return !blocked;
       });
-      return {
-        data: filteredItems,
-        filtered,
-      };
+      return { data: filteredItems };
     }
-    return { data, filtered };
+    return { data };
   }
 
   // For backwards compatibility, older spoc endpoint don't have flight_id,
@@ -1320,7 +1260,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   async scoreSpocs(spocsState) {
-    let belowMinScore = [];
     const spocsResultPromises = this.getPlacements().map(async placement => {
       const nextSpocs = spocsState.data[placement.name] || {};
       const { items } = nextSpocs;
@@ -1329,12 +1268,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         return;
       }
 
-      const {
-        data: scoreResult,
-        filtered: minScoreFilter,
-      } = await this.scoreItems(items, "spocs");
-
-      belowMinScore = [...belowMinScore, ...minScoreFilter];
+      const { data: scoreResult } = await this.scoreItems(items, "spocs");
 
       spocsState.data = {
         ...spocsState.data,
@@ -1361,14 +1295,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         },
       })
     );
-    if (belowMinScore.length) {
-      this._sendSpocsFill(
-        {
-          below_min_score: belowMinScore,
-        },
-        false
-      );
-    }
   }
 
   async refreshContent(options = {}) {
@@ -1735,7 +1661,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
                 },
               })
             );
-            this._sendSpocsFill({ frequency_cap: frequencyCapped }, false);
           }
         }
         break;
@@ -1778,7 +1703,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
               spocs: spocsState.data,
             });
 
-            this._sendSpocsFill({ blocked_by_user: blockedItems }, false);
             // If we're blocking a spoc, we want open tabs to have
             // a slightly different treatment from future tabs.
             // AlsoToPreloaded updates the source data and preloaded tabs with a new spoc.
