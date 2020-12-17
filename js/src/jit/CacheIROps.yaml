@@ -600,13 +600,6 @@
   cost_estimate: 1
   args:
 
-- name: GuardObjectGroupNotPretenured
-  shared: true
-  transpile: false
-  cost_estimate: 1
-  args:
-    group: GroupField
-
 - name: GuardFunctionHasJitEntry
   shared: true
   transpile: true

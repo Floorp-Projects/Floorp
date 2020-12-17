@@ -10770,7 +10770,6 @@ AttachDecision NewObjectIRGenerator::tryAttachStub() {
   }
 
   writer.guardNoAllocationMetadataBuilder();
-  writer.guardObjectGroupNotPretenured(templateObject_->group());
 
   // Bake in a monotonically increasing number to ensure we differentiate
   // between different baseline stubs that otherwise might share stub code.
