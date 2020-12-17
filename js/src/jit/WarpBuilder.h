@@ -12,7 +12,6 @@
 #include "ds/InlineTable.h"
 #include "jit/JitContext.h"
 #include "jit/MIR.h"
-#include "jit/MIRBuilderShared.h"
 #include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
 #include "vm/Opcodes.h"
