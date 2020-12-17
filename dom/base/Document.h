@@ -1255,11 +1255,6 @@ class Document : public nsINode,
   Document* GetSubDocumentFor(nsIContent* aContent) const;
 
   /**
-   * Find the content node for which aDocument is a sub document.
-   */
-  Element* FindContentForSubDocument(Document* aDocument) const;
-
-  /**
    * Return the doctype for this document.
    */
   DocumentType* GetDoctype() const;
