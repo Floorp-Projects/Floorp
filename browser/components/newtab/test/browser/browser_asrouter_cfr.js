@@ -617,69 +617,6 @@ add_task(
 );
 
 add_task(
-  async function test_cfr_tracking_protection_milestone_notification_show() {
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.contentblocking.cfr-milestone.milestone-achieved", 1000],
-        [
-          "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-          `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","updateCycleInMs":3600000}`,
-        ],
-      ],
-    });
-
-    // addRecommendation checks that scheme starts with http and host matches
-    let browser = gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(browser, "http://example.com/");
-    await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
-
-    const showPanel = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
-
-    const response = await trigger_cfr_panel(browser, "example.com", {
-      action: { type: "OPEN_PROTECTION_REPORT" },
-      category: "cfrFeatures",
-      layout: "short_message",
-      skip_address_bar_notifier: true,
-      use_single_secondary_button: true,
-      heading_text: "Test Milestone Message",
-      template: "milestone_message",
-    });
-    Assert.ok(
-      response,
-      "Should return true if addRecommendation checks were successful"
-    );
-    await showPanel;
-
-    const notification = document.getElementById(
-      "contextual-feature-recommendation-notification"
-    );
-    // checkCFRSocialTrackingProtection(notification);
-    checkCFRTrackingProtectionMilestone(notification);
-
-    // Check there is a primary button and click it. It will trigger the callback.
-    Assert.ok(notification.button);
-    let hidePanel = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popuphidden"
-    );
-
-    let protectionsTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-
-    document
-      .getElementById("contextual-feature-recommendation-notification")
-      .button.click();
-
-    let protectionsTab = await protectionsTabPromise;
-
-    await BrowserTestUtils.removeTab(protectionsTab);
-    await hidePanel;
-  }
-);
-
-add_task(
   async function test_cfr_tracking_protection_milestone_notification_remove() {
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -701,25 +638,21 @@ add_task(
       "popupshown"
     );
 
-    const response = await trigger_cfr_panel(browser, "example.com", {
-      action: { type: "OPEN_PROTECTION_REPORT" },
-      category: "cfrFeatures",
-      layout: "short_message",
-      skip_address_bar_notifier: true,
-      use_single_secondary_button: true,
-      heading_text: "Test Milestone Message",
-      template: "milestone_message",
-    });
-    Assert.ok(
-      response,
-      "Should return true if addRecommendation checks were successful"
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          event: "ContentBlockingMilestone",
+        },
+      },
+      "SiteProtection:ContentBlockingMilestone"
     );
+
     await showPanel;
 
     const notification = document.getElementById(
       "contextual-feature-recommendation-notification"
     );
-    // checkCFRSocialTrackingProtection(notification);
+
     checkCFRTrackingProtectionMilestone(notification);
 
     Assert.ok(notification.secondaryButton);

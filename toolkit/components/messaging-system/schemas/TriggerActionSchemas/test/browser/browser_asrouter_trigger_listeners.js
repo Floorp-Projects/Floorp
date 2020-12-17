@@ -417,10 +417,10 @@ add_task(async function check_contentBlockingMilestone_listener() {
   const triggerHandler = (target, trigger) => {
     const {
       id,
-      param: { host },
+      param: { type },
     } = trigger;
     is(id, "contentBlocking", "should match event name");
-    is(host, "ContentBlockingMilestone", "Should be the correct event type");
+    is(type, "ContentBlockingMilestone", "Should be the correct event type");
     observerEvent += 1;
   };
   const contentBlockingListener = ASRouterTriggerListeners.get(
