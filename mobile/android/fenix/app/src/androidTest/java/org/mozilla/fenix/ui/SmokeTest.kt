@@ -15,15 +15,14 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
-import org.mozilla.fenix.ui.robots.clickUrlbar
-import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.*
 
 /**
  * Test Suite that contains tests defined as part of the Smoke and Sanity check defined in Test rail.
@@ -35,6 +34,7 @@ class SmokeTest {
     private lateinit var mockWebServer: MockWebServer
     private var awesomeBar: ViewVisibilityIdlingResource? = null
     private var searchSuggestionsIdlingResource: RecyclerViewIdlingResource? = null
+    private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
 
     // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
     private fun getAwesomebarView(): View? {
@@ -59,6 +59,18 @@ class SmokeTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+
+        if (awesomeBar != null) {
+            IdlingRegistry.getInstance().unregister(awesomeBar!!)
+        }
+
+        if (searchSuggestionsIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
+        }
+
+        if (addonsListIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
+        }
     }
 
     // copied over from HomeScreenTest
@@ -488,6 +500,43 @@ class SmokeTest {
         }.goBack {
         }.openCamera {
             verifyUnblockedByAndroid()
+        }
+    }
+
+    // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
+    @Test
+    fun noCrashWithAddonInstalledTest() {
+        //setting ETP to Strict mode to test it works with add-ons
+        activityTestRule.activity.settings().setStrictETP()
+
+        val addonName = "uBlock Origin"
+        val trackingProtectionPage =
+            TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openAddonsManagerMenu {
+            addonsListIdlingResource =
+                RecyclerViewIdlingResource(
+                    activityTestRule.activity.findViewById(R.id.add_ons_list),
+                    1
+                )
+            IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
+            clickInstallAddon(addonName)
+            acceptInstallAddon()
+            verifyDownloadAddonPrompt(addonName, activityTestRule)
+            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
+        }.goBack {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(trackingProtectionPage.url){}
+        enhancedTrackingProtection {
+            verifyEnhancedTrackingProtectionNotice()
+        }.closeNotificationPopup {}
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openReportSiteIssue {
+            verifyUrl("webcompat.com/issues/new")
         }
     }
 }

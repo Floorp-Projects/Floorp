@@ -251,6 +251,13 @@ class ThreeDotMenuMainRobot {
             return HomeScreenRobot.Transition()
         }
 
+        fun openReportSiteIssue(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            reportSiteIssueButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun openFindInPage(interact: FindInPageRobot.() -> Unit): FindInPageRobot.Transition {
             onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(ViewActions.swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("Find in page")), waitingTime)
@@ -443,6 +450,8 @@ private fun collectionNameTextField() =
 
 private fun assertCollectionNameTextField() = collectionNameTextField()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun reportSiteIssueButton() = onView(withText("Report Site Issue…"))
 
 private fun findInPageButton() = onView(allOf(withText("Find in page")))
 private fun assertFindInPageButton() = findInPageButton()
