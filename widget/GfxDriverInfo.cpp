@@ -782,7 +782,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       // Carrizo
       APPEND_RANGE(0x9870, 0x9877);
 
-#ifdef EARLY_BETA_OR_EARLIER
       // Kaveri
       APPEND_RANGE(0x1304, 0x131d);
 
@@ -790,7 +789,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x9440, 0x949f);
       APPEND_RANGE(0x94a0, 0x94b9);
       APPEND_RANGE(0x9540, 0x955f);
-#endif
 
       break;
     // This should never happen, but we get a warning if we don't handle this.
