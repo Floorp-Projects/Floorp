@@ -475,6 +475,13 @@ impl Texture {
         self.filter
     }
 
+    pub fn is_array(&self) -> bool {
+        match self.target {
+            gl::TEXTURE_2D_ARRAY => true,
+            _ => false
+        }
+    }
+
     pub fn supports_depth(&self) -> bool {
         !self.fbos_with_depth.is_empty()
     }
