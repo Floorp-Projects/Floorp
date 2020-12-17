@@ -661,8 +661,9 @@ this.ASRouterTargeting = {
         candidateMessageTrigger.params.includes(trigger.param.host)) ||
       (candidateMessageTrigger.params &&
         trigger.param.type &&
-        candidateMessageTrigger.params.filter(t => t === trigger.param.type)
-          .length) ||
+        candidateMessageTrigger.params.filter(
+          t => (t & trigger.param.type) === t
+        ).length) ||
       (candidateMessageTrigger.patterns &&
         trigger.param.url &&
         new MatchPatternSet(candidateMessageTrigger.patterns).matches(
