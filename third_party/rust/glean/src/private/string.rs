@@ -32,36 +32,17 @@ impl StringMetric {
 
 #[inherent(pub)]
 impl glean_core::traits::String for StringMetric {
-    /// Sets to the specified value.
-    ///
-    /// # Arguments
-    ///
-    /// * `value` - The string to set the metric to.
-    ///
-    /// ## Notes
-    ///
-    /// Truncates the value if it is longer than `MAX_STRING_LENGTH` bytes and logs an error.
     fn set<S: Into<std::string::String>>(&self, value: S) {
         let metric = Arc::clone(&self.0);
         let new_value = value.into();
         dispatcher::launch(move || crate::with_glean(|glean| metric.set(glean, new_value)));
     }
 
-    /// **Exported for test purposes.**
-    ///
-    /// Gets the currently stored value as a string.
-    ///
-    /// This doesn't clear the stored value.
-    ///
-    /// # Arguments
-    ///
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
     fn test_get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         ping_name: S,
     ) -> Option<std::string::String> {
-        dispatcher::block_on_queue();
+        crate::block_on_dispatcher();
 
         let queried_ping_name = ping_name
             .into()
@@ -70,25 +51,12 @@ impl glean_core::traits::String for StringMetric {
         crate::with_glean(|glean| self.0.test_get_value(glean, queried_ping_name))
     }
 
-    /// **Exported for test purposes.**
-    ///
-    /// Gets the number of recorded errors for the given metric and error type.
-    ///
-    /// # Arguments
-    ///
-    /// * `error` - The type of error
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
-    ///
-    /// # Returns
-    ///
-    /// The number of errors reported.
     fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: ErrorType,
         ping_name: S,
     ) -> i32 {
-        dispatcher::block_on_queue();
+        crate::block_on_dispatcher();
 
         crate::with_glean_mut(|glean| {
             glean_core::test_get_num_recorded_errors(&glean, self.0.meta(), error, ping_name.into())

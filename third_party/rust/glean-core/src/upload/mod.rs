@@ -32,6 +32,8 @@ mod policy;
 mod request;
 mod result;
 
+const WAIT_TIME_FOR_PING_PROCESSING: u64 = 1000; // in milliseconds
+
 #[derive(Debug)]
 struct RateLimiter {
     /// The instant the current interval has started.
@@ -50,7 +52,10 @@ enum RateLimiterState {
     /// The RateLimiter has not reached the maximum count and is still incrementing.
     Incrementing,
     /// The RateLimiter has reached the maximum count for the  current interval.
-    Throttled,
+    ///
+    /// This variant contains the remaining time (in milliseconds)
+    /// until the rate limiter is not throttled anymore.
+    Throttled(u64),
 }
 
 impl RateLimiter {
@@ -68,6 +73,10 @@ impl RateLimiter {
         self.count = 0;
     }
 
+    fn elapsed(&self) -> Duration {
+        self.started.unwrap().elapsed()
+    }
+
     // The counter should reset if
     //
     // 1. It has never started;
@@ -79,8 +88,7 @@ impl RateLimiter {
         }
 
         // Safe unwrap, we already stated that `self.started` is not `None` above.
-        let elapsed = self.started.unwrap().elapsed();
-        if elapsed > self.interval {
+        if self.elapsed() > self.interval {
             return true;
         }
 
@@ -98,7 +106,14 @@ impl RateLimiter {
         }
 
         if self.count == self.max_count {
-            return RateLimiterState::Throttled;
+            // Note that `remining` can't be a negative number because we just called `reset`,
+            // which will check if it is and reset if so.
+            let remaining = self.interval.as_millis() - self.elapsed().as_millis();
+            return RateLimiterState::Throttled(
+                remaining
+                    .try_into()
+                    .unwrap_or(self.interval.as_secs() * 1000),
+            );
         }
 
         self.count += 1;
@@ -119,7 +134,10 @@ pub enum PingUploadTask {
     Upload(PingRequest),
     /// A flag signaling that the pending pings directories are not done being processed,
     /// thus the requester should wait and come back later.
-    Wait,
+    ///
+    /// Contains the amount of time in milliseconds
+    /// the requester should wait before requesting a new task.
+    Wait(u64),
     /// A flag signaling that requester doesn't need to request any more upload tasks at this moment.
     ///
     /// There are three possibilities for this scenario:
@@ -133,6 +151,18 @@ pub enum PingUploadTask {
     /// `PingUploadTask::Upload(PingRequest)` response and finishes when they
     /// finally get a `PingUploadTask::Done` or `PingUploadTask::Wait` response.
     Done,
+}
+
+impl PingUploadTask {
+    /// Whether the current task is an upload task.
+    pub fn is_upload(&self) -> bool {
+        matches!(self, PingUploadTask::Upload(_))
+    }
+
+    /// Whether the current task is wait task.
+    pub fn is_wait(&self) -> bool {
+        matches!(self, PingUploadTask::Wait(_))
+    }
 }
 
 /// Manages the pending pings queue and directory.
@@ -474,12 +504,12 @@ impl PingUploadManager {
         //
         // We want to limit the amount of PingUploadTask::Wait returned in a row,
         // in case we reach MAX_WAIT_ATTEMPTS we want to actually return PingUploadTask::Done.
-        let wait_or_done = || {
+        let wait_or_done = |time: u64| {
             self.wait_attempt_count.fetch_add(1, Ordering::SeqCst);
             if self.wait_attempt_count() > self.policy.max_wait_attempts() {
                 PingUploadTask::Done
             } else {
-                PingUploadTask::Wait
+                PingUploadTask::Wait(time)
             }
         };
 
@@ -487,7 +517,7 @@ impl PingUploadManager {
             log::info!(
                 "Tried getting an upload task, but processing is ongoing. Will come back later."
             );
-            return wait_or_done();
+            return wait_or_done(WAIT_TIME_FOR_PING_PROCESSING);
         }
 
         // This is a no-op in case there are no cached pings.
@@ -510,11 +540,11 @@ impl PingUploadManager {
                     let mut rate_limiter = rate_limiter
                         .write()
                         .expect("Can't write to the rate limiter.");
-                    if rate_limiter.get_state() == RateLimiterState::Throttled {
+                    if let RateLimiterState::Throttled(remaining) = rate_limiter.get_state() {
                         log::info!(
                             "Tried getting an upload task, but we are throttled at the moment."
                         );
-                        return wait_or_done();
+                        return wait_or_done(remaining);
                     }
                 }
 
@@ -554,13 +584,11 @@ impl PingUploadManager {
     pub fn get_upload_task(&self, glean: &Glean, log_ping: bool) -> PingUploadTask {
         let task = self.get_upload_task_internal(glean, log_ping);
 
-        if task != PingUploadTask::Wait && self.wait_attempt_count() > 0 {
+        if !task.is_wait() && self.wait_attempt_count() > 0 {
             self.wait_attempt_count.store(0, Ordering::SeqCst);
         }
 
-        if (task == PingUploadTask::Wait || task == PingUploadTask::Done)
-            && self.recoverable_failure_count() > 0
-        {
+        if !task.is_upload() && self.recoverable_failure_count() > 0 {
             self.recoverable_failure_count.store(0, Ordering::SeqCst);
         }
 
@@ -747,10 +775,8 @@ mod test {
 
         // Try and get the next request.
         // Verify request was returned
-        match upload_manager.get_upload_task(&glean, false) {
-            PingUploadTask::Upload(_) => {}
-            _ => panic!("Expected upload manager to return the next request!"),
-        }
+        let task = upload_manager.get_upload_task(&glean, false);
+        assert!(task.is_upload());
     }
 
     #[test]
@@ -767,10 +793,8 @@ mod test {
 
         // Verify a request is returned for each submitted ping
         for _ in 0..n {
-            match upload_manager.get_upload_task(&glean, false) {
-                PingUploadTask::Upload(_) => {}
-                _ => panic!("Expected upload manager to return the next request!"),
-            }
+            let task = upload_manager.get_upload_task(&glean, false);
+            assert!(task.is_upload());
         }
 
         // Verify that after all requests are returned, none are left
@@ -787,9 +811,8 @@ mod test {
         let mut upload_manager = PingUploadManager::no_policy(dir.path());
 
         // Add a rate limiter to the upload mangager with max of 10 pings every 3 seconds.
-        let secs_per_interval = 3;
         let max_pings_per_interval = 10;
-        upload_manager.set_rate_limiter(secs_per_interval, 10);
+        upload_manager.set_rate_limiter(3, 10);
 
         // Enqueue the max number of pings allowed per uploading window
         for _ in 0..max_pings_per_interval {
@@ -798,28 +821,24 @@ mod test {
 
         // Verify a request is returned for each submitted ping
         for _ in 0..max_pings_per_interval {
-            match upload_manager.get_upload_task(&glean, false) {
-                PingUploadTask::Upload(_) => {}
-                _ => panic!("Expected upload manager to return the next request!"),
-            }
+            let task = upload_manager.get_upload_task(&glean, false);
+            assert!(task.is_upload());
         }
 
         // Enqueue just one more ping
         upload_manager.enqueue_ping(&glean, &Uuid::new_v4().to_string(), PATH, "", None);
 
         // Verify that we are indeed told to wait because we are at capacity
-        assert_eq!(
-            PingUploadTask::Wait,
-            upload_manager.get_upload_task(&glean, false)
-        );
-
-        // Wait for the uploading window to reset
-        thread::sleep(Duration::from_secs(secs_per_interval));
-
         match upload_manager.get_upload_task(&glean, false) {
-            PingUploadTask::Upload(_) => {}
-            _ => panic!("Expected upload manager to return the next request!"),
-        }
+            PingUploadTask::Wait(time) => {
+                // Wait for the uploading window to reset
+                thread::sleep(Duration::from_millis(time));
+            }
+            _ => panic!("Expected upload manager to return a wait task!"),
+        };
+
+        let task = upload_manager.get_upload_task(&glean, false);
+        assert!(task.is_upload());
     }
 
     #[test]
@@ -895,10 +914,8 @@ mod test {
 
         // Verify the requests were properly enqueued
         for _ in 0..n {
-            match upload_manager.get_upload_task(&glean, false) {
-                PingUploadTask::Upload(_) => {}
-                _ => panic!("Expected upload manager to return the next request!"),
-            }
+            let task = upload_manager.get_upload_task(&glean, false);
+            assert!(task.is_upload());
         }
 
         // Verify that after all requests are returned, none are left
@@ -1113,10 +1130,8 @@ mod test {
         upload_manager.enqueue_ping(&glean, &doc_id, &path, "", None);
 
         // Get a task once
-        match upload_manager.get_upload_task(&glean, false) {
-            PingUploadTask::Upload(_) => {}
-            _ => panic!("Expected upload manager to return the next request!"),
-        }
+        let task = upload_manager.get_upload_task(&glean, false);
+        assert!(task.is_upload());
 
         // There should be no more queued tasks
         assert_eq!(
@@ -1168,10 +1183,8 @@ mod test {
 
         // Verify all requests are returned when we try again.
         for _ in 0..n {
-            match upload_manager.get_upload_task(&glean, false) {
-                PingUploadTask::Upload(_) => {}
-                _ => panic!("Expected upload manager to return the next request!"),
-            }
+            let task = upload_manager.get_upload_task(&glean, false);
+            assert!(task.is_upload());
         }
     }
 
@@ -1498,10 +1511,8 @@ mod test {
         // we should be throttled and thus get a PingUploadTask::Wait.
         // Check that we are indeed allowed to get this response as many times as expected.
         for _ in 0..max_wait_attempts {
-            assert_eq!(
-                upload_manager.get_upload_task(&glean, false),
-                PingUploadTask::Wait
-            );
+            let task = upload_manager.get_upload_task(&glean, false);
+            assert!(task.is_wait());
         }
 
         // Check that after we get PingUploadTask::Wait the allowed number of times,
@@ -1515,15 +1526,25 @@ mod test {
         thread::sleep(Duration::from_secs(secs_per_interval));
 
         // Check that we are allowed again to get pings.
-        match upload_manager.get_upload_task(&glean, false) {
-            PingUploadTask::Upload(_) => {}
-            _ => panic!("Expected upload manager to return the next request!"),
-        }
+        let task = upload_manager.get_upload_task(&glean, false);
+        assert!(task.is_upload());
 
         // And once we are done we don't need to wait anymore.
         assert_eq!(
             upload_manager.get_upload_task(&glean, false),
             PingUploadTask::Done
         );
+    }
+
+    #[test]
+    fn wait_task_contains_expected_wait_time_when_pending_pings_dir_not_processed_yet() {
+        let (glean, dir) = new_glean(None);
+        let upload_manager = PingUploadManager::new(dir.path(), "test");
+        match upload_manager.get_upload_task(&glean, false) {
+            PingUploadTask::Wait(time) => {
+                assert_eq!(time, WAIT_TIME_FOR_PING_PROCESSING);
+            }
+            _ => panic!("Expected upload manager to return a wait task!"),
+        };
     }
 }

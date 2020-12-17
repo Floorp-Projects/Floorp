@@ -71,6 +71,7 @@ impl StringMetric {
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
+            self.meta.lifetime,
         ) {
             Some(Metric::String(s)) => Some(s),
             _ => None,
