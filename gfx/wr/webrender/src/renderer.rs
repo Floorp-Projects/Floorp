@@ -4760,14 +4760,14 @@ impl Renderer {
             .borrow_mut()
             .get_composite_shader(
                 CompositeSurfaceFormat::Rgba,
-                ImageBufferKind::Texture2DArray,
+                ImageBufferKind::Texture2D,
             ).bind(
                 &mut self.device,
                 projection,
                 &mut self.renderer_errors
             );
 
-        let mut current_shader_params = (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray);
+        let mut current_shader_params = (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2D);
         let mut current_textures = BatchTextures::empty();
         let mut instances = Vec::new();
 
@@ -4837,7 +4837,7 @@ impl Renderer {
                             tile.z_id,
                         ),
                         BatchTextures::composite_rgb(texture),
-                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2DArray),
+                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2D),
                     )
                 }
                 CompositeTileSurface::ExternalSurface { external_surface_index } => {
