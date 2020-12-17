@@ -257,22 +257,23 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
-        <CSSTransition
-          timeout={250}
-          classNames="customize-animate"
-          in={showCustomizationMenu}
-          appear={true}
-          unmountOnExit={true}
-        >
-          <CustomizeMenu
-            onClose={this.closeCustomizationMenu}
-            openPreferences={this.openPreferences}
-            setPref={this.setPref}
-            enabledSections={enabledSections}
-            pocketRegion={pocketRegion}
-            mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-          />
-        </CSSTransition>
+        {canShowCustomizationMenu && (
+          <CSSTransition
+            timeout={0}
+            classNames="customize-animate"
+            in={showCustomizationMenu}
+            appear={true}
+          >
+            <CustomizeMenu
+              onClose={this.closeCustomizationMenu}
+              openPreferences={this.openPreferences}
+              setPref={this.setPref}
+              enabledSections={enabledSections}
+              pocketRegion={pocketRegion}
+              mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
+            />
+          </CSSTransition>
+        )}
       </div>
     );
   }
