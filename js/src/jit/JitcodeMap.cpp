@@ -569,21 +569,6 @@ void JitcodeGlobalTable::setAllEntriesAsExpired() {
   }
 }
 
-// TODO(no-TI): remove this and IfUnmarked.
-struct Unconditionally {
-  template <typename T>
-  static bool ShouldTrace(JSRuntime* rt, T* thingp) {
-    return true;
-  }
-};
-
-struct IfUnmarked {
-  template <typename T>
-  static bool ShouldTrace(JSRuntime* rt, T* thingp) {
-    return !IsMarkedUnbarriered(rt, thingp);
-  }
-};
-
 bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
   // JitcodeGlobalTable must keep entries that are in the sampler buffer
   // alive. This conditionality is akin to holding the entries weakly.
@@ -640,7 +625,7 @@ bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
       continue;
     }
 
-    markedAny |= entry->trace<IfUnmarked>(marker);
+    markedAny |= entry->trace(marker);
   }
 
   return markedAny;
@@ -665,9 +650,8 @@ void JitcodeGlobalTable::traceWeak(JSRuntime* rt, JSTracer* trc) {
   }
 }
 
-template <class ShouldTraceProvider>
 bool JitcodeGlobalEntry::BaseEntry::traceJitcode(JSTracer* trc) {
-  if (ShouldTraceProvider::ShouldTrace(trc->runtime(), &jitcode_)) {
+  if (!IsMarkedUnbarriered(trc->runtime(), &jitcode_)) {
     TraceManuallyBarrieredEdge(trc, &jitcode_,
                                "jitcodglobaltable-baseentry-jitcode");
     return true;
@@ -680,9 +664,8 @@ bool JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread(
   return IsMarkedUnbarriered(rt, &jitcode_);
 }
 
-template <class ShouldTraceProvider>
 bool JitcodeGlobalEntry::BaselineEntry::trace(JSTracer* trc) {
-  if (ShouldTraceProvider::ShouldTrace(trc->runtime(), &script_)) {
+  if (!IsMarkedUnbarriered(trc->runtime(), &script_)) {
     TraceManuallyBarrieredEdge(trc, &script_,
                                "jitcodeglobaltable-baselineentry-script");
     return true;
@@ -698,14 +681,12 @@ bool JitcodeGlobalEntry::BaselineEntry::isMarkedFromAnyThread(JSRuntime* rt) {
   return IsMarkedUnbarriered(rt, &script_);
 }
 
-template <class ShouldTraceProvider>
 bool JitcodeGlobalEntry::IonEntry::trace(JSTracer* trc) {
   bool tracedAny = false;
 
   JSRuntime* rt = trc->runtime();
   for (unsigned i = 0; i < numScripts(); i++) {
-    if (ShouldTraceProvider::ShouldTrace(rt,
-                                         &sizedScriptList()->pairs[i].script)) {
+    if (!IsMarkedUnbarriered(rt, &sizedScriptList()->pairs[i].script)) {
       TraceManuallyBarrieredEdge(trc, &sizedScriptList()->pairs[i].script,
                                  "jitcodeglobaltable-ionentry-script");
       tracedAny = true;

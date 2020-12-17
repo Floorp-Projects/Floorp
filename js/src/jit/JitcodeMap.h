@@ -216,7 +216,6 @@ class JitcodeGlobalEntry {
       return startsBelowPointer(ptr) && endsAbovePointer(ptr);
     }
 
-    template <class ShouldTraceProvider>
     bool traceJitcode(JSTracer* trc);
     bool isJitcodeMarkedFromAnyThread(JSRuntime* rt);
   };
@@ -300,7 +299,6 @@ class JitcodeGlobalEntry {
 
     uint64_t lookupRealmID(void* ptr) const;
 
-    template <class ShouldTraceProvider>
     bool trace(JSTracer* trc);
     void sweepChildren();
     bool isMarkedFromAnyThread(JSRuntime* rt);
@@ -348,7 +346,6 @@ class JitcodeGlobalEntry {
 
     uint64_t lookupRealmID() const;
 
-    template <class ShouldTraceProvider>
     bool trace(JSTracer* trc);
     void sweepChildren();
     bool isMarkedFromAnyThread(JSRuntime* rt);
@@ -666,15 +663,14 @@ class JitcodeGlobalEntry {
 
   Zone* zone() { return baseEntry().jitcode()->zone(); }
 
-  template <class ShouldTraceProvider>
   bool trace(JSTracer* trc) {
-    bool tracedAny = baseEntry().traceJitcode<ShouldTraceProvider>(trc);
+    bool tracedAny = baseEntry().traceJitcode(trc);
     switch (kind()) {
       case Ion:
-        tracedAny |= ionEntry().trace<ShouldTraceProvider>(trc);
+        tracedAny |= ionEntry().trace(trc);
         break;
       case Baseline:
-        tracedAny |= baselineEntry().trace<ShouldTraceProvider>(trc);
+        tracedAny |= baselineEntry().trace(trc);
         break;
       case BaselineInterpreter:
       case Dummy:
