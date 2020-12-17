@@ -34,14 +34,6 @@ impl TimespanMetric {
 
 #[inherent(pub)]
 impl glean_core::traits::Timespan for TimespanMetric {
-    /// Starts tracking time for the provided metric.
-    ///
-    /// This uses an internal monotonic timer.
-    ///
-    /// This records an error if it's already tracking time (i.e.
-    /// [`start`](TimespanMetric::start) was already called with no
-    /// corresponding [`stop`](TimespanMetric::stop)): in that case the original
-    /// start time will be preserved.
     fn start(&self) {
         let start_time = time::precise_time_ns();
 
@@ -56,9 +48,6 @@ impl glean_core::traits::Timespan for TimespanMetric {
         });
     }
 
-    /// Stops tracking time for the provided metric. Sets the metric to the elapsed time.
-    ///
-    /// This will record an error if no [`start`](TimespanMetric::start) was called.
     fn stop(&self) {
         let stop_time = time::precise_time_ns();
 
@@ -73,8 +62,6 @@ impl glean_core::traits::Timespan for TimespanMetric {
         });
     }
 
-    /// Aborts a previous [`start`](TimespanMetric::start) call. No error is
-    /// recorded if no [`start`](TimespanMetric::start) was called.
     fn cancel(&self) {
         let metric = Arc::clone(&self.0);
         dispatcher::launch(move || {
@@ -84,18 +71,9 @@ impl glean_core::traits::Timespan for TimespanMetric {
             lock.cancel()
         });
     }
-    /// **Exported for test purposes.**
-    ///
-    /// Gets the currently stored value as an integer.
-    ///
-    /// This doesn't clear the stored value.
-    ///
-    /// # Arguments
-    ///
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
+
     fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<u64> {
-        dispatcher::block_on_queue();
+        crate::block_on_dispatcher();
 
         crate::with_glean(|glean| {
             // Note: The order of operations is important here to avoid potential deadlocks because
@@ -116,25 +94,12 @@ impl glean_core::traits::Timespan for TimespanMetric {
         })
     }
 
-    /// **Exported for test purposes.**
-    ///
-    /// Gets the number of recorded errors for the given metric and error type.
-    ///
-    /// # Arguments
-    ///
-    /// * `error` - The type of error
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
-    ///
-    /// # Returns
-    ///
-    /// The number of errors reported.
     fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: ErrorType,
         ping_name: S,
     ) -> i32 {
-        dispatcher::block_on_queue();
+        crate::block_on_dispatcher();
 
         let metric = self
             .0
