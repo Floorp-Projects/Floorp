@@ -84,6 +84,7 @@ impl CounterMetric {
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
+            self.meta.lifetime,
         ) {
             Some(Metric::Counter(i)) => Some(i),
             _ => None,

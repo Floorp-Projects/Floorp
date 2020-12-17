@@ -103,6 +103,7 @@ impl UuidMetric {
             glean.storage(),
             storage_name,
             &self.meta().identifier(glean),
+            self.meta.lifetime,
         ) {
             Some(Metric::Uuid(uuid)) => Uuid::parse_str(&uuid).ok(),
             _ => None,

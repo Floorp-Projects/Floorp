@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use crate::private::PingType;
 use crate::private::{BooleanMetric, CounterMetric};
 use std::path::PathBuf;
 
@@ -48,7 +49,7 @@ fn send_a_ping() {
     };
 
     let _t = new_glean(Some(cfg), true);
-    crate::dispatcher::block_on_queue();
+    crate::block_on_dispatcher();
 
     // Define a new ping and submit it.
     const PING_NAME: &str = "test-ping";
@@ -65,7 +66,7 @@ fn disabling_upload_disables_metrics_recording() {
     let _lock = lock_test();
 
     let _t = new_glean(None, true);
-    crate::dispatcher::block_on_queue();
+    crate::block_on_dispatcher();
 
     let metric = BooleanMetric::new(CommonMetricData {
         name: "bool_metric".into(),
@@ -159,7 +160,7 @@ fn test_experiments_recording_before_glean_inits() {
         ClientInfoMetrics::unknown(),
         false,
     );
-    crate::dispatcher::block_on_queue();
+    crate::block_on_dispatcher();
 
     assert!(test_is_experiment_active(
         "experiment_set_preinit".to_string()
@@ -269,7 +270,7 @@ fn initializing_twice_is_a_noop() {
         true,
     );
 
-    dispatcher::block_on_queue();
+    crate::block_on_dispatcher();
 
     test_reset_glean(
         Configuration {
@@ -400,7 +401,7 @@ fn setting_debug_view_tag_before_initialization_should_not_crash() {
     };
 
     let _t = new_glean(Some(cfg), true);
-    crate::dispatcher::block_on_queue();
+    crate::block_on_dispatcher();
 
     // Submit a baseline ping.
     submit_ping_by_name("baseline", Some("background"));
@@ -459,7 +460,7 @@ fn setting_source_tags_before_initialization_should_not_crash() {
     };
 
     let _t = new_glean(Some(cfg), true);
-    crate::dispatcher::block_on_queue();
+    crate::block_on_dispatcher();
 
     // Submit a baseline ping.
     submit_ping_by_name("baseline", Some("background"));
@@ -480,4 +481,60 @@ fn setting_source_tags_before_initialization_should_not_crash() {
 #[ignore] // TODO: To be done in bug 1673672.
 fn flipping_upload_enabled_respects_order_of_events() {
     todo!()
+}
+
+#[test]
+fn registering_pings_before_init_must_work() {
+    let _lock = lock_test();
+
+    destroy_glean(true);
+    assert!(!was_initialize_called());
+
+    // Define a fake uploader that reports back the submission headers
+    // using a crossbeam channel.
+    let (s, r) = crossbeam_channel::bounded::<String>(1);
+
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    };
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom ping and attempt its registration.
+    let sample_ping = PingType::new("pre-register", true, true, vec![]);
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+
+    let cfg = Configuration {
+        data_path: tmpname,
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        channel: Some("testing".into()),
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: Some(Box::new(FakeUploader { sender: s })),
+    };
+
+    let _t = new_glean(Some(cfg), true);
+    crate::block_on_dispatcher();
+
+    // Submit a baseline ping.
+    sample_ping.submit(None);
+
+    // Wait for the ping to arrive.
+    let url = r.recv().unwrap();
+    assert!(url.contains("pre-register"));
 }

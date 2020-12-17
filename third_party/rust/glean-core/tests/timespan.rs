@@ -247,7 +247,7 @@ fn set_raw_time() {
     );
 
     let time = Duration::from_secs(1);
-    metric.set_raw(&glean, time, false);
+    metric.set_raw(&glean, time);
 
     let time_in_ns = time.as_nanos() as u64;
     assert_eq!(Some(time_in_ns), metric.test_get_value(&glean, "store1"));
@@ -272,7 +272,7 @@ fn set_raw_time_does_nothing_when_timer_running() {
     let time = Duration::from_secs(42);
 
     metric.set_start(&glean, 0);
-    metric.set_raw(&glean, time, false);
+    metric.set_raw(&glean, time);
     metric.set_stop(&glean, 60);
 
     // We expect the start/stop value, not the raw value.

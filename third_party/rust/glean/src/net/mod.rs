@@ -22,9 +22,6 @@ pub use http_uploader::*;
 
 mod http_uploader;
 
-/// The duration the uploader thread should sleep, when told to by glean-core.
-const THROTTLE_BACKOFF_TIME: Duration = Duration::from_secs(60);
-
 /// A description of a component used to upload pings.
 pub trait PingUploader: std::fmt::Debug + Send + Sync {
     /// Uploads a ping to a server.
@@ -100,8 +97,8 @@ impl UploadManager {
                             // Process the upload response.
                             with_glean(|glean| glean.process_ping_upload_response(&doc_id, result));
                         }
-                        PingUploadTask::Wait => {
-                            thread::sleep(THROTTLE_BACKOFF_TIME);
+                        PingUploadTask::Wait(time) => {
+                            thread::sleep(Duration::from_millis(time));
                         }
                         PingUploadTask::Done => {
                             // Nothing to do here, break out of the loop and clear the
