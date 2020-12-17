@@ -8,6 +8,7 @@
 #include "FileSystemRootDirectoryReader.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "CallbackRunnables.h"
+#include "nsReadableUtils.h"
 
 namespace mozilla::dom {
 
@@ -124,12 +125,10 @@ void FileSystemRootDirectoryEntry::GetInternal(
 
   // Let's recreate a path without the first directory.
   nsAutoString path;
-  for (uint32_t i = 1, len = parts.Length(); i < len; ++i) {
-    path.Append(parts[i]);
-    if (i < len - 1) {
-      path.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-    }
-  }
+  StringJoinAppend(
+      path,
+      NS_LITERAL_STRING_FROM_CSTRING(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL),
+      Span{parts}.From(1));
 
   auto* directoryEntry = static_cast<FileSystemDirectoryEntry*>(entry.get());
   directoryEntry->GetInternal(path, aFlag, aSuccessCallback, aErrorCallback,
