@@ -1058,23 +1058,17 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
                                                      bool handleMissing) {
   MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
 
-  // TODO(no-TI): remove.
-  handleMissing = true;
-
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {
-    writer.megamorphicLoadSlotResult(objId, JSID_TO_ATOM(id)->asPropertyName(),
-                                     handleMissing);
+    writer.megamorphicLoadSlotResult(objId, JSID_TO_ATOM(id)->asPropertyName());
   } else {
     MOZ_ASSERT(cacheKind_ == CacheKind::GetElem ||
                cacheKind_ == CacheKind::GetElemSuper);
-    writer.megamorphicLoadSlotByValueResult(objId, getElemKeyValueId(),
-                                            handleMissing);
+    writer.megamorphicLoadSlotByValueResult(objId, getElemKeyValueId());
   }
   writer.returnFromIC();
 
-  trackAttached(handleMissing ? "MegamorphicMissingNativeSlot"
-                              : "MegamorphicNativeSlot");
+  trackAttached("MegamorphicNativeSlot");
 }
 
 AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,

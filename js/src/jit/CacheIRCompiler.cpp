@@ -6503,8 +6503,7 @@ bool CacheIRCompiler::emitWrapResult() {
 }
 
 bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult(ObjOperandId objId,
-                                                           ValOperandId idId,
-                                                           bool handleMissing) {
+                                                           ValOperandId idId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
@@ -6538,11 +6537,8 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult(ObjOperandId objId,
   masm.passABIArg(scratch);
   masm.passABIArg(obj);
   masm.passABIArg(idVal.scratchReg());
-  if (handleMissing) {
-    masm.callWithABI<Fn, GetNativeDataPropertyByValuePure<true>>();
-  } else {
-    masm.callWithABI<Fn, GetNativeDataPropertyByValuePure<false>>();
-  }
+  masm.callWithABI<Fn, GetNativeDataPropertyByValuePure>();
+
   masm.mov(ReturnReg, scratch);
   masm.PopRegsInMask(volatileRegs);
 
@@ -6797,8 +6793,7 @@ bool CacheIRCompiler::emitLoadInstanceOfObjectResult(ValOperandId lhsId,
 }
 
 bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
-                                                    uint32_t nameOffset,
-                                                    bool handleMissing) {
+                                                    uint32_t nameOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
@@ -6836,11 +6831,8 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   emitLoadStubField(name, scratch2);
   masm.passABIArg(scratch2);
   masm.passABIArg(scratch3);
-  if (handleMissing) {
-    masm.callWithABI<Fn, GetNativeDataPropertyPure<true>>();
-  } else {
-    masm.callWithABI<Fn, GetNativeDataPropertyPure<false>>();
-  }
+  masm.callWithABI<Fn, GetNativeDataPropertyPure>();
+
   masm.mov(ReturnReg, scratch2);
   masm.PopRegsInMask(volatileRegs);
 

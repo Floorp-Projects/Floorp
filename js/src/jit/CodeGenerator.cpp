@@ -4460,7 +4460,7 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.passABIArg(temp2);
   masm.passABIArg(temp3);
 
-  masm.callWithABI<Fn, GetNativeDataPropertyPure<true>>();
+  masm.callWithABI<Fn, GetNativeDataPropertyPure>();
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
   masm.popValue(output);
@@ -4496,7 +4496,7 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.passABIArg(temp2);
   masm.passABIArg(obj);
   masm.passABIArg(temp1);
-  masm.callWithABI<Fn, GetNativeDataPropertyByValuePure<true>>();
+  masm.callWithABI<Fn, GetNativeDataPropertyByValuePure>();
 
   MOZ_ASSERT(!idVal.aliases(temp1));
   masm.mov(ReturnReg, temp1);
