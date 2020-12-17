@@ -558,7 +558,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           className: "tiles-topsites-section",
           name: "topsites-section",
           id: "topsites-section",
-          "aria-labelledby": "topsites-disclaimer",
+          "aria-labelledby": "helptext",
           role: "region"
         }, this.props.topSites.data.slice(0, 5).map(({
           icon,
@@ -648,17 +648,13 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     return steps;
   }
 
-  renderDisclaimer() {
-    if (this.props.content.tiles && this.props.content.tiles.type === "topsites" && this.props.topSites && this.props.topSites.showImportable) {
-      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-        text: this.props.content.disclaimer
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
-        id: "topsites-disclaimer",
-        className: "tiles-topsites-disclaimer"
-      }));
-    }
-
-    return null;
+  renderHelpText() {
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+      text: this.props.content.help_text.text
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
+      id: "helptext",
+      className: `helptext ${this.props.content.help_text.position}`
+    }));
   }
 
   render() {
@@ -667,6 +663,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       topSites
     } = this.props;
     const hasSecondaryTopCTA = content.secondary_button && content.secondary_button.position === "top";
+    const showImportableSitesDisclaimer = content.tiles && content.tiles.type === "topsites" && topSites && topSites.showImportable;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
       className: `screen ${this.props.id}`
     }, hasSecondaryTopCTA ? this.renderSecondaryCTA("top") : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -684,11 +681,11 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       className: "primary",
       value: "primary_button",
       onClick: this.handleAction
-    }))), content.secondary_button && content.secondary_button.position !== "top" ? this.renderSecondaryCTA() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
-      className: content.tiles && content.tiles.type === "topsites" && topSites && topSites.showImportable ? "steps has-disclaimer" : "steps",
+    }))), content.secondary_button && content.secondary_button.position !== "top" ? this.renderSecondaryCTA() : null, content.help_text && content.help_text.position === "default" ? this.renderHelpText() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
+      className: content.help_text && content.help_text.position === "footer" || showImportableSitesDisclaimer ? "steps has-helptext" : "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": `{"current": ${parseInt(this.props.order, 10) + 1}, "total": ${this.props.totalNumberOfScreens}}`
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null), this.renderStepsIndicator()), this.renderDisclaimer());
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null), this.renderStepsIndicator()), content.help_text && content.help_text.position === "footer" || showImportableSitesDisclaimer ? this.renderHelpText() : null);
   }
 
 }
@@ -984,8 +981,10 @@ const DEFAULT_WELCOME_CONTENT = {
     order: 1,
     content: {
       zap: true,
-      disclaimer: {
-        string_id: "onboarding-import-sites-disclaimer"
+      help_text: {
+        text: {
+          string_id: "onboarding-import-sites-disclaimer"
+        }
       },
       title: {
         string_id: "onboarding-multistage-import-header"

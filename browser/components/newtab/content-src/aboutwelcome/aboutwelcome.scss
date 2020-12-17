@@ -459,16 +459,6 @@ body {
     }
   }
 
-  .tiles-topsites-disclaimer {
-    display: flex;
-    flex-direction: column;
-    padding: 1em;
-    text-align: center;
-    color: var(--grey-subtitle-1);
-    font-size: 12px;
-    line-height: 18px;
-  }
-
   .tiles-topsites-section {
     $host-size: 12px;
     $tile-size: 96px;
@@ -639,6 +629,19 @@ body {
     }
   }
 
+  .helptext {
+    padding: 1em;
+    text-align: center;
+    color: var(--grey-subtitle-1);
+    font-size: 12px;
+    line-height: 18px;
+
+    &.default {
+      align-self: center;
+      max-width: 40%;
+    }
+  }
+
   .steps {
     display: flex;
     flex-direction: row;
@@ -647,7 +650,7 @@ body {
     padding: 32px 0 66px;
     z-index: 1;
 
-    &.has-disclaimer {
+    &.has-helptext {
       padding-bottom: 0;
     }
 
