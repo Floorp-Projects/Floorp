@@ -626,10 +626,11 @@ class GridInspector {
         }
 
         // If the grid for which the color was updated currently has a highlighter, update
-        // the color.
+        // the color. If the node is not explicitly highlighted, we assume it's the
+        // parent grid for a subgrid.
         if (this.highlighters.gridHighlighters.has(node)) {
           this.highlighters.showGridHighlighter(node);
-        } else if (this.highlighters.parentGridHighlighters.has(node)) {
+        } else {
           this.highlighters.showParentGridHighlighter(node);
         }
       }
