@@ -26,14 +26,14 @@ void ActorChild::SetWorkerRef(SafeRefPtr<CacheWorkerRef> aWorkerRef) {
 
   mWorkerRef = std::move(aWorkerRef);
   if (mWorkerRef) {
-    mWorkerRef->AddActor(this);
+    mWorkerRef->AddActor(*this);
   }
 }
 
 void ActorChild::RemoveWorkerRef() {
   MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerRef);
   if (mWorkerRef) {
-    mWorkerRef->RemoveActor(this);
+    mWorkerRef->RemoveActor(*this);
     mWorkerRef = nullptr;
   }
 }

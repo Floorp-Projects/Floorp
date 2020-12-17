@@ -35,8 +35,8 @@ class CacheWorkerRef final : public SafeRefCounted<CacheWorkerRef> {
   static SafeRefPtr<CacheWorkerRef> PreferBehavior(
       SafeRefPtr<CacheWorkerRef> aCurrentRef, Behavior aBehavior);
 
-  void AddActor(ActorChild* aActor);
-  void RemoveActor(ActorChild* aActor);
+  void AddActor(ActorChild& aActor);
+  void RemoveActor(ActorChild& aActor);
 
   bool Notified() const;
 
@@ -45,7 +45,7 @@ class CacheWorkerRef final : public SafeRefCounted<CacheWorkerRef> {
 
   void Notify();
 
-  nsTArray<ActorChild*> mActorList;
+  nsTArray<NotNull<ActorChild*>> mActorList;
 
   Behavior mBehavior;
   bool mNotified;
