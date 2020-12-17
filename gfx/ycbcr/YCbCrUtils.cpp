@@ -260,7 +260,7 @@ void ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
   if (aDestFormat != SurfaceFormat::R5G6B5_UINT16)
     gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::X8R8G8B8,
                      aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8X8,
-                     srcData.mPicSize);
+                     aData.mPicSize);
 #endif
 }
 
