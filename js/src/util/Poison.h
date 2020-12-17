@@ -132,6 +132,19 @@ static inline void PoisonImpl(void* ptr, uint8_t value, size_t num) {
 #  endif
   JS::Value v = js::PoisonedObjectValue(poison);
 
+#  if defined(JS_NUNBOX32)
+  // On 32-bit arch, ptr may not be JS::Value-size aligned.
+  uintptr_t begin_count = uintptr_t(ptr) % sizeof(JS::Value);
+  if (begin_count) {
+    uint8_t* begin = static_cast<uint8_t*>(ptr);
+    mozilla::PodSet(begin, value, begin_count);
+    ptr = begin + begin_count;
+    num -= begin_count;
+  }
+#  endif
+
+  MOZ_ASSERT(uintptr_t(ptr) % sizeof(JS::Value) == 0);
+
   size_t value_count = num / sizeof(v);
   size_t byte_count = num % sizeof(v);
   mozilla::PodSet(reinterpret_cast<JS::Value*>(ptr), v, value_count);
