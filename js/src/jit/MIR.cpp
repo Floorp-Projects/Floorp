@@ -1953,16 +1953,15 @@ bool MPhi::updateForReplacement(MDefinition* def) {
   return true;
 }
 
-static void MergeTypes(MIRType* ptype, MIRType newType) {
-  // TODO(no-TI): clean up
-  if (newType != *ptype) {
-    if (IsTypeRepresentableAsDouble(newType) &&
-        IsTypeRepresentableAsDouble(*ptype)) {
-      *ptype = MIRType::Double;
-    } else if (*ptype != MIRType::Value) {
-      *ptype = MIRType::Value;
-    }
+static MIRType MergeTypes(MIRType type, MIRType newType) {
+  if (type == newType) {
+    return type;
   }
+  if (IsTypeRepresentableAsDouble(type) &&
+      IsTypeRepresentableAsDouble(newType)) {
+    return MIRType::Double;
+  }
+  return MIRType::Value;
 }
 
 bool MPhi::specializeType(TempAllocator& alloc) {
@@ -1977,7 +1976,7 @@ bool MPhi::specializeType(TempAllocator& alloc) {
 
   for (size_t i = 1; i < inputs_.length(); i++) {
     MDefinition* def = getOperand(i);
-    MergeTypes(&resultType, def->type());
+    resultType = MergeTypes(resultType, def->type());
   }
 
   setResultType(resultType);
@@ -2033,13 +2032,6 @@ bool MPhi::typeIncludes(MDefinition* def) {
   }
 
   return this->mightBeType(def->type());
-}
-
-MBox::MBox(TempAllocator& alloc, MDefinition* ins)
-    : MUnaryInstruction(classOpcode, ins) {
-  // TODO(no-TI): move to MIR.h
-  setResultType(MIRType::Value);
-  setMovable();
 }
 
 void MCall::addArg(size_t argnum, MDefinition* arg) {
