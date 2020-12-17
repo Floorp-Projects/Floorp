@@ -118,6 +118,12 @@ static MOZ_ALWAYS_INLINE void SetMemCheckKind(void* ptr, size_t bytes,
 
 namespace js {
 
+static inline void AssertPoisonPointerAlignment(void* ptr) {
+  // PoisonImpl requires the pointer passed to *Poison functions to be
+  // aligned to JS::Value size.
+  MOZ_ASSERT(uintptr_t(ptr) % sizeof(JS::Value) == 0);
+}
+
 static inline void PoisonImpl(void* ptr, uint8_t value, size_t num) {
   // Without a valid Value tag, a poisoned Value may look like a valid
   // floating point number. To ensure that we crash more readily when
@@ -148,6 +154,7 @@ static inline void PoisonImpl(void* ptr, uint8_t value, size_t num) {
 // Unconditionally poison a region on memory.
 static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
                                 MemCheckKind kind) {
+  AssertPoisonPointerAlignment(ptr);
   PoisonImpl(ptr, value, num);
   SetMemCheckKind(ptr, num, kind);
 }
@@ -160,6 +167,7 @@ extern bool gDisablePoisoning;
 // environment variable.
 static inline void Poison(void* ptr, uint8_t value, size_t num,
                           MemCheckKind kind) {
+  AssertPoisonPointerAlignment(ptr);
 #if defined(JS_GC_POISONING)
   if (!js::gDisablePoisoning) {
     PoisonImpl(ptr, value, num);
@@ -172,6 +180,7 @@ static inline void Poison(void* ptr, uint8_t value, size_t num,
 // JSGC_DISABLE_POISONING environment variable.
 static inline void DebugOnlyPoison(void* ptr, uint8_t value, size_t num,
                                    MemCheckKind kind) {
+  AssertPoisonPointerAlignment(ptr);
 #if defined(DEBUG)
   Poison(ptr, value, num, kind);
 #else
