@@ -18,9 +18,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/BaseProfilerMarkers.h"
+#include "mozilla/FStream.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/glue/Debug.h"
-#include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -329,6 +330,58 @@ static bool TryGetSkeletonUILock() {
                     nullptr);
 
   return lockFile != INVALID_HANDLE_VALUE;
+}
+
+const char kGeneralSection[] = "[General]";
+const char kStartWithLastProfile[] = "StartWithLastProfile=";
+
+static bool ProfileDbHasStartWithLastProfile(IFStream& iniContents) {
+  bool inGeneral = false;
+  std::string line;
+  while (std::getline(iniContents, line)) {
+    int whitespace = 0;
+    while (line.length() > whitespace &&
+           (line[whitespace] == ' ' || line[whitespace] == '\t')) {
+      whitespace++;
+    }
+    line.erase(0, whitespace);
+
+    if (line.compare(kGeneralSection) == 0) {
+      inGeneral = true;
+    } else if (inGeneral) {
+      if (line[0] == '[') {
+        inGeneral = false;
+      } else {
+        if (line.find(kStartWithLastProfile) == 0) {
+          char val = line.c_str()[sizeof(kStartWithLastProfile) - 1];
+          if (val == '0') {
+            return false;
+          } else if (val == '1') {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  // If we don't find it in the .ini file, we interpret that as true
+  return true;
+}
+
+static bool CheckForStartWithLastProfile() {
+  auto roamingAppData = GetKnownFolderPath(FOLDERID_RoamingAppData);
+  if (!roamingAppData) {
+    return false;
+  }
+  std::wstring profileDbPath(roamingAppData.get());
+  profileDbPath.append(
+      L"\\" MOZ_APP_VENDOR L"\\" MOZ_APP_BASENAME L"\\profiles.ini");
+  IFStream profileDb(profileDbPath.c_str());
+  if (profileDb.fail()) {
+    return false;
+  }
+
+  return ProfileDbHasStartWithLastProfile(profileDb);
 }
 
 // We could use nsAutoRegKey, but including nsWindowsHelpers.h causes build
@@ -1470,7 +1523,8 @@ static bool EnvHasValue(const char* name) {
 // which is visually jarring and can also be unpredictable - there's no
 // guarantee that the code which handles the non-default window is set up to
 // properly handle the transition from the skeleton UI window.
-bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
+bool AreAllCmdlineArgumentsApproved(int argc, char** argv,
+                                    bool* explicitProfile) {
   const char* approvedArgumentsArray[] = {
       // These won't cause the browser to be visualy different in any way
       "new-instance", "no-remote", "browser", "foreground", "setDefaultBrowser",
@@ -1515,6 +1569,7 @@ bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
   }
 
 #ifdef MOZILLA_OFFICIAL
+  int profileArgIndex = -1;
   // If we're running mochitests or direct marionette tests, those specify a
   // temporary profile, and we want to ensure that we get the added coverage
   // from those.
@@ -1524,10 +1579,13 @@ bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
       if (!approvedArguments.append("profile")) {
         return false;
       }
+      profileArgIndex = approvedArguments.length() - 1;
 
       break;
     }
   }
+#else
+  int profileArgIndex = approvedArguments.length() - 1;
 #endif
 
   for (int i = 1; i < argc; ++i) {
@@ -1558,6 +1616,10 @@ bool AreAllCmdlineArgumentsApproved(int argc, char** argv) {
       // casing would visually alter the firefox window.
       if (!_stricmp(flag, approvedArg)) {
         approved = true;
+
+        if (i == profileArgIndex) {
+          *explicitProfile = true;
+        }
         break;
       }
     }
@@ -1581,7 +1643,8 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   const TimeStamp skeletonStart = TimeStamp::NowUnfuzzed();
 #endif
 
-  if (!AreAllCmdlineArgumentsApproved(argc, argv) ||
+  bool explicitProfile = false;
+  if (!AreAllCmdlineArgumentsApproved(argc, argv, &explicitProfile) ||
       EnvHasValue("MOZ_SAFE_MODE_RESTART") || EnvHasValue("XRE_PROFILE_PATH") ||
       EnvHasValue("MOZ_RESET_PROFILE_RESTART")) {
     sPreXULSkeletonUIDisallowed = true;
@@ -1616,6 +1679,10 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
 
   if (!TryGetSkeletonUILock()) {
     printf_stderr("Error trying to get skeleton UI lock %lu\n", GetLastError());
+    return;
+  }
+
+  if (!explicitProfile && !CheckForStartWithLastProfile()) {
     return;
   }
 
