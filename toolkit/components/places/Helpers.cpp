@@ -6,6 +6,7 @@
 #include "Helpers.h"
 #include "mozIStorageError.h"
 #include "prio.h"
+#include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsNavHistory.h"
 #include "mozilla/Base64.h"
@@ -364,14 +365,12 @@ nsresult TokenizeQueryString(const nsACString& aQuery,
 void TokensToQueryString(const nsTArray<QueryKeyValuePair>& aTokens,
                          nsACString& aQuery) {
   aQuery = "place:"_ns;
-  for (uint32_t i = 0; i < aTokens.Length(); i++) {
-    if (i > 0) {
-      aQuery.Append("&");
-    }
-    aQuery.Append(aTokens[i].key);
-    aQuery.AppendLiteral("=");
-    aQuery.Append(aTokens[i].value);
-  }
+  StringJoinAppend(aQuery, "&"_ns, aTokens,
+                   [](nsACString& dst, const QueryKeyValuePair& token) {
+                     dst.Append(token.key);
+                     dst.AppendLiteral("=");
+                     dst.Append(token.value);
+                   });
 }
 
 }  // namespace places
