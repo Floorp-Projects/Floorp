@@ -618,7 +618,6 @@ void ICFallbackStub::maybeInvalidateWarp(JSContext* cx, JSScript* script) {
     return;
   }
 
-  MOZ_ASSERT(JitOptions.warpBuilder);
   clearUsedByTranspiler();
 
   if (script->hasIonScript()) {

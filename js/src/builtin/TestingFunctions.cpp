@@ -507,10 +507,6 @@ static bool TrialInline(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setUndefined();
 
-  if (!jit::JitOptions.warpBuilder) {
-    return true;
-  }
-
   FrameIter iter(cx);
   if (iter.done() || !iter.isBaseline() || iter.realm() != cx->realm()) {
     return true;

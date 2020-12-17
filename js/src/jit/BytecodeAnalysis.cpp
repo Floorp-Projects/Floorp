@@ -74,9 +74,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
     JitSpew(JitSpew_BaselineOp, "Analyzing op @ %u (end=%u): %s",
             unsigned(offset), unsigned(script_->length()), CodeName(op));
 
-    if (JitOptions.warpBuilder) {
-      checkWarpSupport(op);
-    }
+    checkWarpSupport(op);
 
     // If this bytecode info has not yet been initialized, it's not reachable.
     if (!infos_[offset].initialized) {

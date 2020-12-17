@@ -2931,9 +2931,7 @@ void LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins) {
 void LIRGenerator::visitArrayLength(MArrayLength* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   auto* lir = new (alloc()) LArrayLength(useRegisterAtStart(ins->elements()));
-  if (JitOptions.warpBuilder) {
-    assignSnapshot(lir, ins->bailoutKind());
-  }
+  assignSnapshot(lir, ins->bailoutKind());
   define(lir, ins);
 }
 
@@ -3460,9 +3458,7 @@ void LIRGenerator::visitArraySlice(MArraySlice* ins) {
       useRegisterAtStart(ins->object()), useRegisterAtStart(ins->begin()),
       useRegisterAtStart(ins->end()), tempFixed(CallTempReg0),
       tempFixed(CallTempReg1));
-  if (JitOptions.warpBuilder) {
-    assignSnapshot(lir, ins->bailoutKind());
-  }
+  assignSnapshot(lir, ins->bailoutKind());
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

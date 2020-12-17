@@ -1381,13 +1381,6 @@ bool MParameter::congruentTo(const MDefinition* ins) const {
   return ins->toParameter()->index() == index_;
 }
 
-WrappedFunction::WrappedFunction(JSFunction* fun)
-    : nativeFun_(fun->isNativeWithoutJitEntry() ? fun : nullptr),
-      nargs_(fun->nargs()),
-      flags_(fun->flags()) {
-  MOZ_ASSERT(!JitOptions.warpBuilder);
-}
-
 WrappedFunction::WrappedFunction(JSFunction* nativeFun, uint16_t nargs,
                                  FunctionFlags flags)
     : nativeFun_(nativeFun), nargs_(nargs), flags_(flags) {
