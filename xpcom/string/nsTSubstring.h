@@ -1371,74 +1371,8 @@ static_assert(sizeof(nsTSubstring<char>) ==
               "Don't add new data fields to nsTSubstring_CharT. "
               "Add to nsTStringRepr<T> instead.");
 
-// You should not need to instantiate this class directly.
-// Use nsTSubstring::Split instead.
-template <typename T>
-class nsTSubstringSplitter {
-  typedef typename nsTSubstring<T>::size_type size_type;
-  typedef typename nsTSubstring<T>::char_type char_type;
-
-  class nsTSubstringSplit_Iter {
-   public:
-    using value_type = const nsTDependentSubstring<T>;
-    using pointer = value_type*;
-    using reference = value_type&;
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type = ptrdiff_t;
-
-    nsTSubstringSplit_Iter() : mObj(nullptr), mPos(0) {}
-
-    nsTSubstringSplit_Iter(const nsTSubstringSplitter<T>* aObj, size_type aPos)
-        : mObj(aObj), mPos(aPos) {}
-
-    bool operator==(const nsTSubstringSplit_Iter& other) const {
-      MOZ_ASSERT(mObj == other.mObj);
-      return mPos == other.mPos;
-    }
-    bool operator!=(const nsTSubstringSplit_Iter& other) const {
-      return !(*this == other);
-    }
-
-    const nsTDependentSubstring<T>& operator*() const;
-    const nsTDependentSubstring<T>* operator->() const;
-
-    const nsTSubstringSplit_Iter& operator++() {
-      ++mPos;
-      return *this;
-    }
-
-   private:
-    const nsTSubstringSplitter<T>* mObj;
-    size_type mPos;
-  };
-
- private:
-  const nsTSubstring<T>* const mStr;
-  mozilla::UniquePtr<nsTDependentSubstring<T>[]> mArray;
-  size_type mArraySize;
-  const char_type mDelim;
-
- public:
-  nsTSubstringSplitter(const nsTSubstring<T>* aStr, char_type aDelim);
-
-  nsTSubstringSplit_Iter begin() const {
-    return nsTSubstringSplit_Iter(this, 0);
-  }
-
-  nsTSubstringSplit_Iter end() const {
-    return nsTSubstringSplit_Iter(this, mArraySize);
-  }
-
-  const nsTDependentSubstring<T>& Get(const size_type index) const {
-    MOZ_ASSERT(index < mArraySize);
-    return mArray[index];
-  }
-};
-
+#include "nsCharSeparatedTokenizer.h"
 #include "nsTDependentSubstring.h"
-
-extern template class nsTSubstringSplitter<char>;
-extern template class nsTSubstringSplitter<char16_t>;
 
 /**
  * Span integration
