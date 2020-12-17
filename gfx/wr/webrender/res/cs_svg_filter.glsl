@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define WR_FEATURE_TEXTURE_2D
+
 #include shared,prim_shared
 
-varying vec3 vInput1Uv;
-varying vec3 vInput2Uv;
+varying vec2 vInput1Uv;
+varying vec2 vInput2Uv;
 flat varying vec4 vInput1UvRect;
 flat varying vec4 vInput2UvRect;
 flat varying int vFilterInputCount;
@@ -72,15 +74,12 @@ vec4 compute_uv_rect(RenderTaskCommonData task, vec2 texture_size) {
     return uvRect;
 }
 
-vec3 compute_uv(RenderTaskCommonData task, vec2 texture_size) {
+vec2 compute_uv(RenderTaskCommonData task, vec2 texture_size) {
     RectWithSize task_rect = task.task_rect;
-    vec3 uv = vec3(0.0, 0.0, task.texture_layer_index);
 
     vec2 uv0 = task_rect.p0 / texture_size;
     vec2 uv1 = floor(task_rect.p0 + task_rect.size) / texture_size;
-    uv.xy = mix(uv0, uv1, aPosition.xy);
-
-    return uv;
+    return mix(uv0, uv1, aPosition.xy);
 }
 
 void main(void) {
@@ -507,9 +506,9 @@ vec4 composite(vec4 Cs, vec4 Cb, int mode) {
     return Cr;
 }
 
-vec4 sampleInUvRect(sampler2DArray sampler, vec3 uv, vec4 uvRect) {
+vec4 sampleInUvRect(sampler2D sampler, vec2 uv, vec4 uvRect) {
     vec2 clamped = clamp(uv.xy, uvRect.xy, uvRect.zw);
-    return texture(sampler, vec3(clamped, uv.z));
+    return texture(sampler, clamped);
 }
 
 void main(void) {
@@ -564,8 +563,8 @@ void main(void) {
             needsPremul = false;
             break;
         case FILTER_OFFSET:
-            vec2 offsetUv = vInput1Uv.xy + vFilterData0.xy;
-            result = sampleInUvRect(sColor0, vec3(offsetUv, vInput1Uv.z), vInput1UvRect);
+            vec2 offsetUv = vInput1Uv + vFilterData0.xy;
+            result = sampleInUvRect(sColor0, offsetUv, vInput1UvRect);
             result *= point_inside_rect(offsetUv, vFilterData1.xy, vFilterData1.zw);
             needsPremul = false;
             break;
