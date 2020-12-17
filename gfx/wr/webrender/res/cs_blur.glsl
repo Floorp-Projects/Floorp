@@ -72,11 +72,7 @@ void main(void) {
     RectWithSize src_rect = src_task.task_rect;
     RectWithSize target_rect = blur_task.common_data.task_rect;
 
-#if defined WR_FEATURE_COLOR_TARGET
-    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0).xy);
-#else
-    vec2 texture_size = vec2(textureSize(sPrevPassAlpha, 0).xy);
-#endif
+    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
     vUvLayer = src_task.texture_layer_index;
 
     // Ensure that the support is an even number of pixels to simplify the
@@ -122,10 +118,10 @@ void main(void) {
 
 #if defined WR_FEATURE_COLOR_TARGET
 #define SAMPLE_TYPE vec4
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassColor, vec3(uv, vUvLayer))
+#define SAMPLE_TEXTURE(uv)  texture(sColor0, vec3(uv, vUvLayer))
 #else
 #define SAMPLE_TYPE float
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassAlpha, vec3(uv, vUvLayer)).r
+#define SAMPLE_TEXTURE(uv)  texture(sColor0, vec3(uv, vUvLayer)).r
 #endif
 
 // TODO(gw): Write a fast path blur that handles smaller blur radii
@@ -182,22 +178,22 @@ void main(void) {
 #ifdef SWGL
     #ifdef WR_FEATURE_COLOR_TARGET
 void swgl_drawSpanRGBA8() {
-    if (!swgl_isTextureRGBA8(sPrevPassColor)) {
+    if (!swgl_isTextureRGBA8(sColor0)) {
         return;
     }
 
-    int layer = swgl_textureLayerOffset(sPrevPassColor, vUvLayer);
-    swgl_commitGaussianBlurRGBA8(sPrevPassColor, vUv, vUvRect, vOffsetScale.x != 0.0,
+    int layer = swgl_textureLayerOffset(sColor0, vUvLayer);
+    swgl_commitGaussianBlurRGBA8(sColor0, vUv, vUvRect, vOffsetScale.x != 0.0,
                                  vSupport, vGaussCoefficients, layer);
 }
     #else
 void swgl_drawSpanR8() {
-    if (!swgl_isTextureR8(sPrevPassAlpha)) {
+    if (!swgl_isTextureR8(sColor0)) {
         return;
     }
 
-    int layer = swgl_textureLayerOffset(sPrevPassAlpha, vUvLayer);
-    swgl_commitGaussianBlurR8(sPrevPassAlpha, vUv, vUvRect, vOffsetScale.x != 0.0,
+    int layer = swgl_textureLayerOffset(sColor0, vUvLayer);
+    swgl_commitGaussianBlurR8(sColor0, vUv, vUvRect, vOffsetScale.x != 0.0,
                               vSupport, vGaussCoefficients, layer);
 }
     #endif
