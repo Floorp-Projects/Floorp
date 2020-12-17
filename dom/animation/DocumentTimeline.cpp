@@ -49,8 +49,6 @@ DocumentTimeline::DocumentTimeline(Document* aDocument,
   if (mDocument) {
     mDocument->Timelines().insertBack(this);
   }
-  // Ensure mLastRefreshDriverTime is valid.
-  UpdateLastRefreshDriverTime();
 }
 
 DocumentTimeline::~DocumentTimeline() {
@@ -100,15 +98,10 @@ bool DocumentTimeline::TracksWallclockTime() const {
 
 TimeStamp DocumentTimeline::GetCurrentTimeStamp() const {
   nsRefreshDriver* refreshDriver = GetRefreshDriver();
-  return refreshDriver ? refreshDriver->MostRecentRefresh()
-                       : mLastRefreshDriverTime;
-}
-
-void DocumentTimeline::UpdateLastRefreshDriverTime() {
-  nsRefreshDriver* refreshDriver = GetRefreshDriver();
   TimeStamp refreshTime =
       refreshDriver ? refreshDriver->MostRecentRefresh() : TimeStamp();
 
+  // Always return the same object to benefit from return-value optimization.
   TimeStamp result =
       !refreshTime.IsNull() ? refreshTime : mLastRefreshDriverTime;
 
@@ -132,6 +125,8 @@ void DocumentTimeline::UpdateLastRefreshDriverTime() {
   if (!refreshTime.IsNull()) {
     mLastRefreshDriverTime = refreshTime;
   }
+
+  return result;
 }
 
 Nullable<TimeDuration> DocumentTimeline::ToTimelineTime(
@@ -216,7 +211,6 @@ void DocumentTimeline::MostRecentRefreshTimeUpdated() {
 }
 
 void DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime) {
-  UpdateLastRefreshDriverTime();
   MostRecentRefreshTimeUpdated();
 }
 
