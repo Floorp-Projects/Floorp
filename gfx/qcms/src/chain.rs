@@ -60,7 +60,7 @@ pub struct qcms_modular_transform {
     pub next_transform: Option<Box<qcms_modular_transform>>,
 }
 pub type transform_module_fn_t =
-    Option<unsafe fn(_: *const qcms_modular_transform, _: *mut f32, _: *mut f32, _: usize) -> ()>;
+    Option<fn(_: &qcms_modular_transform, _: &[f32], _: &mut [f32]) -> ()>;
 
 #[inline]
 fn lerp(mut a: f32, mut b: f32, mut t: f32) -> f32 {
@@ -124,70 +124,51 @@ fn f_1(t: f32) -> f32 {
     }
 }
 
-unsafe fn transform_module_LAB_to_XYZ(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+fn transform_module_LAB_to_XYZ(
+    transform: &qcms_modular_transform,
+    src: &[f32],
+    mut dest: &mut [f32],
 ) {
     // lcms: D50 XYZ values
     let mut WhitePointX: f32 = 0.9642;
     let mut WhitePointY: f32 = 1.0;
     let mut WhitePointZ: f32 = 0.8249;
     let mut i: usize = 0;
-    while i < length {
-        let fresh0 = src;
-        src = src.offset(1);
-        let mut device_L: f32 = *fresh0 * 100.0;
-        let fresh1 = src;
-        src = src.offset(1);
-        let mut device_a: f32 = *fresh1 * 255.0 - 128.0;
-        let fresh2 = src;
-        src = src.offset(1);
-        let mut device_b: f32 = *fresh2 * 255.0 - 128.0;
+
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
+        let mut device_L: f32 = src[0] * 100.0;
+        let mut device_a: f32 = src[1] * 255.0 - 128.0;
+        let mut device_b: f32 = src[2] * 255.0 - 128.0;
+
         let mut y: f32 = (device_L + 16.0) / 116.0;
 
         let mut X = f_1(y + 0.002 * device_a) * WhitePointX;
         let mut Y = f_1(y) * WhitePointY;
         let mut Z = f_1(y - 0.005 * device_b) * WhitePointZ;
 
-        let fresh3 = dest;
-        dest = dest.offset(1);
-        *fresh3 = (X as f64 / (1.0f64 + 32767.0f64 / 32768.0f64)) as f32;
-        let fresh4 = dest;
-        dest = dest.offset(1);
-        *fresh4 = (Y as f64 / (1.0f64 + 32767.0f64 / 32768.0f64)) as f32;
-        let fresh5 = dest;
-        dest = dest.offset(1);
-        *fresh5 = (Z as f64 / (1.0f64 + 32767.0f64 / 32768.0f64)) as f32;
-        i = i + 1
+        dest[0] = (X as f64 / (1.0f64 + 32767.0f64 / 32768.0f64)) as f32;
+        dest[1] = (Y as f64 / (1.0f64 + 32767.0f64 / 32768.0f64)) as f32;
+        dest[2] = (Z as f64 / (1.0f64 + 32767.0f64 / 32768.0f64)) as f32;
     }
 }
 //Based on lcms cmsXYZ2Lab
-unsafe fn transform_module_XYZ_to_LAB(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+fn transform_module_XYZ_to_LAB(
+    mut transform: &qcms_modular_transform,
+    mut src: &[f32],
+    mut dest: &mut [f32],
 ) {
     // lcms: D50 XYZ values
     let mut WhitePointX: f32 = 0.9642;
     let mut WhitePointY: f32 = 1.0;
     let mut WhitePointZ: f32 = 0.8249;
     let mut i: usize = 0;
-    while i < length {
-        let fresh6 = src;
-        src = src.offset(1);
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         let mut device_x: f32 =
-            (*fresh6 as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointX as f64) as f32;
-        let fresh7 = src;
-        src = src.offset(1);
+            (src[0] as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointX as f64) as f32;
         let mut device_y: f32 =
-            (*fresh7 as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointY as f64) as f32;
-        let fresh8 = src;
-        src = src.offset(1);
+            (src[1] as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointY as f64) as f32;
         let mut device_z: f32 =
-            (*fresh8 as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointZ as f64) as f32;
+            (src[2] as f64 * (1.0f64 + 32767.0f64 / 32768.0f64) / WhitePointZ as f64) as f32;
 
         let mut fx = f(device_x);
         let mut fy = f(device_y);
@@ -196,27 +177,23 @@ unsafe fn transform_module_XYZ_to_LAB(
         let mut L: f32 = 116.0 * fy - 16.0;
         let mut a: f32 = 500.0 * (fx - fy);
         let mut b: f32 = 200.0 * (fy - fz);
-        let fresh9 = dest;
-        dest = dest.offset(1);
-        *fresh9 = L / 100.0;
-        let fresh10 = dest;
-        dest = dest.offset(1);
-        *fresh10 = (a + 128.0) / 255.0;
-        let fresh11 = dest;
-        dest = dest.offset(1);
-        *fresh11 = (b + 128.0) / 255.0;
-        i = i + 1
+
+        dest[0] = L / 100.0;
+        dest[1] = (a + 128.0) / 255.0;
+        dest[2] = (b + 128.0) / 255.0;
+
     }
 }
-unsafe fn transform_module_clut_only(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+fn transform_module_clut_only(
+    mut transform: &qcms_modular_transform,
+    mut src: &[f32],
+    mut dest: &mut [f32],
 ) {
     let mut xy_len: i32 = 1;
     let mut x_len: i32 = (*transform).grid_size as i32;
     let mut len: i32 = x_len * x_len;
+    unsafe {
+
     let mut r_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(0isize);
     let mut g_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(1isize);
     let mut b_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(2isize);
@@ -226,17 +203,11 @@ unsafe fn transform_module_clut_only(
         *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize)
     };
 
-    while i < length {
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         debug_assert!((*transform).grid_size as i32 >= 1);
-        let fresh12 = src;
-        src = src.offset(1);
-        let mut linear_r: f32 = *fresh12;
-        let fresh13 = src;
-        src = src.offset(1);
-        let mut linear_g: f32 = *fresh13;
-        let fresh14 = src;
-        src = src.offset(1);
-        let mut linear_b: f32 = *fresh14;
+        let mut linear_r: f32 = src[0];
+        let mut linear_g: f32 = src[1];
+        let mut linear_b: f32 = src[2];
         let mut x: i32 = (linear_r * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
         let mut y: i32 = (linear_g * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
         let mut z: i32 = (linear_b * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
@@ -271,27 +242,21 @@ unsafe fn transform_module_clut_only(
         let mut b_y2: f32 = lerp(b_x3, b_x4, y_d);
         let mut clut_b: f32 = lerp(b_y1, b_y2, z_d);
 
-        let fresh15 = dest;
-        dest = dest.offset(1);
-        *fresh15 = clamp_float(clut_r);
-        let fresh16 = dest;
-        dest = dest.offset(1);
-        *fresh16 = clamp_float(clut_g);
-        let fresh17 = dest;
-        dest = dest.offset(1);
-        *fresh17 = clamp_float(clut_b);
-        i = i + 1
+        dest[0] = clamp_float(clut_r);
+        dest[1] = clamp_float(clut_g);
+        dest[2] = clamp_float(clut_b);
+    }
     }
 }
-unsafe fn transform_module_clut(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+fn transform_module_clut(
+    mut transform: &qcms_modular_transform,
+    mut src: &[f32],
+    mut dest: &mut [f32],
 ) {
     let mut xy_len: i32 = 1;
     let mut x_len: i32 = (*transform).grid_size as i32;
     let mut len: i32 = x_len * x_len;
+    unsafe {
     let mut r_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(0isize);
     let mut g_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(1isize);
     let mut b_table: *const f32 = (*transform).clut.as_ref().unwrap().as_ptr().offset(2isize);
@@ -303,17 +268,11 @@ unsafe fn transform_module_clut(
     let input_clut_table_r = (*transform).input_clut_table_r.as_ref().unwrap();
     let input_clut_table_g = (*transform).input_clut_table_g.as_ref().unwrap();
     let input_clut_table_b = (*transform).input_clut_table_b.as_ref().unwrap();
-    while i < length {
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         debug_assert!((*transform).grid_size as i32 >= 1);
-        let fresh18 = src;
-        src = src.offset(1);
-        let mut device_r: f32 = *fresh18;
-        let fresh19 = src;
-        src = src.offset(1);
-        let mut device_g: f32 = *fresh19;
-        let fresh20 = src;
-        src = src.offset(1);
-        let mut device_b: f32 = *fresh20;
+        let mut device_r: f32 = src[0];
+        let mut device_g: f32 = src[1];
+        let mut device_b: f32 = src[2];
         let mut linear_r: f32 = lut_interp_linear_float(device_r, &input_clut_table_r);
         let mut linear_g: f32 = lut_interp_linear_float(device_g, &input_clut_table_g);
         let mut linear_b: f32 = lut_interp_linear_float(device_b, &input_clut_table_b);
@@ -356,16 +315,10 @@ unsafe fn transform_module_clut(
             lut_interp_linear_float(clut_g, &(*transform).output_clut_table_g.as_ref().unwrap());
         let mut pcs_b: f32 =
             lut_interp_linear_float(clut_b, &(*transform).output_clut_table_b.as_ref().unwrap());
-        let fresh21 = dest;
-        dest = dest.offset(1);
-        *fresh21 = clamp_float(pcs_r);
-        let fresh22 = dest;
-        dest = dest.offset(1);
-        *fresh22 = clamp_float(pcs_g);
-        let fresh23 = dest;
-        dest = dest.offset(1);
-        *fresh23 = clamp_float(pcs_b);
-        i = i + 1
+        dest[0] = clamp_float(pcs_r);
+        dest[1] = clamp_float(pcs_g);
+        dest[2] = clamp_float(pcs_b);
+    }
     }
 }
 /* NOT USED
@@ -493,11 +446,10 @@ static void qcms_transform_module_tetra_clut(struct qcms_modular_transform *tran
     }
 }
 */
-unsafe fn transform_module_gamma_table(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+fn transform_module_gamma_table(
+    mut transform: &qcms_modular_transform,
+    mut src: &[f32],
+    mut dest: &mut [f32],
 ) {
     let mut out_r: f32;
     let mut out_g: f32;
@@ -507,51 +459,32 @@ unsafe fn transform_module_gamma_table(
     let input_clut_table_g = (*transform).input_clut_table_g.as_ref().unwrap();
     let input_clut_table_b = (*transform).input_clut_table_b.as_ref().unwrap();
 
-    while i < length {
-        let fresh24 = src;
-        src = src.offset(1);
-        let mut in_r: f32 = *fresh24;
-        let fresh25 = src;
-        src = src.offset(1);
-        let mut in_g: f32 = *fresh25;
-        let fresh26 = src;
-        src = src.offset(1);
-        let mut in_b: f32 = *fresh26;
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
+        let mut in_r: f32 = src[0];
+        let mut in_g: f32 = src[1];
+        let mut in_b: f32 = src[2];
         out_r = lut_interp_linear_float(in_r, input_clut_table_r);
         out_g = lut_interp_linear_float(in_g, input_clut_table_g);
         out_b = lut_interp_linear_float(in_b, input_clut_table_b);
-        let fresh27 = dest;
-        dest = dest.offset(1);
-        *fresh27 = clamp_float(out_r);
-        let fresh28 = dest;
-        dest = dest.offset(1);
-        *fresh28 = clamp_float(out_g);
-        let fresh29 = dest;
-        dest = dest.offset(1);
-        *fresh29 = clamp_float(out_b);
-        i = i + 1
+
+        dest[0] = clamp_float(out_r);
+        dest[1] = clamp_float(out_g);
+        dest[2] = clamp_float(out_b);
     }
 }
-unsafe fn transform_module_gamma_lut(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+fn transform_module_gamma_lut(
+    mut transform: &qcms_modular_transform,
+    mut src: &[f32],
+    mut dest: &mut [f32],
 ) {
     let mut out_r: f32;
     let mut out_g: f32;
     let mut out_b: f32;
     let mut i: usize = 0;
-    while i < length {
-        let fresh30 = src;
-        src = src.offset(1);
-        let mut in_r: f32 = *fresh30;
-        let fresh31 = src;
-        src = src.offset(1);
-        let mut in_g: f32 = *fresh31;
-        let fresh32 = src;
-        src = src.offset(1);
-        let mut in_b: f32 = *fresh32;
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
+        let mut in_r: f32 = src[0];
+        let mut in_g: f32 = src[1];
+        let mut in_b: f32 = src[2];
         out_r = lut_interp_linear(
             in_r as f64,
             &(*transform).output_gamma_lut_r.as_ref().unwrap(),
@@ -564,23 +497,15 @@ unsafe fn transform_module_gamma_lut(
             in_b as f64,
             &(*transform).output_gamma_lut_b.as_ref().unwrap(),
         );
-        let fresh33 = dest;
-        dest = dest.offset(1);
-        *fresh33 = clamp_float(out_r);
-        let fresh34 = dest;
-        dest = dest.offset(1);
-        *fresh34 = clamp_float(out_g);
-        let fresh35 = dest;
-        dest = dest.offset(1);
-        *fresh35 = clamp_float(out_b);
-        i = i + 1
+        dest[0] = clamp_float(out_r);
+        dest[1] = clamp_float(out_g);
+        dest[2] = clamp_float(out_b);
     }
 }
-unsafe fn transform_module_matrix_translate(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+fn transform_module_matrix_translate(
+    mut transform: &qcms_modular_transform,
+    mut src: &[f32],
+    mut dest: &mut [f32],
 ) {
     let mut mat: matrix = matrix {
         m: [[0.; 3]; 3],
@@ -598,39 +523,26 @@ unsafe fn transform_module_matrix_translate(
     mat.m[1][2] = (*transform).matrix.m[2][1];
     mat.m[2][2] = (*transform).matrix.m[2][2];
     let mut i: usize = 0;
-    while i < length {
-        let fresh36 = src;
-        src = src.offset(1);
-        let mut in_r: f32 = *fresh36;
-        let fresh37 = src;
-        src = src.offset(1);
-        let mut in_g: f32 = *fresh37;
-        let fresh38 = src;
-        src = src.offset(1);
-        let mut in_b: f32 = *fresh38;
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
+        let mut in_r: f32 = src[0];
+        let mut in_g: f32 = src[1];
+        let mut in_b: f32 = src[2];
         let mut out_r: f32 =
             mat.m[0][0] * in_r + mat.m[1][0] * in_g + mat.m[2][0] * in_b + (*transform).tx;
         let mut out_g: f32 =
             mat.m[0][1] * in_r + mat.m[1][1] * in_g + mat.m[2][1] * in_b + (*transform).ty;
         let mut out_b: f32 =
             mat.m[0][2] * in_r + mat.m[1][2] * in_g + mat.m[2][2] * in_b + (*transform).tz;
-        let fresh39 = dest;
-        dest = dest.offset(1);
-        *fresh39 = clamp_float(out_r);
-        let fresh40 = dest;
-        dest = dest.offset(1);
-        *fresh40 = clamp_float(out_g);
-        let fresh41 = dest;
-        dest = dest.offset(1);
-        *fresh41 = clamp_float(out_b);
-        i = i + 1
+        dest[0] = clamp_float(out_r);
+        dest[1] = clamp_float(out_g);
+        dest[2] = clamp_float(out_b);
     }
 }
-unsafe fn transform_module_matrix(
-    mut transform: *const qcms_modular_transform,
-    mut src: *mut f32,
-    mut dest: *mut f32,
-    mut length: usize,
+
+fn transform_module_matrix(
+    mut transform: &qcms_modular_transform,
+    mut src: &[f32],
+    mut dest: &mut [f32],
 ) {
     let mut mat: matrix = matrix {
         m: [[0.; 3]; 3],
@@ -648,29 +560,17 @@ unsafe fn transform_module_matrix(
     mat.m[1][2] = (*transform).matrix.m[2][1];
     mat.m[2][2] = (*transform).matrix.m[2][2];
     let mut i: usize = 0;
-    while i < length {
-        let fresh42 = src;
-        src = src.offset(1);
-        let mut in_r: f32 = *fresh42;
-        let fresh43 = src;
-        src = src.offset(1);
-        let mut in_g: f32 = *fresh43;
-        let fresh44 = src;
-        src = src.offset(1);
-        let mut in_b: f32 = *fresh44;
+    for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
+
+        let mut in_r: f32 = src[0];
+        let mut in_g: f32 = src[1];
+        let mut in_b: f32 = src[2];
         let mut out_r: f32 = mat.m[0][0] * in_r + mat.m[1][0] * in_g + mat.m[2][0] * in_b;
         let mut out_g: f32 = mat.m[0][1] * in_r + mat.m[1][1] * in_g + mat.m[2][1] * in_b;
         let mut out_b: f32 = mat.m[0][2] * in_r + mat.m[1][2] * in_g + mat.m[2][2] * in_b;
-        let fresh45 = dest;
-        dest = dest.offset(1);
-        *fresh45 = clamp_float(out_r);
-        let fresh46 = dest;
-        dest = dest.offset(1);
-        *fresh46 = clamp_float(out_g);
-        let fresh47 = dest;
-        dest = dest.offset(1);
-        *fresh47 = clamp_float(out_b);
-        i = i + 1
+        dest[0] = clamp_float(out_r);
+        dest[1] = clamp_float(out_g);
+        dest[2] = clamp_float(out_b);
     }
 }
 fn modular_transform_alloc() -> Option<Box<qcms_modular_transform>> {
@@ -1154,33 +1054,13 @@ unsafe fn modular_transform_data(
     while !transform.is_none() {
         // Keep swaping src/dest when performing a transform to use less memory.
         let transform_fn: transform_module_fn_t = transform.unwrap().transform_module_fn;
-        if transform_fn != Some(transform_module_gamma_table)
-            && transform_fn != Some(transform_module_gamma_lut)
-            && transform_fn != Some(transform_module_clut)
-            && transform_fn != Some(transform_module_clut_only)
-            && transform_fn != Some(transform_module_matrix)
-            && transform_fn != Some(transform_module_matrix_translate)
-            && transform_fn != Some(transform_module_LAB_to_XYZ)
-            && transform_fn != Some(transform_module_XYZ_to_LAB)
-        {
-            debug_assert!(false, "Unsupported transform module");
-            return None;
-        }
-        if transform.unwrap().grid_size as i32 <= 0
-            && (transform_fn == Some(transform_module_clut)
-                || transform_fn == Some(transform_module_clut_only))
-        {
-            debug_assert!(false, "Invalid transform");
-            return None;
-        }
         transform
             .unwrap()
             .transform_module_fn
             .expect("non-null function pointer")(
-            transform.unwrap() as *const _ as *mut _,
-            src.as_mut_ptr(),
-            dest.as_mut_ptr(),
-            len,
+            transform.as_ref().unwrap(),
+            &src,
+            &mut dest,
         );
         std::mem::swap(&mut src, &mut dest);
         transform = transform.unwrap().next_transform.as_deref();
