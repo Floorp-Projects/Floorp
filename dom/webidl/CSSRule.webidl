@@ -26,7 +26,7 @@ interface CSSRule {
   // const unsigned short MARGIN_RULE = 9;
   const unsigned short NAMESPACE_RULE = 10;
   readonly attribute unsigned short type;
-  attribute DOMString cssText;
+  attribute UTF8String cssText;
   readonly attribute CSSRule? parentRule;
   readonly attribute CSSStyleSheet? parentStyleSheet;
 };

@@ -425,7 +425,8 @@ static ServoAnimationValues ValueFromStringHelper(nsCSSPropertyID aPropID,
   ServoCSSParser::ParsingEnvironment env =
       ServoCSSParser::GetParsingEnvironment(doc);
   RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-      ServoCSSParser::ParseProperty(aPropID, aString, env,
+      ServoCSSParser::ParseProperty(aPropID, NS_ConvertUTF16toUTF8(aString),
+                                    env,
                                     ParsingMode::AllowUnitlessLength |
                                         ParsingMode::AllowAllNumericValues);
   if (!servoDeclarationBlock) {

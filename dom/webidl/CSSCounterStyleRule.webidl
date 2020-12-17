@@ -11,14 +11,14 @@
 [Exposed=Window]
 interface CSSCounterStyleRule : CSSRule {
   attribute DOMString name;
-  attribute DOMString system;
-  attribute DOMString symbols;
-  attribute DOMString additiveSymbols;
-  attribute DOMString negative;
-  attribute DOMString prefix;
-  attribute DOMString suffix;
-  attribute DOMString range;
-  attribute DOMString pad;
-  attribute DOMString speakAs;
-  attribute DOMString fallback;
+  attribute UTF8String system;
+  attribute UTF8String symbols;
+  attribute UTF8String additiveSymbols;
+  attribute UTF8String negative;
+  attribute UTF8String prefix;
+  attribute UTF8String suffix;
+  attribute UTF8String range;
+  attribute UTF8String pad;
+  attribute UTF8String speakAs;
+  attribute UTF8String fallback;
 };

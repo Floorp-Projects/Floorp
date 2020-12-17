@@ -38,12 +38,12 @@ class CSSCounterStyleRule final : public css::Rule {
 
   // WebIDL interface
   uint16_t Type() const override;
-  void GetCssText(nsAString& aCssText) const override;
+  void GetCssText(nsACString& aCssText) const override;
   void GetName(nsAString& aName);
   void SetName(const nsAString& aName);
 #define CSS_COUNTER_DESC(name_, method_) \
-  void Get##method_(nsAString& aValue);  \
-  void Set##method_(const nsAString& aValue);
+  void Get##method_(nsACString& aValue); \
+  void Set##method_(const nsACString& aValue);
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC
 

@@ -154,7 +154,7 @@ void CSSStyleRule::List(FILE* out, int32_t aIndent) const {
 
 /* CSSRule implementation */
 
-void CSSStyleRule::GetCssText(nsAString& aCssText) const {
+void CSSStyleRule::GetCssText(nsACString& aCssText) const {
   Servo_StyleRule_GetCssText(mRawRule, &aCssText);
 }
 
@@ -162,11 +162,11 @@ nsICSSDeclaration* CSSStyleRule::Style() { return &mDecls; }
 
 /* CSSStyleRule implementation */
 
-void CSSStyleRule::GetSelectorText(nsAString& aSelectorText) {
+void CSSStyleRule::GetSelectorText(nsACString& aSelectorText) {
   Servo_StyleRule_GetSelectorText(mRawRule, &aSelectorText);
 }
 
-void CSSStyleRule::SetSelectorText(const nsAString& aSelectorText) {
+void CSSStyleRule::SetSelectorText(const nsACString& aSelectorText) {
   if (IsReadOnly()) {
     return;
   }
@@ -193,7 +193,7 @@ uint32_t CSSStyleRule::GetSelectorCount() {
 }
 
 nsresult CSSStyleRule::GetSelectorText(uint32_t aSelectorIndex,
-                                       nsAString& aText) {
+                                       nsACString& aText) {
   Servo_StyleRule_GetSelectorTextAtIndex(mRawRule, aSelectorIndex, &aText);
   return NS_OK;
 }

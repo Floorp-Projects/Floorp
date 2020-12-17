@@ -64,7 +64,7 @@ class nsResizerFrame final : public nsTitleBarFrame {
                                int8_t aResizerDirection);
 
   struct SizeInfo {
-    nsString width, height;
+    nsCString width, height;
   };
   static void SizeInfoDtorFunc(void* aObject, nsAtom* aPropertyName,
                                void* aPropertyValue, void* aData);

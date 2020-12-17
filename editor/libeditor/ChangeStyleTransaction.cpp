@@ -47,14 +47,15 @@ ChangeStyleTransaction::ChangeStyleTransaction(nsStyledElement& aStyledElement,
     : EditTransactionBase(),
       mStyledElement(&aStyledElement),
       mProperty(&aProperty),
-      mValue(aValue),
       mUndoValue(),
       mRedoValue(),
       mRemoveProperty(aRemove),
       mUndoAttributeWasSet(false),
-      mRedoAttributeWasSet(false) {}
+      mRedoAttributeWasSet(false) {
+  CopyUTF16toUTF8(aValue, mValue);
+}
 
-#define kNullCh (char16_t('\0'))
+#define kNullCh ('\0')
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTransaction, EditTransactionBase,
                                    mStyledElement)
@@ -67,17 +68,16 @@ NS_IMPL_RELEASE_INHERITED(ChangeStyleTransaction, EditTransactionBase)
 
 // Answers true if aValue is in the string list of white-space separated values
 // aValueList.
-bool ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
-                                           const nsAString& aValue) {
-  nsAutoString valueList(aValueList);
+bool ChangeStyleTransaction::ValueIncludes(const nsACString& aValueList,
+                                           const nsACString& aValue) {
+  nsAutoCString valueList(aValueList);
   bool result = false;
 
   // put an extra null at the end
   valueList.Append(kNullCh);
 
-  char16_t* value = ToNewUnicode(aValue);
-  char16_t* start = valueList.BeginWriting();
-  char16_t* end = start;
+  char* start = valueList.BeginWriting();
+  char* end = start;
 
   while (kNullCh != *start) {
     while (kNullCh != *start && nsCRT::IsAsciiSpace(*start)) {
@@ -94,29 +94,28 @@ bool ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
     *end = kNullCh;
 
     if (start < end) {
-      if (nsDependentString(value).Equals(nsDependentString(start),
-                                          nsCaseInsensitiveStringComparator)) {
+      if (aValue.Equals(nsDependentCString(start),
+                        nsCaseInsensitiveCStringComparator)) {
         result = true;
         break;
       }
     }
     start = ++end;
   }
-  free(value);
   return result;
 }
 
 // Removes the value aRemoveValue from the string list of white-space separated
 // values aValueList
 void ChangeStyleTransaction::RemoveValueFromListOfValues(
-    nsAString& aValues, const nsAString& aRemoveValue) {
-  nsAutoString classStr(aValues);
-  nsAutoString outString;
+    nsACString& aValues, const nsACString& aRemoveValue) {
+  nsAutoCString classStr(aValues);
+  nsAutoCString outString;
   // put an extra null at the end
   classStr.Append(kNullCh);
 
-  char16_t* start = classStr.BeginWriting();
-  char16_t* end = start;
+  char* start = classStr.BeginWriting();
+  char* end = start;
 
   while (kNullCh != *start) {
     while (kNullCh != *start && nsCRT::IsAsciiSpace(*start)) {
@@ -134,7 +133,7 @@ void ChangeStyleTransaction::RemoveValueFromListOfValues(
 
     if (start < end && !aRemoveValue.Equals(start)) {
       outString.Append(start);
-      outString.Append(char16_t(' '));
+      outString.Append(' ');
     }
 
     start = ++end;
@@ -158,7 +157,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
   mUndoAttributeWasSet =
       mStyledElement->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
 
-  nsAutoString values;
+  nsAutoCString values;
   nsresult rv = cssDecl->GetPropertyValue(propertyNameString, values);
   if (NS_FAILED(rv)) {
     NS_WARNING("nsICSSDeclaration::GetPropertyPriorityValue() failed");
@@ -170,10 +169,10 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
   bool multiple = AcceptsMoreThanOneValue(*mProperty);
 
   if (mRemoveProperty) {
-    nsAutoString returnString;
+    nsAutoCString returnString;
     if (multiple) {
       // Let's remove only the value we have to remove and not the others
-      RemoveValueFromListOfValues(values, u"none"_ns);
+      RemoveValueFromListOfValues(values, "none"_ns);
       RemoveValueFromListOfValues(values, mValue);
       if (values.IsEmpty()) {
         ErrorResult error;
@@ -184,10 +183,9 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
         }
       } else {
         ErrorResult error;
-        nsAutoString priority;
+        nsAutoCString priority;
         cssDecl->GetPropertyPriority(propertyNameString, priority);
-        cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
-                             priority, error);
+        cssDecl->SetProperty(propertyNameString, values, priority, error);
         if (error.Failed()) {
           NS_WARNING("nsICSSDeclaration::SetProperty() failed");
           return error.StealNSResult();
@@ -202,7 +200,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
       }
     }
   } else {
-    nsAutoString priority;
+    nsAutoCString priority;
     cssDecl->GetPropertyPriority(propertyNameString, priority);
     if (multiple) {
       // Let's add the value we have to add to the others
@@ -211,8 +209,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
       values.Assign(mValue);
     }
     ErrorResult error;
-    cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
-                         priority, error);
+    cssDecl->SetProperty(propertyNameString, values, priority, error);
     if (error.Failed()) {
       NS_WARNING("nsICSSDeclaration::SetProperty() failed");
       return error.StealNSResult();
@@ -239,7 +236,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
 }
 
 nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
-                                          nsAString& aValue) {
+                                          nsACString& aValue) {
   if (NS_WARN_IF(!mStyledElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -256,7 +253,7 @@ nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
     ErrorResult error;
     if (aValue.IsEmpty()) {
       // An empty value means we have to remove the property
-      nsAutoString returnString;
+      nsAutoCString returnString;
       cssDecl->RemoveProperty(propertyNameString, returnString, error);
       if (error.Failed()) {
         NS_WARNING("nsICSSDeclaration::RemoveProperty() failed");
@@ -264,10 +261,9 @@ nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
       }
     }
     // Let's recreate the declaration as it was
-    nsAutoString priority;
+    nsAutoCString priority;
     cssDecl->GetPropertyPriority(propertyNameString, priority);
-    cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(aValue),
-                         priority, error);
+    cssDecl->SetProperty(propertyNameString, aValue, priority, error);
     NS_WARNING_ASSERTION(!error.Failed(),
                          "nsICSSDeclaration::SetProperty() failed");
     return error.StealNSResult();
@@ -302,7 +298,7 @@ bool ChangeStyleTransaction::AcceptsMoreThanOneValue(nsAtom& aCSSProperty) {
 
 // Adds the value aNewValue to the list of white-space separated values aValues
 void ChangeStyleTransaction::AddValueToMultivalueProperty(
-    nsAString& aValues, const nsAString& aNewValue) {
+    nsACString& aValues, const nsACString& aNewValue) {
   if (aValues.IsEmpty() || aValues.LowerCaseEqualsLiteral("none")) {
     aValues.Assign(aNewValue);
   } else if (!ValueIncludes(aValues, aNewValue)) {

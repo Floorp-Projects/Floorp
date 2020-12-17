@@ -72,23 +72,23 @@ already_AddRefed<MediaList> MediaList::Clone() {
 
 MediaList::MediaList() : mRawList(Servo_MediaList_Create().Consume()) {}
 
-MediaList::MediaList(const nsAString& aMedia, CallerType aCallerType)
+MediaList::MediaList(const nsACString& aMedia, CallerType aCallerType)
     : MediaList() {
   SetTextInternal(aMedia, aCallerType);
 }
 
-void MediaList::GetText(nsAString& aMediaText) {
+void MediaList::GetText(nsACString& aMediaText) {
   Servo_MediaList_GetText(mRawList, &aMediaText);
 }
 
 /* static */
-already_AddRefed<MediaList> MediaList::Create(const nsAString& aMedia,
+already_AddRefed<MediaList> MediaList::Create(const nsACString& aMedia,
                                               CallerType aCallerType) {
   RefPtr<MediaList> mediaList = new MediaList(aMedia, aCallerType);
   return mediaList.forget();
 }
 
-void MediaList::SetText(const nsAString& aMediaText) {
+void MediaList::SetText(const nsACString& aMediaText) {
   if (IsReadOnly()) {
     return;
   }
@@ -96,28 +96,26 @@ void MediaList::SetText(const nsAString& aMediaText) {
   SetTextInternal(aMediaText, CallerType::NonSystem);
 }
 
-void MediaList::GetMediaText(nsAString& aMediaText) { GetText(aMediaText); }
+void MediaList::GetMediaText(nsACString& aMediaText) { GetText(aMediaText); }
 
-void MediaList::SetTextInternal(const nsAString& aMediaText,
+void MediaList::SetTextInternal(const nsACString& aMediaText,
                                 CallerType aCallerType) {
-  NS_ConvertUTF16toUTF8 mediaText(aMediaText);
-  Servo_MediaList_SetText(mRawList, &mediaText, aCallerType);
+  Servo_MediaList_SetText(mRawList, &aMediaText, aCallerType);
 }
 
 uint32_t MediaList::Length() { return Servo_MediaList_GetLength(mRawList); }
 
 void MediaList::IndexedGetter(uint32_t aIndex, bool& aFound,
-                              nsAString& aReturn) {
+                              nsACString& aReturn) {
   aFound = Servo_MediaList_GetMediumAt(mRawList, aIndex, &aReturn);
   if (!aFound) {
-    SetDOMStringToNull(aReturn);
+    aReturn.SetIsVoid(true);
   }
 }
 
-void MediaList::Delete(const nsAString& aOldMedium, ErrorResult& aRv) {
+void MediaList::Delete(const nsACString& aOldMedium, ErrorResult& aRv) {
   MOZ_ASSERT(!IsReadOnly());
-  NS_ConvertUTF16toUTF8 oldMedium(aOldMedium);
-  if (Servo_MediaList_DeleteMedium(mRawList, &oldMedium)) {
+  if (Servo_MediaList_DeleteMedium(mRawList, &aOldMedium)) {
     return;
   }
   aRv.ThrowNotFoundError("Medium not in list");
@@ -130,7 +128,7 @@ bool MediaList::Matches(const Document& aDocument) const {
   return Servo_MediaList_Matches(mRawList, rawSet);
 }
 
-void MediaList::Append(const nsAString& aNewMedium, ErrorResult& aRv) {
+void MediaList::Append(const nsACString& aNewMedium, ErrorResult& aRv) {
   MOZ_ASSERT(!IsReadOnly());
   if (aNewMedium.IsEmpty()) {
     // XXXbz per spec there should not be an exception here, as far as
@@ -138,24 +136,23 @@ void MediaList::Append(const nsAString& aNewMedium, ErrorResult& aRv) {
     aRv.ThrowNotFoundError("Empty medium");
     return;
   }
-  NS_ConvertUTF16toUTF8 newMedium(aNewMedium);
-  Servo_MediaList_AppendMedium(mRawList, &newMedium);
+  Servo_MediaList_AppendMedium(mRawList, &aNewMedium);
 }
 
-void MediaList::SetMediaText(const nsAString& aMediaText) {
+void MediaList::SetMediaText(const nsACString& aMediaText) {
   DoMediaChange([&](ErrorResult& aRv) { SetText(aMediaText); }, IgnoreErrors());
 }
 
-void MediaList::Item(uint32_t aIndex, nsAString& aReturn) {
+void MediaList::Item(uint32_t aIndex, nsACString& aReturn) {
   bool dummy;
   IndexedGetter(aIndex, dummy, aReturn);
 }
 
-void MediaList::DeleteMedium(const nsAString& aOldMedium, ErrorResult& aRv) {
+void MediaList::DeleteMedium(const nsACString& aOldMedium, ErrorResult& aRv) {
   DoMediaChange([&](ErrorResult& aRv) { Delete(aOldMedium, aRv); }, aRv);
 }
 
-void MediaList::AppendMedium(const nsAString& aNewMedium, ErrorResult& aRv) {
+void MediaList::AppendMedium(const nsACString& aNewMedium, ErrorResult& aRv) {
   DoMediaChange([&](ErrorResult& aRv) { Append(aNewMedium, aRv); }, aRv);
 }
 

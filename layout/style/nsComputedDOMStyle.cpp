@@ -357,8 +357,7 @@ NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
     nsComputedDOMStyle, ClearComputedStyle())
 
 nsresult nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
-                                              nsAString& aValue) {
-  MOZ_ASSERT(aPropID != eCSSPropertyExtra_variable);
+                                              nsACString& aValue) {
   return GetPropertyValue(aPropID, EmptyCString(), aValue);
 }
 
@@ -371,11 +370,11 @@ void nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
       PromiseFlatCString(nsCSSProps::GetStringValue(aPropID)).get()));
 }
 
-void nsComputedDOMStyle::GetCssText(nsAString& aCssText) {
+void nsComputedDOMStyle::GetCssText(nsACString& aCssText) {
   aCssText.Truncate();
 }
 
-void nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
+void nsComputedDOMStyle::SetCssText(const nsACString& aCssText,
                                     nsIPrincipal* aSubjectPrincipal,
                                     ErrorResult& aRv) {
   aRv.ThrowNoModificationAllowedError("Can't set cssText on computed style");
@@ -401,14 +400,14 @@ css::Rule* nsComputedDOMStyle::GetParentRule() { return nullptr; }
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
-                                     nsAString& aReturn) {
+                                     nsACString& aReturn) {
   nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
   return GetPropertyValue(prop, aPropertyName, aReturn);
 }
 
 nsresult nsComputedDOMStyle::GetPropertyValue(
     nsCSSPropertyID aPropID, const nsACString& aMaybeCustomPropertyName,
-    nsAString& aReturn) {
+    nsACString& aReturn) {
   MOZ_ASSERT(aReturn.IsEmpty());
 
   const ComputedStyleMap::Entry* entry = nullptr;
@@ -451,9 +450,9 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
   if (!nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::SerializedByServo)) {
     if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
       ErrorResult rv;
-      nsString text;
+      nsAutoString text;
       value->GetCssText(text, rv);
-      aReturn.Assign(text);
+      CopyUTF16toUTF8(text, aReturn);
       return rv.StealNSResult();
     }
     return NS_OK;
@@ -1108,7 +1107,7 @@ void nsComputedDOMStyle::ClearCurrentStyleSources() {
 }
 
 void nsComputedDOMStyle::RemoveProperty(const nsACString& aPropertyName,
-                                        nsAString& aReturn, ErrorResult& aRv) {
+                                        nsACString& aReturn, ErrorResult& aRv) {
   // Note: not using nsPrintfCString here in case aPropertyName contains
   // nulls.
   aRv.ThrowNoModificationAllowedError("Can't remove property '"_ns +
@@ -1117,13 +1116,13 @@ void nsComputedDOMStyle::RemoveProperty(const nsACString& aPropertyName,
 }
 
 void nsComputedDOMStyle::GetPropertyPriority(const nsACString& aPropertyName,
-                                             nsAString& aReturn) {
+                                             nsACString& aReturn) {
   aReturn.Truncate();
 }
 
 void nsComputedDOMStyle::SetProperty(const nsACString& aPropertyName,
                                      const nsACString& aValue,
-                                     const nsAString& aPriority,
+                                     const nsACString& aPriority,
                                      nsIPrincipal* aSubjectPrincipal,
                                      ErrorResult& aRv) {
   // Note: not using nsPrintfCString here in case aPropertyName contains
@@ -1317,7 +1316,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOsxFontSmoothing() {
     return nullptr;
   }
 
-  nsAutoString result;
+  nsAutoCString result;
   mComputedStyle->GetComputedPropertyValue(eCSSProperty__moz_osx_font_smoothing,
                                            result);
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -1382,7 +1381,7 @@ void nsComputedDOMStyle::SetValueToURLValue(const StyleComputedUrl* aURL,
 
 enum class Brackets { No, Yes };
 
-static void AppendGridLineNames(nsAString& aResult,
+static void AppendGridLineNames(nsACString& aResult,
                                 Span<const StyleCustomIdent> aLineNames,
                                 Brackets aBrackets) {
   if (aLineNames.IsEmpty()) {
@@ -1396,8 +1395,12 @@ static void AppendGridLineNames(nsAString& aResult,
     aResult.Append('[');
   }
   for (uint32_t i = 0;;) {
+    // TODO: Maybe use servo to do this and avoid the silly utf16->utf8 dance?
+    nsAutoString name;
     nsStyleUtil::AppendEscapedCSSIdent(
-        nsDependentAtomString(aLineNames[i].AsAtom()), aResult);
+        nsDependentAtomString(aLineNames[i].AsAtom()), name);
+    AppendUTF16toUTF8(name, aResult);
+
     if (++i == numLines) {
       break;
     }
@@ -1415,7 +1418,7 @@ static void AppendGridLineNames(nsDOMCSSValueList* aValueList,
     return;
   }
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  nsAutoString lineNamesString;
+  nsAutoCString lineNamesString;
   AppendGridLineNames(lineNamesString, aLineNames, Brackets::Yes);
   val->SetString(lineNamesString);
   aValueList->AppendCSSValue(val.forget());
@@ -1428,7 +1431,7 @@ static void AppendGridLineNames(nsDOMCSSValueList* aValueList,
     return;
   }
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  nsAutoString lineNamesString;
+  nsAutoCString lineNamesString;
   lineNamesString.Assign('[');
   if (!aLineNames1.IsEmpty()) {
     AppendGridLineNames(lineNamesString, aLineNames1, Brackets::No);
@@ -1710,7 +1713,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateColumns() {
   if (!gridFrame) {
     // The element doesn't have a box - return the computed value.
     // https://drafts.csswg.org/css-grid/#resolved-track-list
-    nsAutoString string;
+    nsAutoCString string;
     mComputedStyle->GetComputedPropertyValue(eCSSProperty_grid_template_columns,
                                              string);
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
@@ -1730,7 +1733,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateRows() {
   if (!gridFrame) {
     // The element doesn't have a box - return the computed value.
     // https://drafts.csswg.org/css-grid/#resolved-track-list
-    nsAutoString string;
+    nsAutoCString string;
     mComputedStyle->GetComputedPropertyValue(eCSSProperty_grid_template_rows,
                                              string);
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
@@ -1835,7 +1838,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
   auto getPropertyValue = [&](nsCSSPropertyID aID) {
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-    nsAutoString string;
+    nsAutoCString string;
     mComputedStyle->GetComputedPropertyValue(aID, string);
     value->SetString(string);
     return value.forget();
@@ -2294,7 +2297,7 @@ void nsComputedDOMStyle::SetValueToLengthPercentage(
     return aValue->SetPercent(result);
   }
 
-  nsAutoString result;
+  nsAutoCString result;
   Servo_LengthPercentage_ToCss(&aLength, &result);
   aValue->SetString(result);
 }

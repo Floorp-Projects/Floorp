@@ -66,13 +66,13 @@ class BasicRenderingContext2D {
   // CanvasFillStrokeStyles
   //
   virtual void GetStrokeStyle(
-      OwningStringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual void SetStrokeStyle(
-      const StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual void GetFillStyle(
-      OwningStringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual void SetFillStyle(
-      const StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
+      const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) = 0;
   virtual already_AddRefed<CanvasGradient> CreateLinearGradient(double aX0,
                                                                 double aY0,
                                                                 double aX1,
@@ -92,8 +92,8 @@ class BasicRenderingContext2D {
   virtual void SetShadowOffsetY(double aShadowOffsetY) = 0;
   virtual double ShadowBlur() = 0;
   virtual void SetShadowBlur(double aShadowBlur) = 0;
-  virtual void GetShadowColor(nsAString& aShadowColor) = 0;
-  virtual void SetShadowColor(const nsAString& aShadowColor) = 0;
+  virtual void GetShadowColor(nsACString& aShadowColor) = 0;
+  virtual void SetShadowColor(const nsACString& aShadowColor) = 0;
 
   //
   // CanvasRect

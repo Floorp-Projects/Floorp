@@ -68,11 +68,11 @@ void CSSMediaRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-void CSSMediaRule::GetConditionText(nsAString& aConditionText) {
+void CSSMediaRule::GetConditionText(nsACString& aConditionText) {
   Media()->GetMediaText(aConditionText);
 }
 
-void CSSMediaRule::SetConditionText(const nsAString& aConditionText,
+void CSSMediaRule::SetConditionText(const nsACString& aConditionText,
                                     ErrorResult& aRv) {
   if (IsReadOnly()) {
     return;
@@ -81,7 +81,7 @@ void CSSMediaRule::SetConditionText(const nsAString& aConditionText,
 }
 
 /* virtual */
-void CSSMediaRule::GetCssText(nsAString& aCssText) const {
+void CSSMediaRule::GetCssText(nsACString& aCssText) const {
   Servo_MediaRule_GetCssText(mRawRule, &aCssText);
 }
 

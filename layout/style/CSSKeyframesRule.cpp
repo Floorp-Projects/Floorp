@@ -281,7 +281,7 @@ void CSSKeyframesRule::DeleteRule(const nsAString& aKey) {
 }
 
 /* virtual */
-void CSSKeyframesRule::GetCssText(nsAString& aCssText) const {
+void CSSKeyframesRule::GetCssText(nsACString& aCssText) const {
   Servo_KeyframesRule_GetCssText(mRawRule, &aCssText);
 }
 

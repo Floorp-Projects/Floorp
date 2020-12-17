@@ -7874,10 +7874,9 @@ void nsIFrame::ListMatchedRules(FILE* out, const char* aPrefix) const {
   nsTArray<const RawServoStyleRule*> rawRuleList;
   Servo_ComputedValues_GetStyleRuleList(mComputedStyle, &rawRuleList);
   for (const RawServoStyleRule* rawRule : rawRuleList) {
-    nsString ruleText;
+    nsAutoCString ruleText;
     Servo_StyleRule_GetCssText(rawRule, &ruleText);
-    fprintf_stderr(out, "%s%s\n", aPrefix,
-                   NS_ConvertUTF16toUTF8(ruleText).get());
+    fprintf_stderr(out, "%s%s\n", aPrefix, ruleText.get());
   }
 }
 
@@ -12506,9 +12505,9 @@ void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
     if (aFrame->IsFloating()) printf(" float");
 
     {
-      nsAutoString result;
+      nsAutoCString result;
       aFrame->Style()->GetComputedPropertyValue(eCSSProperty_display, result);
-      printf(" display=%s", NS_ConvertUTF16toUTF8(result).get());
+      printf(" display=%s", result.get());
     }
 
     // This array must exactly match the NS_CSS_FRAME_TYPE constants.

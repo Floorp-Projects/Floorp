@@ -23,8 +23,8 @@ namespace InspectorUtils {
   unsigned long getRelativeRuleLine(CSSRule rule);
   boolean hasRulesModifiedByCSSOM(CSSStyleSheet sheet);
   unsigned long getSelectorCount(CSSStyleRule rule);
-  [Throws] DOMString getSelectorText(CSSStyleRule rule,
-                                     unsigned long selectorIndex);
+  [Throws] UTF8String getSelectorText(CSSStyleRule rule,
+                                      unsigned long selectorIndex);
   [Throws] unsigned long long getSpecificity(CSSStyleRule rule,
                                              unsigned long selectorIndex);
   [Throws] boolean selectorMatchesElement(

@@ -110,10 +110,10 @@ void nsSearchControlFrame::UpdateClearButtonState() {
   nsGenericHTMLElement* element = nsGenericHTMLElement::FromNode(mClearButton);
   nsCOMPtr<nsICSSDeclaration> declaration = element->Style();
   if (content->IsValueEmpty()) {
-    declaration->SetProperty("visibility"_ns, "hidden"_ns, u""_ns,
+    declaration->SetProperty("visibility"_ns, "hidden"_ns, ""_ns,
                              IgnoreErrors());
   } else {
-    nsAutoString dummy;
+    nsAutoCString dummy;
     declaration->RemoveProperty("visibility"_ns, dummy, IgnoreErrors());
   }
 }

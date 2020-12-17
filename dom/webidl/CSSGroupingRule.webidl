@@ -12,7 +12,7 @@
 interface CSSGroupingRule : CSSRule {
   [SameObject] readonly attribute CSSRuleList cssRules;
   [Throws]
-  unsigned long insertRule(DOMString rule, optional unsigned long index = 0);
+  unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Throws]
   void deleteRule(unsigned long index);
 };

@@ -64,7 +64,7 @@ class CSSPageRule final : public css::Rule {
 
   // WebIDL interfaces
   uint16_t Type() const final { return CSSRule_Binding::PAGE_RULE; }
-  void GetCssText(nsAString& aCssText) const final;
+  void GetCssText(nsACString& aCssText) const final;
   nsICSSDeclaration* Style();
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;

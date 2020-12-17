@@ -13,7 +13,7 @@
 [ProbablyShortLivingWrapper,
  Exposed=Window]
 interface MediaQueryList : EventTarget {
-  readonly attribute DOMString media;
+  readonly attribute UTF8String media;
   readonly attribute boolean matches;
 
   [Throws]

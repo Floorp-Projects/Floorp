@@ -10,8 +10,10 @@ import runpy
 # Generates a line of WebIDL with the given spelling of the property name
 # (whether camelCase, _underscorePrefixed, etc.) and the given array of
 # extended attributes.
+
+
 def generateLine(propName, extendedAttrs):
-    return "  [%s] attribute [TreatNullAs=EmptyString] DOMString %s;\n" % (
+    return "  [%s] attribute [TreatNullAs=EmptyString] UTF8String %s;\n" % (
         ", ".join(extendedAttrs),
         propName,
     )

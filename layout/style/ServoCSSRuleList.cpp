@@ -155,7 +155,8 @@ void ServoCSSRuleList::DropParentRuleReference() {
       [](css::Rule* rule) { rule->DropParentRuleReference(); });
 }
 
-nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
+nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
+                                      uint32_t aIndex) {
   MOZ_ASSERT(mStyleSheet,
              "Caller must ensure that "
              "the list is not unlinked from stylesheet");
@@ -164,7 +165,6 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
     return NS_OK;
   }
 
-  NS_ConvertUTF16toUTF8 rule(aRule);
   bool nested = !!mParentRule;
   css::Loader* loader = nullptr;
   auto allowImportRules = mStyleSheet->SelfOrAncestorIsConstructed()
@@ -181,7 +181,7 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
   }
   uint16_t type;
   nsresult rv = Servo_CssRules_InsertRule(mRawRules, mStyleSheet->RawContents(),
-                                          &rule, aIndex, nested, loader,
+                                          &aRule, aIndex, nested, loader,
                                           allowImportRules, mStyleSheet, &type);
   if (NS_FAILED(rv)) {
     return rv;

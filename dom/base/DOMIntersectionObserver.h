@@ -110,7 +110,9 @@ class DOMIntersectionObserver final : public nsISupports,
 
   nsINode* GetRoot() const { return mRoot; }
 
-  void GetRootMargin(DOMString& aRetVal);
+  void GetRootMargin(nsACString&);
+  bool SetRootMargin(const nsACString&);
+
   void GetThresholds(nsTArray<double>& aRetVal);
   void Observe(Element& aTarget);
   void Unobserve(Element& aTarget);
@@ -119,8 +121,6 @@ class DOMIntersectionObserver final : public nsISupports,
   void Disconnect();
 
   void TakeRecords(nsTArray<RefPtr<DOMIntersectionObserverEntry>>& aRetVal);
-
-  bool SetRootMargin(const nsAString& aString);
 
   void Update(Document* aDocument, DOMHighResTimeStamp time);
   MOZ_CAN_RUN_SCRIPT void Notify();

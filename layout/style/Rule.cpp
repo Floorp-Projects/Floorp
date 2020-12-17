@@ -86,7 +86,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 /* virtual */
 void Rule::DropSheetReference() { mSheet = nullptr; }
 
-void Rule::SetCssText(const nsAString& aCssText) {
+void Rule::SetCssText(const nsACString& aCssText) {
   // We used to throw for some rule types, but not all.  Specifically, we did
   // not throw for StyleRule.  Let's just always not throw.
 }

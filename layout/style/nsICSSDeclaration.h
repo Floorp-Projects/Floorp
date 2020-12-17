@@ -55,17 +55,18 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
   mozilla::dom::DocGroup* GetDocGroup();
 
   NS_IMETHOD GetPropertyValue(const nsACString& aPropName,
-                              nsAString& aValue) = 0;
+                              nsACString& aValue) = 0;
   virtual void RemoveProperty(const nsACString& aPropertyName,
-                              nsAString& aReturn,
+                              nsACString& aReturn,
                               mozilla::ErrorResult& aRv) = 0;
   virtual void SetProperty(const nsACString& aPropertyName,
-                           const nsACString& aValue, const nsAString& aPriority,
+                           const nsACString& aValue,
+                           const nsACString& aPriority,
                            nsIPrincipal* aSubjectPrincipal,
                            mozilla::ErrorResult& aRv) = 0;
   // For C++ callers.
   void SetProperty(const nsACString& aPropertyName, const nsACString& aValue,
-                   const nsAString& aPriority, mozilla::ErrorResult& aRv) {
+                   const nsACString& aPriority, mozilla::ErrorResult& aRv) {
     SetProperty(aPropertyName, aValue, aPriority, nullptr, aRv);
   }
 
@@ -84,22 +85,22 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
   }
 
   // WebIDL interface for CSSStyleDeclaration
-  virtual void SetCssText(const nsAString& aString,
+  virtual void SetCssText(const nsACString& aString,
                           nsIPrincipal* aSubjectPrincipal,
                           mozilla::ErrorResult& rv) = 0;
-  virtual void GetCssText(nsAString& aString) = 0;
+  virtual void GetCssText(nsACString& aString) = 0;
   virtual uint32_t Length() = 0;
 
   // The actual implementation of the Item method and the WebIDL indexed getter
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound,
                              nsACString& aPropName) = 0;
 
-  void GetPropertyValue(const nsACString& aPropName, nsString& aValue,
+  void GetPropertyValue(const nsACString& aPropName, nsACString& aValue,
                         mozilla::ErrorResult& rv) {
     rv = GetPropertyValue(aPropName, aValue);
   }
   virtual void GetPropertyPriority(const nsACString& aPropName,
-                                   nsAString& aPriority) = 0;
+                                   nsACString& aPriority) = 0;
   virtual mozilla::css::Rule* GetParentRule() = 0;
 
  protected:
@@ -109,18 +110,19 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
 
 #define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER                               \
-  void GetCssText(nsAString& aCssText) override;                               \
-  void SetCssText(const nsAString& aCssText, nsIPrincipal* aSubjectPrincipal,  \
+  void GetCssText(nsACString& aCssText) override;                              \
+  void SetCssText(const nsACString& aCssText, nsIPrincipal* aSubjectPrincipal, \
                   mozilla::ErrorResult& aRv) override;                         \
   NS_IMETHOD GetPropertyValue(const nsACString& propertyName,                  \
-                              nsAString& _retval) override;                    \
-  void RemoveProperty(const nsACString& propertyName, nsAString& _retval,      \
+                              nsACString& _retval) override;                   \
+  void RemoveProperty(const nsACString& propertyName, nsACString& _retval,     \
                       mozilla::ErrorResult& aRv) override;                     \
   void GetPropertyPriority(const nsACString& propertyName,                     \
-                           nsAString& aPriority) override;                     \
+                           nsACString& aPriority) override;                    \
   void SetProperty(const nsACString& propertyName, const nsACString& value,    \
-                   const nsAString& priority, nsIPrincipal* aSubjectPrincipal, \
-                   mozilla::ErrorResult& aRv) override;                        \
+                   const nsACString& priority,                                 \
+                   nsIPrincipal* aSubjectPrincipal, mozilla::ErrorResult& aRv) \
+      override;                                                                \
   uint32_t Length() override;                                                  \
   mozilla::css::Rule* GetParentRule() override;
 

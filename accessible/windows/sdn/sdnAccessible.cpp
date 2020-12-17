@@ -220,7 +220,7 @@ sdnAccessible::get_computedStyle(
   for (index = realIndex = 0; index < length && realIndex < aMaxStyleProperties;
        index++) {
     nsAutoCString property;
-    nsAutoString value;
+    nsAutoCString value;
 
     // Ignore -moz-* properties.
     cssDecl->Item(index, property);
@@ -230,7 +230,8 @@ sdnAccessible::get_computedStyle(
     if (!value.IsEmpty()) {
       aStyleProperties[realIndex] =
           ::SysAllocString(NS_ConvertUTF8toUTF16(property).get());
-      aStyleValues[realIndex] = ::SysAllocString(value.get());
+      aStyleValues[realIndex] =
+          ::SysAllocString(NS_ConvertUTF8toUTF16(value).get());
       ++realIndex;
     }
   }
@@ -256,12 +257,12 @@ sdnAccessible::get_computedStyleForProperties(
 
   uint32_t index = 0;
   for (index = 0; index < aNumStyleProperties; index++) {
-    nsAutoString value;
+    nsAutoCString value;
     if (aStyleProperties[index])
       cssDecl->GetPropertyValue(
           NS_ConvertUTF16toUTF8(nsDependentString(aStyleProperties[index])),
           value);  // Get property value
-    aStyleValues[index] = ::SysAllocString(value.get());
+    aStyleValues[index] = ::SysAllocString(NS_ConvertUTF8toUTF16(value).get());
   }
 
   return S_OK;
