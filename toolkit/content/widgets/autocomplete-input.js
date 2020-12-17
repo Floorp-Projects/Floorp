@@ -18,6 +18,8 @@
     constructor() {
       super();
 
+      this.popupSelectedIndex = -1;
+
       ChromeUtils.defineModuleGetter(
         this,
         "PrivateBrowsingUtils",
@@ -118,8 +120,6 @@
       );
 
       this.valueIsTyped = false;
-
-      this._selectionDetails = null;
     }
 
     get popup() {
@@ -560,10 +560,7 @@
             }
           }
           if (this.popup.selectedIndex >= 0) {
-            this._selectionDetails = {
-              index: this.popup.selectedIndex,
-              kind: "key",
-            };
+            this.popupSelectedIndex = this.popup.selectedIndex;
           }
           cancel = this.handleEnter(aEvent);
           break;
