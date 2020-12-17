@@ -37,13 +37,6 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender, []);
   });
 
-  it("should return an empty SPOCS fill array given initial state", () => {
-    const { spocsFill } = selectLayoutRender({
-      state: store.getState().DiscoveryStream,
-    });
-    assert.deepEqual(spocsFill, []);
-  });
-
   it("should add .data property from feeds to each compontent in .layout", () => {
     store.dispatch({
       type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
@@ -217,7 +210,7 @@ describe("selectLayoutRender", () => {
     });
   });
 
-  it("should return spoc result and spocs fill for rolls below the probability", () => {
+  it("should return spoc result for rolls below the probability", () => {
     const fakeSpocConfig = {
       positions: [{ index: 0 }, { index: 1 }],
       probability: 0.5,
@@ -250,7 +243,7 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.1);
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
     });
 
@@ -270,14 +263,9 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], {
       id: "bar",
     });
-
-    assert.deepEqual(spocsFill, [
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-    ]);
   });
 
-  it("should return spoc result and spocs fill when there are more positions than spocs", () => {
+  it("should return spoc result when there are more positions than spocs", () => {
     const fakeSpocConfig = {
       positions: [{ index: 0 }, { index: 1 }, { index: 2 }],
       probability: 0.5,
@@ -310,7 +298,7 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.1);
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
     });
 
@@ -330,11 +318,6 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], {
       id: "bar",
     });
-
-    assert.deepEqual(spocsFill, [
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-    ]);
   });
 
   it("should report non-displayed spocs with reason as probability_selection and out_of_position", () => {
@@ -370,7 +353,7 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
       rollCache: [0.7, 0.3, 0.8],
     });
@@ -387,22 +370,6 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], {
       id: "bar",
     });
-
-    assert.deepEqual(spocsFill, [
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-      {
-        id: undefined,
-        reason: "probability_selection",
-        displayed: 0,
-        full_recalc: 0,
-      },
-      {
-        id: undefined,
-        reason: "out_of_position",
-        displayed: 0,
-        full_recalc: 0,
-      },
-    ]);
   });
 
   it("should not return spoc result for rolls above the probability", () => {
@@ -438,7 +405,7 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.6);
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
     });
 
@@ -450,21 +417,6 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], {
       id: "bar",
     });
-
-    assert.deepEqual(spocsFill, [
-      {
-        id: undefined,
-        reason: "probability_selection",
-        displayed: 0,
-        full_recalc: 0,
-      },
-      {
-        id: undefined,
-        reason: "out_of_position",
-        displayed: 0,
-        full_recalc: 0,
-      },
-    ]);
   });
 
   it("Subsequent render should return spoc result for cached rolls below the probability", () => {
@@ -500,7 +452,7 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
       rollCache: [0.4, 0.3],
     });
@@ -521,11 +473,6 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], {
       id: "bar",
     });
-
-    assert.deepEqual(spocsFill, [
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-    ]);
   });
 
   it("Subsequent render should not return spoc result for cached rolls above the probability", () => {
@@ -561,7 +508,7 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
       rollCache: [0.6, 0.7],
     });
@@ -574,21 +521,6 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], {
       id: "bar",
     });
-
-    assert.deepEqual(spocsFill, [
-      {
-        id: undefined,
-        reason: "probability_selection",
-        displayed: 0,
-        full_recalc: 0,
-      },
-      {
-        id: undefined,
-        reason: "out_of_position",
-        displayed: 0,
-        full_recalc: 0,
-      },
-    ]);
   });
 
   it("Subsequent render should return spoc result by cached rolls probability", () => {
@@ -624,7 +556,7 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
       rollCache: [0.7, 0.2],
     });
@@ -641,16 +573,6 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], {
       id: "bar",
     });
-
-    assert.deepEqual(spocsFill, [
-      { id: undefined, reason: "n/a", displayed: 1, full_recalc: 0 },
-      {
-        id: undefined,
-        reason: "out_of_position",
-        displayed: 0,
-        full_recalc: 0,
-      },
-    ]);
   });
 
   it("should return a layout with feeds of items length with positions", () => {
@@ -681,7 +603,7 @@ describe("selectLayoutRender", () => {
     });
     store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
 
-    const { spocsFill, layoutRender } = selectLayoutRender({
+    const { layoutRender } = selectLayoutRender({
       state: store.getState().DiscoveryStream,
     });
 
@@ -691,8 +613,6 @@ describe("selectLayoutRender", () => {
     assert.equal(recommendations[1].pos, 1);
     assert.equal(recommendations[2].pos, 2);
     assert.equal(recommendations[3].pos, undefined);
-
-    assert.lengthOf(spocsFill, 0);
   });
   it("should stop rendering feeds if we hit one that's not ready", () => {
     const fakeLayout = [
