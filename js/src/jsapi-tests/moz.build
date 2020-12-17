@@ -163,6 +163,9 @@ if CONFIG["OS_ARCH"] not in ("WINNT", "Darwin") and CONFIG["OS_TARGET"] != "Andr
         "testPrintError.cpp",
     ]
 
+if CONFIG["MOZ_DEBUG"] or CONFIG["NIGHTLY_BUILD"]:
+    DEFINES["JS_CACHEIR_SPEW"] = True
+    DEFINES["JS_STRUCTURED_SPEW"] = True
 
 DEFINES["EXPORT_JS_API"] = True
 
