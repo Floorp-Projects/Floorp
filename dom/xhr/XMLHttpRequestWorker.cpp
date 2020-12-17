@@ -818,9 +818,7 @@ void Proxy::Teardown(bool aSendUnpin) {
       if (aSendUnpin) {
         RefPtr<XHRUnpinRunnable> runnable =
             new XHRUnpinRunnable(mWorkerPrivate, mXMLHttpRequestPrivate);
-        if (!runnable->Dispatch()) {
-          MOZ_CRASH("We're going to hang at shutdown anyways.");
-        }
+        MOZ_ALWAYS_TRUE(runnable->Dispatch());
       }
 
       if (mSyncLoopTarget) {
@@ -828,9 +826,7 @@ void Proxy::Teardown(bool aSendUnpin) {
         RefPtr<MainThreadStopSyncLoopRunnable> runnable =
             new MainThreadStopSyncLoopRunnable(
                 mWorkerPrivate, std::move(mSyncLoopTarget), false);
-        if (!runnable->Dispatch()) {
-          MOZ_CRASH("We're going to hang at shutdown anyways.");
-        }
+        MOZ_ALWAYS_TRUE(runnable->Dispatch());
       }
 
       mOutstandingSendCount = 0;
@@ -843,6 +839,10 @@ void Proxy::Teardown(bool aSendUnpin) {
 
   MOZ_ASSERT(!mWorkerPrivate);
   MOZ_ASSERT(!mSyncLoopTarget);
+  // If there are rare edge cases left that violate our invariants
+  // just ensure that they won't harm us too much.
+  mWorkerPrivate = nullptr;
+  mSyncLoopTarget = nullptr;
 }
 
 bool Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd) {
@@ -1045,8 +1045,8 @@ bool EventRunnable::PreDispatch(WorkerPrivate* /* unused */) {
       }
 
       default:
-        MOZ_CRASH("Invalid response type");
-        break;
+        MOZ_ASSERT_UNREACHABLE("Invalid response type");
+        return false;
     }
   }
 
@@ -1330,6 +1330,10 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
         MOZ_ASSERT(false, "This should never fail!");
       }
     }
+  } else {
+    // In case of failure we just break the sync loop
+    mProxy->mSyncLoopTarget = nullptr;
+    mSyncLoopTarget = nullptr;
   }
 }
 
@@ -1893,7 +1897,9 @@ void XMLHttpRequestWorker::Send(
   }
 
   if (aData.Value().IsDocument()) {
-    MOZ_CRASH("Documents are not exposed to workers.");
+    MOZ_ASSERT_UNREACHABLE("Documents are not exposed to workers.");
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
   if (aData.Value().IsBlob()) {
@@ -2179,7 +2185,7 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
     }
 
     default:
-      MOZ_CRASH("Invalid type");
+      MOZ_ASSERT_UNREACHABLE("Invalid type");
       aResponse.setNull();
       return;
   }
