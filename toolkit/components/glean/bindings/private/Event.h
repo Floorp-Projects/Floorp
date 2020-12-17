@@ -73,11 +73,14 @@ class EventMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
   Maybe<nsTArray<RecordedEvent>> TestGetValue(
-      const nsACString& aStorageName) const {
-    if (!fog_event_test_has_value(mId, &aStorageName)) {
+      const nsACString& aPingName = nsCString()) const {
+    if (!fog_event_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
 

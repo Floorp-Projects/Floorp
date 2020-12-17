@@ -27,9 +27,12 @@ interface nsIGleanBoolean : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or undefined if there is no value.
    */
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue([optional] in AUTF8String aPingName);
 };
 
 [scriptable, uuid(aa15fd20-1e8a-11eb-9bec-0800200c9a66)]
@@ -55,10 +58,13 @@ interface nsIGleanDatetime : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue([optional] in AUTF8String aPingName);
 };
 
 [scriptable, uuid(05b89d2a-d57c-11ea-82da-3f63399a6f5a)]
@@ -83,9 +89,12 @@ interface nsIGleanCounter : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or undefined if there is no value.
    */
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue([optional] in AUTF8String aPingName);
 };
 
 [scriptable, uuid(eea5ed46-16ba-46cd-bb1f-504581987fe1)]
@@ -114,10 +123,13 @@ interface nsIGleanMemoryDistribution : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
   [implicit_jscontext]
-	jsval testGetValue(in ACString aStorageName);
+	jsval testGetValue([optional] in ACString aPingName);
 };
 
 [scriptable, uuid(5223a48b-687d-47ff-a629-fd4a72d1ecfa)]
@@ -167,10 +179,13 @@ interface nsIGleanString : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue([optional] in AUTF8String aPingName);
 };
 
 [scriptable, uuid(2586530c-030f-11eb-93cb-cbf30d25225a)]
@@ -207,9 +222,12 @@ interface nsIGleanTimespan : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or undefined if there is no value.
    */
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue([optional] in AUTF8String aPingName);
 };
 
 [scriptable, uuid(395700e7-06f6-46be-adcc-ea58977fda6d)]
@@ -239,10 +257,13 @@ interface nsIGleanUuid : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue([optional] in AUTF8String aPingName);
 };
 
 [scriptable, uuid(1b01424a-1f55-11eb-92a5-0754f6c3f240)]
@@ -268,8 +289,11 @@ interface nsIGleanEvent : nsISupports
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric.
    */
   [implicit_jscontext]
-  jsval testGetValue(in AUTF8String aStorageName);
+  jsval testGetValue([optional] in AUTF8String aPingName);
 };

@@ -63,6 +63,8 @@ TEST(FOG, TestCppCounterWorks)
   ASSERT_EQ(
       42,
       mozilla::glean::test_only::bad_code.TestGetValue("test-ping"_ns).value());
+  // And test that the ping name's optional, while you're at it:
+  ASSERT_EQ(42, test_only::bad_code.TestGetValue().value());
 }
 
 TEST(FOG, TestCppStringWorks)

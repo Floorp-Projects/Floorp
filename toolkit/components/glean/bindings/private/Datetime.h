@@ -53,14 +53,18 @@ class DatetimeMetric {
    * This doesn't clear the stored value.
    * Parent process only. Panics in child processes.
    *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<nsCString> TestGetValue(const nsACString& aStorageName) const {
-    if (!fog_datetime_test_has_value(mId, &aStorageName)) {
+  Maybe<nsCString> TestGetValue(
+      const nsACString& aPingName = nsCString()) const {
+    if (!fog_datetime_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
     nsCString ret;
-    fog_datetime_test_get_value(mId, &aStorageName, &ret);
+    fog_datetime_test_get_value(mId, &aPingName, &ret);
     return Some(ret);
   }
 
