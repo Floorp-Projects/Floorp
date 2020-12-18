@@ -2019,7 +2019,11 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
   }
 
   // Set cached value for lightweight and printing
+  bool wasLocking = mAspectRatio != 0.0;
   mBounds.SizeTo(width, height);
+  if (wasLocking) {
+    LockAspectRatio(true);  // This causes us to refresh the mAspectRatio value
+  }
 
   if (mWnd) {
     // Refer to the comment above a similar check in nsWindow::Move
