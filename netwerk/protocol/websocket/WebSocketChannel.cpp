@@ -855,7 +855,10 @@ class PMCECompression {
 
       uint32_t inflated = kBufferLen - mInflater.avail_out;
       if (inflated > 0) {
-        _retval.Append(reinterpret_cast<char*>(mBuffer), inflated);
+        if (!_retval.Append(reinterpret_cast<char*>(mBuffer), inflated,
+                            fallible)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
 
       mInflater.avail_out = kBufferLen;
