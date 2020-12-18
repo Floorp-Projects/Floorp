@@ -24,14 +24,6 @@
 include the word "toolbar" or such, because screen readers already know that
 this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY navbar.accessibleLabel "Navigation">
-<!ENTITY personalbarCmd.label "Bookmarks Toolbar">
-<!ENTITY personalbarCmd.accesskey "B">
-<!-- LOCALIZATION NOTE: The accessibleLabel is a spoken label that should not
-include the word "toolbar" or such, because screen readers already know that
-this container is a toolbar. This avoids double-speaking. -->
-<!ENTITY personalbar.accessibleLabel "Bookmarks">
-<!ENTITY bookmarksToolbarItem.label "Bookmarks Toolbar Items">
-
 <!ENTITY fullScreenCmd.label "Full Screen">
 
 <!ENTITY pictureInPictureHideToggle.label "Hide Picture-in-Picture Toggle">
@@ -57,10 +49,6 @@ this container is a toolbar. This avoids double-speaking. -->
      for the Firefox Account toolbar menu screen.  -->
 <!ENTITY fxa.service.sendTab.description "Send a tab instantly to any device you’re signed in on.">
 
-<!ENTITY showAllBookmarks2.label "Show All Bookmarks">
-<!ENTITY recentBookmarks.label "Recently Bookmarked">
-<!ENTITY bookmarksToolbarChevron.tooltip "Show more bookmarks">
-
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
@@ -69,21 +57,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!-- Toolbar items -->
 <!ENTITY homeButton.label             "Home">
 <!ENTITY homeButton.defaultPage.tooltip "&brandShortName; Home Page">
-
-<!ENTITY bookmarksButton.label          "Bookmarks">
-
-<!ENTITY bookmarksSubview.label             "Bookmarks">
-<!ENTITY bookmarksMenuButton2.label         "Bookmarks Menu">
-<!ENTITY bookmarksMenuButton.other.label    "Other Bookmarks">
-<!ENTITY bookmarksMenuButton.mobile.label   "Mobile Bookmarks">
-<!ENTITY viewBookmarksSidebar2.label        "View Bookmarks Sidebar">
-<!ENTITY hideBookmarksSidebar.label         "Hide Bookmarks Sidebar">
-<!ENTITY viewBookmarksToolbar.label         "View Bookmarks Toolbar">
-<!ENTITY hideBookmarksToolbar.label         "Hide Bookmarks Toolbar">
-<!ENTITY searchBookmarks.label              "Search Bookmarks">
-<!ENTITY bookmarkingTools.label             "Bookmarking Tools">
-<!ENTITY addBookmarksMenu.label             "Add Bookmarks Menu to Toolbar">
-<!ENTITY removeBookmarksMenu.label          "Remove Bookmarks Menu from Toolbar">
 
 <!ENTITY historyButton.label            "History">
 

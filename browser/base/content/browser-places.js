@@ -1591,19 +1591,17 @@ var BookmarkingUI = {
 
     this._initMobileBookmarks(document.getElementById("BMB_mobileBookmarks"));
 
-    this.selectLabel(
+    this.updateLabel(
       "BMB_viewBookmarksSidebar",
       SidebarUI.currentID == "viewBookmarksSidebar"
     );
-    this.selectLabel("BMB_viewBookmarksToolbar", !this.toolbar.collapsed);
+    this.updateLabel("BMB_viewBookmarksToolbar", !this.toolbar.collapsed);
   },
 
-  selectLabel(elementId, visible) {
+  updateLabel(elementId, visible) {
     let element = PanelMultiView.getViewNode(document, elementId);
-    element.setAttribute(
-      "label",
-      element.getAttribute(visible ? "label-hide" : "label-show")
-    );
+    let l10nID = element.getAttribute("data-l10n-id");
+    document.l10n.setAttributes(element, l10nID, { isVisible: !!visible });
   },
 
   toggleBookmarksToolbar(reason) {
@@ -2231,15 +2229,15 @@ var BookmarkingUI = {
     let placement = CustomizableUI.getPlacementOfWidget(
       this.BOOKMARK_BUTTON_ID
     );
-    this.selectLabel(
+    this.updateLabel(
       "panelMenu_toggleBookmarksMenu",
       placement && placement.area == CustomizableUI.AREA_NAVBAR
     );
-    this.selectLabel(
+    this.updateLabel(
       "panelMenu_viewBookmarksSidebar",
       SidebarUI.currentID == "viewBookmarksSidebar"
     );
-    this.selectLabel("panelMenu_viewBookmarksToolbar", !this.toolbar.collapsed);
+    this.updateLabel("panelMenu_viewBookmarksToolbar", !this.toolbar.collapsed);
     PanelUI.showSubView("PanelUI-bookmarkingTools", triggerNode);
   },
 
