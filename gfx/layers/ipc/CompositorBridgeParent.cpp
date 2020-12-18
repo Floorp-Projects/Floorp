@@ -1864,7 +1864,8 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
 }
 
 PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
-    const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize) {
+    const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize,
+    const WindowKind& aWindowKind) {
   MOZ_ASSERT(wr::AsLayersId(aPipelineId) == mRootLayerTreeID);
   MOZ_ASSERT(!mWrBridge);
   MOZ_ASSERT(!mCompositor);
@@ -1896,8 +1897,8 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
   }
 
   nsCString error("FEATURE_FAILTURE_WEBRENDER_INITIALIZE_UNSPECIFIED");
-  RefPtr<wr::WebRenderAPI> api =
-      wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize, error);
+  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(
+      this, std::move(widget), windowId, aSize, aWindowKind, error);
   if (!api) {
     mWrBridge =
         WebRenderBridgeParent::CreateDestroyed(aPipelineId, std::move(error));

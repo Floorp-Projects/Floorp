@@ -202,8 +202,8 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
                         const nsTArray<CompositionPayload>& aPayload) override;
 
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
-      const wr::PipelineId& aPipelineId,
-      const LayoutDeviceIntSize& aSize) override;
+      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize,
+      const WindowKind& aWindowKind) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
   webgpu::PWebGPUParent* AllocPWebGPUParent() override;
