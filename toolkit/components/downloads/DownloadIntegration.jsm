@@ -1267,7 +1267,6 @@ DownloadHistoryObserver.prototype = {
     this._list.removeFinished();
   },
 
-  onTitleChanged() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onDeleteVisits() {},

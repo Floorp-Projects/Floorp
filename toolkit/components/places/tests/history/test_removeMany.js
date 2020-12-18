@@ -84,9 +84,6 @@ add_task(async function test_remove_many() {
     onVisits(aVisits) {
       Assert.ok(false, "Unexpected call to onVisits " + aVisits.length);
     },
-    onTitleChanged(aURI) {
-      Assert.ok(false, "Unexpected call to onTitleChanged " + aURI.spec);
-    },
     onClearHistory() {
       Assert.ok(false, "Unexpected call to onClearHistory");
     },

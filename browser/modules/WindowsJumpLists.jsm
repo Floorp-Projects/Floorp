@@ -78,7 +78,6 @@ XPCOMUtils.defineLazyGetter(this, "gHistoryObserver", function() {
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
     onVisits() {},
-    onTitleChanged() {},
     onFrecencyChanged() {},
     onManyFrecenciesChanged() {},
     onDeleteURI() {},

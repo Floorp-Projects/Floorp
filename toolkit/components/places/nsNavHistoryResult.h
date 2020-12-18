@@ -64,8 +64,6 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
 // and nsINavHistoryObserver (some methods, such as BeginUpdateBatch overlap)
 #define NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE(...)                    \
   NS_DECL_NSINAVBOOKMARKOBSERVER                                       \
-  NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle, \
-                            const nsACString& aGUID) __VA_ARGS__;      \
   NS_IMETHOD OnFrecencyChanged(nsIURI* aURI, int32_t aNewFrecency,     \
                                const nsACString& aGUID, bool aHidden,  \
                                PRTime aLastVisitDate) __VA_ARGS__;     \
@@ -710,6 +708,8 @@ class nsNavHistoryQueryResultNode final
   // the history result creates a new query node dynamically.
   nsresult OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
                    uint32_t aTransitionType, bool aHidden, uint32_t* aAdded);
+  nsresult OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
+                          const nsACString& aGUID);
   virtual void OnRemoving() override;
 
  public:

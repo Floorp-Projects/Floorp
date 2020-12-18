@@ -104,9 +104,6 @@ const getHistoryObserver = () => {
       }
       onBeginUpdateBatch() {}
       onEndUpdateBatch() {}
-      onTitleChanged(uri, title) {
-        this.emit("titleChanged", { url: uri.spec, title: title });
-      }
       onClearHistory() {
         this.emit("visitRemoved", { allHistory: true, urls: [] });
       }
