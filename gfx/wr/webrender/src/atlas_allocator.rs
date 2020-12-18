@@ -272,3 +272,48 @@ impl AtlasAllocator for ShelfAllocator {
         self.dump_into_svg(Some(&rect.to_i32().cast_unit()), output)
     }
 }
+
+#[test]
+fn bug_1680769() {
+    let mut allocators: AllocatorList<ShelfAllocator, ()> = AllocatorList::new(
+        1024,
+        ShelfAllocatorOptions::default(),
+        (),
+    );
+
+    let mut allocations = Vec::new();
+    let mut next_id = CacheTextureId(0);
+    let alloc_cb = &mut |_: DeviceIntSize, _: &()| {
+        let texture_id = next_id;
+        next_id.0 += 1;
+
+        texture_id
+    };
+
+    // Make some allocations, forcing the the creation of multiple textures.
+    for _ in 0..50 {
+        allocations.push(allocators.allocate(size2(256, 256), alloc_cb));
+    }
+
+    // Deallocate everything.
+    // It should empty all atlases and we still have textures allocated because
+    // we haven't called release_empty_textures yet.
+    for alloc in allocations.drain(..) {
+        allocators.deallocate(alloc.0, alloc.1);
+    }
+
+    // Allocate something else.
+    // Bug 1680769 was causing this allocation to be duplicated and leaked in
+    // all textures.
+    allocations.push(allocators.allocate(size2(8, 8), alloc_cb));
+
+    // Deallocate all known allocations.
+    for alloc in allocations.drain(..) {
+        allocators.deallocate(alloc.0, alloc.1);
+    }
+
+    // If we have leaked items, this won't manage to remove all textures.
+    allocators.release_empty_textures(&mut |_| {});
+
+    assert_eq!(allocators.allocated_textures(), 0);
+}
