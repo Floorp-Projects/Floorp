@@ -332,7 +332,6 @@ var DownloadCache = {
   },
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onTitleChanged() {},
   onFrecencyChanged() {},
   onManyFrecenciesChanged() {},
   onDeleteVisits() {},

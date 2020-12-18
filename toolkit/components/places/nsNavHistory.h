@@ -346,12 +346,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
   void UpdateDaysOfHistory(PRTime visitTime);
 
   /**
-   * Fires onTitleChanged event to nsINavHistoryService observers
-   */
-  void NotifyTitleChange(nsIURI* aURI, const nsString& title,
-                         const nsACString& aGUID);
-
-  /**
    * Fires onFrecencyChanged event to nsINavHistoryService observers
    */
   void NotifyFrecencyChanged(const nsACString& aSpec, int32_t aNewFrecency,

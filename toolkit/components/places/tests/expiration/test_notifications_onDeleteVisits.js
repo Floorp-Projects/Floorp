@@ -115,7 +115,6 @@ add_task(async function test_notifications_onDeleteVisits() {
       onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
       onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
       onClearHistory() {},
-      onTitleChanged() {},
       onDeleteURI(aURI, aGUID, aReason) {
         // Check this uri was not bookmarked.
         Assert.equal(currentTest.bookmarks.indexOf(aURI.spec), -1);
