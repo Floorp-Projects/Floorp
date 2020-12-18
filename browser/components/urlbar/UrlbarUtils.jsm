@@ -28,8 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  SearchSuggestionController:
-    "resource://gre/modules/SearchSuggestionController.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
@@ -386,10 +384,7 @@ var UrlbarUtils = {
    *          The array is sorted by match indexes ascending.
    */
   getTokenMatches(tokens, str, highlightType) {
-    // Only search a portion of the string, because not more than a certain
-    // amount of characters are visible in the UI, matching over what is visible
-    // would be expensive and pointless.
-    str = str.substring(0, UrlbarUtils.MAX_TEXT_LENGTH).toLocaleLowerCase();
+    str = str.toLocaleLowerCase();
     // To generate non-overlapping ranges, we start from a 0-filled array with
     // the same length of the string, and use it as a collision marker, setting
     // 1 where the text should be highlighted.
@@ -934,13 +929,7 @@ var UrlbarUtils = {
     // If the user types a search engine alias without a search string,
     // we have an empty search string and we can't bump it.
     // We also don't want to add history in private browsing mode.
-    // Finally we don't want to store extremely long strings that would not be
-    // particularly useful to the user.
-    if (
-      !value ||
-      input.isPrivate ||
-      value.length > SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
-    ) {
+    if (!value || input.isPrivate) {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {

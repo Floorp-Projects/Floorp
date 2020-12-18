@@ -107,10 +107,6 @@
         "resource://gre/modules/FormHistory.jsm",
         {}
       ).FormHistory;
-      this.SearchSuggestionController = ChromeUtils.import(
-        "resource://gre/modules/SearchSuggestionController.jsm",
-        {}
-      ).SearchSuggestionController;
 
       Services.obs.addObserver(this.observer, "browser-search-engine-modified");
       Services.obs.addObserver(this.observer, "browser-search-service");
@@ -416,9 +412,7 @@
       if (
         aData &&
         !PrivateBrowsingUtils.isWindowPrivate(window) &&
-        this.FormHistory.enabled &&
-        aData.length <=
-          this.SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
+        this.FormHistory.enabled
       ) {
         this.FormHistory.update(
           {
