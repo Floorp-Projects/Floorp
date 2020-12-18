@@ -545,6 +545,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
      "Extensible HyperText Markup Language"},
     {APPLICATION_MATHML_XML, "mml", "Mathematical Markup Language"},
     {APPLICATION_RDF, "rdf", "Resource Description Framework"},
+    {"text/csv", "csv", "CSV File"},
     {TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language"},
     {TEXT_CSS, "css", "Style Sheet"},
     {TEXT_VCARD, "vcf,vcard", "Contact Information"},
