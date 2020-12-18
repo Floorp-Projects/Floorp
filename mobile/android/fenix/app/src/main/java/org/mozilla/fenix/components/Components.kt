@@ -117,7 +117,7 @@ class Components(private val context: Context) {
             onNotificationClickIntent = Intent(context, HomeActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                data = "fenix://settings_addon_manager".toUri()
+                data = "${BuildConfig.DEEP_LINK_SCHEME}://settings_addon_manager".toUri()
             }
         )
     }
