@@ -3,7 +3,7 @@ fuzzy(1,840) == border-gradient-simple.yaml border-gradient-simple-ref.yaml
 platform(linux,mac) == border-gradient-nine-patch.yaml border-gradient-nine-patch.png
 == border-radial-gradient-simple.yaml border-radial-gradient-simple-ref.yaml
 platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-gradient-nine-patch.png
-== border-radii.yaml border-radii.png
+== fuzzy(1,10) border-radii.yaml border-radii.png
 == border-none.yaml border-none-ref.yaml
 fuzzy(128,69) == border-overlapping-corner.yaml border-overlapping-corner-ref.yaml
 == border-overlapping-edge.yaml border-overlapping-edge-ref.yaml
@@ -27,9 +27,9 @@ platform(linux,mac) fuzzy(1,130) == dotted-corner-small-radius.yaml dotted-corne
 fuzzy-if(platform(swgl),1,20) == overlapping.yaml overlapping.png
 == zero-width.yaml blank.yaml
 platform(linux,mac) == small-dotted-border.yaml small-dotted-border.png
-== discontinued-dash.yaml discontinued-dash.png
+fuzzy(1,30) == discontinued-dash.yaml discontinued-dash.png
 platform(linux,mac) == border-dashed-dotted-caching.yaml border-dashed-dotted-caching.png
 != small-inset-outset.yaml small-inset-outset-notref.yaml
-fuzzy(1,16) == no-aa.yaml green-square.yaml
+fuzzy(1,90) == no-aa.yaml green-square.yaml
 skip_on(android,device) == border-double-1px.yaml border-double-1px-ref.yaml  # Fails on Pixel2
 == max-scale.yaml max-scale-ref.yaml
