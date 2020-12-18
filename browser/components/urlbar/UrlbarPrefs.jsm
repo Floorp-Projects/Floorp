@@ -192,10 +192,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Also controls the other urlbar.update2 prefs.
   ["update2", true],
 
-  // Whether horizontal key navigation with left/right is disabled for urlbar's
-  // one-off buttons.
-  ["update2.disableOneOffsHorizontalKeyNavigation", true],
-
   // Controls the empty search behavior in Search Mode:
   //  0 - Show nothing
   //  1 - Show search history
