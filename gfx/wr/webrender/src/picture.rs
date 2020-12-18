@@ -122,7 +122,8 @@ use crate::print_tree::{PrintTree, PrintTreePrinter};
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_target::RenderTargetKind;
-use crate::render_task::{BlurTask, RenderTask, RenderTaskLocation, BlurTaskCache, RenderTaskKind};
+use crate::render_task::{BlurTask, RenderTask, RenderTaskLocation, BlurTaskCache};
+use crate::render_task::{StaticRenderTaskSurface, RenderTaskKind};
 use crate::resource_cache::{ResourceCache, ImageGeneration};
 use crate::space::{SpaceMapper, SpaceSnapper};
 use crate::scene::SceneProperties;
@@ -5437,9 +5438,11 @@ impl PicturePrimitive {
 
                                 let render_task_id = frame_state.rg_builder.add().init(
                                     RenderTask::new(
-                                        RenderTaskLocation::PictureCache {
-                                            size: task_size,
-                                            surface,
+                                        RenderTaskLocation::Static {
+                                            surface: StaticRenderTaskSurface::PictureCache {
+                                                surface,
+                                            },
+                                            rect: task_size.into(),
                                         },
                                         RenderTaskKind::new_picture(
                                             task_size,
