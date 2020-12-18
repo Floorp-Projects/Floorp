@@ -177,6 +177,9 @@ add_task(async function test_searchMode_removeRestyledHistory() {
     set: [
       ["browser.urlbar.suggest.searches", true],
       ["browser.urlbar.maxHistoricalSearchSuggestions", 1],
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+      ["browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true],
     ],
   });
 

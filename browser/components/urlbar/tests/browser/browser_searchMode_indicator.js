@@ -62,7 +62,11 @@ add_task(async function setup() {
   );
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.separatePrivateDefault.ui.enabled", false]],
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", false],
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
   });
 });
 
@@ -385,4 +389,20 @@ add_task(async function invalidate_pageproxystate() {
       "Pageproxystate should still be invalid after exiting search mode."
     );
   });
+});
+
+// Tests that the user doesn't get trapped in search mode if the update2 pref
+// is disabled after entering search mode.
+add_task(async function pref_flip_while_enabled() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_QUERY,
+  });
+  await UrlbarTestUtils.enterSearchMode(window);
+  await verifySearchModeResultsAdded(window);
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
+  await UrlbarTestUtils.assertSearchMode(window, null);
+  await SpecialPowers.popPrefEnv();
 });

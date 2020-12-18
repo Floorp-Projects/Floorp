@@ -31,8 +31,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     this.view = view;
     this.input = view.input;
     UrlbarPrefs.addObserver(this);
-    // Override the SearchOneOffs.jsm value for the Address Bar.
-    this.disableOneOffsHorizontalKeyNavigation = true;
+    this._setupOneOffsHorizontalKeyNavigation();
   }
 
   /**
@@ -172,8 +171,13 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    * @param {object} searchMode
    *   Used by UrlbarInput.setSearchMode to enter search mode. See setSearchMode
    *   documentation for details.
+   * @param {boolean} forceNewTab
+   *   True if the search results page should be loaded in a new tab.
+   *   TODO: We can remove this parameter when the update2 pref is removed. This
+   *   parameter is only used by the one-off context menu, which is removed in
+   *   update2.
    */
-  handleSearchCommand(event, searchMode) {
+  handleSearchCommand(event, searchMode, forceNewTab = false) {
     // The settings button is a special case. Its action should be executed
     // immediately.
     if (
@@ -196,14 +200,15 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
       this.input.value && this.input.getAttribute("pageproxystate") != "valid";
     let engine = Services.search.getEngineByName(searchMode.engineName);
 
-    let { where, params } = this._whereToOpen(event);
+    let { where, params } = this._whereToOpen(event, forceNewTab);
 
     // Some key combinations should execute a search immediately. We handle
     // these here, outside the switch statement.
     if (
-      userTypedSearchString &&
-      engine &&
-      (event.shiftKey || where != "current")
+      !this.view.oneOffsRefresh ||
+      (userTypedSearchString &&
+        engine &&
+        (event.shiftKey || where != "current"))
     ) {
       this.input.handleNavigation({
         event,
@@ -304,10 +309,24 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     // Invalidate the engine cache when the local-one-offs-related prefs change
     // so that the one-offs rebuild themselves the next time the view opens.
     if (
-      [...UrlbarUtils.LOCAL_SEARCH_MODES.map(m => m.pref)].includes(changedPref)
+      [
+        "update2",
+        "update2.oneOffsRefresh",
+        ...UrlbarUtils.LOCAL_SEARCH_MODES.map(m => m.pref),
+      ].includes(changedPref)
     ) {
       this.invalidateCache();
     }
+    this._setupOneOffsHorizontalKeyNavigation();
+  }
+
+  /**
+   * Sets whether LEFT/RIGHT should navigate through one-off buttons.
+   */
+  _setupOneOffsHorizontalKeyNavigation() {
+    this.disableOneOffsHorizontalKeyNavigation =
+      UrlbarPrefs.get("update2") &&
+      UrlbarPrefs.get("update2.disableOneOffsHorizontalKeyNavigation");
   }
 
   /**
@@ -318,6 +337,10 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    */
   _rebuildEngineList(engines) {
     super._rebuildEngineList(engines);
+
+    if (!this.view.oneOffsRefresh) {
+      return;
+    }
 
     for (let { source, pref, restrict } of UrlbarUtils.LOCAL_SEARCH_MODES) {
       if (!UrlbarPrefs.get(pref)) {
@@ -343,6 +366,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *   The click event.
    */
   _on_click(event) {
+    if (!this.view.oneOffsRefresh) {
+      super._on_click(event);
+      return;
+    }
+
     // Ignore right clicks.
     if (event.button == 2) {
       return;
@@ -368,7 +396,12 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *   The contextmenu event.
    */
   _on_contextmenu(event) {
-    // Prevent the context menu from appearing.
-    event.preventDefault();
+    // Prevent the context menu from appearing when update2 is enabled.
+    if (this.view.oneOffsRefresh) {
+      event.preventDefault();
+      return;
+    }
+
+    super._on_contextmenu(event);
   }
 }

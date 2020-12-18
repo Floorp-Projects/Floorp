@@ -255,7 +255,11 @@ add_task(async function init() {
   });
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", false]],
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+      ["browser.urlbar.suggest.searches", false],
+    ],
   });
 
   // Move the mouse away from the view so that a result or one-off isn't

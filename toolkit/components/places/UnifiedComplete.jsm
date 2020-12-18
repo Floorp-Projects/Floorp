@@ -1092,7 +1092,10 @@ Search.prototype = {
 
     // Match an alias only when it has a space after it.  If there's no trailing
     // space, then continue to treat it as part of the search string.
-    if (!UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
+    if (
+      UrlbarPrefs.get("update2") &&
+      !UrlbarTokenizer.REGEXP_SPACES_START.test(query)
+    ) {
       return false;
     }
 
@@ -1316,7 +1319,9 @@ Search.prototype = {
     // Restyle past searches, unless they are bookmarks or special results.
     if (
       match.style == "favicon" &&
-      (UrlbarPrefs.get("restyleSearches") || this._searchModeEngine)
+      (UrlbarPrefs.get("restyleSearches") ||
+        (this._searchModeEngine &&
+          UrlbarPrefs.get("update2.restyleBrowsingHistoryAsSearch")))
     ) {
       let restyled = this._maybeRestyleSearchMatch(match);
       if (restyled && UrlbarPrefs.get("maxHistoricalSearchSuggestions") == 0) {
@@ -1669,7 +1674,11 @@ Search.prototype = {
       // This means removing less interesting urls, like redirects or
       // non-bookmarked title-less pages.
 
-      if (UrlbarPrefs.get("restyleSearches") || this._searchModeEngine) {
+      if (
+        UrlbarPrefs.get("restyleSearches") ||
+        (this._searchModeEngine &&
+          UrlbarPrefs.get("update2.restyleBrowsingHistoryAsSearch"))
+      ) {
         // If restyle is enabled, we want to filter out redirect targets,
         // because sources are urls built using search engines definitions that
         // we can reverse-parse.

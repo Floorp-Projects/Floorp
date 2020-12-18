@@ -38,3 +38,27 @@ add_task(function test() {
     0.01
   );
 });
+
+add_task(function experiment_update2() {
+  UrlbarPrefs.set("experiment.update2", false);
+  UrlbarPrefs.set("update2", false);
+  Assert.equal(UrlbarPrefs.get("update2"), false);
+
+  UrlbarPrefs.set("update2", true);
+  Assert.deepEqual(
+    UrlbarPrefs.get("update2"),
+    false,
+    "If experiment.update2 is false, it overrides update2."
+  );
+
+  UrlbarPrefs.set("experiment.update2", true);
+  UrlbarPrefs.set("update2", false);
+  Assert.deepEqual(
+    UrlbarPrefs.get("update2"),
+    false,
+    "If experiment.update2 is true, it does not override update2."
+  );
+
+  UrlbarPrefs.set("update2", true);
+  Assert.deepEqual(UrlbarPrefs.get("update2"), true);
+});

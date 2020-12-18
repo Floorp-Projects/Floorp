@@ -98,8 +98,18 @@ class UrlbarView {
   }
 
   /**
-   * Whether the panel is open.
    * @returns {boolean}
+   *   Whether the update2 one-offs are used.
+   */
+  get oneOffsRefresh() {
+    return (
+      UrlbarPrefs.get("update2") && UrlbarPrefs.get("update2.oneOffsRefresh")
+    );
+  }
+
+  /**
+   * @returns {boolean}
+   *   Whether the panel is open.
    */
   get isOpen() {
     return this.input.hasAttribute("open");
@@ -621,12 +631,13 @@ class UrlbarView {
       });
 
       // Show the one-off search buttons unless any of the following are true:
-      //  * The first result is a search tip
-      //  * The search string is empty
-      //  * The search string starts with an `@` or a search restriction
-      //    character
+      //
+      // * The update 2 refresh is enabled but the first result is a search tip
+      // * The update 2 refresh is disabled and the search string is empty
+      // * The search string starts with an `@` or search restriction character
       this.oneOffSearchButtons.enable(
-        (firstResult.providerName != "UrlbarProviderSearchTips" ||
+        ((this.oneOffsRefresh &&
+          firstResult.providerName != "UrlbarProviderSearchTips") ||
           queryContext.trimmedSearchString) &&
           queryContext.trimmedSearchString[0] != "@" &&
           (queryContext.trimmedSearchString[0] !=
@@ -645,6 +656,7 @@ class UrlbarView {
           setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
         });
       } else if (
+        UrlbarPrefs.get("update2") &&
         firstResult.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW &&
         queryContext.trimmedSearchString != "@"
       ) {
@@ -1272,7 +1284,13 @@ class UrlbarView {
               { engine: result.payload.engine }
             );
           };
-        } else if (!result.payload.keywordOffer) {
+        } else if (!this._shouldLocalizeSearchResultTitle(result)) {
+          // _shouldLocalizeSearchResultTitle is a temporary function that will
+          // be in place only during the update2 transitions. Right now it
+          // returns if the result is a keyword offer result and meets some
+          // other conditions. Post-update2 the conditional above will only
+          // check if the result is a keyword offer. Keyword offer results don't
+          // have action text.
           actionSetter = () => {
             this.document.l10n.setAttributes(
               action,
@@ -1369,6 +1387,28 @@ class UrlbarView {
     } else {
       title.removeAttribute("dir");
     }
+  }
+
+  /**
+   * Returns true if we should localize a result's title. This is a helper
+   * function for the update2 transition period. It can be removed when the
+   * update2 pref is removed. At that point, its callers can instead just check
+   * !!result.payload.keywordOffer.
+   * @param {UrlbarResult} result A search result.
+   * @returns {boolean} True if we should localize a title for search results.
+   */
+  _shouldLocalizeSearchResultTitle(result) {
+    if (
+      result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+      !result.payload.keywordOffer
+    ) {
+      return false;
+    }
+
+    return (
+      UrlbarPrefs.get("update2") ||
+      result.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.HIDE
+    );
   }
 
   _iconForResult(result, iconUrlOverride = null) {
@@ -1743,7 +1783,7 @@ class UrlbarView {
    *   The DOM node for the result's tile.
    */
   _setResultTitle(result, titleNode) {
-    if (result.payload.keywordOffer) {
+    if (this._shouldLocalizeSearchResultTitle(result)) {
       // Keyword offers are the only result that require a localized title.
       // We localize the title instead of using the action text as a title
       // because some keyword offer results use both a title and action text
@@ -1913,6 +1953,7 @@ class UrlbarView {
       // query. Don't change the heuristic result because it would be
       // immediately replaced with the search mode heuristic, causing flicker.
       if (
+        this.oneOffsRefresh &&
         result.heuristic &&
         !engine &&
         !localSearchMode &&
@@ -1952,11 +1993,20 @@ class UrlbarView {
         }
       }
 
+      // When update2 is disabled, we only update search results when a search
+      // engine one-off is selected.
+      if (
+        !this.oneOffsRefresh &&
+        result.type != UrlbarUtils.RESULT_TYPE.SEARCH
+      ) {
+        continue;
+      }
+
       // If the result is the heuristic and a one-off is selected (i.e.,
       // localSearchMode || engine), then restyle it to look like a search
       // result; otherwise, remove such styling. For restyled results, we
       // override the usual result-picking behaviour in UrlbarInput.pickResult.
-      if (result.heuristic) {
+      if (this.oneOffsRefresh && result.heuristic) {
         title.textContent =
           localSearchMode || engine
             ? this._queryContext.searchString
@@ -2011,6 +2061,9 @@ class UrlbarView {
         iconOverride = UrlbarUtils.ICON.SEARCH_GLASS;
       }
       if (
+        // Don't update the favicon on non-heuristic results when update2 is
+        // enabled.
+        !this.oneOffsRefresh ||
         result.heuristic ||
         (result.payload.inPrivateWindow && !result.payload.isPrivateEngine)
       ) {
