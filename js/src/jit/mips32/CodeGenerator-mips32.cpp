@@ -118,46 +118,6 @@ void CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir) {
   }
 }
 
-void CodeGenerator::visitCompareBitwise(LCompareBitwise* lir) {
-  MCompare* mir = lir->mir();
-  Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
-  const ValueOperand lhs = ToValue(lir, LCompareBitwise::LhsInput);
-  const ValueOperand rhs = ToValue(lir, LCompareBitwise::RhsInput);
-  const Register output = ToRegister(lir->output());
-
-  MOZ_ASSERT(IsEqualityOp(mir->jsop()));
-
-  Label notEqual, done;
-  masm.ma_b(lhs.typeReg(), rhs.typeReg(), &notEqual, Assembler::NotEqual,
-            ShortJump);
-  {
-    masm.cmp32Set(cond, lhs.payloadReg(), rhs.payloadReg(), output);
-    masm.ma_b(&done, ShortJump);
-  }
-  masm.bind(&notEqual);
-  { masm.move32(Imm32(cond == Assembler::NotEqual), output); }
-
-  masm.bind(&done);
-}
-
-void CodeGenerator::visitCompareBitwiseAndBranch(
-    LCompareBitwiseAndBranch* lir) {
-  MCompare* mir = lir->cmpMir();
-  Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
-  const ValueOperand lhs = ToValue(lir, LCompareBitwiseAndBranch::LhsInput);
-  const ValueOperand rhs = ToValue(lir, LCompareBitwiseAndBranch::RhsInput);
-
-  MOZ_ASSERT(mir->jsop() == JSOp::Eq || mir->jsop() == JSOp::StrictEq ||
-             mir->jsop() == JSOp::Ne || mir->jsop() == JSOp::StrictNe);
-
-  MBasicBlock* notEqual =
-      (cond == Assembler::Equal) ? lir->ifFalse() : lir->ifTrue();
-
-  branchToBlock(lhs.typeReg(), rhs.typeReg(), notEqual, Assembler::NotEqual);
-  emitBranch(lhs.payloadReg(), rhs.payloadReg(), cond, lir->ifTrue(),
-             lir->ifFalse());
-}
-
 void CodeGenerator::visitCompareI64(LCompareI64* lir) {
   MCompare* mir = lir->mir();
   MOZ_ASSERT(mir->compareType() == MCompare::Compare_Int64 ||

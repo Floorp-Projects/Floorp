@@ -2968,7 +2968,6 @@ MIRType MCompare::inputType() {
     case Compare_Object:
       return MIRType::Object;
     case Compare_Unknown:
-    case Compare_Bitwise:
       return MIRType::Value;
     default:
       MOZ_CRASH("No known conversion");
@@ -3651,7 +3650,7 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
       compareType_ == Compare_DoubleMaybeCoerceRHS ||
       compareType_ == Compare_Float32 || compareType_ == Compare_String ||
       compareType_ == Compare_StrictString || compareType_ == Compare_Object ||
-      compareType_ == Compare_Bitwise || compareType_ == Compare_Symbol);
+      compareType_ == Compare_Symbol);
 
   if (isDoubleComparison() || isFloat32Comparison()) {
     if (!operandsAreNeverNaN()) {
