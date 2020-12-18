@@ -82,7 +82,7 @@ add_task(async function test_client_id() {
   Assert.ok(uuidRegex.test(clientID));
   if (AppConstants.MOZ_GLEAN) {
     Assert.equal(
-      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
       ),
       clientID
@@ -100,7 +100,7 @@ add_task(async function test_client_id() {
   Assert.ok(uuidRegex.test(clientID));
   if (AppConstants.MOZ_GLEAN) {
     Assert.equal(
-      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
       ),
       clientID
@@ -116,7 +116,7 @@ add_task(async function test_client_id() {
     Assert.ok(uuidRegex.test(clientID));
     if (AppConstants.MOZ_GLEAN) {
       Assert.equal(
-        Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+        Glean.fogValidation.legacyTelemetryClientId.testGetValue(
           "fog-validation"
         ),
         clientID
@@ -157,7 +157,7 @@ add_task(async function test_setCanaryClientIDs() {
   Assert.equal(KNOWN_UUID, clientID);
   if (AppConstants.MOZ_GLEAN) {
     Assert.equal(
-      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
       ),
       clientID
@@ -173,7 +173,7 @@ add_task(async function test_resetEcosystemClientID() {
   Assert.ok(firstClientID);
   if (AppConstants.MOZ_GLEAN) {
     Assert.equal(
-      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
       ),
       firstClientID
@@ -188,7 +188,7 @@ add_task(async function test_resetEcosystemClientID() {
   Assert.equal(firstClientID, secondClientID);
   if (AppConstants.MOZ_GLEAN) {
     Assert.equal(
-      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
       ),
       firstClientID
@@ -215,7 +215,7 @@ add_task(async function test_removeClientIDs() {
   Assert.ok(uuidRegex.test(firstEcosystemClientID));
   if (AppConstants.MOZ_GLEAN) {
     Assert.equal(
-      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
       ),
       firstClientID
@@ -307,7 +307,7 @@ add_task(async function test_removeParallelGet() {
   );
   if (AppConstants.MOZ_GLEAN) {
     Assert.equal(
-      Glean.fog_validation.legacy_telemetry_client_id.testGetValue(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
       ),
       newClientID
