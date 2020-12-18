@@ -799,7 +799,7 @@ bool DCSurfaceVideo::CallVideoProcessorBlt(RenderTextureHost* aTexture) {
     return false;
   }
 
-  RefPtr<ID3D11Texture2D> texture2D = texture->GetD3D11Texture2D();
+  RefPtr<ID3D11Texture2D> texture2D = texture->GetD3D11Texture2DWithGL();
   if (!texture2D) {
     gfxCriticalNote << "Failed to get D3D11Texture2D";
     return false;

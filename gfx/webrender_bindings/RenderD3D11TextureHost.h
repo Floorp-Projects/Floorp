@@ -39,7 +39,8 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
   gfx::ColorRange GetColorRange() const { return mColorRange; }
 
-  ID3D11Texture2D* GetD3D11Texture2D();
+  ID3D11Texture2D* GetD3D11Texture2DWithGL();
+  ID3D11Texture2D* GetD3D11Texture2D() { return mTexture; }
 
   // RenderTextureHostSWGL
   gfx::SurfaceFormat GetFormat() const override { return mFormat; }
@@ -66,7 +67,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
  private:
   virtual ~RenderDXGITextureHost();
 
-  bool EnsureD3D11Texture2D();
+  bool EnsureD3D11Texture2DWithGL();
   bool EnsureLockable(wr::ImageRendering aRendering);
 
   void DeleteTextureHandle();
