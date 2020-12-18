@@ -3,6 +3,11 @@ ChromeUtils.defineModuleGetter(
   "Downloads",
   "resource://gre/modules/Downloads.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadsCommon",
+  "resource:///modules/DownloadsCommon.jsm"
+);
 
 let INSECURE_BASE_URL =
   getRootDirectory(gTestPath).replace(
@@ -14,6 +19,27 @@ let SECURE_BASE_URL =
     "chrome://mochitests/content/",
     "https://example.com/"
   ) + "download_page.html";
+
+function promiseFocus() {
+  return new Promise(resolve => {
+    waitForFocus(resolve);
+  });
+}
+
+function promisePanelOpened() {
+  if (DownloadsPanel.panel && DownloadsPanel.panel.state == "open") {
+    return Promise.resolve();
+  }
+  return BrowserTestUtils.waitForEvent(DownloadsPanel.panel, "popupshown");
+}
+
+async function task_openPanel() {
+  await promiseFocus();
+
+  let promise = promisePanelOpened();
+  DownloadsPanel.showPanel();
+  await promise;
+}
 
 function shouldPromptDownload() {
   // Waits until the download Prompt is shown
@@ -27,9 +53,13 @@ function shouldPromptDownload() {
             win.location ==
             "chrome://mozapps/content/downloads/unknownContentType.xhtml"
           ) {
+            let dialog = win.document.getElementById("unknownContentType");
+            let button = dialog.getButton("accept");
+            let saveRadio = win.document.getElementById("save");
+            saveRadio.click();
+            button.disabled = false;
+            dialog.acceptDialog();
             resolve();
-            info("Trying to close window");
-            win.close();
           } else {
             reject();
           }
@@ -113,6 +143,7 @@ async function runTest(url, link, checkFunction, decscription) {
 
   await SpecialPowers.popPrefEnv();
 }
+
 // Test Blocking
 add_task(async function() {
   await runTest(
@@ -130,7 +161,12 @@ add_task(async function() {
   await runTest(
     SECURE_BASE_URL,
     "insecure",
-    () => Promise.all([shouldNotifyDownloadUI(), shouldConsoleError()]),
+    () =>
+      Promise.all([
+        shouldPromptDownload(),
+        shouldNotifyDownloadUI(),
+        shouldConsoleError(),
+      ]),
     "Secure -> Insecure should Error"
   );
   await runTest(
@@ -140,17 +176,40 @@ add_task(async function() {
     "Secure -> Secure should Download"
   );
 });
-
 // Test Manual Unblocking
 add_task(async function() {
   await runTest(
     SECURE_BASE_URL,
     "insecure",
     async () => {
+      await shouldPromptDownload();
       let download = await shouldNotifyDownloadUI();
       await download.unblock();
       ok(download.error == null, "There should be no error after unblocking");
     },
     "A Blocked Download Should succeeded to Download after a Manual unblock"
+  );
+});
+
+// Test Unblock Download Visible
+add_task(async function() {
+  // Focus, open and close the panel once
+  // to make sure the panel is loaded and ready
+  await promiseFocus();
+  await runTest(
+    SECURE_BASE_URL,
+    "insecure",
+    async () => {
+      let panelHasOpened = promisePanelOpened();
+      info("awaiting that the Download Prompt is shown");
+      await shouldPromptDownload();
+      info("awaiting that the Download list adds the new download");
+      await shouldNotifyDownloadUI();
+      info("awaiting that the Download list shows itself");
+      await panelHasOpened;
+      DownloadsPanel.hidePanel();
+      ok(true, "The Download Panel should have opened on blocked download");
+    },
+    "A Blocked Download Should open the Download Panel"
   );
 });

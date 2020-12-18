@@ -982,6 +982,9 @@ DownloadsDataCtor.prototype = {
       download,
       DownloadsCommon.stateOfDownload(download)
     );
+    if (download.error?.becauseBlockedByReputationCheck) {
+      this._notifyDownloadEvent("error");
+    }
   },
 
   onDownloadChanged(download) {
@@ -1070,7 +1073,8 @@ DownloadsDataCtor.prototype = {
    * window, if one is currently available with the required privacy type.
    *
    * @param aType
-   *        Set to "start" for new downloads, "finish" for completed downloads.
+   *        Set to "start" for new downloads, "finish" for completed downloads,
+   *        "error" for downloads that failed and need attention
    */
   _notifyDownloadEvent(aType) {
     DownloadsCommon.log(
@@ -1085,7 +1089,7 @@ DownloadsDataCtor.prototype = {
       return;
     }
 
-    if (this.panelHasShownBefore) {
+    if (this.panelHasShownBefore && aType != "error") {
       // For new downloads after the first one, don't show the panel
       // automatically, but provide a visible notification in the topmost
       // browser window, if the status indicator is already visible.
