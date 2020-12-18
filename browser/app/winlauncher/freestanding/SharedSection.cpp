@@ -147,15 +147,19 @@ static void PackOffsetVector(const Vector<nt::MemorySectionNameOnHeap>& aSource,
 LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
   size_t stringBufferSize = 0;
   Vector<nt::MemorySectionNameOnHeap> modules;
+
+  // We enable automatic DLL blocking only in Nightly for now because it caused
+  // a compat issue (bug 1682304).
+#if defined(NIGHTLY_BUILD)
   aPEHeaders.EnumImportChunks(
       [&stringBufferSize, &modules, &aPEHeaders](const char* aModule) {
-#if defined(DONT_SKIP_DEFAULT_DEPENDENT_MODULES)
+#  if defined(DONT_SKIP_DEFAULT_DEPENDENT_MODULES)
         Unused << aPEHeaders;
-#else
+#  else
         if (aPEHeaders.IsWithinImage(aModule)) {
           return;
         }
-#endif
+#  endif
         HMODULE module = ::GetModuleHandleA(aModule);
         nt::MemorySectionNameOnHeap ntPath =
             nt::MemorySectionNameOnHeap::GetBackingFilePath(nt::kCurrentProcess,
@@ -163,6 +167,7 @@ LauncherVoidResult SharedSection::Init(const nt::PEHeaders& aPEHeaders) {
         stringBufferSize += (ntPath.AsUnicodeString()->Length + sizeof(WCHAR));
         Unused << modules.emplaceBack(std::move(ntPath));
       });
+#endif
 
   size_t arraySize = modules.length() * sizeof(Layout::mModulePathArray[0]);
   size_t totalSize =
@@ -216,20 +221,21 @@ LauncherVoidResult SharedSection::TransferHandle(
 }
 
 extern "C" MOZ_EXPORT uint32_t GetDependentModulePaths(uint32_t** aOutArray) {
+  if (aOutArray) {
+    *aOutArray = nullptr;
+  }
+
+  // We enable pre-spawn CIG only in Nightly for now because it caused
+  // a compat issue (bug 1682304).
+#if defined(NIGHTLY_BUILD)
   const bool isCallerXul = CheckForAddress(RETURN_ADDRESS(), L"xul.dll");
   MOZ_ASSERT(isCallerXul);
   if (!isCallerXul) {
-    if (aOutArray) {
-      *aOutArray = nullptr;
-    }
     return 0;
   }
 
   LauncherResult<SharedSection::Layout*> resultView = gSharedSection.GetView();
   if (resultView.isErr()) {
-    if (aOutArray) {
-      *aOutArray = nullptr;
-    }
     return 0;
   }
 
@@ -239,6 +245,9 @@ extern "C" MOZ_EXPORT uint32_t GetDependentModulePaths(uint32_t** aOutArray) {
     *aOutArray = resultView.inspect()->mModulePathArray;
   }
   return resultView.inspect()->mModulePathArrayLength;
+#else
+  return 0;
+#endif
 }
 
 }  // namespace freestanding
