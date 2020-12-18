@@ -31,8 +31,17 @@ customElements.define(
     }
 
     get previewBrowser() {
-      // Assuming we're a sibling of our preview browser.
-      return this.parentNode.querySelector(".printPreviewBrowser");
+      if (!this._previewBrowser) {
+        // Assuming we're a sibling of our preview browser.
+        this._previewBrowser = this.parentNode.querySelector(
+          ".printPreviewBrowser"
+        );
+      }
+      return this._previewBrowser;
+    }
+
+    set previewBrowser(aBrowser) {
+      this._previewBrowser = aBrowser;
     }
 
     connectedCallback() {
@@ -76,6 +85,25 @@ customElements.define(
       this.mutationObserver.observe(this.previewBrowser, {
         attributes: ["current-page", "sheet-count"],
       });
+
+      this.currentPreviewBrowserObserver = new MutationObserver(changes => {
+        for (let change of changes) {
+          if (change.attributeName == "previewtype") {
+            let previewType = change.target.getAttribute("previewtype");
+            this.previewBrowser = change.target.querySelector(
+              `browser[previewtype="${previewType}"]`
+            );
+            this.mutationObserver.disconnect();
+            this.mutationObserver.observe(this.previewBrowser, {
+              attributes: ["current-page", "sheet-count"],
+            });
+          }
+        }
+      });
+      this.currentPreviewBrowserObserver.observe(this.parentNode, {
+        attributes: ["previewtype"],
+      });
+
       // Initial render with some default values
       // We'll be updated with real values when available
       this.update(this.constructor.defaultProperties);
@@ -86,6 +114,8 @@ customElements.define(
       this.shadowRoot.textContent = "";
       this.mutationObserver?.disconnect();
       delete this.mutationObserver;
+      this.currentPreviewBrowserObserver?.disconnect();
+      delete this.currentPreviewBrowserObserver;
     }
 
     handleEvent(event) {

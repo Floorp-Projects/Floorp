@@ -3509,6 +3509,7 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
 
   memset(&mLink, 0, sizeof(mLink));
   memset(&mStats, 0, sizeof(arena_stats_t));
+  mId = 0;
 
   // Initialize chunks.
   mChunksDirty.Init();

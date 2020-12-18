@@ -366,6 +366,13 @@ let JSWINDOWACTORS = {
     },
   },
 
+  PrintingSelection: {
+    child: {
+      moduleURI: "resource://gre/actors/PrintingSelectionChild.jsm",
+    },
+    allFrames: true,
+  },
+
   PurgeSessionHistory: {
     child: {
       moduleURI: "resource://gre/actors/PurgeSessionHistoryChild.jsm",

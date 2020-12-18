@@ -1233,7 +1233,7 @@ StyleEditorUI.prototype = {
 
         switch (update.updateType) {
           case "style-applied": {
-            editor.onStyleApplied();
+            editor.onStyleApplied(update);
             break;
           }
           case "property-change": {

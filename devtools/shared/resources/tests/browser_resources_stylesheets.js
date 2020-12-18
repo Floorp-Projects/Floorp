@@ -245,10 +245,12 @@ async function testResourceUpdateFeature() {
     },
   ];
 
+  const updateCause = "updated-by-test";
   await styleSheetsFront.update(
     resource.resourceId,
     "@media screen { color: red; } @media print { color: green; } body { color: cyan; }",
-    false
+    false,
+    updateCause
   );
   await waitUntil(() => updates.length === 4);
 
@@ -266,6 +268,9 @@ async function testResourceUpdateFeature() {
   assertUpdate(updates[2].update, {
     resourceId: resource.resourceId,
     updateType: "style-applied",
+    event: {
+      cause: updateCause,
+    },
   });
   is(
     updates[2].update.resourceUpdates,
@@ -495,4 +500,7 @@ function assertUpdate(update, expected) {
   );
   is(update.resourceId, expected.resourceId, "resourceId is correct");
   is(update.updateType, expected.updateType, "updateType is correct");
+  if (expected.event?.cause) {
+    is(update.event?.cause, expected.event.cause, "cause is correct");
+  }
 }

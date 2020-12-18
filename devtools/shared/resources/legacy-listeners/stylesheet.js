@@ -47,12 +47,16 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
       previousMediaRules = mediaRules;
     }
 
-    styleSheet.on("style-applied", () => {
+    styleSheet.on("style-applied", (kind, styleSheetFront, cause) => {
       onUpdated([
         {
           resourceType: resource.resourceType,
           resourceId: resource.resourceId,
           updateType: "style-applied",
+          event: {
+            cause,
+            kind,
+          },
         },
       ]);
     });

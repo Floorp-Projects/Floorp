@@ -115,6 +115,8 @@ var PrintEventHandler = {
   allPaperSizes: {},
   previewIsEmpty: false,
   _delayedChanges: {},
+  _hasRenderedSelectionPreview: false,
+  _hasRenderedPrimaryPreview: false,
   _userChangedSettings: {},
   settingFlags: {
     margins: Ci.nsIPrintSettings.kInitSaveMargins,
@@ -144,7 +146,11 @@ var PrintEventHandler = {
 
   // These settings do not have an associated pref value or flag, but
   // changing them requires us to update the print preview.
-  _nonFlaggedUpdatePreviewSettings: new Set(["pageRanges", "numPagesPerSheet"]),
+  _nonFlaggedUpdatePreviewSettings: new Set([
+    "pageRanges",
+    "numPagesPerSheet",
+    "printSelectionOnly",
+  ]),
   _noPreviewUpdateSettings: new Set(["numCopies", "printDuplex"]),
 
   async init() {
@@ -154,10 +160,10 @@ var PrintEventHandler = {
     // is initiated and the print preview clone must be a snapshot from the
     // time that the print was started.
     let sourceBrowsingContext = this.getSourceBrowsingContext();
-    this.previewBrowser = PrintUtils.createPreviewBrowser(
-      sourceBrowsingContext,
-      ourBrowser
-    );
+    ({
+      previewBrowser: this.previewBrowser,
+      selectionPreviewBrowser: this.selectionPreviewBrowser,
+    } = PrintUtils.createPreviewBrowsers(sourceBrowsingContext, ourBrowser));
 
     // Get the temporary browser that will previously have been created for the
     // platform code to generate the static clone printing doc into if this
@@ -171,6 +177,10 @@ var PrintEventHandler = {
       this.previewBrowser.swapDocShells(existingBrowser);
       existingBrowser.remove();
     }
+    this.hasSelection =
+      args.getProperty("hasSelection") && this.selectionPreviewBrowser;
+    document.querySelector("#print-selection-container").hidden = !this
+      .hasSelection;
 
     let sourcePrincipal =
       sourceBrowsingContext.currentWindowGlobal.documentPrincipal;
@@ -180,6 +190,14 @@ var PrintEventHandler = {
       sourceBrowsingContext.currentWindowContext.documentTitle;
     this.originalSourceCurrentURI =
       sourceBrowsingContext.currentWindowContext.documentURI.spec;
+
+    this.sourceWindowId =
+      sourceBrowsingContext.top.embedderElement.browsingContext.currentWindowGlobal.outerWindowId;
+    this.selectionWindowId =
+      sourceBrowsingContext.currentWindowGlobal.outerWindowId;
+
+    // We don't need the sourceBrowsingContext anymore, get rid of it.
+    sourceBrowsingContext = undefined;
 
     this.printProgressIndicator = document.getElementById("print-progress");
     this.printForm = document.getElementById("print");
@@ -297,10 +315,7 @@ var PrintEventHandler = {
     let settingsToChange = await this.refreshSettings(selectedPrinter.value);
     await this.updateSettings(settingsToChange, true);
 
-    // Kick off the initial print preview with the source browsing context.
-    let initialPreviewDone = this._updatePrintPreview(sourceBrowsingContext);
-    // We don't need the sourceBrowsingContext anymore, get rid of it.
-    sourceBrowsingContext = undefined;
+    let initialPreviewDone = this._updatePrintPreview();
 
     // Use a DeferredTask for updating the preview. This will ensure that we
     // only have one update running at a time.
@@ -319,6 +334,9 @@ var PrintEventHandler = {
     );
 
     await document.l10n.translateElements([this.previewBrowser]);
+    if (this.selectionPreviewBrowser) {
+      await document.l10n.translateElements([this.selectionPreviewBrowser]);
+    }
 
     document.body.removeAttribute("loading");
 
@@ -722,17 +740,16 @@ var PrintEventHandler = {
   },
 
   /**
-   * Create a print preview for the provided source browsingContext, or refresh
-   * the preview with new settings when omitted.
-   *
-   * @param sourceBrowsingContext {BrowsingContext} [optional]
-   *        The source BrowsingContext (the one associated with a tab or
-   *        subdocument) that should be previewed.
+   * Creates a print preview or refreshes the preview with new settings when omitted.
    *
    * @return {Promise} Resolves when the preview has been updated.
    */
-  async _updatePrintPreview(sourceBrowsingContext) {
-    let { previewBrowser, settings } = this;
+  async _updatePrintPreview() {
+    let { settings } = this;
+    let { printSelectionOnly } = this.viewSettings;
+    if (!this.selectionPreviewBrowser) {
+      printSelectionOnly = false;
+    }
 
     // We never want the progress dialog to show
     settings.showPrintProgress = false;
@@ -740,9 +757,24 @@ var PrintEventHandler = {
     this._showRenderingIndicator();
 
     let sourceWinId;
-    if (sourceBrowsingContext) {
-      sourceWinId = sourceBrowsingContext.currentWindowGlobal.outerWindowId;
+
+    // If it's the first time loading this type of browser, get the stored window id.
+    if (printSelectionOnly && !this._hasRenderedSelectionPreview) {
+      sourceWinId = this.selectionWindowId;
+      this._hasRenderedSelectionPreview = true;
+    } else if (!printSelectionOnly && !this._hasRenderedPrimaryPreview) {
+      sourceWinId = this.sourceWindowId;
+      this._hasRenderedPrimaryPreview = true;
     }
+
+    this.previewBrowser.parentElement.setAttribute(
+      "previewtype",
+      printSelectionOnly ? "selection" : "primary"
+    );
+
+    let previewBrowser = printSelectionOnly
+      ? this.selectionPreviewBrowser
+      : this.previewBrowser;
 
     const isFirstCall = !this.printInitiationTime;
     if (isFirstCall) {
@@ -757,13 +789,12 @@ var PrintEventHandler = {
         .add(elapsed);
     }
 
-    let totalPageCount, sheetCount, hasSelection, isEmpty;
+    let totalPageCount, sheetCount, isEmpty;
     try {
       // This resolves with a PrintPreviewSuccessInfo dictionary.
       ({
         totalPageCount,
         sheetCount,
-        hasSelection,
         isEmpty,
       } = await previewBrowser.frameLoader.printPreview(settings, sourceWinId));
     } catch (e) {
@@ -780,14 +811,14 @@ var PrintEventHandler = {
     }
 
     // Update the settings print options on whether there is a selection.
-    settings.isPrintSelectionRBEnabled = hasSelection;
+    settings.isPrintSelectionRBEnabled = this.hasSelection;
 
     document.dispatchEvent(
       new CustomEvent("page-count", {
         detail: { sheetCount, totalPages: totalPageCount },
       })
     );
-    this.previewBrowser.setAttribute("sheet-count", sheetCount);
+    previewBrowser.setAttribute("sheet-count", sheetCount);
 
     this._hideRenderingIndicator();
 
@@ -1684,7 +1715,12 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   }
 
   removeNonPdfSettings() {
-    let selectors = ["#margins", "#headers-footers", "#backgrounds"];
+    let selectors = [
+      "#margins",
+      "#headers-footers",
+      "#backgrounds",
+      "#print-selection-container",
+    ];
     for (let selector of selectors) {
       this.querySelector(selector).remove();
     }
