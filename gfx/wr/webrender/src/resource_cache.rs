@@ -1941,6 +1941,7 @@ impl ResourceCache {
         config: &CaptureConfig,
     ) -> Vec<PlainExternalImage> {
         use std::{fs, path::Path};
+        use crate::texture_cache::TextureCacheConfig;
 
         info!("loading resource cache");
         //TODO: instead of filling the local path to Arc<data> map as we process
@@ -1967,6 +1968,7 @@ impl ResourceCache {
                     self.texture_cache.default_picture_tile_size(),
                     self.texture_cache.color_formats(),
                     self.texture_cache.swizzle_settings(),
+                    &TextureCacheConfig::DEFAULT,
                 );
             }
         }

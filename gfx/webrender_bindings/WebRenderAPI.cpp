@@ -65,7 +65,8 @@ class NewRenderer : public RendererEvent {
               bool* aUseTripleBuffering, bool* aSupportsExternalBufferTextures,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask, LayoutDeviceIntSize aSize,
-              layers::SyncHandle* aHandle, nsACString* aError)
+              layers::WindowKind aWindowKind, layers::SyncHandle* aHandle,
+              nsACString* aError)
       : mDocHandle(aDocHandle),
         mBackend(aBackend),
         mCompositor(aCompositor),
@@ -78,6 +79,7 @@ class NewRenderer : public RendererEvent {
         mCompositorWidget(std::move(aWidget)),
         mTask(aTask),
         mSize(aSize),
+        mWindowKind(aWindowKind),
         mSyncHandle(aHandle),
         mError(aError) {
     MOZ_COUNT_CTOR(NewRenderer);
@@ -126,8 +128,8 @@ class NewRenderer : public RendererEvent {
 
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
-            supportLowPriorityTransactions, supportLowPriorityThreadpool,
-            gfx::gfxVars::UseGLSwizzle(),
+            mWindowKind == WindowKind::MAIN, supportLowPriorityTransactions,
+            supportLowPriorityThreadpool, gfx::gfxVars::UseGLSwizzle(),
             gfx::gfxVars::UseWebRenderScissoredCacheClears(),
 #ifdef NIGHTLY_BUILD
             StaticPrefs::gfx_webrender_start_debug_server(),
@@ -194,6 +196,7 @@ class NewRenderer : public RendererEvent {
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
   LayoutDeviceIntSize mSize;
+  layers::WindowKind mWindowKind;
   layers::SyncHandle* mSyncHandle;
   nsACString* mError;
 };
@@ -344,7 +347,8 @@ void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
 already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
     layers::CompositorBridgeParent* aBridge,
     RefPtr<widget::CompositorWidget>&& aWidget, const wr::WrWindowId& aWindowId,
-    LayoutDeviceIntSize aSize, nsACString& aError) {
+    LayoutDeviceIntSize aSize, layers::WindowKind aWindowKind,
+    nsACString& aError) {
   MOZ_ASSERT(aBridge);
   MOZ_ASSERT(aWidget);
   static_assert(
@@ -368,7 +372,7 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
   auto event = MakeUnique<NewRenderer>(
       &docHandle, aBridge, &backend, &compositor, &maxTextureSize, &useANGLE,
       &useDComp, &useTripleBuffering, &supportsExternalBufferTextures,
-      std::move(aWidget), &task, aSize, &syncHandle, &aError);
+      std::move(aWidget), &task, aSize, aWindowKind, &syncHandle, &aError);
   RenderThread::Get()->RunEvent(aWindowId, std::move(event));
 
   task.Wait();

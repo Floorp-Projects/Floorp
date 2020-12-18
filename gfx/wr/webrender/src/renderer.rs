@@ -93,7 +93,7 @@ use crate::scene_builder_thread::{SceneBuilderThread, SceneBuilderThreadChannels
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::shade::{Shaders, WrShaders};
 use crate::guillotine_allocator::{GuillotineAllocator, FreeRectSlice};
-use crate::texture_cache::TextureCache;
+use crate::texture_cache::{TextureCache, TextureCacheConfig};
 use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
@@ -2511,6 +2511,7 @@ impl Renderer {
             .as_ref()
             .map(|handler| handler.create_similar());
 
+        let texture_cache_config = options.texture_cache_config.clone();
         let mut picture_tile_size = options.picture_tile_size.unwrap_or(picture::TILE_SIZE_DEFAULT);
         // Clamp the picture tile size to reasonable values.
         picture_tile_size.width = picture_tile_size.width.max(128).min(4096);
@@ -2531,6 +2532,7 @@ impl Renderer {
                 picture_tile_size,
                 color_cache_formats,
                 swizzle_settings,
+                &texture_cache_config,
             );
 
             let glyph_cache = GlyphCache::new();
@@ -6939,6 +6941,7 @@ pub struct RendererOptions {
     /// performance impact, so only use when debugging specific problems!
     pub panic_on_gl_error: bool,
     pub picture_tile_size: Option<DeviceIntSize>,
+    pub texture_cache_config: TextureCacheConfig,
 }
 
 impl RendererOptions {
@@ -7007,6 +7010,7 @@ impl Default for RendererOptions {
             enable_gpu_markers: true,
             panic_on_gl_error: false,
             picture_tile_size: None,
+            texture_cache_config: TextureCacheConfig::DEFAULT,
         }
     }
 }
