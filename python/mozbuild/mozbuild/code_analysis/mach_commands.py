@@ -2399,6 +2399,8 @@ class StaticAnalysis(MachCommandBase):
             clang_output = clang_output[: end.start() - 1]
 
         platform, _ = self.platform
+        re_strip_colors = re.compile(r"\x1b\[[\d;]+m", re.MULTILINE)
+        filtered = re_strip_colors.sub("", clang_output)
         # Starting with clang 8, for the diagnostic messages we have multiple `LF CR`
         # in order to be compatiable with msvc compiler format, and for this
         # we are not interested to match the end of line.
@@ -2413,7 +2415,7 @@ class StaticAnalysis(MachCommandBase):
         regex_header = re.compile(regex_string, re.MULTILINE)
 
         # Sort headers by positions
-        headers = sorted(regex_header.finditer(clang_output), key=lambda h: h.start())
+        headers = sorted(regex_header.finditer(filtered), key=lambda h: h.start())
         issues = []
         for _, header in enumerate(headers):
             header_group = header.groups()
