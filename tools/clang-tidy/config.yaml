@@ -222,6 +222,10 @@ clang_checkers:
     reliability: high
   - name: readability-else-after-return
     reliability: high
+    config:
+      - key: WarnOnConditionVariables
+        # Disable as we don't mind this kind of behavior
+        value: 0
   - name: readability-implicit-bool-conversion
     reliability: low
     # On automation the config flags act strange. Please see Bug 1500241.
