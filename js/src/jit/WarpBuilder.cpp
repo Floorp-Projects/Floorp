@@ -483,6 +483,14 @@ bool WarpBuilder::buildPrologue() {
     return false;
   }
 
+#ifdef JS_CACHEIR_SPEW
+  if (snapshot().needsFinalWarmUpCount()) {
+    MIncrementWarmUpCounter* ins =
+        MIncrementWarmUpCounter::New(alloc(), script_);
+    current->add(ins);
+  }
+#endif
+
   return true;
 }
 
@@ -1336,6 +1344,14 @@ bool WarpBuilder::build_LoopHead(BytecodeLocation loc) {
 
   MInterruptCheck* check = MInterruptCheck::New(alloc());
   current->add(check);
+
+#ifdef JS_CACHEIR_SPEW
+  if (snapshot().needsFinalWarmUpCount()) {
+    MIncrementWarmUpCounter* ins =
+        MIncrementWarmUpCounter::New(alloc(), script_);
+    current->add(ins);
+  }
+#endif
 
   return true;
 }
