@@ -476,3 +476,64 @@ add_task(async function testReloadExtension() {
   await closeView(win);
   await addon.uninstall();
 });
+
+async function testOptionsZoom(type = "full") {
+  let id = `${type}-zoom@mochi.test`;
+  let zoomProp = `${type}Zoom`;
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id } },
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      "options.html": `
+        <html>
+          <body>
+            <p>Some text</p>
+          </body>
+        </html>
+      `,
+    },
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  gBrowser.selectedBrowser[zoomProp] = 2;
+
+  let card = getAddonCard(doc, id);
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = doc.querySelector("addon-card");
+
+  let browserAdded = waitOptionsBrowserInserted();
+  card.querySelector('.tab-button[name="preferences"]').click();
+  let optionsBrowser = await browserAdded;
+
+  is(optionsBrowser[zoomProp], 2, `Options browser inherited ${zoomProp}`);
+
+  gBrowser.selectedBrowser[zoomProp] = 0.5;
+
+  is(
+    optionsBrowser[zoomProp],
+    0.5,
+    `Options browser reacts to ${zoomProp} change`
+  );
+
+  await closeView(win);
+  await extension.unload();
+}
+
+add_task(function testOptionsFullZoom() {
+  return testOptionsZoom("full");
+});
+
+add_task(function testOptionsTextZoom() {
+  return testOptionsZoom("text");
+});
