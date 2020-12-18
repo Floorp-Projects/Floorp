@@ -125,6 +125,10 @@ class NewRenderer : public RendererEvent {
     char* errorMessage = nullptr;
     int picTileWidth = StaticPrefs::gfx_webrender_picture_tile_width();
     int picTileHeight = StaticPrefs::gfx_webrender_picture_tile_height();
+    auto* swgl = compositor->swgl();
+    auto* shaders = (aRenderThread.GetShaders() && !swgl)
+                        ? aRenderThread.GetShaders()->RawShaders()
+                        : nullptr;
 
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
@@ -136,15 +140,11 @@ class NewRenderer : public RendererEvent {
 #else
             false,
 #endif
-            compositor->swgl(), compositor->gl(),
-            compositor->SurfaceOriginIsTopLeft(),
+            swgl, compositor->gl(), compositor->SurfaceOriginIsTopLeft(),
             aRenderThread.GetProgramCache()
                 ? aRenderThread.GetProgramCache()->Raw()
                 : nullptr,
-            aRenderThread.GetShaders()
-                ? aRenderThread.GetShaders()->RawShaders()
-                : nullptr,
-            aRenderThread.ThreadPool().Raw(),
+            shaders, aRenderThread.ThreadPool().Raw(),
             aRenderThread.ThreadPoolLP().Raw(), &WebRenderMallocSizeOf,
             &WebRenderMallocEnclosingSizeOf, 0,
             compositor->ShouldUseNativeCompositor() ? compositor.get()
