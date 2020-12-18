@@ -37,13 +37,6 @@ add_task(async function setup() {
   video.src = "video.ogg";
   const content = document.getElementById("content");
   content.append(video);
-  // Ugly hack to reduce the hide controls timeout so we don't waste so much
-  // time in these tests.
-  const { widget } = window.windowGlobalChild.getActor("UAWidgets").widgets.get(
-    video);
-  // Setting this lower than 300 ms causes failures. Not entirely sure why, but
-  // perhaps related to the animation duration.
-  widget.impl.Utils.HIDE_CONTROLS_TIMEOUT_MS = 300;
   controlBar = getElementWithinVideo(video, "controlBar");
   playButton = getElementWithinVideo(video, "playButton");
   info("Waiting for video to load");
