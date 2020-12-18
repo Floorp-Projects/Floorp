@@ -25,7 +25,7 @@ use webrender_build::shader::{ShaderFeatures, ShaderFeatureFlags, get_shader_fea
 pub(crate) fn get_feature_string(kind: ImageBufferKind) -> &'static str {
     match kind {
         ImageBufferKind::Texture2D => "TEXTURE_2D",
-        ImageBufferKind::Texture2DArray => "",
+        ImageBufferKind::Texture2DArray => "TEXTURE_2D_ARRAY",
         ImageBufferKind::TextureRect => "TEXTURE_RECT",
         ImageBufferKind::TextureExternal => "TEXTURE_EXTERNAL",
     }
@@ -258,8 +258,6 @@ impl LazilyCompiledShader {
                             ("sColor1", TextureSampler::Color1),
                             ("sColor2", TextureSampler::Color2),
                             ("sDither", TextureSampler::Dither),
-                            ("sPrevPassAlpha", TextureSampler::PrevPassAlpha),
-                            ("sPrevPassColor", TextureSampler::PrevPassColor),
                             ("sTransformPalette", TextureSampler::TransformPalette),
                             ("sRenderTasks", TextureSampler::RenderTasks),
                             ("sGpuCache", TextureSampler::GpuCache),

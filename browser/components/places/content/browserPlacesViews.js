@@ -904,8 +904,6 @@ function PlacesToolbar(aPlace) {
     ["_dropIndicator", "PlacesToolbarDropIndicator"],
     ["_chevron", "PlacesChevron"],
     ["_chevronPopup", "PlacesChevronPopup"],
-    ["_otherBookmarks", "OtherBookmarks"],
-    ["_otherBookmarksPopup", "OtherBookmarksPopup"],
   ].forEach(function(elementGlobal) {
     let [name, id] = elementGlobal;
     thisView.__defineGetter__(name, function() {
@@ -994,7 +992,7 @@ PlacesToolbar.prototype = {
       this._chevron._placesView.uninit();
     }
 
-    if (this._otherBookmarks._placesView) {
+    if (this._otherBookmarks?._placesView) {
       this._otherBookmarks._placesView.uninit();
     }
 
@@ -1092,6 +1090,10 @@ PlacesToolbar.prototype = {
       // Otherwise, it will be initialized when the toolbar overflows.
       this._chevronPopup.place = this.place;
     }
+
+    // Rebuild the "Other Bookmarks" folder if it already exists.
+    let otherBookmarks = document.getElementById("OtherBookmarks");
+    otherBookmarks?.remove();
 
     BookmarkingUI.maybeShowOtherBookmarksFolder();
   },

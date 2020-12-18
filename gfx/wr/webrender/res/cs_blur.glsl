@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define WR_FEATURE_TEXTURE_2D
+
 #include shared,prim_shared
 
 varying vec2 vUv;
-flat varying float vUvLayer;
 flat varying vec4 vUvRect;
 flat varying vec2 vOffsetScale;
 // The number of pixels on each end that we apply the blur filter over.
@@ -72,12 +73,7 @@ void main(void) {
     RectWithSize src_rect = src_task.task_rect;
     RectWithSize target_rect = blur_task.common_data.task_rect;
 
-#if defined WR_FEATURE_COLOR_TARGET
-    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0).xy);
-#else
-    vec2 texture_size = vec2(textureSize(sPrevPassAlpha, 0).xy);
-#endif
-    vUvLayer = src_task.texture_layer_index;
+    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
 
     // Ensure that the support is an even number of pixels to simplify the
     // fragment shader logic.
@@ -122,10 +118,10 @@ void main(void) {
 
 #if defined WR_FEATURE_COLOR_TARGET
 #define SAMPLE_TYPE vec4
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassColor, vec3(uv, vUvLayer))
+#define SAMPLE_TEXTURE(uv)  texture(sColor0, uv)
 #else
 #define SAMPLE_TYPE float
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassAlpha, vec3(uv, vUvLayer)).r
+#define SAMPLE_TEXTURE(uv)  texture(sColor0, uv).r
 #endif
 
 // TODO(gw): Write a fast path blur that handles smaller blur radii
@@ -182,23 +178,21 @@ void main(void) {
 #ifdef SWGL
     #ifdef WR_FEATURE_COLOR_TARGET
 void swgl_drawSpanRGBA8() {
-    if (!swgl_isTextureRGBA8(sPrevPassColor)) {
+    if (!swgl_isTextureRGBA8(sColor0)) {
         return;
     }
 
-    int layer = swgl_textureLayerOffset(sPrevPassColor, vUvLayer);
-    swgl_commitGaussianBlurRGBA8(sPrevPassColor, vUv, vUvRect, vOffsetScale.x != 0.0,
-                                 vSupport, vGaussCoefficients, layer);
+    swgl_commitGaussianBlurRGBA8(sColor0, vUv, vUvRect, vOffsetScale.x != 0.0,
+                                 vSupport, vGaussCoefficients, 0);
 }
     #else
 void swgl_drawSpanR8() {
-    if (!swgl_isTextureR8(sPrevPassAlpha)) {
+    if (!swgl_isTextureR8(sColor0)) {
         return;
     }
 
-    int layer = swgl_textureLayerOffset(sPrevPassAlpha, vUvLayer);
-    swgl_commitGaussianBlurR8(sPrevPassAlpha, vUv, vUvRect, vOffsetScale.x != 0.0,
-                              vSupport, vGaussCoefficients, layer);
+    swgl_commitGaussianBlurR8(sColor0, vUv, vUvRect, vOffsetScale.x != 0.0,
+                              vSupport, vGaussCoefficients, 0);
 }
     #endif
 #endif

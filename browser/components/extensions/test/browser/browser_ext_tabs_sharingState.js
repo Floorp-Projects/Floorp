@@ -1,10 +1,6 @@
 "use strict";
 
 add_task(async function test_tabs_mediaIndicators() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.tabhide.enabled", true]],
-  });
-
   let initialTab = gBrowser.selectedTab;
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

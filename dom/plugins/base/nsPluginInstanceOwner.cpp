@@ -2851,7 +2851,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void) {
       mWidget = nsIWidget::CreateChildWindow();
       nsWidgetInitData initData;
       initData.mWindowType = eWindowType_plugin;
-      initData.mUnicode = false;
       initData.clipChildren = true;
       initData.clipSiblings = true;
       rv = mWidget->Create(parentWidget.get(), nullptr,

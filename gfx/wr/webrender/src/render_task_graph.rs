@@ -7,12 +7,11 @@ use api::ImageFormat;
 use api::units::*;
 use crate::internal_types::{CacheTextureId, FastHashMap};
 use crate::render_backend::FrameId;
-use crate::render_target::{RenderTargetKind, RenderTargetList, ColorRenderTarget};
+use crate::render_target::{RenderTargetList, ColorRenderTarget};
 use crate::render_target::{PictureCacheTarget, TextureCacheRenderTarget, AlphaRenderTarget};
 use crate::render_task::{BlitSource, RenderTask, RenderTaskKind, RenderTaskData};
-use crate::render_task::{RenderTaskLocation};
 use crate::util::{VecHelper, Allocation};
-use std::{cmp, usize, f32, i32, u32};
+use std::{usize, f32, i32, u32};
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -196,12 +195,8 @@ impl RenderTaskGraph {
             let task_id = RenderTaskId {
                 index: task_index as u32,
             };
-            let task = &self.tasks[task_index];
             passes[pass_index as usize].add_render_task(
                 task_id,
-                task.get_dynamic_size(),
-                task.target_kind(),
-                &task.location,
             );
         }
     }
@@ -431,23 +426,7 @@ impl RenderPass {
     pub fn add_render_task(
         &mut self,
         task_id: RenderTaskId,
-        size: DeviceIntSize,
-        target_kind: RenderTargetKind,
-        location: &RenderTaskLocation,
     ) {
-        // If this will be rendered to a dynamically-allocated region on an
-        // off-screen render target, update the max-encountered size. We don't
-        // need to do this for things drawn to the texture cache, since those
-        // don't affect our render target allocation.
-        if location.is_dynamic() {
-            let max_size = match target_kind {
-                RenderTargetKind::Color => &mut self.color.max_dynamic_size,
-                RenderTargetKind::Alpha => &mut self.alpha.max_dynamic_size,
-            };
-            max_size.width = cmp::max(max_size.width, size.width);
-            max_size.height = cmp::max(max_size.height, size.height);
-        }
-
         self.tasks.push(task_id);
     }
 }
@@ -639,6 +618,10 @@ fn dump_task_dependency_link(
 use euclid::size2;
 #[cfg(test)]
 use smallvec::SmallVec;
+#[cfg(test)]
+use crate::render_task::RenderTaskLocation;
+#[cfg(test)]
+use crate::render_target::RenderTargetKind;
 
 #[cfg(test)]
 fn dyn_location(w: i32, h: i32) -> RenderTaskLocation {
