@@ -41,14 +41,15 @@ import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.perf.StorageStatsMetrics
 import org.mozilla.fenix.perf.StartupTimeline
+import org.mozilla.fenix.perf.StorageStatsMetrics
 import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
+import java.util.concurrent.TimeUnit
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -130,6 +131,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 components.core.engine.warmUp()
             }
             initializeWebExtensionSupport()
+            restoreBrowserState()
+            removeTimedOutTabs()
 
             restoreDownloads()
 
@@ -157,6 +160,39 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         initVisualCompletenessQueueAndQueueTasks()
 
         components.appStartupTelemetry.onFenixApplicationOnCreate()
+    }
+
+    private fun restoreBrowserState() = GlobalScope.launch(Dispatchers.Main) {
+        val store = components.core.store
+        val sessionStorage = components.core.sessionStorage
+
+        components.useCases.tabsUseCases.restore(sessionStorage)
+
+        // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
+        // the app is used.
+        sessionStorage.autoSave(store)
+            .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
+            .whenGoingToBackground()
+            .whenSessionsChange()
+    }
+
+    private fun removeTimedOutTabs() {
+        val store = components.core.store
+        val tabsUseCases = components.useCases.tabsUseCases
+
+        // Now that we have restored our previous state (if there's one) let's remove timed out tabs
+        if (!settings().manuallyCloseTabs) {
+            val now = System.currentTimeMillis()
+            val tabTimeout = settings().getTabTimeout()
+
+            val tabsToRemove = store.state.tabs
+                .filter { tab -> now - tab.lastAccess > tabTimeout }
+                .map { tab -> tab.id }
+
+            if (tabsToRemove.isNotEmpty()) {
+                tabsUseCases.removeTabs(tabsToRemove)
+            }
+        }
     }
 
     private fun restoreDownloads() {

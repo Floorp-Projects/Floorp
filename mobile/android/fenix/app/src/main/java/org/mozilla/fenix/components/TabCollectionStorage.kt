@@ -11,7 +11,6 @@ import androidx.lifecycle.asLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.storage.BrowserStateSerializer
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
@@ -56,7 +55,7 @@ class TabCollectionStorage(
 
     private val collectionStorage by lazy {
         strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            TabCollectionStorage(context, BrowserStateSerializer())
+            TabCollectionStorage(context)
         }
     }
 
