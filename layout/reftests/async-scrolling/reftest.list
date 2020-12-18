@@ -53,7 +53,7 @@ fuzzy-if(Android,0-6,0-4) fuzzy-if(skiaContent&&!Android,0-1,0-34) fuzzy-if(webr
 fuzzy-if(Android,0-6,0-4) fuzzy-if(webrender&&gtkWidget,34-34,30-32) fuzzy-if(webrender&&cocoaWidget,7-7,38-39) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html # Bug 1604338
 fuzzy-if(Android,0-6,0-4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
 fuzzy-if(Android,0-6,0-4) fuzzy-if(webrender&&gtkWidget,34-34,30-32) fuzzy-if(webrender&&cocoaWidget,7-7,38-39) skip-if(!asyncPan) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html # Bug 1604338
-fuzzy-if(Android,0-7,0-1680) fuzzy-if(webrender&&gtkWidget,1-1,10-20) fuzzy-if(webrender&&cocoaWidget,1-2,16-18) skip-if(!asyncPan) == perspective-scrolling-1.html perspective-scrolling-1-ref.html # Bug 1604338
+fuzzy-if(Android,0-7,0-1680) fuzzy-if(webrender&&gtkWidget&&!swgl,1-1,10-20) fuzzy-if(webrender&&cocoaWidget,1-2,16-18) skip-if(!asyncPan) == perspective-scrolling-1.html perspective-scrolling-1-ref.html # Bug 1604338
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-2.html perspective-scrolling-2-ref.html
 fuzzy-if(Android,0-19,0-4) fuzzy-if(webrender&&gtkWidget,13-13,28-32) fuzzy-if(webrender&&cocoaWidget,13-13,44-44) skip-if(!asyncPan) == perspective-scrolling-3.html perspective-scrolling-3-ref.html # Bug 1604338
 fuzzy-if(Android,0-7,0-4) fuzzy-if(webrender&&gtkWidget,29-30,30-32) fuzzy-if(webrender&&cocoaWidget,19-20,44-44) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html # Bug 1604338
@@ -64,15 +64,15 @@ skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
 fuzzy-if(Android,0-19,0-4) fuzzy-if(webrender&&gtkWidget,19-19,32-32) fuzzy-if(webrender&&cocoaWidget,21-21,44-44) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html # Bug 1604338
 fuzzy-if(Android,0-44,0-10) fuzzy-if(webrender&&gtkWidget,26-26,60-64) fuzzy-if(webrender&&cocoaWidget,13-13,81-82) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html # Bug 1604338
-fuzzy-if(Android,0-6,0-8) fuzzy-if(webrender&&gtkWidget,28-28,56-60) fuzzy-if(webrender&&cocoaWidget,18-19,70-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html # Bug 1604338
-fuzzy-if(Android,0-6,0-8) fuzzy-if(webrender&&gtkWidget,28-28,56-60) fuzzy-if(webrender&&cocoaWidget,18-19,70-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html # Bug 1604338
+fuzzy-if(Android,0-6,0-8) fuzzy-if(webrender&&gtkWidget,28-28,30-60) fuzzy-if(webrender&&cocoaWidget,18-19,70-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html # Bug 1604338
+fuzzy-if(Android,0-6,0-8) fuzzy-if(webrender&&gtkWidget,28-28,30-60) fuzzy-if(webrender&&cocoaWidget,18-19,70-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html # Bug 1604338
 skip-if(!asyncPan) == fixed-pos-scrolled-clip-5.html fixed-pos-scrolled-clip-5-ref.html
 skip-if(!asyncPan) == position-sticky-bug1434250.html position-sticky-bug1434250-ref.html
 fuzzy-if(Android,0-8,0-4) fuzzy-if(webrender&&gtkWidget,25-25,30-32) fuzzy-if(webrender&&cocoaWidget,16-16,44-44) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html # Bug 1604338
 fuzzy-if(Android,0-6,0-4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 fuzzy-if(Android,0-8,0-27) fuzzy-if(webrender&&cocoaWidget,10-11,44-44) skip-if(!asyncPan) == curtain-effect-1.html curtain-effect-1-ref.html
 fuzzy-if(Android,0-6,0-4) fuzzy-if(webrender&&gtkWidget,15-15,28-32) fuzzy-if(webrender&&cocoaWidget,8-8,38-42) skip-if(!asyncPan) == transformed-1.html transformed-1-ref.html # Bug 1604338
-fuzzy-if(Android&&!webrender,2-2,4-4) fuzzy-if(Android&&webrender,7-7,4-4) fuzzy-if(webrender&&gtkWidget,4-5,27-28) fuzzy-if(webrender&&cocoaWidget,6-6,37-38) skip-if(!asyncPan) == position-sticky-transformed-in-scrollframe-1.html position-sticky-transformed-in-scrollframe-1-ref.html # Bug 1604338
+fuzzy-if(Android&&!webrender,2-2,4-4) fuzzy-if(Android&&webrender,7-7,4-4) fuzzy-if(webrender&&gtkWidget&&!swgl,4-5,27-28) fuzzy-if(webrender&&cocoaWidget,6-6,37-38) skip-if(!asyncPan) == position-sticky-transformed-in-scrollframe-1.html position-sticky-transformed-in-scrollframe-1-ref.html # Bug 1604338
 fuzzy-if(Android&&!webrender,3-3,4-4) fuzzy-if(Android&&webrender,10-10,4-4) fuzzy-if(webrender&&gtkWidget,20-20,32-32) fuzzy-if(webrender&&cocoaWidget,15-16,44-44) skip-if(!asyncPan) == position-sticky-transformed-in-scrollframe-2.html position-sticky-transformed-in-scrollframe-2-ref.html # Bug 1604338
 fuzzy-if(Android&&!webrender,3-3,4-4) fuzzy-if(Android&&webrender,13-13,4-4) fuzzy-if(webrender&&gtkWidget,26-27,30-32) fuzzy-if(webrender&&cocoaWidget,16-16,44-44) skip-if(!asyncPan) == position-sticky-in-transformed-scrollframe-1.html position-sticky-in-transformed-scrollframe-ref.html # Bug 1604338
 fuzzy-if(Android&&!webrender,3-3,4-4) fuzzy-if(Android&&webrender,13-13,4-4) fuzzy-if(webrender&&gtkWidget,26-27,30-32) fuzzy-if(webrender&&cocoaWidget,16-16,44-44) skip-if(!asyncPan) == position-sticky-in-transformed-scrollframe-2.html position-sticky-in-transformed-scrollframe-ref.html # Bug 1604338

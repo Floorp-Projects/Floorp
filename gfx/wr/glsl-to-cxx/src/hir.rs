@@ -3667,33 +3667,37 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
     );
 
     for s in &[Sampler2D, Sampler2DRect, Sampler2DArray] {
-        declare_function(
+        declare_function_ext(
             state,
             "swgl_isTextureLinear",
             None,
             Type::new(Bool),
             vec![Type::new(*s)],
+            RunClass::Scalar,
         );
-        declare_function(
+        declare_function_ext(
             state,
             "swgl_isTextureRGBA8",
             None,
             Type::new(Bool),
             vec![Type::new(*s)],
+            RunClass::Scalar,
         );
-        declare_function(
+        declare_function_ext(
             state,
             "swgl_isTextureR8",
             None,
             Type::new(Bool),
             vec![Type::new(*s)],
+            RunClass::Scalar,
         );
-        declare_function(
+        declare_function_ext(
             state,
             "swgl_textureLayerOffset",
             None,
             Type::new(Int),
             vec![Type::new(*s), Type::new(Float)],
+            RunClass::Scalar,
         );
         declare_function(
             state,
@@ -3743,6 +3747,35 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Float), Type::new(Int)],
+        );
+        declare_function_ext(
+            state,
+            "swgl_allowTextureNearest",
+            None,
+            Type::new(Bool),
+            vec![Type::new(*s), Type::new(Vec2)],
+            RunClass::Scalar,
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureNearestRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Int)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureNearestColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Int)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureNearestColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float), Type::new(Int)],
         );
         declare_function(
             state,
