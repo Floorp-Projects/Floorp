@@ -454,12 +454,12 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Update the style sheet in place with new text.
    *
-   * @param  {object} request
-   *         'text' - new text
-   *         'transition' - whether to do CSS transition for change.
-   *         'kind' - either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
+   * @param {string} text: new text
+   * @param {boolean} transition: whether to do CSS transition for change.
+   * @param {string} kind: either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
+   * @param {string|null} cause: indicates the cause of this update
    */
-  update: function(text, transition, kind = UPDATE_GENERAL) {
+  update: function(text, transition, kind = UPDATE_GENERAL, cause) {
     InspectorUtils.parseStyleSheet(this.rawSheet, text);
 
     modifiedStyleSheets.set(this.rawSheet, text);
@@ -471,9 +471,9 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     }
 
     if (transition) {
-      this._startTransition(kind);
+      this._startTransition(kind, cause);
     } else {
-      this.emit("style-applied", kind, this);
+      this.emit("style-applied", kind, this, cause);
     }
 
     this._getMediaRules().then(rules => {
@@ -484,8 +484,11 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Insert a catch-all transition sheet into the document. Set a timeout
    * to remove the transition after a certain time.
+   *
+   * @param {string} kind: either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
+   * @param {string|null} cause: indicates the cause of this update
    */
-  _startTransition: function(kind) {
+  _startTransition: function(kind, cause) {
     if (!this._transitionSheetLoaded) {
       this._transitionSheetLoaded = true;
       // We don't remove this sheet. It uses an internal selector that
@@ -500,7 +503,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     // @see _onTransitionEnd
     this.window.clearTimeout(this._transitionTimeout);
     this._transitionTimeout = this.window.setTimeout(
-      this._onTransitionEnd.bind(this, kind),
+      this._onTransitionEnd.bind(this, kind, cause),
       TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS
     );
   },
@@ -508,14 +511,17 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * This cleans up class and rule added for transition effect and then
    * notifies that the style has been applied.
+   *
+   * @param {string} kind: either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
+   * @param {string|null} cause: indicates the cause of this update
    */
-  _onTransitionEnd: function(kind) {
+  _onTransitionEnd: function(kind, cause) {
     this._transitionTimeout = null;
     removePseudoClassLock(
       this.document.documentElement,
       TRANSITION_PSEUDO_CLASS
     );
-    this.emit("style-applied", kind, this);
+    this.emit("style-applied", kind, this, cause);
   },
 });
 
