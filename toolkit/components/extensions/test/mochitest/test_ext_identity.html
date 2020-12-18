@@ -353,6 +353,37 @@ add_task(async function test_auto303Redirect() {
   await extension.awaitMessage("done");
   await extension.unload();
 });
+
+add_task(async function test_loopbackRedirectURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["identity"],
+    },
+    async background() {
+      let redirectURL = "http://127.0.0.1/mozoauth2/35b64b676900f491c00e7f618d43f7040e88422e";
+      let actualRedirect = await browser.identity.launchWebAuthFlow({
+        interactive: true,
+        url: `https://example.com/tests/toolkit/components/extensions/test/mochitest/oauth.html?redirect_uri=${encodeURIComponent(redirectURL)}`
+      }).catch(error => {
+        browser.test.fail(error.message)
+      });
+      browser.test.assertTrue(
+        actualRedirect.startsWith(redirectURL),
+        "Expected redirect url to be loopback address"
+      )
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
 </script>
 
 </body>
