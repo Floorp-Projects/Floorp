@@ -11,9 +11,6 @@ const SUGGESTIONS_ENGINE_NAME = "engine-suggestions.xml";
 // Basic test that uses two engines, a GET engine and a POST engine, neither
 // providing search suggestions.
 add_task(async function basicGetAndPost() {
-  // This test requires update2.  See also test_search_engine_alias_legacy.js.
-  Services.prefs.setBoolPref("browser.urlbar.update2", true);
-
   // Note that head_autocomplete.js has already added a MozSearch engine.
   // Here we add another engine with a search alias.
   await Services.search.addEngineWithDetails("AliasedGETMozSearch", {
