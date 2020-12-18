@@ -7769,6 +7769,19 @@ class LGuardFunctionScript : public LInstructionHelper<0, 1, 0> {
   MGuardFunctionScript* mir() { return mir_->toGuardFunctionScript(); }
 };
 
+class LIncrementWarmUpCounter : public LInstructionHelper<0, 0, 1> {
+ public:
+  LIR_HEADER(IncrementWarmUpCounter)
+
+  explicit LIncrementWarmUpCounter(const LDefinition& scratch)
+      : LInstructionHelper(classOpcode) {
+    setTemp(0, scratch);
+  }
+
+  const LDefinition* scratch() { return getTemp(0); }
+  MIncrementWarmUpCounter* mir() { return mir_->toIncrementWarmUpCounter(); }
+};
+
 class LRecompileCheck : public LInstructionHelper<0, 0, 1> {
  public:
   LIR_HEADER(RecompileCheck)

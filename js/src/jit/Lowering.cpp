@@ -5188,6 +5188,11 @@ void LIRGenerator::visitGuardDOMExpandoMissingOrGuardShape(
   redefine(ins, ins->expando());
 }
 
+void LIRGenerator::visitIncrementWarmUpCounter(MIncrementWarmUpCounter* ins) {
+  LIncrementWarmUpCounter* lir = new (alloc()) LIncrementWarmUpCounter(temp());
+  add(lir, ins);
+}
+
 void LIRGenerator::visitRecompileCheck(MRecompileCheck* ins) {
   LRecompileCheck* lir = new (alloc()) LRecompileCheck(temp());
   add(lir, ins);
