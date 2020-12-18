@@ -11,7 +11,7 @@ use libc::c_void;
 ///     ..MacOSHandle::empty()
 /// };
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MacOSHandle {
     pub ns_window: *mut c_void,
     pub ns_view: *mut c_void,

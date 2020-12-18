@@ -1,117 +1,126 @@
 use std::{fmt, sync::Arc};
 
-use winapi::shared::winerror::SUCCEEDED;
+use parking_lot::Mutex;
+use winapi::shared::winerror;
 
 use crate::{command::CommandBuffer, Backend, Shared};
 use hal::{command, pool};
 
-#[derive(Debug)]
-pub enum CommandPoolAllocator {
-    Shared(native::CommandAllocator),
-    Individual(Vec<native::CommandAllocator>),
+pub struct PoolShared {
+    device: native::Device,
+    list_type: native::CmdListType,
+    allocators: Mutex<Vec<native::CommandAllocator>>,
+    lists: Mutex<Vec<native::GraphicsCommandList>>,
 }
 
-pub struct CommandPool {
-    pub(crate) allocator: CommandPoolAllocator,
-    pub(crate) device: native::Device,
-    pub(crate) list_type: native::CmdListType,
-    pub(crate) shared: Arc<Shared>,
-    pub(crate) create_flags: pool::CommandPoolCreateFlags,
-}
-
-impl fmt::Debug for CommandPool {
+impl fmt::Debug for PoolShared {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str("CommandPool")
+        // TODO: print out as struct
+        fmt.write_str("PoolShared")
     }
 }
 
-impl CommandPool {
-    fn create_command_list(&mut self) -> (native::GraphicsCommandList, native::CommandAllocator) {
-        let command_allocator = match self.allocator {
-            CommandPoolAllocator::Shared(ref allocator) => allocator.clone(),
-            CommandPoolAllocator::Individual(ref mut allocators) => {
-                let (command_allocator, hr) = self.device.create_command_allocator(self.list_type);
-
-                // TODO: error handling
-                if !SUCCEEDED(hr) {
-                    error!("error on command allocator creation: {:x}", hr);
-                }
-
-                allocators.push(command_allocator);
-                command_allocator
+impl PoolShared {
+    pub fn acquire(&self) -> (native::CommandAllocator, native::GraphicsCommandList) {
+        let allocator = match self.allocators.lock().pop() {
+            Some(allocator) => allocator,
+            None => {
+                let (allocator, hr) = self.device.create_command_allocator(self.list_type);
+                assert_eq!(
+                    winerror::S_OK,
+                    hr,
+                    "error on command allocator creation: {:x}",
+                    hr
+                );
+                allocator
             }
         };
-
-        // allocate command lists
-        let (command_list, hr) = self.device.create_graphics_command_list(
-            self.list_type,
-            command_allocator,
-            native::PipelineState::null(),
-            0,
-        );
-
-        if !SUCCEEDED(hr) {
-            error!("error on command list creation: {:x}", hr);
-        }
-
-        // Close command list as they are initiated as recording.
-        // But only one command list can be recording for each allocator
-        let _hr = command_list.close();
-
-        (command_list, command_allocator)
-    }
-
-    pub(crate) fn destroy(self) {
-        match self.allocator {
-            CommandPoolAllocator::Shared(ref allocator) => unsafe {
-                allocator.destroy();
-            },
-            CommandPoolAllocator::Individual(ref allocators) => {
-                for allocator in allocators.iter() {
-                    unsafe {
-                        allocator.destroy();
-                    }
-                }
+        let list = match self.lists.lock().pop() {
+            Some(list) => {
+                list.reset(allocator, native::PipelineState::null());
+                list
             }
-        }
+            None => {
+                let (command_list, hr) = self.device.create_graphics_command_list(
+                    self.list_type,
+                    allocator,
+                    native::PipelineState::null(),
+                    0,
+                );
+                assert_eq!(
+                    hr,
+                    winerror::S_OK,
+                    "error on command list creation: {:x}",
+                    hr
+                );
+                command_list
+            }
+        };
+        (allocator, list)
     }
+
+    pub fn release_allocator(&self, allocator: native::CommandAllocator) {
+        self.allocators.lock().push(allocator);
+    }
+
+    pub fn release_list(&self, list: native::GraphicsCommandList) {
+        //pre-condition: list must be closed
+        self.lists.lock().push(list);
+    }
+}
+
+#[derive(Debug)]
+pub struct CommandPool {
+    shared: Arc<Shared>,
+    pool_shared: Arc<PoolShared>,
 }
 
 unsafe impl Send for CommandPool {}
 unsafe impl Sync for CommandPool {}
 
+impl CommandPool {
+    pub(crate) fn new(
+        device: native::Device,
+        list_type: native::CmdListType,
+        shared: &Arc<Shared>,
+        _create_flags: pool::CommandPoolCreateFlags,
+    ) -> Self {
+        let pool_shared = Arc::new(PoolShared {
+            device,
+            list_type,
+            allocators: Mutex::default(),
+            lists: Mutex::default(),
+        });
+        CommandPool {
+            shared: Arc::clone(shared),
+            pool_shared,
+        }
+    }
+}
+
 impl pool::CommandPool<Backend> for CommandPool {
     unsafe fn reset(&mut self, _release_resources: bool) {
-        match self.allocator {
-            CommandPoolAllocator::Shared(ref allocator) => {
-                allocator.Reset();
-            }
-            CommandPoolAllocator::Individual(ref mut allocators) => {
-                for allocator in allocators.iter_mut() {
-                    allocator.Reset();
-                }
-            }
-        }
+        //do nothing. The allocated command buffers would not know
+        // that this happened, but they should be ready to
+        // process `begin` as if they are in `Initial` state.
     }
 
     unsafe fn allocate_one(&mut self, level: command::Level) -> CommandBuffer {
         // TODO: Implement secondary buffers
         assert_eq!(level, command::Level::Primary);
-        let (command_list, command_allocator) = self.create_command_list();
-        CommandBuffer::new(
-            command_list,
-            command_allocator,
-            self.shared.clone(),
-            self.create_flags,
-        )
+        CommandBuffer::new(&self.shared, &self.pool_shared)
     }
 
     unsafe fn free<I>(&mut self, cbufs: I)
     where
         I: IntoIterator<Item = CommandBuffer>,
     {
-        for mut cbuf in cbufs {
-            cbuf.destroy();
+        let mut allocators = self.pool_shared.allocators.lock();
+        let mut lists = self.pool_shared.lists.lock();
+        for cbuf in cbufs {
+            let (allocator, list) = cbuf.destroy();
+            allocators.extend(allocator);
+            lists.extend(list);
         }
     }
 }

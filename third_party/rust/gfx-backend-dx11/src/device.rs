@@ -11,18 +11,25 @@ use winapi::{
 
 use wio::com::ComPtr;
 
-use std::{borrow::Borrow, fmt, mem, ops::Range, ptr, sync::{Arc, Weak}};
+use std::{
+    borrow::Borrow,
+    fmt, mem,
+    ops::Range,
+    ptr,
+    sync::{Arc, Weak},
+};
 
 use parking_lot::{Condvar, Mutex, RwLock};
 
 use crate::{
-    conv, internal, shader, Backend, Buffer, BufferView, CommandBuffer, CommandPool,
-    ComputePipeline, DescriptorContent, DescriptorIndex, DescriptorPool, DescriptorSet,
-    DescriptorSetInfo, DescriptorSetLayout, Fence, Framebuffer, GraphicsPipeline, Image, ImageView,
-    InternalBuffer, InternalImage, Memory, MultiStageData, PipelineLayout, QueryPool, RawFence,
+    conv,
+    debug::{set_debug_name, set_debug_name_with_suffix, verify_debug_ascii},
+    internal, shader, Backend, Buffer, BufferView, CommandBuffer, CommandPool, ComputePipeline,
+    DescriptorContent, DescriptorIndex, DescriptorPool, DescriptorSet, DescriptorSetInfo,
+    DescriptorSetLayout, Fence, Framebuffer, GraphicsPipeline, Image, ImageView, InternalBuffer,
+    InternalImage, Memory, MultiStageData, PipelineLayout, QueryPool, RawFence,
     RegisterAccumulator, RegisterData, RenderPass, ResourceIndex, Sampler, Semaphore, ShaderModule,
     SubpassDesc, ViewInfo,
-    debug::{set_debug_name_with_suffix, set_debug_name, verify_debug_ascii},
 };
 
 //TODO: expose coherent type 0x2 when it's properly supported
@@ -96,7 +103,7 @@ impl Device {
     fn create_rasterizer_state(
         &self,
         rasterizer_desc: &pso::Rasterizer,
-        multisampling_desc: &Option<pso::Multisampling>
+        multisampling_desc: &Option<pso::Multisampling>,
     ) -> Result<ComPtr<d3d11::ID3D11RasterizerState>, pso::CreationError> {
         let mut rasterizer = ptr::null_mut();
         let desc = conv::map_rasterizer_desc(rasterizer_desc, multisampling_desc);
@@ -136,10 +143,7 @@ impl Device {
     fn create_depth_stencil_state(
         &self,
         depth_desc: &pso::DepthStencilDesc,
-    ) -> Result<
-        DepthStencilState,
-        pso::CreationError,
-    > {
+    ) -> Result<DepthStencilState, pso::CreationError> {
         let mut depth = ptr::null_mut();
         let (desc, stencil_ref, read_only) = conv::map_depth_stencil_desc(depth_desc);
 
@@ -150,9 +154,9 @@ impl Device {
 
         if winerror::SUCCEEDED(hr) {
             Ok(DepthStencilState {
-                raw: unsafe{ ComPtr::from_raw(depth) },
+                raw: unsafe { ComPtr::from_raw(depth) },
                 stencil_ref,
-                read_only
+                read_only,
             })
         } else {
             Err(pso::CreationError::Other)
@@ -184,20 +188,23 @@ impl Device {
         }
 
         // See [`shader::introspect_spirv_vertex_semantic_remapping`] for details of why this is needed.
-        let semantics: Vec<_> = attributes.iter().map(|attrib| {
-            match vertex_semantic_remapping.get(&attrib.location) {
-                Some(Some((major, minor))) => {
-                    let name = std::borrow::Cow::Owned(format!("TEXCOORD{}_\0", major));
-                    let location = *minor;
-                    (name, location)
-                }
-                _ => {
-                    let name = std::borrow::Cow::Borrowed("TEXCOORD\0");
-                    let location = attrib.location;
-                    (name, location)
-                }
-            }
-        }).collect();
+        let semantics: Vec<_> = attributes
+            .iter()
+            .map(
+                |attrib| match vertex_semantic_remapping.get(&attrib.location) {
+                    Some(Some((major, minor))) => {
+                        let name = std::borrow::Cow::Owned(format!("TEXCOORD{}_\0", major));
+                        let location = *minor;
+                        (name, location)
+                    }
+                    _ => {
+                        let name = std::borrow::Cow::Borrowed("TEXCOORD\0");
+                        let location = attrib.location;
+                        (name, location)
+                    }
+                },
+            )
+            .collect();
 
         let input_elements = attributes
             .iter()
@@ -628,7 +635,9 @@ impl Device {
             image::ViewKind::D2 => {
                 if info.kind.num_samples() > 1 {
                     desc.ViewDimension = d3d11::D3D11_RTV_DIMENSION_TEXTURE2DMS;
-                    *unsafe { desc.u.Texture2DMS_mut() } = d3d11::D3D11_TEX2DMS_RTV { UnusedField_NothingToDefine: 0 }
+                    *unsafe { desc.u.Texture2DMS_mut() } = d3d11::D3D11_TEX2DMS_RTV {
+                        UnusedField_NothingToDefine: 0,
+                    }
                 } else {
                     desc.ViewDimension = d3d11::D3D11_RTV_DIMENSION_TEXTURE2D;
                     *unsafe { desc.u.Texture2D_mut() } = d3d11::D3D11_TEX2D_RTV { MipSlice }
@@ -921,7 +930,8 @@ impl device::Device<Backend> for Device {
             //
             // Leave one slot for push constants
             assert!(
-                data.c.res_index as u32 <= d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1,
+                data.c.res_index as u32
+                    <= d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1,
                 "{} bound constant buffers exceeds limit of {}",
                 data.c.res_index as u32,
                 d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1,
@@ -1010,8 +1020,13 @@ impl device::Device<Backend> for Device {
                 let vs = build_shader(ShaderStage::Vertex, Some(&vertex))?.unwrap();
                 let gs = build_shader(ShaderStage::Geometry, geometry.as_ref())?;
 
-                let layout =
-                    self.create_input_layout(vs.clone(), buffers, attributes, input_assembler, vertex_semantic_remapping)?;
+                let layout = self.create_input_layout(
+                    vs.clone(),
+                    buffers,
+                    attributes,
+                    input_assembler,
+                    vertex_semantic_remapping,
+                )?;
 
                 let vs = self.create_vertex_shader(vs)?;
                 let gs = if let Some(blob) = gs {
@@ -1045,7 +1060,8 @@ impl device::Device<Backend> for Device {
             None
         };
 
-        let rasterizer_state = self.create_rasterizer_state(&desc.rasterizer, &desc.multisampling)?;
+        let rasterizer_state =
+            self.create_rasterizer_state(&desc.rasterizer, &desc.multisampling)?;
         let blend_state = self.create_blend_state(&desc.blender, &desc.multisampling)?;
         let depth_stencil_state = Some(self.create_depth_stencil_state(&desc.depth_stencil)?);
 
@@ -1366,7 +1382,7 @@ impl device::Device<Backend> for Device {
             srv,
             uav,
             usage: buffer.internal.usage,
-            debug_name: buffer.internal.debug_name.take()
+            debug_name: buffer.internal.debug_name.take(),
         };
         let range = offset..offset + buffer.requirements.size;
 
@@ -1402,38 +1418,12 @@ impl device::Device<Backend> for Device {
         usage: image::Usage,
         view_caps: image::ViewCapabilities,
     ) -> Result<Image, image::CreationError> {
-        use image::Usage;
-        //
-        // TODO: create desc
-
         let surface_desc = format.base_format().0.desc();
         let bytes_per_texel = surface_desc.bits / 8;
         let ext = kind.extent();
         let size = (ext.width * ext.height * ext.depth) as u64 * bytes_per_texel as u64;
-        let compressed = surface_desc.is_compressed();
-        let depth = format.is_depth();
 
-        let mut bind = 0;
-
-        if usage.intersects(Usage::TRANSFER_SRC | Usage::SAMPLED | Usage::STORAGE) {
-            bind |= d3d11::D3D11_BIND_SHADER_RESOURCE;
-        }
-
-        // we cant get RTVs or UAVs on compressed & depth formats
-        if !compressed && !depth {
-            if usage.intersects(Usage::COLOR_ATTACHMENT | Usage::TRANSFER_DST) {
-                bind |= d3d11::D3D11_BIND_RENDER_TARGET;
-            }
-
-            if usage.intersects(Usage::TRANSFER_DST | Usage::STORAGE) {
-                bind |= d3d11::D3D11_BIND_UNORDERED_ACCESS;
-            }
-        }
-
-        if usage.contains(Usage::DEPTH_STENCIL_ATTACHMENT) {
-            bind |= d3d11::D3D11_BIND_DEPTH_STENCIL;
-        }
-
+        let bind = conv::map_image_usage(usage, surface_desc);
         debug!("{:b}", bind);
 
         Ok(Image {
@@ -1697,7 +1687,10 @@ impl device::Device<Backend> for Device {
                         .map_err(|_| device::BindError::WrongMemory)?;
 
                     if let Some(ref name) = image.internal.debug_name {
-                        set_debug_name(&rtv, &format!("{} -- RTV Mip {} Layer {}", name, mip, layer));
+                        set_debug_name(
+                            &rtv,
+                            &format!("{} -- RTV Mip {} Layer {}", name, mip, layer),
+                        );
                     }
 
                     render_target_views.push(rtv);
@@ -1721,11 +1714,14 @@ impl device::Device<Backend> for Device {
                     };
 
                     let dsv = self
-                            .view_image_as_depth_stencil(&view, None)
-                            .map_err(|_| device::BindError::WrongMemory)?;
+                        .view_image_as_depth_stencil(&view, None)
+                        .map_err(|_| device::BindError::WrongMemory)?;
 
                     if let Some(ref name) = image.internal.debug_name {
-                        set_debug_name(&dsv, &format!("{} -- DSV Mip {} Layer {}", name, mip, layer));
+                        set_debug_name(
+                            &dsv,
+                            &format!("{} -- DSV Mip {} Layer {}", name, mip, layer),
+                        );
                     }
 
                     depth_stencil_views.push(dsv);
@@ -1750,7 +1746,7 @@ impl device::Device<Backend> for Device {
             unordered_access_views,
             depth_stencil_views,
             render_target_views,
-            debug_name: image.internal.debug_name.take()
+            debug_name: image.internal.debug_name.take(),
         };
 
         image.decomposed_format = decomposed;
@@ -1796,7 +1792,11 @@ impl device::Device<Backend> for Device {
         let mut debug_name = image.internal.debug_name.clone();
 
         Ok(ImageView {
-            subresource: d3d11::D3D11CalcSubresource(0, range.layer_start as _, range.level_start as _),
+            subresource: d3d11::D3D11CalcSubresource(
+                0,
+                range.layer_start as _,
+                range.level_start as _,
+            ),
             format,
             srv_handle: if image.usage.intersects(image::Usage::SAMPLED) {
                 let srv = self.view_image_as_shader_resource(&srv_info)?;
@@ -1843,8 +1843,8 @@ impl device::Device<Backend> for Device {
                 None
             },
             rodsv_handle: if image.usage.contains(image::Usage::DEPTH_STENCIL_ATTACHMENT) {
-                let rodsv = self.view_image_as_depth_stencil(&info, Some(image.format.is_stencil()))?;
-
+                let rodsv =
+                    self.view_image_as_depth_stencil(&info, Some(image.format.is_stencil()))?;
 
                 if let Some(ref mut name) = debug_name {
                     set_debug_name_with_suffix(&rodsv, name, " -- DSV");
@@ -1943,11 +1943,16 @@ impl device::Device<Backend> for Device {
             let content = DescriptorContent::from(binding.ty);
             // If this binding is used by the graphics pipeline and is a UAV, it belongs to the "Output Merger"
             // stage, so we only put them in the fragment stage to save redundant descriptor allocations.
-            let stage_flags =
-                if content.contains(DescriptorContent::UAV)
-                    && binding.stage_flags.intersects(pso::ShaderStageFlags::ALL - pso::ShaderStageFlags::COMPUTE) {
+            let stage_flags = if content.contains(DescriptorContent::UAV)
+                && binding
+                    .stage_flags
+                    .intersects(pso::ShaderStageFlags::ALL - pso::ShaderStageFlags::COMPUTE)
+            {
                 let mut stage_flags = pso::ShaderStageFlags::FRAGMENT;
-                stage_flags.set(pso::ShaderStageFlags::COMPUTE, binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE));
+                stage_flags.set(
+                    pso::ShaderStageFlags::COMPUTE,
+                    binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE),
+                );
                 stage_flags
             } else {
                 binding.stage_flags
@@ -2002,7 +2007,8 @@ impl device::Device<Backend> for Device {
 
             // If we're skipping array indices in the current binding, we need to add them to get the correct binding offset
             if array_index > 0 {
-                let binding: &pso::DescriptorSetLayoutBinding = &write.set.layout.bindings[binding_index];
+                let binding: &pso::DescriptorSetLayoutBinding =
+                    &write.set.layout.bindings[binding_index];
                 let content = DescriptorContent::from(binding.ty);
                 mapping.add_content_many(content, binding.stage_flags, array_index as _);
             }
@@ -2013,7 +2019,8 @@ impl device::Device<Backend> for Device {
             // When we hit the end of an array of descriptors and there are still descriptors left
             // over, we will spill into writing the next binding.
             for descriptor in write.descriptors {
-                let binding: &pso::DescriptorSetLayoutBinding = &write.set.layout.bindings[binding_index];
+                let binding: &pso::DescriptorSetLayoutBinding =
+                    &write.set.layout.bindings[binding_index];
 
                 let handles = match *descriptor.borrow() {
                     pso::Descriptor::Buffer(buffer, ref _sub) => RegisterData {
@@ -2027,12 +2034,8 @@ impl device::Device<Backend> for Device {
                     },
                     pso::Descriptor::Image(image, _layout) => RegisterData {
                         c: ptr::null_mut(),
-                        t: image
-                            .srv_handle
-                            .map_or(ptr::null_mut(), |h| h as *mut _),
-                        u: image
-                            .uav_handle
-                            .map_or(ptr::null_mut(), |h| h as *mut _),
+                        t: image.srv_handle.map_or(ptr::null_mut(), |h| h as *mut _),
+                        u: image.uav_handle.map_or(ptr::null_mut(), |h| h as *mut _),
                         s: ptr::null_mut(),
                     },
                     pso::Descriptor::Sampler(sampler) => RegisterData {
@@ -2044,12 +2047,8 @@ impl device::Device<Backend> for Device {
                     pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => {
                         RegisterData {
                             c: ptr::null_mut(),
-                            t: image
-                                .srv_handle
-                                .map_or(ptr::null_mut(), |h| h as *mut _),
-                            u: image
-                                .uav_handle
-                                .map_or(ptr::null_mut(), |h| h as *mut _),
+                            t: image.srv_handle.map_or(ptr::null_mut(), |h| h as *mut _),
+                            u: image.uav_handle.map_or(ptr::null_mut(), |h| h as *mut _),
                             s: sampler.sampler_handle.as_raw() as *mut _,
                         }
                     }
@@ -2072,18 +2071,22 @@ impl device::Device<Backend> for Device {
                 if content.contains(DescriptorContent::UAV) {
                     // If this binding is used by the graphics pipeline and is a UAV, it belongs to the "Output Merger"
                     // stage, so we only put them in the fragment stage to save redundant descriptor allocations.
-                    let stage_flags = if binding.stage_flags.intersects(pso::ShaderStageFlags::ALL - pso::ShaderStageFlags::COMPUTE) {
+                    let stage_flags = if binding
+                        .stage_flags
+                        .intersects(pso::ShaderStageFlags::ALL - pso::ShaderStageFlags::COMPUTE)
+                    {
                         let mut stage_flags = pso::ShaderStageFlags::FRAGMENT;
-                        stage_flags.set(pso::ShaderStageFlags::COMPUTE, binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE));
+                        stage_flags.set(
+                            pso::ShaderStageFlags::COMPUTE,
+                            binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE),
+                        );
                         stage_flags
                     } else {
                         binding.stage_flags
                     };
 
                     let offsets = mapping.map_other(|map| map.u);
-                    write
-                        .set
-                        .assign_stages(&offsets, stage_flags, handles.u);
+                    write.set.assign_stages(&offsets, stage_flags, handles.u);
                 };
                 if content.contains(DescriptorContent::SAMPLER) {
                     let offsets = mapping.map_other(|map| map.s);
@@ -2351,7 +2354,7 @@ impl device::Device<Backend> for Device {
     }
 
     unsafe fn destroy_buffer_view(&self, _view: BufferView) {
-        unimplemented!()
+        //unimplemented!()
     }
 
     unsafe fn destroy_image(&self, mut image: Image) {
@@ -2465,8 +2468,16 @@ impl device::Device<Backend> for Device {
         let mut name = name.to_string();
 
         set_debug_name_with_suffix(&graphics_pipeline.blend_state, &mut name, " -- Blend State");
-        set_debug_name_with_suffix(&graphics_pipeline.rasterizer_state, &mut name, " -- Rasterizer State");
-        set_debug_name_with_suffix(&graphics_pipeline.input_layout, &mut name, " -- Input Layout");
+        set_debug_name_with_suffix(
+            &graphics_pipeline.rasterizer_state,
+            &mut name,
+            " -- Rasterizer State",
+        );
+        set_debug_name_with_suffix(
+            &graphics_pipeline.input_layout,
+            &mut name,
+            " -- Input Layout",
+        );
         if let Some(ref dss) = graphics_pipeline.depth_stencil_state {
             set_debug_name_with_suffix(&dss.raw, &mut name, " -- Depth Stencil State");
         }

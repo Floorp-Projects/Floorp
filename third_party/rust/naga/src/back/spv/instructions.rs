@@ -379,11 +379,9 @@ pub(super) fn instruction_load(
     instruction.set_result(id);
     instruction.add_operand(pointer_type_id);
 
-    instruction.add_operand(if let Some(memory_access) = memory_access {
-        memory_access.bits()
-    } else {
-        spirv::MemoryAccess::NONE.bits()
-    });
+    if let Some(memory_access) = memory_access {
+        instruction.add_operand(memory_access.bits());
+    }
 
     instruction
 }
@@ -397,11 +395,9 @@ pub(super) fn instruction_store(
     instruction.add_operand(pointer_type_id);
     instruction.add_operand(object_id);
 
-    instruction.add_operand(if let Some(memory_access) = memory_access {
-        memory_access.bits()
-    } else {
-        spirv::MemoryAccess::NONE.bits()
-    });
+    if let Some(memory_access) = memory_access {
+        instruction.add_operand(memory_access.bits());
+    }
 
     instruction
 }
@@ -505,7 +501,12 @@ pub(super) fn instruction_image_sample_implicit_lod(
 //
 // Conversion Instructions
 //
-fn instruction_unary(op: Op, result_type_id: Word, id: Word, value: Word) -> Instruction {
+pub(super) fn instruction_unary(
+    op: Op,
+    result_type_id: Word,
+    id: Word,
+    value: Word,
+) -> Instruction {
     let mut instruction = Instruction::new(op);
     instruction.set_type(result_type_id);
     instruction.set_result(id);
@@ -513,41 +514,6 @@ fn instruction_unary(op: Op, result_type_id: Word, id: Word, value: Word) -> Ins
     instruction
 }
 
-pub(super) fn instruction_convert_f_to_u(
-    result_type_id: Word,
-    id: Word,
-    float_value: Word,
-) -> Instruction {
-    instruction_unary(Op::ConvertFToU, result_type_id, id, float_value)
-}
-
-pub(super) fn instruction_convert_f_to_s(
-    result_type_id: Word,
-    id: Word,
-    float_value: Word,
-) -> Instruction {
-    instruction_unary(Op::ConvertFToS, result_type_id, id, float_value)
-}
-
-pub(super) fn instruction_convert_s_to_f(
-    result_type_id: Word,
-    id: Word,
-    signed_value: Word,
-) -> Instruction {
-    instruction_unary(Op::ConvertSToF, result_type_id, id, signed_value)
-}
-
-pub(super) fn instruction_convert_u_to_f(
-    result_type_id: Word,
-    id: Word,
-    unsigned_value: Word,
-) -> Instruction {
-    instruction_unary(Op::ConvertUToF, result_type_id, id, unsigned_value)
-}
-
-pub(super) fn instruction_bit_cast(result_type_id: Word, id: Word, operand: Word) -> Instruction {
-    instruction_unary(Op::Bitcast, result_type_id, id, operand)
-}
 //
 // Composite Instructions
 //
@@ -571,6 +537,38 @@ pub(super) fn instruction_composite_construct(
 //
 // Arithmetic Instructions
 //
+fn instruction_binary(
+    op: Op,
+    result_type_id: Word,
+    id: Word,
+    operand_1: Word,
+    operand_2: Word,
+) -> Instruction {
+    let mut instruction = Instruction::new(op);
+    instruction.set_type(result_type_id);
+    instruction.set_result(id);
+    instruction.add_operand(operand_1);
+    instruction.add_operand(operand_2);
+    instruction
+}
+
+pub(super) fn instruction_i_sub(
+    result_type_id: Word,
+    id: Word,
+    operand_1: Word,
+    operand_2: Word,
+) -> Instruction {
+    instruction_binary(Op::ISub, result_type_id, id, operand_1, operand_2)
+}
+
+pub(super) fn instruction_f_sub(
+    result_type_id: Word,
+    id: Word,
+    operand_1: Word,
+    operand_2: Word,
+) -> Instruction {
+    instruction_binary(Op::FSub, result_type_id, id, operand_1, operand_2)
+}
 
 pub(super) fn instruction_i_mul(
     result_type_id: Word,
@@ -578,12 +576,7 @@ pub(super) fn instruction_i_mul(
     operand_1: Word,
     operand_2: Word,
 ) -> Instruction {
-    let mut instruction = Instruction::new(Op::IMul);
-    instruction.set_type(result_type_id);
-    instruction.set_result(id);
-    instruction.add_operand(operand_1);
-    instruction.add_operand(operand_2);
-    instruction
+    instruction_binary(Op::IMul, result_type_id, id, operand_1, operand_2)
 }
 
 pub(super) fn instruction_f_mul(
@@ -592,12 +585,7 @@ pub(super) fn instruction_f_mul(
     operand_1: Word,
     operand_2: Word,
 ) -> Instruction {
-    let mut instruction = Instruction::new(Op::FMul);
-    instruction.set_type(result_type_id);
-    instruction.set_result(id);
-    instruction.add_operand(operand_1);
-    instruction.add_operand(operand_2);
-    instruction
+    instruction_binary(Op::FMul, result_type_id, id, operand_1, operand_2)
 }
 
 pub(super) fn instruction_vector_times_scalar(
@@ -673,6 +661,15 @@ pub(super) fn instruction_matrix_times_matrix(
 //
 // Bit Instructions
 //
+
+pub(super) fn instruction_bitwise_and(
+    result_type_id: Word,
+    id: Word,
+    operand_1: Word,
+    operand_2: Word,
+) -> Instruction {
+    instruction_binary(Op::BitwiseAnd, result_type_id, id, operand_1, operand_2)
+}
 
 //
 // Relational and Logical Instructions

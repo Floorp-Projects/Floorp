@@ -545,7 +545,7 @@ pub fn map_buffer_resource_state(access: buffer::Access) -> D3D12_RESOURCE_STATE
 }
 
 /// Derive the combination of read-only states from the access flags.
-fn derive_image_state(access: image::Access) -> D3D12_RESOURCE_STATES {
+fn derive_immutable_image_states(access: image::Access) -> D3D12_RESOURCE_STATES {
     let mut state = D3D12_RESOURCE_STATE_COMMON;
 
     if access.contains(image::Access::TRANSFER_READ) {
@@ -565,24 +565,23 @@ fn derive_image_state(access: image::Access) -> D3D12_RESOURCE_STATES {
     state
 }
 
-const MUTABLE_IMAGE_ACCESS: &[(image::Access, D3D12_RESOURCE_STATES)] = &[
-    (
-        image::Access::SHADER_WRITE,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-    ),
-    (
-        image::Access::COLOR_ATTACHMENT_WRITE,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-    ),
-    (
-        image::Access::DEPTH_STENCIL_ATTACHMENT_WRITE,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-    ),
-    (
-        image::Access::TRANSFER_WRITE,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-    ),
-];
+/// Derive the mutable or read-only states from the access flags.
+fn derive_mutable_image_states(access: image::Access) -> D3D12_RESOURCE_STATES {
+    if access.contains(image::Access::SHADER_WRITE) {
+        return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    }
+    if access.contains(image::Access::COLOR_ATTACHMENT_WRITE) {
+        return D3D12_RESOURCE_STATE_RENDER_TARGET;
+    }
+    if access.contains(image::Access::DEPTH_STENCIL_ATTACHMENT_WRITE) {
+        return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+    }
+    if access.contains(image::Access::TRANSFER_WRITE) {
+        return D3D12_RESOURCE_STATE_COPY_DEST;
+    }
+
+    derive_immutable_image_states(access)
+}
 
 pub fn map_image_resource_state(
     access: image::Access,
@@ -600,22 +599,9 @@ pub fn map_image_resource_state(
         // from and into `COPY_DEST` to have a consistent state for srcAccess.
         image::Layout::TransferDstOptimal => D3D12_RESOURCE_STATE_COPY_DEST,
         image::Layout::TransferSrcOptimal => D3D12_RESOURCE_STATE_COPY_SOURCE,
-        image::Layout::General => {
-            match MUTABLE_IMAGE_ACCESS
-                .iter()
-                .find(|&(bit, _)| access.contains(*bit))
-            {
-                Some(&(bit, state)) => {
-                    if !(access & !bit).is_empty() {
-                        warn!("Required access contains multiple writable states with `General` layout: {:?}", access);
-                    }
-                    state
-                }
-                None => derive_image_state(access),
-            }
-        }
+        image::Layout::General => derive_mutable_image_states(access),
         image::Layout::ShaderReadOnlyOptimal | image::Layout::DepthStencilReadOnlyOptimal => {
-            derive_image_state(access)
+            derive_immutable_image_states(access)
         }
         image::Layout::Undefined | image::Layout::Preinitialized => D3D12_RESOURCE_STATE_COMMON,
     }

@@ -194,6 +194,7 @@ unsafe impl Sync for Shared {}
 impl Shared {
     fn new(device: metal::Device, experiments: &Experiments) -> Self {
         let private_caps = PrivateCapabilities::new(&device, experiments);
+        debug!("{:#?}", private_caps);
 
         let visibility = VisibilityShared {
             buffer: device.new_buffer(
@@ -296,8 +297,8 @@ impl hal::Instance<Backend> for Instance {
         }
     }
 
-    unsafe fn destroy_surface(&self, _surface: Surface) {
-        // TODO: Implement Surface cleanup
+    unsafe fn destroy_surface(&self, surface: Surface) {
+        surface.dispose();
     }
 }
 
@@ -350,7 +351,7 @@ unsafe impl Sync for GfxManagedMetalLayerDelegate {}
 
 impl Instance {
     #[cfg(target_os = "ios")]
-    unsafe fn create_from_uiview(&self, uiview: *mut c_void) -> window::SurfaceInner {
+    unsafe fn create_from_uiview(&self, uiview: *mut c_void) -> Surface {
         let view: cocoa_foundation::base::id = mem::transmute(uiview);
         if view.is_null() {
             panic!("window does not have a valid contentView");
@@ -381,11 +382,11 @@ impl Instance {
         }
 
         let _: *mut c_void = msg_send![view, retain];
-        window::SurfaceInner::new(NonNull::new(view), render_layer)
+        Surface::new(NonNull::new(view), render_layer)
     }
 
     #[cfg(target_os = "macos")]
-    unsafe fn create_from_nsview(&self, nsview: *mut c_void) -> window::SurfaceInner {
+    unsafe fn create_from_nsview(&self, nsview: *mut c_void) -> Surface {
         let view: cocoa_foundation::base::id = mem::transmute(nsview);
         if view.is_null() {
             panic!("window does not have a valid contentView");
@@ -425,28 +426,28 @@ impl Instance {
         };
 
         let _: *mut c_void = msg_send![view, retain];
-        window::SurfaceInner::new(NonNull::new(view), render_layer)
+        Surface::new(NonNull::new(view), render_layer)
     }
 
-    unsafe fn create_from_layer(&self, layer: &CoreAnimationLayerRef) -> window::SurfaceInner {
+    unsafe fn create_from_layer(&self, layer: &CoreAnimationLayerRef) -> Surface {
         let class = class!(CAMetalLayer);
         let proper_kind: BOOL = msg_send![layer, isKindOfClass: class];
         assert_eq!(proper_kind, YES);
-        window::SurfaceInner::new(None, layer.to_owned())
+        Surface::new(None, layer.to_owned())
     }
 
     pub fn create_surface_from_layer(&self, layer: &CoreAnimationLayerRef) -> Surface {
-        unsafe { self.create_from_layer(layer) }.into_surface()
+        unsafe { self.create_from_layer(layer) }
     }
 
     #[cfg(target_os = "macos")]
     pub fn create_surface_from_nsview(&self, nsview: *mut c_void) -> Surface {
-        unsafe { self.create_from_nsview(nsview) }.into_surface()
+        unsafe { self.create_from_nsview(nsview) }
     }
 
     #[cfg(target_os = "ios")]
     pub fn create_surface_from_uiview(&self, uiview: *mut c_void) -> Surface {
-        unsafe { self.create_from_uiview(uiview) }.into_surface()
+        unsafe { self.create_from_uiview(uiview) }
     }
 }
 
@@ -456,7 +457,7 @@ impl hal::Backend for Backend {
     type Instance = Instance;
     type PhysicalDevice = device::PhysicalDevice;
     type Device = device::Device;
-    type Surface = window::Surface;
+    type Surface = Surface;
 
     type QueueFamily = QueueFamily;
     type CommandQueue = command::CommandQueue;
@@ -517,6 +518,11 @@ const MUTABLE_COMPARISON_SAMPLER_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily4_v1,
     MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
+    MTLFeatureSet::macOS_GPUFamily2_v1,
+];
+
+const SAMPLER_CLAMP_TO_BORDER_SUPPORT: &[MTLFeatureSet] = &[
+    MTLFeatureSet::macOS_GPUFamily1_v2,
     MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
@@ -680,6 +686,7 @@ struct PrivateCapabilities {
     argument_buffers: bool,
     shared_textures: bool,
     mutable_comparison_samplers: bool,
+    sampler_clamp_to_border: bool,
     base_instance: bool,
     base_vertex_instance_drawing: bool,
     dual_source_blending: bool,
@@ -825,6 +832,7 @@ impl PrivateCapabilities {
                 &device,
                 MUTABLE_COMPARISON_SAMPLER_SUPPORT,
             ),
+            sampler_clamp_to_border: Self::supports_any(&device, SAMPLER_CLAMP_TO_BORDER_SUPPORT),
             base_instance: Self::supports_any(&device, BASE_INSTANCE_SUPPORT),
             base_vertex_instance_drawing: Self::supports_any(&device, BASE_VERTEX_INSTANCE_SUPPORT),
             dual_source_blending: Self::supports_any(&device, DUAL_SOURCE_BLEND_SUPPORT),

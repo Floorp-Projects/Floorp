@@ -43,35 +43,50 @@ fn gen_query_error(err: SpirvErrorCode) -> device::ShaderError {
 /// This is a temporary workaround for https://github.com/KhronosGroup/SPIRV-Cross/issues/1512.
 ///
 /// This workaround also exists under the same name in the DX12 backend.
-pub(crate) fn introspect_spirv_vertex_semantic_remapping(raw_data: &[u32]) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, device::ShaderError> {
+pub(crate) fn introspect_spirv_vertex_semantic_remapping(
+    raw_data: &[u32],
+) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, device::ShaderError> {
     // This is inefficient as we already parse it once before. This is a temporary workaround only called
     // on vertex shaders. If this becomes permanent or shows up in profiles, deduplicate these as first course of action.
     let ast = parse_spirv(raw_data)?;
 
     let mut map = auxil::FastHashMap::default();
 
-    let inputs = ast.get_shader_resources().map_err(gen_query_error)?.stage_inputs;
+    let inputs = ast
+        .get_shader_resources()
+        .map_err(gen_query_error)?
+        .stage_inputs;
     for input in inputs {
-        let idx = ast.get_decoration(input.id, spirv::Decoration::Location).map_err(gen_query_error)?;
+        let idx = ast
+            .get_decoration(input.id, spirv::Decoration::Location)
+            .map_err(gen_query_error)?;
 
         let ty = ast.get_type(input.type_id).map_err(gen_query_error)?;
 
         match ty {
             spirv::Type::Boolean { columns, .. }
-                | spirv::Type::Int { columns, .. }
-                | spirv::Type::UInt { columns, .. }
-                | spirv::Type::Half { columns, .. }
-                | spirv::Type::Float { columns, .. }
-                | spirv::Type::Double { columns, .. } if columns > 1 => {
+            | spirv::Type::Int { columns, .. }
+            | spirv::Type::UInt { columns, .. }
+            | spirv::Type::Half { columns, .. }
+            | spirv::Type::Float { columns, .. }
+            | spirv::Type::Double { columns, .. }
+                if columns > 1 =>
+            {
                 for col in 0..columns {
                     if let Some(_) = map.insert(idx + col, Some((idx, col))) {
-                        return Err(device::ShaderError::CompilationFailed(format!("Shader has overlapping input attachments at location {}", idx)))
+                        return Err(device::ShaderError::CompilationFailed(format!(
+                            "Shader has overlapping input attachments at location {}",
+                            idx
+                        )));
                     }
                 }
             }
             _ => {
                 if let Some(_) = map.insert(idx, None) {
-                    return Err(device::ShaderError::CompilationFailed(format!("Shader has overlapping input attachments at location {}", idx)))
+                    return Err(device::ShaderError::CompilationFailed(format!(
+                        "Shader has overlapping input attachments at location {}",
+                        idx
+                    )));
                 }
             }
         }
@@ -92,12 +107,15 @@ pub(crate) fn compile_spirv_entrypoint(
 
     patch_spirv_resources(&mut ast, stage, layout)?;
     let shader_model = hlsl::ShaderModel::V5_0;
-    let shader_code = translate_spirv(&mut ast, shader_model, layout, stage, features, source.entry)?;
-    log::debug!(
-        "Generated {:?} shader:\n{}",
+    let shader_code = translate_spirv(
+        &mut ast,
+        shader_model,
+        layout,
         stage,
-        shader_code,
-    );
+        features,
+        source.entry,
+    )?;
+    log::debug!("Generated {:?} shader:\n{}", stage, shader_code,);
 
     let real_name = ast
         .get_cleansed_entry_point_name(source.entry, conv::map_stage(stage))
@@ -242,14 +260,10 @@ fn patch_spirv_resources(
 
         let read_only = match layout.sets[set].bindings[binding as usize].ty {
             pso::DescriptorType::Buffer {
-                ty: pso::BufferDescriptorType::Storage {
-                    read_only
-                },
+                ty: pso::BufferDescriptorType::Storage { read_only },
                 ..
-            } => {
-                read_only
-            }
-            _ => unreachable!()
+            } => read_only,
+            _ => unreachable!(),
         };
 
         let (_content, res_index) = if read_only {
@@ -272,12 +286,8 @@ fn patch_spirv_resources(
             d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT - 1 - res_index.u as u32
         };
 
-        ast.set_decoration(
-            storage_buffer.id,
-            spirv::Decoration::Binding,
-            index,
-        )
-        .map_err(gen_unexpected_error)?;
+        ast.set_decoration(storage_buffer.id, spirv::Decoration::Binding, index)
+            .map_err(gen_unexpected_error)?;
     }
 
     for image in &shader_resources.storage_images {
@@ -298,12 +308,8 @@ fn patch_spirv_resources(
             d3d11::D3D11_PS_CS_UAV_REGISTER_COUNT - 1 - res_index.u as u32
         };
 
-        ast.set_decoration(
-            image.id,
-            spirv::Decoration::Binding,
-            index,
-        )
-        .map_err(gen_unexpected_error)?;
+        ast.set_decoration(image.id, spirv::Decoration::Binding, index)
+            .map_err(gen_unexpected_error)?;
     }
 
     for sampler in &shader_resources.separate_samplers {
@@ -332,18 +338,23 @@ fn patch_spirv_resources(
             .map_err(gen_unexpected_error)?;
     }
 
-    assert!(shader_resources.push_constant_buffers.len() <= 1, "Only 1 push constant buffer is supported");
+    assert!(
+        shader_resources.push_constant_buffers.len() <= 1,
+        "Only 1 push constant buffer is supported"
+    );
     for push_constant_buffer in &shader_resources.push_constant_buffers {
         ast.set_decoration(
             push_constant_buffer.id,
             spirv::Decoration::DescriptorSet,
-            0 // value doesn't matter, just needs a value
-        ).map_err(gen_unexpected_error)?;
+            0, // value doesn't matter, just needs a value
+        )
+        .map_err(gen_unexpected_error)?;
         ast.set_decoration(
             push_constant_buffer.id,
             spirv::Decoration::Binding,
-            d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1
-        ).map_err(gen_unexpected_error)?;
+            d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT - 1,
+        )
+        .map_err(gen_unexpected_error)?;
     }
 
     Ok(())

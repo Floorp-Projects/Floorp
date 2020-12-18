@@ -16,17 +16,14 @@
 mod clear;
 mod structs;
 
-use std::any::Any;
-use std::borrow::Borrow;
-use std::fmt;
-use std::ops::Range;
+use std::{any::Any, borrow::Borrow, fmt, ops::Range};
 
-use crate::image::{Filter, Layout, SubresourceRange};
-use crate::memory::{Barrier, Dependencies};
-use crate::{buffer, pass, pso, query};
 use crate::{
-    Backend, DrawCount, IndexCount, InstanceCount, TaskCount, VertexCount, VertexOffset,
-    WorkGroupCount,
+    buffer,
+    image::{Filter, Layout, SubresourceRange},
+    memory::{Barrier, Dependencies},
+    pass, pso, query, Backend, DrawCount, IndexCount, IndexType, InstanceCount, TaskCount,
+    VertexCount, VertexOffset, WorkGroupCount,
 };
 
 pub use self::clear::*;
@@ -54,10 +51,12 @@ bitflags! {
 }
 
 /// An enum that indicates whether a command buffer is primary or secondary.
-#[allow(missing_docs)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Level {
+    /// Can be submitted to a queue for execution, but cannot be called from other
+    /// command buffers.
     Primary,
+    /// Cannot be submitted directly, but can be called from primary command buffers.
     Secondary,
 }
 
@@ -190,7 +189,12 @@ pub trait CommandBuffer<B: Backend>: fmt::Debug + Any + Send + Sync {
 
     /// Bind the index buffer view, making it the "current" one that draw commands
     /// will operate on.
-    unsafe fn bind_index_buffer(&mut self, view: buffer::IndexBufferView<B>);
+    unsafe fn bind_index_buffer(
+        &mut self,
+        buffer: &B::Buffer,
+        sub: buffer::SubRange,
+        ty: IndexType,
+    );
 
     /// Bind the vertex buffer set, making it the "current" one that draw commands
     /// will operate on.

@@ -12,7 +12,7 @@ use hal::{
 
 use smallvec::SmallVec;
 
-use std::{borrow::Borrow, mem, ptr};
+use std::{borrow::Borrow, mem};
 
 pub fn map_format(format: format::Format) -> vk::Format {
     vk::Format::from_raw(format as i32)
@@ -223,12 +223,11 @@ pub fn map_wrap(wrap: image::WrapMode) -> vk::SamplerAddressMode {
     }
 }
 
-pub fn map_border_color(col: image::PackedColor) -> Option<vk::BorderColor> {
-    match col.0 {
-        0x00000000 => Some(vk::BorderColor::FLOAT_TRANSPARENT_BLACK),
-        0xFF000000 => Some(vk::BorderColor::FLOAT_OPAQUE_BLACK),
-        0xFFFFFFFF => Some(vk::BorderColor::FLOAT_OPAQUE_WHITE),
-        _ => None,
+pub fn map_border_color(border_color: image::BorderColor) -> vk::BorderColor {
+    match border_color {
+        image::BorderColor::TransparentBlack => vk::BorderColor::FLOAT_TRANSPARENT_BLACK,
+        image::BorderColor::OpaqueBlack => vk::BorderColor::FLOAT_OPAQUE_BLACK,
+        image::BorderColor::OpaqueWhite => vk::BorderColor::FLOAT_OPAQUE_WHITE,
     }
 }
 
@@ -508,13 +507,11 @@ where
         .into_iter()
         .map(|range| {
             let &(ref memory, ref segment) = range.borrow();
-            vk::MappedMemoryRange {
-                s_type: vk::StructureType::MAPPED_MEMORY_RANGE,
-                p_next: ptr::null(),
-                memory: memory.raw,
-                offset: segment.offset,
-                size: segment.size.unwrap_or(vk::WHOLE_SIZE),
-            }
+            vk::MappedMemoryRange::builder()
+                .memory(memory.raw)
+                .offset(segment.offset)
+                .size(segment.size.unwrap_or(vk::WHOLE_SIZE))
+                .build()
         })
         .collect()
 }
@@ -636,4 +633,38 @@ pub fn map_descriptor_pool_create_flags(
     flags: pso::DescriptorPoolCreateFlags,
 ) -> vk::DescriptorPoolCreateFlags {
     vk::DescriptorPoolCreateFlags::from_raw(flags.bits())
+}
+
+pub fn map_memory_properties(flags: vk::MemoryPropertyFlags) -> hal::memory::Properties {
+    use crate::memory::Properties;
+    let mut properties = Properties::empty();
+
+    if flags.contains(vk::MemoryPropertyFlags::DEVICE_LOCAL) {
+        properties |= Properties::DEVICE_LOCAL;
+    }
+    if flags.contains(vk::MemoryPropertyFlags::HOST_VISIBLE) {
+        properties |= Properties::CPU_VISIBLE;
+    }
+    if flags.contains(vk::MemoryPropertyFlags::HOST_COHERENT) {
+        properties |= Properties::COHERENT;
+    }
+    if flags.contains(vk::MemoryPropertyFlags::HOST_CACHED) {
+        properties |= Properties::CPU_CACHED;
+    }
+    if flags.contains(vk::MemoryPropertyFlags::LAZILY_ALLOCATED) {
+        properties |= Properties::LAZILY_ALLOCATED;
+    }
+
+    properties
+}
+
+pub fn map_memory_heap_flags(flags: vk::MemoryHeapFlags) -> hal::memory::HeapFlags {
+    use hal::memory::HeapFlags;
+    let mut hal_flags = HeapFlags::empty();
+
+    if flags.contains(vk::MemoryHeapFlags::DEVICE_LOCAL) {
+        hal_flags |= HeapFlags::DEVICE_LOCAL;
+    }
+
+    hal_flags
 }

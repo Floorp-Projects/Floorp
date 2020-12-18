@@ -33,7 +33,7 @@ use hal::{
 use std::borrow::{Borrow, Cow};
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
-use std::{fmt, mem, ptr, slice};
+use std::{fmt, mem, slice};
 
 #[cfg(feature = "use-rtld-next")]
 use ash::{EntryCustom, LoadingError};
@@ -351,15 +351,12 @@ impl hal::Instance<Backend> for Instance {
         })?;
 
         let app_name = CString::new(name).unwrap();
-        let app_info = vk::ApplicationInfo {
-            s_type: vk::StructureType::APPLICATION_INFO,
-            p_next: ptr::null(),
-            p_application_name: app_name.as_ptr(),
-            application_version: version,
-            p_engine_name: b"gfx-rs\0".as_ptr() as *const _,
-            engine_version: 1,
-            api_version: vk::make_version(1, 0, 0),
-        };
+        let app_info = vk::ApplicationInfo::builder()
+            .application_name(app_name.as_c_str())
+            .application_version(version)
+            .engine_name(CStr::from_bytes_with_nul(b"gfx-rs\0").unwrap())
+            .engine_version(1)
+            .api_version(vk::make_version(1, 0, 0));
 
         let instance_extensions = entry
             .enumerate_instance_extension_properties()
@@ -417,16 +414,11 @@ impl hal::Instance<Backend> for Instance {
 
             let str_pointers = cstrings.iter().map(|s| s.as_ptr()).collect::<Vec<_>>();
 
-            let create_info = vk::InstanceCreateInfo {
-                s_type: vk::StructureType::INSTANCE_CREATE_INFO,
-                p_next: ptr::null(),
-                flags: vk::InstanceCreateFlags::empty(),
-                p_application_info: &app_info,
-                enabled_layer_count: layers.len() as _,
-                pp_enabled_layer_names: str_pointers.as_ptr(),
-                enabled_extension_count: extensions.len() as _,
-                pp_enabled_extension_names: str_pointers[layers.len()..].as_ptr(),
-            };
+            let create_info = vk::InstanceCreateInfo::builder()
+                .flags(vk::InstanceCreateFlags::empty())
+                .application_info(&app_info)
+                .enabled_layer_names(&str_pointers[..layers.len()])
+                .enabled_extension_names(&str_pointers[layers.len()..]);
 
             unsafe { entry.create_instance(&create_info, None) }.map_err(|e| {
                 warn!("Unable to create Vulkan instance: {:?}", e);
@@ -452,28 +444,20 @@ impl hal::Instance<Backend> for Instance {
                 CStr::from_ptr(props.extension_name.as_ptr()) == DebugUtils::name()
             }) {
                 let ext = DebugUtils::new(entry, &instance);
-                let info = vk::DebugUtilsMessengerCreateInfoEXT {
-                    s_type: vk::StructureType::DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-                    p_next: ptr::null(),
-                    flags: vk::DebugUtilsMessengerCreateFlagsEXT::empty(),
-                    message_severity: vk::DebugUtilsMessageSeverityFlagsEXT::all(),
-                    message_type: vk::DebugUtilsMessageTypeFlagsEXT::all(),
-                    pfn_user_callback: Some(debug_utils_messenger_callback),
-                    p_user_data: ptr::null_mut(),
-                };
+                let info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
+                    .flags(vk::DebugUtilsMessengerCreateFlagsEXT::empty())
+                    .message_severity(vk::DebugUtilsMessageSeverityFlagsEXT::all())
+                    .message_type(vk::DebugUtilsMessageTypeFlagsEXT::all())
+                    .pfn_user_callback(Some(debug_utils_messenger_callback));
                 let handle = unsafe { ext.create_debug_utils_messenger(&info, None) }.unwrap();
                 Some(DebugMessenger::Utils(ext, handle))
             } else if instance_extensions.iter().any(|props| unsafe {
                 CStr::from_ptr(props.extension_name.as_ptr()) == DebugReport::name()
             }) {
                 let ext = DebugReport::new(entry, &instance);
-                let info = vk::DebugReportCallbackCreateInfoEXT {
-                    s_type: vk::StructureType::DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
-                    p_next: ptr::null(),
-                    flags: vk::DebugReportFlagsEXT::all(),
-                    pfn_callback: Some(debug_report_callback),
-                    p_user_data: ptr::null_mut(),
-                };
+                let info = vk::DebugReportCallbackCreateInfoEXT::builder()
+                    .flags(vk::DebugReportFlagsEXT::all())
+                    .pfn_callback(Some(debug_report_callback));
                 let handle = unsafe { ext.create_debug_report_callback(&info, None) }.unwrap();
                 Some(DebugMessenger::Report(ext, handle))
             } else {
@@ -586,7 +570,6 @@ impl hal::Instance<Backend> for Instance {
                 Ok(self.create_surface_from_wayland(handle.display, handle.surface))
             }
             #[cfg(all(
-                feature = "x11",
                 unix,
                 not(target_os = "android"),
                 not(target_os = "macos"),
@@ -600,7 +583,6 @@ impl hal::Instance<Backend> for Instance {
                 Ok(self.create_surface_from_xlib(handle.display as *mut _, handle.window))
             }
             #[cfg(all(
-                feature = "xcb",
                 unix,
                 not(target_os = "android"),
                 not(target_os = "macos"),
@@ -621,7 +603,7 @@ impl hal::Instance<Backend> for Instance {
             RawWindowHandle::Windows(handle) => {
                 use winapi::um::libloaderapi::GetModuleHandleW;
 
-                let hinstance = GetModuleHandleW(ptr::null());
+                let hinstance = GetModuleHandleW(std::ptr::null());
                 Ok(self.create_surface_from_hwnd(hinstance as *mut _, handle.hwnd))
             }
             #[cfg(target_os = "macos")]
@@ -693,13 +675,12 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
     ) -> Result<adapter::Gpu<Backend>, DeviceCreationError> {
         let family_infos = families
             .iter()
-            .map(|&(family, priorities)| vk::DeviceQueueCreateInfo {
-                s_type: vk::StructureType::DEVICE_QUEUE_CREATE_INFO,
-                p_next: ptr::null(),
-                flags: vk::DeviceQueueCreateFlags::empty(),
-                queue_family_index: family.index,
-                queue_count: priorities.len() as _,
-                p_queue_priorities: priorities.as_ptr(),
+            .map(|&(family, priorities)| {
+                vk::DeviceQueueCreateInfo::builder()
+                    .flags(vk::DeviceQueueCreateFlags::empty())
+                    .queue_family_index(family.index)
+                    .queue_priorities(priorities)
+                    .build()
             })
             .collect::<Vec<_>>();
 
@@ -939,48 +920,17 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         };
         let memory_heaps = mem_properties.memory_heaps[..mem_properties.memory_heap_count as usize]
             .iter()
-            .map(|mem| mem.size)
+            .map(|mem| adapter::MemoryHeap {
+                size: mem.size,
+                flags: conv::map_memory_heap_flags(mem.flags),
+            })
             .collect();
         let memory_types = mem_properties.memory_types[..mem_properties.memory_type_count as usize]
             .iter()
             .filter_map(|mem| {
-                use crate::memory::Properties;
-                let mut properties = Properties::empty();
-
-                if mem
-                    .property_flags
-                    .contains(vk::MemoryPropertyFlags::DEVICE_LOCAL)
-                {
-                    properties |= Properties::DEVICE_LOCAL;
-                }
-                if mem
-                    .property_flags
-                    .contains(vk::MemoryPropertyFlags::HOST_VISIBLE)
-                {
-                    properties |= Properties::CPU_VISIBLE;
-                }
-                if mem
-                    .property_flags
-                    .contains(vk::MemoryPropertyFlags::HOST_COHERENT)
-                {
-                    properties |= Properties::COHERENT;
-                }
-                if mem
-                    .property_flags
-                    .contains(vk::MemoryPropertyFlags::HOST_CACHED)
-                {
-                    properties |= Properties::CPU_CACHED;
-                }
-                if mem
-                    .property_flags
-                    .contains(vk::MemoryPropertyFlags::LAZILY_ALLOCATED)
-                {
-                    properties |= Properties::LAZILY_ALLOCATED;
-                }
-
                 if self.known_memory_flags.contains(mem.property_flags) {
                     Some(adapter::MemoryType {
-                        properties,
+                        properties: conv::map_memory_properties(mem.property_flags),
                         heap_index: mem.heap_index as usize,
                     })
                 } else {
@@ -1043,6 +993,8 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             | Features::TRIANGLE_FAN
             | Features::SEPARATE_STENCIL_REF_VALUES
             | Features::SAMPLER_MIP_LOD_BIAS
+            | Features::SAMPLER_BORDER_COLOR
+            | Features::MUTABLE_COMPARISON_SAMPLER
             | Features::TEXTURE_DESCRIPTOR_ARRAY;
 
         if self.supports_extension(*AMD_NEGATIVE_VIEWPORT_HEIGHT)
@@ -1506,26 +1458,18 @@ impl queue::CommandQueue<Backend> for CommandQueue {
             .map(|semaphore| semaphore.borrow().0)
             .collect::<Vec<_>>();
 
-        let info = vk::SubmitInfo {
-            s_type: vk::StructureType::SUBMIT_INFO,
-            p_next: ptr::null(),
-            wait_semaphore_count: waits.len() as u32,
-            p_wait_semaphores: waits.as_ptr(),
-            // If count is zero, AMD driver crashes if nullptr is not set for stage masks
-            p_wait_dst_stage_mask: if stages.is_empty() {
-                ptr::null()
-            } else {
-                stages.as_ptr()
-            },
-            command_buffer_count: buffers.len() as u32,
-            p_command_buffers: buffers.as_ptr(),
-            signal_semaphore_count: signals.len() as u32,
-            p_signal_semaphores: signals.as_ptr(),
-        };
+        let mut info = vk::SubmitInfo::builder()
+            .wait_semaphores(&waits)
+            .command_buffers(&buffers)
+            .signal_semaphores(&signals);
+        // If count is zero, AMD driver crashes if nullptr is not set for stage masks
+        if !stages.is_empty() {
+            info = info.wait_dst_stage_mask(&stages);
+        }
 
         let fence_raw = fence.map(|fence| fence.0).unwrap_or(vk::Fence::null());
 
-        let result = self.device.raw.queue_submit(*self.raw, &[info], fence_raw);
+        let result = self.device.raw.queue_submit(*self.raw, &[*info], fence_raw);
         assert_eq!(Ok(()), result);
     }
 
@@ -1536,36 +1480,27 @@ impl queue::CommandQueue<Backend> for CommandQueue {
         wait_semaphore: Option<&native::Semaphore>,
     ) -> Result<Option<Suboptimal>, PresentError> {
         let ssc = surface.swapchain.as_ref().unwrap();
-        let p_wait_semaphores = if let Some(wait_semaphore) = wait_semaphore {
-            &wait_semaphore.0
+        let wait_semaphore = if let Some(wait_semaphore) = wait_semaphore {
+            wait_semaphore.0
         } else {
-            let submit_info = vk::SubmitInfo {
-                s_type: vk::StructureType::SUBMIT_INFO,
-                p_next: ptr::null(),
-                wait_semaphore_count: 0,
-                p_wait_semaphores: ptr::null(),
-                p_wait_dst_stage_mask: &vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT,
-                command_buffer_count: 0,
-                p_command_buffers: ptr::null(),
-                signal_semaphore_count: 1,
-                p_signal_semaphores: &ssc.semaphore.0,
-            };
+            let signals = &[ssc.semaphore.0];
+            let submit_info = vk::SubmitInfo::builder()
+                .wait_dst_stage_mask(&[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT])
+                .signal_semaphores(signals);
             self.device
                 .raw
-                .queue_submit(*self.raw, &[submit_info], vk::Fence::null())
+                .queue_submit(*self.raw, &[*submit_info], vk::Fence::null())
                 .unwrap();
-            &ssc.semaphore.0
+            ssc.semaphore.0
         };
-        let present_info = vk::PresentInfoKHR {
-            s_type: vk::StructureType::PRESENT_INFO_KHR,
-            p_next: ptr::null(),
-            wait_semaphore_count: 1,
-            p_wait_semaphores,
-            swapchain_count: 1,
-            p_swapchains: &ssc.swapchain.raw,
-            p_image_indices: &image.index,
-            p_results: ptr::null_mut(),
-        };
+
+        let wait_semaphores = &[wait_semaphore];
+        let swapchains = &[ssc.swapchain.raw];
+        let image_indices = &[image.index];
+        let present_info = vk::PresentInfoKHR::builder()
+            .wait_semaphores(wait_semaphores)
+            .swapchains(swapchains)
+            .image_indices(image_indices);
 
         match self.swapchain_fn.queue_present(*self.raw, &present_info) {
             Ok(true) => Ok(None),

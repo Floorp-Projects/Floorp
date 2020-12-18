@@ -40,7 +40,8 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvTextureViewDestroy(RawId aSelfId);
   ipc::IPCResult RecvSamplerDestroy(RawId aSelfId);
   ipc::IPCResult RecvCommandEncoderFinish(
-      RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc);
+      RawId aSelfId, RawId aDeviceId,
+      const dom::GPUCommandBufferDescriptor& aDesc);
   ipc::IPCResult RecvCommandEncoderDestroy(RawId aSelfId);
   ipc::IPCResult RecvCommandBufferDestroy(RawId aSelfId);
   ipc::IPCResult RecvQueueSubmit(RawId aSelfId,
@@ -67,12 +68,14 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvSwapChainDestroy(wr::ExternalImageId aExternalId);
 
   ipc::IPCResult RecvDeviceAction(RawId aSelf, const ipc::ByteBuf& aByteBuf);
-  ipc::IPCResult RecvTextureAction(RawId aSelf, const ipc::ByteBuf& aByteBuf);
-  ipc::IPCResult RecvCommandEncoderAction(RawId aSelf,
+  ipc::IPCResult RecvTextureAction(RawId aSelf, RawId aDevice,
+                                   const ipc::ByteBuf& aByteBuf);
+  ipc::IPCResult RecvCommandEncoderAction(RawId aSelf, RawId aDevice,
                                           const ipc::ByteBuf& aByteBuf);
-  ipc::IPCResult RecvBumpImplicitBindGroupLayout(RawId pipelineId,
-                                                 bool isCompute,
-                                                 uint32_t index);
+  ipc::IPCResult RecvBumpImplicitBindGroupLayout(RawId aPipelineId,
+                                                 bool aIsCompute,
+                                                 uint32_t aIndex,
+                                                 RawId aAssignId);
 
   ipc::IPCResult RecvShutdown();
 

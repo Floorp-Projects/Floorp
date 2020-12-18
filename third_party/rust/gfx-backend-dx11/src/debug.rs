@@ -27,7 +27,9 @@ impl DebugScope {
             }
         }
 
-        let annotation = context.cast::<d3d11_1::ID3DUserDefinedAnnotation>().unwrap();
+        let annotation = context
+            .cast::<d3d11_1::ID3DUserDefinedAnnotation>()
+            .unwrap();
         let msg: &OsStr = name.as_ref();
         let msg: Vec<u16> = msg.to_wide_null();
 
@@ -55,7 +57,9 @@ pub fn debug_marker(context: &ComPtr<d3d11::ID3D11DeviceContext>, name: &str) {
         }
     }
 
-    let annotation = context.cast::<d3d11_1::ID3DUserDefinedAnnotation>().unwrap();
+    let annotation = context
+        .cast::<d3d11_1::ID3DUserDefinedAnnotation>()
+        .unwrap();
     let msg: &OsStr = name.as_ref();
     let msg: Vec<u16> = msg.to_wide_null();
 
@@ -79,7 +83,11 @@ pub fn verify_debug_ascii(name: &str) -> bool {
 /// SetPrivateData will copy the data internally so the data doesn't need to live.
 pub fn set_debug_name(resource: &d3d11::ID3D11DeviceChild, name: &str) {
     unsafe {
-        resource.SetPrivateData((&d3dcommon::WKPDID_D3DDebugObjectName) as *const _, name.len() as _, name.as_ptr() as *const _);
+        resource.SetPrivateData(
+            (&d3dcommon::WKPDID_D3DDebugObjectName) as *const _,
+            name.len() as _,
+            name.as_ptr() as *const _,
+        );
     }
 }
 
@@ -89,10 +97,18 @@ pub fn set_debug_name(resource: &d3d11::ID3D11DeviceChild, name: &str) {
 ///
 /// The given string will be mutated to add the suffix, then restored to it's original state.
 /// This saves an allocation. SetPrivateData will copy the data internally so the data doesn't need to live.
-pub fn set_debug_name_with_suffix(resource: &d3d11::ID3D11DeviceChild, name: &mut String, suffix: &str) {
+pub fn set_debug_name_with_suffix(
+    resource: &d3d11::ID3D11DeviceChild,
+    name: &mut String,
+    suffix: &str,
+) {
     name.push_str(suffix);
     unsafe {
-        resource.SetPrivateData((&d3dcommon::WKPDID_D3DDebugObjectName) as *const _, name.len() as _, name.as_ptr() as *const _);
+        resource.SetPrivateData(
+            (&d3dcommon::WKPDID_D3DDebugObjectName) as *const _,
+            name.len() as _,
+            name.as_ptr() as *const _,
+        );
     }
     name.drain((name.len() - suffix.len())..);
 }
