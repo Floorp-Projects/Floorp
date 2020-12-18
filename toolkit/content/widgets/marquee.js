@@ -187,13 +187,15 @@ this.MarqueeBaseImplWidget = class {
 
       switch (this._currentDirection) {
         case "up":
-          {
-            let height = this.window.getComputedStyle(this.element).height;
-            this.outerDiv.style.height = height;
-            if (this.originalHeight > this.outerDiv.offsetHeight) {
-              corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
-            }
-            this.innerDiv.style.padding = height + " 0";
+        case "down": {
+          let height = this.window.getComputedStyle(this.element).height;
+          this.outerDiv.style.height = height;
+          if (this.originalHeight > this.outerDiv.offsetHeight) {
+            corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
+          }
+          this.innerDiv.style.padding = height + " 0";
+          let isUp = this._currentDirection == "up";
+          if (isUp) {
             this.dirsign = 1;
             this.startAt =
               this.element.behavior == "alternate"
@@ -204,17 +206,7 @@ this.MarqueeBaseImplWidget = class {
               this.element.behavior == "slide"
                 ? parseInt(height) + corrvalue
                 : this.originalHeight + parseInt(height);
-          }
-          break;
-
-        case "down":
-          {
-            let height = this.window.getComputedStyle(this.element).height;
-            this.outerDiv.style.height = height;
-            if (this.originalHeight > this.outerDiv.offsetHeight) {
-              corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
-            }
-            this.innerDiv.style.padding = height + " 0";
+          } else {
             this.dirsign = -1;
             this.startAt =
               this.element.behavior == "alternate"
@@ -227,40 +219,50 @@ this.MarqueeBaseImplWidget = class {
                 : 0;
           }
           break;
-
-        case "right":
-          if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth) {
-            corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
-          }
-          this.dirsign = -1;
-          this.stopAt =
-            this.element.behavior == "alternate" ||
-            this.element.behavior == "slide"
-              ? this.innerDiv.offsetWidth - corrvalue
-              : 0;
-          this.startAt =
-            this.outerDiv.offsetWidth +
-            (this.element.behavior == "alternate"
-              ? corrvalue
-              : this.innerDiv.offsetWidth + this.stopAt);
-          break;
-
+        }
         case "left":
-        default:
-          if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth) {
-            corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
+        case "right":
+        default: {
+          let isRight = this._currentDirection == "right";
+          // NOTE: It's important to use getComputedStyle() to not account for the padding.
+          let innerWidth = parseInt(
+            this.window.getComputedStyle(this.innerDiv).width
+          );
+          if (innerWidth > this.outerDiv.offsetWidth) {
+            corrvalue = innerWidth - this.outerDiv.offsetWidth;
           }
-          this.dirsign = 1;
-          this.startAt =
-            this.element.behavior == "alternate"
-              ? this.innerDiv.offsetWidth - corrvalue
-              : 0;
-          this.stopAt =
-            this.outerDiv.offsetWidth +
-            (this.element.behavior == "alternate" ||
-            this.element.behavior == "slide"
-              ? corrvalue
-              : this.innerDiv.offsetWidth + this.startAt);
+          let rtl =
+            this.window.getComputedStyle(this.element).direction == "rtl";
+          if (isRight != rtl) {
+            this.dirsign = -1;
+            this.stopAt =
+              this.element.behavior == "alternate" ||
+              this.element.behavior == "slide"
+                ? innerWidth - corrvalue
+                : 0;
+            this.startAt =
+              this.outerDiv.offsetWidth +
+              (this.element.behavior == "alternate"
+                ? corrvalue
+                : innerWidth + this.stopAt);
+          } else {
+            this.dirsign = 1;
+            this.startAt =
+              this.element.behavior == "alternate" ? innerWidth - corrvalue : 0;
+            this.stopAt =
+              this.outerDiv.offsetWidth +
+              (this.element.behavior == "alternate" ||
+              this.element.behavior == "slide"
+                ? corrvalue
+                : innerWidth + this.startAt);
+          }
+          if (rtl) {
+            this.startAt = -this.startAt;
+            this.stopAt = -this.stopAt;
+            this.dirsign = -this.dirsign;
+          }
+          break;
+        }
       }
 
       if (aResetPosition) {
@@ -356,20 +358,7 @@ this.MarqueeBaseImplWidget = class {
   init() {
     this.element.stop();
 
-    if (this._currentDirection != "up" && this._currentDirection != "down") {
-      var width = this.window.getComputedStyle(this.element).width;
-      this.innerDiv.parentNode.style.margin = "0 " + width;
-
-      // XXX Adding the margin sometimes causes the marquee to widen,
-      // see testcase from bug bug 364434:
-      // https://bugzilla.mozilla.org/attachment.cgi?id=249233
-      // Just add a fixed width with current marquee's width for now
-      if (width != this.window.getComputedStyle(this.element).width) {
-        width = this.window.getComputedStyle(this.element).width;
-        this.outerDiv.style.width = width;
-        this.innerDiv.parentNode.style.margin = "0 " + width;
-      }
-    } else {
+    if (this._currentDirection == "up" || this._currentDirection == "down") {
       // store the original height before we add padding
       this.innerDiv.style.padding = 0;
       this.originalHeight = this.innerDiv.offsetHeight;
@@ -402,29 +391,27 @@ this.MarqueeBaseImplWidget = class {
 };
 
 this.MarqueeHorizontalImplWidget = class extends MarqueeBaseImplWidget {
-  // White-space isn't allowed because a marquee could be
-  // inside 'white-space: pre'
   generateContent() {
-    this.shadowRoot.innerHTML = `<div class="horizontalContainer"
-        ><link rel="stylesheet" type="text/css" href="chrome://global/content/elements/marquee.css"
-          /><div class="horizontalOuterDiv"
-            ><div id="innerDiv" class="horizontalInnerDiv"
-              ><div
-                ><slot
-              /></div
-            ></div
-          ></div
+    // White-space isn't allowed because a marquee could be
+    // inside 'white-space: pre'
+    this.shadowRoot.innerHTML = `<div class="outerDiv horizontal"
+        ><link rel="stylesheet" href="chrome://global/content/elements/marquee.css"
+          /><div class="innerDiv" id="innerDiv"
+            ><slot
+          /></div
       ></div>`;
   }
 };
 
 this.MarqueeVerticalImplWidget = class extends MarqueeBaseImplWidget {
-  // White-space isn't allowed because a marquee could be
-  // inside 'white-space: pre'
   generateContent() {
-    this.shadowRoot.innerHTML = `<div class="verticalContainer"
-        ><link rel="stylesheet" type="text/css" href="chrome://global/content/elements/marquee.css"
-          /><div id="innerDiv" class="verticalInnerDiv"><slot /></div
+    // White-space isn't allowed because a marquee could be
+    // inside 'white-space: pre'
+    this.shadowRoot.innerHTML = `<div class="outerDiv vertical"
+        ><link rel="stylesheet" href="chrome://global/content/elements/marquee.css"
+          /><div class="innerDiv" id="innerDiv"
+            ><slot
+          /></div
       ></div>`;
   }
 };
