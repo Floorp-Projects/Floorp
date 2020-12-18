@@ -43,6 +43,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
+#include "mozilla/dom/PlacesVisitTitle.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla::dom;
@@ -449,7 +450,7 @@ class NotifyManyVisitsObservers : public Runnable {
  public:
   explicit NotifyManyVisitsObservers(const VisitData& aPlace)
       : Runnable("places::NotifyManyVisitsObservers"),
-        mPlace(aPlace),
+        mPlaces({aPlace}),
         mHistory(History::GetService()) {}
 
   explicit NotifyManyVisitsObservers(nsTArray<VisitData>&& aPlaces)
@@ -480,21 +481,32 @@ class NotifyManyVisitsObservers : public Runnable {
     return NS_OK;
   }
 
-  void AddPlaceForNotify(const VisitData& aPlace, nsIURI* aURI,
+  void AddPlaceForNotify(const VisitData& aPlace,
                          Sequence<OwningNonNull<PlacesEvent>>& aEvents) {
-    if (aPlace.transitionType != nsINavHistoryService::TRANSITION_EMBED) {
-      RefPtr<PlacesVisit> vd = new PlacesVisit();
-      vd->mVisitId = aPlace.visitId;
-      vd->mUrl.Assign(NS_ConvertUTF8toUTF16(aPlace.spec));
-      vd->mVisitTime = aPlace.visitTime / 1000;
-      vd->mReferringVisitId = aPlace.referrerVisitId;
-      vd->mTransitionType = aPlace.transitionType;
-      vd->mPageGuid.Assign(aPlace.guid);
-      vd->mHidden = aPlace.hidden;
-      vd->mVisitCount = aPlace.visitCount + 1;  // Add current visit
-      vd->mTypedCount = static_cast<uint32_t>(aPlace.typed);
-      vd->mLastKnownTitle.Assign(aPlace.title);
-      bool success = !!aEvents.AppendElement(vd.forget(), fallible);
+    if (aPlace.transitionType == nsINavHistoryService::TRANSITION_EMBED) {
+      return;
+    }
+
+    RefPtr<PlacesVisit> visitEvent = new PlacesVisit();
+    visitEvent->mVisitId = aPlace.visitId;
+    visitEvent->mUrl.Assign(NS_ConvertUTF8toUTF16(aPlace.spec));
+    visitEvent->mVisitTime = aPlace.visitTime / 1000;
+    visitEvent->mReferringVisitId = aPlace.referrerVisitId;
+    visitEvent->mTransitionType = aPlace.transitionType;
+    visitEvent->mPageGuid.Assign(aPlace.guid);
+    visitEvent->mHidden = aPlace.hidden;
+    visitEvent->mVisitCount = aPlace.visitCount + 1;  // Add current visit
+    visitEvent->mTypedCount = static_cast<uint32_t>(aPlace.typed);
+    visitEvent->mLastKnownTitle.Assign(aPlace.title);
+    bool success = !!aEvents.AppendElement(visitEvent.forget(), fallible);
+    MOZ_RELEASE_ASSERT(success);
+
+    if (aPlace.titleChanged) {
+      RefPtr<PlacesVisitTitle> titleEvent = new PlacesVisitTitle();
+      titleEvent->mUrl.Assign(NS_ConvertUTF8toUTF16(aPlace.spec));
+      titleEvent->mPageGuid.Assign(aPlace.guid);
+      titleEvent->mTitle.Assign(aPlace.title);
+      bool success = !!aEvents.AppendElement(titleEvent.forget(), fallible);
       MOZ_RELEASE_ASSERT(success);
     }
   }
@@ -523,49 +535,28 @@ class NotifyManyVisitsObservers : public Runnable {
         mozilla::services::GetObserverService();
 
     Sequence<OwningNonNull<PlacesEvent>> events;
-    nsCOMArray<nsIURI> uris;
-    if (mPlaces.Length() > 0) {
-      for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
-        nsCOMPtr<nsIURI> uri;
-        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec));
-        if (!uri) {
-          return NS_ERROR_UNEXPECTED;
-        }
-        AddPlaceForNotify(mPlaces[i], uri, events);
-        uris.AppendElement(uri.forget());
-      }
-    } else {
+    PRTime now = PR_Now();
+    for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
       nsCOMPtr<nsIURI> uri;
-      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlace.spec));
+      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec));
       if (!uri) {
         return NS_ERROR_UNEXPECTED;
       }
-      AddPlaceForNotify(mPlace, uri, events);
-      uris.AppendElement(uri.forget());
+      AddPlaceForNotify(mPlaces[i], events);
+
+      nsresult rv = NotifyVisit(navHistory, obsService, now, uri, mPlaces[i]);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (events.Length() > 0) {
       PlacesObservers::NotifyListeners(events);
     }
 
-    PRTime now = PR_Now();
-    if (!mPlaces.IsEmpty()) {
-      for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
-        nsresult rv =
-            NotifyVisit(navHistory, obsService, now, uris[i], mPlaces[i]);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    } else {
-      nsresult rv = NotifyVisit(navHistory, obsService, now, uris[0], mPlace);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     return NS_OK;
   }
 
  private:
-  nsTArray<VisitData> mPlaces;
-  VisitData mPlace;
+  AutoTArray<VisitData, 1> mPlaces;
   RefPtr<History> mHistory;
 };
 
@@ -589,6 +580,9 @@ class NotifyTitleObservers : public Runnable {
         mTitle(aTitle),
         mGUID(aGUID) {}
 
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is marked
+  // MOZ_CAN_RUN_SCRIPT.  See bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
@@ -601,6 +595,17 @@ class NotifyTitleObservers : public Runnable {
     }
 
     navHistory->NotifyTitleChange(uri, mTitle, mGUID);
+
+    RefPtr<PlacesVisitTitle> titleEvent = new PlacesVisitTitle();
+    titleEvent->mUrl.Assign(NS_ConvertUTF8toUTF16(mSpec));
+    titleEvent->mPageGuid.Assign(mGUID);
+    titleEvent->mTitle.Assign(mTitle);
+
+    Sequence<OwningNonNull<PlacesEvent>> events;
+    bool success = !!events.AppendElement(titleEvent.forget(), fallible);
+    MOZ_RELEASE_ASSERT(success);
+
+    PlacesObservers::NotifyListeners(events);
 
     return NS_OK;
   }
