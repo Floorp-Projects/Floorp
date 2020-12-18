@@ -26,13 +26,11 @@ export const PrefsButton = ({ onClick, icon }) => (
 );
 
 export const PersonalizeButton = ({ onClick }) => (
-  <div className="button-wrapper">
-    <button
-      className="personalize-button"
-      onClick={onClick}
-      data-l10n-id="newtab-personalize-button-label"
-    />
-  </div>
+  <button
+    className="personalize-button"
+    onClick={onClick}
+    data-l10n-id="newtab-personalize-button-label"
+  />
 );
 
 // Returns a function will not be continuously triggered when called. The
