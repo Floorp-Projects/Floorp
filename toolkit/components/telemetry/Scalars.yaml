@@ -4737,6 +4737,28 @@ update:
     operating_systems:
       - windows
 
+  move_result:
+    bug_numbers:
+      - 353804
+    description: >
+      Firefox keeps downloading updates in a different place from updates that
+      are ready to install. Once the download completes, the resulting file has
+      to be moved from the downloading update directory to the ready update
+      directory. This probe counts the results that we get when attempting to
+      perform this file move. Valid values for the keys for this probe are
+      stored in the MOVE_RESULT_* values in UpdateTelemetry.jsm.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - bytesized@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # The following section contains search counters.
 browser.search:
   with_ads:
