@@ -136,6 +136,21 @@ CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
   return entryHappiness;
 }
 
+void CacheIRHealth::spewScriptFinalWarmUpCount(JSContext* cx,
+                                               const char* filename,
+                                               JSScript* script,
+                                               uint32_t warmUpCount) {
+  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, nullptr);
+  if (!spew) {
+    return;
+  }
+
+  spew->property("filename", filename);
+  spew->property("line", script->lineno());
+  spew->property("column", script->column());
+  spew->property("finalWarmUpCount", warmUpCount);
+}
+
 void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
                            SpewContext context) {
   AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, script);
