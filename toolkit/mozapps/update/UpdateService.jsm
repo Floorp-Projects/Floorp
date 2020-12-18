@@ -276,6 +276,10 @@ var gLogfileOutputStream;
 // at once. Computers with many users (ex: a school computer), should not end
 // up with dozens of BITS jobs.
 var gBITSInUseByAnotherUser = false;
+// Tracks whether an update is currently being staged. This is slightly more
+// accurate than checking for STATE_APPLYING because there are brief periods of
+// time at the beginning and end of staging when that will not be the state.
+let gStagingInProgress = false;
 
 XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
   return (
@@ -1014,13 +1018,23 @@ function getStatusTextFromCode(code, defaultCode) {
 }
 
 /**
- * Get the Active Updates directory
- * @return The active updates directory, as a nsIFile object
+ * Get the Ready Update directory. This is the directory that an update
+ * should reside in after download has completed but before it has been
+ * installed and cleaned up.
+ * @return The ready updates directory, as a nsIFile object
  */
-function getUpdatesDir() {
-  // Right now, we only support downloading one patch at a time, so we always
-  // use the same target directory.
+function getReadyUpdateDir() {
   return getUpdateDirCreate([DIR_UPDATES, "0"]);
+}
+
+/**
+ * Get the Downloading Update directory. This is the directory that an update
+ * should reside in during download. Once download is completed, it will be
+ * moved to the Ready Update directory.
+ * @return The downloading update directory, as a nsIFile object
+ */
+function getDownloadingUpdateDir() {
+  return getUpdateDirCreate([DIR_UPDATES, "downloading"]);
 }
 
 /**
@@ -1163,7 +1177,7 @@ function isServiceInstalled() {
 }
 
 /**
- * Removes the contents of the updates patch directory and rotates the update
+ * Removes the contents of the ready update directory and rotates the update
  * logs when present. If the update.log exists in the patch directory this will
  * move the last-update.log if it exists to backup-update.log in the parent
  * directory of the patch directory and then move the update.log in the patch
@@ -1172,13 +1186,13 @@ function isServiceInstalled() {
  * @param aRemovePatchFiles (optional, defaults to true)
  *        When true the update's patch directory contents are removed.
  */
-function cleanUpUpdatesDir(aRemovePatchFiles = true) {
+function cleanUpReadyUpdateDir(aRemovePatchFiles = true) {
   let updateDir;
   try {
-    updateDir = getUpdatesDir();
+    updateDir = getReadyUpdateDir();
   } catch (e) {
     LOG(
-      "cleanUpUpdatesDir - unable to get the updates patch directory. " +
+      "cleanUpReadyUpdateDir - unable to get the updates patch directory. " +
         "Exception: " +
         e
     );
@@ -1197,7 +1211,7 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
         logFile.moveTo(dir, FILE_BACKUP_UPDATE_LOG);
       } catch (e) {
         LOG(
-          "cleanUpUpdatesDir - failed to rename file " +
+          "cleanUpReadyUpdateDir - failed to rename file " +
             logFile.path +
             " to " +
             FILE_BACKUP_UPDATE_LOG
@@ -1209,7 +1223,7 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
       updateLogFile.moveTo(dir, FILE_LAST_UPDATE_LOG);
     } catch (e) {
       LOG(
-        "cleanUpUpdatesDir - failed to rename file " +
+        "cleanUpReadyUpdateDir - failed to rename file " +
           updateLogFile.path +
           " to " +
           FILE_LAST_UPDATE_LOG
@@ -1228,8 +1242,37 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
       try {
         file.remove(true);
       } catch (e) {
-        LOG("cleanUpUpdatesDir - failed to remove file " + file.path);
+        LOG("cleanUpReadyUpdateDir - failed to remove file " + file.path);
       }
+    }
+  }
+}
+
+/**
+ * Removes the contents of the update download directory.
+ *
+ */
+function cleanUpDownloadingUpdateDir() {
+  let updateDir;
+  try {
+    updateDir = getDownloadingUpdateDir();
+  } catch (e) {
+    LOG(
+      "cleanUpDownloadUpdatesDir - unable to get the updates patch " +
+        "directory. Exception: " +
+        e
+    );
+    return;
+  }
+
+  let dirEntries = updateDir.directoryEntries;
+  while (dirEntries.hasMoreElements()) {
+    let file = dirEntries.nextFile;
+    // Now, recursively remove this file.
+    try {
+      file.remove(true);
+    } catch (e) {
+      LOG("cleanUpDownloadUpdatesDir - failed to remove file " + file.path);
     }
   }
 }
@@ -1237,6 +1280,9 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
 /**
  * Clean up the updates list and the directory that contains the update that
  * is ready to be installed.
+ *
+ * Note - This function causes a state transition to either STATE_DOWNLOADING
+ *        or STATE_NONE, depending on whether an update download is in progress.
  */
 function cleanupReadyUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
@@ -1249,13 +1295,33 @@ function cleanupReadyUpdate() {
   }
   um.saveUpdates();
 
-  // Now trash the updates directory, since we're done with it
-  cleanUpUpdatesDir();
+  let readyUpdateDir = getReadyUpdateDir();
+  let shouldSetDownloadingStatus =
+    um.downloadingUpdate || readStatusFile(readyUpdateDir) == STATE_DOWNLOADING;
+
+  // Now trash the ready update directory, since we're done with it
+  cleanUpReadyUpdateDir();
+
+  // We need to handle two similar cases here.
+  // The first is where we clean up the ready updates directory while we are in
+  // the downloading state. In this case, we remove the update.status file that
+  // says we are downloading, even though we should remain in that state.
+  // The second case is when we clean up a ready update, but there is also a
+  // downloading update (in which case the update status file's state will
+  // reflect the state of the ready update, not the downloading one). In that
+  // case, instead of reverting to STATE_NONE (which is what we do by removing
+  // the status file), we should set our state to downloading.
+  if (shouldSetDownloadingStatus) {
+    writeStatusFile(readyUpdateDir, STATE_DOWNLOADING);
+  }
 }
 
 /**
  * Clean up updates list and the directory that the currently downloading update
  * is downloaded to.
+ *
+ * Note - This function may cause a state transition. If the current state is
+ *        STATE_DOWNLOADING, this will cause it to change to STATE_NONE.
  */
 function cleanupDownloadingUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
@@ -1268,8 +1334,52 @@ function cleanupDownloadingUpdate() {
   }
   um.saveUpdates();
 
-  // Now trash the updates directory, since we're done with it
-  cleanUpUpdatesDir();
+  // Now trash the update download directory, since we're done with it
+  cleanUpDownloadingUpdateDir();
+
+  // If the update status file says we are downloading, we should remove that
+  // too, since we aren't doing that anymore.
+  let readyUpdateDir = getReadyUpdateDir();
+  let status = readStatusFile(readyUpdateDir);
+  if (status == STATE_DOWNLOADING) {
+    let statusFile = readyUpdateDir.clone();
+    statusFile.append(FILE_UPDATE_STATUS);
+    statusFile.remove();
+  }
+}
+
+/**
+ * Clean up updates list, the ready update directory, and the downloading update
+ * directory.
+ *
+ * This is more efficient than calling
+ *   cleanupReadyUpdate();
+ *   cleanupDownloadingUpdate();
+ * because those need some special handling of the update status file to make
+ * sure that, for example, cleaning up a ready update doesn't make us forget
+ * that we are downloading an update. When we cleanup both updates, we don't
+ * need to worry about things like that.
+ *
+ * Note - This function causes a state transition to STATE_NONE.
+ */
+function cleanupActiveUpdates() {
+  // Move the update from the Active Update list into the Past Updates list.
+  var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+    Ci.nsIUpdateManager
+  );
+  if (um.readyUpdate) {
+    um.addUpdateToHistory(um.readyUpdate);
+    um.readyUpdate = null;
+  }
+  if (um.downloadingUpdate) {
+    um.addUpdateToHistory(um.downloadingUpdate);
+    um.downloadingUpdate = null;
+  }
+  um.saveUpdates();
+
+  // Now trash both active update directories, since we're done with them
+  cleanUpReadyUpdateDir();
+  cleanUpDownloadingUpdateDir();
 }
 
 /**
@@ -1323,7 +1433,7 @@ function readStringFromFile(file) {
 function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
   if (WRITE_ERRORS.includes(update.errorCode)) {
-    writeStatusFile(getUpdatesDir(), (update.state = STATE_PENDING));
+    writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     return true;
   }
 
@@ -1390,13 +1500,13 @@ function handleUpdateFailure(update, errorCode) {
         cleanupReadyUpdate();
       } else {
         writeStatusFile(
-          getUpdatesDir(),
+          getReadyUpdateDir(),
           (update.state = STATE_PENDING_ELEVATE)
         );
       }
       update.statusText = gUpdateBundle.GetStringFromName("elevationFailure");
     } else {
-      writeStatusFile(getUpdatesDir(), (update.state = STATE_PENDING));
+      writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     }
     return true;
   }
@@ -1430,7 +1540,7 @@ function handleUpdateFailure(update, errorCode) {
       Services.prefs.setIntPref(PREF_APP_UPDATE_SERVICE_ERRORS, failCount);
     }
 
-    writeStatusFile(getUpdatesDir(), (update.state = STATE_PENDING));
+    writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     return true;
   }
 
@@ -1442,13 +1552,66 @@ function handleUpdateFailure(update, errorCode) {
 }
 
 /**
+ * Return the first UpdatePatch with the given type.
+ * @param   update
+ *          A nsIUpdate object to search through for a patch of the desired
+ *          type.
+ * @param   patch_type
+ *          The type of the patch ("complete" or "partial")
+ * @return  A nsIUpdatePatch object matching the type specified
+ */
+function getPatchOfType(update, patch_type) {
+  for (var i = 0; i < update.patchCount; ++i) {
+    var patch = update.getPatchAt(i);
+    if (patch && patch.type == patch_type) {
+      return patch;
+    }
+  }
+  return null;
+}
+
+/**
  * Fall back to downloading a complete update in case an update has failed.
  *
- * @param update the update object that has failed to apply.
  * @param postStaging true if we have just attempted to stage an update.
  */
-function handleFallbackToCompleteUpdate(update, postStaging) {
-  cleanupReadyUpdate();
+function handleFallbackToCompleteUpdate(postStaging) {
+  // If we failed to install an update, we need to fall back to a complete
+  // update. If the install directory has been modified, more partial updates
+  // will fail for the same reason. Since we only download partial updates
+  // while there is already an update downloaded, we don't have to check the
+  // downloading update, we can be confident that we are not downloading the
+  // right thing at the moment.
+
+  let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+    Ci.nsIUpdateManager
+  );
+  let aus = Cc["@mozilla.org/updates/update-service;1"].getService(
+    Ci.nsIApplicationUpdateService
+  );
+
+  // The downloading update will be newer than the ready update, so use that
+  // update, if it exists.
+  let update = um.downloadingUpdate || um.readyUpdate;
+  if (!update) {
+    LOG(
+      "handleFallbackToCompleteUpdate - Unable to find an update to fall " +
+        "back to."
+    );
+    return;
+  }
+
+  aus.stopDownload();
+  cleanupActiveUpdates();
+
+  if (!update.selectedPatch) {
+    // If we don't have a partial patch selected but a partial is available,
+    // _selectPatch() will download that instead of the complete patch.
+    let patch = getPatchOfType(update, "partial");
+    if (patch) {
+      patch.selected = true;
+    }
+  }
 
   update.statusText = gUpdateBundle.GetStringFromName("patchApplyFailure");
   var oldType = update.selectedPatch ? update.selectedPatch.type : "complete";
@@ -1459,9 +1622,7 @@ function handleFallbackToCompleteUpdate(update, postStaging) {
       "handleFallbackToCompleteUpdate - install of partial patch " +
         "failed, downloading complete patch"
     );
-    var success = Cc["@mozilla.org/updates/update-service;1"]
-      .getService(Ci.nsIApplicationUpdateService)
-      .downloadUpdate(update, !postStaging);
+    var success = aus.downloadUpdate(update, !postStaging);
     if (!success) {
       cleanupDownloadingUpdate();
     }
@@ -1542,7 +1703,9 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
       AUSTLMY.pingStatusErrorCode(suffix, statusErrorCode);
     }
   }
-  let binaryTransparencyResult = readBinaryTransparencyResult(getUpdatesDir());
+  let binaryTransparencyResult = readBinaryTransparencyResult(
+    getReadyUpdateDir()
+  );
   if (binaryTransparencyResult) {
     AUSTLMY.pingBinaryTransparencyResult(
       suffix,
@@ -1669,6 +1832,21 @@ function handleCriticalWriteResult(wroteSuccessfully, path) {
   if (!wroteSuccessfully) {
     handleCriticalWriteFailure(path);
   }
+}
+
+/**
+ * This returns true if the passed update is the same version or older than the
+ * version and build ID values passed. Otherwise it returns false.
+ */
+function updateIsAtLeastAsOldAs(update, version, buildID) {
+  if (!update || !update.appVersion || !update.buildID) {
+    return false;
+  }
+  let versionComparison = Services.vc.compare(update.appVersion, version);
+  return (
+    versionComparison < 0 ||
+    (versionComparison == 0 && update.buildID == buildID)
+  );
 }
 
 /**
@@ -2420,6 +2598,7 @@ UpdateService.prototype = {
    * optionally attempt to fetch a different version if appropriate) or
    * notify the user of install success.
    */
+  /* eslint-disable-next-line complexity */
   _postUpdateProcessing: function AUS__postUpdateProcessing() {
     if (this.disabledByPolicy) {
       // This function is a point when we can potentially enter the update
@@ -2438,13 +2617,7 @@ UpdateService.prototype = {
       );
       return;
     }
-    let status = readStatusFile(getUpdatesDir());
-    // Which cleanup function we potentially want to use depends on whether this
-    // is a downloading update or a ready update.
-    let cleanupUpdate =
-      status == STATE_DOWNLOADING
-        ? cleanupDownloadingUpdate
-        : cleanupReadyUpdate;
+    let status = readStatusFile(getReadyUpdateDir());
 
     if (!this.canApplyUpdates) {
       LOG(
@@ -2454,36 +2627,51 @@ UpdateService.prototype = {
       if (hasUpdateMutex()) {
         // If the update is present in the update directory somehow,
         // it would prevent us from notifying the user of further updates.
-        cleanupUpdate();
+        cleanupActiveUpdates();
       }
       return;
     }
 
-    var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+    let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    // Right now, there is only ever a single update at once, so the line below
-    // will retrieve it. Once we are capable of multiple updates per Firefox
-    // session, this function will need to be changed to handle both updates.
-    var update = um.readyUpdate || um.downloadingUpdate;
+
+    let updates = [];
+    if (um.readyUpdate) {
+      updates.push(um.readyUpdate);
+    }
+    if (um.downloadingUpdate) {
+      updates.push(um.downloadingUpdate);
+    }
+
     if (status == STATE_NONE) {
       // A status of STATE_NONE in _postUpdateProcessing means that the
-      // update.status file is present but there isn't an update in progress so
-      // cleanup the update.
-      LOG("UpdateService:_postUpdateProcessing - status is none");
-      if (!update) {
-        update = new Update(null);
+      // update.status file is present but there isn't an update in progress.
+      // This isn't an expected state, so if we find ourselves in it, we want
+      // to just clean things up to go back to a good state.
+      if (!updates.length) {
+        updates.push(new Update(null));
       }
-      update.state = STATE_FAILED;
-      update.errorCode = ERR_UPDATE_STATE_NONE;
-      update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+      for (let update of updates) {
+        update.state = STATE_FAILED;
+        update.errorCode = ERR_UPDATE_STATE_NONE;
+        update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+      }
       let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
-      pingStateAndStatusCodes(update, true, newStatus);
-      cleanupUpdate();
+      pingStateAndStatusCodes(updates[0], true, newStatus);
+      cleanupActiveUpdates();
       return;
     }
 
-    if (update && update.channel != UpdateUtils.UpdateChannel) {
+    let channelChanged = updates => {
+      for (let update of updates) {
+        if (update.channel != UpdateUtils.UpdateChannel) {
+          return true;
+        }
+      }
+      return false;
+    };
+    if (channelChanged(updates)) {
       LOG(
         "UpdateService:_postUpdateProcessing - channel has changed, " +
           "reloading default preferences to workaround bug 802022"
@@ -2494,23 +2682,28 @@ UpdateService.prototype = {
       // shouldn't be removed until after bug 802022 is fixed.
       let prefSvc = Services.prefs.QueryInterface(Ci.nsIObserver);
       prefSvc.observe(null, "reload-default-prefs", null);
-      if (update.channel != UpdateUtils.UpdateChannel) {
+      if (channelChanged(updates)) {
+        let channel = um.readyUpdate
+          ? um.readyUpdate.channel
+          : um.downloadingUpdate.channel;
         LOG(
           "UpdateService:_postUpdateProcessing - update channel is " +
             "different than application's channel, removing update. update " +
             "channel: " +
-            update.channel +
+            channel +
             ", expected channel: " +
             UpdateUtils.UpdateChannel
         );
-        // User switched channels, clear out the old active update and remove
+        // User switched channels, clear out the old active updates and remove
         // partial downloads
-        update.state = STATE_FAILED;
-        update.errorCode = ERR_CHANNEL_CHANGE;
-        update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+        for (let update of updates) {
+          update.state = STATE_FAILED;
+          update.errorCode = ERR_CHANNEL_CHANGE;
+          update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+        }
         let newStatus = STATE_FAILED + ": " + ERR_CHANNEL_CHANGE;
-        pingStateAndStatusCodes(update, true, newStatus);
-        cleanupUpdate();
+        pingStateAndStatusCodes(updates[0], true, newStatus);
+        cleanupActiveUpdates();
         return;
       }
     }
@@ -2520,59 +2713,109 @@ UpdateService.prototype = {
     // older than the current version. This also handles the general case when
     // an update is for an older version or the same version and same build ID.
     if (
-      update &&
-      update.appVersion &&
-      (status == STATE_PENDING ||
-        status == STATE_PENDING_SERVICE ||
-        status == STATE_APPLIED ||
-        status == STATE_APPLIED_SERVICE ||
-        status == STATE_PENDING_ELEVATE ||
-        status == STATE_DOWNLOADING)
+      status == STATE_PENDING ||
+      status == STATE_PENDING_SERVICE ||
+      status == STATE_APPLIED ||
+      status == STATE_APPLIED_SERVICE ||
+      status == STATE_PENDING_ELEVATE ||
+      status == STATE_DOWNLOADING
     ) {
+      let tooOldUpdate;
       if (
-        Services.vc.compare(update.appVersion, Services.appinfo.version) < 0 ||
-        (Services.vc.compare(update.appVersion, Services.appinfo.version) ==
-          0 &&
-          update.buildID == Services.appinfo.appBuildID)
+        updateIsAtLeastAsOldAs(
+          um.readyUpdate,
+          Services.appinfo.version,
+          Services.appinfo.appBuildID
+        )
       ) {
+        tooOldUpdate = um.readyUpdate;
+      } else if (
+        updateIsAtLeastAsOldAs(
+          um.downloadingUpdate,
+          Services.appinfo.version,
+          Services.appinfo.appBuildID
+        )
+      ) {
+        tooOldUpdate = um.downloadingUpdate;
+      }
+      if (tooOldUpdate) {
         LOG(
           "UpdateService:_postUpdateProcessing - removing update for older " +
             "application version or same application version with same build " +
             "ID. update application version: " +
-            update.appVersion +
+            tooOldUpdate.appVersion +
             ", " +
             "application version: " +
             Services.appinfo.version +
             ", update " +
             "build ID: " +
-            update.buildID +
+            tooOldUpdate.buildID +
             ", application build ID: " +
             Services.appinfo.appBuildID
         );
-        update.state = STATE_FAILED;
-        update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
-        update.errorCode = ERR_OLDER_VERSION_OR_SAME_BUILD;
+        tooOldUpdate.state = STATE_FAILED;
+        tooOldUpdate.statusText = gUpdateBundle.GetStringFromName(
+          "statusFailed"
+        );
+        tooOldUpdate.errorCode = ERR_OLDER_VERSION_OR_SAME_BUILD;
         // This could be split out to report telemetry for each case.
         let newStatus = STATE_FAILED + ": " + ERR_OLDER_VERSION_OR_SAME_BUILD;
-        pingStateAndStatusCodes(update, true, newStatus);
-        cleanupUpdate();
+        pingStateAndStatusCodes(tooOldUpdate, true, newStatus);
+        // Cleanup both updates regardless of which one is too old. It's
+        // exceedingly unlikely that a user could end up in a state where one
+        // update is acceptable and the other isn't. And it makes this function
+        // considerably more complex to try to deal with that possibility.
+        cleanupActiveUpdates();
         return;
       }
     }
 
-    pingStateAndStatusCodes(update, true, status);
-    if (status == STATE_DOWNLOADING) {
-      LOG(
-        "UpdateService:_postUpdateProcessing - patch found in downloading " +
-          "state"
-      );
-      // Resume download
-      let success = this.downloadUpdate(update, true);
-      if (!success) {
+    pingStateAndStatusCodes(
+      status == STATE_DOWNLOADING ? um.downloadingUpdate : um.readyUpdate,
+      true,
+      status
+    );
+    if (um.downloadingUpdate || status == STATE_DOWNLOADING) {
+      if (status == STATE_SUCCEEDED) {
+        // If we successfully installed an update while we were downloading
+        // another update, the downloading update is now a partial MAR for
+        // a version that is no longer installed. We know that it's a partial
+        // MAR without checking because we currently only download partial MARs
+        // when an update has already been downloaded.
+        LOG(
+          "UpdateService:_postUpdateProcessing - removing downloading patch " +
+            "because we installed a different patch before it finished" +
+            "downloading."
+        );
         cleanupDownloadingUpdate();
+      } else {
+        // Attempt to resume download
+        if (um.downloadingUpdate) {
+          LOG(
+            "UpdateService:_postUpdateProcessing - resuming patch found in " +
+              "downloading state"
+          );
+          let success = this.downloadUpdate(um.downloadingUpdate, true);
+          if (!success) {
+            cleanupDownloadingUpdate();
+          }
+        } else {
+          LOG(
+            "UpdateService:_postUpdateProcessing - Warning: found " +
+              "downloading state, but no downloading patch"
+          );
+          // Put ourselves back in a good state.
+          cleanupActiveUpdates();
+        }
+        if (status == STATE_DOWNLOADING) {
+          // Done dealing with the downloading update, and there is no ready
+          // update, so return early.
+          return;
+        }
       }
-      return;
     }
+
+    let update = um.readyUpdate;
 
     if (status == STATE_APPLYING) {
       // This indicates that the background updater service is in either of the
@@ -2604,7 +2847,7 @@ UpdateService.prototype = {
           "UpdateService:_postUpdateProcessing - patch found in applying " +
             "state for the second time"
         );
-        cleanupUpdate();
+        cleanupReadyUpdate();
       }
       return;
     }
@@ -2615,7 +2858,7 @@ UpdateService.prototype = {
           "UpdateService:_postUpdateProcessing - previous patch failed " +
             "and no patch available"
         );
-        cleanupUpdate();
+        cleanupReadyUpdate();
         return;
       }
       update = new Update(null);
@@ -2630,7 +2873,7 @@ UpdateService.prototype = {
     if (status != STATE_SUCCEEDED) {
       // Rotate the update logs so the update log isn't removed. By passing
       // false the patch directory won't be removed.
-      cleanUpUpdatesDir(false);
+      cleanUpReadyUpdateDir(false);
     }
 
     if (status == STATE_SUCCEEDED) {
@@ -2646,17 +2889,17 @@ UpdateService.prototype = {
       }
 
       // Done with this update. Clean it up.
-      cleanupUpdate();
+      cleanupReadyUpdate();
 
       Services.prefs.setIntPref(PREF_APP_UPDATE_ELEVATE_ATTEMPTS, 0);
     } else if (status == STATE_PENDING_ELEVATE) {
       // In case the active-update.xml file is deleted.
-      if (!um.readyUpdate) {
+      if (!update) {
         LOG(
           "UpdateService:_postUpdateProcessing - status is pending-elevate " +
             "but there isn't a ready update, removing update"
         );
-        cleanupUpdate();
+        cleanupReadyUpdate();
       } else {
         let uri = "chrome://mozapps/content/update/updateElevation.xhtml";
         let features =
@@ -2674,7 +2917,7 @@ UpdateService.prototype = {
       }
 
       // Something went wrong with the patch application process.
-      handleFallbackToCompleteUpdate(update, false);
+      handleFallbackToCompleteUpdate(false);
     }
   },
 
@@ -2747,6 +2990,22 @@ UpdateService.prototype = {
       PREF_APP_UPDATE_BACKGROUNDERRORS,
       0
     );
+
+    // If we already have an update ready, we don't want to worry the user over
+    // update check failures. As far as the user knows, the update status is
+    // the status of the ready update. We don't want to confuse them by saying
+    // that an update check failed.
+    let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
+    if (um.readyUpdate) {
+      LOG(
+        "UpdateService:onError - Ignoring error because another update is " +
+          "ready."
+      );
+      return;
+    }
+
     errCount++;
     Services.prefs.setIntPref(PREF_APP_UPDATE_BACKGROUNDERRORS, errCount);
     // Don't allow the preference to set a value greater than 20 for max errors.
@@ -2796,8 +3055,6 @@ UpdateService.prototype = {
         "UpdateService:_attemptResume - _patch.state: " +
           this._downloader._patch.state
       );
-      // Make sure downloading is the state for selectPatch to work correctly
-      writeStatusFile(getUpdatesDir(), STATE_DOWNLOADING);
       let success = this.downloadUpdate(
         this._downloader._update,
         this._downloader.background
@@ -2968,19 +3225,34 @@ UpdateService.prototype = {
       return;
     }
 
-    let readState = readStatusFile(getUpdatesDir());
-    let updatePending =
-      readState == STATE_PENDING ||
-      readState == STATE_PENDING_SERVICE ||
-      readState == STATE_PENDING_ELEVATE;
-    let updateApplied =
-      readState == STATE_APPLIED || readState == STATE_APPLIED_SERVICE;
-    if (updatePending || updateApplied) {
-      if (updatePending) {
-        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
-      } else {
-        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_STAGED);
-      }
+    // Once we have downloaded a complete update, do not download further
+    // updates until the complete update is installed. This is important,
+    // because if we fall back from a partial update to a complete update,
+    // it might be because of changes to the patch directory (which would cause
+    // a failure to apply any partial MAR). So we really don't want to replace
+    // a downloaded complete update with a downloaded partial update. And we
+    // do not currently download complete updates if there is already a
+    // readyUpdate available.
+    var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
+    if (
+      um.readyUpdate &&
+      um.readyUpdate.selectedPatch &&
+      um.readyUpdate.selectedPatch.type == "complete"
+    ) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
+      return;
+    }
+
+    // If we start downloading an update while the readyUpdate is staging, we
+    // run the risk of eventually wanting to overwrite readyUpdate with the
+    // downloadingUpdate while the readyUpdate is still staging. Then we would
+    // have to have a weird intermediate state where the downloadingUpdate has
+    // finished downloading, but can't be moved yet. It's simpler to just not
+    // start a new update if the old one is still staging.
+    if (gStagingInProgress) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
       return;
     }
 
@@ -3180,7 +3452,7 @@ UpdateService.prototype = {
     var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    if (um.downloadingUpdate || um.readyUpdate) {
+    if (um.downloadingUpdate) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_HAS_ACTIVEUPDATE);
       return;
     }
@@ -3450,13 +3722,15 @@ UpdateService.prototype = {
     // Don't download the update if the update's version is less than the
     // current application's version or the update's version is the same as the
     // application's version and the build ID is the same as the application's
-    // build ID.
+    // build ID. If we already have an update ready, we want to apply those
+    // same checks against the version of the ready update, so that we don't
+    // download an update that isn't newer than the one we already have.
     if (
-      update.appVersion &&
-      (Services.vc.compare(update.appVersion, Services.appinfo.version) < 0 ||
-        (update.buildID &&
-          update.buildID == Services.appinfo.appBuildID &&
-          update.appVersion == Services.appinfo.version))
+      updateIsAtLeastAsOldAs(
+        update,
+        Services.appinfo.version,
+        Services.appinfo.appBuildID
+      )
     ) {
       LOG(
         "UpdateService:downloadUpdate - canceling download of update since " +
@@ -3471,6 +3745,38 @@ UpdateService.prototype = {
           Services.appinfo.appBuildID +
           "\n" +
           "update build ID : " +
+          update.buildID
+      );
+      cleanupDownloadingUpdate();
+      return false;
+    }
+    let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
+    if (
+      um.readyUpdate &&
+      um.readyUpdate.appVersion &&
+      um.readyUpdate.buildID &&
+      updateIsAtLeastAsOldAs(
+        update,
+        um.readyUpdate.appVersion,
+        um.readyUpdate.buildID
+      )
+    ) {
+      LOG(
+        "UpdateService:downloadUpdate - not downloading update because the " +
+          "update that's already been downloaded is the same version or " +
+          "newer.\n" +
+          "currently downloaded update application version: " +
+          um.readyUpdate.appVersion +
+          "\n" +
+          "available update application version : " +
+          update.appVersion +
+          "\n" +
+          "currently downloaded update build ID: " +
+          um.readyUpdate.buildID +
+          "\n" +
+          "available update build ID : " +
           update.buildID
       );
       cleanupDownloadingUpdate();
@@ -3510,11 +3816,6 @@ UpdateService.prototype = {
     }
     this._downloader = null;
   },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  getUpdatesDirectory: getUpdatesDir,
 
   /**
    * See nsIUpdateService.idl
@@ -3596,7 +3897,7 @@ function UpdateManager() {
     if (activeUpdates.length >= 2) {
       this._downloadingUpdate = activeUpdates[1];
     }
-    let status = readStatusFile(getUpdatesDir());
+    let status = readStatusFile(getReadyUpdateDir());
     // This check is performed here since UpdateService:_postUpdateProcessing
     // won't be called when there isn't an update.status file.
     if (status == STATE_NONE) {
@@ -3614,7 +3915,8 @@ function UpdateManager() {
       this.addUpdateToHistory(this._readyUpdate);
       this._readyUpdate = null;
       this.saveUpdates();
-      cleanUpUpdatesDir();
+      cleanUpReadyUpdateDir();
+      cleanUpDownloadingUpdateDir();
     } else if (status == STATE_DOWNLOADING) {
       // The first update we read out of activeUpdates may not be the ready
       // update, it may be the downloading update.
@@ -3674,7 +3976,7 @@ UpdateManager.prototype = {
           if (activeUpdates.length >= 2) {
             this._downloadingUpdate = activeUpdates[1];
           }
-          if (readStatusFile(getUpdatesDir()) == STATE_DOWNLOADING) {
+          if (readStatusFile(getReadyUpdateDir()) == STATE_DOWNLOADING) {
             this._downloadingUpdate = this._readyUpdate;
             this._readyUpdate = null;
           }
@@ -3984,12 +4286,14 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   refreshUpdateStatus: async function UM_refreshUpdateStatus() {
+    gStagingInProgress = false;
+
     var update = this._readyUpdate;
     if (!update) {
       return;
     }
 
-    var status = readStatusFile(getUpdatesDir());
+    var status = readStatusFile(getReadyUpdateDir());
     pingStateAndStatusCodes(update, false, status);
     var parts = status.split(":");
     update.state = parts[0];
@@ -4000,20 +4304,23 @@ UpdateManager.prototype = {
     // Rotate the update logs so the update log isn't removed if a complete
     // update is downloaded. By passing false the patch directory won't be
     // removed.
-    cleanUpUpdatesDir(false);
+    cleanUpReadyUpdateDir(false);
 
     if (update.state == STATE_FAILED && parts[1]) {
       if (
         parts[1] == DELETE_ERROR_STAGING_LOCK_FILE ||
         parts[1] == UNEXPECTED_STAGING_ERROR
       ) {
-        writeStatusFile(getUpdatesDir(), (update.state = STATE_PENDING));
+        writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
       } else if (!handleUpdateFailure(update, parts[1])) {
-        handleFallbackToCompleteUpdate(update, true);
+        handleFallbackToCompleteUpdate(true);
       }
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
-      writeStatusFile(getUpdatesDir(), (update.state = STATE_APPLIED_SERVICE));
+      writeStatusFile(
+        getReadyUpdateDir(),
+        (update.state = STATE_APPLIED_SERVICE)
+      );
     }
 
     // Now that the active update's properties have been updated write the
@@ -4042,7 +4349,7 @@ UpdateManager.prototype = {
     if (!update) {
       return;
     }
-    let status = readStatusFile(getUpdatesDir());
+    let status = readStatusFile(getReadyUpdateDir());
     let parts = status.split(":");
     update.state = parts[0];
     if (update.state == STATE_PENDING_ELEVATE) {
@@ -4055,7 +4362,7 @@ UpdateManager.prototype = {
       // The updater then detects whether or not elevation is required and
       // displays the elevation prompt if necessary. This last step does not
       // depend on the state in the status file.
-      writeStatusFile(getUpdatesDir(), STATE_PENDING);
+      writeStatusFile(getReadyUpdateDir(), STATE_PENDING);
     }
   },
 
@@ -4601,7 +4908,7 @@ Downloader.prototype = {
       return false;
     }
 
-    let destination = getUpdatesDir();
+    let destination = getDownloadingUpdateDir();
     destination.append(FILE_UPDATE_MAR);
 
     // Ensure that the file size matches the expected file size.
@@ -4631,28 +4938,12 @@ Downloader.prototype = {
     // Given an update to download, we will always try to download the patch
     // for a partial update over the patch for a full update.
 
-    /**
-     * Return the first UpdatePatch with the given type.
-     * @param   type
-     *          The type of the patch ("complete" or "partial")
-     * @return  A nsIUpdatePatch object matching the type specified
-     */
-    function getPatchOfType(type) {
-      for (var i = 0; i < update.patchCount; ++i) {
-        var patch = update.getPatchAt(i);
-        if (patch && patch.type == type) {
-          return patch;
-        }
-      }
-      return null;
-    }
-
     // Look to see if any of the patches in the Update object has been
     // pre-selected for download, otherwise we must figure out which one
     // to select ourselves.
     var selectedPatch = update.selectedPatch;
 
-    var state = readStatusFile(updateDir);
+    var state = selectedPatch ? selectedPatch.state : STATE_NONE;
 
     // If this is a patch that we know about, then select it.  If it is a patch
     // that we do not know about, then remove it and use our default logic.
@@ -4701,8 +4992,7 @@ Downloader.prototype = {
       if (update && selectedPatch.type == "complete") {
         // This is a pretty fatal error.  Just bail.
         LOG("Downloader:_selectPatch - failed to apply complete patch!");
-        writeStatusFile(updateDir, STATE_NONE);
-        writeVersionFile(getUpdatesDir(), null);
+        cleanupDownloadingUpdate();
         return null;
       }
 
@@ -4712,34 +5002,40 @@ Downloader.prototype = {
       selectedPatch = null;
     }
 
+    let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
+
     // If we were not able to discover an update from a previous download, we
     // select the best patch from the given set.
-    var partialPatch = getPatchOfType("partial");
+    var partialPatch = getPatchOfType(update, "partial");
     if (!useComplete) {
       selectedPatch = partialPatch;
     }
     if (!selectedPatch) {
+      if (um.readyUpdate) {
+        // If we already have a ready update, we download partials only.
+        LOG(
+          "Downloader:_selectPatch - not selecting a complete patch because " +
+            "this is not the first download of the session"
+        );
+        return null;
+      }
+
       if (partialPatch) {
         partialPatch.selected = false;
       }
-      selectedPatch = getPatchOfType("complete");
+      selectedPatch = getPatchOfType(update, "complete");
     }
-
-    // Restore the updateDir since we may have deleted it.
-    updateDir = getUpdatesDir();
 
     // if update only contains a partial patch, selectedPatch == null here if
     // the partial patch has been attempted and fails and we're trying to get a
     // complete patch
     if (selectedPatch) {
       selectedPatch.selected = true;
+      update.isCompleteUpdate = selectedPatch.type == "complete";
     }
 
-    update.isCompleteUpdate = selectedPatch.type == "complete";
-
-    var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
-      Ci.nsIUpdateManager
-    );
     um.downloadingUpdate = update;
 
     return selectedPatch;
@@ -4856,7 +5152,7 @@ Downloader.prototype = {
       throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
 
-    var updateDir = getUpdatesDir();
+    var updateDir = getDownloadingUpdateDir();
 
     this._update = update;
 
@@ -4888,7 +5184,7 @@ Downloader.prototype = {
     }
 
     if (!canUseBits) {
-      let patchFile = getUpdatesDir().clone();
+      let patchFile = updateDir.clone();
       patchFile.append(FILE_UPDATE_MAR);
 
       // The interval is 0 since there is no need to throttle downloads.
@@ -5046,7 +5342,12 @@ Downloader.prototype = {
       );
     }
 
-    writeStatusFile(updateDir, STATE_DOWNLOADING);
+    let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
+    if (!um.readyUpdate) {
+      writeStatusFile(getReadyUpdateDir(), STATE_DOWNLOADING);
+    }
     if (this._patch.state != STATE_DOWNLOADING) {
       this._patch.state = STATE_DOWNLOADING;
       Cc["@mozilla.org/updates/update-manager;1"]
@@ -5317,6 +5618,8 @@ Downloader.prototype = {
     var shouldRegisterOnlineObserver = false;
     var shouldRetrySoon = false;
     var deleteActiveUpdate = false;
+    let migratedToReadyUpdate = false;
+    let nonDownloadFailure = false;
     var retryTimeout = Services.prefs.getIntPref(
       PREF_APP_UPDATE_SOCKET_RETRYTIMEOUT,
       DEFAULT_SOCKET_RETRYTIMEOUT
@@ -5345,24 +5648,67 @@ Downloader.prototype = {
     );
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
-        if (shouldUseService()) {
-          state = STATE_PENDING_SERVICE;
-        } else if (getElevationRequired()) {
-          state = STATE_PENDING_ELEVATE;
-        } else {
-          state = STATE_PENDING;
-        }
-        shouldShowPrompt = !getCanStageUpdates();
         AUSTLMY.pingDownloadCode(this.isCompleteUpdate, AUSTLMY.DWNLD_SUCCESS);
 
-        // Tell the updater.exe we're ready to apply.
-        writeStatusFile(getUpdatesDir(), state);
-        writeVersionFile(getUpdatesDir(), this._update.appVersion);
-        this._update.installDate = new Date().getTime();
-        this._update.statusText = gUpdateBundle.GetStringFromName(
-          "installPending"
-        );
-        Services.prefs.setIntPref(PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS, 0);
+        // We're about to clobber the ready update so we can replace it with the
+        // downloading update that just finished. We need to let observers know
+        // about this.
+        Services.obs.notifyObservers(this._update, "update-swap");
+
+        // Swap the downloading update into the ready update directory.
+        cleanUpReadyUpdateDir();
+        let downloadedMar = getDownloadingUpdateDir();
+        downloadedMar.append(FILE_UPDATE_MAR);
+        let readyDir = getReadyUpdateDir();
+        try {
+          downloadedMar.moveTo(readyDir, FILE_UPDATE_MAR);
+          migratedToReadyUpdate = true;
+        } catch (e) {
+          migratedToReadyUpdate = false;
+        }
+
+        if (migratedToReadyUpdate) {
+          if (shouldUseService()) {
+            state = STATE_PENDING_SERVICE;
+          } else if (getElevationRequired()) {
+            state = STATE_PENDING_ELEVATE;
+          } else {
+            state = STATE_PENDING;
+          }
+          shouldShowPrompt = !getCanStageUpdates();
+
+          // Tell the updater.exe we're ready to apply.
+          writeStatusFile(getReadyUpdateDir(), state);
+          writeVersionFile(getReadyUpdateDir(), this._update.appVersion);
+          this._update.installDate = new Date().getTime();
+          this._update.statusText = gUpdateBundle.GetStringFromName(
+            "installPending"
+          );
+          Services.prefs.setIntPref(PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS, 0);
+        } else {
+          LOG(
+            "Downloader:onStopRequest - failed to move the downloading " +
+              "update to the ready update directory."
+          );
+
+          state = STATE_DOWNLOAD_FAILED;
+          status = Cr.NS_ERROR_FILE_COPY_OR_MOVE_FAILED;
+
+          const mfCode = "move_failed";
+          let message = getStatusTextFromCode(mfCode, mfCode);
+          this._update.statusText = message;
+
+          nonDownloadFailure = true;
+          deleteActiveUpdate = true;
+
+          cleanUpDownloadingUpdateDir();
+
+          let failedWrite = readyDir.clone();
+          failedWrite.append(FILE_UPDATE_MAR);
+          permissionFixingInProgress = handleCriticalWriteFailure(
+            failedWrite.path
+          );
+        }
       } else {
         LOG("Downloader:onStopRequest - download verification failed");
         state = STATE_DOWNLOAD_FAILED;
@@ -5378,7 +5724,7 @@ Downloader.prototype = {
         }
 
         // Destroy the updates directory, since we're done with it.
-        cleanUpUpdatesDir();
+        cleanUpDownloadingUpdateDir();
       }
     } else if (status == Cr.NS_ERROR_OFFLINE) {
       // Register an online observer to try again.
@@ -5425,9 +5771,10 @@ Downloader.prototype = {
         LOG("Downloader:onStopRequest - permission error");
         // This will either fix the permissions, or asynchronously show the
         // reinstall prompt if it cannot fix them.
-        let patchFile = getUpdatesDir().clone();
+        let patchFile = getDownloadingUpdateDir();
         patchFile.append(FILE_UPDATE_MAR);
         permissionFixingInProgress = handleCriticalWriteFailure(patchFile.path);
+        nonDownloadFailure = true;
       } else {
         LOG("Downloader:onStopRequest - non-verification failure");
       }
@@ -5450,7 +5797,7 @@ Downloader.prototype = {
       );
 
       // Destroy the updates directory, since we're done with it.
-      cleanUpUpdatesDir();
+      cleanUpDownloadingUpdateDir();
 
       deleteActiveUpdate = true;
     }
@@ -5505,6 +5852,10 @@ Downloader.prototype = {
     } else if (um.downloadingUpdate && um.downloadingUpdate.state != state) {
       um.downloadingUpdate.state = state;
     }
+    if (migratedToReadyUpdate) {
+      um.readyUpdate = um.downloadingUpdate;
+      um.downloadingUpdate = null;
+    }
     um.saveUpdates();
 
     // Only notify listeners about the stopped state if we
@@ -5524,37 +5875,41 @@ Downloader.prototype = {
 
     if (state == STATE_DOWNLOAD_FAILED) {
       var allFailed = true;
-      // If we haven't already, attempt to download without BITS
-      if (request instanceof BitsRequest) {
-        LOG(
-          "Downloader:onStopRequest - BITS download failed. Falling back " +
-            "to nsIIncrementalDownload"
-        );
-        let success = this.downloadUpdate(this._update);
-        if (!success) {
-          cleanupDownloadingUpdate();
-        } else {
-          allFailed = false;
+      // Don't bother retrying the download if we got an error that isn't
+      // download related.
+      if (!nonDownloadFailure) {
+        // If we haven't already, attempt to download without BITS
+        if (request instanceof BitsRequest) {
+          LOG(
+            "Downloader:onStopRequest - BITS download failed. Falling back " +
+              "to nsIIncrementalDownload"
+          );
+          let success = this.downloadUpdate(this._update);
+          if (!success) {
+            cleanupDownloadingUpdate();
+          } else {
+            allFailed = false;
+          }
         }
-      }
 
-      // Check if there is a complete update patch that can be downloaded.
-      if (
-        allFailed &&
-        !this._update.isCompleteUpdate &&
-        this._update.patchCount == 2
-      ) {
-        LOG(
-          "Downloader:onStopRequest - verification of patch failed, " +
-            "downloading complete update patch"
-        );
-        this._update.isCompleteUpdate = true;
-        let success = this.downloadUpdate(this._update);
+        // Check if there is a complete update patch that can be downloaded.
+        if (
+          allFailed &&
+          !this._update.isCompleteUpdate &&
+          this._update.patchCount == 2
+        ) {
+          LOG(
+            "Downloader:onStopRequest - verification of patch failed, " +
+              "downloading complete update patch"
+          );
+          this._update.isCompleteUpdate = true;
+          let success = this.downloadUpdate(this._update);
 
-        if (!success) {
-          cleanupDownloadingUpdate();
-        } else {
-          allFailed = false;
+          if (!success) {
+            cleanupDownloadingUpdate();
+          } else {
+            allFailed = false;
+          }
         }
       }
 
@@ -5630,9 +5985,6 @@ Downloader.prototype = {
       state == STATE_PENDING_SERVICE ||
       state == STATE_PENDING_ELEVATE
     ) {
-      um.readyUpdate = um.downloadingUpdate;
-      um.downloadingUpdate = null;
-
       if (getCanStageUpdates()) {
         LOG(
           "Downloader:onStopRequest - attempting to stage update: " +
@@ -5644,6 +5996,7 @@ Downloader.prototype = {
           Cc["@mozilla.org/updates/update-processor;1"]
             .createInstance(Ci.nsIUpdateProcessor)
             .processUpdate();
+          gStagingInProgress = true;
         } catch (e) {
           // Fail gracefully in case the application does not support the update
           // processor service.
