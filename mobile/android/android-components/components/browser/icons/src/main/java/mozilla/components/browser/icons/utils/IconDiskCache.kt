@@ -6,6 +6,7 @@ package mozilla.components.browser.icons.utils
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.annotation.VisibleForTesting
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
@@ -36,8 +37,10 @@ class IconDiskCache :
     DiskIconLoader.LoaderDiskCache, DiskIconPreparer.PreparerDiskCache,
     DiskIconProcessor.ProcessorDiskCache {
     private val logger = Logger("Icons/IconDiskCache")
-    private var iconResourcesCache: DiskLruCache? = null
-    private var iconDataCache: DiskLruCache? = null
+    @VisibleForTesting
+    internal var iconResourcesCache: DiskLruCache? = null
+    @VisibleForTesting
+    internal var iconDataCache: DiskLruCache? = null
     private val iconResourcesCacheWriteLock = Any()
     private val iconDataCacheWriteLock = Any()
 
@@ -118,8 +121,17 @@ class IconDiskCache :
     }
 
     internal fun clear(context: Context) {
-        getIconResourcesCache(context).delete()
-        getIconDataCache(context).delete()
+        try {
+            getIconResourcesCache(context).delete()
+        } catch (e: IOException) {
+            logger.warn("Icon resource cache could not be cleared. Perhaps there is none?")
+        }
+
+        try {
+            getIconDataCache(context).delete()
+        } catch (e: IOException) {
+            logger.warn("Icon data cache could not be cleared. Perhaps there is none?")
+        }
 
         iconResourcesCache = null
         iconDataCache = null

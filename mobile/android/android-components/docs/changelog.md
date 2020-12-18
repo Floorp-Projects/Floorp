@@ -18,6 +18,9 @@ permalink: /changelog/
 * **feature-accounts-push**
   * Rolling back to previous behaviour of renewing push registration token when the `subscriptionExpired` flag is observed.
 
+* **browser-icons**
+  * Catch `IOException` that may be thrown when deleting icon caches.
+
 # 70.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v69.0.0...v70.0.0)

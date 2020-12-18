@@ -6,6 +6,7 @@ package mozilla.components.browser.icons.utils
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.support.test.any
@@ -13,10 +14,12 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.`when`
+import java.io.IOException
 import java.io.OutputStream
 
 @RunWith(AndroidJUnit4::class)
@@ -80,5 +83,22 @@ class IconDiskCacheTest {
         val data = cache.getIconData(testContext, resource)
         assertNotNull(data!!)
         assertEquals("Hello World", String(data))
+    }
+
+    @Test
+    fun `Clearing cache directories catches IOException`() {
+        val cache = IconDiskCache()
+        val dataCache: DiskLruCache = mock()
+        val resCache: DiskLruCache = mock()
+        cache.iconDataCache = dataCache
+        cache.iconResourcesCache = resCache
+
+        `when`(dataCache.delete()).thenThrow(IOException("test"))
+        `when`(resCache.delete()).thenThrow(IOException("test"))
+
+        cache.clear(testContext)
+
+        assertNull(cache.iconDataCache)
+        assertNull(cache.iconResourcesCache)
     }
 }
