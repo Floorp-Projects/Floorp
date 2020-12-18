@@ -4561,7 +4561,6 @@ TEST_F(JsepSessionTest, TestExtmapZeroId) {
 }
 
 TEST_F(JsepSessionTest, TestExtmapInvalidId) {
-  AddTracks(*mSessionOff, "video");
   AddTracks(*mSessionAns, "video");
 
   std::string sdp =
@@ -4588,7 +4587,6 @@ TEST_F(JsepSessionTest, TestExtmapInvalidId) {
 }
 
 TEST_F(JsepSessionTest, TestExtmapDuplicateId) {
-  AddTracks(*mSessionOff, "video");
   AddTracks(*mSessionAns, "video");
 
   std::string sdp =
@@ -4611,6 +4609,166 @@ TEST_F(JsepSessionTest, TestExtmapDuplicateId) {
   ASSERT_TRUE(result.mError == Some(dom::PCError::OperationError));
   ASSERT_EQ("Description contains duplicate extension id 2 on level 0",
             mSessionAns->GetLastError());
+}
+
+TEST_F(JsepSessionTest, TestNegotiatedExtmapStability) {
+  AddTracks(*mSessionAns, "audio,video");
+
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 6 2 IN IP4 1r\r\n"
+      "t=0 0a\r\n"
+      "a=ice-ufrag:Xp\r\n"
+      "a=ice-pwd:he\r\n"
+      "a=setup:actpass\r\n"
+      "a=fingerprint:sha-256 "
+      "DC:FC:25:56:2B:88:77:2F:E4:FA:97:4E:2E:F1:D6:34:A6:A0:11:E2:E4:38:B3:98:"
+      "08:D2:F7:9D:F5:E2:C1:15\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 51.81.107.13\r\n"
+      "a=sendrecv\r\n"
+      "a=extmap:11 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n"
+      "a=fmtp:111 maxplaybackrate=48000;stereo=1;useinbandfec=1\r\n"
+      "a=mid:audio\r\n"
+      "a=rtcp-mux\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=setup:active\r\n"
+      "a=ssrc:3463672643 cname:{ec9a356a-8d2c-504e-9977-99070a51f929}\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 100\r\n"
+      "c=IN IP4 0\r\n"
+      "a=sendrecv\r\n"
+      "a=rtpmap:100 VP8/90000\r\n"
+      "a=extmap:12 urn:ietf:params:rtp-hdrext:toffset\r\n"
+      "a=extmap:13 "
+      "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n";
+  auto result = mSessionAns->SetRemoteDescription(kJsepSdpOffer, sdp);
+  ASSERT_FALSE(result.mError.isSome());
+  auto answer = CreateAnswer();
+  result = mSessionAns->SetLocalDescription(kJsepSdpAnswer, answer);
+  ASSERT_FALSE(result.mError.isSome());
+
+  // Verify that we've negotiated the right extmap based on the unusual values
+  // in the offer.
+  auto transceivers = mSessionAns->GetTransceivers();
+  ASSERT_EQ(2U, transceivers.size());
+  auto* audioSend = transceivers[0]->mSendTrack.GetNegotiatedDetails();
+  auto* audioRecv = transceivers[0]->mRecvTrack.GetNegotiatedDetails();
+  auto* videoSend = transceivers[1]->mSendTrack.GetNegotiatedDetails();
+  auto* videoRecv = transceivers[1]->mRecvTrack.GetNegotiatedDetails();
+  ASSERT_TRUE(audioSend);
+  ASSERT_TRUE(audioRecv);
+  ASSERT_TRUE(videoSend);
+  ASSERT_TRUE(videoRecv);
+  ASSERT_EQ(
+      11U,
+      audioSend->GetExt("urn:ietf:params:rtp-hdrext:ssrc-audio-level")->entry);
+  ASSERT_EQ(
+      11U,
+      audioRecv->GetExt("urn:ietf:params:rtp-hdrext:ssrc-audio-level")->entry);
+  ASSERT_EQ(12U,
+            videoSend->GetExt("urn:ietf:params:rtp-hdrext:toffset")->entry);
+  ASSERT_EQ(12U,
+            videoRecv->GetExt("urn:ietf:params:rtp-hdrext:toffset")->entry);
+  ASSERT_EQ(
+      13U,
+      videoSend
+          ->GetExt("http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")
+          ->entry);
+  ASSERT_EQ(
+      13U,
+      videoRecv
+          ->GetExt("http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")
+          ->entry);
+
+  SwapOfferAnswerRoles();
+
+  // Make sure a reoffer uses the negotiated extmap
+  auto reoffer = CreateOffer();
+  ASSERT_NE(std::string::npos, reoffer.find("a=extmap:11"));
+  ASSERT_NE(std::string::npos, reoffer.find("a=extmap:12"));
+  ASSERT_NE(std::string::npos, reoffer.find("a=extmap:13"));
+}
+
+TEST_F(JsepSessionTest, TestNegotiatedExtmapCollision) {
+  AddTracks(*mSessionAns, "audio");
+  // ssrc-audio-level will be extmap 1 for both
+  // csrc-audio-level will be 2 for both
+  // mid will be 3 for both
+  mSessionAns->AddAudioRtpExtension("foo");
+  mSessionAns->AddAudioRtpExtension("bar");
+  mSessionAns->AddAudioRtpExtension("baz");
+
+  // Set up an offer that uses the same extmap entries, but for different
+  // things, causing collisions.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 6 2 IN IP4 1r\r\n"
+      "t=0 0a\r\n"
+      "a=ice-ufrag:Xp\r\n"
+      "a=ice-pwd:he\r\n"
+      "a=setup:actpass\r\n"
+      "a=fingerprint:sha-256 "
+      "DC:FC:25:56:2B:88:77:2F:E4:FA:97:4E:2E:F1:D6:34:A6:A0:11:E2:E4:38:B3:98:"
+      "08:D2:F7:9D:F5:E2:C1:15\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 51.81.107.13\r\n"
+      "a=sendrecv\r\n"
+      "a=extmap:1 foo\r\n"
+      "a=extmap:2 bar\r\n"
+      "a=extmap:3 baz\r\n"
+      "a=extmap:11 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n"
+      "a=fmtp:111 maxplaybackrate=48000;stereo=1;useinbandfec=1\r\n"
+      "a=mid:audio\r\n"
+      "a=rtcp-mux\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=setup:active\r\n"
+      "a=ssrc:3463672643 cname:{ec9a356a-8d2c-504e-9977-99070a51f929}\r\n";
+  auto result = mSessionAns->SetRemoteDescription(kJsepSdpOffer, sdp);
+  ASSERT_FALSE(result.mError.isSome());
+  auto answer = CreateAnswer();
+  result = mSessionAns->SetLocalDescription(kJsepSdpAnswer, answer);
+  ASSERT_FALSE(result.mError.isSome());
+
+  // Verify that we've negotiated the right extmap based on the unusual values
+  // in the offer.
+  auto transceivers = mSessionAns->GetTransceivers();
+  ASSERT_EQ(1U, transceivers.size());
+  auto* audioSend = transceivers[0]->mSendTrack.GetNegotiatedDetails();
+  auto* audioRecv = transceivers[0]->mRecvTrack.GetNegotiatedDetails();
+  ASSERT_TRUE(audioSend);
+  ASSERT_TRUE(audioRecv);
+  ASSERT_EQ(1U, audioSend->GetExt("foo")->entry);
+  ASSERT_EQ(1U, audioRecv->GetExt("foo")->entry);
+  ASSERT_EQ(2U, audioSend->GetExt("bar")->entry);
+  ASSERT_EQ(2U, audioRecv->GetExt("bar")->entry);
+  ASSERT_EQ(3U, audioSend->GetExt("baz")->entry);
+  ASSERT_EQ(3U, audioRecv->GetExt("baz")->entry);
+  ASSERT_EQ(
+      11U,
+      audioSend->GetExt("urn:ietf:params:rtp-hdrext:ssrc-audio-level")->entry);
+  ASSERT_EQ(
+      11U,
+      audioRecv->GetExt("urn:ietf:params:rtp-hdrext:ssrc-audio-level")->entry);
+  SwapOfferAnswerRoles();
+
+  // Make sure a reoffer uses the negotiated extmap
+  auto reoffer = CreateOffer();
+  ASSERT_NE(std::string::npos, reoffer.find("a=extmap:1 foo"));
+  ASSERT_NE(std::string::npos, reoffer.find("a=extmap:2 bar"));
+  ASSERT_NE(std::string::npos, reoffer.find("a=extmap:3 baz"));
+  ASSERT_NE(
+      std::string::npos,
+      reoffer.find("a=extmap:11 urn:ietf:params:rtp-hdrext:ssrc-audio-level"));
+
+  // Ensure no duplicates
+  ASSERT_EQ(std::string::npos,
+            reoffer.find("a=extmap:1 ", reoffer.find("a=extmap:1 ") + 1));
+  ASSERT_EQ(std::string::npos,
+            reoffer.find("a=extmap:2 ", reoffer.find("a=extmap:2 ") + 1));
+  ASSERT_EQ(std::string::npos,
+            reoffer.find("a=extmap:3 ", reoffer.find("a=extmap:3 ") + 1));
+  ASSERT_EQ(std::string::npos,
+            reoffer.find("a=extmap:11 ", reoffer.find("a=extmap:11 ") + 1));
 }
 
 TEST_F(JsepSessionTest, TestRtcpFbStar) {
