@@ -472,10 +472,6 @@ class NotifyManyVisitsObservers : public Runnable {
     }
     mHistory->NotifyVisited(aURI, IHistory::VisitedStatus::Visited);
 
-    if (aPlace.titleChanged) {
-      aNavHistory->NotifyTitleChange(aURI, aPlace.title, aPlace.guid);
-    }
-
     aNavHistory->UpdateDaysOfHistory(aPlace.visitTime);
 
     return NS_OK;
@@ -585,16 +581,6 @@ class NotifyTitleObservers : public Runnable {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
-
-    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
-    nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mSpec));
-    if (!uri) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    navHistory->NotifyTitleChange(uri, mTitle, mGUID);
 
     RefPtr<PlacesVisitTitle> titleEvent = new PlacesVisitTitle();
     titleEvent->mUrl.Assign(NS_ConvertUTF8toUTF16(mSpec));

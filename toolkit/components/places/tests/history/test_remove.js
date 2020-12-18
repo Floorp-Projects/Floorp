@@ -45,9 +45,6 @@ add_task(async function test_remove_single() {
       observer = {
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
-        onTitleChanged(aUri) {
-          reject(new Error("Unexpected call to onTitleChanged " + aUri.spec));
-        },
         onClearHistory() {
           reject("Unexpected call to onClearHistory");
         },

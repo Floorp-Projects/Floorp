@@ -148,11 +148,6 @@ add_task(async function test_removeVisitsByFilter() {
       deferred: PromiseUtils.defer(),
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onTitleChanged(uri) {
-        this.deferred.reject(
-          new Error("Unexpected call to onTitleChanged " + uri.spec)
-        );
-      },
       onClearHistory() {
         this.deferred.reject("Unexpected call to onClearHistory");
       },

@@ -871,7 +871,6 @@ var PageThumbsHistoryObserver = {
     PageThumbsStorage.wipe();
   },
 
-  onTitleChanged() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onDeleteVisits() {},

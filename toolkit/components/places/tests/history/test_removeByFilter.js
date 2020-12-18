@@ -461,9 +461,6 @@ function getObserverPromise(bookmarkedUri) {
     observer = {
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onTitleChanged(aUri) {
-        reject(new Error("Unexpected call to onTitleChanged"));
-      },
       onClearHistory() {
         reject(new Error("Unexpected call to onClearHistory"));
       },

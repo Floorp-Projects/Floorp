@@ -580,30 +580,6 @@ interface nsINavHistoryObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
-   * Called whenever either the "real" title or the custom title of the page
-   * changed. BOTH TITLES ARE ALWAYS INCLUDED in this notification, even though
-   * only one will change at a time. Often, consumers will want to display the
-   * user title if it is available, and fall back to the page title (the one
-   * specified in the <title> tag of the page).
-   *
-   * Note that there is a difference between an empty title and a NULL title.
-   * An empty string means that somebody specifically set the title to be
-   * nothing. NULL means nobody set it. From C++: use IsVoid() and SetIsVoid()
-   * to see whether an empty string is "null" or not (it will always be an
-   * empty string in either case).
-   *
-   * @param aURI
-   *        The URI of the page.
-   * @param aPageTitle
-   *        The new title of the page.
-   * @param aGUID
-   *        The unique ID associated with the page.
-   */
-  void onTitleChanged(in nsIURI aURI,
-                      in AString aPageTitle,
-                      in ACString aGUID);
-
-  /**
    * Called when an individual page's frecency has changed.
    *
    * This is not called for pages whose frecencies change as the result of some
