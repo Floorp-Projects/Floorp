@@ -327,7 +327,6 @@ module.exports = {
         "dom/payments/test/test_showPayment.html",
         "dom/tests/browser/browser_persist_cookies.js",
         "dom/tests/browser/browser_persist_mixed_content_image.js",
-        "netwerk/test/unit/test_http2-proxy.js",
       ],
       rules: {
         "no-async-promise-executor": "off",
