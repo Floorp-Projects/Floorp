@@ -574,13 +574,11 @@ const PrefsButton = ({
 }));
 const PersonalizeButton = ({
   onClick
-}) => react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("div", {
-  className: "button-wrapper"
-}, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("button", {
+}) => react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement("button", {
   className: "personalize-button",
   onClick: onClick,
   "data-l10n-id": "newtab-personalize-button-label"
-})); // Returns a function will not be continuously triggered when called. The
+}); // Returns a function will not be continuously triggered when called. The
 // function will be triggered if called again after `wait` milliseconds.
 
 function debounce(func, wait) {
