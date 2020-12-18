@@ -26,6 +26,7 @@ cmake \
   -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/aarch64-apple-darwin-ld \
   -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo \
   -DCMAKE_AR=$MOZ_FETCHES_DIR/cctools/bin/aarch64-apple-darwin-ar \
+  -DCMAKE_RANLIB=$MOZ_FETCHES_DIR/cctools/bin/aarch64-apple-darwin-ranlib \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_CONFIG_PATH=$MOZ_FETCHES_DIR/clang/bin/llvm-config \
