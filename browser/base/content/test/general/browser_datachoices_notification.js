@@ -131,8 +131,6 @@ add_task(async function setup() {
     return closeAllNotifications();
   });
 
-  // bug 1571932
-  Preferences.set(PREF_TELEMETRY_LOG_LEVEL, "Trace");
   // Don't skip the infobar visualisation.
   Preferences.set(PREF_BYPASS_NOTIFICATION, false);
   // Set the current policy version.
@@ -226,13 +224,12 @@ add_task(async function test_single_window() {
   );
 });
 
+/* See bug 1571932
 add_task(async function test_multiple_windows() {
   clearAcceptedPolicy();
-  assertCoherentInitialState(); // bug 1571932
 
   // Close all the notifications, then try to trigger the data choices infobar.
   await closeAllNotifications();
-  assertCoherentInitialState(); // bug 1571932
 
   // Ensure we see the notification on all windows and that action on one window
   // results in dismiss on every window.
@@ -292,4 +289,4 @@ add_task(async function test_multiple_windows() {
     -1,
     "Date pref set."
   );
-});
+});*/
