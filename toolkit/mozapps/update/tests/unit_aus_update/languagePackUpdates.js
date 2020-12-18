@@ -119,6 +119,9 @@ add_task(async function testLangpackUpdateSuccess() {
     !Object.values(snapshot.values).every(val => val == 0),
     "Should have recorded a time"
   );
+
+  // Reload the update manager so that we can download the same update again
+  reloadUpdateManagerData(true);
 });
 
 add_task(async function testLangpackUpdateFails() {
@@ -155,6 +158,9 @@ add_task(async function testLangpackUpdateFails() {
   reject();
 
   await notified;
+
+  // Reload the update manager so that we can download the same update again
+  reloadUpdateManagerData(true);
 });
 
 add_task(async function testLangpackStaged() {
@@ -199,6 +205,9 @@ add_task(async function testLangpackStaged() {
   resolve();
 
   await notified;
+
+  // Reload the update manager so that we can download the same update again
+  reloadUpdateManagerData(true);
 });
 
 add_task(async function testRedownload() {
@@ -270,6 +279,9 @@ add_task(async function testRedownload() {
     Object.values(snapshot.values).every(val => val == 0),
     "Should have recorded a time"
   );
+
+  // Reload the update manager so that we can download the same update again
+  reloadUpdateManagerData(true);
 });
 
 add_task(async function finish() {
