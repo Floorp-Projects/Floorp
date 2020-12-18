@@ -2,13 +2,13 @@ use auxil::{FastHashMap, ShaderStage};
 use hal::{command, image, pso};
 
 use winapi::{
+    shared::minwindef::UINT,
     shared::{
         dxgiformat,
         minwindef::{FALSE, TRUE},
         winerror,
     },
     um::{d3d11, d3dcommon},
-    shared::minwindef::UINT
 };
 
 use wio::com::ComPtr;
@@ -146,7 +146,8 @@ pub struct Internal {
     pub working_buffer: ComPtr<d3d11::ID3D11Buffer>,
     pub working_buffer_size: u64,
 
-    pub constant_buffer_count_buffer: [UINT; d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT as _],
+    pub constant_buffer_count_buffer:
+        [UINT; d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT as _],
 
     /// Command lists are not supported by graphics card and are being emulated.
     /// Requires various workarounds to make things work correctly.
@@ -594,8 +595,15 @@ impl Internal {
             },
         );
 
-        let mut threading_capability: d3d11::D3D11_FEATURE_DATA_THREADING = unsafe { mem::zeroed() };
-        let hr = unsafe { device.CheckFeatureSupport(d3d11::D3D11_FEATURE_THREADING, &mut threading_capability as *mut _ as *mut _, mem::size_of::<d3d11::D3D11_FEATURE_DATA_THREADING>() as _) };
+        let mut threading_capability: d3d11::D3D11_FEATURE_DATA_THREADING =
+            unsafe { mem::zeroed() };
+        let hr = unsafe {
+            device.CheckFeatureSupport(
+                d3d11::D3D11_FEATURE_THREADING,
+                &mut threading_capability as *mut _ as *mut _,
+                mem::size_of::<d3d11::D3D11_FEATURE_DATA_THREADING>() as _,
+            )
+        };
         assert_eq!(hr, winerror::S_OK);
 
         let command_list_emulation = !(threading_capability.DriverCommandLists >= 1);
@@ -632,7 +640,8 @@ impl Internal {
             working_buffer,
             working_buffer_size: working_buffer_size as _,
 
-            constant_buffer_count_buffer: [4096_u32; d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT as _],
+            constant_buffer_count_buffer: [4096_u32;
+                d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT as _],
 
             command_list_emulation,
         }
@@ -711,24 +720,22 @@ impl Internal {
                 let info: &command::ImageCopy = region.borrow();
 
                 assert_eq!(
-                    src.decomposed_format.typeless,
-                    dst.decomposed_format.typeless,
+                    src.decomposed_format.typeless, dst.decomposed_format.typeless,
                     "DX11 backend cannot copy between underlying image formats: {} to {}.",
-                    src.decomposed_format.typeless,
-                    dst.decomposed_format.typeless,
+                    src.decomposed_format.typeless, dst.decomposed_format.typeless,
                 );
 
                 // Formats are the same per above assert, only need to do it for one of the formats
-                let full_copy_only = src.format.is_depth() || src.format.is_stencil() || src.kind.num_samples() > 1;
+                let full_copy_only =
+                    src.format.is_depth() || src.format.is_stencil() || src.kind.num_samples() > 1;
 
                 let copy_box = if full_copy_only {
-                    let offset_zero =
-                        info.src_offset.x == 0
-                            && info.src_offset.y == 0
-                            && info.src_offset.z == 0
-                            && info.dst_offset.x == 0
-                            && info.dst_offset.y == 0
-                            && info.dst_offset.z == 0;
+                    let offset_zero = info.src_offset.x == 0
+                        && info.src_offset.y == 0
+                        && info.src_offset.z == 0
+                        && info.dst_offset.x == 0
+                        && info.dst_offset.y == 0
+                        && info.dst_offset.z == 0;
 
                     let full_extent = info.extent == src.kind.extent();
 
@@ -927,14 +934,13 @@ impl Internal {
                     unsafe {
                         context.UpdateSubresource(
                             dst.internal.raw,
-                            dst.calc_subresource(
-                                info.image_layers.level as _,
-                                layer as _,
-                            ),
+                            dst.calc_subresource(info.image_layers.level as _, layer as _),
                             &bounds,
-                            src.memory_ptr
-                                .offset(src.bound_range.start as isize + info.buffer_offset as isize + depth_pitch as isize * layer_offset as isize)
-                                as _,
+                            src.memory_ptr.offset(
+                                src.bound_range.start as isize
+                                    + info.buffer_offset as isize
+                                    + depth_pitch as isize * layer_offset as isize,
+                            ) as _,
                             row_pitch,
                             depth_pitch,
                         );

@@ -47,13 +47,13 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                            const dom::GPUBufferDescriptor& aDesc);
   RawId DeviceCreateTexture(RawId aSelfId,
                             const dom::GPUTextureDescriptor& aDesc);
-  RawId TextureCreateView(RawId aSelfId,
+  RawId TextureCreateView(RawId aSelfId, RawId aDeviceId,
                           const dom::GPUTextureViewDescriptor& aDesc);
   RawId DeviceCreateSampler(RawId aSelfId,
                             const dom::GPUSamplerDescriptor& aDesc);
   RawId DeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
-  RawId CommandEncoderFinish(RawId aSelfId,
+  RawId CommandEncoderFinish(RawId aSelfId, RawId aDeviceId,
                              const dom::GPUCommandBufferDescriptor& aDesc);
   RawId DeviceCreateBindGroupLayout(
       RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc);
@@ -74,6 +74,9 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                              size_t maxBufferCount,
                              wr::ExternalImageId aExternalImageId);
   void SwapChainPresent(wr::ExternalImageId aExternalImageId, RawId aTextureId);
+
+  void RegisterDevice(RawId aId, Device* aDevice);
+  void UnregisterDevice(RawId aId);
 
  private:
   virtual ~WebGPUChild();
@@ -96,8 +99,10 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
   ffi::WGPUClient* const mClient;
   bool mIPCOpen;
+  std::unordered_map<RawId, Device*> mDeviceMap;
 
  public:
+  ipc::IPCResult RecvError(RawId aDeviceId, const nsACString& aMessage);
   ipc::IPCResult RecvDropAction(const ipc::ByteBuf& aByteBuf);
   ipc::IPCResult RecvFreeAdapter(RawId id);
   ipc::IPCResult RecvFreeDevice(RawId id);

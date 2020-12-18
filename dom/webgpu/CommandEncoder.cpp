@@ -118,7 +118,7 @@ void CommandEncoder::CopyBufferToBuffer(const Buffer& aSource,
     ffi::wgpu_command_encoder_copy_buffer_to_buffer(
         aSource.mId, aSourceOffset, aDestination.mId, aDestinationOffset, aSize,
         ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
 }
 
@@ -131,7 +131,7 @@ void CommandEncoder::CopyBufferToTexture(
     ffi::wgpu_command_encoder_copy_buffer_to_texture(
         ConvertBufferCopyView(aSource), ConvertTextureCopyView(aDestination),
         ConvertExtent(aCopySize), ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
 }
 void CommandEncoder::CopyTextureToBuffer(
@@ -143,7 +143,7 @@ void CommandEncoder::CopyTextureToBuffer(
     ffi::wgpu_command_encoder_copy_texture_to_buffer(
         ConvertTextureCopyView(aSource), ConvertBufferCopyView(aDestination),
         ConvertExtent(aCopySize), ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
 }
 void CommandEncoder::CopyTextureToTexture(
@@ -155,7 +155,7 @@ void CommandEncoder::CopyTextureToTexture(
     ffi::wgpu_command_encoder_copy_texture_to_texture(
         ConvertTextureCopyView(aSource), ConvertTextureCopyView(aDestination),
         ConvertExtent(aCopySize), ToFFI(&bb));
-    mBridge->SendCommandEncoderAction(mId, std::move(bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
 }
 
@@ -190,7 +190,7 @@ void CommandEncoder::EndComputePass(ffi::WGPUComputePass& aPass,
 
   ipc::ByteBuf byteBuf;
   ffi::wgpu_compute_pass_finish(&aPass, ToFFI(&byteBuf));
-  mBridge->SendCommandEncoderAction(mId, std::move(byteBuf));
+  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(byteBuf));
 }
 
 void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass,
@@ -201,7 +201,7 @@ void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass,
 
   ipc::ByteBuf byteBuf;
   ffi::wgpu_render_pass_finish(&aPass, ToFFI(&byteBuf));
-  mBridge->SendCommandEncoderAction(mId, std::move(byteBuf));
+  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(byteBuf));
 }
 
 already_AddRefed<CommandBuffer> CommandEncoder::Finish(
@@ -209,7 +209,7 @@ already_AddRefed<CommandBuffer> CommandEncoder::Finish(
   RawId id = 0;
   if (mValid) {
     mValid = false;
-    id = mBridge->CommandEncoderFinish(mId, aDesc);
+    id = mBridge->CommandEncoderFinish(mId, mParent->mId, aDesc);
   }
   RefPtr<CommandBuffer> comb =
       new CommandBuffer(mParent, id, mTargetCanvasElement);

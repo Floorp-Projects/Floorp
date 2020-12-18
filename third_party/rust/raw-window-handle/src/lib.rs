@@ -76,29 +76,26 @@ mod platform {
 
 /// Window that wraps around a raw window handle.
 ///
-/// It is entirely valid behavior for fields within each platform-specific `RawWindowHandle` variant
-/// to be `null` or `0`, and appropriate checking should be done before the handle is used. However,
-/// users can safely assume that non-`null`/`0` fields are valid handles, and it is up to the
-/// implementor of this trait to ensure that condition is upheld.
+/// # Safety guarantees
 ///
-/// Despite that qualification, implementors should still make a best-effort attempt to fill in all
+/// Users can safely assume that non-`null`/`0` fields are valid handles, and it is up to the
+/// implementer of this trait to ensure that condition is upheld. However, It is entirely valid
+/// behavior for fields within each platform-specific `RawWindowHandle` variant to be `null` or
+/// `0`, and appropriate checking should be done before the handle is used.
+///
+/// Despite that qualification, implementers should still make a best-effort attempt to fill in all
 /// available fields. If an implementation doesn't, and a downstream user needs the field, it should
-/// try to derive the field from other fields the implementor *does* provide via whatever methods the
+/// try to derive the field from other fields the implementer *does* provide via whatever methods the
 /// platform provides.
 ///
-/// The exact handle returned by `raw_window_handle` must not change during the lifetime of this
-/// trait's implementor.
+/// The exact handles returned by `raw_window_handle` must remain consistent between multiple calls
+/// to `raw_window_handle`, and must be valid for at least the lifetime of the `HasRawWindowHandle`
+/// implementer.
 pub unsafe trait HasRawWindowHandle {
     fn raw_window_handle(&self) -> RawWindowHandle;
 }
 
-unsafe impl HasRawWindowHandle for RawWindowHandle {
-    fn raw_window_handle(&self) -> RawWindowHandle {
-        *self
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RawWindowHandle {
     #[cfg_attr(feature = "nightly-docs", doc(cfg(target_os = "ios")))]
     #[cfg_attr(not(feature = "nightly-docs"), cfg(target_os = "ios"))]
@@ -192,6 +189,6 @@ pub enum RawWindowHandle {
 }
 
 mod seal {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct Seal;
 }

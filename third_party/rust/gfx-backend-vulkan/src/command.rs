@@ -1,11 +1,6 @@
-use ash::version::DeviceV1_0;
-use ash::vk;
+use ash::{version::DeviceV1_0, vk};
 use smallvec::SmallVec;
-use std::borrow::Borrow;
-use std::ffi::CString;
-use std::ops::Range;
-use std::sync::Arc;
-use std::{mem, ptr, slice};
+use std::{borrow::Borrow, ffi::CString, mem, ops::Range, slice, sync::Arc};
 
 use inplace_it::inplace_or_alloc_array;
 
@@ -14,8 +9,8 @@ use hal::{
     buffer, command as com,
     format::Aspects,
     image::{Filter, Layout, SubresourceRange},
-    memory, pso, query, DrawCount, IndexCount, InstanceCount, TaskCount, VertexCount, VertexOffset,
-    WorkGroupCount,
+    memory, pso, query, DrawCount, IndexCount, IndexType, InstanceCount, TaskCount, VertexCount,
+    VertexOffset, WorkGroupCount,
 };
 
 #[derive(Debug)]
@@ -80,20 +75,20 @@ where
     for barrier in barriers {
         match *barrier.borrow() {
             memory::Barrier::AllBuffers(ref access) => {
-                global.push(vk::MemoryBarrier {
-                    s_type: vk::StructureType::MEMORY_BARRIER,
-                    p_next: ptr::null(),
-                    src_access_mask: conv::map_buffer_access(access.start),
-                    dst_access_mask: conv::map_buffer_access(access.end),
-                });
+                global.push(
+                    vk::MemoryBarrier::builder()
+                        .src_access_mask(conv::map_buffer_access(access.start))
+                        .dst_access_mask(conv::map_buffer_access(access.end))
+                        .build(),
+                );
             }
             memory::Barrier::AllImages(ref access) => {
-                global.push(vk::MemoryBarrier {
-                    s_type: vk::StructureType::MEMORY_BARRIER,
-                    p_next: ptr::null(),
-                    src_access_mask: conv::map_image_access(access.start),
-                    dst_access_mask: conv::map_image_access(access.end),
-                });
+                global.push(
+                    vk::MemoryBarrier::builder()
+                        .src_access_mask(conv::map_image_access(access.start))
+                        .dst_access_mask(conv::map_image_access(access.end))
+                        .build(),
+                );
             }
             memory::Barrier::Buffer {
                 ref states,
@@ -105,17 +100,17 @@ where
                     Some(f) => f.start.0 as u32..f.end.0 as u32,
                     None => vk::QUEUE_FAMILY_IGNORED..vk::QUEUE_FAMILY_IGNORED,
                 };
-                buffer.push(vk::BufferMemoryBarrier {
-                    s_type: vk::StructureType::BUFFER_MEMORY_BARRIER,
-                    p_next: ptr::null(),
-                    src_access_mask: conv::map_buffer_access(states.start),
-                    dst_access_mask: conv::map_buffer_access(states.end),
-                    src_queue_family_index: families.start,
-                    dst_queue_family_index: families.end,
-                    buffer: target.raw,
-                    offset: range.offset,
-                    size: range.size.unwrap_or(vk::WHOLE_SIZE),
-                });
+                buffer.push(
+                    vk::BufferMemoryBarrier::builder()
+                        .src_access_mask(conv::map_buffer_access(states.start))
+                        .dst_access_mask(conv::map_buffer_access(states.end))
+                        .src_queue_family_index(families.start)
+                        .dst_queue_family_index(families.end)
+                        .buffer(target.raw)
+                        .offset(range.offset)
+                        .size(range.size.unwrap_or(vk::WHOLE_SIZE))
+                        .build(),
+                );
             }
             memory::Barrier::Image {
                 ref states,
@@ -128,18 +123,18 @@ where
                     Some(f) => f.start.0 as u32..f.end.0 as u32,
                     None => vk::QUEUE_FAMILY_IGNORED..vk::QUEUE_FAMILY_IGNORED,
                 };
-                image.push(vk::ImageMemoryBarrier {
-                    s_type: vk::StructureType::IMAGE_MEMORY_BARRIER,
-                    p_next: ptr::null(),
-                    src_access_mask: conv::map_image_access(states.start.0),
-                    dst_access_mask: conv::map_image_access(states.end.0),
-                    old_layout: conv::map_image_layout(states.start.1),
-                    new_layout: conv::map_image_layout(states.end.1),
-                    src_queue_family_index: families.start,
-                    dst_queue_family_index: families.end,
-                    image: target.raw,
-                    subresource_range,
-                });
+                image.push(
+                    vk::ImageMemoryBarrier::builder()
+                        .src_access_mask(conv::map_image_access(states.start.0))
+                        .dst_access_mask(conv::map_image_access(states.end.0))
+                        .old_layout(conv::map_image_layout(states.start.1))
+                        .new_layout(conv::map_image_layout(states.end.1))
+                        .src_queue_family_index(families.start)
+                        .dst_queue_family_index(families.end)
+                        .image(target.raw)
+                        .subresource_range(subresource_range)
+                        .build(),
+                );
             }
         }
     }
@@ -196,31 +191,23 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         flags: com::CommandBufferFlags,
         info: com::CommandBufferInheritanceInfo<Backend>,
     ) {
-        let inheritance_info = vk::CommandBufferInheritanceInfo {
-            s_type: vk::StructureType::COMMAND_BUFFER_INHERITANCE_INFO,
-            p_next: ptr::null(),
-            render_pass: info
-                .subpass
-                .map_or(vk::RenderPass::null(), |subpass| subpass.main_pass.raw),
-            subpass: info.subpass.map_or(0, |subpass| subpass.index as u32),
-            framebuffer: info
-                .framebuffer
-                .map_or(vk::Framebuffer::null(), |buffer| buffer.raw),
-            occlusion_query_enable: if info.occlusion_query_enable {
-                vk::TRUE
-            } else {
-                vk::FALSE
-            },
-            query_flags: conv::map_query_control_flags(info.occlusion_query_flags),
-            pipeline_statistics: conv::map_pipeline_statistics(info.pipeline_statistics),
-        };
+        let inheritance_info = vk::CommandBufferInheritanceInfo::builder()
+            .render_pass(
+                info.subpass
+                    .map_or(vk::RenderPass::null(), |subpass| subpass.main_pass.raw),
+            )
+            .subpass(info.subpass.map_or(0, |subpass| subpass.index as u32))
+            .framebuffer(
+                info.framebuffer
+                    .map_or(vk::Framebuffer::null(), |buffer| buffer.raw),
+            )
+            .occlusion_query_enable(info.occlusion_query_enable)
+            .query_flags(conv::map_query_control_flags(info.occlusion_query_flags))
+            .pipeline_statistics(conv::map_pipeline_statistics(info.pipeline_statistics));
 
-        let info = vk::CommandBufferBeginInfo {
-            s_type: vk::StructureType::COMMAND_BUFFER_BEGIN_INFO,
-            p_next: ptr::null(),
-            flags: conv::map_command_buffer_flags(flags),
-            p_inheritance_info: &inheritance_info,
-        };
+        let info = vk::CommandBufferBeginInfo::builder()
+            .flags(conv::map_command_buffer_flags(flags))
+            .inheritance_info(&inheritance_info);
 
         assert_eq!(
             Ok(()),
@@ -276,15 +263,11 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         inplace_or_alloc_array(raw_clear_values.len(), |uninit_guard| {
             let raw_clear_values = uninit_guard.init_with_iter(raw_clear_values);
 
-            let info = vk::RenderPassBeginInfo {
-                s_type: vk::StructureType::RENDER_PASS_BEGIN_INFO,
-                p_next: ptr::null(),
-                render_pass: render_pass.raw,
-                framebuffer: frame_buffer.raw,
-                render_area,
-                clear_value_count,
-                p_clear_values: raw_clear_values.as_ptr(),
-            };
+            let info = vk::RenderPassBeginInfo::builder()
+                .render_pass(render_pass.raw)
+                .framebuffer(frame_buffer.raw)
+                .render_area(render_area)
+                .clear_values(&raw_clear_values);
 
             let contents = map_subpass_contents(first_subpass);
             self.device
@@ -537,12 +520,17 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         });
     }
 
-    unsafe fn bind_index_buffer(&mut self, ibv: buffer::IndexBufferView<Backend>) {
+    unsafe fn bind_index_buffer(
+        &mut self,
+        buffer: &n::Buffer,
+        sub: buffer::SubRange,
+        ty: IndexType,
+    ) {
         self.device.raw.cmd_bind_index_buffer(
             self.raw,
-            ibv.buffer.raw,
-            ibv.range.offset,
-            conv::map_index_type(ibv.index_type),
+            buffer.raw,
+            sub.offset,
+            conv::map_index_type(ty),
         );
     }
 

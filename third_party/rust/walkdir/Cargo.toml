@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,9 +11,11 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "walkdir"
-version = "2.1.4"
+version = "2.3.1"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
+exclude = ["/ci/*", "/.travis.yml", "/appveyor.yml"]
 description = "Recursively walk a directory."
 homepage = "https://github.com/BurntSushi/walkdir"
 documentation = "https://docs.rs/walkdir/"
@@ -23,25 +25,15 @@ categories = ["filesystem"]
 license = "Unlicense/MIT"
 repository = "https://github.com/BurntSushi/walkdir"
 [dependencies.same-file]
-version = "1"
-[dev-dependencies.docopt]
-version = "0.8"
-
-[dev-dependencies.quickcheck]
-version = "0.6"
-default-features = false
-
-[dev-dependencies.rand]
-version = "0.4"
-
-[dev-dependencies.serde]
-version = "1"
-
-[dev-dependencies.serde_derive]
-version = "1"
+version = "1.0.1"
+[dev-dependencies.doc-comment]
+version = "0.3"
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3"
 features = ["std", "winnt"]
+
+[target."cfg(windows)".dependencies.winapi-util]
+version = "0.1.1"
 [badges.appveyor]
 repository = "BurntSushi/walkdir"
 

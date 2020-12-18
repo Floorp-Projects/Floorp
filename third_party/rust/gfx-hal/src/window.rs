@@ -252,7 +252,7 @@ pub trait Surface<B: Backend>: fmt::Debug + Any + Send + Sync {
 /// associtated swap chain.
 pub trait PresentationSurface<B: Backend>: Surface<B> {
     /// An opaque type wrapping the swapchain image.
-    type SwapchainImage: Borrow<B::ImageView> + fmt::Debug + Send + Sync;
+    type SwapchainImage: Borrow<B::Image> + Borrow<B::ImageView> + fmt::Debug + Send + Sync;
 
     /// Set up the swapchain associated with the surface to have the given format.
     unsafe fn configure_swapchain(

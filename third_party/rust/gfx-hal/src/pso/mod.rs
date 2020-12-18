@@ -108,6 +108,7 @@ bitflags!(
 bitflags!(
     /// Combination of different shader pipeline stages.
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Default)]
     pub struct ShaderStageFlags: u32 {
         /// Vertex shader stage.
         const VERTEX   = 0x1;

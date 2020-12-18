@@ -1,12 +1,12 @@
 use crate::{
     device::{Device, PhysicalDevice},
+    internal::Channel,
     native, Backend, QueueFamily, Shared,
 };
 
 use hal::{format, image, window as w};
 
 use crate::CGRect;
-use foreign_types::ForeignType;
 use metal::{CGFloat, CGSize, CoreAnimationDrawable};
 use objc::rc::autoreleasepool;
 use objc::runtime::Object;
@@ -14,52 +14,39 @@ use parking_lot::Mutex;
 
 use std::borrow::Borrow;
 use std::ptr::NonNull;
-use std::sync::Arc;
 use std::thread;
 
 #[derive(Debug)]
 pub struct Surface {
-    inner: Arc<SurfaceInner>,
+    view: Option<NonNull<Object>>,
+    render_layer: Mutex<metal::CoreAnimationLayer>,
     swapchain_format: metal::MTLPixelFormat,
+    swapchain_format_desc: format::FormatDesc,
     main_thread_id: thread::ThreadId,
 }
 
-#[derive(Debug)]
-pub(crate) struct SurfaceInner {
-    view: Option<NonNull<Object>>,
-    render_layer: Mutex<metal::CoreAnimationLayer>,
-}
+unsafe impl Send for Surface {}
+unsafe impl Sync for Surface {}
 
-unsafe impl Send for SurfaceInner {}
-unsafe impl Sync for SurfaceInner {}
-
-impl Drop for SurfaceInner {
-    fn drop(&mut self) {
-        if let Some(view) = self.view {
-            let () = unsafe { msg_send![view.as_ptr(), release] };
-        }
-    }
-}
-
-#[derive(Debug)]
-struct FrameNotFound {
-    drawable: metal::Drawable,
-    texture: metal::Texture,
-}
-
-impl SurfaceInner {
+impl Surface {
     pub fn new(view: Option<NonNull<Object>>, layer: metal::CoreAnimationLayer) -> Self {
-        SurfaceInner {
+        Surface {
             view,
             render_layer: Mutex::new(layer),
+            swapchain_format: metal::MTLPixelFormat::Invalid,
+            swapchain_format_desc: format::FormatDesc {
+                bits: 0,
+                dim: (0, 0),
+                packed: false,
+                aspects: format::Aspects::empty(),
+            },
+            main_thread_id: thread::current().id(),
         }
     }
 
-    pub fn into_surface(self) -> Surface {
-        Surface {
-            inner: Arc::new(self),
-            swapchain_format: metal::MTLPixelFormat::Invalid,
-            main_thread_id: thread::current().id(),
+    pub(crate) fn dispose(self) {
+        if let Some(view) = self.view {
+            let () = unsafe { msg_send![view.as_ptr(), release] };
         }
     }
 
@@ -71,8 +58,7 @@ impl SurfaceInner {
             .map_format(config.format)
             .expect("unsupported backbuffer format");
 
-        let render_layer_borrow = self.render_layer.lock();
-        let render_layer = render_layer_borrow.as_ref();
+        let render_layer = self.render_layer.lock();
         let framebuffer_only = config.image_usage == image::Usage::COLOR_ATTACHMENT;
         let display_sync = config.present_mode != w::PresentMode::IMMEDIATE;
         let is_mac = caps.os_is_mac;
@@ -84,7 +70,7 @@ impl SurfaceInner {
         let can_set_display_sync = is_mac && caps.has_version_at_least(10, 13);
         let drawable_size = CGSize::new(config.extent.width as f64, config.extent.height as f64);
 
-        let device_raw = shared.device.lock().as_ptr();
+        let device_raw = shared.device.lock();
         unsafe {
             // On iOS, unless the user supplies a view with a CAMetalLayer, we
             // create one as a sublayer. However, when the view changes size,
@@ -95,22 +81,22 @@ impl SurfaceInner {
                 if let Some(view) = self.view {
                     let main_layer: *mut Object = msg_send![view.as_ptr(), layer];
                     let bounds: CGRect = msg_send![main_layer, bounds];
-                    let () = msg_send![render_layer, setFrame: bounds];
+                    let () = msg_send![*render_layer, setFrame: bounds];
                 }
             }
-            let () = msg_send![render_layer, setDevice: device_raw];
-            let () = msg_send![render_layer, setPixelFormat: mtl_format];
-            let () = msg_send![render_layer, setFramebufferOnly: framebuffer_only];
+            render_layer.set_device(&*device_raw);
+            render_layer.set_pixel_format(mtl_format);
+            render_layer.set_framebuffer_only(framebuffer_only as _);
 
             // this gets ignored on iOS for certain OS/device combinations (iphone5s iOS 10.3)
-            let () = msg_send![render_layer, setMaximumDrawableCount: config.image_count as u64];
+            let () = msg_send![*render_layer, setMaximumDrawableCount: config.image_count as u64];
 
-            let () = msg_send![render_layer, setDrawableSize: drawable_size];
+            render_layer.set_drawable_size(drawable_size);
             if can_set_next_drawable_timeout {
-                let () = msg_send![render_layer, setAllowsNextDrawableTimeout:false];
+                let () = msg_send![*render_layer, setAllowsNextDrawableTimeout:false];
             }
             if can_set_display_sync {
-                let () = msg_send![render_layer, setDisplaySyncEnabled: display_sync];
+                let () = msg_send![*render_layer, setDisplaySyncEnabled: display_sync];
             }
         };
 
@@ -164,26 +150,27 @@ impl Default for AcquireMode {
 
 #[derive(Debug)]
 pub struct SwapchainImage {
-    surface: Arc<SurfaceInner>,
-    index: w::SwapImageIndex,
-}
-
-#[derive(Debug)]
-pub struct SurfaceImage {
+    image: native::Image,
     view: native::ImageView,
     drawable: metal::CoreAnimationDrawable,
 }
 
-unsafe impl Send for SurfaceImage {}
-unsafe impl Sync for SurfaceImage {}
+unsafe impl Send for SwapchainImage {}
+unsafe impl Sync for SwapchainImage {}
 
-impl SurfaceImage {
+impl SwapchainImage {
     pub(crate) fn into_drawable(self) -> CoreAnimationDrawable {
         self.drawable
     }
 }
 
-impl Borrow<native::ImageView> for SurfaceImage {
+impl Borrow<native::Image> for SwapchainImage {
+    fn borrow(&self) -> &native::Image {
+        &self.image
+    }
+}
+
+impl Borrow<native::ImageView> for SwapchainImage {
     fn borrow(&self) -> &native::ImageView {
         &self.view
     }
@@ -197,7 +184,7 @@ impl w::Surface<Backend> for Surface {
 
     fn capabilities(&self, physical_device: &PhysicalDevice) -> w::SurfaceCapabilities {
         let current_extent = if self.main_thread_id == thread::current().id() {
-            Some(self.inner.dimensions())
+            Some(self.dimensions())
         } else {
             warn!("Unable to get the current view dimensions on a non-main thread");
             None
@@ -251,7 +238,7 @@ impl w::Surface<Backend> for Surface {
 }
 
 impl w::PresentationSurface<Backend> for Surface {
-    type SwapchainImage = SurfaceImage;
+    type SwapchainImage = SwapchainImage;
 
     unsafe fn configure_swapchain(
         &mut self,
@@ -259,7 +246,7 @@ impl w::PresentationSurface<Backend> for Surface {
         config: w::SwapchainConfig,
     ) -> Result<(), w::CreationError> {
         assert!(image::Usage::COLOR_ATTACHMENT.contains(config.image_usage));
-        self.swapchain_format = self.inner.configure(&device.shared, &config);
+        self.swapchain_format = self.configure(&device.shared, &config);
         Ok(())
     }
 
@@ -271,19 +258,29 @@ impl w::PresentationSurface<Backend> for Surface {
         &mut self,
         _timeout_ns: u64, //TODO: use the timeout
     ) -> Result<(Self::SwapchainImage, Option<w::Suboptimal>), w::AcquireError> {
-        let render_layer_borrow = self.inner.render_layer.lock();
+        let render_layer = self.render_layer.lock();
         let (drawable, texture) = autoreleasepool(|| {
-            let drawable = render_layer_borrow.next_drawable().unwrap();
+            let drawable = render_layer.next_drawable().unwrap();
             (drawable.to_owned(), drawable.texture().to_owned())
         });
+        let size = render_layer.drawable_size();
 
-        let image = SurfaceImage {
+        let sc_image = SwapchainImage {
+            image: native::Image {
+                like: native::ImageLike::Texture(texture.clone()),
+                kind: image::Kind::D2(size.width as u32, size.height as u32, 1, 1),
+                mip_levels: 1,
+                format_desc: self.swapchain_format_desc,
+                shader_channel: Channel::Float,
+                mtl_format: self.swapchain_format,
+                mtl_type: metal::MTLTextureType::D2,
+            },
             view: native::ImageView {
                 texture,
                 mtl_format: self.swapchain_format,
             },
             drawable,
         };
-        Ok((image, None))
+        Ok((sc_image, None))
     }
 }

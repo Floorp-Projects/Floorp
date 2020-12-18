@@ -11,7 +11,7 @@ use libc::c_void;
 ///     ..WindowsHandle::empty()
 /// };
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WindowsHandle {
     /// A Win32 HWND handle.
     pub hwnd: *mut c_void,

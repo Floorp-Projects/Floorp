@@ -50,16 +50,18 @@ JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
 
 Device::Device(Adapter* const aParent, RawId aId)
     : DOMEventTargetHelper(aParent->GetParentObject()),
-      mBridge(aParent->mBridge),
       mId(aId),
-      mQueue(new Queue(this, aParent->mBridge, aId)) {}
+      mBridge(aParent->mBridge),
+      mQueue(new Queue(this, aParent->mBridge, aId)) {
+  mBridge->RegisterDevice(mId, this);
+}
 
 Device::~Device() { Cleanup(); }
 
 void Device::Cleanup() {
   if (mValid && mBridge && mBridge->IsOpen()) {
     mValid = false;
-    mBridge->SendDeviceDestroy(mId);
+    mBridge->UnregisterDevice(mId);
   }
 }
 

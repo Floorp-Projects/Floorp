@@ -1,6 +1,6 @@
 use std::{
     borrow::Borrow,
-    collections::{BTreeMap, VecDeque},
+    collections::{hash_map::Entry, BTreeMap},
     ffi, iter, mem,
     ops::Range,
     ptr, slice,
@@ -37,12 +37,9 @@ use hal::{
 };
 
 use crate::{
-    command as cmd, conv, descriptors_cpu,
-    pool::{CommandPool, CommandPoolAllocator},
-    resource as r, root_constants,
-    root_constants::RootConstant,
-    window::Swapchain,
-    Backend as B, Device, MemoryGroup, MAX_VERTEX_BUFFERS, NUM_HEAP_PROPERTIES, QUEUE_FAMILIES,
+    command as cmd, conv, descriptors_cpu, pool::CommandPool, resource as r, root_constants,
+    root_constants::RootConstant, window::Swapchain, Backend as B, Device, MemoryGroup,
+    MAX_VERTEX_BUFFERS, NUM_HEAP_PROPERTIES, QUEUE_FAMILIES,
 };
 use native::{PipelineStateSubobject, Subobject};
 
@@ -279,16 +276,23 @@ impl Device {
     /// This is a temporary workaround for https://github.com/KhronosGroup/SPIRV-Cross/issues/1512.
     ///
     /// This workaround also exists under the same name in the DX11 backend.
-    pub(crate) fn introspect_spirv_vertex_semantic_remapping(raw_data: &[u32]) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, hal::device::ShaderError> {
+    pub(crate) fn introspect_spirv_vertex_semantic_remapping(
+        raw_data: &[u32],
+    ) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, hal::device::ShaderError> {
         // This is inefficient as we already parse it once before. This is a temporary workaround only called
         // on vertex shaders. If this becomes permanent or shows up in profiles, deduplicate these as first course of action.
         let ast = Self::parse_spirv(raw_data)?;
 
         let mut map = auxil::FastHashMap::default();
 
-        let inputs = ast.get_shader_resources().map_err(gen_query_error)?.stage_inputs;
+        let inputs = ast
+            .get_shader_resources()
+            .map_err(gen_query_error)?
+            .stage_inputs;
         for input in inputs {
-            let idx = ast.get_decoration(input.id, spirv::Decoration::Location).map_err(gen_query_error)?;
+            let idx = ast
+                .get_decoration(input.id, spirv::Decoration::Location)
+                .map_err(gen_query_error)?;
 
             let ty = ast.get_type(input.type_id).map_err(gen_query_error)?;
 
@@ -298,16 +302,24 @@ impl Device {
                 | spirv::Type::UInt { columns, .. }
                 | spirv::Type::Half { columns, .. }
                 | spirv::Type::Float { columns, .. }
-                | spirv::Type::Double { columns, .. } if columns > 1 => {
+                | spirv::Type::Double { columns, .. }
+                    if columns > 1 =>
+                {
                     for col in 0..columns {
                         if let Some(_) = map.insert(idx + col, Some((idx, col))) {
-                            return Err(hal::device::ShaderError::CompilationFailed(format!("Shader has overlapping input attachments at location {}", idx)))
+                            return Err(hal::device::ShaderError::CompilationFailed(format!(
+                                "Shader has overlapping input attachments at location {}",
+                                idx
+                            )));
                         }
                     }
                 }
                 _ => {
                     if let Some(_) = map.insert(idx, None) {
-                        return Err(hal::device::ShaderError::CompilationFailed(format!("Shader has overlapping input attachments at location {}", idx)))
+                        return Err(hal::device::ShaderError::CompilationFailed(format!(
+                            "Shader has overlapping input attachments at location {}",
+                            idx
+                        )));
                     }
                 }
             }
@@ -462,6 +474,9 @@ impl Device {
         compile_options.vertex.invert_y = !features.contains(hal::Features::NDC_Y_UP);
         compile_options.force_zero_initialized_variables = true;
         compile_options.nonwritable_uav_texture_as_srv = true;
+        // these are technically incorrect, but better than panicking
+        compile_options.point_size_compat = true;
+        compile_options.point_coord_compat = true;
         compile_options.entry_point = Some((entry_point.to_string(), conv::map_stage(stage)));
 
         let stage_flag = stage.to_flag();
@@ -520,8 +535,14 @@ impl Device {
 
                 let execution_model = conv::map_stage(stage);
                 let shader_model = hlsl::ShaderModel::V5_1;
-                let shader_code =
-                    Self::translate_spirv(&mut ast, shader_model, layout, stage, features, source.entry)?;
+                let shader_code = Self::translate_spirv(
+                    &mut ast,
+                    shader_model,
+                    layout,
+                    stage,
+                    features,
+                    source.entry,
+                )?;
                 debug!("SPIRV-Cross generated shader:\n{}", shader_code);
 
                 let real_name = ast
@@ -603,8 +624,6 @@ impl Device {
         let cpu_handle = heap.start_cpu_descriptor();
         let gpu_handle = heap.start_gpu_descriptor();
 
-        let range_allocator = RangeAllocator::new(0..(capacity as u64));
-
         r::DescriptorHeap {
             raw: heap,
             handle_size: descriptor_size as _,
@@ -614,7 +633,6 @@ impl Device {
                 gpu: gpu_handle,
                 size: 0,
             },
-            range_allocator,
         }
     }
 
@@ -721,7 +739,7 @@ impl Device {
         &self,
         info: &ViewInfo,
     ) -> Result<descriptors_cpu::Handle, image::ViewCreationError> {
-        let handle = self.rtv_pool.lock().unwrap().alloc_handle();
+        let handle = self.rtv_pool.lock().alloc_handle();
         Self::view_image_as_render_target_impl(self.raw, handle.raw, info).map(|_| handle)
     }
 
@@ -809,7 +827,7 @@ impl Device {
         &self,
         info: &ViewInfo,
     ) -> Result<descriptors_cpu::Handle, image::ViewCreationError> {
-        let handle = self.dsv_pool.lock().unwrap().alloc_handle();
+        let handle = self.dsv_pool.lock().alloc_handle();
         Self::view_image_as_depth_stencil_impl(self.raw, handle.raw, info).map(|_| handle)
     }
 
@@ -938,7 +956,7 @@ impl Device {
         info: &ViewInfo,
     ) -> Result<descriptors_cpu::Handle, image::ViewCreationError> {
         let desc = Self::build_image_as_shader_resource_desc(&info)?;
-        let handle = self.srv_uav_pool.lock().unwrap().alloc_handle();
+        let handle = self.srv_uav_pool.lock().alloc_handle();
         unsafe {
             self.raw
                 .CreateShaderResourceView(info.resource.as_mut_ptr(), &desc, handle.raw);
@@ -952,7 +970,11 @@ impl Device {
         info: &ViewInfo,
     ) -> Result<descriptors_cpu::Handle, image::ViewCreationError> {
         #![allow(non_snake_case)]
-        assert_eq!(info.levels.start + 1, info.levels.end);
+
+        // Cannot make a storage image over multiple mips
+        if info.levels.start + 1 != info.levels.end {
+            return Err(image::ViewCreationError::Unsupported);
+        }
 
         let mut desc = d3d12::D3D12_UNORDERED_ACCESS_VIEW_DESC {
             Format: info.format,
@@ -1020,7 +1042,7 @@ impl Device {
             }
         }
 
-        let handle = self.srv_uav_pool.lock().unwrap().alloc_handle();
+        let handle = self.srv_uav_pool.lock().alloc_handle();
         unsafe {
             self.raw.CreateUnorderedAccessView(
                 info.resource.as_mut_ptr(),
@@ -1063,6 +1085,11 @@ impl Device {
         //TODO: proper error type?
         let non_srgb_format = conv::map_format_nosrgb(config.format).unwrap();
 
+        let mut flags = dxgi::DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+        if config.present_mode.contains(w::PresentMode::IMMEDIATE) {
+            flags |= dxgi::DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+        }
+
         // TODO: double-check values
         let desc = dxgi1_2::DXGI_SWAP_CHAIN_DESC1 {
             AlphaMode: dxgi1_2::DXGI_ALPHA_MODE_IGNORE,
@@ -1070,7 +1097,7 @@ impl Device {
             Width: config.extent.width,
             Height: config.extent.height,
             Format: non_srgb_format,
-            Flags: dxgi::DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT,
+            Flags: flags,
             BufferUsage: dxgitype::DXGI_USAGE_RENDER_TARGET_OUTPUT,
             SampleDesc: dxgitype::DXGI_SAMPLE_DESC {
                 Count: 1,
@@ -1139,10 +1166,11 @@ impl Device {
 
         Swapchain {
             inner,
-            frame_queue: VecDeque::new(),
             rtv_heap,
             resources,
             waitable,
+            usage: config.image_usage,
+            acquired_count: 0,
         }
     }
 }
@@ -1251,33 +1279,15 @@ impl d::Device<B> for Device {
         create_flags: CommandPoolCreateFlags,
     ) -> Result<CommandPool, d::OutOfMemory> {
         let list_type = QUEUE_FAMILIES[family.0].native_type();
-
-        let allocator = if create_flags.contains(CommandPoolCreateFlags::RESET_INDIVIDUAL) {
-            // Allocators are created per individual ID3D12GraphicsCommandList
-            CommandPoolAllocator::Individual(Vec::new())
-        } else {
-            let (command_allocator, hr) = self.raw.create_command_allocator(list_type);
-
-            // TODO: error handling
-            if !winerror::SUCCEEDED(hr) {
-                error!("error on command allocator creation: {:x}", hr);
-            }
-
-            CommandPoolAllocator::Shared(command_allocator)
-        };
-
-        Ok(CommandPool {
-            allocator,
-            device: self.raw,
+        Ok(CommandPool::new(
+            self.raw,
             list_type,
-            shared: self.shared.clone(),
+            &self.shared,
             create_flags,
-        })
+        ))
     }
 
-    unsafe fn destroy_command_pool(&self, pool: CommandPool) {
-        pool.destroy();
-    }
+    unsafe fn destroy_command_pool(&self, _pool: CommandPool) {}
 
     unsafe fn create_render_pass<'a, IA, IS, ID>(
         &self,
@@ -1737,9 +1747,18 @@ impl d::Device<B> for Device {
                             parameters
                                 .push(native::RootParameter::cbv_descriptor(visibility, binding));
                             root_offset += 2; // root CBV costs 2 words
-                        } else {
-                            // SRV and UAV not implemented so far
-                            unimplemented!()
+                        }
+                        if content.contains(r::DescriptorContent::SRV) {
+                            parameter_offsets.push(root_offset);
+                            parameters
+                                .push(native::RootParameter::srv_descriptor(visibility, binding));
+                            root_offset += 2; // root SRV costs 2 words
+                        }
+                        if content.contains(r::DescriptorContent::UAV) {
+                            parameter_offsets.push(root_offset);
+                            parameters
+                                .push(native::RootParameter::uav_descriptor(visibility, binding));
+                            root_offset += 2; // root UAV costs 2 words
                         }
                     }
                 }
@@ -1899,7 +1918,10 @@ impl d::Device<B> for Device {
             // this information, so just pretend like this workaround never existed and hope
             // for the best.
             if let crate::resource::ShaderModule::Spirv(ref spv) = vs.module {
-                Some(Self::introspect_spirv_vertex_semantic_remapping(spv).map_err(pso::CreationError::Shader)?)
+                Some(
+                    Self::introspect_spirv_vertex_semantic_remapping(spv)
+                        .map_err(pso::CreationError::Shader)?,
+                )
             } else {
                 None
             }
@@ -1934,25 +1956,26 @@ impl d::Device<B> for Device {
         }
 
         // See [`introspect_spirv_vertex_semantic_remapping`] for details of why this is needed.
-        let semantics: Vec<_> = attributes.iter().map(|attrib| {
-            let semantics = vertex_semantic_remapping
-                .as_ref()
-                .and_then(|map| {
-                    map.get(&attrib.location)
-                });
-            match semantics {
-                Some(Some((major, minor))) => {
-                    let name = std::borrow::Cow::Owned(format!("TEXCOORD{}_\0", major));
-                    let location = *minor;
-                    (name, location)
+        let semantics: Vec<_> = attributes
+            .iter()
+            .map(|attrib| {
+                let semantics = vertex_semantic_remapping
+                    .as_ref()
+                    .and_then(|map| map.get(&attrib.location));
+                match semantics {
+                    Some(Some((major, minor))) => {
+                        let name = std::borrow::Cow::Owned(format!("TEXCOORD{}_\0", major));
+                        let location = *minor;
+                        (name, location)
+                    }
+                    _ => {
+                        let name = std::borrow::Cow::Borrowed("TEXCOORD\0");
+                        let location = attrib.location;
+                        (name, location)
+                    }
                 }
-                _ => {
-                    let name = std::borrow::Cow::Borrowed("TEXCOORD\0");
-                    let location = attrib.location;
-                    (name, location)
-                }
-            }
-        }).collect();
+            })
+            .collect();
 
         // Define input element descriptions
         let input_element_descs = attributes
@@ -2335,7 +2358,7 @@ impl d::Device<B> for Device {
         }
 
         let clear_uav = if buffer_unbound.usage.contains(buffer::Usage::TRANSFER_DST) {
-            let handle = self.srv_uav_pool.lock().unwrap().alloc_handle();
+            let handle = self.srv_uav_pool.lock().alloc_handle();
             let mut view_desc = d3d12::D3D12_UNORDERED_ACCESS_VIEW_DESC {
                 Format: dxgiformat::DXGI_FORMAT_R32_TYPELESS,
                 ViewDimension: d3d12::D3D12_UAV_DIMENSION_BUFFER,
@@ -2379,7 +2402,10 @@ impl d::Device<B> for Device {
         let buffer = buffer.expect_bound();
         let buffer_features = {
             let idx = format.map(|fmt| fmt as usize).unwrap_or(0);
-            self.format_properties.get(idx).properties.buffer_features
+            self.format_properties
+                .resolve(idx)
+                .properties
+                .buffer_features
         };
         let (format, format_desc) = match format.and_then(conv::map_format) {
             Some(fmt) => (fmt, format.unwrap().surface_desc()),
@@ -2410,7 +2436,7 @@ impl d::Device<B> for Device {
                 Flags: d3d12::D3D12_BUFFER_SRV_FLAG_NONE,
             };
 
-            let handle = self.srv_uav_pool.lock().unwrap().alloc_handle();
+            let handle = self.srv_uav_pool.lock().alloc_handle();
             self.raw.clone().CreateShaderResourceView(
                 buffer.resource.as_mut_ptr(),
                 &desc,
@@ -2438,7 +2464,7 @@ impl d::Device<B> for Device {
                 CounterOffsetInBytes: 0,
             };
 
-            let handle = self.srv_uav_pool.lock().unwrap().alloc_handle();
+            let handle = self.srv_uav_pool.lock().alloc_handle();
             self.raw.clone().CreateUnorderedAccessView(
                 buffer.resource.as_mut_ptr(),
                 ptr::null_mut(),
@@ -2474,7 +2500,7 @@ impl d::Device<B> for Device {
         let view_format = conv::map_format(format);
         let extent = kind.extent();
 
-        let format_info = self.format_properties.get(format as usize);
+        let format_info = self.format_properties.resolve(format as usize);
         let (layout, features) = match tiling {
             image::Tiling::Optimal => (
                 d3d12::D3D12_TEXTURE_LAYOUT_UNKNOWN,
@@ -2522,19 +2548,12 @@ impl d::Device<B> for Device {
 
         let alloc_info = self.raw.clone().GetResourceAllocationInfo(0, 1, &desc);
 
-        let target_usage = image::Usage::COLOR_ATTACHMENT
-            | image::Usage::DEPTH_STENCIL_ATTACHMENT;
-
-        let target_features = format::ImageFeature::COLOR_ATTACHMENT | format::ImageFeature::DEPTH_STENCIL_ATTACHMENT;
-
-        // Image usages which require RT/DS heap due to internal implementation.
-        let needs_target_usage =
-            usage.intersects(target_usage)
-                || (usage.contains(image::Usage::TRANSFER_DST) && features.intersects(target_features));
-
+        // Image flags which require RT/DS heap due to internal implementation.
+        let target_flags = d3d12::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+            | d3d12::D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
         let type_mask_shift = if self.private_caps.heterogeneous_resource_heaps {
             MEM_TYPE_UNIVERSAL_SHIFT
-        } else if needs_target_usage {
+        } else if desc.Flags & target_flags != 0 {
             MEM_TYPE_TARGET_SHIFT
         } else {
             MEM_TYPE_IMAGE_SHIFT
@@ -2664,7 +2683,7 @@ impl d::Device<B> for Device {
         // if the format supports being rendered into, allowing us to create clear_Xv
         let format_properties = self
             .format_properties
-            .get(image_unbound.format as usize)
+            .resolve(image_unbound.format as usize)
             .properties;
         let props = match image_unbound.tiling {
             image::Tiling::Optimal => format_properties.optimal_tiling,
@@ -2682,8 +2701,8 @@ impl d::Device<B> for Device {
 
         *image = r::Image::Bound(r::ImageBound {
             resource: resource,
-            place: r::Place {
-                heap: memory.heap.clone(),
+            place: r::Place::Heap {
+                raw: memory.heap.clone(),
                 offset,
             },
             surface_type: image_unbound.format.base_format().0,
@@ -2693,8 +2712,6 @@ impl d::Device<B> for Device {
             default_view_format: image_unbound.view_format,
             view_caps: image_unbound.view_caps,
             descriptor: image_unbound.desc,
-            bytes_per_block: image_unbound.bytes_per_block,
-            block_dim: image_unbound.block_dim,
             clear_cv: if aspects.contains(Aspects::COLOR) && can_clear_color {
                 let format = image_unbound.view_format.unwrap();
                 (0..num_layers)
@@ -2819,6 +2836,8 @@ impl d::Device<B> for Device {
                 None
             },
             handle_rtv: if image.usage.contains(image::Usage::COLOR_ATTACHMENT) {
+                // This view is not necessarily going to be rendered to, even
+                // if the image supports that in general.
                 match self.view_image_as_render_target(&info) {
                     Ok(handle) => r::RenderTargetHandle::Pool(handle),
                     Err(_) => r::RenderTargetHandle::None,
@@ -2856,34 +2875,41 @@ impl d::Device<B> for Device {
         &self,
         info: &image::SamplerDesc,
     ) -> Result<r::Sampler, d::AllocationError> {
-        assert!(info.normalized);
-        let handle = self.sampler_pool.lock().unwrap().alloc_handle();
-
-        let op = match info.comparison {
-            Some(_) => d3d12::D3D12_FILTER_REDUCTION_TYPE_COMPARISON,
-            None => d3d12::D3D12_FILTER_REDUCTION_TYPE_STANDARD,
+        if !info.normalized {
+            warn!("Sampler with unnormalized coordinates is not supported!");
+        }
+        let handle = match self.samplers.map.lock().entry(info.clone()) {
+            Entry::Occupied(e) => *e.get(),
+            Entry::Vacant(e) => {
+                let handle = self.samplers.pool.lock().alloc_handle();
+                let info = e.key();
+                let op = match info.comparison {
+                    Some(_) => d3d12::D3D12_FILTER_REDUCTION_TYPE_COMPARISON,
+                    None => d3d12::D3D12_FILTER_REDUCTION_TYPE_STANDARD,
+                };
+                self.raw.create_sampler(
+                    handle.raw,
+                    conv::map_filter(
+                        info.mag_filter,
+                        info.min_filter,
+                        info.mip_filter,
+                        op,
+                        info.anisotropy_clamp,
+                    ),
+                    [
+                        conv::map_wrap(info.wrap_mode.0),
+                        conv::map_wrap(info.wrap_mode.1),
+                        conv::map_wrap(info.wrap_mode.2),
+                    ],
+                    info.lod_bias.0,
+                    info.anisotropy_clamp.map_or(0, |aniso| aniso as u32),
+                    conv::map_comparison(info.comparison.unwrap_or(pso::Comparison::Always)),
+                    info.border.into(),
+                    info.lod_range.start.0..info.lod_range.end.0,
+                );
+                *e.insert(handle)
+            }
         };
-        self.raw.create_sampler(
-            handle.raw,
-            conv::map_filter(
-                info.mag_filter,
-                info.min_filter,
-                info.mip_filter,
-                op,
-                info.anisotropy_clamp,
-            ),
-            [
-                conv::map_wrap(info.wrap_mode.0),
-                conv::map_wrap(info.wrap_mode.1),
-                conv::map_wrap(info.wrap_mode.2),
-            ],
-            info.lod_bias.0,
-            info.anisotropy_clamp.map_or(0, |aniso| aniso as u32),
-            conv::map_comparison(info.comparison.unwrap_or(pso::Comparison::Always)),
-            info.border.into(),
-            info.lod_range.start.0..info.lod_range.end.0,
-        );
-
         Ok(r::Sampler { handle })
     }
 
@@ -2934,46 +2960,32 @@ impl d::Device<B> for Device {
 
         // Allocate slices of the global GPU descriptor heaps.
         let heap_srv_cbv_uav = {
-            let mut heap_srv_cbv_uav = self.heap_srv_cbv_uav.lock().unwrap();
+            let view_heap = &self.heap_srv_cbv_uav.0;
 
             let range = match num_srv_cbv_uav {
                 0 => 0..0,
-                _ => heap_srv_cbv_uav
-                    .range_allocator
+                _ => self
+                    .heap_srv_cbv_uav
+                    .1
+                    .lock()
                     .allocate_range(num_srv_cbv_uav as _)
-                    .unwrap(), // TODO: error/resize
+                    .map_err(|e| {
+                        warn!("View pool allocation error: {:?}", e);
+                        d::OutOfMemory::Host
+                    })?,
             };
 
             r::DescriptorHeapSlice {
-                heap: heap_srv_cbv_uav.raw.clone(),
-                handle_size: heap_srv_cbv_uav.handle_size as _,
+                heap: view_heap.raw.clone(),
+                handle_size: view_heap.handle_size as _,
                 range_allocator: RangeAllocator::new(range),
-                start: heap_srv_cbv_uav.start,
-            }
-        };
-
-        let heap_sampler = {
-            let mut heap_sampler = self.heap_sampler.lock().unwrap();
-
-            let range = match num_samplers {
-                0 => 0..0,
-                _ => heap_sampler
-                    .range_allocator
-                    .allocate_range(num_samplers as _)
-                    .unwrap(), // TODO: error/resize
-            };
-
-            r::DescriptorHeapSlice {
-                heap: heap_sampler.raw.clone(),
-                handle_size: heap_sampler.handle_size as _,
-                range_allocator: RangeAllocator::new(range),
-                start: heap_sampler.start,
+                start: view_heap.start,
             }
         };
 
         Ok(r::DescriptorPool {
             heap_srv_cbv_uav,
-            heap_sampler,
+            heap_raw_sampler: self.samplers.heap.raw,
             pools: descriptor_pools,
             max_size: max_sets as _,
         })
@@ -3001,16 +3013,10 @@ impl d::Device<B> for Device {
         J: IntoIterator,
         J::Item: Borrow<pso::Descriptor<'a, B>>,
     {
-        let mut descriptor_updater = self.descriptor_updater.lock().unwrap();
+        let mut descriptor_updater = self.descriptor_updater.lock();
         descriptor_updater.reset();
 
-        //TODO: combine destination ranges
-        let mut dst_samplers = Vec::new();
-        let mut dst_views = Vec::new();
-        let mut src_samplers = Vec::new();
-        let mut src_views = Vec::new();
-        let mut num_samplers = Vec::new();
-        let mut num_views = Vec::new();
+        let mut accum = descriptors_cpu::MultiCopyAccumulator::default();
         debug!("write_descriptor_sets");
 
         for write in write_iter {
@@ -3021,6 +3027,11 @@ impl d::Device<B> for Device {
                 "\t{:?} binding {} array offset {}",
                 bind_info, target_binding, offset
             );
+            let base_sampler_offset = write.set.sampler_offset(write.binding, write.array_offset);
+            trace!("\tsampler offset {}", base_sampler_offset);
+            let mut sampler_offset = base_sampler_offset;
+            let mut desc_samplers = write.set.sampler_origins.borrow_mut();
+
             for descriptor in write.descriptors {
                 // spill over the writes onto the next binding
                 while offset >= bind_info.count {
@@ -3032,7 +3043,6 @@ impl d::Device<B> for Device {
                 let mut src_cbv = None;
                 let mut src_srv = None;
                 let mut src_uav = None;
-                let mut src_sampler = None;
 
                 match *descriptor.borrow() {
                     pso::Descriptor::Buffer(buffer, ref sub) => {
@@ -3123,10 +3133,12 @@ impl d::Device<B> for Device {
                     }
                     pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => {
                         src_srv = image.handle_srv.map(|h| h.raw);
-                        src_sampler = Some(sampler.handle.raw);
+                        desc_samplers[sampler_offset] = sampler.handle.raw;
+                        sampler_offset += 1;
                     }
                     pso::Descriptor::Sampler(sampler) => {
-                        src_sampler = Some(sampler.handle.raw);
+                        desc_samplers[sampler_offset] = sampler.handle.raw;
+                        sampler_offset += 1;
                     }
                     pso::Descriptor::TexelBuffer(buffer_view) => {
                         if bind_info.content.contains(r::DescriptorContent::SRV) {
@@ -3144,15 +3156,17 @@ impl d::Device<B> for Device {
 
                 if let Some(handle) = src_cbv {
                     trace!("\tcbv offset {}", offset);
-                    src_views.push(handle);
-                    dst_views.push(bind_info.view_range.as_ref().unwrap().at(offset));
-                    num_views.push(1);
+                    accum.src_views.add(handle, 1);
+                    accum
+                        .dst_views
+                        .add(bind_info.view_range.as_ref().unwrap().at(offset), 1);
                 }
                 if let Some(handle) = src_srv {
                     trace!("\tsrv offset {}", offset);
-                    src_views.push(handle);
-                    dst_views.push(bind_info.view_range.as_ref().unwrap().at(offset));
-                    num_views.push(1);
+                    accum.src_views.add(handle, 1);
+                    accum
+                        .dst_views
+                        .add(bind_info.view_range.as_ref().unwrap().at(offset), 1);
                 }
                 if let Some(handle) = src_uav {
                     let uav_offset = if bind_info.content.contains(r::DescriptorContent::SRV) {
@@ -3161,43 +3175,24 @@ impl d::Device<B> for Device {
                         offset
                     };
                     trace!("\tuav offset {}", uav_offset);
-                    src_views.push(handle);
-                    dst_views.push(bind_info.view_range.as_ref().unwrap().at(uav_offset));
-                    num_views.push(1);
-                }
-                if let Some(handle) = src_sampler {
-                    trace!("\tsampler offset {}", offset);
-                    src_samplers.push(handle);
-                    dst_samplers.push(bind_info.sampler_range.as_ref().unwrap().at(offset));
-                    num_samplers.push(1);
+                    accum.src_views.add(handle, 1);
+                    accum
+                        .dst_views
+                        .add(bind_info.view_range.as_ref().unwrap().at(uav_offset), 1);
                 }
 
                 offset += 1;
             }
+
+            if sampler_offset != base_sampler_offset {
+                drop(desc_samplers);
+                write
+                    .set
+                    .update_samplers(&self.samplers.heap, &self.samplers.origins, &mut accum);
+            }
         }
 
-        if !num_views.is_empty() {
-            self.raw.clone().CopyDescriptors(
-                dst_views.len() as u32,
-                dst_views.as_ptr(),
-                num_views.as_ptr(),
-                src_views.len() as u32,
-                src_views.as_ptr(),
-                num_views.as_ptr(),
-                d3d12::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-            );
-        }
-        if !num_samplers.is_empty() {
-            self.raw.clone().CopyDescriptors(
-                dst_samplers.len() as u32,
-                dst_samplers.as_ptr(),
-                num_samplers.as_ptr(),
-                src_samplers.len() as u32,
-                src_samplers.as_ptr(),
-                num_samplers.as_ptr(),
-                d3d12::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-            );
-        }
+        accum.flush(self.raw);
     }
 
     unsafe fn copy_descriptor_sets<'a, I>(&self, copy_iter: I)
@@ -3205,25 +3200,25 @@ impl d::Device<B> for Device {
         I: IntoIterator,
         I::Item: Borrow<pso::DescriptorSetCopy<'a, B>>,
     {
-        let mut dst_samplers = Vec::new();
-        let mut dst_views = Vec::new();
-        let mut src_samplers = Vec::new();
-        let mut src_views = Vec::new();
-        let mut num_samplers = Vec::new();
-        let mut num_views = Vec::new();
+        let mut accum = descriptors_cpu::MultiCopyAccumulator::default();
 
         for copy_wrap in copy_iter {
             let copy = copy_wrap.borrow();
             let src_info = &copy.src_set.binding_infos[copy.src_binding as usize];
             let dst_info = &copy.dst_set.binding_infos[copy.dst_binding as usize];
+
             if let (Some(src_range), Some(dst_range)) =
                 (src_info.view_range.as_ref(), dst_info.view_range.as_ref())
             {
                 assert!(copy.src_array_offset + copy.count <= src_range.handle.size as usize);
                 assert!(copy.dst_array_offset + copy.count <= dst_range.handle.size as usize);
-                src_views.push(src_range.at(copy.src_array_offset as _));
-                dst_views.push(dst_range.at(copy.dst_array_offset as _));
-                num_views.push(copy.count as u32);
+                let count = copy.count as u32;
+                accum
+                    .src_views
+                    .add(src_range.at(copy.src_array_offset as _), count);
+                accum
+                    .dst_views
+                    .add(dst_range.at(copy.dst_array_offset as _), count);
 
                 if (src_info.content & dst_info.content)
                     .contains(r::DescriptorContent::SRV | r::DescriptorContent::UAV)
@@ -3236,45 +3231,39 @@ impl d::Device<B> for Device {
                         dst_info.count as usize + copy.dst_array_offset + copy.count
                             <= dst_range.handle.size as usize
                     );
-                    src_views.push(src_range.at(src_info.count + copy.src_array_offset as u64));
-                    dst_views.push(dst_range.at(dst_info.count + copy.dst_array_offset as u64));
-                    num_views.push(copy.count as u32);
+                    accum.src_views.add(
+                        src_range.at(src_info.count + copy.src_array_offset as u64),
+                        count,
+                    );
+                    accum.dst_views.add(
+                        dst_range.at(dst_info.count + copy.dst_array_offset as u64),
+                        count,
+                    );
                 }
             }
-            if let (Some(src_range), Some(dst_range)) = (
-                src_info.sampler_range.as_ref(),
-                dst_info.sampler_range.as_ref(),
-            ) {
-                assert!(copy.src_array_offset + copy.count <= src_range.handle.size as usize);
-                assert!(copy.dst_array_offset + copy.count <= dst_range.handle.size as usize);
-                src_samplers.push(src_range.at(copy.src_array_offset as _));
-                dst_samplers.push(dst_range.at(copy.dst_array_offset as _));
-                num_samplers.push(copy.count as u32);
+
+            if dst_info.content.contains(r::DescriptorContent::SAMPLER) {
+                let src_offset = copy
+                    .src_set
+                    .sampler_offset(copy.src_binding, copy.src_array_offset);
+                let dst_offset = copy
+                    .dst_set
+                    .sampler_offset(copy.dst_binding, copy.dst_array_offset);
+                let src_samplers = copy.src_set.sampler_origins.borrow();
+                let mut dst_samplers = copy.dst_set.sampler_origins.borrow_mut();
+                dst_samplers[dst_offset..dst_offset + copy.count]
+                    .copy_from_slice(&src_samplers[src_offset..src_offset + copy.count]);
+                drop(dst_samplers);
+
+                copy.dst_set.update_samplers(
+                    &self.samplers.heap,
+                    &self.samplers.origins,
+                    &mut accum,
+                );
             }
         }
 
-        if !num_views.is_empty() {
-            self.raw.clone().CopyDescriptors(
-                dst_views.len() as u32,
-                dst_views.as_ptr(),
-                num_views.as_ptr(),
-                src_views.len() as u32,
-                src_views.as_ptr(),
-                num_views.as_ptr(),
-                d3d12::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-            );
-        }
-        if !num_samplers.is_empty() {
-            self.raw.clone().CopyDescriptors(
-                dst_samplers.len() as u32,
-                dst_samplers.as_ptr(),
-                num_samplers.as_ptr(),
-                src_samplers.len() as u32,
-                src_samplers.as_ptr(),
-                num_samplers.as_ptr(),
-                d3d12::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-            );
-        }
+        accum.flush(self.raw.clone());
     }
 
     unsafe fn map_memory(
@@ -3390,7 +3379,7 @@ impl d::Device<B> for Device {
         I::Item: Borrow<r::Fence>,
     {
         let fences = fences.into_iter().collect::<Vec<_>>();
-        let mut events = self.events.lock().unwrap();
+        let mut events = self.events.lock();
         for _ in events.len()..fences.len() {
             events.push(native::Event::create(false, false));
         }
@@ -3535,7 +3524,7 @@ impl d::Device<B> for Device {
         match buffer {
             r::Buffer::Bound(buffer) => {
                 if let Some(handle) = buffer.clear_uav {
-                    self.srv_uav_pool.lock().unwrap().free_handle(handle);
+                    self.srv_uav_pool.lock().free_handle(handle);
                 }
                 buffer.resource.destroy();
             }
@@ -3544,7 +3533,7 @@ impl d::Device<B> for Device {
     }
 
     unsafe fn destroy_buffer_view(&self, view: r::BufferView) {
-        let mut pool = self.srv_uav_pool.lock().unwrap();
+        let mut pool = self.srv_uav_pool.lock();
         if let Some(handle) = view.handle_srv {
             pool.free_handle(handle);
         }
@@ -3556,9 +3545,9 @@ impl d::Device<B> for Device {
     unsafe fn destroy_image(&self, image: r::Image) {
         match image {
             r::Image::Bound(image) => {
-                let mut dsv_pool = self.dsv_pool.lock().unwrap();
+                let mut dsv_pool = self.dsv_pool.lock();
                 for handle in image.clear_cv {
-                    self.rtv_pool.lock().unwrap().free_handle(handle);
+                    self.rtv_pool.lock().free_handle(handle);
                 }
                 for handle in image.clear_dv {
                     dsv_pool.free_handle(handle);
@@ -3574,42 +3563,30 @@ impl d::Device<B> for Device {
 
     unsafe fn destroy_image_view(&self, view: r::ImageView) {
         if let Some(handle) = view.handle_srv {
-            self.srv_uav_pool.lock().unwrap().free_handle(handle);
+            self.srv_uav_pool.lock().free_handle(handle);
         }
         if let Some(handle) = view.handle_uav {
-            self.srv_uav_pool.lock().unwrap().free_handle(handle);
+            self.srv_uav_pool.lock().free_handle(handle);
         }
         if let r::RenderTargetHandle::Pool(handle) = view.handle_rtv {
-            self.rtv_pool.lock().unwrap().free_handle(handle);
+            self.rtv_pool.lock().free_handle(handle);
         }
         if let Some(handle) = view.handle_dsv {
-            self.dsv_pool.lock().unwrap().free_handle(handle);
+            self.dsv_pool.lock().free_handle(handle);
         }
     }
 
-    unsafe fn destroy_sampler(&self, sampler: r::Sampler) {
-        self.sampler_pool
-            .lock()
-            .unwrap()
-            .free_handle(sampler.handle);
+    unsafe fn destroy_sampler(&self, _sampler: r::Sampler) {
+        // We don't destroy samplers, they are permanently cached
     }
 
     unsafe fn destroy_descriptor_pool(&self, pool: r::DescriptorPool) {
         let view_range = pool.heap_srv_cbv_uav.range_allocator.initial_range();
         if view_range.start < view_range.end {
             self.heap_srv_cbv_uav
+                .1
                 .lock()
-                .unwrap()
-                .range_allocator
                 .free_range(view_range.clone());
-        }
-        let sampler_range = pool.heap_sampler.range_allocator.initial_range();
-        if sampler_range.start < sampler_range.end {
-            self.heap_sampler
-                .lock()
-                .unwrap()
-                .range_allocator
-                .free_range(sampler_range.clone());
         }
     }
 

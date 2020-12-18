@@ -2,7 +2,6 @@ use std::{
     borrow::Borrow,
     fmt, hash,
     os::raw::c_void,
-    ptr,
     sync::{Arc, Mutex},
     time::Instant,
 };
@@ -88,12 +87,7 @@ pub struct RawSurface {
 }
 
 impl Instance {
-    #[cfg(all(
-        feature = "x11",
-        unix,
-        not(target_os = "android"),
-        not(target_os = "macos")
-    ))]
+    #[cfg(all(unix, not(target_os = "android"), not(target_os = "macos")))]
     pub fn create_surface_from_xlib(&self, dpy: *mut vk::Display, window: vk::Window) -> Surface {
         let entry = VK_ENTRY
             .as_ref()
@@ -105,13 +99,10 @@ impl Instance {
 
         let surface = {
             let xlib_loader = khr::XlibSurface::new(entry, &self.raw.inner);
-            let info = vk::XlibSurfaceCreateInfoKHR {
-                s_type: vk::StructureType::XLIB_SURFACE_CREATE_INFO_KHR,
-                p_next: ptr::null(),
-                flags: vk::XlibSurfaceCreateFlagsKHR::empty(),
-                window,
-                dpy,
-            };
+            let info = vk::XlibSurfaceCreateInfoKHR::builder()
+                .flags(vk::XlibSurfaceCreateFlagsKHR::empty())
+                .window(window)
+                .dpy(dpy);
 
             unsafe { xlib_loader.create_xlib_surface(&info, None) }
                 .expect("XlibSurface::create_xlib_surface() failed")
@@ -120,12 +111,7 @@ impl Instance {
         self.create_surface_from_vk_surface_khr(surface)
     }
 
-    #[cfg(all(
-        feature = "xcb",
-        unix,
-        not(target_os = "android"),
-        not(target_os = "macos")
-    ))]
+    #[cfg(all(unix, not(target_os = "android"), not(target_os = "macos")))]
     pub fn create_surface_from_xcb(
         &self,
         connection: *mut vk::xcb_connection_t,
@@ -141,13 +127,10 @@ impl Instance {
 
         let surface = {
             let xcb_loader = khr::XcbSurface::new(entry, &self.raw.inner);
-            let info = vk::XcbSurfaceCreateInfoKHR {
-                s_type: vk::StructureType::XCB_SURFACE_CREATE_INFO_KHR,
-                p_next: ptr::null(),
-                flags: vk::XcbSurfaceCreateFlagsKHR::empty(),
-                window,
-                connection,
-            };
+            let info = vk::XcbSurfaceCreateInfoKHR::builder()
+                .flags(vk::XcbSurfaceCreateFlagsKHR::empty())
+                .window(window)
+                .connection(connection);
 
             unsafe { xcb_loader.create_xcb_surface(&info, None) }
                 .expect("XcbSurface::create_xcb_surface() failed")
@@ -172,13 +155,10 @@ impl Instance {
 
         let surface = {
             let w_loader = khr::WaylandSurface::new(entry, &self.raw.inner);
-            let info = vk::WaylandSurfaceCreateInfoKHR {
-                s_type: vk::StructureType::WAYLAND_SURFACE_CREATE_INFO_KHR,
-                p_next: ptr::null(),
-                flags: vk::WaylandSurfaceCreateFlagsKHR::empty(),
-                display: display as *mut _,
-                surface: surface as *mut _,
-            };
+            let info = vk::WaylandSurfaceCreateInfoKHR::builder()
+                .flags(vk::WaylandSurfaceCreateFlagsKHR::empty())
+                .display(display)
+                .surface(surface);
 
             unsafe { w_loader.create_wayland_surface(&info, None) }.expect("WaylandSurface failed")
         };
@@ -194,12 +174,9 @@ impl Instance {
 
         let surface = {
             let loader = khr::AndroidSurface::new(entry, &self.raw.inner);
-            let info = vk::AndroidSurfaceCreateInfoKHR {
-                s_type: vk::StructureType::ANDROID_SURFACE_CREATE_INFO_KHR,
-                p_next: ptr::null(),
-                flags: vk::AndroidSurfaceCreateFlagsKHR::empty(),
-                window: window as *const _ as *mut _,
-            };
+            let info = vk::AndroidSurfaceCreateInfoKHR::builder()
+                .flags(vk::AndroidSurfaceCreateFlagsKHR::empty())
+                .window(window as *mut _);
 
             unsafe { loader.create_android_surface(&info, None) }.expect("AndroidSurface failed")
         };
@@ -218,13 +195,10 @@ impl Instance {
         }
 
         let surface = {
-            let info = vk::Win32SurfaceCreateInfoKHR {
-                s_type: vk::StructureType::WIN32_SURFACE_CREATE_INFO_KHR,
-                p_next: ptr::null(),
-                flags: vk::Win32SurfaceCreateFlagsKHR::empty(),
-                hinstance: hinstance as *mut _,
-                hwnd: hwnd as *mut _,
-            };
+            let info = vk::Win32SurfaceCreateInfoKHR::builder()
+                .flags(vk::Win32SurfaceCreateFlagsKHR::empty())
+                .hinstance(hinstance)
+                .hwnd(hwnd);
             let win32_loader = khr::Win32Surface::new(entry, &self.raw.inner);
             unsafe {
                 win32_loader
@@ -279,12 +253,11 @@ impl Instance {
 
         let surface = {
             let mac_os_loader = mvk::MacOSSurface::new(entry, &self.raw.inner);
-            let info = vk::MacOSSurfaceCreateInfoMVK {
-                s_type: vk::StructureType::MACOS_SURFACE_CREATE_INFO_M,
-                p_next: ptr::null(),
-                flags: vk::MacOSSurfaceCreateFlagsMVK::empty(),
-                p_view: view,
-            };
+            let mut info = vk::MacOSSurfaceCreateInfoMVK::builder()
+                .flags(vk::MacOSSurfaceCreateFlagsMVK::empty());
+            if let Some(view) = unsafe { view.as_ref() } {
+                info = info.view(view);
+            }
 
             unsafe {
                 mac_os_loader
@@ -419,7 +392,14 @@ impl w::Surface<Backend> for Surface {
 #[derive(Debug)]
 pub struct SurfaceImage {
     pub(crate) index: w::SwapImageIndex,
+    image: native::Image,
     view: native::ImageView,
+}
+
+impl Borrow<native::Image> for SurfaceImage {
+    fn borrow(&self) -> &native::Image {
+        &self.image
+    }
 }
 
 impl Borrow<native::ImageView> for SurfaceImage {
@@ -508,6 +488,12 @@ impl w::PresentationSurface<Backend> for Surface {
                 }
                 let image = Self::SwapchainImage {
                     index,
+                    image: native::Image {
+                        raw: frame.image,
+                        ty: vk::ImageType::TYPE_2D,
+                        flags: vk::ImageCreateFlags::empty(),
+                        extent: ssc.swapchain.extent,
+                    },
                     view: native::ImageView {
                         image: frame.image,
                         view: frame.view,
@@ -546,6 +532,7 @@ pub struct Swapchain {
     pub(crate) raw: vk::SwapchainKHR,
     pub(crate) functor: khr::Swapchain,
     pub(crate) vendor_id: u32,
+    pub(crate) extent: vk::Extent3D,
 }
 
 impl fmt::Debug for Swapchain {

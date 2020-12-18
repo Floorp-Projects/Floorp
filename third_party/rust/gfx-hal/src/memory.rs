@@ -30,6 +30,15 @@ bitflags!(
 );
 
 bitflags!(
+    /// Memory heap flags.
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    pub struct HeapFlags: u16 {
+        /// Device local memory on the GPU.
+        const DEVICE_LOCAL = 0x1;
+    }
+);
+
+bitflags!(
     /// Barrier dependency flags.
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct Dependencies: u32 {

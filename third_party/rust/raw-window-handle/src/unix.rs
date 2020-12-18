@@ -11,7 +11,7 @@ use libc::{c_ulong, c_void};
 ///     ..XlibHandle::empty()
 /// };
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct XlibHandle {
     /// An Xlib `Window`.
     pub window: c_ulong,
@@ -32,7 +32,7 @@ pub struct XlibHandle {
 ///     ..XcbHandle::empty()
 /// };
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct XcbHandle {
     /// An X11 `xcb_window_t`.
     pub window: u32, // Based on xproto.h
@@ -53,7 +53,7 @@ pub struct XcbHandle {
 ///     ..WaylandHandle::empty()
 /// };
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WaylandHandle {
     /// A pointer to a `wl_surface`.
     pub surface: *mut c_void,

@@ -493,6 +493,28 @@ impl Into<[f32; 4]> for PackedColor {
     }
 }
 
+/// The border color for `WrapMode::Border` wrap mode.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum BorderColor {
+    ///
+    TransparentBlack,
+    ///
+    OpaqueBlack,
+    ///
+    OpaqueWhite,
+}
+
+impl Into<[f32; 4]> for BorderColor {
+    fn into(self) -> [f32; 4] {
+        match self {
+            BorderColor::TransparentBlack => [0.0, 0.0, 0.0, 0.0],
+            BorderColor::OpaqueBlack => [0.0, 0.0, 0.0, 1.0],
+            BorderColor::OpaqueWhite => [1.0, 1.0, 1.0, 1.0],
+        }
+    }
+}
+
 /// Specifies how to sample from an image.  These are all the parameters
 /// available that alter how the GPU goes from a coordinate in an image
 /// to producing an actual value from the texture, including filtering/
@@ -519,7 +541,7 @@ pub struct SamplerDesc {
     /// Comparison mode, used primary for a shadow map.
     pub comparison: Option<Comparison>,
     /// Border color is used when one of the wrap modes is set to border.
-    pub border: PackedColor,
+    pub border: BorderColor,
     /// Specifies whether the texture coordinates are normalized.
     pub normalized: bool,
     /// Anisotropic filtering.
@@ -540,7 +562,7 @@ impl SamplerDesc {
             lod_bias: Lod(0.0),
             lod_range: Lod::RANGE.clone(),
             comparison: None,
-            border: PackedColor(0),
+            border: BorderColor::TransparentBlack,
             normalized: true,
             anisotropy_clamp: None,
         }
@@ -583,6 +605,12 @@ pub enum Layout {
     Preinitialized,
     /// The layout that an image must be in to be presented to the display.
     Present,
+}
+
+impl Default for Layout {
+    fn default() -> Self {
+        Self::General
+    }
 }
 
 bitflags!(

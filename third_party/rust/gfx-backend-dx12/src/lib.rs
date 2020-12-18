@@ -1,3 +1,23 @@
+/*!
+# D3D12 backend internals.
+
+## Resource transitions
+
+Vulkan semantics for resource states doesn't exactly match D3D12.
+
+For regular images, whenever there is a specific layout used,
+we map it to a corresponding D3D12 resource state.
+
+For the swapchain images, we consider them to be in COMMON state
+everywhere except for render passes, where it's forcefully
+transitioned into the render state. When transfers to/from are
+requested, we transition them into and from the COPY_ states.
+
+For buffers and images in General layout, we the best effort of guessing
+the single mutable state based on the access flags. We can't reliably
+handle a case where multiple mutable access flags are used.
+*/
+
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
@@ -13,10 +33,14 @@ mod resource;
 mod root_constants;
 mod window;
 
+use auxil::FastHashMap;
 use hal::{
     adapter, format as f, image, memory, pso::PipelineStage, queue as q, Features, Hints, Limits,
 };
+use range_alloc::RangeAllocator;
 
+use parking_lot::{Mutex, RwLock};
+use smallvec::SmallVec;
 use winapi::{
     shared::{dxgi, dxgi1_2, dxgi1_4, dxgi1_6, minwindef::TRUE, winerror},
     um::{d3d12, d3d12sdklayers, handleapi, synchapi, winbase},
@@ -30,7 +54,7 @@ use std::{
     mem,
     os::windows::ffi::OsStringExt,
     //TODO: use parking_lot
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
 use self::descriptors_cpu::DescriptorCpuPool;
@@ -48,9 +72,11 @@ const MAX_DESCRIPTOR_SETS: usize = 8;
 
 const NUM_HEAP_PROPERTIES: usize = 3;
 
+pub type DescriptorIndex = u64;
+
 // Memory types are grouped according to the supported resources.
 // Grouping is done to circumvent the limitations of heap tier 1 devices.
-// Devices with Tier 1 will expose `BuffersOnl`, `ImageOnly` and `TargetOnly`.
+// Devices with Tier 1 will expose `BuffersOnly`, `ImageOnly` and `TargetOnly`.
 // Devices with Tier 2 or higher will only expose `Universal`.
 enum MemoryGroup {
     Universal = 0,
@@ -173,6 +199,13 @@ static QUEUE_FAMILIES: [QueueFamily; 4] = [
     QueueFamily::Normal(q::QueueType::Transfer),
 ];
 
+#[derive(Default)]
+struct Workarounds {
+    // On WARP, temporary CPU descriptors are still used by the runtime
+    // after we call `CopyDescriptors`.
+    avoid_cpu_descriptor_overwrites: bool,
+}
+
 //Note: fields are dropped in the order of declaration, so we put the
 // most owning fields last.
 pub struct PhysicalDevice {
@@ -181,6 +214,7 @@ pub struct PhysicalDevice {
     limits: Limits,
     format_properties: Arc<FormatProperties>,
     private_caps: Capabilities,
+    workarounds: Workarounds,
     heap_properties: &'static [HeapProperties; NUM_HEAP_PROPERTIES],
     memory_properties: adapter::MemoryProperties,
     // Indicates that there is currently an active logical device.
@@ -205,10 +239,9 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         families: &[(&QueueFamily, &[q::QueuePriority])],
         requested_features: Features,
     ) -> Result<adapter::Gpu<Backend>, hal::device::CreationError> {
-        let lock = self.is_open.try_lock();
-        let mut open_guard = match lock {
-            Ok(inner) => inner,
-            Err(_) => return Err(hal::device::CreationError::TooManyObjects),
+        let mut open_guard = match self.is_open.try_lock() {
+            Some(inner) => inner,
+            None => return Err(hal::device::CreationError::TooManyObjects),
         };
 
         if !self.features().contains(requested_features) {
@@ -301,7 +334,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 
     fn format_properties(&self, fmt: Option<f::Format>) -> f::Properties {
         let idx = fmt.map(|fmt| fmt as usize).unwrap_or(0);
-        self.format_properties.get(idx).properties
+        self.format_properties.resolve(idx).properties
     }
 
     fn image_format_properties(
@@ -313,7 +346,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         view_caps: image::ViewCapabilities,
     ) -> Option<image::FormatProperties> {
         conv::map_format(format)?; //filter out unknown formats
-        let format_info = self.format_properties.get(format as usize);
+        let format_info = self.format_properties.resolve(format as usize);
 
         let supported_usage = {
             use hal::image::Usage as U;
@@ -461,13 +494,13 @@ impl q::CommandQueue<Backend> for CommandQueue {
         synchapi::ResetEvent(self.idle_event.0);
 
         // TODO: semaphores
-        let mut lists = submission
+        let lists = submission
             .command_buffers
             .into_iter()
-            .map(|buf| buf.borrow().as_raw_list())
-            .collect::<Vec<_>>();
+            .map(|cmd_buf| cmd_buf.borrow().as_raw_list())
+            .collect::<SmallVec<[_; 4]>>();
         self.raw
-            .ExecuteCommandLists(lists.len() as _, lists.as_mut_ptr());
+            .ExecuteCommandLists(lists.len() as _, lists.as_ptr());
 
         if let Some(fence) = fence {
             assert_eq!(winerror::S_OK, self.raw.Signal(fence.raw.as_mut_ptr(), 1));
@@ -477,11 +510,10 @@ impl q::CommandQueue<Backend> for CommandQueue {
     unsafe fn present(
         &mut self,
         surface: &mut window::Surface,
-        _image: resource::ImageView,
+        image: window::SwapchainImage,
         _wait_semaphore: Option<&resource::Semaphore>,
     ) -> Result<Option<hal::window::Suboptimal>, hal::window::PresentError> {
-        surface.present();
-        Ok(None)
+        surface.present(image).map(|()| None)
     }
 
     fn wait_idle(&self) -> Result<(), hal::device::OutOfMemory> {
@@ -541,57 +573,17 @@ impl Shared {
     }
 }
 
-struct DescriptorUpdater {
-    heaps: Vec<descriptors_cpu::HeapLinear>,
-    heap_index: usize,
-    reset_heap_index: usize,
+pub struct SamplerStorage {
+    map: Mutex<FastHashMap<image::SamplerDesc, descriptors_cpu::Handle>>,
+    pool: Mutex<DescriptorCpuPool>,
+    heap: resource::DescriptorHeap,
+    origins: RwLock<resource::DescriptorOrigins>,
 }
 
-impl DescriptorUpdater {
-    fn new(device: native::Device) -> Self {
-        DescriptorUpdater {
-            heaps: vec![Self::create_heap(device)],
-            heap_index: 0,
-            reset_heap_index: 0,
-        }
-    }
-
+impl SamplerStorage {
     unsafe fn destroy(&mut self) {
-        for heap in self.heaps.drain(..) {
-            heap.destroy();
-        }
-    }
-
-    fn reset(&mut self) {
-        self.reset_heap_index = self.heap_index;
-        // Note: this could clear all the heaps, but WARP has an issue with that
-        if false {
-            for heap in self.heaps.iter_mut() {
-                heap.clear();
-            }
-        }
-    }
-
-    fn create_heap(device: native::Device) -> descriptors_cpu::HeapLinear {
-        let size = 1 << 12; //arbitrary
-        descriptors_cpu::HeapLinear::new(device, native::DescriptorHeapType::CbvSrvUav, size)
-    }
-
-    fn alloc_handle(&mut self, device: native::Device) -> native::CpuDescriptor {
-        if self.heaps[self.heap_index].is_full() {
-            self.heap_index += 1;
-            if self.heap_index == self.heaps.len() {
-                self.heap_index = 0;
-            }
-            if self.heap_index == self.reset_heap_index {
-                let heap = Self::create_heap(device);
-                self.heaps.insert(self.heap_index, heap);
-                self.reset_heap_index += 1;
-            } else {
-                self.heaps[self.heap_index].clear();
-            }
-        }
-        self.heaps[self.heap_index].alloc_handle()
+        self.pool.lock().destroy();
+        self.heap.destroy();
     }
 }
 
@@ -605,11 +597,13 @@ pub struct Device {
     rtv_pool: Mutex<DescriptorCpuPool>,
     dsv_pool: Mutex<DescriptorCpuPool>,
     srv_uav_pool: Mutex<DescriptorCpuPool>,
-    sampler_pool: Mutex<DescriptorCpuPool>,
-    descriptor_updater: Mutex<DescriptorUpdater>,
+    descriptor_updater: Mutex<descriptors_cpu::DescriptorUpdater>,
     // CPU/GPU descriptor heaps
-    heap_srv_cbv_uav: Mutex<resource::DescriptorHeap>,
-    heap_sampler: Mutex<resource::DescriptorHeap>,
+    heap_srv_cbv_uav: (
+        resource::DescriptorHeap,
+        Mutex<RangeAllocator<DescriptorIndex>>,
+    ),
+    samplers: SamplerStorage,
     events: Mutex<Vec<native::Event>>,
     shared: Arc<Shared>,
     // Present queue exposed by the `Present` queue family.
@@ -642,20 +636,28 @@ impl Device {
         let rtv_pool = DescriptorCpuPool::new(device, native::DescriptorHeapType::Rtv);
         let dsv_pool = DescriptorCpuPool::new(device, native::DescriptorHeapType::Dsv);
         let srv_uav_pool = DescriptorCpuPool::new(device, native::DescriptorHeapType::CbvSrvUav);
-        let sampler_pool = DescriptorCpuPool::new(device, native::DescriptorHeapType::Sampler);
 
+        // maximum number of CBV/SRV/UAV descriptors in heap for Tier 1
+        let view_capacity = 1_000_000;
         let heap_srv_cbv_uav = Self::create_descriptor_heap_impl(
             device,
             native::DescriptorHeapType::CbvSrvUav,
             true,
-            1_000_000, // maximum number of CBV/SRV/UAV descriptors in heap for Tier 1
+            view_capacity,
         );
+        let view_range_allocator = RangeAllocator::new(0..(view_capacity as u64));
 
+        let sampler_pool = DescriptorCpuPool::new(device, native::DescriptorHeapType::Sampler);
         let heap_sampler = Self::create_descriptor_heap_impl(
             device,
             native::DescriptorHeapType::Sampler,
             true,
             2_048,
+        );
+
+        let descriptor_updater = descriptors_cpu::DescriptorUpdater::new(
+            device,
+            physical_device.workarounds.avoid_cpu_descriptor_overwrites,
         );
 
         let draw_signature = Self::create_command_signature(device, device::CommandSignature::Draw);
@@ -686,10 +688,14 @@ impl Device {
             rtv_pool: Mutex::new(rtv_pool),
             dsv_pool: Mutex::new(dsv_pool),
             srv_uav_pool: Mutex::new(srv_uav_pool),
-            sampler_pool: Mutex::new(sampler_pool),
-            descriptor_updater: Mutex::new(DescriptorUpdater::new(device)),
-            heap_srv_cbv_uav: Mutex::new(heap_srv_cbv_uav),
-            heap_sampler: Mutex::new(heap_sampler),
+            descriptor_updater: Mutex::new(descriptor_updater),
+            heap_srv_cbv_uav: (heap_srv_cbv_uav, Mutex::new(view_range_allocator)),
+            samplers: SamplerStorage {
+                map: Mutex::default(),
+                pool: Mutex::new(sampler_pool),
+                heap: heap_sampler,
+                origins: RwLock::default(),
+            },
             events: Mutex::new(Vec::new()),
             shared: Arc::new(shared),
             present_queue,
@@ -712,22 +718,22 @@ impl Device {
 
 impl Drop for Device {
     fn drop(&mut self) {
-        *self.open.lock().unwrap() = false;
+        *self.open.lock() = false;
 
         unsafe {
             for queue in &mut self.queues {
+                let _ = q::CommandQueue::wait_idle(queue);
                 queue.destroy();
             }
 
             self.shared.destroy();
-            self.heap_srv_cbv_uav.lock().unwrap().destroy();
-            self.heap_sampler.lock().unwrap().destroy();
-            self.rtv_pool.lock().unwrap().destroy();
-            self.dsv_pool.lock().unwrap().destroy();
-            self.srv_uav_pool.lock().unwrap().destroy();
-            self.sampler_pool.lock().unwrap().destroy();
+            self.heap_srv_cbv_uav.0.destroy();
+            self.samplers.destroy();
+            self.rtv_pool.lock().destroy();
+            self.dsv_pool.lock().destroy();
+            self.srv_uav_pool.lock().destroy();
 
-            self.descriptor_updater.lock().unwrap().destroy();
+            self.descriptor_updater.lock().destroy();
 
             // Debug tracking alive objects
             let (debug_device, hr_debug) = self.raw.cast::<d3d12sdklayers::ID3D12DebugDevice>();
@@ -846,6 +852,10 @@ impl hal::Instance<Backend> for Instance {
                 if hr == winerror::DXGI_ERROR_NOT_FOUND {
                     break;
                 }
+                if !winerror::SUCCEEDED(hr) {
+                    error!("Failed enumerating adapters: 0x{:x}", hr);
+                    break;
+                }
 
                 adapter2
             } else {
@@ -861,7 +871,7 @@ impl hal::Instance<Backend> for Instance {
 
                 let (adapter2, hr2) = unsafe { adapter1.cast::<dxgi1_2::IDXGIAdapter2>() };
                 if !winerror::SUCCEEDED(hr2) {
-                    error!("Failed casting to Adapter2");
+                    error!("Failed casting to Adapter2: 0x{:x}", hr2);
                     break;
                 }
 
@@ -906,11 +916,14 @@ impl hal::Instance<Backend> for Instance {
                 )
             });
 
+            let mut workarounds = Workarounds::default();
+
             let info = adapter::AdapterInfo {
                 name: device_name,
                 vendor: desc.VendorId as usize,
                 device: desc.DeviceId as usize,
                 device_type: if (desc.Flags & dxgi::DXGI_ADAPTER_FLAG_SOFTWARE) != 0 {
+                    workarounds.avoid_cpu_descriptor_overwrites = true;
                     adapter::DeviceType::VirtualGpu
                 } else if features_architecture.CacheCoherentUMA == TRUE {
                     adapter::DeviceType::IntegratedGpu
@@ -1087,14 +1100,17 @@ impl hal::Instance<Backend> for Instance {
                     mem_info.Budget
                 };
 
-                let local = query_memory(dxgi1_4::DXGI_MEMORY_SEGMENT_GROUP_LOCAL);
-                match memory_architecture {
-                    MemoryArchitecture::NUMA => {
-                        let non_local = query_memory(dxgi1_4::DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL);
-                        vec![local, non_local]
-                    }
-                    _ => vec![local],
+                let mut heaps = vec![adapter::MemoryHeap {
+                    size: query_memory(dxgi1_4::DXGI_MEMORY_SEGMENT_GROUP_LOCAL),
+                    flags: memory::HeapFlags::DEVICE_LOCAL,
+                }];
+                if let MemoryArchitecture::NUMA = memory_architecture {
+                    heaps.push(adapter::MemoryHeap {
+                        size: query_memory(dxgi1_4::DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL),
+                        flags: memory::HeapFlags::empty(),
+                    });
                 }
+                heaps
             };
             //TODO: find a way to get a tighter bound?
             let sample_count_mask = 0x3F;
@@ -1138,6 +1154,8 @@ impl hal::Instance<Backend> for Instance {
                     Features::INSTANCE_RATE |
                     Features::DEPTH_CLAMP |
                     Features::SAMPLER_MIP_LOD_BIAS |
+                    Features::SAMPLER_BORDER_COLOR |
+                    Features::MUTABLE_COMPARISON_SAMPLER |
                     Features::SAMPLER_ANISOTROPY |
                     Features::TEXTURE_DESCRIPTOR_ARRAY |
                     Features::SAMPLER_MIRROR_CLAMP_EDGE |
@@ -1234,6 +1252,7 @@ impl hal::Instance<Backend> for Instance {
                     heterogeneous_resource_heaps,
                     memory_architecture,
                 },
+                workarounds,
                 heap_properties,
                 memory_properties: adapter::MemoryProperties {
                     memory_types,
@@ -1349,8 +1368,8 @@ impl FormatProperties {
         }
     }
 
-    fn get(&self, idx: usize) -> FormatInfo {
-        let mut guard = self.info[idx].lock().unwrap();
+    fn resolve(&self, idx: usize) -> FormatInfo {
+        let mut guard = self.info[idx].lock();
         if let Some(info) = *guard {
             return info;
         }

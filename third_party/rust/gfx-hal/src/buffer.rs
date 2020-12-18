@@ -5,7 +5,7 @@
 //! They can be used as shader resources, vertex buffers, index buffers or for
 //! specifying the action commands for indirect execution.
 
-use crate::{device, format, Backend, IndexType};
+use crate::{device::OutOfMemory, format::Format};
 
 /// An offset inside a buffer, in bytes.
 pub type Offset = u64;
@@ -40,7 +40,7 @@ pub type State = Access;
 #[derive(Clone, Debug, PartialEq)]
 pub enum CreationError {
     /// Out of either host or device memory.
-    OutOfMemory(device::OutOfMemory),
+    OutOfMemory(OutOfMemory),
 
     /// Requested buffer usage is not supported.
     ///
@@ -51,8 +51,8 @@ pub enum CreationError {
     },
 }
 
-impl From<device::OutOfMemory> for CreationError {
-    fn from(error: device::OutOfMemory) -> Self {
+impl From<OutOfMemory> for CreationError {
+    fn from(error: OutOfMemory) -> Self {
         CreationError::OutOfMemory(error)
     }
 }
@@ -83,14 +83,14 @@ impl std::error::Error for CreationError {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ViewCreationError {
     /// Out of either host or device memory.
-    OutOfMemory(device::OutOfMemory),
+    OutOfMemory(OutOfMemory),
 
     /// Buffer view format is not supported.
-    UnsupportedFormat(Option<format::Format>),
+    UnsupportedFormat(Option<Format>),
 }
 
-impl From<device::OutOfMemory> for ViewCreationError {
-    fn from(error: device::OutOfMemory) -> Self {
+impl From<OutOfMemory> for ViewCreationError {
+    fn from(error: OutOfMemory) -> Self {
         ViewCreationError::OutOfMemory(error)
     }
 }
@@ -190,17 +190,3 @@ bitflags!(
         const MEMORY_WRITE = 0x10000;
     }
 );
-
-/// Index buffer view for `bind_index_buffer`.
-///
-/// Defines a buffer slice used for acquiring the indices on draw commands.
-/// Indices are used to lookup vertex indices in the vertex buffers.
-#[derive(Debug)]
-pub struct IndexBufferView<'a, B: Backend> {
-    /// The buffer to bind.
-    pub buffer: &'a B::Buffer,
-    /// The subrange of the buffer.
-    pub range: SubRange,
-    /// The type of the table elements (`u16` or `u32`).
-    pub index_type: IndexType,
-}

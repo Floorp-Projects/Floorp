@@ -4,7 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGPUChild.h"
+#include "mozilla/EnumTypeTraits.h"
 #include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/dom/GPUUncapturedErrorEvent.h"
+#include "mozilla/webgpu/ValidationError.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "Sampler.h"
 
@@ -14,6 +17,12 @@ namespace webgpu {
 NS_IMPL_CYCLE_COLLECTION(WebGPUChild)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGPUChild, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGPUChild, Release)
+
+static ffi::WGPUCompareFunction ConvertCompareFunction(
+    const dom::GPUCompareFunction& aCompare) {
+  // Value of 0 = Undefined is reserved on the C side for "null" semantics.
+  return ffi::WGPUCompareFunction(UnderlyingValue(aCompare) + 1);
+}
 
 static ffi::WGPUClient* initialize() {
   ffi::WGPUInfrastructure infra = ffi::wgpu_client_new();
@@ -120,7 +129,8 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
 }
 
 RawId WebGPUChild::TextureCreateView(
-    RawId aSelfId, const dom::GPUTextureViewDescriptor& aDesc) {
+    RawId aSelfId, RawId aDeviceId,
+    const dom::GPUTextureViewDescriptor& aDesc) {
   ffi::WGPUTextureViewDescriptor desc = {};
   nsCString label;
   if (aDesc.mLabel.WasPassed()) {
@@ -151,7 +161,7 @@ RawId WebGPUChild::TextureCreateView(
   ByteBuf bb;
   RawId id =
       ffi::wgpu_client_create_texture_view(mClient, aSelfId, &desc, ToFFI(&bb));
-  if (!SendTextureAction(aSelfId, std::move(bb))) {
+  if (!SendTextureAction(aSelfId, aDeviceId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
   return id;
@@ -177,7 +187,7 @@ RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
 
   ffi::WGPUCompareFunction comparison = ffi::WGPUCompareFunction_Sentinel;
   if (aDesc.mCompare.WasPassed()) {
-    comparison = ffi::WGPUCompareFunction(aDesc.mCompare.Value());
+    comparison = ConvertCompareFunction(aDesc.mCompare.Value());
     desc.compare = &comparison;
   }
 
@@ -209,8 +219,9 @@ RawId WebGPUChild::DeviceCreateCommandEncoder(
 }
 
 RawId WebGPUChild::CommandEncoderFinish(
-    RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc) {
-  if (!SendCommandEncoderFinish(aSelfId, aDesc)) {
+    RawId aSelfId, RawId aDeviceId,
+    const dom::GPUCommandBufferDescriptor& aDesc) {
+  if (!SendCommandEncoderFinish(aSelfId, aDeviceId, aDesc)) {
     MOZ_CRASH("IPC failure");
   }
   // We rely on knowledge that `CommandEncoderId` == `CommandBufferId`
@@ -224,7 +235,7 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
     RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc) {
   struct OptionalData {
     ffi::WGPUTextureViewDimension dim;
-    ffi::WGPUTextureComponentType type;
+    ffi::WGPURawTextureSampleType type;
     ffi::WGPUTextureFormat format;
   };
   nsTArray<OptionalData> optional(aDesc.mEntries.Length());
@@ -234,8 +245,23 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
       data.dim = ffi::WGPUTextureViewDimension(entry.mViewDimension.Value());
     }
     if (entry.mTextureComponentType.WasPassed()) {
-      data.type =
-          ffi::WGPUTextureComponentType(entry.mTextureComponentType.Value());
+      switch (entry.mTextureComponentType.Value()) {
+        case dom::GPUTextureComponentType::Float:
+          data.type = ffi::WGPURawTextureSampleType_Float;
+          break;
+        case dom::GPUTextureComponentType::Uint:
+          data.type = ffi::WGPURawTextureSampleType_Uint;
+          break;
+        case dom::GPUTextureComponentType::Sint:
+          data.type = ffi::WGPURawTextureSampleType_Sint;
+          break;
+        case dom::GPUTextureComponentType::Depth_comparison:
+          data.type = ffi::WGPURawTextureSampleType_Depth;
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE();
+          break;
+      }
     }
     if (entry.mStorageTextureFormat.WasPassed()) {
       data.format = ffi::WGPUTextureFormat(entry.mStorageTextureFormat.Value());
@@ -256,7 +282,7 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
       e.view_dimension = &optional[i].dim;
     }
     if (entry.mTextureComponentType.WasPassed()) {
-      e.texture_component_type = &optional[i].type;
+      e.texture_sample_type = &optional[i].type;
     }
     if (entry.mStorageTextureFormat.WasPassed()) {
       e.storage_texture_format = &optional[i].format;
@@ -433,12 +459,6 @@ static ffi::WGPUColorStateDescriptor ConvertColorDescriptor(
   return desc;
 }
 
-static ffi::WGPUCompareFunction ConvertCompareFunction(
-    const dom::GPUCompareFunction& aCompare) {
-  // Value of 0 = Undefined is reserved on the C side for "null" semantics.
-  return ffi::WGPUCompareFunction(static_cast<uint8_t>(aCompare) + 1);
-}
-
 static ffi::WGPUStencilStateFaceDescriptor ConvertStencilFaceDescriptor(
     const dom::GPUStencilStateFaceDescriptor& aDesc) {
   ffi::WGPUStencilStateFaceDescriptor desc = {};
@@ -561,6 +581,29 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
   return id;
 }
 
+ipc::IPCResult WebGPUChild::RecvError(RawId aDeviceId,
+                                      const nsACString& aMessage) {
+  if (!aDeviceId) {
+    // TODO: figure out how to report these kinds of errors
+    printf_stderr("Validation error without device target: %s\n",
+                  PromiseFlatCString(aMessage).get());
+  } else if (mDeviceMap.find(aDeviceId) == mDeviceMap.end()) {
+    printf_stderr("Validation error on a dropped device: %s\n",
+                  PromiseFlatCString(aMessage).get());
+  } else {
+    auto* target = mDeviceMap[aDeviceId];
+    MOZ_ASSERT(target);
+    dom::GPUUncapturedErrorEventInit init;
+    init.mError.SetAsGPUValidationError() =
+        new ValidationError(target, aMessage);
+    RefPtr<mozilla::dom::GPUUncapturedErrorEvent> event =
+        dom::GPUUncapturedErrorEvent::Constructor(target, u"uncapturederror"_ns,
+                                                  init);
+    target->DispatchEvent(*event);
+  }
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUChild::RecvDropAction(const ipc::ByteBuf& aByteBuf) {
   const auto* byteBuf = ToFFI(&aByteBuf);
   ffi::wgpu_client_drop_action(mClient, byteBuf);
@@ -639,6 +682,15 @@ void WebGPUChild::SwapChainPresent(wr::ExternalImageId aExternalImageId,
   // selection.
   RawId encoderId = ffi::wgpu_client_make_encoder_id(mClient, aTextureId);
   SendSwapChainPresent(aExternalImageId, aTextureId, encoderId);
+}
+
+void WebGPUChild::RegisterDevice(RawId aId, Device* aDevice) {
+  mDeviceMap.insert({aId, aDevice});
+}
+
+void WebGPUChild::UnregisterDevice(RawId aId) {
+  mDeviceMap.erase(aId);
+  SendDeviceDestroy(aId);
 }
 
 }  // namespace webgpu

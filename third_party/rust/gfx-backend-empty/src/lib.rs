@@ -131,7 +131,10 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             vec![memory_type]
         };
         // TODO: perhaps get an estimate of free RAM to report here?
-        let memory_heaps = vec![64 * 1024];
+        let memory_heaps = vec![adapter::MemoryHeap {
+            size: 64 * 1024,
+            flags: hal::memory::HeapFlags::empty(),
+        }];
         adapter::MemoryProperties {
             memory_types,
             memory_heaps,
@@ -175,7 +178,7 @@ impl queue::CommandQueue<Backend> for CommandQueue {
     unsafe fn present(
         &mut self,
         _surface: &mut Surface,
-        _image: (),
+        _image: SwapchainImage,
         _wait_semaphore: Option<&()>,
     ) -> Result<Option<window::Suboptimal>, window::PresentError> {
         Ok(None)
@@ -725,7 +728,12 @@ impl command::CommandBuffer<Backend> for CommandBuffer {
         unimplemented!("{}", NOT_SUPPORTED_MESSAGE)
     }
 
-    unsafe fn bind_index_buffer(&mut self, _: hal::buffer::IndexBufferView<Backend>) {
+    unsafe fn bind_index_buffer(
+        &mut self,
+        _: &Buffer,
+        _: hal::buffer::SubRange,
+        _: hal::IndexType,
+    ) {
         unimplemented!("{}", NOT_SUPPORTED_MESSAGE)
     }
 
@@ -1061,8 +1069,22 @@ impl window::Surface<Backend> for Surface {
         None
     }
 }
+
+#[derive(Debug)]
+pub struct SwapchainImage;
+impl Borrow<Image> for SwapchainImage {
+    fn borrow(&self) -> &Image {
+        unimplemented!()
+    }
+}
+impl Borrow<()> for SwapchainImage {
+    fn borrow(&self) -> &() {
+        unimplemented!()
+    }
+}
+
 impl window::PresentationSurface<Backend> for Surface {
-    type SwapchainImage = ();
+    type SwapchainImage = SwapchainImage;
 
     unsafe fn configure_swapchain(
         &mut self,
@@ -1077,8 +1099,8 @@ impl window::PresentationSurface<Backend> for Surface {
     unsafe fn acquire_image(
         &mut self,
         _: u64,
-    ) -> Result<((), Option<window::Suboptimal>), window::AcquireError> {
-        Ok(((), None))
+    ) -> Result<(SwapchainImage, Option<window::Suboptimal>), window::AcquireError> {
+        Ok((SwapchainImage, None))
     }
 }
 

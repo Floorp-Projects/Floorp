@@ -27,8 +27,8 @@ use hal::{
 };
 use metal::{
     CaptureManager, MTLCPUCacheMode, MTLLanguageVersion, MTLPrimitiveTopologyClass,
-    MTLPrimitiveType, MTLResourceOptions, MTLSamplerBorderColor, MTLSamplerMipFilter,
-    MTLStorageMode, MTLTextureType, MTLVertexStepFunction,
+    MTLPrimitiveType, MTLResourceOptions, MTLSamplerMipFilter, MTLStorageMode, MTLTextureType,
+    MTLVertexStepFunction,
 };
 use objc::{
     rc::autoreleasepool,
@@ -39,13 +39,11 @@ use spirv_cross::{msl, spirv, ErrorCode as SpirvErrorCode};
 
 use std::{
     borrow::Borrow,
-    cell::RefCell,
     cmp,
     collections::hash_map::Entry,
     collections::BTreeMap,
     iter, mem,
     ops::Range,
-    path::Path,
     ptr,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -388,8 +386,14 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
     fn memory_properties(&self) -> adapter::MemoryProperties {
         adapter::MemoryProperties {
             memory_heaps: vec![
-                !0, //TODO: private memory limits
-                self.shared.private_caps.max_buffer_size,
+                adapter::MemoryHeap {
+                    size: !0, //TODO: private memory limits
+                    flags: memory::HeapFlags::DEVICE_LOCAL,
+                },
+                adapter::MemoryHeap {
+                    size: self.shared.private_caps.max_buffer_size,
+                    flags: memory::HeapFlags::empty(),
+                },
             ],
             memory_types: self.memory_types.to_vec(),
         }
@@ -436,6 +440,16 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 F::empty()
             }
             //| F::SAMPLER_MIRROR_CLAMP_EDGE
+            | if self.shared.private_caps.sampler_clamp_to_border {
+                F::SAMPLER_BORDER_COLOR
+            } else {
+                F::empty()
+            }
+            | if self.shared.private_caps.mutable_comparison_samplers {
+                F::MUTABLE_COMPARISON_SAMPLER
+            } else {
+                F::empty()
+            }
             | F::NDC_Y_UP
     }
 
@@ -566,60 +580,7 @@ impl Device {
         }
     }
 
-    pub fn create_shader_library_from_file<P>(
-        &self,
-        _path: P,
-    ) -> Result<n::ShaderModule, ShaderError>
-    where
-        P: AsRef<Path>,
-    {
-        unimplemented!()
-    }
-
-    pub fn create_shader_library_from_source<S>(
-        &self,
-        source: S,
-        version: LanguageVersion,
-        rasterization_enabled: bool,
-    ) -> Result<n::ShaderModule, ShaderError>
-    where
-        S: AsRef<str>,
-    {
-        let options = metal::CompileOptions::new();
-        let msl_version = match version {
-            LanguageVersion { major: 1, minor: 0 } => MTLLanguageVersion::V1_0,
-            LanguageVersion { major: 1, minor: 1 } => MTLLanguageVersion::V1_1,
-            LanguageVersion { major: 1, minor: 2 } => MTLLanguageVersion::V1_2,
-            LanguageVersion { major: 2, minor: 0 } => MTLLanguageVersion::V2_0,
-            LanguageVersion { major: 2, minor: 1 } => MTLLanguageVersion::V2_1,
-            _ => {
-                return Err(ShaderError::CompilationFailed(
-                    "shader model not supported".into(),
-                ));
-            }
-        };
-        if msl_version > self.shared.private_caps.msl_version {
-            return Err(ShaderError::CompilationFailed(
-                "shader model too high".into(),
-            ));
-        }
-        options.set_language_version(msl_version);
-
-        self.shared
-            .device
-            .lock()
-            .new_library_with_source(source.as_ref(), &options)
-            .map(|library| {
-                n::ShaderModule::Compiled(n::ModuleInfo {
-                    library,
-                    entry_point_map: n::EntryPointMap::default(),
-                    rasterization_enabled,
-                })
-            })
-            .map_err(|e| ShaderError::CompilationFailed(e.into()))
-    }
-
-    fn compile_shader_library(
+    fn compile_shader_library_cross(
         device: &Mutex<metal::Device>,
         raw_data: &[u32],
         compiler_options: &msl::CompilerOptions,
@@ -697,6 +658,62 @@ impl Device {
         })
     }
 
+    #[cfg(feature = "naga")]
+    fn compile_shader_library_naga(
+        device: &Mutex<metal::Device>,
+        module: &naga::Module,
+        naga_options: &naga::back::msl::Options,
+    ) -> Result<n::ModuleInfo, ShaderError> {
+        let source = naga::back::msl::write_string(module, naga_options)
+            .map_err(|e| ShaderError::CompilationFailed(format!("{:?}", e)))?;
+
+        let mut entry_point_map = n::EntryPointMap::default();
+        for (&(stage, ref name), ep) in module.entry_points.iter() {
+            entry_point_map.insert(
+                name.clone(),
+                spirv::EntryPoint {
+                    //TODO: fill that information by Naga
+                    name: format!("{}{:?}", name, stage),
+                    execution_model: match stage {
+                        naga::ShaderStage::Vertex => spirv::ExecutionModel::Vertex,
+                        naga::ShaderStage::Fragment => spirv::ExecutionModel::Fragment,
+                        naga::ShaderStage::Compute => spirv::ExecutionModel::GlCompute,
+                    },
+                    work_group_size: spirv::WorkGroupSize {
+                        x: ep.workgroup_size[0],
+                        y: ep.workgroup_size[1],
+                        z: ep.workgroup_size[2],
+                    },
+                },
+            );
+        }
+
+        debug!("Naga generated shader:\n{}", source);
+
+        let options = metal::CompileOptions::new();
+        let msl_version = match naga_options.lang_version {
+            (1, 0) => MTLLanguageVersion::V1_0,
+            (1, 1) => MTLLanguageVersion::V1_1,
+            (1, 2) => MTLLanguageVersion::V1_2,
+            (2, 0) => MTLLanguageVersion::V2_0,
+            (2, 1) => MTLLanguageVersion::V2_1,
+            (2, 2) => MTLLanguageVersion::V2_2,
+            other => panic!("Unexpected language version {:?}", other),
+        };
+        options.set_language_version(msl_version);
+
+        let library = device
+            .lock()
+            .new_library_with_source(source.as_ref(), &options)
+            .map_err(|err| ShaderError::CompilationFailed(err.into()))?;
+
+        Ok(n::ModuleInfo {
+            library,
+            entry_point_map,
+            rasterization_enabled: true, //TODO
+        })
+    }
+
     fn load_shader(
         &self,
         ep: &pso::EntryPoint<Backend>,
@@ -710,51 +727,62 @@ impl Device {
         let module_map;
         let (info_owned, info_guard);
 
-        let info = match *ep.module {
-            n::ShaderModule::Compiled(ref info) => info,
-            n::ShaderModule::Raw(ref data) => {
-                let compiler_options = &mut match primitive_class {
-                    MTLPrimitiveTopologyClass::Point => layout.shader_compiler_options_point.clone(),
-                    _ => layout.shader_compiler_options.clone(),
-                };
-                compiler_options.entry_point = Some((ep.entry.to_string(), match stage {
-                    ShaderStage::Vertex => spirv::ExecutionModel::Vertex,
-                    ShaderStage::Fragment => spirv::ExecutionModel::Fragment,
-                    ShaderStage::Compute => spirv::ExecutionModel::GlCompute,
-                    _ => return Err(pso::CreationError::UnsupportedPipeline),
-                }));
-                match pipeline_cache {
-                    Some(cache) => {
-                        module_map = cache
-                            .modules
-                            .get_or_create_with(compiler_options, || FastStorageMap::default());
-                        info_guard = module_map.get_or_create_with(data, || {
-                            Self::compile_shader_library(
-                                device,
-                                data,
-                                compiler_options,
-                                msl_version,
-                                &ep.specialization,
-                            )
-                            .unwrap()
-                        });
-                        &*info_guard
-                    }
-                    None => {
-                        info_owned = Self::compile_shader_library(
-                            device,
-                            data,
-                            compiler_options,
-                            msl_version,
-                            &ep.specialization,
-                        )
-                        .map_err(|e| {
-                            error!("Error compiling the shader {:?}", e);
-                            pso::CreationError::Other
-                        })?;
-                        &info_owned
+        let compiler_options = &mut match primitive_class {
+            MTLPrimitiveTopologyClass::Point => layout.shader_compiler_options_point.clone(),
+            _ => layout.shader_compiler_options.clone(),
+        };
+        compiler_options.entry_point = Some((
+            ep.entry.to_string(),
+            match stage {
+                ShaderStage::Vertex => spirv::ExecutionModel::Vertex,
+                ShaderStage::Fragment => spirv::ExecutionModel::Fragment,
+                ShaderStage::Compute => spirv::ExecutionModel::GlCompute,
+                _ => return Err(pso::CreationError::UnsupportedPipeline),
+            },
+        ));
+
+        let data = &ep.module.spv;
+        let info = match pipeline_cache {
+            Some(cache) => {
+                module_map = cache
+                    .modules
+                    .get_or_create_with(compiler_options, FastStorageMap::default);
+                info_guard = module_map.get_or_create_with(data, || {
+                    Self::compile_shader_library_cross(
+                        device,
+                        data,
+                        compiler_options,
+                        msl_version,
+                        &ep.specialization,
+                    )
+                    .unwrap()
+                });
+                &*info_guard
+            }
+            None => {
+                let mut result = Err(ShaderError::CompilationFailed(String::new()));
+                #[cfg(feature = "naga")]
+                if let Some(ref module) = ep.module.naga {
+                    result =
+                        Self::compile_shader_library_naga(device, module, &layout.naga_options);
+                    if let Err(ShaderError::CompilationFailed(ref msg)) = result {
+                        warn!("Naga: {:?}", msg);
                     }
                 }
+                if result.is_err() {
+                    result = Self::compile_shader_library_cross(
+                        device,
+                        data,
+                        compiler_options,
+                        msl_version,
+                        &ep.specialization,
+                    );
+                }
+                info_owned = result.map_err(|e| {
+                    error!("Error compiling the shader {:?}", e);
+                    pso::CreationError::Other
+                })?;
+                &info_owned
             }
         };
 
@@ -849,15 +877,7 @@ impl Device {
             descriptor.set_compare_function(conv::map_compare_function(fun));
         }
         if [r, s, t].iter().any(|&am| am == image::WrapMode::Border) {
-            descriptor.set_border_color(match info.border.0 {
-                0x0000_0000 => MTLSamplerBorderColor::TransparentBlack,
-                0x0000_00FF => MTLSamplerBorderColor::OpaqueBlack,
-                0xFFFF_FFFF => MTLSamplerBorderColor::OpaqueWhite,
-                other => {
-                    error!("Border color 0x{:X} is not supported", other);
-                    MTLSamplerBorderColor::TransparentBlack
-                }
-            });
+            descriptor.set_border_color(conv::map_border_color(info.border));
         }
 
         if caps.argument_buffers {
@@ -907,14 +927,10 @@ impl Device {
                 Some(func) => unsafe { mem::transmute(conv::map_compare_function(func) as u32) },
                 None => msl::SamplerCompareFunc::Always,
             },
-            border_color: match info.border.0 {
-                0x0000_0000 => msl::SamplerBorderColor::TransparentBlack,
-                0x0000_00FF => msl::SamplerBorderColor::OpaqueBlack,
-                0xFFFF_FFFF => msl::SamplerBorderColor::OpaqueWhite,
-                other => {
-                    error!("Border color 0x{:X} is not supported", other);
-                    msl::SamplerBorderColor::TransparentBlack
-                }
+            border_color: match info.border {
+                image::BorderColor::TransparentBlack => msl::SamplerBorderColor::TransparentBlack,
+                image::BorderColor::OpaqueBlack => msl::SamplerBorderColor::OpaqueBlack,
+                image::BorderColor::OpaqueWhite => msl::SamplerBorderColor::OpaqueWhite,
             },
             lod_clamp_min: lods.start.into(),
             lod_clamp_max: lods.end.into(),
@@ -981,46 +997,47 @@ impl hal::device::Device<Backend> for Device {
                 let mut colors: ArrayVec<[_; MAX_COLOR_ATTACHMENTS]> = sub
                     .colors
                     .iter()
-                    .map(|&(id, _)| (id, n::SubpassOps::empty(), None))
+                    .map(|&(id, _)| {
+                        let hal_format = attachments[id].format.expect("No format!");
+                        n::AttachmentInfo {
+                            id,
+                            resolve_id: None,
+                            ops: n::AttachmentOps::empty(),
+                            format: self
+                                .shared
+                                .private_caps
+                                .map_format(hal_format)
+                                .expect("Unable to map color format!"),
+                            channel: Channel::from(hal_format.base_format().1),
+                        }
+                    })
                     .collect();
                 for (color, &(resolve_id, _)) in colors.iter_mut().zip(sub.resolves.iter()) {
                     if resolve_id != pass::ATTACHMENT_UNUSED {
-                        color.2 = Some(resolve_id);
+                        color.resolve_id = Some(resolve_id);
                     }
                 }
+                let depth_stencil = sub.depth_stencil.map(|&(id, _)| {
+                    let hal_format = attachments[id].format.expect("No format!");
+                    n::AttachmentInfo {
+                        id,
+                        resolve_id: None,
+                        ops: n::AttachmentOps::empty(),
+                        format: self
+                            .shared
+                            .private_caps
+                            .map_format(hal_format)
+                            .expect("Unable to map depth-stencil format!"),
+                        channel: Channel::Float,
+                    }
+                });
 
                 n::Subpass {
-                    colors,
-                    depth_stencil: sub
-                        .depth_stencil
-                        .map(|&(id, _)| (id, n::SubpassOps::empty())),
-                    inputs: sub.inputs.iter().map(|&(id, _)| id).collect(),
-                    target_formats: n::SubpassFormats {
-                        colors: sub
-                            .colors
-                            .iter()
-                            .map(|&(id, _)| {
-                                let format =
-                                    attachments[id].format.expect("No color format provided");
-                                let mtl_format = self
-                                    .shared
-                                    .private_caps
-                                    .map_format(format)
-                                    .expect("Unable to map color format!");
-                                (mtl_format, Channel::from(format.base_format().1))
-                            })
-                            .collect(),
-                        depth_stencil: sub.depth_stencil.map(|&(id, _)| {
-                            self.shared
-                                .private_caps
-                                .map_format(
-                                    attachments[id]
-                                        .format
-                                        .expect("No depth-stencil format provided"),
-                                )
-                                .expect("Unable to map depth-stencil format!")
-                        }),
+                    attachments: n::SubpassData {
+                        colors,
+                        depth_stencil,
                     },
+                    inputs: sub.inputs.iter().map(|&(id, _)| id).collect(),
                 }
             })
             .collect();
@@ -1029,32 +1046,32 @@ impl hal::device::Device<Backend> for Device {
         // an attachment receives LOAD flag on a subpass if it's the first sub-pass that uses it
         let mut use_mask = 0u64;
         for sub in subpasses.iter_mut() {
-            for &mut (id, ref mut ops, _) in sub.colors.iter_mut() {
-                if use_mask & 1 << id == 0 {
-                    *ops |= n::SubpassOps::LOAD;
-                    use_mask ^= 1 << id;
+            for at in sub.attachments.colors.iter_mut() {
+                if use_mask & 1 << at.id == 0 {
+                    at.ops |= n::AttachmentOps::LOAD;
+                    use_mask ^= 1 << at.id;
                 }
             }
-            if let Some((id, ref mut ops)) = sub.depth_stencil {
-                if use_mask & 1 << id == 0 {
-                    *ops |= n::SubpassOps::LOAD;
-                    use_mask ^= 1 << id;
+            if let Some(ref mut at) = sub.attachments.depth_stencil {
+                if use_mask & 1 << at.id == 0 {
+                    at.ops |= n::AttachmentOps::LOAD;
+                    use_mask ^= 1 << at.id;
                 }
             }
         }
         // sprinkle store operations
         // an attachment receives STORE flag on a subpass if it's the last sub-pass that uses it
         for sub in subpasses.iter_mut().rev() {
-            for &mut (id, ref mut ops, _) in sub.colors.iter_mut() {
-                if use_mask & 1 << id != 0 {
-                    *ops |= n::SubpassOps::STORE;
-                    use_mask ^= 1 << id;
+            for at in sub.attachments.colors.iter_mut() {
+                if use_mask & 1 << at.id != 0 {
+                    at.ops |= n::AttachmentOps::STORE;
+                    use_mask ^= 1 << at.id;
                 }
             }
-            if let Some((id, ref mut ops)) = sub.depth_stencil {
-                if use_mask & 1 << id != 0 {
-                    *ops |= n::SubpassOps::STORE;
-                    use_mask ^= 1 << id;
+            if let Some(ref mut at) = sub.attachments.depth_stencil {
+                if use_mask & 1 << at.id != 0 {
+                    at.ops |= n::AttachmentOps::STORE;
+                    use_mask ^= 1 << at.id;
                 }
             }
         }
@@ -1157,8 +1174,12 @@ impl hal::device::Device<Backend> for Device {
                 cs: stage_infos[2].2.clone(),
             };
             match *set_layout.borrow() {
-                n::DescriptorSetLayout::Emulated(ref desc_layouts, ref samplers) => {
-                    for &(binding, ref data) in samplers {
+                n::DescriptorSetLayout::Emulated {
+                    layouts: ref desc_layouts,
+                    ref immutable_samplers,
+                    total: _,
+                } => {
+                    for (&binding, data) in immutable_samplers.iter() {
                         //TODO: array support?
                         const_samplers.insert(
                             msl::SamplerLocation {
@@ -1198,8 +1219,7 @@ impl hal::device::Device<Backend> for Device {
                             let res = msl::ResourceBinding {
                                 buffer_id: if layout.content.contains(n::DescriptorContent::BUFFER)
                                 {
-                                    counters.buffers += 1;
-                                    (counters.buffers - 1) as _
+                                    counters.buffers as _
                                 } else {
                                     !0
                                 },
@@ -1207,8 +1227,7 @@ impl hal::device::Device<Backend> for Device {
                                     .content
                                     .contains(n::DescriptorContent::TEXTURE)
                                 {
-                                    counters.textures += 1;
-                                    (counters.textures - 1) as _
+                                    counters.textures as _
                                 } else {
                                     !0
                                 },
@@ -1216,12 +1235,12 @@ impl hal::device::Device<Backend> for Device {
                                     .content
                                     .contains(n::DescriptorContent::SAMPLER)
                                 {
-                                    counters.samplers += 1;
-                                    (counters.samplers - 1) as _
+                                    counters.samplers as _
                                 } else {
                                     !0
                                 },
                             };
+                            counters.add(layout.content);
                             if layout.array_index == 0 {
                                 let location = msl::ResourceBindingLocation {
                                     stage,
@@ -1280,6 +1299,51 @@ impl hal::device::Device<Backend> for Device {
             assert!(counters.samplers <= self.shared.private_caps.max_samplers_per_stage);
         }
 
+        #[cfg(feature = "naga")]
+        let naga_options = {
+            use naga::back::msl;
+            fn res_index(id: u32) -> Option<u8> {
+                if id == !0 {
+                    None
+                } else {
+                    Some(id as _)
+                }
+            }
+            msl::Options {
+                lang_version: match self.shared.private_caps.msl_version {
+                    MTLLanguageVersion::V1_0 => (1, 0),
+                    MTLLanguageVersion::V1_1 => (1, 1),
+                    MTLLanguageVersion::V1_2 => (1, 2),
+                    MTLLanguageVersion::V2_0 => (2, 0),
+                    MTLLanguageVersion::V2_1 => (2, 1),
+                    MTLLanguageVersion::V2_2 => (2, 2),
+                },
+                spirv_cross_compatibility: true,
+                binding_map: res_overrides
+                    .iter()
+                    .map(|(loc, binding)| {
+                        let source = msl::BindSource {
+                            stage: match loc.stage {
+                                spirv::ExecutionModel::Vertex => naga::ShaderStage::Vertex,
+                                spirv::ExecutionModel::Fragment => naga::ShaderStage::Fragment,
+                                spirv::ExecutionModel::GlCompute => naga::ShaderStage::Compute,
+                                other => panic!("Unexpected stage: {:?}", other),
+                            },
+                            group: loc.desc_set,
+                            binding: loc.binding,
+                        };
+                        let target = msl::BindTarget {
+                            buffer: res_index(binding.buffer_id),
+                            texture: res_index(binding.texture_id),
+                            sampler: res_index(binding.sampler_id),
+                            mutable: false, //TODO
+                        };
+                        (source, target)
+                    })
+                    .collect(),
+            }
+        };
+
         let mut shader_compiler_options = msl::CompilerOptions::default();
         shader_compiler_options.version = match self.shared.private_caps.msl_version {
             MTLLanguageVersion::V1_0 => msl::Version::V1_0,
@@ -1302,6 +1366,8 @@ impl hal::device::Device<Backend> for Device {
         Ok(n::PipelineLayout {
             shader_compiler_options,
             shader_compiler_options_point,
+            #[cfg(feature = "naga")]
+            naga_options,
             infos,
             total: n::MultiStageResourceCounters {
                 vs: stage_infos[0].2.clone(),
@@ -1360,10 +1426,9 @@ impl hal::device::Device<Backend> for Device {
         for source in sources {
             let src = source.borrow().modules.whole_write();
             for (key, value) in src.iter() {
-                let storage = match dst.entry(key.clone()) {
-                    Entry::Vacant(e) => e.insert(FastStorageMap::default()),
-                    Entry::Occupied(e) => e.into_mut(),
-                };
+                let storage = dst
+                    .entry(key.clone())
+                    .or_insert_with(FastStorageMap::default);
                 let mut dst_module = storage.whole_write();
                 let src_module = value.whole_write();
                 for (key_module, value_module) in src_module.iter() {
@@ -1372,8 +1437,15 @@ impl hal::device::Device<Backend> for Device {
                             em.insert(value_module.clone());
                         }
                         Entry::Occupied(em) => {
-                            assert_eq!(em.get().library.as_ptr(), value_module.library.as_ptr());
-                            assert_eq!(em.get().entry_point_map, value_module.entry_point_map);
+                            if em.get().library.as_ptr() != value_module.library.as_ptr()
+                                || em.get().entry_point_map != value_module.entry_point_map
+                            {
+                                warn!(
+                                    "Merged module don't match, target: {:?}, source: {:?}",
+                                    em.get(),
+                                    value_module
+                                );
+                            }
                         }
                     }
                 }
@@ -1453,16 +1525,26 @@ impl hal::device::Device<Backend> for Device {
         }
 
         // Vertex shader
-        let (vs_lib, vs_function, _, enable_rasterization) =
-            self.load_shader(vs, pipeline_layout, primitive_class, cache, ShaderStage::Vertex)?;
+        let (vs_lib, vs_function, _, enable_rasterization) = self.load_shader(
+            vs,
+            pipeline_layout,
+            primitive_class,
+            cache,
+            ShaderStage::Vertex,
+        )?;
         pipeline.set_vertex_function(Some(&vs_function));
 
         // Fragment shader
         let fs_function;
         let fs_lib = match pipeline_desc.fragment {
             Some(ref ep) => {
-                let (lib, fun, _, _) =
-                    self.load_shader(ep, pipeline_layout, primitive_class, cache, ShaderStage::Fragment)?;
+                let (lib, fun, _, _) = self.load_shader(
+                    ep,
+                    pipeline_layout,
+                    primitive_class,
+                    cache,
+                    ShaderStage::Fragment,
+                )?;
                 fs_function = fun;
                 pipeline.set_fragment_function(Some(&fs_function));
                 Some(lib)
@@ -1470,7 +1552,9 @@ impl hal::device::Device<Backend> for Device {
             None => {
                 // TODO: This is a workaround for what appears to be a Metal validation bug
                 // A pixel format is required even though no attachments are provided
-                if subpass.colors.is_empty() && subpass.depth_stencil.is_none() {
+                if subpass.attachments.colors.is_empty()
+                    && subpass.attachments.depth_stencil.is_none()
+                {
                     pipeline.set_depth_attachment_pixel_format(metal::MTLPixelFormat::Depth32Float);
                 }
                 None
@@ -1502,8 +1586,8 @@ impl hal::device::Device<Backend> for Device {
             .targets
             .iter()
             .chain(iter::repeat(&pso::ColorBlendDesc::EMPTY));
-        for (i, (&(mtl_format, _), color_desc)) in subpass
-            .target_formats
+        for (i, (at, color_desc)) in subpass
+            .attachments
             .colors
             .iter()
             .zip(blend_targets)
@@ -1514,7 +1598,7 @@ impl hal::device::Device<Backend> for Device {
                 .object_at(i as u64)
                 .expect("too many color attachments");
 
-            desc.set_pixel_format(mtl_format);
+            desc.set_pixel_format(at.format);
             desc.set_write_mask(conv::map_write_mask(color_desc.mask));
 
             if let Some(ref blend) = color_desc.blend {
@@ -1531,15 +1615,13 @@ impl hal::device::Device<Backend> for Device {
                 desc.set_destination_alpha_blend_factor(alpha_dst);
             }
         }
-        if let Some(mtl_format) = subpass.target_formats.depth_stencil {
-            let orig_format = rp_attachments[subpass.depth_stencil.unwrap().0]
-                .format
-                .unwrap();
+        if let Some(ref at) = subpass.attachments.depth_stencil {
+            let orig_format = rp_attachments[at.id].format.unwrap();
             if orig_format.is_depth() {
-                pipeline.set_depth_attachment_pixel_format(mtl_format);
+                pipeline.set_depth_attachment_pixel_format(at.format);
             }
             if orig_format.is_stencil() {
-                pipeline.set_stencil_attachment_pixel_format(mtl_format);
+                pipeline.set_stencil_attachment_pixel_format(at.format);
             }
         }
 
@@ -1674,13 +1756,16 @@ impl hal::device::Device<Backend> for Device {
             .depth_stencil_states
             .prepare(&pipeline_desc.depth_stencil, &*device);
 
-        if let Some(multisampling) = &pipeline_desc.multisampling {
+        let samples = if let Some(multisampling) = &pipeline_desc.multisampling {
             pipeline.set_sample_count(multisampling.rasterization_samples as u64);
             pipeline.set_alpha_to_coverage_enabled(multisampling.alpha_coverage);
             pipeline.set_alpha_to_one_enabled(multisampling.alpha_to_one);
             // TODO: sample_mask
             // TODO: sample_shading
-        }
+            multisampling.rasterization_samples
+        } else {
+            1
+        };
 
         device
             .new_render_pipeline_state(&pipeline)
@@ -1696,7 +1781,8 @@ impl hal::device::Device<Backend> for Device {
                 depth_stencil_desc: pipeline_desc.depth_stencil.clone(),
                 baked_states: pipeline_desc.baked_states.clone(),
                 vertex_buffers,
-                attachment_formats: subpass.target_formats.clone(),
+                attachment_formats: subpass.attachments.map(|at| (at.format, at.channel)),
+                samples,
             })
             .map_err(|err| {
                 error!("PSO creation failed: {}", err);
@@ -1761,30 +1847,24 @@ impl hal::device::Device<Backend> for Device {
         raw_data: &[u32],
     ) -> Result<n::ShaderModule, ShaderError> {
         //TODO: we can probably at least parse here and save the `Ast`
-        let depends_on_pipeline_layout = true; //TODO: !self.private_caps.argument_buffers
-
-        // TODO: also depends on pipeline layout if there are specialization constants that
-        // SPIRV-Cross generates macros for, which occurs when MSL version is older than 1.2 or the
-        // constant is used as an array size (see
-        // `CompilerMSL::emit_specialization_constants_and_structs` in SPIRV-Cross)
-        Ok(if depends_on_pipeline_layout {
-            n::ShaderModule::Raw(raw_data.to_vec())
-        } else {
-            let mut options = msl::CompilerOptions::default();
-            options.enable_point_size_builtin = false;
-            options.vertex.invert_y = !self.features.contains(hal::Features::NDC_Y_UP);
-            options.force_zero_initialized_variables = true;
-            options.force_native_arrays = true;
-            let info = Self::compile_shader_library(
-                &self.shared.device,
-                raw_data,
-                &options,
-                self.shared.private_caps.msl_version,
-                &pso::Specialization::default(), // we should only pass empty specialization constants
-                                                 // here if we know they won't be used by
-                                                 // SPIRV-Cross, see above
-            )?;
-            n::ShaderModule::Compiled(info)
+        Ok(n::ShaderModule {
+            spv: raw_data.to_vec(),
+            #[cfg(feature = "naga")]
+            naga: match naga::front::spv::Parser::new(raw_data.iter().cloned(), &Default::default())
+                .parse()
+            {
+                Ok(module) => match naga::proc::Validator::new().validate(&module) {
+                    Ok(()) => Some(module),
+                    Err(e) => {
+                        warn!("Naga validation failed: {:?}", e);
+                        None
+                    }
+                },
+                Err(e) => {
+                    warn!("Naga parsing failed: {:?}", e);
+                    None
+                }
+            },
         })
     }
 
@@ -2056,10 +2136,12 @@ impl hal::device::Device<Backend> for Device {
             let mut immutable_sampler_iter = immutable_samplers.into_iter();
             let mut tmp_samplers = Vec::new();
             let mut desc_layouts = Vec::new();
+            let mut total = n::ResourceData::new();
 
             for set_layout_binding in binding_iter {
                 let slb = set_layout_binding.borrow();
                 let mut content = n::DescriptorContent::from(slb.ty);
+                total.add(content);
 
                 if slb.immutable_samplers {
                     tmp_samplers.extend(
@@ -2099,13 +2181,14 @@ impl hal::device::Device<Backend> for Device {
                 }
             });
 
-            Ok(n::DescriptorSetLayout::Emulated(
-                Arc::new(desc_layouts),
-                tmp_samplers
+            Ok(n::DescriptorSetLayout::Emulated {
+                layouts: Arc::new(desc_layouts),
+                total,
+                immutable_samplers: tmp_samplers
                     .into_iter()
                     .map(|ts| (ts.binding, ts.data))
                     .collect(),
-            ))
+            })
         }
     }
 
@@ -2145,37 +2228,51 @@ impl hal::device::Device<Backend> for Device {
                                 debug_assert!(!layout
                                     .content
                                     .contains(n::DescriptorContent::IMMUTABLE_SAMPLER));
-                                data.samplers[counters.samplers as usize] =
-                                    Some(AsNative::from(sam.raw.as_ref().unwrap().as_ref()));
+                                data.samplers[counters.samplers as usize] = (
+                                    layout.stages,
+                                    Some(AsNative::from(sam.raw.as_ref().unwrap().as_ref())),
+                                );
                             }
                             pso::Descriptor::Image(view, il) => {
-                                data.textures[counters.textures as usize] =
-                                    Some((AsNative::from(view.texture.as_ref()), il));
+                                data.textures[counters.textures as usize] = (
+                                    layout.stages,
+                                    Some(AsNative::from(view.texture.as_ref())),
+                                    il,
+                                );
                             }
                             pso::Descriptor::CombinedImageSampler(view, il, sam) => {
                                 if !layout
                                     .content
                                     .contains(n::DescriptorContent::IMMUTABLE_SAMPLER)
                                 {
-                                    data.samplers[counters.samplers as usize] =
-                                        Some(AsNative::from(sam.raw.as_ref().unwrap().as_ref()));
+                                    data.samplers[counters.samplers as usize] = (
+                                        layout.stages,
+                                        Some(AsNative::from(sam.raw.as_ref().unwrap().as_ref())),
+                                    );
                                 }
-                                data.textures[counters.textures as usize] =
-                                    Some((AsNative::from(view.texture.as_ref()), il));
+                                data.textures[counters.textures as usize] = (
+                                    layout.stages,
+                                    Some(AsNative::from(view.texture.as_ref())),
+                                    il,
+                                );
                             }
                             pso::Descriptor::TexelBuffer(view) => {
-                                data.textures[counters.textures as usize] = Some((
-                                    AsNative::from(view.raw.as_ref()),
+                                data.textures[counters.textures as usize] = (
+                                    layout.stages,
+                                    Some(AsNative::from(view.raw.as_ref())),
                                     image::Layout::General,
-                                ));
+                                );
                             }
                             pso::Descriptor::Buffer(buf, ref sub) => {
                                 let (raw, range) = buf.as_bound();
                                 debug_assert!(
                                     range.start + sub.offset + sub.size.unwrap_or(0) <= range.end
                                 );
-                                let pair = (AsNative::from(raw), range.start + sub.offset);
-                                data.buffers[counters.buffers as usize] = Some(pair);
+                                data.buffers[counters.buffers as usize] = (
+                                    layout.stages,
+                                    Some(AsNative::from(raw)),
+                                    range.start + sub.offset,
+                                );
                             }
                         }
                         counters.add(layout.content);
@@ -2600,7 +2697,7 @@ impl hal::device::Device<Backend> for Device {
         descriptor.set_depth(extent.depth as u64);
         descriptor.set_mipmap_level_count(mip_levels as u64);
         descriptor.set_pixel_format(mtl_format);
-        descriptor.set_usage(conv::map_texture_usage(usage, tiling));
+        descriptor.set_usage(conv::map_texture_usage(usage, tiling, view_caps));
 
         let base = format.base_format();
         let format_desc = base.0.desc();
@@ -2849,18 +2946,18 @@ impl hal::device::Device<Backend> for Device {
     unsafe fn destroy_image_view(&self, _view: n::ImageView) {}
 
     fn create_fence(&self, signaled: bool) -> Result<n::Fence, OutOfMemory> {
-        let cell = RefCell::new(n::FenceInner::Idle { signaled });
+        let mutex = Mutex::new(n::FenceInner::Idle { signaled });
         debug!(
             "Creating fence ptr {:?} with signal={}",
-            cell.as_ptr(),
+            unsafe { mutex.raw() } as *const _,
             signaled
         );
-        Ok(n::Fence(cell))
+        Ok(n::Fence(mutex))
     }
 
     unsafe fn reset_fence(&self, fence: &n::Fence) -> Result<(), OutOfMemory> {
-        debug!("Resetting fence ptr {:?}", fence.0.as_ptr());
-        fence.0.replace(n::FenceInner::Idle { signaled: false });
+        debug!("Resetting fence ptr {:?}", fence.0.raw() as *const _);
+        *fence.0.lock() = n::FenceInner::Idle { signaled: false };
         Ok(())
     }
 
@@ -2874,12 +2971,12 @@ impl hal::device::Device<Backend> for Device {
         }
 
         debug!("wait_for_fence {:?} for {} ms", fence, timeout_ns);
-        match *fence.0.borrow() {
+        match *fence.0.lock() {
             n::FenceInner::Idle { signaled } => {
                 if !signaled {
                     warn!(
                         "Fence ptr {:?} is not pending, waiting not possible",
-                        fence.0.as_ptr()
+                        fence.0.raw() as *const _
                     );
                 }
                 Ok(signaled)
@@ -2905,7 +3002,7 @@ impl hal::device::Device<Backend> for Device {
     }
 
     unsafe fn get_fence_status(&self, fence: &n::Fence) -> Result<bool, DeviceLost> {
-        Ok(match *fence.0.borrow() {
+        Ok(match *fence.0.lock() {
             n::FenceInner::Idle { signaled } => signaled,
             n::FenceInner::PendingSubmission(ref cmd_buf) => match cmd_buf.status() {
                 metal::MTLCommandBufferStatus::Completed => true,
@@ -3139,18 +3236,22 @@ impl hal::device::Device<Backend> for Device {
 
     unsafe fn set_compute_pipeline_name(
         &self,
-        _compute_pipeline: &mut n::ComputePipeline,
-        _name: &str,
+        compute_pipeline: &mut n::ComputePipeline,
+        name: &str,
     ) {
-        // TODO
+        if self.shared.private_caps.supports_debug_markers {
+            compute_pipeline.raw.set_label(name);
+        }
     }
 
     unsafe fn set_graphics_pipeline_name(
         &self,
-        _graphics_pipeline: &mut n::GraphicsPipeline,
-        _name: &str,
+        graphics_pipeline: &mut n::GraphicsPipeline,
+        name: &str,
     ) {
-        // TODO
+        if self.shared.private_caps.supports_debug_markers {
+            graphics_pipeline.raw.set_label(name);
+        }
     }
 }
 

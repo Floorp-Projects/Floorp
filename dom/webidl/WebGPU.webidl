@@ -178,8 +178,8 @@ interface GPUOutOfMemoryError {
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUValidationError {
-    //constructor(DOMString message);
-    //readonly attribute DOMString message;
+    constructor(DOMString message);
+    readonly attribute DOMString message;
 };
 
 typedef (GPUOutOfMemoryError or GPUValidationError) GPUError;

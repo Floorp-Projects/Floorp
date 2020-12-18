@@ -14,7 +14,7 @@ use hal::{
 };
 
 use std::borrow::Borrow;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::ops::Range;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -59,8 +59,8 @@ impl GraphicsPipelineInfoBuf {
         source: &pso::EntryPoint<'a, B>,
     ) {
         let string = CString::new(source.entry).unwrap();
-        let p_name = string.as_ptr();
         self.c_strings.push(string);
+        let name = self.c_strings.last().unwrap().as_c_str();
 
         self.specialization_entries.push(
             source
@@ -83,15 +83,15 @@ impl GraphicsPipelineInfoBuf {
             p_data: source.specialization.data.as_ptr() as _,
         });
 
-        self.stages.push(vk::PipelineShaderStageCreateInfo {
-            s_type: vk::StructureType::PIPELINE_SHADER_STAGE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineShaderStageCreateFlags::empty(),
-            stage,
-            module: source.module.raw,
-            p_name,
-            p_specialization_info: self.specializations.last().unwrap(),
-        })
+        self.stages.push(
+            vk::PipelineShaderStageCreateInfo::builder()
+                .flags(vk::PipelineShaderStageCreateFlags::empty())
+                .stage(stage)
+                .module(source.module.raw)
+                .name(name)
+                .specialization_info(self.specializations.last().unwrap())
+                .build(),
+        )
     }
 
     unsafe fn initialize<'a>(
@@ -147,26 +147,17 @@ impl GraphicsPipelineInfoBuf {
                     })
                     .collect();
 
-                this.vertex_input_state = vk::PipelineVertexInputStateCreateInfo {
-                    s_type: vk::StructureType::PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags: vk::PipelineVertexInputStateCreateFlags::empty(),
-                    vertex_binding_description_count: this.vertex_bindings.len() as _,
-                    p_vertex_binding_descriptions: this.vertex_bindings.as_ptr(),
-                    vertex_attribute_description_count: this.vertex_attributes.len() as _,
-                    p_vertex_attribute_descriptions: this.vertex_attributes.as_ptr(),
-                };
+                this.vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
+                    .flags(vk::PipelineVertexInputStateCreateFlags::empty())
+                    .vertex_binding_descriptions(&this.vertex_bindings)
+                    .vertex_attribute_descriptions(&this.vertex_attributes)
+                    .build();
 
-                this.input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo {
-                    s_type: vk::StructureType::PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags: vk::PipelineInputAssemblyStateCreateFlags::empty(),
-                    topology: conv::map_topology(&input_assembler),
-                    primitive_restart_enable: match input_assembler.restart_index {
-                        Some(_) => vk::TRUE,
-                        None => vk::FALSE,
-                    },
-                };
+                this.input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
+                    .flags(vk::PipelineInputAssemblyStateCreateFlags::empty())
+                    .topology(conv::map_topology(&input_assembler))
+                    .primitive_restart_enable(input_assembler.restart_index.is_some())
+                    .build();
             }
             pso::PrimitiveAssemblerDesc::Mesh { ref task, ref mesh } => {
                 this.vertex_bindings = Vec::new();
@@ -212,41 +203,32 @@ impl GraphicsPipelineInfoBuf {
             }
         };
 
-        this.rasterization_state = vk::PipelineRasterizationStateCreateInfo {
-            s_type: vk::StructureType::PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineRasterizationStateCreateFlags::empty(),
-            depth_clamp_enable: if desc.rasterizer.depth_clamping {
+        this.rasterization_state = vk::PipelineRasterizationStateCreateInfo::builder()
+            .flags(vk::PipelineRasterizationStateCreateFlags::empty())
+            .depth_clamp_enable(if desc.rasterizer.depth_clamping {
                 if device.shared.features.contains(Features::DEPTH_CLAMP) {
-                    vk::TRUE
+                    true
                 } else {
                     warn!("Depth clamping was requested on a device with disabled feature");
-                    vk::FALSE
+                    false
                 }
             } else {
-                vk::FALSE
-            },
-            rasterizer_discard_enable: if desc.fragment.is_none()
-                && desc.depth_stencil.depth.is_none()
-                && desc.depth_stencil.stencil.is_none()
-            {
-                vk::TRUE
-            } else {
-                vk::FALSE
-            },
-            polygon_mode,
-            cull_mode: conv::map_cull_face(desc.rasterizer.cull_face),
-            front_face: conv::map_front_face(desc.rasterizer.front_face),
-            depth_bias_enable: if desc.rasterizer.depth_bias.is_some() {
-                vk::TRUE
-            } else {
-                vk::FALSE
-            },
-            depth_bias_constant_factor: depth_bias.const_factor,
-            depth_bias_clamp: depth_bias.clamp,
-            depth_bias_slope_factor: depth_bias.slope_factor,
-            line_width,
-        };
+                false
+            })
+            .rasterizer_discard_enable(
+                desc.fragment.is_none()
+                    && desc.depth_stencil.depth.is_none()
+                    && desc.depth_stencil.stencil.is_none(),
+            )
+            .polygon_mode(polygon_mode)
+            .cull_mode(conv::map_cull_face(desc.rasterizer.cull_face))
+            .front_face(conv::map_front_face(desc.rasterizer.front_face))
+            .depth_bias_enable(desc.rasterizer.depth_bias.is_some())
+            .depth_bias_constant_factor(depth_bias.const_factor)
+            .depth_bias_clamp(depth_bias.clamp)
+            .depth_bias_slope_factor(depth_bias.slope_factor)
+            .line_width(line_width)
+            .build();
 
         this.tessellation_state = {
             if let pso::PrimitiveAssemblerDesc::Vertex {
@@ -254,12 +236,12 @@ impl GraphicsPipelineInfoBuf {
             } = &desc.primitive_assembler
             {
                 if let pso::Primitive::PatchList(patch_control_points) = input_assembler.primitive {
-                    Some(vk::PipelineTessellationStateCreateInfo {
-                        s_type: vk::StructureType::PIPELINE_TESSELLATION_STATE_CREATE_INFO,
-                        p_next: ptr::null(),
-                        flags: vk::PipelineTessellationStateCreateFlags::empty(),
-                        patch_control_points: patch_control_points as _,
-                    })
+                    Some(
+                        vk::PipelineTessellationStateCreateInfo::builder()
+                            .flags(vk::PipelineTessellationStateCreateFlags::empty())
+                            .patch_control_points(patch_control_points as _)
+                            .build(),
+                    )
                 } else {
                     None
                 }
@@ -268,32 +250,37 @@ impl GraphicsPipelineInfoBuf {
             }
         };
 
-        this.viewport_state = vk::PipelineViewportStateCreateInfo {
-            s_type: vk::StructureType::PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineViewportStateCreateFlags::empty(),
-            scissor_count: 1, // TODO
-            p_scissors: match desc.baked_states.scissor {
+        this.viewport_state = {
+            let scissors = match desc.baked_states.scissor {
                 Some(ref rect) => {
                     this.scissor = conv::map_rect(rect);
-                    &this.scissor
+                    Some([this.scissor])
                 }
                 None => {
                     this.dynamic_states.push(vk::DynamicState::SCISSOR);
-                    ptr::null()
+                    None
                 }
-            },
-            viewport_count: 1, // TODO
-            p_viewports: match desc.baked_states.viewport {
+            };
+            let viewports = match desc.baked_states.viewport {
                 Some(ref vp) => {
                     this.viewport = device.shared.map_viewport(vp);
-                    &this.viewport
+                    Some([this.viewport])
                 }
                 None => {
                     this.dynamic_states.push(vk::DynamicState::VIEWPORT);
-                    ptr::null()
+                    None
                 }
-            },
+            };
+
+            let mut builder = vk::PipelineViewportStateCreateInfo::builder()
+                .flags(vk::PipelineViewportStateCreateFlags::empty());
+            if let Some(scissors) = &scissors {
+                builder = builder.scissors(scissors);
+            }
+            if let Some(viewports) = &viewports {
+                builder = builder.viewports(viewports);
+            }
+            builder.build()
         };
 
         this.multisample_state = match desc.multisampling {
@@ -302,37 +289,28 @@ impl GraphicsPipelineInfoBuf {
                     (ms.sample_mask & 0xFFFFFFFF) as u32,
                     ((ms.sample_mask >> 32) & 0xFFFFFFFF) as u32,
                 ];
-                vk::PipelineMultisampleStateCreateInfo {
-                    s_type: vk::StructureType::PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags: vk::PipelineMultisampleStateCreateFlags::empty(),
-                    rasterization_samples: vk::SampleCountFlags::from_raw(
+                vk::PipelineMultisampleStateCreateInfo::builder()
+                    .flags(vk::PipelineMultisampleStateCreateFlags::empty())
+                    .rasterization_samples(vk::SampleCountFlags::from_raw(
                         (ms.rasterization_samples as u32) & vk::SampleCountFlags::all().as_raw(),
-                    ),
-                    sample_shading_enable: ms.sample_shading.is_some() as _,
-                    min_sample_shading: ms.sample_shading.unwrap_or(0.0),
-                    p_sample_mask: &this.sample_mask as _,
-                    alpha_to_coverage_enable: ms.alpha_coverage as _,
-                    alpha_to_one_enable: ms.alpha_to_one as _,
-                }
+                    ))
+                    .sample_shading_enable(ms.sample_shading.is_some())
+                    .min_sample_shading(ms.sample_shading.unwrap_or(0.0))
+                    .sample_mask(&this.sample_mask)
+                    .alpha_to_coverage_enable(ms.alpha_coverage)
+                    .alpha_to_one_enable(ms.alpha_to_one)
+                    .build()
             }
-            None => vk::PipelineMultisampleStateCreateInfo {
-                s_type: vk::StructureType::PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-                p_next: ptr::null(),
-                flags: vk::PipelineMultisampleStateCreateFlags::empty(),
-                rasterization_samples: vk::SampleCountFlags::TYPE_1,
-                sample_shading_enable: vk::FALSE,
-                min_sample_shading: 0.0,
-                p_sample_mask: ptr::null(),
-                alpha_to_coverage_enable: vk::FALSE,
-                alpha_to_one_enable: vk::FALSE,
-            },
+            None => vk::PipelineMultisampleStateCreateInfo::builder()
+                .flags(vk::PipelineMultisampleStateCreateFlags::empty())
+                .rasterization_samples(vk::SampleCountFlags::TYPE_1)
+                .build(),
         };
 
         let depth_stencil = desc.depth_stencil;
         let (depth_test_enable, depth_write_enable, depth_compare_op) = match depth_stencil.depth {
-            Some(ref depth) => (vk::TRUE, depth.write as _, conv::map_comparison(depth.fun)),
-            None => (vk::FALSE, vk::FALSE, vk::CompareOp::NEVER),
+            Some(ref depth) => (true, depth.write as _, conv::map_comparison(depth.fun)),
+            None => (false, false, vk::CompareOp::NEVER),
         };
         let (stencil_test_enable, front, back) = match depth_stencil.stencil {
             Some(ref stencil) => {
@@ -368,7 +346,7 @@ impl GraphicsPipelineInfoBuf {
                             .push(vk::DynamicState::STENCIL_REFERENCE);
                     }
                 }
-                (vk::TRUE, front, back)
+                (true, front, back)
             }
             None => mem::zeroed(),
         };
@@ -380,20 +358,18 @@ impl GraphicsPipelineInfoBuf {
             }
         };
 
-        this.depth_stencil_state = vk::PipelineDepthStencilStateCreateInfo {
-            s_type: vk::StructureType::PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineDepthStencilStateCreateFlags::empty(),
-            depth_test_enable,
-            depth_write_enable,
-            depth_compare_op,
-            depth_bounds_test_enable: depth_stencil.depth_bounds as _,
-            stencil_test_enable,
-            front,
-            back,
-            min_depth_bounds,
-            max_depth_bounds,
-        };
+        this.depth_stencil_state = vk::PipelineDepthStencilStateCreateInfo::builder()
+            .flags(vk::PipelineDepthStencilStateCreateFlags::empty())
+            .depth_test_enable(depth_test_enable)
+            .depth_write_enable(depth_write_enable)
+            .depth_compare_op(depth_compare_op)
+            .depth_bounds_test_enable(depth_stencil.depth_bounds)
+            .stencil_test_enable(stencil_test_enable)
+            .front(front)
+            .back(back)
+            .min_depth_bounds(min_depth_bounds)
+            .max_depth_bounds(max_depth_bounds)
+            .build();
 
         this.blend_states = desc
             .blender
@@ -427,30 +403,24 @@ impl GraphicsPipelineInfoBuf {
             })
             .collect();
 
-        this.color_blend_state = vk::PipelineColorBlendStateCreateInfo {
-            s_type: vk::StructureType::PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineColorBlendStateCreateFlags::empty(),
-            logic_op_enable: vk::FALSE, // TODO
-            logic_op: vk::LogicOp::CLEAR,
-            attachment_count: this.blend_states.len() as _,
-            p_attachments: this.blend_states.as_ptr(), // TODO:
-            blend_constants: match desc.baked_states.blend_color {
+        this.color_blend_state = vk::PipelineColorBlendStateCreateInfo::builder()
+            .flags(vk::PipelineColorBlendStateCreateFlags::empty())
+            .logic_op_enable(false) // TODO
+            .logic_op(vk::LogicOp::CLEAR)
+            .attachments(&this.blend_states) // TODO:
+            .blend_constants(match desc.baked_states.blend_color {
                 Some(value) => value,
                 None => {
                     this.dynamic_states.push(vk::DynamicState::BLEND_CONSTANTS);
                     [0.0; 4]
                 }
-            },
-        };
+            })
+            .build();
 
-        this.pipeline_dynamic_state = vk::PipelineDynamicStateCreateInfo {
-            s_type: vk::StructureType::PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineDynamicStateCreateFlags::empty(),
-            dynamic_state_count: this.dynamic_states.len() as _,
-            p_dynamic_states: this.dynamic_states.as_ptr(),
-        };
+        this.pipeline_dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
+            .flags(vk::PipelineDynamicStateCreateFlags::empty())
+            .dynamic_states(&this.dynamic_states)
+            .build();
     }
 }
 
@@ -491,12 +461,9 @@ impl d::Device<B> for Device {
         mem_type: MemoryTypeId,
         size: u64,
     ) -> Result<n::Memory, d::AllocationError> {
-        let info = vk::MemoryAllocateInfo {
-            s_type: vk::StructureType::MEMORY_ALLOCATE_INFO,
-            p_next: ptr::null(),
-            allocation_size: size,
-            memory_type_index: self.get_ash_memory_type_index(mem_type),
-        };
+        let info = vk::MemoryAllocateInfo::builder()
+            .allocation_size(size)
+            .memory_type_index(self.get_ash_memory_type_index(mem_type));
 
         let result = self.shared.raw.allocate_memory(&info, None);
 
@@ -522,12 +489,9 @@ impl d::Device<B> for Device {
             flags |= vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER;
         }
 
-        let info = vk::CommandPoolCreateInfo {
-            s_type: vk::StructureType::COMMAND_POOL_CREATE_INFO,
-            p_next: ptr::null(),
-            flags,
-            queue_family_index: family.0 as _,
-        };
+        let info = vk::CommandPoolCreateInfo::builder()
+            .flags(flags)
+            .queue_family_index(family.0 as _);
 
         let result = self.shared.raw.create_command_pool(&info, None);
 
@@ -672,17 +636,11 @@ impl d::Device<B> for Device {
                     inplace_it::inplace_or_alloc_array(dependencies.len(), |uninit_guard| {
                         let dependencies = uninit_guard.init_with_iter(dependencies);
 
-                        let info = vk::RenderPassCreateInfo {
-                            s_type: vk::StructureType::RENDER_PASS_CREATE_INFO,
-                            p_next: ptr::null(),
-                            flags: vk::RenderPassCreateFlags::empty(),
-                            attachment_count: attachments.len() as u32,
-                            p_attachments: attachments.as_ptr(),
-                            subpass_count: subpasses.len() as u32,
-                            p_subpasses: subpasses.as_ptr(),
-                            dependency_count: dependencies.len() as u32,
-                            p_dependencies: dependencies.as_ptr(),
-                        };
+                        let info = vk::RenderPassCreateInfo::builder()
+                            .flags(vk::RenderPassCreateFlags::empty())
+                            .attachments(&attachments)
+                            .subpasses(&subpasses)
+                            .dependencies(&dependencies);
 
                         self.shared.raw.create_render_pass(&info, None)
                     });
@@ -734,15 +692,10 @@ impl d::Device<B> for Device {
             inplace_it::inplace_or_alloc_array(push_constant_ranges.len(), |uninit_guard| {
                 let push_constant_ranges = uninit_guard.init_with_iter(push_constant_ranges);
 
-                let info = vk::PipelineLayoutCreateInfo {
-                    s_type: vk::StructureType::PIPELINE_LAYOUT_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags: vk::PipelineLayoutCreateFlags::empty(),
-                    set_layout_count: set_layouts.len() as u32,
-                    p_set_layouts: set_layouts.as_ptr(),
-                    push_constant_range_count: push_constant_ranges.len() as u32,
-                    p_push_constant_ranges: push_constant_ranges.as_ptr(),
-                };
+                let info = vk::PipelineLayoutCreateInfo::builder()
+                    .flags(vk::PipelineLayoutCreateFlags::empty())
+                    .set_layouts(&set_layouts)
+                    .push_constant_ranges(&push_constant_ranges);
 
                 self.shared.raw.create_pipeline_layout(&info, None)
             })
@@ -760,18 +713,12 @@ impl d::Device<B> for Device {
         &self,
         data: Option<&[u8]>,
     ) -> Result<n::PipelineCache, d::OutOfMemory> {
-        let (data_len, data) = if let Some(d) = data {
-            (d.len(), d.as_ptr())
+        let info =
+            vk::PipelineCacheCreateInfo::builder().flags(vk::PipelineCacheCreateFlags::empty());
+        let info = if let Some(d) = data {
+            info.initial_data(d)
         } else {
-            (0_usize, ptr::null())
-        };
-
-        let info = vk::PipelineCacheCreateInfo {
-            s_type: vk::StructureType::PIPELINE_CACHE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::PipelineCacheCreateFlags::empty(),
-            initial_data_size: data_len,
-            p_initial_data: data as _,
+            info
         };
 
         let result = self.shared.raw.create_pipeline_cache(&info, None);
@@ -871,30 +818,27 @@ impl d::Device<B> for Device {
                 flags |= vk::PipelineCreateFlags::ALLOW_DERIVATIVES;
             }
 
-            vk::GraphicsPipelineCreateInfo {
-                s_type: vk::StructureType::GRAPHICS_PIPELINE_CREATE_INFO,
-                p_next: ptr::null(),
-                flags,
-                stage_count: buf.stages.len() as _,
-                p_stages: buf.stages.as_ptr(),
-                p_vertex_input_state: &buf.vertex_input_state,
-                p_input_assembly_state: &buf.input_assembly_state,
-                p_rasterization_state: &buf.rasterization_state,
-                p_tessellation_state: match buf.tessellation_state.as_ref() {
-                    Some(t) => t as _,
-                    None => ptr::null(),
-                },
-                p_viewport_state: &buf.viewport_state,
-                p_multisample_state: &buf.multisample_state,
-                p_depth_stencil_state: &buf.depth_stencil_state,
-                p_color_blend_state: &buf.color_blend_state,
-                p_dynamic_state: &buf.pipeline_dynamic_state,
-                layout: desc.layout.raw,
-                render_pass: desc.subpass.main_pass.raw,
-                subpass: desc.subpass.index as _,
-                base_pipeline_handle: base_handle,
-                base_pipeline_index: base_index,
-            }
+            let builder = vk::GraphicsPipelineCreateInfo::builder()
+                .flags(flags)
+                .stages(&buf.stages)
+                .vertex_input_state(&buf.vertex_input_state)
+                .input_assembly_state(&buf.input_assembly_state)
+                .rasterization_state(&buf.rasterization_state);
+            let builder = match buf.tessellation_state.as_ref() {
+                Some(t) => builder.tessellation_state(t),
+                None => builder,
+            };
+            builder
+                .viewport_state(&buf.viewport_state)
+                .multisample_state(&buf.multisample_state)
+                .depth_stencil_state(&buf.depth_stencil_state)
+                .color_blend_state(&buf.color_blend_state)
+                .dynamic_state(&buf.pipeline_dynamic_state)
+                .layout(desc.layout.raw)
+                .render_pass(desc.subpass.main_pass.raw)
+                .subpass(desc.subpass.index as _)
+                .base_pipeline_handle(base_handle)
+                .base_pipeline_index(base_index)
         };
 
         let mut pipeline = vk::Pipeline::null();
@@ -903,7 +847,7 @@ impl d::Device<B> for Device {
             self.shared.raw.handle(),
             cache.map_or(vk::PipelineCache::null(), |cache| cache.raw),
             1,
-            &info,
+            &*info,
             ptr::null(),
             &mut pipeline,
         ) {
@@ -969,30 +913,28 @@ impl d::Device<B> for Device {
                     flags |= vk::PipelineCreateFlags::ALLOW_DERIVATIVES;
                 }
 
-                vk::GraphicsPipelineCreateInfo {
-                    s_type: vk::StructureType::GRAPHICS_PIPELINE_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags,
-                    stage_count: buf.stages.len() as _,
-                    p_stages: buf.stages.as_ptr(),
-                    p_vertex_input_state: &buf.vertex_input_state,
-                    p_input_assembly_state: &buf.input_assembly_state,
-                    p_rasterization_state: &buf.rasterization_state,
-                    p_tessellation_state: match buf.tessellation_state.as_ref() {
-                        Some(t) => t as _,
-                        None => ptr::null(),
-                    },
-                    p_viewport_state: &buf.viewport_state,
-                    p_multisample_state: &buf.multisample_state,
-                    p_depth_stencil_state: &buf.depth_stencil_state,
-                    p_color_blend_state: &buf.color_blend_state,
-                    p_dynamic_state: &buf.pipeline_dynamic_state,
-                    layout: desc.layout.raw,
-                    render_pass: desc.subpass.main_pass.raw,
-                    subpass: desc.subpass.index as _,
-                    base_pipeline_handle: base_handle,
-                    base_pipeline_index: base_index,
-                }
+                let builder = vk::GraphicsPipelineCreateInfo::builder()
+                    .flags(flags)
+                    .stages(&buf.stages)
+                    .vertex_input_state(&buf.vertex_input_state)
+                    .input_assembly_state(&buf.input_assembly_state)
+                    .rasterization_state(&buf.rasterization_state);
+                let builder = match buf.tessellation_state.as_ref() {
+                    Some(t) => builder.tessellation_state(t),
+                    None => builder,
+                };
+                builder
+                    .viewport_state(&buf.viewport_state)
+                    .multisample_state(&buf.multisample_state)
+                    .depth_stencil_state(&buf.depth_stencil_state)
+                    .color_blend_state(&buf.color_blend_state)
+                    .dynamic_state(&buf.pipeline_dynamic_state)
+                    .layout(desc.layout.raw)
+                    .render_pass(desc.subpass.main_pass.raw)
+                    .subpass(desc.subpass.index as _)
+                    .base_pipeline_handle(base_handle)
+                    .base_pipeline_index(base_index)
+                    .build()
             })
             .collect();
 
@@ -1039,15 +981,12 @@ impl d::Device<B> for Device {
         ComputePipelineInfoBuf::initialize(&mut buf, desc);
 
         let info = {
-            let stage = vk::PipelineShaderStageCreateInfo {
-                s_type: vk::StructureType::PIPELINE_SHADER_STAGE_CREATE_INFO,
-                p_next: ptr::null(),
-                flags: vk::PipelineShaderStageCreateFlags::empty(),
-                stage: vk::ShaderStageFlags::COMPUTE,
-                module: desc.shader.module.raw,
-                p_name: buf.c_string.as_ptr(),
-                p_specialization_info: &buf.specialization,
-            };
+            let stage = vk::PipelineShaderStageCreateInfo::builder()
+                .flags(vk::PipelineShaderStageCreateFlags::empty())
+                .stage(vk::ShaderStageFlags::COMPUTE)
+                .module(desc.shader.module.raw)
+                .name(buf.c_string.as_c_str())
+                .specialization_info(&buf.specialization);
 
             let (base_handle, base_index) = match desc.parent {
                 pso::BasePipeline::Pipeline(pipeline) => (pipeline.0, -1),
@@ -1075,15 +1014,13 @@ impl d::Device<B> for Device {
                 flags |= vk::PipelineCreateFlags::ALLOW_DERIVATIVES;
             }
 
-            vk::ComputePipelineCreateInfo {
-                s_type: vk::StructureType::COMPUTE_PIPELINE_CREATE_INFO,
-                p_next: ptr::null(),
-                flags,
-                stage,
-                layout: desc.layout.raw,
-                base_pipeline_handle: base_handle,
-                base_pipeline_index: base_index,
-            }
+            vk::ComputePipelineCreateInfo::builder()
+                .flags(flags)
+                .stage(*stage)
+                .layout(desc.layout.raw)
+                .base_pipeline_handle(base_handle)
+                .base_pipeline_index(base_index)
+                .build()
         };
 
         let mut pipeline = vk::Pipeline::null();
@@ -1128,15 +1065,12 @@ impl d::Device<B> for Device {
             .map(|(desc, buf)| {
                 let desc = desc.borrow();
 
-                let stage = vk::PipelineShaderStageCreateInfo {
-                    s_type: vk::StructureType::PIPELINE_SHADER_STAGE_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags: vk::PipelineShaderStageCreateFlags::empty(),
-                    stage: vk::ShaderStageFlags::COMPUTE,
-                    module: desc.shader.module.raw,
-                    p_name: buf.c_string.as_ptr(),
-                    p_specialization_info: &buf.specialization,
-                };
+                let stage = vk::PipelineShaderStageCreateInfo::builder()
+                    .flags(vk::PipelineShaderStageCreateFlags::empty())
+                    .stage(vk::ShaderStageFlags::COMPUTE)
+                    .module(desc.shader.module.raw)
+                    .name(buf.c_string.as_c_str())
+                    .specialization_info(&buf.specialization);
 
                 let (base_handle, base_index) = match desc.parent {
                     pso::BasePipeline::Pipeline(pipeline) => (pipeline.0, -1),
@@ -1164,15 +1098,13 @@ impl d::Device<B> for Device {
                     flags |= vk::PipelineCreateFlags::ALLOW_DERIVATIVES;
                 }
 
-                vk::ComputePipelineCreateInfo {
-                    s_type: vk::StructureType::COMPUTE_PIPELINE_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags,
-                    stage,
-                    layout: desc.layout.raw,
-                    base_pipeline_handle: base_handle,
-                    base_pipeline_index: base_index,
-                }
+                vk::ComputePipelineCreateInfo::builder()
+                    .flags(flags)
+                    .stage(*stage)
+                    .layout(desc.layout.raw)
+                    .base_pipeline_handle(base_handle)
+                    .base_pipeline_index(base_index)
+                    .build()
             })
             .collect();
 
@@ -1232,17 +1164,13 @@ impl d::Device<B> for Device {
             }
         }
 
-        let info = vk::FramebufferCreateInfo {
-            s_type: vk::StructureType::FRAMEBUFFER_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::FramebufferCreateFlags::empty(),
-            render_pass: renderpass.raw,
-            attachment_count: raw_attachments.len() as u32,
-            p_attachments: raw_attachments.as_ptr(),
-            width: extent.width,
-            height: extent.height,
-            layers: extent.depth,
-        };
+        let info = vk::FramebufferCreateInfo::builder()
+            .flags(vk::FramebufferCreateFlags::empty())
+            .render_pass(renderpass.raw)
+            .attachments(&raw_attachments)
+            .width(extent.width)
+            .height(extent.height)
+            .layers(extent.depth);
 
         let result = self.shared.raw.create_framebuffer(&info, None);
 
@@ -1267,13 +1195,9 @@ impl d::Device<B> for Device {
         &self,
         spirv_data: &[u32],
     ) -> Result<n::ShaderModule, d::ShaderError> {
-        let info = vk::ShaderModuleCreateInfo {
-            s_type: vk::StructureType::SHADER_MODULE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::ShaderModuleCreateFlags::empty(),
-            code_size: spirv_data.len() * 4,
-            p_code: spirv_data.as_ptr(),
-        };
+        let info = vk::ShaderModuleCreateInfo::builder()
+            .flags(vk::ShaderModuleCreateFlags::empty())
+            .code(spirv_data);
 
         let module = self.shared.raw.create_shader_module(&info, None);
 
@@ -1294,47 +1218,36 @@ impl d::Device<B> for Device {
         use hal::pso::Comparison;
 
         let (anisotropy_enable, max_anisotropy) =
-            desc.anisotropy_clamp.map_or((vk::FALSE, 1.0), |aniso| {
+            desc.anisotropy_clamp.map_or((false, 1.0), |aniso| {
                 if self.shared.features.contains(Features::SAMPLER_ANISOTROPY) {
-                    (vk::TRUE, aniso as f32)
+                    (true, aniso as f32)
                 } else {
                     warn!(
                         "Anisotropy({}) was requested on a device with disabled feature",
                         aniso
                     );
-                    (vk::FALSE, 1.0)
+                    (false, 1.0)
                 }
             });
-        let info = vk::SamplerCreateInfo {
-            s_type: vk::StructureType::SAMPLER_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::SamplerCreateFlags::empty(),
-            mag_filter: conv::map_filter(desc.mag_filter),
-            min_filter: conv::map_filter(desc.min_filter),
-            mipmap_mode: conv::map_mip_filter(desc.mip_filter),
-            address_mode_u: conv::map_wrap(desc.wrap_mode.0),
-            address_mode_v: conv::map_wrap(desc.wrap_mode.1),
-            address_mode_w: conv::map_wrap(desc.wrap_mode.2),
-            mip_lod_bias: desc.lod_bias.0,
-            anisotropy_enable,
-            max_anisotropy,
-            compare_enable: if desc.comparison.is_some() {
-                vk::TRUE
-            } else {
-                vk::FALSE
-            },
-            compare_op: conv::map_comparison(desc.comparison.unwrap_or(Comparison::Never)),
-            min_lod: desc.lod_range.start.0,
-            max_lod: desc.lod_range.end.0,
-            border_color: match conv::map_border_color(desc.border) {
-                Some(bc) => bc,
-                None => {
-                    error!("Unsupported border color {:x}", desc.border.0);
-                    vk::BorderColor::FLOAT_TRANSPARENT_BLACK
-                }
-            },
-            unnormalized_coordinates: if desc.normalized { vk::FALSE } else { vk::TRUE },
-        };
+        let info = vk::SamplerCreateInfo::builder()
+            .flags(vk::SamplerCreateFlags::empty())
+            .mag_filter(conv::map_filter(desc.mag_filter))
+            .min_filter(conv::map_filter(desc.min_filter))
+            .mipmap_mode(conv::map_mip_filter(desc.mip_filter))
+            .address_mode_u(conv::map_wrap(desc.wrap_mode.0))
+            .address_mode_v(conv::map_wrap(desc.wrap_mode.1))
+            .address_mode_w(conv::map_wrap(desc.wrap_mode.2))
+            .mip_lod_bias(desc.lod_bias.0)
+            .anisotropy_enable(anisotropy_enable)
+            .max_anisotropy(max_anisotropy)
+            .compare_enable(desc.comparison.is_some())
+            .compare_op(conv::map_comparison(
+                desc.comparison.unwrap_or(Comparison::Never),
+            ))
+            .min_lod(desc.lod_range.start.0)
+            .max_lod(desc.lod_range.end.0)
+            .border_color(conv::map_border_color(desc.border))
+            .unnormalized_coordinates(!desc.normalized);
 
         let result = self.shared.raw.create_sampler(&info, None);
 
@@ -1353,16 +1266,11 @@ impl d::Device<B> for Device {
         size: u64,
         usage: buffer::Usage,
     ) -> Result<n::Buffer, buffer::CreationError> {
-        let info = vk::BufferCreateInfo {
-            s_type: vk::StructureType::BUFFER_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::BufferCreateFlags::empty(), // TODO:
-            size,
-            usage: conv::map_buffer_usage(usage),
-            sharing_mode: vk::SharingMode::EXCLUSIVE, // TODO:
-            queue_family_index_count: 0,
-            p_queue_family_indices: ptr::null(),
-        };
+        let info = vk::BufferCreateInfo::builder()
+            .flags(vk::BufferCreateFlags::empty()) // TODO:
+            .size(size)
+            .usage(conv::map_buffer_usage(usage))
+            .sharing_mode(vk::SharingMode::EXCLUSIVE); // TODO:
 
         let result = self.shared.raw.create_buffer(&info, None);
 
@@ -1409,15 +1317,12 @@ impl d::Device<B> for Device {
         format: Option<format::Format>,
         range: buffer::SubRange,
     ) -> Result<n::BufferView, buffer::ViewCreationError> {
-        let info = vk::BufferViewCreateInfo {
-            s_type: vk::StructureType::BUFFER_VIEW_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::BufferViewCreateFlags::empty(),
-            buffer: buffer.raw,
-            format: format.map_or(vk::Format::UNDEFINED, conv::map_format),
-            offset: range.offset,
-            range: range.size.unwrap_or(vk::WHOLE_SIZE),
-        };
+        let info = vk::BufferViewCreateInfo::builder()
+            .flags(vk::BufferViewCreateFlags::empty())
+            .buffer(buffer.raw)
+            .format(format.map_or(vk::Format::UNDEFINED, conv::map_format))
+            .offset(range.offset)
+            .range(range.size.unwrap_or(vk::WHOLE_SIZE));
 
         let result = self.shared.raw.create_buffer_view(&info, None);
 
@@ -1448,23 +1353,20 @@ impl d::Device<B> for Device {
             image::Kind::D3(..) => vk::ImageType::TYPE_3D,
         };
 
-        let info = vk::ImageCreateInfo {
-            s_type: vk::StructureType::IMAGE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags,
-            image_type,
-            format: conv::map_format(format),
-            extent: extent.clone(),
-            mip_levels: mip_levels as u32,
-            array_layers: array_layers as u32,
-            samples: vk::SampleCountFlags::from_raw(samples & vk::SampleCountFlags::all().as_raw()),
-            tiling: conv::map_tiling(tiling),
-            usage: conv::map_image_usage(usage),
-            sharing_mode: vk::SharingMode::EXCLUSIVE, // TODO:
-            queue_family_index_count: 0,
-            p_queue_family_indices: ptr::null(),
-            initial_layout: vk::ImageLayout::UNDEFINED,
-        };
+        let info = vk::ImageCreateInfo::builder()
+            .flags(flags)
+            .image_type(image_type)
+            .format(conv::map_format(format))
+            .extent(extent.clone())
+            .mip_levels(mip_levels as u32)
+            .array_layers(array_layers as u32)
+            .samples(vk::SampleCountFlags::from_raw(
+                samples & vk::SampleCountFlags::all().as_raw(),
+            ))
+            .tiling(conv::map_tiling(tiling))
+            .usage(conv::map_image_usage(usage))
+            .sharing_mode(vk::SharingMode::EXCLUSIVE) // TODO:
+            .initial_layout(vk::ImageLayout::UNDEFINED);
 
         let result = self.shared.raw.create_image(&info, None);
 
@@ -1539,19 +1441,16 @@ impl d::Device<B> for Device {
         let is_cube = image
             .flags
             .intersects(vk::ImageCreateFlags::CUBE_COMPATIBLE);
-        let info = vk::ImageViewCreateInfo {
-            s_type: vk::StructureType::IMAGE_VIEW_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::ImageViewCreateFlags::empty(),
-            image: image.raw,
-            view_type: match conv::map_view_kind(kind, image.ty, is_cube) {
+        let info = vk::ImageViewCreateInfo::builder()
+            .flags(vk::ImageViewCreateFlags::empty())
+            .image(image.raw)
+            .view_type(match conv::map_view_kind(kind, image.ty, is_cube) {
                 Some(ty) => ty,
                 None => return Err(image::ViewCreationError::BadKind(kind)),
-            },
-            format: conv::map_format(format),
-            components: conv::map_swizzle(swizzle),
-            subresource_range: conv::map_subresource_range(&range),
-        };
+            })
+            .format(conv::map_format(format))
+            .components(conv::map_swizzle(swizzle))
+            .subresource_range(conv::map_subresource_range(&range));
 
         let result = self.shared.raw.create_image_view(&info, None);
 
@@ -1590,14 +1489,10 @@ impl d::Device<B> for Device {
         let result = inplace_it::inplace_or_alloc_array(pools.len(), |uninit_guard| {
             let pools = uninit_guard.init_with_iter(pools);
 
-            let info = vk::DescriptorPoolCreateInfo {
-                s_type: vk::StructureType::DESCRIPTOR_POOL_CREATE_INFO,
-                p_next: ptr::null(),
-                flags: conv::map_descriptor_pool_create_flags(flags),
-                max_sets: max_sets as u32,
-                pool_size_count: pools.len() as u32,
-                p_pool_sizes: pools.as_ptr(),
-            };
+            let info = vk::DescriptorPoolCreateInfo::builder()
+                .flags(conv::map_descriptor_pool_create_flags(flags))
+                .max_sets(max_sets as u32)
+                .pool_sizes(&pools);
 
             self.shared.raw.create_descriptor_pool(&info, None)
         });
@@ -1659,13 +1554,9 @@ impl d::Device<B> for Device {
                 // TODO raw_bindings doesnt implement fmt::Debug
                 // debug!("create_descriptor_set_layout {:?}", raw_bindings);
 
-                let info = vk::DescriptorSetLayoutCreateInfo {
-                    s_type: vk::StructureType::DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                    p_next: ptr::null(),
-                    flags: vk::DescriptorSetLayoutCreateFlags::empty(),
-                    binding_count: raw_bindings.len() as _,
-                    p_bindings: raw_bindings.as_ptr(),
-                };
+                let info = vk::DescriptorSetLayoutCreateInfo::builder()
+                    .flags(vk::DescriptorSetLayoutCreateFlags::empty())
+                    .bindings(&raw_bindings);
 
                 self.shared.raw.create_descriptor_set_layout(&info, None)
             })
@@ -1740,32 +1631,40 @@ impl d::Device<B> for Device {
 
                 match *descriptor.borrow() {
                     pso::Descriptor::Sampler(sampler) => {
-                        image_infos.push(vk::DescriptorImageInfo {
-                            sampler: sampler.0,
-                            image_view: vk::ImageView::null(),
-                            image_layout: vk::ImageLayout::GENERAL,
-                        });
+                        image_infos.push(
+                            vk::DescriptorImageInfo::builder()
+                                .sampler(sampler.0)
+                                .image_view(vk::ImageView::null())
+                                .image_layout(vk::ImageLayout::GENERAL)
+                                .build(),
+                        );
                     }
                     pso::Descriptor::Image(view, layout) => {
-                        image_infos.push(vk::DescriptorImageInfo {
-                            sampler: vk::Sampler::null(),
-                            image_view: view.view,
-                            image_layout: conv::map_image_layout(layout),
-                        });
+                        image_infos.push(
+                            vk::DescriptorImageInfo::builder()
+                                .sampler(vk::Sampler::null())
+                                .image_view(view.view)
+                                .image_layout(conv::map_image_layout(layout))
+                                .build(),
+                        );
                     }
                     pso::Descriptor::CombinedImageSampler(view, layout, sampler) => {
-                        image_infos.push(vk::DescriptorImageInfo {
-                            sampler: sampler.0,
-                            image_view: view.view,
-                            image_layout: conv::map_image_layout(layout),
-                        });
+                        image_infos.push(
+                            vk::DescriptorImageInfo::builder()
+                                .sampler(sampler.0)
+                                .image_view(view.view)
+                                .image_layout(conv::map_image_layout(layout))
+                                .build(),
+                        );
                     }
                     pso::Descriptor::Buffer(buffer, ref sub) => {
-                        buffer_infos.push(vk::DescriptorBufferInfo {
-                            buffer: buffer.raw,
-                            offset: sub.offset,
-                            range: sub.size.unwrap_or(vk::WHOLE_SIZE),
-                        });
+                        buffer_infos.push(
+                            vk::DescriptorBufferInfo::builder()
+                                .buffer(buffer.raw)
+                                .offset(sub.offset)
+                                .range(sub.size.unwrap_or(vk::WHOLE_SIZE))
+                                .build(),
+                        );
                     }
                     pso::Descriptor::TexelBuffer(view) => {
                         texel_buffer_views.push(view.raw);
@@ -1816,17 +1715,15 @@ impl d::Device<B> for Device {
     {
         let copies = copies.into_iter().map(|copy| {
             let c = copy.borrow();
-            vk::CopyDescriptorSet {
-                s_type: vk::StructureType::COPY_DESCRIPTOR_SET,
-                p_next: ptr::null(),
-                src_set: c.src_set.raw,
-                src_binding: c.src_binding as u32,
-                src_array_element: c.src_array_offset as u32,
-                dst_set: c.dst_set.raw,
-                dst_binding: c.dst_binding as u32,
-                dst_array_element: c.dst_array_offset as u32,
-                descriptor_count: c.count as u32,
-            }
+            vk::CopyDescriptorSet::builder()
+                .src_set(c.src_set.raw)
+                .src_binding(c.src_binding as u32)
+                .src_array_element(c.src_array_offset as u32)
+                .dst_set(c.dst_set.raw)
+                .dst_binding(c.dst_binding as u32)
+                .dst_array_element(c.dst_array_offset as u32)
+                .descriptor_count(c.count as u32)
+                .build()
         });
 
         inplace_it::inplace_or_alloc_array(copies.len(), |uninit_guard| {
@@ -1894,11 +1791,7 @@ impl d::Device<B> for Device {
     }
 
     fn create_semaphore(&self) -> Result<n::Semaphore, d::OutOfMemory> {
-        let info = vk::SemaphoreCreateInfo {
-            s_type: vk::StructureType::SEMAPHORE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::SemaphoreCreateFlags::empty(),
-        };
+        let info = vk::SemaphoreCreateInfo::builder().flags(vk::SemaphoreCreateFlags::empty());
 
         let result = unsafe { self.shared.raw.create_semaphore(&info, None) };
 
@@ -1911,15 +1804,11 @@ impl d::Device<B> for Device {
     }
 
     fn create_fence(&self, signaled: bool) -> Result<n::Fence, d::OutOfMemory> {
-        let info = vk::FenceCreateInfo {
-            s_type: vk::StructureType::FENCE_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: if signaled {
-                vk::FenceCreateFlags::SIGNALED
-            } else {
-                vk::FenceCreateFlags::empty()
-            },
-        };
+        let info = vk::FenceCreateInfo::builder().flags(if signaled {
+            vk::FenceCreateFlags::SIGNALED
+        } else {
+            vk::FenceCreateFlags::empty()
+        });
 
         let result = unsafe { self.shared.raw.create_fence(&info, None) };
 
@@ -1996,11 +1885,7 @@ impl d::Device<B> for Device {
     }
 
     fn create_event(&self) -> Result<n::Event, d::OutOfMemory> {
-        let info = vk::EventCreateInfo {
-            s_type: vk::StructureType::EVENT_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::EventCreateFlags::empty(),
-        };
+        let info = vk::EventCreateInfo::builder().flags(vk::EventCreateFlags::empty());
 
         let result = unsafe { self.shared.raw.create_event(&info, None) };
         match result {
@@ -2066,14 +1951,11 @@ impl d::Device<B> for Device {
             ),
         };
 
-        let info = vk::QueryPoolCreateInfo {
-            s_type: vk::StructureType::QUERY_POOL_CREATE_INFO,
-            p_next: ptr::null(),
-            flags: vk::QueryPoolCreateFlags::empty(),
-            query_type,
-            query_count,
-            pipeline_statistics,
-        };
+        let info = vk::QueryPoolCreateInfo::builder()
+            .flags(vk::QueryPoolCreateFlags::empty())
+            .query_type(query_type)
+            .query_count(query_count)
+            .pipeline_statistics(pipeline_statistics);
 
         let result = self.shared.raw.create_query_pool(&info, None);
 
@@ -2315,15 +2197,15 @@ impl Device {
             // Keep variables outside the if-else block to ensure they do not
             // go out of scope while we hold a pointer to them
             let mut buffer: [u8; 64] = [0u8; 64];
-            let mut buffer_vec: Vec<u8>;
+            let buffer_vec: Vec<u8>;
 
             // Append a null terminator to the string
-            let name_ptr = if name.len() < 64 {
+            let name_cstr = if name.len() < 64 {
                 // Common case, string is very small. Allocate a copy on the stack.
                 std::ptr::copy_nonoverlapping(name.as_ptr(), buffer.as_mut_ptr(), name.len());
                 // Add null terminator
                 buffer[name.len()] = 0;
-                buffer.as_mut_ptr()
+                CStr::from_bytes_with_nul(&buffer[..name.len() + 1]).unwrap()
             } else {
                 // Less common case, the string is large.
                 // This requires a heap allocation.
@@ -2333,17 +2215,14 @@ impl Device {
                     .cloned()
                     .chain(std::iter::once(0))
                     .collect::<Vec<u8>>();
-                buffer_vec.as_mut_ptr()
+                CStr::from_bytes_with_nul(&buffer_vec).unwrap()
             };
             let _result = debug_utils_ext.debug_utils_set_object_name(
                 self.shared.raw.handle(),
-                &vk::DebugUtilsObjectNameInfoEXT {
-                    s_type: vk::StructureType::DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-                    p_next: std::ptr::null_mut(),
-                    object_type,
-                    object_handle,
-                    p_object_name: name_ptr as *const _,
-                },
+                &vk::DebugUtilsObjectNameInfoEXT::builder()
+                    .object_type(object_type)
+                    .object_handle(object_handle)
+                    .object_name(name_cstr),
             );
         }
     }
@@ -2361,29 +2240,24 @@ impl Device {
             None => vk::SwapchainKHR::null(),
         };
 
-        let info = vk::SwapchainCreateInfoKHR {
-            s_type: vk::StructureType::SWAPCHAIN_CREATE_INFO_KHR,
-            p_next: ptr::null(),
-            flags: vk::SwapchainCreateFlagsKHR::empty(),
-            surface: surface.raw.handle,
-            min_image_count: config.image_count,
-            image_format: conv::map_format(config.format),
-            image_color_space: vk::ColorSpaceKHR::SRGB_NONLINEAR,
-            image_extent: vk::Extent2D {
+        let info = vk::SwapchainCreateInfoKHR::builder()
+            .flags(vk::SwapchainCreateFlagsKHR::empty())
+            .surface(surface.raw.handle)
+            .min_image_count(config.image_count)
+            .image_format(conv::map_format(config.format))
+            .image_color_space(vk::ColorSpaceKHR::SRGB_NONLINEAR)
+            .image_extent(vk::Extent2D {
                 width: config.extent.width,
                 height: config.extent.height,
-            },
-            image_array_layers: 1,
-            image_usage: conv::map_image_usage(config.image_usage),
-            image_sharing_mode: vk::SharingMode::EXCLUSIVE,
-            queue_family_index_count: 0,
-            p_queue_family_indices: ptr::null(),
-            pre_transform: vk::SurfaceTransformFlagsKHR::IDENTITY,
-            composite_alpha: conv::map_composite_alpha_mode(config.composite_alpha_mode),
-            present_mode: conv::map_present_mode(config.present_mode),
-            clipped: 1,
-            old_swapchain,
-        };
+            })
+            .image_array_layers(1)
+            .image_usage(conv::map_image_usage(config.image_usage))
+            .image_sharing_mode(vk::SharingMode::EXCLUSIVE)
+            .pre_transform(vk::SurfaceTransformFlagsKHR::IDENTITY)
+            .composite_alpha(conv::map_composite_alpha_mode(config.composite_alpha_mode))
+            .present_mode(conv::map_present_mode(config.present_mode))
+            .clipped(true)
+            .old_swapchain(old_swapchain);
 
         let result = functor.create_swapchain(&info, None);
 
@@ -2418,10 +2292,16 @@ impl Device {
             _ => unreachable!(),
         };
 
+        let extent = vk::Extent3D {
+            width: config.extent.width,
+            height: config.extent.height,
+            depth: 1,
+        };
         let swapchain = w::Swapchain {
             raw: swapchain_raw,
             functor,
             vendor_id: self.vendor_id,
+            extent,
         };
 
         let images = backbuffer_images
@@ -2430,11 +2310,7 @@ impl Device {
                 raw: image,
                 ty: vk::ImageType::TYPE_2D,
                 flags: vk::ImageCreateFlags::empty(),
-                extent: vk::Extent3D {
-                    width: config.extent.width,
-                    height: config.extent.height,
-                    depth: 1,
-                },
+                extent,
             })
             .collect();
 
