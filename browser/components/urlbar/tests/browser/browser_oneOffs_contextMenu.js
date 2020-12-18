@@ -18,15 +18,6 @@ XPCOMUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
 let originalEngine;
 let newEngine;
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-});
-
 // The one-off context menu should not be shown.
 add_task(async function contextMenu_not_shown() {
   // Add a popupshown listener on the context menu that sets this

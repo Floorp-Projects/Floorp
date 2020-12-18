@@ -332,12 +332,6 @@ add_task(async function test_adaptive_mouse() {
 
 add_task(async function test_adaptive_searchmode() {
   info("Check adaptive history is not shown in search mode.");
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
 
   let suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
@@ -364,6 +358,4 @@ add_task(async function test_adaptive_searchmode() {
   await UrlbarTestUtils.enterSearchMode(window, {
     engineName: suggestionsEngine.name,
   });
-
-  await SpecialPowers.popPrefEnv();
 });

@@ -109,12 +109,6 @@ add_task(async function searchRestriction() {
 });
 
 add_task(async function historyRestriction() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search(UrlbarTokenizer.RESTRICT.HISTORY)
@@ -128,16 +122,9 @@ add_task(async function historyRestriction() {
   Assert.ok(!gURLBar.value, "The Urlbar has no value.");
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function historyRestrictionWithString() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   gURLBar.blur();
   // The leading and trailing spaces are intentional to verify that search()
   // preserves them.
@@ -162,7 +149,6 @@ add_task(async function historyRestrictionWithString() {
   assertOneOffButtonsVisible(true);
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function tagRestriction() {

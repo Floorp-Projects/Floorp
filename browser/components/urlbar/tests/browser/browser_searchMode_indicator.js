@@ -62,11 +62,7 @@ add_task(async function setup() {
   );
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.search.separatePrivateDefault.ui.enabled", false],
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
+    set: [["browser.search.separatePrivateDefault.ui.enabled", false]],
   });
 });
 
