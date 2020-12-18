@@ -95,6 +95,12 @@ struct ParamTraits<mozilla::layers::LayersObserverEpoch>
     : public PlainOldDataSerializer<mozilla::layers::LayersObserverEpoch> {};
 
 template <>
+struct ParamTraits<mozilla::layers::WindowKind>
+    : public ContiguousEnumSerializer<mozilla::layers::WindowKind,
+                                      mozilla::layers::WindowKind::MAIN,
+                                      mozilla::layers::WindowKind::LAST> {};
+
+template <>
 struct ParamTraits<mozilla::layers::LayersBackend>
     : public ContiguousEnumSerializer<
           mozilla::layers::LayersBackend,

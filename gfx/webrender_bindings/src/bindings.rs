@@ -38,7 +38,7 @@ use webrender::{
     CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, NativeSurfaceId,
     NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo, ProfilerHooks, RecordedFrameHandle,
     Renderer, RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener,
-    UploadMethod, WrShaders, ONE_TIME_USAGE_HINT,
+    UploadMethod, WrShaders, ONE_TIME_USAGE_HINT, TextureCacheConfig,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1456,6 +1456,7 @@ pub extern "C" fn wr_window_new(
     window_id: WrWindowId,
     window_width: i32,
     window_height: i32,
+    is_main_window: bool,
     support_low_priority_transactions: bool,
     support_low_priority_threadpool: bool,
     allow_texture_swizzling: bool,
@@ -1580,6 +1581,18 @@ pub extern "C" fn wr_window_new(
         None
     };
 
+    let texture_cache_config = if is_main_window {
+        TextureCacheConfig::DEFAULT
+    } else {
+        TextureCacheConfig {
+            color8_linear_texture_size: 512,
+            color8_nearest_texture_size: 512,
+            color8_glyph_texture_size: 512,
+            alpha8_texture_size: 512,
+            alpha16_texture_size: 512,
+        }
+    };
+
     let opts = RendererOptions {
         enable_aa: true,
         force_subpixel_aa: false,
@@ -1625,6 +1638,7 @@ pub extern "C" fn wr_window_new(
         enable_gpu_markers,
         panic_on_gl_error,
         picture_tile_size,
+        texture_cache_config,
         ..Default::default()
     };
 

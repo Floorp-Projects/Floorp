@@ -228,7 +228,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   void WillEndTransaction();
 
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(
-      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&);
+      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&,
+      const WindowKind&);
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor);
 
   webgpu::PWebGPUChild* AllocPWebGPUChild();

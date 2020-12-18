@@ -165,6 +165,11 @@ struct LayersObserverEpoch {
 class CompositionOpportunityType {};
 typedef BaseTransactionId<CompositionOpportunityType> CompositionOpportunityId;
 
+/// We make different decisions about resource allocation sizes in WebRender
+/// depending on whether we are going to render web pages or simpler
+/// content in the window.
+enum class WindowKind : int8_t { MAIN = 0, SECONDARY, LAST };
+
 enum class LayersBackend : int8_t {
   LAYERS_NONE = 0,
   LAYERS_BASIC,

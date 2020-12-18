@@ -242,7 +242,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual bool DeallocPTextureParent(PTextureParent* aActor) = 0;
 
   virtual PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
-      const PipelineId& pipelineId, const LayoutDeviceIntSize& aSize) = 0;
+      const PipelineId& pipelineId, const LayoutDeviceIntSize& aSize,
+      const WindowKind& aWindowKind) = 0;
   virtual bool DeallocPWebRenderBridgeParent(
       PWebRenderBridgeParent* aActor) = 0;
 
@@ -665,8 +666,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   }
 
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
-      const wr::PipelineId& aPipelineId,
-      const LayoutDeviceIntSize& aSize) override;
+      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize,
+      const WindowKind& aWindowKind) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
   RefPtr<WebRenderBridgeParent> GetWebRenderBridgeParent() const;
   Maybe<TimeStamp> GetTestingTimeStamp() const;
