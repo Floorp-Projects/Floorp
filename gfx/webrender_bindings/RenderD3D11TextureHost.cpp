@@ -550,6 +550,10 @@ bool RenderDXGIYCbCrTextureHost::EnsureLockable(wr::ImageRendering aRendering) {
 }
 
 bool RenderDXGIYCbCrTextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
+  if (mTextureHandles[0]) {
+    return true;
+  }
+
   for (int i = 0; i < 3; ++i) {
     // Get the R8 D3D11 texture from shared handle.
     HRESULT hr = aDevice->OpenSharedResource(
