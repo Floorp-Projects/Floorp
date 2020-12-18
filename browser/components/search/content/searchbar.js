@@ -359,28 +359,6 @@
         oneOffRecorded = this.textbox.popup.oneOffButtons.maybeRecordTelemetry(
           aEvent
         );
-        if (!oneOffRecorded) {
-          let source = "unknown";
-          let target = aEvent.originalTarget;
-          if (aEvent instanceof MouseEvent) {
-            if (
-              target.classList.contains("search-panel-header") ||
-              target.parentNode.classList.contains("search-panel-header")
-            ) {
-              source = "header";
-            }
-          } else if (aEvent instanceof XULCommandEvent) {
-            if (target.getAttribute("anonid") == "paste-and-search") {
-              source = "paste";
-            }
-          }
-          if (!aEngine) {
-            aEngine = this.currentEngine;
-          }
-          BrowserSearchTelemetry.recordSearch(gBrowser, aEngine, source, {
-            isOneOff: true,
-          });
-        }
       }
 
       if (aWhere === "tab" && !!aParams.inBackground) {
