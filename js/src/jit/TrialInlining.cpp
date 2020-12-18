@@ -27,8 +27,30 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
 
 #ifdef JS_CACHEIR_SPEW
   if (cx->spewer().enabled(cx, script, SpewChannel::RateMyCacheIR)) {
-    CacheIRHealth cih;
-    cih.rateMyCacheIR(cx, script);
+    for (uint32_t i = 0; i < icScript->numICEntries(); i++) {
+      ICEntry& entry = icScript->icEntry(i);
+
+      // If the IC is megamorphic or generic, then we have already
+      // spewed the IC report on transition.
+      if (!(uint8_t(entry.fallbackStub()->state().mode()) > 0)) {
+        jit::ICStub* stub = entry.firstStub();
+        bool sawNonZeroCount = false;
+        while (!stub->isFallback()) {
+          uint32_t count = stub->enteredCount();
+          if (count > 0 && sawNonZeroCount) {
+            CacheIRHealth cih;
+            cih.rateIC(cx, &entry, script, SpewContext::TrialInlining);
+            break;
+          }
+
+          if (count > 0 && !sawNonZeroCount) {
+            sawNonZeroCount = true;
+          }
+
+          stub = stub->toCacheIRStub()->next();
+        }
+      }
+    }
   }
 #endif
 

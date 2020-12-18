@@ -48,11 +48,11 @@ class ICEntry;
 // script, inline cache entry, or stub is unhappy go to:
 // https://carolinecullen.github.io/cacheirhealthreport/info.html
 //
+enum SpewContext : uint8_t { Shell, Transition, TrialInlining };
 
 class CacheIRHealth {
   enum Happiness : uint8_t { Sad, MediumSad, MediumHappy, Happy };
 
- public:
   // Get happiness from health score.
   Happiness determineStubHappiness(uint32_t stubHealthScore);
   // Health of an individual stub.
@@ -65,9 +65,14 @@ class CacheIRHealth {
   Happiness spewJSOpAndCacheIRHealth(AutoStructuredSpewer& spew,
                                      HandleScript script, jit::ICEntry* entry,
                                      jsbytecode* pc, JSOp op);
+
+ public:
+  // Spew the health of a particular ICEntry only.
+  void rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
+              SpewContext context);
   // If a JitScript exists, spew the health of all ICEntries that exist
   // for the specified script.
-  void rateMyCacheIR(JSContext* cx, HandleScript script);
+  void rateScript(JSContext* cx, HandleScript script, SpewContext context);
 };
 
 }  // namespace jit
