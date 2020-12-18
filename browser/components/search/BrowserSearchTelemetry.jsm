@@ -56,6 +56,112 @@ class BrowserSearchTelemetryHandler {
   }
 
   /**
+   * Records the method by which the user selected a result from the urlbar or
+   * searchbar.
+   *
+   * @param {Event} event
+   *        The event that triggered the selection.
+   * @param {string} source
+   *        Either "urlbar" or "searchbar" depending on the source.
+   * @param {number} index
+   *        The index that the user chose in the popup, or -1 if there wasn't a
+   *        selection.
+   * @param {string} userSelectionBehavior
+   *        How the user cycled through results before picking the current match.
+   *        Could be one of "tab", "arrow" or "none".
+   */
+  recordSearchSuggestionSelectionMethod(
+    event,
+    source,
+    index,
+    userSelectionBehavior = "none"
+  ) {
+    // If the contents of the histogram are changed then
+    // `UrlbarTestUtils.SELECTED_RESULT_METHODS` should also be updated.
+    if (source == "searchbar" && userSelectionBehavior != "none") {
+      throw new Error("Did not expect a selection behavior for the searchbar.");
+    }
+
+    let histogram = Services.telemetry.getHistogramById(
+      source == "urlbar"
+        ? "FX_URLBAR_SELECTED_RESULT_METHOD"
+        : "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
+    );
+    // command events are from the one-off context menu.  Treat them as clicks.
+    // Note that we don't care about MouseEvent subclasses here, since
+    // those are not clicks.
+    let isClick =
+      event &&
+      (ChromeUtils.getClassName(event) == "MouseEvent" ||
+        event.type == "command");
+    let category;
+    if (isClick) {
+      category = "click";
+    } else if (index >= 0) {
+      switch (userSelectionBehavior) {
+        case "tab":
+          category = "tabEnterSelection";
+          break;
+        case "arrow":
+          category = "arrowEnterSelection";
+          break;
+        case "rightClick":
+          // Selected by right mouse button.
+          category = "rightClickEnter";
+          break;
+        default:
+          category = "enterSelection";
+      }
+    } else {
+      category = "enter";
+    }
+    histogram.add(category);
+  }
+
+  /**
+   * Records entry into the Urlbar's search mode.
+   *
+   * Telemetry records only which search mode is entered and how it was entered.
+   * It does not record anything pertaining to searches made within search mode.
+   * @param {object} searchMode
+   *   A search mode object. See UrlbarInput.setSearchMode documentation for
+   *   details.
+   */
+  recordSearchMode(searchMode) {
+    // Search mode preview is not search mode. Recording it would just create
+    // noise.
+    if (searchMode.isPreview) {
+      return;
+    }
+    let scalarKey;
+    if (searchMode.engineName) {
+      let engine = Services.search.getEngineByName(searchMode.engineName);
+      let resultDomain = engine.getResultDomain();
+      // For built-in engines, sanitize the data in a few special cases to make
+      // analysis easier.
+      if (!engine.isAppProvided) {
+        scalarKey = "other";
+      } else if (resultDomain.includes("amazon.")) {
+        // Group all the localized Amazon sites together.
+        scalarKey = "Amazon";
+      } else if (resultDomain.endsWith("wikipedia.org")) {
+        // Group all the localized Wikipedia sites together.
+        scalarKey = "Wikipedia";
+      } else {
+        scalarKey = searchMode.engineName;
+      }
+    } else if (searchMode.source) {
+      scalarKey = UrlbarUtils.getResultSourceName(searchMode.source) || "other";
+    }
+
+    Services.telemetry.keyedScalarAdd(
+      "urlbar.searchmode." + searchMode.entry,
+      scalarKey,
+      1
+    );
+  }
+
+  /**
    * The main entry point for recording search related Telemetry. This includes
    * search counts and engagement measurements.
    *
@@ -133,72 +239,6 @@ class BrowserSearchTelemetryHandler {
       // telemetry is broken for some reason.
       console.error(ex);
     }
-  }
-
-  _recordSearch(engine, url, source, action = null) {
-    // The one-off buttons are logged in two places, if we hit here with the
-    // action as oneoff and no url, then we are hitting the attribution case
-    // in `recordSearch` above. Really this needs re-architecturing so we
-    // do not have two distinct calls to `recordSearch` for one-offs
-    // (see bug 1662553).
-    if (!(action == "oneoff" && !url)) {
-      PartnerLinkAttribution.makeSearchEngineRequest(engine, url).catch(
-        Cu.reportError
-      );
-    }
-
-    let scalarKey = action ? "search_" + action : "search";
-    Services.telemetry.keyedScalarAdd(
-      "browser.engagement.navigation." + source,
-      scalarKey,
-      1
-    );
-    Services.telemetry.recordEvent("navigation", "search", source, action, {
-      engine: engine.telemetryId,
-    });
-  }
-
-  /**
-   * Records entry into the Urlbar's search mode.
-   *
-   * Telemetry records only which search mode is entered and how it was entered.
-   * It does not record anything pertaining to searches made within search mode.
-   * @param {object} searchMode
-   *   A search mode object. See UrlbarInput.setSearchMode documentation for
-   *   details.
-   */
-  recordSearchMode(searchMode) {
-    // Search mode preview is not search mode. Recording it would just create
-    // noise.
-    if (searchMode.isPreview) {
-      return;
-    }
-    let scalarKey;
-    if (searchMode.engineName) {
-      let engine = Services.search.getEngineByName(searchMode.engineName);
-      let resultDomain = engine.getResultDomain();
-      // For built-in engines, sanitize the data in a few special cases to make
-      // analysis easier.
-      if (!engine.isAppProvided) {
-        scalarKey = "other";
-      } else if (resultDomain.includes("amazon.")) {
-        // Group all the localized Amazon sites together.
-        scalarKey = "Amazon";
-      } else if (resultDomain.endsWith("wikipedia.org")) {
-        // Group all the localized Wikipedia sites together.
-        scalarKey = "Wikipedia";
-      } else {
-        scalarKey = searchMode.engineName;
-      }
-    } else if (searchMode.source) {
-      scalarKey = UrlbarUtils.getResultSourceName(searchMode.source) || "other";
-    }
-
-    Services.telemetry.keyedScalarAdd(
-      "urlbar.searchmode." + searchMode.entry,
-      scalarKey,
-      1
-    );
   }
 
   _handleSearchAction(engine, source, details) {
@@ -283,67 +323,27 @@ class BrowserSearchTelemetryHandler {
     this._recordSearch(engine, details.url, sourceName, "enter");
   }
 
-  /**
-   * Records the method by which the user selected a result from the urlbar or
-   * searchbar.
-   *
-   * @param {Event} event
-   *        The event that triggered the selection.
-   * @param {string} source
-   *        Either "urlbar" or "searchbar" depending on the source.
-   * @param {number} index
-   *        The index that the user chose in the popup, or -1 if there wasn't a
-   *        selection.
-   * @param {string} userSelectionBehavior
-   *        How the user cycled through results before picking the current match.
-   *        Could be one of "tab", "arrow" or "none".
-   */
-  recordSearchSuggestionSelectionMethod(
-    event,
-    source,
-    index,
-    userSelectionBehavior = "none"
-  ) {
-    // If the contents of the histogram are changed then
-    // `UrlbarTestUtils.SELECTED_RESULT_METHODS` should also be updated.
-    if (source == "searchbar" && userSelectionBehavior != "none") {
-      throw new Error("Did not expect a selection behavior for the searchbar.");
+  _recordSearch(engine, url, source, action = null) {
+    // The one-off buttons are logged in two places, if we hit here with the
+    // action as oneoff and no url, then we are hitting the attribution case
+    // in `recordSearch` above. Really this needs re-architecturing so we
+    // do not have two distinct calls to `recordSearch` for one-offs
+    // (see bug 1662553).
+    if (!(action == "oneoff" && !url)) {
+      PartnerLinkAttribution.makeSearchEngineRequest(engine, url).catch(
+        Cu.reportError
+      );
     }
 
-    let histogram = Services.telemetry.getHistogramById(
-      source == "urlbar"
-        ? "FX_URLBAR_SELECTED_RESULT_METHOD"
-        : "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
+    let scalarKey = action ? "search_" + action : "search";
+    Services.telemetry.keyedScalarAdd(
+      "browser.engagement.navigation." + source,
+      scalarKey,
+      1
     );
-    // command events are from the one-off context menu.  Treat them as clicks.
-    // Note that we don't care about MouseEvent subclasses here, since
-    // those are not clicks.
-    let isClick =
-      event &&
-      (ChromeUtils.getClassName(event) == "MouseEvent" ||
-        event.type == "command");
-    let category;
-    if (isClick) {
-      category = "click";
-    } else if (index >= 0) {
-      switch (userSelectionBehavior) {
-        case "tab":
-          category = "tabEnterSelection";
-          break;
-        case "arrow":
-          category = "arrowEnterSelection";
-          break;
-        case "rightClick":
-          // Selected by right mouse button.
-          category = "rightClickEnter";
-          break;
-        default:
-          category = "enterSelection";
-      }
-    } else {
-      category = "enter";
-    }
-    histogram.add(category);
+    Services.telemetry.recordEvent("navigation", "search", source, action, {
+      engine: engine.telemetryId,
+    });
   }
 }
 
