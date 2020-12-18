@@ -8854,49 +8854,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
-                                                 MutableHandleObject res) {
-  AutoRealm ar(cx_, calleeFunc);
-
-  // Don't allocate a template object for super() calls as Ion doesn't inline
-  // native super().
-  bool isSuper = op_ == JSOp::SuperCall || op_ == JSOp::SpreadSuperCall;
-  if (isSuper) {
-    return true;
-  }
-
-  if (!calleeFunc->hasJitInfo() ||
-      calleeFunc->jitInfo()->type() != JSJitInfo::InlinableNative) {
-    return true;
-  }
-
-  bool isConstructing = IsConstructOp(op_);
-
-  // Check for natives to which template objects can be attached. This is
-  // done to provide templates to Ion for inlining these natives later on.
-  // TODO(no-TI): IonBuilder template objects.
-  switch (calleeFunc->jitInfo()->inlinableNative) {
-    case InlinableNative::String: {
-      if (!isConstructing) {
-        return true;
-      }
-
-      if (args_.length() == 1 && args_[0].isString()) {
-        // This case is handled by tryAttachStringConstructor.
-        return true;
-      }
-
-      RootedString emptyString(cx_, cx_->runtime()->emptyString);
-      res.set(StringObject::create(cx_, emptyString, /* proto = */ nullptr,
-                                   TenuredObject));
-      return !!res;
-    }
-
-    default:
-      return true;
-  }
-}
-
 AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
 
@@ -8919,12 +8876,6 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   // Check for specific native-function optimizations.
   if (isSpecialized) {
     TRY_ATTACH(tryAttachInlinableNative(calleeFunc));
-  }
-
-  RootedObject templateObj(cx_);
-  if (isSpecialized && !getTemplateObjectForNative(calleeFunc, &templateObj)) {
-    cx_->clearPendingException();
-    return AttachDecision::NoAction;
   }
 
   // Load argc.
@@ -8979,11 +8930,6 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   }
 
   writer.returnFromIC();
-
-  if (templateObj) {
-    MOZ_ASSERT(isSpecialized);
-    writer.metaNativeTemplateObject(calleeFunc, templateObj);
-  }
 
   return AttachDecision::Attach;
 }

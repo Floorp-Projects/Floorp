@@ -7169,10 +7169,8 @@ bool CacheIRCompiler::emitCallIsSuspendedGeneratorResult(ValOperandId valId) {
   return true;
 }
 
-// This op generates no code. It is consumed by BaselineInspector.
-bool CacheIRCompiler::emitMetaTwoByte(MetaTwoByteKind, uint32_t, uint32_t) {
-  return true;
-}
+// This op generates no code. It is consumed by the transpiler.
+bool CacheIRCompiler::emitMetaTwoByte(uint32_t, uint32_t) { return true; }
 
 bool CacheIRCompiler::emitCallNativeGetElementResult(ObjOperandId objId,
                                                      Int32OperandId indexId) {
