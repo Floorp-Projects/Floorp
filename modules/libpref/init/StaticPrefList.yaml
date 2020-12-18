@@ -10424,7 +10424,7 @@
 - name: widget.remote-look-and-feel
   type: bool
 #ifdef MOZ_WIDGET_GTK
-  value: true
+  value: false
 #else
   value: false
 #endif
