@@ -2314,12 +2314,6 @@ var BookmarkingUI = {
               }
             }
           }
-          if (ev.parentGuid == PlacesUtils.bookmarks.toolbarGuid) {
-            Services.telemetry.scalarAdd(
-              "browser.engagement.bookmarks_toolbar_bookmark_added",
-              1
-            );
-          }
           break;
         case "bookmark-removed":
           // If one of the tracked bookmarks has been removed, unregister it.
@@ -2396,12 +2390,6 @@ var BookmarkingUI = {
       oldParentGuid === PlacesUtils.bookmarks.toolbarGuid;
     if (hasMovedToToolbar || hasMovedOutOfToolbar) {
       this.updateEmptyToolbarMessage();
-    }
-    if (hasMovedToToolbar) {
-      Services.telemetry.scalarAdd(
-        "browser.engagement.bookmarks_toolbar_bookmark_added",
-        1
-      );
     }
   },
 

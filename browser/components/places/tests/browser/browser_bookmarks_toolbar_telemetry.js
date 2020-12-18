@@ -64,6 +64,12 @@ add_task(async function test_bookmarks_toolbar_telemetry() {
     1
   );
 
+  // Extra windows are opened to make sure telemetry numbers aren't
+  // double counted since there will be multiple instances of the
+  // bookmarks toolbar.
+  let extraWindows = [];
+  extraWindows.push(await BrowserTestUtils.openNewBrowserWindow());
+
   Services.telemetry.getSnapshotForScalars("main", true);
   let bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
@@ -79,17 +85,39 @@ add_task(async function test_bookmarks_toolbar_telemetry() {
 
   let newtab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(() => BrowserTestUtils.removeTab(newtab));
-  Services.telemetry.getSnapshotForScalars("main", true);
   let bookmarkToolbarButton = document.querySelector(
     "#PlacesToolbarItems > toolbarbutton"
   );
   bookmarkToolbarButton.click();
   TelemetryTestUtils.assertScalar(
-    TelemetryTestUtils.getProcessScalars("parent", false, true),
+    TelemetryTestUtils.getProcessScalars("parent"),
     "browser.engagement.bookmarks_toolbar_bookmark_opened",
     1,
     "Bookmarks opened value should be 1"
   );
+
+  extraWindows.push(await BrowserTestUtils.openNewBrowserWindow());
+  extraWindows.push(await BrowserTestUtils.openNewBrowserWindow());
+
+  // Simulate dragging a bookmark within the toolbar to ensure
+  // that the bookmarks_toolbar_bookmark_added probe doesn't increment
+  let srcElement = document.querySelector("#PlacesToolbar .bookmark-item");
+  let destElement = document.querySelector("#PlacesToolbar");
+  await EventUtils.synthesizePlainDragAndDrop({
+    srcElement,
+    destElement,
+  });
+
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    "browser.engagement.bookmarks_toolbar_bookmark_added",
+    3,
+    "Bookmarks added value should still be 3"
+  );
+
+  for (let win of extraWindows) {
+    await BrowserTestUtils.closeWindow(win);
+  }
 });
 
 async function changeToolbarVisibilityViaContextMenu(nextState) {
