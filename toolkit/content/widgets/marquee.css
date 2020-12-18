@@ -18,8 +18,8 @@
   padding: 0 !important;
 }
 
-/* PRINT ONLY rules */
-@media print {
+/* When printing or when the user doesn't want movement, we disable scrolling */
+@media print, (prefers-reduced-motion) {
   .innerDiv {
     padding: 0 !important;
   }
