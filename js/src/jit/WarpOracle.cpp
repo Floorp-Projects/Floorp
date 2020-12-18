@@ -149,8 +149,14 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   // Insert the outermost scriptSnapshot at the front of the list.
   scriptSnapshots_.insertFront(scriptSnapshot);
 
+  bool recordFinalWarmUpCount = false;
+#ifdef JS_CACHEIR_SPEW
+  recordFinalWarmUpCount = outerScript_->needsFinalWarmUpCount();
+#endif
+
   auto* snapshot = new (alloc_.fallible())
-      WarpSnapshot(cx_, alloc_, std::move(scriptSnapshots_), bailoutInfo_);
+      WarpSnapshot(cx_, alloc_, std::move(scriptSnapshots_), bailoutInfo_,
+                   recordFinalWarmUpCount);
   if (!snapshot) {
     return abort(outerScript_, AbortReason::Alloc);
   }

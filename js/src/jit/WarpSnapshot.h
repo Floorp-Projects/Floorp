@@ -579,10 +579,15 @@ class WarpSnapshot : public TempObject {
   using NurseryObjectVector = Vector<JSObject*, 0, JitAllocPolicy>;
   NurseryObjectVector nurseryObjects_;
 
+#ifdef JS_CACHEIR_SPEW
+  bool needsFinalWarmUpCount_ = false;
+#endif
+
  public:
   explicit WarpSnapshot(JSContext* cx, TempAllocator& alloc,
                         WarpScriptSnapshotList&& scriptSnapshots,
-                        const WarpBailoutInfo& bailoutInfo);
+                        const WarpBailoutInfo& bailoutInfo,
+                        bool recordWarmUpCount);
 
   WarpScriptSnapshot* rootScript() { return scriptSnapshots_.getFirst(); }
   const WarpScriptSnapshotList& scripts() const { return scriptSnapshots_; }
@@ -602,6 +607,10 @@ class WarpSnapshot : public TempObject {
 #ifdef JS_JITSPEW
   void dump() const;
   void dump(GenericPrinter& out) const;
+#endif
+
+#ifdef JS_CACHEIR_SPEW
+  bool needsFinalWarmUpCount() const { return needsFinalWarmUpCount_; }
 #endif
 };
 

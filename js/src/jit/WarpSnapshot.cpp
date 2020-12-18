@@ -26,12 +26,17 @@ static_assert(!std::is_polymorphic_v<WarpOpSnapshot>,
 
 WarpSnapshot::WarpSnapshot(JSContext* cx, TempAllocator& alloc,
                            WarpScriptSnapshotList&& scriptSnapshots,
-                           const WarpBailoutInfo& bailoutInfo)
+                           const WarpBailoutInfo& bailoutInfo,
+                           bool needsFinalWarmUpCount)
     : scriptSnapshots_(std::move(scriptSnapshots)),
       globalLexicalEnv_(&cx->global()->lexicalEnvironment()),
       globalLexicalEnvThis_(globalLexicalEnv_->thisObject()),
       bailoutInfo_(bailoutInfo),
-      nurseryObjects_(alloc) {}
+      nurseryObjects_(alloc) {
+#ifdef JS_CACHEIR_SPEW
+  needsFinalWarmUpCount_ = needsFinalWarmUpCount;
+#endif
+}
 
 WarpScriptSnapshot::WarpScriptSnapshot(
     JSScript* script, const WarpEnvironment& env,
