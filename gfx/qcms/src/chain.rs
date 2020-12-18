@@ -1045,7 +1045,7 @@ fn modular_transform_create(
     //return qcms_modular_transform_reduce(first_transform);
     return first_transform;
 }
-unsafe fn modular_transform_data(
+fn modular_transform_data(
     mut transform: Option<&qcms_modular_transform>,
     mut src: Vec<f32>,
     mut dest: Vec<f32>,
@@ -1069,7 +1069,7 @@ unsafe fn modular_transform_data(
     return Some(src);
 }
 
-pub unsafe fn chain_transform(
+pub fn chain_transform(
     mut in_0: &qcms_profile,
     mut out: &qcms_profile,
     mut src: Vec<f32>,
