@@ -67,6 +67,10 @@ class CacheIRHealth {
                                      jsbytecode* pc, JSOp op);
 
  public:
+  // Spews the final hit count for scripts where we care about its final hit
+  // count.
+  void spewScriptFinalWarmUpCount(JSContext* cx, const char* filename,
+                                  JSScript* script, uint32_t warmUpCount);
   // Spew the health of a particular ICEntry only.
   void rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
               SpewContext context);
