@@ -151,6 +151,10 @@ class SearchOneOffs {
     // details.  Summary: On Linux, switching between themes can cause a row
     // of buttons to disappear.
     Services.obs.addObserver(this, "lightweight-theme-changed", true);
+
+    // This defaults to false in the Search Bar, subclasses can change their
+    // default in the constructor.
+    this.disableOneOffsHorizontalKeyNavigation = false;
   }
 
   addEventListener(...args) {

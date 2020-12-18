@@ -31,7 +31,8 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     this.view = view;
     this.input = view.input;
     UrlbarPrefs.addObserver(this);
-    this._setupOneOffsHorizontalKeyNavigation();
+    // Override the SearchOneOffs.jsm value for the Address Bar.
+    this.disableOneOffsHorizontalKeyNavigation = true;
   }
 
   /**
@@ -317,16 +318,6 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     ) {
       this.invalidateCache();
     }
-    this._setupOneOffsHorizontalKeyNavigation();
-  }
-
-  /**
-   * Sets whether LEFT/RIGHT should navigate through one-off buttons.
-   */
-  _setupOneOffsHorizontalKeyNavigation() {
-    this.disableOneOffsHorizontalKeyNavigation =
-      UrlbarPrefs.get("update2") &&
-      UrlbarPrefs.get("update2.disableOneOffsHorizontalKeyNavigation");
   }
 
   /**
