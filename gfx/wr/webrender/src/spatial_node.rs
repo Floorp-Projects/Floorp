@@ -89,7 +89,7 @@ fn compute_offset_from(
                 break;
             },
             SpatialNodeType::ScrollFrame(ref info) => {
-                if info.external_id == Some(external_id) {
+                if info.external_id == external_id {
                     break;
                 }
 
@@ -152,7 +152,7 @@ impl SpatialNode {
     pub fn new_scroll_frame(
         pipeline_id: PipelineId,
         parent_index: SpatialNodeIndex,
-        external_id: Option<ExternalScrollId>,
+        external_id: ExternalScrollId,
         frame_rect: &LayoutRect,
         content_size: &LayoutSize,
         scroll_sensitivity: ScrollSensitivity,
@@ -673,7 +673,7 @@ impl SpatialNode {
 
     pub fn matches_external_id(&self, external_id: ExternalScrollId) -> bool {
         match self.node_type {
-            SpatialNodeType::ScrollFrame(info) if info.external_id == Some(external_id) => true,
+            SpatialNodeType::ScrollFrame(info) if info.external_id == external_id => true,
             _ => false,
         }
     }
@@ -770,7 +770,7 @@ pub struct ScrollFrameInfo {
     /// An external id to identify this scroll frame to API clients. This
     /// allows setting scroll positions via the API without relying on ClipsIds
     /// which may change between frames.
-    pub external_id: Option<ExternalScrollId>,
+    pub external_id: ExternalScrollId,
 
     /// Stores whether this is a scroll frame added implicitly by WR when adding
     /// a pipeline (either the root or an iframe). We need to exclude these
@@ -802,7 +802,7 @@ impl ScrollFrameInfo {
         viewport_rect: LayoutRect,
         scroll_sensitivity: ScrollSensitivity,
         scrollable_size: LayoutSize,
-        external_id: Option<ExternalScrollId>,
+        external_id: ExternalScrollId,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
     ) -> ScrollFrameInfo {
@@ -919,7 +919,7 @@ fn test_cst_perspective_relative_scroll() {
 
     let scroll_frame_1 = cst.add_scroll_frame(
         root,
-        Some(ext_scroll_id),
+        ext_scroll_id,
         pipeline_id,
         &LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(100.0, 100.0)),
         &LayoutSize::new(100.0, 500.0),
@@ -930,7 +930,7 @@ fn test_cst_perspective_relative_scroll() {
 
     let scroll_frame_2 = cst.add_scroll_frame(
         scroll_frame_1,
-        None,
+        ExternalScrollId(2, pipeline_id),
         pipeline_id,
         &LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(100.0, 100.0)),
         &LayoutSize::new(100.0, 500.0),

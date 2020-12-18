@@ -2751,7 +2751,7 @@ pub extern "C" fn wr_dp_define_scroll_layer(
 
     let space_and_clip = state.frame_builder.dl_builder.define_scroll_frame(
         &parent.to_webrender(state.pipeline_id),
-        Some(ExternalScrollId(external_scroll_id, state.pipeline_id)),
+        ExternalScrollId(external_scroll_id, state.pipeline_id),
         content_rect,
         clip_rect,
         ScrollSensitivity::Script,

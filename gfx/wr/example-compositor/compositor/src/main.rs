@@ -235,7 +235,7 @@ fn build_display_list(
 
     let scroll_space_info = builder.define_scroll_frame(
         &fixed_space_info,
-        Some(scroll_id),
+        scroll_id,
         LayoutRect::new(LayoutPoint::zero(), layout_size),
         LayoutRect::new(LayoutPoint::zero(), layout_size),
         ScrollSensitivity::Script,

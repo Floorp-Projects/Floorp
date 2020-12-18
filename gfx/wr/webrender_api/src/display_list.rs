@@ -1724,7 +1724,7 @@ impl DisplayListBuilder {
     pub fn define_scroll_frame(
         &mut self,
         parent_space_and_clip: &di::SpaceAndClipInfo,
-        external_id: Option<di::ExternalScrollId>,
+        external_id: di::ExternalScrollId,
         content_rect: LayoutRect,
         clip_rect: LayoutRect,
         scroll_sensitivity: di::ScrollSensitivity,
