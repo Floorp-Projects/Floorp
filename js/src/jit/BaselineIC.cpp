@@ -22,6 +22,7 @@
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
+#include "jit/CacheIRHealth.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
@@ -666,6 +667,13 @@ void ICFallbackStub::trace(JSTracer* trc) {
 static void MaybeTransition(JSContext* cx, BaselineFrame* frame,
                             ICFallbackStub* stub) {
   if (stub->state().maybeTransition()) {
+#ifdef JS_CACHEIR_SPEW
+    if (cx->spewer().enabled(cx, frame->script(), SpewChannel::RateMyCacheIR)) {
+      CacheIRHealth cih;
+      RootedScript script(cx, frame->script());
+      cih.rateIC(cx, stub->icEntry(), script, SpewContext::Transition);
+    }
+#endif
     stub->discardStubs(cx, frame->invalidationScript());
   }
 }
