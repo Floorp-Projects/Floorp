@@ -2,37 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.horizontalContainer {
-  display: -moz-box;
+.outerDiv {
   overflow: hidden;
   width: -moz-available;
 }
-.horizontalOuterDiv {
-  display: -moz-box;
-}
 
-.horizontalInnerDiv {
-  display: table;
-  border-spacing: 0;
-}
-
-.verticalContainer {
-  overflow: hidden;
-  width: -moz-available;
+.horizontal > .innerDiv {
+  width: max-content;
+  /* We want to create overflow of twice our available space. */
+  padding: 0 100%;
 }
 
 /* disable scrolling in contenteditable */
-:host(:read-write) .horizontalOuterDiv,
-:host(:read-write) .verticalInnerDiv {
-  margin: 0 !important;
+:host(:read-write) .innerDiv {
   padding: 0 !important;
 }
 
 /* PRINT ONLY rules */
 @media print {
-  .horizontalOuterDiv,
-  .verticalInnerDiv {
-    margin: 0 !important;
+  .innerDiv {
     padding: 0 !important;
   }
 }
