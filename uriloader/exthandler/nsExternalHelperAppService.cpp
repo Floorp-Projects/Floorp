@@ -488,6 +488,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {APPLICATION_GZIP2, "gz", "gzip"},
     {"application/x-arj", "arj", "ARJ file"},
     {"application/rtf", "rtf", "Rich Text Format File"},
+    {APPLICATION_ZIP, "zip", "ZIP Archive"},
     {APPLICATION_XPINSTALL, "xpi", "XPInstall Install"},
     {APPLICATION_PDF, "pdf", "Portable Document Format"},
     {APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File"},
