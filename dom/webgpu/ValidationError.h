@@ -10,18 +10,28 @@
 #include "ObjectModel.h"
 
 namespace mozilla {
+namespace dom {
+class GlobalObject;
+}  // namespace dom
 namespace webgpu {
 class Device;
 
 class ValidationError final : public nsWrapperCache, public ChildOf<Device> {
+  nsCString mMessage;
+
  public:
   GPU_DECL_CYCLE_COLLECTION(ValidationError)
   GPU_DECL_JS_WRAP(ValidationError)
-  ValidationError() = delete;
+  ValidationError(Device* aParent, const nsACString& aMessage);
 
  private:
   virtual ~ValidationError();
   void Cleanup() {}
+
+ public:
+  static already_AddRefed<ValidationError> Constructor(
+      const dom::GlobalObject& aGlobal, const nsAString& aString);
+  void GetMessage(nsAString& aMessage) const;
 };
 
 }  // namespace webgpu

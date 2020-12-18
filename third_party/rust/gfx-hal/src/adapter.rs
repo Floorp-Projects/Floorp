@@ -16,7 +16,7 @@ use crate::{
     Backend, Features, Hints, Limits,
 };
 
-/// A description for a single chunk of memory in a heap.
+/// A description for a single type of memory in a heap.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MemoryType {
@@ -27,6 +27,16 @@ pub struct MemoryType {
     pub heap_index: usize,
 }
 
+/// A description for a memory heap.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MemoryHeap {
+    /// Total size of the heap.
+    pub size: u64,
+    /// Heap flags.
+    pub flags: memory::HeapFlags,
+}
+
 /// Types of memory supported by this adapter and available memory.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -35,7 +45,7 @@ pub struct MemoryProperties {
     /// Multiple types can point to the same heap.
     pub memory_types: Vec<MemoryType>,
     /// Memory heaps with their size in bytes.
-    pub memory_heaps: Vec<u64>,
+    pub memory_heaps: Vec<MemoryHeap>,
 }
 
 /// Represents a combination of a [logical device][crate::device::Device] and the

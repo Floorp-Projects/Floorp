@@ -13,13 +13,13 @@
 [package]
 edition = "2018"
 name = "raw-window-handle"
-version = "0.3.0"
+version = "0.3.3"
 authors = ["Osspial <osspial@gmail.com>"]
 description = "Interoperability library for Rust Windowing applications."
 documentation = "https://docs.rs/raw-window-handle"
 readme = "README.md"
 keywords = ["windowing"]
-license = "Unlicense"
+license = "MIT"
 repository = "https://github.com/rust-windowing/raw-window-handle"
 [package.metadata.docs.rs]
 features = ["nightly-docs"]

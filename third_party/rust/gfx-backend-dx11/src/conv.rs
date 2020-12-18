@@ -1,11 +1,11 @@
 use auxil::ShaderStage;
 use hal::{
-    format::Format,
-    image::{Filter, WrapMode},
+    format::{Aspects, Format, FormatDesc},
+    image,
     pso::{
         BlendDesc, BlendOp, ColorBlendDesc, Comparison, DepthBias, DepthStencilDesc, Face, Factor,
-        FrontFace, InputAssemblerDesc, Multisampling, PolygonMode, Rasterizer, Rect, Sided, State, StencilFace,
-        StencilOp, StencilValue, Viewport
+        FrontFace, InputAssemblerDesc, Multisampling, PolygonMode, Rasterizer, Rect, Sided, State,
+        StencilFace, StencilOp, StencilValue, Viewport,
     },
     IndexType,
 };
@@ -510,7 +510,10 @@ fn map_cull_mode(mode: Face) -> D3D11_CULL_MODE {
     }
 }
 
-pub(crate) fn map_rasterizer_desc(desc: &Rasterizer, multisampling_desc: &Option<Multisampling>) -> D3D11_RASTERIZER_DESC {
+pub(crate) fn map_rasterizer_desc(
+    desc: &Rasterizer,
+    multisampling_desc: &Option<Multisampling>,
+) -> D3D11_RASTERIZER_DESC {
     let bias = match desc.depth_bias {
         //TODO: support dynamic depth bias
         Some(State::Static(db)) => db,
@@ -644,7 +647,10 @@ fn map_blend_targets(
     targets
 }
 
-pub(crate) fn map_blend_desc(desc: &BlendDesc, multisampling: &Option<Multisampling>) -> D3D11_BLEND_DESC {
+pub(crate) fn map_blend_desc(
+    desc: &BlendDesc,
+    multisampling: &Option<Multisampling>,
+) -> D3D11_BLEND_DESC {
     D3D11_BLEND_DESC {
         AlphaToCoverageEnable: multisampling.as_ref().map_or(false, |m| m.alpha_coverage) as _,
         IndependentBlendEnable: TRUE,
@@ -728,8 +734,8 @@ pub(crate) fn map_depth_stencil_desc(
         None => unsafe { mem::zeroed() },
     };
 
-    let stencil_read_only = write_mask == 0 ||
-        (front.StencilDepthFailOp == D3D11_STENCIL_OP_KEEP
+    let stencil_read_only = write_mask == 0
+        || (front.StencilDepthFailOp == D3D11_STENCIL_OP_KEEP
             && front.StencilFailOp == D3D11_STENCIL_OP_KEEP
             && front.StencilPassOp == D3D11_STENCIL_OP_KEEP
             && back.StencilDepthFailOp == D3D11_STENCIL_OP_KEEP
@@ -753,7 +759,7 @@ pub(crate) fn map_depth_stencil_desc(
             BackFace: back,
         },
         stencil_ref,
-        read_only
+        read_only,
     )
 }
 
@@ -783,28 +789,29 @@ pub fn map_stage(stage: ShaderStage) -> spirv::ExecutionModel {
     }
 }
 
-pub fn map_wrapping(wrap: WrapMode) -> D3D11_TEXTURE_ADDRESS_MODE {
+pub fn map_wrapping(wrap: image::WrapMode) -> D3D11_TEXTURE_ADDRESS_MODE {
+    use hal::image::WrapMode as Wm;
     match wrap {
-        WrapMode::Tile => D3D11_TEXTURE_ADDRESS_WRAP,
-        WrapMode::Mirror => D3D11_TEXTURE_ADDRESS_MIRROR,
-        WrapMode::Clamp => D3D11_TEXTURE_ADDRESS_CLAMP,
-        WrapMode::Border => D3D11_TEXTURE_ADDRESS_BORDER,
-        WrapMode::MirrorClamp => D3D11_TEXTURE_ADDRESS_MIRROR_ONCE,
+        Wm::Tile => D3D11_TEXTURE_ADDRESS_WRAP,
+        Wm::Mirror => D3D11_TEXTURE_ADDRESS_MIRROR,
+        Wm::Clamp => D3D11_TEXTURE_ADDRESS_CLAMP,
+        Wm::Border => D3D11_TEXTURE_ADDRESS_BORDER,
+        Wm::MirrorClamp => D3D11_TEXTURE_ADDRESS_MIRROR_ONCE,
     }
 }
 
-fn map_filter_type(filter: Filter) -> D3D11_FILTER_TYPE {
+fn map_filter_type(filter: image::Filter) -> D3D11_FILTER_TYPE {
     match filter {
-        Filter::Nearest => D3D11_FILTER_TYPE_POINT,
-        Filter::Linear => D3D11_FILTER_TYPE_LINEAR,
+        image::Filter::Nearest => D3D11_FILTER_TYPE_POINT,
+        image::Filter::Linear => D3D11_FILTER_TYPE_LINEAR,
     }
 }
 
 // Hopefully works just as well in d3d11 :)
 pub fn map_filter(
-    mag_filter: Filter,
-    min_filter: Filter,
-    mip_filter: Filter,
+    mag_filter: image::Filter,
+    min_filter: image::Filter,
+    mip_filter: image::Filter,
     reduction: D3D11_FILTER_REDUCTION_TYPE,
     anisotropy_clamp: Option<u8>,
 ) -> D3D11_FILTER {
@@ -819,4 +826,30 @@ pub fn map_filter(
         | anisotropy_clamp
             .map(|_| D3D11_FILTER_ANISOTROPIC)
             .unwrap_or(0)
+}
+
+pub fn map_image_usage(usage: image::Usage, format_desc: FormatDesc) -> D3D11_BIND_FLAG {
+    let mut bind = 0;
+
+    if usage.intersects(image::Usage::TRANSFER_SRC | image::Usage::SAMPLED | image::Usage::STORAGE)
+    {
+        bind |= D3D11_BIND_SHADER_RESOURCE;
+    }
+
+    // we cant get RTVs or UAVs on compressed & depth formats
+    if !format_desc.is_compressed() && !format_desc.aspects.contains(Aspects::DEPTH) {
+        if usage.intersects(image::Usage::COLOR_ATTACHMENT | image::Usage::TRANSFER_DST) {
+            bind |= D3D11_BIND_RENDER_TARGET;
+        }
+
+        if usage.intersects(image::Usage::TRANSFER_DST | image::Usage::STORAGE) {
+            bind |= D3D11_BIND_UNORDERED_ACCESS;
+        }
+    }
+
+    if usage.contains(image::Usage::DEPTH_STENCIL_ATTACHMENT) {
+        bind |= D3D11_BIND_DEPTH_STENCIL;
+    }
+
+    bind
 }

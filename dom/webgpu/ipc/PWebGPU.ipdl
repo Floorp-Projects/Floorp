@@ -36,9 +36,9 @@ async protocol PWebGPU
 
 parent:
   async DeviceAction(RawId selfId, ByteBuf buf);
-  async TextureAction(RawId selfId, ByteBuf buf);
-  async CommandEncoderAction(RawId selfId, ByteBuf buf);
-  async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index);
+  async TextureAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
+  async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
+  async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (RawId adapterId);
   async AdapterRequestDevice(RawId selfId, GPUDeviceDescriptor desc, RawId newId);
@@ -52,7 +52,7 @@ parent:
   async SamplerDestroy(RawId selfId);
   async DeviceDestroy(RawId selfId);
 
-  async CommandEncoderFinish(RawId selfId, GPUCommandBufferDescriptor desc);
+  async CommandEncoderFinish(RawId selfId, RawId deviceId, GPUCommandBufferDescriptor desc);
   async CommandEncoderDestroy(RawId selfId);
   async CommandBufferDestroy(RawId selfId);
   async QueueSubmit(RawId selfId, RawId[] commandBuffers);
@@ -72,6 +72,7 @@ parent:
   async Shutdown();
 
 child:
+  async Error(RawId aDeviceId, nsCString message);
   async DropAction(ByteBuf buf);
   async FreeAdapter(RawId id);
   async FreeDevice(RawId id);

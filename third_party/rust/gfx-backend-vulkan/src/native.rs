@@ -119,8 +119,6 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         I::Item: Borrow<DescriptorSetLayout>,
         E: Extend<DescriptorSet>,
     {
-        use std::ptr;
-
         let mut raw_layouts = Vec::new();
         let mut layout_bindings = Vec::new();
         for layout in layout_iter {
@@ -128,13 +126,9 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
             layout_bindings.push(layout.borrow().bindings.clone());
         }
 
-        let info = vk::DescriptorSetAllocateInfo {
-            s_type: vk::StructureType::DESCRIPTOR_SET_ALLOCATE_INFO,
-            p_next: ptr::null(),
-            descriptor_pool: self.raw,
-            descriptor_set_count: raw_layouts.len() as u32,
-            p_set_layouts: raw_layouts.as_ptr(),
-        };
+        let info = vk::DescriptorSetAllocateInfo::builder()
+            .descriptor_pool(self.raw)
+            .set_layouts(&raw_layouts);
 
         self.device
             .raw

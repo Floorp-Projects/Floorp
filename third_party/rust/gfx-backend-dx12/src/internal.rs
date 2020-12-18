@@ -1,10 +1,7 @@
 use auxil::FastHashMap;
-use std::{
-    ffi::CStr,
-    mem, ptr,
-    sync::{Arc, Mutex},
-};
+use std::{ffi::CStr, mem, ptr, sync::Arc};
 
+use parking_lot::Mutex;
 use winapi::{
     shared::{
         dxgiformat, dxgitype,
@@ -60,14 +57,14 @@ impl ServicePipes {
     }
 
     pub unsafe fn destroy(&self) {
-        let blits = self.blits_2d_color.lock().unwrap();
+        let blits = self.blits_2d_color.lock();
         for (_, pipe) in &*blits {
             pipe.destroy();
         }
     }
 
     pub fn get_blit_2d_color(&self, key: BlitKey) -> BlitPipe {
-        let mut blits = self.blits_2d_color.lock().unwrap();
+        let mut blits = self.blits_2d_color.lock();
         blits
             .entry(key)
             .or_insert_with(|| self.create_blit_2d_color(key))

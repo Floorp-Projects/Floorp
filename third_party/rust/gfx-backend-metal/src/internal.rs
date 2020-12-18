@@ -4,7 +4,7 @@ use auxil::FastHashMap;
 use hal::{
     command::ClearColor,
     format::{Aspects, ChannelType},
-    image::Filter,
+    image::{Filter, NumSamples},
     pso,
 };
 
@@ -259,6 +259,7 @@ pub struct ClearKey {
     pub framebuffer_aspects: Aspects,
     pub color_formats: [metal::MTLPixelFormat; MAX_COLOR_ATTACHMENTS],
     pub depth_stencil_format: metal::MTLPixelFormat,
+    pub sample_count: NumSamples,
     pub target_index: Option<(u8, Channel)>,
 }
 
@@ -308,6 +309,9 @@ impl ImageClearPipes {
         }
         if key.framebuffer_aspects.contains(Aspects::STENCIL) {
             pipeline.set_stencil_attachment_pixel_format(key.depth_stencil_format);
+        }
+        if key.sample_count > 1 {
+            pipeline.set_sample_count(key.sample_count as u64);
         }
 
         if let Some((index, channel)) = key.target_index {

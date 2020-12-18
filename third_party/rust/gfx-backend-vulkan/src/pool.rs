@@ -1,7 +1,6 @@
 use ash::version::DeviceV1_0;
 use ash::vk;
 use smallvec::SmallVec;
-use std::ptr;
 use std::sync::Arc;
 
 use crate::command::CommandBuffer;
@@ -30,13 +29,10 @@ impl pool::CommandPool<Backend> for RawCommandPool {
     where
         E: Extend<CommandBuffer>,
     {
-        let info = vk::CommandBufferAllocateInfo {
-            s_type: vk::StructureType::COMMAND_BUFFER_ALLOCATE_INFO,
-            p_next: ptr::null(),
-            command_pool: self.raw,
-            level: conv::map_command_buffer_level(level),
-            command_buffer_count: num as u32,
-        };
+        let info = vk::CommandBufferAllocateInfo::builder()
+            .command_pool(self.raw)
+            .level(conv::map_command_buffer_level(level))
+            .command_buffer_count(num as u32);
 
         let device = &self.device;
 

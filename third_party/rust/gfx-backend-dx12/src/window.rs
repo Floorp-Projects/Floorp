@@ -1,12 +1,13 @@
-use std::{collections::VecDeque, fmt, mem, os::raw::c_void};
+use std::{borrow::Borrow, fmt, mem, os::raw::c_void};
 
 use winapi::{
     shared::{
-        dxgi, dxgi1_4,
+        dxgi, dxgi1_4, dxgi1_5, dxgitype,
+        minwindef::{BOOL, FALSE, TRUE},
         windef::{HWND, RECT},
         winerror,
     },
-    um::{synchapi, winbase, winnt::HANDLE, winuser::GetClientRect},
+    um::{d3d12, synchapi, winbase, winnt::HANDLE, winuser::GetClientRect},
 };
 
 use crate::{conv, resource as r, Backend, Device, Instance, PhysicalDevice, QueueFamily};
@@ -27,6 +28,7 @@ struct Presentation {
     swapchain: Swapchain,
     format: f::Format,
     size: w::Extent2D,
+    mode: w::PresentMode,
 }
 
 pub struct Surface {
@@ -45,13 +47,29 @@ unsafe impl Send for Surface {}
 unsafe impl Sync for Surface {}
 
 impl Surface {
-    pub(crate) unsafe fn present(&self) {
-        self.presentation
-            .as_ref()
-            .unwrap()
-            .swapchain
-            .inner
-            .Present(1, 0);
+    pub(crate) unsafe fn present(&mut self, image: SwapchainImage) -> Result<(), w::PresentError> {
+        let present = self.presentation.as_mut().unwrap();
+        let sc = &mut present.swapchain;
+        sc.acquired_count -= 1;
+
+        let expected_index = sc.inner.GetCurrentBackBufferIndex() as w::SwapImageIndex;
+        if image.index != expected_index {
+            log::warn!(
+                "Expected frame {}, got frame {}",
+                expected_index,
+                image.index
+            );
+            return Err(w::PresentError::OutOfDate);
+        }
+
+        let (interval, flags) = match present.mode {
+            w::PresentMode::IMMEDIATE => (0, dxgi::DXGI_PRESENT_ALLOW_TEARING),
+            w::PresentMode::FIFO => (1, 0),
+            _ => (1, 0), // Surface was created with an unsupported present mode, fall back to FIFO
+        };
+
+        sc.inner.Present(interval, flags);
+        Ok(())
     }
 }
 
@@ -75,8 +93,31 @@ impl w::Surface<Backend> for Surface {
             })
         };
 
+        let allow_tearing = unsafe {
+            let (f5, hr) = self.factory.cast::<dxgi1_5::IDXGIFactory5>();
+            if winerror::SUCCEEDED(hr) {
+                let mut allow_tearing: BOOL = FALSE;
+                let hr = f5.CheckFeatureSupport(
+                    dxgi1_5::DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+                    &mut allow_tearing as *mut _ as *mut _,
+                    mem::size_of::<BOOL>() as _,
+                );
+
+                f5.destroy();
+
+                winerror::SUCCEEDED(hr) && allow_tearing == TRUE
+            } else {
+                false
+            }
+        };
+
+        let mut present_modes = w::PresentMode::FIFO;
+        if allow_tearing {
+            present_modes |= w::PresentMode::IMMEDIATE;
+        }
+
         w::SurfaceCapabilities {
-            present_modes: w::PresentMode::FIFO,                  //TODO
+            present_modes,
             composite_alpha_modes: w::CompositeAlphaMode::OPAQUE, //TODO
             image_count: 2..=16, // we currently use a flip effect which supports 2..=16 buffers
             current_extent,
@@ -104,8 +145,27 @@ impl w::Surface<Backend> for Surface {
     }
 }
 
+#[derive(Debug)]
+pub struct SwapchainImage {
+    index: w::SwapImageIndex,
+    image: r::Image,
+    view: r::ImageView,
+}
+
+impl Borrow<r::Image> for SwapchainImage {
+    fn borrow(&self) -> &r::Image {
+        &self.image
+    }
+}
+
+impl Borrow<r::ImageView> for SwapchainImage {
+    fn borrow(&self) -> &r::ImageView {
+        &self.view
+    }
+}
+
 impl w::PresentationSurface<Backend> for Surface {
-    type SwapchainImage = r::ImageView;
+    type SwapchainImage = SwapchainImage;
 
     unsafe fn configure_swapchain(
         &mut self,
@@ -123,13 +183,18 @@ impl w::PresentationSurface<Backend> for Surface {
                 // can't have image resources in flight used by GPU
                 device.wait_idle().unwrap();
 
+                let mut flags = dxgi::DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+                if config.present_mode.contains(w::PresentMode::IMMEDIATE) {
+                    flags |= dxgi::DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+                }
+
                 let inner = present.swapchain.release_resources();
                 let result = inner.ResizeBuffers(
                     config.image_count,
                     config.extent.width,
                     config.extent.height,
                     conv::map_format_nosrgb(config.format).unwrap(),
-                    dxgi::DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT,
+                    flags,
                 );
                 if result != winerror::S_OK {
                     error!("ResizeBuffers failed with 0x{:x}", result as u32);
@@ -144,10 +209,19 @@ impl w::PresentationSurface<Backend> for Surface {
             }
         };
 
+        // Disable automatic Alt+Enter handling by DXGI.
+        const DXGI_MWA_NO_WINDOW_CHANGES: u32 = 1;
+        const DXGI_MWA_NO_ALT_ENTER: u32 = 2;
+        self.factory.MakeWindowAssociation(
+            self.wnd_handle,
+            DXGI_MWA_NO_WINDOW_CHANGES | DXGI_MWA_NO_ALT_ENTER,
+        );
+
         self.presentation = Some(Presentation {
             swapchain: device.wrap_swapchain(swapchain, &config),
             format: config.format,
             size: config.extent,
+            mode: config.present_mode,
         });
         Ok(())
     }
@@ -165,40 +239,90 @@ impl w::PresentationSurface<Backend> for Surface {
     unsafe fn acquire_image(
         &mut self,
         timeout_ns: u64,
-    ) -> Result<(r::ImageView, Option<w::Suboptimal>), w::AcquireError> {
+    ) -> Result<(SwapchainImage, Option<w::Suboptimal>), w::AcquireError> {
         let present = self.presentation.as_mut().unwrap();
         let sc = &mut present.swapchain;
 
         sc.wait((timeout_ns / 1_000_000) as u32)?;
 
-        let index = sc.inner.GetCurrentBackBufferIndex();
-        let view = r::ImageView {
-            resource: sc.resources[index as usize],
-            handle_srv: None,
-            handle_rtv: r::RenderTargetHandle::Swapchain(sc.rtv_heap.at(index as _, 0).cpu),
-            handle_uav: None,
-            handle_dsv: None,
-            dxgi_format: conv::map_format(present.format).unwrap(),
-            num_levels: 1,
-            mip_levels: (0, 1),
-            layers: (0, 1),
-            kind: i::Kind::D2(present.size.width, present.size.height, 1, 1),
+        let base_index = sc.inner.GetCurrentBackBufferIndex() as usize;
+        let index = (base_index + sc.acquired_count) % sc.resources.len();
+        sc.acquired_count += 1;
+        let resource = sc.resources[index];
+
+        let kind = i::Kind::D2(present.size.width, present.size.height, 1, 1);
+        let base_format = present.format.base_format();
+        let dxgi_format = conv::map_format(present.format).unwrap();
+        let rtv = sc.rtv_heap.at(index as _, 0).cpu;
+
+        let descriptor = d3d12::D3D12_RESOURCE_DESC {
+            Dimension: d3d12::D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+            Alignment: 0,
+            Width: present.size.width as _,
+            Height: present.size.height as _,
+            DepthOrArraySize: 1,
+            MipLevels: 1,
+            Format: dxgi_format,
+            SampleDesc: dxgitype::DXGI_SAMPLE_DESC {
+                Count: 1,
+                Quality: 0,
+            },
+            Layout: d3d12::D3D12_TEXTURE_LAYOUT_UNKNOWN,
+            Flags: d3d12::D3D12_RESOURCE_FLAG_NONE, //TODO?
         };
 
-        Ok((view, None))
+        let image = r::ImageBound {
+            resource,
+            place: r::Place::Swapchain {},
+            surface_type: base_format.0,
+            kind,
+            mip_levels: 1,
+            usage: sc.usage,
+            default_view_format: None,
+            view_caps: i::ViewCapabilities::empty(),
+            descriptor,
+            clear_cv: Vec::new(), //TODO
+            clear_dv: Vec::new(),
+            clear_sv: Vec::new(),
+            requirements: hal::memory::Requirements {
+                size: 0,
+                alignment: 1,
+                type_mask: 0,
+            },
+        };
+
+        let swapchain_image = SwapchainImage {
+            index: index as _,
+            image: r::Image::Bound(image),
+            view: r::ImageView {
+                resource,
+                handle_srv: None,
+                handle_rtv: r::RenderTargetHandle::Swapchain(rtv),
+                handle_uav: None,
+                handle_dsv: None,
+                dxgi_format,
+                num_levels: 1,
+                mip_levels: (0, 1),
+                layers: (0, 1),
+                kind,
+            },
+        };
+
+        Ok((swapchain_image, None))
     }
 }
 
 #[derive(Debug)]
 pub struct Swapchain {
     pub(crate) inner: native::WeakPtr<dxgi1_4::IDXGISwapChain3>,
-    pub(crate) frame_queue: VecDeque<usize>,
     #[allow(dead_code)]
     pub(crate) rtv_heap: r::DescriptorHeap,
     // need to associate raw image pointers with the swapchain so they can be properly released
     // when the swapchain is destroyed
     pub(crate) resources: Vec<native::Resource>,
     pub(crate) waitable: HANDLE,
+    pub(crate) usage: i::Usage,
+    pub(crate) acquired_count: usize,
 }
 
 impl Swapchain {

@@ -24,7 +24,7 @@ petgraph = { version ="0.5", optional = true }
 default = []
 glsl-in = ["pomelo"]
 glsl-validate = []
-glsl-out = []
+glsl-out = ["petgraph"]
 msl-out = []
 serialize = ["serde"]
 deserialize = ["serde"]
