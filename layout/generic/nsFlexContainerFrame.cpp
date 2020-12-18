@@ -1501,14 +1501,25 @@ static nscoord PartiallyResolveAutoMinSize(
 
   const auto itemWM = aFlexItem.GetWritingMode();
   const auto cbWM = aAxisTracker.GetWritingMode();
-  const auto cbSize =
-      aItemReflowInput.mContainingBlockSize.ConvertTo(cbWM, itemWM);
   const auto& mainStyleSize =
       aItemReflowInput.mStylePosition->Size(aAxisTracker.MainAxis(), cbWM);
+  const auto& maxMainStyleSize =
+      aItemReflowInput.mStylePosition->MaxSize(aAxisTracker.MainAxis(), cbWM);
   const auto boxSizingAdjust =
       aItemReflowInput.mStylePosition->mBoxSizing == StyleBoxSizing::Border
           ? aFlexItem.BorderPadding().Size(cbWM)
           : LogicalSize(cbWM);
+
+  // If this flex item is a compressible replaced element list in CSS Sizing 3
+  // §5.2.2, CSS Sizing 3 §5.2.1c requires us to resolve the percentage part of
+  // the preferred main size property against zero, yielding a definite
+  // specified size suggestion. Here we can use a zero percentage basis to
+  // fulfill this requirement.
+  const auto percentBasis =
+      aFlexItem.Frame()->IsPercentageResolvedAgainstZero(mainStyleSize,
+                                                         maxMainStyleSize)
+          ? LogicalSize(cbWM, 0, 0)
+          : aItemReflowInput.mContainingBlockSize.ConvertTo(cbWM, itemWM);
 
   // Compute the specified size suggestion, which is the main-size property if
   // it's definite.
@@ -1520,16 +1531,16 @@ static nscoord PartiallyResolveAutoMinSize(
       // responsible for computing the min-content inline-size and min()'ing it
       // with the value we return.
       specifiedSizeSuggestion = aFlexItem.Frame()->ComputeISizeValue(
-          cbSize.ISize(cbWM), boxSizingAdjust.ISize(cbWM),
+          percentBasis.ISize(cbWM), boxSizingAdjust.ISize(cbWM),
           mainStyleSize.AsLengthPercentage());
     }
   } else {
-    if (!nsLayoutUtils::IsAutoBSize(mainStyleSize, cbSize.BSize(cbWM))) {
+    if (!nsLayoutUtils::IsAutoBSize(mainStyleSize, percentBasis.BSize(cbWM))) {
       // NOTE: We ignore auto and extremum block-size. This is OK because the
       // caller is responsible for computing the min-content block-size and
       // min()'ing it with the value we return.
       specifiedSizeSuggestion = nsLayoutUtils::ComputeBSizeValue(
-          cbSize.BSize(cbWM), boxSizingAdjust.BSize(cbWM),
+          percentBasis.BSize(cbWM), boxSizingAdjust.BSize(cbWM),
           mainStyleSize.AsLengthPercentage());
     }
   }
