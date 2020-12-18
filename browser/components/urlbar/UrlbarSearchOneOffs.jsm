@@ -172,13 +172,8 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    * @param {object} searchMode
    *   Used by UrlbarInput.setSearchMode to enter search mode. See setSearchMode
    *   documentation for details.
-   * @param {boolean} forceNewTab
-   *   True if the search results page should be loaded in a new tab.
-   *   TODO: We can remove this parameter when the update2 pref is removed. This
-   *   parameter is only used by the one-off context menu, which is removed in
-   *   update2.
    */
-  handleSearchCommand(event, searchMode, forceNewTab = false) {
+  handleSearchCommand(event, searchMode) {
     // The settings button is a special case. Its action should be executed
     // immediately.
     if (
@@ -201,7 +196,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
       this.input.value && this.input.getAttribute("pageproxystate") != "valid";
     let engine = Services.search.getEngineByName(searchMode.engineName);
 
-    let { where, params } = this._whereToOpen(event, forceNewTab);
+    let { where, params } = this._whereToOpen(event);
 
     // Some key combinations should execute a search immediately. We handle
     // these here, outside the switch statement.

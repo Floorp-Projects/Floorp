@@ -7,12 +7,6 @@
  */
 
 add_task(async function() {
-  // This test requires update2.  See also
-  // browser_action_searchengine_alias_legacy.js.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-
   const ICON_URI =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAA" +
     "CQkWg2AAABGklEQVQoz2NgGB6AnZ1dUlJSXl4eSDIyMhLW4Ovr%2B%2Fr168uXL69Zs4YoG%2BL" +
