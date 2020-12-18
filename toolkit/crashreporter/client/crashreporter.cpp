@@ -143,10 +143,10 @@ static bool ReadExtraFile(const string& aExtraDataPath, Json::Value& aExtra) {
 
 static string Basename(const string& file) {
   string::size_type slashIndex = file.rfind(UI_DIR_SEPARATOR);
-  if (slashIndex != string::npos)
+  if (slashIndex != string::npos) {
     return file.substr(slashIndex + 1);
-  else
-    return file;
+  }
+  return file;
 }
 
 static string GetDumpLocalID() {
@@ -528,9 +528,8 @@ static string ComputeDumpHash() {
     }
 
     return hash.str();
-  } else {
-    return "";  // If we encountered an error, return an empty hash
   }
+  return "";  // If we encountered an error, return an empty hash
 }
 
 }  // namespace CrashReporter
