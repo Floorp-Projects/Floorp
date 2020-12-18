@@ -2106,7 +2106,9 @@ this.VideoControlsImplWidget = class {
           }
         }
 
-        this.textTrackListContainer.hidden = true;
+        if (!this.textTrackListContainer.hidden) {
+          this.toggleClosedCaption();
+        }
       },
 
       onControlBarAnimationFinished() {
@@ -2126,8 +2128,37 @@ this.VideoControlsImplWidget = class {
       toggleClosedCaption() {
         if (this.textTrackListContainer.hidden) {
           this.textTrackListContainer.hidden = false;
+          if (this.prefs["media.videocontrols.keyboard-tab-to-all-controls"]) {
+            // If we're about to hide the controls after focus, prevent that, as
+            // that will dismiss the CC menu before the user can use it.
+            this.window.clearTimeout(this._hideControlsTimeout);
+            this._hideControlsTimeout = 0;
+          }
         } else {
           this.textTrackListContainer.hidden = true;
+          // If the CC menu was shown via the keyboard, we may have prevented
+          // the controls from hiding. We can now hide them.
+          if (
+            this.prefs["media.videocontrols.keyboard-tab-to-all-controls"] &&
+            !this.controlBar.hidden &&
+            // The click-to-play overlay must already be hidden (we don't
+            // hide controls when the overlay is visible).
+            this.clickToPlay.hidden &&
+            // Don't do this if the controls are static.
+            this.dynamicControls &&
+            // If the mouse is hovering over the control bar, the controls
+            // shouldn't hide.
+            // We use "div:hover" instead of just ":hover" so this works in
+            // quirks mode documents. See
+            // https://quirks.spec.whatwg.org/#the-active-and-hover-quirk
+            !this.controlBar.matches("div:hover")
+          ) {
+            this.window.clearTimeout(this._hideControlsTimeout);
+            this._hideControlsTimeout = this.window.setTimeout(
+              () => this._hideControlsFn(),
+              this.HIDE_CONTROLS_TIMEOUT_MS
+            );
+          }
         }
       },
 

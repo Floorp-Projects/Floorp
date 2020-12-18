@@ -35,6 +35,8 @@ add_task(async function setup() {
   video.preload = "auto";
   video.loop = true;
   video.src = "video.ogg";
+  const caption = video.addTextTrack("captions", "English", "en");
+  caption.mode = "showing";
   const content = document.getElementById("content");
   content.append(video);
   controlBar = getElementWithinVideo(video, "controlBar");
@@ -67,6 +69,39 @@ add_task(async function testShowControlsOnFocus() {
   playButton.focus();
   await shown;
   ok(!controlBar.hidden, "Controls shown after focus");
+  await BrowserTestUtils.waitForEvent(video, "controlbarchange");
+  ok(controlBar.hidden, "Controls hidden after timeout");
+});
+
+add_task(async function testCcMenuStaysVisible() {
+  ok(controlBar.hidden, "Controls initially hidden");
+  const shown = BrowserTestUtils.waitForEvent(video, "controlbarchange");
+  info("Focusing CC button");
+  const ccButton = getElementWithinVideo(video, "closedCaptionButton");
+  ccButton.focus();
+  await shown;
+  ok(!controlBar.hidden, "Controls shown after focus");
+  // Checking this using an implementation detail is ugly, but there's no other
+  // way to do it without fragile timing.
+  const { widget } = window.windowGlobalChild.getActor("UAWidgets").widgets.get(
+    video);
+  ok(widget.impl.Utils._hideControlsTimeout, "Hide timeout set");
+  const ttList = getElementWithinVideo(video, "textTrackListContainer");
+  ok(ttList.hidden, "Text track list initially hidden");
+
+  synthesizeKey(" ");
+  ok(!ttList.hidden, "Text track list shown after space");
+  ok(
+    !widget.impl.Utils._hideControlsTimeout,
+    "Hide timeout cleared (controls won't hide)"
+  );
+  const ccOff = ttList.querySelector("button");
+  ccOff.focus();
+  synthesizeKey(" ");
+  ok(ttList.hidden, "Text track list hidden after activating Off button");
+  ok(!controlBar.hidden, "Controls still shown");
+  ok(widget.impl.Utils._hideControlsTimeout, "Hide timeout set");
+
   await BrowserTestUtils.waitForEvent(video, "controlbarchange");
   ok(controlBar.hidden, "Controls hidden after timeout");
 });
