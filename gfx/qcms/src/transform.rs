@@ -1131,7 +1131,7 @@ fn transform_precacheLUT_float(
                 }
             }
         }
-        let lut = unsafe { chain_transform(in_0, out, src, dest, lutSize as usize) };
+        let lut = chain_transform(in_0, out, src, dest, lutSize as usize);
         if let Some(lut) = lut {
             (*transform).clut = Some(lut);
             (*transform).grid_size = samples as u16;
