@@ -233,6 +233,7 @@ let InternalFaviconLoader = {
 };
 
 var PlacesUIUtils = {
+  _bookmarkToolbarTelemetryListening: false,
   LAST_USED_FOLDERS_META_KEY: "bookmarks/lastusedfolders",
 
   getFormattedString: function PUIU_getFormattedString(key, params) {
@@ -1158,6 +1159,69 @@ var PlacesUIUtils = {
     if (win.top.XULBrowserWindow) {
       win.top.XULBrowserWindow.setOverLink(url);
     }
+  },
+
+  ensureBookmarkToolbarTelemetryListening() {
+    if (this._bookmarkToolbarTelemetryListening) {
+      return;
+    }
+
+    // This listener is for counting new bookmarks
+    let placesUtilsObserversListener = events => {
+      for (let event of events) {
+        if (
+          event.type == "bookmark-added" &&
+          event.parentGuid == PlacesUtils.bookmarks.toolbarGuid
+        ) {
+          Services.telemetry.scalarAdd(
+            "browser.engagement.bookmarks_toolbar_bookmark_added",
+            1
+          );
+        }
+      }
+    };
+
+    // This listener is for tracking bookmark moves
+    let placesUtilsBookmarksObserver = {
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onItemChanged() {},
+      onItemMoved(
+        aItemId,
+        aProperty,
+        aIsAnnotationProperty,
+        aNewValue,
+        aLastModified,
+        aItemType,
+        aGuid,
+        oldParentGuid,
+        newParentGuid
+      ) {
+        let hasMovedToToolbar =
+          newParentGuid == PlacesUtils.bookmarks.toolbarGuid &&
+          oldParentGuid != PlacesUtils.bookmarks.toolbarGuid;
+        if (hasMovedToToolbar) {
+          Services.telemetry.scalarAdd(
+            "browser.engagement.bookmarks_toolbar_bookmark_added",
+            1
+          );
+        }
+      },
+    };
+
+    this._bookmarkToolbarTelemetryListening = true;
+    PlacesUtils.observers.addListener(
+      ["bookmark-added"],
+      placesUtilsObserversListener
+    );
+    PlacesUtils.bookmarks.addObserver(placesUtilsBookmarksObserver);
+    PlacesUtils.registerShutdownFunction(() => {
+      PlacesUtils.observers.removeListener(
+        ["bookmark-added"],
+        placesUtilsObserversListener
+      );
+      PlacesUtils.bookmarks.removeObserver(placesUtilsBookmarksObserver);
+    });
   },
 
   /**
