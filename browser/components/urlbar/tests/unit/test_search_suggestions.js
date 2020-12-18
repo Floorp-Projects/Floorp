@@ -188,7 +188,9 @@ add_task(async function disabled_urlbarSuggestions_withRestrictionToken() {
     matches: [
       makeSearchResult(context, {
         query: SEARCH_STRING,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         engineName: ENGINE_NAME,
         heuristic: true,
       }),
@@ -214,7 +216,9 @@ add_task(
       matches: [
         makeSearchResult(context, {
           query: SEARCH_STRING,
-          alias: UrlbarTokenizer.RESTRICT.SEARCH,
+          alias: UrlbarPrefs.get("update2")
+            ? UrlbarTokenizer.RESTRICT.SEARCH
+            : undefined,
           engineName: ENGINE_NAME,
           heuristic: true,
         }),
@@ -238,7 +242,9 @@ add_task(
       matches: [
         makeSearchResult(context, {
           query: SEARCH_STRING,
-          alias: UrlbarTokenizer.RESTRICT.SEARCH,
+          alias: UrlbarPrefs.get("update2")
+            ? UrlbarTokenizer.RESTRICT.SEARCH
+            : undefined,
           engineName: ENGINE_NAME,
           heuristic: true,
         }),
@@ -413,7 +419,9 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         query: SEARCH_STRING,
         heuristic: true,
       }),
@@ -450,7 +458,9 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         query: "",
         heuristic: true,
       }),
@@ -487,7 +497,9 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         query: "h",
         heuristic: true,
       }),
@@ -498,7 +510,21 @@ add_task(async function restrictToken() {
     ],
   });
 
+  // With update2 disabled, any other restriction char allows to search for it.
+  Services.prefs.setBoolPref("browser.urlbar.update2", false);
+  context = createContext(UrlbarTokenizer.RESTRICT.OPENPAGE, {
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+  Services.prefs.clearUserPref("browser.urlbar.update2");
+
   // Leading search-mode restriction tokens are removed.
+  Services.prefs.setBoolPref("browser.urlbar.update2", true);
   context = createContext(
     `${UrlbarTokenizer.RESTRICT.BOOKMARK} ${SEARCH_STRING}`,
     { isPrivate: false }
@@ -541,6 +567,7 @@ add_task(async function restrictToken() {
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
+  Services.prefs.clearUserPref("browser.urlbar.update2");
 
   await cleanUpSuggestions();
 });

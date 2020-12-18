@@ -37,7 +37,12 @@ add_task(async function init() {
   await Services.search.moveEngine(engine, 0);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.separatePrivateDefault.ui.enabled", false]],
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", false],
+      // This test is only concerned with update2 behaviour.
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
   });
 
   registerCleanupFunction(async function() {

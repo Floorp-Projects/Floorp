@@ -118,7 +118,11 @@ add_task(async function() {
 
     // If testcase.input triggers local search mode, there won't be a heuristic.
     let resultIndex =
-      context.searchMode && !context.searchMode.engineName ? 0 : 1;
+      UrlbarPrefs.get("update2") &&
+      context.searchMode &&
+      !context.searchMode.engineName
+        ? 0
+        : 1;
 
     Assert.greaterOrEqual(
       UrlbarTestUtils.getResultCount(window),
