@@ -6,7 +6,7 @@
 
 // Definitions needed to run eslint on this file.
 /* global AppConstants, DATA_URI_SPEC, LOG_FUNCTION */
-/* global Services, URL_HOST */
+/* global Services, URL_HOST, TestUtils */
 
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
@@ -843,4 +843,88 @@ function debugDump(aText, aCaller) {
     let caller = aCaller ? aCaller : Components.stack.caller;
     logTestInfo(aText, caller);
   }
+}
+
+/**
+ * Creates the continue file used to signal that update staging or the mock http
+ * server should continue. The delay this creates allows the tests to verify the
+ * user interfaces before they auto advance to other phases of an update. The
+ * continue file for staging will be deleted by the test updater and the
+ * continue file for the update check and update download requests will be
+ * deleted by the test http server handler implemented in app_update.sjs. The
+ * test returns a promise so the test can wait on the deletion of the continue
+ * file when necessary. If the continue file still exists at the end of a test
+ * it will be removed to prevent it from affecting tests that run after the test
+ * that created it.
+ *
+ * @param  leafName
+ *         The leafName of the file to create. This should be one of the
+ *         folowing constants that are defined in testConstants.js:
+ *         CONTINUE_CHECK
+ *         CONTINUE_DOWNLOAD
+ *         CONTINUE_STAGING
+ * @return Promise
+ *         Resolves when the file is deleted or if the file is not deleted when
+ *         the check for the file's existence times out. If the file isn't
+ *         deleted before the check for the file's existence times out it will
+ *         be deleted when the test ends so it doesn't affect tests that run
+ *         after the test that created the continue file.
+ * @throws If the file already exists.
+ */
+async function continueFileHandler(leafName) {
+  // The total time to wait with 300 retries and the default interval of 100 is
+  // approximately 30 seconds.
+  let interval = 100;
+  let retries = 300;
+  let continueFile;
+  if (leafName == CONTINUE_STAGING) {
+    // The total time to wait with 600 retries and an interval of 200 is
+    // approximately 120 seconds.
+    interval = 200;
+    retries = 600;
+    continueFile = getGREBinDir();
+    if (AppConstants.platform == "macosx") {
+      continueFile = continueFile.parent.parent;
+    }
+    continueFile.append(leafName);
+  } else {
+    continueFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+    let continuePath = REL_PATH_DATA + leafName;
+    let continuePathParts = continuePath.split("/");
+    for (let i = 0; i < continuePathParts.length; ++i) {
+      continueFile.append(continuePathParts[i]);
+    }
+  }
+  if (continueFile.exists()) {
+    logTestInfo(
+      "The continue file should not exist, path: " + continueFile.path
+    );
+    continueFile.remove(false);
+  }
+  debugDump("Creating continue file, path: " + continueFile.path);
+  continueFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  // If for whatever reason the continue file hasn't been removed when a test
+  // has finished remove it during cleanup so it doesn't affect tests that run
+  // after the test that created it.
+  registerCleanupFunction(() => {
+    if (continueFile.exists()) {
+      logTestInfo(
+        "Removing continue file during test cleanup, path: " + continueFile.path
+      );
+      continueFile.remove(false);
+    }
+  });
+  return TestUtils.waitForCondition(
+    () => !continueFile.exists(),
+    "Waiting for file to be deleted, path: " + continueFile.path,
+    interval,
+    retries
+  ).catch(e => {
+    logTestInfo(
+      "Continue file was not removed after checking " +
+        retries +
+        " times, path: " +
+        continueFile.path
+    );
+  });
 }

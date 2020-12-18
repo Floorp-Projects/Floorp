@@ -3082,7 +3082,7 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   checkForBackgroundUpdates: function AUS_checkForBackgroundUpdates() {
-    this._checkForBackgroundUpdates(false);
+    return this._checkForBackgroundUpdates(false);
   },
 
   // The suffix used for background update check telemetry histogram ID's.
@@ -3116,7 +3116,7 @@ UpdateService.prototype = {
       // telling the user about update failures if update is disabled.
       // See Bug 1599590.
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
-      return;
+      return false;
     }
 
     this._isNotify = isNotify;
@@ -3234,7 +3234,7 @@ UpdateService.prototype = {
     // If a download is in progress or the patch has been staged do nothing.
     if (this.isDownloading) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADING);
-      return;
+      return false;
     }
 
     // Once we have downloaded a complete update, do not download further
@@ -3254,7 +3254,7 @@ UpdateService.prototype = {
       um.readyUpdate.selectedPatch.type == "complete"
     ) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
-      return;
+      return false;
     }
 
     // If we start downloading an update while the readyUpdate is staging, we
@@ -3265,7 +3265,7 @@ UpdateService.prototype = {
     // start a new update if the old one is still staging.
     if (gStagingInProgress) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
-      return;
+      return false;
     }
 
     let validUpdateURL = true;
@@ -3296,6 +3296,7 @@ UpdateService.prototype = {
 
         this.backgroundChecker.checkForUpdates(this, false);
       });
+    return true;
   },
 
   /**
