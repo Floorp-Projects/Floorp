@@ -7,9 +7,11 @@
 #ifndef frontend_CompilationInfo_h
 #define frontend_CompilationInfo_h
 
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/RefPtr.h"  // RefPtr
 #include "mozilla/Span.h"
+#include "mozilla/Variant.h"  // mozilla::Variant, mozilla::AsVariant
 
 #include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
@@ -29,6 +31,7 @@
 #include "vm/JSFunction.h"  // JSFunction
 #include "vm/JSScript.h"    // SourceExtent
 #include "vm/Realm.h"
+#include "vm/SharedStencil.h"  // SharedImmutableScriptData
 
 namespace js {
 
@@ -223,11 +226,49 @@ struct MOZ_RAII CompilationState {
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
 
+  // The number of functions that *will* have bytecode.
+  // This doesn't count top-level non-function script.
+  //
+  // This should be counted while parsing, and should be passed to
+  // CompilationStencil.prepareStorageFor *before* start emitting bytecode.
+  size_t nonLazyFunctionCount = 0;
+
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    const JS::ReadOnlyCompileOptions& options,
                    CompilationInfo& compilationInfo,
                    Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr);
+};
+
+// Store shared data for non-lazy script.
+struct SharedDataContainer {
+  using SingleSharedData = RefPtr<js::SharedImmutableScriptData>;
+  using SharedDataVector =
+      Vector<RefPtr<js::SharedImmutableScriptData>, 0, js::SystemAllocPolicy>;
+  using SharedDataMap =
+      HashMap<FunctionIndex, RefPtr<js::SharedImmutableScriptData>,
+              mozilla::DefaultHasher<FunctionIndex>, js::SystemAllocPolicy>;
+
+  mozilla::Variant<SingleSharedData, SharedDataVector, SharedDataMap> storage;
+
+  // Defaults to SingleSharedData for delazification vector.
+  SharedDataContainer() : storage(mozilla::AsVariant(SingleSharedData())) {}
+
+  bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
+                         size_t allScriptCount);
+
+  // Returns index-th script's shared data, or nullptr if it doesn't have.
+  js::SharedImmutableScriptData* get(FunctionIndex index);
+
+  // Add data for index-th script and share it with VM.
+  bool addAndShare(JSContext* cx, FunctionIndex index,
+                   js::SharedImmutableScriptData* data);
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();
+  void dump(js::JSONPrinter& json);
+  void dumpFields(js::JSONPrinter& json);
+#endif
 };
 
 // The top level struct of stencil.
@@ -242,6 +283,7 @@ struct CompilationStencil {
   // reserved for the top-level script. This top-level may or may not be a
   // function.
   Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
+  SharedDataContainer sharedData;
 
   Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
 
@@ -265,6 +307,15 @@ struct CompilationStencil {
 
   const ParserAtom* getParserAtomAt(JSContext* cx,
                                     TaggedParserAtomIndex taggedIndex) const;
+
+  bool prepareStorageFor(JSContext* cx, size_t nonLazyFunctionCount) {
+    size_t nonLazyScriptCount = nonLazyFunctionCount;
+    if (!scriptData[0].isFunction()) {
+      nonLazyScriptCount++;
+    }
+    return sharedData.prepareStorageFor(cx, nonLazyScriptCount,
+                                        scriptData.length());
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();

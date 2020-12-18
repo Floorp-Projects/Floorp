@@ -573,9 +573,6 @@ class ScriptStencil {
   mozilla::Maybe<MemberInitializers> memberInitializers;
   mozilla::Span<TaggedScriptThingIndex> gcThings;
 
-  // See `BaseScript::sharedData_`.
-  RefPtr<js::SharedImmutableScriptData> sharedData = {};
-
   // The location of this script in the source.
   SourceExtent extent = {};
 
@@ -614,9 +611,14 @@ class ScriptStencil {
   // False otherwise.
   bool allowRelazify : 1;
 
+  // True if this is non-lazy script and shared data is created.
+  // The shared data is stored into CompilationStencil.sharedData.
+  bool hasSharedData : 1;
+
   // End of fields.
 
-  ScriptStencil() : wasFunctionEmitted(false), allowRelazify(false) {}
+  ScriptStencil()
+      : wasFunctionEmitted(false), allowRelazify(false), hasSharedData(false) {}
 
   bool isFunction() const {
     bool result = functionFlags.toRaw() != 0x0000;
