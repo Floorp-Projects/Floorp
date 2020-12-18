@@ -6,9 +6,8 @@
 
 //! Wrap several flavors of Windows error into a `Result`.
 
+use std::error::Error;
 use std::fmt;
-
-use failure::Fail;
 
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::winerror::{
@@ -17,7 +16,7 @@ use winapi::shared::winerror::{
 use winapi::um::errhandlingapi::GetLastError;
 
 /// An error code, optionally with information about the failing call.
-#[derive(Clone, Debug, Eq, Fail, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ErrorAndSource<T: ErrorCode> {
     code: T,
     function: Option<&'static str>,
@@ -89,6 +88,8 @@ where
         Ok(())
     }
 }
+
+impl<T> Error for ErrorAndSource<T> where T: ErrorCode {}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FileLine(pub &'static str, pub u32);

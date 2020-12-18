@@ -166,7 +166,7 @@ add_task(async function test_initial_config_correct() {
 
   await Services.search.init();
 
-  const installedEngines = await Services.search.getDefaultEngines();
+  const installedEngines = await Services.search.getAppProvidedEngines();
   Assert.deepEqual(
     installedEngines.map(e => e.identifier),
     [
@@ -249,7 +249,7 @@ add_task(async function test_config_updated_engine_changes() {
     "Should have removed the expected engine"
   );
 
-  const installedEngines = await Services.search.getDefaultEngines();
+  const installedEngines = await Services.search.getAppProvidedEngines();
 
   Assert.deepEqual(
     installedEngines.map(e => e.identifier),

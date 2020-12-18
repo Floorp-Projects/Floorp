@@ -328,7 +328,7 @@ interface nsISearchService : nsISupports
   Promise addEnginesFromExtension(in jsval extension);
 
   /**
-   * Un-hides all engines in the set of engines returned by getDefaultEngines.
+   * Un-hides all engines in the set of engines returned by getAppProvidedEngines.
    */
   void restoreDefaultEngines();
 
@@ -376,7 +376,7 @@ interface nsISearchService : nsISupports
    *
    * @returns an array of nsISearchEngine objects.
    */
-  Promise getDefaultEngines();
+  Promise getAppProvidedEngines();
 
   /**
    * Returns an array of search engines installed by a given extension.

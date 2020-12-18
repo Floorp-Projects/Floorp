@@ -61,7 +61,7 @@ add_task(async function test_engine_sort_with_non_builtins_sort() {
   ];
 
   // We should still have the same built-in engines listed.
-  await checkOrder("getDefaultEngines", EXPECTED_ORDER);
+  await checkOrder("getAppProvidedEngines", EXPECTED_ORDER);
 
   const expected = [...EXPECTED_ORDER];
   // This is inserted in alphabetical order for the last three.

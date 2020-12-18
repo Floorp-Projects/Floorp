@@ -642,12 +642,10 @@ dependencies = [
 
 [[package]]
 name = "comedy"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d4f03fbb05a4df3523a44cda10340e6ae6bea03ee9d01240a1a2c1ef6c73e95"
+checksum = "74428ae4f7f05f32f4448e9f42d371538196919c4834979f4f96d1fdebffcb47"
 dependencies = [
- "failure",
- "failure_derive",
  "winapi 0.3.9",
 ]
 
@@ -1402,9 +1400,9 @@ dependencies = [
 
 [[package]]
 name = "filetime_win"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8c37abd4a58e0cb794bcae4a7dc4f02fff376949d8d1066d4c729e97bfb38ec"
+checksum = "b12c2c8d7d9f04d7952cc33bac89b7425fb3cf4c44773b06ea49ac3df259ac57"
 dependencies = [
  "comedy",
  "winapi 0.3.9",
@@ -2180,9 +2178,9 @@ dependencies = [
 
 [[package]]
 name = "guid_win"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87261686cc5e35b6584f4c2a430c2b153d8a92ab1ef820c16be34c1df8f5f58b"
+checksum = "d87f4be87a557b98b4e4316f2009834f4448652938a950c1e8b33ae25f6f183b"
 dependencies = [
  "comedy",
  "winapi 0.3.9",

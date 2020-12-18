@@ -59,21 +59,6 @@ class MarionetteCommandsChild extends JSWindowActorChild {
         `for window id ${this.innerWindowId}`
     );
 
-    // Listen for click event to indicate one click has happened, so actions
-    // code can send dblclick event
-    this.document.defaultView.addEventListener(
-      "click",
-      event.DoubleClickTracker.setClick
-    );
-    this.document.defaultView.addEventListener(
-      "dblclick",
-      event.DoubleClickTracker.resetClick
-    );
-    this.document.defaultView.addEventListener(
-      "unload",
-      event.DoubleClickTracker.resetClick,
-      true
-    );
     clearActionInputState();
   }
 

@@ -306,7 +306,7 @@ add_task(async function check_needsUpdate() {
 
 add_task(async function checksearchEngines() {
   const result = await ASRouterTargeting.Environment.searchEngines;
-  const expectedInstalled = (await Services.search.getDefaultEngines())
+  const expectedInstalled = (await Services.search.getAppProvidedEngines())
     .map(engine => engine.identifier)
     .sort()
     .join(",");
@@ -344,7 +344,7 @@ add_task(async function checksearchEngines() {
   const message2 = {
     id: "foo",
     targeting: `searchEngines[${
-      (await Services.search.getDefaultEngines())[0].identifier
+      (await Services.search.getAppProvidedEngines())[0].identifier
     } in .installed]`,
   };
   is(

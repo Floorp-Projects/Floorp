@@ -15,9 +15,7 @@
 #define RASTER_LOCAL            0
 #define RASTER_SCREEN           1
 
-uniform sampler2DArray sPrevPassAlpha;
-uniform sampler2DArray sPrevPassColor;
-uniform sampler2DArray sClipMask;
+uniform sampler2D sClipMask;
 
 vec2 clamp_rect(vec2 pt, RectWithSize rect) {
     return clamp(pt, rect.p0, rect.p0 + rect.size);
@@ -268,11 +266,7 @@ float do_clip() {
         return 0.0;
     }
     // finally, the slow path - fetch the mask value from an image
-    // Note the Z getting rounded to the nearest integer because the variable
-    // is still interpolated and becomes a subject of precision-caused
-    // fluctuations, see https://bugzilla.mozilla.org/show_bug.cgi?id=1491911
-    ivec3 tc = ivec3(mask_uv, vClipMaskUv.z + 0.5);
-    return texelFetch(sClipMask, tc, 0).r;
+    return texelFetch(sClipMask, ivec2(mask_uv), 0).r;
 }
 
 #ifdef WR_FEATURE_DITHERING

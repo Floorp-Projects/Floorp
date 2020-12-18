@@ -9,9 +9,9 @@ publish = false
 status_serde = ["serde", "serde_derive"]
 
 [dependencies]
-comedy = "0.1.0"
-filetime_win = "0.1.0"
-guid_win = "0.1.0"
+comedy = "0.2.0"
+filetime_win = "0.2.0"
+guid_win = "0.2.0"
 serde = { version = "1.0.80", optional = true }
 serde_derive = { version = "1.0.80", optional = true }
 

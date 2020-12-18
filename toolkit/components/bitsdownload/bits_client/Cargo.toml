@@ -7,13 +7,11 @@ publish = false
 
 [dependencies]
 bits = { path = "./bits" }
-comedy = "0.1.0"
-guid_win = "0.1.0"
+comedy = "0.2.0"
+guid_win = "0.2.0"
 
 [dependencies.failure]
 version = "0.1.3"
-features = ["derive"]
-default_features = false
 
 [dependencies.failure_derive]
 version = "0.1.3"

@@ -27,11 +27,11 @@ add_task(async function basic_multilocale_test() {
   useCustomGeoServer("FR", initPromise);
 
   await Services.search.init();
-  await Services.search.getDefaultEngines();
+  await Services.search.getAppProvidedEngines();
   resolver();
   await SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
-  let engines = await Services.search.getDefaultEngines();
+  let engines = await Services.search.getAppProvidedEngines();
 
   Assert.deepEqual(
     engines.map(e => e._name),

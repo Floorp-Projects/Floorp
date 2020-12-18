@@ -50,8 +50,6 @@ XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
 
 var { DefaultMap, ExtensionError } = ExtensionUtils;
 
-const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
-
 const TAB_HIDE_CONFIRMED_TYPE = "tabHideNotification";
 
 const TAB_ID_NONE = -1;
@@ -1536,12 +1534,6 @@ this.tabs = class extends ExtensionAPI {
         },
 
         show(tabIds) {
-          if (!Services.prefs.getBoolPref(TABHIDE_PREFNAME, false)) {
-            throw new ExtensionError(
-              `tabs.show is currently experimental and must be enabled with the ${TABHIDE_PREFNAME} preference.`
-            );
-          }
-
           for (let tab of getNativeTabsFromIDArray(tabIds)) {
             if (tab.ownerGlobal) {
               tab.ownerGlobal.gBrowser.showTab(tab);
@@ -1550,12 +1542,6 @@ this.tabs = class extends ExtensionAPI {
         },
 
         hide(tabIds) {
-          if (!Services.prefs.getBoolPref(TABHIDE_PREFNAME, false)) {
-            throw new ExtensionError(
-              `tabs.hide is currently experimental and must be enabled with the ${TABHIDE_PREFNAME} preference.`
-            );
-          }
-
           let hidden = [];
           for (let tab of getNativeTabsFromIDArray(tabIds)) {
             if (tab.ownerGlobal && !tab.hidden) {

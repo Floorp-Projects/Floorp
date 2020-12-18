@@ -6,7 +6,7 @@ license = "MPL-2.0"
 
 [dependencies]
 bits_client = { path = "./bits_client" }
-comedy = "0.1.0"
+comedy = "0.2.0"
 crossbeam-utils = "0.6.3"
 failure_derive = "0.1.3"
 libc = "0.2"
@@ -18,5 +18,3 @@ xpcom = { path = "../../../xpcom/rust/xpcom" }
 
 [dependencies.failure]
 version = "0.1.3"
-features = ["derive"]
-default_features = false

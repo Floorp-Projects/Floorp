@@ -3,16 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define VECS_PER_SPECIFIC_BRUSH 3
+#define WR_FEATURE_TEXTURE_2D
 
 #include shared,prim_shared,brush
 
 // xy: uv coorinates.
-// z: layer.
-varying vec3 v_src_uv;
+varying vec2 v_src_uv;
 
 // xy: uv coorinates.
-// z: layer.
-varying vec3 v_backdrop_uv;
+varying vec2 v_backdrop_uv;
 
 flat varying int v_op;
 
@@ -32,7 +31,8 @@ void brush_vs(
 ) {
     //Note: this is unsafe for `vi.world_pos.w <= 0.0`
     vec2 device_pos = vi.world_pos.xy * pic_task.device_pixel_scale / max(0.0, vi.world_pos.w);
-    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
+    vec2 backdrop_texture_size = vec2(textureSize(sColor0, 0));
+    vec2 src_texture_size = vec2(textureSize(sColor1, 0));
     v_op = prim_user_data.x;
 
     PictureTask src_task = fetch_picture_task(prim_user_data.z);
@@ -40,16 +40,14 @@ void brush_vs(
     vec2 src_uv = src_device_pos +
                   src_task.common_data.task_rect.p0 -
                   src_task.content_origin;
-    v_src_uv.xy = src_uv / texture_size;
-    v_src_uv.z = src_task.common_data.texture_layer_index;
+    v_src_uv = src_uv / src_texture_size;
 
     RenderTaskCommonData backdrop_task = fetch_render_task_common_data(prim_user_data.y);
     float src_to_backdrop_scale = pic_task.device_pixel_scale / src_task.device_pixel_scale;
     vec2 backdrop_uv = device_pos +
                        backdrop_task.task_rect.p0 -
                        src_task.content_origin * src_to_backdrop_scale;
-    v_backdrop_uv.xy = backdrop_uv / texture_size;
-    v_backdrop_uv.z = backdrop_task.texture_layer_index;
+    v_backdrop_uv = backdrop_uv / backdrop_texture_size;
 }
 #endif
 
@@ -212,8 +210,8 @@ const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
 Fragment brush_fs() {
-    vec4 Cb = textureLod(sPrevPassColor, vec3(v_backdrop_uv.xy, v_backdrop_uv.z), 0.0);
-    vec4 Cs = textureLod(sPrevPassColor, vec3(v_src_uv.xy, v_src_uv.z), 0.0);
+    vec4 Cb = texture(sColor0, v_backdrop_uv);
+    vec4 Cs = texture(sColor1, v_src_uv);
 
     // The mix-blend-mode functions assume no premultiplied alpha
     if (Cb.a != 0.0) {

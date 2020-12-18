@@ -60,7 +60,6 @@ const TEST_MULTISTAGE_CONTENT = {
       content: {
         zap: true,
         title: "Step 2 longzaptest",
-        disclaimer: "test",
         tiles: {
           type: "topsites",
           info: true,
@@ -87,6 +86,10 @@ const TEST_MULTISTAGE_CONTENT = {
           action: {
             navigate: true,
           },
+        },
+        help_text: {
+          text: "Here's some sample help text",
+          position: "default",
         },
       },
     },
@@ -310,6 +313,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "main.AW_STEP3",
       "div.brand-logo",
       "div.welcome-text",
+      "p.helptext",
     ],
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP2"]

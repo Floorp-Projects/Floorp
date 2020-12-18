@@ -2139,6 +2139,34 @@ static void OnDefaultAgentRemoteSettingsPrefChanged(const char* aPref,
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
+static void SetDefaultAgentLastRunTime() {
+  nsresult rv;
+  nsAutoString valueName;
+  valueName.AppendLiteral("AppLastRunTime");
+  rv = PrependRegistryValueName(valueName);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsAutoString keyName;
+  keyName.AppendLiteral(DEFAULT_BROWSER_AGENT_KEY_NAME);
+  rv = regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, keyName,
+                      nsIWindowsRegKey::ACCESS_WRITE);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  FILETIME fileTime;
+  GetSystemTimeAsFileTime(&fileTime);
+
+  ULARGE_INTEGER integerTime;
+  integerTime.u.LowPart = fileTime.dwLowDateTime;
+  integerTime.u.HighPart = fileTime.dwHighDateTime;
+
+  rv = regKey->WriteInt64Value(valueName, integerTime.QuadPart);
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+
 #  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 
 #endif  // XP_WIN
@@ -4995,6 +5023,7 @@ nsresult XREMain::XRE_mainRun() {
     Preferences::RegisterCallbackAndCall(
         &OnDefaultAgentRemoteSettingsPrefChanged,
         kPrefSecurityContentSignatureRootHash);
+    SetDefaultAgentLastRunTime();
 #  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 #endif
 

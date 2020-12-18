@@ -238,6 +238,9 @@ class startup_about_home_paint_realworld_webextensions(ts_paint):
     ]
     tpmanifest = "${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest"
     webextensions_folder = "${talos}/webextensions"
+    preferences = {
+        "browser.startup.homepage.abouthome_cache.enabled": False,
+    }
 
 
 @register_test()

@@ -68,6 +68,10 @@ function registerEventsActor() {
           pageshow: { mozSystemGroup: true },
           // popstate doesn't bubble, as such use capturing phase
           popstate: { capture: true, mozSystemGroup: true },
+
+          click: {},
+          dblclick: {},
+          unload: { capture: true },
         },
       },
 

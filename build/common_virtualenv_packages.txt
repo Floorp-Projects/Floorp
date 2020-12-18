@@ -93,6 +93,7 @@ mozilla.pth:testing/web-platform/tests/tools/third_party/h2
 mozilla.pth:testing/web-platform/tests/tools/third_party/hpack
 mozilla.pth:testing/web-platform/tests/tools/third_party/hyperframe
 mozilla.pth:testing/web-platform/tests/tools/third_party/certifi
+mozilla.pth:testing/web-platform/tests/tools/third_party/pywebsocket3
 mozilla.pth:testing/web-platform/tests/tools/wptserve
 mozilla.pth:testing/web-platform/tests/tools/wptrunner
 mozilla.pth:testing/web-platform/tests/tools/six

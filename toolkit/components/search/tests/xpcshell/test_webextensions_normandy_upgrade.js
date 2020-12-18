@@ -30,7 +30,7 @@ const CONFIG_UPDATED = [
 ];
 
 async function getEngineNames() {
-  let engines = await Services.search.getDefaultEngines();
+  let engines = await Services.search.getAppProvidedEngines();
   return engines.map(engine => engine._name);
 }
 

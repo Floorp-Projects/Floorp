@@ -458,7 +458,7 @@ const TargetingGetters = {
     return new Promise(resolve => {
       // Note: calling init ensures this code is only executed after Search has been initialized
       Services.search
-        .getDefaultEngines()
+        .getAppProvidedEngines()
         .then(engines => {
           resolve({
             current: Services.search.defaultEngine.identifier,
