@@ -1588,7 +1588,6 @@
   cost_estimate: 0
   custom_writer: true
   args:
-    kind: MetaTwoByteKindImm
     functionObject: ObjectField
     templateObject: ObjectField
 

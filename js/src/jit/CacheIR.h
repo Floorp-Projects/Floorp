@@ -512,11 +512,6 @@ JSObject* NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj);
 void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst,
                               Label* failure);
 
-enum class MetaTwoByteKind : uint8_t {
-  NativeTemplateObject,
-  ScriptedTemplateObject,
-};
-
 #ifdef JS_SIMULATOR
 bool CallAnyNative(JSContext* cx, unsigned argc, Value* vp);
 #endif
@@ -679,11 +674,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeScalarTypeImm(Scalar::Type type) {
     MOZ_ASSERT(size_t(type) <= UINT8_MAX);
     buffer_.writeByte(uint8_t(type));
-  }
-  void writeMetaTwoByteKindImm(MetaTwoByteKind kind) {
-    static_assert(sizeof(MetaTwoByteKind) == sizeof(uint8_t),
-                  "MetaTwoByteKind must fit in a byte");
-    buffer_.writeByte(uint8_t(kind));
   }
   void writeUnaryMathFunctionImm(UnaryMathFunction fun) {
     static_assert(sizeof(UnaryMathFunction) == sizeof(uint8_t),
@@ -1038,16 +1028,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     callNativeSetter_(receiver, setter, rhs, sameRealm, nargsAndFlags);
   }
 
-  // These generate no code, but save the template object in a stub
-  // field for BaselineInspector.
-  void metaNativeTemplateObject(JSFunction* callee, JSObject* templateObject) {
-    metaTwoByte_(MetaTwoByteKind::NativeTemplateObject, callee, templateObject);
-  }
-
   void metaScriptedTemplateObject(JSFunction* callee,
                                   JSObject* templateObject) {
-    metaTwoByte_(MetaTwoByteKind::ScriptedTemplateObject, callee,
-                 templateObject);
+    metaTwoByte_(callee, templateObject);
   }
   friend class CacheIRCloner;
 
@@ -1648,8 +1631,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
 
   ScriptedThisResult getThisForScripted(HandleFunction calleeFunc,
                                         MutableHandleObject result);
-  bool getTemplateObjectForNative(HandleFunction calleeFunc,
-                                  MutableHandleObject result);
 
   void emitNativeCalleeGuard(HandleFunction callee);
   void emitCalleeGuard(ObjOperandId calleeId, HandleFunction callee);
