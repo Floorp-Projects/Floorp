@@ -361,12 +361,8 @@
         );
         if (!oneOffRecorded) {
           let source = "unknown";
-          let type = "unknown";
           let target = aEvent.originalTarget;
-          if (aEvent instanceof KeyboardEvent) {
-            type = "key";
-          } else if (aEvent instanceof MouseEvent) {
-            type = "mouse";
+          if (aEvent instanceof MouseEvent) {
             if (
               target.classList.contains("search-panel-header") ||
               target.parentNode.classList.contains("search-panel-header")
@@ -382,7 +378,6 @@
             aEngine = this.currentEngine;
           }
           BrowserSearchTelemetry.recordSearch(gBrowser, aEngine, source, {
-            type,
             isOneOff: true,
           });
         }

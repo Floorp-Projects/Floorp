@@ -1046,18 +1046,15 @@ class SearchOneOffs {
     }
 
     let source = null;
-    let type = "unknown";
     let engine = null;
     let target = aEvent.originalTarget;
 
     if (aEvent instanceof KeyboardEvent) {
-      type = "key";
       if (this.selectedButton) {
         source = "oneoff";
         engine = this.selectedButton.engine;
       }
     } else if (aEvent instanceof MouseEvent) {
-      type = "mouse";
       if (target.classList.contains("searchbar-engine-one-off-item")) {
         source = "oneoff";
         engine = target.engine;
@@ -1079,7 +1076,6 @@ class SearchOneOffs {
     }
 
     BrowserSearchTelemetry.recordSearch(this.window.gBrowser, engine, source, {
-      type,
       isOneOff: true,
     });
     return true;
