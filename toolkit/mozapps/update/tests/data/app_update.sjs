@@ -36,11 +36,11 @@ function loadHelperScript(aScriptFile) {
 var scriptFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 scriptFile.initWithPath(getState("__LOCATION__"));
 scriptFile = scriptFile.parent;
-/* import-globals-from testConstants.js */
+/* import-globals-from ../browser/testConstants.js */
 scriptFile.append("testConstants.js");
 loadHelperScript(scriptFile);
 
-/* import-globals-from ../data/sharedUpdateXML.js */
+/* import-globals-from sharedUpdateXML.js */
 scriptFile = getTestDataFile("sharedUpdateXML.js");
 loadHelperScript(scriptFile);
 
