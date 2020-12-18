@@ -7,6 +7,18 @@ gczeal(0);
 gcparam('minNurseryBytes', 1024 * 1024);
 gcparam('maxNurseryBytes', 1024 * 1024);
 
+function startIncrementalGC() {
+  startgc(1, 'shrinking');
+  while (gcstate() === "Prepare") {
+    gcslice(1);
+  }
+}
+
+function syncIncrementalGC() {
+  startIncrementalGC();
+  finishgc();
+}
+
 // All reachable keys should be found, and the rest should be swept.
 function basicSweeping() {
   var wm1 = new WeakMap();
@@ -15,9 +27,7 @@ function basicSweeping() {
   wm1.set(hold, {'name': 'val2'});
   wm1.set({'name': 'obj3'}, {'name': 'val3'});
 
-  finishgc();
-  startgc(100000, 'shrinking');
-  finishgc();
+  syncIncrementalGC();
 
   assertEq(wm1.get(hold).name, 'val2');
   assertEq(nondeterministicGetWeakMapKeys(wm1).length, 1);
@@ -39,9 +49,7 @@ function weakGraph() {
   wm1.set(obj4, obj1); // This edge will be cleared
   obj1 = obj3 = obj4 = undefined;
 
-  finishgc();
-  startgc(100000, 'shrinking');
-  finishgc();
+  syncIncrementalGC();
 
   assertEq(obj2.name, "obj2");
   assertEq(wm1.get(obj2).name, "obj3");
@@ -68,9 +76,7 @@ function deadWeakMap() {
   obj1 = obj3 = obj4 = undefined;
   wm1 = undefined;
 
-  finishgc();
-  startgc(100000, 'shrinking');
-  finishgc();
+  syncIncrementalGC();
 
   assertEq(obj2.name, "obj2");
   assertEq(finalizeCount(), initialCount + 1);
@@ -96,9 +102,7 @@ function deadKeys() {
   obj1 = obj3 = undefined;
   var initialCount = finalizeCount();
 
-  finishgc();
-  startgc(100000, 'shrinking');
-  finishgc();
+  syncIncrementalGC();
 
   assertEq(finalizeCount(), initialCount + 2);
   assertEq(nondeterministicGetWeakMapKeys(wm1).length, 0);
@@ -130,9 +134,7 @@ function weakKeysRealloc() {
   obj2 = undefined;
 
   var initialCount = finalizeCount();
-  finishgc();
-  startgc(100000, 'shrinking');
-  finishgc();
+  syncIncrementalGC();
   assertEq(finalizeCount(), initialCount + 1);
 }
 
@@ -149,8 +151,8 @@ function deletedKeys() {
   for (var i = 0; i < 1000; i++)
     wm.set(g.Object.create(null), i);
 
-  finishgc();
-  startgc(100, 'shrinking');
+  startIncrementalGC();
+
   for (var key of nondeterministicGetWeakMapKeys(wm)) {
     if (wm.get(key) % 2)
       wm.delete(key);
@@ -179,8 +181,7 @@ function incrementalAdds() {
   obj2 = undefined;
 
   var obj3 = [];
-  finishgc();
-  startgc(100, 'shrinking');
+  startIncrementalGC();
   var M = 10;
   var N = 800;
   for (var j = 0; j < M; j++) {
