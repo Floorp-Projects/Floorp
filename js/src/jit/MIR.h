@@ -3047,9 +3047,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   void truncate() override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
-  static CompareType determineCompareType(JSOp op, MDefinition* left,
-                                          MDefinition* right);
-
 #ifdef DEBUG
   bool isConsistentFloat32Use(MUse* use) const override {
     // Both sides of the compare can be Float32
