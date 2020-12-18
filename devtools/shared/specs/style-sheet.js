@@ -28,6 +28,7 @@ const styleSheetSpec = generateActorSpec({
       type: "styleApplied",
       kind: Arg(0, "number"),
       styleSheet: Arg(1, "stylesheet"),
+      cause: Arg(2, "nullable:string"),
     },
     "media-rules-changed": {
       type: "mediaRulesChanged",

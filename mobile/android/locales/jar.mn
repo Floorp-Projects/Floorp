@@ -12,14 +12,7 @@
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
   locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)
-  locale/@AB_CD@/browser/devicePrompt.properties  (%chrome/devicePrompt.properties)
-  locale/@AB_CD@/browser/pippki.properties        (%chrome/pippki.properties)
-  locale/@AB_CD@/browser/sync.properties          (%chrome/sync.properties)
-  locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
   locale/@AB_CD@/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
-#if MOZ_UPDATE_CHANNEL != release && MOZ_UPDATE_CHANNEL != esr
-  locale/@AB_CD@/browser/webcompatReporter.properties (%chrome/webcompatReporter.properties)
-#endif
 
 # overrides for toolkit l10n, also for en-US
 # keep this file list in sync with l10n.toml and filter.py

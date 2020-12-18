@@ -209,18 +209,13 @@ add_task(async function testPrintOnNewWindowDoesntClose() {
     set: [["print.tab_modal.enabled", true]],
   });
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  let browser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, PrintHelper.defaultTestPageUrl);
-  await BrowserTestUtils.browserLoaded(
-    browser,
-    true,
-    PrintHelper.defaultTestPageUrl
-  );
-  let helper = new PrintHelper(browser);
-  await helper.startPrint();
-  let file = helper.mockFilePicker("print_new_window_close.pdf");
-  await helper.assertPrintToFile(file, () => {
-    EventUtils.sendKey("return", helper.win);
+
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+    let file = helper.mockFilePicker("print_new_window_close.pdf");
+    await helper.assertPrintToFile(file, () => {
+      EventUtils.sendKey("return", helper.win);
+    });
   });
   ok(!win.closed, "Shouldn't be closed");
   await BrowserTestUtils.closeWindow(win);
