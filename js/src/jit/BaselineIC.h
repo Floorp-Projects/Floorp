@@ -288,8 +288,6 @@ class ICStub {
         LIMIT
   };
 
-  static bool IsValidKind(Kind k) { return (k > INVALID) && (k < LIMIT); }
-
   template <typename T, typename... Args>
   static T* New(JSContext* cx, ICStubSpace* space, JitCode* code,
                 Args&&... args) {
@@ -383,8 +381,6 @@ class ICStub {
   static constexpr size_t offsetOfEnteredCount() {
     return offsetof(ICStub, enteredCount_);
   }
-
-  bool makesGCCalls() const;
 };
 
 class ICFallbackStub : public ICStub {
@@ -498,6 +494,7 @@ class ICCacheIRStub : public ICStub {
   // stack during GC - specifically the ones that can make calls.  To ensure
   // that these do not get purged, all stubs that can make calls are allocated
   // in the fallback stub space.
+  bool makesGCCalls() const;
   bool allocatedInFallbackSpace() const { return makesGCCalls(); }
 
   static constexpr size_t offsetOfNext() {
