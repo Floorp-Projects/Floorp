@@ -238,7 +238,7 @@ struct SharedTextures {
     color8_nearest: AllocatorList<SlabAllocator, TextureParameters>,
     alpha8_linear: AllocatorList<SlabAllocator, TextureParameters>,
     alpha16_linear: AllocatorList<SlabAllocator, TextureParameters>,
-    color8_linear: AllocatorList<SlabAllocator, TextureParameters>,
+    color8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     color8_glyphs: AllocatorList<BucketedShelfAllocator, TextureParameters>,
 }
 
@@ -274,8 +274,10 @@ impl SharedTextures {
             // The primary cache for images, etc.
             color8_linear: AllocatorList::new(
                 2048,
-                SlabAllocatorParameters {
-                    region_size: TEXTURE_REGION_DIMENSIONS,
+                ShelfAllocatorOptions {
+                    num_columns: 2,
+                    alignment: size2(16, 16),
+                    .. ShelfAllocatorOptions::default()
                 },
                 TextureParameters {
                     formats: color_formats.clone(),
