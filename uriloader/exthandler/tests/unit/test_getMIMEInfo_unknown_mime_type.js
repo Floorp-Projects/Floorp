@@ -15,18 +15,18 @@ add_task(async function test_check_unknown_mime_type() {
   Assert.equal(zipType, "application/x-zip-compressed");
   try {
     let extension = mimeService.getPrimaryExtension("application/zip", "");
-    Assert.ok(!extension, "Expect no known extension for zip files.");
-  } catch (ex) {
-    Assert.ok(
-      ex,
-      "We'll take an exception instead of an empty string, I guess."
+    Assert.equal(
+      extension,
+      "zip",
+      "Expect our own info to provide an extension for zip files."
     );
+  } catch (ex) {
+    Assert.ok(false, "We shouldn't throw when getting zip info.");
   }
   let found = {};
   let mimeInfo = mimeService.getMIMEInfoFromOS("application/zip", "zip", found);
   Assert.ok(
-    found.value,
-    "Should be able to find mime info even for the unknown mimetype."
+    mimeInfo.hasDefaultHandler,
+    "Should have a default app for zip files"
   );
-  Assert.ok(mimeInfo.hasDefaultHandler, "Should have a default app");
 });
