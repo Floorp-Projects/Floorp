@@ -333,6 +333,7 @@ pub struct YamlFrameReader {
     /// A HashMap of offsets which specify what scroll offsets particular
     /// scroll layers should be initialized with.
     scroll_offsets: HashMap<ExternalScrollId, LayoutPoint>,
+    next_external_scroll_id: u64,
 
     image_map: HashMap<(PathBuf, Option<i64>), (ImageKey, LayoutSize)>,
 
@@ -383,6 +384,7 @@ impl YamlFrameReader {
             built_frame: usize::MAX,
             keyframes: None,
             external_image_handler: Some(Box::new(LocalExternalImageHandler::new())),
+            next_external_scroll_id: 1000,      // arbitrary to easily see in logs which are implicit
         }
     }
 
@@ -1805,11 +1807,12 @@ impl YamlFrameReader {
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 
-        let external_id =  yaml["scroll-offset"].as_point().map(|size| {
-            let id = ExternalScrollId((self.scroll_offsets.len() + 1) as u64, dl.pipeline_id);
-            self.scroll_offsets.insert(id, LayoutPoint::new(size.x, size.y));
-            id
-        });
+        let external_id = ExternalScrollId(self.next_external_scroll_id, dl.pipeline_id);
+        self.next_external_scroll_id += 1;
+
+        if let Some(size) = yaml["scroll-offset"].as_point() {
+            self.scroll_offsets.insert(external_id, LayoutPoint::new(size.x, size.y));
+        }
 
         let space_and_clip = dl.define_scroll_frame(
             &self.top_space_and_clip(),

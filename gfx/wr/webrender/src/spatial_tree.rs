@@ -429,12 +429,10 @@ impl SpatialTree {
         let mut result = vec![];
         for node in &self.spatial_nodes {
             if let SpatialNodeType::ScrollFrame(info) = node.node_type {
-                if let Some(id) = info.external_id {
-                    result.push(ScrollNodeState {
-                        id,
-                        scroll_offset: info.offset - info.external_scroll_offset,
-                    })
-                }
+                result.push(ScrollNodeState {
+                    id: info.external_id,
+                    scroll_offset: info.offset - info.external_scroll_offset,
+                })
             }
         }
         result
@@ -448,8 +446,8 @@ impl SpatialTree {
             }
 
             match old_node.node_type {
-                SpatialNodeType::ScrollFrame(info) if info.external_id.is_some() => {
-                    scroll_states.insert(info.external_id.unwrap(), info);
+                SpatialNodeType::ScrollFrame(info) => {
+                    scroll_states.insert(info.external_id, info);
                 }
                 _ => {}
             }
@@ -539,7 +537,7 @@ impl SpatialTree {
     pub fn finalize_and_apply_pending_scroll_offsets(&mut self, old_states: ScrollStates) {
         for node in &mut self.spatial_nodes {
             let external_id = match node.node_type {
-                SpatialNodeType::ScrollFrame(ScrollFrameInfo { external_id: Some(id), ..} ) => id,
+                SpatialNodeType::ScrollFrame(ScrollFrameInfo { external_id, ..}) => external_id,
                 _ => continue,
             };
 
@@ -556,7 +554,7 @@ impl SpatialTree {
     pub fn add_scroll_frame(
         &mut self,
         parent_index: SpatialNodeIndex,
-        external_id: Option<ExternalScrollId>,
+        external_id: ExternalScrollId,
         pipeline_id: PipelineId,
         frame_rect: &LayoutRect,
         content_size: &LayoutSize,

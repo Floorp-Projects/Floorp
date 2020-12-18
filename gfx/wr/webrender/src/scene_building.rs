@@ -727,7 +727,7 @@ impl<'a> SceneBuilder<'a> {
         self.add_scroll_frame(
             SpatialId::root_scroll_node(iframe_pipeline_id),
             spatial_node_index,
-            Some(ExternalScrollId(0, iframe_pipeline_id)),
+            ExternalScrollId(0, iframe_pipeline_id),
             iframe_pipeline_id,
             &iframe_rect,
             &bounds.size,
@@ -1981,7 +1981,7 @@ impl<'a> SceneBuilder<'a> {
         self.add_scroll_frame(
             SpatialId::root_scroll_node(pipeline_id),
             spatial_node_index,
-            Some(ExternalScrollId(0, pipeline_id)),
+            ExternalScrollId(0, pipeline_id),
             pipeline_id,
             &viewport_rect,
             &viewport_rect.size,
@@ -2190,7 +2190,7 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         new_node_id: SpatialId,
         parent_node_index: SpatialNodeIndex,
-        external_id: Option<ExternalScrollId>,
+        external_id: ExternalScrollId,
         pipeline_id: PipelineId,
         frame_rect: &LayoutRect,
         content_size: &LayoutSize,

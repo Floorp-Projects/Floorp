@@ -19,6 +19,9 @@ use webrender::api::units::*;
 use winit::dpi::LogicalPosition;
 
 
+const EXT_SCROLL_ID_ROOT: u64 = 1;
+const EXT_SCROLL_ID_CONTENT: u64 = 2;
+
 struct App {
     cursor_position: WorldPoint,
     scroll_origin: LayoutPoint,
@@ -53,7 +56,7 @@ impl Example for App {
             // set the scrolling clip
             let space_and_clip1 = builder.define_scroll_frame(
                 &root_space_and_clip,
-                None,
+                ExternalScrollId(EXT_SCROLL_ID_ROOT, PipelineId::dummy()),
                 (0, 0).by(1000, 1000),
                 scrollbox,
                 ScrollSensitivity::ScriptAndInputEvents,
@@ -85,7 +88,7 @@ impl Example for App {
             // be relative to the stacking context.
             let space_and_clip2 = builder.define_scroll_frame(
                 &space_and_clip1,
-                Some(ExternalScrollId(0, PipelineId::dummy())),
+                ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
                 (0, 100).to(300, 1000),
                 (0, 100).to(200, 300),
                 ScrollSensitivity::ScriptAndInputEvents,
@@ -179,7 +182,7 @@ impl Example for App {
 
                     txn.scroll_node_with_id(
                         self.scroll_origin,
-                        ExternalScrollId(0, PipelineId::dummy()),
+                        ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
                         ScrollClamping::ToContentBounds,
                     );
                     txn.generate_frame(0);
@@ -203,7 +206,7 @@ impl Example for App {
 
                 txn.scroll_node_with_id(
                     self.scroll_origin,
-                    ExternalScrollId(0, PipelineId::dummy()),
+                    ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
                     ScrollClamping::ToContentBounds,
                 );
 
