@@ -3087,6 +3087,16 @@ UpdateService.prototype = {
 
   // The suffix used for background update check telemetry histogram ID's.
   get _pingSuffix() {
+    let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
+    if (um.readyUpdate) {
+      // Once an update has been downloaded, all later updates will be reported
+      // to telemetry as subsequent updates. We move the first update into
+      // readyUpdate as soon as the download is complete, so any update checks
+      // after readyUpdate is no longer null are subsequent update checks.
+      return AUSTLMY.SUBSEQUENT;
+    }
     return this._isNotify ? AUSTLMY.NOTIFY : AUSTLMY.EXTERNAL;
   },
 
@@ -3114,11 +3124,13 @@ UpdateService.prototype = {
     // Histogram IDs:
     // UPDATE_PING_COUNT_EXTERNAL
     // UPDATE_PING_COUNT_NOTIFY
+    // UPDATE_PING_COUNT_SUBSEQUENT
     AUSTLMY.pingGeneric("UPDATE_PING_COUNT_" + this._pingSuffix, true, false);
 
     // Histogram IDs:
     // UPDATE_UNABLE_TO_APPLY_EXTERNAL
     // UPDATE_UNABLE_TO_APPLY_NOTIFY
+    // UPDATE_UNABLE_TO_APPLY_SUBSEQUENT
     AUSTLMY.pingGeneric(
       "UPDATE_UNABLE_TO_APPLY_" + this._pingSuffix,
       getCanApplyUpdates(),
@@ -3127,6 +3139,7 @@ UpdateService.prototype = {
     // Histogram IDs:
     // UPDATE_CANNOT_STAGE_EXTERNAL
     // UPDATE_CANNOT_STAGE_NOTIFY
+    // UPDATE_CANNOT_STAGE_SUBSEQUENT
     AUSTLMY.pingGeneric(
       "UPDATE_CANNOT_STAGE_" + this._pingSuffix,
       getCanStageUpdates(),
@@ -3136,6 +3149,7 @@ UpdateService.prototype = {
       // Histogram IDs:
       // UPDATE_CAN_USE_BITS_EXTERNAL
       // UPDATE_CAN_USE_BITS_NOTIFY
+      // UPDATE_CAN_USE_BITS_SUBSEQUENT
       AUSTLMY.pingGeneric(
         "UPDATE_CAN_USE_BITS_" + this._pingSuffix,
         getCanUseBits()
@@ -3144,12 +3158,15 @@ UpdateService.prototype = {
     // Histogram IDs:
     // UPDATE_INVALID_LASTUPDATETIME_EXTERNAL
     // UPDATE_INVALID_LASTUPDATETIME_NOTIFY
+    // UPDATE_INVALID_LASTUPDATETIME_SUBSEQUENT
     // UPDATE_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL
     // UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY
+    // UPDATE_LAST_NOTIFY_INTERVAL_DAYS_SUBSEQUENT
     AUSTLMY.pingLastUpdateTime(this._pingSuffix);
     // Histogram IDs:
     // UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL
     // UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY
+    // UPDATE_NOT_PREF_UPDATE_AUTO_SUBSEQUENT
     UpdateUtils.getAppUpdateAutoEnabled().then(enabled => {
       AUSTLMY.pingGeneric(
         "UPDATE_NOT_PREF_UPDATE_AUTO_" + this._pingSuffix,
@@ -3160,6 +3177,7 @@ UpdateService.prototype = {
     // Histogram IDs:
     // UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL
     // UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_NOTIFY
+    // UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_SUBSEQUENT
     AUSTLMY.pingBoolPref(
       "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_" + this._pingSuffix,
       PREF_APP_UPDATE_STAGING_ENABLED,
@@ -3170,20 +3188,10 @@ UpdateService.prototype = {
       // Histogram IDs:
       // UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL
       // UPDATE_PREF_UPDATE_CANCELATIONS_NOTIFY
+      // UPDATE_PREF_UPDATE_CANCELATIONS_SUBSEQUENT
       AUSTLMY.pingIntPref(
         "UPDATE_PREF_UPDATE_CANCELATIONS_" + this._pingSuffix,
         PREF_APP_UPDATE_CANCELATIONS,
-        0,
-        0
-      );
-    }
-    if (AppConstants.platform == "macosx") {
-      // Histogram IDs:
-      // UPDATE_PREF_UPDATE_CANCELATIONS_OSX_EXTERNAL
-      // UPDATE_PREF_UPDATE_CANCELATIONS_OSX_NOTIFY
-      AUSTLMY.pingIntPref(
-        "UPDATE_PREF_UPDATE_CANCELATIONS_OSX_" + this._pingSuffix,
-        PREF_APP_UPDATE_CANCELATIONS_OSX,
         0,
         0
       );
@@ -3192,6 +3200,7 @@ UpdateService.prototype = {
       // Histogram IDs:
       // UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_EXTERNAL
       // UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_NOTIFY
+      // UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_SUBSEQUENT
       AUSTLMY.pingBoolPref(
         "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_" + this._pingSuffix,
         PREF_APP_UPDATE_SERVICE_ENABLED,
@@ -3200,6 +3209,7 @@ UpdateService.prototype = {
       // Histogram IDs:
       // UPDATE_PREF_SERVICE_ERRORS_EXTERNAL
       // UPDATE_PREF_SERVICE_ERRORS_NOTIFY
+      // UPDATE_PREF_SERVICE_ERRORS_SUBSEQUENT
       AUSTLMY.pingIntPref(
         "UPDATE_PREF_SERVICE_ERRORS_" + this._pingSuffix,
         PREF_APP_UPDATE_SERVICE_ERRORS,
@@ -3210,8 +3220,10 @@ UpdateService.prototype = {
         // Histogram IDs:
         // UPDATE_SERVICE_INSTALLED_EXTERNAL
         // UPDATE_SERVICE_INSTALLED_NOTIFY
+        // UPDATE_SERVICE_INSTALLED_SUBSEQUENT
         // UPDATE_SERVICE_MANUALLY_UNINSTALLED_EXTERNAL
         // UPDATE_SERVICE_MANUALLY_UNINSTALLED_NOTIFY
+        // UPDATE_SERVICE_MANUALLY_UNINSTALLED_SUBSEQUENT
         AUSTLMY.pingServiceInstallStatus(
           this._pingSuffix,
           isServiceInstalled()
@@ -5668,6 +5680,7 @@ Downloader.prototype = {
         }
 
         if (migratedToReadyUpdate) {
+          AUSTLMY.pingMoveResult(AUSTLMY.MOVE_RESULT_SUCCESS);
           if (shouldUseService()) {
             state = STATE_PENDING_SERVICE;
           } else if (getElevationRequired()) {
@@ -5690,6 +5703,7 @@ Downloader.prototype = {
             "Downloader:onStopRequest - failed to move the downloading " +
               "update to the ready update directory."
           );
+          AUSTLMY.pingMoveResult(AUSTLMY.MOVE_RESULT_UNKNOWN_FAILURE);
 
           state = STATE_DOWNLOAD_FAILED;
           status = Cr.NS_ERROR_FILE_COPY_OR_MOVE_FAILED;
