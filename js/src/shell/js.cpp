@@ -3806,7 +3806,7 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       script = base->asJSScript();
-      cih.rateMyCacheIR(cx, script);
+      cih.rateScript(cx, script, js::jit::SpewContext::Shell);
     }
   } else {
     RootedValue value(cx, args.get(0));
@@ -3821,7 +3821,7 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    cih.rateMyCacheIR(cx, script);
+    cih.rateScript(cx, script, js::jit::SpewContext::Shell);
   }
 
   args.rval().setUndefined();

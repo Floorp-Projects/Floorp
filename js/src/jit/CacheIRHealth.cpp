@@ -136,7 +136,24 @@ CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
   return entryHappiness;
 }
 
-void CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
+void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
+                           SpewContext context) {
+  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, script);
+  if (!spew) {
+    return;
+  }
+
+  spew->property("spewContext", uint8_t(context));
+
+  jsbytecode* op = entry->pc(script);
+  JSOp jsOp = JSOp(*op);
+  spew->property("op", CodeName(jsOp));
+
+  spewHealthForStubsInCacheIREntry(spew, entry);
+}
+
+void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
+                               SpewContext context) {
   jit::JitScript* jitScript = script->maybeJitScript();
   if (!jitScript) {
     return;
@@ -146,6 +163,8 @@ void CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
   if (!spew) {
     return;
   }
+
+  spew->property("spewContext", uint8_t(context));
 
   jsbytecode* next = script->code();
   jsbytecode* end = script->codeEnd();
