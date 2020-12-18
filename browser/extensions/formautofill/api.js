@@ -84,7 +84,6 @@ function isAvailable() {
   if (availablePref == "on") {
     return true;
   } else if (availablePref == "detect") {
-    let locale = Services.locale.requestedLocale;
     let region = Services.prefs.getCharPref("browser.search.region", "");
     let supportedCountries = Services.prefs
       .getCharPref("extensions.formautofill.supportedCountries")
@@ -95,7 +94,7 @@ function isAvailable() {
     ) {
       return false;
     }
-    return locale == "en-US" && supportedCountries.includes(region);
+    return supportedCountries.includes(region);
   }
   return false;
 }
