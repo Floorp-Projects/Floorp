@@ -18,7 +18,7 @@ use crate::resource_cache::CacheItem;
 use std::{mem, usize, f32, i32};
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
 use crate::render_target::RenderTargetKind;
-use crate::render_task::{RenderTask, RenderTaskLocation};
+use crate::render_task::{RenderTask, StaticRenderTaskSurface, RenderTaskLocation};
 use crate::render_task_graph::{RenderTaskGraphBuilder, RenderTaskId};
 use euclid::Scale;
 
@@ -120,13 +120,7 @@ impl RenderTaskCache {
         texture_cache: &mut TextureCache,
     ) {
         // Find out what size to alloc in the texture cache.
-        let size = match render_task.location {
-            RenderTaskLocation::PictureCache { .. } |
-            RenderTaskLocation::TextureCache { .. } => {
-                panic!("BUG: dynamic task was expected");
-            }
-            RenderTaskLocation::Dynamic(_, size) => size,
-        };
+        let size = render_task.location.size();
 
         // Select the right texture page to allocate from.
         let image_format = match render_task.target_kind() {
@@ -170,9 +164,13 @@ impl RenderTaskCache {
         let (texture_id, texture_layer, uv_rect, _, _, _) =
             texture_cache.get_cache_location(&entry.handle);
 
-        render_task.location = RenderTaskLocation::TextureCache {
+        let surface = StaticRenderTaskSurface::TextureCache {
             texture: texture_id,
             layer: texture_layer,
+        };
+
+        render_task.location = RenderTaskLocation::Static {
+            surface,
             rect: uv_rect.to_i32(),
         };
     }
