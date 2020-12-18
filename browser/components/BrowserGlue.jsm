@@ -2643,12 +2643,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      {
-        task: () => {
-          PlacesUIUtils.ensureBookmarkToolbarTelemetryListening();
-        },
-      },
-
       // Marionette needs to be initialized as very last step
       {
         task: () => {
