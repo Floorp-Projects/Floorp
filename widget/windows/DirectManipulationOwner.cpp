@@ -325,6 +325,9 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
   } else if (mState == State::ePinching) {
     if (mShouldSendPinchStart) {
       updateLastScale = SendPinch(Phase::eStart, scale);
+      // If we get here our current scale is not fuzzy equal to the previous
+      // scale, so SendPinch should return true.
+      MOZ_ASSERT(updateLastScale);
       mShouldSendPinchStart = false;
     } else {
       updateLastScale = SendPinch(Phase::eMiddle, scale);
