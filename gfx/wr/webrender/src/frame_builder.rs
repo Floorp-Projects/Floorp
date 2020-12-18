@@ -23,8 +23,8 @@ use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, FrameStamp, FrameId, ScratchBuffer};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetContext, RenderTargetKind};
-use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, RenderTaskGraphCounters};
-use crate::render_task_graph::RenderPass;
+use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
+use crate::render_task_graph::{RenderPass, RenderTaskGraphBuilder};
 use crate::render_task::{RenderTaskLocation, RenderTaskKind};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{BuiltScene, SceneProperties};
@@ -175,7 +175,7 @@ pub struct FrameBuildingContext<'a> {
 }
 
 pub struct FrameBuildingState<'a> {
-    pub render_tasks: &'a mut RenderTaskGraph,
+    pub rg_builder: &'a mut RenderTaskGraphBuilder,
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
@@ -185,7 +185,6 @@ pub struct FrameBuildingState<'a> {
     pub dirty_region_stack: Vec<DirtyRegion>,
     pub composite_state: &'a mut CompositeState,
     pub num_visible_primitives: u32,
-    pub render_task_roots: &'a mut Vec<RenderTaskId>,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -248,7 +247,7 @@ impl FrameBuilder {
         global_screen_world_rect: WorldRect,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskGraph,
+        rg_builder: &mut RenderTaskGraphBuilder,
         global_device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
@@ -259,7 +258,6 @@ impl FrameBuilder {
         tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         profile: &mut TransactionProfile,
-        render_task_roots: &mut Vec<RenderTaskId>,
     ) {
         profile_scope!("build_layer_screen_rects_and_cull_layers");
 
@@ -342,7 +340,6 @@ impl FrameBuilder {
                 scratch,
                 tile_cache: None,
                 data_stores,
-                render_tasks,
                 composite_state,
             };
 
@@ -365,7 +362,7 @@ impl FrameBuilder {
         profile.start_time(profiler::FRAME_PREPARE_TIME);
 
         let mut frame_state = FrameBuildingState {
-            render_tasks,
+            rg_builder,
             clip_store: &mut scene.clip_store,
             resource_cache,
             gpu_cache,
@@ -375,7 +372,6 @@ impl FrameBuilder {
             dirty_region_stack: scratch.frame.dirty_region_stack.take(),
             composite_state,
             num_visible_primitives: 0,
-            render_task_roots,
         };
 
         // Push a default dirty region which culls primitives
@@ -428,7 +424,6 @@ impl FrameBuilder {
 
         let pic = &mut scene.prim_store.pictures[scene.root_pic_index.0];
         pic.restore_context(
-            ROOT_SURFACE_INDEX,
             prim_list,
             pic_context,
             pic_state,
@@ -457,6 +452,7 @@ impl FrameBuilder {
         scene: &mut BuiltScene,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
+        rg_builder: &mut RenderTaskGraphBuilder,
         stamp: FrameStamp,
         global_device_pixel_scale: DevicePixelScale,
         device_origin: DeviceIntPoint,
@@ -464,7 +460,6 @@ impl FrameBuilder {
         scene_properties: &SceneProperties,
         data_stores: &mut DataStores,
         scratch: &mut ScratchBuffer,
-        render_task_counters: &mut RenderTaskGraphCounters,
         debug_flags: DebugFlags,
         tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
@@ -489,10 +484,7 @@ impl FrameBuilder {
         let mut transform_palette = scene.spatial_tree.build_transform_palette();
         scene.clip_store.clear_old_instances();
 
-        let mut render_tasks = RenderTaskGraph::new(
-            stamp.frame_id(),
-            render_task_counters,
-        );
+        rg_builder.begin_frame(stamp.frame_id());
 
         let output_size = scene.output_rect.size.to_i32();
         let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
@@ -506,13 +498,12 @@ impl FrameBuilder {
 
         self.composite_state_prealloc.preallocate(&mut composite_state);
 
-        let mut render_task_roots = Vec::new();
         self.build_layer_screen_rects_and_cull_layers(
             scene,
             screen_world_rect,
             resource_cache,
             gpu_cache,
-            &mut render_tasks,
+            rg_builder,
             global_device_pixel_scale,
             scene_properties,
             &mut transform_palette,
@@ -523,12 +514,15 @@ impl FrameBuilder {
             tile_cache_logger,
             tile_caches,
             profile,
-            &mut render_task_roots,
         );
 
         profile.start_time(profiler::FRAME_BATCHING_TIME);
 
-        let mut passes;
+        let (mut render_tasks, mut passes) = rg_builder.end_frame(
+            output_size,
+            scene.config.gpu_supports_fast_clears,
+        );
+
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
         let mut prim_headers = PrimitiveHeaders::new();
@@ -537,12 +531,6 @@ impl FrameBuilder {
 
         {
             profile_marker!("Batching");
-
-            passes = render_tasks.generate_passes(
-                &render_task_roots,
-                output_size,
-                scene.config.gpu_supports_fast_clears,
-            );
 
             // Used to generated a unique z-buffer value per primitive.
             let mut z_generator = ZBufferIdGenerator::new(scene.config.max_depth_ids);
@@ -668,7 +656,6 @@ impl FrameBuilder {
         let gpu_cache_frame_id = gpu_cache.end_frame(profile).frame_id();
 
         render_tasks.write_task_data();
-        *render_task_counters = render_tasks.counters();
         resource_cache.end_frame(profile);
 
         self.prim_headers_prealloc.record_vec(&mut prim_headers.headers_int);
