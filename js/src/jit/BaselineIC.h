@@ -771,29 +771,14 @@ class ICNewArray_Fallback : public ICFallbackStub {
 
   GCPtrArrayObject templateObject_;
 
-  // The group used for objects created here is always available, even if the
-  // template object itself is not.
-  GCPtrObjectGroup templateGroup_;
-
-  ICNewArray_Fallback(TrampolinePtr stubCode, ObjectGroup* templateGroup)
+  explicit ICNewArray_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(ICStub::NewArray_Fallback, stubCode),
-        templateObject_(nullptr),
-        templateGroup_(templateGroup) {}
+        templateObject_(nullptr) {}
 
  public:
   GCPtrArrayObject& templateObject() { return templateObject_; }
 
-  void setTemplateObject(ArrayObject* obj) {
-    MOZ_ASSERT(obj->group() == templateGroup());
-    templateObject_ = obj;
-  }
-
-  GCPtrObjectGroup& templateGroup() { return templateGroup_; }
-
-  void setTemplateGroup(ObjectGroup* group) {
-    templateObject_ = nullptr;
-    templateGroup_ = group;
-  }
+  void setTemplateObject(ArrayObject* obj) { templateObject_ = obj; }
 };
 
 // JSOp::NewObject

@@ -327,17 +327,7 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         break;
       }
       case JSOp::NewArray: {
-        JSObject* proto =
-            GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
-        if (!proto) {
-          return false;
-        }
-        ObjectGroup* group = ObjectGroup::defaultNewGroup(
-            cx, &ArrayObject::class_, TaggedProto(proto));
-        if (!group) {
-          return false;
-        }
-        auto* stub = alloc.newStub<ICNewArray_Fallback>(Kind::NewArray, group);
+        auto* stub = alloc.newStub<ICNewArray_Fallback>(Kind::NewArray);
         if (!addIC(loc, stub)) {
           return false;
         }
@@ -625,8 +615,6 @@ void ICFallbackStub::trace(JSTracer* trc) {
       ICNewArray_Fallback* stub = toNewArray_Fallback();
       TraceNullableEdge(trc, &stub->templateObject(),
                         "baseline-newarray-template");
-      TraceEdge(trc, &stub->templateGroup(),
-                "baseline-newarray-template-group");
       break;
     }
     case ICStub::NewObject_Fallback: {
