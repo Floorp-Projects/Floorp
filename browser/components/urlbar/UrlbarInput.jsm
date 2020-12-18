@@ -1539,22 +1539,18 @@ class UrlbarInput {
    * instead.
    */
   searchModeShortcut() {
-    if (this.view.oneOffsRefresh) {
-      // We restrict to search results when entering search mode from this
-      // shortcut to honor historical behaviour.
-      this.searchMode = {
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
-        entry: "shortcut",
-      };
-      // The searchMode setter clears the input if pageproxystate is valid, so
-      // we know at this point this.value will either be blank or the user's
-      // typed string.
-      this.search(this.value);
-      this.select();
-    } else {
-      this.search(UrlbarTokenizer.RESTRICT.SEARCH);
-    }
+    // We restrict to search results when entering search mode from this
+    // shortcut to honor historical behaviour.
+    this.searchMode = {
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
+      entry: "shortcut",
+    };
+    // The searchMode setter clears the input if pageproxystate is valid, so
+    // we know at this point this.value will either be blank or the user's
+    // typed string.
+    this.search(this.value);
+    this.select();
   }
 
   /**

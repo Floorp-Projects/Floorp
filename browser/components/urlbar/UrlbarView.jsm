@@ -98,18 +98,8 @@ class UrlbarView {
   }
 
   /**
+   * Whether the panel is open.
    * @returns {boolean}
-   *   Whether the update2 one-offs are used.
-   */
-  get oneOffsRefresh() {
-    return (
-      UrlbarPrefs.get("update2") && UrlbarPrefs.get("update2.oneOffsRefresh")
-    );
-  }
-
-  /**
-   * @returns {boolean}
-   *   Whether the panel is open.
    */
   get isOpen() {
     return this.input.hasAttribute("open");
@@ -631,13 +621,12 @@ class UrlbarView {
       });
 
       // Show the one-off search buttons unless any of the following are true:
-      //
-      // * The update 2 refresh is enabled but the first result is a search tip
-      // * The update 2 refresh is disabled and the search string is empty
-      // * The search string starts with an `@` or search restriction character
+      //  * The first result is a search tip
+      //  * The search string is empty
+      //  * The search string starts with an `@` or a search restriction
+      //    character
       this.oneOffSearchButtons.enable(
-        ((this.oneOffsRefresh &&
-          firstResult.providerName != "UrlbarProviderSearchTips") ||
+        (firstResult.providerName != "UrlbarProviderSearchTips" ||
           queryContext.trimmedSearchString) &&
           queryContext.trimmedSearchString[0] != "@" &&
           (queryContext.trimmedSearchString[0] !=
@@ -1953,7 +1942,6 @@ class UrlbarView {
       // query. Don't change the heuristic result because it would be
       // immediately replaced with the search mode heuristic, causing flicker.
       if (
-        this.oneOffsRefresh &&
         result.heuristic &&
         !engine &&
         !localSearchMode &&
@@ -1993,20 +1981,11 @@ class UrlbarView {
         }
       }
 
-      // When update2 is disabled, we only update search results when a search
-      // engine one-off is selected.
-      if (
-        !this.oneOffsRefresh &&
-        result.type != UrlbarUtils.RESULT_TYPE.SEARCH
-      ) {
-        continue;
-      }
-
       // If the result is the heuristic and a one-off is selected (i.e.,
       // localSearchMode || engine), then restyle it to look like a search
       // result; otherwise, remove such styling. For restyled results, we
       // override the usual result-picking behaviour in UrlbarInput.pickResult.
-      if (this.oneOffsRefresh && result.heuristic) {
+      if (result.heuristic) {
         title.textContent =
           localSearchMode || engine
             ? this._queryContext.searchString
@@ -2061,9 +2040,6 @@ class UrlbarView {
         iconOverride = UrlbarUtils.ICON.SEARCH_GLASS;
       }
       if (
-        // Don't update the favicon on non-heuristic results when update2 is
-        // enabled.
-        !this.oneOffsRefresh ||
         result.heuristic ||
         (result.payload.inPrivateWindow && !result.payload.isPrivateEngine)
       ) {

@@ -23,14 +23,6 @@ if (AppConstants.platform == "macosx") {
 }
 
 add_task(async function init() {
-  // This test requires update2.  See also browser_tokenAlias_legacy.js.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-
   // Add a default engine with suggestions, to avoid hitting the network when
   // fetching them.
   let defaultEngine = await SearchTestUtils.promiseNewSearchEngine(

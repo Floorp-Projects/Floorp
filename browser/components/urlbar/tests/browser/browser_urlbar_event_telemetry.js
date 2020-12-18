@@ -117,48 +117,7 @@ const tests = [
   },
 
   async function(win) {
-    info("Type something, click one-off. Update2 disabled.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", false],
-        ["browser.urlbar.update2.oneOffsRefresh", false],
-      ],
-    });
-    win.gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window: win,
-      value: "moz",
-      fireInputEvent: true,
-    });
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
-    UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton.click();
-    await promise;
-    await SpecialPowers.popPrefEnv();
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "click",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "3",
-        numWords: "1",
-        selIndex: "0",
-        selType: "oneoff",
-        provider: "HeuristicFallback",
-      },
-    };
-  },
-
-  async function(win) {
     info("Type something, click one-off and press enter.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.oneOffsRefresh", true],
-      ],
-    });
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -180,7 +139,6 @@ const tests = [
 
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
-    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -198,51 +156,9 @@ const tests = [
   },
 
   async function(win) {
-    info("Type something, select one-off, Enter. Update2 disabled.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", false],
-        ["browser.urlbar.update2.oneOffsRefresh", false],
-      ],
-    });
-    win.gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window: win,
-      value: "moz",
-      fireInputEvent: true,
-    });
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
-    Assert.ok(UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton);
-    EventUtils.synthesizeKey("VK_RETURN", {}, win);
-    await promise;
-    await SpecialPowers.popPrefEnv();
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "3",
-        numWords: "1",
-        selIndex: "0",
-        selType: "oneoff",
-        provider: "HeuristicFallback",
-      },
-    };
-  },
-
-  async function(win) {
     info(
       "Type something, select one-off with enter, and select result with enter."
     );
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.oneOffsRefresh", true],
-      ],
-    });
     win.gURLBar.select();
 
     let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
@@ -262,7 +178,6 @@ const tests = [
 
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
-    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -558,6 +473,7 @@ const tests = [
     }
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
+    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -575,49 +491,7 @@ const tests = [
   },
 
   async function(win) {
-    info("Type @, Enter on a keywordoffer. Update 2 disabled.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", false],
-        ["browser.urlbar.update2.oneOffsRefresh", false],
-      ],
-    });
-    win.gURLBar.select();
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window: win,
-      value: "@",
-      fireInputEvent: true,
-    });
-    while (win.gURLBar.untrimmedValue != `${TEST_ENGINE_ALIAS} `) {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    }
-    EventUtils.synthesizeKey("VK_RETURN", {}, win);
-    await UrlbarTestUtils.promiseSearchComplete(win);
-    await SpecialPowers.popPrefEnv();
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "1",
-        numWords: "1",
-        selIndex: val => parseInt(val) > 0,
-        selType: "keywordoffer",
-        provider: "TokenAliasEngines",
-      },
-    };
-  },
-
-  async function(win) {
     info("Type @, enter on a keywordoffer, then search and press enter.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.oneOffsRefresh", true],
-      ],
-    });
     win.gURLBar.select();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
@@ -640,7 +514,6 @@ const tests = [
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
 
-    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -659,13 +532,6 @@ const tests = [
 
   async function(win) {
     info("Type an @alias, then space, then search and press enter.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.oneOffsRefresh", true],
-      ],
-    });
-
     const alias = "testalias";
     let aliasEngine = await Services.search.addEngineWithDetails("AliasTest", {
       alias,
@@ -692,7 +558,6 @@ const tests = [
     await promise;
 
     await Services.search.removeEngine(aliasEngine);
-    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -851,7 +716,6 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(win);
     while (win.gURLBar.untrimmedValue != "http://example.org/") {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
@@ -882,7 +746,6 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(win);
     while (win.gURLBar.untrimmedValue != "http://example.com/") {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
@@ -1012,12 +875,6 @@ const tests = [
 
   async function(win) {
     info("Open search mode with a keyboard shortcut.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.oneOffsRefresh", true],
-      ],
-    });
     let defaultEngine = await Services.search.getDefault();
     win.gURLBar.select();
     EventUtils.synthesizeKey("k", { accelKey: true });
@@ -1037,7 +894,6 @@ const tests = [
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
 
-    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "engagement",
@@ -1337,12 +1193,6 @@ const tests = [
 
   async function(win) {
     info("Enter search mode from Top Sites.");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.update2.oneOffsRefresh", true],
-      ],
-    });
     await updateTopSites(sites => true, /* enableSearchShorcuts */ true);
 
     win.gURLBar.value = "";
@@ -1377,7 +1227,6 @@ const tests = [
       win.gURLBar.blur();
     });
 
-    await SpecialPowers.popPrefEnv();
     return {
       category: "urlbar",
       method: "abandonment",

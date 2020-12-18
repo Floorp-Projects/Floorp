@@ -34,13 +34,6 @@ add_task(async function setup() {
     await Services.search.removeEngine(aliasEngine);
     Services.search.setDefault(oldDefaultEngine);
   });
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
 });
 
 // An incomplete alias should not be replaced.

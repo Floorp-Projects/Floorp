@@ -206,10 +206,9 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     // Some key combinations should execute a search immediately. We handle
     // these here, outside the switch statement.
     if (
-      !this.view.oneOffsRefresh ||
-      (userTypedSearchString &&
-        engine &&
-        (event.shiftKey || where != "current"))
+      userTypedSearchString &&
+      engine &&
+      (event.shiftKey || where != "current")
     ) {
       this.input.handleNavigation({
         event,
@@ -310,11 +309,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     // Invalidate the engine cache when the local-one-offs-related prefs change
     // so that the one-offs rebuild themselves the next time the view opens.
     if (
-      [
-        "update2",
-        "update2.oneOffsRefresh",
-        ...UrlbarUtils.LOCAL_SEARCH_MODES.map(m => m.pref),
-      ].includes(changedPref)
+      [...UrlbarUtils.LOCAL_SEARCH_MODES.map(m => m.pref)].includes(changedPref)
     ) {
       this.invalidateCache();
     }
@@ -328,10 +323,6 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    */
   _rebuildEngineList(engines) {
     super._rebuildEngineList(engines);
-
-    if (!this.view.oneOffsRefresh) {
-      return;
-    }
 
     for (let { source, pref, restrict } of UrlbarUtils.LOCAL_SEARCH_MODES) {
       if (!UrlbarPrefs.get(pref)) {
@@ -357,11 +348,6 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *   The click event.
    */
   _on_click(event) {
-    if (!this.view.oneOffsRefresh) {
-      super._on_click(event);
-      return;
-    }
-
     // Ignore right clicks.
     if (event.button == 2) {
       return;
@@ -387,12 +373,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *   The contextmenu event.
    */
   _on_contextmenu(event) {
-    // Prevent the context menu from appearing when update2 is enabled.
-    if (this.view.oneOffsRefresh) {
-      event.preventDefault();
-      return;
-    }
-
-    super._on_contextmenu(event);
+    // Prevent the context menu from appearing.
+    event.preventDefault();
   }
 }

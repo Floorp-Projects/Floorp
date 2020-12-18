@@ -22,8 +22,6 @@ add_task(async function setup() {
   await PlacesUtils.history.clear();
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
       // Disable onboarding results for general tests. They are enabled in tests
       // that specifically address onboarding.
       ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],

@@ -369,10 +369,6 @@ pref("browser.urlbar.shortcuts.bookmarks", true);
 pref("browser.urlbar.shortcuts.tabs", true);
 pref("browser.urlbar.shortcuts.history", true);
 
-// Whether the urlbar one-offs act as search filters instead of executing a
-// search immediately.
-pref("browser.urlbar.update2.oneOffsRefresh", true);
-
 pref("browser.urlbar.eventTelemetry.enabled", false);
 
 // Controls when to DNS resolve single word search strings, after they were

@@ -8,15 +8,6 @@
 
 "use strict";
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-});
-
 // Opens a new tab, does a search, enters search mode, and then manually calls
 // setURI.  Uses a variety of initial URLs, search strings, and setURI arguments
 // in order to hit different branches in setURI.  Search mode should remain

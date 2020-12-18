@@ -272,14 +272,6 @@ add_task(async function test_search_mode_history() {
  *   The expected l10n object for the one-off.
  */
 async function doSearchModeTest(expectedSearchMode, expectedPlaceholderL10n) {
-  // Enable update2.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-
   // Click the urlbar to open the top-sites view.
   if (gURLBar.getAttribute("pageproxystate") == "invalid") {
     gURLBar.handleRevert();
@@ -300,5 +292,4 @@ async function doSearchModeTest(expectedSearchMode, expectedPlaceholderL10n) {
 
   await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 }

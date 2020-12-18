@@ -13,13 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 UrlbarTestUtils.init(this);
 
 add_task(async function test() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-
   // Open the urlbar view and enter search mode.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,

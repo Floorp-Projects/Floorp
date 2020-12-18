@@ -11,15 +11,6 @@
 const LINK_PAGE_URL =
   "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/dummy_page.html";
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-});
-
 // Opens a new tab containing a link, enters search mode, and clicks the link.
 // Uses a variety of search strings and link hrefs in order to hit different
 // branches in setURI.  Search mode should be exited in all cases, and the href

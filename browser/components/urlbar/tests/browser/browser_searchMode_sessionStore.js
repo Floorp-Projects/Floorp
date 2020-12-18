@@ -19,15 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // bug 1671087, but it's not clear.  Regardless, a longer timeout won't hurt.
 requestLongerTimeout(5);
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-});
-
 const SEARCH_STRING = "test browser_sessionStore.js";
 const URL = "http://example.com/";
 

@@ -308,13 +308,6 @@ add_task(async function test_about_newtab() {
 });
 
 add_task(async function test_urlbar_oneOff_click() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:blank"
@@ -355,59 +348,6 @@ add_task(async function test_urlbar_oneOff_click() {
 
   BrowserTestUtils.removeTab(tab);
   gRequests = [];
-
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function test_urlbar_oneOff_click_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:blank"
-  );
-
-  info("Type a query.");
-  let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
-    "https://mochi.test:8888/browser/browser/components/search/test/browser/?search=query&foo=1",
-    tab
-  );
-  await searchInAwesomebar("query");
-  info("Click the first one-off button.");
-  UrlbarTestUtils.getOneOffSearchButtons(window)
-    .getSelectableButtons(false)[0]
-    .click();
-  await promiseLoad;
-
-  await BrowserTestUtils.waitForCondition(
-    () => gRequests.length == 1,
-    "Should have received an attribution submission"
-  );
-  Assert.equal(
-    gRequests[0].getHeader("X-Region"),
-    Region.home,
-    "Should have set the region correctly"
-  );
-  Assert.equal(
-    gRequests[0].getHeader("X-Source"),
-    "searchurl",
-    "Should have set the source correctly"
-  );
-  Assert.equal(
-    gRequests[0].getHeader("X-Target-url"),
-    "https://mochi.test:8888/browser/browser/components/search/test/browser/?foo=1",
-    "Should have set the target url correctly and stripped the search terms"
-  );
-
-  BrowserTestUtils.removeTab(tab);
-  gRequests = [];
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_searchbar_oneOff_click() {
