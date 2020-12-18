@@ -486,10 +486,18 @@ main {
   .prefs-button button:active {
     background-color: var(--newtab-element-active-color); }
 
-.button-wrapper {
-  padding-inline-end: 16px;
-  padding-block: 16px 0;
-  text-align: end; }
+@media (max-height: 701px) {
+  .personalize-button {
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 16px; } }
+
+@media (min-height: 700px) {
+  .personalize-button {
+    position: fixed;
+    top: 16px;
+    inset-inline-end: 16px;
+    z-index: 1000; } }
 
 .personalize-button {
   font-size: 12px;
