@@ -200,6 +200,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     mEpochParentId = aId;
   }
 
+  void LogHistory();
+
  protected:
   virtual ~nsSHistory();
 
@@ -220,10 +222,6 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd,
                      nsTArray<LoadEntryResult>& aLoadResults,
                      bool aSameEpoch = false);
-
-#ifdef DEBUG
-  nsresult PrintHistory();
-#endif
 
   // Find the history entry for a given bfcache entry. It only looks up between
   // the range where alive viewers may exist (i.e nsSHistory::VIEWER_WINDOW).

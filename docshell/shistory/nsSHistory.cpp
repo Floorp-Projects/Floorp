@@ -67,6 +67,8 @@ int32_t nsSHistory::sHistoryMaxTotalViewers = -1;
 // entries were touched, so that we can evict older entries first.
 static uint32_t gTouchCounter = 0;
 
+extern mozilla::LazyLogModule gSHLog;
+
 LazyLogModule gSHistoryLog("nsSHistory");
 
 #define LOG(format) MOZ_LOG(gSHistoryLog, mozilla::LogLevel::Debug, format)
@@ -902,33 +904,69 @@ nsSHistory::GetIndexOfEntry(nsISHEntry* aSHEntry) {
   return -1;
 }
 
-#ifdef DEBUG
-nsresult nsSHistory::PrintHistory() {
-  for (int32_t i = 0; i < Length(); i++) {
-    nsCOMPtr<nsISHEntry> entry = mEntries[i];
-    nsCOMPtr<nsILayoutHistoryState> layoutHistoryState =
-        entry->GetLayoutHistoryState();
-    nsCOMPtr<nsIURI> uri = entry->GetURI();
-    nsString title;
-    entry->GetTitle(title);
-
-#  if 0
-    nsAutoCString url;
-    if (uri) {
-      uri->GetSpec(url);
-    }
-
-    printf("**** SH Entry #%d: %x\n", i, entry.get());
-    printf("\t\t URL = %s\n", url.get());
-
-    printf("\t\t Title = %s\n", NS_LossyConvertUTF16toASCII(title).get());
-    printf("\t\t layout History Data = %x\n", layoutHistoryState.get());
-#  endif
+static void LogEntry(nsISHEntry* aEntry, int32_t aIndex, int32_t aTotal,
+                     const nsCString& aPrefix, bool aIsCurrent) {
+  if (!aEntry) {
+    MOZ_LOG(gSHLog, LogLevel::Debug,
+            (" %s+- %i SH Entry null\n", aPrefix.get(), aIndex));
+    return;
   }
 
-  return NS_OK;
+  nsCOMPtr<nsIURI> uri = aEntry->GetURI();
+  nsAutoString title;
+  aEntry->GetTitle(title);
+
+  SHEntrySharedParentState* shared;
+  if (mozilla::SessionHistoryInParent()) {
+    shared = static_cast<SessionHistoryEntry*>(aEntry)->SharedInfo();
+  } else {
+    shared = static_cast<nsSHEntry*>(aEntry)->GetState();
+  }
+
+  nsID docShellId;
+  aEntry->GetDocshellID(docShellId);
+
+  int32_t childCount = aEntry->GetChildCount();
+
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("%s%s+- %i SH Entry %p %" PRIu64 " %s\n", aIsCurrent ? ">" : " ",
+           aPrefix.get(), aIndex, aEntry, shared->GetId(),
+           nsIDToCString(docShellId).get()));
+
+  nsCString prefix(aPrefix);
+  if (aIndex < aTotal - 1) {
+    prefix.AppendLiteral("|   ");
+  } else {
+    prefix.AppendLiteral("    ");
+  }
+
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          (" %s%s  URL = %s\n", prefix.get(), childCount > 0 ? "|" : " ",
+           uri->GetSpecOrDefault().get()));
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          (" %s%s  Title = %s\n", prefix.get(), childCount > 0 ? "|" : " ",
+           NS_LossyConvertUTF16toASCII(title).get()));
+
+  nsCOMPtr<nsISHEntry> prevChild;
+  for (int32_t i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsISHEntry> child;
+    aEntry->GetChildAt(i, getter_AddRefs(child));
+    LogEntry(child, i, childCount, prefix, false);
+    child.swap(prevChild);
+  }
 }
-#endif
+
+void nsSHistory::LogHistory() {
+  if (!MOZ_LOG_TEST(gSHLog, LogLevel::Debug)) {
+    return;
+  }
+
+  MOZ_LOG(gSHLog, LogLevel::Debug, ("nsSHistory %p\n", this));
+  int32_t length = Length();
+  for (int32_t i = 0; i < length; i++) {
+    LogEntry(mEntries[i], i, length, EmptyCString(), i == mIndex);
+  }
+}
 
 void nsSHistory::WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                                int32_t* aOutEndIndex) {

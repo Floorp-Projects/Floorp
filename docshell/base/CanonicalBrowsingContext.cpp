@@ -579,6 +579,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
 
       HistoryCommitIndexAndLength(aChangeID, caller);
 
+      shistory->LogHistory();
+
       return;
     }
     // XXX Should the loading entries before [i] be removed?
@@ -697,6 +699,8 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
 
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
   HistoryCommitIndexAndLength(aChangeID, caller);
+
+  static_cast<nsSHistory*>(shistory)->LogHistory();
 }
 
 void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
