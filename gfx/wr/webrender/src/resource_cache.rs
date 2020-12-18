@@ -28,7 +28,7 @@ use crate::gpu_types::UvRectKind;
 use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, TextureSource, ResourceUpdateList};
 use crate::profiler::{self, TransactionProfile, bytes_to_mb};
 use crate::render_backend::{FrameId, FrameStamp};
-use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
+use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey};
 use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
 use euclid::point2;
@@ -556,19 +556,19 @@ impl ResourceCache {
         &mut self,
         key: RenderTaskCacheKey,
         gpu_cache: &mut GpuCache,
-        rg_builder: &mut RenderTaskGraphBuilder,
+        render_tasks: &mut RenderTaskGraph,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
         f: F,
     ) -> RenderTaskCacheEntryHandle
     where
-        F: FnOnce(&mut RenderTaskGraphBuilder) -> RenderTaskId,
+        F: FnOnce(&mut RenderTaskGraph) -> RenderTaskId,
     {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
             gpu_cache,
-            rg_builder,
+            render_tasks,
             user_data,
             is_opaque,
             |render_graph| Ok(f(render_graph))
@@ -1029,6 +1029,7 @@ impl ResourceCache {
         mut font: FontInstance,
         glyph_keys: &[GlyphKey],
         gpu_cache: &mut GpuCache,
+        render_task_tree: &mut RenderTaskGraph,
     ) {
         debug_assert_eq!(self.state, State::AddResources);
 
@@ -1039,6 +1040,8 @@ impl ResourceCache {
             glyph_keys,
             &mut self.texture_cache,
             gpu_cache,
+            &mut self.cached_render_tasks,
+            render_task_tree,
         );
     }
 
