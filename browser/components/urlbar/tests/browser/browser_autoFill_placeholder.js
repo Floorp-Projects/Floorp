@@ -212,18 +212,7 @@ add_task(async function clear_placeholder_for_keyword_or_alias() {
   await searchAndCheck("EXA", "EXAmple.com/", "EXAmple.com/");
   // Matches the alias.
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
   await searchAndCheck("eXaM", "eXaMple.com/", "eXaMple.com/");
-  await SpecialPowers.popPrefEnv();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-  await searchAndCheck("eXaM", "eXaMple.com/", "eXaM");
-  await SpecialPowers.popPrefEnv();
-
   await searchAndCheck("examp", "example.com/", "example.com/");
 
   await cleanUp();

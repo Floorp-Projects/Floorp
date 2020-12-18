@@ -68,29 +68,7 @@ add_task(async function searchEngineAlias() {
   );
 });
 
-// Calls search() with a restriction character.
-add_task(async function searchRestriction_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-  gURLBar.blur();
-  await UrlbarTestUtils.promisePopupOpen(window, () =>
-    gURLBar.search(UrlbarTokenizer.RESTRICT.SEARCH)
-  );
-  ok(gURLBar.hasAttribute("focused"), "url bar is focused");
-  // We always add a whitespace to restrict tokens.
-  await assertUrlbarValue(UrlbarTokenizer.RESTRICT.SEARCH + " ");
-
-  assertOneOffButtonsVisible(false);
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
-});
-
 add_task(async function searchRestriction() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search(UrlbarTokenizer.RESTRICT.SEARCH)
@@ -105,7 +83,6 @@ add_task(async function searchRestriction() {
   assertOneOffButtonsVisible(true);
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function historyRestriction() {
@@ -152,9 +129,6 @@ add_task(async function historyRestrictionWithString() {
 });
 
 add_task(async function tagRestriction() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search(UrlbarTokenizer.RESTRICT.TAG)
@@ -166,7 +140,6 @@ add_task(async function tagRestriction() {
   await assertUrlbarValue(`${UrlbarTokenizer.RESTRICT.TAG} `);
   assertOneOffButtonsVisible(true);
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 });
 
 // Calls search() twice with the same value. The popup should reopen.
@@ -215,10 +188,6 @@ add_task(async function searchIME() {
 
 // Calls search() with an engine alias.
 add_task(async function searchWithAlias() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-
   await UrlbarTestUtils.promisePopupOpen(window, async () =>
     gURLBar.search(`${ALIAS} test`, {
       searchEngine: aliasEngine,
@@ -235,7 +204,6 @@ add_task(async function searchWithAlias() {
   assertOneOffButtonsVisible(true);
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 });
 
 /**
