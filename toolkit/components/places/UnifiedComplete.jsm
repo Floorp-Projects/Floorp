@@ -1319,9 +1319,7 @@ Search.prototype = {
     // Restyle past searches, unless they are bookmarks or special results.
     if (
       match.style == "favicon" &&
-      (UrlbarPrefs.get("restyleSearches") ||
-        (this._searchModeEngine &&
-          UrlbarPrefs.get("update2.restyleBrowsingHistoryAsSearch")))
+      (UrlbarPrefs.get("restyleSearches") || this._searchModeEngine)
     ) {
       let restyled = this._maybeRestyleSearchMatch(match);
       if (restyled && UrlbarPrefs.get("maxHistoricalSearchSuggestions") == 0) {
@@ -1674,11 +1672,7 @@ Search.prototype = {
       // This means removing less interesting urls, like redirects or
       // non-bookmarked title-less pages.
 
-      if (
-        UrlbarPrefs.get("restyleSearches") ||
-        (this._searchModeEngine &&
-          UrlbarPrefs.get("update2.restyleBrowsingHistoryAsSearch"))
-      ) {
+      if (UrlbarPrefs.get("restyleSearches") || this._searchModeEngine) {
         // If restyle is enabled, we want to filter out redirect targets,
         // because sources are urls built using search engines definitions that
         // we can reverse-parse.
