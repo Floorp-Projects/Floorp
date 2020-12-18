@@ -681,7 +681,7 @@ use crate::render_target::RenderTargetKind;
 
 #[cfg(test)]
 fn dyn_location(w: i32, h: i32) -> RenderTaskLocation {
-    RenderTaskLocation::Dynamic(None, size2(w, h))
+    RenderTaskLocation::Unallocated { size: size2(w, h) }
 }
 
 #[cfg(test)]
@@ -692,19 +692,22 @@ fn pic_cache_location(
 ) -> RenderTaskLocation {
     use crate::picture::ResolvedSurfaceTexture;
     use crate::composite::{NativeSurfaceId, NativeTileId};
+    use crate::render_task::StaticRenderTaskSurface;
 
     let size = DeviceIntSize::new(512, 512);
 
-    RenderTaskLocation::PictureCache {
-        size,
-        surface: ResolvedSurfaceTexture::Native {
-            id: NativeTileId {
-                surface_id: NativeSurfaceId(surface_id),
-                x,
-                y,
+    RenderTaskLocation::Static {
+        surface: StaticRenderTaskSurface::PictureCache {
+            surface: ResolvedSurfaceTexture::Native {
+                id: NativeTileId {
+                    surface_id: NativeSurfaceId(surface_id),
+                    x,
+                    y,
+                },
+                size,
             },
-            size,
         },
+        rect: size.into(),
     }
 }
 
