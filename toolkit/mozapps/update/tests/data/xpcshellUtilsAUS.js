@@ -4107,9 +4107,9 @@ function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
  */
 function waitForUpdateDownload(aUpdates, aExpectedStatus) {
   let bestUpdate = gAUS.selectUpdate(aUpdates);
-  let state = gAUS.downloadUpdate(bestUpdate, false);
-  if (state == STATE_NONE || state == STATE_FAILED) {
-    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
+  let success = gAUS.downloadUpdate(bestUpdate, false);
+  if (!success) {
+    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + success);
   }
   return new Promise(resolve =>
     gAUS.addDownloadListener({
