@@ -567,7 +567,7 @@ function runDoorhangerUpdateTest(params, steps) {
 
     const { notificationId, button, checkActiveUpdate, pageURLs } = step;
     return (async function() {
-      if (!params.popupShown) {
+      if (!params.popupShown && !PanelUI.isNotificationPanelOpen) {
         await BrowserTestUtils.waitForEvent(
           PanelUI.notificationPanel,
           "popupshown"
