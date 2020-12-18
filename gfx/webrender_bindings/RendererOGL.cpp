@@ -161,7 +161,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
-  if (!mCompositor->BeginFrame()) {
+  if (mThread->IsHandlingDeviceReset() || !mCompositor->BeginFrame()) {
     CheckGraphicsResetStatus("BeginFrame", /* aForce */ true);
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return RenderedFrameId();

@@ -818,17 +818,6 @@ void RenderThread::HandleDeviceReset(const char* aWhere,
     }
   }
 
-  // On some platforms (i.e. Linux), we may get a device reset just for purging
-  // video memory with NVIDIA devices, because the driver has edge cases it
-  // needs to clear all of it.
-  if (aReason == LOCAL_GL_PURGED_CONTEXT_RESET_NV) {
-    MOZ_ASSERT(aBridge);
-    layers::CompositorThread()->Dispatch(NewRunnableMethod(
-        "CompositorBridgeParent::NotifyWebRenderContextPurge", aBridge,
-        &layers::CompositorBridgeParent::NotifyWebRenderContextPurge));
-    return;
-  }
-
   mHandlingDeviceReset = aReason != LOCAL_GL_NO_ERROR;
   if (mHandlingDeviceReset) {
     // All RenderCompositors will be destroyed by the GPUProcessManager in

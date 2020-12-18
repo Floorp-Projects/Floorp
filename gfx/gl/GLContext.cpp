@@ -517,7 +517,10 @@ bool GLContext::InitImpl() {
         END_SYMBOLS};
     (void)fnLoadSymbols(symbols, nullptr);
 
-    auto err = fGetError();
+    // We need to call the fGetError symbol directly here because if there is an
+    // unflushed reset status, we don't want to mark the context as lost. That
+    // would prevent us from recovering.
+    auto err = mSymbols.fGetError();
     if (err == LOCAL_GL_CONTEXT_LOST) {
       MOZ_ASSERT(mSymbols.fGetGraphicsResetStatus);
       const auto status = fGetGraphicsResetStatus();
