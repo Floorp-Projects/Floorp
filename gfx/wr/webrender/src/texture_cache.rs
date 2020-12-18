@@ -610,6 +610,7 @@ impl TextureCache {
             crate::picture::TILE_SIZE_DEFAULT,
             TextureFormatPair::from(image_format),
             None,
+            &TextureCacheConfig::DEFAULT,
         );
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
