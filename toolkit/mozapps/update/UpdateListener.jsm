@@ -33,6 +33,13 @@ const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";
 var UpdateListener = {
   timeouts: [],
 
+  restartDoorhangerShown: false,
+  // Once a restart badge/doorhanger is scheduled, these store the time that
+  // they were scheduled at (as milliseconds elapsed since the UNIX epoch). This
+  // allows us to resume the badge/doorhanger timers rather than restarting
+  // them from the beginning when a new update comes along.
+  updateFirstReadyTime: null,
+
   get badgeWaitTime() {
     return Services.prefs.getIntPref("app.update.badgeWaitTime", 4 * 24 * 3600); // 4 days
   },
@@ -53,6 +60,12 @@ var UpdateListener = {
   },
 
   reset() {
+    this.clearPendingAndActiveNotifications();
+    this.restartDoorhangerShown = false;
+    this.updateFirstReadyTime = null;
+  },
+
+  clearPendingAndActiveNotifications() {
     AppMenuNotifications.removeNotification(/^update-/);
     this.clearCallbacks();
   },
@@ -166,6 +179,9 @@ var UpdateListener = {
     let notification = AppUpdateService.isOtherInstanceHandlingUpdates
       ? "other-instance"
       : "restart";
+    if (!dismissed) {
+      this.restartDoorhangerShown = true;
+    }
     this.showUpdateNotification(notification, true, dismissed, () =>
       this.requestRestart()
     );
@@ -260,8 +276,22 @@ var UpdateListener = {
       case "success":
         this.clearCallbacks();
 
-        let badgeWaitTimeMs = this.badgeWaitTime * 1000;
-        let doorhangerWaitTimeMs = update.promptWaitTime * 1000;
+        let initialBadgeWaitTimeMs = this.badgeWaitTime * 1000;
+        let initialDoorhangerWaitTimeMs = update.promptWaitTime * 1000;
+        let now = Date.now();
+
+        if (!this.updateFirstReadyTime) {
+          this.updateFirstReadyTime = now;
+        }
+
+        let badgeWaitTimeMs = Math.max(
+          0,
+          this.updateFirstReadyTime + initialBadgeWaitTimeMs - now
+        );
+        let doorhangerWaitTimeMs = Math.max(
+          0,
+          this.updateFirstReadyTime + initialDoorhangerWaitTimeMs - now
+        );
 
         if (badgeWaitTimeMs < doorhangerWaitTimeMs) {
           this.addTimeout(badgeWaitTimeMs, () => {
@@ -270,17 +300,19 @@ var UpdateListener = {
               this.showRestartNotification(update, true);
             }
 
-            // doorhangerWaitTimeMs is relative to when we initially received
-            // the event. Since we've already waited badgeWaitTimeMs, subtract
-            // that from doorhangerWaitTimeMs.
-            let remainingTime = doorhangerWaitTimeMs - badgeWaitTimeMs;
-            this.addTimeout(remainingTime, () => {
-              this.showRestartNotification(update, false);
-            });
+            if (!this.restartDoorhangerShown) {
+              // doorhangerWaitTimeMs is relative to when we initially received
+              // the event. Since we've already waited badgeWaitTimeMs, subtract
+              // that from doorhangerWaitTimeMs.
+              let remainingTime = doorhangerWaitTimeMs - badgeWaitTimeMs;
+              this.addTimeout(remainingTime, () => {
+                this.showRestartNotification(update, false);
+              });
+            }
           });
         } else {
           this.addTimeout(doorhangerWaitTimeMs, () => {
-            this.showRestartNotification(update, false);
+            this.showRestartNotification(update, this.restartDoorhangerShown);
           });
         }
         break;
@@ -292,7 +324,6 @@ var UpdateListener = {
       case "show-prompt":
         // If an update is available and the app.update.auto preference is
         // false, then show an update available doorhanger.
-        this.clearCallbacks();
         this.showUpdateAvailableNotification(update, false);
         break;
       case "cant-apply":
@@ -312,9 +343,24 @@ var UpdateListener = {
         this.showUpdateDownloadingNotification();
         break;
       case "idle":
-        this.reset();
+        this.clearPendingAndActiveNotifications();
         break;
     }
+  },
+
+  handleUpdateSwap() {
+    // This function is called because we just finished downloading an update
+    // (possibly) when another update was already ready.
+    // At some point, we may want to have some sort of intermediate
+    // notification to display here so that the badge doesn't just disappear.
+    // Currently, this function just hides update notifications and clears
+    // the callback timers so that notifications will not be shown. We want to
+    // clear the restart notification so the user doesn't try to restart to
+    // update during staging. We want to clear any other notifications too,
+    // since none of them make sense to display now.
+    // Our observer will fire again when the update is either ready to install
+    // or an error has been encountered.
+    this.clearPendingAndActiveNotifications();
   },
 
   observe(subject, topic, status) {
@@ -341,6 +387,9 @@ var UpdateListener = {
         break;
       case "update-error":
         this.handleUpdateError(update, status);
+        break;
+      case "update-swap":
+        this.handleUpdateSwap();
         break;
     }
   },
