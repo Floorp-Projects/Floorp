@@ -31,7 +31,7 @@ pull_request_rules:
         strict: smart
   - name: Release automation
     conditions:
-      - base~=releases_.*
+      - base~=releases[_/].*
       - author=github-actions[bot]
       # Listing checks manually beause we do not have a "push complete" check yet.
       - check-success=build-android-test-debug
