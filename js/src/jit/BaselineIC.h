@@ -290,18 +290,6 @@ class ICStub {
 
   static bool IsValidKind(Kind k) { return (k > INVALID) && (k < LIMIT); }
 
-  static const char* KindString(Kind k) {
-    switch (k) {
-#define DEF_KIND_STR(kindName) \
-  case kindName:               \
-    return #kindName;
-      IC_BASELINE_STUB_KIND_LIST(DEF_KIND_STR)
-#undef DEF_KIND_STR
-      default:
-        MOZ_CRASH("Invalid kind.");
-    }
-  }
-
   template <typename T, typename... Args>
   static T* New(JSContext* cx, ICStubSpace* space, JitCode* code,
                 Args&&... args) {
