@@ -85,8 +85,10 @@ struct ShutdownStep {
 
 static ShutdownStep sShutdownSteps[] = {
     ShutdownStep("quit-application"),
+    ShutdownStep("profile-change-net-teardown"),
     ShutdownStep("profile-change-teardown"),
     ShutdownStep("profile-before-change"),
+    ShutdownStep("profile-before-change-qm"),
     ShutdownStep("xpcom-will-shutdown"),
     ShutdownStep("xpcom-shutdown"),
 };
@@ -205,7 +207,7 @@ void RunWatchdog(void* arg) {
         MOZ_CRASH_UNSAFE(strdup(msg.BeginReading()));
       }
 
-      MOZ_CRASH("Shutdown hanging before starting.");
+      MOZ_CRASH("Shutdown hanging before starting any known phase.");
     }
 
     // Maybe some workers are blocking the shutdown.
@@ -215,10 +217,20 @@ void RunWatchdog(void* arg) {
       runtimeService->CrashIfHanging();
     }
 
-    // Shutdown is apparently dead. Crash the process.
-    CrashReporter::SetMinidumpAnalysisAllThreads();
+    // If we get here, we know that all shutdown phases have been
+    // finished successfully and no worker is hanging.
+    // Therefore there should be nothing left worth waiting for.
+    // We give us a short extra time in case we have a late race
+    // and are about to have a clean shutdown anyway.
+#if defined(XP_WIN)
+    Sleep(1000 /* ms */);
+#else
+    usleep(1000000 /* usec */);
+#endif
 
-    MOZ_CRASH("Shutdown too long, probably frozen, causing a crash.");
+    // If we are still alive then we just crash.
+    CrashReporter::SetMinidumpAnalysisAllThreads();
+    MOZ_CRASH("Shutdown hanging after all known phases and workers finished.");
   }
 }
 
