@@ -177,102 +177,99 @@ add_task(async function test_openPBWindow() {
 
 // TODO: (Bug 1658620) Write a new subtest for this behaviour with the update2
 // pref on.
-add_task(async function test_oneoff_selected_with_private_engine_mouse() {
-  info(
-    "Test that 'Search in a Private Window' opens the private engine even if a one-off is selected"
-  );
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "unique198273982173",
-  });
-  await AssertPrivateResult(
-    window,
-    await Services.search.getDefaultPrivate(),
-    true
-  );
+// add_task(async function test_oneoff_selected_with_private_engine_mouse() {
+//   info(
+//     "Test that 'Search in a Private Window' opens the private engine even if a one-off is selected"
+//   );
+//   await SpecialPowers.pushPrefEnv({
+//     set: [
+//       ["browser.urlbar.update2", false],
+//       ["browser.urlbar.update2.oneOffsRefresh", false],
+//     ],
+//   });
+//   await UrlbarTestUtils.promiseAutocompleteResultPopup({
+//     window,
+//     value: "unique198273982173",
+//   });
+//   await AssertPrivateResult(
+//     window,
+//     await Services.search.getDefaultPrivate(),
+//     true
+//   );
 
-  await withHttpServer(serverInfo, async () => {
-    // Select the 'Search in a Private Window' result, alt down to select the
-    // first one-off button, Click on the result. It should open a pb window using
-    // the private search engine, because it has been set.
-    let promiseWindow = BrowserTestUtils.waitForNewWindow({
-      url: "http://localhost:20709/?terms=unique198273982173",
-      maybeErrorPage: true,
-    });
-    // Select the private result.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    // Select the first one-off button.
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    // Click on the result.
-    let element = UrlbarTestUtils.getSelectedRow(window);
-    EventUtils.synthesizeMouseAtCenter(element, {});
-    let win = await promiseWindow;
-    Assert.ok(
-      PrivateBrowsingUtils.isWindowPrivate(win),
-      "Should open a private window"
-    );
-    await BrowserTestUtils.closeWindow(win);
-  });
-  await SpecialPowers.popPrefEnv();
-});
+//   await withHttpServer(serverInfo, async () => {
+//     // Select the 'Search in a Private Window' result, alt down to select the
+//     // first one-off button, Click on the result. It should open a pb window using
+//     // the private search engine, because it has been set.
+//     let promiseWindow = BrowserTestUtils.waitForNewWindow({
+//       url: "http://localhost:20709/?terms=unique198273982173",
+//       maybeErrorPage: true,
+//     });
+//     // Select the private result.
+//     EventUtils.synthesizeKey("KEY_ArrowDown");
+//     // Select the first one-off button.
+//     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+//     // Click on the result.
+//     let element = UrlbarTestUtils.getSelectedRow(window);
+//     EventUtils.synthesizeMouseAtCenter(element, {});
+//     let win = await promiseWindow;
+//     Assert.ok(
+//       PrivateBrowsingUtils.isWindowPrivate(win),
+//       "Should open a private window"
+//     );
+//     await BrowserTestUtils.closeWindow(win);
+//   });
+//   await SpecialPowers.popPrefEnv();
+// });
 
 // TODO: (Bug 1658620) Write a new subtest for this behaviour with the update2
 // pref on.
-add_task(async function test_oneoff_selected_with_private_engine_keyboard() {
-  info(
-    "Test that 'Search in a Private Window' opens the private engine even if a one-off is selected"
-  );
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "unique198273982173",
-  });
-  await AssertPrivateResult(
-    window,
-    await Services.search.getDefaultPrivate(),
-    true
-  );
+// add_task(async function test_oneoff_selected_with_private_engine_keyboard() {
+//   info(
+//     "Test that 'Search in a Private Window' opens the private engine even if a one-off is selected"
+//   );
+//   await SpecialPowers.pushPrefEnv({
+//     set: [
+//       ["browser.urlbar.update2", false],
+//       ["browser.urlbar.update2.oneOffsRefresh", false],
+//     ],
+//   });
+//   await UrlbarTestUtils.promiseAutocompleteResultPopup({
+//     window,
+//     value: "unique198273982173",
+//   });
+//   await AssertPrivateResult(
+//     window,
+//     await Services.search.getDefaultPrivate(),
+//     true
+//   );
 
-  await withHttpServer(serverInfo, async () => {
-    // Select the 'Search in a Private Window' result, alt down to select the
-    // first one-off button, Enter. It should open a pb window, but using the
-    // selected one-off engine.
-    let promiseWindow = BrowserTestUtils.waitForNewWindow({
-      url: "http://localhost:20709/?terms=unique198273982173",
-      maybeErrorPage: true,
-    });
-    // Select the private result.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    // Select the first one-off button.
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    EventUtils.synthesizeKey("VK_RETURN");
-    let win = await promiseWindow;
-    Assert.ok(
-      PrivateBrowsingUtils.isWindowPrivate(win),
-      "Should open a private window"
-    );
-    await BrowserTestUtils.closeWindow(win);
-  });
-  await SpecialPowers.popPrefEnv();
-});
+//   await withHttpServer(serverInfo, async () => {
+//     // Select the 'Search in a Private Window' result, alt down to select the
+//     // first one-off button, Enter. It should open a pb window, but using the
+//     // selected one-off engine.
+//     let promiseWindow = BrowserTestUtils.waitForNewWindow({
+//       url: "http://localhost:20709/?terms=unique198273982173",
+//       maybeErrorPage: true,
+//     });
+//     // Select the private result.
+//     EventUtils.synthesizeKey("KEY_ArrowDown");
+//     // Select the first one-off button.
+//     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+//     EventUtils.synthesizeKey("VK_RETURN");
+//     let win = await promiseWindow;
+//     Assert.ok(
+//       PrivateBrowsingUtils.isWindowPrivate(win),
+//       "Should open a private window"
+//     );
+//     await BrowserTestUtils.closeWindow(win);
+//   });
+//   await SpecialPowers.popPrefEnv();
+// });
 
 add_task(async function test_alias_no_query() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.emptySearchBehavior", 2],
-    ],
+    set: [["browser.urlbar.update2.emptySearchBehavior", 2]],
   });
   info(
     "Test that 'Search in a Private Window' doesn't appear if an alias is typed with no query"
@@ -295,10 +292,7 @@ add_task(async function test_alias_no_query() {
 
 add_task(async function test_alias_query() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.emptySearchBehavior", 2],
-    ],
+    set: [["browser.urlbar.update2.emptySearchBehavior", 2]],
   });
   info(
     "Test that 'Search in a Private Window' appears when an alias is typed with a query"

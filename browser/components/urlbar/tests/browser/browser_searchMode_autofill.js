@@ -11,14 +11,6 @@
 const DEFAULT_ENGINE_NAME = "Test";
 
 add_task(async function setup() {
-  // This test requires update2.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits([{ uri: "http://example.com/" }]);
   }

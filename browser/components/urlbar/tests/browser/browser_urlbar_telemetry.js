@@ -242,12 +242,6 @@ add_task(async function test_simpleQuery() {
 });
 
 add_task(async function test_searchMode_enter() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
@@ -326,217 +320,11 @@ add_task(async function test_searchMode_enter() {
   );
 
   BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
-});
-
-// This subtest can be removed with the update2 pref.
-add_task(async function test_searchAlias_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  Services.telemetry.clearScalars();
-  Services.telemetry.clearEvents();
-
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
-  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_METHOD"
-  );
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:blank"
-  );
-
-  info("Search using a search alias.");
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInAwesomebar("mozalias query");
-  EventUtils.synthesizeKey("KEY_Enter");
-  await p;
-
-  // Check if the scalars contain the expected values.
-  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
-  TelemetryTestUtils.assertKeyedScalar(
-    scalars,
-    SCALAR_URLBAR,
-    "search_alias",
-    1
-  );
-  Assert.equal(
-    Object.keys(scalars[SCALAR_URLBAR]).length,
-    1,
-    "This search must only increment one entry in the scalar."
-  );
-
-  // Also check events.
-  TelemetryTestUtils.assertEvents(
-    [
-      [
-        "navigation",
-        "search",
-        "urlbar",
-        "alias",
-        { engine: "other-MozSearch" },
-      ],
-    ],
-    { category: "navigation", method: "search" }
-  );
-
-  // Check the histograms as well.
-  TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
-
-  TelemetryTestUtils.assertHistogram(
-    resultTypeHist,
-    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
-    1
-  );
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    resultIndexByTypeHist,
-    "searchengine",
-    0,
-    1
-  );
-
-  TelemetryTestUtils.assertHistogram(
-    resultMethodHist,
-    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
-    1
-  );
-
-  BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
-});
-
-// Performs a search using the first result, a one-off button, and the Return
-// (Enter) key.
-// This subtest can be removed with the update2 pref.
-add_task(async function test_oneOff_enter_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  Services.telemetry.clearScalars();
-  Services.telemetry.clearEvents();
-
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
-  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_METHOD"
-  );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:blank"
-  );
-
-  info("Perform a one-off search using the first engine. Update 2 disabled.");
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInAwesomebar("query");
-
-  info("Pressing Alt+Down to take us to the first one-off engine.");
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-  EventUtils.synthesizeKey("KEY_Enter");
-  await p;
-
-  // Check if the scalars contain the expected values.
-  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
-  TelemetryTestUtils.assertKeyedScalar(
-    scalars,
-    SCALAR_URLBAR,
-    "search_oneoff",
-    1
-  );
-  Assert.equal(
-    Object.keys(scalars[SCALAR_URLBAR]).length,
-    1,
-    "This search must only increment one entry in the scalar."
-  );
-
-  // SEARCH_COUNTS should be incremented, but only the urlbar source since an
-  // internal @search keyword was not used.
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.urlbar",
-    1
-  );
-  TelemetryTestUtils.assertKeyedHistogramSum(
-    search_hist,
-    "other-MozSearch.alias",
-    undefined
-  );
-
-  // Also check events.
-  TelemetryTestUtils.assertEvents(
-    [
-      [
-        "navigation",
-        "search",
-        "urlbar",
-        "oneoff",
-        { engine: "other-MozSearch" },
-      ],
-    ],
-    { category: "navigation", method: "search" }
-  );
-
-  // Check the histograms as well.
-  TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
-
-  TelemetryTestUtils.assertHistogram(
-    resultTypeHist,
-    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
-    1
-  );
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    resultIndexByTypeHist,
-    "searchengine",
-    0,
-    1
-  );
-
-  TelemetryTestUtils.assertHistogram(
-    resultMethodHist,
-    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
-    1
-  );
-
-  BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
 });
 
 // Performs a search using the first result, a one-off button, and the Return
 // (Enter) key.
 add_task(async function test_oneOff_enter() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
@@ -646,67 +434,12 @@ add_task(async function test_oneOff_enter() {
   );
 
   BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
-});
-
-// Performs a search using the second result, a one-off button, and the Return
-// (Enter) key.  This only tests the FX_URLBAR_SELECTED_RESULT_METHOD histogram
-// since test_oneOff_enter covers everything else.
-// This subtest can be removed with the update2 pref.
-add_task(async function test_oneOff_enterSelection_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  Services.telemetry.clearScalars();
-  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_METHOD"
-  );
-
-  await withNewSearchEngine(async function() {
-    let tab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      "about:blank"
-    );
-
-    info(
-      "Type a query. Suggestions should be generated by the test engine. Update2 disabled."
-    );
-    let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    await searchInAwesomebar("query");
-
-    info(
-      "Select the second result, press Alt+Down to take us to the first one-off engine."
-    );
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    EventUtils.synthesizeKey("KEY_Enter");
-    await p;
-
-    TelemetryTestUtils.assertHistogram(
-      resultMethodHist,
-      UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection,
-      1
-    );
-
-    BrowserTestUtils.removeTab(tab);
-  });
-
-  await SpecialPowers.popPrefEnv();
 });
 
 // Performs a search using the second result, a one-off button, and the Return
 // (Enter) key.  This only tests the FX_URLBAR_SELECTED_RESULT_METHOD histogram
 // since test_oneOff_enter covers everything else.
 add_task(async function test_oneOff_enterSelection() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -750,61 +483,12 @@ add_task(async function test_oneOff_enterSelection() {
 
     BrowserTestUtils.removeTab(tab);
   });
-
-  await SpecialPowers.popPrefEnv();
-});
-
-// Performs a search using a click on a one-off button.  This only tests the
-// FX_URLBAR_SELECTED_RESULT_METHOD histogram since test_oneOff_enter covers
-// everything else.
-// This subtest can be removed with the update2 pref.
-add_task(async function test_oneOff_click_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  Services.telemetry.clearScalars();
-
-  let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_METHOD"
-  );
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:blank"
-  );
-
-  info("Type a query.");
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInAwesomebar("query");
-  info("Click the first one-off button. Update2 disabled");
-  UrlbarTestUtils.getOneOffSearchButtons(window)
-    .getSelectableButtons(false)[0]
-    .click();
-  await p;
-
-  TelemetryTestUtils.assertHistogram(
-    resultMethodHist,
-    UrlbarTestUtils.SELECTED_RESULT_METHODS.click,
-    1
-  );
-
-  BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
 });
 
 // Performs a search using a click on a one-off button.  This only tests the
 // FX_URLBAR_SELECTED_RESULT_METHOD histogram since test_oneOff_enter covers
 // everything else.
 add_task(async function test_oneOff_click() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
 
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
@@ -846,7 +530,6 @@ add_task(async function test_oneOff_click() {
   );
 
   BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
 });
 
 // Clicks the first suggestion offered by the test search engine.
@@ -1046,12 +729,6 @@ add_task(async function test_suggestion_enterSelection() {
 // Clicks the first suggestion offered by the test search engine when in search
 // mode.
 add_task(async function test_searchmode_suggestion_click() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
@@ -1147,7 +824,6 @@ add_task(async function test_searchmode_suggestion_click() {
 
     BrowserTestUtils.removeTab(tab);
   });
-  await SpecialPowers.popPrefEnv();
 });
 
 // Selects and presses the Return (Enter) key on the first suggestion offered by
@@ -1155,12 +831,6 @@ add_task(async function test_searchmode_suggestion_click() {
 // FX_URLBAR_SELECTED_RESULT_METHOD histogram since
 // test_searchmode_suggestion_click covers everything else.
 add_task(async function test_searchmode_suggestion_arrowEnterSelection() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -1190,18 +860,11 @@ add_task(async function test_searchmode_suggestion_arrowEnterSelection() {
     );
     BrowserTestUtils.removeTab(tab);
   });
-  await SpecialPowers.popPrefEnv();
 });
 
 // Selects through tab and presses the Return (Enter) key on the first
 // suggestion offered by the test search engine in search mode.
 add_task(async function test_suggestion_tabEnterSelection() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -1232,18 +895,11 @@ add_task(async function test_suggestion_tabEnterSelection() {
 
     BrowserTestUtils.removeTab(tab);
   });
-  await SpecialPowers.popPrefEnv();
 });
 
 // Selects through code and presses the Return (Enter) key on the first
 // suggestion offered by the test search engine in search mode.
 add_task(async function test_suggestion_enterSelection() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
   Services.telemetry.clearScalars();
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
@@ -1274,7 +930,6 @@ add_task(async function test_suggestion_enterSelection() {
 
     BrowserTestUtils.removeTab(tab);
   });
-  await SpecialPowers.popPrefEnv();
 });
 
 // Clicks a form history result.

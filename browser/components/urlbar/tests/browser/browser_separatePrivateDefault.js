@@ -138,78 +138,78 @@ add_task(async function test_search_disabled_suggestions() {
 
 // TODO: (Bug 1658620) Write a new subtest for this behaviour with the update2
 // pref on.
-add_task(async function test_oneoff_selected_keyboard() {
-  info(
-    "Test that 'Search in a Private Window' with keyboard opens the selected one-off engine if there's no private engine"
-  );
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "unique198273982173",
-  });
-  await AssertPrivateResult(window, await Services.search.getDefault(), false);
-  // Select the 'Search in a Private Window' result, alt down to select the
-  // first one-off button, Enter. It should open a pb window, but using the
-  // selected one-off engine.
-  let promiseWindow = BrowserTestUtils.waitForNewWindow({
-    url:
-      "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/print_postdata.sjs",
-  });
-  // Select the private result.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  // Select the first one-off button.
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-  EventUtils.synthesizeKey("VK_RETURN");
-  let win = await promiseWindow;
-  Assert.ok(
-    PrivateBrowsingUtils.isWindowPrivate(win),
-    "Should open a private window"
-  );
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
-});
+// add_task(async function test_oneoff_selected_keyboard() {
+//   info(
+//     "Test that 'Search in a Private Window' with keyboard opens the selected one-off engine if there's no private engine"
+//   );
+//   await SpecialPowers.pushPrefEnv({
+//     set: [
+//       ["browser.urlbar.update2", false],
+//       ["browser.urlbar.update2.oneOffsRefresh", false],
+//     ],
+//   });
+//   await UrlbarTestUtils.promiseAutocompleteResultPopup({
+//     window,
+//     value: "unique198273982173",
+//   });
+//   await AssertPrivateResult(window, await Services.search.getDefault(), false);
+//   // Select the 'Search in a Private Window' result, alt down to select the
+//   // first one-off button, Enter. It should open a pb window, but using the
+//   // selected one-off engine.
+//   let promiseWindow = BrowserTestUtils.waitForNewWindow({
+//     url:
+//       "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/print_postdata.sjs",
+//   });
+//   // Select the private result.
+//   EventUtils.synthesizeKey("KEY_ArrowDown");
+//   // Select the first one-off button.
+//   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+//   EventUtils.synthesizeKey("VK_RETURN");
+//   let win = await promiseWindow;
+//   Assert.ok(
+//     PrivateBrowsingUtils.isWindowPrivate(win),
+//     "Should open a private window"
+//   );
+//   await BrowserTestUtils.closeWindow(win);
+//   await SpecialPowers.popPrefEnv();
+// });
 
 // TODO: (Bug 1658620) Write a new subtest for this behaviour with the update2
 // pref on.
-add_task(async function test_oneoff_selected_mouse() {
-  info(
-    "Test that 'Search in a Private Window' with mouse opens the selected one-off engine if there's no private engine"
-  );
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-    ],
-  });
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "unique198273982173",
-  });
-  await AssertPrivateResult(window, await Services.search.getDefault(), false);
-  // Select the 'Search in a Private Window' result, alt down to select the
-  // first one-off button, Enter. It should open a pb window, but using the
-  // selected one-off engine.
-  let promiseWindow = BrowserTestUtils.waitForNewWindow({
-    url:
-      "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/print_postdata.sjs",
-  });
-  // Select the private result.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  // Select the first one-off button.
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-  // Click on the result.
-  let element = UrlbarTestUtils.getSelectedRow(window);
-  EventUtils.synthesizeMouseAtCenter(element, {});
-  let win = await promiseWindow;
-  Assert.ok(
-    PrivateBrowsingUtils.isWindowPrivate(win),
-    "Should open a private window"
-  );
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
-});
+// add_task(async function test_oneoff_selected_mouse() {
+//   info(
+//     "Test that 'Search in a Private Window' with mouse opens the selected one-off engine if there's no private engine"
+//   );
+//   await SpecialPowers.pushPrefEnv({
+//     set: [
+//       ["browser.urlbar.update2", false],
+//       ["browser.urlbar.update2.oneOffsRefresh", false],
+//     ],
+//   });
+//   await UrlbarTestUtils.promiseAutocompleteResultPopup({
+//     window,
+//     value: "unique198273982173",
+//   });
+//   await AssertPrivateResult(window, await Services.search.getDefault(), false);
+//   // Select the 'Search in a Private Window' result, alt down to select the
+//   // first one-off button, Enter. It should open a pb window, but using the
+//   // selected one-off engine.
+//   let promiseWindow = BrowserTestUtils.waitForNewWindow({
+//     url:
+//       "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/print_postdata.sjs",
+//   });
+//   // Select the private result.
+//   EventUtils.synthesizeKey("KEY_ArrowDown");
+//   // Select the first one-off button.
+//   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+//   // Click on the result.
+//   let element = UrlbarTestUtils.getSelectedRow(window);
+//   EventUtils.synthesizeMouseAtCenter(element, {});
+//   let win = await promiseWindow;
+//   Assert.ok(
+//     PrivateBrowsingUtils.isWindowPrivate(win),
+//     "Should open a private window"
+//   );
+//   await BrowserTestUtils.closeWindow(win);
+//   await SpecialPowers.popPrefEnv();
+// });

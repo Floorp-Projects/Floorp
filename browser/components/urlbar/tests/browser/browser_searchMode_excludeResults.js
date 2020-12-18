@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
       ["browser.urlbar.suggest.searches", false],
       ["browser.urlbar.autoFill", false],
       // Special prefs for remote tabs.
