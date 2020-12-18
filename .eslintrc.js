@@ -319,16 +319,6 @@ module.exports = {
     },
     {
       files: [
-        "dom/l10n/tests/mochitest/document_l10n/non-system-principal/test.html",
-        "dom/tests/browser/browser_persist_cookies.js",
-        "dom/tests/browser/browser_persist_mixed_content_image.js",
-      ],
-      rules: {
-        "no-async-promise-executor": "off",
-      },
-    },
-    {
-      files: [
         "testing/mochitest/browser-harness.xhtml",
         "testing/mochitest/chrome/test_chromeGetTestFile.xhtml",
         "testing/mochitest/chrome/test_sanityEventUtils.xhtml",

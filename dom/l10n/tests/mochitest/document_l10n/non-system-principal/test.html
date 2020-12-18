@@ -5,7 +5,7 @@
   <title>Test DocumentL10n in HTML environment</title>
   <link rel="localization" href="test.ftl"/>
   <script type="text/javascript">
-    document.testsReadyPromise = new Promise(async (resolve) => {
+    document.testsReadyPromise = new Promise((resolve) => {
       // The test is in this file to ensure that we're testing
       // the behavior in a non-system principal.
       document.addEventListener("DOMContentLoaded", async () => {
