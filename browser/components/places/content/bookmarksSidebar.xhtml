@@ -21,7 +21,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="init();"
         onunload="PlacesUIUtils.setMouseoverURL('', window);"
-        aria-label="&bookmarksButton.label;">
+        data-l10n-id="bookmarks-sidebar-content">
 
   <script src="chrome://browser/content/places/bookmarksSidebar.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
@@ -32,6 +32,7 @@
 
   <linkset>
     <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/browser.ftl"/>
     <html:link rel="localization" href="browser/places.ftl"/>
   </linkset>
 
