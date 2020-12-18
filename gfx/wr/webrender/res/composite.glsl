@@ -240,6 +240,15 @@ void swgl_drawSpanRGBA8() {
 
     int layer = swgl_textureLayerOffset(sColor0, vLayer);
 
+    if (swgl_allowTextureNearest(sColor0, vUv)) {
+        if (vColor != vec4(1.0)) {
+            swgl_commitTextureNearestColorRGBA8(sColor0, vUv, vUVBounds, vColor, layer);
+        } else {
+            swgl_commitTextureNearestRGBA8(sColor0, vUv, vUVBounds, layer);
+        }
+        return;
+    }
+
     vec2 uv = swgl_linearQuantize(sColor0, vUv);
     vec2 min_uv = swgl_linearQuantize(sColor0, vUVBounds.xy);
     vec2 max_uv = swgl_linearQuantize(sColor0, vUVBounds.zw);

@@ -358,7 +358,22 @@ void swgl_drawSpanRGBA8() {
     float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_layer_and_perspective.y);
 
     #ifndef WR_FEATURE_REPETITION
-        vec2 uv = swgl_linearQuantize(sColor0, v_uv * perspective_divisor + v_uv_bounds.xy);
+        vec2 uv = v_uv * perspective_divisor + v_uv_bounds.xy;
+
+        #ifndef WR_FEATURE_ANTIALIASING
+        if (!needs_clip() && swgl_allowTextureNearest(sColor0, uv)) {
+            #ifdef WR_FEATURE_ALPHA_PASS
+            if (v_color != vec4(1.0)) {
+                swgl_commitTextureNearestColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color, layer);
+                return;
+            }
+            #endif
+            swgl_commitTextureNearestRGBA8(sColor0, uv, v_uv_sample_bounds, layer);
+            return;
+        }
+        #endif
+
+        uv = swgl_linearQuantize(sColor0, uv);
         vec2 min_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.xy);
         vec2 max_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.zw);
         vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(v_uv)) * perspective_divisor;

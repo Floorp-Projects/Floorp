@@ -355,6 +355,163 @@ static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
 #define swgl_commitTextureLinearColorYUV(...) \
   swgl_commitChunk(RGBA8, sampleColorYUV(__VA_ARGS__))
 
+// Helper functions to apply a color modulus when available.
+struct NoColor {};
+
+SI WideRGBA8 applyColor(WideRGBA8 src, NoColor) { return src; }
+
+SI WideRGBA8 applyColor(WideRGBA8 src, WideRGBA8 color) {
+  return muldiv255(src, color);
+}
+
+SI PackedRGBA8 applyColor(PackedRGBA8 src, NoColor) { return src; }
+
+SI PackedRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
+  return pack(muldiv255(unpack(src), color));
+}
+
+// Samples an axis-aligned span of on a single row of a texture using 1:1
+// nearest filtering. Sampling is constrained to only fall within the given UV
+// bounds. This requires a pointer to the destination buffer. An optional color
+// modulus can be supplied.
+template <typename S, typename C>
+static void blendTextureNearestRGBA8(S sampler, const ivec2_scalar& i, int span,
+                                     const ivec2_scalar& minUV,
+                                     const ivec2_scalar& maxUV, C color,
+                                     uint32_t* buf, int layerOffset = 0) {
+  // Calculate the row pointer within the buffer, clamping to within valid row
+  // bounds.
+  uint32_t* row =
+      &sampler->buf[clamp(clampCoord(i.y, sampler->height), minUV.y, maxUV.y) *
+                        sampler->stride +
+                    layerOffset];
+  // Find clamped X bounds within the row.
+  int minX = clamp(minUV.x, 0, sampler->width - 1);
+  int maxX = clamp(maxUV.x, minX, sampler->width - 1);
+  int curX = i.x;
+  // If we need to start sampling below the valid sample bounds, then we need to
+  // fill this section with a constant clamped sample.
+  if (curX < minX) {
+    int n = min(minX - curX, span);
+    curX += n;
+    span -= n;
+    auto src = applyColor(unpack(bit_cast<PackedRGBA8>(U32(row[minX]))), color);
+    while (n > 0) {
+      int chunk = min(n, 4);
+      auto r = blend_key ? blend_pixels_RGBA8(
+                               partial_load_span<PackedRGBA8>(buf, chunk), src)
+                         : src;
+      partial_store_span(buf, pack(r), chunk);
+      buf += chunk;
+      n -= chunk;
+    }
+  }
+  // Here we only deal with valid samples within the sample bounds. No clamping
+  // should occur here within these inner loops.
+  int n = min(maxX + 1 - curX, span);
+  span -= n;
+  // Try to process as many chunks as possible with full loads and stores.
+  if (blend_key) {
+    for (int end = curX + (n & ~3); curX < end; curX += 4, buf += 4) {
+      auto src =
+          applyColor(unpack(unaligned_load<PackedRGBA8>(&row[curX])), color);
+      auto r = blend_pixels_RGBA8(unaligned_load<PackedRGBA8>(buf), src);
+      unaligned_store(buf, pack(r));
+    }
+  } else {
+    for (int end = curX + (n & ~3); curX < end; curX += 4, buf += 4) {
+      auto src = applyColor(unaligned_load<PackedRGBA8>(&row[curX]), color);
+      unaligned_store(buf, src);
+    }
+  }
+  n &= 3;
+  // If we have any leftover samples after processing chunks, use partial loads
+  // and stores.
+  if (n > 0) {
+    if (blend_key) {
+      auto src = applyColor(
+          unpack(partial_load_span<PackedRGBA8>(&row[curX], n)), color);
+      auto r = blend_pixels_RGBA8(partial_load_span<PackedRGBA8>(buf, n), src);
+      partial_store_span(buf, pack(r), n);
+    } else {
+      auto src =
+          applyColor(partial_load_span<PackedRGBA8>(&row[curX], n), color);
+      partial_store_span(buf, src, n);
+    }
+    buf += n;
+    curX += n;
+  }
+  // If we still have samples left above the valid sample bounds, then we again
+  // need to fill this section with a constant clamped sample.
+  if (span > 0) {
+    auto src = applyColor(unpack(bit_cast<PackedRGBA8>(U32(row[maxX]))), color);
+    while (span > 0) {
+      int chunk = min(span, 4);
+      auto r = blend_key ? blend_pixels_RGBA8(
+                               partial_load_span<PackedRGBA8>(buf, chunk), src)
+                         : src;
+      partial_store_span(buf, pack(r), chunk);
+      buf += chunk;
+      span -= chunk;
+    }
+  }
+}
+
+// TODO: blendTextureNearestR8 if it is actually needed
+
+// Commit an entire span of 1:1 nearest texture fetches, potentially scaled by a
+// color
+#define swgl_commitTextureNearest(format, s, p, uv_rect, color, ...)          \
+  do {                                                                        \
+    ivec2_scalar i = make_ivec2(samplerScale(s, force_scalar(p)));            \
+    ivec2_scalar min_uv =                                                     \
+        make_ivec2(samplerScale(s, vec2_scalar{uv_rect.x, uv_rect.y}));       \
+    ivec2_scalar max_uv =                                                     \
+        make_ivec2(samplerScale(s, vec2_scalar{uv_rect.z, uv_rect.w}));       \
+    blendTextureNearest##format(s, i, swgl_SpanLength, min_uv, max_uv, color, \
+                                swgl_Out##format, __VA_ARGS__);               \
+    swgl_Out##format += swgl_SpanLength;                                      \
+    swgl_SpanLength = 0;                                                      \
+  } while (0)
+#define swgl_commitTextureNearestRGBA8(s, p, uv_rect, ...) \
+  swgl_commitTextureNearest(RGBA8, s, p, uv_rect, NoColor(), __VA_ARGS__)
+#define swgl_commitTextureNearestR8(s, p, uv_rect, ...) \
+  swgl_commitTextureNearest(R8, s, p, uv_rect, NoColor(), __VA_ARGS__)
+
+#define swgl_commitTextureNearestColor(format, s, p, uv_rect, color, ...) \
+  swgl_commitTextureNearest(format, s, p, uv_rect,                        \
+                            pack_pixels_##format(color), __VA_ARGS__)
+#define swgl_commitTextureNearestColorRGBA8(s, p, uv_rect, color, ...) \
+  swgl_commitTextureNearestColor(RGBA8, s, p, uv_rect, color, __VA_ARGS__)
+#define swgl_commitTextureNearestColorR8(s, p, uv_rect, color, ...) \
+  swgl_commitTextureNearestColor(R8, s, p, uv_rect, color, __VA_ARGS__)
+
+// Helper function to decide whether we can safely apply 1:1 nearest filtering
+// without diverging too much from the linear filter
+template <typename S, typename T>
+static bool allowTextureNearest(S sampler, T P, int span) {
+  // First verify if the row Y doesn't change across samples
+  if (P.y.x != P.y.y) {
+    return false;
+  }
+  P = samplerScale(sampler, P);
+  // We need to verify that the pixel step reasonably approximates stepping
+  // by a single texel for every pixel we need to reproduce. Try to ensure
+  // that the margin of error is no more than approximately 2^-7.
+  span &= ~(128 - 1);
+  span += 128;
+  return round((P.x.y - P.x.x) * span) == span &&
+         // Also verify that we're reasonably close to the center of a texel
+         // so that it doesn't look that much different than if a linear filter
+         // was used.
+         (int(P.x.x * 4.0f + 0.5f) & 3) == 2 &&
+         (int(P.y.x * 4.0f + 0.5f) & 3) == 2;
+}
+
+// Determine if we can apply 1:1 nearest filtering to a span of texture
+#define swgl_allowTextureNearest(s, p) \
+  allowTextureNearest(s, p, swgl_SpanLength)
+
 // Dispatch helper used by the GLSL translator to swgl_drawSpan functions.
 // The number of pixels committed is tracked by checking for the difference in
 // swgl_SpanLength. Any varying interpolants used will be advanced past the
