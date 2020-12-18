@@ -164,6 +164,7 @@ class JsepSessionImpl : public JsepSession {
 
   void AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                         SdpMediaSection* msection);
+  uint16_t GetNeverUsedExtmapEntry();
   nsresult SetupIds();
   void SetupDefaultCodecs();
   void SetupDefaultRtpExtensions();
@@ -256,6 +257,7 @@ class JsepSessionImpl : public JsepSession {
   size_t mTransportIdCounter;
   size_t mTransceiverIdCounter = 0;
   std::vector<JsepExtmapMediaType> mRtpExtensions;
+  std::set<uint16_t> mExtmapEntriesEverUsed;
   UniquePtr<JsepUuidGenerator> mUuidGen;
   std::string mDefaultRemoteStreamId;
   std::string mCNAME;
