@@ -373,11 +373,6 @@ pref("browser.urlbar.shortcuts.history", true);
 // search immediately.
 pref("browser.urlbar.update2.oneOffsRefresh", true);
 
-// Whether browsing history that is recognized as a previous search should
-// be restyled and deduped against form history. This only happens when
-// search mode is active.
-pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true);
-
 pref("browser.urlbar.eventTelemetry.enabled", false);
 
 // Controls when to DNS resolve single word search strings, after they were

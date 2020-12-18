@@ -201,11 +201,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the urlbar one-offs act as search filters instead of executing a
   // search immediately.
   ["update2.oneOffsRefresh", true],
-
-  // Whether browsing history that is recognized as a previous search should
-  // be restyled and deduped against form history. This only happens when
-  // search mode is active.
-  ["update2.restyleBrowsingHistoryAsSearch", true],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
