@@ -74,6 +74,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether telemetry events should be recorded.
   ["eventTelemetry.enabled", false],
 
+  // Used as an override to update2 that is only available in Firefox 83+.
+  // In Firefox 82 we'll set experiment.update2 to false for the holdback
+  // cohort, so that upgrading to Firefox 83 won't enable the update2 feature.
+  // We must do this because experiment rollout begins one week before the 83
+  // release, and we don't want to touch update2 in Firefox 82.
+  ["experiment.update2", true],
+
   // Whether we expand the font size when when the urlbar is
   // focused.
   ["experimental.expandTextOnFocus", false],
@@ -181,11 +188,28 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // popular domains will no longer be included in the results.
   ["usepreloadedtopurls.expire_days", 14],
 
+  // Whether aliases are styled as a "chiclet" separated from the Urlbar.
+  // Also controls the other urlbar.update2 prefs.
+  ["update2", true],
+
+  // Whether horizontal key navigation with left/right is disabled for urlbar's
+  // one-off buttons.
+  ["update2.disableOneOffsHorizontalKeyNavigation", true],
+
   // Controls the empty search behavior in Search Mode:
   //  0 - Show nothing
   //  1 - Show search history
   //  2 - Show search and browsing history
   ["update2.emptySearchBehavior", 0],
+
+  // Whether the urlbar one-offs act as search filters instead of executing a
+  // search immediately.
+  ["update2.oneOffsRefresh", true],
+
+  // Whether browsing history that is recognized as a previous search should
+  // be restyled and deduped against form history. This only happens when
+  // search mode is active.
+  ["update2.restyleBrowsingHistoryAsSearch", true],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
@@ -420,6 +444,16 @@ class Preferences {
             this.get("suggest." + type) && Ci.mozIPlacesAutoComplete[behavior];
         }
         return val;
+      }
+      case "update2": {
+        // The experiment.update2 pref is a partial override to update2. If it
+        // is false, it overrides update2. It was introduced for Firefox 83+ to
+        // run a holdback study on update2 and can be removed when the holdback
+        // study is complete. See bug 1674469.
+        if (!this._readPref("experiment.update2")) {
+          return false;
+        }
+        return this._readPref(pref);
       }
     }
     return this._readPref(pref);

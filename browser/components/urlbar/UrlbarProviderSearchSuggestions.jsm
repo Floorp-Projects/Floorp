@@ -101,7 +101,8 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     let wantsLocalSuggestions =
       UrlbarPrefs.get("maxHistoricalSearchSuggestions") &&
-      (queryContext.trimmedSearchString ||
+      (!UrlbarPrefs.get("update2") ||
+        queryContext.trimmedSearchString ||
         UrlbarPrefs.get("update2.emptySearchBehavior") != 0);
 
     return wantsLocalSuggestions || this._allowRemoteSuggestions(queryContext);
@@ -491,7 +492,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     // Match an alias only when it has a space after it.  If there's no trailing
     // space, then continue to treat it as part of the search string.
-    if (!UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
+    if (
+      UrlbarPrefs.get("update2") &&
+      !UrlbarTokenizer.REGEXP_SPACES_START.test(query)
+    ) {
       return null;
     }
 

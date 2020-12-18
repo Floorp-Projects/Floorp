@@ -41,6 +41,7 @@ add_task(async function setup() {
 // A non-token alias without a trailing space shouldn't be recognized as a
 // keyword.  It should be treated as part of the search string.
 add_task(async function nonTokenAlias_noTrailingSpace() {
+  Services.prefs.setBoolPref("browser.urlbar.update2", true);
   Services.prefs.setBoolPref(
     "browser.search.separatePrivateDefault.ui.enabled",
     false
@@ -60,9 +61,38 @@ add_task(async function nonTokenAlias_noTrailingSpace() {
       }),
     ],
   });
+  Services.prefs.clearUserPref("browser.urlbar.update2");
   Services.prefs.clearUserPref(
     "browser.search.separatePrivateDefault.ui.enabled"
   );
+});
+
+// With update2 disabled, a non-token alias without a trailing space should be
+// recognized as a keyword, and the history result should be included.
+add_task(async function nonTokenAlias_noTrailingSpace_legacy() {
+  Services.prefs.setBoolPref("browser.urlbar.update2", false);
+  let alias = "moz";
+  engine.alias = alias;
+  Assert.equal(engine.alias, alias);
+  for (let isPrivate of [false, true]) {
+    let context = createContext(alias, { isPrivate });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          engineName: SUGGESTIONS_ENGINE_NAME,
+          alias,
+          query: "",
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "http://localhost:9000/search?terms=",
+          title: HISTORY_TITLE,
+        }),
+      ],
+    });
+  }
+  Services.prefs.clearUserPref("browser.urlbar.update2");
 });
 
 // A non-token alias with a trailing space should be recognized as a keyword,
@@ -181,9 +211,11 @@ add_task(async function tokenAlias_noTrailingSpace() {
         makeSearchResult(context, {
           engineName: SUGGESTIONS_ENGINE_NAME,
           alias,
-          keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+          keywordOffer: UrlbarPrefs.get("update2")
+            ? UrlbarUtils.KEYWORD_OFFER.SHOW
+            : UrlbarUtils.KEYWORD_OFFER.HIDE,
           query: "",
-          heuristic: false,
+          heuristic: !UrlbarPrefs.get("update2"),
         }),
       ],
     });
@@ -193,6 +225,7 @@ add_task(async function tokenAlias_noTrailingSpace() {
 // A token alias with a trailing space should be recognized as a keyword without
 // a keyword offer.
 add_task(async function tokenAlias_trailingSpace() {
+  Services.prefs.setBoolPref("browser.urlbar.update2", true);
   let alias = "@moz";
   engine.alias = alias;
   Assert.equal(engine.alias, alias);
@@ -215,6 +248,7 @@ add_task(async function tokenAlias_trailingSpace() {
       });
     }
   }
+  Services.prefs.clearUserPref("browser.urlbar.update2");
 });
 
 // Search for "alias HISTORY_TITLE" with a token alias in a non-private context.
