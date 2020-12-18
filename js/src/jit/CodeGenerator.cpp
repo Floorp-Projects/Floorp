@@ -14002,6 +14002,33 @@ void CodeGenerator::visitWasmLoadTls(LWasmLoadTls* ins) {
   }
 }
 
+void CodeGenerator::incrementWarmUpCounter(AbsoluteAddress warmUpCount,
+                                           JSScript* script, Register tmp) {
+  // The code depends on the JitScript* not being discarded without also
+  // invalidating Ion code. Assert this.
+#ifdef DEBUG
+  Label ok;
+  masm.movePtr(ImmGCPtr(script), tmp);
+  masm.loadJitScript(tmp, tmp);
+  masm.branchPtr(Assembler::Equal, tmp, ImmPtr(script->jitScript()), &ok);
+  masm.assumeUnreachable("Didn't find JitScript?");
+  masm.bind(&ok);
+#endif
+
+  masm.load32(warmUpCount, tmp);
+  masm.add32(Imm32(1), tmp);
+  masm.store32(tmp, warmUpCount);
+}
+
+void CodeGenerator::visitIncrementWarmUpCounter(LIncrementWarmUpCounter* ins) {
+  Register tmp = ToRegister(ins->scratch());
+
+  AbsoluteAddress warmUpCount =
+      AbsoluteAddress(ins->mir()->script()->jitScript())
+          .offset(JitScript::offsetOfWarmUpCount());
+  incrementWarmUpCounter(warmUpCount, ins->mir()->script(), tmp);
+}
+
 void CodeGenerator::visitRecompileCheck(LRecompileCheck* ins) {
   Label done;
   Register tmp = ToRegister(ins->scratch());
@@ -14019,28 +14046,15 @@ void CodeGenerator::visitRecompileCheck(LRecompileCheck* ins) {
     }
   }
 
-  JitScript* jitScript = ins->mir()->script()->jitScript();
-
-  // The code depends on the JitScript* not being discarded without also
-  // invalidating Ion code. Assert this.
-#ifdef DEBUG
-  Label ok;
-  masm.movePtr(ImmGCPtr(ins->mir()->script()), tmp);
-  masm.loadJitScript(tmp, tmp);
-  masm.branchPtr(Assembler::Equal, tmp, ImmPtr(jitScript), &ok);
-  masm.assumeUnreachable("Didn't find JitScript?");
-  masm.bind(&ok);
-#endif
-
-  // Check if warm-up counter is high enough.
   AbsoluteAddress warmUpCount =
-      AbsoluteAddress(jitScript).offset(JitScript::offsetOfWarmUpCount());
+      AbsoluteAddress(ins->mir()->script()->jitScript())
+          .offset(JitScript::offsetOfWarmUpCount());
   if (ins->mir()->increaseWarmUpCounter()) {
-    masm.load32(warmUpCount, tmp);
-    masm.add32(Imm32(1), tmp);
-    masm.store32(tmp, warmUpCount);
+    incrementWarmUpCounter(warmUpCount, ins->mir()->script(), tmp);
+
+    // Check if warm-up counter is high enough.
     if (ins->mir()->checkCounter()) {
-      masm.branch32(Assembler::BelowOrEqual, tmp,
+      masm.branch32(Assembler::BelowOrEqual, warmUpCount,
                     Imm32(ins->mir()->recompileThreshold()), &done);
     }
   } else {
