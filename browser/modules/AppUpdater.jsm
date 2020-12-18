@@ -46,9 +46,12 @@ class AppUpdater {
       "nsIUpdateManager"
     );
     this.QueryInterface = ChromeUtils.generateQI([
+      "nsIObserver",
       "nsIProgressEventSink",
       "nsIRequestObserver",
+      "nsISupportsWeakReference",
     ]);
+    Services.obs.addObserver(this, "update-swap", /* ownsWeak */ true);
   }
 
   /**
@@ -389,32 +392,41 @@ class AppUpdater {
   _awaitStagingComplete() {
     let observer = (aSubject, aTopic, aData) => {
       // Update the UI when the background updater is finished
-      let status = aData;
-      if (
-        status == "applied" ||
-        status == "applied-service" ||
-        status == "pending" ||
-        status == "pending-service" ||
-        status == "pending-elevate"
-      ) {
-        // If the update is successfully applied, or if the updater has
-        // fallen back to non-staged updates, show the "Restart to Update"
-        // button.
-        this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
-      } else if (status == "failed") {
-        // Background update has failed, let's show the UI responsible for
-        // prompting the user to update manually.
-        this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
-      } else if (status == "downloading") {
-        // We've fallen back to downloading the complete update because the
-        // partial update failed to get staged in the background.
-        // Therefore we need to keep our observer.
-        this._setupDownloadListener();
-        return;
+      switch (aTopic) {
+        case "update-staged":
+          let status = aData;
+          if (
+            status == "applied" ||
+            status == "applied-service" ||
+            status == "pending" ||
+            status == "pending-service" ||
+            status == "pending-elevate"
+          ) {
+            // If the update is successfully applied, or if the updater has
+            // fallen back to non-staged updates, show the "Restart to Update"
+            // button.
+            this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
+          } else if (status == "failed") {
+            // Background update has failed, let's show the UI responsible for
+            // prompting the user to update manually.
+            this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+          } else if (status == "downloading") {
+            // We've fallen back to downloading the complete update because the
+            // partial update failed to get staged in the background.
+            // Therefore we need to keep our observer.
+            this._setupDownloadListener();
+            return;
+          }
+          break;
+        case "update-error":
+          this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+          break;
       }
       Services.obs.removeObserver(observer, "update-staged");
+      Services.obs.removeObserver(observer, "update-error");
     };
     Services.obs.addObserver(observer, "update-staged");
+    Services.obs.addObserver(observer, "update-error");
   }
 
   /**
@@ -488,6 +500,43 @@ class AppUpdater {
       listener(status, ...listenerArgs);
     }
     return status;
+  }
+
+  observe(subject, topic, status) {
+    switch (topic) {
+      case "update-swap":
+        this._handleUpdateSwap();
+        break;
+    }
+  }
+
+  _handleUpdateSwap() {
+    // This function exists to deal with the fact that we support handling 2
+    // updates at once: a ready update and a downloading update. But AppUpdater
+    // only ever really considers a single update at a time.
+    // We see an update swap just when the downloading update has finished
+    // downloading and is being swapped into UpdateManager.readyUpdate. At this
+    // point, we are in one of two states. Either:
+    //  a) The update that is being swapped in is the update that this
+    //     AppUpdater has already been tracking, or
+    //  b) We've been tracking the ready update. Now that the downloading
+    //     update is about to be swapped into the place of the ready update, we
+    //     need to switch over to tracking the new update.
+    if (
+      this._status == AppUpdater.STATUS.DOWNLOADING ||
+      this._status == AppUpdater.STATUS.STAGING
+    ) {
+      // We are already tracking the correct update.
+      return;
+    }
+
+    if (this.updateStagingEnabled) {
+      this._setStatus(AppUpdater.STATUS.STAGING);
+      this._awaitStagingComplete();
+    } else {
+      this._setStatus(AppUpdater.STATUS.DOWNLOADING);
+      this._awaitDownloadComplete();
+    }
   }
 }
 
