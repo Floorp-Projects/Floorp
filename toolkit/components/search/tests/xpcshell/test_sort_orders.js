@@ -54,7 +54,7 @@ async function checkOrder(type, expectedOrder) {
 }
 
 add_task(async function test_engine_sort_only_builtins() {
-  await checkOrder("getDefaultEngines", EXPECTED_ORDER);
+  await checkOrder("getAppProvidedEngines", EXPECTED_ORDER);
   await checkOrder("getEngines", EXPECTED_ORDER);
 });
 
@@ -72,7 +72,7 @@ add_task(async function test_engine_sort_with_non_builtins_sort() {
   );
 
   // We should still have the same built-in engines listed.
-  await checkOrder("getDefaultEngines", EXPECTED_ORDER);
+  await checkOrder("getAppProvidedEngines", EXPECTED_ORDER);
 
   const expected = [...EXPECTED_ORDER];
   expected.splice(EXPECTED_ORDER.length, 0, "nonbuiltin1");
@@ -90,7 +90,7 @@ add_task(async function test_engine_sort_with_locale() {
     "Test search engine (Reordered)",
   ];
 
-  await checkOrder("getDefaultEngines", expected);
+  await checkOrder("getAppProvidedEngines", expected);
   expected.push("nonbuiltin1");
   await checkOrder("getEngines", expected);
 });

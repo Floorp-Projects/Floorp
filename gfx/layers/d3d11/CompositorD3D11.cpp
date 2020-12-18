@@ -1583,7 +1583,7 @@ bool CompositorD3D11::UpdateRenderTarget() {
   IntRegion validFront;
   validFront.Sub(mBackBufferInvalid, mFrontBufferInvalid);
 
-  if (!validFront.IsEmpty()) {
+  if (mIsDoubleBuffered && !validFront.IsEmpty()) {
     RefPtr<ID3D11Texture2D> frontBuf;
     hr = mSwapChain->GetBuffer(1, __uuidof(ID3D11Texture2D),
                                (void**)frontBuf.StartAssignment());

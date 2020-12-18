@@ -594,7 +594,6 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mInDtor = false;
   mIsVisible = false;
   mIsTopWidgetWindow = false;
-  mUnicodeWidget = true;
   mDisplayPanFeedback = false;
   mTouchWindow = false;
   mFutureMarginsToUse = false;
@@ -807,8 +806,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   nsWidgetInitData defaultInitData;
   if (!aInitData) aInitData = &defaultInitData;
 
-  mUnicodeWidget = aInitData->mUnicode;
-
   nsIWidget* baseParent =
       aInitData->mWindowType == eWindowType_dialog ||
               aInitData->mWindowType == eWindowType_toplevel ||
@@ -1006,13 +1003,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
     // Make FAKETRACKPOINTSCROLLABLE use nsWindow::WindowProc, and store the
     // old window procedure in its "user data".
-    WNDPROC oldWndProc;
-    if (mUnicodeWidget)
-      oldWndProc = (WNDPROC)::SetWindowLongPtrW(scrollableWnd, GWLP_WNDPROC,
-                                                (LONG_PTR)nsWindow::WindowProc);
-    else
-      oldWndProc = (WNDPROC)::SetWindowLongPtrA(scrollableWnd, GWLP_WNDPROC,
-                                                (LONG_PTR)nsWindow::WindowProc);
+    WNDPROC oldWndProc = (WNDPROC)::SetWindowLongPtrW(
+        scrollableWnd, GWLP_WNDPROC, (LONG_PTR)nsWindow::WindowProc);
     ::SetWindowLongPtrW(scrollableWnd, GWLP_USERDATA, (LONG_PTR)oldWndProc);
   }
 
@@ -1314,27 +1306,15 @@ void nsWindow::SubclassWindow(BOOL bState) {
       NS_ERROR("Invalid window handle");
     }
 
-    if (mUnicodeWidget) {
-      mPrevWndProc = reinterpret_cast<WNDPROC>(
-          SetWindowLongPtrW(mWnd, GWLP_WNDPROC,
-                            reinterpret_cast<LONG_PTR>(nsWindow::WindowProc)));
-    } else {
-      mPrevWndProc = reinterpret_cast<WNDPROC>(
-          SetWindowLongPtrA(mWnd, GWLP_WNDPROC,
-                            reinterpret_cast<LONG_PTR>(nsWindow::WindowProc)));
-    }
+    mPrevWndProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
+        mWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(nsWindow::WindowProc)));
     NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
     // connect the this pointer to the nsWindow handle
     WinUtils::SetNSWindowBasePtr(mWnd, this);
   } else {
     if (IsWindow(mWnd)) {
-      if (mUnicodeWidget) {
-        SetWindowLongPtrW(mWnd, GWLP_WNDPROC,
-                          reinterpret_cast<LONG_PTR>(mPrevWndProc));
-      } else {
-        SetWindowLongPtrA(mWnd, GWLP_WNDPROC,
-                          reinterpret_cast<LONG_PTR>(mPrevWndProc));
-      }
+      SetWindowLongPtrW(mWnd, GWLP_WNDPROC,
+                        reinterpret_cast<LONG_PTR>(mPrevWndProc));
     }
     WinUtils::SetNSWindowBasePtr(mWnd, nullptr);
     mPrevWndProc = nullptr;

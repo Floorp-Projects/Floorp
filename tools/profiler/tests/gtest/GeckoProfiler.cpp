@@ -1491,10 +1491,9 @@ TEST(GeckoProfiler, Markers)
             EXPECT_EQ_JSON(data[0u]["format"], String, "string");
 
           } else if (nameString == "BHR-detected hang") {
-            EXPECT_EQ(display.size(), 3u);
+            EXPECT_EQ(display.size(), 2u);
             EXPECT_EQ(display[0u].asString(), "marker-chart");
             EXPECT_EQ(display[1u].asString(), "marker-table");
-            EXPECT_EQ(display[2u].asString(), "timeline-overview");
 
             ASSERT_EQ(data.size(), 0u);
 

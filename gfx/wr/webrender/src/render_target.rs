@@ -4,13 +4,12 @@
 
 
 use api::units::*;
-use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle, ImageBufferKind};
+use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, resolve_image};
 use crate::batch::{ClipBatcher, BatchBuilder};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX};
 use crate::clip::ClipStore;
 use crate::composite::CompositeState;
-use crate::device::Texture;
 use crate::frame_builder::{FrameGlobalResources};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
@@ -24,9 +23,9 @@ use crate::render_task::{RenderTaskKind, RenderTaskAddress, BlitSource};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
-use crate::guillotine_allocator::{GuillotineAllocator, FreeRectSlice};
+use crate::guillotine_allocator::{GuillotineAllocator};
 use crate::visibility::PrimitiveVisibilityMask;
-use std::{cmp, mem};
+use std::{mem};
 
 
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
@@ -37,9 +36,6 @@ const STYLE_MASK: i32 = 0x00FF_FF00;
 /// we try to avoid it. This can go away when proper tiling support lands,
 /// since we can then split large primitives across multiple textures.
 const IDEAL_MAX_TEXTURE_DIMENSION: i32 = 2048;
-/// If we ever need a larger texture than the ideal, we better round it up to a
-/// reasonable number in order to have a bit of leeway in placing things inside.
-const TEXTURE_DIMENSION_MASK: i32 = 0xFF;
 
 /// A tag used to identify the output format of a `RenderTarget`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -89,6 +85,8 @@ pub struct RenderTargetContext<'a, 'rc> {
 pub trait RenderTarget {
     /// Creates a new RenderTarget of the given type.
     fn new(
+        texture_id: CacheTextureId,
+        target_size: DeviceIntSize,
         screen_size: DeviceIntSize,
         gpu_supports_fast_clears: bool,
     ) -> Self;
@@ -132,6 +130,13 @@ pub trait RenderTarget {
 
     fn used_rect(&self) -> DeviceIntRect;
     fn add_used(&mut self, rect: DeviceIntRect);
+    fn texture_id(&self) -> CacheTextureId;
+    fn save_target(&self) -> bool;
+
+    fn allocate(
+        &mut self,
+        size: DeviceIntSize,
+    ) -> Option<(CacheTextureId, DeviceIntPoint)>;
 }
 
 /// A series of `RenderTarget` instances, serving as the high-level container
@@ -164,17 +169,9 @@ pub trait RenderTarget {
 pub struct RenderTargetList<T> {
     screen_size: DeviceIntSize,
     pub format: ImageFormat,
-    /// The maximum width and height of any single primitive we've encountered
-    /// that will be drawn to a dynamic location.
-    ///
-    /// We initially create our per-slice allocators with a width and height of
-    /// IDEAL_MAX_TEXTURE_DIMENSION. If we encounter a larger primitive, the
-    /// allocation will fail, but we'll bump max_dynamic_size, which will cause the
-    /// allocator for the next slice to be just large enough to accomodate it.
-    pub max_dynamic_size: DeviceIntSize,
     pub targets: Vec<T>,
-    pub alloc_tracker: GuillotineAllocator,
-    pub texture_id: Option<CacheTextureId>,
+    // pub alloc_tracker: GuillotineAllocator,
+    // pub texture_id: Option<CacheTextureId>,
     gpu_supports_fast_clears: bool,
 }
 
@@ -187,10 +184,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         RenderTargetList {
             screen_size,
             format,
-            max_dynamic_size: DeviceIntSize::new(0, 0),
             targets: Vec::new(),
-            alloc_tracker: GuillotineAllocator::new(None),
-            texture_id: None,
             gpu_supports_fast_clears,
         }
     }
@@ -210,12 +204,6 @@ impl<T: RenderTarget> RenderTargetList<T> {
             return;
         }
 
-        // Get a bounding rect of all the layers, and round it up to a multiple
-        // of 256. This improves render target reuse when resizing the window,
-        // since we don't need to create a new render target for each slightly-
-        // larger frame.
-        let mut bounding_rect = DeviceIntRect::zero();
-
         for target in &mut self.targets {
             target.build(
                 ctx,
@@ -227,82 +215,61 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 z_generator,
                 composite_state,
             );
-
-            bounding_rect = target.used_rect().union(&bounding_rect);
         }
-
-        debug_assert_eq!(bounding_rect.origin, DeviceIntPoint::zero());
-        let dimensions = DeviceIntSize::new(
-            (bounding_rect.size.width + 255) & !255,
-            (bounding_rect.size.height + 255) & !255,
-        );
-
-        let texture_id = ctx.resource_cache.get_or_create_render_target_from_pool(
-            dimensions,
-            self.targets.len(),
-            self.format,
-        );
-
-        assert!(self.texture_id.is_none());
-        self.texture_id = Some(texture_id);
     }
 
     pub fn allocate(
         &mut self,
-        alloc_size: DeviceIntSize,
-    ) -> (RenderTargetIndex, DeviceIntPoint) {
-        let (free_rect_slice, origin) = match self.alloc_tracker.allocate(&alloc_size) {
-            Some(allocation) => allocation,
-            None => {
-                // Have the allocator restrict slice sizes to our max ideal
-                // dimensions, unless we've already gone bigger on a previous
-                // slice.
-                let rounded_dimensions = DeviceIntSize::new(
-                    (self.max_dynamic_size.width + TEXTURE_DIMENSION_MASK) & !TEXTURE_DIMENSION_MASK,
-                    (self.max_dynamic_size.height + TEXTURE_DIMENSION_MASK) & !TEXTURE_DIMENSION_MASK,
-                );
-                let allocator_dimensions = DeviceIntSize::new(
-                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, rounded_dimensions.width),
-                    cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, rounded_dimensions.height),
-                );
+        requested_size: DeviceIntSize,
+        resource_cache: &mut ResourceCache,
+    ) -> (usize, CacheTextureId, DeviceIntPoint) {
+        let is_standalone =
+            requested_size.width > IDEAL_MAX_TEXTURE_DIMENSION ||
+            requested_size.height > IDEAL_MAX_TEXTURE_DIMENSION;
 
-                assert!(alloc_size.width <= allocator_dimensions.width &&
-                    alloc_size.height <= allocator_dimensions.height);
-                let slice = FreeRectSlice(self.targets.len() as u32);
-                self.targets.push(T::new(self.screen_size, self.gpu_supports_fast_clears));
-
-                self.alloc_tracker.extend(
-                    slice,
-                    allocator_dimensions,
-                    alloc_size,
-                );
-
-                (slice, DeviceIntPoint::zero())
-            }
+        let target_size = if is_standalone {
+            requested_size
+        } else {
+            DeviceIntSize::new(
+                IDEAL_MAX_TEXTURE_DIMENSION,
+                IDEAL_MAX_TEXTURE_DIMENSION,
+            )
         };
 
-        if alloc_size.is_empty() && self.targets.is_empty() {
-            // push an unused target here, only if we don't have any
-            self.targets.push(T::new(self.screen_size, self.gpu_supports_fast_clears));
+        for (target_index, target) in self.targets.iter_mut().enumerate() {
+            if let Some((texture_id, origin)) = target.allocate(requested_size) {
+                // TODO(gw): Move `add_used` into `allocate` when adding the
+                //           full graph functionality.
+                target.add_used(DeviceIntRect::new(origin, requested_size));
+                return (target_index, texture_id, origin);
+            }
         }
 
-        self.targets[free_rect_slice.0 as usize]
-            .add_used(DeviceIntRect::new(origin, alloc_size));
+        let texture_id = resource_cache.get_or_create_render_target_from_pool(
+            target_size,
+            self.format,
+        );
 
-        (RenderTargetIndex(free_rect_slice.0 as usize), origin)
+        let mut target = T::new(
+            texture_id,
+            target_size,
+            self.screen_size,
+            self.gpu_supports_fast_clears,
+        );
+
+        let (texture_id, origin) = target.allocate(requested_size).expect("bug: unable to alloc");
+
+        target.add_used(DeviceIntRect::new(origin, requested_size));
+
+        let target_index = self.targets.len();
+
+        self.targets.push(target);
+
+        (target_index, texture_id, origin)
     }
 
     pub fn needs_depth(&self) -> bool {
         self.targets.iter().any(|target| target.needs_depth())
-    }
-
-    pub fn check_ready(&self, t: &Texture) {
-        let dimensions = t.get_dimensions();
-        assert!(dimensions.width >= self.max_dynamic_size.width);
-        assert!(dimensions.height >= self.max_dynamic_size.height);
-        assert_eq!(t.get_format(), self.format);
-        assert_eq!(t.get_layer_count() as usize, self.targets.len());
-        assert!(t.supports_depth() >= self.needs_depth());
     }
 }
 
@@ -316,8 +283,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
 pub struct ColorRenderTarget {
     pub alpha_batch_containers: Vec<AlphaBatchContainer>,
     // List of blur operations to apply for this render target.
-    pub vertical_blurs: Vec<BlurInstance>,
-    pub horizontal_blurs: Vec<BlurInstance>,
+    pub vertical_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
+    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub svg_filters: Vec<(BatchTextures, Vec<SvgFilterInstance>)>,
     pub blits: Vec<BlitJob>,
@@ -327,24 +294,43 @@ pub struct ColorRenderTarget {
     // we can set a scissor rect and only clear to the
     // used portion of the target as an optimization.
     pub used_rect: DeviceIntRect,
+    allocator: GuillotineAllocator,
+    pub texture_id: CacheTextureId,
+    save_target: bool,
 }
 
 impl RenderTarget for ColorRenderTarget {
     fn new(
+        texture_id: CacheTextureId,
+        target_size: DeviceIntSize,
         screen_size: DeviceIntSize,
         _: bool,
     ) -> Self {
         ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
-            vertical_blurs: Vec::new(),
-            horizontal_blurs: Vec::new(),
+            vertical_blurs: FastHashMap::default(),
+            horizontal_blurs: FastHashMap::default(),
             scalings: FastHashMap::default(),
             svg_filters: Vec::new(),
             blits: Vec::new(),
             alpha_tasks: Vec::new(),
             screen_size,
             used_rect: DeviceIntRect::zero(),
+            allocator: GuillotineAllocator::new(Some(target_size)),
+            texture_id,
+            save_target: false,
         }
+    }
+
+    fn allocate(
+        &mut self,
+        size: DeviceIntSize,
+    ) -> Option<(CacheTextureId, DeviceIntPoint)> {
+        self.allocator
+            .allocate(&size)
+            .map(|(_, origin)| {
+                (self.texture_id, origin)
+            })
     }
 
     fn build(
@@ -455,6 +441,14 @@ impl RenderTarget for ColorRenderTarget {
         }
     }
 
+    fn texture_id(&self) -> CacheTextureId {
+        self.texture_id
+    }
+
+    fn save_target(&self) -> bool {
+        self.save_target
+    }
+
     fn add_task(
         &mut self,
         task_id: RenderTaskId,
@@ -468,13 +462,16 @@ impl RenderTarget for ColorRenderTarget {
         profile_scope!("add_task");
         let task = &render_tasks[task_id];
 
+        self.save_target |= task.save_target;
+
         match task.kind {
             RenderTaskKind::VerticalBlur(..) => {
                 add_blur_instances(
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
@@ -482,7 +479,8 @@ impl RenderTarget for ColorRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::Picture(..) => {
@@ -591,8 +589,8 @@ impl RenderTarget for ColorRenderTarget {
 pub struct AlphaRenderTarget {
     pub clip_batcher: ClipBatcher,
     // List of blur operations to apply for this render target.
-    pub vertical_blurs: Vec<BlurInstance>,
-    pub horizontal_blurs: Vec<BlurInstance>,
+    pub vertical_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
+    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub zero_clears: Vec<RenderTaskId>,
     pub one_clears: Vec<RenderTaskId>,
@@ -600,22 +598,49 @@ pub struct AlphaRenderTarget {
     // we can set a scissor rect and only clear to the
     // used portion of the target as an optimization.
     pub used_rect: DeviceIntRect,
+    allocator: GuillotineAllocator,
+    pub texture_id: CacheTextureId,
+    save_target: bool,
 }
 
 impl RenderTarget for AlphaRenderTarget {
     fn new(
+        texture_id: CacheTextureId,
+        target_size: DeviceIntSize,
         _: DeviceIntSize,
         gpu_supports_fast_clears: bool,
     ) -> Self {
         AlphaRenderTarget {
             clip_batcher: ClipBatcher::new(gpu_supports_fast_clears),
-            vertical_blurs: Vec::new(),
-            horizontal_blurs: Vec::new(),
+            vertical_blurs: FastHashMap::default(),
+            horizontal_blurs: FastHashMap::default(),
             scalings: FastHashMap::default(),
             zero_clears: Vec::new(),
             one_clears: Vec::new(),
             used_rect: DeviceIntRect::zero(),
+            allocator: GuillotineAllocator::new(Some(target_size)),
+            texture_id,
+            save_target: false,
         }
+    }
+
+    fn allocate(
+        &mut self,
+        size: DeviceIntSize,
+    ) -> Option<(CacheTextureId, DeviceIntPoint)> {
+        self.allocator
+            .allocate(&size)
+            .map(|(_, origin)| {
+                (self.texture_id, origin)
+            })
+    }
+
+    fn texture_id(&self) -> CacheTextureId {
+        self.texture_id
+    }
+
+    fn save_target(&self) -> bool {
+        self.save_target
     }
 
     fn add_task(
@@ -631,6 +656,8 @@ impl RenderTarget for AlphaRenderTarget {
         profile_scope!("add_task");
         let task = &render_tasks[task_id];
         let (target_rect, _) = task.get_target_rect();
+
+        self.save_target |= task.save_target;
 
         match task.kind {
             RenderTaskKind::Readback |
@@ -648,7 +675,8 @@ impl RenderTarget for AlphaRenderTarget {
                     &mut self.vertical_blurs,
                     BlurDirection::Vertical,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::HorizontalBlur(..) => {
@@ -657,7 +685,8 @@ impl RenderTarget for AlphaRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_id.into(),
-                    task.children[0].into(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
@@ -740,7 +769,7 @@ pub struct PictureCacheTarget {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCacheRenderTarget {
     pub target_kind: RenderTargetKind,
-    pub horizontal_blurs: Vec<BlurInstance>,
+    pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
     pub blits: Vec<BlitJob>,
     pub border_segments_complex: Vec<BorderInstance>,
     pub border_segments_solid: Vec<BorderInstance>,
@@ -753,7 +782,7 @@ impl TextureCacheRenderTarget {
     pub fn new(target_kind: RenderTargetKind) -> Self {
         TextureCacheRenderTarget {
             target_kind,
-            horizontal_blurs: vec![],
+            horizontal_blurs: FastHashMap::default(),
             blits: vec![],
             border_segments_complex: vec![],
             border_segments_solid: vec![],
@@ -770,9 +799,6 @@ impl TextureCacheRenderTarget {
     ) {
         profile_scope!("add_task");
         let task_address = task_id.into();
-        let src_task_address = render_tasks[task_id].children.get(0).map(|&src_task_id| {
-            src_task_id.into()
-        });
 
         let task = &mut render_tasks[task_id];
         let target_rect = task.get_target_rect();
@@ -797,7 +823,8 @@ impl TextureCacheRenderTarget {
                     &mut self.horizontal_blurs,
                     BlurDirection::Horizontal,
                     task_address,
-                    src_task_address.unwrap(),
+                    task.children[0],
+                    render_tasks,
                 );
             }
             RenderTaskKind::Blit(ref task_info) => {
@@ -871,18 +898,27 @@ impl TextureCacheRenderTarget {
 }
 
 fn add_blur_instances(
-    instances: &mut Vec<BlurInstance>,
+    instances: &mut FastHashMap<TextureSource, Vec<BlurInstance>>,
     blur_direction: BlurDirection,
     task_address: RenderTaskAddress,
-    src_task_address: RenderTaskAddress,
+    src_task_id: RenderTaskId,
+    render_tasks: &RenderTaskGraph,
 ) {
+    let source = TextureSource::TextureCache(
+        render_tasks[src_task_id].get_target_texture(),
+        Swizzle::default(),
+    );
+
     let instance = BlurInstance {
         task_address,
-        src_task_address,
+        src_task_address: src_task_id.into(),
         blur_direction,
     };
 
-    instances.push(instance);
+    instances
+        .entry(source)
+        .or_insert(Vec::new())
+        .push(instance);
 }
 
 fn add_scaling_instances(
@@ -931,10 +967,10 @@ fn add_scaling_instances(
         }
         None => {
             (
-                match task.target_kind {
-                    RenderTargetKind::Color => TextureSource::PrevPassColor,
-                    RenderTargetKind::Alpha => TextureSource::PrevPassAlpha,
-                },
+                TextureSource::TextureCache(
+                    source_task.unwrap().get_target_texture(),
+                    Swizzle::default(),
+                ),
                 source_task.unwrap().location.to_source_rect(),
             )
         }
@@ -964,29 +1000,19 @@ fn add_svg_filter_instances(
     if let Some(id) = input_1_task {
         let task = &render_tasks[id];
 
-        textures.input.colors[0] = if task.save_target {
-            TextureSource::TextureCache(
-                task.get_target_texture(),
-                ImageBufferKind::Texture2DArray,
-                Swizzle::default(),
-            )
-        } else {
-            TextureSource::PrevPassColor
-        };
+        textures.input.colors[0] = TextureSource::TextureCache(
+            task.get_target_texture(),
+            Swizzle::default(),
+        );
     }
 
     if let Some(id) = input_2_task {
         let task = &render_tasks[id];
 
-        textures.input.colors[1] = if task.save_target {
-            TextureSource::TextureCache(
-                task.get_target_texture(),
-                ImageBufferKind::Texture2DArray,
-                Swizzle::default(),
-            )
-        } else {
-            TextureSource::PrevPassColor
-        };
+        textures.input.colors[1] = TextureSource::TextureCache(
+            task.get_target_texture(),
+            Swizzle::default(),
+        );
     }
 
     let kind = match filter {

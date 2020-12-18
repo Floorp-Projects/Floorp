@@ -143,10 +143,35 @@ const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
   FullLookAndFeel* lf = new FullLookAndFeel{};
   nsXPLookAndFeel* impl = nsXPLookAndFeel::GetInstance();
 
+  int32_t darkTheme = 0;
+  int32_t accessibilityTheme = 0;
+  impl->NativeGetInt(IntID::SystemUsesDarkTheme, darkTheme);
+  impl->NativeGetInt(IntID::UseAccessibilityTheme, accessibilityTheme);
+
   impl->WithThemeConfiguredForContent([&]() {
     for (auto id : MakeEnumeratedRange(IntID::End)) {
       int32_t theInt;
-      nsresult rv = impl->NativeGetInt(id, theInt);
+      nsresult rv;
+      // We want to take SystemUsesDarkTheme and UseAccessibilityTheme from
+      // the parent process theme rather than the content configured theme.
+      // This ensures that media queries like (prefers-color-scheme: dark) will
+      // match correctly in content processes.
+      //
+      // (When the RemoteLookAndFeel is not in use, the LookAndFeelCache
+      // ensures we get these values from the parent process theme.)
+      switch (id) {
+        case IntID::SystemUsesDarkTheme:
+          theInt = darkTheme;
+          rv = NS_OK;
+          break;
+        case IntID::UseAccessibilityTheme:
+          theInt = accessibilityTheme;
+          rv = NS_OK;
+          break;
+        default:
+          rv = impl->NativeGetInt(id, theInt);
+          break;
+      }
       AddToMap(&lf->ints(), &lf->intMap(),
                NS_SUCCEEDED(rv) ? Some(theInt) : Nothing{});
     }

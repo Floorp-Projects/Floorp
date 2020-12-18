@@ -3354,7 +3354,6 @@ nsresult BrowserChild::CreatePluginWidget(nsIWidget* aParent,
 
   nsWidgetInitData initData;
   initData.mWindowType = eWindowType_plugin_ipc_content;
-  initData.mUnicode = false;
   initData.clipChildren = true;
   initData.clipSiblings = true;
   nsresult rv = pluginWidget->Create(
