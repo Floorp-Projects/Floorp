@@ -226,7 +226,7 @@ void AssertIsOnMainThread() { MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!"); }
 
 typedef nsTArray<NotNull<RefPtr<nsThread>>> nsThreadArray;
 
-static bool sShutdownComplete;
+static Atomic<bool> sShutdownComplete;
 
 //-----------------------------------------------------------------------------
 
