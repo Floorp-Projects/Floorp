@@ -131,25 +131,11 @@ class StructuredSpewer {
     }
   }
 
-  ~StructuredSpewer() { disableSpewing(); }
+  ~StructuredSpewer() { finishSpew(); }
 
   void enableSpewing() { spewingEnabled_ = true; }
 
-  void disableSpewing() {
-    if (!spewingEnabled_) {
-      return;
-    }
-
-    if (json_.isSome()) {
-      json_->endList();
-      output_.flush();
-      output_.finish();
-      json_.reset();
-    }
-
-    spewingEnabled_ = false;
-    outputInitializationAttempted_ = false;
-  }
+  void disableSpewing() { spewingEnabled_ = false; }
 
   // Check if the spewer is enabled for a particular script, used to power
   // script level filtering.
@@ -216,6 +202,18 @@ class StructuredSpewer {
 
   // Start a record
   void startObject(JSContext* cx, const JSScript* script, SpewChannel channel);
+
+  void finishSpew() {
+    if (json_.isSome()) {
+      json_->endList();
+      output_.flush();
+      output_.finish();
+      json_.reset();
+    }
+
+    spewingEnabled_ = false;
+    outputInitializationAttempted_ = false;
+  }
 
   friend class AutoSpewChannel;
   friend class AutoStructuredSpewer;
