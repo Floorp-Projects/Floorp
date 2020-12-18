@@ -913,10 +913,7 @@ const tests = [
   async function(win) {
     info("Open search mode from a tab-to-search result.");
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
-      ],
+      set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
     });
 
     await PlacesUtils.history.clear();
@@ -1243,10 +1240,7 @@ const tests = [
   async function(win) {
     info("Open search mode from a tab-to-search result.");
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update2", true],
-        ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
-      ],
+      set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
     });
 
     await PlacesUtils.history.clear();

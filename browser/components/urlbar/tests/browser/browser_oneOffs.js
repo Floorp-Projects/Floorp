@@ -68,65 +68,6 @@ add_task(async function init() {
 
 // Opens the view without showing the one-offs.  They should be hidden and arrow
 // key selection should work properly.
-//
-// This task can be removed when update2 is enabled by default.
-add_task(async function noOneOffs_legacy() {
-  // Do a search for "@" since we hide the one-offs in that case.
-  let value = "@";
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value,
-    fireInputEvent: true,
-  });
-  await TestUtils.waitForCondition(
-    () => !oneOffSearchButtons._rebuilding,
-    "Waiting for one-offs to finish rebuilding"
-  );
-
-  Assert.equal(
-    UrlbarTestUtils.getOneOffSearchButtonsVisible(window),
-    false,
-    "One-offs should be hidden"
-  );
-  assertState(-1, -1, value);
-
-  // Get the result count.  We don't care what the results are, just what the
-  // count is so that we can key through them all.
-  let resultCount = UrlbarTestUtils.getResultCount(window);
-
-  // Key down through all results.
-  for (let i = 0; i < resultCount; i++) {
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(i, -1);
-  }
-
-  // Key down again.  Nothing should be selected.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  assertState(-1, -1, value);
-
-  // Key down again.  The first result should be selected.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  assertState(0, -1);
-
-  // Key up.  Nothing should be selected.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
-  assertState(-1, -1, value);
-
-  // Key up through all the results.
-  for (let i = resultCount - 1; i >= 0; i--) {
-    EventUtils.synthesizeKey("KEY_ArrowUp");
-    assertState(i, -1);
-  }
-
-  // Key up again.  Nothing should be selected.
-  EventUtils.synthesizeKey("KEY_ArrowUp");
-  assertState(-1, -1, value);
-
-  await hidePopup();
-});
-
-// Opens the view without showing the one-offs.  They should be hidden and arrow
-// key selection should work properly.
 add_task(async function noOneOffs() {
   // Do a search for "@" since we hide the one-offs in that case.
   let value = "@";
@@ -485,6 +426,7 @@ add_task(async function oneOffReturn() {
 
   gBrowser.removeTab(gBrowser.selectedTab);
   await UrlbarTestUtils.formHistory.clear();
+  await hidePopup();
 });
 
 // When all engines and local shortcuts are hidden except for the current
@@ -520,7 +462,7 @@ add_task(async function allOneOffsHiddenExceptCurrentEngine() {
     "The one-off buttons should be hidden"
   );
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  assertState(1, -1);
+  assertState(0, -1);
   await hidePopup();
   await SpecialPowers.popPrefEnv();
 });
@@ -555,46 +497,6 @@ add_task(async function hiddenWhenUsingSearchAlias() {
     "Should be showing the one-off buttons"
   );
   await hidePopup();
-});
-
-// Makes sure local search mode one-offs don't exist without update2.
-//
-// This task can be removed when update2 is enabled by default.
-add_task(async function localOneOffs_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-
-  oneOffSearchButtons.invalidateCache();
-  let rebuildPromise = BrowserTestUtils.waitForEvent(
-    oneOffSearchButtons,
-    "rebuild"
-  );
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "localOneOffsWithoutUpdate2",
-  });
-  await rebuildPromise;
-
-  Assert.equal(oneOffSearchButtons.localButtons.length, 0);
-  Assert.equal(
-    document.getElementById("urlbar-engine-one-off-item-bookmarks"),
-    null,
-    "Bookmarks one-off should not exist"
-  );
-  Assert.equal(
-    document.getElementById("urlbar-engine-one-off-item-tabs"),
-    null,
-    "Tabs one-off should not exist"
-  );
-  Assert.equal(
-    document.getElementById("urlbar-engine-one-off-item-history"),
-    null,
-    "History one-off should not exist"
-  );
-
-  await hidePopup();
-  await SpecialPowers.popPrefEnv();
 });
 
 // Makes sure the local shortcuts exist.

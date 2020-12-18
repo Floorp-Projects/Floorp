@@ -192,29 +192,22 @@ test_newtab({
       gURLBar.focused,
       "We clicked a search topsite the focus should be in location bar"
     );
-    if (!Services.prefs.getBoolPref("browser.urlbar.update2")) {
-      ok(
-        gURLBar.value.includes(searchTopSiteTag),
-        "Should contain the tag of the search topsite clicked"
-      );
-    } else {
-      let engine = await Services.search.getEngineByAlias(searchTopSiteTag);
+    let engine = await Services.search.getEngineByAlias(searchTopSiteTag);
 
-      // We don't use UrlbarTestUtils.assertSearchMode here since the newtab
-      // testing scope doesn't integrate well with UrlbarTestUtils.
-      Assert.deepEqual(
-        gURLBar.searchMode,
-        {
-          engineName: engine.name,
-          entry: "topsites_newtab",
-          isPreview: false,
-        },
-        "The Urlbar is in search mode."
-      );
-      ok(
-        gURLBar.hasAttribute("searchmode"),
-        "The Urlbar has the searchmode attribute."
-      );
-    }
+    // We don't use UrlbarTestUtils.assertSearchMode here since the newtab
+    // testing scope doesn't integrate well with UrlbarTestUtils.
+    Assert.deepEqual(
+      gURLBar.searchMode,
+      {
+        engineName: engine.name,
+        entry: "topsites_newtab",
+        isPreview: false,
+      },
+      "The Urlbar is in search mode."
+    );
+    ok(
+      gURLBar.hasAttribute("searchmode"),
+      "The Urlbar has the searchmode attribute."
+    );
   },
 });

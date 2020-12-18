@@ -58,7 +58,7 @@ add_task(async function switchToTab() {
     value: "% robots",
   });
 
-  let index = UrlbarPrefs.get("update2") ? 0 : 1;
+  let index = 0;
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
   Assert.equal(
     result.type,
