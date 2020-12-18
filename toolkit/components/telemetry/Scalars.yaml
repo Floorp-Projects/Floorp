@@ -1926,16 +1926,16 @@ preferences:
   prefs_file_was_invalid:
     bug_numbers:
       - 1367813
+      - 1682571
     description: >-
       Set to true if a failure occurred reading profile/prefs.js.
-    expires: "62"
+    expires: never
     kind: boolean
     notification_emails:
-      - bsmedberg@mozilla.com
+      - kwright@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
     record_in_processes:
       - main
   read_user_js:
