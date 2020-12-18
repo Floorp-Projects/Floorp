@@ -19,6 +19,10 @@ enum PlacesEventType {
    * data: PlacesFavicon. Fired whenever a favicon changes.
    */
   "favicon-changed",
+  /**
+   * data: PlacesVisitTitle. Fired whenever a page title changes.
+   */
+  "page-title-changed",
 };
 
 [ChromeOnly, Exposed=Window]
@@ -215,4 +219,30 @@ interface PlacesFavicon : PlacesEvent {
    * The URI of the new favicon.
    */
   readonly attribute DOMString faviconUrl;
+};
+
+dictionary PlacesVisitTitleInit {
+  required DOMString url;
+  required ByteString pageGuid;
+  required DOMString title;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesVisitTitle : PlacesEvent {
+  constructor(PlacesVisitTitleInit initDict);
+
+  /**
+   * The URI of the changed page.
+   */
+  readonly attribute DOMString url;
+
+  /**
+   * The unique id associated with the page.
+   */
+  readonly attribute ByteString pageGuid;
+
+  /**
+   * The title of the changed page.
+   */
+  readonly attribute DOMString title;
 };

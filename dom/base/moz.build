@@ -222,6 +222,7 @@ EXPORTS.mozilla.dom += [
     "PlacesFavicon.h",
     "PlacesObservers.h",
     "PlacesVisit.h",
+    "PlacesVisitTitle.h",
     "PlacesWeakCallbackWrapper.h",
     "PopupBlocker.h",
     "Pose.h",
