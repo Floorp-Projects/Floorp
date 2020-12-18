@@ -623,7 +623,11 @@ function runDoorhangerUpdateTest(params, steps) {
   }
 
   return (async function() {
-    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+    if (params.slowStaging) {
+      gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+    } else {
+      gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+    }
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
@@ -640,7 +644,7 @@ function runDoorhangerUpdateTest(params, steps) {
       "?detailsURL=" +
       gDetailsURL +
       queryString +
-      getVersionParams();
+      getVersionParams(params.version);
     setUpdateURL(updateURL);
 
     if (params.checkAttempts) {
@@ -689,13 +693,9 @@ function runAboutDialogUpdateTest(params, steps) {
     const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
     return (async function() {
       let updateDeck = aboutDialog.document.getElementById("updateDeck");
-      // Also continue if the selected panel ID is 'apply' since there are no
-      // other panels after 'apply'.
       await TestUtils.waitForCondition(
         () =>
-          updateDeck.selectedPanel &&
-          (updateDeck.selectedPanel.id == panelId ||
-            updateDeck.selectedPanel.id == "apply"),
+          updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId,
         "Waiting for the expected panel ID: " + panelId,
         undefined,
         200
@@ -832,7 +832,7 @@ function runAboutDialogUpdateTest(params, steps) {
       "?detailsURL=" +
       gDetailsURL +
       queryString +
-      getVersionParams();
+      getVersionParams(params.version);
     if (params.backgroundUpdate) {
       setUpdateURL(updateURL);
       gAUS.checkForBackgroundUpdates();
@@ -904,13 +904,10 @@ function runAboutPrefsUpdateTest(params, steps) {
         [{ panelId }],
         async ({ panelId }) => {
           let updateDeck = content.document.getElementById("updateDeck");
-          // Also continue if the selected panel ID is 'apply' since there are no
-          // other panels after 'apply'.
           await ContentTaskUtils.waitForCondition(
             () =>
               updateDeck.selectedPanel &&
-              (updateDeck.selectedPanel.id == panelId ||
-                updateDeck.selectedPanel.id == "apply"),
+              updateDeck.selectedPanel.id == panelId,
             "Waiting for the expected panel ID: " + panelId,
             undefined,
             200
@@ -1078,7 +1075,7 @@ function runAboutPrefsUpdateTest(params, steps) {
       "?detailsURL=" +
       gDetailsURL +
       queryString +
-      getVersionParams();
+      getVersionParams(params.version);
     if (params.backgroundUpdate) {
       setUpdateURL(updateURL);
       gAUS.checkForBackgroundUpdates();
