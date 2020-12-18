@@ -1691,6 +1691,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   // NeedsArgsObj: custom logic below.
   MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
   MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
+  MUTABLE_FLAG_GETTER_SETTER(needsFinalWarmUpCount, NeedsFinalWarmUpCount)
   MUTABLE_FLAG_GETTER_SETTER(failedBoundsCheck, FailedBoundsCheck)
   MUTABLE_FLAG_GETTER_SETTER(failedShapeGuard, FailedShapeGuard)
   MUTABLE_FLAG_GETTER_SETTER(hadLICMInvalidation, HadLICMInvalidation)
