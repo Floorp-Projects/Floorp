@@ -1509,8 +1509,10 @@ fn expr_run_class(state: &OutputState, expr: &hir::Expr) -> hir::RunClass {
             });
             match fun {
                 hir::FunIdentifier::Identifier(ref sym) => match &state.hir.sym(*sym).decl {
-                    hir::SymDecl::NativeFunction(..) => {
-                        if arg_mask != 0 {
+                    hir::SymDecl::NativeFunction(_, _, ref ret_class) => {
+                        if *ret_class != hir::RunClass::Unknown {
+                            *ret_class
+                        } else if arg_mask != 0 {
                             hir::RunClass::Vector
                         } else {
                             hir::RunClass::Scalar
