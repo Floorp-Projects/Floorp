@@ -2955,8 +2955,6 @@ MIRType MCompare::inputType() {
     case Compare_Int32MaybeCoerceRHS:
       return MIRType::Int32;
     case Compare_Double:
-    case Compare_DoubleMaybeCoerceLHS:
-    case Compare_DoubleMaybeCoerceRHS:
       return MIRType::Double;
     case Compare_Float32:
       return MIRType::Float32;
@@ -3646,8 +3644,6 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
       compareType_ == Compare_Int32MaybeCoerceLHS ||
       compareType_ == Compare_Int32MaybeCoerceRHS ||
       compareType_ == Compare_UInt32 || compareType_ == Compare_Double ||
-      compareType_ == Compare_DoubleMaybeCoerceLHS ||
-      compareType_ == Compare_DoubleMaybeCoerceRHS ||
       compareType_ == Compare_Float32 || compareType_ == Compare_String ||
       compareType_ == Compare_StrictString || compareType_ == Compare_Object ||
       compareType_ == Compare_Symbol);

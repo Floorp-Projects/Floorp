@@ -220,28 +220,12 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
       case MIRType::Double: {
         MToFPInstruction::ConversionKind convert =
             MToFPInstruction::NumbersOnly;
-        if (compare->compareType() == MCompare::Compare_DoubleMaybeCoerceLHS &&
-            i == 0) {
-          convert = MToFPInstruction::NonNullNonStringPrimitives;
-        } else if (compare->compareType() ==
-                       MCompare::Compare_DoubleMaybeCoerceRHS &&
-                   i == 1) {
-          convert = MToFPInstruction::NonNullNonStringPrimitives;
-        }
         replace = MToDouble::New(alloc, in, convert);
         break;
       }
       case MIRType::Float32: {
         MToFPInstruction::ConversionKind convert =
             MToFPInstruction::NumbersOnly;
-        if (compare->compareType() == MCompare::Compare_DoubleMaybeCoerceLHS &&
-            i == 0) {
-          convert = MToFPInstruction::NonNullNonStringPrimitives;
-        } else if (compare->compareType() ==
-                       MCompare::Compare_DoubleMaybeCoerceRHS &&
-                   i == 1) {
-          convert = MToFPInstruction::NonNullNonStringPrimitives;
-        }
         replace = MToFloat32::New(alloc, in, convert);
         break;
       }
