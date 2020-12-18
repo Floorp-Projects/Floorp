@@ -68,7 +68,7 @@ def metric_identifier(category, metric_name):
     """
     The metric's unique identifier, including the category and name
     """
-    return f"{category}.{metric_name}"
+    return f"{category}.{util.camelize(metric_name)}"
 
 
 def type_name(type):
@@ -89,8 +89,6 @@ def output_js(objs, output_fd, options={}):
     :param options: options dictionary.
     """
 
-    # Monkeypatch a util.snake_case function for the templates to use
-    util.snake_case = lambda value: value.replace(".", "_").replace("-", "_")
     # Monkeypatch util.get_jinja2_template to find templates nearby
 
     def get_local_template(template_name, filters=()):
@@ -141,7 +139,7 @@ def write_metrics(objs, output_fd, template_filename):
     metric_type_ids = {}
 
     for category_name, objs in objs.items():
-        category_name = util.snake_case(category_name)
+        category_name = util.camelize(category_name)
         id = category_string_table.stringIndex(category_name)
         categories.append((category_name, id))
 

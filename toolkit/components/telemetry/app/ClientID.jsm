@@ -450,7 +450,7 @@ var ClientIDImpl = {
     this._clientID = id;
 
     if (AppConstants.MOZ_GLEAN) {
-      Glean.fog_validation.legacy_telemetry_client_id.set(this._clientID);
+      Glean.fogValidation.legacyTelemetryClientId.set(this._clientID);
     }
 
     this._clientIDHash = null;
