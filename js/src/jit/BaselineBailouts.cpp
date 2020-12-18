@@ -552,17 +552,6 @@ bool BaselineStackBuilder::initFrame() {
                             : script_->offsetToPC(iter_.pcOffset());
   op_ = JSOp(*pc_);
 
-  // When pgo is enabled, increment the counter of the block in which we
-  // resume, as Ion does not keep track of the code coverage.
-  //
-  // We need to do that when pgo is enabled, as after a specific number of
-  // FirstExecution bailouts, we invalidate and recompile the script with
-  // IonMonkey. Failing to increment the counter of the current basic block
-  // might lead to repeated bailouts and invalidations.
-  if (!JitOptions.disablePgo && script_->hasScriptCounts()) {
-    script_->incHitCount(pc_);
-  }
-
   return true;
 }
 

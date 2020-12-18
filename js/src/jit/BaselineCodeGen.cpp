@@ -213,10 +213,9 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  // When code coverage is only enabled for optimizations, or when a Debugger
-  // set the collectCoverageInfo flag, we have to create the ScriptCounts if
-  // they do not exist.
-  if (!script->hasScriptCounts() && cx->realm()->collectCoverage()) {
+  // When code coverage is enabled, we have to create the ScriptCounts if they
+  // do not exist.
+  if (!script->hasScriptCounts() && cx->realm()->collectCoverageForDebug()) {
     if (!script->initScriptCounts(cx)) {
       return Method_Error;
     }
