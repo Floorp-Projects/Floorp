@@ -6,7 +6,8 @@
 
 #include "frontend/Stencil.h"
 
-#include "mozilla/RefPtr.h"  // RefPtr
+#include "mozilla/RefPtr.h"   // RefPtr
+#include "mozilla/Sprintf.h"  // SprintfLiteral
 
 #include <memory>  // std::uninitialized_fill
 
@@ -347,7 +348,10 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
   for (auto item : CompilationInfo::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
     fun = item.function;
-    if (scriptStencil.sharedData) {
+    auto index = item.functionIndex;
+    if (scriptStencil.hasSharedData) {
+      auto* sharedData = stencil.sharedData.get(index);
+
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
       //
@@ -359,7 +363,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
 
       RootedScript script(
           cx, JSScript::fromStencil(cx, input, stencil, gcOutput, scriptStencil,
-                                    fun));
+                                    sharedData, fun));
       if (!script) {
         return false;
       }
@@ -400,14 +404,15 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  MOZ_ASSERT(scriptStencil.sharedData);
+  auto* sharedData = stencil.sharedData.get(CompilationInfo::TopLevelIndex);
+  MOZ_ASSERT(sharedData);
 
   if (input.lazy) {
     gcOutput.script = JSScript::CastFromLazy(input.lazy);
 
     Rooted<JSScript*> script(cx, gcOutput.script);
     if (!JSScript::fullyInitFromStencil(cx, input, stencil, gcOutput, script,
-                                        scriptStencil, fun)) {
+                                        scriptStencil, sharedData, fun)) {
       return false;
     }
 
@@ -419,8 +424,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  gcOutput.script =
-      JSScript::fromStencil(cx, input, stencil, gcOutput, scriptStencil, fun);
+  gcOutput.script = JSScript::fromStencil(cx, input, stencil, gcOutput,
+                                          scriptStencil, sharedData, fun);
   if (!gcOutput.script) {
     return false;
   }
@@ -570,12 +575,14 @@ static void AssertDelazificationFieldsMatch(CompilationStencil& stencil,
                 acceptableDifferenceForFunction));
 
     // Delazification shouldn't delazify inner scripts.
-    MOZ_ASSERT_IF(item.functionIndex == 0, scriptStencil.sharedData);
-    MOZ_ASSERT_IF(item.functionIndex > 0, !scriptStencil.sharedData);
+    MOZ_ASSERT_IF(item.functionIndex == CompilationInfo::TopLevelIndex,
+                  scriptStencil.hasSharedData);
+    MOZ_ASSERT_IF(item.functionIndex > CompilationInfo::TopLevelIndex,
+                  !scriptStencil.hasSharedData);
 
     // FIXME: If this function is lazily parsed again, nargs isn't set to
     //        correct value (bug 1666978).
-    MOZ_ASSERT_IF(scriptStencil.sharedData,
+    MOZ_ASSERT_IF(scriptStencil.hasSharedData,
                   fun->nargs() == scriptStencil.nargs);
   }
 }
@@ -928,6 +935,102 @@ CompilationState::CompilationState(JSContext* cx,
       allocScope(frontendAllocScope),
       parserAtoms(cx->runtime(), compilationInfo.alloc,
                   compilationInfo.stencil.parserAtomData) {}
+
+bool SharedDataContainer::prepareStorageFor(JSContext* cx,
+                                            size_t nonLazyScriptCount,
+                                            size_t allScriptCount) {
+  if (nonLazyScriptCount <= 1) {
+    MOZ_ASSERT(storage.is<SingleSharedData>());
+    return true;
+  }
+
+  // If the ratio of scripts with bytecode is small, allocating the Vector
+  // storage with the number of all scripts isn't space-efficient.
+  // In that case use HashMap instead.
+  //
+  // In general, we expect either all scripts to contain bytecode (priviledge
+  // and self-hosted), or almost none to (eg standard lazy parsing output).
+  constexpr size_t thresholdRatio = 8;
+  bool useHashMap = nonLazyScriptCount < allScriptCount / thresholdRatio;
+  if (useHashMap) {
+    storage.emplace<SharedDataMap>();
+    if (!storage.as<SharedDataMap>().reserve(nonLazyScriptCount)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  } else {
+    storage.emplace<SharedDataVector>();
+    if (!storage.as<SharedDataVector>().resize(allScriptCount)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+js::SharedImmutableScriptData* SharedDataContainer::get(FunctionIndex index) {
+  struct Matcher {
+    FunctionIndex index;
+
+    js::SharedImmutableScriptData* operator()(SingleSharedData& ptr) {
+      if (index == CompilationInfo::TopLevelIndex) {
+        return ptr;
+      }
+      return nullptr;
+    }
+
+    js::SharedImmutableScriptData* operator()(SharedDataVector& vec) {
+      if (index.index < vec.length()) {
+        return vec[index];
+      }
+      return nullptr;
+    }
+
+    js::SharedImmutableScriptData* operator()(SharedDataMap& map) {
+      auto p = map.lookup(index);
+      if (p) {
+        return p->value();
+      }
+      return nullptr;
+    }
+  };
+
+  Matcher m{index};
+  return storage.match(m);
+}
+
+bool SharedDataContainer::addAndShare(JSContext* cx, FunctionIndex index,
+                                      js::SharedImmutableScriptData* data) {
+  struct Matcher {
+    JSContext* cx;
+    FunctionIndex index;
+    js::SharedImmutableScriptData* data;
+
+    bool operator()(SingleSharedData& ptr) {
+      MOZ_ASSERT(index == CompilationInfo::TopLevelIndex);
+      ptr = data;
+      return SharedImmutableScriptData::shareScriptData(cx, ptr);
+    }
+
+    bool operator()(SharedDataVector& vec) {
+      // Resized by SharedDataContainer::prepareStorageFor.
+      vec[index] = data;
+      return SharedImmutableScriptData::shareScriptData(cx, vec[index]);
+    }
+
+    bool operator()(SharedDataMap& map) {
+      // Reserved by SharedDataContainer::prepareStorageFor.
+      map.putNewInfallible(index, data);
+      auto p = map.lookup(index);
+      MOZ_ASSERT(p);
+      return SharedImmutableScriptData::shareScriptData(cx, p->value());
+    }
+  };
+
+  Matcher m{cx, index, data};
+  return storage.match(m);
+}
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
@@ -1555,12 +1658,7 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   }
   json.endList();
 
-  if (sharedData) {
-    json.formatProperty("sharedData", "u8[%zu]",
-                        sharedData->immutableDataLength());
-  } else {
-    json.nullProperty("sharedData");
-  }
+  json.boolProperty("hasSharedData", hasSharedData);
 
   json.beginObjectProperty("extent");
   json.property("sourceStart", extent.sourceStart);
@@ -1593,6 +1691,52 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
     json.boolProperty("wasFunctionEmitted", wasFunctionEmitted);
     json.boolProperty("allowRelazify", allowRelazify);
   }
+}
+
+void SharedDataContainer::dump() {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  dump(json);
+}
+
+void SharedDataContainer::dump(js::JSONPrinter& json) {
+  json.beginObject();
+  dumpFields(json);
+  json.endObject();
+}
+
+void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
+  struct Matcher {
+    js::JSONPrinter& json;
+
+    void operator()(SingleSharedData& ptr) {
+      json.formatProperty("0", "u8[%zu]", ptr->immutableDataLength());
+    }
+
+    void operator()(SharedDataVector& vec) {
+      char index[16];
+      for (size_t i = 0; i < vec.length(); i++) {
+        SprintfLiteral(index, "%zu", i);
+        if (vec[i]) {
+          json.formatProperty(index, "u8[%zu]", vec[i]->immutableDataLength());
+        } else {
+          json.nullProperty(index);
+        }
+      }
+    }
+
+    void operator()(SharedDataMap& map) {
+      char index[16];
+      for (auto iter = map.iter(); !iter.done(); iter.next()) {
+        SprintfLiteral(index, "%u", iter.get().key().index);
+        json.formatProperty(index, "u8[%zu]",
+                            iter.get().value()->immutableDataLength());
+      }
+    }
+  };
+
+  Matcher m{json};
+  storage.match(m);
 }
 
 void CompilationStencil::dump() {
@@ -1642,6 +1786,10 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
     moduleMetadata->dumpFields(json, this);
     json.endObject();
   }
+
+  json.beginObjectProperty("sharedData");
+  sharedData.dumpFields(json);
+  json.endObject();
 
   json.endObject();
 }

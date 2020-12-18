@@ -1969,6 +1969,13 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
     options.setSourceIsLazy(v.toBoolean());
   }
 
+  if (!JS_GetProperty(cx, opts, "forceFullParse", &v)) {
+    return false;
+  }
+  if (v.isBoolean() && v.toBoolean()) {
+    options.setForceFullParse();
+  }
+
   return true;
 }
 
@@ -5383,6 +5390,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
 #ifdef JS_ENABLE_SMOOSH
   bool smoosh = false;
 #endif
+  bool forceFullParse = false;
 
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
@@ -5407,6 +5415,16 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
       JS_ReportErrorASCII(cx, "option `module` should be a boolean, got %s",
                           typeName);
       return false;
+    }
+
+    RootedValue forceFullParseValue(cx);
+    if (!JS_GetProperty(cx, objOptions, "forceFullParse",
+                        &forceFullParseValue)) {
+      return false;
+    }
+
+    if (forceFullParseValue.isBoolean() && forceFullParseValue.toBoolean()) {
+      forceFullParse = true;
     }
 
 #ifdef JS_ENABLE_SMOOSH
@@ -5492,6 +5510,10 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
       .setFileAndLine("<string>", 1)
       .setIsRunOnce(true)
       .setNoScriptRval(true);
+
+  if (forceFullParse) {
+    options.setForceFullParse();
+  }
 
   if (goal == frontend::ParseGoal::Module) {
     // See frontend::CompileModule.
@@ -8650,6 +8672,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      sourceIsLazy: if present and true, indicates that, after compilation, \n"
 "          script source should not be cached by the JS engine and should be \n"
 "          lazily loaded from the embedding as-needed.\n"
+"      forceFullParse: if present and true, disable syntax-parse.\n"
 "      loadBytecode: if true, and if the source is a CacheEntryObject,\n"
 "         the bytecode would be loaded and decoded from the cache entry instead\n"
 "         of being parsed, then it would be executed as usual.\n"
@@ -8859,12 +8882,17 @@ JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
 "  |specifier| will resolve to |module|.  Returns |module|."),
 
     JS_FN_HELP("dumpStencil", DumpStencil, 1, 0,
-"dumpStencil(code)",
-"  Parses a string and returns string that represents stencil."),
+"dumpStencil(code, [options])",
+"  Parses a string and returns string that represents stencil.\n"
+"  See parse function's help for options"),
 
     JS_FN_HELP("parse", Parse, 1, 0,
-"parse(code)",
-"  Parses a string, potentially throwing."),
+"parse(code, [options])",
+"  Parses a string, potentially throwing. If present, |options| may\n"
+"  have properties saying how the code should be compiled:\n"
+"      module: if present and true, compile the source as module.\n"
+"      forceFullParse: if present and true, disable syntax-parse.\n"
+"      smoosh: if present and true, use SmooshMonkey."),
 
     JS_FN_HELP("syntaxParse", SyntaxParse, 1, 0,
 "syntaxParse(code)",

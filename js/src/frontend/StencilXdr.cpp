@@ -6,6 +6,8 @@
 
 #include "frontend/StencilXdr.h"  // StencilXDR
 
+#include "mozilla/Variant.h"  // mozilla::AsVariant
+
 #include <stddef.h>     // size_t
 #include <stdint.h>     // uint8_t, uint16_t, uint32_t
 #include <type_traits>  // std::has_unique_object_representations
@@ -22,11 +24,11 @@ template <XDRMode mode>
                                           ScriptStencil& stencil) {
   enum class XdrFlags : uint8_t {
     HasMemberInitializers = 0,
-    HasSharedData,
     HasFunctionAtom,
     HasScopeIndex,
     WasFunctionEmitted,
     AllowRelazify,
+    HasSharedData,
   };
 
   struct XdrFields {
@@ -54,10 +56,6 @@ template <XDRMode mode>
 
     xdrFields.numGcThings = stencil.gcThings.size();
 
-    if (stencil.sharedData) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::HasSharedData);
-    }
-
     if (stencil.functionAtom) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasFunctionAtom);
     }
@@ -76,6 +74,9 @@ template <XDRMode mode>
     }
     if (stencil.allowRelazify) {
       xdrFlags |= 1 << uint8_t(XdrFlags::AllowRelazify);
+    }
+    if (stencil.hasSharedData) {
+      xdrFlags |= 1 << uint8_t(XdrFlags::HasSharedData);
     }
   }
 
@@ -136,6 +137,9 @@ template <XDRMode mode>
     if (xdrFlags & (1 << uint8_t(XdrFlags::AllowRelazify))) {
       stencil.allowRelazify = true;
     }
+    if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
+      stencil.hasSharedData = true;
+    }
   }
 
 #ifdef __cpp_lib_has_unique_object_representations
@@ -149,10 +153,6 @@ template <XDRMode mode>
   MOZ_TRY(xdr->codeBytes(
       const_cast<TaggedScriptThingIndex*>(stencil.gcThings.data()),
       sizeof(TaggedScriptThingIndex) * xdrFields.numGcThings));
-
-  if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
-    MOZ_TRY(StencilXDR::SharedData<mode>(xdr, stencil.sharedData));
-  }
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasFunctionAtom))) {
     MOZ_TRY(XDRTaggedParserAtomIndex(xdr, &stencil.functionAtom));
@@ -852,6 +852,116 @@ template XDRResult XDRCompilationInput(XDRState<XDR_DECODE>* xdr,
                                        CompilationInput& input);
 
 template <XDRMode mode>
+XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
+                                 SharedDataContainer& sharedData) {
+  enum class Kind : uint8_t {
+    Single,
+    Vector,
+    Map,
+  };
+
+  uint8_t kind;
+  if (mode == XDR_ENCODE) {
+    if (sharedData.storage.is<SharedDataContainer::SingleSharedData>()) {
+      kind = uint8_t(Kind::Single);
+    } else if (sharedData.storage.is<SharedDataContainer::SharedDataVector>()) {
+      kind = uint8_t(Kind::Vector);
+    } else {
+      MOZ_ASSERT(sharedData.storage.is<SharedDataContainer::SharedDataMap>());
+      kind = uint8_t(Kind::Map);
+    }
+  }
+  MOZ_TRY(xdr->codeUint8(&kind));
+
+  switch (Kind(kind)) {
+    case Kind::Single: {
+      if (mode == XDR_DECODE) {
+        sharedData.storage.emplace<SharedDataContainer::SingleSharedData>();
+      }
+      auto& data =
+          sharedData.storage.as<SharedDataContainer::SingleSharedData>();
+      MOZ_TRY(StencilXDR::SharedData<mode>(xdr, data));
+      break;
+    }
+
+    case Kind::Vector: {
+      if (mode == XDR_DECODE) {
+        sharedData.storage.emplace<SharedDataContainer::SharedDataVector>();
+      }
+      auto& vec =
+          sharedData.storage.as<SharedDataContainer::SharedDataVector>();
+      MOZ_TRY(XDRVector(xdr, vec));
+      for (auto& entry : vec) {
+        // NOTE: There can be nullptr, even if we don't perform syntax parsing,
+        //       because of constant folding.
+        uint8_t exists;
+        if (mode == XDR_ENCODE) {
+          exists = !!entry;
+        }
+
+        MOZ_TRY(xdr->codeUint8(&exists));
+
+        if (exists) {
+          MOZ_TRY(StencilXDR::SharedData<mode>(xdr, entry));
+        }
+      }
+      break;
+    }
+
+    case Kind::Map: {
+      if (mode == XDR_DECODE) {
+        sharedData.storage.emplace<SharedDataContainer::SharedDataMap>();
+      }
+      auto& map = sharedData.storage.as<SharedDataContainer::SharedDataMap>();
+
+      uint32_t count;
+      if (mode == XDR_ENCODE) {
+        count = map.count();
+      }
+      MOZ_TRY(xdr->codeUint32(&count));
+      if (mode == XDR_DECODE) {
+        if (!map.reserve(count)) {
+          js::ReportOutOfMemory(xdr->cx());
+          return xdr->fail(JS::TranscodeResult_Throw);
+        }
+      }
+
+      if (mode == XDR_ENCODE) {
+        for (auto iter = map.iter(); !iter.done(); iter.next()) {
+          uint32_t index = iter.get().key().index;
+          auto& data = iter.get().value();
+          MOZ_TRY(xdr->codeUint32(&index));
+          MOZ_TRY(StencilXDR::SharedData<mode>(xdr, data));
+        }
+      } else {
+        for (uint32_t i = 0; i < count; i++) {
+          FunctionIndex index;
+          MOZ_TRY(xdr->codeUint32(&index.index));
+
+          RefPtr<SharedImmutableScriptData> data;
+          MOZ_TRY(StencilXDR::SharedData<mode>(xdr, data));
+
+          if (!map.putNew(index, data)) {
+            js::ReportOutOfMemory(xdr->cx());
+            return xdr->fail(JS::TranscodeResult_Throw);
+          }
+        }
+      }
+
+      break;
+    }
+  }
+
+  return Ok();
+}
+
+template XDRResult XDRSharedDataContainer(XDRState<XDR_ENCODE>* xdr,
+                                          SharedDataContainer& sharedData);
+
+template XDRResult XDRSharedDataContainer(XDRState<XDR_DECODE>* xdr,
+                                          SharedDataContainer& sharedData);
+
+template <XDRMode mode>
 XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
                                 CompilationStencil& stencil) {
   if (!stencil.asmJS.empty()) {
@@ -877,6 +987,8 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   for (auto& entry : stencil.objLiteralData) {
     MOZ_TRY(StencilXDR::ObjLiteral(xdr, entry));
   }
+
+  MOZ_TRY(XDRSharedDataContainer(xdr, stencil.sharedData));
 
   // Now serialize the vector of ScriptStencils.
 

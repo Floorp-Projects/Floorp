@@ -1927,7 +1927,7 @@ class JSScript : public js::BaseScript {
       js::frontend::CompilationStencil& stencil,
       js::frontend::CompilationGCOutput& gcOutput, js::HandleScript script,
       const js::frontend::ScriptStencil& scriptStencil,
-      js::HandleFunction function);
+      js::SharedImmutableScriptData* sharedData, js::HandleFunction function);
 
   // Allocate a JSScript and initialize it with bytecode. This consumes
   // allocations within the stencil.
@@ -1936,6 +1936,7 @@ class JSScript : public js::BaseScript {
                                js::frontend::CompilationStencil& stencil,
                                js::frontend::CompilationGCOutput& gcOutput,
                                const js::frontend::ScriptStencil& scriptStencil,
+                               js::SharedImmutableScriptData* sharedData,
                                js::HandleFunction function);
 
 #ifdef DEBUG
