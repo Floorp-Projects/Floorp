@@ -105,8 +105,8 @@ add_task(async function() {
       info("done showCallback");
     };
     saveBrowser(browser);
-    await new Promise(async (resolve, reject) => {
-      let dls = await Downloads.getList(Downloads.PUBLIC);
+    let dls = await Downloads.getList(Downloads.PUBLIC);
+    await new Promise((resolve, reject) => {
       dls.addView({
         onDownloadChanged(download) {
           if (download.succeeded) {
