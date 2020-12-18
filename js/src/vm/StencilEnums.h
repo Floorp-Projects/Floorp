@@ -275,6 +275,9 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Set if the script has opted into spew.
   SpewEnabled = 1 << 15,
 
+  // Set if we care about a script's final warmup count.
+  NeedsFinalWarmUpCount = 1 << 16,
+
   //
   // IonMonkey compilation hints.
   //
@@ -283,34 +286,34 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // IonDisabled is equivalent to |jitScript->canIonCompile() == false| but
   // JitScript can be discarded on GC and we don't want this to affect
   // observable behavior (see ArgumentsGetterImpl comment).
-  BaselineDisabled = 1 << 16,
-  IonDisabled = 1 << 17,
+  BaselineDisabled = 1 << 17,
+  IonDisabled = 1 << 18,
 
   // Script has had hoisted bounds checks fail.
-  FailedBoundsCheck = 1 << 18,
+  FailedBoundsCheck = 1 << 19,
 
   // Script has had hoisted shape guard fail.
-  FailedShapeGuard = 1 << 19,
+  FailedShapeGuard = 1 << 20,
 
   // Script has had instruction hoisted by LICM fail.
-  HadLICMInvalidation = 1 << 20,
+  HadLICMInvalidation = 1 << 21,
 
   // An overflow happened where Range Analysis hoped it would not. The next
   // compile should be more conservative.
-  HadEagerTruncationBailout = 1 << 21,
+  HadEagerTruncationBailout = 1 << 22,
 
   // This script should not be inlined into others. This happens after inlining
   // has failed.
-  Uninlineable = 1 << 22,
+  Uninlineable = 1 << 23,
 
   // An idempotent IC has triggered invalidation and should be deoptimized.
-  InvalidatedIdempotentCache = 1 << 23,
+  InvalidatedIdempotentCache = 1 << 24,
 
   // Lexical check did fail and bail out.
-  FailedLexicalCheck = 1 << 24,
+  FailedLexicalCheck = 1 << 25,
 
   // A guard inserted by phi specialization failed.
-  HadSpeculativePhiBailout = 1 << 25,
+  HadSpeculativePhiBailout = 1 << 26,
 };
 
 }  // namespace js

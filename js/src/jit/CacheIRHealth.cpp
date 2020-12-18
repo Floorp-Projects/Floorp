@@ -143,6 +143,7 @@ void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
     return;
   }
 
+  script->setNeedsFinalWarmUpCount();
   spew->property("spewContext", uint8_t(context));
 
   jsbytecode* op = entry->pc(script);
@@ -164,6 +165,7 @@ void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
     return;
   }
 
+  script->setNeedsFinalWarmUpCount();
   spew->property("spewContext", uint8_t(context));
 
   jsbytecode* next = script->code();
