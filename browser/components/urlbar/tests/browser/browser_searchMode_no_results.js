@@ -10,13 +10,6 @@
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.oneOffsRefresh", true],
-    ],
-  });
-
   // In order to open the view without any results, we need to be in search mode
   // with an empty search string so that no heuristic result is shown, and the
   // empty search must yield zero additional results.  We'll enter search mode
