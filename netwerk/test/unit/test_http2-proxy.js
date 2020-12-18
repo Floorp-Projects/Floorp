@@ -291,14 +291,12 @@ class http2ProxyCode {
   }
 }
 
-function proxy_session_counter() {
-  return new Promise(async resolve => {
-    let data = await NodeServer.execute(
-      processId,
-      `http2ProxyCode.proxySessionCount()`
-    );
-    resolve(parseInt(data) - initial_session_count);
-  });
+async function proxy_session_counter() {
+  let data = await NodeServer.execute(
+    processId,
+    `http2ProxyCode.proxySessionCount()`
+  );
+  return parseInt(data) - initial_session_count;
 }
 let processId;
 add_task(async function setup() {
