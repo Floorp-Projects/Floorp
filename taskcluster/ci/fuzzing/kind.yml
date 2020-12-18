@@ -15,11 +15,9 @@ kind-dependencies:
     - build
 
 job-defaults:
-    platform: linux64-shippable/opt
+    platform: linux64/opt
     require-build:
-        linux64-shippable/opt: build-linux64-shippable/opt
-    dependencies:
-        linux64-opt: build-linux64/opt
+        linux64/opt: build-linux64/opt
     worker-type: b-linux
     worker:
         max-run-time: 3600
