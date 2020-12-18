@@ -49,6 +49,13 @@ this.identity = class extends ExtensionAPI {
           // Validate the url and retreive redirect_uri if it was provided.
           let url, redirectURI;
           let baseRedirectURL = this.getRedirectURL();
+
+          // Allow using loopback address for native OAuth flows as some
+          //  providers do not accept the URL provided by getRedirectURL.
+          // For more context, see bug 1635344.
+          let loopbackURL = `http://127.0.0.1/mozoauth2/${computeHash(
+            extension.id
+          )}`;
           try {
             url = new URL(details.url);
           } catch (e) {
@@ -58,7 +65,10 @@ this.identity = class extends ExtensionAPI {
             redirectURI = new URL(
               url.searchParams.get("redirect_uri") || baseRedirectURL
             );
-            if (!redirectURI.href.startsWith(baseRedirectURL)) {
+            if (
+              !redirectURI.href.startsWith(baseRedirectURL) &&
+              !redirectURI.href.startsWith(loopbackURL)
+            ) {
               return Promise.reject({ message: "redirect_uri not allowed" });
             }
           } catch (e) {
