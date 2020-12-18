@@ -16,7 +16,7 @@ You can use either mercurial or git. `Mercurial <https://www.mercurial-scm.org/d
 
 For git, see the `git cinnabar documentation <https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development>`__
 
-The clone can take from 40 minutes to two hours,(depending on your connection) and
+The clone can take from 40 minutes to two hours (depending on your connection) and
 the repository should be less than 5GB (~ 20GB after the build).
 
 If you have any network connection issues and cannot clone with command, try :ref:`Mercurial bundles <Mercurial bundles>`.
@@ -128,6 +128,7 @@ To visualize your patch in the repository, run:
     # Git
     $ git show
 
+:ref:`More information on how to work with stack of patches <Working with stack of patches Quick Reference>`
 
 :ref:`More information <Mercurial Overview>`
 
@@ -246,6 +247,8 @@ command:
    $ git rebase -i
 
 The submission step is the same as for the initial patch.
+
+:ref:`More information on how to work with stack of patches <Working with stack of patches Quick Reference>`
 
 Retrieve new changes from the repository
 ----------------------------------------
