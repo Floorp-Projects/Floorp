@@ -49,6 +49,7 @@ const styleSheetsSpec = generateActorSpec({
         resourceId: Arg(0, "string"),
         text: Arg(1, "string"),
         transition: Arg(2, "boolean"),
+        cause: Arg(3, "nullable:string"),
       },
       response: {},
     },
