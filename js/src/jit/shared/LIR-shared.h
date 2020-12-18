@@ -1779,48 +1779,6 @@ class LCompareBAndBranch
   MCompare* cmpMir() const { return cmpMir_; }
 };
 
-class LCompareBitwise : public LInstructionHelper<1, 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CompareBitwise)
-
-  static const size_t LhsInput = 0;
-  static const size_t RhsInput = BOX_PIECES;
-
-  LCompareBitwise(const LBoxAllocation& lhs, const LBoxAllocation& rhs)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(LhsInput, lhs);
-    setBoxOperand(RhsInput, rhs);
-  }
-
-  MCompare* mir() const { return mir_->toCompare(); }
-};
-
-class LCompareBitwiseAndBranch
-    : public LControlInstructionHelper<2, 2 * BOX_PIECES, 0> {
-  MCompare* cmpMir_;
-
- public:
-  LIR_HEADER(CompareBitwiseAndBranch)
-
-  static const size_t LhsInput = 0;
-  static const size_t RhsInput = BOX_PIECES;
-
-  LCompareBitwiseAndBranch(MCompare* cmpMir, MBasicBlock* ifTrue,
-                           MBasicBlock* ifFalse, const LBoxAllocation& lhs,
-                           const LBoxAllocation& rhs)
-      : LControlInstructionHelper(classOpcode), cmpMir_(cmpMir) {
-    setSuccessor(0, ifTrue);
-    setSuccessor(1, ifFalse);
-    setBoxOperand(LhsInput, lhs);
-    setBoxOperand(RhsInput, rhs);
-  }
-
-  MBasicBlock* ifTrue() const { return getSuccessor(0); }
-  MBasicBlock* ifFalse() const { return getSuccessor(1); }
-  MTest* mir() const { return mir_->toTest(); }
-  MCompare* cmpMir() const { return cmpMir_; }
-};
-
 class LCompareVM : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
  public:
   LIR_HEADER(CompareVM)

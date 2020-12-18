@@ -2944,9 +2944,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     // Wasm Ref/AnyRef/NullRef compared to Ref/AnyRef/NullRef
     Compare_RefOrNull,
 
-    // Compare 2 values bitwise
-    Compare_Bitwise,
-
     // All other possible compares
     Compare_Unknown
   };
@@ -3032,7 +3029,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     if (compareType_ == Compare_Unknown) {
       return AliasSet::Store(AliasSet::Any);
     }
-    MOZ_ASSERT(compareType_ <= Compare_Bitwise);
+    MOZ_ASSERT(compareType_ <= Compare_RefOrNull);
     return AliasSet::None();
   }
 
