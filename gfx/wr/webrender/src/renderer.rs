@@ -3364,7 +3364,8 @@ impl Renderer {
                 (CompositorKind::Draw { .. }, CompositorKind::Native { .. }) => {
                     true
                 }
-                (_, _) => {
+                (current_compositor_kind, active_doc_compositor_kind) => {
+                    dbg!(current_compositor_kind, active_doc_compositor_kind);
                     unreachable!();
                 }
             };
