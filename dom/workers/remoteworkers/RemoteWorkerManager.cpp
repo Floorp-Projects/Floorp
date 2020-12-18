@@ -445,6 +445,26 @@ void RemoteWorkerManager::LaunchInternal(
   MOZ_ASSERT(aTargetActor == mParentActor ||
              mChildActors.Contains(aTargetActor));
 
+  // We need to send permissions to content processes, but not if we're spawning
+  // the worker here in the parent process.
+  if (aTargetActor != mParentActor) {
+    RefPtr<ContentParent> contentParent =
+        BackgroundParent::GetContentParent(aTargetActor->Manager());
+
+    // This won't cause any race conditions because the content process
+    // should wait for the permissions to be received before executing the
+    // Service Worker.
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__, [contentParent = std::move(contentParent),
+                   principalInfo = aData.principalInfo()] {
+          TransmitPermissionsAndBlobURLsForPrincipalInfo(contentParent,
+                                                         principalInfo);
+        });
+
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  }
+
   RemoteWorkerParent* workerActor = static_cast<RemoteWorkerParent*>(
       aTargetActor->Manager()->SendPRemoteWorkerConstructor(aData));
   if (NS_WARN_IF(!workerActor)) {
@@ -572,19 +592,6 @@ RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActorInternal(
             (aActor->OtherPid() == aProcessId || !actor)) {
           ++lock->mCount;
 
-          // This won't cause any race conditions because the content process
-          // should wait for the permissions to be received before executing the
-          // Service Worker.
-          nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-              __func__, [contentParent = std::move(aContentParent),
-                         principalInfo = aData.principalInfo()] {
-                TransmitPermissionsAndBlobURLsForPrincipalInfo(contentParent,
-                                                               principalInfo);
-              });
-
-          MOZ_ALWAYS_SUCCEEDS(
-              SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
-
           actor = aActor;
           return false;
         }
@@ -656,8 +663,6 @@ void RemoteWorkerManager::LaunchNewContentProcess(
                                    const nsCString& remoteType) mutable {
     if (aValue.IsResolve()) {
       LOG(("LaunchNewContentProcess: successfully got child process"));
-      TransmitPermissionsAndBlobURLsForPrincipalInfo(aValue.ResolveValue(),
-                                                     principalInfo);
 
       // The failure callback won't run, and we're on the main thread, so
       // we need to properly release the thread-unsafe RemoteWorkerManager.
@@ -697,8 +702,23 @@ void RemoteWorkerManager::LaunchNewContentProcess(
         auto remoteType =
             workerRemoteType.IsEmpty() ? DEFAULT_REMOTE_TYPE : workerRemoteType;
 
+        // Request a process making sure to specify aPreferUsed=true.  For a
+        // given remoteType there's a pool size limit.  If we pass aPreferUsed
+        // here, then if there's any process in the pool already, we will use
+        // that.  If we pass false (which is the default if omitted), then this
+        // call will spawn a new process if the pool isn't at its limit yet.
+        //
+        // (Our intent is never to grow the pool size here.  Our logic gets here
+        // because our current logic on PBackground is only aware of
+        // RemoteWorkerServiceParent actors that have registered themselves,
+        // which is fundamentally unaware of processes that will match in the
+        // future when they register.  So we absolutely are fine with and want
+        // any existing processes.)
         ContentParent::GetNewOrUsedBrowserProcessAsync(
-            /* aRemoteType = */ remoteType)
+            /* aRemoteType = */ remoteType,
+            /* aGroup */ nullptr,
+            hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
+            /* aPreferUsed */ true)
             ->Then(GetCurrentSerialEventTarget(), __func__,
                    [callback = std::move(callback),
                     remoteType](const CallbackParamType& aValue) mutable {
