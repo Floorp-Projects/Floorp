@@ -576,5 +576,18 @@ bookmarks-toolbar-placeholder =
   .title = Bookmarks Toolbar Items
 bookmarks-toolbar-placeholder-button =
   .label = Bookmarks Toolbar Items
+
+## Library Panel items
+
 library-bookmarks-menu =
   .label = Bookmarks
+library-bookmarks-bookmark-this-page =
+  .label = Bookmark This Page
+library-bookmarks-bookmark-edit =
+  .label = Edit This Bookmark
+
+## More items
+
+more-menu-go-offline =
+  .label = Work Offline
+  .accesskey = k
