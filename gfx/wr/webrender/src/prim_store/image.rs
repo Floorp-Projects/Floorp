@@ -210,17 +210,17 @@ impl ImageData {
                                     kind: RenderTaskCacheKeyKind::Image(image_cache_key),
                                 },
                                 frame_state.gpu_cache,
-                                frame_state.rg_builder,
+                                frame_state.render_tasks,
                                 None,
                                 image_properties.descriptor.is_opaque(),
-                                |rg_builder| {
+                                |render_tasks| {
                                     // Create a task to blit from the texture cache to
                                     // a normal transient render task surface. This will
                                     // copy only the sub-rect, if specified.
                                     // TODO: figure out if/when we can do a blit instead.
                                     let cache_to_target_task_id = RenderTask::new_scaling_with_padding(
                                         BlitSource::Image { key: image_cache_key },
-                                        rg_builder,
+                                        render_tasks,
                                         target_kind,
                                         *size,
                                         padding,
@@ -229,7 +229,7 @@ impl ImageData {
                                     // Create a task to blit the rect from the child render
                                     // task above back into the right spot in the persistent
                                     // render target cache.
-                                    rg_builder.add().init(RenderTask::new_blit(
+                                    render_tasks.add().init(RenderTask::new_blit(
                                         *size,
                                         BlitSource::RenderTask {
                                             task_id: cache_to_target_task_id,
