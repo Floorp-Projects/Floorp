@@ -10,7 +10,6 @@ from six import string_types
 from six.moves.urllib.parse import urlunsplit
 
 from tests.support import defaults
-
 from tests.support.helpers import cleanup_session, deep_update
 from tests.support.inline import build_inline
 from tests.support.http_request import HTTPRequest
