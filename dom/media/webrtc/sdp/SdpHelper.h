@@ -91,9 +91,9 @@ class SdpHelper {
 
   static bool GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam);
 
-  void AddCommonExtmaps(
+  void NegotiateAndAddExtmaps(
       const SdpMediaSection& remoteMsection,
-      const std::vector<SdpExtmapAttributeList::Extmap>& localExtensions,
+      std::vector<SdpExtmapAttributeList::Extmap>& localExtensions,
       SdpMediaSection* localMsection);
 
   bool SdpMatch(const Sdp& sdp1, const Sdp& sdp2);

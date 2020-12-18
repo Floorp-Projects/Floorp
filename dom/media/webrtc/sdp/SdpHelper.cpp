@@ -632,9 +632,9 @@ bool SdpHelper::GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam) {
   return true;
 }
 
-void SdpHelper::AddCommonExtmaps(
+void SdpHelper::NegotiateAndAddExtmaps(
     const SdpMediaSection& remoteMsection,
-    const std::vector<SdpExtmapAttributeList::Extmap>& localExtensions,
+    std::vector<SdpExtmapAttributeList::Extmap>& localExtensions,
     SdpMediaSection* localMsection) {
   if (!remoteMsection.GetAttributeList().HasAttribute(
           SdpAttribute::kExtmapAttribute)) {
@@ -644,28 +644,29 @@ void SdpHelper::AddCommonExtmaps(
   UniquePtr<SdpExtmapAttributeList> localExtmap(new SdpExtmapAttributeList);
   auto& theirExtmap = remoteMsection.GetAttributeList().GetExtmap().mExtmaps;
   for (const auto& theirExt : theirExtmap) {
-    for (const auto& ourExt : localExtensions) {
+    for (auto& ourExt : localExtensions) {
+      if (theirExt.entry == 0) {
+        // 0 is invalid, ignore it
+        continue;
+      }
+
       if (theirExt.extensionname != ourExt.extensionname) {
         continue;
       }
 
-      auto negotiatedExt = theirExt;
-
-      negotiatedExt.direction =
-          reverse(negotiatedExt.direction) & ourExt.direction;
-      if (negotiatedExt.direction ==
-          SdpDirectionAttribute::Direction::kInactive) {
+      ourExt.direction = reverse(theirExt.direction) & ourExt.direction;
+      if (ourExt.direction == SdpDirectionAttribute::Direction::kInactive) {
         continue;
       }
 
       // RFC 5285 says that ids >= 4096 can be used by the offerer to
       // force the answerer to pick, otherwise the value in the offer is
       // used.
-      if (negotiatedExt.entry >= 4096) {
-        negotiatedExt.entry = ourExt.entry;
+      if (theirExt.entry < 4096) {
+        ourExt.entry = theirExt.entry;
       }
 
-      localExtmap->mExtmaps.push_back(negotiatedExt);
+      localExtmap->mExtmaps.push_back(ourExt);
     }
   }
 
