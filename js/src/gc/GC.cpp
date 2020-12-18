@@ -8069,6 +8069,9 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
 #ifdef MOZ_VTUNE
   MOZ_ASSERT(!sourceZone->scriptVTuneIdMap);
 #endif
+#ifdef JS_CACHEIR_SPEW
+  MOZ_ASSERT(!sourceZone->scriptFinalWarmUpCountMap);
+#endif
 
   // The source realm is now completely empty, and is the only realm in its
   // compartment, which is the only compartment in its zone. Delete realm,

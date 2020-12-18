@@ -39,6 +39,7 @@
 #include "frontend/StencilXdr.h"   // frontend::StencilXdr::SharedData
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
+#include "jit/CacheIRHealth.h"
 #include "jit/Invalidation.h"
 #include "jit/Ion.h"
 #include "jit/IonScript.h"
@@ -646,8 +647,17 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
 
   if (warmUpData_.isJitScript()) {
     JSScript* script = this->asJSScript();
+#ifdef JS_CACHEIR_SPEW
+    maybeUpdateWarmUpCount(script);
+#endif
     script->releaseJitScriptOnFinalize(fop);
   }
+
+#ifdef JS_CACHEIR_SPEW
+  if (hasBytecode()) {
+    maybeSpewScriptFinalWarmUpCount(this->asJSScript());
+  }
+#endif
 
   if (data_) {
     // We don't need to triger any barriers here, just free the memory.
@@ -4209,6 +4219,51 @@ JS_FRIEND_API unsigned js::GetScriptLineExtent(JSScript* script) {
 
   return 1 + maxLineNo - script->lineno();
 }
+
+#ifdef JS_CACHEIR_SPEW
+void js::maybeUpdateWarmUpCount(JSScript* script) {
+  if (script->needsFinalWarmUpCount()) {
+    ScriptFinalWarmUpCountMap* map =
+        script->zone()->scriptFinalWarmUpCountMap.get();
+    // If needsFinalWarmUpCount is true, ScriptFinalWarmUpCountMap must have
+    // already been created and thus must be asserted.
+    MOZ_ASSERT(map);
+    ScriptFinalWarmUpCountMap::Ptr p = map->lookup(script);
+    MOZ_ASSERT(p);
+
+    mozilla::Get<0>(p->value()) += script->jitScript()->warmUpCount();
+  }
+}
+
+void js::maybeSpewScriptFinalWarmUpCount(JSScript* script) {
+  if (script->needsFinalWarmUpCount()) {
+    ScriptFinalWarmUpCountMap* map =
+        script->zone()->scriptFinalWarmUpCountMap.get();
+    // If needsFinalWarmUpCount is true, ScriptFinalWarmUpCountMap must have
+    // already been created and thus must be asserted.
+    MOZ_ASSERT(map);
+    ScriptFinalWarmUpCountMap::Ptr p = map->lookup(script);
+    MOZ_ASSERT(p);
+    uint32_t warmUpCount;
+    const char* scriptName;
+    mozilla::Tie(warmUpCount, scriptName) = p->value();
+
+    JSContext* cx = TlsContext.get();
+    cx->spewer().enableSpewing();
+
+    // In the case that we care about a script's final warmup count but the
+    // spewer is not enabled, AutoSpewChannel automatically sets and unsets
+    // the proper channel for the duration of spewing a health report's warm
+    // up count.
+    AutoSpewChannel channel(cx, SpewChannel::RateMyCacheIR, script);
+    jit::CacheIRHealth cih;
+    cih.spewScriptFinalWarmUpCount(cx, scriptName, script, warmUpCount);
+
+    script->zone()->scriptFinalWarmUpCountMap->remove(script);
+    script->setNeedsFinalWarmUpCount(false);
+  }
+}
+#endif
 
 void js::DescribeScriptedCallerForDirectEval(JSContext* cx, HandleScript script,
                                              jsbytecode* pc, const char** file,

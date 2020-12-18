@@ -438,6 +438,10 @@ void Zone::discardJitCode(JSFreeOp* fop,
       }
     }
 
+#ifdef JS_CACHEIR_SPEW
+    maybeUpdateWarmUpCount(script);
+#endif
+
     // Warm-up counter for scripts are reset on GC. After discarding code we
     // need to let it warm back up to get information such as which
     // opcodes are setting array holes or accessing getter properties.
@@ -849,6 +853,19 @@ void Zone::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
     }
   }
 #endif
+
+#ifdef JS_CACHEIR_SPEW
+  if (scriptFinalWarmUpCountMap) {
+    for (ScriptFinalWarmUpCountMap::Enum e(*scriptFinalWarmUpCountMap);
+         !e.empty(); e.popFront()) {
+      BaseScript* script = e.front().key();
+      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
+          script != e.front().key()) {
+        e.rekeyFront(script);
+      }
+    }
+  }
+#endif
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -896,6 +913,18 @@ void Zone::checkScriptMapsAfterMovingGC() {
     }
   }
 #  endif  // MOZ_VTUNE
+
+#  ifdef JS_CACHEIR_SPEW
+  if (scriptFinalWarmUpCountMap) {
+    for (auto r = scriptFinalWarmUpCountMap->all(); !r.empty(); r.popFront()) {
+      BaseScript* script = r.front().key();
+      MOZ_ASSERT(script->zone() == this);
+      CheckGCThingAfterMovingGC(script);
+      auto ptr = scriptFinalWarmUpCountMap->lookup(script);
+      MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+    }
+  }
+#  endif  // JS_CACHEIR_SPEW
 }
 #endif
 
