@@ -8,9 +8,9 @@ platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-grad
 fuzzy(128,69) == border-overlapping-corner.yaml border-overlapping-corner-ref.yaml
 == border-overlapping-edge.yaml border-overlapping-edge-ref.yaml
 == border-invisible.yaml border-invisible-ref.yaml
-platform(linux,mac) == border-suite.yaml border-suite.png
-platform(linux,mac) fuzzy(8,80) == border-suite-2.yaml border-suite-2.png
-platform(linux,mac) == border-suite-3.yaml border-suite-3.png
+platform(linux,mac) fuzzy(3,80) == border-suite.yaml border-suite.png
+platform(linux,mac) fuzzy(8,90) == border-suite-2.yaml border-suite-2.png
+platform(linux,mac) fuzzy(1,10) == border-suite-3.yaml border-suite-3.png
 skip_on(android,device) == border-double-simple.yaml border-double-simple-ref.yaml  # Fails on Pixel2
 == border-double-simple-2.yaml border-double-simple-2-ref.yaml
 skip_on(android,device) fuzzy(64,24) == border-groove-simple.yaml border-groove-simple-ref.yaml  # Fails on Pixel2
@@ -23,7 +23,7 @@ platform(linux,mac) == border-image-round.yaml border-image-round-ref.png
 fuzzy(1,5000) == border-image-fill.yaml border-image-fill-ref.png
 fuzzy(2,25360) == border-image-fill-2.yaml border-image-fill-2-ref.png
 == border-no-bogus-line.yaml border-no-bogus-line-ref.png
-platform(linux,mac) == dotted-corner-small-radius.yaml dotted-corner-small-radius.png
+platform(linux,mac) fuzzy(1,130) == dotted-corner-small-radius.yaml dotted-corner-small-radius.png
 fuzzy-if(platform(swgl),1,20) == overlapping.yaml overlapping.png
 == zero-width.yaml blank.yaml
 platform(linux,mac) == small-dotted-border.yaml small-dotted-border.png
