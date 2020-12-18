@@ -36,13 +36,16 @@ body {
   --popup-button-active: hsla(240,5%,5%,.15);
   --popup-bgcolor: white;
   --popup-button: #edecf0;
-  --selected-fonttype-background: var(--blue-40-a30);
+  --selected-background: var(--blue-40-a30);
   --selected-border: var(--blue-40);
   --popup-line: var(--grey-30);
   --font-value-border: var(--grey-30);
   --font-color: #000000;
   --icon-fill: #3b3b3c;
   --icon-disabled-fill: #8080807F;
+  --link-foreground: var(--blue-60);
+  --link-selected-foreground: #333;
+  --visited-link-foreground: #b5007f;
   /* light colours */
 }
 
@@ -63,6 +66,10 @@ body.dark {
   --popup-bgcolor: #4c4a50;
   --popup-button: #5c5c61;
   --popup-line: #5c5c61;
+  --selected-background: #3E6D9A;
+  --link-foreground: #45a1ff;
+  --visited-link-foreground: rgba(255, 26, 217, 0.3);
+  --link-selected-foreground: #fff;
   --opaque-popup-border: #434146;
   --font-value-border: #656468;
   --font-color: #fff;
@@ -85,11 +92,11 @@ body.loaded {
 }
 
 body.dark *::-moz-selection {
-  background-color: #FFFFFF;
-  color: #0095DD;
+  background-color: var(--selected-background);
 }
-body.dark a::-moz-selection {
-  color: #DD4800;
+
+a::-moz-selection {
+  color: var(--link-selected-foreground);
 }
 
 body.sans-serif,
@@ -187,7 +194,7 @@ body.dark blockquote {
   font-family: Helvetica, Arial, sans-serif;
   text-decoration: none;
   border-bottom: 1px solid;
-  color: #0095dd;
+  color: var(--link-foreground);
 }
 
 .header > h1 {
@@ -548,7 +555,7 @@ button:disabled {
 }
 
 .font-type-buttons > label[checked] {
-  background-color: var(--selected-fonttype-background);
+  background-color: var(--selected-background);
 }
 
 .sans-serif-button {
@@ -674,11 +681,11 @@ button:disabled {
 .moz-reader-content a:link,
 .moz-reader-content a:link:hover,
 .moz-reader-content a:link:active {
-  color: #0095dd;
+  color: var(--link-foreground);
 }
 
 .moz-reader-content a:visited {
-  color: #c2e;
+  color: var(--visited-link-foreground);
 }
 
 .moz-reader-content * {
