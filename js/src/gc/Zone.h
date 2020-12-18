@@ -223,6 +223,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 #ifdef MOZ_VTUNE
   js::UniquePtr<js::ScriptVTuneIdMap> scriptVTuneIdMap;
 #endif
+#ifdef JS_CACHEIR_SPEW
+  js::UniquePtr<js::ScriptFinalWarmUpCountMap> scriptFinalWarmUpCountMap;
+#endif
 
   js::ZoneData<js::StringStats> previousGCStringStats;
   js::ZoneData<js::StringStats> stringStats;
