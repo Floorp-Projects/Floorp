@@ -645,7 +645,6 @@ class UrlbarView {
           setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
         });
       } else if (
-        UrlbarPrefs.get("update2") &&
         firstResult.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW &&
         queryContext.trimmedSearchString != "@"
       ) {
@@ -1273,13 +1272,7 @@ class UrlbarView {
               { engine: result.payload.engine }
             );
           };
-        } else if (!this._shouldLocalizeSearchResultTitle(result)) {
-          // _shouldLocalizeSearchResultTitle is a temporary function that will
-          // be in place only during the update2 transitions. Right now it
-          // returns if the result is a keyword offer result and meets some
-          // other conditions. Post-update2 the conditional above will only
-          // check if the result is a keyword offer. Keyword offer results don't
-          // have action text.
+        } else if (!result.payload.keywordOffer) {
           actionSetter = () => {
             this.document.l10n.setAttributes(
               action,
@@ -1376,28 +1369,6 @@ class UrlbarView {
     } else {
       title.removeAttribute("dir");
     }
-  }
-
-  /**
-   * Returns true if we should localize a result's title. This is a helper
-   * function for the update2 transition period. It can be removed when the
-   * update2 pref is removed. At that point, its callers can instead just check
-   * !!result.payload.keywordOffer.
-   * @param {UrlbarResult} result A search result.
-   * @returns {boolean} True if we should localize a title for search results.
-   */
-  _shouldLocalizeSearchResultTitle(result) {
-    if (
-      result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-      !result.payload.keywordOffer
-    ) {
-      return false;
-    }
-
-    return (
-      UrlbarPrefs.get("update2") ||
-      result.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.HIDE
-    );
   }
 
   _iconForResult(result, iconUrlOverride = null) {
@@ -1772,7 +1743,7 @@ class UrlbarView {
    *   The DOM node for the result's tile.
    */
   _setResultTitle(result, titleNode) {
-    if (this._shouldLocalizeSearchResultTitle(result)) {
+    if (result.payload.keywordOffer) {
       // Keyword offers are the only result that require a localized title.
       // We localize the title instead of using the action text as a title
       // because some keyword offer results use both a title and action text
