@@ -46,10 +46,8 @@ add_task(async function basic() {
         engineName: TEST_ENGINE_NAME,
         alias: TEST_ENGINE_ALIAS,
         query: "",
-        keywordOffer: UrlbarPrefs.get("update2")
-          ? UrlbarUtils.KEYWORD_OFFER.SHOW
-          : UrlbarUtils.KEYWORD_OFFER.HIDE,
-        heuristic: !UrlbarPrefs.get("update2"),
+        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        heuristic: false,
       }),
     ],
   });
@@ -83,10 +81,8 @@ add_task(async function preserveCase() {
         engineName: TEST_ENGINE_NAME,
         alias,
         query: "",
-        keywordOffer: UrlbarPrefs.get("update2")
-          ? UrlbarUtils.KEYWORD_OFFER.SHOW
-          : UrlbarUtils.KEYWORD_OFFER.HIDE,
-        heuristic: !UrlbarPrefs.get("update2"),
+        keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+        heuristic: false,
       }),
     ],
   });

@@ -94,10 +94,7 @@ async function checkForOnboardingResult(engineName) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
-    ],
+    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
   });
 
   let engine = await Services.search.addEngineWithDetails(ENGINE_NAME, {

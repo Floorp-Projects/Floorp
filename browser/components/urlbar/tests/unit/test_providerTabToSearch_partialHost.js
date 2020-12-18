@@ -11,8 +11,6 @@
 
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
-  // Enable tab-to-search.
-  Services.prefs.setBoolPref("browser.urlbar.update2", true);
   // Disable tab-to-search onboarding results.
   Services.prefs.setIntPref(
     "browser.urlbar.tabToSearch.onboard.interactionsLeft",
@@ -28,8 +26,6 @@ add_task(async function setup() {
     Services.prefs.clearUserPref(
       "browser.search.separatePrivateDefault.ui.enabled"
     );
-    Services.prefs.clearUserPref("browser.urlbar.update2");
-    Services.prefs.clearUserPref("browser.urlbar.update2.tabToComplete");
     Services.prefs.clearUserPref(
       "browser.urlbar.tabToSearch.onboard.interactionsLeft"
     );

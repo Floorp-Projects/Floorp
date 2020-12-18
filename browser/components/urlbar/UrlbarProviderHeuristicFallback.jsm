@@ -229,10 +229,6 @@ class ProviderHeuristicFallback extends UrlbarProvider {
   }
 
   _searchModeKeywordResult(queryContext) {
-    if (!UrlbarPrefs.get("update2")) {
-      return null;
-    }
-
     if (!queryContext.tokens.length) {
       return null;
     }

@@ -296,7 +296,7 @@ add_task(async function oncePerSession() {
 
 // The one-off search buttons should not be shown when
 // a search tip is shown even though the search string is empty.
-add_task(async function update2() {
+add_task(async function shortcut_buttons_with_tip() {
   await checkTab(
     window,
     "about:newtab",

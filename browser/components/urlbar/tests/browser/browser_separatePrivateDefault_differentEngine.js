@@ -313,27 +313,6 @@ add_task(async function test_alias_query() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function test_alias_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-  info(
-    "Test that 'Search in a Private Window' doesn't appear if an alias is typed"
-  );
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "alias",
-  });
-  await AssertNoPrivateResult(window);
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "alias something",
-  });
-  await AssertNoPrivateResult(window);
-  await SpecialPowers.popPrefEnv();
-});
-
 add_task(async function test_restrict() {
   info(
     "Test that 'Search in a Private Window' doesn's appear for just the restriction token"

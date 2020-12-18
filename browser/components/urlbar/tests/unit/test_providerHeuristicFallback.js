@@ -29,7 +29,6 @@ add_task(async function setup() {
     Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
     Services.prefs.clearUserPref(PRIVATE_SEARCH_PREF);
     Services.prefs.clearUserPref("keyword.enabled");
-    Services.prefs.clearUserPref("browser.urlbar.update2");
   });
   Services.search.setDefault(engine);
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
@@ -515,44 +514,6 @@ add_task(async function() {
   });
   await Services.search.setDefault(originalTestEngine);
 
-  Services.prefs.setBoolPref("browser.urlbar.update2", false);
-  info(
-    "With update2 disabled, leading restriction tokens are not removed from the search result, apart from the search token."
-  );
-  // Note that we use the alias from AliasEngine in the query. Since we're using
-  // a restriction token, we expect that the default engine be used.
-  for (let token of Object.values(UrlbarTokenizer.RESTRICT)) {
-    for (let spaces of TEST_SPACES) {
-      for (query of [
-        token + spaces + "alias query",
-        "query" + spaces + token,
-      ]) {
-        info(
-          "Testing: " + JSON.stringify({ query, spaces: codePoints(spaces) })
-        );
-        let expectedQuery =
-          token == UrlbarTokenizer.RESTRICT.SEARCH &&
-          query.startsWith(UrlbarTokenizer.RESTRICT.SEARCH)
-            ? query.substring(1).trimStart()
-            : query;
-        context = createContext(query, { isPrivate: false });
-        info(`Searching for "${query}", expecting "${expectedQuery}"`);
-        await check_results({
-          context,
-          matches: [
-            makeSearchResult(context, {
-              engineName: ENGINE_NAME,
-              query: expectedQuery,
-              heuristic: true,
-            }),
-          ],
-        });
-      }
-    }
-  }
-  Services.prefs.clearUserPref("browser.urlbar.update2");
-
-  Services.prefs.setBoolPref("browser.urlbar.update2", true);
   info(
     "Leading search-mode restriction tokens are removed from the search result."
   );
@@ -634,7 +595,6 @@ add_task(async function() {
       });
     }
   }
-  Services.prefs.clearUserPref("browser.urlbar.update2");
 
   await Services.search.removeEngine(engine2);
 });

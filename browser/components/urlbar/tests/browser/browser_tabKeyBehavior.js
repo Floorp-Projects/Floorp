@@ -145,9 +145,6 @@ add_task(async function tabSearchModePreview() {
   info(
     "Tab past a search mode preview keywordoffer after focusing with the keyboard."
   );
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "@",
@@ -177,7 +174,6 @@ add_task(async function tabSearchModePreview() {
     // Verify that blur closes search mode preview.
     await UrlbarTestUtils.assertSearchMode(window, null);
   });
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function tabTabToSearch() {

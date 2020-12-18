@@ -102,10 +102,6 @@ add_task(async function test_search_icon() {
  * Tests the search hand-off on character keydown in "about:privatebrowsing".
  */
 add_task(async function test_search_handoff_on_keydown() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-
   let { win, tab } = await openAboutPrivateBrowsing();
 
   await SpecialPowers.spawn(tab, [], async function() {
@@ -153,55 +149,6 @@ add_task(async function test_search_handoff_on_keydown() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
-});
-
-/**
- * This task can be removed when browser.urlbar.update2 is enabled by default.
- *
- * Tests the search hand-off on character keydown in "about:privatebrowsing".
- */
-add_task(async function test_search_handoff_on_keydown_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-
-  let { win, tab } = await openAboutPrivateBrowsing();
-
-  await SpecialPowers.spawn(tab, [], async function() {
-    let btn = content.document.getElementById("search-handoff-button");
-    btn.click();
-    ok(btn.classList.contains("focused"), "in-content search has focus styles");
-  });
-  ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");
-  await new Promise(r => EventUtils.synthesizeKey("f", {}, win, r));
-  await SpecialPowers.spawn(tab, [], async function() {
-    ok(
-      content.document
-        .getElementById("search-handoff-button")
-        .classList.contains("hidden"),
-      "in-content search is hidden"
-    );
-  });
-  ok(urlBarHasNormalFocus(win), "url bar has normal focused");
-  is(win.gURLBar.value, `${expectedEngineAlias} f`, "url bar has search text");
-  await UrlbarTestUtils.promiseSearchComplete(win);
-  // Close the popup.
-  await UrlbarTestUtils.promisePopupClose(win);
-
-  // Hitting ESC should reshow the in-content search
-  await new Promise(r => EventUtils.synthesizeKey("KEY_Escape", {}, win, r));
-  await SpecialPowers.spawn(tab, [], async function() {
-    ok(
-      !content.document
-        .getElementById("search-handoff-button")
-        .classList.contains("hidden"),
-      "in-content search is not hidden"
-    );
-  });
-
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
 });
 
 /**
@@ -226,10 +173,6 @@ add_task(async function test_search_handoff_on_composition_start() {
  * Tests the search hand-off on paste in "about:privatebrowsing".
  */
 add_task(async function test_search_handoff_on_paste() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-
   let { win, tab } = await openAboutPrivateBrowsing();
 
   await SpecialPowers.spawn(tab, [], async function() {
@@ -260,42 +203,4 @@ add_task(async function test_search_handoff_on_paste() {
   is(win.gURLBar.value, "words", "url bar has search text");
 
   await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
-});
-
-/**
- * This task can be removed when browser.urlbar.update2 is enabled by default.
- *
- * Tests the search hand-off on paste in "about:privatebrowsing".
- */
-add_task(async function test_search_handoff_on_paste_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-
-  let { win, tab } = await openAboutPrivateBrowsing();
-
-  await SpecialPowers.spawn(tab, [], async function() {
-    content.document.getElementById("search-handoff-button").click();
-  });
-  ok(urlBarHasHiddenFocus(win), "url bar has hidden focused");
-  var helper = SpecialPowers.Cc[
-    "@mozilla.org/widget/clipboardhelper;1"
-  ].getService(SpecialPowers.Ci.nsIClipboardHelper);
-  helper.copyString("words");
-  await new Promise(r =>
-    EventUtils.synthesizeKey("v", { accelKey: true }, win, r)
-  );
-
-  await UrlbarTestUtils.promiseSearchComplete(win);
-
-  ok(urlBarHasNormalFocus(win), "url bar has normal focused");
-  is(
-    win.gURLBar.value,
-    `${expectedEngineAlias} words`,
-    "url bar has search text"
-  );
-
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
 });

@@ -353,10 +353,6 @@ pref("browser.urlbar.openintab", false);
 // If true, we show tail suggestions when available.
 pref("browser.urlbar.richSuggestions.tail", true);
 
-// Whether the Urlbar can enter search mode. Also controls the other
-// urlbar.update2 prefs.
-pref("browser.urlbar.update2", true);
-
 // Controls the empty search behavior in Search Mode:
 //  0 - Show nothing
 //  1 - Show search history

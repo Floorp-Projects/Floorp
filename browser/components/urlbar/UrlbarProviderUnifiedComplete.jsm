@@ -65,7 +65,6 @@ class ProviderUnifiedComplete extends UrlbarProvider {
   isActive(queryContext) {
     if (
       !queryContext.trimmedSearchString &&
-      UrlbarPrefs.get("update2") &&
       queryContext.searchMode?.engineName &&
       UrlbarPrefs.get("update2.emptySearchBehavior") < 2
     ) {
@@ -207,28 +206,6 @@ function makeUrlbarResult(tokens, info) {
           );
         }
 
-        let keywordOffer;
-        if (
-          !UrlbarPrefs.get("update2") &&
-          action.params.alias?.startsWith("@") &&
-          !action.params.searchQuery.trim()
-        ) {
-          // This conditional is true only for the heuristic result, when the
-          // search string is "@alias" followed by any number of spaces.  There
-          // are only three other cases where results will have a token alias
-          // and empty search string: When autofilling a token alias, which
-          // UrlbarProviderTokenAliasEngines handles; when the search string is
-          // "@" and we show all token aliases, which
-          // UrlbarProviderTokenAliasEngines also handles; and when a top site
-          // is an alias, which UrlbarProviderTopSites handles.
-          //
-          // When update2 is disabled, we want this result to be a keyword offer
-          // so that the user can pick it and it behaves like an autofilled
-          // @alias result.  The keyword should be hidden.  When update2 is
-          // enabled, we want it not to be an offer so that it causes the input
-          // to enter search mode.
-          keywordOffer = UrlbarUtils.KEYWORD_OFFER.HIDE;
-        }
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
           UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -245,7 +222,6 @@ function makeUrlbarResult(tokens, info) {
               UrlbarUtils.HIGHLIGHT.NONE,
             ],
             icon: info.icon,
-            keywordOffer,
           })
         );
       }

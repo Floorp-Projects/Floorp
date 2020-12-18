@@ -123,17 +123,12 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
       this._autofillData.instance == this.queryInstance
     ) {
       addCallback(this, this._autofillData.result);
-      if (!UrlbarPrefs.get("update2")) {
-        return;
-      }
     }
 
     for (let { engine, tokenAliases } of this._engines) {
       if (
-        (!UrlbarPrefs.get("update2") &&
-          queryContext.trimmedSearchString == "@") ||
-        (tokenAliases[0].startsWith(queryContext.trimmedSearchString) &&
-          engine.name != this._autofillData?.result.payload.engine)
+        tokenAliases[0].startsWith(queryContext.trimmedSearchString) &&
+        engine.name != this._autofillData?.result.payload.engine
       ) {
         let result = new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
@@ -185,7 +180,6 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
           // alias followed by a space.  UrlbarProviderUnifiedComplete will take
           // over at this point.
           if (
-            UrlbarPrefs.get("update2") &&
             lowerCaseSearchString.startsWith(alias) &&
             UrlbarTokenizer.REGEXP_SPACES_START.test(
               lowerCaseSearchString.substring(alias.length)
@@ -208,22 +202,17 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
               keyword: [aliasPreservingUserCase, UrlbarUtils.HIGHLIGHT.TYPED],
               query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
               icon: engine.iconURI?.spec,
-              // With update2 enabled, we only deal with KEYWORD_OFFER.SHOW.
               // See bug 1665066 for work to turn this into a boolean property.
-              keywordOffer: UrlbarPrefs.get("update2")
-                ? UrlbarUtils.KEYWORD_OFFER.SHOW
-                : UrlbarUtils.KEYWORD_OFFER.HIDE,
+              keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
             })
           );
-          if (UrlbarPrefs.get("update2")) {
-            // We set suggestedIndex = 0 instead of the heuristic because we
-            // don't want this result to be automatically selected. That way,
-            // users can press Tab to select the result, building on their
-            // muscle memory from tab-to-search.
-            result.suggestedIndex = 0;
-          } else {
-            result.heuristic = true;
-          }
+
+          // We set suggestedIndex = 0 instead of the heuristic because we
+          // don't want this result to be automatically selected. That way,
+          // users can press Tab to select the result, building on their
+          // muscle memory from tab-to-search.
+          result.suggestedIndex = 0;
+
           result.autofill = {
             value,
             selectionStart: queryContext.searchString.length,

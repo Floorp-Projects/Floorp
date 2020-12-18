@@ -45,16 +45,6 @@ add_task(async function visible() {
   });
 });
 
-// The rows should not be visible when the urlbar's update2 is disabled.
-add_task(async function update2Disabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-  await checkRowVisibility(false);
-  await SpecialPowers.popPrefEnv();
-  await checkRowVisibility(true);
-});
-
 // Toggling the browser.urlbar.shortcuts.* prefs should toggle the corresponding
 // checkboxes in the rows.
 add_task(async function syncFromPrefs() {

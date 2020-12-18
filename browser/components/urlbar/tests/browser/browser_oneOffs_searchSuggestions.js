@@ -139,35 +139,6 @@ add_task(async function test_returnAfterSuggestion() {
 
 // Presses the Return key when a non-default one-off is selected after selecting
 // a search suggestion.
-// Can be removed with the update2 prefs.
-add_task(async function test_returnAfterSuggestion_nonDefault_legacy() {
-  await withSuggestions(async (index, usingFormHistory) => {
-    await selectSecondSuggestion(index, usingFormHistory);
-
-    // Alt+Down twice to select the second one-off.
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    await assertState({
-      inputValue: "foobar",
-      resultIndex: index + 1,
-      oneOffIndex: 1,
-      suggestion: {
-        isFormHistory: usingFormHistory,
-      },
-    });
-
-    let resultsPromise = BrowserTestUtils.browserLoaded(
-      gBrowser.selectedBrowser,
-      false,
-      `http://localhost:20709/?terms=foobar`
-    );
-    EventUtils.synthesizeKey("KEY_Enter");
-    await resultsPromise;
-  });
-});
-
-// Presses the Return key when a non-default one-off is selected after selecting
-// a search suggestion.
 add_task(async function test_returnAfterSuggestion_nonDefault() {
   await withSuggestions(async (index, usingFormHistory) => {
     await selectSecondSuggestion(index, usingFormHistory);
