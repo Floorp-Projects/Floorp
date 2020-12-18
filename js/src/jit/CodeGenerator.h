@@ -333,6 +333,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void maybeEmitGlobalBarrierCheck(const LAllocation* maybeGlobal,
                                    OutOfLineCode* ool);
 
+  void incrementWarmUpCounter(AbsoluteAddress warmUpCount, JSScript* script,
+                              Register tmp);
+
   Vector<CodeOffset, 0, JitAllocPolicy> ionScriptLabels_;
 
   // Used to bake in a pointer into the IonScript's list of nursery objects, for
