@@ -235,8 +235,8 @@ impl EvictionNotice {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct SharedTextures {
-    color8_nearest: AllocatorList<SlabAllocator, TextureParameters>,
-    alpha8_linear: AllocatorList<SlabAllocator, TextureParameters>,
+    color8_nearest: AllocatorList<ShelfAllocator, TextureParameters>,
+    alpha8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     alpha16_linear: AllocatorList<SlabAllocator, TextureParameters>,
     color8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     color8_glyphs: AllocatorList<BucketedShelfAllocator, TextureParameters>,
@@ -249,10 +249,17 @@ impl SharedTextures {
             // Used primarily for cached shadow masks. There can be lots of
             // these on some pages like francine, but most pages don't use it
             // much.
+            // Most content tends to fit into two 512x512 textures. We are
+            // conservatively using 1024x1024 to fit everything in a single
+            // texture and avoid breaking batches, but it's worth checking
+            // whether it would actually lead to a lot of batch breaks in
+            // practice.
             alpha8_linear: AllocatorList::new(
                 1024,
-                SlabAllocatorParameters {
-                    region_size: TEXTURE_REGION_DIMENSIONS,
+                ShelfAllocatorOptions {
+                    num_columns: 1,
+                    alignment: size2(8, 8),
+                    .. ShelfAllocatorOptions::default()
                 },
                 TextureParameters {
                     formats: TextureFormatPair::from(ImageFormat::R8),
@@ -301,10 +308,8 @@ impl SharedTextures {
             // are small. Some other images use it too, but those tend to be
             // larger than 512x512 and thus don't use the shared cache anyway.
             color8_nearest: AllocatorList::new(
-                TEXTURE_REGION_DIMENSIONS,
-                SlabAllocatorParameters {
-                    region_size: TEXTURE_REGION_DIMENSIONS,
-                },
+                512,
+                ShelfAllocatorOptions::default(),
                 TextureParameters {
                     formats: color_formats,
                     filter: TextureFilter::Nearest,
