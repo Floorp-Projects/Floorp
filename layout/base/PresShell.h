@@ -106,6 +106,7 @@ class DocAccessible;
 #endif
 
 namespace dom {
+class BrowserParent;
 class Element;
 class Event;
 class HTMLSlotElement;
@@ -118,6 +119,7 @@ class SourceSurface;
 
 namespace layers {
 class LayerManager;
+struct LayersId;
 }  // namespace layers
 
 namespace layout {
@@ -174,6 +176,13 @@ class PresShell final : public nsStubDocumentObserver,
    */
   static nsIContent* GetCapturingContent() {
     return sCapturingContentInfo.mContent;
+  }
+
+  /**
+   */
+  static dom::BrowserParent* GetCapturingRemoteTarget() {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    return sCapturingContentInfo.mRemoteTarget;
   }
 
   /**
@@ -1640,7 +1649,8 @@ class PresShell final : public nsStubDocumentObserver,
    * but capturing is held more strongly (i.e., calls to SetCapturingContent()
    * won't unlock unless CaptureFlags::PointerLock is set again).
    */
-  static void SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags);
+  static void SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags,
+                                  WidgetEvent* aEvent = nullptr);
 
   /**
    * Alias for SetCapturingContent(nullptr, CaptureFlags::None) for making
@@ -1648,6 +1658,13 @@ class PresShell final : public nsStubDocumentObserver,
    */
   static void ReleaseCapturingContent() {
     PresShell::SetCapturingContent(nullptr, CaptureFlags::None);
+  }
+
+  static void ReleaseCapturingRemoteTarget(dom::BrowserParent* aBrowserParent) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    if (sCapturingContentInfo.mRemoteTarget == aBrowserParent) {
+      sCapturingContentInfo.mRemoteTarget = nullptr;
+    }
   }
 
   // Called at the end of nsLayoutUtils::PaintFrame() if we were painting to
@@ -3121,13 +3138,15 @@ class PresShell final : public nsStubDocumentObserver,
 
   struct CapturingContentInfo final {
     CapturingContentInfo()
-        : mAllowed(false),
+        : mRemoteTarget(nullptr),
+          mAllowed(false),
           mPointerLock(false),
           mRetargetToElement(false),
           mPreventDrag(false) {}
 
     // capture should only be allowed during a mousedown event
     StaticRefPtr<nsIContent> mContent;
+    dom::BrowserParent* mRemoteTarget;
     bool mAllowed;
     bool mPointerLock;
     bool mRetargetToElement;
