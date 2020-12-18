@@ -1928,7 +1928,7 @@ bool InsertIterator::Next() {
     // If we already processed the first node in the mNodes list,
     // check if we can just use the walker to get its next sibling.
     Accessible* nextChild = mWalker.Next();
-    if (nextChild && mProcessedNodes.EnsureInserted(nextChild->GetContent())) {
+    if (nextChild) {
       mChildBefore = mChild;
       mChild = nextChild;
       return true;
