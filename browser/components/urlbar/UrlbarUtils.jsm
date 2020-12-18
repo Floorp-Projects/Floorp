@@ -28,6 +28,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  SearchSuggestionController:
+    "resource://gre/modules/SearchSuggestionController.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
@@ -929,7 +931,13 @@ var UrlbarUtils = {
     // If the user types a search engine alias without a search string,
     // we have an empty search string and we can't bump it.
     // We also don't want to add history in private browsing mode.
-    if (!value || input.isPrivate) {
+    // Finally we don't want to store extremely long strings that would not be
+    // particularly useful to the user.
+    if (
+      !value ||
+      input.isPrivate ||
+      value.length > SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
+    ) {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
