@@ -13,6 +13,7 @@ use crate::internal_types::LayoutPrimitiveInfo;
 use crate::picture::{SubpixelMode, SurfaceInfo};
 use crate::prim_store::{PrimitiveOpacity,  PrimitiveScratchBuffer};
 use crate::prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
+use crate::render_task_graph::RenderTaskGraph;
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ResourceCache};
 use crate::util::{MatrixHelpers};
@@ -385,6 +386,7 @@ impl TextRunPrimitive {
         subpixel_mode: &SubpixelMode,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
+        render_tasks: &mut RenderTaskGraph,
         spatial_tree: &SpatialTree,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
@@ -421,6 +423,7 @@ impl TextRunPrimitive {
             self.used_font.clone(),
             &scratch.glyph_keys[self.glyph_keys_range],
             gpu_cache,
+            render_tasks,
         );
     }
 }

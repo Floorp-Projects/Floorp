@@ -229,6 +229,7 @@ fn prepare_prim_for_render(
             // Restore the dependencies (borrow check dance)
             store.pictures[pic_context_for_children.pic_index.0]
                 .restore_context(
+                    pic_context.surface_index,
                     prim_list,
                     pic_context_for_children,
                     pic_state_for_children,
@@ -274,7 +275,7 @@ fn prepare_prim_for_render(
 
     #[cfg(debug_assertions)]
     {
-        prim_instance.prepared_frame_id = frame_state.rg_builder.frame_id();
+        prim_instance.prepared_frame_id = frame_state.render_tasks.frame_id();
     }
 
     prepare_interned_prim_for_render(
@@ -355,11 +356,11 @@ fn prepare_interned_prim_for_render(
                         kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
                     },
                     frame_state.gpu_cache,
-                    frame_state.rg_builder,
+                    frame_state.render_tasks,
                     None,
                     false,
-                    |rg_builder| {
-                        rg_builder.add().init(RenderTask::new_dynamic(
+                    |render_tasks| {
+                        render_tasks.add().init(RenderTask::new_dynamic(
                             task_size,
                             RenderTaskKind::new_line_decoration(
                                 cache_key.style,
@@ -414,6 +415,7 @@ fn prepare_interned_prim_for_render(
                 &pic_context.subpixel_mode,
                 frame_state.resource_cache,
                 frame_state.gpu_cache,
+                frame_state.render_tasks,
                 frame_context.spatial_tree,
                 scratch,
             );
@@ -490,11 +492,11 @@ fn prepare_interned_prim_for_render(
                 handles.push(frame_state.resource_cache.request_render_task(
                     cache_key,
                     frame_state.gpu_cache,
-                    frame_state.rg_builder,
+                    frame_state.render_tasks,
                     None,
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
-                    |rg_builder| {
-                        rg_builder.add().init(RenderTask::new_dynamic(
+                    |render_tasks| {
+                        render_tasks.add().init(RenderTask::new_dynamic(
                             cache_size,
                             RenderTaskKind::new_border_segment(
                                 build_border_instances(
@@ -818,11 +820,11 @@ fn prepare_interned_prim_for_render(
                                             kind: RenderTaskCacheKeyKind::Gradient(cache_key),
                                         },
                                         frame_state.gpu_cache,
-                                        frame_state.rg_builder,
+                                        frame_state.render_tasks,
                                         None,
                                         is_opaque,
-                                        |rg_builder| {
-                                            rg_builder.add().init(RenderTask::new_dynamic(
+                                        |render_tasks| {
+                                            render_tasks.add().init(RenderTask::new_dynamic(
                                                 task_size,
                                                 RenderTaskKind::new_gradient(
                                                     segment_stops,
@@ -1103,7 +1105,7 @@ fn prepare_interned_prim_for_render(
             let backdrop_surface_index = store.pictures[backdrop_pic_index.0].raster_config.as_ref().unwrap().surface_index;
             if let Some(backdrop_tasks) = frame_state.surfaces[backdrop_surface_index.0].render_tasks {
                 let picture_task_id = frame_state.surfaces[pic_context.surface_index.0].render_tasks.as_ref().unwrap().port;
-                frame_state.rg_builder.add_dependency(picture_task_id, backdrop_tasks.root);
+                frame_state.render_tasks.add_dependency(picture_task_id, backdrop_tasks.root);
             } else {
                 if prim_instance.is_chased() {
                     println!("\tBackdrop primitive culled because backdrop task was not assigned render tasks");
@@ -1499,13 +1501,13 @@ pub fn update_clip_task(
                 frame_state.clip_store,
                 frame_state.gpu_cache,
                 frame_state.resource_cache,
-                frame_state.rg_builder,
+                frame_state.render_tasks,
                 &mut data_stores.clip,
                 device_pixel_scale,
                 frame_context.fb_config,
             ),
         );
-        let clip_task_id = frame_state.rg_builder.add().init(clip_task);
+        let clip_task_id = frame_state.render_tasks.add().init(clip_task);
         if instance.is_chased() {
             println!("\tcreated task {:?} with device rect {:?}",
                 clip_task_id, device_rect);
@@ -1514,7 +1516,7 @@ pub fn update_clip_task(
         let clip_task_index = ClipTaskIndex(scratch.clip_mask_instances.len() as _);
         scratch.clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
         instance.vis.clip_task_index = clip_task_index;
-        frame_state.rg_builder.add_dependency(
+        frame_state.render_tasks.add_dependency(
             frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
             clip_task_id,
         );
@@ -1590,19 +1592,19 @@ pub fn update_brush_segment_clip_task(
             frame_state.clip_store,
             frame_state.gpu_cache,
             frame_state.resource_cache,
-            frame_state.rg_builder,
+            frame_state.render_tasks,
             clip_data_store,
             device_pixel_scale,
             frame_context.fb_config,
         ),
     );
-    let clip_task_id = frame_state.rg_builder.add().init(clip_task);
+    let clip_task_id = frame_state.render_tasks.add().init(clip_task);
     let port = frame_state
         .surfaces[surface_index.0]
         .render_tasks
         .unwrap_or_else(|| panic!("bug: no task for surface {:?}", surface_index))
         .port;
-    frame_state.rg_builder.add_dependency(port, clip_task_id);
+    frame_state.render_tasks.add_dependency(port, clip_task_id);
     ClipMaskKind::Mask(clip_task_id)
 }
 
