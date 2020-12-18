@@ -197,10 +197,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //  1 - Show search history
   //  2 - Show search and browsing history
   ["update2.emptySearchBehavior", 0],
-
-  // Whether the urlbar one-offs act as search filters instead of executing a
-  // search immediately.
-  ["update2.oneOffsRefresh", true],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
