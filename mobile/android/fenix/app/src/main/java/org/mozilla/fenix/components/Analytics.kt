@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.StrictMode
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.GleanCrashReporterService
@@ -117,12 +118,15 @@ class Analytics(
                 // from the app unless the user does so from a UI control.
                 // However, the user may have opt-ed out of mako experiments already, so
                 // we should respect that setting here.
-                val enabled = context.settings().isExperimentationEnabled
+                val enabled = context.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+                    context.settings().isExperimentationEnabled
+                }
                 if (!enabled) {
                     globalUserParticipation = enabled
                 }
-                context.settings().isExperimentationEnabled = globalUserParticipation
-
+            }
+        }.apply {
+            if (FeatureFlags.nimbusExperiments) {
                 // Nimbus should look after downloading experiment definitions from remote settings
                 // on another thread, and making sure we don't hit the server each time we start.
                 updateExperiments()
