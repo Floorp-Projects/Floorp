@@ -1843,6 +1843,7 @@ EnvironmentCache.prototype = {
       "hasARMv6",
       "hasARMv7",
       "hasNEON",
+      "hasUserCET",
     ];
 
     // Enumerate the available CPU extensions.
