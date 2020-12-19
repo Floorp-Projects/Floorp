@@ -3401,7 +3401,6 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
 
   AllocKind dstKind = src->getAllocKind();
   Zone* zone = src->nurseryZone();
-  zone->tenuredStrings++;
 
   // If this string is in the StringToAtomCache, try to deduplicate it by using
   // the atom. Don't do this for dependent strings because they're more
@@ -3449,6 +3448,7 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
     if (auto p = nursery().stringDeDupSet->lookup(src)) {
       // Deduplicate to the looked-up string!
       dst = *p;
+      zone->stringStats.ref().noteDeduplicated(src->length(), src->allocSize());
       StringRelocationOverlay::forwardCell(src, dst);
       gcprobes::PromoteToTenured(src, dst);
       return dst;
@@ -3465,6 +3465,8 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
     dst = allocTenuredString(src, zone, dstKind);
     dst->clearNonDeduplicatable();
   }
+
+  zone->stringStats.ref().noteTenured(src->allocSize());
 
   auto* overlay = StringRelocationOverlay::forwardCell(src, dst);
   MOZ_ASSERT(dst->isDeduplicatable());

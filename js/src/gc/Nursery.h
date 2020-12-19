@@ -50,6 +50,7 @@ class JSDependentString;
 
 namespace js {
 
+struct StringStats;
 class AutoLockGCBgAlloc;
 class ObjectElements;
 class PlainObject;
@@ -478,6 +479,9 @@ class Nursery {
   // Whether we will nursery-allocate BigInts.
   bool canAllocateBigInts_;
 
+  // Report how many strings were deduplicated.
+  bool reportDeduplications_;
+
   // Whether and why a collection of this nursery has been requested. This is
   // mutable as it is set by the store buffer, which otherwise cannot modify
   // anything in the nursery.
@@ -732,6 +736,7 @@ class Nursery {
                      bool wasEmpty, double promotionRate);
 
   void printCollectionProfile(JS::GCReason reason, double promotionRate);
+  void printDeduplicationData(js::StringStats& prev, js::StringStats& curr);
 
   // Profile recording and printing.
   void maybeClearProfileDurations();

@@ -874,6 +874,8 @@ class GCRuntime {
  public:
   gcstats::Statistics& stats() { return stats_.ref(); }
 
+  js::StringStats stringStats;
+
   GCMarker marker;
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
