@@ -60,7 +60,7 @@ class GetEventStateName : public nsAutoCString {
  public:
   explicit GetEventStateName(guint aState,
                              IMContextWrapper::IMContextID aIMContextID =
-                                 IMContextWrapper::IMContextID::eUnknown) {
+                                 IMContextWrapper::IMContextID::Unknown) {
     if (aState & GDK_SHIFT_MASK) {
       AppendModifier("shift");
     }
@@ -86,7 +86,7 @@ class GetEventStateName : public nsAutoCString {
       AppendModifier("mod5");
     }
     switch (aIMContextID) {
-      case IMContextWrapper::IMContextID::eIBus:
+      case IMContextWrapper::IMContextID::IBus:
         static const guint IBUS_HANDLED_MASK = 1 << 24;
         static const guint IBUS_IGNORED_MASK = 1 << 25;
         if (aState & IBUS_HANDLED_MASK) {
@@ -96,7 +96,8 @@ class GetEventStateName : public nsAutoCString {
           AppendModifier("IBUS_IGNORED_MASK");
         }
         break;
-      case IMContextWrapper::IMContextID::eFcitx:
+      case IMContextWrapper::IMContextID::Fcitx:
+      case IMContextWrapper::IMContextID::Fcitx5:
         static const guint FcitxKeyState_HandledMask = 1 << 24;
         static const guint FcitxKeyState_IgnoredMask = 1 << 25;
         if (aState & FcitxKeyState_HandledMask) {
@@ -334,7 +335,7 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
       mCompositionStart(UINT32_MAX),
       mProcessingKeyEvent(nullptr),
       mCompositionState(eCompositionState_NotComposing),
-      mIMContextID(IMContextID::eUnknown),
+      mIMContextID(IMContextID::Unknown),
       mIsIMFocused(false),
       mFallbackToKeyEvent(false),
       mKeyboardEventWasDispatched(false),
@@ -470,7 +471,7 @@ void IMContextWrapper::Init() {
                    this);
   nsDependentCSubstring im = GetIMName();
   if (im.EqualsLiteral("ibus")) {
-    mIMContextID = IMContextID::eIBus;
+    mIMContextID = IMContextID::IBus;
     mIsIMInAsyncKeyHandlingMode = !IsIBusInSyncMode();
     // Although ibus has key snooper mode, it's forcibly disabled on Firefox
     // in default settings by its whitelist since we always send key events
@@ -479,7 +480,7 @@ void IMContextWrapper::Init() {
     // support such rare cases for reducing maintenance cost.
     mIsKeySnooped = false;
   } else if (im.EqualsLiteral("fcitx")) {
-    mIMContextID = IMContextID::eFcitx;
+    mIMContextID = IMContextID::Fcitx;
     mIsIMInAsyncKeyHandlingMode = !IsFcitxInSyncMode();
     // Although Fcitx has key snooper mode similar to ibus, it's also
     // disabled on Firefox in default settings by its whitelist.  The
@@ -487,8 +488,12 @@ void IMContextWrapper::Init() {
     // FCITX_NO_SNOOPER_APPS, but we don't need to support such rare cases
     // for reducing maintenance cost.
     mIsKeySnooped = false;
+  } else if (im.EqualsLiteral("fcitx5")) {
+    mIMContextID = IMContextID::Fcitx5;
+    mIsIMInAsyncKeyHandlingMode = true;  // does not have sync mode.
+    mIsKeySnooped = false;               // never use key snooper.
   } else if (im.EqualsLiteral("uim")) {
-    mIMContextID = IMContextID::eUim;
+    mIMContextID = IMContextID::Uim;
     mIsIMInAsyncKeyHandlingMode = false;
     // We cannot know if uim uses key snooper since it's build option of
     // uim.  Therefore, we need to retrieve the consideration from the
@@ -497,19 +502,19 @@ void IMContextWrapper::Init() {
     mIsKeySnooped =
         Preferences::GetBool("intl.ime.hack.uim.using_key_snooper", true);
   } else if (im.EqualsLiteral("scim")) {
-    mIMContextID = IMContextID::eScim;
+    mIMContextID = IMContextID::Scim;
     mIsIMInAsyncKeyHandlingMode = false;
     mIsKeySnooped = false;
   } else if (im.EqualsLiteral("iiim")) {
-    mIMContextID = IMContextID::eIIIMF;
+    mIMContextID = IMContextID::IIIMF;
     mIsIMInAsyncKeyHandlingMode = false;
     mIsKeySnooped = false;
   } else if (im.EqualsLiteral("wayland")) {
-    mIMContextID = IMContextID::eWayland;
+    mIMContextID = IMContextID::Wayland;
     mIsIMInAsyncKeyHandlingMode = false;
     mIsKeySnooped = true;
   } else {
-    mIMContextID = IMContextID::eUnknown;
+    mIMContextID = IMContextID::Unknown;
     mIsIMInAsyncKeyHandlingMode = false;
     mIsKeySnooped = false;
   }
@@ -709,7 +714,7 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
 }
 
 void IMContextWrapper::PrepareToDestroyContext(GtkIMContext* aContext) {
-  if (mIMContextID == IMContextID::eIIIMF) {
+  if (mIMContextID == IMContextID::IIIMF) {
     // IIIM module registers handlers for the "closed" signal on the
     // display, but the signal handler is not disconnected when the module
     // is unloaded.  To prevent the module from being unloaded, use static
@@ -780,6 +785,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
     return KeyHandlingState::eNotHandled;
   }
 
+  MOZ_LOG(gGtkIMLog, LogLevel::Info, (">>>>>>>>>>>>>>>>"));
   MOZ_LOG(
       gGtkIMLog, LogLevel::Info,
       ("0x%p OnKeyEvent(aCaller=0x%p, "
@@ -797,8 +803,8 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
        "mCompositionState=%s, current context=%p, active context=%p, "
        "mIMContextID=%s, mIsIMInAsyncKeyHandlingMode=%s",
        this, ToChar(mMaybeInDeadKeySequence), GetCompositionStateName(),
-       GetCurrentContext(), GetActiveContext(),
-       GetIMContextIDName(mIMContextID), ToChar(mIsIMInAsyncKeyHandlingMode)));
+       GetCurrentContext(), GetActiveContext(), ToString(mIMContextID).c_str(),
+       ToChar(mIsIMInAsyncKeyHandlingMode)));
 
   if (aCaller != mLastFocusedWindow) {
     MOZ_LOG(gGtkIMLog, LogLevel::Error,
@@ -853,7 +859,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
   // an array or a hashtable.
   if (probablyHandledAsynchronously) {
     switch (mIMContextID) {
-      case IMContextID::eIBus: {
+      case IMContextID::IBus: {
         // See src/ibustypes.h
         static const guint IBUS_IGNORED_MASK = 1 << 25;
         // If IBUS_IGNORED_MASK was set to aEvent->state, the event
@@ -923,7 +929,8 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
         }
         break;
       }
-      case IMContextID::eFcitx: {
+      case IMContextID::Fcitx:
+      case IMContextID::Fcitx5: {
         // See src/lib/fcitx-utils/keysym.h
         static const guint FcitxKeyState_IgnoredMask = 1 << 25;
         // If FcitxKeyState_IgnoredMask was set to aEvent->state,
@@ -1092,6 +1099,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
        ToChar(maybeHandledAsynchronously), mPostingKeyEvents.Length(),
        GetCompositionStateName(), ToChar(mMaybeInDeadKeySequence),
        ToChar(mKeyboardEventWasDispatched), ToChar(mKeyboardEventWasConsumed)));
+  MOZ_LOG(gGtkIMLog, LogLevel::Info, ("<<<<<<<<<<<<<<<<\n\n"));
 
   if (filterThisEvent) {
     return KeyHandlingState::eHandled;
@@ -2020,8 +2028,8 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
   } else {
     MOZ_ASSERT(mIsKeySnooped);
     // Currently, we support key snooper mode of uim and wayland only.
-    MOZ_ASSERT(mIMContextID == IMContextID::eUim ||
-               mIMContextID == IMContextID::eWayland);
+    MOZ_ASSERT(mIMContextID == IMContextID::Uim ||
+               mIMContextID == IMContextID::Wayland);
     // uim sends "preedit_start" signal and "preedit_changed" separately
     // at starting composition, "commit" and "preedit_end" separately at
     // committing composition.
