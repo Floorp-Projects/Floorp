@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
@@ -90,6 +91,9 @@ class PageInfoChild extends JSWindowActorChild {
     docInfo.characterSet = document.characterSet;
     docInfo.lastModified = document.lastModified;
     docInfo.principal = document.nodePrincipal;
+    docInfo.cookieJarSettings = E10SUtils.serializeCookieJarSettings(
+      document.cookieJarSettings
+    );
 
     let documentURIObject = {};
     documentURIObject.spec = document.documentURIObject.spec;
