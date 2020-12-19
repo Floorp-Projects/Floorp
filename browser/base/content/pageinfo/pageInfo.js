@@ -712,6 +712,9 @@ function saveMedia() {
         true,
         Services.io.newURI(item.baseURI)
       );
+      let cookieJarSettings = E10SUtils.deserializeCookieJarSettings(
+        gDocInfo.cookieJarSettings
+      );
       saveURL(
         url,
         null,
@@ -719,7 +722,7 @@ function saveMedia() {
         false,
         false,
         referrerInfo,
-        null,
+        cookieJarSettings,
         null,
         gDocInfo.isContentWindowPrivate,
         gDocInfo.principal
@@ -736,6 +739,9 @@ function saveMedia() {
             true,
             aBaseURI
           );
+          let cookieJarSettings = E10SUtils.deserializeCookieJarSettings(
+            gDocInfo.cookieJarSettings
+          );
           internalSave(
             aURIString,
             null,
@@ -746,6 +752,7 @@ function saveMedia() {
             "SaveImageTitle",
             aChosenData,
             referrerInfo,
+            cookieJarSettings,
             null,
             false,
             null,
