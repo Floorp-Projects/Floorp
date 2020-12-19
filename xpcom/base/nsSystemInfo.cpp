@@ -29,6 +29,7 @@
 #    include <wscapi.h>
 #  endif  // __MINGW32__
 #  include "base/scoped_handle_win.h"
+#  include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #  include "nsAppDirectoryServiceDefs.h"
 #  include "nsDirectoryServiceDefs.h"
 #  include "nsDirectoryServiceUtils.h"
@@ -854,6 +855,13 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
   return NS_OK;
 }
 
+#if defined(XP_WIN) && (_WIN32_WINNT < 0x0A00)
+WINBASEAPI
+BOOL WINAPI IsUserCetAvailableInEnvironment(_In_ DWORD UserCetEnvironment);
+
+#  define USER_CET_ENVIRONMENT_WIN32_PROCESS 0x00000000
+#endif
+
 nsresult nsSystemInfo::Init() {
   // check that it is called from the main thread on all platforms.
   MOZ_ASSERT(NS_IsMainThread());
@@ -950,6 +958,18 @@ nsresult nsSystemInfo::Init() {
     }
   }
 #  endif  // __MINGW32__
+
+  mozilla::DynamicallyLinkedFunctionPtr<decltype(
+      &IsUserCetAvailableInEnvironment)>
+      isUserCetAvailable(L"api-ms-win-core-sysinfo-l1-2-6.dll",
+                         "IsUserCetAvailableInEnvironment");
+  bool hasUserCET = isUserCetAvailable &&
+                    isUserCetAvailable(USER_CET_ENVIRONMENT_WIN32_PROCESS);
+  rv = SetPropertyAsBool(u"hasUserCET"_ns, hasUserCET);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
 #endif
 
 #if defined(XP_MACOSX)
