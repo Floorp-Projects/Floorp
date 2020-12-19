@@ -280,12 +280,12 @@ body.dark blockquote {
     transition-duration: 250ms;
   }
 
-  .toolbar-container.scrolled .toolbar:not(:hover):not(:focus-within) {
+  .toolbar-container.scrolled .toolbar:not(:hover, :focus-within) {
     border-color: transparent;
     box-shadow: 0 2px 8px transparent;
   }
 
-  .toolbar-container.scrolled .toolbar:not(:hover):not(:focus-within) .button {
+  .toolbar-container.scrolled .toolbar:not(:hover, :focus-within) .button {
     opacity: 0.6;
   }
 

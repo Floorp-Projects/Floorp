@@ -99,7 +99,7 @@ select {
   padding: 0;
 }
 
-select:not([size]):not([multiple])[iconic] {
+select:not([size], [multiple])[iconic] {
   padding-inline-start: 28px;
 }
 

@@ -19,7 +19,7 @@ button:not([disabled="true"]):hover:active {
 
 /* When the window isn't focused, the default button background isn't drawn,
  * so don't change the text color then: */
-button[default="true"]:not([disabled="true"]):not(:-moz-window-inactive) {
+button[default="true"]:not([disabled="true"], :-moz-window-inactive) {
   color: -moz-mac-defaultbuttontext;
 }
 

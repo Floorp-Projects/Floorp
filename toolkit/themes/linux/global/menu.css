@@ -68,7 +68,7 @@ menubar:-moz-lwtheme > menu:not([open="true"]) {
   text-shadow: inherit;
 }
 
-menubar > menu[_moz-menuactive="true"]:not([open]):not([disabled="true"]):not(:-moz-lwtheme) {
+menubar > menu[_moz-menuactive="true"]:not([open], [disabled="true"], :-moz-lwtheme) {
   color: -moz-menubartext;
 }
 

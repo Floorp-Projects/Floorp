@@ -69,8 +69,8 @@
   transition: all 0.1s ease-out;
 }
 
-.pie-chart-slice:not(:hover):not([focused]),
-.pie-chart-slice:not(:hover):not([focused]) + .pie-chart-label {
+.pie-chart-slice:not(:hover, [focused]),
+.pie-chart-slice:not(:hover, [focused]) + .pie-chart-label {
   transform: none !important;
 }
 

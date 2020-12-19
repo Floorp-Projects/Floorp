@@ -189,7 +189,7 @@ toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover 
 
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active),
 .findbar-button:not([disabled=true]):is([checked="true"],:hover:active),
-toolbarbutton.bookmark-item:not(.subviewbutton):hover:active:not([disabled="true"]),
+toolbarbutton.bookmark-item:hover:active:not(.subviewbutton, [disabled="true"]),
 toolbarbutton.bookmark-item[open="true"],
 toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-icon,
 toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-text,

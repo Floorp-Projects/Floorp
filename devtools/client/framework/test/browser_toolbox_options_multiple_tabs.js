@@ -24,7 +24,7 @@ async function openToolboxOptionsInNewTab() {
   const doc = toolbox.doc;
   const panel = await toolbox.selectTool("options");
   const { id } = panel.panelDoc.querySelector(
-    "#default-tools-box input[type=checkbox]:not([data-unsupported]):not([checked])"
+    "#default-tools-box input[type=checkbox]:not([data-unsupported], [checked])"
   );
 
   return {

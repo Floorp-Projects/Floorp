@@ -24,7 +24,7 @@
 :root[platform="mac"] .webconsole-app .reverse-search {
   border-end-start-radius: 5px;
 }
-:root[platform="mac"] .webconsole-app:not(.jsterm-editor):not(.sidebar-visible) .reverse-search
+:root[platform="mac"] .webconsole-app:not(.jsterm-editor, .sidebar-visible) .reverse-search
 {
   border-end-end-radius: 5px;
 }
