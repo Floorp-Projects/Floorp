@@ -20,12 +20,12 @@
 }
 
 .command-bar-button:not(.disabled):hover,
-.devtools-button.debugger-settings-menu-button:empty:not(:disabled):not([aria-expanded="true"]):hover {
+.devtools-button.debugger-settings-menu-button:empty:not(:disabled, [aria-expanded="true"]):hover {
   background: var(--theme-toolbar-background-hover);
 }
 
 .theme-dark .command-bar-button:not(.disabled):hover,
-.devtools-button.debugger-settings-menu-button:empty:not(:disabled):not([aria-expanded="true"]):hover {
+.devtools-button.debugger-settings-menu-button:empty:not(:disabled, [aria-expanded="true"]):hover {
   background: var(--theme-toolbar-hover);
 }
 

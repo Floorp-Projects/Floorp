@@ -47,7 +47,7 @@ toolbarbutton[disabled="true"] {
   color: GrayText;
 }
 
-toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
+toolbarbutton:-moz-lwtheme:not(:hover, [checked="true"], [open="true"], [disabled="true"]) {
   text-shadow: inherit;
 }
 

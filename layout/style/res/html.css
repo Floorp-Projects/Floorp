@@ -335,7 +335,7 @@ table:-moz-table-border-nonzero > th
 }
 
 /* collapse only if rules are really specified */
-table[rules]:not([rules="none"]):not([rules=""]) {
+table[rules]:not([rules="none"], [rules=""]) {
   border-collapse: collapse;
 }
 

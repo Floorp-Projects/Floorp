@@ -43,7 +43,7 @@
   background-color: var(--status-code-color-5xx);
 }
 
-.status-code:not([data-code^="3"]):not(.status-code-blocked) {
+.status-code:not([data-code^="3"], .status-code-blocked) {
   color: var(--theme-body-background);
 }
 

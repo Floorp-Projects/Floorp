@@ -157,7 +157,7 @@ body {
   --jsterm-border-width: 1px;
 }
 
-.webconsole-app:not(.jsterm-editor):not(.eager-evaluation) .jsterm-input-container {
+.webconsole-app:not(.jsterm-editor, .eager-evaluation) .jsterm-input-container {
   /* The input should be full-height when eager evaluation is disabled. */
   flex-grow: 1;
   --jsterm-padding-top: var(--console-input-extra-padding);

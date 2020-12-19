@@ -206,7 +206,7 @@
 }
 
 /* Center first level indent within the left gutter */
-.message:not(.startGroup):not(.startGroupCollapsed) > .indent[data-indent="1"] {
+.message:not(.startGroup, .startGroupCollapsed) > .indent[data-indent="1"] {
   margin-inline-start: calc(1px + var(--console-icon-horizontal-offset));
   margin-inline-end: calc(11px - var(--console-icon-horizontal-offset));
 }

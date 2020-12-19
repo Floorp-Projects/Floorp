@@ -558,7 +558,7 @@
 /*
  * Dim requests served from cache
  */
-.request-list-item:not(.selected):not(:hover).fromCache {
+.request-list-item:not(.selected, :hover).fromCache {
   --table-icon-opacity: 0.7;
   color: var(--theme-text-color-alt);
 }

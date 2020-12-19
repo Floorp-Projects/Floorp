@@ -56,8 +56,8 @@ label.findbar-find-fast:-moz-lwtheme {
   border-color: var(--lwt-toolbar-field-border-color, @findUiDefaultBorderColor@);
 }
 
-.findbar-find-next:not(:-moz-lwtheme):not([disabled]):hover:active,
-.findbar-find-previous:not(:-moz-lwtheme):not([disabled]):hover:active,
+.findbar-find-next:not(:-moz-lwtheme, [disabled]):hover:active,
+.findbar-find-previous:not(:-moz-lwtheme, [disabled]):hover:active,
 .findbar-button:not([disabled]):hover:active,
 .findbar-button:not([disabled])[checked="true"] {
   background-image: linear-gradient(#dadada, #dadada);
