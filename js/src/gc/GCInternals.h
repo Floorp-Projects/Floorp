@@ -274,17 +274,6 @@ struct SweepingTracer final : public GenericTracer {
   T* onEdge(T* thingp);
 };
 
-// Structure for counting how many times objects in a particular group have
-// been tenured during a minor collection.
-struct TenureCount {
-  ObjectGroup* group;
-  unsigned count;
-
-  // ObjectGroups are never nursery-allocated, and TenureCounts are only used
-  // in minor GC (not compacting GC), so prevent the analysis from
-  // complaining about TenureCounts being held live across a minor GC.
-} JS_HAZ_NON_GC_POINTER;
-
 extern void DelayCrossCompartmentGrayMarking(JSObject* src);
 
 inline bool IsOOMReason(JS::GCReason reason) {
