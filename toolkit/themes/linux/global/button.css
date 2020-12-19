@@ -36,7 +36,7 @@ button:hover:not(:active,[disabled="true"],[open="true"],[checked="true"],[defau
 
 /* .......... active state .......... */
 
-button:is(:hover:active,[open="true"]):not([default="true"]):not([disabled="true"]) {
+button:is(:hover:active, [open="true"]):not([default="true"], [disabled="true"]) {
   color: -moz-gtk-buttonactivetext;
 }
 

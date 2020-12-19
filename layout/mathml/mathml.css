@@ -143,7 +143,7 @@ mtd {
 /* Don't support m(labeled)tr without mtable, nor mtd without m(labeled)tr */
 :not(mtable) > mtr,
 :not(mtable) > mlabeledtr,
-:not(mtr):not(mlabeledtr) > mtd {
+:not(mtr, mlabeledtr) > mtd {
   display: none !important;
 }
 

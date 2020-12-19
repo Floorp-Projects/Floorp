@@ -94,7 +94,7 @@
 }
 
 /* Invert text selection color in selected rows */
-.treeTable .treeRow.selected :not(input):not(textarea)::selection {
+.treeTable .treeRow.selected :not(input, textarea)::selection {
   color: var(--theme-selection-background);
   background-color: var(--theme-selection-color);
 }

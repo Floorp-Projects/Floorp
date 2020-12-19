@@ -79,7 +79,7 @@ select.playback-rate-selector.devtools-button {
   text-align: center;
 }
 
-select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.checked):hover {
+select.playback-rate-selector.devtools-button:not(:empty, :disabled, .checked):hover {
   background: none;
   background-color: var(--toolbarbutton-background);
   background-image: url("chrome://devtools/skin/images/dropmarker.svg");

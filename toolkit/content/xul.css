@@ -180,7 +180,7 @@ groupbox {
 
 %ifndef MOZ_WIDGET_GTK
 titlebar,
-toolbar:not([nowindowdrag="true"]):not([customizing="true"]) {
+toolbar:not([nowindowdrag="true"], [customizing="true"]) {
   -moz-window-dragging: drag;
 }
 %endif

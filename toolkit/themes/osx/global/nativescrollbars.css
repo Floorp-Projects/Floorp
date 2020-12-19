@@ -17,7 +17,7 @@ scrollbar[root="true"] {
   z-index: 2147483647; /* largest positive value of a signed 32-bit integer */
 }
 
-html|select[size]:not([size="0"]):not([size="1"]),
+html|select[size]:not([size="0"], [size="1"]),
 html|select[multiple] {
   scrollbar-width: thin;
 }

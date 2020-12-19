@@ -206,7 +206,7 @@
 /* Custom configurable/enumerable/writable or frozen/sealed/extensible
  * variables and properties */
 
-.variable-or-property[non-enumerable]:not([self]):not([pseudo-item]) > .title > .name {
+.variable-or-property[non-enumerable]:not([self], [pseudo-item]) > .title > .name {
   opacity: 0.6;
 }
 

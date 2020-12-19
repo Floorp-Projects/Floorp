@@ -356,7 +356,7 @@
   transform: none !important;
 }
 
-xul|*:fullscreen:not(:root):not([hidden="true"]) {
+xul|*:fullscreen:not(:root, [hidden="true"]) {
   /* The position: fixed; property above used to force the computed display
    * value to block. It is no longer the case now, so we manually set it here to
    * maintain the old behaviour. We should probably not do this, but we don't
@@ -366,7 +366,7 @@ xul|*:fullscreen:not(:root):not([hidden="true"]) {
 
 /* Selectors here should match the check in
  * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
-*|*:fullscreen:not(:root):not(:-moz-browser-frame) {
+*|*:fullscreen:not(:root, :-moz-browser-frame) {
   -moz-top-layer: top !important;
 }
 

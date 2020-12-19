@@ -381,20 +381,20 @@ body {
   border: 0;
 }
 
-.treeTable:not(:focus):not(:focus-within) .treeRow.selected {
+.treeTable:not(:focus, :focus-within) .treeRow.selected {
   background-color: var(--accessibility-unfocused-tree-focused-node-background);
 }
 
-.treeTable:not(:focus):not(:focus-within) .treeRow.selected .theme-twisty {
+.treeTable:not(:focus, :focus-within) .treeRow.selected .theme-twisty {
   fill: var(--accessibility-unfocused-tree-focused-node-twisty-fill);
 }
 
-.treeTable:not(:focus):not(:focus-within) .treeRow.selected *,
-.treeTable:not(:focus):not(:focus-within) .treeRow.selected .treeLabelCell:after {
+.treeTable:not(:focus, :focus-within) .treeRow.selected *,
+.treeTable:not(:focus, :focus-within) .treeRow.selected .treeLabelCell:after {
   color: inherit;
 }
 
-.treeTable:not(:focus):not(:focus-within) .treeRow.selected .objectBox-string {
+.treeTable:not(:focus, :focus-within) .treeRow.selected .objectBox-string {
   color: var(--string-color);
 }
 
@@ -501,7 +501,7 @@ body {
   color: var(--theme-selection-color);
 }
 
-.treeTable:not(:focus):not(:focus-within) .treeRow.selected .badges .badge {
+.treeTable:not(:focus, :focus-within) .treeRow.selected .badges .badge {
   color: var(--badge-color);
 }
 
@@ -807,7 +807,7 @@ body {
   margin-inline-start: 1px;
 }
 
-.accessibility-color-contrast .accessibility-contrast-value:not(:first-child):not(:empty):before {
+.accessibility-color-contrast .accessibility-contrast-value:not(:first-child, :empty):before {
   margin-inline-start: 4px;
 }
 
@@ -833,7 +833,7 @@ body {
 }
 
 .devtools-toolbar .toolbar-menu-button.active,
-.devtools-toolbar .toolbar-menu-button.active.devtools-button:not(:empty):not(.checked):not(:disabled):focus {
+.devtools-toolbar .toolbar-menu-button.active.devtools-button:not(:empty, .checked, :disabled):focus {
   color: var(--theme-toolbar-selected-color);
 }
 

@@ -391,7 +391,7 @@ function makeRuleset(coeffs, biases) {
       rule(
         DEVELOPMENT
           ? dom(
-              "input[type=password]:not([disabled]):not([aria-hidden=true]"
+              "input[type=password]:not([disabled], [aria-hidden=true])"
             ).when(isVisible)
           : element("input"),
         type("new").note(clearCache)

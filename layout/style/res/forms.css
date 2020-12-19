@@ -495,7 +495,7 @@ input:is([type="radio"], [type="checkbox"]):is(:disabled, :disabled:active, :dis
   cursor: unset;
 }
 
-input:not([type="file"]):not([type="image"]):-moz-focusring,
+input:not([type="file"], [type="image"]):-moz-focusring,
 select:-moz-focusring,
 button:-moz-focusring,
 textarea:-moz-focusring {

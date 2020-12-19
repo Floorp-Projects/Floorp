@@ -8,7 +8,7 @@
   animation-name: alert-animation;
 }
 
-#alertBox[animate]:not([clicked]):not([closing]):hover {
+#alertBox[animate]:not([clicked], [closing]):hover {
   animation-play-state: paused;
 }
 
