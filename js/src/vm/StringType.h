@@ -433,6 +433,8 @@ class JSString : public js::gc::CellWithLengthAndFlags {
     return flags() >> INDEX_VALUE_SHIFT;
   }
 
+  inline size_t allocSize() const;
+
   /* Fallible conversions to more-derived string types. */
 
   inline JSLinearString* ensureLinear(JSContext* cx);
@@ -1944,6 +1946,19 @@ inline js::PropertyName* JSAtom::asPropertyName() {
   MOZ_ASSERT(!isIndex(&dummy));
 #endif
   return static_cast<js::PropertyName*>(this);
+}
+
+inline size_t JSLinearString::allocSize() const {
+  MOZ_ASSERT(ownsMallocedChars());
+
+  size_t charSize =
+      hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
+  size_t count = isExtensible() ? asExtensible().capacity() : length();
+  return count * charSize;
+}
+
+inline size_t JSString::allocSize() const {
+  return ownsMallocedChars() ? asLinear().allocSize() : 0;
 }
 
 namespace js {

@@ -218,6 +218,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       enableProfiling_(false),
       canAllocateStrings_(true),
       canAllocateBigInts_(true),
+      reportDeduplications_(false),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       smoothedGrowthFactor(1.0),
       decommitTask(gc)
@@ -246,6 +247,17 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
     }
     enableProfiling_ = true;
     profileThreshold_ = TimeDuration::FromMicroseconds(atoi(env));
+  }
+
+  if (char* env = getenv("JS_GC_REPORT_STATS")) {
+    if (0 == strcmp(env, "help")) {
+      fprintf(stderr,
+              "JS_GC_REPORT_STATS=1\n"
+              "\tAfter a minor GC, report how many strings were "
+              "deduplicated.\n");
+      exit(0);
+    }
+    reportDeduplications_ = !!atoi(env);
   }
 
   if (!gc->storeBuffer().enable()) {
@@ -794,6 +806,8 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   json.property("cells_tenured", previousGC.tenuredCells);
   json.property("strings_tenured",
                 stats().getStat(gcstats::STAT_STRINGS_TENURED));
+  json.property("strings_deduplicated",
+                stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED));
   json.property("bigints_tenured",
                 stats().getStat(gcstats::STAT_BIGINTS_TENURED));
   json.property("bytes_used", previousGC.nurseryUsedBytes);
@@ -849,7 +863,8 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
 
 // static
 void js::Nursery::printProfileHeader() {
-  fprintf(stderr, "MinorGC: Timestamp  Reason               PRate  Size ");
+  fprintf(stderr,
+          "MinorGC: Timestamp  Reason               PRate  Size  Dedup");
 #define PRINT_HEADER(name, text) fprintf(stderr, " %6s", text);
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
 #undef PRINT_HEADER
@@ -867,8 +882,8 @@ void js::Nursery::printProfileDurations(const ProfileDurations& times) {
 void js::Nursery::printTotalProfileTimes() {
   if (enableProfiling_) {
     fprintf(stderr,
-            "MinorGC TOTALS: %7" PRIu64 " collections:                 ",
-            gc->minorGCCount());
+            "MinorGC TOTALS: %7" PRIu64 " collections:       %16" PRIu64,
+            gc->stringStats.deduplicatedStrings, gc->minorGCCount());
     printProfileDurations(totalDurations_);
   }
 }
@@ -971,11 +986,6 @@ void js::Nursery::collect(JSGCInvocationKind kind, JS::GCReason reason) {
   maybeClearProfileDurations();
   startProfile(ProfileKey::Total);
 
-  // The analysis marks TenureCount as not problematic for GC hazards because
-  // it is only used here, and ObjectGroup pointers are never
-  // nursery-allocated.
-  MOZ_ASSERT(!IsNurseryAllocable(AllocKind::OBJECT_GROUP));
-
   previousGC.reason = JS::GCReason::NO_REASON;
   previousGC.nurseryUsedBytes = usedSpace();
   previousGC.nurseryCapacity = capacity();
@@ -1038,8 +1048,22 @@ void js::Nursery::collect(JSGCInvocationKind kind, JS::GCReason reason) {
 
   timeInChunkAlloc_ = mozilla::TimeDuration();
 
+  js::StringStats prevStats = gc->stringStats;
+  js::StringStats& currStats = gc->stringStats;
+  currStats = js::StringStats();
+  for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
+    currStats += zone->stringStats;
+    zone->previousGCStringStats = zone->stringStats;
+  }
+  stats().setStat(
+      gcstats::STAT_STRINGS_DEDUPLICATED,
+      currStats.deduplicatedStrings - prevStats.deduplicatedStrings);
   if (enableProfiling_ && totalTime >= profileThreshold_) {
     printCollectionProfile(reason, promotionRate);
+  }
+
+  if (reportDeduplications_) {
+    printDeduplicationData(prevStats, currStats);
   }
 }
 
@@ -1066,11 +1090,25 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
 
   TimeDuration ts = startTimes_[ProfileKey::Total] - stats().creationTime();
 
-  fprintf(stderr, "MinorGC: %10.6f %-20.20s %5.1f%% %5zu", ts.ToSeconds(),
-          JS::ExplainGCReason(reason), promotionRate * 100,
-          previousGC.nurseryCapacity / 1024);
+  fprintf(stderr, "MinorGC: %10.6f %-20.20s %4.1f%% %5zu %6" PRIu32,
+          ts.ToSeconds(), JS::ExplainGCReason(reason), promotionRate * 100,
+          previousGC.nurseryCapacity / 1024,
+          stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED));
 
   printProfileDurations(profileDurations_);
+}
+
+void js::Nursery::printDeduplicationData(js::StringStats& prev,
+                                         js::StringStats& curr) {
+  if (curr.deduplicatedStrings > prev.deduplicatedStrings) {
+    fprintf(stderr,
+            "pid %zu: deduplicated %" PRIi64 " strings, %" PRIu64
+            " chars, %" PRIu64 " malloc bytes\n",
+            size_t(getpid()),
+            curr.deduplicatedStrings - prev.deduplicatedStrings,
+            curr.deduplicatedChars - prev.deduplicatedChars,
+            curr.deduplicatedBytes - prev.deduplicatedBytes);
+  }
 }
 
 js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCReason reason) {
@@ -1210,15 +1248,17 @@ void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   uint32_t numBigIntsTenured = 0;
   uint32_t numNurseryBigIntRealmsDisabled = 0;
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
-    // For some tests in JetStream2 and Kranken, the tenuredRate is high but the
+    // For some tests in JetStream2 and Kraken, the tenuredRate is high but the
     // number of allocated strings is low. So we calculate the tenuredRate only
     // if the number of string allocations is enough.
     bool allocThreshold = zone->nurseryAllocatedStrings > 30000;
+    uint64_t zoneTenuredStrings =
+        zone->stringStats.ref().liveNurseryStrings -
+        zone->previousGCStringStats.ref().liveNurseryStrings;
     double tenuredRate = allocThreshold
-                             ? double(zone->tenuredStrings) /
+                             ? double(zoneTenuredStrings) /
                                    double(zone->nurseryAllocatedStrings)
                              : 0.0;
-
     bool disableNurseryStrings =
         pretenureStr && zone->allocNurseryStrings &&
         tenuredRate > tunables().pretenureStringThreshold();
@@ -1252,8 +1292,7 @@ void js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
         zone->allocNurseryBigInts = false;
       }
     }
-    numStringsTenured += zone->tenuredStrings;
-    zone->tenuredStrings = 0;
+    numStringsTenured += zoneTenuredStrings;
     numBigIntsTenured += zone->tenuredBigInts;
     zone->tenuredBigInts = 0;
     zone->nurseryAllocatedStrings = 0;

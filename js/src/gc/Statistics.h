@@ -54,6 +54,9 @@ enum Stat {
   // Number of strings tenured.
   STAT_STRINGS_TENURED,
 
+  // Number of strings deduplicated.
+  STAT_STRINGS_DEDUPLICATED,
+
   // Number of realms that had nursery strings disabled due to large numbers
   // being tenured.
   STAT_NURSERY_STRING_REALMS_DISABLED,
@@ -523,6 +526,53 @@ struct MOZ_RAII AutoSCC {
 };
 
 } /* namespace gcstats */
+
+struct StringStats {
+  // number of strings that were deduplicated, and their sizes in characters
+  // and bytes
+  uint64_t deduplicatedStrings = 0;
+  uint64_t deduplicatedChars = 0;
+  uint64_t deduplicatedBytes = 0;
+
+  // number of live nursery strings at the start of a nursery collection
+  uint64_t liveNurseryStrings = 0;
+
+  // number of new strings added to the tenured heap
+  uint64_t tenuredStrings = 0;
+
+  // Currently, liveNurseryStrings = tenuredStrings + deduplicatedStrings (but
+  // in the future we may do more transformation during tenuring, eg
+  // atomizing.)
+
+  // number of malloced bytes associated with tenured strings (the actual
+  // malloc will have happened when the strings were allocated in the nursery;
+  // the ownership of the bytes will be transferred to the tenured strings)
+  uint64_t tenuredBytes = 0;
+
+  StringStats& operator+=(const StringStats& other) {
+    deduplicatedStrings += other.deduplicatedStrings;
+    deduplicatedChars += other.deduplicatedChars;
+    deduplicatedBytes += other.deduplicatedBytes;
+    liveNurseryStrings += other.liveNurseryStrings;
+    tenuredStrings += other.tenuredStrings;
+    tenuredBytes += other.tenuredBytes;
+    return *this;
+  }
+
+  void noteTenured(size_t mallocBytes) {
+    liveNurseryStrings++;
+    tenuredStrings++;
+    tenuredBytes += mallocBytes;
+  }
+
+  void noteDeduplicated(size_t numChars, size_t mallocBytes) {
+    liveNurseryStrings++;
+    deduplicatedStrings++;
+    deduplicatedChars += numChars;
+    deduplicatedBytes += mallocBytes;
+  }
+};
+
 } /* namespace js */
 
 #endif /* gc_Statistics_h */
