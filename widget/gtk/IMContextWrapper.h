@@ -119,32 +119,38 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   //       becomes really IM behavior dependent.  So, perhaps, we need prefs
   //       to control related flags for IM developers.
   enum class IMContextID : uint8_t {
-    eFcitx,
-    eIBus,
-    eIIIMF,
-    eScim,
-    eUim,
-    eWayland,
-    eUnknown,
+    Fcitx,  // 4.x or earlier
+    Fcitx5,
+    IBus,
+    IIIMF,
+    Scim,
+    Uim,
+    Wayland,
+    Unknown,
   };
 
-  static const char* GetIMContextIDName(IMContextID aIMContextID) {
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const IMContextID& aIMContextID) {
     switch (aIMContextID) {
-      case IMContextID::eFcitx:
-        return "eFcitx";
-      case IMContextID::eIBus:
-        return "eIBus";
-      case IMContextID::eIIIMF:
-        return "eIIIMF";
-      case IMContextID::eScim:
-        return "eScim";
-      case IMContextID::eUim:
-        return "eUim";
-      case IMContextID::eWayland:
-        return "eWayland";
-      default:
-        return "eUnknown";
+      case IMContextID::Fcitx:
+        return aStream << "Fcitx";
+      case IMContextID::Fcitx5:
+        return aStream << "Fcitx5";
+      case IMContextID::IBus:
+        return aStream << "IBus";
+      case IMContextID::IIIMF:
+        return aStream << "IIIMF";
+      case IMContextID::Scim:
+        return aStream << "Scim";
+      case IMContextID::Uim:
+        return aStream << "Uim";
+      case IMContextID::Wayland:
+        return aStream << "Wayland";
+      case IMContextID::Unknown:
+        return aStream << "Unknown";
     }
+    MOZ_ASSERT_UNREACHABLE("Add new case for the new IM support");
+    return aStream << "Unknown";
   }
 
   /**
