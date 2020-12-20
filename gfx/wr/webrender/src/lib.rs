@@ -97,6 +97,7 @@ mod device;
 mod ellipse;
 mod filterdata;
 mod frame_builder;
+mod frame_graph;
 mod freelist;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod gamma_lut;
@@ -131,6 +132,8 @@ mod guillotine_allocator;
 mod slab_allocator;
 mod texture_cache;
 mod tile_cache;
+#[cfg(test)]
+mod tests;
 mod util;
 mod visibility;
 mod api_resources;

@@ -50,6 +50,11 @@ pub struct RenderTaskCacheEntry {
     user_data: Option<[f32; 3]>,
     is_opaque: bool,
     pub handle: TextureCacheHandle,
+    /// If a render task was generated for this cache entry on _this_ frame,
+    /// we need to track the task id here. This allows us to hook it up as
+    /// a dependency of any parent tasks that make a reqiest from the render
+    /// task cache.
+    pub render_task_id: Option<RenderTaskId>,
 }
 
 #[derive(Debug, MallocSizeOf)]
@@ -111,6 +116,14 @@ impl RenderTaskCache {
             }
             retain
         });
+
+        // Clear out the render task ID of any remaining cache entries that were drawn
+        // on the previous frame, so we don't accidentally hook up stale dependencies
+        // when building the frame graph.
+        for (_, handle) in &self.map {
+            let entry = self.cache_entries.get_mut(handle);
+            entry.render_task_id = None;
+        }
     }
 
     fn alloc_render_task(
@@ -121,9 +134,10 @@ impl RenderTaskCache {
     ) {
         // Find out what size to alloc in the texture cache.
         let size = render_task.location.size();
+        let target_kind = render_task.target_kind();
 
         // Select the right texture page to allocate from.
-        let image_format = match render_task.target_kind() {
+        let image_format = match target_kind {
             RenderTargetKind::Color => texture_cache.shared_color_expected_format(),
             RenderTargetKind::Alpha => texture_cache.shared_alpha_expected_format(),
         };
@@ -167,6 +181,7 @@ impl RenderTaskCache {
         let surface = StaticRenderTaskSurface::TextureCache {
             texture: texture_id,
             layer: texture_layer,
+            target_kind,
         };
 
         render_task.location = RenderTaskLocation::Static {
@@ -183,6 +198,7 @@ impl RenderTaskCache {
         rg_builder: &mut RenderTaskGraphBuilder,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
+        parent_render_task_id: RenderTaskId,
         f: F,
     ) -> Result<RenderTaskCacheEntryHandle, ()>
     where
@@ -196,6 +212,7 @@ impl RenderTaskCache {
                 handle: TextureCacheHandle::invalid(),
                 user_data,
                 is_opaque,
+                render_task_id: None,
             };
             cache_entries.insert(entry)
         });
@@ -209,6 +226,7 @@ impl RenderTaskCache {
 
             cache_entry.user_data = user_data;
             cache_entry.is_opaque = is_opaque;
+            cache_entry.render_task_id = Some(render_task_id);
 
             let render_task = rg_builder.get_task_mut(render_task_id);
 
@@ -218,8 +236,14 @@ impl RenderTaskCache {
                 gpu_cache,
                 texture_cache,
             );
+        }
 
-            rg_builder.add_cacheable_render_task(
+        // If this render task cache is being drawn this frame, ensure we hook up the
+        // render task for it as a dependency of any render task that uses this as
+        // an input source.
+        if let Some(render_task_id) = cache_entry.render_task_id {
+            rg_builder.add_dependency(
+                parent_render_task_id,
                 render_task_id,
             );
         }
