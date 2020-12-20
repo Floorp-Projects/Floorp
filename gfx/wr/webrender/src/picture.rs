@@ -637,7 +637,7 @@ pub enum SurfaceTextureDescriptor {
 /// This is the same as a `SurfaceTextureDescriptor` but has been resolved
 /// into a texture cache handle (if appropriate) that can be used by the
 /// batching and compositing code in the renderer.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ResolvedSurfaceTexture {
@@ -5003,8 +5003,8 @@ impl PicturePrimitive {
 
                         let task_size = device_rect.size.to_i32();
 
-                        let picture_task_id = frame_state.rg_builder.add().init({
-                            let mut picture_task = RenderTask::new_dynamic(
+                        let picture_task_id = frame_state.rg_builder.add().init(
+                            RenderTask::new_dynamic(
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
@@ -5018,11 +5018,15 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                 ),
-                            );
-                            picture_task.mark_for_saving();
+                            )
+                        );
 
-                            picture_task
-                        });
+                        // Add this content picture as a dependency of the parent surface, to
+                        // ensure it isn't free'd after the shadow uses it as an input.
+                        frame_state.rg_builder.add_dependency(
+                            frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port,
+                            picture_task_id,
+                        );
 
                         self.secondary_render_task_id = Some(picture_task_id);
 
@@ -5458,8 +5462,6 @@ impl PicturePrimitive {
                                         )
                                     ),
                                 );
-
-                                frame_state.rg_builder.add_root_render_task(render_task_id);
 
                                 if first {
                                     // TODO(gw): Maybe we can restructure this code to avoid the
