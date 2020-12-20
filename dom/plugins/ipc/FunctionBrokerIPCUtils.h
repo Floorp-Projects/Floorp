@@ -8,6 +8,7 @@
 #define dom_plugins_ipc_functionbrokeripcutils_h 1
 
 #include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "PluginMessageUtils.h"
 
 #if defined(XP_WIN)
