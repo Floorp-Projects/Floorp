@@ -23,19 +23,11 @@ use crate::render_task::{RenderTaskKind, RenderTaskAddress, BlitSource};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
-use crate::guillotine_allocator::{GuillotineAllocator};
 use crate::visibility::PrimitiveVisibilityMask;
-use std::{mem};
 
 
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
 const STYLE_MASK: i32 = 0x00FF_FF00;
-
-/// According to apitrace, textures larger than 2048 break fast clear
-/// optimizations on some intel drivers. We sometimes need to go larger, but
-/// we try to avoid it. This can go away when proper tiling support lands,
-/// since we can then split large primitives across multiple textures.
-const IDEAL_MAX_TEXTURE_DIMENSION: i32 = 2048;
 
 /// A tag used to identify the output format of a `RenderTarget`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -86,9 +78,9 @@ pub trait RenderTarget {
     /// Creates a new RenderTarget of the given type.
     fn new(
         texture_id: CacheTextureId,
-        target_size: DeviceIntSize,
         screen_size: DeviceIntSize,
         gpu_supports_fast_clears: bool,
+        used_rect: DeviceIntRect,
     ) -> Self;
 
     /// Optional hook to provide additional processing for the target at the
@@ -97,7 +89,7 @@ pub trait RenderTarget {
         &mut self,
         _ctx: &mut RenderTargetContext,
         _gpu_cache: &mut GpuCache,
-        _render_tasks: &mut RenderTaskGraph,
+        _render_tasks: &RenderTaskGraph,
         _deferred_resolves: &mut Vec<DeferredResolve>,
         _prim_headers: &mut PrimitiveHeaders,
         _transforms: &mut TransformPalette,
@@ -127,16 +119,7 @@ pub trait RenderTarget {
     );
 
     fn needs_depth(&self) -> bool;
-
-    fn used_rect(&self) -> DeviceIntRect;
-    fn add_used(&mut self, rect: DeviceIntRect);
     fn texture_id(&self) -> CacheTextureId;
-    fn save_target(&self) -> bool;
-
-    fn allocate(
-        &mut self,
-        size: DeviceIntSize,
-    ) -> Option<(CacheTextureId, DeviceIntPoint)>;
 }
 
 /// A series of `RenderTarget` instances, serving as the high-level container
@@ -167,25 +150,17 @@ pub trait RenderTarget {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetList<T> {
-    screen_size: DeviceIntSize,
     pub format: ImageFormat,
     pub targets: Vec<T>,
-    // pub alloc_tracker: GuillotineAllocator,
-    // pub texture_id: Option<CacheTextureId>,
-    gpu_supports_fast_clears: bool,
 }
 
 impl<T: RenderTarget> RenderTargetList<T> {
     pub fn new(
-        screen_size: DeviceIntSize,
         format: ImageFormat,
-        gpu_supports_fast_clears: bool,
     ) -> Self {
         RenderTargetList {
-            screen_size,
             format,
             targets: Vec::new(),
-            gpu_supports_fast_clears,
         }
     }
 
@@ -193,7 +168,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         &mut self,
         ctx: &mut RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -218,56 +193,6 @@ impl<T: RenderTarget> RenderTargetList<T> {
         }
     }
 
-    pub fn allocate(
-        &mut self,
-        requested_size: DeviceIntSize,
-        resource_cache: &mut ResourceCache,
-    ) -> (usize, CacheTextureId, DeviceIntPoint) {
-        let is_standalone =
-            requested_size.width > IDEAL_MAX_TEXTURE_DIMENSION ||
-            requested_size.height > IDEAL_MAX_TEXTURE_DIMENSION;
-
-        let target_size = if is_standalone {
-            requested_size
-        } else {
-            DeviceIntSize::new(
-                IDEAL_MAX_TEXTURE_DIMENSION,
-                IDEAL_MAX_TEXTURE_DIMENSION,
-            )
-        };
-
-        for (target_index, target) in self.targets.iter_mut().enumerate() {
-            if let Some((texture_id, origin)) = target.allocate(requested_size) {
-                // TODO(gw): Move `add_used` into `allocate` when adding the
-                //           full graph functionality.
-                target.add_used(DeviceIntRect::new(origin, requested_size));
-                return (target_index, texture_id, origin);
-            }
-        }
-
-        let texture_id = resource_cache.get_or_create_render_target_from_pool(
-            target_size,
-            self.format,
-        );
-
-        let mut target = T::new(
-            texture_id,
-            target_size,
-            self.screen_size,
-            self.gpu_supports_fast_clears,
-        );
-
-        let (texture_id, origin) = target.allocate(requested_size).expect("bug: unable to alloc");
-
-        target.add_used(DeviceIntRect::new(origin, requested_size));
-
-        let target_index = self.targets.len();
-
-        self.targets.push(target);
-
-        (target_index, texture_id, origin)
-    }
-
     pub fn needs_depth(&self) -> bool {
         self.targets.iter().any(|target| target.needs_depth())
     }
@@ -290,21 +215,19 @@ pub struct ColorRenderTarget {
     pub blits: Vec<BlitJob>,
     alpha_tasks: Vec<RenderTaskId>,
     screen_size: DeviceIntSize,
+    pub texture_id: CacheTextureId,
     // Track the used rect of the render target, so that
     // we can set a scissor rect and only clear to the
     // used portion of the target as an optimization.
     pub used_rect: DeviceIntRect,
-    allocator: GuillotineAllocator,
-    pub texture_id: CacheTextureId,
-    save_target: bool,
 }
 
 impl RenderTarget for ColorRenderTarget {
     fn new(
         texture_id: CacheTextureId,
-        target_size: DeviceIntSize,
         screen_size: DeviceIntSize,
         _: bool,
+        used_rect: DeviceIntRect,
     ) -> Self {
         ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
@@ -315,29 +238,16 @@ impl RenderTarget for ColorRenderTarget {
             blits: Vec::new(),
             alpha_tasks: Vec::new(),
             screen_size,
-            used_rect: DeviceIntRect::zero(),
-            allocator: GuillotineAllocator::new(Some(target_size)),
             texture_id,
-            save_target: false,
+            used_rect,
         }
-    }
-
-    fn allocate(
-        &mut self,
-        size: DeviceIntSize,
-    ) -> Option<(CacheTextureId, DeviceIntPoint)> {
-        self.allocator
-            .allocate(&size)
-            .map(|(_, origin)| {
-                (self.texture_id, origin)
-            })
     }
 
     fn build(
         &mut self,
         ctx: &mut RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -445,10 +355,6 @@ impl RenderTarget for ColorRenderTarget {
         self.texture_id
     }
 
-    fn save_target(&self) -> bool {
-        self.save_target
-    }
-
     fn add_task(
         &mut self,
         task_id: RenderTaskId,
@@ -461,8 +367,6 @@ impl RenderTarget for ColorRenderTarget {
     ) {
         profile_scope!("add_task");
         let task = &render_tasks[task_id];
-
-        self.save_target |= task.save_target;
 
         match task.kind {
             RenderTaskKind::VerticalBlur(..) => {
@@ -570,14 +474,6 @@ impl RenderTarget for ColorRenderTarget {
             !ab.opaque_batches.is_empty()
         })
     }
-
-    fn used_rect(&self) -> DeviceIntRect {
-        self.used_rect
-    }
-
-    fn add_used(&mut self, rect: DeviceIntRect) {
-        self.used_rect = self.used_rect.union(&rect);
-    }
 }
 
 /// Contains the work (in the form of instance arrays) needed to fill an alpha
@@ -594,21 +490,15 @@ pub struct AlphaRenderTarget {
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub zero_clears: Vec<RenderTaskId>,
     pub one_clears: Vec<RenderTaskId>,
-    // Track the used rect of the render target, so that
-    // we can set a scissor rect and only clear to the
-    // used portion of the target as an optimization.
-    pub used_rect: DeviceIntRect,
-    allocator: GuillotineAllocator,
     pub texture_id: CacheTextureId,
-    save_target: bool,
 }
 
 impl RenderTarget for AlphaRenderTarget {
     fn new(
         texture_id: CacheTextureId,
-        target_size: DeviceIntSize,
         _: DeviceIntSize,
         gpu_supports_fast_clears: bool,
+        _: DeviceIntRect,
     ) -> Self {
         AlphaRenderTarget {
             clip_batcher: ClipBatcher::new(gpu_supports_fast_clears),
@@ -617,30 +507,12 @@ impl RenderTarget for AlphaRenderTarget {
             scalings: FastHashMap::default(),
             zero_clears: Vec::new(),
             one_clears: Vec::new(),
-            used_rect: DeviceIntRect::zero(),
-            allocator: GuillotineAllocator::new(Some(target_size)),
             texture_id,
-            save_target: false,
         }
-    }
-
-    fn allocate(
-        &mut self,
-        size: DeviceIntSize,
-    ) -> Option<(CacheTextureId, DeviceIntPoint)> {
-        self.allocator
-            .allocate(&size)
-            .map(|(_, origin)| {
-                (self.texture_id, origin)
-            })
     }
 
     fn texture_id(&self) -> CacheTextureId {
         self.texture_id
-    }
-
-    fn save_target(&self) -> bool {
-        self.save_target
     }
 
     fn add_task(
@@ -656,8 +528,6 @@ impl RenderTarget for AlphaRenderTarget {
         profile_scope!("add_task");
         let task = &render_tasks[task_id];
         let (target_rect, _) = task.get_target_rect();
-
-        self.save_target |= task.save_target;
 
         match task.kind {
             RenderTaskKind::Readback |
@@ -745,14 +615,6 @@ impl RenderTarget for AlphaRenderTarget {
     fn needs_depth(&self) -> bool {
         false
     }
-
-    fn used_rect(&self) -> DeviceIntRect {
-        self.used_rect
-    }
-
-    fn add_used(&mut self, rect: DeviceIntRect) {
-        self.used_rect = self.used_rect.union(&rect);
-    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -795,12 +657,12 @@ impl TextureCacheRenderTarget {
     pub fn add_task(
         &mut self,
         task_id: RenderTaskId,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &RenderTaskGraph,
     ) {
         profile_scope!("add_task");
         let task_address = task_id.into();
 
-        let task = &mut render_tasks[task_id];
+        let task = &render_tasks[task_id];
         let target_rect = task.get_target_rect();
 
         match task.kind {
@@ -844,11 +706,15 @@ impl TextureCacheRenderTarget {
                     }
                 }
             }
-            RenderTaskKind::Border(ref mut task_info) => {
+            RenderTaskKind::Border(ref task_info) => {
                 self.clears.push(target_rect.0);
 
                 let task_origin = target_rect.0.origin.to_f32();
-                let instances = mem::replace(&mut task_info.instances, Vec::new());
+                // TODO(gw): Clone here instead of a move of this vec, since the frame
+                //           graph is immutable by this point. It's rare that borders
+                //           are drawn since they are persisted in the texture cache,
+                //           but perhaps this could be improved in future.
+                let instances = task_info.instances.clone();
                 for mut instance in instances {
                     // TODO(gw): It may be better to store the task origin in
                     //           the render task data instead of per instance.

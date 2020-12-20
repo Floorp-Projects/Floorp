@@ -527,6 +527,28 @@ impl ResourceCache {
         }
     }
 
+    /// Construct a resource cache for use in unit tests.
+    #[cfg(test)]
+    pub fn new_for_testing() -> Self {
+        use rayon::ThreadPoolBuilder;
+
+        let texture_cache = TextureCache::new_for_testing(
+            4096,
+            ImageFormat::RGBA8,
+        );
+        let workers = Arc::new(ThreadPoolBuilder::new().build().unwrap());
+        let glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
+        let cached_glyphs = GlyphCache::new();
+        let font_instances = SharedFontInstanceMap::new();
+
+        ResourceCache::new(
+            texture_cache,
+            glyph_rasterizer,
+            cached_glyphs,
+            font_instances,
+        )
+    }
+
     pub fn max_texture_size(&self) -> i32 {
         self.texture_cache.max_texture_size()
     }
@@ -559,6 +581,7 @@ impl ResourceCache {
         rg_builder: &mut RenderTaskGraphBuilder,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
+        parent_render_task_id: RenderTaskId,
         f: F,
     ) -> RenderTaskCacheEntryHandle
     where
@@ -571,6 +594,7 @@ impl ResourceCache {
             rg_builder,
             user_data,
             is_opaque,
+            parent_render_task_id,
             |render_graph| Ok(f(render_graph))
         ).expect("Failed to request a render task from the resource cache!")
     }
@@ -1430,7 +1454,7 @@ impl ResourceCache {
         profile_scope!("end_frame");
         self.state = State::Idle;
 
-        // GC the render target pool, if it's currently > 32 MB in size.
+        // GC the render target pool, if it's currently > 64 MB in size.
         //
         // We use a simple scheme whereby we drop any texture that hasn't been used
         // in the last 60 frames, until we are below the size threshold. This should
@@ -1443,7 +1467,7 @@ impl ResourceCache {
         //
         // [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1494099
         self.gc_render_targets(
-            32 * 1024 * 1024,
+            64 * 1024 * 1024,
             32 * 1024 * 1024 * 10,
             60,
         );
@@ -1657,7 +1681,7 @@ impl ResourceCache {
         let mut retained_targets = SmallVec::<[RenderTarget; 8]>::new();
 
         for target in self.render_target_pool.drain(..) {
-            debug_assert!(!target.is_active);
+            assert!(!target.is_active);
 
             // Drop oldest textures until we are under the allowed size threshold.
             // However, if it's been used in very recently, it is always kept around,
@@ -1677,6 +1701,19 @@ impl ResourceCache {
         }
 
         self.render_target_pool.extend(retained_targets);
+    }
+
+    #[cfg(test)]
+    pub fn validate_surfaces(
+        &self,
+        expected_surfaces: &[(i32, i32, ImageFormat)],
+    ) {
+        assert_eq!(expected_surfaces.len(), self.render_target_pool.len());
+
+        for (expected, surface) in expected_surfaces.iter().zip(self.render_target_pool.iter()) {
+            assert_eq!(DeviceIntSize::new(expected.0, expected.1), surface.size);
+            assert_eq!(expected.2, surface.format);
+        }
     }
 }
 
