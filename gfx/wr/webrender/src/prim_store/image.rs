@@ -24,7 +24,6 @@ use crate::render_task::{BlitSource, RenderTask};
 use crate::render_task_cache::{
     RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind
 };
-use crate::render_task_graph::RenderTaskId;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::pack_as_float;
 
@@ -146,7 +145,6 @@ impl ImageData {
     pub fn update(
         &mut self,
         common: &mut PrimTemplateCommonData,
-        parent_render_task_id: RenderTaskId,
         frame_state: &mut FrameBuildingState,
     ) {
         if let Some(mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
@@ -215,7 +213,6 @@ impl ImageData {
                                 frame_state.rg_builder,
                                 None,
                                 image_properties.descriptor.is_opaque(),
-                                parent_render_task_id,
                                 |rg_builder| {
                                     // Create a task to blit from the texture cache to
                                     // a normal transient render task surface. This will
@@ -232,13 +229,12 @@ impl ImageData {
                                     // Create a task to blit the rect from the child render
                                     // task above back into the right spot in the persistent
                                     // render target cache.
-                                    RenderTask::new_blit(
+                                    rg_builder.add().init(RenderTask::new_blit(
                                         *size,
                                         BlitSource::RenderTask {
                                             task_id: cache_to_target_task_id,
                                         },
-                                        rg_builder,
-                                    )
+                                    ))
                                 }
                             ));
                         }

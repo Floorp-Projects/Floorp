@@ -5108,7 +5108,7 @@ impl Renderer {
                     // target slices were minimum 2048x2048. Now that we size
                     // them adaptively, this may be less of a win (except perhaps
                     // on a mostly-unused last slice of a large texture array).
-                    Some(draw_target.to_framebuffer_rect(target.used_rect))
+                    Some(draw_target.to_framebuffer_rect(target.used_rect()))
                 }
                 DrawTarget::Texture { .. } | DrawTarget::External { .. } => {
                     None

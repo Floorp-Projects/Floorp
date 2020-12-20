@@ -30,8 +30,7 @@ use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
 use crate::render_backend::DataStores;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheEntryHandle, RenderTaskCacheKey, to_cache_size};
-use crate::render_task::{RenderTaskKind, RenderTask};
-use crate::render_task_graph::RenderTaskId;
+use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::segment::SegmentBuilder;
 use crate::space::SpaceMapper;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
@@ -359,7 +358,6 @@ fn prepare_interned_prim_for_render(
                     frame_state.rg_builder,
                     None,
                     false,
-                    frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
                     |rg_builder| {
                         rg_builder.add().init(RenderTask::new_dynamic(
                             task_size,
@@ -495,7 +493,6 @@ fn prepare_interned_prim_for_render(
                     frame_state.rg_builder,
                     None,
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
-                    frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
                     |rg_builder| {
                         rg_builder.add().init(RenderTask::new_dynamic(
                             cache_size,
@@ -612,11 +609,7 @@ fn prepare_interned_prim_for_render(
 
             // Update the template this instane references, which may refresh the GPU
             // cache with any shared template data.
-            image_data.update(
-                common_data,
-                frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
-                frame_state,
-            );
+            image_data.update(common_data, frame_state);
 
             // common_data.opacity.is_opaque is computed in the above update call.
             is_opaque = common_data.opacity.is_opaque;
@@ -724,9 +717,8 @@ fn prepare_interned_prim_for_render(
                                  stops: &[GradientStopKey],
                                  orientation: LineOrientation,
                                  frame_state: &mut FrameBuildingState,
-                                 gradient: &mut LinearGradientPrimitive,
-                                 parent_render_task_id: RenderTaskId,
-                ) {
+                                 gradient: &mut LinearGradientPrimitive)
+                {
                     // these prints are used to generate documentation examples, so
                     // leaving them in but commented out:
                     //println!("emit_segments call:");
@@ -829,7 +821,6 @@ fn prepare_interned_prim_for_render(
                                         frame_state.rg_builder,
                                         None,
                                         is_opaque,
-                                        parent_render_task_id,
                                         |rg_builder| {
                                             rg_builder.add().init(RenderTask::new_dynamic(
                                                 task_size,
@@ -881,9 +872,7 @@ fn prepare_interned_prim_for_render(
                                   &stops,
                                   orientation,
                                   frame_state,
-                                  gradient,
-                                  frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
-                    );
+                                  gradient);
                 }
                 else
                 {
@@ -910,9 +899,7 @@ fn prepare_interned_prim_for_render(
                                       &stops,
                                       orientation,
                                       frame_state,
-                                      gradient,
-                                      frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
-                        );
+                                      gradient);
 
                         segment_start_point = repeat_end + gradient_offset_base;
                     }
@@ -1501,18 +1488,24 @@ pub fn update_clip_task(
             unadjusted_device_rect,
             device_pixel_scale,
         );
-        let clip_task_id = RenderTaskKind::new_mask(
-            device_rect,
-            instance.vis.clip_chain.clips_range,
-            root_spatial_node_index,
-            frame_state.clip_store,
-            frame_state.gpu_cache,
-            frame_state.resource_cache,
-            frame_state.rg_builder,
-            &mut data_stores.clip,
-            device_pixel_scale,
-            frame_context.fb_config,
+        let task_size = device_rect.size.to_i32();
+
+        let clip_task = RenderTask::new_dynamic(
+            task_size,
+            RenderTaskKind::new_mask(
+                device_rect,
+                instance.vis.clip_chain.clips_range,
+                root_spatial_node_index,
+                frame_state.clip_store,
+                frame_state.gpu_cache,
+                frame_state.resource_cache,
+                frame_state.rg_builder,
+                &mut data_stores.clip,
+                device_pixel_scale,
+                frame_context.fb_config,
+            ),
         );
+        let clip_task_id = frame_state.rg_builder.add().init(clip_task);
         if instance.is_chased() {
             println!("\tcreated task {:?} with device rect {:?}",
                 clip_task_id, device_rect);
@@ -1586,20 +1579,24 @@ pub fn update_brush_segment_clip_task(
     };
 
     let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
+    let task_size = device_rect.size.to_i32();
 
-    let clip_task_id = RenderTaskKind::new_mask(
-        device_rect,
-        clip_chain.clips_range,
-        root_spatial_node_index,
-        frame_state.clip_store,
-        frame_state.gpu_cache,
-        frame_state.resource_cache,
-        frame_state.rg_builder,
-        clip_data_store,
-        device_pixel_scale,
-        frame_context.fb_config,
+    let clip_task = RenderTask::new_dynamic(
+        task_size,
+        RenderTaskKind::new_mask(
+            device_rect,
+            clip_chain.clips_range,
+            root_spatial_node_index,
+            frame_state.clip_store,
+            frame_state.gpu_cache,
+            frame_state.resource_cache,
+            frame_state.rg_builder,
+            clip_data_store,
+            device_pixel_scale,
+            frame_context.fb_config,
+        ),
     );
-
+    let clip_task_id = frame_state.rg_builder.add().init(clip_task);
     let port = frame_state
         .surfaces[surface_index.0]
         .render_tasks
