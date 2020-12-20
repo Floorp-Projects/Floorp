@@ -726,54 +726,44 @@ fn modular_transform_create_lut(mut lut: &lutType) -> Option<Box<qcms_modular_tr
             // Prepare input curves
             transform = modular_transform_alloc();
             if !transform.is_none() {
-                if true {
-                    transform.as_mut().unwrap().input_clut_table_r = Some(
-                        (*lut).input_table[0..(*lut).num_input_table_entries as usize].to_vec(),
-                    );
-                    transform.as_mut().unwrap().input_clut_table_g = Some(
-                        (*lut).input_table[(*lut).num_input_table_entries as usize
-                            ..(*lut).num_input_table_entries as usize * 2]
-                            .to_vec(),
-                    );
-                    transform.as_mut().unwrap().input_clut_table_b = Some(
-                        (*lut).input_table[(*lut).num_input_table_entries as usize * 2
-                            ..(*lut).num_input_table_entries as usize * 3]
-                            .to_vec(),
-                    );
-                    transform.as_mut().unwrap().input_clut_table_length =
-                        (*lut).num_input_table_entries;
-                    // Prepare table
-                    clut_length = ((*lut).num_clut_grid_points as usize).pow(3) * 3;
-                    if true {
-                        assert_eq!(clut_length, lut.clut_table.len());
-                        transform.as_mut().unwrap().clut = Some((*lut).clut_table.clone());
+                transform.as_mut().unwrap().input_clut_table_r =
+                    Some((*lut).input_table[0..(*lut).num_input_table_entries as usize].to_vec());
+                transform.as_mut().unwrap().input_clut_table_g = Some(
+                    (*lut).input_table[(*lut).num_input_table_entries as usize
+                        ..(*lut).num_input_table_entries as usize * 2]
+                        .to_vec(),
+                );
+                transform.as_mut().unwrap().input_clut_table_b = Some(
+                    (*lut).input_table[(*lut).num_input_table_entries as usize * 2
+                        ..(*lut).num_input_table_entries as usize * 3]
+                        .to_vec(),
+                );
+                transform.as_mut().unwrap().input_clut_table_length =
+                    (*lut).num_input_table_entries;
+                // Prepare table
+                clut_length = ((*lut).num_clut_grid_points as usize).pow(3) * 3;
+                assert_eq!(clut_length, lut.clut_table.len());
+                transform.as_mut().unwrap().clut = Some((*lut).clut_table.clone());
 
-                        transform.as_mut().unwrap().grid_size = (*lut).num_clut_grid_points as u16;
-                        // Prepare output curves
-                        if true {
-                            transform.as_mut().unwrap().output_clut_table_r = Some(
-                                (*lut).output_table[0..(*lut).num_output_table_entries as usize]
-                                    .to_vec(),
-                            );
-                            transform.as_mut().unwrap().output_clut_table_g = Some(
-                                (*lut).output_table[(*lut).num_output_table_entries as usize
-                                    ..(*lut).num_output_table_entries as usize * 2]
-                                    .to_vec(),
-                            );
-                            transform.as_mut().unwrap().output_clut_table_b = Some(
-                                (*lut).output_table[(*lut).num_output_table_entries as usize * 2
-                                    ..(*lut).num_output_table_entries as usize * 3]
-                                    .to_vec(),
-                            );
-                            transform.as_mut().unwrap().output_clut_table_length =
-                                (*lut).num_output_table_entries;
-                            transform.as_mut().unwrap().transform_module_fn =
-                                Some(transform_module_clut);
-                            append_transform(transform, next_transform);
-                            return first_transform;
-                        }
-                    }
-                }
+                transform.as_mut().unwrap().grid_size = (*lut).num_clut_grid_points as u16;
+                // Prepare output curves
+                transform.as_mut().unwrap().output_clut_table_r =
+                    Some((*lut).output_table[0..(*lut).num_output_table_entries as usize].to_vec());
+                transform.as_mut().unwrap().output_clut_table_g = Some(
+                    (*lut).output_table[(*lut).num_output_table_entries as usize
+                        ..(*lut).num_output_table_entries as usize * 2]
+                        .to_vec(),
+                );
+                transform.as_mut().unwrap().output_clut_table_b = Some(
+                    (*lut).output_table[(*lut).num_output_table_entries as usize * 2
+                        ..(*lut).num_output_table_entries as usize * 3]
+                        .to_vec(),
+                );
+                transform.as_mut().unwrap().output_clut_table_length =
+                    (*lut).num_output_table_entries;
+                transform.as_mut().unwrap().transform_module_fn = Some(transform_module_clut);
+                append_transform(transform, next_transform);
+                return first_transform;
             }
         }
     }

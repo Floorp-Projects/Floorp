@@ -1120,33 +1120,32 @@ fn transform_precacheLUT_float(
 
     let mut src = Vec::with_capacity(lutSize as usize);
     let mut dest = vec![0.; lutSize as usize];
-    if true && true {
-        /* Prepare a list of points we want to sample */
-        for x in 0..samples {
-            for y in 0..samples {
-                for z in 0..samples {
-                    src.push(x as i32 as f32 / (samples - 1) as f32);
-                    src.push(y as i32 as f32 / (samples - 1) as f32);
-                    src.push(z as i32 as f32 / (samples - 1) as f32);
-                }
+    /* Prepare a list of points we want to sample */
+    for x in 0..samples {
+        for y in 0..samples {
+            for z in 0..samples {
+                src.push(x as i32 as f32 / (samples - 1) as f32);
+                src.push(y as i32 as f32 / (samples - 1) as f32);
+                src.push(z as i32 as f32 / (samples - 1) as f32);
             }
-        }
-        let lut = chain_transform(in_0, out, src, dest, lutSize as usize);
-        if let Some(lut) = lut {
-            (*transform).clut = Some(lut);
-            (*transform).grid_size = samples as u16;
-            if in_type == DATA_RGBA_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgba)
-            } else if in_type == DATA_BGRA_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_bgra)
-            } else if in_type == DATA_RGB_8 {
-                (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgb)
-            }
-            debug_assert!((*transform).transform_fn.is_some());
-        } else {
-            return None;
         }
     }
+    let lut = chain_transform(in_0, out, src, dest, lutSize as usize);
+    if let Some(lut) = lut {
+        (*transform).clut = Some(lut);
+        (*transform).grid_size = samples as u16;
+        if in_type == DATA_RGBA_8 {
+            (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgba)
+        } else if in_type == DATA_BGRA_8 {
+            (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_bgra)
+        } else if in_type == DATA_RGB_8 {
+            (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgb)
+        }
+        debug_assert!((*transform).transform_fn.is_some());
+    } else {
+        return None;
+    }
+
     return Some(transform);
 }
 
