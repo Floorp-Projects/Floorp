@@ -6453,9 +6453,8 @@ void nsGlobalWindowOuter::EnterModalState() {
       topDoc->SuppressEventHandling();
     }
 
-    nsGlobalWindowInner* inner = topWin->GetCurrentInnerWindowInternal();
-    if (inner) {
-      topWin->GetCurrentInnerWindowInternal()->Suspend();
+    if (nsGlobalWindowInner* inner = topWin->GetCurrentInnerWindowInternal()) {
+      inner->Suspend();
     }
   }
   topWin->mModalStateDepth++;
