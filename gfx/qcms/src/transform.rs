@@ -360,7 +360,7 @@ fn adapt_matrix_to_D50(mut r: matrix, mut source_white_pt: qcms_CIE_xyY) -> matr
     }
     return matrix_multiply(Bradford, r);
 }
-pub fn set_rgb_colorants(
+pub(crate) fn set_rgb_colorants(
     mut profile: &mut qcms_profile,
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
@@ -382,7 +382,7 @@ pub fn set_rgb_colorants(
     profile.blueColorant.Z = double_to_s15Fixed16Number(colorants.m[2][2] as f64);
     return true;
 }
-pub fn get_rgb_colorants(
+pub(crate) fn get_rgb_colorants(
     mut colorants: &mut matrix,
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
@@ -1380,17 +1380,17 @@ pub unsafe extern "C" fn qcms_transform_data(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_enable_iccv4() {
+pub extern "C" fn qcms_enable_iccv4() {
     qcms_supports_iccv4.store(true, Ordering::Relaxed);
 }
 pub static qcms_supports_avx: AtomicBool = AtomicBool::new(false);
 pub static qcms_supports_neon: AtomicBool = AtomicBool::new(false);
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_enable_avx() {
+pub extern "C" fn qcms_enable_avx() {
     qcms_supports_avx.store(true, Ordering::Relaxed);
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_enable_neon() {
+pub extern "C" fn qcms_enable_neon() {
     qcms_supports_neon.store(true, Ordering::Relaxed);
 }
