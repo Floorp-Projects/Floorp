@@ -68,30 +68,10 @@ static bool VerifySharedSection(SharedSection& aSharedSection) {
   VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, GetSystemInfo);
   VERIFY_FUNCTION_RESOLVED(k32mod, view->mK32Exports, VirtualProtect);
 
-  Span<uint32_t> modulePaths = []() -> Span<uint32_t> {
-    auto getDependentModulePaths =
-        reinterpret_cast<uint32_t (*)(uint32_t**)>(::GetProcAddress(
-            ::GetModuleHandleW(nullptr), "GetDependentModulePaths"));
-    if (!getDependentModulePaths) {
-      printf(
-          "TEST-FAILED | TestCrossProcessWin | "
-          "Failed to get a pointer to GetDependentModulePaths - %08lx.\n",
-          ::GetLastError());
-      return nullptr;
-    }
-
-    uint32_t* modulePathArray;
-    uint32_t modulePathArrayLen = getDependentModulePaths(&modulePathArray);
-    return Span(modulePathArray, modulePathArrayLen);
-  }();
-
-  if (modulePaths.IsEmpty()) {
-    return false;
-  }
-
-  const uint8_t* arrayBase =
-      reinterpret_cast<const uint8_t*>(modulePaths.data());
-  for (const uint32_t& offset : modulePaths) {
+  const uint8_t* const arrayBase =
+      reinterpret_cast<const uint8_t*>(view->mModulePathArray);
+  for (uint32_t i = 0; i < view->mModulePathArrayLength; ++i) {
+    uint32_t offset = view->mModulePathArray[i];
     // Use NtQueryAttributesFile to check the validity of an NT path.
     UNICODE_STRING ntpath;
     ::RtlInitUnicodeString(
