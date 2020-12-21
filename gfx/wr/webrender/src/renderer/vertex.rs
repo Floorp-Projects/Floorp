@@ -10,7 +10,9 @@
 use std::{marker::PhantomData, mem, ops};
 use api::units::*;
 use crate::{
-    device::{Device, Texture, TextureFilter, TextureUploader, UploadPBOPool, VertexUsageHint, VAO},
+    device::{
+        Device, Texture, TextureFilter, TextureUploader, UploadPBOPool, VertexUsageHint, VAO,
+    },
     frame_builder::Frame,
     gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, TransformData},
     internal_types::Swizzle,
@@ -31,30 +33,24 @@ pub mod desc {
     use crate::device::{VertexAttribute, VertexAttributeKind, VertexDescriptor};
 
     pub const PRIM_INSTANCES: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
-        instance_attributes: &[
-            VertexAttribute {
-                name: "aData",
-                count: 4,
-                kind: VertexAttributeKind::I32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
+        instance_attributes: &[VertexAttribute {
+            name: "aData",
+            count: 4,
+            kind: VertexAttributeKind::I32,
+        }],
     };
 
     pub const BLUR: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aBlurRenderTaskAddress",
@@ -75,13 +71,11 @@ pub mod desc {
     };
 
     pub const LINE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskRect",
@@ -112,13 +106,11 @@ pub mod desc {
     };
 
     pub const GRADIENT: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskRect",
@@ -168,13 +160,11 @@ pub mod desc {
     };
 
     pub const BORDER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTaskOrigin",
@@ -225,13 +215,11 @@ pub mod desc {
     };
 
     pub const SCALE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aScaleTargetRect",
@@ -252,13 +240,11 @@ pub mod desc {
     };
 
     pub const CLIP_RECT: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             // common clip attributes
             VertexAttribute {
@@ -341,13 +327,11 @@ pub mod desc {
     };
 
     pub const CLIP_BOX_SHADOW: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             // common clip attributes
             VertexAttribute {
@@ -400,13 +384,11 @@ pub mod desc {
     };
 
     pub const CLIP_IMAGE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             // common clip attributes
             VertexAttribute {
@@ -465,30 +447,24 @@ pub mod desc {
     };
 
     pub const RESOLVE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
-        instance_attributes: &[
-            VertexAttribute {
-                name: "aRect",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
+        instance_attributes: &[VertexAttribute {
+            name: "aRect",
+            count: 4,
+            kind: VertexAttributeKind::F32,
+        }],
     };
 
     pub const SVG_FILTER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aFilterRenderTaskAddress",
@@ -529,13 +505,11 @@ pub mod desc {
     };
 
     pub const VECTOR_STENCIL: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aFromPosition",
@@ -581,13 +555,11 @@ pub mod desc {
     };
 
     pub const VECTOR_COVER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aTargetRect",
@@ -613,13 +585,11 @@ pub mod desc {
     };
 
     pub const COMPOSITE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aDeviceRect",
@@ -665,13 +635,11 @@ pub mod desc {
     };
 
     pub const CLEAR: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }],
         instance_attributes: &[
             VertexAttribute {
                 name: "aRect",
@@ -706,7 +674,6 @@ pub enum VertexArrayKind {
     Clear,
 }
 
-
 pub struct VertexDataTexture<T> {
     texture: Option<Texture>,
     format: api::ImageFormat,
@@ -714,9 +681,7 @@ pub struct VertexDataTexture<T> {
 }
 
 impl<T> VertexDataTexture<T> {
-    pub fn new(
-        format: api::ImageFormat,
-    ) -> Self {
+    pub fn new(format: api::ImageFormat) -> Self {
         Self {
             texture: None,
             format,
@@ -738,7 +703,7 @@ impl<T> VertexDataTexture<T> {
         &'a mut self,
         device: &mut Device,
         texture_uploader: &mut TextureUploader<'a>,
-        data: &mut Vec<T>
+        data: &mut Vec<T>,
     ) {
         debug_assert!(mem::size_of::<T>() % 16 == 0);
         let texels_per_item = mem::size_of::<T>() / 16;
@@ -766,7 +731,10 @@ impl<T> VertexDataTexture<T> {
         }
 
         let needed_height = (len / items_per_row) as i32;
-        let existing_height = self.texture.as_ref().map_or(0, |t| t.get_dimensions().height);
+        let existing_height = self
+            .texture
+            .as_ref()
+            .map_or(0, |t| t.get_dimensions().height);
 
         // Create a new texture if needed.
         //
@@ -777,7 +745,9 @@ impl<T> VertexDataTexture<T> {
         // 1), and shrink it if the waste would be more than `VERTEX_TEXTURE_EXTRA_ROWS`
         // rows. This helps with memory overhead, especially because there are several
         // instances of these textures per Renderer.
-        if needed_height > existing_height || needed_height + VERTEX_TEXTURE_EXTRA_ROWS < existing_height {
+        if needed_height > existing_height
+            || needed_height + VERTEX_TEXTURE_EXTRA_ROWS < existing_height
+        {
             // Drop the existing texture, if any.
             if let Some(t) = self.texture.take() {
                 device.delete_texture(t);
@@ -814,7 +784,16 @@ impl<T> VertexDataTexture<T> {
         );
 
         debug_assert!(len <= data.capacity(), "CPU copy will read out of bounds");
-        texture_uploader.upload(device, self.texture(), rect, 0, None, None, data.as_ptr(), len);
+        texture_uploader.upload(
+            device,
+            self.texture(),
+            rect,
+            0,
+            None,
+            None,
+            data.as_ptr(),
+            len,
+        );
     }
 
     pub fn deinit(mut self, device: &mut Device) {
@@ -841,12 +820,7 @@ impl VertexDataTextures {
         }
     }
 
-    pub fn update(
-        &mut self,
-        device: &mut Device,
-        pbo_pool: &mut UploadPBOPool,
-        frame: &mut Frame,
-    ) {
+    pub fn update(&mut self, device: &mut Device, pbo_pool: &mut UploadPBOPool, frame: &mut Frame) {
         let mut texture_uploader = device.upload_texture(pbo_pool);
         self.prim_header_f_texture.update(
             device,
@@ -858,11 +832,8 @@ impl VertexDataTextures {
             &mut texture_uploader,
             &mut frame.prim_headers.headers_int,
         );
-        self.transforms_texture.update(
-            device,
-            &mut texture_uploader,
-            &mut frame.transform_palette,
-        );
+        self.transforms_texture
+            .update(device, &mut texture_uploader, &mut frame.transform_palette);
         self.render_task_texture.update(
             device,
             &mut texture_uploader,
@@ -896,16 +867,13 @@ impl VertexDataTextures {
     }
 
     pub fn size_in_bytes(&self) -> usize {
-        self.prim_header_f_texture.size_in_bytes() +
-        self.prim_header_i_texture.size_in_bytes() +
-        self.transforms_texture.size_in_bytes() +
-        self.render_task_texture.size_in_bytes()
+        self.prim_header_f_texture.size_in_bytes()
+            + self.prim_header_i_texture.size_in_bytes()
+            + self.transforms_texture.size_in_bytes()
+            + self.render_task_texture.size_in_bytes()
     }
 
-    pub fn deinit(
-        self,
-        device: &mut Device,
-    ) {
+    pub fn deinit(self, device: &mut Device) {
         self.transforms_texture.deinit(device);
         self.prim_header_f_texture.deinit(device);
         self.prim_header_i_texture.deinit(device);
@@ -952,7 +920,8 @@ impl RendererVAOs {
         RendererVAOs {
             blur_vao: device.create_vao_with_new_instances(&desc::BLUR, &prim_vao),
             clip_rect_vao: device.create_vao_with_new_instances(&desc::CLIP_RECT, &prim_vao),
-            clip_box_shadow_vao: device.create_vao_with_new_instances(&desc::CLIP_BOX_SHADOW, &prim_vao),
+            clip_box_shadow_vao: device
+                .create_vao_with_new_instances(&desc::CLIP_BOX_SHADOW, &prim_vao),
             clip_image_vao: device.create_vao_with_new_instances(&desc::CLIP_IMAGE, &prim_vao),
             border_vao: device.create_vao_with_new_instances(&desc::BORDER, &prim_vao),
             scale_vao: device.create_vao_with_new_instances(&desc::SCALE, &prim_vao),
