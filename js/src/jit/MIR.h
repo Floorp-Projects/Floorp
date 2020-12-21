@@ -6061,6 +6061,42 @@ class MBigIntMod : public MBigIntBinaryArithInstruction {
   ALLOW_CLONE(MBigIntMod)
 };
 
+class MBigIntPow : public MBigIntBinaryArithInstruction {
+  bool canBeNegativeExponent_;
+
+  MBigIntPow(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    MOZ_ASSERT(right->type() == MIRType::BigInt);
+    canBeNegativeExponent_ =
+        !right->isConstant() || right->toConstant()->toBigInt()->isNegative();
+
+    // Throws when the exponent is negative.
+    if (canBeNegativeExponent_) {
+      setGuard();
+      setNotMovable();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntPow)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool canBeNegativeExponent() const { return canBeNegativeExponent_; }
+
+  AliasSet getAliasSet() const override {
+    if (canBeNegativeExponent()) {
+      return AliasSet::Store(AliasSet::ExceptionState);
+    }
+    return AliasSet::None();
+  }
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return !canBeNegativeExponent(); }
+
+  ALLOW_CLONE(MBigIntPow)
+};
+
 class MBigIntBitAnd : public MBigIntBinaryArithInstruction {
   MBigIntBitAnd(MDefinition* left, MDefinition* right)
       : MBigIntBinaryArithInstruction(classOpcode, left, right) {

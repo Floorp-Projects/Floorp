@@ -8868,6 +8868,117 @@ void CodeGenerator::visitBigIntMod(LBigIntMod* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitBigIntPow(LBigIntPow* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::pow>(ins, ArgList(lhs, rhs),
+                                         StoreRegisterTo(output));
+
+  // x ** -y throws an error.
+  if (ins->mir()->canBeNegativeExponent()) {
+    masm.branchIfBigIntIsNegative(rhs, ool->entry());
+  }
+
+  Register dest = temp1;
+  Register base = temp2;
+  Register exponent = output;
+
+  Label done;
+  masm.movePtr(ImmWord(1), dest);  // p = 1
+
+  // 1n ** y == 1n
+  // -1n ** y == 1n when y is even
+  // -1n ** y == -1n when y is odd
+  Label lhsNotOne;
+  masm.branch32(Assembler::Above, Address(lhs, BigInt::offsetOfLength()),
+                Imm32(1), &lhsNotOne);
+  masm.loadFirstBigIntDigitOrZero(lhs, base);
+  masm.branchPtr(Assembler::NotEqual, base, Imm32(1), &lhsNotOne);
+  {
+    masm.loadFirstBigIntDigitOrZero(rhs, exponent);
+
+    Label lhsNonNegative;
+    masm.branchIfBigIntIsNonNegative(lhs, &lhsNonNegative);
+    masm.branchTestPtr(Assembler::Zero, exponent, Imm32(1), &done);
+    masm.bind(&lhsNonNegative);
+    masm.movePtr(lhs, output);
+    masm.jump(ool->rejoin());
+  }
+  masm.bind(&lhsNotOne);
+
+  // x ** 0n == 1n
+  masm.branchIfBigIntIsZero(rhs, &done);
+
+  // 0n ** y == 0n with y != 0n
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(lhs, &lhsNonZero);
+  {
+    masm.movePtr(lhs, output);
+    masm.jump(ool->rejoin());
+  }
+  masm.bind(&lhsNonZero);
+
+  // Call into the VM when the exponent can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigIntAbsolute(rhs, exponent, ool->entry());
+
+  // x ** y with x > 1 and y >= DigitBits can't be pointer-sized.
+  masm.branchPtr(Assembler::AboveOrEqual, exponent, Imm32(BigInt::DigitBits),
+                 ool->entry());
+
+  // x ** 1n == x
+  Label rhsNotOne;
+  masm.branch32(Assembler::NotEqual, exponent, Imm32(1), &rhsNotOne);
+  {
+    masm.movePtr(lhs, output);
+    masm.jump(ool->rejoin());
+  }
+  masm.bind(&rhsNotOne);
+
+  // Call into the VM when the base operand can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigIntNonZero(lhs, base, ool->entry());
+
+  // MacroAssembler::pow32() adjusted to work on pointer-sized registers.
+  {
+    // m = base
+    // n = exponent
+
+    Label start, loop;
+    masm.jump(&start);
+    masm.bind(&loop);
+
+    // m *= m
+    masm.branchMulPtr(Assembler::Overflow, base, base, ool->entry());
+
+    masm.bind(&start);
+
+    // if ((n & 1) != 0) p *= m
+    Label even;
+    masm.branchTest32(Assembler::Zero, exponent, Imm32(1), &even);
+    masm.branchMulPtr(Assembler::Overflow, base, dest, ool->entry());
+    masm.bind(&even);
+
+    // n >>= 1
+    // if (n == 0) return p
+    masm.branchRshift32(Assembler::NonZero, Imm32(1), exponent, &loop);
+  }
+
+  MOZ_ASSERT(temp1 == dest);
+
+  // Create and return the result.
+  masm.bind(&done);
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, temp1);
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitBigIntBitAnd(LBigIntBitAnd* ins) {
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
