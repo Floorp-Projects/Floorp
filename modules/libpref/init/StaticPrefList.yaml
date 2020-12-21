@@ -8872,6 +8872,11 @@
   value: false
   mirror: always
 
+- name: network.cache.frecency_array_check_enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
