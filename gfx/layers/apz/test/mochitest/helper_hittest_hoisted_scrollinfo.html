@@ -53,7 +53,7 @@
  </svg>
 </body>
 <script type="application/javascript">
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
@@ -62,7 +62,7 @@ function* test(testDriver) {
   // scrolled.
   var scroller = document.querySelector("#scroller");
   utils.setDisplayPortForElement(0, 0, 300, 500, scroller, 1);
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   // Inactive scrollframe flags will round-trip through the dispatch-to-content
   // region and end up as IRREGULAR_AREA when WebRender is disabled.
@@ -74,11 +74,11 @@ function* test(testDriver) {
                  utils.getViewId(scroller),
                  utils.getLayersId(),
                  "scrollable content inside a filter");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
