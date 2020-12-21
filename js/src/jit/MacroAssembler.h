@@ -902,6 +902,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void xor32(Register src, Register dest) PER_SHARED_ARCH;
   inline void xor32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+  inline void xor32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
   inline void xor32(const Address& src, Register dest) PER_SHARED_ARCH;
 
   inline void xorPtr(Register src, Register dest) PER_ARCH;
