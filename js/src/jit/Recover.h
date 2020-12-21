@@ -75,6 +75,8 @@ namespace jit {
   _(BigIntAdd)                 \
   _(BigIntSub)                 \
   _(BigIntMul)                 \
+  _(BigIntIncrement)           \
+  _(BigIntDecrement)           \
   _(Concat)                    \
   _(StringLength)              \
   _(ArgumentsLength)           \
@@ -349,6 +351,22 @@ class RBigIntSub final : public RInstruction {
 class RBigIntMul final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntMul, 2)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RBigIntIncrement final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntIncrement, 1)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RBigIntDecrement final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntDecrement, 1)
 
   MOZ_MUST_USE bool recover(JSContext* cx,
                             SnapshotIterator& iter) const override;

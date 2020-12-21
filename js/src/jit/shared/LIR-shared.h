@@ -42,6 +42,16 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps> {
   const LAllocation* rhs() { return this->getOperand(1); }
 };
 
+template <size_t Temps, size_t ExtraUses = 0>
+class LUnaryMath : public LInstructionHelper<1, 1 + ExtraUses, Temps> {
+ protected:
+  explicit LUnaryMath(LNode::Opcode opcode)
+      : LInstructionHelper<1, 1 + ExtraUses, Temps>(opcode) {}
+
+ public:
+  const LAllocation* input() { return this->getOperand(0); }
+};
+
 // An LOsiPoint captures a snapshot after a call and ensures enough space to
 // patch in a call to the invalidation mechanism.
 //
@@ -2868,6 +2878,38 @@ class LBigIntMul : public LBinaryMath<2> {
       : LBinaryMath(classOpcode) {
     setOperand(0, lhs);
     setOperand(1, rhs);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
+class LBigIntIncrement : public LUnaryMath<2> {
+ public:
+  LIR_HEADER(BigIntIncrement)
+
+  LBigIntIncrement(const LAllocation& input, const LDefinition& temp1,
+                   const LDefinition& temp2)
+      : LUnaryMath(classOpcode) {
+    setOperand(0, input);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
+class LBigIntDecrement : public LUnaryMath<2> {
+ public:
+  LIR_HEADER(BigIntDecrement)
+
+  LBigIntDecrement(const LAllocation& input, const LDefinition& temp1,
+                   const LDefinition& temp2)
+      : LUnaryMath(classOpcode) {
+    setOperand(0, input);
     setTemp(0, temp1);
     setTemp(1, temp2);
   }
