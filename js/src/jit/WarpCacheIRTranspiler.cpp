@@ -2450,6 +2450,11 @@ bool WarpCacheIRTranspiler::emitBigIntSubResult(BigIntOperandId lhsId,
   return emitBigIntBinaryArithResult<MBigIntSub>(lhsId, rhsId);
 }
 
+bool WarpCacheIRTranspiler::emitBigIntMulResult(BigIntOperandId lhsId,
+                                                BigIntOperandId rhsId) {
+  return emitBigIntBinaryArithResult<MBigIntMul>(lhsId, rhsId);
+}
+
 bool WarpCacheIRTranspiler::emitCallStringConcatResult(StringOperandId lhsId,
                                                        StringOperandId rhsId) {
   MDefinition* lhs = getOperand(lhsId);
