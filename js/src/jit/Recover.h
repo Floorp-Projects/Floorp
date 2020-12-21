@@ -72,6 +72,7 @@ namespace jit {
   _(Div)                       \
   _(Mod)                       \
   _(Not)                       \
+  _(BigIntAdd)                 \
   _(Concat)                    \
   _(StringLength)              \
   _(ArgumentsLength)           \
@@ -322,6 +323,14 @@ class RMod final : public RInstruction {
 class RNot final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(Not, 1)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RBigIntAdd final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntAdd, 2)
 
   MOZ_MUST_USE bool recover(JSContext* cx,
                             SnapshotIterator& iter) const override;

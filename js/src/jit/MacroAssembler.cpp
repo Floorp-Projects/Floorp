@@ -1167,8 +1167,7 @@ void MacroAssembler::loadBigIntDigits(Register bigInt, Register digits) {
 
   // If inline digits aren't used, load the heap digits. Use a conditional move
   // to prevent speculative execution.
-  cmp32LoadPtr(Assembler::GreaterThan,
-               Address(bigInt, BigInt::offsetOfLength()),
+  cmp32LoadPtr(Assembler::Above, Address(bigInt, BigInt::offsetOfLength()),
                Imm32(int32_t(BigInt::inlineDigitsLength())),
                Address(bigInt, BigInt::offsetOfHeapDigits()), digits);
 }
@@ -1205,7 +1204,7 @@ void MacroAssembler::loadBigInt64(Register bigInt, Register64 dest) {
 
   // And conditionally load the second digit into the high value register.
   Label twoDigits, digitsDone;
-  branch32(Assembler::GreaterThan, Address(bigInt, BigInt::offsetOfLength()),
+  branch32(Assembler::Above, Address(bigInt, BigInt::offsetOfLength()),
            Imm32(1), &twoDigits);
   {
     move32(Imm32(0), dest.high);
@@ -1241,6 +1240,37 @@ void MacroAssembler::loadFirstBigIntDigitOrZero(Register bigInt,
   loadPtr(Address(dest, 0), dest);
 
   bind(&done);
+}
+
+void MacroAssembler::loadBigIntNonZero(Register bigInt, Register dest,
+                                       Label* fail) {
+  MOZ_ASSERT(bigInt != dest);
+
+#ifdef DEBUG
+  Label nonZero;
+  branchIfBigIntIsNonZero(bigInt, &nonZero);
+  assumeUnreachable("Unexpected zero BigInt");
+  bind(&nonZero);
+#endif
+
+  branch32(Assembler::Above, Address(bigInt, BigInt::offsetOfLength()),
+           Imm32(1), fail);
+
+  static_assert(BigInt::inlineDigitsLength() > 0,
+                "Single digit BigInts use inline storage");
+
+  // Load the first inline digit into the destination register.
+  loadPtr(Address(bigInt, BigInt::offsetOfInlineDigits()), dest);
+
+  // BigInt digits are stored as absolute numbers. Take the failure path when
+  // the digit can't be stored in intptr_t.
+  branchTestPtr(Assembler::Signed, dest, dest, fail);
+
+  // Negate |dest| when the BigInt is negative.
+  Label nonNegative;
+  branchIfBigIntIsNonNegative(bigInt, &nonNegative);
+  negPtr(dest);
+  bind(&nonNegative);
 }
 
 void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
@@ -1289,6 +1319,38 @@ void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
 #endif
 
   store64(val, Address(bigInt, js::BigInt::offsetOfInlineDigits()));
+
+  bind(&done);
+}
+
+void MacroAssembler::initializeBigInt(Register bigInt, Register val) {
+  store32(Imm32(0), Address(bigInt, BigInt::offsetOfFlags()));
+
+  Label done, nonZero;
+  branchTestPtr(Assembler::NonZero, val, val, &nonZero);
+  {
+    store32(Imm32(0), Address(bigInt, BigInt::offsetOfLength()));
+    jump(&done);
+  }
+  bind(&nonZero);
+
+  // Set the sign-bit for negative values and then continue with the two's
+  // complement.
+  Label isPositive;
+  branchTestPtr(Assembler::NotSigned, val, val, &isPositive);
+  {
+    store32(Imm32(BigInt::signBitMask()),
+            Address(bigInt, BigInt::offsetOfFlags()));
+    negPtr(val);
+  }
+  bind(&isPositive);
+
+  store32(Imm32(1), Address(bigInt, BigInt::offsetOfLength()));
+
+  static_assert(sizeof(BigInt::Digit) == sizeof(uintptr_t),
+                "BigInt Digit size matches uintptr_t");
+
+  storePtr(val, Address(bigInt, js::BigInt::offsetOfInlineDigits()));
 
   bind(&done);
 }
