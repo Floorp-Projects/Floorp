@@ -50,16 +50,25 @@ consoleListener.prototype  = {
         is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.consoleID, "wow", "consoleID is set by consoleInstance");
         is(obj.prefix, "_PREFIX_", "prefix is set by consoleInstance");
+        // We expect to see 2 messages from this innerID.
         ++this.count;
       } else if (obj.innerID == "LEVEL") {
         // Nothing special... just we don't want to see 'invisible' messages.
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
         is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.prefix, "", "prefix is empty by default");
+        // We expect to see 2 messages from this innerID.
+        ++this.count;
+      } else if (obj.innerID == "NO PREF") {
+        // Nothing special... just we don't want to see 'invisible' messages.
+        is(obj.ID, "jsm", "ID and InnerID are correctly set.");
+        is(obj.arguments[0], "Hello world!", "Message matches");
+        is(obj.prefix, "", "prefix is empty by default");
+        // We expect to see 1 message from this innerID.
         ++this.count;
       }
 
-      if (this.count == 4) {
+      if (this.count == 7) {
         is(dumpCalled, 2, "Dump has been called!");
         Services.obs.removeObserver(this, "console-api-log-event");
         SimpleTest.finish();
