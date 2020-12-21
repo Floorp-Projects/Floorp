@@ -25,7 +25,8 @@ NS_INTERFACE_MAP_END
 
 namespace {
 
-ConsoleLogLevel PrefToValue(const nsAString& aPref) {
+ConsoleLogLevel PrefToValue(const nsAString& aPref,
+                            const ConsoleLogLevel aLevel) {
   if (!NS_IsMainThread()) {
     NS_WARNING("Console.maxLogLevelPref is not supported on workers!");
     return ConsoleLogLevel::All;
@@ -42,7 +43,7 @@ ConsoleLogLevel PrefToValue(const nsAString& aPref) {
 
     nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
                                           true /* from chrome context*/);
-    return ConsoleLogLevel::All;
+    return aLevel;
   }
 
   int index = FindEnumStringIndexImpl(value.get(), value.Length(),
@@ -54,7 +55,7 @@ ConsoleLogLevel PrefToValue(const nsAString& aPref) {
 
     nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
                                           true /* from chrome context*/);
-    return ConsoleLogLevel::All;
+    return aLevel;
   }
 
   MOZ_ASSERT(index < (int)ConsoleLogLevelValues::Count);
@@ -98,7 +99,8 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
   }
 
   if (!aOptions.mMaxLogLevelPref.IsEmpty()) {
-    mConsole->mMaxLogLevel = PrefToValue(aOptions.mMaxLogLevelPref);
+    mConsole->mMaxLogLevel =
+        PrefToValue(aOptions.mMaxLogLevelPref, mConsole->mMaxLogLevel);
   }
 }
 
