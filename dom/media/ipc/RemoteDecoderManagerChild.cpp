@@ -144,7 +144,12 @@ void RemoteDecoderManagerChild::Shutdown() {
 
 void RemoteDecoderManagerChild::RunWhenGPUProcessRecreated(
     already_AddRefed<Runnable> aTask) {
-  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (!managerThread) {
+    // We've been shutdown, bail.
+    return;
+  }
+  MOZ_ASSERT(managerThread->IsOnCurrentThread());
 
   // If we've already been recreated, then run the task immediately.
   auto* manager = GetSingleton(RemoteDecodeIn::GpuProcess);
@@ -159,7 +164,12 @@ void RemoteDecoderManagerChild::RunWhenGPUProcessRecreated(
 /* static */
 RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetSingleton(
     RemoteDecodeIn aLocation) {
-  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (!managerThread) {
+    // We've been shutdown, bail.
+    return nullptr;
+  }
+  MOZ_ASSERT(managerThread->IsOnCurrentThread());
   switch (aLocation) {
     case RemoteDecodeIn::GpuProcess:
       return sRemoteDecoderManagerChildForGPUProcess;
@@ -405,7 +415,13 @@ RemoteDecoderManagerChild::RemoteDecoderManagerChild(RemoteDecodeIn aLocation)
 
 void RemoteDecoderManagerChild::OpenForRDDProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aEndpoint) {
-  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (!managerThread) {
+    // We've been shutdown, bail.
+    return;
+  }
+  MOZ_ASSERT(managerThread->IsOnCurrentThread());
+
   // Only create RemoteDecoderManagerChild, bind new endpoint and init
   // ipdl if:
   // 1) haven't init'd sRemoteDecoderManagerChild
@@ -429,7 +445,12 @@ void RemoteDecoderManagerChild::OpenForRDDProcess(
 
 void RemoteDecoderManagerChild::OpenForGPUProcess(
     Endpoint<PRemoteDecoderManagerChild>&& aEndpoint) {
-  MOZ_ASSERT(GetManagerThread() && GetManagerThread()->IsOnCurrentThread());
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (!managerThread) {
+    // We've been shutdown, bail.
+    return;
+  }
+  MOZ_ASSERT(managerThread->IsOnCurrentThread());
   // Make sure we always dispatch everything in sRecreateTasks, even if we
   // fail since this is as close to being recreated as we will ever be.
   sRemoteDecoderManagerChildForGPUProcess = nullptr;
