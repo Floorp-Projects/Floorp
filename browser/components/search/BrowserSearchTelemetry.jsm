@@ -29,14 +29,9 @@ const KNOWN_SEARCH_SOURCES = [
   "webextension",
 ];
 
-const KNOWN_ONEOFF_SOURCES = [
-  "oneoff-urlbar",
-  "oneoff-searchbar",
-  "unknown", // Edge case: this is the searchbar (see bug 1195733 comment 7).
-];
-
 /**
- * The handler class. TODO
+ * This class handles saving search telemetry related to the url bar,
+ * search bar and other areas as per the sources above.
  */
 class BrowserSearchTelemetryHandler {
   /**
@@ -191,45 +186,25 @@ class BrowserSearchTelemetryHandler {
       if (!this.shouldRecordSearchCount(tabbrowser)) {
         return;
       }
+      if (!KNOWN_SEARCH_SOURCES.includes(source)) {
+        console.error("Unknown source for search: ", source);
+        return;
+      }
 
       const countIdPrefix = `${engine.telemetryId}.`;
       const countIdSource = countIdPrefix + source;
       let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
 
-      if (details.isOneOff) {
-        if (!KNOWN_ONEOFF_SOURCES.includes(source)) {
-          // Silently drop the error if this bogus call
-          // came from 'urlbar' or 'searchbar'. They're
-          // calling |recordSearch| twice from two different
-          // code paths because they want to record the search
-          // in SEARCH_COUNTS.
-          if (["urlbar", "searchbar"].includes(source)) {
-            histogram.add(countIdSource);
-            PartnerLinkAttribution.makeSearchEngineRequest(
-              engine,
-              details.url
-            ).catch(Cu.reportError);
-            return;
-          }
-          console.trace("Unknown source for one-off search: ", source);
-          return;
-        }
+      if (
+        details.alias &&
+        engine.isAppProvided &&
+        engine.aliases.includes(details.alias)
+      ) {
+        // This is a keyword search using an AppProvided engine.
+        // Record the source as "alias", not "urlbar".
+        histogram.add(countIdPrefix + "alias");
       } else {
-        if (!KNOWN_SEARCH_SOURCES.includes(source)) {
-          console.trace("Unknown source for search: ", source);
-          return;
-        }
-        if (
-          details.alias &&
-          engine.isAppProvided &&
-          engine.aliases.includes(details.alias)
-        ) {
-          // This is a keyword search using an AppProvided engine.
-          // Record the source as "alias", not "urlbar".
-          histogram.add(countIdPrefix + "alias");
-        } else {
-          histogram.add(countIdSource);
-        }
+        histogram.add(countIdSource);
       }
 
       // Dispatch the search signal to other handlers.
@@ -244,10 +219,7 @@ class BrowserSearchTelemetryHandler {
   _handleSearchAction(engine, source, details) {
     switch (source) {
       case "urlbar":
-      case "oneoff-urlbar":
       case "searchbar":
-      case "oneoff-searchbar":
-      case "unknown": // Edge case: this is the searchbar (see bug 1195733 comment 7).
         this._handleSearchAndUrlbar(engine, source, details);
         break;
       case "urlbar-searchmode":
@@ -279,57 +251,23 @@ class BrowserSearchTelemetryHandler {
    *   @see recordSearch
    */
   _handleSearchAndUrlbar(engine, source, details) {
-    // We want "urlbar" and "urlbar-oneoff" (and similar cases) to go in the same
-    // scalar, but in a different key.
-
-    // When using one-offs in the searchbar we get an "unknown" source. See bug
-    // 1195733 comment 7 for the context. Fix-up the label here.
-    const sourceName =
-      source === "unknown" ? "searchbar" : source.replace("oneoff-", "");
-
     const isOneOff = !!details.isOneOff;
+    let action = "enter";
     if (isOneOff) {
-      // We will receive a signal from the "urlbar"/"searchbar" even when the
-      // search came from "oneoff-urlbar". That's because both signals
-      // are propagated from search.xml. Skip it if that's the case.
-      // Moreover, we skip the "unknown" source that comes from the searchbar
-      // when performing searches from the default search engine. See bug 1195733
-      // comment 7 for context.
-      if (["urlbar", "searchbar", "unknown"].includes(source)) {
-        return;
-      }
-
-      // If that's a legit one-off search signal, record it using the relative key.
-      this._recordSearch(engine, details.url, sourceName, "oneoff");
-      return;
-    }
-
-    // The search was not a one-off. It was a search with the default search engine.
-    if (details.isFormHistory) {
-      // It came from a form history result.
-      this._recordSearch(engine, details.url, sourceName, "formhistory");
-      return;
+      action = "oneoff";
+    } else if (details.isFormHistory) {
+      action = "formhistory";
     } else if (details.isSuggestion) {
-      // It came from a suggested search, so count it as such.
-      this._recordSearch(engine, details.url, sourceName, "suggestion");
-      return;
+      action = "suggestion";
     } else if (details.alias) {
-      // This one came from a search that used an alias.
-      this._recordSearch(engine, details.url, sourceName, "alias");
-      return;
+      action = "alias";
     }
 
-    // The search signal was generated by typing something and pressing enter.
-    this._recordSearch(engine, details.url, sourceName, "enter");
+    this._recordSearch(engine, details.url, source, action);
   }
 
   _recordSearch(engine, url, source, action = null) {
-    // The one-off buttons are logged in two places, if we hit here with the
-    // action as oneoff and no url, then we are hitting the attribution case
-    // in `recordSearch` above. Really this needs re-architecturing so we
-    // do not have two distinct calls to `recordSearch` for one-offs
-    // (see bug 1662553).
-    if (!(action == "oneoff" && !url)) {
+    if (url) {
       PartnerLinkAttribution.makeSearchEngineRequest(engine, url).catch(
         Cu.reportError
       );
