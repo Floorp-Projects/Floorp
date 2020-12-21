@@ -183,7 +183,7 @@
     "PASS"
   ],
   "Cookie specs Page.cookies should get a cookie (cookies.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Cookie specs Page.cookies should properly report httpOnly cookie (cookies.spec.ts)": [
     "PASS"
@@ -195,7 +195,7 @@
     "PASS"
   ],
   "Cookie specs Page.cookies should get multiple cookies (cookies.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Cookie specs Page.cookies should get cookies from multiple urls (cookies.spec.ts)": [
     "FAIL"
@@ -246,7 +246,7 @@
     "FAIL"
   ],
   "DefaultBrowserContext page.cookies() should work (defaultbrowsercontext.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "DefaultBrowserContext page.setCookie() should work (defaultbrowsercontext.spec.ts)": [
     "FAIL"
