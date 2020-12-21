@@ -11,6 +11,7 @@
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SMILAnimationFunction.h"
 #include "mozilla/SMILTimeContainer.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "nsContentUtils.h"
 #include "nsIContentInlines.h"
 #include "nsIReferrerInfo.h"
@@ -353,9 +354,13 @@ bool SVGAnimationElement::IsEventAttributeNameInternal(nsAtom* aName) {
 }
 
 void SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr) {
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  if (nsContentUtils::IsLocalRefURL(aHrefStr)) {
+    baseURI = SVGObserverUtils::GetBaseURLForLocalRef(this, baseURI);
+  }
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), aHrefStr,
-                                            OwnerDoc(), GetBaseURI());
+                                            OwnerDoc(), baseURI);
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       ReferrerInfo::CreateForSVGResources(OwnerDoc());
 
