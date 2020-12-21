@@ -555,7 +555,13 @@ struct Texture {
       flags &= ~flag;
     }
   }
-  void set_should_free(bool val) { set_flag(SHOULD_FREE, val); }
+  void set_should_free(bool val) {
+    // buf must be null before SHOULD_FREE can be safely toggled. Otherwise, we
+    // might accidentally mistakenly realloc an externally allocated buffer as
+    // if it were an internally allocated one.
+    assert(!buf);
+    set_flag(SHOULD_FREE, val);
+  }
   void set_cleared(bool val) { set_flag(CLEARED, val); }
 
   // Delayed-clearing state. When a clear of an FB is requested, we don't
@@ -659,8 +665,14 @@ struct Texture {
 
   void cleanup() {
     assert(!locked);  // Locked textures shouldn't be destroyed
-    if (buf && should_free()) {
-      free(buf);
+    if (buf) {
+      // If we need to toggle SHOULD_FREE state, ensure that buf is nulled out,
+      // regardless of whether we internally allocated it. This will prevent us
+      // from wrongly treating buf as having been internally allocated for when
+      // we go to realloc if it actually was externally allocted.
+      if (should_free()) {
+        free(buf);
+      }
       buf = nullptr;
       buf_size = 0;
       buf_bpp = 0;
