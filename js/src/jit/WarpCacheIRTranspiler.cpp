@@ -2497,6 +2497,10 @@ bool WarpCacheIRTranspiler::emitBigIntNegationResult(BigIntOperandId inputId) {
   return emitBigIntUnaryArithResult<MBigIntNegate>(inputId);
 }
 
+bool WarpCacheIRTranspiler::emitBigIntNotResult(BigIntOperandId inputId) {
+  return emitBigIntUnaryArithResult<MBigIntBitNot>(inputId);
+}
+
 bool WarpCacheIRTranspiler::emitCallStringConcatResult(StringOperandId lhsId,
                                                        StringOperandId rhsId) {
   MDefinition* lhs = getOperand(lhsId);

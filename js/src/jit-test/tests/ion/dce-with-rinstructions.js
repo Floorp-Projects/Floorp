@@ -1491,6 +1491,15 @@ function rbigintbitxor(i) {
     return i;
 }
 
+let uceFault_bitnot_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitnot_bigint'));
+function rbigintbitnot(i) {
+    var x = ~i;
+    if (uceFault_bitnot_bigint(i) || uceFault_bitnot_bigint(i))
+        assertEq(x, -100n  /* = ~99 */);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1638,6 +1647,7 @@ for (j = 100 - max; j < 100; j++) {
     rbigintbitand(BigInt(i));
     rbigintbitor(BigInt(i));
     rbigintbitxor(BigInt(i));
+    rbigintbitnot(BigInt(i));
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

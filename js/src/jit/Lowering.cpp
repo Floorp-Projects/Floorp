@@ -1986,6 +1986,13 @@ void LIRGenerator::visitBigIntNegate(MBigIntNegate* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitBigIntBitNot(MBigIntBitNot* ins) {
+  auto* lir =
+      new (alloc()) LBigIntBitNot(useRegister(ins->input()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
