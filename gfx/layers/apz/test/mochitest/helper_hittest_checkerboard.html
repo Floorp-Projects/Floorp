@@ -17,7 +17,7 @@
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
@@ -28,7 +28,7 @@ function* test(testDriver) {
   // scrollframe scrolls all the way to the bottom of its range, where it's
   // sure to checkerboard.
   utils.setDisplayPortForElement(0, 0, 300, 1000, scroller, 1);
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
   var scrollY = scroller.scrollTopMax;
   utils.setAsyncScrollOffset(scroller, 0, scrollY);
   if (config.isWebRender) {
@@ -49,11 +49,11 @@ function* test(testDriver) {
                  scrollerViewId,
                  utils.getLayersId(),
                  "active scrollframe");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
