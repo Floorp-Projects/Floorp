@@ -63,14 +63,14 @@ body {
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
   // layerize the scrollable frame
   var subframe = document.querySelector(".subframe");
   utils.setDisplayPortForElement(0, 0, 800, 2000, subframe, 1);
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   var target = document.querySelector(".absoluteClip");
   checkHitResult(hitTest(centerOf(target)),
@@ -78,11 +78,11 @@ function* test(testDriver) {
                  utils.getViewId(subframe),
                  utils.getLayersId(),
                  "fixed item inside a scrolling transform");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
