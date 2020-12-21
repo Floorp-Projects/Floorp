@@ -15,7 +15,7 @@ config = {
     "log_name": "raptor",
     "installer_path": "installer.exe",
     "virtualenv_path": VENV_PATH,
-    "virtualenv_modules": ["pywin32", "raptor", "mozinstall"],
+    "virtualenv_modules": ["pypiwin32==219", "raptor", "mozinstall"],
     "exes": {
         "python": PYTHON,
         "easy_install": [
