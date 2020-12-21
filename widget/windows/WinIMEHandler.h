@@ -181,7 +181,6 @@ class IMEHandler final {
 
   static bool sMaybeEditable;
   static bool sForceDisableCurrentIMM_IME;
-  static bool sPluginHasFocus;
   static bool sNativeCaretIsCreated;
   static bool sHasNativeCaretBeenRequested;
 
@@ -205,7 +204,7 @@ class IMEHandler final {
   static bool sIsIMMEnabled;
   static bool sAssociateIMCOnlyWhenIMM_IMEActive;
 
-  static bool IsTSFAvailable() { return (sIsInTSFMode && !sPluginHasFocus); }
+  static bool IsTSFAvailable() { return sIsInTSFMode; }
   static bool IsIMMActive();
 
   static void MaybeShowOnScreenKeyboard(nsWindow* aWindow,
