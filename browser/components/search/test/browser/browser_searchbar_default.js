@@ -7,6 +7,10 @@
 
 "use strict";
 
+const { SearchSuggestionController } = ChromeUtils.import(
+  "resource://gre/modules/SearchSuggestionController.jsm"
+);
+
 const templateNormal = "https://example.com/?q=";
 const templatePrivate = "https://example.com/?query=";
 
@@ -74,8 +78,14 @@ add_task(async function setup() {
   });
 });
 
-async function doSearch(win, tab, engineName, expectedUrl) {
-  await searchInSearchbar(win, "query");
+async function doSearch(
+  win,
+  tab,
+  engineName,
+  templateUrl,
+  inputText = "query"
+) {
+  await searchInSearchbar(win, inputText);
 
   Assert.ok(
     win.BrowserSearch.searchBar.textbox.popup.searchbarEngineName
@@ -90,7 +100,7 @@ async function doSearch(win, tab, engineName, expectedUrl) {
 
   Assert.equal(
     tab.linkedBrowser.currentURI.spec,
-    expectedUrl,
+    templateUrl + inputText,
     "Should have loaded the expected search page."
   );
 }
@@ -101,7 +111,7 @@ add_task(async function test_default_search() {
     "about:blank"
   );
 
-  await doSearch(window, tab, "MozSearch1", templateNormal + "query");
+  await doSearch(window, tab, "MozSearch1", templateNormal);
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -109,12 +119,7 @@ add_task(async function test_default_search() {
 add_task(async function test_default_search_private_no_separate() {
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  await doSearch(
-    win,
-    win.gBrowser.selectedTab,
-    "MozSearch1",
-    templateNormal + "query"
-  );
+  await doSearch(win, win.gBrowser.selectedTab, "MozSearch1", templateNormal);
 
   await BrowserTestUtils.closeWindow(win);
 });
@@ -130,12 +135,49 @@ add_task(async function test_default_search_private_no_separate() {
 
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  await doSearch(
-    win,
-    win.gBrowser.selectedTab,
-    "MozSearch2",
-    templatePrivate + "query"
-  );
+  await doSearch(win, win.gBrowser.selectedTab, "MozSearch2", templatePrivate);
 
   await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_form_history() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+  await FormHistoryTestUtils.clear("searchbar-history");
+  const gShortString = new Array(
+    SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
+  )
+    .fill("a")
+    .join("");
+  let promiseAdd = TestUtils.topicObserved("satchel-storage-changed");
+  await doSearch(window, tab, "MozSearch1", templateNormal, gShortString);
+  await promiseAdd;
+  let entries = (await FormHistoryTestUtils.search("searchbar-history")).map(
+    entry => entry.value
+  );
+  Assert.deepEqual(
+    entries,
+    [gShortString],
+    "Should have stored search history"
+  );
+
+  await FormHistoryTestUtils.clear("searchbar-history");
+  const gLongString = new Array(
+    SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH + 1
+  )
+    .fill("a")
+    .join("");
+  await doSearch(window, tab, "MozSearch1", templateNormal, gLongString);
+  // There's nothing we can wait for, since addition should not be happening.
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 500));
+  entries = (await FormHistoryTestUtils.search("searchbar-history")).map(
+    entry => entry.value
+  );
+  Assert.deepEqual(entries, [], "Should not find form history");
+
+  await FormHistoryTestUtils.clear("searchbar-history");
+  BrowserTestUtils.removeTab(tab);
 });

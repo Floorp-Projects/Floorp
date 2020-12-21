@@ -306,7 +306,12 @@ let ContentSearch = {
     } catch (err) {
       return false;
     }
-    if (isPrivate || !entry) {
+    if (
+      isPrivate ||
+      !entry ||
+      entry.value.length >
+        SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
+    ) {
       return false;
     }
     let browserData = this._suggestionDataForBrowser(browser, true);
