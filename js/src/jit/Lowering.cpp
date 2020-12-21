@@ -974,6 +974,14 @@ void LIRGenerator::visitCompare(MCompare* comp) {
     return;
   }
 
+  // Compare two BigInts.
+  if (comp->compareType() == MCompare::Compare_BigInt) {
+    auto* lir = new (alloc()) LCompareBigInt(
+        useRegister(left), useRegister(right), temp(), temp(), temp());
+    define(lir, comp);
+    return;
+  }
+
   // Unknown/unspecialized compare use a VM call.
   if (comp->compareType() == MCompare::Compare_Unknown) {
     LCompareVM* lir =
