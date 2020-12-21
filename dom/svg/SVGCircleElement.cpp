@@ -151,12 +151,11 @@ already_AddRefed<Path> SVGCircleElement::BuildPath(PathBuilder* aBuilder) {
 
 bool SVGCircleElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
                                              const ComputedStyle& aOldStyle) {
-  auto *newSVGReset = aNewStyle.StyleSVGReset(),
-       *oldSVGReset = aOldStyle.StyleSVGReset();
+  const auto& newSVGReset = *aNewStyle.StyleSVGReset();
+  const auto& oldSVGReset = *aOldStyle.StyleSVGReset();
 
-  return newSVGReset->mCx != oldSVGReset->mCx ||
-         newSVGReset->mCy != oldSVGReset->mCy ||
-         newSVGReset->mR != oldSVGReset->mR;
+  return newSVGReset.mCx != oldSVGReset.mCx ||
+         newSVGReset.mCy != oldSVGReset.mCy || newSVGReset.mR != oldSVGReset.mR;
 }
 
 nsCSSPropertyID SVGCircleElement::GetCSSPropertyIdForAttrEnum(

@@ -136,37 +136,37 @@ nsresult SVGGeometryFrame::AttributeChanged(int32_t aNameSpaceID,
 /* virtual */
 void SVGGeometryFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsIFrame::DidSetComputedStyle(aOldComputedStyle);
+  auto* element = static_cast<SVGGeometryElement*>(GetContent());
+  if (!aOldComputedStyle) {
+    element->ClearAnyCachedPath();
+    return;
+  }
 
-  if (aOldComputedStyle) {
-    SVGGeometryElement* element =
-        static_cast<SVGGeometryElement*>(GetContent());
-
-    const auto* oldStyleSVG = aOldComputedStyle->StyleSVG();
-    if (!SVGContentUtils::ShapeTypeHasNoCorners(GetContent())) {
-      if (StyleSVG()->mStrokeLinecap != oldStyleSVG->mStrokeLinecap &&
-          element->IsSVGElement(nsGkAtoms::path)) {
-        // If the stroke-linecap changes to or from "butt" then our element
-        // needs to update its cached Moz2D Path, since SVGPathData::BuildPath
-        // decides whether or not to insert little lines into the path for zero
-        // length subpaths base on that property.
+  const auto* oldStyleSVG = aOldComputedStyle->StyleSVG();
+  if (!SVGContentUtils::ShapeTypeHasNoCorners(GetContent())) {
+    if (StyleSVG()->mStrokeLinecap != oldStyleSVG->mStrokeLinecap &&
+        element->IsSVGElement(nsGkAtoms::path)) {
+      // If the stroke-linecap changes to or from "butt" then our element
+      // needs to update its cached Moz2D Path, since SVGPathData::BuildPath
+      // decides whether or not to insert little lines into the path for zero
+      // length subpaths base on that property.
+      element->ClearAnyCachedPath();
+    } else if (HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD)) {
+      if (StyleSVG()->mClipRule != oldStyleSVG->mClipRule) {
+        // Moz2D Path objects are fill-rule specific.
+        // For clipPath we use clip-rule as the path's fill-rule.
         element->ClearAnyCachedPath();
-      } else if (HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD)) {
-        if (StyleSVG()->mClipRule != oldStyleSVG->mClipRule) {
-          // Moz2D Path objects are fill-rule specific.
-          // For clipPath we use clip-rule as the path's fill-rule.
-          element->ClearAnyCachedPath();
-        }
-      } else {
-        if (StyleSVG()->mFillRule != oldStyleSVG->mFillRule) {
-          // Moz2D Path objects are fill-rule specific.
-          element->ClearAnyCachedPath();
-        }
+      }
+    } else {
+      if (StyleSVG()->mFillRule != oldStyleSVG->mFillRule) {
+        // Moz2D Path objects are fill-rule specific.
+        element->ClearAnyCachedPath();
       }
     }
+  }
 
-    if (element->IsGeometryChangedViaCSS(*Style(), *aOldComputedStyle)) {
-      element->ClearAnyCachedPath();
-    }
+  if (element->IsGeometryChangedViaCSS(*Style(), *aOldComputedStyle)) {
+    element->ClearAnyCachedPath();
   }
 }
 
