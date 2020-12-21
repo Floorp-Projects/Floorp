@@ -2138,7 +2138,7 @@ class UrlbarInput {
    *   The url this query was triggered with.
    */
   _recordSearch(engine, event, searchActionDetails = {}) {
-    const isOneOff = this.view.oneOffSearchButtons.maybeRecordTelemetry(event);
+    const isOneOff = this.view.oneOffSearchButtons.eventTargetIsAOneOff(event);
 
     BrowserSearchTelemetry.recordSearch(
       this.window.gBrowser,

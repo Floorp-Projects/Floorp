@@ -347,7 +347,7 @@
       let textValue = textBox.value;
 
       let selectedIndex = this.telemetrySelectedIndex;
-      let oneOffRecorded = false;
+      let isOneOff = false;
 
       BrowserSearchTelemetry.recordSearchSuggestionSelectionMethod(
         aEvent,
@@ -356,7 +356,7 @@
       );
 
       if (selectedIndex == -1) {
-        oneOffRecorded = this.textbox.popup.oneOffButtons.maybeRecordTelemetry(
+        isOneOff = this.textbox.popup.oneOffButtons.eventTargetIsAOneOff(
           aEvent
         );
       }
@@ -374,10 +374,10 @@
       }
 
       // This is a one-off search only if oneOffRecorded is true.
-      this.doSearch(textValue, aWhere, aEngine, aParams, oneOffRecorded);
+      this.doSearch(textValue, aWhere, aEngine, aParams, isOneOff);
     }
 
-    doSearch(aData, aWhere, aEngine, aParams, aOneOff) {
+    doSearch(aData, aWhere, aEngine, aParams, isOneOff = false) {
       let textBox = this._textbox;
       let engine = aEngine || this.currentEngine;
 
@@ -408,8 +408,8 @@
 
       // If we hit here, we come either from a one-off, a plain search or a suggestion.
       const details = {
-        isOneOff: aOneOff,
-        isSuggestion: !aOneOff && this.telemetrySelectedIndex != -1,
+        isOneOff,
+        isSuggestion: !isOneOff && this.telemetrySelectedIndex != -1,
         url: submission.uri,
       };
 
