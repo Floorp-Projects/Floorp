@@ -1242,6 +1242,20 @@ void MacroAssembler::loadFirstBigIntDigitOrZero(Register bigInt,
   bind(&done);
 }
 
+void MacroAssembler::loadBigInt(Register bigInt, Register dest, Label* fail) {
+  Label done, nonZero;
+  branchIfBigIntIsNonZero(bigInt, &nonZero);
+  {
+    movePtr(ImmWord(0), dest);
+    jump(&done);
+  }
+  bind(&nonZero);
+
+  loadBigIntNonZero(bigInt, dest, fail);
+
+  bind(&done);
+}
+
 void MacroAssembler::loadBigIntNonZero(Register bigInt, Register dest,
                                        Label* fail) {
   MOZ_ASSERT(bigInt != dest);

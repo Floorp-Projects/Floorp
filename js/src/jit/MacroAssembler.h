@@ -3704,6 +3704,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadFirstBigIntDigitOrZero(Register bigInt, Register dest);
 
   /**
+   * Load the number stored in |bigInt| into |dest|. Handles the case when the
+   * BigInt digits length is zero. Jumps to |fail| when the number can't be
+   * saved into a single pointer-sized register.
+   */
+  void loadBigInt(Register bigInt, Register dest, Label* fail);
+
+  /**
    * Load the number stored in |bigInt| into |dest|. Doesn't handle the case
    * when the BigInt digits length is zero. Jumps to |fail| when the number
    * can't be saved into a single pointer-sized register.
