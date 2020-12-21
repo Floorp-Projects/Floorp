@@ -84,7 +84,7 @@
 </div>
 <script>
 
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
@@ -92,7 +92,7 @@ function* test(testDriver) {
   for (var scroller of document.querySelectorAll(".scroller")) {
     utils.setDisplayPortForElement(0, 0, 100, 200, scroller, 1);
   }
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   var rootViewId = utils.getViewId(document.scrollingElement);
   for (var testId = 1; testId <= 4; testId++) {
@@ -171,7 +171,7 @@ function* test(testDriver) {
 }
 
 waitUntilApzStable()
-    .then(runContinuation(test))
+    .then(test)
     .then(subtestDone, subtestFailed);
 </script>
 </body></html>
