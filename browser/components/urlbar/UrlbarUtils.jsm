@@ -386,7 +386,10 @@ var UrlbarUtils = {
    *          The array is sorted by match indexes ascending.
    */
   getTokenMatches(tokens, str, highlightType) {
-    str = str.toLocaleLowerCase();
+    // Only search a portion of the string, because not more than a certain
+    // amount of characters are visible in the UI, matching over what is visible
+    // would be expensive and pointless.
+    str = str.substring(0, UrlbarUtils.MAX_TEXT_LENGTH).toLocaleLowerCase();
     // To generate non-overlapping ranges, we start from a 0-filled array with
     // the same length of the string, and use it as a collision marker, setting
     // 1 where the text should be highlighted.
