@@ -196,6 +196,15 @@ void MacroAssembler::xor32(Imm32 imm, Register dest) {
   Eor(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
 }
 
+void MacroAssembler::xor32(Imm32 imm, const Address& dest) {
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch32 = temps.AcquireW();
+  MOZ_ASSERT(scratch32.asUnsized() != dest.base);
+  load32(dest, scratch32.asUnsized());
+  Eor(scratch32, scratch32, Operand(imm.value));
+  store32(scratch32.asUnsized(), dest);
+}
+
 void MacroAssembler::xor32(const Address& src, Register dest) {
   vixl::UseScratchRegisterScope temps(this);
   const ARMRegister scratch32 = temps.AcquireW();
