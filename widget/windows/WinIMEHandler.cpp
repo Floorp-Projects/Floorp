@@ -436,10 +436,6 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
 
   // Assume that SetInputContext() is called only when aWindow has focus.
   sPluginHasFocus = (aInputContext.mIMEState.mEnabled == IMEEnabled::Plugin);
-  if (sPluginHasFocus) {
-    // Update some cached system settings in the plugin.
-    aWindow->DispatchPluginSettingEvents();
-  }
 
   if (aInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
     IMEHandler::MaybeDismissOnScreenKeyboard(aWindow, Sync::Yes);
