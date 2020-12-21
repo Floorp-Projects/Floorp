@@ -54,8 +54,11 @@ add_task(async function setup() {
   let json = await response.json();
   await SearchTestUtils.updateRemoteSettingsConfig(json.data);
 
+  let topsitesAttribution = Services.prefs.getStringPref(
+    "browser.partnerlink.campaign.topsites"
+  );
   gHttpServer = new HttpServer();
-  gHttpServer.registerPathHandler("/", submitHandler);
+  gHttpServer.registerPathHandler(`/cid/${topsitesAttribution}`, submitHandler);
   gHttpServer.start(-1);
 
   await SpecialPowers.pushPrefEnv({
@@ -70,7 +73,7 @@ add_task(async function setup() {
       //
       [
         "browser.partnerlink.attributionURL",
-        `http://localhost:${gHttpServer.identity.primaryPort}/`,
+        `http://localhost:${gHttpServer.identity.primaryPort}/cid/`,
       ],
     ],
   });
