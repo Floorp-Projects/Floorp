@@ -8,6 +8,7 @@
 
 #include "nsDebug.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/SVGAnimateMotionElement.h"
 #include "mozilla/dom/SVGGeometryElement.h"
@@ -192,9 +193,13 @@ SVGGeometryElement* SVGMPathElement::GetReferencedPath() {
 
 void SVGMPathElement::UpdateHrefTarget(nsIContent* aParent,
                                        const nsAString& aHrefStr) {
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  if (nsContentUtils::IsLocalRefURL(aHrefStr)) {
+    baseURI = SVGObserverUtils::GetBaseURLForLocalRef(this, baseURI);
+  }
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), aHrefStr,
-                                            OwnerDoc(), GetBaseURI());
+                                            OwnerDoc(), baseURI);
 
   // Stop observing old target (if any)
   if (mPathTracker.get()) {

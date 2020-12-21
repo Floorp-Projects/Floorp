@@ -3153,7 +3153,7 @@ class nsContentUtils {
    * Detect whether a string is a local-url.
    * https://drafts.csswg.org/css-values/#local-urls
    */
-  static bool IsLocalRefURL(const nsString& aString);
+  static bool IsLocalRefURL(const nsAString& aString);
 
   /**
    * Compose a tab id with process id and a serial number.
