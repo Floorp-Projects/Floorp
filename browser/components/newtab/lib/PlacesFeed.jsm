@@ -383,23 +383,6 @@ class PlacesFeed {
     }
   }
 
-  /**
-   * Sends an attribution request for Top Sites interactions.
-   * @param {object} data
-   *   Attribution paramters from a Top Site.
-   */
-  makeAttributionRequest(data) {
-    let args = Object.assign(
-      {
-        campaignID: Services.prefs.getStringPref(
-          "browser.partnerlink.campaign.topsites"
-        ),
-      },
-      data
-    );
-    PartnerLinkAttribution.makeRequest(args);
-  }
-
   async fillSearchTopSiteTerm({ _target, data }) {
     const searchEngine = await Services.search.getEngineByAlias(data.label);
     _target.browser.ownerGlobal.gURLBar.search(data.label, {
@@ -560,7 +543,7 @@ class PlacesFeed {
         break;
       }
       case at.PARTNER_LINK_ATTRIBUTION:
-        this.makeAttributionRequest(action.data);
+        PartnerLinkAttribution.makeRequest(action.data);
         break;
     }
   }
