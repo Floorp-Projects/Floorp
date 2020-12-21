@@ -569,6 +569,11 @@ void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
   MOZ_CRASH("NYI");
 }
 
+void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
+                                  Label* label) {
+  MOZ_CRASH("NYI");
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   subPtr(rhs, lhs);
