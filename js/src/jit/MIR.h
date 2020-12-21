@@ -6040,6 +6040,23 @@ class MBigIntDecrement : public MBigIntUnaryArithInstruction {
   ALLOW_CLONE(MBigIntDecrement)
 };
 
+class MBigIntNegate : public MBigIntUnaryArithInstruction {
+  explicit MBigIntNegate(MDefinition* input)
+      : MBigIntUnaryArithInstruction(classOpcode, input) {
+    // We don't need to guard this instruction because it can only fail on OOM.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntNegate)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntNegate)
+};
+
 class MConcat : public MBinaryInstruction,
                 public MixPolicy<ConvertToStringPolicy<0>,
                                  ConvertToStringPolicy<1>>::Data {

@@ -3734,6 +3734,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void initializeBigInt(Register bigInt, Register val);
 
   /**
+   * Copy a BigInt. Jumps to |fail| on allocation failure or when the BigInt
+   * digits need to be heap allocated.
+   */
+  void copyBigIntWithInlineDigits(Register src, Register dest, Register temp,
+                                  Label* fail, bool attemptNursery);
+
+  /**
    * Compare a BigInt and an Int32 value. Falls through to the false case.
    */
   void compareBigIntAndInt32(JSOp op, Register bigInt, Register int32,
