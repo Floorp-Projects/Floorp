@@ -36,7 +36,7 @@
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var utils = getHitTestConfig().utils;
 
   var subframe = document.getElementById("subframe");
@@ -48,11 +48,11 @@ function* test(testDriver) {
     utils.getViewId(subframe),
     utils.getLayersId(),
     "subframe was successfully hit");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
