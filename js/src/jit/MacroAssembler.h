@@ -1468,6 +1468,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTwoByteString(Register string, Label* label);
 
   inline void branchIfNegativeBigInt(Register bigInt, Label* label);
+  inline void branchIfBigIntIsNonNegative(Register bigInt, Label* label);
 
   inline void branchTestFunctionFlags(Register fun, uint32_t flags,
                                       Condition cond, Label* label);
@@ -3676,10 +3677,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
    */
   void addToCharPtr(Register chars, Register index, CharEncoding encoding);
 
- private:
+  /**
+   * Load the BigInt digits from |bigInt| into |digits|.
+   */
   void loadBigIntDigits(Register bigInt, Register digits);
 
- public:
   /**
    * Load the first [u]int64 value from |bigInt| into |dest|.
    */
