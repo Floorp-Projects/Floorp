@@ -976,12 +976,6 @@ interface nsIDOMWindowUtils : nsISupports {
   const unsigned long IME_STATUS_PASSWORD = 2;
 
   /**
-   * PLUGIN means a plug-in has focus. At this time we should not touch to
-   * controlling the IME state.
-   */
-  const unsigned long IME_STATUS_PLUGIN   = 3;
-
-  /**
    * Get IME status, see above IME_STATUS_* definitions.
    */
   readonly attribute unsigned long IMEStatus;

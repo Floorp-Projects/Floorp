@@ -663,12 +663,6 @@ function runPluginTest() {
     return;
   }
 
-  if (navigator.platform.indexOf("Mac") == 0) {
-    // XXX on mac, currently, this test isn't passed because it doesn't return
-    // IME_STATUS_PLUGIN by its bug.
-    return;
-  }
-
   var plugin = document.getElementById("plugin");
 
   // Plugins are not supported and their elements should not accept focus;

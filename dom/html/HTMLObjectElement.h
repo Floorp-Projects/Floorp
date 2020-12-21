@@ -57,7 +57,6 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                int32_t* aTabIndex) override;
-  virtual IMEState GetDesiredIMEState() override;
 
   // Overriden nsIFormControl methods
   NS_IMETHOD Reset() override;

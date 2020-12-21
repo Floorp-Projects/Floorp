@@ -186,14 +186,6 @@ bool HTMLEmbedElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   return true;
 }
 
-nsIContent::IMEState HTMLEmbedElement::GetDesiredIMEState() {
-  if (Type() == eType_Plugin) {
-    return IMEState(IMEEnabled::Plugin);
-  }
-
-  return nsGenericHTMLElement::GetDesiredIMEState();
-}
-
 bool HTMLEmbedElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsIPrincipal* aMaybeScriptedPrincipal,

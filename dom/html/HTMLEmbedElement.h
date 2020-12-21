@@ -46,7 +46,6 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                int32_t* aTabIndex) override;
-  virtual IMEState GetDesiredIMEState() override;
 
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
