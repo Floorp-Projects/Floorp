@@ -1100,7 +1100,7 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
   // TODO: remove the uglyness, see bug 598468.
   NS_ASSERTION(gPreventAssertInCompareTreePosition || parent,
                "no common ancestor at all???");
-#endif  // DEBUG
+#endif            // DEBUG
   if (!parent) {  // different documents??
     return 0;
   }
@@ -4572,21 +4572,21 @@ static nscoord AddIntrinsicSizeOffset(
   nscoord coordOutsideSize = 0;
 
   if (!(aFlags & nsLayoutUtils::IGNORE_PADDING)) {
-    coordOutsideSize = NSCoordSaturatingAdd(coordOutsideSize, aOffsets.padding);
+    coordOutsideSize += aOffsets.padding;
   }
 
-  coordOutsideSize = NSCoordSaturatingAdd(coordOutsideSize, aOffsets.border);
+  coordOutsideSize += aOffsets.border;
 
   if (aBoxSizing == StyleBoxSizing::Border) {
-    min = NSCoordSaturatingAdd(min, coordOutsideSize);
+    min += coordOutsideSize;
     result = NSCoordSaturatingAdd(result, coordOutsideSize);
 
     coordOutsideSize = 0;
   }
 
-  coordOutsideSize = NSCoordSaturatingAdd(coordOutsideSize, aOffsets.margin);
+  coordOutsideSize += aOffsets.margin;
 
-  min = NSCoordSaturatingAdd(min, coordOutsideSize);
+  min += coordOutsideSize;
   result = NSCoordSaturatingAdd(result, coordOutsideSize);
 
   nscoord size;
@@ -4597,13 +4597,13 @@ static nscoord AddIntrinsicSizeOffset(
   } else if (GetAbsoluteCoord(aStyleSize, size) ||
              GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
                                PROP_WIDTH, size)) {
-    result = NSCoordSaturatingAdd(size, coordOutsideSize);
+    result = size + coordOutsideSize;
   }
 
   nscoord maxSize = aFixedMaxSize ? *aFixedMaxSize : 0;
   if (aFixedMaxSize || GetIntrinsicCoord(aStyleMaxSize, aRenderingContext,
                                          aFrame, PROP_MAX_WIDTH, maxSize)) {
-    maxSize = NSCoordSaturatingAdd(maxSize, coordOutsideSize);
+    maxSize += coordOutsideSize;
     if (result > maxSize) {
       result = maxSize;
     }
@@ -4612,7 +4612,7 @@ static nscoord AddIntrinsicSizeOffset(
   nscoord minSize = aFixedMinSize ? *aFixedMinSize : 0;
   if (aFixedMinSize || GetIntrinsicCoord(aStyleMinSize, aRenderingContext,
                                          aFrame, PROP_MIN_WIDTH, minSize)) {
-    minSize = NSCoordSaturatingAdd(minSize, coordOutsideSize);
+    minSize += coordOutsideSize;
     if (result < minSize) {
       result = minSize;
     }
@@ -4632,7 +4632,7 @@ static nscoord AddIntrinsicSizeOffset(
     nscoord themeSize = pc->DevPixelsToAppUnits(
         aAxis == eAxisVertical ? devSize.height : devSize.width);
     // GetMinimumWidgetSize() returns a border-box width.
-    themeSize = NSCoordSaturatingAdd(themeSize, aOffsets.margin);
+    themeSize += aOffsets.margin;
     if (themeSize > result || !canOverride) {
       result = themeSize;
     }
