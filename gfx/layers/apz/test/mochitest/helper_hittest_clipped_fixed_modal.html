@@ -60,14 +60,14 @@
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
   // layerize the scrollable frame
   var subframe = document.querySelector(".content");
   utils.setDisplayPortForElement(0, 0, 800, 2000, subframe, 1);
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   var target = document.querySelector(".content");
   checkHitResult(hitTest(centerOf(target)),
@@ -75,11 +75,11 @@ function* test(testDriver) {
                  utils.getViewId(subframe),
                  utils.getLayersId(),
                  "content covered by a clipped fixed div");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
