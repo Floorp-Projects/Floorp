@@ -68,17 +68,6 @@ void MacroAssembler::xor32(Register src, Register dest) { ma_xor(dest, src); }
 
 void MacroAssembler::xor32(Imm32 imm, Register dest) { ma_xor(dest, imm); }
 
-void MacroAssembler::xor32(Imm32 imm, const Address& dest) {
-  load32(dest, SecondScratchReg);
-  ma_xor(SecondScratchReg, imm);
-  store32(SecondScratchReg, dest);
-}
-
-void MacroAssembler::xor32(const Address& src, Register dest) {
-  load32(src, SecondScratchReg);
-  ma_xor(dest, SecondScratchReg);
-}
-
 // ===============================================================
 // Swap instructions
 
@@ -568,21 +557,6 @@ void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
   MOZ_ASSERT(cond == Overflow);
   neg32(reg);
   branch32(Assembler::Equal, reg, Imm32(INT32_MIN), label);
-}
-
-void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  MOZ_CRASH("NYI");
-}
-
-void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  MOZ_CRASH("NYI");
-}
-
-void MacroAssembler::branchMulPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  MOZ_CRASH("NYI");
 }
 
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,

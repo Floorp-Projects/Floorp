@@ -274,7 +274,7 @@ var uceFault_mul_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul
 function rmul_number(i) {
     var x = 2 * i;
     if (uceFault_mul_number(i) || uceFault_mul_number(i))
-        assertEq(x, 198  /* = 2 * 99 */);
+        assertEq(x, 198  /* = 1 * 99 */);
     assertRecoveredOnBailout(x, true);
     return i;
 }
@@ -316,7 +316,7 @@ var uceFault_imul_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_im
 function rimul_number(i) {
     var x = Math.imul(2, i);
     if (uceFault_imul_number(i) || uceFault_imul_number(i))
-        assertEq(x, 198  /* = 2 * 99 */);
+        assertEq(x, 198  /* = 1 * 99 */);
     assertRecoveredOnBailout(x, true);
     return i;
 }
@@ -1408,143 +1408,6 @@ function rsign_double(i) {
     return i;
 }
 
-let uceFault_add_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_add_bigint'));
-function rbigintadd(i) {
-    var x = 1n + i;
-    if (uceFault_add_bigint(i) || uceFault_add_bigint(i))
-        assertEq(x, 100n  /* = 1 + 99 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_sub_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sub_bigint'));
-function rbigintsub(i) {
-    var x = 1n - i;
-    if (uceFault_sub_bigint(i) || uceFault_sub_bigint(i))
-        assertEq(x, -98n  /* = 1 - 99 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_mul_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul_bigint'));
-function rbigintmul(i) {
-    var x = 2n * i;
-    if (uceFault_mul_bigint(i) || uceFault_mul_bigint(i))
-        assertEq(x, 198n  /* = 2 * 99 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_div_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_div_bigint'));
-function rbigintdiv(i) {
-    var x = i / 3n;
-    if (uceFault_div_bigint(i) || uceFault_div_bigint(i))
-        assertEq(x, 33n  /* = 99 / 3 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_mod_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mod_bigint'));
-function rbigintmod(i) {
-    var x = i % 2n;
-    if (uceFault_mod_bigint(i) || uceFault_mod_bigint(i))
-        assertEq(x, 1n  /* = 99 % 2 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_pow_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_pow_bigint'));
-function rbigintpow(i) {
-    var x = i ** 2n;
-    if (uceFault_pow_bigint(i) || uceFault_pow_bigint(i))
-        assertEq(x, 9801n  /* = 99 ** 2 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_inc_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_inc_bigint'));
-function rbigintinc(i) {
-    var x = i;
-    x++;
-    if (uceFault_inc_bigint(i) || uceFault_inc_bigint(i))
-        assertEq(x, 100n  /* = 99 + 1 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_dec_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_dec_bigint'));
-function rbigintdec(i) {
-    var x = i;
-    x--;
-    if (uceFault_dec_bigint(i) || uceFault_dec_bigint(i))
-        assertEq(x, 98n  /* = 99 - 1 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_neg_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_neg_bigint'));
-function rbigintneg(i) {
-    var x = -i;
-    if (uceFault_neg_bigint(i) || uceFault_neg_bigint(i))
-        assertEq(x, -99n);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_bitand_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitand_bigint'));
-function rbigintbitand(i) {
-    var x = 1n & i;
-    if (uceFault_bitand_bigint(i) || uceFault_bitand_bigint(i))
-        assertEq(x, 1n  /* = 1 & 99 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_bitor_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitor_bigint'));
-function rbigintbitor(i) {
-    var x = i | -100n; /* -100 == ~99 */
-    if (uceFault_bitor_bigint(i) || uceFault_bitor_bigint(i))
-        assertEq(x, -1n) /* ~99 | 99 = -1 */
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_bitxor_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitxor_bigint'));
-function rbigintbitxor(i) {
-    var x = 1n ^ i;
-    if (uceFault_bitxor_bigint(i) || uceFault_bitxor_bigint(i))
-        assertEq(x, 98n  /* = 1 XOR 99 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_bitnot_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_bitnot_bigint'));
-function rbigintbitnot(i) {
-    var x = ~i;
-    if (uceFault_bitnot_bigint(i) || uceFault_bitnot_bigint(i))
-        assertEq(x, -100n  /* = ~99 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_lsh_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_lsh_bigint'));
-function rbigintlsh(i) {
-    var x = i << 1n;
-    if (uceFault_lsh_bigint(i) || uceFault_lsh_bigint(i))
-        assertEq(x, 198n); /* 99 << 1 == 198 */
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
-let uceFault_rsh_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_rsh_bigint'));
-function rbigintrsh(i) {
-    var x = i >> 1n;
-    if (uceFault_rsh_bigint(i) || uceFault_rsh_bigint(i))
-        assertEq(x, 49n  /* = 99 >> 1 */);
-    assertRecoveredOnBailout(x, true);
-    return i;
-}
-
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1683,21 +1546,6 @@ for (j = 100 - max; j < 100; j++) {
     rlog_object(i);
     rsign_number(i);
     rsign_double(i);
-    rbigintadd(BigInt(i));
-    rbigintsub(BigInt(i));
-    rbigintmul(BigInt(i));
-    rbigintdiv(BigInt(i));
-    rbigintmod(BigInt(i));
-    rbigintpow(BigInt(i));
-    rbigintinc(BigInt(i));
-    rbigintdec(BigInt(i));
-    rbigintneg(BigInt(i));
-    rbigintbitand(BigInt(i));
-    rbigintbitor(BigInt(i));
-    rbigintbitxor(BigInt(i));
-    rbigintbitnot(BigInt(i));
-    rbigintlsh(BigInt(i));
-    rbigintrsh(BigInt(i));
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

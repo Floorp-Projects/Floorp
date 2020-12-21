@@ -96,8 +96,6 @@ void MacroAssembler::loadAbiReturnAddress(Register dest) { movePtr(lr, dest); }
 
 void MacroAssembler::not32(Register reg) { ma_mvn(reg, reg); }
 
-void MacroAssembler::notPtr(Register reg) { ma_mvn(reg, reg); }
-
 void MacroAssembler::and32(Register src, Register dest) {
   ma_and(src, dest, SetCC);
 }
@@ -203,23 +201,6 @@ void MacroAssembler::xor32(Register src, Register dest) {
 void MacroAssembler::xor32(Imm32 imm, Register dest) {
   ScratchRegisterScope scratch(*this);
   ma_eor(imm, dest, scratch, SetCC);
-}
-
-void MacroAssembler::xor32(Imm32 imm, const Address& dest) {
-  ScratchRegisterScope scratch(*this);
-  SecondScratchRegisterScope scratch2(*this);
-
-  ma_ldr(dest, scratch, scratch2);
-  ma_eor(imm, scratch, scratch2);
-  ma_str(scratch, dest, scratch2);
-}
-
-void MacroAssembler::xor32(const Address& src, Register dest) {
-  ScratchRegisterScope scratch(*this);
-  SecondScratchRegisterScope scratch2(*this);
-
-  ma_ldr(src, scratch, scratch2);
-  ma_eor(scratch, dest, SetCC);
 }
 
 void MacroAssembler::xorPtr(Register src, Register dest) { ma_eor(src, dest); }
@@ -601,10 +582,6 @@ void MacroAssembler::lshiftPtr(Imm32 imm, Register dest) {
   ma_lsl(imm, dest, dest);
 }
 
-void MacroAssembler::lshiftPtr(Register src, Register dest) {
-  ma_lsl(src, dest, dest);
-}
-
 void MacroAssembler::lshift64(Imm32 imm, Register64 dest) {
   MOZ_ASSERT(0 <= imm.value && imm.value < 64);
   if (imm.value == 0) {
@@ -657,10 +634,6 @@ void MacroAssembler::rshiftPtr(Imm32 imm, Register dest) {
   if (imm.value) {
     ma_lsr(imm, dest, dest);
   }
-}
-
-void MacroAssembler::rshiftPtr(Register src, Register dest) {
-  ma_lsr(src, dest, dest);
 }
 
 void MacroAssembler::rshift32(Register src, Register dest) {
@@ -1495,21 +1468,6 @@ void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
   MOZ_ASSERT(cond == Overflow);
   neg32(reg);
   j(cond, label);
-}
-
-void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  branchAdd32(cond, src, dest, label);
-}
-
-void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  branchSub32(cond, src, dest, label);
-}
-
-void MacroAssembler::branchMulPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  branchMul32(cond, src, dest, label);
 }
 
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,

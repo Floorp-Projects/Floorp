@@ -394,25 +394,9 @@ void MacroAssembler::branchTwoByteString(Register string, Label* label) {
                Imm32(JSString::LATIN1_CHARS_BIT), label);
 }
 
-void MacroAssembler::branchIfBigIntIsNegative(Register bigInt, Label* label) {
+void MacroAssembler::branchIfNegativeBigInt(Register bigInt, Label* label) {
   branchTest32(Assembler::NonZero, Address(bigInt, BigInt::offsetOfFlags()),
                Imm32(BigInt::signBitMask()), label);
-}
-
-void MacroAssembler::branchIfBigIntIsNonNegative(Register bigInt,
-                                                 Label* label) {
-  branchTest32(Assembler::Zero, Address(bigInt, BigInt::offsetOfFlags()),
-               Imm32(BigInt::signBitMask()), label);
-}
-
-void MacroAssembler::branchIfBigIntIsZero(Register bigInt, Label* label) {
-  branch32(Assembler::Equal, Address(bigInt, BigInt::offsetOfLength()),
-           Imm32(0), label);
-}
-
-void MacroAssembler::branchIfBigIntIsNonZero(Register bigInt, Label* label) {
-  branch32(Assembler::NotEqual, Address(bigInt, BigInt::offsetOfLength()),
-           Imm32(0), label);
 }
 
 void MacroAssembler::branchTestFunctionFlags(Register fun, uint32_t flags,

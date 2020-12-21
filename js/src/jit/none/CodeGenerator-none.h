@@ -59,12 +59,6 @@ class CodeGeneratorNone : public CodeGeneratorShared {
   void emitTableSwitchDispatch(MTableSwitch*, Register, Register) {
     MOZ_CRASH();
   }
-  void emitBigIntDiv(LBigIntDiv*, Register, Register, Register, Label*) {
-    MOZ_CRASH();
-  }
-  void emitBigIntMod(LBigIntMod*, Register, Register, Register, Label*) {
-    MOZ_CRASH();
-  }
   ValueOperand ToValue(LInstruction*, size_t) { MOZ_CRASH(); }
   ValueOperand ToTempValue(LInstruction*, size_t) { MOZ_CRASH(); }
   void generateInvalidateEpilogue() { MOZ_CRASH(); }

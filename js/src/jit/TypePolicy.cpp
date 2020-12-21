@@ -97,28 +97,6 @@ bool ArithPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   return true;
 }
 
-bool BigIntArithPolicy::adjustInputs(TempAllocator& alloc,
-                                     MInstruction* ins) const {
-  MOZ_ASSERT(ins->type() == MIRType::BigInt);
-
-  for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
-    MDefinition* in = ins->getOperand(i);
-    if (in->type() == ins->type()) {
-      continue;
-    }
-
-    auto* replace = MToBigInt::New(alloc, in);
-    ins->block()->insertBefore(ins, replace);
-    ins->replaceOperand(i, replace);
-
-    if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 bool AllDoublePolicy::staticAdjustInputs(TempAllocator& alloc,
                                          MInstruction* ins) {
   for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
@@ -163,12 +141,6 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     return BoxInputsPolicy::staticAdjustInputs(alloc, def);
   }
 
-  auto replaceOperand = [&](size_t index, auto* replace) {
-    def->block()->insertBefore(def, replace);
-    def->replaceOperand(index, replace);
-    return replace->typePolicy()->adjustInputs(alloc, replace);
-  };
-
   // Compare_Boolean specialization is done for "Anything === Bool"
   // If the LHS is boolean, we set the specialization to Compare_Int32.
   // This matches other comparisons of the form bool === bool and
@@ -186,7 +158,9 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     if (rhs->type() != MIRType::Boolean) {
       MInstruction* unbox =
           MUnbox::New(alloc, rhs, MIRType::Boolean, MUnbox::Infallible);
-      if (!replaceOperand(1, unbox)) {
+      def->block()->insertBefore(def, unbox);
+      def->replaceOperand(1, unbox);
+      if (!unbox->typePolicy()->adjustInputs(alloc, unbox)) {
         return false;
       }
     }
@@ -211,7 +185,9 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     if (rhs->type() != MIRType::String) {
       MInstruction* unbox =
           MUnbox::New(alloc, rhs, MIRType::String, MUnbox::Infallible);
-      if (!replaceOperand(1, unbox)) {
+      def->block()->insertBefore(def, unbox);
+      def->replaceOperand(1, unbox);
+      if (!unbox->typePolicy()->adjustInputs(alloc, unbox)) {
         return false;
       }
     }
@@ -227,54 +203,11 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     return true;
   }
 
-  // Compare_BigInt_Int32 specialization is done for "BigInt <cmp> Int32".
-  // Compare_BigInt_Double specialization is done for "BigInt <cmp> Double".
-  // Compare_BigInt_String specialization is done for "BigInt <cmp> String".
-  if (compare->compareType() == MCompare::Compare_BigInt_Int32 ||
-      compare->compareType() == MCompare::Compare_BigInt_Double ||
-      compare->compareType() == MCompare::Compare_BigInt_String) {
-    if (MDefinition* in = def->getOperand(0); in->type() != MIRType::BigInt) {
-      auto* replace =
-          MUnbox::New(alloc, in, MIRType::BigInt, MUnbox::Infallible);
-      if (!replaceOperand(0, replace)) {
-        return false;
-      }
-    }
-
-    MDefinition* in = def->getOperand(1);
-
-    MInstruction* replace = nullptr;
-    if (compare->compareType() == MCompare::Compare_BigInt_Int32) {
-      if (in->type() != MIRType::Int32) {
-        replace = MToNumberInt32::New(
-            alloc, in, IntConversionInputKind::NumbersOrBoolsOnly);
-      }
-    } else if (compare->compareType() == MCompare::Compare_BigInt_Double) {
-      if (in->type() != MIRType::Double) {
-        replace = MToDouble::New(alloc, in, MToFPInstruction::NumbersOnly);
-      }
-    } else {
-      MOZ_ASSERT(compare->compareType() == MCompare::Compare_BigInt_String);
-      if (in->type() != MIRType::String) {
-        replace = MUnbox::New(alloc, in, MIRType::String, MUnbox::Infallible);
-      }
-    }
-
-    if (replace) {
-      if (!replaceOperand(1, replace)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   // Convert all inputs to the right input type
   MIRType type = compare->inputType();
   MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Double ||
              type == MIRType::Float32 || type == MIRType::Object ||
-             type == MIRType::String || type == MIRType::Symbol ||
-             type == MIRType::BigInt);
+             type == MIRType::String || type == MIRType::Symbol);
   for (size_t i = 0; i < 2; i++) {
     MDefinition* in = def->getOperand(i);
     if (in->type() == type) {
@@ -317,14 +250,14 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
       case MIRType::Symbol:
         replace = MUnbox::New(alloc, in, MIRType::Symbol, MUnbox::Infallible);
         break;
-      case MIRType::BigInt:
-        replace = MUnbox::New(alloc, in, MIRType::BigInt, MUnbox::Infallible);
-        break;
       default:
         MOZ_CRASH("Unknown compare specialization");
     }
 
-    if (!replaceOperand(i, replace)) {
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(i, replace);
+
+    if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
       return false;
     }
   }
@@ -1130,7 +1063,6 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
 #define TYPE_POLICY_LIST(_)     \
   _(AllDoublePolicy)            \
   _(ArithPolicy)                \
-  _(BigIntArithPolicy)          \
   _(BitwisePolicy)              \
   _(BoxInputsPolicy)            \
   _(CallPolicy)                 \

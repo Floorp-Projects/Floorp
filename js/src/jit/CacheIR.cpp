@@ -9479,7 +9479,7 @@ AttachDecision CompareIRGenerator::tryAttachBigIntInt32(ValOperandId lhsId,
     Int32OperandId intId = createGuards(lhsVal_, lhsId);
     BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
 
-    writer.compareBigIntInt32Result(ReverseCompareOp(op_), bigIntId, intId);
+    writer.compareInt32BigIntResult(op_, intId, bigIntId);
   }
   writer.returnFromIC();
 
@@ -9507,7 +9507,7 @@ AttachDecision CompareIRGenerator::tryAttachBigIntNumber(ValOperandId lhsId,
     NumberOperandId numId = writer.guardIsNumber(lhsId);
     BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
 
-    writer.compareBigIntNumberResult(ReverseCompareOp(op_), bigIntId, numId);
+    writer.compareNumberBigIntResult(op_, numId, bigIntId);
   }
   writer.returnFromIC();
 
@@ -9535,7 +9535,7 @@ AttachDecision CompareIRGenerator::tryAttachBigIntString(ValOperandId lhsId,
     StringOperandId strId = writer.guardToString(lhsId);
     BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
 
-    writer.compareBigIntStringResult(ReverseCompareOp(op_), bigIntId, strId);
+    writer.compareStringBigIntResult(op_, strId, bigIntId);
   }
   writer.returnFromIC();
 
