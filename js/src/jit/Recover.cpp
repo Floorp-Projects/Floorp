@@ -632,6 +632,50 @@ bool RBigIntBitXor::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MBigIntLsh::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntLsh));
+  return true;
+}
+
+RBigIntLsh::RBigIntLsh(CompactBufferReader& reader) {}
+
+bool RBigIntLsh::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  if (!js::BitLsh(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
+bool MBigIntRsh::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntRsh));
+  return true;
+}
+
+RBigIntRsh::RBigIntRsh(CompactBufferReader& reader) {}
+
+bool RBigIntRsh::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  if (!js::BitRsh(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MBigIntIncrement::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntIncrement));

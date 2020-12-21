@@ -78,6 +78,8 @@ namespace jit {
   _(BigIntBitAnd)              \
   _(BigIntBitOr)               \
   _(BigIntBitXor)              \
+  _(BigIntLsh)                 \
+  _(BigIntRsh)                 \
   _(BigIntIncrement)           \
   _(BigIntDecrement)           \
   _(BigIntNegate)              \
@@ -380,6 +382,22 @@ class RBigIntBitOr final : public RInstruction {
 class RBigIntBitXor final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntBitXor, 2)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RBigIntLsh final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntLsh, 2)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RBigIntRsh final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntRsh, 2)
 
   MOZ_MUST_USE bool recover(JSContext* cx,
                             SnapshotIterator& iter) const override;
