@@ -1945,6 +1945,20 @@ void LIRGenerator::visitBigIntMul(MBigIntMul* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitBigIntIncrement(MBigIntIncrement* ins) {
+  auto* lir =
+      new (alloc()) LBigIntIncrement(useRegister(ins->input()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitBigIntDecrement(MBigIntDecrement* ins) {
+  auto* lir =
+      new (alloc()) LBigIntDecrement(useRegister(ins->input()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
