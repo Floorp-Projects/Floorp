@@ -1732,6 +1732,29 @@ class LCompareStrictS : public LInstructionHelper<1, BOX_PIECES + 1, 1> {
   MCompare* mir() { return mir_->toCompare(); }
 };
 
+class LCompareBigInt : public LInstructionHelper<1, 2, 3> {
+ public:
+  LIR_HEADER(CompareBigInt)
+
+  LCompareBigInt(const LAllocation& left, const LAllocation& right,
+                 const LDefinition& temp1, const LDefinition& temp2,
+                 const LDefinition& temp3)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, left);
+    setOperand(1, right);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+  }
+
+  const LAllocation* left() { return getOperand(0); }
+  const LAllocation* right() { return getOperand(1); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+  MCompare* mir() { return mir_->toCompare(); }
+};
+
 // Used for strict-equality comparisons where one side is a boolean
 // and the other is a value. Note that CompareI is used to compare
 // two booleans.

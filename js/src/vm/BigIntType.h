@@ -411,13 +411,16 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   BigInt(const BigInt& other) = delete;
   void operator=(const BigInt& other) = delete;
 
+ public:
+  static constexpr size_t offsetOfFlags() { return offsetOfHeaderFlags(); }
+  static constexpr size_t offsetOfLength() { return offsetOfHeaderLength(); }
+
+  static constexpr size_t signBitMask() { return SignBit; }
+
  private:
   // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler to
   // call the methods below.
   friend class js::jit::MacroAssembler;
-
-  static constexpr size_t offsetOfFlags() { return offsetOfHeaderFlags(); }
-  static constexpr size_t offsetOfLength() { return offsetOfHeaderLength(); }
 
   static size_t offsetOfInlineDigits() {
     return offsetof(BigInt, inlineDigits_);
@@ -426,8 +429,6 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   static size_t offsetOfHeapDigits() { return offsetof(BigInt, heapDigits_); }
 
   static constexpr size_t inlineDigitsLength() { return InlineDigitsLength; }
-
-  static constexpr size_t signBitMask() { return SignBit; }
 
  private:
   friend class js::TenuringTracer;
