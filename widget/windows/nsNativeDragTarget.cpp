@@ -237,6 +237,12 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
 
   // Drag and drop image helper
   if (GetDropTargetHelper()) {
+    // We get a lot of crashes (often uncaught by our handler) later on during
+    // DragOver calls, see bug 1465513. It looks like this might be because
+    // we're not cleaning up previous drags fully and now released resources get
+    // used. Calling IDropTargetHelper::DragLeave before DragEnter seems to fix
+    // this for at least one reproduction of this crash.
+    GetDropTargetHelper()->DragLeave();
     POINT pt = {ptl.x, ptl.y};
     GetDropTargetHelper()->DragEnter(mHWnd, pIDataSource, &pt, *pdwEffect);
   }
@@ -313,6 +319,8 @@ nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL ptl, LPDWORD pdwEffect) {
   // Drag and drop image helper
   if (GetDropTargetHelper()) {
     if (dragImageChanged) {
+      // See comment in nsNativeDragTarget::DragEnter.
+      GetDropTargetHelper()->DragLeave();
       // The drop helper only updates the image during DragEnter, so emulate
       // a DragEnter if the image was changed.
       POINT pt = {ptl.x, ptl.y};
