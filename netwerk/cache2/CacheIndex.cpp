@@ -18,7 +18,6 @@
 #include "nsITimer.h"
 #include "mozilla/AutoRestore.h"
 #include <algorithm>
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 
@@ -69,23 +68,6 @@ class FrecencyComparator {
 };
 
 }  // namespace
-
-CacheIndexRecord::~CacheIndexRecord() {
-  if (!StaticPrefs::network_cache_frecency_array_check_enabled()) {
-    return;
-  }
-
-  RefPtr<CacheIndex> index = CacheIndex::gInstance;
-  if (index) {
-    CacheIndex::sLock.AssertCurrentThreadOwns();
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    bool found = index->mFrecencyArray.FindAndRemoveRecord(this);
-    MOZ_DIAGNOSTIC_ASSERT(!found);
-#else
-    Unused << index->mFrecencyArray.FindAndRemoveRecord(this);
-#endif
-  }
-}
 
 /**
  * This helper class is responsible for keeping CacheIndex::mIndexStats and
@@ -3397,10 +3379,6 @@ void CacheIndex::FrecencyArray::ReplaceRecord(CacheIndexRecord* aOldRecord,
   idx = mRecs.IndexOf(aOldRecord);
   MOZ_RELEASE_ASSERT(idx != mRecs.NoIndex);
   mRecs[idx] = aNewRecord;
-}
-
-bool CacheIndex::FrecencyArray::FindAndRemoveRecord(CacheIndexRecord* aRecord) {
-  return mRecs.RemoveElement(aRecord);
 }
 
 void CacheIndex::FrecencyArray::SortIfNeeded() {

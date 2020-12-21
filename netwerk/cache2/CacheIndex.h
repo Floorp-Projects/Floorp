@@ -101,8 +101,6 @@ struct CacheIndexRecord {
         mOnStopTime(kIndexTimeNotAvailable),
         mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN),
         mFlags(0) {}
-
-  ~CacheIndexRecord();
 };
 #pragma pack(pop)
 
@@ -817,7 +815,6 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   friend class CacheIndexEntryAutoManage;
   friend class FileOpenHelper;
   friend class CacheIndexIterator;
-  friend struct CacheIndexRecord;
 
   virtual ~CacheIndex();
 
@@ -1190,7 +1187,6 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     void RemoveRecord(CacheIndexRecord* aRecord);
     void ReplaceRecord(CacheIndexRecord* aOldRecord,
                        CacheIndexRecord* aNewRecord);
-    bool FindAndRemoveRecord(CacheIndexRecord* aRecord);
     void SortIfNeeded();
 
     size_t Length() const { return mRecs.Length() - mRemovedElements; }
