@@ -2968,6 +2968,7 @@ MIRType MCompare::inputType() {
     case Compare_BigInt:
     case Compare_BigInt_Int32:
     case Compare_BigInt_Double:
+    case Compare_BigInt_String:
       return MIRType::BigInt;
     case Compare_Unknown:
       return MIRType::Value;
@@ -3652,7 +3653,8 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
       compareType_ == Compare_StrictString || compareType_ == Compare_Object ||
       compareType_ == Compare_Symbol || compareType_ == Compare_BigInt ||
       compareType_ == Compare_BigInt_Int32 ||
-      compareType_ == Compare_BigInt_Double);
+      compareType_ == Compare_BigInt_Double ||
+      compareType_ == Compare_BigInt_String);
 
   if (isDoubleComparison() || isFloat32Comparison()) {
     if (!operandsAreNeverNaN()) {
