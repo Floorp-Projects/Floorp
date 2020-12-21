@@ -246,17 +246,15 @@ already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
 
 bool SVGRectElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
                                            const ComputedStyle& aOldStyle) {
-  auto *newSVGReset = aNewStyle.StyleSVGReset(),
-       *oldSVGReset = aOldStyle.StyleSVGReset();
-  auto *newPosition = aNewStyle.StylePosition(),
-       *oldPosition = aOldStyle.StylePosition();
-
-  return newSVGReset->mX != oldSVGReset->mX ||
-         newSVGReset->mY != oldSVGReset->mY ||
-         newPosition->mWidth != oldPosition->mWidth ||
-         newPosition->mHeight != oldPosition->mHeight ||
-         newSVGReset->mRx != oldSVGReset->mRx ||
-         newSVGReset->mRy != oldSVGReset->mRy;
+  const auto& newSVGReset = *aNewStyle.StyleSVGReset();
+  const auto& oldSVGReset = *aOldStyle.StyleSVGReset();
+  const auto& newPosition = *aNewStyle.StylePosition();
+  const auto& oldPosition = *aOldStyle.StylePosition();
+  return newSVGReset.mX != oldSVGReset.mX || newSVGReset.mY != oldSVGReset.mY ||
+         newPosition.mWidth != oldPosition.mWidth ||
+         newPosition.mHeight != oldPosition.mHeight ||
+         newSVGReset.mRx != oldSVGReset.mRx ||
+         newSVGReset.mRy != oldSVGReset.mRy;
 }
 
 nsCSSPropertyID SVGRectElement::GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum) {

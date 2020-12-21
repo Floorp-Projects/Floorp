@@ -133,15 +133,14 @@ already_AddRefed<Path> SVGGeometryElement::GetOrBuildPathForHitTest() {
 
 bool SVGGeometryElement::IsGeometryChangedViaCSS(
     ComputedStyle const& aNewStyle, ComputedStyle const& aOldStyle) const {
-  if (IsSVGElement(nsGkAtoms::rect)) {
+  nsAtom* name = NodeInfo()->NameAtom();
+  if (name == nsGkAtoms::rect) {
     return SVGRectElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
   }
-
-  if (IsSVGElement(nsGkAtoms::circle)) {
+  if (name == nsGkAtoms::circle) {
     return SVGCircleElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
   }
-
-  if (IsSVGElement(nsGkAtoms::ellipse)) {
+  if (name == nsGkAtoms::ellipse) {
     return SVGEllipseElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
   }
   return false;
