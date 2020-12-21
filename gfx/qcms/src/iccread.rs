@@ -1002,8 +1002,7 @@ fn read_rendering_intent(mut profile: &mut qcms_profile, mut src: &mut mem_sourc
         }
     };
 }
-#[no_mangle]
-pub extern "C" fn qcms_profile_create() -> Box<qcms_profile> {
+fn profile_create() -> Box<qcms_profile> {
     Box::new(qcms_profile::default())
 }
 /* build sRGB gamma table */
@@ -1072,7 +1071,7 @@ pub fn profile_create_rgb_with_table(
     mut primaries: qcms_CIE_xyYTRIPLE,
     table: &[u16],
 ) -> Option<Box<qcms_profile>> {
-    let mut profile = qcms_profile_create();
+    let mut profile = profile_create();
     //XXX: should store the whitepoint
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
         return None;
@@ -1174,7 +1173,7 @@ pub fn profile_sRGB() -> Option<Box<qcms_profile>> {
 }
 
 pub fn profile_create_gray_with_gamma(gamma: f32) -> Option<Box<qcms_profile>> {
-    let mut profile = qcms_profile_create();
+    let mut profile = profile_create();
 
     profile.grayTRC = Some(curve_from_gamma(gamma));
     profile.class_type = DISPLAY_DEVICE_PROFILE;
@@ -1191,7 +1190,7 @@ pub fn profile_create_rgb_with_gamma_set(
     mut greenGamma: f32,
     mut blueGamma: f32,
 ) -> Option<Box<qcms_profile>> {
-    let mut profile = qcms_profile_create();
+    let mut profile = profile_create();
 
     //XXX: should store the whitepoint
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
@@ -1231,7 +1230,7 @@ pub fn profile_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
     if src.buf.len() <= 64 || src.buf.len() >= MAX_PROFILE_SIZE {
         return None;
     }
-    let mut profile = qcms_profile_create();
+    let mut profile = profile_create();
 
     check_CMM_type_signature(src);
     check_profile_version(src);
