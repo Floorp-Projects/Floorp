@@ -111,3 +111,23 @@ add_task(async function test_save_page_on_image_document() {
     }
   );
 });
+
+/**
+ * Make sure that a valid JPEG image using the .JPG extension doesn't
+ * get it replaced with .jpeg.
+ */
+add_task(async function test_save_page_on_JPEG_image_document() {
+  await BrowserTestUtils.withNewTab(`${TEST_ROOT}/blank.JPG`, async browser => {
+    await new Promise(resolve => {
+      MockFilePicker.showCallback = function(fp) {
+        ok(
+          fp.defaultString.endsWith("JPG"),
+          `filepicker for "save page" has "${fp.defaultString}", should end in JPG`
+        );
+        setTimeout(resolve, 0);
+        return Ci.nsIFilePicker.returnCancel;
+      };
+      document.getElementById("Browser:SavePage").doCommand();
+    });
+  });
+});
