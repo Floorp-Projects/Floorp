@@ -14,6 +14,7 @@ Services.scriptloader.loadSubScript(
 
 const TEST_IMAGE_URL = TEST_DOMAIN + TEST_PATH + "file_saveAsImage.sjs";
 const TEST_VIDEO_URL = TEST_DOMAIN + TEST_PATH + "file_saveAsVideo.sjs";
+const TEST_PAGEINFO_URL = TEST_DOMAIN + TEST_PATH + "file_saveAsPageInfo.html";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
@@ -370,11 +371,167 @@ add_task(async function testSavePageInOfflineMode() {
 
       // Clean up
       BrowserTestUtils.removeTab(tab);
+
+      // Clean up the cache count on the server side.
+      await fetch(`${TEST_IMAGE_URL}?result`);
       await new Promise(resolve => {
         Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
           resolve()
         );
       });
+    }
+  }
+});
+
+add_task(async function testPageInfoMediaSaveAs() {
+  for (let networkIsolation of [true, false]) {
+    for (let partitionPerSite of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["privacy.partition.network_state", networkIsolation],
+          ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+        ],
+      });
+
+      let partitionKey = partitionPerSite
+        ? "(http,example.net)"
+        : "example.net";
+
+      info(
+        `Open a new tab for testing "Save AS" in the media panel of the page info.`
+      );
+      let tab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        TEST_PAGEINFO_URL
+      );
+
+      info("Open the media panel of the pageinfo.");
+      let pageInfo = BrowserPageInfo(
+        gBrowser.selectedBrowser.currentURI.spec,
+        "mediaTab"
+      );
+
+      await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
+
+      let imageTree = pageInfo.document.getElementById("imagetree");
+      let imageRowsNum = imageTree.view.rowCount;
+
+      is(imageRowsNum, 2, "There should be two media items here.");
+
+      for (let i = 0; i < imageRowsNum; i++) {
+        imageTree.view.selection.select(i);
+        imageTree.ensureRowIsVisible(i);
+        imageTree.focus();
+
+        // Wait until the preview is loaded.
+        let preview = pageInfo.document.getElementById("thepreviewimage");
+        let mediaType = pageInfo.gImageView.data[i][1]; // COL_IMAGE_TYPE
+        if (mediaType == "Image") {
+          await BrowserTestUtils.waitForEvent(preview, "loadend");
+        } else if (mediaType == "Video") {
+          await BrowserTestUtils.waitForEvent(preview, "canplaythrough");
+        }
+
+        let url = pageInfo.gImageView.data[i][0]; // COL_IMAGE_ADDRESS
+        info(`Start to save the media item with URL: ${url}`);
+
+        let transferCompletePromise = createPromiseForTransferComplete();
+
+        // Observe the channel and check if it has the correct partitionKey.
+        let observerPromise = createPromiseForObservingChannel(
+          url,
+          partitionKey
+        );
+
+        info("Triggering the save process.");
+        let saveElement = pageInfo.document.getElementById("imagesaveasbutton");
+        saveElement.doCommand();
+
+        info("Waiting for the channel.");
+        await observerPromise;
+
+        info("Wait until the save is finished.");
+        await transferCompletePromise;
+      }
+
+      pageInfo.close();
+      BrowserTestUtils.removeTab(tab);
+    }
+  }
+});
+
+add_task(async function testPageInfoMediaMultipleSelectedSaveAs() {
+  for (let networkIsolation of [true, false]) {
+    for (let partitionPerSite of [true, false]) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["privacy.partition.network_state", networkIsolation],
+          ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+        ],
+      });
+
+      let partitionKey = partitionPerSite
+        ? "(http,example.net)"
+        : "example.net";
+
+      info(
+        `Open a new tab for testing "Save AS" in the media panel of the page info.`
+      );
+      let tab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        TEST_PAGEINFO_URL
+      );
+
+      info("Open the media panel of the pageinfo.");
+      let pageInfo = BrowserPageInfo(
+        gBrowser.selectedBrowser.currentURI.spec,
+        "mediaTab"
+      );
+
+      await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
+
+      // Make sure the preview image is loaded in order to avoid interfering
+      // following tests.
+      let preview = pageInfo.document.getElementById("thepreviewimage");
+      await BrowserTestUtils.waitForCondition(() => {
+        return preview.complete;
+      });
+
+      let imageTree = pageInfo.document.getElementById("imagetree");
+      let imageRowsNum = imageTree.view.rowCount;
+
+      is(imageRowsNum, 2, "There should be two media items here.");
+
+      imageTree.view.selection.selectAll();
+      imageTree.focus();
+
+      let url = pageInfo.gImageView.data[0][0]; // COL_IMAGE_ADDRESS
+      info(`Start to save the media item with URL: ${url}`);
+
+      let transferCompletePromise = createPromiseForTransferComplete();
+      let observerPromises = [];
+
+      // Observe all channels and check if they have the correct partitionKey.
+      for (let i = 0; i < imageRowsNum; ++i) {
+        let observerPromise = createPromiseForObservingChannel(
+          url,
+          partitionKey
+        );
+        observerPromises.push(observerPromise);
+      }
+
+      info("Triggering the save process.");
+      let saveElement = pageInfo.document.getElementById("imagesaveasbutton");
+      saveElement.doCommand();
+
+      info("Waiting for the all channels.");
+      await Promise.all(observerPromises);
+
+      info("Wait until the save is finished.");
+      await transferCompletePromise;
+
+      pageInfo.close();
+      BrowserTestUtils.removeTab(tab);
     }
   }
 });
