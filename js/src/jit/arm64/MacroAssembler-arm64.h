@@ -1300,6 +1300,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Subs(ARMRegister(dest, 32), ARMRegister(dest, 32),
          Operand(ARMRegister(src, 32)));
   }
+  void subs64(Register src, Register dest) {
+    Subs(ARMRegister(dest, 64), ARMRegister(dest, 64),
+         Operand(ARMRegister(src, 64)));
+  }
 
   void ret() {
     pop(lr);
