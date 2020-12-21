@@ -2177,17 +2177,23 @@ GLboolean UnmapBuffer(GLenum target) {
 
 void Uniform1i(GLint location, GLint V0) {
   // debugf("tex: %d\n", (int)ctx->textures.size);
-  vertex_shader->set_uniform_1i(location, V0);
+  if (vertex_shader) {
+    vertex_shader->set_uniform_1i(location, V0);
+  }
 }
 void Uniform4fv(GLint location, GLsizei count, const GLfloat* v) {
   assert(count == 1);
-  vertex_shader->set_uniform_4fv(location, v);
+  if (vertex_shader) {
+    vertex_shader->set_uniform_4fv(location, v);
+  }
 }
 void UniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose,
                       const GLfloat* value) {
   assert(count == 1);
   assert(!transpose);
-  vertex_shader->set_uniform_matrix4fv(location, value);
+  if (vertex_shader) {
+    vertex_shader->set_uniform_matrix4fv(location, value);
+  }
 }
 
 void FramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
@@ -4073,7 +4079,8 @@ extern "C" {
 
 void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                            GLintptr offset, GLsizei instancecount) {
-  if (offset < 0 || count <= 0 || instancecount <= 0) {
+  if (offset < 0 || count <= 0 || instancecount <= 0 || !vertex_shader ||
+      !fragment_shader) {
     return;
   }
 
