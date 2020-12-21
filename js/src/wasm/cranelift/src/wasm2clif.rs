@@ -71,10 +71,7 @@ fn imm64(offset: usize) -> ir::immediates::Imm64 {
 /// setting up a return value to a caller; they may be used/relied upon when
 /// using an arg that came from a caller, or using a return value that came from
 /// a callee.
-fn init_sig_from_wsig(
-    call_conv: CallConv,
-    wsig: &bindings::FuncType,
-) -> WasmResult<ir::Signature> {
+fn init_sig_from_wsig(call_conv: CallConv, wsig: &bindings::FuncType) -> WasmResult<ir::Signature> {
     let mut sig = ir::Signature::new(call_conv);
 
     for arg_type in wsig.args() {

@@ -10,12 +10,8 @@ extern crate rkv;
 extern crate tempfile;
 
 use rkv::backend::{
-    BackendEnvironmentBuilder,
-    SafeMode,
-    SafeModeDatabase,
-    SafeModeEnvironment,
-    SafeModeRoTransaction,
-    SafeModeRwTransaction,
+    BackendEnvironmentBuilder, SafeMode, SafeModeDatabase, SafeModeEnvironment,
+    SafeModeRoTransaction, SafeModeRwTransaction,
 };
 use std::fs;
 use std::fs::File;
@@ -215,11 +211,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         }
     };
 
-    fn store_put<I: Iterator<Item = u8> + Clone>(
-        fuzz: &mut I,
-        env: &Rkv,
-        store: &SingleStore,
-    ) {
+    fn store_put<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &Rkv, store: &SingleStore) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
             None => return,
@@ -247,11 +239,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         }
     }
 
-    fn store_get<I: Iterator<Item = u8> + Clone>(
-        fuzz: &mut I,
-        env: &Rkv,
-        store: &SingleStore,
-    ) {
+    fn store_get<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &Rkv, store: &SingleStore) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
             None => return,
@@ -272,11 +260,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         maybe_abort(fuzz, reader).unwrap();
     }
 
-    fn store_delete<I: Iterator<Item = u8> + Clone>(
-        fuzz: &mut I,
-        env: &Rkv,
-        store: &SingleStore,
-    ) {
+    fn store_delete<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &Rkv, store: &SingleStore) {
         let key = match get_any_data(fuzz, 1024) {
             Some(key) => key,
             None => return,
