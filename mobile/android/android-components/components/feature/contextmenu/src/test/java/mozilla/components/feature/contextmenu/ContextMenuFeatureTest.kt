@@ -310,6 +310,7 @@ class ContextMenuFeatureTest {
             ContextMenuUseCases(store)
         )
 
+        store.waitUntilIdle()
         testDispatcher.advanceUntilIdle()
 
         assertNotNull(store.state.findTab("test-tab")!!.content.hitResult)
@@ -317,6 +318,7 @@ class ContextMenuFeatureTest {
 
         feature.onMenuItemSelected("test-tab", "test-id")
 
+        store.waitUntilIdle()
         testDispatcher.advanceUntilIdle()
 
         assertNull(store.state.findTab("test-tab")!!.content.hitResult)
