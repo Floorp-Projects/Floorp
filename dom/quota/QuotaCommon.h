@@ -16,9 +16,9 @@
 #include "mozIStorageStatement.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorNames.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ThreadLocal.h"
@@ -1017,7 +1017,8 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
                                     const nsACString& aStatementString);
 
 void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
-              const nsACString& aSourceFile, int32_t aSourceLine);
+              const nsACString& aSourceFile, int32_t aSourceLine,
+              Maybe<nsresult> aRv);
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
@@ -1088,21 +1089,13 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
                                      const char* aSourceFile,            \
                                      int32_t aSourceLine) {              \
       if constexpr (std::is_same_v<T, nsresult>) {                       \
-        const char* name = mozilla::GetStaticErrorName(aRv);             \
-        const auto msg = nsPrintfCString{                                \
-            "%s failed with "                                            \
-            "result 0x%" PRIX32 "%s%s%s",                                \
-            aExpr,                                                       \
-            static_cast<uint32_t>(aRv),                                  \
-            name ? " (" : "",                                            \
-            name ? name : "",                                            \
-            name ? ")" : ""};                                            \
-        mozilla::dom::quota::LogError(                                   \
-            module, msg, nsDependentCString(aSourceFile), aSourceLine);  \
+        mozilla::dom::quota::LogError(module, nsDependentCString(aExpr), \
+                                      nsDependentCString(aSourceFile),   \
+                                      aSourceLine, Some(aRv));           \
       } else {                                                           \
         mozilla::dom::quota::LogError(module, nsDependentCString(aExpr), \
                                       nsDependentCString(aSourceFile),   \
-                                      aSourceLine);                      \
+                                      aSourceLine, Nothing{});           \
       }                                                                  \
     }
 #else
