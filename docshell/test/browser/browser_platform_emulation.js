@@ -46,7 +46,7 @@ async function contentTaskOverride() {
   );
 
   newFrameWin.location.reload();
-  await ContentTaskUtils.waitForEvent(newFrameWin, "load");
+  await ContentTaskUtils.waitForEvent(newFrame, "load");
 
   is(
     newFrameWin.navigator.platform,
