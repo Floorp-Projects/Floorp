@@ -38,22 +38,8 @@ template <typename StepFunc>
 Result<UsageInfo, nsresult> ReduceUsageInfo(nsIFile& aDir,
                                             const Atomic<bool>& aCanceled,
                                             const StepFunc& aStepFunc) {
-  // XXX The following loop (including the cancellation check) is very similar
-  // to QuotaClient::GetDatabaseFilenames in dom/indexedDB/ActorsParent.cpp
-  CACHE_TRY_INSPECT(const auto& entries,
-                    MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
-                                               aDir, GetDirectoryEntries));
-
-  CACHE_TRY_RETURN(ReduceEach(
-      [&entries, &aCanceled]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
-        if (aCanceled) {
-          return nsCOMPtr<nsIFile>{};
-        }
-
-        CACHE_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
-                                                    GetNextFile));
-      },
-      UsageInfo{},
+  CACHE_TRY_RETURN(quota::ReduceEachFileAtomicCancelable(
+      aDir, aCanceled, UsageInfo{},
       [&aStepFunc](UsageInfo usageInfo, const nsCOMPtr<nsIFile>& bodyDir)
           -> Result<UsageInfo, nsresult> {
         CACHE_TRY(OkIf(!QuotaManager::IsShuttingDown()), Err(NS_ERROR_ABORT));
@@ -86,9 +72,9 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
         }
 
         UsageInfo usageInfo;
-        const auto getUsage = [&usageInfo](nsIFile* bodyFile,
-                                           const nsACString& leafName,
-                                           bool& fileDeleted) -> nsresult {
+        const auto getUsage =
+            [&usageInfo](nsIFile* bodyFile,
+                         const nsACString& leafName) -> Result<bool, nsresult> {
           MOZ_DIAGNOSTIC_ASSERT(bodyFile);
           Unused << leafName;
 
@@ -111,9 +97,7 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
           // tests. Note that file usage hasn't been exposed to users yet.
           usageInfo += DatabaseUsageType(Some(fileSize));
 
-          fileDeleted = false;
-
-          return NS_OK;
+          return false;
         };
         CACHE_TRY(BodyTraverseFiles(QuotaInfo{}, bodyDir, getUsage,
                                     /* aCanRemoveFiles */

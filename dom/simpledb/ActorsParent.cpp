@@ -1735,60 +1735,35 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   DebugOnly<bool> exists;
   MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)) && exists);
 
-  nsCOMPtr<nsIDirectoryEnumerator> directoryEntries;
-  rv = directory->GetDirectoryEntries(getter_AddRefs(directoryEntries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  SDB_TRY_RETURN(ReduceEachFileAtomicCancelable(
+      *directory, aCanceled, UsageInfo{},
+      [](UsageInfo usageInfo,
+         const nsCOMPtr<nsIFile>& file) -> Result<UsageInfo, nsresult> {
+        SDB_TRY_INSPECT(const bool& isDirectory,
+                        MOZ_TO_RESULT_INVOKE(file, IsDirectory));
 
-  UsageInfo res;
+        if (isDirectory) {
+          Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+          return usageInfo;
+        }
 
-  while (!aCanceled) {
-    nsCOMPtr<nsIFile> file;
-    rv = directoryEntries->GetNextFile(getter_AddRefs(file));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+        nsString leafName;
+        SDB_TRY(file->GetLeafName(leafName));
 
-    if (!file) {
-      break;
-    }
+        if (StringEndsWith(leafName, kSDBSuffix)) {
+          SDB_TRY_INSPECT(const int64_t& fileSize,
+                          MOZ_TO_RESULT_INVOKE(file, GetFileSize));
 
-    bool isDirectory;
-    rv = file->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+          MOZ_ASSERT(fileSize >= 0);
 
-    if (isDirectory) {
-      Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
-      continue;
-    }
+          return usageInfo +
+                 UsageInfo{DatabaseUsageType(Some(uint64_t(fileSize)))};
+        }
 
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+        Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
 
-    if (StringEndsWith(leafName, kSDBSuffix)) {
-      int64_t fileSize;
-      rv = file->GetFileSize(&fileSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      MOZ_ASSERT(fileSize >= 0);
-
-      res += DatabaseUsageType(Some(uint64_t(fileSize)));
-
-      continue;
-    }
-
-    Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
-  }
-
-  return res;
+        return usageInfo;
+      }));
 }
 
 void QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
