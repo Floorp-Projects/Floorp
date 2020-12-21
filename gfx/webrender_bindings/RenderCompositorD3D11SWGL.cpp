@@ -117,7 +117,9 @@ void RenderCompositorD3D11SWGL::CompositorEndFrame() {
       RefPtr<TexturedEffect> texturedEffect;
       gfx::IntSize size;
       if (auto* host = surface.mExternalImage->AsRenderDXGITextureHost()) {
-        host->EnsureD3D11Texture2D(mCompositor->GetDevice());
+        if (!host->EnsureD3D11Texture2D(mCompositor->GetDevice())) {
+          continue;
+        }
 
         layer = new DataTextureSourceD3D11(mCompositor->GetDevice(),
                                            host->GetFormat(),
@@ -138,7 +140,9 @@ void RenderCompositorD3D11SWGL::CompositorEndFrame() {
         host->LockInternal();
       } else if (auto* host =
                      surface.mExternalImage->AsRenderDXGIYCbCrTextureHost()) {
-        host->EnsureD3D11Texture2D(mCompositor->GetDevice());
+        if (!host->EnsureD3D11Texture2D(mCompositor->GetDevice())) {
+          continue;
+        }
 
         layer = new DataTextureSourceD3D11(mCompositor->GetDevice(),
                                            SurfaceFormat::A8,

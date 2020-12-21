@@ -175,6 +175,12 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2DWithGL() {
 
 bool RenderDXGITextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
   if (mTexture) {
+    RefPtr<ID3D11Device> device;
+    mTexture->GetDevice(getter_AddRefs(device));
+    if (aDevice != device) {
+      gfxCriticalNote << "RenderDXGITextureHost uses obsoleted device";
+      return false;
+    }
     return true;
   }
 
@@ -550,6 +556,15 @@ bool RenderDXGIYCbCrTextureHost::EnsureLockable(wr::ImageRendering aRendering) {
 }
 
 bool RenderDXGIYCbCrTextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
+  if (mTextures[0]) {
+    RefPtr<ID3D11Device> device;
+    mTextures[0]->GetDevice(getter_AddRefs(device));
+    if (aDevice != device) {
+      gfxCriticalNote << "RenderDXGIYCbCrTextureHost uses obsoleted device";
+      return false;
+    }
+  }
+
   if (mTextureHandles[0]) {
     return true;
   }
