@@ -240,11 +240,11 @@ class UrlbarResult {
     // For performance reasons limit excessive string lengths, to reduce the
     // amount of string matching we do here, and avoid wasting resources to
     // handle long textruns that the user would never see anyway.
-    for (let prop of ["displayUrl", "title"].filter(p => p in payloadInfo)) {
-      payloadInfo[prop][0] = payloadInfo[prop][0].substring(
-        0,
-        UrlbarUtils.MAX_TEXT_LENGTH
-      );
+    for (let prop of ["displayUrl", "title", "suggestion"]) {
+      let val = payloadInfo[prop]?.[0];
+      if (typeof val == "string") {
+        payloadInfo[prop][0] = val.substring(0, UrlbarUtils.MAX_TEXT_LENGTH);
+      }
     }
 
     let entries = Object.entries(payloadInfo);
