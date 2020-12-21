@@ -240,7 +240,7 @@ class MachCommands(MachCommandBase):
                 clangd_path,
                 clangd_cc_path,
                 int(multiprocessing.cpu_count() / 2),
-                clang_tidy_cfg.checks,
+                ",".join(clang_tidy_cfg.checks),
             )
         )
 
