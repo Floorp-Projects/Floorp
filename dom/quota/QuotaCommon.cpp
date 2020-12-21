@@ -8,6 +8,7 @@
 
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
@@ -286,8 +287,19 @@ void ScopedLogExtraInfo::AddInfo() {
 #endif
 
 void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
-              const nsACString& aSourceFile, int32_t aSourceLine) {
+              const nsACString& aSourceFile, int32_t aSourceLine,
+              Maybe<nsresult> aRv) {
   nsAutoCString extraInfosString;
+
+  const char* rvName = nullptr;
+  if (aRv) {
+    rvName = mozilla::GetStaticErrorName(*aRv);
+    extraInfosString.AppendPrintf(
+        "failed with "
+        "result 0x%" PRIX32 "%s%s%s",
+        static_cast<uint32_t>(*aRv), rvName ? " (" : "", rvName ? rvName : "",
+        rvName ? ")" : "");
+  }
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
   const auto& extraInfos = ScopedLogExtraInfo::GetExtraInfoMap();
@@ -337,6 +349,10 @@ void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceLine)});
       res.AppendElement(EventExtraEntry{
           "context"_ns, nsPromiseFlatCString{*contextIt->second}});
+
+      if (rvName) {
+        res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
+      }
 
       return res;
     }());
