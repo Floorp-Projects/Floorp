@@ -999,20 +999,6 @@ void nsHtml5StreamParser::CommitLocalFileToEncoding() {
   }
 }
 
-class MaybeRunCollector : public Runnable {
- public:
-  explicit MaybeRunCollector(nsIDocShell* aDocShell)
-      : Runnable("MaybeRunCollector"), mDocShell(aDocShell) {}
-
-  NS_IMETHOD Run() override {
-    nsJSContext::MaybeRunNextCollectorSlice(mDocShell,
-                                            JS::GCReason::HTML_PARSER);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocShell> mDocShell;
-};
-
 nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   MOZ_RELEASE_ASSERT(STREAM_NOT_STARTED == mStreamState,
                      "Got OnStartRequest when the stream had already started.");
@@ -1164,16 +1150,6 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
       do_QueryInterface(mRequest, &rv);
   if (threadRetargetableRequest) {
     rv = threadRetargetableRequest->RetargetDeliveryTo(mEventTarget);
-    if (NS_SUCCEEDED(rv)) {
-      // Parser thread should be now ready to get data from necko and parse it
-      // and main thread might have a chance to process a collector slice.
-      // We need to do this asynchronously so that necko may continue processing
-      // the request.
-      nsCOMPtr<nsIRunnable> runnable =
-          new MaybeRunCollector(mExecutor->GetDocument()->GetDocShell());
-      mozilla::SchedulerGroup::Dispatch(
-          mozilla::TaskCategory::GarbageCollection, runnable.forget());
-    }
   }
 
   if (NS_FAILED(rv)) {

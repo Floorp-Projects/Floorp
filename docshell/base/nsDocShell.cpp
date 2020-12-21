@@ -10400,11 +10400,6 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   rv = aURILoader->OpenURI(aChannel, aOpenFlags, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We're about to load a new page and it may take time before necko
-  // gives back any data, so main thread might have a chance to process a
-  // collector slice
-  nsJSContext::MaybeRunNextCollectorSlice(this, JS::GCReason::DOCSHELL);
-
   // Success.  Keep the initial ClientSource if it exists.
   cleanupInitialClient.release();
 
