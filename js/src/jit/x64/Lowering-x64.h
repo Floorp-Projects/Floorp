@@ -52,6 +52,9 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared {
   void lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod);
   void lowerUDivI64(MDiv* div);
   void lowerUModI64(MMod* mod);
+
+  void lowerBigIntDiv(MBigIntDiv* ins);
+  void lowerBigIntMod(MBigIntMod* ins);
 };
 
 using LIRGeneratorSpecific = LIRGeneratorX64;

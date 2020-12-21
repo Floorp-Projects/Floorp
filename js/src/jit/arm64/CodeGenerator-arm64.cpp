@@ -869,6 +869,41 @@ void CodeGenerator::visitModMaskI(LModMaskI* ins) {
   }
 }
 
+void CodeGeneratorARM64::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
+                                       Register divisor, Register output,
+                                       Label* fail) {
+  // Callers handle division by zero and integer overflow.
+
+  const ARMRegister dividend64(dividend, 64);
+  const ARMRegister divisor64(divisor, 64);
+
+  masm.Sdiv(/* result= */ dividend64, dividend64, divisor64);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, dividend);
+}
+
+void CodeGeneratorARM64::emitBigIntMod(LBigIntMod* ins, Register dividend,
+                                       Register divisor, Register output,
+                                       Label* fail) {
+  // Callers handle division by zero and integer overflow.
+
+  const ARMRegister dividend64(dividend, 64);
+  const ARMRegister divisor64(divisor, 64);
+  const ARMRegister output64(output, 64);
+
+  // Signed division.
+  masm.Sdiv(output64, dividend64, divisor64);
+
+  // Compute the remainder: output = dividend - (output * divisor).
+  masm.Msub(/* result= */ dividend64, output64, divisor64, dividend64);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, dividend);
+}
+
 void CodeGenerator::visitBitNotI(LBitNotI* ins) {
   const LAllocation* input = ins->getOperand(0);
   const LDefinition* output = ins->getDef(0);

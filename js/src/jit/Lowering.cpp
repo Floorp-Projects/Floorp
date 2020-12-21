@@ -1945,6 +1945,10 @@ void LIRGenerator::visitBigIntMul(MBigIntMul* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitBigIntDiv(MBigIntDiv* ins) { lowerBigIntDiv(ins); }
+
+void LIRGenerator::visitBigIntMod(MBigIntMod* ins) { lowerBigIntMod(ins); }
+
 void LIRGenerator::visitBigIntBitAnd(MBigIntBitAnd* ins) {
   auto* lir = new (alloc()) LBigIntBitAnd(
       useRegister(ins->lhs()), useRegister(ins->rhs()), temp(), temp());
