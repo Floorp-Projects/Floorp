@@ -1217,15 +1217,6 @@ nsIWidgetListener* PuppetWidget::GetCurrentWidgetListener() {
   return mAttachedWidgetListener;
 }
 
-void PuppetWidget::SetCandidateWindowForPlugin(
-    const CandidateWindowPosition& aPosition) {
-  if (!mBrowserChild) {
-    return;
-  }
-
-  mBrowserChild->SendSetCandidateWindowForPlugin(aPosition);
-}
-
 void PuppetWidget::EnableIMEForPlugin(bool aEnable) {
   if (!mBrowserChild) {
     return;

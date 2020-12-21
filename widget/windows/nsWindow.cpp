@@ -8593,25 +8593,6 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
          !(IsPopup() && DeviceManagerDx::Get()->IsWARP());
 }
 
-void nsWindow::SetCandidateWindowForPlugin(
-    const CandidateWindowPosition& aPosition) {
-  CANDIDATEFORM form;
-  form.dwIndex = 0;
-  if (aPosition.mExcludeRect) {
-    form.dwStyle = CFS_EXCLUDE;
-    form.rcArea.left = aPosition.mRect.X();
-    form.rcArea.top = aPosition.mRect.Y();
-    form.rcArea.right = aPosition.mRect.XMost();
-    form.rcArea.bottom = aPosition.mRect.YMost();
-  } else {
-    form.dwStyle = CFS_CANDIDATEPOS;
-  }
-  form.ptCurrentPos.x = aPosition.mPoint.x;
-  form.ptCurrentPos.y = aPosition.mPoint.y;
-
-  IMEHandler::SetCandidateWindow(this, &form);
-}
-
 void nsWindow::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) {
   const NPEvent* pPluginEvent =
       static_cast<const NPEvent*>(aEvent.mPluginEvent);
