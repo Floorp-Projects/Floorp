@@ -9,6 +9,7 @@ BROWSER_CHROME_MANIFESTS += [
     "browser/emulation/browser.ini",
     "browser/input/browser.ini",
     "browser/io/browser.ini",
+    "browser/log/browser.ini",
     "browser/network/browser.ini",
     "browser/page/browser.ini",
     "browser/runtime/browser.ini",
