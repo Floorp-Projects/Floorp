@@ -664,19 +664,8 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   sPresContext = aPresContext;
   sContent = aContent;
 
-  // Don't call CreateIMEContentObserver() here except when a plugin gets
-  // focus because it will be called from the focus event handler of focused
-  // editor.
-  if (newState.mEnabled == IMEEnabled::Plugin) {
-    CreateIMEContentObserver(nullptr);
-    if (sActiveIMEContentObserver) {
-      MOZ_LOG(sISMLog, LogLevel::Debug,
-              ("  OnChangeFocusInternal(), an IMEContentObserver instance is "
-               "created for plugin and trying to flush its pending "
-               "notifications..."));
-      sActiveIMEContentObserver->TryToFlushPendingNotifications(false);
-    }
-  }
+  // Don't call CreateIMEContentObserver() here  because it will be called from
+  // the focus event handler of focused editor.
 
   return NS_OK;
 }
@@ -844,7 +833,7 @@ void IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     DestroyIMEContentObserver();
   }
 
-  CreateIMEContentObserver(&aEditorBase);
+  CreateIMEContentObserver(aEditorBase);
 
   // Let's flush the focus notification now.
   if (sActiveIMEContentObserver) {
@@ -921,13 +910,13 @@ void IMEStateManager::OnReFocus(nsPresContext* aPresContext,
 // static
 void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                      nsIContent* aContent,
-                                     EditorBase* aEditorBase) {
+                                     EditorBase& aEditorBase) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
       ("UpdateIMEState(aNewIMEState=%s, aContent=0x%p, aEditorBase=0x%p), "
        "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s), "
        "sActiveIMEContentObserver=0x%p, sIsGettingNewIMEState=%s",
-       ToString(aNewIMEState).c_str(), aContent, aEditorBase,
+       ToString(aNewIMEState).c_str(), aContent, &aEditorBase,
        sPresContext.get(), sContent.get(), sWidget,
        GetBoolName(sWidget && !sWidget->Destroyed()),
        sActiveIMEContentObserver.get(), GetBoolName(sIsGettingNewIMEState)));
@@ -939,15 +928,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     return;
   }
 
-  RefPtr<PresShell> presShell;
-  if (!aEditorBase) {
-    MOZ_ASSERT(aContent, "we must have content");
-    Document* doc = aContent->OwnerDoc();
-    presShell = doc->GetPresShell();
-  } else {
-    presShell = aEditorBase->GetPresShell();
-  }
-
+  RefPtr<PresShell> presShell(aEditorBase.GetPresShell());
   if (NS_WARN_IF(!presShell)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
             ("  UpdateIMEState(), FAILED due to "
@@ -994,7 +975,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     return;
   }
 
-  nsCOMPtr<nsIWidget> widget(sWidget);
+  OwningNonNull<nsIWidget> widget(*sWidget);
 
   MOZ_ASSERT(!sPresContext->GetTextInputHandlingWidget() ||
              sPresContext->GetTextInputHandlingWidget() == widget);
@@ -1011,7 +992,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
             ("  UpdateIMEState(), try to reinitialize the "
              "active IMEContentObserver"));
     RefPtr<IMEContentObserver> contentObserver = sActiveIMEContentObserver;
-    RefPtr<nsPresContext> presContext = sPresContext;
+    OwningNonNull<nsPresContext> presContext(*sPresContext);
     if (!contentObserver->MaybeReinitialize(widget, presContext, aContent,
                                             aEditorBase)) {
       MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1930,13 +1911,13 @@ void IMEStateManager::DestroyIMEContentObserver() {
 }
 
 // static
-void IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase) {
+void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase) {
   MOZ_LOG(sISMLog, LogLevel::Info,
           ("CreateIMEContentObserver(aEditorBase=0x%p), "
            "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s), "
            "sActiveIMEContentObserver=0x%p, "
            "sActiveIMEContentObserver->IsManaging(sPresContext, sContent)=%s",
-           aEditorBase, sPresContext.get(), sContent.get(), sWidget,
+           &aEditorBase, sPresContext.get(), sContent.get(), sWidget,
            GetBoolName(sWidget && !sWidget->Destroyed()),
            sActiveIMEContentObserver.get(),
            GetBoolName(sActiveIMEContentObserver
@@ -1959,7 +1940,7 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase) {
     return;  // Sometimes, there are no widgets.
   }
 
-  nsCOMPtr<nsIWidget> widget(sWidget);
+  OwningNonNull<nsIWidget> widget(*sWidget);
 
   // If it's not text editable, we don't need to create IMEContentObserver.
   if (!IsIMEObserverNeeded(widget->GetInputContext().mIMEState)) {
@@ -1976,6 +1957,13 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase) {
     return;
   }
 
+  if (NS_WARN_IF(!sPresContext)) {
+    MOZ_LOG(sISMLog, LogLevel::Error,
+            ("  CreateIMEContentObserver(), FAILED due to "
+             "the nsPresContext is nullptr"));
+    return;
+  }
+
   MOZ_ASSERT(sPresContext->GetTextInputHandlingWidget() == widget);
 
   MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -1988,7 +1976,7 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase) {
   // We should hold the current instance here.
   RefPtr<IMEContentObserver> activeIMEContentObserver(
       sActiveIMEContentObserver);
-  RefPtr<nsPresContext> presContext = sPresContext;
+  OwningNonNull<nsPresContext> presContext(*sPresContext);
   RefPtr<nsIContent> content = sContent;
   activeIMEContentObserver->Init(widget, presContext, content, aEditorBase);
 }

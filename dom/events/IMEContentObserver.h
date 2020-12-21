@@ -81,18 +81,12 @@ class IMEContentObserver final : public nsStubMutationObserver,
    *
    * @param aWidget         The widget which can access native IME.
    * @param aPresContext    The PresContext which has aContent.
-   * @param aContent        An editable element or a plugin host element which
-   *                        user may use IME in.
-   *                        Or nullptr if this will observe design mode
-   *                        document.
-   * @param aEditorBase     When aContent is an editable element or nullptr,
-   *                        non-nullptr referring an editor instance which
-   *                        manages aContent.
-   *                        Otherwise, i.e., this will observe a plugin content,
-   *                        should be nullptr.
+   * @param aContent        An editable element or nullptr if this will observe
+   *                        design mode document.
+   * @param aEditorBase     The editor which is associated with aContent.
    */
-  MOZ_CAN_RUN_SCRIPT void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
-                               nsIContent* aContent, EditorBase* aEditorBase);
+  MOZ_CAN_RUN_SCRIPT void Init(nsIWidget& aWidget, nsPresContext& aPresContext,
+                               nsIContent* aContent, EditorBase& aEditorBase);
 
   /**
    * Destroy() finalizes the instance, i.e., stops observing contents and
@@ -125,14 +119,13 @@ class IMEContentObserver final : public nsStubMutationObserver,
    * @return            Returns true if the instance is managing the content.
    *                    Otherwise, false.
    */
-  MOZ_CAN_RUN_SCRIPT bool MaybeReinitialize(nsIWidget* aWidget,
-                                            nsPresContext* aPresContext,
+  MOZ_CAN_RUN_SCRIPT bool MaybeReinitialize(nsIWidget& aWidget,
+                                            nsPresContext& aPresContext,
                                             nsIContent* aContent,
-                                            EditorBase* aEditorBase);
+                                            EditorBase& aEditorBase);
 
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
   bool IsManaging(const TextComposition* aTextComposition) const;
-  bool WasInitializedWithPlugin() const;
   bool WasInitializedWith(const EditorBase& aEditorBase) const {
     return mEditorBase == &aEditorBase;
   }
@@ -182,11 +175,9 @@ class IMEContentObserver final : public nsStubMutationObserver,
     eState_Observing
   };
   State GetState() const;
-  MOZ_CAN_RUN_SCRIPT bool InitWithEditor(nsPresContext* aPresContext,
+  MOZ_CAN_RUN_SCRIPT bool InitWithEditor(nsPresContext& aPresContext,
                                          nsIContent* aContent,
-                                         EditorBase* aEditorBase);
-  bool InitWithPlugin(nsPresContext* aPresContext, nsIContent* aContent);
-  bool IsInitializedWithPlugin() const { return !mEditorBase; }
+                                         EditorBase& aEditorBase);
   void OnIMEReceivedFocus();
   void Clear();
   bool IsObservingContent(nsPresContext* aPresContext,
@@ -293,8 +284,6 @@ class IMEContentObserver final : public nsStubMutationObserver,
   /**
    * UpdateSelectionCache() updates mSelectionData with the latest selection.
    * This should be called only when IsSafeToNotifyIME() returns true.
-   *
-   * Note that this does nothing if WasInitializedWithPlugin() returns true.
    */
   MOZ_CAN_RUN_SCRIPT bool UpdateSelectionCache(bool aRequireFlush = true);
 
