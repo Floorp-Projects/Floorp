@@ -94,11 +94,6 @@ class nsJSContext : public nsIScriptContext {
   static void RunNextCollectorTimer(
       JS::GCReason aReason,
       mozilla::TimeStamp aDeadline = mozilla::TimeStamp());
-  // If user has been idle and aDocShell is for an iframe being loaded in an
-  // already loaded top level docshell, this will run a CC or GC
-  // timer/runner if there is such pending.
-  static void MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
-                                         JS::GCReason aReason);
 
   // The GC should probably run soon, in the zone of object aObj (if given).
   static void PokeGC(JS::GCReason aReason, JSObject* aObj, uint32_t aDelay = 0);
