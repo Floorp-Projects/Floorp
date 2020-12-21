@@ -2322,8 +2322,8 @@ void TextInputHandler::InsertText(NSAttributedString* aAttrString, NSRange* aRep
            currentKeyEvent ? TrueOrFalse(currentKeyEvent->mCompositionDispatched) : "N/A"));
 
   InputContext context = mWidget->GetInputContext();
-  bool isEditable = (context.mIMEState.mEnabled == IMEState::ENABLED ||
-                     context.mIMEState.mEnabled == IMEState::PASSWORD);
+  bool isEditable = (context.mIMEState.mEnabled == IMEEnabled::Enabled ||
+                     context.mIMEState.mEnabled == IMEEnabled::Password);
   NSRange selectedRange = SelectedRange();
 
   nsAutoString str;

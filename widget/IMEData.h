@@ -257,51 +257,49 @@ struct IMENotificationRequests final {
 };
 
 /**
+ * IME enabled states.
+ *
+ * WARNING: If you change these values, you also need to edit:
+ *   nsIDOMWindowUtils.idl
+ */
+enum class IMEEnabled {
+  /**
+   * 'Disabled' means the user cannot use IME. So, the IME open state should
+   * be 'closed' during 'disabled'.
+   */
+  Disabled,
+  /**
+   * 'Enabled' means the user can use IME.
+   */
+  Enabled,
+  /**
+   * 'Password' state is a special case for the password editors.
+   * E.g., on mac, the password editors should disable the non-Roman
+   * keyboard layouts at getting focus. Thus, the password editor may have
+   * special rules on some platforms.
+   */
+  Password,
+  /**
+   * This state is used when a plugin is focused.
+   * When a plug-in is focused content, we should send native events
+   * directly. Because we don't process some native events, but they may
+   * be needed by the plug-in.
+   */
+  Plugin,
+  /**
+   * 'Unknown' is useful when you cache this enum.  So, this shouldn't be
+   * used with nsIWidget::SetInputContext().
+   */
+  Unknown,
+};
+
+/**
  * Contains IMEStatus plus information about the current
  * input context that the IME can use as hints if desired.
  */
 
 struct IMEState final {
-  /**
-   * IME enabled states, the mEnabled value of
-   * SetInputContext()/GetInputContext() should be one value of following
-   * values.
-   *
-   * WARNING: If you change these values, you also need to edit:
-   *   nsIDOMWindowUtils.idl
-   *   nsContentUtils::GetWidgetStatusFromIMEStatus
-   */
-  enum Enabled {
-    /**
-     * 'Disabled' means the user cannot use IME. So, the IME open state should
-     * be 'closed' during 'disabled'.
-     */
-    DISABLED,
-    /**
-     * 'Enabled' means the user can use IME.
-     */
-    ENABLED,
-    /**
-     * 'Password' state is a special case for the password editors.
-     * E.g., on mac, the password editors should disable the non-Roman
-     * keyboard layouts at getting focus. Thus, the password editor may have
-     * special rules on some platforms.
-     */
-    PASSWORD,
-    /**
-     * This state is used when a plugin is focused.
-     * When a plug-in is focused content, we should send native events
-     * directly. Because we don't process some native events, but they may
-     * be needed by the plug-in.
-     */
-    PLUGIN,
-    /**
-     * 'Unknown' is useful when you cache this enum.  So, this shouldn't be
-     * used with nsIWidget::SetInputContext().
-     */
-    UNKNOWN
-  };
-  Enabled mEnabled;
+  IMEEnabled mEnabled;
 
   /**
    * IME open states the mOpen value of SetInputContext() should be one value of
@@ -336,22 +334,24 @@ struct IMEState final {
   };
   Open mOpen;
 
-  IMEState() : mEnabled(ENABLED), mOpen(DONT_CHANGE_OPEN_STATE) {}
+  IMEState() : mEnabled(IMEEnabled::Enabled), mOpen(DONT_CHANGE_OPEN_STATE) {}
 
-  explicit IMEState(Enabled aEnabled, Open aOpen = DONT_CHANGE_OPEN_STATE)
+  explicit IMEState(IMEEnabled aEnabled, Open aOpen = DONT_CHANGE_OPEN_STATE)
       : mEnabled(aEnabled), mOpen(aOpen) {}
 
   // Returns true if the user can input characters.
   // This means that a plain text editor, an HTML editor, a password editor or
   // a plain text editor whose ime-mode is "disabled".
   bool IsEditable() const {
-    return mEnabled == ENABLED || mEnabled == PASSWORD;
+    return mEnabled == IMEEnabled::Enabled || mEnabled == IMEEnabled::Password;
   }
   // Returns true if the user might be able to input characters.
   // This means that a plain text editor, an HTML editor, a password editor,
   // a plain text editor whose ime-mode is "disabled" or a windowless plugin
   // has focus.
-  bool MaybeEditable() const { return IsEditable() || mEnabled == PLUGIN; }
+  bool MaybeEditable() const {
+    return IsEditable() || mEnabled == IMEEnabled::Plugin;
+  }
 };
 
 // NS_ONLY_ONE_NATIVE_IME_CONTEXT is a special value of native IME context.
@@ -980,8 +980,7 @@ struct CandidateWindowPosition {
   bool mExcludeRect;
 };
 
-std::ostream& operator<<(std::ostream& aStream,
-                         const IMEState::Enabled& aEnabled);
+std::ostream& operator<<(std::ostream& aStream, const IMEEnabled& aEnabled);
 std::ostream& operator<<(std::ostream& aStream, const IMEState::Open& aOpen);
 std::ostream& operator<<(std::ostream& aStream, const IMEState& aState);
 std::ostream& operator<<(std::ostream& aStream,

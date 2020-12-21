@@ -30,21 +30,6 @@ static inline const char* ToChar(bool aBool) {
   return aBool ? "true" : "false";
 }
 
-static const char* GetEnabledStateName(uint32_t aState) {
-  switch (aState) {
-    case IMEState::DISABLED:
-      return "DISABLED";
-    case IMEState::ENABLED:
-      return "ENABLED";
-    case IMEState::PASSWORD:
-      return "PASSWORD";
-    case IMEState::PLUGIN:
-      return "PLUG_IN";
-    default:
-      return "UNKNOWN ENABLED STATUS!!";
-  }
-}
-
 static const char* GetEventType(GdkEventKey* aKeyEvent) {
   switch (aKeyEvent->type) {
     case GDK_KEY_PRESS:
@@ -632,7 +617,7 @@ NS_IMETHODIMP_(IMENotificationRequests)
 IMContextWrapper::GetIMENotificationRequests() {
   // While a plugin has focus, IMContextWrapper doesn't need any
   // notifications.
-  if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
+  if (mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin) {
     return IMENotificationRequests();
   }
 
@@ -706,7 +691,7 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
 
   mOwnerWindow = nullptr;
   mLastFocusedWindow = nullptr;
-  mInputContext.mIMEState.mEnabled = IMEState::DISABLED;
+  mInputContext.mIMEState.mEnabled = IMEEnabled::Disabled;
   mPostingKeyEvents.Clear();
 
   MOZ_LOG(gGtkIMLog, LogLevel::Debug,
@@ -922,7 +907,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
         // <input type="password"> or |ime-mode: disabled;|.  However, in
         // some environments, not so actually.  Therefore, we need to check
         // the result of gtk_im_context_filter_keypress() later.
-        if (mInputContext.mIMEState.mEnabled == IMEState::PASSWORD) {
+        if (mInputContext.mIMEState.mEnabled == IMEEnabled::Password) {
           probablyHandledAsynchronously = false;
           maybeHandledAsynchronously = !isHandlingAsyncEvent;
           break;
@@ -1266,7 +1251,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
   MOZ_LOG(gGtkIMLog, LogLevel::Info,
           ("0x%p SetInputContext(aCaller=0x%p, aContext={ mIMEState={ "
            "mEnabled=%s }, mHTMLInputType=%s })",
-           this, aCaller, GetEnabledStateName(aContext->mIMEState.mEnabled),
+           this, aCaller, ToString(aContext->mIMEState.mEnabled).c_str(),
            NS_ConvertUTF16toUTF8(aContext->mHTMLInputType).get()));
 
   if (aCaller != mLastFocusedWindow) {
@@ -1330,7 +1315,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
         // I.e., let's ignore tablet devices for now.  When somebody
         // reports actual trouble on tablet devices, we should try to
         // look for a way to solve actual problem.
-        if (mInputContext.mIMEState.mEnabled == IMEState::PASSWORD) {
+        if (mInputContext.mIMEState.mEnabled == IMEEnabled::Password) {
           purpose = GTK_INPUT_PURPOSE_PASSWORD;
         } else if (inputType.EqualsLiteral("email")) {
           purpose = GTK_INPUT_PURPOSE_EMAIL;
@@ -1393,7 +1378,7 @@ GtkIMContext* IMContextWrapper::GetCurrentContext() const {
   if (IsEnabled()) {
     return mContext;
   }
-  if (mInputContext.mIMEState.mEnabled == IMEState::PASSWORD) {
+  if (mInputContext.mIMEState.mEnabled == IMEEnabled::Password) {
     return mSimpleContext;
   }
   return mDummyContext;
@@ -1408,10 +1393,10 @@ bool IMContextWrapper::IsValidContext(GtkIMContext* aContext) const {
 }
 
 bool IMContextWrapper::IsEnabled() const {
-  return mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
-         mInputContext.mIMEState.mEnabled == IMEState::PLUGIN ||
+  return mInputContext.mIMEState.mEnabled == IMEEnabled::Enabled ||
+         mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin ||
          (!sUseSimpleContext &&
-          mInputContext.mIMEState.mEnabled == IMEState::PASSWORD);
+          mInputContext.mIMEState.mEnabled == IMEEnabled::Password);
 }
 
 void IMContextWrapper::Focus() {

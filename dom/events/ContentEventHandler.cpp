@@ -461,7 +461,7 @@ nsIContent* ContentEventHandler::GetFocusedContent() {
 
 bool ContentEventHandler::IsPlugin(nsIContent* aContent) {
   return aContent &&
-         aContent->GetDesiredIMEState().mEnabled == IMEState::PLUGIN;
+         aContent->GetDesiredIMEState().mEnabled == IMEEnabled::Plugin;
 }
 
 nsresult ContentEventHandler::QueryContentRect(

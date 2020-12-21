@@ -3190,7 +3190,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvGetInputContext(
     widget::IMEState* aState) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    *aState = widget::IMEState(IMEState::DISABLED,
+    *aState = widget::IMEState(IMEEnabled::Disabled,
                                IMEState::OPEN_STATE_NOT_SUPPORTED);
     return IPC_OK();
   }

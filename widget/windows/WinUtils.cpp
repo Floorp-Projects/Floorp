@@ -1637,7 +1637,7 @@ bool WinUtils::IsIMEEnabled(const InputContext& aInputContext) {
   if (!IsIMEEnabled(aInputContext.mIMEState.mEnabled)) {
     return false;
   }
-  if (aInputContext.mIMEState.mEnabled == IMEState::PLUGIN &&
+  if (aInputContext.mIMEState.mEnabled == IMEEnabled::Plugin &&
       aInputContext.mHTMLInputType.EqualsLiteral("password")) {
     return false;
   }
@@ -1645,8 +1645,8 @@ bool WinUtils::IsIMEEnabled(const InputContext& aInputContext) {
 }
 
 /* static */
-bool WinUtils::IsIMEEnabled(IMEState::Enabled aIMEState) {
-  return (aIMEState == IMEState::ENABLED || aIMEState == IMEState::PLUGIN);
+bool WinUtils::IsIMEEnabled(IMEEnabled aIMEState) {
+  return (aIMEState == IMEEnabled::Enabled || aIMEState == IMEEnabled::Plugin);
 }
 
 /* static */

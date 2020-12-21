@@ -1966,11 +1966,11 @@ nsresult EditorBase::GetPreferredIMEState(IMEState* aState) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  aState->mEnabled = IMEState::ENABLED;
+  aState->mEnabled = IMEEnabled::Enabled;
   aState->mOpen = IMEState::DONT_CHANGE_OPEN_STATE;
 
   if (IsReadonly()) {
-    aState->mEnabled = IMEState::DISABLED;
+    aState->mEnabled = IMEEnabled::Disabled;
     return NS_OK;
   }
 
@@ -1987,12 +1987,12 @@ nsresult EditorBase::GetPreferredIMEState(IMEState* aState) {
   switch (frameForRootElement->StyleUIReset()->mIMEMode) {
     case StyleImeMode::Auto:
       if (IsPasswordEditor()) {
-        aState->mEnabled = IMEState::PASSWORD;
+        aState->mEnabled = IMEEnabled::Password;
       }
       break;
     case StyleImeMode::Disabled:
       // we should use password state for |ime-mode: disabled;|.
-      aState->mEnabled = IMEState::PASSWORD;
+      aState->mEnabled = IMEEnabled::Password;
       break;
     case StyleImeMode::Active:
       aState->mOpen = IMEState::OPEN;

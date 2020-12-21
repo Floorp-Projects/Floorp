@@ -164,25 +164,20 @@ nsCString PrintStringDetail::PrintCharData(char32_t aChar) {
 
 namespace widget {
 
-std::ostream& operator<<(std::ostream& aStream,
-                         const IMEState::Enabled& aEnabled) {
+std::ostream& operator<<(std::ostream& aStream, const IMEEnabled& aEnabled) {
   switch (aEnabled) {
-    case IMEState::DISABLED:
-      aStream << "DISABLED";
-      break;
-    case IMEState::ENABLED:
-      aStream << "ENABLED";
-      break;
-    case IMEState::PASSWORD:
-      aStream << "PASSWORD";
-      break;
-    case IMEState::PLUGIN:
-      aStream << "PLUGIN";
-      break;
-    default:
-      aStream << "illegal value";
-      break;
+    case IMEEnabled::Disabled:
+      return aStream << "DISABLED";
+    case IMEEnabled::Enabled:
+      return aStream << "ENABLED";
+    case IMEEnabled::Password:
+      return aStream << "PASSWORD";
+    case IMEEnabled::Plugin:
+      return aStream << "PLUGIN";
+    case IMEEnabled::Unknown:
+      return aStream << "illegal value";
   }
+  MOZ_ASSERT_UNREACHABLE("Add a case to handle your new IMEEnabled value");
   return aStream;
 }
 

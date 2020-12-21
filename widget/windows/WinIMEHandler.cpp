@@ -435,7 +435,7 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   const InputContext& oldInputContext = aWindow->GetInputContext();
 
   // Assume that SetInputContext() is called only when aWindow has focus.
-  sPluginHasFocus = (aInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
+  sPluginHasFocus = (aInputContext.mIMEState.mEnabled == IMEEnabled::Plugin);
   if (sPluginHasFocus) {
     // Update some cached system settings in the plugin.
     aWindow->DispatchPluginSettingEvents();
@@ -460,7 +460,7 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
       if (sIsIMMEnabled) {
         // Associate IMC with aWindow only when it's necessary.
         AssociateIMEContext(aWindow, enable && NeedsToAssociateIMC());
-      } else if (oldInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
+      } else if (oldInputContext.mIMEState.mEnabled == IMEEnabled::Plugin) {
         // Disassociate the IME context from the window when plugin loses focus
         // in pure TSF mode.
         AssociateIMEContext(aWindow, false);
@@ -519,7 +519,7 @@ void IMEHandler::InitInputContext(nsWindow* aWindow,
   }
 
   // For a11y, the default enabled state should be 'enabled'.
-  aInputContext.mIMEState.mEnabled = IMEState::ENABLED;
+  aInputContext.mIMEState.mEnabled = IMEEnabled::Enabled;
 
   if (sIsInTSFMode) {
     TSFTextStore::SetInputContext(

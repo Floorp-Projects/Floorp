@@ -564,7 +564,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   // If a child process has focus, we should disable IME state until the child
   // process actually gets focus because if user types keys before that they
   // are handled by IME.
-  IMEState newState = remoteHasFocus ? IMEState(IMEState::DISABLED)
+  IMEState newState = remoteHasFocus ? IMEState(IMEEnabled::Disabled)
                                      : GetNewIMEState(aPresContext, aContent);
   bool setIMEState = true;
 
@@ -586,7 +586,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       }
     } else if (focusActuallyChanging) {
       InputContext context = newWidget->GetInputContext();
-      if (context.mIMEState.mEnabled == IMEState::DISABLED &&
+      if (context.mIMEState.mEnabled == IMEEnabled::Disabled &&
           context.mOrigin == InputContext::ORIGIN_CONTENT) {
         setIMEState = false;
         MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -643,7 +643,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     } else if (aAction.mFocusChange == InputContextAction::FOCUS_NOT_CHANGED) {
       // If aContent isn't null or aContent is null but editable, somebody gets
       // focus.
-      bool gotFocus = aContent || (newState.mEnabled == IMEState::ENABLED);
+      bool gotFocus = aContent || (newState.mEnabled == IMEEnabled::Enabled);
       aAction.mFocusChange = gotFocus ? InputContextAction::GOT_FOCUS
                                       : InputContextAction::LOST_FOCUS;
     }
@@ -667,7 +667,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   // Don't call CreateIMEContentObserver() here except when a plugin gets
   // focus because it will be called from the focus event handler of focused
   // editor.
-  if (newState.mEnabled == IMEState::PLUGIN) {
+  if (newState.mEnabled == IMEEnabled::Plugin) {
     CreateIMEContentObserver(nullptr);
     if (sActiveIMEContentObserver) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -1087,25 +1087,25 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
 
   if (!CanHandleWith(aPresContext)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
-            ("  GetNewIMEState() returns DISABLED because "
+            ("  GetNewIMEState() returns IMEEnabled::Disabled because "
              "the nsPresContext has been destroyed"));
-    return IMEState(IMEState::DISABLED);
+    return IMEState(IMEEnabled::Disabled);
   }
 
   // On Printing or Print Preview, we don't need IME.
   if (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
       aPresContext->Type() == nsPresContext::eContext_Print) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
-            ("  GetNewIMEState() returns DISABLED because "
+            ("  GetNewIMEState() returns IMEEnabled::Disabled because "
              "the nsPresContext is for print or print preview"));
-    return IMEState(IMEState::DISABLED);
+    return IMEState(IMEEnabled::Disabled);
   }
 
   if (sInstalledMenuKeyboardListener) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
-            ("  GetNewIMEState() returns DISABLED because "
+            ("  GetNewIMEState() returns IMEEnabled::Disabled because "
              "menu keyboard listener was installed"));
-    return IMEState(IMEState::DISABLED);
+    return IMEState(IMEEnabled::Disabled);
   }
 
   if (!aContent) {
@@ -1114,14 +1114,14 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
     Document* doc = aPresContext->Document();
     if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
-              ("  GetNewIMEState() returns ENABLED because "
+              ("  GetNewIMEState() returns IMEEnabled::Enabled because "
                "design mode editor has focus"));
-      return IMEState(IMEState::ENABLED);
+      return IMEState(IMEEnabled::Enabled);
     }
     MOZ_LOG(sISMLog, LogLevel::Debug,
-            ("  GetNewIMEState() returns DISABLED because "
+            ("  GetNewIMEState() returns IMEEnabled::Disabled because "
              "no content has focus"));
-    return IMEState(IMEState::DISABLED);
+    return IMEState(IMEEnabled::Disabled);
   }
 
   // nsIContent::GetDesiredIMEState() may cause a call of UpdateIMEState()
@@ -1156,12 +1156,12 @@ static bool MayBeIMEUnawareWebApp(nsINode* aNode) {
 
 // static
 void IMEStateManager::ResetActiveChildInputContext() {
-  sActiveChildInputContext.mIMEState.mEnabled = IMEState::UNKNOWN;
+  sActiveChildInputContext.mIMEState.mEnabled = IMEEnabled::Unknown;
 }
 
 // static
 bool IMEStateManager::HasActiveChildSetInputContext() {
-  return sActiveChildInputContext.mIMEState.mEnabled != IMEState::UNKNOWN;
+  return sActiveChildInputContext.mIMEState.mEnabled != IMEEnabled::Unknown;
 }
 
 // static
