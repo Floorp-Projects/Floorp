@@ -295,6 +295,7 @@ if CONFIG["OS_ARCH"] == "Darwin":
     OS_LIBS += [
         # Link to Metal as required by the Metal gfx-hal backend
         "-weak_framework Metal",
+        "-weak_framework MediaPlayer",
     ]
 
 
