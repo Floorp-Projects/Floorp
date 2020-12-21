@@ -2268,17 +2268,6 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvGetCompositionString(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult PluginInstanceParent::RecvSetCandidateWindow(
-    const mozilla::widget::CandidateWindowPosition& aPosition) {
-#if defined(OS_WIN)
-  nsPluginInstanceOwner* owner = GetOwner();
-  if (owner) {
-    owner->SetCandidateWindow(aPosition);
-  }
-#endif
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult PluginInstanceParent::RecvRequestCommitOrCancel(
     const bool& aCommitted) {
 #if defined(OS_WIN)

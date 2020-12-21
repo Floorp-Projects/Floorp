@@ -2562,30 +2562,6 @@ bool IMMHandler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
   }
 }
 
-// static
-void IMMHandler::SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm) {
-  // Hack for ATOK 2011 - 2016 (Japanese IME).  They refer native caret
-  // position at deciding candidate window position.  Note that we cannot
-  // check active IME since TIPs are wrapped and hidden by CUAS.
-  if (aWindow->PluginHasFocus()) {
-    // We cannot retrieve proper character height from plugin.  Therefore,
-    // we should assume that the caret height is always 20px since if less than
-    // this height, candidate window may overlap with composition string when
-    // there is no enough space under composition string to show candidate
-    // window.
-    static const int32_t kCaretHeight = 20;
-    // If a11y module is handling native caret, we shouldn't touch it.
-    // However, it does not work well with Flash Player with IME.  So, we
-    // need to keep overriding caret position here.
-    LayoutDeviceIntRect caretRect(aForm->ptCurrentPos.x,
-                                  aForm->ptCurrentPos.y - kCaretHeight, 1,
-                                  kCaretHeight);
-    IMEHandler::CreateNativeCaret(aWindow, caretRect);
-  }
-  IMEContext context(aWindow);
-  ::ImmSetCandidateWindow(context.get(), aForm);
-}
-
 // staitc
 void IMMHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
                                           const NPEvent* aEvent) {

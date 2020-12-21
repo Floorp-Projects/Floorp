@@ -1118,15 +1118,6 @@ HWND IMEHandler::GetOnScreenKeyboardWindow() {
 }
 
 // static
-void IMEHandler::SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm) {
-  if (!sPluginHasFocus) {
-    return;
-  }
-
-  IMMHandler::SetCandidateWindow(aWindow, aForm);
-}
-
-// static
 void IMEHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
                                           const NPEvent* aPluginEvent) {
   if (!sPluginHasFocus) {
