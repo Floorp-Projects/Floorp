@@ -5989,6 +5989,63 @@ class MBigIntMul : public MBigIntBinaryArithInstruction {
   ALLOW_CLONE(MBigIntMul)
 };
 
+class MBigIntBitAnd : public MBigIntBinaryArithInstruction {
+  MBigIntBitAnd(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    setCommutative();
+
+    // We don't need to guard this instruction because it can only fail on OOM.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntBitAnd)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntBitAnd)
+};
+
+class MBigIntBitOr : public MBigIntBinaryArithInstruction {
+  MBigIntBitOr(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    setCommutative();
+
+    // We don't need to guard this instruction because it can only fail on OOM.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntBitOr)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntBitOr)
+};
+
+class MBigIntBitXor : public MBigIntBinaryArithInstruction {
+  MBigIntBitXor(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    setCommutative();
+
+    // We don't need to guard this instruction because it can only fail on OOM.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntBitXor)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntBitXor)
+};
+
 class MBigIntUnaryArithInstruction : public MUnaryInstruction,
                                      public BigIntArithPolicy::Data {
  protected:
