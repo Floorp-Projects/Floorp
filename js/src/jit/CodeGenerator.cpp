@@ -8919,6 +8919,26 @@ void CodeGenerator::visitCompareBigInt(LCompareBigInt* lir) {
   masm.bind(&done);
 }
 
+void CodeGenerator::visitCompareBigIntInt32(LCompareBigIntInt32* lir) {
+  JSOp op = lir->mir()->jsop();
+  Register left = ToRegister(lir->left());
+  Register right = ToRegister(lir->right());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+  Register output = ToRegister(lir->output());
+
+  Label ifTrue, ifFalse;
+  masm.compareBigIntAndInt32(op, left, right, temp1, temp2, &ifTrue, &ifFalse);
+
+  Label done;
+  masm.bind(&ifFalse);
+  masm.move32(Imm32(0), output);
+  masm.jump(&done);
+  masm.bind(&ifTrue);
+  masm.move32(Imm32(1), output);
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitCompareVM(LCompareVM* lir) {
   pushArg(ToValue(lir, LCompareVM::RhsInput));
   pushArg(ToValue(lir, LCompareVM::LhsInput));
