@@ -206,7 +206,9 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
   }
 
   // Compare_BigInt_Int32 specialization is done for "BigInt <cmp> Int32".
-  if (compare->compareType() == MCompare::Compare_BigInt_Int32) {
+  // Compare_BigInt_Double specialization is done for "BigInt <cmp> Double".
+  if (compare->compareType() == MCompare::Compare_BigInt_Int32 ||
+      compare->compareType() == MCompare::Compare_BigInt_Double) {
     if (MDefinition* in = def->getOperand(0); in->type() != MIRType::BigInt) {
       auto* replace =
           MUnbox::New(alloc, in, MIRType::BigInt, MUnbox::Infallible);
@@ -215,9 +217,22 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
       }
     }
 
-    if (MDefinition* in = def->getOperand(1); in->type() != MIRType::Int32) {
-      auto* replace = MToNumberInt32::New(
-          alloc, in, IntConversionInputKind::NumbersOrBoolsOnly);
+    MDefinition* in = def->getOperand(1);
+
+    MInstruction* replace = nullptr;
+    if (compare->compareType() == MCompare::Compare_BigInt_Int32) {
+      if (in->type() != MIRType::Int32) {
+        replace = MToNumberInt32::New(
+            alloc, in, IntConversionInputKind::NumbersOrBoolsOnly);
+      }
+    } else {
+      MOZ_ASSERT(compare->compareType() == MCompare::Compare_BigInt_Double);
+      if (in->type() != MIRType::Double) {
+        replace = MToDouble::New(alloc, in, MToFPInstruction::NumbersOnly);
+      }
+    }
+
+    if (replace) {
       if (!replaceOperand(1, replace)) {
         return false;
       }
