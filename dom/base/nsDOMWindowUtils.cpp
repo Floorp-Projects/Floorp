@@ -1751,7 +1751,7 @@ nsDOMWindowUtils::GetIMEIsOpen(bool* aState) {
 
   // Open state should not be available when IME is not enabled.
   InputContext context = widget->GetInputContext();
-  if (context.mIMEState.mEnabled != IMEState::ENABLED) {
+  if (context.mIMEState.mEnabled != IMEEnabled::Enabled) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

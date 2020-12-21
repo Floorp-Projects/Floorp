@@ -94,7 +94,7 @@ PuppetWidget::PuppetWidget(BrowserChild* aBrowserChild)
       mNeedIMEStateInit(false),
       mIgnoreCompositionEvents(false) {
   // Setting 'Unknown' means "not yet cached".
-  mInputContext.mIMEState.mEnabled = IMEState::UNKNOWN;
+  mInputContext.mIMEState.mEnabled = IMEEnabled::Unknown;
 }
 
 PuppetWidget::~PuppetWidget() { Destroy(); }
@@ -696,7 +696,7 @@ void PuppetWidget::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) {
 // When this widget caches input context and currently managed by
 // IMEStateManager, the cache is valid.
 bool PuppetWidget::HaveValidInputContextCache() const {
-  return (mInputContext.mIMEState.mEnabled != IMEState::UNKNOWN &&
+  return (mInputContext.mIMEState.mEnabled != IMEEnabled::Unknown &&
           IMEStateManager::GetWidgetForActiveInputContext() == this);
 }
 
@@ -761,7 +761,7 @@ nsresult PuppetWidget::NotifyIMEOfFocusChange(
 
   bool gotFocus = aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS;
   if (gotFocus) {
-    if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN) {
+    if (mInputContext.mIMEState.mEnabled != IMEEnabled::Plugin) {
       // When IME gets focus, we should initalize all information of the
       // content.
       if (NS_WARN_IF(!mContentCache.CacheAll(this, &aIMENotification))) {
@@ -807,7 +807,7 @@ nsresult PuppetWidget::NotifyIMEOfCompositionUpdate(
     return NS_ERROR_FAILURE;
   }
 
-  if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
+  if (mInputContext.mIMEState.mEnabled != IMEEnabled::Plugin &&
       NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
@@ -827,7 +827,7 @@ nsresult PuppetWidget::NotifyIMEOfTextChange(
   }
 
   // While a plugin has focus, text change notification shouldn't be available.
-  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEState::PLUGIN)) {
+  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -860,7 +860,7 @@ nsresult PuppetWidget::NotifyIMEOfSelectionChange(
 
   // While a plugin has focus, selection change notification shouldn't be
   // available.
-  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEState::PLUGIN)) {
+  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -886,7 +886,7 @@ nsresult PuppetWidget::NotifyIMEOfMouseButtonEvent(
 
   // While a plugin has focus, mouse button event notification shouldn't be
   // available.
-  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEState::PLUGIN)) {
+  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -911,7 +911,7 @@ nsresult PuppetWidget::NotifyIMEOfPositionChange(
   }
   // While a plugin has focus, selection range isn't available.  So, we don't
   // need to cache it at that time.
-  if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
+  if (mInputContext.mIMEState.mEnabled != IMEEnabled::Plugin &&
       NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
@@ -1233,8 +1233,8 @@ void PuppetWidget::EnableIMEForPlugin(bool aEnable) {
 
   // If current IME state isn't plugin, we ignore this call.
   if (NS_WARN_IF(HaveValidInputContextCache() &&
-                 mInputContext.mIMEState.mEnabled != IMEState::UNKNOWN &&
-                 mInputContext.mIMEState.mEnabled != IMEState::PLUGIN)) {
+                 mInputContext.mIMEState.mEnabled != IMEEnabled::Unknown &&
+                 mInputContext.mIMEState.mEnabled != IMEEnabled::Plugin)) {
     return;
   }
 
@@ -1350,7 +1350,7 @@ PuppetWidget::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
 
 NS_IMETHODIMP_(IMENotificationRequests)
 PuppetWidget::GetIMENotificationRequests() {
-  if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
+  if (mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin) {
     // If a plugin has focus, we cannot receive text nor selection change
     // in the plugin.  Therefore, PuppetWidget needs to receive only position
     // change event for updating the editor rect cache.

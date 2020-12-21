@@ -5780,7 +5780,7 @@ bool TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
     EnsureToDestroyAndReleaseEnabledTextStoreIf(textStore);
     return false;
   }
-  if (aContext.mIMEState.mEnabled == IMEState::PASSWORD) {
+  if (aContext.mIMEState.mEnabled == IMEEnabled::Password) {
     MarkContextAsKeyboardDisabled(textStore->mContext);
     RefPtr<ITfContext> topContext;
     newDocMgr->GetTop(getter_AddRefs(topContext));

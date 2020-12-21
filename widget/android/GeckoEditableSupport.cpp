@@ -1429,7 +1429,7 @@ void GeckoEditableSupport::SetInputContext(const InputContext& aContext,
 
   mInputContext = aContext;
 
-  if (mInputContext.mIMEState.mEnabled != IMEState::DISABLED &&
+  if (mInputContext.mIMEState.mEnabled != IMEEnabled::Disabled &&
       !mInputContext.mHTMLInputInputmode.EqualsLiteral("none") &&
       aAction.UserMightRequestOpenVKB()) {
     // Don't reset keyboard when we should simply open the vkb
@@ -1457,16 +1457,16 @@ void GeckoEditableSupport::NotifyIMEContext(const InputContext& aContext,
   const bool isUserAction =
       aAction.mCause != InputContextAction::CAUSE_LONGPRESS &&
       !(aAction.mCause == InputContextAction::CAUSE_UNKNOWN_CHROME &&
-        aContext.mIMEState.mEnabled == IMEState::ENABLED) &&
+        aContext.mIMEState.mEnabled == IMEEnabled::Enabled) &&
       (aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput);
   const int32_t flags =
       (inPrivateBrowsing ? EditableListener::IME_FLAG_PRIVATE_BROWSING : 0) |
       (isUserAction ? EditableListener::IME_FLAG_USER_ACTION : 0);
 
   mEditable->NotifyIMEContext(
-      aContext.mIMEState.mEnabled, aContext.mHTMLInputType,
-      aContext.mHTMLInputInputmode, aContext.mActionHint,
-      aContext.mAutocapitalize, flags);
+      static_cast<int32_t>(aContext.mIMEState.mEnabled),
+      aContext.mHTMLInputType, aContext.mHTMLInputInputmode,
+      aContext.mActionHint, aContext.mAutocapitalize, flags);
 }
 
 InputContext GeckoEditableSupport::GetInputContext() {
