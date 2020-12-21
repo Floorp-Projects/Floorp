@@ -28,6 +28,19 @@ function bigIntAddBail(i) {
   if (i >= 99) bailout();
 }
 
+function bigIntSubBail(i) {
+  var x = [0n, minBigInt][0 + (i >= 99)];
+
+  var a = x - 1n;
+
+  // Add a function call to capture a resumepoint at the end of the call or
+  // inside the inlined block, such as the bailout does not rewind to the
+  // beginning of the function.
+  resumeHere();
+
+  if (i >= 99) bailout();
+}
+
 // Prevent compilation of the top-level
 eval(`(${resumeHere})`);
 
@@ -38,6 +51,15 @@ eval(`(${resumeHere})`);
 try {
   for (let i = 0; i < 100; i++) {
     bigIntAddBail(i);
+  }
+  throw new Error("missing exception");
+} catch (e) {
+  assertEq(e instanceof RangeError || e === "out of memory", true, String(e));
+}
+
+try {
+  for (let i = 0; i < 100; i++) {
+    bigIntSubBail(i);
   }
   throw new Error("missing exception");
 } catch (e) {
