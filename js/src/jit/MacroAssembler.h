@@ -1469,6 +1469,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void branchIfBigIntIsNegative(Register bigInt, Label* label);
   inline void branchIfBigIntIsNonNegative(Register bigInt, Label* label);
+  inline void branchIfBigIntIsZero(Register bigInt, Label* label);
+  inline void branchIfBigIntIsNonZero(Register bigInt, Label* label);
 
   inline void branchTestFunctionFlags(Register fun, uint32_t flags,
                                       Condition cond, Label* label);
