@@ -425,8 +425,6 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   // FYI: If there is no composition, this call will do nothing.
   NotifyIME(aWindow, IMENotification(REQUEST_TO_COMMIT_COMPOSITION));
 
-  const InputContext& oldInputContext = aWindow->GetInputContext();
-
   if (aInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
     IMEHandler::MaybeDismissOnScreenKeyboard(aWindow, Sync::Yes);
   } else if (aAction.UserMightRequestOpenVKB()) {
@@ -446,10 +444,6 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
       if (sIsIMMEnabled) {
         // Associate IMC with aWindow only when it's necessary.
         AssociateIMEContext(aWindow, enable && NeedsToAssociateIMC());
-      } else if (oldInputContext.mIMEState.mEnabled == IMEEnabled::Plugin) {
-        // Disassociate the IME context from the window when plugin loses focus
-        // in pure TSF mode.
-        AssociateIMEContext(aWindow, false);
       }
       if (adjustOpenState) {
         TSFTextStore::SetIMEOpenState(open);

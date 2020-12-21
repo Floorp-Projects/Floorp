@@ -172,8 +172,6 @@ std::ostream& operator<<(std::ostream& aStream, const IMEEnabled& aEnabled) {
       return aStream << "ENABLED";
     case IMEEnabled::Password:
       return aStream << "PASSWORD";
-    case IMEEnabled::Plugin:
-      return aStream << "PLUGIN";
     case IMEEnabled::Unknown:
       return aStream << "illegal value";
   }
