@@ -4425,25 +4425,6 @@ bool nsWindow::DispatchPluginEvent(UINT aMessage, WPARAM aWParam,
   return ret;
 }
 
-void nsWindow::DispatchPluginSettingEvents() {
-  // Update scroll wheel properties.
-  {
-    LRESULT lresult;
-    MSGResult msgResult(&lresult);
-    MSG msg =
-        WinUtils::InitMSG(WM_SETTINGCHANGE, SPI_SETWHEELSCROLLLINES, 0, mWnd);
-    ProcessMessageForPlugin(msg, msgResult);
-  }
-
-  {
-    LRESULT lresult;
-    MSGResult msgResult(&lresult);
-    MSG msg =
-        WinUtils::InitMSG(WM_SETTINGCHANGE, SPI_SETWHEELSCROLLCHARS, 0, mWnd);
-    ProcessMessageForPlugin(msg, msgResult);
-  }
-}
-
 void nsWindow::DispatchCustomEvent(const nsString& eventName) {
   if (Document* doc = GetDocument()) {
     if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
@@ -5115,75 +5096,6 @@ const char16_t* GetQuitType() {
   return nullptr;
 }
 
-// The main windows message processing method for plugins.
-// The result means whether this method processed the native
-// event for plugin. If false, the native event should be
-// processed by the caller self.
-bool nsWindow::ProcessMessageForPlugin(MSG aMsg, MSGResult& aResult) {
-  aResult.mResult = 0;
-  aResult.mConsumed = true;
-
-  bool eventDispatched = false;
-  switch (aMsg.message) {
-    case WM_CHAR:
-    case WM_SYSCHAR:
-      aResult.mResult = ProcessCharMessage(aMsg, &eventDispatched);
-      break;
-
-    case WM_KEYUP:
-    case WM_SYSKEYUP:
-      aResult.mResult = ProcessKeyUpMessage(aMsg, &eventDispatched);
-      break;
-
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-      aResult.mResult = ProcessKeyDownMessage(aMsg, &eventDispatched);
-      break;
-
-    case WM_SETTINGCHANGE: {
-      // If there was a change in scroll wheel settings then shove the new
-      // value into the unused lParam so that the client doesn't need to ask
-      // for it.
-      if ((aMsg.wParam != SPI_SETWHEELSCROLLLINES) &&
-          (aMsg.wParam != SPI_SETWHEELSCROLLCHARS)) {
-        return false;
-      }
-      UINT wheelDelta = 0;
-      UINT getMsg = (aMsg.wParam == SPI_SETWHEELSCROLLLINES)
-                        ? SPI_GETWHEELSCROLLLINES
-                        : SPI_GETWHEELSCROLLCHARS;
-      if (NS_WARN_IF(!::SystemParametersInfo(getMsg, 0, &wheelDelta, 0))) {
-        // Use system default scroll amount, 3, when
-        // SPI_GETWHEELSCROLLLINES/CHARS isn't available.
-        wheelDelta = 3;
-      }
-      aMsg.lParam = wheelDelta;
-      break;
-    }
-
-    case WM_DEADCHAR:
-    case WM_SYSDEADCHAR:
-
-    case WM_CUT:
-    case WM_COPY:
-    case WM_PASTE:
-    case WM_CLEAR:
-    case WM_UNDO:
-      break;
-
-    default:
-      return false;
-  }
-
-  if (!eventDispatched) {
-    aResult.mConsumed = nsWindowBase::DispatchPluginEvent(aMsg);
-  }
-  if (!Destroyed()) {
-    DispatchPendingEvents();
-  }
-  return true;
-}
-
 static void ForceFontUpdate() {
   // update device context font cache
   // Dirty but easiest way:
@@ -5209,13 +5121,6 @@ bool nsWindow::ExternalHandlerProcessMessage(UINT aMessage, WPARAM& aWParam,
   if (MouseScrollHandler::ProcessMessage(this, aMessage, aWParam, aLParam,
                                          aResult)) {
     return true;
-  }
-
-  if (PluginHasFocus()) {
-    MSG nativeMsg = WinUtils::InitMSG(aMessage, aWParam, aLParam, mWnd);
-    if (ProcessMessageForPlugin(nativeMsg, aResult)) {
-      return true;
-    }
   }
 
   return false;
