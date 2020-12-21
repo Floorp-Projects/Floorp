@@ -544,6 +544,28 @@ bool RBigIntSub::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MBigIntMul::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntMul));
+  return true;
+}
+
+RBigIntMul::RBigIntMul(CompactBufferReader& reader) {}
+
+bool RBigIntMul::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  if (!js::MulValues(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MConcat::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_Concat));
