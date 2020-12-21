@@ -1335,6 +1335,16 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
   return false;
 }
 
+static inline void SetSameSiteDefaultAttribute(CookieStruct& aCookieData,
+                                               bool laxByDefault) {
+  aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
+  if (laxByDefault) {
+    aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
+  } else {
+    aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
+  }
+}
+
 // Parses attributes from cookie header. expires/max-age attributes aren't
 // folded into the cookie struct here, because we don't know which one to use
 // until we've parsed the header.
@@ -1364,17 +1374,12 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
 
   aCookieData.isSecure() = false;
   aCookieData.isHttpOnly() = false;
-  aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
-  aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
 
   bool laxByDefault =
       StaticPrefs::network_cookie_sameSite_laxByDefault() &&
       !nsContentUtils::IsURIInPrefList(
           aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
-
-  if (laxByDefault) {
-    aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
-  }
+  SetSameSiteDefaultAttribute(aCookieData, laxByDefault);
 
   nsDependentCSubstring tokenString(cookieStart, cookieStart);
   nsDependentCSubstring tokenValue(cookieStart, cookieStart);
@@ -1438,6 +1443,9 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
         aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
         sameSiteSet = true;
       } else {
+        // Reset to defaults if unknown token value (see Bug 1682450)
+        SetSameSiteDefaultAttribute(aCookieData, laxByDefault);
+        sameSiteSet = false;
         CookieLogging::LogMessageToConsole(
             aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
             "CookieSameSiteValueInvalid2"_ns,
