@@ -440,6 +440,43 @@ async function createFile(contents, options = {}) {
   return { file, path };
 }
 
+async function throwScriptError(options = {}) {
+  const { inContent = true } = options;
+
+  const addScriptErrorInternal = ({ options }) => {
+    const {
+      flag = Ci.nsIScriptError.errorFlag,
+      innerWindowId = content.windowGlobalChild.innerWindowId,
+    } = options;
+
+    const scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(
+      Ci.nsIScriptError
+    );
+    scriptError.initWithWindowID(
+      options.text,
+      options.sourceName || "sourceName",
+      null,
+      options.lineNumber || 0,
+      options.columnNumber || 0,
+      flag,
+      options.category || "javascript",
+      innerWindowId
+    );
+    Services.console.logMessage(scriptError);
+  };
+
+  if (inContent) {
+    ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      { options },
+      addScriptErrorInternal
+    );
+  } else {
+    options.innerWindowId = window.windowGlobalChild.innerWindowId;
+    addScriptErrorInternal({ options });
+  }
+}
+
 class RecordEvents {
   /**
    * A timeline of events chosen by calls to `addRecorder`.

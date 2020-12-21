@@ -1380,7 +1380,7 @@
     "FAIL"
   ],
   "Page Page.Events.PageError should fire (page.spec.ts)": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Page Page.setUserAgent should work (page.spec.ts)": [
     "PASS"
