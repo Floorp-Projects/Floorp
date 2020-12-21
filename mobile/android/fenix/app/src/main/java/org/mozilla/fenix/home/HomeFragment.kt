@@ -85,6 +85,7 @@ import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
@@ -345,10 +346,6 @@ class HomeFragment : Fragment() {
                 sessionControlView!!.view.layoutManager?.onRestoreInstanceState(parcelable)
             }
             homeViewModel.layoutManagerState = null
-
-            // We have to delay so that the keyboard collapses and the view is resized before the
-            // animation from SearchFragment happens
-            delay(ANIMATION_DELAY)
         }
 
         observeSearchEngineChanges()
@@ -602,7 +599,9 @@ class HomeFragment : Fragment() {
         }
 
         if (browsingModeManager.mode.isPrivate &&
-            context.settings().showPrivateModeCfr
+            // We will be showing the search dialog and don't want to show the CFR while the dialog shows
+            !bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) &&
+            context.settings().shouldShowPrivateModeCfr
         ) {
             recommendPrivateBrowsingShortcut()
         }
@@ -714,10 +713,13 @@ class HomeFragment : Fragment() {
             // We want to show the popup only after privateBrowsingButton is available.
             // Otherwise, we will encounter an activity token error.
             privateBrowsingButton.post {
-                context.settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
-                privateBrowsingRecommend.showAsDropDown(
-                    privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END
-                )
+                runIfFragmentIsAttached {
+                    context.settings().showedPrivateModeContextualFeatureRecommender = true
+                    context.settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
+                    privateBrowsingRecommend.showAsDropDown(
+                        privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END
+                    )
+                }
             }
         }
     }
@@ -1043,7 +1045,6 @@ class HomeFragment : Fragment() {
 
         private const val FOCUS_ON_ADDRESS_BAR = "focusOnAddressBar"
         private const val FOCUS_ON_COLLECTION = "focusOnCollection"
-        private const val ANIMATION_DELAY = 100L
 
         /**
          * Represents the number of items in [sessionControlView] that are NOT part of

@@ -837,7 +837,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     fun incrementNumTimesPrivateModeOpened() = numTimesPrivateModeOpened.increment()
 
-    private var showedPrivateModeContextualFeatureRecommender by booleanPreference(
+    var showedPrivateModeContextualFeatureRecommender by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_showed_private_mode_cfr),
         default = false
     )
@@ -846,7 +846,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_private_mode_opened)
     )
 
-    val showPrivateModeCfr: Boolean
+    val shouldShowPrivateModeCfr: Boolean
         get() {
             if (!canShowCfr) return false
             val focusInstalled = MozillaProductDetector
@@ -854,13 +854,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                 .contains(MozillaProductDetector.MozillaProducts.FOCUS.productName)
 
             val showCondition = if (focusInstalled) {
-                numTimesPrivateModeOpened.value == CFR_COUNT_CONDITION_FOCUS_INSTALLED
+                numTimesPrivateModeOpened.value >= CFR_COUNT_CONDITION_FOCUS_INSTALLED
             } else {
-                numTimesPrivateModeOpened.value == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED
+                numTimesPrivateModeOpened.value >= CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED
             }
 
             if (showCondition && !showedPrivateModeContextualFeatureRecommender) {
-                showedPrivateModeContextualFeatureRecommender = true
                 return true
             }
 
