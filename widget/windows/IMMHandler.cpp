@@ -487,10 +487,6 @@ void IMMHandler::OnUpdateComposition(nsWindow* aWindow) {
     return;
   }
 
-  if (aWindow->PluginHasFocus()) {
-    return;
-  }
-
   IMEContext context(aWindow);
   gIMMHandler->SetIMERelatedWindowsPos(aWindow, context);
 }
@@ -2168,8 +2164,7 @@ void IMMHandler::AdjustCompositionFont(nsWindow* aWindow,
   logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
   logFont.lfPitchAndFamily = DEFAULT_PITCH;
 
-  if (!aWindow->PluginHasFocus() && aWritingMode.IsVertical() &&
-      IsVerticalWritingSupported()) {
+  if (aWritingMode.IsVertical() && IsVerticalWritingSupported()) {
     SetVerticalFontToLogFont(IsJapanist2003Active()
                                  ? sCompositionFontForJapanist2003
                                  : sCompositionFont,
