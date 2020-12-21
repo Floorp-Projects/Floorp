@@ -68,6 +68,11 @@ void MacroAssembler::xor32(Register src, Register dest) { ma_xor(dest, src); }
 
 void MacroAssembler::xor32(Imm32 imm, Register dest) { ma_xor(dest, imm); }
 
+void MacroAssembler::xor32(const Address& src, Register dest) {
+  load32(src, SecondScratchReg);
+  ma_xor(dest, SecondScratchReg);
+}
+
 // ===============================================================
 // Swap instructions
 
