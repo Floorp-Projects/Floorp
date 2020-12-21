@@ -34,7 +34,7 @@
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var utils = getHitTestConfig().utils;
 
   hitTestScrollbar({
@@ -46,11 +46,11 @@ function* test(testDriver) {
     expectThumb: true,
     layerState: LayerState.INACTIVE,
   });
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
