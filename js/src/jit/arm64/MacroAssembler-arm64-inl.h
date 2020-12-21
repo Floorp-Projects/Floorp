@@ -87,6 +87,10 @@ void MacroAssembler::not32(Register reg) {
   Orn(ARMRegister(reg, 32), vixl::wzr, ARMRegister(reg, 32));
 }
 
+void MacroAssembler::notPtr(Register reg) {
+  Orn(ARMRegister(reg, 64), vixl::xzr, ARMRegister(reg, 64));
+}
+
 void MacroAssembler::and32(Register src, Register dest) {
   And(ARMRegister(dest, 32), ARMRegister(dest, 32),
       Operand(ARMRegister(src, 32)));

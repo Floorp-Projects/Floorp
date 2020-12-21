@@ -102,6 +102,8 @@ void MacroAssembler::load32SignExtendToPtr(const Address& src, Register dest) {
 // ===============================================================
 // Logical functions
 
+void MacroAssembler::notPtr(Register reg) { notl(reg); }
+
 void MacroAssembler::andPtr(Register src, Register dest) { andl(src, dest); }
 
 void MacroAssembler::andPtr(Imm32 imm, Register dest) { andl(imm, dest); }

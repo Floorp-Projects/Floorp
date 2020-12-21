@@ -966,6 +966,8 @@ class Assembler : public AssemblerX86Shared {
 
   void negq(Register reg) { masm.negq_r(reg.encoding()); }
 
+  void notq(Register reg) { masm.notq_r(reg.encoding()); }
+
   void mov(ImmWord word, Register dest) {
     // Use xor for setting registers to zero, as it is specially optimized
     // for this purpose on modern hardware. Note that it does clobber FLAGS
