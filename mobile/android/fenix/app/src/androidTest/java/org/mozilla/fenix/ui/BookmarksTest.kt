@@ -466,20 +466,12 @@ class BookmarksTest {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2)
             IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
-        }.openThreeDotMenu(defaultWebPage.url) {
-            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
-        }.clickEdit {
-            verifyEditBookmarksView()
-            changeBookmarkTitle(testBookmark.title)
-            saveEditBookmark()
-
-            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
 
             createFolder(bookmarksFolderName)
 
             IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
 
-        }.openThreeDotMenu(testBookmark.title) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickEdit {
             clickParentFolderSelector()
             selectFolder(bookmarksFolderName)
