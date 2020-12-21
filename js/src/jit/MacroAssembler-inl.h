@@ -405,6 +405,16 @@ void MacroAssembler::branchIfBigIntIsNonNegative(Register bigInt,
                Imm32(BigInt::signBitMask()), label);
 }
 
+void MacroAssembler::branchIfBigIntIsZero(Register bigInt, Label* label) {
+  branch32(Assembler::Equal, Address(bigInt, BigInt::offsetOfLength()),
+           Imm32(0), label);
+}
+
+void MacroAssembler::branchIfBigIntIsNonZero(Register bigInt, Label* label) {
+  branch32(Assembler::NotEqual, Address(bigInt, BigInt::offsetOfLength()),
+           Imm32(0), label);
+}
+
 void MacroAssembler::branchTestFunctionFlags(Register fun, uint32_t flags,
                                              Condition cond, Label* label) {
   // 16-bit loads are slow and unaligned 32-bit loads may be too so
