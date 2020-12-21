@@ -292,8 +292,6 @@ class MOZ_STACK_CLASS ContentEventHandler {
   static LineBreakType GetLineBreakType(bool aUseNativeLineBreak);
   // Returns focused content (including its descendant documents).
   nsIContent* GetFocusedContent();
-  // Returns true if the content is a plugin host.
-  bool IsPlugin(nsIContent* aContent);
   // QueryContentRect() sets the rect of aContent's frame(s) to aEvent.
   nsresult QueryContentRect(nsIContent* aContent,
                             WidgetQueryContentEvent* aEvent);

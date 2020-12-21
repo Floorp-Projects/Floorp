@@ -398,7 +398,7 @@ nsresult EditorBase::PostCreate() {
     }
     // May be null in design mode
     nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
-    IMEStateManager::UpdateIMEState(newState, content, this);
+    IMEStateManager::UpdateIMEState(newState, content, *this);
   }
 
   // FYI: This call might cause destroying this editor.
@@ -637,7 +637,7 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
       nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
-      IMEStateManager::UpdateIMEState(newState, content, this);
+      IMEStateManager::UpdateIMEState(newState, content, *this);
     }
   }
 

@@ -459,11 +459,6 @@ nsIContent* ContentEventHandler::GetFocusedContent() {
       getter_AddRefs(focusedWindow));
 }
 
-bool ContentEventHandler::IsPlugin(nsIContent* aContent) {
-  return aContent &&
-         aContent->GetDesiredIMEState().mEnabled == IMEEnabled::Plugin;
-}
-
 nsresult ContentEventHandler::QueryContentRect(
     nsIContent* aContent, WidgetQueryContentEvent* aEvent) {
   MOZ_ASSERT(aContent, "aContent must not be null");
@@ -2474,10 +2469,7 @@ nsresult ContentEventHandler::OnQueryEditorRect(
     return rv;
   }
 
-  nsIContent* focusedContent = GetFocusedContent();
-  if (NS_WARN_IF(NS_FAILED(QueryContentRect(
-          IsPlugin(focusedContent) ? focusedContent : mRootContent.get(),
-          aEvent)))) {
+  if (NS_WARN_IF(NS_FAILED(QueryContentRect(mRootContent, aEvent)))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2719,19 +2711,12 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
       docFrame->PresContext()->DevPixelsToIntCSSPixels(eventLoc.y) -
           docFrameRect.y);
 
-  Element* contentUnderMouse = mDocument->ElementFromPointHelper(
-      eventLocCSS.x, eventLocCSS.y, false, false, ViewportType::Visual);
-  if (contentUnderMouse) {
-    nsIWidget* targetWidget = nullptr;
-    nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame();
-    nsIObjectFrame* pluginFrame = do_QueryFrame(targetFrame);
-    if (pluginFrame) {
-      targetWidget = pluginFrame->GetWidget();
-    } else if (targetFrame) {
-      targetWidget = targetFrame->GetNearestWidget();
-    }
-    if (aEvent->mWidget == targetWidget) {
-      aEvent->mReply->mWidgetIsHit = true;
+  if (Element* contentUnderMouse = mDocument->ElementFromPointHelper(
+          eventLocCSS.x, eventLocCSS.y, false, false, ViewportType::Visual)) {
+    if (nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame()) {
+      if (aEvent->mWidget == targetFrame->GetNearestWidget()) {
+        aEvent->mReply->mWidgetIsHit = true;
+      }
     }
   }
 
