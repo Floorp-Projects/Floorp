@@ -2982,6 +2982,22 @@ class LBigIntNegate : public LUnaryMath<1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LBigIntBitNot : public LUnaryMath<2> {
+ public:
+  LIR_HEADER(BigIntBitNot)
+
+  LBigIntBitNot(const LAllocation& input, const LDefinition& temp1,
+                const LDefinition& temp2)
+      : LUnaryMath(classOpcode) {
+    setOperand(0, input);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
 // Adds two string, returning a string.
 class LConcat : public LInstructionHelper<1, 2, 5> {
  public:

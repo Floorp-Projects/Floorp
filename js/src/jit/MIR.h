@@ -6114,6 +6114,23 @@ class MBigIntNegate : public MBigIntUnaryArithInstruction {
   ALLOW_CLONE(MBigIntNegate)
 };
 
+class MBigIntBitNot : public MBigIntUnaryArithInstruction {
+  explicit MBigIntBitNot(MDefinition* input)
+      : MBigIntUnaryArithInstruction(classOpcode, input) {
+    // See MBigIntAdd for why we don't guard this instruction.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntBitNot)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntBitNot)
+};
+
 class MConcat : public MBinaryInstruction,
                 public MixPolicy<ConvertToStringPolicy<0>,
                                  ConvertToStringPolicy<1>>::Data {
