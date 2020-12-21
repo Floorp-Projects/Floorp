@@ -2937,6 +2937,46 @@ class LBigIntBitXor : public LBinaryMath<2> {
   const LDefinition* temp2() { return getTemp(1); }
 };
 
+class LBigIntLsh : public LBinaryMath<3> {
+ public:
+  LIR_HEADER(BigIntLsh)
+
+  LBigIntLsh(const LAllocation& lhs, const LAllocation& rhs,
+             const LDefinition& temp1, const LDefinition& temp2,
+             const LDefinition& temp3)
+      : LBinaryMath(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+};
+
+class LBigIntRsh : public LBinaryMath<3> {
+ public:
+  LIR_HEADER(BigIntRsh)
+
+  LBigIntRsh(const LAllocation& lhs, const LAllocation& rhs,
+             const LDefinition& temp1, const LDefinition& temp2,
+             const LDefinition& temp3)
+      : LBinaryMath(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+    setTemp(2, temp3);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
+};
+
 class LBigIntIncrement : public LUnaryMath<2> {
  public:
   LIR_HEADER(BigIntIncrement)
