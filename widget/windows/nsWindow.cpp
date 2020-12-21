@@ -8593,25 +8593,6 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
          !(IsPopup() && DeviceManagerDx::Get()->IsWARP());
 }
 
-void nsWindow::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) {
-  const NPEvent* pPluginEvent =
-      static_cast<const NPEvent*>(aEvent.mPluginEvent);
-
-  if (NS_WARN_IF(!pPluginEvent)) {
-    return;
-  }
-
-  if (!mWnd) {
-    return;
-  }
-
-  // For WM_IME_*COMPOSITION
-  IMEHandler::DefaultProcOfPluginEvent(this, pPluginEvent);
-
-  CallWindowProcW(GetPrevWindowProc(), mWnd, pPluginEvent->event,
-                  pPluginEvent->wParam, pPluginEvent->lParam);
-}
-
 void nsWindow::EnableIMEForPlugin(bool aEnable) {
   // Current IME state isn't plugin, ignore this call
   if (NS_WARN_IF(mInputContext.mIMEState.mEnabled != IMEEnabled::Plugin)) {

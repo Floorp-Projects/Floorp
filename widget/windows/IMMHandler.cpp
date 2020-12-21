@@ -986,62 +986,6 @@ bool IMMHandler::OnChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
  * message handlers for plug-in
  ****************************************************************************/
 
-void IMMHandler::OnIMEStartCompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
-                                               LPARAM lParam) {
-  MOZ_LOG(gIMMLog, LogLevel::Info,
-          ("OnIMEStartCompositionOnPlugin, hWnd=%08x, mIsComposingOnPlugin=%s",
-           aWindow->GetWindowHandle(), GetBoolName(mIsComposingOnPlugin)));
-  mIsComposingOnPlugin = true;
-  mDispatcher = GetTextEventDispatcherFor(aWindow);
-  mComposingWindow = aWindow;
-  IMEContext context(aWindow);
-  SetIMERelatedWindowsPosOnPlugin(aWindow, context);
-  // On widnowless plugin, we should assume that the focused editor is always
-  // in horizontal writing mode.
-  AdjustCompositionFont(aWindow, context, WritingMode());
-}
-
-void IMMHandler::OnIMECompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
-                                          LPARAM lParam) {
-  MOZ_LOG(
-      gIMMLog, LogLevel::Info,
-      ("OnIMECompositionOnPlugin, hWnd=%08x, lParam=%08x, "
-       "mIsComposingOnPlugin=%s, GCS_RESULTSTR=%s, GCS_COMPSTR=%s, "
-       "GCS_COMPATTR=%s, GCS_COMPCLAUSE=%s, GCS_CURSORPOS=%s",
-       aWindow->GetWindowHandle(), lParam, GetBoolName(mIsComposingOnPlugin),
-       GetBoolName(lParam & GCS_RESULTSTR), GetBoolName(lParam & GCS_COMPSTR),
-       GetBoolName(lParam & GCS_COMPATTR), GetBoolName(lParam & GCS_COMPCLAUSE),
-       GetBoolName(lParam & GCS_CURSORPOS)));
-  // We should end composition if there is a committed string.
-  if (IS_COMMITTING_LPARAM(lParam)) {
-    mIsComposingOnPlugin = false;
-    mComposingWindow = nullptr;
-    mDispatcher = nullptr;
-    return;
-  }
-  // Continue composition if there is still a string being composed.
-  if (IS_COMPOSING_LPARAM(lParam)) {
-    mIsComposingOnPlugin = true;
-    mDispatcher = GetTextEventDispatcherFor(aWindow);
-    mComposingWindow = aWindow;
-    IMEContext context(aWindow);
-    SetIMERelatedWindowsPosOnPlugin(aWindow, context);
-  }
-}
-
-void IMMHandler::OnIMEEndCompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
-                                             LPARAM lParam) {
-  MOZ_LOG(gIMMLog, LogLevel::Info,
-          ("OnIMEEndCompositionOnPlugin, hWnd=%08x, mIsComposingOnPlugin=%s",
-           aWindow->GetWindowHandle(), GetBoolName(mIsComposingOnPlugin)));
-
-  mIsComposingOnPlugin = false;
-  mComposingWindow = nullptr;
-  mDispatcher = nullptr;
-
-  IMEHandler::MaybeDestroyNativeCaret();
-}
-
 bool IMMHandler::OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam,
                                    LPARAM lParam, MSGResult& aResult) {
   MOZ_LOG(gIMMLog, LogLevel::Info,
@@ -2559,32 +2503,6 @@ bool IMMHandler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
       return false;
     default:
       return false;
-  }
-}
-
-// staitc
-void IMMHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
-                                          const NPEvent* aEvent) {
-  switch (aEvent->event) {
-    case WM_IME_STARTCOMPOSITION:
-      EnsureHandlerInstance();
-      gIMMHandler->OnIMEStartCompositionOnPlugin(aWindow, aEvent->wParam,
-                                                 aEvent->lParam);
-      break;
-
-    case WM_IME_COMPOSITION:
-      if (gIMMHandler) {
-        gIMMHandler->OnIMECompositionOnPlugin(aWindow, aEvent->wParam,
-                                              aEvent->lParam);
-      }
-      break;
-
-    case WM_IME_ENDCOMPOSITION:
-      if (gIMMHandler) {
-        gIMMHandler->OnIMEEndCompositionOnPlugin(aWindow, aEvent->wParam,
-                                                 aEvent->lParam);
-      }
-      break;
   }
 }
 

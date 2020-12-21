@@ -1117,15 +1117,6 @@ HWND IMEHandler::GetOnScreenKeyboardWindow() {
   return nullptr;
 }
 
-// static
-void IMEHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
-                                          const NPEvent* aPluginEvent) {
-  if (!sPluginHasFocus) {
-    return;
-  }
-  IMMHandler::DefaultProcOfPluginEvent(aWindow, aPluginEvent);
-}
-
 bool IMEHandler::MaybeCreateNativeCaret(nsWindow* aWindow) {
   MOZ_ASSERT(aWindow);
 

@@ -1868,12 +1868,6 @@ class nsIWidget : public nsISupports {
     return GetInputContext().mIMEState.mEnabled == IMEEnabled::Plugin;
   }
 
-  /**
-   * Handle default action when PluginEvent isn't handled
-   */
-  virtual void DefaultProcOfPluginEvent(
-      const mozilla::WidgetPluginEvent& aEvent) = 0;
-
   /*
    * Enable or Disable IME by windowless plugin.
    */

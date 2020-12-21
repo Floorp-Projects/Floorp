@@ -1929,11 +1929,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPluginEvent(
     const WidgetPluginEvent& aEvent) {
   WidgetPluginEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
-  nsEventStatus status = DispatchWidgetEventViaAPZ(localEvent);
-  if (status != nsEventStatus_eConsumeNoDefault) {
-    // If not consumed, we should call default action
-    SendDefaultProcOfPluginEvent(aEvent);
-  }
+  DispatchWidgetEventViaAPZ(localEvent);
   return IPC_OK();
 }
 

@@ -686,13 +686,6 @@ void PuppetWidget::SetPluginFocused(bool& aFocused) {
   }
 }
 
-void PuppetWidget::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) {
-  if (!mBrowserChild) {
-    return;
-  }
-  mBrowserChild->SendDefaultProcOfPluginEvent(aEvent);
-}
-
 // When this widget caches input context and currently managed by
 // IMEStateManager, the cache is valid.
 bool PuppetWidget::HaveValidInputContextCache() const {

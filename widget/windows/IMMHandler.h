@@ -126,8 +126,6 @@ class IMMHandler final {
   // IME.  Otherwise, NS_OK.
   static nsresult OnMouseButtonEvent(nsWindow* aWindow,
                                      const IMENotification& aIMENotification);
-  static void DefaultProcOfPluginEvent(nsWindow* aWindow,
-                                       const NPEvent* aEvent);
 
 #define DECL_IS_IME_ACTIVE(aReadableName) \
   static bool Is##aReadableName##Active();

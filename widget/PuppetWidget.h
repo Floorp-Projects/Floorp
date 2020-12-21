@@ -253,8 +253,6 @@ class PuppetWidget : public nsBaseWidget,
       int32_t aPanelY, nsString& aCommitted) override;
 
   virtual void SetPluginFocused(bool& aFocused) override;
-  virtual void DefaultProcOfPluginEvent(
-      const mozilla::WidgetPluginEvent& aEvent) override;
 
   virtual nsresult SynthesizeNativeKeyEvent(
       int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
