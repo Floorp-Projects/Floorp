@@ -2332,7 +2332,7 @@ void CompositorBridgeParent::NotifyDidRender(const VsyncId& aCompositeStartId,
   RefPtr<UiCompositorControllerParent> uiController =
       UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeID);
 
-  if (mIsForcedFirstPaint) {
+  if (uiController && mIsForcedFirstPaint) {
     uiController->NotifyFirstPaint();
     mIsForcedFirstPaint = false;
   }
