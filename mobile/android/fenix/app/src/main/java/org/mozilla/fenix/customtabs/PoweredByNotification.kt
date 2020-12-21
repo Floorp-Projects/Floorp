@@ -58,7 +58,7 @@ class PoweredByNotification(
             val appName = getString(R.string.app_name)
             return NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.drawable.ic_status_logo)
-                .setContentTitle(getString(R.string.browser_menu_powered_by2, appName))
+                .setContentTitle(applicationContext.getString(R.string.browser_menu_powered_by2, appName))
                 .setBadgeIconType(BADGE_ICON_NONE)
                 .setColor(ContextCompat.getColor(this, R.color.primary_text_light_theme))
                 .setPriority(NotificationCompat.PRIORITY_MIN)

@@ -33,8 +33,8 @@ class PrivateNotificationService : AbstractPrivateNotificationService() {
 
     override fun NotificationCompat.Builder.buildNotification() {
         setSmallIcon(R.drawable.ic_private_browsing)
-        setContentTitle(getString(R.string.app_name_private_4, getString(R.string.app_name)))
-        setContentText(getString(R.string.notification_pbm_delete_text_2))
+        setContentTitle(applicationContext.getString(R.string.app_name_private_4, getString(R.string.app_name)))
+        setContentText(applicationContext.getString(R.string.notification_pbm_delete_text_2))
         color = ContextCompat.getColor(this@PrivateNotificationService, R.color.pbm_notification_color)
     }
 
