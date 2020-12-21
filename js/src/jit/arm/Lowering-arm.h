@@ -86,6 +86,8 @@ class LIRGeneratorARM : public LIRGeneratorShared {
 
   void lowerBigIntLsh(MBigIntLsh* ins);
   void lowerBigIntRsh(MBigIntRsh* ins);
+  void lowerBigIntDiv(MBigIntDiv* ins);
+  void lowerBigIntMod(MBigIntMod* ins);
 
   LTableSwitch* newLTableSwitch(const LAllocation& in,
                                 const LDefinition& inputCopy,

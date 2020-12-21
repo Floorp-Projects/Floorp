@@ -23,6 +23,11 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared {
   void storeUnboxedValue(const LAllocation* value, MIRType valueType,
                          Operand dest, MIRType slotType);
 
+  void emitBigIntDiv(LBigIntDiv* ins, Register dividend, Register divisor,
+                     Register output, Label* fail);
+  void emitBigIntMod(LBigIntMod* ins, Register dividend, Register divisor,
+                     Register output, Label* fail);
+
   void wasmStore(const wasm::MemoryAccessDesc& access, const LAllocation* value,
                  Operand dstAddr);
   template <typename T>

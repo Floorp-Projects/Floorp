@@ -863,6 +863,89 @@ void CodeGenerator::visitModMaskI(LModMaskI* ins) {
   }
 }
 
+void CodeGeneratorARM::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
+                                     Register divisor, Register output,
+                                     Label* fail) {
+  // Callers handle division by zero and integer overflow.
+
+  if (HasIDIV()) {
+    masm.ma_sdiv(dividend, divisor, /* result= */ dividend);
+
+    // Create and return the result.
+    masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+    masm.initializeBigInt(output, dividend);
+
+    return;
+  }
+
+  // idivmod returns the quotient in r0, and the remainder in r1.
+  MOZ_ASSERT(dividend == r0);
+  MOZ_ASSERT(divisor == r1);
+
+  LiveRegisterSet volatileRegs = liveVolatileRegs(ins);
+  volatileRegs.takeUnchecked(dividend);
+  volatileRegs.takeUnchecked(divisor);
+  volatileRegs.takeUnchecked(output);
+
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = int64_t (*)(int, int);
+  masm.setupUnalignedABICall(output);
+  masm.passABIArg(dividend);
+  masm.passABIArg(divisor);
+  masm.callWithABI<Fn, __aeabi_idivmod>(MoveOp::GENERAL,
+                                        CheckUnsafeCallWithABI::DontCheckOther);
+
+  masm.PopRegsInMask(volatileRegs);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, dividend);
+}
+
+void CodeGeneratorARM::emitBigIntMod(LBigIntMod* ins, Register dividend,
+                                     Register divisor, Register output,
+                                     Label* fail) {
+  // Callers handle division by zero and integer overflow.
+
+  if (HasIDIV()) {
+    {
+      ScratchRegisterScope scratch(masm);
+      masm.ma_smod(dividend, divisor, /* result= */ dividend, scratch);
+    }
+
+    // Create and return the result.
+    masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+    masm.initializeBigInt(output, dividend);
+
+    return;
+  }
+
+  // idivmod returns the quotient in r0, and the remainder in r1.
+  MOZ_ASSERT(dividend == r0);
+  MOZ_ASSERT(divisor == r1);
+
+  LiveRegisterSet volatileRegs = liveVolatileRegs(ins);
+  volatileRegs.takeUnchecked(dividend);
+  volatileRegs.takeUnchecked(divisor);
+  volatileRegs.takeUnchecked(output);
+
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = int64_t (*)(int, int);
+  masm.setupUnalignedABICall(output);
+  masm.passABIArg(dividend);
+  masm.passABIArg(divisor);
+  masm.callWithABI<Fn, __aeabi_idivmod>(MoveOp::GENERAL,
+                                        CheckUnsafeCallWithABI::DontCheckOther);
+
+  masm.PopRegsInMask(volatileRegs);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, dividend, fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, divisor);
+}
+
 void CodeGenerator::visitBitNotI(LBitNotI* ins) {
   const LAllocation* input = ins->getOperand(0);
   const LDefinition* dest = ins->getDef(0);
