@@ -716,6 +716,11 @@ SearchSuggestionController.engineOffersSuggestions = function(engine) {
 };
 
 /**
+ * The maximum length of a value to be stored in search history.
+ */
+SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH = 255;
+
+/**
  * The maximum time (ms) to wait before giving up on a remote suggestions.
  */
 XPCOMUtils.defineLazyPreferenceGetter(
