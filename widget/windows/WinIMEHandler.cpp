@@ -53,7 +53,6 @@ InputContextAction::Cause IMEHandler::sLastContextActionCause =
     InputContextAction::CAUSE_UNKNOWN;
 bool IMEHandler::sMaybeEditable = false;
 bool IMEHandler::sForceDisableCurrentIMM_IME = false;
-bool IMEHandler::sPluginHasFocus = false;
 bool IMEHandler::sNativeCaretIsCreated = false;
 bool IMEHandler::sHasNativeCaretBeenRequested = false;
 
@@ -357,12 +356,6 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
 
 // static
 IMENotificationRequests IMEHandler::GetIMENotificationRequests() {
-  // While a plugin has focus, neither TSFTextStore nor IMMHandler needs
-  // notifications.
-  if (sPluginHasFocus) {
-    return IMENotificationRequests();
-  }
-
   if (IsTSFAvailable()) {
     if (!sIsIMMEnabled) {
       return TSFTextStore::GetIMENotificationRequests();
@@ -433,9 +426,6 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   NotifyIME(aWindow, IMENotification(REQUEST_TO_COMMIT_COMPOSITION));
 
   const InputContext& oldInputContext = aWindow->GetInputContext();
-
-  // Assume that SetInputContext() is called only when aWindow has focus.
-  sPluginHasFocus = (aInputContext.mIMEState.mEnabled == IMEEnabled::Plugin);
 
   if (aInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
     IMEHandler::MaybeDismissOnScreenKeyboard(aWindow, Sync::Yes);
@@ -745,9 +735,8 @@ void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow,
     return;
   }
 #endif  // NIGHTLY_BUILD
-  if (sPluginHasFocus || !IsWin8OrLater() ||
-      !Preferences::GetBool(kOskEnabled, true) || GetOnScreenKeyboardWindow() ||
-      !IMEHandler::NeedOnScreenKeyboard()) {
+  if (!IsWin8OrLater() || !Preferences::GetBool(kOskEnabled, true) ||
+      GetOnScreenKeyboardWindow() || !IMEHandler::NeedOnScreenKeyboard()) {
     return;
   }
 
@@ -774,7 +763,7 @@ void IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow, Sync aSync) {
                        mozilla::gfx::VRFxEventState::BLUR);
   }
 #endif  // NIGHTLY_BUILD
-  if (sPluginHasFocus || !IsWin8OrLater()) {
+  if (!IsWin8OrLater()) {
     return;
   }
 
