@@ -6,6 +6,9 @@
 #include "MediaHardwareKeysEventSourceMacMediaCenter.h"
 #include "MediaKeyListenerTest.h"
 #include "nsCocoaFeatures.h"
+#include "nsCocoaUtils.h"
+#include "prinrval.h"
+#include "prthread.h"
 
 using namespace mozilla::dom;
 
@@ -124,6 +127,38 @@ TEST(MediaHardwareKeysEventSourceMacMediaCenter, TestMediaCenterPrevNextEvent)
   previousHandler(nil);
 
   ASSERT_TRUE(listener->IsResultEqualTo(MediaControlKey::Previoustrack));
+}
+
+TEST(MediaHardwareKeysEventSourceMacMediaCenter, TestSetMetadata)
+{
+  RefPtr<MediaHardwareKeysEventSourceMacMediaCenter> source =
+      new MediaHardwareKeysEventSourceMacMediaCenter();
+
+  ASSERT_TRUE(source->GetListenersNum() == 0);
+
+  RefPtr<MediaKeyListenerTest> listener = new MediaKeyListenerTest();
+
+  source->AddListener(listener.get());
+
+  ASSERT_TRUE(source->Open());
+
+  MediaMetadataBase metadata;
+  metadata.mTitle = u"MediaPlayback";
+  metadata.mArtist = u"Firefox";
+  metadata.mAlbum = u"Mozilla";
+  source->SetMediaMetadata(metadata);
+
+  // The update procedure of nowPlayingInfo is async, so wait for a second
+  // before checking the result.
+  PR_Sleep(PR_SecondsToInterval(1));
+  MPNowPlayingInfoCenter* center = [MPNowPlayingInfoCenter defaultCenter];
+  ASSERT_TRUE([center.nowPlayingInfo[MPMediaItemPropertyTitle] isEqualToString:@"MediaPlayback"]);
+  ASSERT_TRUE([center.nowPlayingInfo[MPMediaItemPropertyArtist] isEqualToString:@"Firefox"]);
+  ASSERT_TRUE([center.nowPlayingInfo[MPMediaItemPropertyAlbumTitle] isEqualToString:@"Mozilla"]);
+
+  source->Close();
+  PR_Sleep(PR_SecondsToInterval(1));
+  ASSERT_TRUE(center.nowPlayingInfo == nil);
 }
 
 NS_ASSUME_NONNULL_END
