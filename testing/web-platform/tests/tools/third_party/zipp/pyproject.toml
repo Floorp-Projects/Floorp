@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+skip-string-normalization = true
+
+[tool.setuptools_scm]
+
+# jaraco/skeleton#22
+[tool.jaraco.pytest.plugins.black]
+addopts = "--black"
+
+# jaraco/skeleton#22
+[tool.jaraco.pytest.plugins.mypy]
+addopts = "--mypy"
+
+[tool.jaraco.pytest.plugins.flake8]
+addopts = "--flake8"
+
+[tool.jaraco.pytest.plugins.cov]
+addopts = "--cov"
