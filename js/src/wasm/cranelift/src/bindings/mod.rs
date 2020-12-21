@@ -41,8 +41,8 @@ pub use self::low_level::CraneliftFuncCompileInput as FuncCompileInput;
 pub use self::low_level::CraneliftMetadataEntry as MetadataEntry;
 pub use self::low_level::CraneliftModuleEnvironment as LowLevelModuleEnvironment;
 pub use self::low_level::CraneliftStaticEnvironment as StaticEnvironment;
-pub use self::low_level::TypeIdDescKind;
 pub use self::low_level::Trap;
+pub use self::low_level::TypeIdDescKind;
 
 mod low_level;
 
