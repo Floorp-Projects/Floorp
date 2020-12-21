@@ -374,8 +374,8 @@ Finder.prototype = {
   },
 
   getInitialSelection() {
+    let initialSelection = this.getActiveSelectionText().selectedText;
     this._getWindow().setTimeout(() => {
-      let initialSelection = this.getActiveSelectionText().selectedText;
       for (let l of this._listeners) {
         try {
           l.onCurrentSelection(initialSelection, true);

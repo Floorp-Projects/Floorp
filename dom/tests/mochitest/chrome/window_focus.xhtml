@@ -1448,8 +1448,7 @@ function doFrameSwitchingTests()
                      [framed.contentDocument, "blur", null, null, window, null],
                      [framed.contentWindow, "blur", null, null, window, null],
                      [frameb.contentDocument, "focus", null, frameb.contentWindow, window, frameb],
-                     [frameb.contentWindow, "focus", null, frameb.contentWindow, window, frameb],
-                     [inputb, "focus", inputb, frameb.contentWindow, window, frameb]];
+                     [frameb.contentWindow, "focus", null, frameb.contentWindow, window, frameb]];
   fm.focusedWindow = frameb.contentWindow;
   ok(gEventMatched && gExpectedEvents.length == 0, "frame switch using focusedWindow");
 
@@ -1461,8 +1460,7 @@ function doFrameSwitchingTests()
 
   // focus a sibling frame by setting focusedWindow when no element is focused in that frame
   gEventMatched = true;
-  gExpectedEvents = [[inputb, "blur", null, frameb.contentWindow, window, frameb],
-                     [frameb.contentDocument, "blur", null, null, window, null],
+  gExpectedEvents = [[frameb.contentDocument, "blur", null, null, window, null],
                      [frameb.contentWindow, "blur", null, null, window, null],
                      [framec.contentDocument, "focus", null, framec.contentWindow, window, framea],
                      [framec.contentWindow, "focus", null, framec.contentWindow, window, framea]];

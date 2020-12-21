@@ -1147,6 +1147,8 @@
       }
 
       if (this.prefillWithSelection && userWantsPrefill) {
+        this.browser.finder.getInitialSelection();
+
         // NB: We have to focus this._findField here so tests that send
         // key events can open and close the find bar synchronously.
         this._findField.focus();
@@ -1157,7 +1159,6 @@
         // jumbled up queries.
         this._findField.select();
 
-        this.browser.finder.getInitialSelection();
         return startFindPromise;
       }
 
