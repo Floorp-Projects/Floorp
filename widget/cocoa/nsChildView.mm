@@ -1526,7 +1526,6 @@ void nsChildView::SetInputContext(const InputContext& aContext, const InputConte
   mInputContext = aContext;
   switch (aContext.mIMEState.mEnabled) {
     case IMEEnabled::Enabled:
-    case IMEEnabled::Plugin:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(true);
       if (mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
@@ -1549,7 +1548,6 @@ void nsChildView::SetInputContext(const InputContext& aContext, const InputConte
 InputContext nsChildView::GetInputContext() {
   switch (mInputContext.mIMEState.mEnabled) {
     case IMEEnabled::Enabled:
-    case IMEEnabled::Plugin:
       if (mTextInputHandler) {
         mInputContext.mIMEState.mOpen =
             mTextInputHandler->IsIMEOpened() ? IMEState::OPEN : IMEState::CLOSED;

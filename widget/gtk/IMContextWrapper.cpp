@@ -615,12 +615,6 @@ TextEventDispatcher* IMContextWrapper::GetTextEventDispatcher() {
 
 NS_IMETHODIMP_(IMENotificationRequests)
 IMContextWrapper::GetIMENotificationRequests() {
-  // While a plugin has focus, IMContextWrapper doesn't need any
-  // notifications.
-  if (mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin) {
-    return IMENotificationRequests();
-  }
-
   IMENotificationRequests::Notifications notifications =
       IMENotificationRequests::NOTIFY_NOTHING;
   // If it's not enabled, we don't need position change notification.
@@ -766,7 +760,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
     bool aKeyboardEventWasDispatched /* = false */) {
   MOZ_ASSERT(aEvent, "aEvent must be non-null");
 
-  if (!mInputContext.mIMEState.MaybeEditable() || MOZ_UNLIKELY(IsDestroyed())) {
+  if (!mInputContext.mIMEState.IsEditable() || MOZ_UNLIKELY(IsDestroyed())) {
     return KeyHandlingState::eNotHandled;
   }
 
@@ -1284,7 +1278,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
       aContext->mHTMLInputType != mInputContext.mHTMLInputType;
 
   // Release current IME focus if IME is enabled.
-  if (changingEnabledState && mInputContext.mIMEState.MaybeEditable()) {
+  if (changingEnabledState && mInputContext.mIMEState.IsEditable()) {
     EndIMEComposition(mLastFocusedWindow);
     Blur();
   }
@@ -1292,7 +1286,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
   mInputContext = *aContext;
 
   if (changingEnabledState) {
-    if (mInputContext.mIMEState.MaybeEditable()) {
+    if (mInputContext.mIMEState.IsEditable()) {
       GtkIMContext* currentContext = GetCurrentContext();
       if (currentContext) {
         GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
@@ -1394,7 +1388,6 @@ bool IMContextWrapper::IsValidContext(GtkIMContext* aContext) const {
 
 bool IMContextWrapper::IsEnabled() const {
   return mInputContext.mIMEState.mEnabled == IMEEnabled::Enabled ||
-         mInputContext.mIMEState.mEnabled == IMEEnabled::Plugin ||
          (!sUseSimpleContext &&
           mInputContext.mIMEState.mEnabled == IMEEnabled::Password);
 }

@@ -1634,19 +1634,12 @@ LayoutDeviceIntRect WinUtils::ToIntRect(const RECT& aRect) {
 
 /* static */
 bool WinUtils::IsIMEEnabled(const InputContext& aInputContext) {
-  if (!IsIMEEnabled(aInputContext.mIMEState.mEnabled)) {
-    return false;
-  }
-  if (aInputContext.mIMEState.mEnabled == IMEEnabled::Plugin &&
-      aInputContext.mHTMLInputType.EqualsLiteral("password")) {
-    return false;
-  }
-  return true;
+  return IsIMEEnabled(aInputContext.mIMEState.mEnabled);
 }
 
 /* static */
 bool WinUtils::IsIMEEnabled(IMEEnabled aIMEState) {
-  return (aIMEState == IMEEnabled::Enabled || aIMEState == IMEEnabled::Plugin);
+  return aIMEState == IMEEnabled::Enabled;
 }
 
 /* static */

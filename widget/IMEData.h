@@ -280,13 +280,6 @@ enum class IMEEnabled {
    */
   Password,
   /**
-   * This state is used when a plugin is focused.
-   * When a plug-in is focused content, we should send native events
-   * directly. Because we don't process some native events, but they may
-   * be needed by the plug-in.
-   */
-  Plugin,
-  /**
    * 'Unknown' is useful when you cache this enum.  So, this shouldn't be
    * used with nsIWidget::SetInputContext().
    */
@@ -344,13 +337,6 @@ struct IMEState final {
   // a plain text editor whose ime-mode is "disabled".
   bool IsEditable() const {
     return mEnabled == IMEEnabled::Enabled || mEnabled == IMEEnabled::Password;
-  }
-  // Returns true if the user might be able to input characters.
-  // This means that a plain text editor, an HTML editor, a password editor,
-  // a plain text editor whose ime-mode is "disabled" or a windowless plugin
-  // has focus.
-  bool MaybeEditable() const {
-    return IsEditable() || mEnabled == IMEEnabled::Plugin;
   }
 };
 
