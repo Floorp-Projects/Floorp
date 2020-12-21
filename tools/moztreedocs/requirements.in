@@ -30,7 +30,7 @@ python-dateutil==2.8.1
 python-frontmatter==0.5.0
 pytz==2020.1
 PyYAML==5.3.1
-recommonmark==0.6.0
+recommonmark==0.7.1
 redo==2.0.3
 requests==2.24.0
 rsa==4.6
