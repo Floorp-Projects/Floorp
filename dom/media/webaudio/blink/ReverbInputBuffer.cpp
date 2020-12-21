@@ -39,18 +39,19 @@ ReverbInputBuffer::ReverbInputBuffer(size_t length) : m_writeIndex(0) {
 }
 
 void ReverbInputBuffer::write(const float* sourceP, size_t numberOfFrames) {
+  // m_writeIndex is atomic and checked by other threads, so only touch
+  // it at the start and end.
   size_t bufferLength = m_buffer.Length();
-  bool isCopySafe = m_writeIndex + numberOfFrames <= bufferLength;
-  MOZ_ASSERT(isCopySafe);
-  if (!isCopySafe) return;
+  size_t index = m_writeIndex;
+  size_t newIndex = index + numberOfFrames;
 
-  memcpy(m_buffer.Elements() + m_writeIndex, sourceP,
-         sizeof(float) * numberOfFrames);
+  MOZ_RELEASE_ASSERT(newIndex <= bufferLength);
 
-  m_writeIndex += numberOfFrames;
-  MOZ_ASSERT(m_writeIndex <= bufferLength);
+  memcpy(m_buffer.Elements() + index, sourceP, sizeof(float) * numberOfFrames);
 
-  if (m_writeIndex >= bufferLength) m_writeIndex = 0;
+  if (newIndex >= bufferLength) {
+    m_writeIndex = 0;
+  }
 }
 
 float* ReverbInputBuffer::directReadFrom(int* readIndex,
