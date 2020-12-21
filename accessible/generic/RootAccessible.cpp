@@ -467,18 +467,18 @@ void RootAccessible::Shutdown() {
 }
 
 Relation RootAccessible::RelationByType(RelationType aType) const {
-  if (!mDocumentNode || aType != RelationType::EMBEDS)
+  if (!mDocumentNode || aType != RelationType::EMBEDS) {
     return DocAccessibleWrap::RelationByType(aType);
+  }
 
-  if (nsPIDOMWindowOuter* rootWindow = mDocumentNode->GetWindow()) {
-    nsCOMPtr<nsPIDOMWindowOuter> contentWindow =
-        nsGlobalWindowOuter::Cast(rootWindow)->GetContent();
-    if (contentWindow) {
-      RefPtr<Document> contentDocumentNode = contentWindow->GetDoc();
-      if (contentDocumentNode) {
-        DocAccessible* contentDocument =
-            GetAccService()->GetDocAccessible(contentDocumentNode);
-        if (contentDocument) return Relation(contentDocument);
+  if (nsIDocShell* docShell = mDocumentNode->GetDocShell()) {
+    nsCOMPtr<nsIDocShellTreeOwner> owner;
+    docShell->GetTreeOwner(getter_AddRefs(owner));
+    if (owner) {
+      nsCOMPtr<nsIDocShellTreeItem> contentShell;
+      owner->GetPrimaryContentShell(getter_AddRefs(contentShell));
+      if (contentShell) {
+        return Relation(nsAccUtils::GetDocAccessibleFor(contentShell));
       }
     }
   }
