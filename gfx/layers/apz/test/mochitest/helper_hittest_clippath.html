@@ -31,7 +31,7 @@ when this page loads, the blue rect should be behind the green circle. mousing o
 <div id="clipped"></div>
 <script>
 
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
@@ -40,7 +40,7 @@ function* test(testDriver) {
   var subscroller = subwindow.document.scrollingElement;
   var subutils = SpecialPowers.getDOMWindowUtils(subwindow);
   subutils.setDisplayPortForElement(0, 0, 400, 1000, subscroller, 1);
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   var rootViewId = utils.getViewId(document.scrollingElement);
   var iframeViewId = subutils.getViewId(subscroller);
@@ -79,7 +79,7 @@ function* test(testDriver) {
   // one that needs a mask. Then run the checks again; the expected results for
   // WR are slightly different
   document.getElementById("clipped").style.clipPath = "polygon(50px 200px, 75px 75px, 200px 50px, 350px 200px, 200px 350px)";
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   checkHitResult(hitTest({ x: 10, y: 10 }),
       APZHitResultFlags.VISIBLE,
@@ -109,7 +109,7 @@ function* test(testDriver) {
 }
 
 waitUntilApzStable()
-    .then(runContinuation(test))
+    .then(test)
     .then(subtestDone, subtestFailed);
 </script>
 </body></html>
