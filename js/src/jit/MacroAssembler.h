@@ -989,11 +989,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void subDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
-  // On x86-shared, srcDest must be eax and edx will be clobbered.
   inline void mul32(Register rhs, Register srcDest) PER_SHARED_ARCH;
 
   inline void mul32(Register src1, Register src2, Register dest, Label* onOver)
       DEFINED_ON(arm64);
+
+  inline void mulPtr(Register rhs, Register srcDest) DEFINED_ON(x86, x64);
 
   inline void mul64(const Operand& src, const Register64& dest) DEFINED_ON(x64);
   inline void mul64(const Operand& src, const Register64& dest,
@@ -1431,6 +1432,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                            Label* label) PER_SHARED_ARCH;
 
   inline void branchSubPtr(Condition cond, Register src, Register dest,
+                           Label* label) PER_SHARED_ARCH;
+
+  inline void branchMulPtr(Condition cond, Register src, Register dest,
                            Label* label) PER_SHARED_ARCH;
 
   inline void decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
