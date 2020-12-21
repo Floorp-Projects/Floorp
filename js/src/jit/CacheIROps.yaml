@@ -2472,15 +2472,6 @@
     lhs: BigIntId
     rhs: Int32Id
 
-- name: CompareInt32BigIntResult
-  shared: true
-  transpile: false
-  cost_estimate: 3
-  args:
-    op: JSOpImm
-    lhs: Int32Id
-    rhs: BigIntId
-
 - name: CompareBigIntNumberResult
   shared: true
   transpile: false
@@ -2490,15 +2481,6 @@
     lhs: BigIntId
     rhs: NumberId
 
-- name: CompareNumberBigIntResult
-  shared: true
-  transpile: false
-  cost_estimate: 4
-  args:
-    op: JSOpImm
-    lhs: NumberId
-    rhs: BigIntId
-
 - name: CompareBigIntStringResult
   shared: true
   transpile: false
@@ -2507,15 +2489,6 @@
     op: JSOpImm
     lhs: BigIntId
     rhs: StringId
-
-- name: CompareStringBigIntResult
-  shared: true
-  transpile: false
-  cost_estimate: 5
-  args:
-    op: JSOpImm
-    lhs: StringId
-    rhs: BigIntId
 
 - name: CompareNullUndefinedResult
   shared: true

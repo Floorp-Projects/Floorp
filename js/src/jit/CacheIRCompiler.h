@@ -794,11 +794,6 @@ class MOZ_RAII CacheIRCompiler {
   bool emitComparePointerResultShared(JSOp op, TypedOperandId lhsId,
                                       TypedOperandId rhsId);
 
-  bool emitCompareBigIntInt32ResultShared(Register bigInt, Register int32,
-                                          Register scratch1, Register scratch2,
-                                          JSOp op,
-                                          const AutoOutputRegister& output);
-
   MOZ_MUST_USE bool emitMathFunctionNumberResultShared(
       UnaryMathFunction fun, FloatRegister inputScratch, ValueOperand output);
 
