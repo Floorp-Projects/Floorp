@@ -110,12 +110,12 @@
 
 var config = getHitTestConfig();
 
-function* test(testDriver) {
+async function test() {
   for (var scroller of document.querySelectorAll(".taBigBox > div")) {
     // layerize all the scrollable divs
     config.utils.setDisplayPortForElement(0, 0, 100, 100, scroller, 1);
   }
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
 
   var scrollId = config.utils.getViewId(document.scrollingElement);
   var layersId = config.utils.getLayersId();
@@ -356,7 +356,7 @@ if (!config.isWebRender) {
   subtestDone();
 } else {
   waitUntilApzStable()
-    .then(runContinuation(test))
+    .then(test)
     .then(subtestDone, subtestFailed);
 }
 
