@@ -1210,23 +1210,6 @@ nsIWidgetListener* PuppetWidget::GetCurrentWidgetListener() {
   return mAttachedWidgetListener;
 }
 
-void PuppetWidget::EnableIMEForPlugin(bool aEnable) {
-  if (!mBrowserChild) {
-    return;
-  }
-
-  // If current IME state isn't plugin, we ignore this call.
-  if (NS_WARN_IF(HaveValidInputContextCache() &&
-                 mInputContext.mIMEState.mEnabled != IMEEnabled::Unknown &&
-                 mInputContext.mIMEState.mEnabled != IMEEnabled::Plugin)) {
-    return;
-  }
-
-  // We don't have valid state in cache or state is plugin, so delegate to
-  // chrome process.
-  mBrowserChild->SendEnableIMEForPlugin(aEnable);
-}
-
 void PuppetWidget::ZoomToRect(const uint32_t& aPresShellId,
                               const ScrollableLayerGuid::ViewID& aViewId,
                               const CSSRect& aRect, const uint32_t& aFlags) {

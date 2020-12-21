@@ -2027,7 +2027,6 @@ BOOL PluginInstanceChild::ImmAssociateContextExProc(HWND hWND, HIMC hImc,
     // Store the last IME state since Flash may call ImmAssociateContextEx
     // before taking focus.
     self->mLastEnableIMEState = !!(dwFlags & IACE_DEFAULT);
-    self->SendEnableIME(self->mLastEnableIMEState);
   }
   return sImm32ImmAssociateContextExStub(hWND, hImc, dwFlags);
 }
@@ -2112,11 +2111,7 @@ int16_t PluginInstanceChild::WinlessHandleEvent(NPEvent& event) {
   // activated and set input context with PLUGIN.  So after activating
   // content process, we have to set current IME state again.
 
-  if (event.event == WM_SETFOCUS) {
-    // When focus is changed from chrome process to plugin process,
-    // Flash may call ImmAssociateContextEx before receiving WM_SETFOCUS.
-    SendEnableIME(mLastEnableIMEState);
-  } else if (event.event == WM_KILLFOCUS) {
+  if (event.event == WM_KILLFOCUS) {
     // Flash always calls ImmAssociateContextEx by taking focus.
     // Although this flag doesn't have to be reset, I add it for safety.
     mLastEnableIMEState = true;
