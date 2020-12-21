@@ -47,6 +47,7 @@
 #include "jit/ABIFunctionList-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "jit/TemplateObject-inl.h"
+#include "vm/BytecodeUtil-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSObject-inl.h"
 
@@ -1292,6 +1293,107 @@ void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
   store64(val, Address(bigInt, js::BigInt::offsetOfInlineDigits()));
 
   bind(&done);
+}
+
+void MacroAssembler::compareBigIntAndInt32(JSOp op, Register bigInt,
+                                           Register int32, Register scratch1,
+                                           Register scratch2, Label* ifTrue,
+                                           Label* ifFalse) {
+  MOZ_ASSERT(IsLooseEqualityOp(op) || IsRelationalOp(op));
+
+  static_assert(std::is_same_v<BigInt::Digit, uintptr_t>,
+                "BigInt digit can be loaded in a pointer-sized register");
+  static_assert(sizeof(BigInt::Digit) >= sizeof(uint32_t),
+                "BigInt digit stores at least an uint32");
+
+  // Test for too large numbers.
+  //
+  // If the absolute value of the BigInt can't be expressed in an uint32/uint64,
+  // the result of the comparison is a constant.
+  if (op == JSOp::Eq || op == JSOp::Ne) {
+    Label* tooLarge = op == JSOp::Eq ? ifFalse : ifTrue;
+    branch32(Assembler::GreaterThan,
+             Address(bigInt, BigInt::offsetOfDigitLength()), Imm32(1),
+             tooLarge);
+  } else {
+    Label doCompare;
+    branch32(Assembler::LessThanOrEqual,
+             Address(bigInt, BigInt::offsetOfDigitLength()), Imm32(1),
+             &doCompare);
+
+    // Still need to take the sign-bit into account for relational operations.
+    if (op == JSOp::Lt || op == JSOp::Le) {
+      branchIfBigIntIsNegative(bigInt, ifTrue);
+      jump(ifFalse);
+    } else {
+      branchIfBigIntIsNegative(bigInt, ifFalse);
+      jump(ifTrue);
+    }
+
+    bind(&doCompare);
+  }
+
+  // Test for mismatched signs and, if the signs are equal, load |abs(x)| in
+  // |scratch1| and |abs(y)| in |scratch2| and then compare the absolute numbers
+  // against each other.
+  {
+    // Jump to |ifTrue| resp. |ifFalse| if the BigInt is strictly less than
+    // resp. strictly greater than the int32 value, depending on the comparison
+    // operator.
+    Label* greaterThan;
+    Label* lessThan;
+    if (op == JSOp::Eq) {
+      greaterThan = ifFalse;
+      lessThan = ifFalse;
+    } else if (op == JSOp::Ne) {
+      greaterThan = ifTrue;
+      lessThan = ifTrue;
+    } else if (op == JSOp::Lt || op == JSOp::Le) {
+      greaterThan = ifFalse;
+      lessThan = ifTrue;
+    } else {
+      MOZ_ASSERT(op == JSOp::Gt || op == JSOp::Ge);
+      greaterThan = ifTrue;
+      lessThan = ifFalse;
+    }
+
+    // BigInt digits are always stored as an absolute number.
+    loadFirstBigIntDigitOrZero(bigInt, scratch1);
+
+    // Load the int32 into |scratch2| and negate it for negative numbers.
+    move32(int32, scratch2);
+
+    Label isNegative, doCompare;
+    branchIfBigIntIsNegative(bigInt, &isNegative);
+    branch32(Assembler::LessThan, int32, Imm32(0), greaterThan);
+    jump(&doCompare);
+
+    // We rely on |neg32(INT32_MIN)| staying INT32_MIN, because we're using an
+    // unsigned comparison below.
+    bind(&isNegative);
+    branch32(Assembler::GreaterThanOrEqual, int32, Imm32(0), lessThan);
+    neg32(scratch2);
+
+    // Not all supported platforms (e.g. MIPS64) zero-extend 32-bit operations,
+    // so we need to explicitly clear any high 32-bits.
+    move32ZeroExtendToPtr(scratch2, scratch2);
+
+    // Reverse the relational comparator for negative numbers.
+    // |-x < -y| <=> |+x > +y|.
+    // |-x ≤ -y| <=> |+x ≥ +y|.
+    // |-x > -y| <=> |+x < +y|.
+    // |-x ≥ -y| <=> |+x ≤ +y|.
+    JSOp reversed = ReverseCompareOp(op);
+    if (reversed != op) {
+      branchPtr(JSOpToCondition(reversed, /* isSigned = */ false), scratch1,
+                scratch2, ifTrue);
+      jump(ifFalse);
+    }
+
+    bind(&doCompare);
+    branchPtr(JSOpToCondition(op, /* isSigned = */ false), scratch1, scratch2,
+              ifTrue);
+  }
 }
 
 void MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,

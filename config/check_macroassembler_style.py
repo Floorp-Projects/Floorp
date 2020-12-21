@@ -146,7 +146,7 @@ def get_macroassembler_definitions(filename):
     style_section = False
     lines = ""
     signatures = []
-    with open(filename) as f:
+    with open(filename, encoding="utf-8") as f:
         for line in f:
             if "//{{{ check_macroassembler_style" in line:
                 if style_section:
@@ -211,7 +211,7 @@ def get_macroassembler_declaration(filename):
     style_section = False
     lines = ""
     signatures = []
-    with open(filename) as f:
+    with open(filename, encoding="utf-8") as f:
         for line in f:
             if "//{{{ check_macroassembler_decl_style" in line:
                 style_section = True
