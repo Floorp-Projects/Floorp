@@ -35,6 +35,7 @@ class MediaHardwareKeysEventSourceMacMediaCenter final
   void Close() override;
   bool IsOpened() const override;
   void SetPlaybackState(dom::MediaSessionPlaybackState aState) override;
+  void SetMediaMetadata(const dom::MediaMetadataBase& aMetadata) override;
   // Currently we don't support showing supported keys on the touch bar.
   void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override {}
 
