@@ -190,7 +190,7 @@ class IMEStateManager {
   //     asynchronously.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static void UpdateIMEState(
       const IMEState& aNewIMEState, nsIContent* aContent,
-      EditorBase* aEditorBase);
+      EditorBase& aEditorBase);
 
   // This method is called when user operates mouse button in focused editor
   // and before the editor handles it.
@@ -315,7 +315,7 @@ class IMEStateManager {
   //     marked too.  Probably, we should initialize IMEContentObserver
   //     asynchronously.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static void CreateIMEContentObserver(
-      EditorBase* aEditorBase);
+      EditorBase& aEditorBase);
 
   static void DestroyIMEContentObserver();
 
