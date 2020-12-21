@@ -132,13 +132,21 @@ bound by enclosing environments.
 Return the value of the variable bound to <i>name</i> in this
 environment, or `undefined` if this environment does not bind
 <i>name</i>. <i>Name</i> must be a string that is a valid ECMAScript
-identifier name. The result is a debuggee value.
+identifier name. The result is a debuggee value, in most cases.
 
 JavaScript engines often omit variables from environments, to save space
 and reduce execution time. If the given variable should be in scope, but
 `getVariable` is unable to produce its value, it returns an ordinary
 JavaScript object (not a [`Debugger.Object`][object] instance) whose
 `optimizedOut` property is `true`.
+
+Aside from the above case, this method can return something that is not a
+debuggee value in two other cases. If a function argument is missing, then it
+returns an ordinary JavaScript object whose `missingArgument` property is
+`true`. Finally, if a variable name is bound in the environment but not yet
+initialized (for example, if the debuggee is paused in the middle of an
+initializer expression) then it returns an ordinary JavaScript object whose
+`uninitialized` property is `true`.
 
 This is not an [invocation function][inv fr];
 if this call would cause debuggee code to run (say, because the
