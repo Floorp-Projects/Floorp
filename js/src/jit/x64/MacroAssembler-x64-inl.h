@@ -64,11 +64,6 @@ void MacroAssembler::load32SignExtendToPtr(const Address& src, Register dest) {
   movslq(Operand(src), dest);
 }
 
-// ===============================================================
-// Logical instructions
-
-void MacroAssembler::notPtr(Register reg) { notq(reg); }
-
 void MacroAssembler::andPtr(Register src, Register dest) { andq(src, dest); }
 
 void MacroAssembler::andPtr(Imm32 imm, Register dest) { andq(imm, dest); }
@@ -229,10 +224,6 @@ void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
   subPtr(ImmWord(imm.value), dest.reg);
 }
 
-void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
-  imulq(rhs, srcDest);
-}
-
 void MacroAssembler::mul64(Imm64 imm, const Register64& dest,
                            const Register temp) {
   MOZ_ASSERT(temp == InvalidReg);
@@ -292,15 +283,6 @@ void MacroAssembler::lshiftPtr(Imm32 imm, Register dest) {
   shlq(imm, dest);
 }
 
-void MacroAssembler::lshiftPtr(Register shift, Register srcDest) {
-  if (Assembler::HasBMI2()) {
-    shlxq(srcDest, shift, srcDest);
-    return;
-  }
-  MOZ_ASSERT(shift == rcx);
-  shlq_cl(srcDest);
-}
-
 void MacroAssembler::lshift64(Imm32 imm, Register64 dest) {
   MOZ_ASSERT(0 <= imm.value && imm.value < 64);
   lshiftPtr(imm, dest.reg);
@@ -318,15 +300,6 @@ void MacroAssembler::lshift64(Register shift, Register64 srcDest) {
 void MacroAssembler::rshiftPtr(Imm32 imm, Register dest) {
   MOZ_ASSERT(0 <= imm.value && imm.value < 64);
   shrq(imm, dest);
-}
-
-void MacroAssembler::rshiftPtr(Register shift, Register srcDest) {
-  if (Assembler::HasBMI2()) {
-    shrxq(srcDest, shift, srcDest);
-    return;
-  }
-  MOZ_ASSERT(shift == rcx);
-  shrq_cl(srcDest);
 }
 
 void MacroAssembler::rshift64(Imm32 imm, Register64 dest) {
