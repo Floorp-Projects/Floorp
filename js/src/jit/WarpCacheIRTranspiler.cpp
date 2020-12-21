@@ -194,17 +194,6 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitInt32BinaryArithResult(Int32OperandId lhsId,
                                                Int32OperandId rhsId);
 
-  template <typename T>
-  MOZ_MUST_USE bool emitBigIntBinaryArithResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId);
-
-  template <typename T>
-  MOZ_MUST_USE bool emitBigIntBinaryArithEffectfulResult(BigIntOperandId lhsId,
-                                                         BigIntOperandId rhsId);
-
-  template <typename T>
-  MOZ_MUST_USE bool emitBigIntUnaryArithResult(BigIntOperandId inputId);
-
   MOZ_MUST_USE bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
                                       MCompare::CompareType compareType);
 
@@ -2434,123 +2423,6 @@ bool WarpCacheIRTranspiler::emitInt32URightShiftResult(Int32OperandId lhsId,
   return true;
 }
 
-template <typename T>
-bool WarpCacheIRTranspiler::emitBigIntBinaryArithResult(BigIntOperandId lhsId,
-                                                        BigIntOperandId rhsId) {
-  MDefinition* lhs = getOperand(lhsId);
-  MDefinition* rhs = getOperand(rhsId);
-
-  auto* ins = T::New(alloc(), lhs, rhs);
-  add(ins);
-
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitBigIntAddResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntAdd>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntSubResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntSub>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntMulResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntMul>(lhsId, rhsId);
-}
-
-template <typename T>
-bool WarpCacheIRTranspiler::emitBigIntBinaryArithEffectfulResult(
-    BigIntOperandId lhsId, BigIntOperandId rhsId) {
-  MDefinition* lhs = getOperand(lhsId);
-  MDefinition* rhs = getOperand(rhsId);
-
-  auto* ins = T::New(alloc(), lhs, rhs);
-
-  if (ins->isEffectful()) {
-    addEffectful(ins);
-
-    pushResult(ins);
-    return resumeAfter(ins);
-  }
-
-  add(ins);
-
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitBigIntDivResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithEffectfulResult<MBigIntDiv>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntModResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithEffectfulResult<MBigIntMod>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntPowResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithEffectfulResult<MBigIntPow>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntBitAndResult(BigIntOperandId lhsId,
-                                                   BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntBitAnd>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntBitOrResult(BigIntOperandId lhsId,
-                                                  BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntBitOr>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntBitXorResult(BigIntOperandId lhsId,
-                                                   BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntBitXor>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntLeftShiftResult(BigIntOperandId lhsId,
-                                                      BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntLsh>(lhsId, rhsId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntRightShiftResult(BigIntOperandId lhsId,
-                                                       BigIntOperandId rhsId) {
-  return emitBigIntBinaryArithResult<MBigIntRsh>(lhsId, rhsId);
-}
-
-template <typename T>
-bool WarpCacheIRTranspiler::emitBigIntUnaryArithResult(
-    BigIntOperandId inputId) {
-  MDefinition* input = getOperand(inputId);
-
-  auto* ins = T::New(alloc(), input);
-  add(ins);
-
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitBigIntIncResult(BigIntOperandId inputId) {
-  return emitBigIntUnaryArithResult<MBigIntIncrement>(inputId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntDecResult(BigIntOperandId inputId) {
-  return emitBigIntUnaryArithResult<MBigIntDecrement>(inputId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntNegationResult(BigIntOperandId inputId) {
-  return emitBigIntUnaryArithResult<MBigIntNegate>(inputId);
-}
-
-bool WarpCacheIRTranspiler::emitBigIntNotResult(BigIntOperandId inputId) {
-  return emitBigIntUnaryArithResult<MBigIntBitNot>(inputId);
-}
-
 bool WarpCacheIRTranspiler::emitCallStringConcatResult(StringOperandId lhsId,
                                                        StringOperandId rhsId) {
   MDefinition* lhs = getOperand(lhsId);
@@ -2606,28 +2478,6 @@ bool WarpCacheIRTranspiler::emitCompareSymbolResult(JSOp op,
                                                     SymbolOperandId rhsId) {
   MOZ_ASSERT(IsEqualityOp(op));
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Symbol);
-}
-
-bool WarpCacheIRTranspiler::emitCompareBigIntResult(JSOp op,
-                                                    BigIntOperandId lhsId,
-                                                    BigIntOperandId rhsId) {
-  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_BigInt);
-}
-
-bool WarpCacheIRTranspiler::emitCompareBigIntInt32Result(JSOp op,
-                                                         BigIntOperandId lhsId,
-                                                         Int32OperandId rhsId) {
-  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_BigInt_Int32);
-}
-
-bool WarpCacheIRTranspiler::emitCompareBigIntNumberResult(
-    JSOp op, BigIntOperandId lhsId, NumberOperandId rhsId) {
-  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_BigInt_Double);
-}
-
-bool WarpCacheIRTranspiler::emitCompareBigIntStringResult(
-    JSOp op, BigIntOperandId lhsId, StringOperandId rhsId) {
-  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_BigInt_String);
 }
 
 bool WarpCacheIRTranspiler::emitCompareNullUndefinedResult(

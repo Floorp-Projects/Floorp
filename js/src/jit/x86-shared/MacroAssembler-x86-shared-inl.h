@@ -65,14 +65,6 @@ void MacroAssembler::xor32(Register src, Register dest) { xorl(src, dest); }
 
 void MacroAssembler::xor32(Imm32 imm, Register dest) { xorl(imm, dest); }
 
-void MacroAssembler::xor32(Imm32 imm, const Address& dest) {
-  xorl(imm, Operand(dest));
-}
-
-void MacroAssembler::xor32(const Address& src, Register dest) {
-  xorl(Operand(src), dest);
-}
-
 void MacroAssembler::clz32(Register src, Register dest, bool knownNotZero) {
   if (AssemblerX86Shared::HasLZCNT()) {
     lzcntl(src, dest);
@@ -619,24 +611,6 @@ void MacroAssembler::branchRshift32(Condition cond, T src, Register dest,
 void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
   MOZ_ASSERT(cond == Overflow);
   neg32(reg);
-  j(cond, label);
-}
-
-void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  addPtr(src, dest);
-  j(cond, label);
-}
-
-void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  subPtr(src, dest);
-  j(cond, label);
-}
-
-void MacroAssembler::branchMulPtr(Condition cond, Register src, Register dest,
-                                  Label* label) {
-  mulPtr(src, dest);
   j(cond, label);
 }
 

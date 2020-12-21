@@ -513,50 +513,6 @@ void LIRGeneratorARM::lowerPowOfTwoI(MPow* mir) {
   define(lir, mir);
 }
 
-void LIRGeneratorARM::lowerBigIntLsh(MBigIntLsh* ins) {
-  auto* lir = new (alloc()) LBigIntLsh(
-      useRegister(ins->lhs()), useRegister(ins->rhs()), temp(), temp(), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGeneratorARM::lowerBigIntRsh(MBigIntRsh* ins) {
-  auto* lir = new (alloc()) LBigIntRsh(
-      useRegister(ins->lhs()), useRegister(ins->rhs()), temp(), temp(), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGeneratorARM::lowerBigIntDiv(MBigIntDiv* ins) {
-  LDefinition temp1, temp2;
-  if (HasIDIV()) {
-    temp1 = temp();
-    temp2 = temp();
-  } else {
-    temp1 = tempFixed(r0);
-    temp2 = tempFixed(r1);
-  }
-  auto* lir = new (alloc()) LBigIntDiv(useRegister(ins->lhs()),
-                                       useRegister(ins->rhs()), temp1, temp2);
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGeneratorARM::lowerBigIntMod(MBigIntMod* ins) {
-  LDefinition temp1, temp2;
-  if (HasIDIV()) {
-    temp1 = temp();
-    temp2 = temp();
-  } else {
-    temp1 = tempFixed(r0);
-    temp2 = tempFixed(r1);
-  }
-  auto* lir = new (alloc()) LBigIntMod(useRegister(ins->lhs()),
-                                       useRegister(ins->rhs()), temp1, temp2);
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   if (ins->type() == MIRType::Int32) {
     define(new (alloc()) LNegI(useRegisterAtStart(ins->input())), ins);
