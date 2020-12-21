@@ -1205,6 +1205,12 @@ void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
   B(label, cond);
 }
 
+void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
+                                  Label* label) {
+  adds64(src, dest);
+  B(label, cond);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(rhs.value));
