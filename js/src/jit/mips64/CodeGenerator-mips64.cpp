@@ -302,6 +302,40 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   masm.bind(&done);
 }
 
+void CodeGeneratorMIPS64::emitBigIntDiv(LBigIntDiv* ins, Register dividend,
+                                        Register divisor, Register output,
+                                        Label* fail) {
+  // Callers handle division by zero and integer overflow.
+
+#ifdef MIPSR6
+  masm.as_ddiv(/* result= */ dividend, dividend, divisor);
+#else
+  masm.as_ddiv(dividend, divisor);
+  masm.as_mflo(dividend);
+#endif
+
+  // Create and return the result.
+  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, dividend);
+}
+
+void CodeGeneratorMIPS64::emitBigIntMod(LBigIntMod* ins, Register dividend,
+                                        Register divisor, Register output,
+                                        Label* fail) {
+  // Callers handle division by zero and integer overflow.
+
+#ifdef MIPSR6
+  masm.as_dmod(/* result= */ dividend, dividend, divisor);
+#else
+  masm.as_ddiv(dividend, divisor);
+  masm.as_mfhi(dividend);
+#endif
+
+  // Create and return the result.
+  masm.newGCBigInt(output, divisor, fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, dividend);
+}
+
 template <typename T>
 void CodeGeneratorMIPS64::emitWasmLoadI64(T* lir) {
   const MWasmLoad* mir = lir->mir();

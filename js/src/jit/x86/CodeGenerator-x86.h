@@ -23,6 +23,11 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared {
   ValueOperand ToValue(LInstruction* ins, size_t pos);
   ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
+  void emitBigIntDiv(LBigIntDiv* ins, Register dividend, Register divisor,
+                     Register output, Label* fail);
+  void emitBigIntMod(LBigIntMod* ins, Register dividend, Register divisor,
+                     Register output, Label* fail);
+
   template <typename T>
   void emitWasmLoad(T* ins);
   template <typename T>
