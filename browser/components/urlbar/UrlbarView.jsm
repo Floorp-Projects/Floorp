@@ -1331,7 +1331,10 @@ class UrlbarView {
       item.removeAttribute("pinned");
     }
 
-    if (result.payload.isSponsored) {
+    if (
+      result.payload.isSponsored &&
+      result.type != UrlbarUtils.RESULT_TYPE.TAB_SWITCH
+    ) {
       item.toggleAttribute("sponsored", true);
       actionSetter = () => {
         this.document.l10n.setAttributes(
