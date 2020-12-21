@@ -1793,6 +1793,21 @@ class LCompareBigIntDouble : public LCallInstructionHelper<1, 2, 1> {
   MCompare* mir() { return mir_->toCompare(); }
 };
 
+class LCompareBigIntString : public LCallInstructionHelper<1, 2, 0> {
+ public:
+  LIR_HEADER(CompareBigIntString)
+
+  LCompareBigIntString(const LAllocation& left, const LAllocation& right)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, left);
+    setOperand(1, right);
+  }
+
+  const LAllocation* left() { return getOperand(0); }
+  const LAllocation* right() { return getOperand(1); }
+  MCompare* mir() { return mir_->toCompare(); }
+};
+
 // Used for strict-equality comparisons where one side is a boolean
 // and the other is a value. Note that CompareI is used to compare
 // two booleans.
