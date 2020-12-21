@@ -590,17 +590,12 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
 }
 
 static already_AddRefed<nsDocShellLoadState> CreateLoadInfo(
-    SessionHistoryEntry* aEntry, Maybe<uint64_t> aLoadId) {
+    SessionHistoryEntry* aEntry) {
   const SessionHistoryInfo& info = aEntry->Info();
   RefPtr<nsDocShellLoadState> loadState(new nsDocShellLoadState(info.GetURI()));
   info.FillLoadInfo(*loadState);
   UniquePtr<LoadingSessionHistoryInfo> loadingInfo;
-  if (aLoadId.isSome()) {
-    loadingInfo =
-        MakeUnique<LoadingSessionHistoryInfo>(aEntry, aLoadId.value());
-  } else {
-    loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(aEntry);
-  }
+  loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(aEntry);
   loadState->SetLoadingSessionHistoryInfo(std::move(loadingInfo));
 
   return loadState.forget();
@@ -622,7 +617,7 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
   }
 
   if (mActiveEntry) {
-    aLoadState.emplace(CreateLoadInfo(mActiveEntry, Nothing()));
+    aLoadState.emplace(CreateLoadInfo(mActiveEntry));
     aReloadActiveEntry.emplace(true);
     if (aForceReload) {
       shistory->RemoveFrameEntries(mActiveEntry);
@@ -630,8 +625,7 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
   } else if (!mLoadingEntries.IsEmpty()) {
     const LoadingSessionHistoryEntry& loadingEntry =
         mLoadingEntries.LastElement();
-    aLoadState.emplace(
-        CreateLoadInfo(loadingEntry.mEntry, Some(loadingEntry.mLoadId)));
+    aLoadState.emplace(CreateLoadInfo(loadingEntry.mEntry));
     aReloadActiveEntry.emplace(false);
     if (aForceReload) {
       SessionHistoryEntry* entry =
