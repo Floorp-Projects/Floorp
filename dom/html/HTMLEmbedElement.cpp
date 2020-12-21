@@ -188,7 +188,7 @@ bool HTMLEmbedElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
 nsIContent::IMEState HTMLEmbedElement::GetDesiredIMEState() {
   if (Type() == eType_Plugin) {
-    return IMEState(IMEState::PLUGIN);
+    return IMEState(IMEEnabled::Plugin);
   }
 
   return nsGenericHTMLElement::GetDesiredIMEState();

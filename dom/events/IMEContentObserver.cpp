@@ -162,7 +162,7 @@ void IMEContentObserver::Init(nsIWidget* aWidget, nsPresContext* aPresContext,
   mWidget = aWidget;
   mIMENotificationRequests = &mWidget->IMENotificationRequestsRef();
 
-  if (aWidget->GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN) {
+  if (aWidget->GetInputContext().mIMEState.mEnabled == IMEEnabled::Plugin) {
     if (!InitWithPlugin(aPresContext, aContent)) {
       Clear();
       return;
@@ -304,7 +304,8 @@ bool IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
 bool IMEContentObserver::InitWithPlugin(nsPresContext* aPresContext,
                                         nsIContent* aContent) {
   if (NS_WARN_IF(!aContent) ||
-      NS_WARN_IF(aContent->GetDesiredIMEState().mEnabled != IMEState::PLUGIN)) {
+      NS_WARN_IF(aContent->GetDesiredIMEState().mEnabled !=
+                 IMEEnabled::Plugin)) {
     return false;
   }
   nsIFrame* frame = aContent->GetPrimaryFrame();

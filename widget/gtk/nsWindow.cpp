@@ -7202,7 +7202,7 @@ void nsWindow::SetInputContext(const InputContext& aContext,
 InputContext nsWindow::GetInputContext() {
   InputContext context;
   if (!mIMContext) {
-    context.mIMEState.mEnabled = IMEState::DISABLED;
+    context.mIMEState.mEnabled = IMEEnabled::Disabled;
     context.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
   } else {
     context = mIMContext->GetInputContext();

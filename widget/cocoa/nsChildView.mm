@@ -1525,19 +1525,19 @@ void nsChildView::SetInputContext(const InputContext& aContext, const InputConte
   // IMEInputHandler::IsEditableContent() too.
   mInputContext = aContext;
   switch (aContext.mIMEState.mEnabled) {
-    case IMEState::ENABLED:
-    case IMEState::PLUGIN:
+    case IMEEnabled::Enabled:
+    case IMEEnabled::Plugin:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(true);
       if (mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
         mTextInputHandler->SetIMEOpenState(mInputContext.mIMEState.mOpen == IMEState::OPEN);
       }
       break;
-    case IMEState::DISABLED:
+    case IMEEnabled::Disabled:
       mTextInputHandler->SetASCIICapableOnly(false);
       mTextInputHandler->EnableIME(false);
       break;
-    case IMEState::PASSWORD:
+    case IMEEnabled::Password:
       mTextInputHandler->SetASCIICapableOnly(true);
       mTextInputHandler->EnableIME(false);
       break;
@@ -1548,8 +1548,8 @@ void nsChildView::SetInputContext(const InputContext& aContext, const InputConte
 
 InputContext nsChildView::GetInputContext() {
   switch (mInputContext.mIMEState.mEnabled) {
-    case IMEState::ENABLED:
-    case IMEState::PLUGIN:
+    case IMEEnabled::Enabled:
+    case IMEEnabled::Plugin:
       if (mTextInputHandler) {
         mInputContext.mIMEState.mOpen =
             mTextInputHandler->IsIMEOpened() ? IMEState::OPEN : IMEState::CLOSED;

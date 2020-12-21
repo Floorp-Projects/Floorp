@@ -844,10 +844,10 @@ struct ParamTraits<mozilla::widget::IMENotification> {
 };
 
 template <>
-struct ParamTraits<mozilla::widget::IMEState::Enabled>
-    : ContiguousEnumSerializer<mozilla::widget::IMEState::Enabled,
-                               mozilla::widget::IMEState::Enabled::DISABLED,
-                               mozilla::widget::IMEState::Enabled::UNKNOWN> {};
+struct ParamTraits<mozilla::widget::IMEEnabled>
+    : ContiguousEnumSerializer<mozilla::widget::IMEEnabled,
+                               mozilla::widget::IMEEnabled::Disabled,
+                               mozilla::widget::IMEEnabled::Unknown> {};
 
 template <>
 struct ParamTraits<mozilla::widget::IMEState::Open>

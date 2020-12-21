@@ -6348,9 +6348,9 @@ nsresult HTMLEditor::GetPreferredIMEState(IMEState* aState) {
   // HTML editor don't prefer the CSS ime-mode because IE didn't do so too.
   aState->mOpen = IMEState::DONT_CHANGE_OPEN_STATE;
   if (IsReadonly()) {
-    aState->mEnabled = IMEState::DISABLED;
+    aState->mEnabled = IMEEnabled::Disabled;
   } else {
-    aState->mEnabled = IMEState::ENABLED;
+    aState->mEnabled = IMEEnabled::Enabled;
   }
   return NS_OK;
 }

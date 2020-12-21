@@ -339,7 +339,7 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
 nsIContent::IMEState HTMLObjectElement::GetDesiredIMEState() {
   if (Type() == eType_Plugin) {
-    return IMEState(IMEState::PLUGIN);
+    return IMEState(IMEEnabled::Plugin);
   }
 
   return nsGenericHTMLFormElement::GetDesiredIMEState();

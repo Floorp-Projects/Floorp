@@ -1815,7 +1815,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
     MOZ_ASSERT(thisContent, "should have content");
     if (updateIMEState && thisContent && fm && fm->IsFocused(thisContent)) {
       widget::IMEState state;
-      state.mEnabled = widget::IMEState::PLUGIN;
+      state.mEnabled = widget::IMEEnabled::Plugin;
       state.mOpen = widget::IMEState::DONT_CHANGE_OPEN_STATE;
       IMEStateManager::UpdateIMEState(state, thisContent, nullptr);
     }
