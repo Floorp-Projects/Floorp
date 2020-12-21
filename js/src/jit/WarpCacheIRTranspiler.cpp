@@ -194,6 +194,10 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitInt32BinaryArithResult(Int32OperandId lhsId,
                                                Int32OperandId rhsId);
 
+  template <typename T>
+  MOZ_MUST_USE bool emitBigIntBinaryArithResult(BigIntOperandId lhsId,
+                                                BigIntOperandId rhsId);
+
   MOZ_MUST_USE bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
                                       MCompare::CompareType compareType);
 
@@ -2421,6 +2425,24 @@ bool WarpCacheIRTranspiler::emitInt32URightShiftResult(Int32OperandId lhsId,
 
   pushResult(ins);
   return true;
+}
+
+template <typename T>
+bool WarpCacheIRTranspiler::emitBigIntBinaryArithResult(BigIntOperandId lhsId,
+                                                        BigIntOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = T::New(alloc(), lhs, rhs);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitBigIntAddResult(BigIntOperandId lhsId,
+                                                BigIntOperandId rhsId) {
+  return emitBigIntBinaryArithResult<MBigIntAdd>(lhsId, rhsId);
 }
 
 bool WarpCacheIRTranspiler::emitCallStringConcatResult(StringOperandId lhsId,

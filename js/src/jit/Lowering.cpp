@@ -1924,6 +1924,13 @@ void LIRGenerator::visitMod(MMod* ins) {
   MOZ_CRASH("Unhandled number specialization");
 }
 
+void LIRGenerator::visitBigIntAdd(MBigIntAdd* ins) {
+  auto* lir = new (alloc()) LBigIntAdd(useRegister(ins->lhs()),
+                                       useRegister(ins->rhs()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
