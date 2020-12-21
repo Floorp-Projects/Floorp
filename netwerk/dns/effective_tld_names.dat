@@ -11771,10 +11771,6 @@ myfast.host
 fastvps.site
 myfast.space
 
-// Featherhead : https://featherhead.xyz/
-// Submitted by Simon Menke <simon@featherhead.xyz>
-fhapp.xyz
-
 // Fedora : https://fedoraproject.org/
 // submitted by Patrick Uiterwijk <puiterwijk@fedoraproject.org>
 fedorainfracloud.org
@@ -12095,6 +12091,14 @@ moonscale.net
 // iki.fi
 // Submitted by Hannu Aronsson <haa@iki.fi>
 iki.fi
+
+// Incsub, LLC: https://incsub.com/
+// Submitted by Aaron Edwards <sysadmins@incsub.com>
+smushcdn.com
+wphostedmail.com
+wpmucdn.com
+tempurl.host
+wpmudev.host
 
 // Individual Network Berlin e.V. : https://www.in-berlin.de/
 // Submitted by Christian Seitz <chris@in-berlin.de>
