@@ -282,7 +282,6 @@ class PluginInstanceParent : public PPluginInstanceParent {
                                                    nsTArray<uint8_t>* aBuffer,
                                                    int32_t* aLength);
   mozilla::ipc::IPCResult RecvRequestCommitOrCancel(const bool& aCommitted);
-  mozilla::ipc::IPCResult RecvEnableIME(const bool& aEnable);
 
   // for reserved shortcut key handling with windowed plugin on Windows
   nsresult HandledWindowedPluginKeyEvent(

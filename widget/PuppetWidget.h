@@ -283,8 +283,6 @@ class PuppetWidget : public nsBaseWidget,
   virtual void StartAsyncScrollbarDrag(
       const AsyncDragMetrics& aDragMetrics) override;
 
-  virtual void EnableIMEForPlugin(bool aEnable) override;
-
   virtual void ZoomToRect(const uint32_t& aPresShellId,
                           const ScrollableLayerGuid::ViewID& aViewId,
                           const CSSRect& aRect,

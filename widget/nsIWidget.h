@@ -1861,11 +1861,6 @@ class nsIWidget : public nsISupports {
    */
   virtual void SetPluginFocused(bool& aFocused) = 0;
 
-  /*
-   * Enable or Disable IME by windowless plugin.
-   */
-  virtual void EnableIMEForPlugin(bool aEnable) {}
-
   /**
    * MaybeDispatchInitialFocusEvent will dispatch a focus event after creation
    * of the widget, in the event that we were not able to observe and respond to
