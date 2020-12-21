@@ -1217,6 +1217,21 @@ void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
   B(label, cond);
 }
 
+void MacroAssembler::branchMulPtr(Condition cond, Register src, Register dest,
+                                  Label* label) {
+  MOZ_ASSERT(cond == Assembler::Overflow);
+
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch64 = temps.AcquireX();
+  const ARMRegister src64(src, 64);
+  const ARMRegister dest64(dest, 64);
+
+  Smulh(scratch64, dest64, src64);
+  Mul(dest64, dest64, src64);
+  Cmp(scratch64, Operand(dest64, vixl::ASR, 63));
+  B(label, NotEqual);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(rhs.value));
