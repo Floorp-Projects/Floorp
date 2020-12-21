@@ -1966,6 +1966,10 @@ void LIRGenerator::visitBigIntBitXor(MBigIntBitXor* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitBigIntLsh(MBigIntLsh* ins) { lowerBigIntLsh(ins); }
+
+void LIRGenerator::visitBigIntRsh(MBigIntRsh* ins) { lowerBigIntRsh(ins); }
+
 void LIRGenerator::visitBigIntIncrement(MBigIntIncrement* ins) {
   auto* lir =
       new (alloc()) LBigIntIncrement(useRegister(ins->input()), temp(), temp());
