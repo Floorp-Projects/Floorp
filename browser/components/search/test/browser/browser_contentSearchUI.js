@@ -10,16 +10,20 @@ const TEST_MSG = "ContentSearchUIControllerTest";
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentSearch: "resource:///actors/ContentSearchParent.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
+  SearchSuggestionController:
+    "resource://gre/modules/SearchSuggestionController.jsm",
 });
 
 requestLongerTimeout(2);
 
 function waitForSuggestions() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    return ContentTaskUtils.waitForCondition(() => {
-      return content.gController.input.getAttribute("aria-expanded") == "true";
-    });
-  });
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+    ContentTaskUtils.waitForCondition(
+      () => content.gController.input.getAttribute("aria-expanded") == "true",
+      "Waiting for suggestions",
+      200 // Increased interval to support long textruns.
+    )
+  );
 }
 
 async function waitForSearch() {
@@ -111,6 +115,20 @@ async function msg(type, data = null) {
         keyName,
         data.modifiers || {},
         gBrowser.selectedBrowser
+      );
+      if (data?.waitForSuggestions) {
+        await waitForSuggestions();
+      }
+      break;
+    }
+    case "text": {
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [data.value],
+        text => {
+          content.gController.input.value = text.substring(0, text.length - 1);
+          content.synthesizeKey(text.substring(text.length - 1), {});
+        }
       );
       if (data?.waitForSuggestions) {
         await waitForSuggestions();
@@ -649,6 +667,43 @@ add_task(async function formHistory() {
   // Type an X again.  The form history entry should still be gone.
   state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
+
+  await msg("reset");
+});
+
+add_task(async function formHistory_limit() {
+  info("Check long strings are not added to form history");
+  await focusContentSearchBar();
+  const gLongString = new Array(
+    SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH + 1
+  )
+    .fill("x")
+    .join("");
+  // Type and confirm a very long string.
+  let state = await msg("text", {
+    value: gLongString,
+    waitForSuggestions: true,
+  });
+  checkState(
+    state,
+    gLongString,
+    [`${gLongString}foo`, `${gLongString}bar`],
+    -1
+  );
+
+  await FormHistoryTestUtils.clear("searchbar-history");
+  let entry = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    return content.gController.addInputValueToFormHistory();
+  });
+  // There's nothing we can wait for, since addition should not be happening.
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 500));
+  Assert.equal(
+    await FormHistoryTestUtils.count("searchbar-history", {
+      source: entry.source,
+    }),
+    0
+  );
 
   await msg("reset");
 });
