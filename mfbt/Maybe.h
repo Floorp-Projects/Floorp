@@ -496,6 +496,13 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   /*
    * Returns the contents of this Maybe<T> by value. If |isNothing()|, returns
    * the default value provided.
+   *
+   * Note: If the value passed to aDefault is not the result of a trivial
+   * expression, but expensive to evaluate, e.g. |valueOr(ExpensiveFunction())|,
+   * use |valueOrFrom| instead, e.g.
+   * |valueOrFrom([arg] { return ExpensiveFunction(arg); })|. This ensures
+   * that the expensive expression is only evaluated when its result will
+   * actually be used.
    */
   template <typename V>
   constexpr T valueOr(V&& aDefault) const {
