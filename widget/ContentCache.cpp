@@ -613,26 +613,14 @@ bool ContentCacheInParent::HandleQueryContentEvent(
             ("0x%p HandleQueryContentEvent(), "
              "making offset absolute... aEvent={ mMessage=%s, mInput={ "
              "mOffset=%" PRId64 ", mLength=%" PRIu32 " } }, "
-             "aWidget={ PluginHasFocus()=%s }, mWidgetHasComposition=%s, "
-             "mPendingCommitCount=%" PRIu8 ", mCompositionStart=%" PRIu32 ", "
+             "mWidgetHasComposition=%s, mPendingCommitCount=%" PRIu8
+             ", mCompositionStart=%" PRIu32 ", "
              "mPendingCommitLength=%" PRIu32 ", mSelection=%s",
              this, ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
-             aEvent.mInput.mLength, GetBoolName(aWidget->PluginHasFocus()),
-             GetBoolName(mWidgetHasComposition), mPendingCommitCount,
-             mCompositionStart.valueOr(UINT32_MAX), mPendingCommitLength,
-             ToString(mSelection).c_str()));
-    if (aWidget->PluginHasFocus()) {
-      if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(0))) {
-        MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                ("0x%p HandleQueryContentEvent(), FAILED due to "
-                 "aEvent.mInput.MakeOffsetAbsolute(0) failure, aEvent={ "
-                 "mMessage=%s, "
-                 "mInput={ mOffset=%" PRId64 ", mLength=%" PRIu32 " } }",
-                 this, ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
-                 aEvent.mInput.mLength));
-        return false;
-      }
-    } else if (mWidgetHasComposition || mPendingCommitCount) {
+             aEvent.mInput.mLength, GetBoolName(mWidgetHasComposition),
+             mPendingCommitCount, mCompositionStart.valueOr(UINT32_MAX),
+             mPendingCommitLength, ToString(mSelection).c_str()));
+    if (mWidgetHasComposition || mPendingCommitCount) {
       if (NS_WARN_IF(mCompositionStart.isNothing()) ||
           NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
               mCompositionStart.value() + mPendingCommitLength))) {
@@ -676,19 +664,6 @@ bool ContentCacheInParent::HandleQueryContentEvent(
               ("0x%p HandleQueryContentEvent(aEvent={ "
                "mMessage=eQuerySelectedText }, aWidget=0x%p)",
                this, aWidget));
-      if (aWidget->PluginHasFocus()) {
-        MOZ_LOG(sContentCacheLog, LogLevel::Info,
-                ("0x%p HandleQueryContentEvent(), return emtpy selection "
-                 "because plugin has focus",
-                 this));
-        aEvent.EmplaceReply();
-        aEvent.mReply->mFocusedWidget = aWidget;
-        aEvent.mReply->mOffsetAndData.emplace(0, EmptyString(),
-                                              OffsetAndDataFor::SelectedString);
-        aEvent.mReply->mReversed = false;
-        aEvent.mReply->mHasSelection = false;
-        return true;
-      }
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query
         // failed.
@@ -1160,10 +1135,7 @@ bool ContentCacheInParent::OnCompositionEvent(
   // We must be able to simulate the selection because
   // we might not receive selection updates in time
   if (!mWidgetHasComposition) {
-    if (aEvent.mWidget && aEvent.mWidget->PluginHasFocus()) {
-      // If focus is on plugin, we cannot get selection range
-      mCompositionStart = Some(0);
-    } else if (mCompositionStartInChild.isSome()) {
+    if (mCompositionStartInChild.isSome()) {
       // If there is pending composition in the remote process, let's use
       // its start offset temporarily because this stores a lot of information
       // around it and the user must look around there, so, showing some UI
