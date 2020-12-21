@@ -1162,16 +1162,6 @@ function getDefaultExtension(aFilename, aURI, aContentType) {
     return "";
   } // temporary fix for bug 120327
 
-  // For images, rely solely on the mime type if known.
-  // All the extension is going to do is lie to us.
-  if (aContentType?.startsWith("image/")) {
-    let mimeInfo = getMIMEInfoForType(aContentType, "");
-    let exts = Array.from(mimeInfo.getFileExtensions());
-    if (exts.length) {
-      return exts[0];
-    }
-  }
-
   // First try the extension from the filename
   var url = Cc["@mozilla.org/network/standard-url-mutator;1"]
     .createInstance(Ci.nsIURIMutator)
@@ -1185,7 +1175,13 @@ function getDefaultExtension(aFilename, aURI, aContentType) {
   // This mirrors some code in nsExternalHelperAppService::DoContent
   // Use the filename first and then the URI if that fails
 
-  var mimeInfo = getMIMEInfoForType(aContentType, ext);
+  // For images, rely solely on the mime type if known.
+  // All the extension is going to do is lie to us.
+  var lookupExt = ext;
+  if (aContentType?.startsWith("image/")) {
+    lookupExt = "";
+  }
+  var mimeInfo = getMIMEInfoForType(aContentType, lookupExt);
 
   if (ext && mimeInfo && mimeInfo.extensionExists(ext)) {
     return ext;
@@ -1201,11 +1197,15 @@ function getDefaultExtension(aFilename, aURI, aContentType) {
   if (urlext && mimeInfo && mimeInfo.extensionExists(urlext)) {
     return urlext;
   }
+
+  // That failed as well. If we could lookup the MIME use the primary
+  // extension for that type.
   try {
     if (mimeInfo) {
       return mimeInfo.primaryExtension;
     }
   } catch (e) {}
+
   // Fall back on the extensions in the filename and URI for lack
   // of anything better.
   return ext || urlext;
