@@ -4829,10 +4829,11 @@ browser.searchinit:
   init_result_status_code:
     bug_numbers:
       - 1651194
+      - 1683105
     description: >-
           Status code (nsresult) for the search service initialization routine.
           Stored as a string due to issues with large uint scalars when the scalar was created.
-    expires: "87"
+    expires: "91"
     kind: string
     notification_emails:
       - fx-search@mozilla.com
