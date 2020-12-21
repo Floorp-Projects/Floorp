@@ -2918,6 +2918,19 @@ class LBigIntDecrement : public LUnaryMath<2> {
   const LDefinition* temp2() { return getTemp(1); }
 };
 
+class LBigIntNegate : public LUnaryMath<1> {
+ public:
+  LIR_HEADER(BigIntNegate)
+
+  LBigIntNegate(const LAllocation& input, const LDefinition& temp)
+      : LUnaryMath(classOpcode) {
+    setOperand(0, input);
+    setTemp(0, temp);
+  }
+
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 // Adds two string, returning a string.
 class LConcat : public LInstructionHelper<1, 2, 5> {
  public:
