@@ -30,6 +30,7 @@
 #define ReverbInputBuffer_h
 
 #include "nsTArray.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 
 namespace WebCore {
@@ -64,7 +65,7 @@ class ReverbInputBuffer {
 
  private:
   nsTArray<float> m_buffer;
-  size_t m_writeIndex;
+  mozilla::Atomic<size_t, mozilla::ReleaseAcquire> m_writeIndex;
 };
 
 }  // namespace WebCore
