@@ -1,0 +1,45 @@
+// |jit-test| --ion-limit-script-size=off
+
+setJitCompilerOption("baseline.warmup.trigger", 9);
+setJitCompilerOption("ion.warmup.trigger", 20);
+setJitCompilerOption("ion.full.warmup.trigger", 20);
+
+// Prevent the GC from cancelling Ion compilations, when we expect them to succeed
+gczeal(0);
+
+// Keep in sync with BigInt::MaxBitLength.
+const maxBitLength = 1024 * 1024;
+
+const maxBigInt = BigInt.asUintN(maxBitLength, -1n);
+const minBigInt = -maxBigInt;
+
+function resumeHere() {}
+
+function bigIntAddBail(i) {
+  var x = [0n, maxBigInt][0 + (i >= 99)];
+
+  var a = x + 1n;
+
+  // Add a function call to capture a resumepoint at the end of the call or
+  // inside the inlined block, such as the bailout does not rewind to the
+  // beginning of the function.
+  resumeHere();
+
+  if (i >= 99) bailout();
+}
+
+// Prevent compilation of the top-level
+eval(`(${resumeHere})`);
+
+// The bigIntXBail() functions create a BigInt which exceeds the maximum
+// representable BigInt. This results in either throwing a RangeError or an
+// out-of-memory error when the operation is recovered during a bailout.
+
+try {
+  for (let i = 0; i < 100; i++) {
+    bigIntAddBail(i);
+  }
+  throw new Error("missing exception");
+} catch (e) {
+  assertEq(e instanceof RangeError || e === "out of memory", true, String(e));
+}
