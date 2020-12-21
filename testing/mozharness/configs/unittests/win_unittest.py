@@ -39,7 +39,7 @@ config = {
     "installer_path": INSTALLER_PATH,
     "binary_path": BINARY_PATH,
     "xpcshell_name": XPCSHELL_NAME,
-    "virtualenv_modules": ["pypiwin32", "six==1.13.0", "vcversioner==2.16.0.0"],
+    "virtualenv_modules": ["pypiwin32==219", "six==1.13.0", "vcversioner==2.16.0.0"],
     "virtualenv_path": "venv",
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {
