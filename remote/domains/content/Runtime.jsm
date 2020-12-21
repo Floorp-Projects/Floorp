@@ -25,6 +25,10 @@ addDebuggerToGlobal(Cu.getGlobalForObject(this));
 
 const OBSERVER_CONSOLE_API = "console-api-log-event";
 
+const CONSOLE_API_LEVEL_MAP = {
+  warn: "warning",
+};
+
 class SetMap extends Map {
   constructor() {
     super();
@@ -297,6 +301,29 @@ class Runtime extends ContentProcessDomain {
     return this.__debugger;
   }
 
+  _buildStackTrace(stack) {
+    const callFrames = [];
+
+    while (
+      stack &&
+      stack.source !== "debugger eval code" &&
+      !stack.source.startsWith("chrome://")
+    ) {
+      callFrames.push({
+        functionName: stack.functionDisplayName,
+        scriptId: stack.sourceId,
+        url: stack.source,
+        lineNumber: stack.line,
+        columnNumber: stack.column,
+      });
+      stack = stack.parent || stack.asyncParent;
+    }
+
+    return {
+      callFrames,
+    };
+  }
+
   _getRemoteObject(objectId) {
     for (const ctx of this.contexts.values()) {
       const debuggerObj = ctx.getRemoteObject(objectId);
@@ -380,7 +407,33 @@ class Runtime extends ContentProcessDomain {
       executionContextId: context?.id || 0,
       timestamp: payload.timestamp,
       type: payload.type,
-      stackTrace: payload.stacktrace,
+      stackTrace: this._buildStackTrace(payload.stack),
+    });
+  }
+
+  _emitExceptionThrown(payload) {
+    // Filter out messages that aren't coming from a valid inner window, or from
+    // a different browser tab. Also messages of type "time", which are not
+    // getting reported by Chrome.
+    const curBrowserId = this.session.browsingContext.browserId;
+    const win = Services.wm.getCurrentInnerWindowWithId(payload.innerWindowId);
+    if (!win || BrowsingContext.getFromWindow(win).browserId != curBrowserId) {
+      return;
+    }
+
+    const context = this._getDefaultContextForWindow();
+    this.emit("Runtime.exceptionThrown", {
+      timestamp: payload.timestamp,
+      exceptionDetails: {
+        // Temporary placeholder to return a number.
+        exceptionId: 0,
+        text: payload.text,
+        lineNumber: payload.lineNumber,
+        columnNumber: payload.columnNumber,
+        url: payload.url,
+        stackTrace: this._buildStackTrace(payload.stack),
+        executionContextId: context?.id || undefined,
+      },
     });
   }
 
@@ -515,8 +568,9 @@ class Runtime extends ContentProcessDomain {
   // nsIObserver
 
   /**
-   * Takes a console message belonging to the current window that is not
-   * a Javascript error, and emits a "consoleAPICalled" event.
+   * Takes a console message belonging to the current window and emits a
+   * "exceptionThrown" event if it's a Javascript error, otherwise a
+   * "consoleAPICalled" event.
    *
    * @param {nsIConsoleMessage} message
    *     Console message.
@@ -528,20 +582,9 @@ class Runtime extends ContentProcessDomain {
       const message = subject.wrappedJSObject;
       entry = fromConsoleAPI(message);
       this._emitConsoleAPICalled(entry);
-      return;
-    }
-
-    if (subject instanceof Ci.nsIConsoleMessage) {
-      // Script errors will be handled through Log.entryAdded
-      if (
-        subject instanceof Ci.nsIScriptError &&
-        subject.flags == Ci.nsIScriptError.errorFlag
-      ) {
-        return;
-      }
-
-      entry = fromConsoleMessage(subject);
-      this._emitConsoleAPICalled(entry);
+    } else if (subject instanceof Ci.nsIScriptError && subject.hasException) {
+      entry = fromScriptError(subject);
+      this._emitExceptionThrown(entry);
     }
   }
 
@@ -553,36 +596,26 @@ class Runtime extends ContentProcessDomain {
 }
 
 function fromConsoleAPI(message) {
-  const CONSOLE_API_LEVEL_MAP = {
-    warn: "warning",
-  };
-
   // From sendConsoleAPIMessage (toolkit/modules/Console.jsm)
   return {
     arguments: message.arguments,
     innerWindowId: message.innerID,
     // TODO: Fetch the stack (Bug 1679981)
-    stacktrace: undefined,
+    stack: undefined,
     timestamp: message.timeStamp,
     type: CONSOLE_API_LEVEL_MAP[message.level] || message.level,
   };
 }
 
-function fromConsoleMessage(message) {
-  const CONSOLE_MESSAGE_LEVEL_MAP = {
-    [Ci.nsIConsoleMessage.debug]: "verbose",
-    [Ci.nsIConsoleMessage.info]: "info",
-    [Ci.nsIConsoleMessage.warn]: "warning",
-    [Ci.nsIConsoleMessage.error]: "error",
-  };
-
-  // From xpcom/base/nsIConsoleMessage.idl and dom/bindings/nsIScriptError.idl
+function fromScriptError(error) {
+  // From dom/bindings/nsIScriptError.idl
   return {
-    arguments: [message.message],
-    innerWindowId: message.innerWindowID,
-    // TODO: Fetch the stack (Bug 1679981)
-    stacktrace: undefined,
-    timestamp: message.timeStamp,
-    type: CONSOLE_MESSAGE_LEVEL_MAP[message.logLevel] || message.logLevel,
+    innerWindowId: error.innerWindowID,
+    columnNumber: error.columnNumber,
+    lineNumber: error.lineNumber,
+    stack: error.stack,
+    text: error.errorMessage,
+    timestamp: error.timeStamp,
+    url: error.sourceName,
   };
 }

@@ -23,6 +23,17 @@ add_task(async function noEventsAfterRuntimeDomainDisabled({ client }) {
   });
 });
 
+add_task(async function noEventsForJavascriptErrors({ client }) {
+  await loadURL(PAGE_CONSOLE_EVENTS);
+  const context = await enableRuntime(client);
+
+  await runConsoleTest(client, 0, async () => {
+    evaluate(client, context.id, () => {
+      document.getElementById("js-error").click();
+    });
+  });
+});
+
 add_task(async function consoleAPI({ client }) {
   const context = await enableRuntime(client);
 
@@ -131,29 +142,6 @@ add_task(async function consoleAPIByContentInteraction({ client }) {
 
   is(events[0].type, "error", "Got expected type");
   is(events[0].args[0].value, "foo", "Got expected argument value");
-  is(
-    events[0].executionContextId,
-    context.id,
-    "Got event from current execution context"
-  );
-});
-
-add_task(async function consoleMessageByContent({ client }) {
-  await loadURL(PAGE_CONSOLE_EVENTS);
-  const context = await enableRuntime(client);
-
-  const events = await runConsoleTest(client, 1, async () => {
-    evaluate(client, context.id, () => {
-      document.execCommand("copy");
-    });
-  });
-
-  is(events[0].type, "warning", "Got expected type");
-  Assert.equal(events[0].args.length, 1, "Got expected amount of argumnets");
-  ok(
-    events[0].args[0].value.includes("document.execCommand"),
-    "Got expected argument value"
-  );
   is(
     events[0].executionContextId,
     context.id,
