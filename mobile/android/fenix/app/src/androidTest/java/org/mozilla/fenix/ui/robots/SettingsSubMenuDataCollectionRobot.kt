@@ -38,7 +38,9 @@ class SettingsSubMenuDataCollectionRobot {
         verifyDataCollectionOptions()
         verifyUsageAndTechnicalDataSwitchDefault()
         verifyMarketingDataSwitchDefault()
-        verifyExperimentsSwitchDefault()
+        // Temporarily disabled until https://github.com/mozilla-mobile/fenix/issues/17086 and
+        // https://github.com/mozilla-mobile/fenix/issues/17143 are resolved:
+        // verifyExperimentsSwitchDefault()
     }
 
     class Transition {
@@ -80,8 +82,10 @@ private fun assertDataCollectionOptions() {
     onView(withText(marketingDataText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    onView(withText(R.string.preference_experiments_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    onView(withText(R.string.preference_experiments_summary_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    // Temporarily disabled until https://github.com/mozilla-mobile/fenix/issues/17086 and
+    // https://github.com/mozilla-mobile/fenix/issues/17143 are resolved:
+    // onView(withText(R.string.preference_experiments_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    // onView(withText(R.string.preference_experiments_summary_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun usageAndTechnicalDataButton() = onView(withText(R.string.preference_usage_data))
