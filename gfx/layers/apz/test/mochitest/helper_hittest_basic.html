@@ -17,7 +17,7 @@
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
@@ -56,7 +56,7 @@ function* test(testDriver) {
   // also apply a async scroll offset in the y-direction such that the
   // scrollframe scrolls to the bottom of its range.
   utils.setDisplayPortForElement(0, 0, 500, 500, scroller, 1);
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
   var scrollY = scroller.scrollTopMax;
   utils.setAsyncScrollOffset(scroller, 0, scrollY);
   if (config.isWebRender) {
@@ -131,11 +131,11 @@ function* test(testDriver) {
     expectThumb: false,
     layerState: LayerState.ACTIVE,
   });
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
