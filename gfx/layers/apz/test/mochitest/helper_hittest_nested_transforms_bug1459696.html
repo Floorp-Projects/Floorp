@@ -59,7 +59,7 @@
 </body>
 <script type="application/javascript">
 
-function* test(testDriver) {
+async function test() {
   var utils = getHitTestConfig().utils;
 
   var leftPane = document.getElementById("left-pane");
@@ -70,11 +70,11 @@ function* test(testDriver) {
     utils.getViewId(leftPane),
     utils.getLayersId(),
     "left pane was successfully hit");
-
-  subtestDone();
 }
 
-waitUntilApzStable().then(runContinuation(test));
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
 
 </script>
 </html>
