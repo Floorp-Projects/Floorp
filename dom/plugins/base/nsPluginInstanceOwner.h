@@ -256,8 +256,6 @@ class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
 
   bool GetCompositionString(uint32_t aIndex, nsTArray<uint8_t>* aString,
                             int32_t* aLength);
-  bool SetCandidateWindow(
-      const mozilla::widget::CandidateWindowPosition& aPosition);
   bool RequestCommitOrCancel(bool aCommitted);
   bool EnableIME(bool aEnable);
 

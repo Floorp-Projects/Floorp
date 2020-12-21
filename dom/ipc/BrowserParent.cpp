@@ -3154,17 +3154,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetPluginFocused(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvSetCandidateWindowForPlugin(
-    const CandidateWindowPosition& aPosition) {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return IPC_OK();
-  }
-
-  widget->SetCandidateWindowForPlugin(aPosition);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvEnableIMEForPlugin(
     const bool& aEnable) {
   nsCOMPtr<nsIWidget> widget = GetWidget();

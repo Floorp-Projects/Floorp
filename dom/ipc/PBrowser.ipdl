@@ -388,11 +388,6 @@ parent:
     nested(inside_cpow) async SetPluginFocused(bool aFocused);
 
     /**
-     * Set IME candidate window by windowless plugin if plugin has focus.
-     */
-    async SetCandidateWindowForPlugin(CandidateWindowPosition aPosition);
-
-    /**
      * Enable or Disable IME by windowless plugin if plugin has focus.
      */
     async EnableIMEForPlugin(bool aEnable);

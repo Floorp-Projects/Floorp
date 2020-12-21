@@ -254,10 +254,6 @@ parent:
 
   sync GetCompositionString(uint32_t aType)
                             returns (uint8_t[] aDist, int32_t aLength);
-  // Set candidate window position.
-  //
-  // @param aPosition  position information of candidate window
-  async SetCandidateWindow(CandidateWindowPosition aPosition);
   async RequestCommitOrCancel(bool aCommitted);
 
   // Control IME can enable or disable

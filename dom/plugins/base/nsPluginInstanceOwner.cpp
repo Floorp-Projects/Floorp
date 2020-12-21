@@ -829,24 +829,6 @@ bool nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
   return false;
 }
 
-bool nsPluginInstanceOwner::SetCandidateWindow(
-    const widget::CandidateWindowPosition& aPosition) {
-  if (NS_WARN_IF(!mPluginFrame)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
-  if (!widget) {
-    widget = GetRootWidgetForPluginFrame(mPluginFrame);
-    if (NS_WARN_IF(!widget)) {
-      return false;
-    }
-  }
-
-  widget->SetCandidateWindowForPlugin(aPosition);
-  return true;
-}
-
 bool nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted) {
   nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
   if (!widget) {

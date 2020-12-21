@@ -281,8 +281,6 @@ class PluginInstanceParent : public PPluginInstanceParent {
   mozilla::ipc::IPCResult RecvGetCompositionString(const uint32_t& aIndex,
                                                    nsTArray<uint8_t>* aBuffer,
                                                    int32_t* aLength);
-  mozilla::ipc::IPCResult RecvSetCandidateWindow(
-      const mozilla::widget::CandidateWindowPosition& aPosition);
   mozilla::ipc::IPCResult RecvRequestCommitOrCancel(const bool& aCommitted);
   mozilla::ipc::IPCResult RecvEnableIME(const bool& aEnable);
 
