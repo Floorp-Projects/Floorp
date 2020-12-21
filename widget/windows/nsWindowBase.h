@@ -86,11 +86,6 @@ class nsWindowBase : public nsBaseWidget {
   virtual bool DispatchPluginEvent(const MSG& aMsg);
 
   /*
-   * Returns true if this should dispatch a plugin event.
-   */
-  bool ShouldDispatchPluginEvent();
-
-  /*
    * Touch input injection apis
    */
   virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,

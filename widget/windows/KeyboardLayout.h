@@ -754,14 +754,6 @@ class MOZ_STACK_CLASS NativeKey final {
   bool DispatchKeyPressEventsWithoutCharMessage() const;
 
   /**
-   * MaybeDispatchPluginEventsForRemovedCharMessages() dispatches plugin events
-   * for removed char messages when a windowless plugin has focus.
-   * Returns true if the widget is destroyed or blurred during dispatching a
-   * plugin event.
-   */
-  bool MaybeDispatchPluginEventsForRemovedCharMessages() const;
-
-  /**
    * Checkes whether the key event down message is handled without following
    * WM_CHAR messages.  For example, if following WM_CHAR message indicates
    * control character input, the WM_CHAR message is unclear whether it's

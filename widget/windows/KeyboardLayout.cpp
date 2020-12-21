@@ -2532,7 +2532,7 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
     // message is processed by us, so, nobody shouldn't process it.
     HWND focusedWnd = ::GetFocus();
     if (!defaultPrevented && !mFakeCharMsgs && !IsKeyMessageOnPlugin() &&
-        focusedWnd && !mWidget->PluginHasFocus() && !isIMEEnabled &&
+        focusedWnd && !isIMEEnabled &&
         WinUtils::IsIMEEnabled(mWidget->GetInputContext())) {
       RedirectedKeyDownMessageManager::RemoveNextCharMessage(focusedWnd);
 
@@ -2598,7 +2598,6 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
             ("%p   NativeKey::HandleKeyDownMessage(), not dispatching keypress "
              "event because preceding keydown event was consumed",
              this));
-    MaybeDispatchPluginEventsForRemovedCharMessages();
     return true;
   }
 
@@ -2623,8 +2622,7 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
             ("%p   NativeKey::HandleKeyDownMessage(), tries to be dispatching "
              "keypress events...",
              this));
-    return (MaybeDispatchPluginEventsForRemovedCharMessages() ||
-            DispatchKeyPressEventsWithoutCharMessage());
+    return DispatchKeyPressEventsWithoutCharMessage();
   }
 
   // If WM_KEYDOWN of VK_PACKET isn't followed by WM_CHAR, we don't need to
@@ -3400,71 +3398,6 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
       GetResultOfInSendMessageEx().get(), ToString(kFoundCharMsg).get());
   CrashReporter::AppendAppNotesToCrashReport(info);
   MOZ_CRASH("We lost the following char message");
-  return false;
-}
-
-bool NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages() const {
-  MOZ_ASSERT(IsKeyDownMessage());
-  MOZ_ASSERT(!IsKeyMessageOnPlugin());
-
-  for (size_t i = 0;
-       i < mFollowingCharMsgs.Length() && mWidget->ShouldDispatchPluginEvent();
-       ++i) {
-    MOZ_LOG(
-        sNativeKeyLogger, LogLevel::Info,
-        ("%p   NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages(), "
-         "dispatching %uth plugin event for %s...",
-         this, i + 1, ToString(mFollowingCharMsgs[i]).get()));
-    MOZ_RELEASE_ASSERT(
-        !mWidget->Destroyed(),
-        "NativeKey tries to dispatch a plugin event on destroyed widget");
-    mWidget->DispatchPluginEvent(mFollowingCharMsgs[i]);
-    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
-      MOZ_LOG(
-          sNativeKeyLogger, LogLevel::Info,
-          ("%p   NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages(), "
-           "%uth plugin event caused %s",
-           this, i + 1,
-           mWidget->Destroyed() ? "destroying the widget" : "focus change"));
-      return true;
-    }
-    MOZ_LOG(
-        sNativeKeyLogger, LogLevel::Info,
-        ("%p   NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages(), "
-         "dispatched %uth plugin event",
-         this, i + 1));
-  }
-
-  // Dispatch odd char messages which are caused by ATOK or WXG (both of them
-  // are Japanese IME) and removed by RemoveFollowingOddCharMessages().
-  for (size_t i = 0;
-       i < mRemovedOddCharMsgs.Length() && mWidget->ShouldDispatchPluginEvent();
-       ++i) {
-    MOZ_LOG(
-        sNativeKeyLogger, LogLevel::Info,
-        ("%p   NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages(), "
-         "dispatching %uth plugin event for odd char message, %s...",
-         this, i + 1, ToString(mFollowingCharMsgs[i]).get()));
-    MOZ_RELEASE_ASSERT(
-        !mWidget->Destroyed(),
-        "NativeKey tries to dispatch a plugin event on destroyed widget");
-    mWidget->DispatchPluginEvent(mRemovedOddCharMsgs[i]);
-    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
-      MOZ_LOG(
-          sNativeKeyLogger, LogLevel::Info,
-          ("%p   NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages(), "
-           "%uth plugin event for odd char message caused %s",
-           this, i + 1,
-           mWidget->Destroyed() ? "destroying the widget" : "focus change"));
-      return true;
-    }
-    MOZ_LOG(
-        sNativeKeyLogger, LogLevel::Info,
-        ("%p   NativeKey::MaybeDispatchPluginEventsForRemovedCharMessages(), "
-         "dispatched %uth plugin event for odd char message",
-         this, i + 1));
-  }
-
   return false;
 }
 

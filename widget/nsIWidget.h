@@ -1862,13 +1862,6 @@ class nsIWidget : public nsISupports {
   virtual void SetPluginFocused(bool& aFocused) = 0;
 
   /*
-   * Tell the plugin has focus.  It is unnecessary to use IPC
-   */
-  bool PluginHasFocus() {
-    return GetInputContext().mIMEState.mEnabled == IMEEnabled::Plugin;
-  }
-
-  /*
    * Enable or Disable IME by windowless plugin.
    */
   virtual void EnableIMEForPlugin(bool aEnable) {}

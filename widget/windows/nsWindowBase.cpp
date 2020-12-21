@@ -19,23 +19,7 @@ static const wchar_t kUser32LibName[] = L"user32.dll";
 bool nsWindowBase::sTouchInjectInitialized = false;
 InjectTouchInputPtr nsWindowBase::sInjectTouchFuncPtr;
 
-bool nsWindowBase::DispatchPluginEvent(const MSG& aMsg) {
-  if (!ShouldDispatchPluginEvent()) {
-    return false;
-  }
-  WidgetPluginEvent pluginEvent(true, ePluginInputEvent, this);
-  LayoutDeviceIntPoint point(0, 0);
-  InitEvent(pluginEvent, &point);
-  NPEvent npEvent;
-  npEvent.event = aMsg.message;
-  npEvent.wParam = aMsg.wParam;
-  npEvent.lParam = aMsg.lParam;
-  pluginEvent.mPluginEvent.Copy(npEvent);
-  pluginEvent.mRetargetToFocusedDocument = true;
-  return DispatchWindowEvent(&pluginEvent);
-}
-
-bool nsWindowBase::ShouldDispatchPluginEvent() { return PluginHasFocus(); }
+bool nsWindowBase::DispatchPluginEvent(const MSG& aMsg) { return false; }
 
 // static
 bool nsWindowBase::InitTouchInjection() {
