@@ -945,9 +945,6 @@ class UrlbarInput {
       PartnerLinkAttribution.makeRequest({
         targetURL: result.payload.url,
         source: "urlbar",
-        campaignID: Services.prefs.getStringPref(
-          "browser.partnerlink.campaign.topsites"
-        ),
       });
     }
 
