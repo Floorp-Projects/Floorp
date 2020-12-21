@@ -151,12 +151,6 @@ class IMEHandler final {
    */
   static void InitInputContext(nsWindow* aWindow, InputContext& aInputContext);
 
-  /*
-   * For WM_IME_*COMPOSITION messages and e10s with windowless plugin
-   */
-  static void DefaultProcOfPluginEvent(nsWindow* aWindow,
-                                       const NPEvent* aPluginEvent);
-
   /**
    * This is called by TSFStaticSink when active IME is changed.
    */

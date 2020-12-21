@@ -403,11 +403,6 @@ parent:
     nested(inside_cpow) async OnWindowedPluginKeyEvent(NativeEventData aKeyEventData);
 
     /**
-     *  When plugin event isn't consumed, call this
-     */
-    async DefaultProcOfPluginEvent(WidgetPluginEvent aEvent);
-
-    /**
      * Request that the parent process move focus to the browser's frame. If
      * canRaise is true, the window can be raised if it is inactive.
      */

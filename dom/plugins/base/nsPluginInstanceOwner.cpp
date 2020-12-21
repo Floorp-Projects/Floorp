@@ -1504,25 +1504,6 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(Event* aMouseEvent,
 }
 
 #ifdef XP_WIN
-void nsPluginInstanceOwner::CallDefaultProc(const WidgetGUIEvent* aEvent) {
-  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
-  if (!widget) {
-    widget = GetRootWidgetForPluginFrame(mPluginFrame);
-    if (NS_WARN_IF(!widget)) {
-      return;
-    }
-  }
-
-  const NPEvent* npEvent = static_cast<const NPEvent*>(aEvent->mPluginEvent);
-  if (NS_WARN_IF(!npEvent)) {
-    return;
-  }
-
-  WidgetPluginEvent pluginEvent(true, ePluginInputEvent, widget);
-  pluginEvent.mPluginEvent.Copy(*npEvent);
-  widget->DefaultProcOfPluginEvent(pluginEvent);
-}
-
 already_AddRefed<TextComposition> nsPluginInstanceOwner::GetTextComposition() {
   if (NS_WARN_IF(!mPluginFrame)) {
     return nullptr;
@@ -1569,18 +1550,8 @@ void nsPluginInstanceOwner::HandleNoConsumedCompositionMessage(
     return;
   }
   if (!mSentStartComposition) {
-    // We post WM_IME_COMPOSITION to default proc, but
-    // WM_IME_STARTCOMPOSITION isn't post yet.  We should post it at first.
-    WidgetPluginEvent startEvent(true, ePluginInputEvent, widget);
-    npevent.event = WM_IME_STARTCOMPOSITION;
-    npevent.wParam = 0;
-    npevent.lParam = 0;
-    startEvent.mPluginEvent.Copy(npevent);
-    CallDefaultProc(&startEvent);
     mSentStartComposition = true;
   }
-
-  CallDefaultProc(aCompositionEvent);
 }
 #endif
 
@@ -1641,11 +1612,7 @@ nsresult nsPluginInstanceOwner::DispatchCompositionToPlugin(Event* aEvent) {
   }
 
   if (pPluginEvent->event == WM_IME_STARTCOMPOSITION) {
-    // Flash's protected mode lies that composition event is handled, but it
-    // cannot do it well.  So even if handled, we should post this message when
-    // no IMM API calls during WM_IME_COMPOSITION.
     if (nsEventStatus_eConsumeNoDefault != status) {
-      CallDefaultProc(compositionEvent);
       mSentStartComposition = true;
     } else {
       mSentStartComposition = false;
@@ -1655,10 +1622,6 @@ nsresult nsPluginInstanceOwner::DispatchCompositionToPlugin(Event* aEvent) {
   }
 
   if (pPluginEvent->event == WM_IME_ENDCOMPOSITION) {
-    // Always post WM_END_COMPOSITION to default proc. Because Flash may lie
-    // that it doesn't handle composition well, but event is handled.
-    // Even if posting this message, default proc do nothing if unnecessary.
-    CallDefaultProc(compositionEvent);
     return NS_OK;
   }
 

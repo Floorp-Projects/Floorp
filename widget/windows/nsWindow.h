@@ -356,8 +356,6 @@ class nsWindow final : public nsWindowBase {
 
   const IMEContext& DefaultIMC() const { return mDefaultIMC; }
 
-  virtual void DefaultProcOfPluginEvent(
-      const mozilla::WidgetPluginEvent& aEvent) override;
   virtual void EnableIMEForPlugin(bool aEnable) override;
   virtual nsresult OnWindowedPluginKeyEvent(
       const mozilla::NativeEventData& aKeyEventData,
