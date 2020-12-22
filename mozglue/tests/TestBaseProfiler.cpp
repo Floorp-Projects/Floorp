@@ -1919,19 +1919,14 @@ static void TestChunkedBufferSingle() {
   // cbTarget.Dump();
 #  endif
 
-  // Though we failed to write an entry (before the AppendContent test), the
-  // chunk is still open for smaller entries.
-  // TODO: It would be better to mark the chunk full, so that entries would be
-  // consistently rejected from now on. See later patch.
+  // Because we failed to write a too-big chunk above, the chunk was marked
+  // full, so that entries should be consistently rejected from now on.
   cbSingle.Put(1, [&](Maybe<ProfileBufferEntryWriter>& aEW) {
-    MOZ_RELEASE_ASSERT(aEW.isSome());
-    MOZ_RELEASE_ASSERT(aEW->RemainingBytes() == 1);
-    **aEW = '!';
-    ++(*aEW);
+    MOZ_RELEASE_ASSERT(aEW.isNothing());
   });
   VERIFY_PCB_START_END_PUSHED_CLEARED_FAILED(
-      cbSingle, 1, 1 + blockBytes * ((testBlocks - 1)) + ULEB128Size(1u) + 1,
-      testBlocks - 1 + 1, 0, remainingBytesForLastBlock + 1);
+      cbSingle, 1, 1 + blockBytes * ((testBlocks - 1)), testBlocks - 1, 0,
+      remainingBytesForLastBlock + 1 + ULEB128Size(1u) + 1);
 
   // Clear the buffer before the next test.
 

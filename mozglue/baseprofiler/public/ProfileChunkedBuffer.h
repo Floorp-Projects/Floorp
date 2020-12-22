@@ -1449,6 +1449,11 @@ class ProfileChunkedBuffer {
         } else {
           // Block doesn't fit fully in current chunk, it needs to overflow into
           // the next one.
+          // Whether or not we can write this entry, the current chunk is now
+          // considered full, so it will be released. (Otherwise we could refuse
+          // this entry, but later accept a smaller entry into this chunk, which
+          // would be somewhat inconsistent.)
+          currentChunkFilled = true;
           // Make sure the next chunk is available (from a previous request),
           // otherwise create one on the spot.
           if (ProfileBufferChunk* next = GetOrCreateNextChunk(aLock);
@@ -1466,7 +1471,6 @@ class ProfileChunkedBuffer {
             const auto mem1 = next->ReserveInitialBlockAsTail(
                 blockBytes - mem0.LengthBytes());
             MOZ_ASSERT(next->RemainingBytes() != 0);
-            currentChunkFilled = true;
             nextChunkInitialized = true;
             // Block is split in two spans.
             maybeEntryWriter.emplace(
