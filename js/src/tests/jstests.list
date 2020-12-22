@@ -142,6 +142,8 @@ skip script test262/language/literals/string/legacy-non-octal-escape-sequence-8-
 skip script test262/language/expressions/template-literal/invalid-legacy-octal-escape-sequence-9.js
 skip script test262/language/literals/string/legacy-non-octal-escape-sequence-9-strict-strict.js
 skip script test262/language/expressions/tagged-template/invalid-escape-sequences.js
+skip script test262/language/literals/string/legacy-non-octal-escape-sequence-8-strict-explicit-pragma.js
+skip script test262/language/literals/string/legacy-non-octal-escape-sequence-9-strict-explicit-pragma.js
 
 # Lazily resolved "name" and "length" properties on functions violate property key order.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1629803
@@ -651,37 +653,13 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-d
 # Tests not yet updated for https://github.com/tc39/proposal-intl-displaynames/pull/83
 skip script test262/intl402/DisplayNames/locales-length-tolength-throws.js
 skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
-skip script test262/intl402/DisplayNames/length.js
-
-# https://github.com/tc39/test262/issues/2879
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
-skip script test262/built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/filter/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/find/BigInt/predicate-may-detach-buffer.js
-skip script test262/built-ins/TypedArray/prototype/findIndex/BigInt/predicate-may-detach-buffer.js
-skip script test262/built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
 
 # Tests not yet updated for https://github.com/tc39/ecma262/pull/2210
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
-
-# https://github.com/tc39/ecma262/pull/2210
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-out-of-bounds.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-minus-zero.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-not-integer.js
-skip script test262/built-ins/TypedArray/prototype/includes/detached-buffer-tointeger.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/tonumber-value-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
+skip script test262/built-ins/TypedArray/prototype/filter/BigInt/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/findIndex/BigInt/predicate-may-detach-buffer.js
 
 
 ##############################################
