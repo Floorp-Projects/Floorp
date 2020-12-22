@@ -1483,6 +1483,11 @@ void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
   branchAdd32(cond, src, dest, label);
 }
 
+void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
+                                  Label* label) {
+  branchSub32(cond, src, dest, label);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   ScratchRegisterScope scratch(*this);
