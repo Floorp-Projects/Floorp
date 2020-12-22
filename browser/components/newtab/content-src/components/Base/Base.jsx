@@ -269,6 +269,7 @@ export class BaseContent extends React.PureComponent {
               enabledSections={enabledSections}
               pocketRegion={pocketRegion}
               mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
+              dispatch={this.props.dispatch}
             />
           </CSSTransition>
         )}

@@ -137,7 +137,7 @@ this.AboutPreferences = class AboutPreferences {
           ac.UserEvent({
             event: "PREF_CHANGED",
             source: eventSource,
-            value: { status: checked },
+            value: { status: checked, menu_source: "ABOUT_PREFERENCES" },
           })
         );
       }
