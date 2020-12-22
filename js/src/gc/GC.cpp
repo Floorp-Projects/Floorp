@@ -7001,6 +7001,9 @@ bool GCRuntime::hasForegroundWork() const {
     case State::NotActive:
       // Incremental GC is not running and no work is pending.
       return false;
+    case State::Prepare:
+      // We yield in the Prepare state after starting unmarking.
+      return !unmarkTask.wasStarted();
     case State::Finalize:
       // We yield in the Finalize state to wait for background sweeping.
       return !isBackgroundSweeping();
