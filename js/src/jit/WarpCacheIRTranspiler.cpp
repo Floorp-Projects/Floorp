@@ -2492,6 +2492,11 @@ bool WarpCacheIRTranspiler::emitCompareBigIntInt32Result(JSOp op,
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_BigInt_Int32);
 }
 
+bool WarpCacheIRTranspiler::emitCompareBigIntNumberResult(
+    JSOp op, BigIntOperandId lhsId, NumberOperandId rhsId) {
+  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_BigInt_Double);
+}
+
 bool WarpCacheIRTranspiler::emitCompareNullUndefinedResult(
     JSOp op, bool isUndefined, ValOperandId inputId) {
   MDefinition* input = getOperand(inputId);

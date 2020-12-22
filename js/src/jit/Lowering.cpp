@@ -990,6 +990,15 @@ void LIRGenerator::visitCompare(MCompare* comp) {
     return;
   }
 
+  // Compare BigInt with Double.
+  if (comp->compareType() == MCompare::Compare_BigInt_Double) {
+    auto* lir = new (alloc()) LCompareBigIntDouble(useRegisterAtStart(left),
+                                                   useRegisterAtStart(right),
+                                                   tempFixed(CallTempReg0));
+    defineReturn(lir, comp);
+    return;
+  }
+
   // Unknown/unspecialized compare use a VM call.
   if (comp->compareType() == MCompare::Compare_Unknown) {
     LCompareVM* lir =
