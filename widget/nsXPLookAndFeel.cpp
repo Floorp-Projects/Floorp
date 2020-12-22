@@ -22,6 +22,7 @@
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/StaticPrefs_findbar.h"
 #include "mozilla/StaticPrefs_ui.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "mozilla/Telemetry.h"
