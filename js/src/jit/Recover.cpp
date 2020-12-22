@@ -614,6 +614,30 @@ bool RBigIntMod::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MBigIntPow::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntPow));
+  return true;
+}
+
+RBigIntPow::RBigIntPow(CompactBufferReader& reader) {}
+
+bool RBigIntPow::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  MOZ_ASSERT(!rhs.toBigInt()->isNegative(),
+             "negative exponent throws and therefore can't be recovered");
+  if (!js::PowValues(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MBigIntBitAnd::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntBitAnd));

@@ -1453,6 +1453,15 @@ function rbigintmod(i) {
     return i;
 }
 
+let uceFault_pow_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_pow_bigint'));
+function rbigintpow(i) {
+    var x = i ** 2n;
+    if (uceFault_pow_bigint(i) || uceFault_pow_bigint(i))
+        assertEq(x, 9801n  /* = 99 ** 2 */);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 let uceFault_inc_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_inc_bigint'));
 function rbigintinc(i) {
     var x = i;
@@ -1679,6 +1688,7 @@ for (j = 100 - max; j < 100; j++) {
     rbigintmul(BigInt(i));
     rbigintdiv(BigInt(i));
     rbigintmod(BigInt(i));
+    rbigintpow(BigInt(i));
     rbigintinc(BigInt(i));
     rbigintdec(BigInt(i));
     rbigintneg(BigInt(i));

@@ -2924,6 +2924,25 @@ class LBigIntMod : public LBinaryMath<2> {
   const MBigIntMod* mir() const { return mirRaw()->toBigIntMod(); }
 };
 
+class LBigIntPow : public LBinaryMath<2> {
+ public:
+  LIR_HEADER(BigIntPow)
+
+  LBigIntPow(const LAllocation& lhs, const LAllocation& rhs,
+             const LDefinition& temp1, const LDefinition& temp2)
+      : LBinaryMath(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+
+  const MBigIntPow* mir() const { return mirRaw()->toBigIntPow(); }
+};
+
 class LBigIntBitAnd : public LBinaryMath<2> {
  public:
   LIR_HEADER(BigIntBitAnd)
