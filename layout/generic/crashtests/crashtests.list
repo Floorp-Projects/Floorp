@@ -697,6 +697,7 @@ load 1460158-2.html
 load 1460158-3.html
 load 1461039.html
 load 1461979-1.html
+asserts(0-1) load 1466224.html # assertion is bug 1683800
 load 1467239.html
 load 1472403.html
 load 1474768.html
