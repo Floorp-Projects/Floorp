@@ -321,7 +321,7 @@ describe("AboutPreferences Feed", () => {
           ac.UserEvent({
             event: "PREF_CHANGED",
             source: eventSource,
-            value: { status: true },
+            value: { menu_source: "ABOUT_PREFERENCES", status: true },
           })
         );
       });
