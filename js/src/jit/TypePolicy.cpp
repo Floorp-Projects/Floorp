@@ -97,6 +97,28 @@ bool ArithPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   return true;
 }
 
+bool BigIntArithPolicy::adjustInputs(TempAllocator& alloc,
+                                     MInstruction* ins) const {
+  MOZ_ASSERT(ins->type() == MIRType::BigInt);
+
+  for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
+    MDefinition* in = ins->getOperand(i);
+    if (in->type() == ins->type()) {
+      continue;
+    }
+
+    auto* replace = MToBigInt::New(alloc, in);
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(i, replace);
+
+    if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool AllDoublePolicy::staticAdjustInputs(TempAllocator& alloc,
                                          MInstruction* ins) {
   for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
@@ -1108,6 +1130,7 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
 #define TYPE_POLICY_LIST(_)     \
   _(AllDoublePolicy)            \
   _(ArithPolicy)                \
+  _(BigIntArithPolicy)          \
   _(BitwisePolicy)              \
   _(BoxInputsPolicy)            \
   _(CallPolicy)                 \

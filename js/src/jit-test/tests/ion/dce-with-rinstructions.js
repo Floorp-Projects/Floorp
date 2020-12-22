@@ -1408,6 +1408,15 @@ function rsign_double(i) {
     return i;
 }
 
+let uceFault_add_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_add_bigint'));
+function rbigintadd(i) {
+    var x = 1n + i;
+    if (uceFault_add_bigint(i) || uceFault_add_bigint(i))
+        assertEq(x, 100n  /* = 1 + 99 */);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1546,6 +1555,7 @@ for (j = 100 - max; j < 100; j++) {
     rlog_object(i);
     rsign_number(i);
     rsign_double(i);
+    rbigintadd(BigInt(i));
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

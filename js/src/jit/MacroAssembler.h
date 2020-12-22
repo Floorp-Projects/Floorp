@@ -3701,9 +3701,22 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadFirstBigIntDigitOrZero(Register bigInt, Register dest);
 
   /**
-   * Initialize a BigInt from |dest|. Clobbers |val|!
+   * Load the number stored in |bigInt| into |dest|. Doesn't handle the case
+   * when the BigInt digits length is zero. Jumps to |fail| when the number
+   * can't be saved into a single pointer-sized register.
+   */
+  void loadBigIntNonZero(Register bigInt, Register dest, Label* fail);
+
+  /**
+   * Initialize a BigInt from |val|. Clobbers |val|!
    */
   void initializeBigInt64(Scalar::Type type, Register bigInt, Register64 val);
+
+  /**
+   * Initialize a BigInt from the signed, pointer-sized register |val|.
+   * Clobbers |val|!
+   */
+  void initializeBigInt(Register bigInt, Register val);
 
   /**
    * Compare a BigInt and an Int32 value. Falls through to the false case.
