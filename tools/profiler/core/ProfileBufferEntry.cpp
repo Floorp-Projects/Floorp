@@ -1633,7 +1633,8 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
               // Found our CompactStack, just make a copy of the whole entry.
               er = *it;
               auto bytes = er.RemainingBytes();
-              MOZ_ASSERT(bytes < 65536);
+              MOZ_ASSERT(bytes <
+                         ProfileBufferChunkManager::scExpectedMaximumStackSize);
               tempBuffer.Put(bytes, [&](Maybe<ProfileBufferEntryWriter>& aEW) {
                 MOZ_ASSERT(aEW.isSome(), "tempBuffer cannot be out-of-session");
                 aEW->WriteFromReader(er, bytes);
