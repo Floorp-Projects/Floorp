@@ -2668,6 +2668,12 @@ bool js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
   // This loop isn't explicit in the spec algorithm. See the comment on step
   // 4.c.i below. (There's a very similar loop in the NativeGetProperty
   // implementation, but unfortunately not similar enough to common up.)
+  //
+  // We're intentionally not spec-compliant for TypedArrays:
+  // When |pobj| is a TypedArray and |id| is a TypedArray index, we should
+  // ignore |receiver| and instead always try to set the property on |pobj|.
+  // Bug 1502889 showed that this behavior isn't web-compatible. This issue is
+  // also reported at <https://github.com/tc39/ecma262/issues/1541>.
   for (;;) {
     // Steps 2-3. ('done' is a SpiderMonkey-specific thing, used below.)
     bool done;
