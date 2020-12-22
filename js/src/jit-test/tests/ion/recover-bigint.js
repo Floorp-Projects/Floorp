@@ -93,6 +93,32 @@ function bigIntBitNotBail(i) {
   if (i >= 99) bailout();
 }
 
+function bigIntLshBail(i) {
+  var shift = [0n, BigInt(maxBitLength)][0 + (i >= 99)];
+
+  var a = 1n << shift;
+
+  // Add a function call to capture a resumepoint at the end of the call or
+  // inside the inlined block, such as the bailout does not rewind to the
+  // beginning of the function.
+  resumeHere();
+
+  if (i >= 99) bailout();
+}
+
+function bigIntRshBail(i) {
+  var shift = [0n, -BigInt(maxBitLength)][0 + (i >= 99)];
+
+  var a = 1n >> shift;
+
+  // Add a function call to capture a resumepoint at the end of the call or
+  // inside the inlined block, such as the bailout does not rewind to the
+  // beginning of the function.
+  resumeHere();
+
+  if (i >= 99) bailout();
+}
+
 // Prevent compilation of the top-level
 eval(`(${resumeHere})`);
 
@@ -148,6 +174,24 @@ try {
 try {
   for (let i = 0; i < 100; i++) {
     bigIntBitNotBail(i);
+  }
+  throw new Error("missing exception");
+} catch (e) {
+  assertEq(e instanceof RangeError || e === "out of memory", true, String(e));
+}
+
+try {
+  for (let i = 0; i < 100; i++) {
+    bigIntLshBail(i);
+  }
+  throw new Error("missing exception");
+} catch (e) {
+  assertEq(e instanceof RangeError || e === "out of memory", true, String(e));
+}
+
+try {
+  for (let i = 0; i < 100; i++) {
+    bigIntRshBail(i);
   }
   throw new Error("missing exception");
 } catch (e) {
