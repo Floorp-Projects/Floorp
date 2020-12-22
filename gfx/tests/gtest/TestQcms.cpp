@@ -201,16 +201,6 @@ class GfxQcms_ProfilePairBase : public ::testing::Test {
     // XXX: This means that we can't have qcms v2 unit test
     //      without changing the qcms API.
     qcms_enable_iccv4();
-#ifdef MOZILLA_MAY_SUPPORT_AVX
-    if (mozilla::supports_avx()) {
-      qcms_enable_avx();
-    }
-#endif
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-    if (mozilla::supports_neon()) {
-      qcms_enable_neon();
-    }
-#endif
   }
 
   void TearDown() override {
