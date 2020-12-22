@@ -2458,6 +2458,21 @@ bool WarpCacheIRTranspiler::emitBigIntMulResult(BigIntOperandId lhsId,
   return emitBigIntBinaryArithResult<MBigIntMul>(lhsId, rhsId);
 }
 
+bool WarpCacheIRTranspiler::emitBigIntBitAndResult(BigIntOperandId lhsId,
+                                                   BigIntOperandId rhsId) {
+  return emitBigIntBinaryArithResult<MBigIntBitAnd>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitBigIntBitOrResult(BigIntOperandId lhsId,
+                                                  BigIntOperandId rhsId) {
+  return emitBigIntBinaryArithResult<MBigIntBitOr>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitBigIntBitXorResult(BigIntOperandId lhsId,
+                                                   BigIntOperandId rhsId) {
+  return emitBigIntBinaryArithResult<MBigIntBitXor>(lhsId, rhsId);
+}
+
 template <typename T>
 bool WarpCacheIRTranspiler::emitBigIntUnaryArithResult(
     BigIntOperandId inputId) {

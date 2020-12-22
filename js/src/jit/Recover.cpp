@@ -566,6 +566,72 @@ bool RBigIntMul::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MBigIntBitAnd::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntBitAnd));
+  return true;
+}
+
+RBigIntBitAnd::RBigIntBitAnd(CompactBufferReader& reader) {}
+
+bool RBigIntBitAnd::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  if (!js::BitAnd(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
+bool MBigIntBitOr::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntBitOr));
+  return true;
+}
+
+RBigIntBitOr::RBigIntBitOr(CompactBufferReader& reader) {}
+
+bool RBigIntBitOr::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  if (!js::BitOr(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
+bool MBigIntBitXor::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntBitXor));
+  return true;
+}
+
+RBigIntBitXor::RBigIntBitXor(CompactBufferReader& reader) {}
+
+bool RBigIntBitXor::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  if (!js::BitXor(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MBigIntIncrement::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntIncrement));

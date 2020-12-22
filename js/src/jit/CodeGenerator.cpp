@@ -8756,6 +8756,123 @@ void CodeGenerator::visitBigIntMul(LBigIntMul* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitBigIntBitAnd(LBigIntBitAnd* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::bitAnd>(ins, ArgList(lhs, rhs),
+                                            StoreRegisterTo(output));
+
+  // 0n & x == 0n
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(lhs, &lhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&lhsNonZero);
+
+  // x & 0n == 0n
+  Label rhsNonZero;
+  masm.branchIfBigIntIsNonZero(rhs, &rhsNonZero);
+  masm.movePtr(rhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&rhsNonZero);
+
+  // Call into the VM when either operand can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigIntNonZero(lhs, temp1, ool->entry());
+  masm.loadBigIntNonZero(rhs, temp2, ool->entry());
+
+  masm.andPtr(temp2, temp1);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, temp1);
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitBigIntBitOr(LBigIntBitOr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::bitOr>(ins, ArgList(lhs, rhs),
+                                           StoreRegisterTo(output));
+
+  // 0n | x == x
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(lhs, &lhsNonZero);
+  masm.movePtr(rhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&lhsNonZero);
+
+  // x | 0n == x
+  Label rhsNonZero;
+  masm.branchIfBigIntIsNonZero(rhs, &rhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&rhsNonZero);
+
+  // Call into the VM when either operand can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigIntNonZero(lhs, temp1, ool->entry());
+  masm.loadBigIntNonZero(rhs, temp2, ool->entry());
+
+  masm.orPtr(temp2, temp1);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, temp1);
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitBigIntBitXor(LBigIntBitXor* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::bitXor>(ins, ArgList(lhs, rhs),
+                                            StoreRegisterTo(output));
+
+  // 0n ^ x == x
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(lhs, &lhsNonZero);
+  masm.movePtr(rhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&lhsNonZero);
+
+  // x ^ 0n == x
+  Label rhsNonZero;
+  masm.branchIfBigIntIsNonZero(rhs, &rhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&rhsNonZero);
+
+  // Call into the VM when either operand can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigIntNonZero(lhs, temp1, ool->entry());
+  masm.loadBigIntNonZero(rhs, temp2, ool->entry());
+
+  masm.xorPtr(temp2, temp1);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, temp1);
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitBigIntIncrement(LBigIntIncrement* ins) {
   Register input = ToRegister(ins->input());
   Register temp1 = ToRegister(ins->temp1());
