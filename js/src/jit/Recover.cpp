@@ -695,6 +695,27 @@ bool RBigIntNegate::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MBigIntBitNot::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntBitNot));
+  return true;
+}
+
+RBigIntBitNot::RBigIntBitNot(CompactBufferReader& reader) {}
+
+bool RBigIntBitNot::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue operand(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(operand.isBigInt());
+  if (!js::BitNot(cx, &operand, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MConcat::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_Concat));

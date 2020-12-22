@@ -3724,6 +3724,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadBigIntNonZero(Register bigInt, Register dest, Label* fail);
 
   /**
+   * Load the absolute number stored in |bigInt| into |dest|. Handles the case
+   * when the BigInt digits length is zero. Jumps to |fail| when the number
+   * can't be saved into a single pointer-sized register.
+   */
+  void loadBigIntAbsolute(Register bigInt, Register dest, Label* fail);
+
+  /**
    * Initialize a BigInt from |val|. Clobbers |val|!
    */
   void initializeBigInt64(Scalar::Type type, Register bigInt, Register64 val);
@@ -3733,6 +3740,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
    * Clobbers |val|!
    */
   void initializeBigInt(Register bigInt, Register val);
+
+  /**
+   * Initialize a BigInt from the pointer-sized register |val|.
+   */
+  void initializeBigIntAbsolute(Register bigInt, Register val);
 
   /**
    * Copy a BigInt. Jumps to |fail| on allocation failure or when the BigInt

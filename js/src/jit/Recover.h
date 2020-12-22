@@ -81,6 +81,7 @@ namespace jit {
   _(BigIntIncrement)           \
   _(BigIntDecrement)           \
   _(BigIntNegate)              \
+  _(BigIntBitNot)              \
   _(Concat)                    \
   _(StringLength)              \
   _(ArgumentsLength)           \
@@ -403,6 +404,14 @@ class RBigIntDecrement final : public RInstruction {
 class RBigIntNegate final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntNegate, 1)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RBigIntBitNot final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntBitNot, 1)
 
   MOZ_MUST_USE bool recover(JSContext* cx,
                             SnapshotIterator& iter) const override;
