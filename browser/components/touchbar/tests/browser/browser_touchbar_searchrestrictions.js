@@ -80,10 +80,6 @@ add_task(async function insertTokens() {
       input: "mozilla",
       token: UrlbarTokenizer.RESTRICT.OPENPAGE,
     },
-    {
-      input: "mozilla",
-      token: UrlbarTokenizer.RESTRICT.TITLE,
-    },
   ];
   for (let test of tests) {
     await searchAndCheckState(test);
