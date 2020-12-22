@@ -8,23 +8,18 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
+let gPathsToRemove = [];
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.useDownloadDir", true]],
   });
   registerCleanupFunction(async () => {
-    let publicList = await Downloads.getList(Downloads.PUBLIC);
-    let downloads = await publicList.getAll();
-    for (let download of downloads) {
-      if (download.target.exists) {
-        try {
-          info("removing " + download.target.path);
-          await IOUtils.remove(download.target.path);
-        } catch (ex) {
-          /* ignore */
-        }
-      }
+    for (let path of gPathsToRemove) {
+      // IOUtils.remove ignores non-existing files out of the box.
+      await IOUtils.remove(path);
     }
+    let publicList = await Downloads.getList(Downloads.PUBLIC);
     await publicList.removeFinished();
   });
 });
@@ -86,7 +81,11 @@ async function checkDownloadWithExtensionState(
       expectedName,
       `Downloaded file should also match ${expectedName}`
     );
-    await IOUtils.remove(download.target.path);
+    gPathsToRemove.push(download.target.path);
+    let pathToRemove = download.target.path;
+    // Avoid one file interfering with subsequent files.
+    await publicList.removeFinished();
+    await IOUtils.remove(pathToRemove);
   } else {
     // We just cancel out for files that would end up without a path, as we'd
     // prompt for a filename.
