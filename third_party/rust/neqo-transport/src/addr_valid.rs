@@ -399,9 +399,8 @@ struct NewTokenFrameStatus {
 }
 
 impl NewTokenFrameStatus {
-    fn fits(&self, space: usize) -> bool {
-        1 + Encoder::varint_len(u64::try_from(self.token.len()).unwrap()) + self.token.len()
-            <= space
+    fn len(&self) -> usize {
+        1 + Encoder::vvec_len(self.token.len())
     }
 }
 
@@ -432,7 +431,7 @@ impl NewTokenSender {
         stats: &mut FrameStats,
     ) {
         for t in self.tokens.iter_mut() {
-            if t.needs_sending && t.fits(builder.remaining()) {
+            if t.needs_sending && t.len() <= builder.remaining() {
                 t.needs_sending = false;
 
                 builder.encode_varint(crate::frame::FRAME_TYPE_NEW_TOKEN);

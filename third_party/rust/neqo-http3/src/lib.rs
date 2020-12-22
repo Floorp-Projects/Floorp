@@ -115,21 +115,21 @@ impl Error {
 
     #[must_use]
     pub fn connection_error(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::HttpGeneralProtocol
-            | Self::HttpInternal
-            | Self::HttpStreamCreation
-            | Self::HttpClosedCriticalStream
-            | Self::HttpFrameUnexpected
-            | Self::HttpFrame
-            | Self::HttpExcessiveLoad
-            | Self::HttpId
-            | Self::HttpSettings
-            | Self::HttpMissingSettings
-            | Self::QpackError(QpackError::EncoderStream)
-            | Self::QpackError(QpackError::DecoderStream) => true,
-            _ => false,
-        }
+                | Self::HttpInternal
+                | Self::HttpStreamCreation
+                | Self::HttpClosedCriticalStream
+                | Self::HttpFrameUnexpected
+                | Self::HttpFrame
+                | Self::HttpExcessiveLoad
+                | Self::HttpId
+                | Self::HttpSettings
+                | Self::HttpMissingSettings
+                | Self::QpackError(QpackError::EncoderStream)
+                | Self::QpackError(QpackError::DecoderStream)
+        )
     }
 
     #[must_use]
@@ -188,10 +188,14 @@ impl Error {
         }
     }
 
-    #[must_use]
-    pub fn map_send_errors() -> Self {
-        debug_assert!(false, "Unexpected error");
-        Error::HttpInternal
+    /// # Errors
+    ///   Any error is mapped to the indicated type.
+    fn map_error<R>(r: Result<R, impl Into<Self>>, err: Self) -> Result<R, Self> {
+        Ok(r.map_err(|e| {
+            debug_assert!(!matches!(e.into(), Self::HttpInternal));
+            debug_assert!(!matches!(err, Self::HttpInternal));
+            err
+        })?)
     }
 }
 

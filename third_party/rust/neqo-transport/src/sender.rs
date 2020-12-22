@@ -40,7 +40,7 @@ impl Display for PacketSender {
 
 impl PacketSender {
     #[must_use]
-    pub fn new(alg: &CongestionControlAlgorithm) -> Self {
+    pub fn new(alg: CongestionControlAlgorithm) -> Self {
         Self {
             cc: match alg {
                 CongestionControlAlgorithm::NewReno => {

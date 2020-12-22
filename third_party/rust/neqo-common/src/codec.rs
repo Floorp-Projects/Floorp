@@ -313,6 +313,7 @@ impl Encoder {
         self.buf.resize(self.buf.len() + n, 0);
         f(self);
         let len = self.buf.len() - start - n;
+        assert!(len < (1 << (n * 8)));
         for i in 0..n {
             self.buf[start + i] = ((len >> (8 * (n - i - 1))) & 0xff) as u8
         }
@@ -730,6 +731,15 @@ mod tests {
             enc_inner.encode(&Encoder::from_hex("02"));
         });
         assert_eq!(enc, Encoder::from_hex("000102"));
+    }
+
+    #[test]
+    #[should_panic]
+    fn encode_vec_with_overflow() {
+        let mut enc = Encoder::default();
+        enc.encode_vec_with(1, |enc_inner| {
+            enc_inner.encode(&[0xb0; 256]);
+        });
     }
 
     #[test]

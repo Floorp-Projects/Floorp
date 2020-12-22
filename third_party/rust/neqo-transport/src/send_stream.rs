@@ -822,11 +822,11 @@ pub(crate) struct SendStreams(IndexMap<StreamId, SendStream>);
 
 impl SendStreams {
     pub fn get(&self, id: StreamId) -> Res<&SendStream> {
-        self.0.get(&id).ok_or_else(|| Error::InvalidStreamId)
+        self.0.get(&id).ok_or(Error::InvalidStreamId)
     }
 
     pub fn get_mut(&mut self, id: StreamId) -> Res<&mut SendStream> {
-        self.0.get_mut(&id).ok_or_else(|| Error::InvalidStreamId)
+        self.0.get_mut(&id).ok_or(Error::InvalidStreamId)
     }
 
     pub fn exists(&self, id: StreamId) -> bool {

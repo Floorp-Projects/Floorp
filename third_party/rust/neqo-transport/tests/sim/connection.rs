@@ -216,11 +216,8 @@ impl ConnectionGoal for SendData {
     }
 
     fn process(&mut self, c: &mut Connection, _now: Instant) -> GoalStatus {
-        if let Some(stream_id) = self.stream_id {
-            self.send(c, stream_id)
-        } else {
-            GoalStatus::Waiting
-        }
+        self.stream_id
+            .map_or(GoalStatus::Waiting, |stream_id| self.send(c, stream_id))
     }
 
     fn handle_event(

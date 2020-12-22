@@ -17,8 +17,9 @@ use neqo_crypto::{
 };
 use neqo_transport::{
     server::{ActiveConnectionRef, Server, ValidateAddress},
-    Connection, ConnectionError, ConnectionEvent, Error, FixedConnectionIdManager, Output,
-    QuicVersion, State, StreamType,
+    Connection, ConnectionError, ConnectionEvent, ConnectionParameters, Error,
+    FixedConnectionIdManager, Output, QuicVersion, State, StreamType, LOCAL_STREAM_LIMIT_BIDI,
+    LOCAL_STREAM_LIMIT_UNI,
 };
 use test_fixture::{self, assertions, default_client, loopback, now, split_datagram};
 
@@ -38,6 +39,7 @@ fn default_server() -> Server {
         test_fixture::anti_replay(),
         Box::new(AllowZeroRtt {}),
         Rc::new(RefCell::new(FixedConnectionIdManager::new(9))),
+        ConnectionParameters::default(),
     )
     .expect("should create a server")
 }
@@ -938,4 +940,72 @@ fn closed() {
     qtrace!("60s later");
     let res = server.process(None, now() + Duration::from_secs(60));
     assert_eq!(res, Output::None);
+}
+
+fn can_create_streams(c: &mut Connection, t: StreamType, n: usize) {
+    for _ in 0..n {
+        c.stream_create(t).unwrap();
+    }
+    assert_eq!(c.stream_create(t), Err(Error::StreamLimitError));
+}
+
+#[test]
+fn max_streams() {
+    const MAX_STREAMS: u64 = 40;
+    let mut server = Server::new(
+        now(),
+        test_fixture::DEFAULT_KEYS,
+        test_fixture::DEFAULT_ALPN,
+        test_fixture::anti_replay(),
+        Box::new(AllowZeroRtt {}),
+        Rc::new(RefCell::new(FixedConnectionIdManager::new(9))),
+        ConnectionParameters::default()
+            .max_streams(StreamType::BiDi, MAX_STREAMS)
+            .max_streams(StreamType::UniDi, MAX_STREAMS),
+    )
+    .expect("should create a server");
+
+    let mut client = default_client();
+    connect(&mut client, &mut server);
+
+    // Make sure that we can create MAX_STREAMS uni- and bidirectional streams.
+    can_create_streams(
+        &mut client,
+        StreamType::UniDi,
+        usize::try_from(MAX_STREAMS).unwrap(),
+    );
+    can_create_streams(
+        &mut client,
+        StreamType::BiDi,
+        usize::try_from(MAX_STREAMS).unwrap(),
+    );
+}
+
+#[test]
+fn max_streams_default() {
+    let mut server = Server::new(
+        now(),
+        test_fixture::DEFAULT_KEYS,
+        test_fixture::DEFAULT_ALPN,
+        test_fixture::anti_replay(),
+        Box::new(AllowZeroRtt {}),
+        Rc::new(RefCell::new(FixedConnectionIdManager::new(9))),
+        ConnectionParameters::default(),
+    )
+    .expect("should create a server");
+
+    let mut client = default_client();
+    connect(&mut client, &mut server);
+
+    // Make sure that we can create LOCAL_STREAM_LIMIT_UNI unidirectional streams
+    can_create_streams(
+        &mut client,
+        StreamType::UniDi,
+        usize::try_from(LOCAL_STREAM_LIMIT_UNI).unwrap(),
+    );
+    can_create_streams(
+        &mut client,
+        StreamType::BiDi,
+        usize::try_from(LOCAL_STREAM_LIMIT_BIDI).unwrap(),
+    );
 }
