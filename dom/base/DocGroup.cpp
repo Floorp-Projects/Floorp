@@ -248,7 +248,7 @@ RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
 
     top = context->Top();
 
-    if (!top) {
+    if (!top || !top->GetCurrentWindowContext()) {
       continue;
     }
 
