@@ -17,15 +17,14 @@ namespace ipc {
 base::SharedMemory* IdleSchedulerParent::sActiveChildCounter = nullptr;
 std::bitset<NS_IDLE_SCHEDULER_COUNTER_ARRAY_LENGHT>
     IdleSchedulerParent::sInUseChildCounters;
-LinkedList<IdleSchedulerParent> IdleSchedulerParent::sDefault;
 LinkedList<IdleSchedulerParent> IdleSchedulerParent::sWaitingForIdle;
-LinkedList<IdleSchedulerParent> IdleSchedulerParent::sIdle;
 Atomic<int32_t> IdleSchedulerParent::sCPUsForChildProcesses(-1);
 uint32_t IdleSchedulerParent::sChildProcessesRunningPrioritizedOperation = 0;
+uint32_t IdleSchedulerParent::sChildProcessesAlive = 0;
 nsITimer* IdleSchedulerParent::sStarvationPreventer = nullptr;
 
 IdleSchedulerParent::IdleSchedulerParent() {
-  sDefault.insertBack(this);
+  sChildProcessesAlive++;
 
   if (sCPUsForChildProcesses == -1) {
     // nsISystemInfo can be initialized only on the main thread.
@@ -81,14 +80,18 @@ IdleSchedulerParent::~IdleSchedulerParent() {
 
   if (isInList()) {
     remove();
-    if (sDefault.isEmpty() && sWaitingForIdle.isEmpty() && sIdle.isEmpty()) {
-      delete sActiveChildCounter;
-      sActiveChildCounter = nullptr;
+  }
 
-      if (sStarvationPreventer) {
-        sStarvationPreventer->Cancel();
-        NS_RELEASE(sStarvationPreventer);
-      }
+  MOZ_ASSERT(sChildProcessesAlive > 0);
+  sChildProcessesAlive--;
+  if (sChildProcessesAlive == 0) {
+    MOZ_ASSERT(sWaitingForIdle.isEmpty());
+    delete sActiveChildCounter;
+    sActiveChildCounter = nullptr;
+
+    if (sStarvationPreventer) {
+      sStarvationPreventer->Cancel();
+      NS_RELEASE(sStarvationPreventer);
     }
   }
 
@@ -97,6 +100,13 @@ IdleSchedulerParent::~IdleSchedulerParent() {
 
 IPCResult IdleSchedulerParent::RecvInitForIdleUse(
     InitForIdleUseResolver&& aResolve) {
+  // This must already be non-zero, if it is zero then the cleanup code for the
+  // shared memory (initialised below) will never run.  The invariant is that if
+  // the shared memory is initialsed, then this is non-zero.
+  MOZ_ASSERT(sChildProcessesAlive > 0);
+
+  MOZ_ASSERT(IsNotDoingIdleTask());
+
   // Create a shared memory object which is shared across all the relevant
   // processes.
   if (!sActiveChildCounter) {
@@ -142,10 +152,12 @@ IPCResult IdleSchedulerParent::RecvInitForIdleUse(
 
 IPCResult IdleSchedulerParent::RecvRequestIdleTime(uint64_t aId,
                                                    TimeDuration aBudget) {
+  MOZ_ASSERT(aBudget);
+  MOZ_ASSERT(IsNotDoingIdleTask());
+
   mCurrentRequestId = aId;
   mRequestedIdleBudget = aBudget;
 
-  remove();
   sWaitingForIdle.insertBack(this);
 
   Schedule(this);
@@ -153,10 +165,16 @@ IPCResult IdleSchedulerParent::RecvRequestIdleTime(uint64_t aId,
 }
 
 IPCResult IdleSchedulerParent::RecvIdleTimeUsed(uint64_t aId) {
+  // The client can either signal that they've used the idle time or they're
+  // canceling the request.  We cannot use a seperate cancel message because it
+  // could arrive after the parent has granted the request.
+  MOZ_ASSERT(IsWaitingForIdle() || IsDoingIdleTask());
+
   if (mCurrentRequestId == aId) {
-    // Ensure the object is back in the default queue.
-    remove();
-    sDefault.insertBack(this);
+    if (IsWaitingForIdle()) {
+      remove();
+    }
+    mRequestedIdleBudget = TimeDuration();
   }
   Schedule(nullptr);
   return IPC_OK();
@@ -222,13 +240,17 @@ void IdleSchedulerParent::Schedule(IdleSchedulerParent* aRequester) {
   // run itself.
   RefPtr<IdleSchedulerParent> idleRequester;
   if (aRequester && aRequester->mRunningPrioritizedOperation) {
-    aRequester->remove();
+    if (aRequester->isInList()) {
+      aRequester->remove();
+    }
     idleRequester = aRequester;
   } else {
     idleRequester = sWaitingForIdle.popFirst();
   }
 
-  sIdle.insertBack(idleRequester);
+  // We would assert that IsWaiting() except after removing the task from it's
+  // list this will return false.  Instead check IsDoingIdleTask()
+  MOZ_ASSERT(idleRequester->IsDoingIdleTask());
   Unused << idleRequester->SendIdleTime(idleRequester->mCurrentRequestId,
                                         idleRequester->mRequestedIdleBudget);
 }
