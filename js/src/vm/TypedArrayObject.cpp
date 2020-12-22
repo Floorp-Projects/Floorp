@@ -947,8 +947,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static bool setElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                          uint64_t index, HandleValue v, ObjectOpResult& result);
-  static bool defineElement(JSContext* cx, HandleObject obj, uint64_t index,
-                            HandleValue v, ObjectOpResult& result);
+  static bool defineElement(JSContext* cx, Handle<TypedArrayObject*> obj,
+                            uint64_t index, HandleValue v,
+                            ObjectOpResult& result);
 };
 
 template <typename NativeType>
@@ -1040,7 +1041,7 @@ template <typename NativeType>
 // [[DefineOwnProperty]]
 template <typename NativeType>
 /* static */ bool TypedArrayObjectTemplate<NativeType>::defineElement(
-    JSContext* cx, HandleObject obj, uint64_t index, HandleValue v,
+    JSContext* cx, Handle<TypedArrayObject*> obj, uint64_t index, HandleValue v,
     ObjectOpResult& result) {
   // Steps 1-2 are enforced by the caller.
 
@@ -1051,15 +1052,14 @@ template <typename NativeType>
   }
 
   // Step 8.
-  if (obj->as<TypedArrayObject>().hasDetachedBuffer()) {
+  if (obj->hasDetachedBuffer()) {
     return result.fail(JSMSG_TYPED_ARRAY_DETACHED);
   }
 
   // Steps 9-12 are enforced by the caller.
 
   // Steps 7, 13-16.
-  TypedArrayObjectTemplate<NativeType>::setIndex(obj->as<TypedArrayObject>(),
-                                                 index, nativeValue);
+  TypedArrayObjectTemplate<NativeType>::setIndex(*obj, index, nativeValue);
 
   // Step 17.
   return result.succeed();
@@ -2473,20 +2473,18 @@ bool js::SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
 }
 
 /* ES6 draft rev 34 (2015 Feb 20) 9.4.5.3 [[DefineOwnProperty]] step 3.c. */
-bool js::DefineTypedArrayElement(JSContext* cx, HandleObject obj,
+bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                                  uint64_t index,
                                  Handle<PropertyDescriptor> desc,
                                  ObjectOpResult& result) {
-  MOZ_ASSERT(obj->is<TypedArrayObject>());
-
   // These are all substeps of 3.b.
 
   // Steps i-iii are handled by the caller.
 
   // Steps iv-v.
   // We (wrongly) ignore out of range defines with a value.
-  if (index >= obj->as<TypedArrayObject>().length().get()) {
-    if (obj->as<TypedArrayObject>().hasDetachedBuffer()) {
+  if (index >= obj->length().get()) {
+    if (obj->hasDetachedBuffer()) {
       return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
     }
     return result.failSoft(JSMSG_BAD_INDEX);
@@ -2514,8 +2512,7 @@ bool js::DefineTypedArrayElement(JSContext* cx, HandleObject obj,
 
   // Step x.
   if (desc.hasValue()) {
-    TypedArrayObject* tobj = &obj->as<TypedArrayObject>();
-    switch (tobj->type()) {
+    switch (obj->type()) {
 #define DEFINE_TYPED_ARRAY_ELEMENT(T, N)                              \
   case Scalar::N:                                                     \
     return TypedArrayObjectTemplate<T>::defineElement(cx, obj, index, \

@@ -1562,12 +1562,13 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     }
   } else if (obj->is<TypedArrayObject>()) {
     // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
+    Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
     mozilla::Maybe<uint64_t> index;
     JS_TRY_VAR_OR_RETURN_FALSE(cx, index, IsTypedArrayIndex(cx, id));
 
     if (index) {
       MOZ_ASSERT(!cx->isHelperThreadContext());
-      return DefineTypedArrayElement(cx, obj, index.value(), desc_, result);
+      return DefineTypedArrayElement(cx, tobj, index.value(), desc_, result);
     }
   } else if (obj->is<ArgumentsObject>()) {
     Rooted<ArgumentsObject*> argsobj(cx, &obj->as<ArgumentsObject>());
