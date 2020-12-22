@@ -16,19 +16,19 @@
 == clip-path-polygon-012.html clip-path-stripes-001-ref.html
 fuzzy-if(skiaContent,0-1,0-20) fails-if(webrender&&!gtkWidget) == clip-path-polygon-013.html clip-path-stripes-003-ref.html
 
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-001.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-002.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-003.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-004.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-005.html clip-path-circle-002-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-006.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-007.html clip-path-circle-002-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-008.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-001.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-002.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-003.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-004.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-005.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-006.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-007.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-008.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,35-70,699-800) == clip-path-circle-009.html clip-path-circle-003-ref.html
 fuzzy-if(webrender,35-70,699-800) == clip-path-circle-010.html clip-path-circle-004-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-011.html clip-path-circle-005-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-011.html clip-path-circle-005-ref.html
 fuzzy-if(webrender,35-70,699-800) == clip-path-circle-012.html clip-path-circle-006-ref.html
-fuzzy-if(webrender,35-70,699-750) == clip-path-circle-013.html clip-path-circle-002-ref.html
+fuzzy-if(webrender,35-70,699-800) == clip-path-circle-013.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,34-70,699-885) == clip-path-circle-014.html clip-path-circle-007-ref.html
 fuzzy-if(webrender,34-70,699-905) == clip-path-circle-015.html clip-path-circle-008-ref.html
 fuzzy-if(webrender,34-70,699-840) == clip-path-circle-016.html clip-path-circle-009-ref.html
