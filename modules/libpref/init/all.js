@@ -4593,7 +4593,11 @@ pref("marionette.contentListener", false);
 #if defined(ENABLE_REMOTE_AGENT)
   // Indicates whether the remote agent is enabled.
   // If it is false, the remote agent will not be loaded.
-  pref("remote.enabled", true);
+  #if defined(NIGHTLY_BUILD)
+    pref("remote.enabled", true);
+  #else
+    pref("remote.enabled", false);
+  #endif
 
   // Limits remote agent to listen on loopback devices,
   // e.g. 127.0.0.1, localhost, and ::1.
