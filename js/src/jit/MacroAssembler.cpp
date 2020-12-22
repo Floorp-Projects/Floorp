@@ -1181,8 +1181,7 @@ void MacroAssembler::loadBigInt64(Register bigInt, Register64 dest) {
 
   Label done, nonZero;
 
-  branch32(Assembler::NotEqual, Address(bigInt, BigInt::offsetOfLength()),
-           Imm32(0), &nonZero);
+  branchIfBigIntIsNonZero(bigInt, &nonZero);
   {
     move64(Imm64(0), dest);
     jump(&done);
@@ -1229,8 +1228,7 @@ void MacroAssembler::loadBigInt64(Register bigInt, Register64 dest) {
 void MacroAssembler::loadFirstBigIntDigitOrZero(Register bigInt,
                                                 Register dest) {
   Label done, nonZero;
-  branch32(Assembler::NotEqual, Address(bigInt, BigInt::offsetOfLength()),
-           Imm32(0), &nonZero);
+  branchIfBigIntIsNonZero(bigInt, &nonZero);
   {
     movePtr(ImmWord(0), dest);
     jump(&done);
