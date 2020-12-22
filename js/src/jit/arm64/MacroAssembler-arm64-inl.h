@@ -1211,6 +1211,12 @@ void MacroAssembler::branchAddPtr(Condition cond, Register src, Register dest,
   B(label, cond);
 }
 
+void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
+                                  Label* label) {
+  subs64(src, dest);
+  B(label, cond);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   Subs(ARMRegister(lhs, 64), ARMRegister(lhs, 64), Operand(rhs.value));
