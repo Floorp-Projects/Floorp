@@ -116,19 +116,22 @@ function generateMediaControlKeyEvent(event) {
  *         Resolve when the media has been starting playing and the main
  *         controller has been updated.
  */
-function playMedia(tab, elementId) {
-  const playPromise = SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [elementId],
-    Id => {
-      const video = content.document.getElementById(Id);
-      if (!video) {
-        ok(false, `can't get the media element!`);
-      }
-      return video.play();
+async function playMedia(tab, elementId) {
+  const playbackStatePromise = waitUntilDisplayedPlaybackChanged();
+  await SpecialPowers.spawn(tab.linkedBrowser, [elementId], async Id => {
+    const video = content.document.getElementById(Id);
+    if (!video) {
+      ok(false, `can't get the media element!`);
     }
-  );
-  return Promise.all([playPromise, waitUntilDisplayedPlaybackChanged()]);
+    ok(
+      await video.play().then(
+        _ => true,
+        _ => false
+      ),
+      "video started playing"
+    );
+  });
+  return playbackStatePromise;
 }
 
 /**
