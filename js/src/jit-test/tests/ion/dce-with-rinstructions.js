@@ -1455,6 +1455,15 @@ function rbigintdec(i) {
     return i;
 }
 
+let uceFault_neg_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_neg_bigint'));
+function rbigintneg(i) {
+    var x = -i;
+    if (uceFault_neg_bigint(i) || uceFault_neg_bigint(i))
+        assertEq(x, -99n);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1598,6 +1607,7 @@ for (j = 100 - max; j < 100; j++) {
     rbigintmul(BigInt(i));
     rbigintinc(BigInt(i));
     rbigintdec(BigInt(i));
+    rbigintneg(BigInt(i));
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

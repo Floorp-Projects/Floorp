@@ -1369,6 +1369,39 @@ void MacroAssembler::initializeBigInt(Register bigInt, Register val) {
   bind(&done);
 }
 
+void MacroAssembler::copyBigIntWithInlineDigits(Register src, Register dest,
+                                                Register temp, Label* fail,
+                                                bool attemptNursery) {
+  branch32(Assembler::Above, Address(src, BigInt::offsetOfLength()),
+           Imm32(int32_t(BigInt::inlineDigitsLength())), fail);
+
+  newGCBigInt(dest, temp, fail, attemptNursery);
+
+  // Copy the sign-bit, but not any of the other bits used by the GC.
+  load32(Address(src, BigInt::offsetOfFlags()), temp);
+  and32(Imm32(BigInt::signBitMask()), temp);
+  store32(temp, Address(dest, BigInt::offsetOfFlags()));
+
+  // Copy the length.
+  load32(Address(src, BigInt::offsetOfLength()), temp);
+  store32(temp, Address(dest, BigInt::offsetOfLength()));
+
+  // Copy the digits.
+  Address srcDigits(src, js::BigInt::offsetOfInlineDigits());
+  Address destDigits(dest, js::BigInt::offsetOfInlineDigits());
+
+  for (size_t i = 0; i < BigInt::inlineDigitsLength(); i++) {
+    static_assert(sizeof(BigInt::Digit) == sizeof(uintptr_t),
+                  "BigInt Digit size matches uintptr_t");
+
+    loadPtr(srcDigits, temp);
+    storePtr(temp, destDigits);
+
+    srcDigits = Address(src, srcDigits.offset + sizeof(BigInt::Digit));
+    destDigits = Address(dest, destDigits.offset + sizeof(BigInt::Digit));
+  }
+}
+
 void MacroAssembler::compareBigIntAndInt32(JSOp op, Register bigInt,
                                            Register int32, Register scratch1,
                                            Register scratch2, Label* ifTrue,
