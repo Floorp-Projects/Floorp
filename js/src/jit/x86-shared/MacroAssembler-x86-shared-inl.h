@@ -65,6 +65,10 @@ void MacroAssembler::xor32(Register src, Register dest) { xorl(src, dest); }
 
 void MacroAssembler::xor32(Imm32 imm, Register dest) { xorl(imm, dest); }
 
+void MacroAssembler::xor32(Imm32 imm, const Address& dest) {
+  xorl(imm, Operand(dest));
+}
+
 void MacroAssembler::xor32(const Address& src, Register dest) {
   xorl(Operand(src), dest);
 }
