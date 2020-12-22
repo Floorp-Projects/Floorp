@@ -281,7 +281,7 @@ static inline uint8_t GetPropertyAttributes(JSObject* obj,
     return obj->as<NativeObject>().getElementsHeader()->elementAttributes();
   }
   if (prop.isTypedArrayElement()) {
-    return JSPROP_ENUMERATE | JSPROP_PERMANENT;
+    return JSPROP_ENUMERATE;
   }
 
   return prop.shape()->attributes();

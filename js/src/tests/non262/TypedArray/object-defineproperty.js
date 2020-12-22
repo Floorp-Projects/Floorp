@@ -42,7 +42,7 @@ Object.defineProperty(obj, 0, {value: 18});
 assertEq(obj[0], 18);
 
 var desc = Object.getOwnPropertyDescriptor(obj, 0);
-assertEq(desc.configurable, false);
+assertEq(desc.configurable, true);
 assertEq(desc.enumerable, true);
 assertEq(desc.writable, true);
 assertEq(desc.value, 18);

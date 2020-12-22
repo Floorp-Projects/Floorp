@@ -8,24 +8,25 @@ var array = new Int32Array(0);
 Object.preventExtensions(array);
 assertEq(Object.isSealed(array), true);
 
+// Non-empty typed arrays can never be sealed, because the elements stay configurable.
 array = new Int32Array(1);
 array.b = "test";
 Object.preventExtensions(array);
 assertEq(Object.isSealed(array), false);
 Object.defineProperty(array, "b", {configurable: false});
-assertEq(Object.isSealed(array), true);
+assertEq(Object.isSealed(array), false);
 
 array = new Int32Array(2);
 array.b = "test";
 Object.seal(array);
-assertEq(Object.isSealed(array), true);
+assertEq(Object.isSealed(array), false);
 assertThrowsInstanceOf(() => array.c = 15, TypeError);
 
 // Freeze
 assertEq(Object.isFrozen(new Int32Array(2)), false);
 assertEq(Object.isFrozen(new Int32Array(0)), false);
 
-// Empty non-extensible typed-array is trvially frozen
+// Empty non-extensible typed-array is trivially frozen
 var array = new Int32Array(0);
 Object.preventExtensions(array);
 assertEq(Object.isFrozen(array), true);
