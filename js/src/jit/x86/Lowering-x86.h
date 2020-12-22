@@ -57,6 +57,9 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared {
   void lowerUDivI64(MDiv* div);
   void lowerUModI64(MMod* mod);
 
+  void lowerBigIntDiv(MBigIntDiv* ins);
+  void lowerBigIntMod(MBigIntMod* ins);
+
   void lowerPhi(MPhi* phi);
 
  public:

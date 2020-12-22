@@ -40,6 +40,11 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared {
                ifFalse);
   }
 
+  void emitBigIntDiv(LBigIntDiv* ins, Register dividend, Register divisor,
+                     Register output, Label* fail);
+  void emitBigIntMod(LBigIntMod* ins, Register dividend, Register divisor,
+                     Register output, Label* fail);
+
   template <typename T>
   void emitWasmLoadI64(T* ins);
   template <typename T>

@@ -74,6 +74,20 @@ void LIRGeneratorMIPS64::lowerUModI64(MMod* mod) {
   defineInt64(lir, mod);
 }
 
+void LIRGeneratorMIPS64::lowerBigIntDiv(MBigIntDiv* ins) {
+  auto* lir = new (alloc()) LBigIntDiv(useRegister(ins->lhs()),
+                                       useRegister(ins->rhs()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGeneratorMIPS64::lowerBigIntMod(MBigIntMod* ins) {
+  auto* lir = new (alloc()) LBigIntMod(useRegister(ins->lhs()),
+                                       useRegister(ins->rhs()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitBox(MBox* box) {
   MDefinition* opd = box->getOperand(0);
 

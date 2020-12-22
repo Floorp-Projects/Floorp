@@ -647,6 +647,20 @@ void LIRGeneratorX86::lowerUModI64(MMod* mod) {
   MOZ_CRASH("We use MWasmBuiltinModI64 instead.");
 }
 
+void LIRGeneratorX86::lowerBigIntDiv(MBigIntDiv* ins) {
+  auto* lir = new (alloc()) LBigIntDiv(
+      useRegister(ins->lhs()), useRegister(ins->rhs()), tempFixed(eax), temp());
+  defineFixed(lir, ins, LAllocation(AnyRegister(edx)));
+  assignSafepoint(lir, ins);
+}
+
+void LIRGeneratorX86::lowerBigIntMod(MBigIntMod* ins) {
+  auto* lir = new (alloc()) LBigIntMod(
+      useRegister(ins->lhs()), useRegister(ins->rhs()), tempFixed(eax), temp());
+  defineFixed(lir, ins, LAllocation(AnyRegister(edx)));
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitSubstr(MSubstr* ins) {
   // Due to lack of registers on x86, we reuse the string register as
   // temporary. As a result we only need two temporary registers and take a
