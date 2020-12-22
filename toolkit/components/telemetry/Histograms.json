@@ -10044,19 +10044,19 @@
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["jolin@mozilla.com", "bvandyk@mozilla.com"],
-    "expires_in_version": "85",
+    "expires_in_version": "92",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a HLS media type.",
-    "bug_numbers": [1628048]
+    "bug_numbers": [1628048, 1672573]
   },
   "MEDIA_HLS_CANPLAY_SUPPORTED": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["jolin@mozilla.com", "bvandyk@mozilla.com"],
-    "expires_in_version": "85",
+    "expires_in_version": "92",
     "kind": "boolean",
     "description": "Reports a true value when a canPlayType request supports HLS.",
-    "bug_numbers": [1628048]
+    "bug_numbers": [1628048, 1672573]
   },
   "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS": {
     "record_in_processes": ["main", "content"],
