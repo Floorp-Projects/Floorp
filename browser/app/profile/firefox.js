@@ -820,9 +820,6 @@ pref("browser.preferences.exposeHTTPSOnly", true);
 
 pref("browser.proton.enabled", false);
 
-pref("browser.download.show_plugins_in_list", true);
-pref("browser.download.hide_plugins_without_extensions", true);
-
 // Backspace and Shift+Backspace behavior
 // 0 goes Back/Forward
 // 1 act like PgUp/PgDown
