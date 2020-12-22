@@ -45,7 +45,7 @@ function defineProp() {
             return 1;
         }
     };
-    var desc = {value, writable: true, enumerable: true, configurable: false};
+    var desc = {value, writable: true, enumerable: true, configurable: true};
 
     var N = 100;
     var ta = new Int32Array(0);

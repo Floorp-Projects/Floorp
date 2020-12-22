@@ -22,8 +22,8 @@ for (constructor of constructors) {
   assertEq(Object.isSealed(a), false);
   assertEq(Object.isFrozen(a), false);
 
-  // Should not throw.
-  Object.seal(a);
+  // Should complain that it can't change attributes of indexed typed array properties.
+  assertThrowsInstanceOf(() => Object.seal(a), TypeError);
 
   // Should complain that it can't change attributes of indexed typed array properties.
   assertThrowsInstanceOf(() => Object.freeze(a), TypeError);
@@ -75,7 +75,7 @@ for (constructor of constructors) {
   assertEq(a[5], 3);
 
   // Don't define new properties.
-  Object.defineProperty(a, 20, {value: 3});
+  assertThrowsInstanceOf(() => Object.defineProperty(a, 20, {value: 3}), TypeError);
   assertEq(a[20], undefined);
 
   // Don't delete indexed properties.
