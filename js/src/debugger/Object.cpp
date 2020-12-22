@@ -2288,8 +2288,7 @@ Result<Completion> DebuggerObject::setProperty(JSContext* cx,
   ObjectOpResult opResult;
   bool ok = SetProperty(cx, referent, id, value, receiver, opResult);
 
-  return Completion::fromJSResult(cx, ok,
-                                  BooleanValue(ok && opResult.reallyOk()));
+  return Completion::fromJSResult(cx, ok, BooleanValue(ok && opResult.ok()));
 }
 
 /* static */
