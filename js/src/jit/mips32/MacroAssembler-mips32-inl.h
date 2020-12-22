@@ -82,6 +82,8 @@ void MacroAssembler::load32SignExtendToPtr(const Address& src, Register dest) {
 // ===============================================================
 // Logical instructions
 
+void MacroAssembler::notPtr(Register reg) { ma_not(reg, reg); }
+
 void MacroAssembler::andPtr(Register src, Register dest) { ma_and(dest, src); }
 
 void MacroAssembler::andPtr(Imm32 imm, Register dest) { ma_and(dest, imm); }
