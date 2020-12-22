@@ -100,8 +100,7 @@ IdleSchedulerParent::~IdleSchedulerParent() {
 IPCResult IdleSchedulerParent::RecvInitForIdleUse(
     InitForIdleUseResolver&& aResolve) {
   // Create a shared memory object which is shared across all the relevant
-  // processes. Only first 4 bytes of the allocated are used currently to
-  // count activity state of child processes
+  // processes.
   if (!sActiveChildCounter) {
     sActiveChildCounter = new base::SharedMemory();
     size_t shmemSize = NS_IDLE_SCHEDULER_COUNTER_ARRAY_LENGHT * sizeof(int32_t);
@@ -221,7 +220,7 @@ void IdleSchedulerParent::Schedule(IdleSchedulerParent* aRequester) {
     }
   }
 
-  // We can run run an idle task. If the requester is prioritized, just let it
+  // We can run an idle task. If the requester is prioritized, just let it
   // run itself.
   RefPtr<IdleSchedulerParent> idleRequester;
   if (aRequester && aRequester->mRunningPrioritizedOperation) {
