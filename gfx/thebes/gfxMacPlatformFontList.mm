@@ -979,6 +979,8 @@ nsresult gfxMacPlatformFontList::InitFontListForPlatform() {
 }
 
 void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
+  nsAutoreleasePool localPool;
+
   InitSystemFontNames();
   if (XRE_IsParentProcess()) {
     CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
