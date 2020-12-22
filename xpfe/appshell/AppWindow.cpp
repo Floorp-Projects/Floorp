@@ -66,6 +66,7 @@
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/EventDispatcher.h"
 
 #ifdef XP_WIN
@@ -1900,6 +1901,8 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
       return NS_ERROR_FAILURE;
     }
   }
+
+  settings.rtlEnabled = intl::LocaleService::GetInstance()->IsAppLocaleRTL();
 
   PersistPreXULSkeletonUIValues(settings);
 #endif

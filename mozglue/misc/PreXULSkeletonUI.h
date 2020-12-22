@@ -43,6 +43,7 @@ struct SkeletonUISettings {
   Vector<CSSPixelSpan> springs;
   bool maximized;
   bool menubarShown;
+  bool rtlEnabled;
 };
 
 enum class ThemeMode : uint32_t { Invalid, Default, Dark, Light };
