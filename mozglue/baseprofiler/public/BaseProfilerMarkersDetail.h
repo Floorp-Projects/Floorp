@@ -277,7 +277,8 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
     // separately.
     // TODO use a local on-stack byte buffer to remove last allocation.
     // TODO reduce internal profiler stack levels, see bug 1659872.
-    ProfileBufferChunkManagerSingle chunkManager(64 * 1024);
+    ProfileBufferChunkManagerSingle chunkManager(
+        ProfileBufferChunkManager::scExpectedMaximumStackSize);
     ProfileChunkedBuffer chunkedBuffer(
         ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
     aOptions.StackRef().UseRequestedBacktrace(
