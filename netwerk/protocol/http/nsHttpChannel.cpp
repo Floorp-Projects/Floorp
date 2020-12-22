@@ -1019,6 +1019,11 @@ void nsHttpChannel::ReleaseListeners() {
   HttpBaseChannel::ReleaseListeners();
   mChannelClassifier = nullptr;
   mWarningReporter = nullptr;
+
+  for (StreamFilterRequest& request : mStreamFilterRequests) {
+    request.mPromise->Reject(false, __func__);
+  }
+  mStreamFilterRequests.Clear();
 }
 
 void nsHttpChannel::DoAsyncAbort(nsresult aStatus) {
