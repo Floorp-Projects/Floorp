@@ -257,7 +257,6 @@ class WindowSurfaceWayland : public WindowSurface {
   // Avoid any rendering artifacts for significant performance penality.
   bool mSmoothRendering;
 
-  bool mIsMainThread;
   gint mSurfaceReadyTimerID;
   mozilla::Mutex mSurfaceLock;
 };
