@@ -16,8 +16,6 @@
 #include "nsClipboard.h"
 #include "nsWaylandDisplay.h"
 
-struct FastTrackClipboard;
-
 class DataOffer {
  public:
   void AddMIMEType(const char* aMimeType);
@@ -134,9 +132,6 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
 
   void ClearDragAndDropDataOffer();
 
-  void TransferFastTrackClipboard(int aClipboardRequestNumber,
-                                  GtkSelectionData* aSelectionData);
-
   virtual ~nsRetrievalContextWayland() override;
 
  private:
@@ -149,7 +144,6 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
   mozilla::UniquePtr<DataOffer> mPrimaryOffer;
   RefPtr<nsWaylandDragContext> mDragContext;
 
-  int mClipboardRequestNumber;
   char* mClipboardData;
   uint32_t mClipboardDataLength;
 

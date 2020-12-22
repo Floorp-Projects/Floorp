@@ -749,7 +749,6 @@ nsRetrievalContextWayland::nsRetrievalContextWayland(void)
       mClipboardOffer(nullptr),
       mPrimaryOffer(nullptr),
       mDragContext(nullptr),
-      mClipboardRequestNumber(0),
       mClipboardData(nullptr),
       mClipboardDataLength(0) {
   wl_data_device* dataDevice = wl_data_device_manager_get_data_device(
@@ -807,42 +806,6 @@ GdkAtom* nsRetrievalContextWayland::GetTargets(int32_t aWhichClipboard,
   return nullptr;
 }
 
-struct FastTrackClipboard {
-  FastTrackClipboard(int aClipboardRequestNumber,
-                     nsRetrievalContextWayland* aRetrievalContex)
-      : mClipboardRequestNumber(aClipboardRequestNumber),
-        mRetrievalContex(aRetrievalContex) {}
-
-  int mClipboardRequestNumber;
-  nsRetrievalContextWayland* mRetrievalContex;
-};
-
-static void wayland_clipboard_contents_received(
-    GtkClipboard* clipboard, GtkSelectionData* selection_data, gpointer data) {
-  LOGCLIP(("wayland_clipboard_contents_received() callback\n"));
-  FastTrackClipboard* fastTrack = static_cast<FastTrackClipboard*>(data);
-  fastTrack->mRetrievalContex->TransferFastTrackClipboard(
-      fastTrack->mClipboardRequestNumber, selection_data);
-  delete fastTrack;
-}
-
-void nsRetrievalContextWayland::TransferFastTrackClipboard(
-    int aClipboardRequestNumber, GtkSelectionData* aSelectionData) {
-  if (mClipboardRequestNumber == aClipboardRequestNumber) {
-    int dataLength = gtk_selection_data_get_length(aSelectionData);
-    if (dataLength > 0) {
-      mClipboardDataLength = dataLength;
-      mClipboardData = reinterpret_cast<char*>(
-          g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
-      memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),
-             sizeof(char) * mClipboardDataLength);
-      mClipboardData[mClipboardDataLength] = '\0';
-    }
-  } else {
-    NS_WARNING("Received obsoleted clipboard data!");
-  }
-}
-
 const char* nsRetrievalContextWayland::GetClipboardData(
     const char* aMimeType, int32_t aWhichClipboard, uint32_t* aContentLength) {
   NS_ASSERTION(mClipboardData == nullptr && mClipboardDataLength == 0,
@@ -851,33 +814,20 @@ const char* nsRetrievalContextWayland::GetClipboardData(
   LOGCLIP(("nsRetrievalContextWayland::GetClipboardData [%p] mime %s\n", this,
            aMimeType));
 
-  /* If actual clipboard data is owned by us we don't need to go
-   * through Wayland but we ask Gtk+ to directly call data
-   * getter callback nsClipboard::SelectionGetEvent().
-   * see gtk_selection_convert() at gtk+/gtkselection.c.
-   */
-  GdkAtom selection = GetSelectionAtom(aWhichClipboard);
-  if (gdk_selection_owner_get(selection)) {
-    LOGCLIP(("  Internal clipboard content\n"));
-    mClipboardRequestNumber++;
-    gtk_clipboard_request_contents(
-        gtk_clipboard_get(selection), gdk_atom_intern(aMimeType, FALSE),
-        wayland_clipboard_contents_received,
-        new FastTrackClipboard(mClipboardRequestNumber, this));
-  } else {
-    LOGCLIP(("  Remote clipboard content\n"));
-    const auto& dataOffer =
-        (selection == GDK_SELECTION_PRIMARY) ? mPrimaryOffer : mClipboardOffer;
-    if (!dataOffer) {
-      // Something went wrong. We're requested to provide clipboard data
-      // but we haven't got any from wayland.
-      NS_WARNING("Requested data without valid DataOffer!");
-      mClipboardData = nullptr;
-      mClipboardDataLength = 0;
-    } else {
-      mClipboardData = dataOffer->GetData(mDisplay->GetDisplay(), aMimeType,
-                                          &mClipboardDataLength);
+  const auto& dataOffer =
+      (GetSelectionAtom(aWhichClipboard) == GDK_SELECTION_PRIMARY)
+          ? mPrimaryOffer
+          : mClipboardOffer;
+  if (!dataOffer) {
+    // Something went wrong. We're requested to provide clipboard data
+    // but we haven't got any from wayland.
+    NS_WARNING("Requested data without valid DataOffer!");
+    if (mClipboardData) {
+      ReleaseClipboardData(mClipboardData);
     }
+  } else {
+    mClipboardData = dataOffer->GetData(mDisplay->GetDisplay(), aMimeType,
+                                        &mClipboardDataLength);
   }
 
   *aContentLength = mClipboardDataLength;
@@ -908,8 +858,10 @@ void nsRetrievalContextWayland::ReleaseClipboardData(
 
   NS_ASSERTION(aClipboardData == mClipboardData,
                "Releasing unknown clipboard data!");
-  g_free((void*)aClipboardData);
 
-  mClipboardData = nullptr;
-  mClipboardDataLength = 0;
+  if (mClipboardData) {
+    g_free((void*)aClipboardData);
+    mClipboardData = nullptr;
+    mClipboardDataLength = 0;
+  }
 }
