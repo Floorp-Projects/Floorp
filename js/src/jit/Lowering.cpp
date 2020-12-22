@@ -999,6 +999,15 @@ void LIRGenerator::visitCompare(MCompare* comp) {
     return;
   }
 
+  // Compare BigInt with String.
+  if (comp->compareType() == MCompare::Compare_BigInt_String) {
+    auto* lir = new (alloc()) LCompareBigIntString(useRegisterAtStart(left),
+                                                   useRegisterAtStart(right));
+    defineReturn(lir, comp);
+    assignSafepoint(lir, comp);
+    return;
+  }
+
   // Unknown/unspecialized compare use a VM call.
   if (comp->compareType() == MCompare::Compare_Unknown) {
     LCompareVM* lir =
