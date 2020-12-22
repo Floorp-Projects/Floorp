@@ -276,8 +276,9 @@ class ServoWebDriverRefTestExecutor(RefTestExecutor):
                 self.protocol.session.timeouts.script = timeout
                 self.timeout = timeout
             except IOError:
-                self.logger.error("Lost webdriver connection")
-                return Stop
+                msg = "Lost webdriver connection"
+                self.logger.error(msg)
+                return ("INTERNAL-ERROR", msg)
 
         return ServoWebDriverRun(self.logger,
                                  self._screenshot,
