@@ -2124,7 +2124,7 @@
 
 - name: BigIntSubResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     lhs: BigIntId
