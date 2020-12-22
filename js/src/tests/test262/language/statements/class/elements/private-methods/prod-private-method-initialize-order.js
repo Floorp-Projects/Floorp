@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-methods) shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) -- requires shell-options
+// |reftest| shell-option(--enable-private-fields) shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/prod-private-method-initialize-order.case
 // - src/class-elements/private-methods/cls-decl.template

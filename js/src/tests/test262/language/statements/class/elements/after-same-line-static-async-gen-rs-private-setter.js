@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-private-methods) shell-option(--enable-private-fields) skip-if(!xulRuntime.shell) async -- requires shell-options
+// |reftest| shell-option(--enable-private-fields) shell-option(--enable-private-methods) skip-if(!xulRuntime.shell) async -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-private-setter.case
 // - src/class-elements/productions/cls-decl-after-same-line-static-async-gen.template

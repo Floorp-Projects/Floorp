@@ -16,7 +16,7 @@ info: |
         Return ? IntegerIndexedElementSet(O, numericIndex, value).
 
   ...
-includes: [testBigIntTypedArray.js, propertyHelper.js]
+includes: [testBigIntTypedArray.js]
 features: [align-detached-buffer-semantics-with-web-reality, BigInt, Reflect, TypedArray]
 ---*/
 testWithBigIntTypedArrayConstructors(function(TA) {
