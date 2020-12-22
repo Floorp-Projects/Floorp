@@ -8939,6 +8939,68 @@ void CodeGenerator::visitCompareBigIntInt32(LCompareBigIntInt32* lir) {
   masm.bind(&done);
 }
 
+void CodeGenerator::visitCompareBigIntDouble(LCompareBigIntDouble* lir) {
+  JSOp op = lir->mir()->jsop();
+  Register left = ToRegister(lir->left());
+  FloatRegister right = ToFloatRegister(lir->right());
+  Register temp = ToRegister(lir->temp());
+  Register output = ToRegister(lir->output());
+
+  masm.setupUnalignedABICall(temp);
+
+  // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  if (op == JSOp::Le || op == JSOp::Gt) {
+    masm.passABIArg(right, MoveOp::DOUBLE);
+    masm.passABIArg(left);
+  } else {
+    masm.passABIArg(left);
+    masm.passABIArg(right, MoveOp::DOUBLE);
+  }
+
+  using FnBigIntNumber = bool (*)(BigInt*, double);
+  using FnNumberBigInt = bool (*)(double, BigInt*);
+  switch (op) {
+    case JSOp::Eq: {
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::Equal>>();
+      break;
+    }
+    case JSOp::Ne: {
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberEqual<EqualityKind::NotEqual>>();
+      break;
+    }
+    case JSOp::Lt: {
+      masm.callWithABI<FnBigIntNumber,
+                       jit::BigIntNumberCompare<ComparisonKind::LessThan>>();
+      break;
+    }
+    case JSOp::Gt: {
+      masm.callWithABI<FnNumberBigInt,
+                       jit::NumberBigIntCompare<ComparisonKind::LessThan>>();
+      break;
+    }
+    case JSOp::Le: {
+      masm.callWithABI<
+          FnNumberBigInt,
+          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>>();
+      break;
+    }
+    case JSOp::Ge: {
+      masm.callWithABI<
+          FnBigIntNumber,
+          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>>();
+      break;
+    }
+    default:
+      MOZ_CRASH("unhandled op");
+  }
+
+  masm.storeCallBoolResult(output);
+}
+
 void CodeGenerator::visitCompareVM(LCompareVM* lir) {
   pushArg(ToValue(lir, LCompareVM::RhsInput));
   pushArg(ToValue(lir, LCompareVM::LhsInput));
