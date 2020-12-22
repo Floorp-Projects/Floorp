@@ -39,7 +39,7 @@ class ProfileBufferChunkManager {
   // Most ChunkManager sub-classes will require chunk sizes, this can serve as
   // a minimum recommendation to hold most backtraces.
   constexpr static ProfileBufferChunk::Length scExpectedMaximumStackSize =
-      64 * 1024;
+      128 * 1024;
 
   // Estimated maximum buffer size.
   [[nodiscard]] virtual size_t MaxTotalSize() const = 0;
