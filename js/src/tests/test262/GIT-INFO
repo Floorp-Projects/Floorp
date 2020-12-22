@@ -1,7 +1,8 @@
-commit 00014894735c3bee62bed234594abf387ea0c57b
-Author: Rick Waldron <waldron.rick@gmail.com>
-Date:   Wed Oct 21 20:14:28 2020 -0400
+commit 734c867ac332abe662b55530243949e7cdbd0de4
+Author: Tom Schuster <evilpies@gmail.com>
+Date:   Thu Dec 10 13:08:34 2020 +0100
 
-    Update test/built-ins/TypedArray/prototype/forEach/callbackfn-detachbuffer.js
+    Remove test code between license and front matter
     
-    Co-authored-by: Ross Kirsling <rkirsling@gmail.com>
+    The script that we use for updating SpiderMonkey's copy of test262 doesn't like this.
+    @rwaldron r?

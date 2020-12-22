@@ -17,9 +17,9 @@ info: |
   22.1.3.9 Array.prototype.findIndex ( predicate[ , thisArg ] )
 
     Repeat, while k < len,
-      Let Pk be ! ToString(𝔽(k)).
+      Let Pk be ! ToString(F(k)).
       Let kValue be ? Get(O, Pk).
-      Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+      Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, F(k), O »)).
     ...
 
   IntegerIndexedElementGet ( O, index )

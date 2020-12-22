@@ -35,7 +35,7 @@ testWithTypedArrayConstructors(function(TA) {
     true,
     "defineProperty's result"
   );
-  assert.sameValue(sample[0], 0, "side effect check");
+  assert.sameValue(sample[0], 42, "side effect check");
 });
 
 reportCompare(0, 0);

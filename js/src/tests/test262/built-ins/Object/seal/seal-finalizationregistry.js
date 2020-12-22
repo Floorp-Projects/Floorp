@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('FinalizationRegistry')) -- FinalizationRegistry is not enabled unconditionally
 // Copyright (C) 2020 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -30,7 +31,7 @@ info: |
           Let desc be the PropertyDescriptor { [[Configurable]]: false, [[Writable]]: false }.
         Perform ? DefinePropertyOrThrow(O, k, desc).
   Return true.
-
+features: [FinalizationRegistry]
 ---*/
 
 Object.seal(new FinalizationRegistry(() => {}));
