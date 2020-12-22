@@ -8873,6 +8873,212 @@ void CodeGenerator::visitBigIntBitXor(LBigIntBitXor* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitBigIntLsh(LBigIntLsh* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::lsh>(ins, ArgList(lhs, rhs),
+                                         StoreRegisterTo(output));
+
+  // 0n << x == 0n
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(lhs, &lhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&lhsNonZero);
+
+  // x << 0n == x
+  Label rhsNonZero;
+  masm.branchIfBigIntIsNonZero(rhs, &rhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&rhsNonZero);
+
+  // Inline |BigInt::lsh| for the case when |lhs| contains a single digit.
+
+  Label rhsTooLarge;
+  masm.loadBigIntAbsolute(rhs, temp2, &rhsTooLarge);
+
+  // Call into the VM when the left-hand side operand can't be loaded into a
+  // pointer-sized register.
+  masm.loadBigIntAbsolute(lhs, temp1, ool->entry());
+
+  // Handle shifts exceeding |BigInt::DigitBits| first.
+  Label shift, create;
+  masm.branchPtr(Assembler::Below, temp2, Imm32(BigInt::DigitBits), &shift);
+  {
+    masm.bind(&rhsTooLarge);
+
+    // x << DigitBits with x != 0n always exceeds pointer-sized storage.
+    masm.branchIfBigIntIsNonNegative(rhs, ool->entry());
+
+    // x << -DigitBits == x >> DigitBits, which is either 0n or -1n.
+    masm.move32(Imm32(0), temp1);
+    masm.branchIfBigIntIsNonNegative(lhs, &create);
+    masm.move32(Imm32(1), temp1);
+    masm.jump(&create);
+  }
+  masm.bind(&shift);
+
+  Label nonNegative;
+  masm.branchIfBigIntIsNonNegative(rhs, &nonNegative);
+  {
+    masm.movePtr(temp1, temp3);
+
+    // |x << -y| is computed as |x >> y|.
+    masm.rshiftPtr(temp2, temp1);
+
+    // For negative numbers, round down if any bit was shifted out.
+    masm.branchIfBigIntIsNonNegative(lhs, &create);
+
+    // Compute |mask = (static_cast<Digit>(1) << shift) - 1|.
+    masm.movePtr(ImmWord(-1), output);
+    masm.lshiftPtr(temp2, output);
+    masm.notPtr(output);
+
+    // Add plus one when |(lhs.digit(0) & mask) != 0|.
+    masm.branchTestPtr(Assembler::Zero, output, temp3, &create);
+    masm.addPtr(ImmWord(1), temp1);
+    masm.jump(&create);
+  }
+  masm.bind(&nonNegative);
+  {
+    masm.movePtr(temp2, temp3);
+
+    // Compute |grow = lhs.digit(0) >> (DigitBits - shift)|.
+    masm.negPtr(temp2);
+    masm.addPtr(Imm32(BigInt::DigitBits), temp2);
+    masm.movePtr(temp1, output);
+    masm.rshiftPtr(temp2, output);
+
+    // Call into the VM when any bit will be shifted out.
+    masm.branchTestPtr(Assembler::NonZero, output, output, ool->entry());
+
+    masm.movePtr(temp3, temp2);
+    masm.lshiftPtr(temp2, temp1);
+  }
+  masm.bind(&create);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigIntAbsolute(output, temp1);
+
+  // Set the sign bit when the left-hand side is negative.
+  masm.branchIfBigIntIsNonNegative(lhs, ool->rejoin());
+  masm.or32(Imm32(BigInt::signBitMask()),
+            Address(output, BigInt::offsetOfFlags()));
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitBigIntRsh(LBigIntRsh* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::rsh>(ins, ArgList(lhs, rhs),
+                                         StoreRegisterTo(output));
+
+  // 0n >> x == 0n
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(lhs, &lhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&lhsNonZero);
+
+  // x >> 0n == x
+  Label rhsNonZero;
+  masm.branchIfBigIntIsNonZero(rhs, &rhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&rhsNonZero);
+
+  // Inline |BigInt::rsh| for the case when |lhs| contains a single digit.
+
+  Label rhsTooLarge;
+  masm.loadBigIntAbsolute(rhs, temp2, &rhsTooLarge);
+
+  // Call into the VM when the left-hand side operand can't be loaded into a
+  // pointer-sized register.
+  masm.loadBigIntAbsolute(lhs, temp1, ool->entry());
+
+  // Handle shifts exceeding |BigInt::DigitBits| first.
+  Label shift, create;
+  masm.branchPtr(Assembler::Below, temp2, Imm32(BigInt::DigitBits), &shift);
+  {
+    masm.bind(&rhsTooLarge);
+
+    // x >> -DigitBits == x << DigitBits, which exceeds pointer-sized storage.
+    masm.branchIfBigIntIsNegative(rhs, ool->entry());
+
+    // x >> DigitBits is either 0n or -1n.
+    masm.move32(Imm32(0), temp1);
+    masm.branchIfBigIntIsNonNegative(lhs, &create);
+    masm.move32(Imm32(1), temp1);
+    masm.jump(&create);
+  }
+  masm.bind(&shift);
+
+  Label nonNegative;
+  masm.branchIfBigIntIsNonNegative(rhs, &nonNegative);
+  {
+    masm.movePtr(temp2, temp3);
+
+    // Compute |grow = lhs.digit(0) >> (DigitBits - shift)|.
+    masm.negPtr(temp2);
+    masm.addPtr(Imm32(BigInt::DigitBits), temp2);
+    masm.movePtr(temp1, output);
+    masm.rshiftPtr(temp2, output);
+
+    // Call into the VM when any bit will be shifted out.
+    masm.branchTestPtr(Assembler::NonZero, output, output, ool->entry());
+
+    // |x >> -y| is computed as |x << y|.
+    masm.movePtr(temp3, temp2);
+    masm.lshiftPtr(temp2, temp1);
+    masm.jump(&create);
+  }
+  masm.bind(&nonNegative);
+  {
+    masm.movePtr(temp1, temp3);
+
+    masm.rshiftPtr(temp2, temp1);
+
+    // For negative numbers, round down if any bit was shifted out.
+    masm.branchIfBigIntIsNonNegative(lhs, &create);
+
+    // Compute |mask = (static_cast<Digit>(1) << shift) - 1|.
+    masm.movePtr(ImmWord(-1), output);
+    masm.lshiftPtr(temp2, output);
+    masm.notPtr(output);
+
+    // Add plus one when |(lhs.digit(0) & mask) != 0|.
+    masm.branchTestPtr(Assembler::Zero, output, temp3, &create);
+    masm.addPtr(ImmWord(1), temp1);
+  }
+  masm.bind(&create);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigIntAbsolute(output, temp1);
+
+  // Set the sign bit when the left-hand side is negative.
+  masm.branchIfBigIntIsNonNegative(lhs, ool->rejoin());
+  masm.or32(Imm32(BigInt::signBitMask()),
+            Address(output, BigInt::offsetOfFlags()));
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitBigIntIncrement(LBigIntIncrement* ins) {
   Register input = ToRegister(ins->input());
   Register temp1 = ToRegister(ins->temp1());

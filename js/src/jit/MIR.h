@@ -6046,6 +6046,40 @@ class MBigIntBitXor : public MBigIntBinaryArithInstruction {
   ALLOW_CLONE(MBigIntBitXor)
 };
 
+class MBigIntLsh : public MBigIntBinaryArithInstruction {
+  MBigIntLsh(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    // See MBigIntAdd for why we don't guard this instruction.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntLsh)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntLsh)
+};
+
+class MBigIntRsh : public MBigIntBinaryArithInstruction {
+  MBigIntRsh(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    // See MBigIntAdd for why we don't guard this instruction.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntRsh)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntRsh)
+};
+
 class MBigIntUnaryArithInstruction : public MUnaryInstruction,
                                      public BigIntArithPolicy::Data {
  protected:
