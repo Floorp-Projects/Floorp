@@ -5914,6 +5914,45 @@ class MWasmBuiltinModI64 : public MAryInstruction<3>, public ArithPolicy::Data {
   ALLOW_CLONE(MWasmBuiltinModI64)
 };
 
+class MBigIntBinaryArithInstruction : public MBinaryInstruction,
+                                      public BigIntArithPolicy::Data {
+ protected:
+  MBigIntBinaryArithInstruction(Opcode op, MDefinition* left,
+                                MDefinition* right)
+      : MBinaryInstruction(op, left, right) {
+    setResultType(MIRType::BigInt);
+    setMovable();
+  }
+
+ public:
+  bool congruentTo(const MDefinition* ins) const override {
+    return binaryCongruentTo(ins);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+class MBigIntAdd : public MBigIntBinaryArithInstruction {
+  MBigIntAdd(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    setCommutative();
+
+    // Don't guard this instruction even though adding two BigInts can throw
+    // JSMSG_BIGINT_TOO_LARGE. This matches the behavior when adding too large
+    // strings in MConcat.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntAdd)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntAdd)
+};
+
 class MConcat : public MBinaryInstruction,
                 public MixPolicy<ConvertToStringPolicy<0>,
                                  ConvertToStringPolicy<1>>::Data {

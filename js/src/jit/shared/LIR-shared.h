@@ -2825,6 +2825,23 @@ class LWasmBuiltinModD : public LInstructionHelper<1, 3, 0> {
   MWasmBuiltinModD* mir() const { return mir_->toWasmBuiltinModD(); }
 };
 
+class LBigIntAdd : public LBinaryMath<2> {
+ public:
+  LIR_HEADER(BigIntAdd)
+
+  LBigIntAdd(const LAllocation& lhs, const LAllocation& rhs,
+             const LDefinition& temp1, const LDefinition& temp2)
+      : LBinaryMath(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
 // Adds two string, returning a string.
 class LConcat : public LInstructionHelper<1, 2, 5> {
  public:

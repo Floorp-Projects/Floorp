@@ -86,6 +86,14 @@ class ArithPolicy final : public TypePolicy {
                                  MInstruction* def) const override;
 };
 
+class BigIntArithPolicy final : public TypePolicy {
+ public:
+  constexpr BigIntArithPolicy() = default;
+  EMPTY_DATA_;
+  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
+                                 MInstruction* def) const override;
+};
+
 class AllDoublePolicy final : public TypePolicy {
  public:
   constexpr AllDoublePolicy() = default;
