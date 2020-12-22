@@ -12,7 +12,6 @@ use std::cmp::min;
 use std::collections::VecDeque;
 use std::convert::TryFrom;
 use std::ops::{Index, IndexMut};
-use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use neqo_common::{qdebug, qinfo, qtrace, qwarn};
@@ -137,7 +136,7 @@ pub struct SentPacket {
     pub pn: PacketNumber,
     ack_eliciting: bool,
     pub time_sent: Instant,
-    pub tokens: Rc<Vec<RecoveryToken>>,
+    pub tokens: Vec<RecoveryToken>,
 
     time_declared_lost: Option<Instant>,
     /// After a PTO, this is true when the packet has been released.
@@ -152,7 +151,7 @@ impl SentPacket {
         pn: PacketNumber,
         time_sent: Instant,
         ack_eliciting: bool,
-        tokens: Rc<Vec<RecoveryToken>>,
+        tokens: Vec<RecoveryToken>,
         size: usize,
     ) -> Self {
         Self {
@@ -200,11 +199,8 @@ impl SentPacket {
     /// Ask whether this tracked packet has been declared lost for long enough
     /// that it can be expired and no longer tracked.
     pub fn expired(&self, now: Instant, expiration_period: Duration) -> bool {
-        if let Some(loss_time) = self.time_declared_lost {
-            (loss_time + expiration_period) <= now
-        } else {
-            false
-        }
+        self.time_declared_lost
+            .map_or(false, |loss_time| (loss_time + expiration_period) <= now)
     }
 
     /// Whether the packet contents were cleared out after a PTO.

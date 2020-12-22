@@ -570,7 +570,7 @@ pub enum StreamerState {
 /// [`Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
 pub struct QlogStreamer {
     start_time: std::time::Instant,
-    writer: Box<dyn std::io::Write + Send>,
+    writer: Box<dyn std::io::Write + Send + Sync>,
     qlog: Qlog,
     state: StreamerState,
     first_event: bool,
@@ -589,7 +589,7 @@ impl QlogStreamer {
     pub fn new(
         qlog_version: String, title: Option<String>, description: Option<String>,
         summary: Option<String>, start_time: std::time::Instant, trace: Trace,
-        writer: Box<dyn std::io::Write + Send>,
+        writer: Box<dyn std::io::Write + Send + Sync>,
     ) -> Self {
         let qlog = Qlog {
             qlog_version,
@@ -673,7 +673,11 @@ impl QlogStreamer {
             return Err(Error::InvalidState);
         }
 
-        let event_time = self.start_time.elapsed();
+        let event_time = if cfg!(test) {
+            std::time::Duration::from_secs(0)
+        } else {
+            self.start_time.elapsed()
+        };
 
         let rel = match &self.qlog.traces[0].configuration {
             Some(conf) => match conf.time_units {
@@ -786,7 +790,7 @@ impl QlogStreamer {
 
     /// Returns the writer.
     #[allow(clippy::borrowed_box)]
-    pub fn writer(&self) -> &Box<dyn std::io::Write + Send> {
+    pub fn writer(&self) -> &Box<dyn std::io::Write + Send + Sync> {
         &self.writer
     }
 }
@@ -1310,23 +1314,27 @@ pub enum EventData {
     PacketReceived {
         packet_type: PacketType,
         header: PacketHeader,
-        frames: Option<Vec<QuicFrame>>,
-
+        // `frames` is defined here in the QLog schema specification. However,
+        // our streaming serializer requires serde to put the object at the end,
+        // so we define it there and depend on serde's preserve_order feature.
         is_coalesced: Option<bool>,
 
         raw_encrypted: Option<String>,
         raw_decrypted: Option<String>,
+        frames: Option<Vec<QuicFrame>>,
     },
 
     PacketSent {
         packet_type: PacketType,
         header: PacketHeader,
-        frames: Option<Vec<QuicFrame>>,
-
+        // `frames` is defined here in the QLog schema specification. However,
+        // our streaming serializer requires serde to put the object at the end,
+        // so we define it there and depend on serde's preserve_order feature.
         is_coalesced: Option<bool>,
 
         raw_encrypted: Option<String>,
         raw_decrypted: Option<String>,
+        frames: Option<Vec<QuicFrame>>,
     },
 
     PacketDropped {
@@ -1648,6 +1656,7 @@ pub enum QuicFrameTypeName {
     ConnectionClose,
     ApplicationClose,
     HandshakeDone,
+    Datagram,
     Unknown,
 }
 
@@ -1962,6 +1971,13 @@ pub enum QuicFrame {
         frame_type: QuicFrameTypeName,
     },
 
+    Datagram {
+        frame_type: QuicFrameTypeName,
+        length: String,
+
+        raw: Option<String>,
+    },
+
     Unknown {
         frame_type: QuicFrameTypeName,
         raw_frame_type: u64,
@@ -2142,6 +2158,14 @@ impl QuicFrame {
     pub fn handshake_done() -> Self {
         QuicFrame::HandshakeDone {
             frame_type: QuicFrameTypeName::HandshakeDone,
+        }
+    }
+
+    pub fn datagram(length: String, raw: Option<String>) -> Self {
+        QuicFrame::Datagram {
+            frame_type: QuicFrameTypeName::Datagram,
+            length,
+            raw,
         }
     }
 
@@ -2821,10 +2845,27 @@ mod tests {
             None,
         );
 
+        let frame3 = QuicFrame::stream(
+            "0".to_string(),
+            "0".to_string(),
+            "100".to_string(),
+            true,
+            None,
+        );
+
         let event2 = event::Event::packet_sent_min(
+            PacketType::Initial,
+            pkt_hdr.clone(),
+            Some(Vec::new()),
+        );
+
+        let event3 = event::Event::packet_sent(
             PacketType::Initial,
             pkt_hdr,
             Some(Vec::new()),
+            None,
+            Some("encrypted_foo".to_string()),
+            Some("decrypted_foo".to_string()),
         );
 
         let mut s = QlogStreamer::new(
@@ -2869,11 +2910,8 @@ mod tests {
             _ => false,
         });
 
-        // Some events hold frames, can't write any more events until frame
-        // writing is concluded. Store event add time so that we can substitute
-        // it back into the qlog test output and avoid time-base flappiness.
-        let event_add_time =
-            format!("\"{}\"", s.start_time.elapsed().as_millis().to_string());
+        // Some events hold frames; can't write any more events until frame
+        // writing is concluded.
         assert!(match s.add_event(event2.clone()) {
             Ok(true) => true,
             _ => false,
@@ -2888,16 +2926,31 @@ mod tests {
             Ok(()) => true,
             _ => false,
         });
+
         assert!(match s.add_event(event2.clone()) {
             Err(Error::InvalidState) => true,
             _ => false,
         });
-
-        // Finish logging
         assert!(match s.finish_frames() {
             Ok(()) => true,
             _ => false,
         });
+
+        // Adding an event that includes both frames and raw data should
+        // be allowed.
+        assert!(match s.add_event(event3.clone()) {
+            Ok(true) => true,
+            _ => false,
+        });
+        assert!(match s.add_frame(frame3.clone(), false) {
+            Ok(()) => true,
+            _ => false,
+        });
+        assert!(match s.finish_frames() {
+            Ok(()) => true,
+            _ => false,
+        });
+
         assert!(match s.finish_log() {
             Ok(()) => true,
             _ => false,
@@ -2906,8 +2959,8 @@ mod tests {
         let r = s.writer();
         let w: &Box<std::io::Cursor<Vec<u8>>> = unsafe { std::mem::transmute(r) };
 
-        let log_string = r#"{"qlog_version":"version","title":"title","description":"description","traces":[{"vantage_point":{"type":"server"},"title":"Quiche qlog trace","description":"Quiche qlog trace description","configuration":{"time_units":"ms","time_offset":"0"},"event_fields":["relative_time","category","event","data"],"events":[["0","transport","packet_sent",{"packet_type":"handshake","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"40","offset":"40","length":"400","fin":true}]}],[event_add_time,"transport","packet_sent",{"packet_type":"initial","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"0","offset":"0","length":"100","fin":true}]}]]}]}"#;
-        let log_string = log_string.replace("event_add_time", &event_add_time);
+        let log_string = r#"{"qlog_version":"version","title":"title","description":"description","traces":[{"vantage_point":{"type":"server"},"title":"Quiche qlog trace","description":"Quiche qlog trace description","configuration":{"time_units":"ms","time_offset":"0"},"event_fields":["relative_time","category","event","data"],"events":[["0","transport","packet_sent",{"packet_type":"handshake","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"40","offset":"40","length":"400","fin":true}]}],["0","transport","packet_sent",{"packet_type":"initial","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"frames":[{"frame_type":"stream","stream_id":"0","offset":"0","length":"100","fin":true}]}],["0","transport","packet_sent",{"packet_type":"initial","header":{"packet_number":"0","packet_size":1251,"payload_length":1224,"version":"ff000018","scil":"8","dcil":"8","scid":"7e37e4dcc6682da8","dcid":"36ce104eee50101c"},"raw_encrypted":"encrypted_foo","raw_decrypted":"decrypted_foo","frames":[{"frame_type":"stream","stream_id":"0","offset":"0","length":"100","fin":true}]}]]}]}"#;
+
         let written_string = std::str::from_utf8(w.as_ref().get_ref()).unwrap();
 
         assert_eq!(log_string, written_string);

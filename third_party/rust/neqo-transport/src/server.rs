@@ -14,11 +14,10 @@ use neqo_crypto::{AntiReplay, Cipher, ZeroRttCheckResult, ZeroRttChecker};
 
 pub use crate::addr_valid::ValidateAddress;
 use crate::addr_valid::{AddressValidation, AddressValidationResult};
-use crate::cc::CongestionControlAlgorithm;
 use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdManager, ConnectionIdRef};
 use crate::connection::{Connection, Output, State};
 use crate::packet::{PacketBuilder, PacketType, PublicPacket};
-use crate::{QuicVersion, Res};
+use crate::{ConnectionParameters, QuicVersion, Res};
 
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -130,6 +129,8 @@ pub struct Server {
     zero_rtt_checker: ServerZeroRttChecker,
     /// A connection ID manager.
     cid_manager: CidMgr,
+    /// Connection parameters.
+    conn_params: ConnectionParameters,
     /// Active connection attempts, keyed by `AttemptKey`.  Initial packets with
     /// the same key are routed to the connection that was first accepted.
     /// This is cleared out when the connection is closed or established.
@@ -166,6 +167,7 @@ impl Server {
         anti_replay: AntiReplay,
         zero_rtt_checker: Box<dyn ZeroRttChecker>,
         cid_manager: CidMgr,
+        conn_params: ConnectionParameters,
     ) -> Res<Self> {
         let validation = AddressValidation::new(now, ValidateAddress::Never)?;
         Ok(Self {
@@ -175,6 +177,7 @@ impl Server {
             anti_replay,
             zero_rtt_checker: ServerZeroRttChecker::new(zero_rtt_checker),
             cid_manager,
+            conn_params,
             active_attempts: HashMap::default(),
             connections: Rc::default(),
             active: HashSet::default(),
@@ -407,8 +410,7 @@ impl Server {
             &self.certs,
             &self.protocols,
             Rc::clone(&cid_mgr) as _,
-            &CongestionControlAlgorithm::NewReno,
-            initial.quic_version,
+            &self.conn_params.clone().quic_version(initial.quic_version),
         );
 
         if let Ok(mut c) = sconn {

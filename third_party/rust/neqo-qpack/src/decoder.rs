@@ -106,28 +106,28 @@ impl QPackDecoder {
         match instruction {
             DecodedEncoderInstruction::Capacity { value } => self.set_capacity(value)?,
             DecodedEncoderInstruction::InsertWithNameRefStatic { index, value } => {
-                self.table
-                    .insert_with_name_ref(true, index, &value)
-                    .map_err(|_| Error::EncoderStream)?;
+                Error::map_error(
+                    self.table.insert_with_name_ref(true, index, &value),
+                    Error::EncoderStream,
+                )?;
                 self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::InsertWithNameRefDynamic { index, value } => {
-                self.table
-                    .insert_with_name_ref(false, index, &value)
-                    .map_err(|_| Error::EncoderStream)?;
+                Error::map_error(
+                    self.table.insert_with_name_ref(false, index, &value),
+                    Error::EncoderStream,
+                )?;
                 self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::InsertWithNameLiteral { name, value } => {
-                self.table
-                    .insert(&name, &value)
-                    .map(|_| ())
-                    .map_err(|_| Error::EncoderStream)?;
+                Error::map_error(
+                    self.table.insert(&name, &value).map(|_| ()),
+                    Error::EncoderStream,
+                )?;
                 self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::Duplicate { index } => {
-                self.table
-                    .duplicate(index)
-                    .map_err(|_| Error::EncoderStream)?;
+                Error::map_error(self.table.duplicate(index), Error::EncoderStream)?;
                 self.stats.dynamic_table_inserts += 1;
             }
             DecodedEncoderInstruction::NoInstruction => {
@@ -161,6 +161,7 @@ impl QPackDecoder {
 
     /// # Errors
     ///     May return an error in case of any transport error. TODO: define transport errors.
+    #[allow(clippy::map_err_ignore, clippy::unknown_clippy_lints)]
     pub fn send(&mut self, conn: &mut Connection) -> Res<()> {
         // Encode increment instruction if needed.
         let increment = self.table.base() - self.acked_inserts;

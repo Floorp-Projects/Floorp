@@ -16,7 +16,7 @@ use neqo_common::{qtrace, Datagram};
 use neqo_crypto::{AntiReplay, Cipher};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
-use neqo_transport::{ConnectionIdManager, Output};
+use neqo_transport::{ConnectionIdManager, ConnectionParameters, Output};
 use std::cell::RefCell;
 use std::cell::RefMut;
 use std::collections::HashMap;
@@ -61,6 +61,7 @@ impl Http3Server {
                 anti_replay,
                 Box::new(HttpZeroRttChecker::new(qpack_settings)),
                 cid_manager,
+                ConnectionParameters::default(),
             )?,
             qpack_settings,
             http3_handlers: HashMap::new(),

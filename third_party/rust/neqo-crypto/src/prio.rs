@@ -5,7 +5,11 @@
 // except according to those terms.
 
 #![allow(dead_code, non_upper_case_globals, non_snake_case)]
-#![allow(clippy::cognitive_complexity, clippy::empty_enum, clippy::too_many_lines)]
+#![allow(
+    clippy::cognitive_complexity,
+    clippy::empty_enum,
+    clippy::too_many_lines
+)]
 
 include!(concat!(env!("OUT_DIR"), "/nspr_io.rs"));
 
