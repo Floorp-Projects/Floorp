@@ -163,12 +163,6 @@ skip script test262/built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn
 skip script test262/built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer-realm.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/infinity-detached-buffer.js
@@ -290,14 +284,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Cal
 # reevaluated at some point.
 skip script test262/language/expressions/assignmenttargettype/parenthesized-callexpression-arguments.js
 skip script test262/language/expressions/assignmenttargettype/direct-callexpression-arguments.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1672862
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex-desc-configurable.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
 # All of these tests pass except with --more-compartments.
@@ -692,6 +678,7 @@ skip script test262/harness/detachArrayBuffer.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1672850
 skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 
+
 ####################################################
 # Tests disabled due to invalid test expectations  #
 ####################################################
@@ -711,10 +698,21 @@ skip script test262/intl402/DisplayNames/locales-length-tolength-throws.js
 skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
 skip script test262/intl402/DisplayNames/length.js
 
+# https://github.com/tc39/test262/issues/2879
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
+
+# Tests not yet updated for https://github.com/tc39/ecma262/pull/2210
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
 ##############################################
+
 shell-option(--enable-iterator-helpers) script non262/AsyncIterator/asynciterator.js
 shell-option(--enable-iterator-helpers) script non262/AsyncIterator/length.js
 shell-option(--enable-iterator-helpers) script non262/AsyncIterator/name.js
