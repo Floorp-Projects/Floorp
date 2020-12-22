@@ -280,8 +280,8 @@ bool SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
  * Implements [[DefineOwnProperty]] for TypedArrays when the property
  * key is a TypedArray index.
  */
-bool DefineTypedArrayElement(JSContext* cx, HandleObject arr, uint64_t index,
-                             Handle<PropertyDescriptor> desc,
+bool DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
+                             uint64_t index, Handle<PropertyDescriptor> desc,
                              ObjectOpResult& result);
 
 static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
