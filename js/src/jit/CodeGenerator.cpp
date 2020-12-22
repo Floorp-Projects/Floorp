@@ -8717,6 +8717,45 @@ void CodeGenerator::visitBigIntSub(LBigIntSub* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitBigIntMul(LBigIntMul* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::mul>(ins, ArgList(lhs, rhs),
+                                         StoreRegisterTo(output));
+
+  // 0n * x == 0n
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(lhs, &lhsNonZero);
+  masm.movePtr(lhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&lhsNonZero);
+
+  // x * 0n == 0n
+  Label rhsNonZero;
+  masm.branchIfBigIntIsNonZero(rhs, &rhsNonZero);
+  masm.movePtr(rhs, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&rhsNonZero);
+
+  // Call into the VM when either operand can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigIntNonZero(lhs, temp1, ool->entry());
+  masm.loadBigIntNonZero(rhs, temp2, ool->entry());
+
+  masm.branchMulPtr(Assembler::Overflow, temp2, temp1, ool->entry());
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, temp1);
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitFloor(LFloor* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());

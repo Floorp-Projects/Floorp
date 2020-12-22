@@ -274,7 +274,7 @@ var uceFault_mul_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul
 function rmul_number(i) {
     var x = 2 * i;
     if (uceFault_mul_number(i) || uceFault_mul_number(i))
-        assertEq(x, 198  /* = 1 * 99 */);
+        assertEq(x, 198  /* = 2 * 99 */);
     assertRecoveredOnBailout(x, true);
     return i;
 }
@@ -316,7 +316,7 @@ var uceFault_imul_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_im
 function rimul_number(i) {
     var x = Math.imul(2, i);
     if (uceFault_imul_number(i) || uceFault_imul_number(i))
-        assertEq(x, 198  /* = 1 * 99 */);
+        assertEq(x, 198  /* = 2 * 99 */);
     assertRecoveredOnBailout(x, true);
     return i;
 }
@@ -1426,6 +1426,15 @@ function rbigintsub(i) {
     return i;
 }
 
+let uceFault_mul_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_mul_bigint'));
+function rbigintmul(i) {
+    var x = 2n * i;
+    if (uceFault_mul_bigint(i) || uceFault_mul_bigint(i))
+        assertEq(x, 198n  /* = 2 * 99 */);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1566,6 +1575,7 @@ for (j = 100 - max; j < 100; j++) {
     rsign_double(i);
     rbigintadd(BigInt(i));
     rbigintsub(BigInt(i));
+    rbigintmul(BigInt(i));
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

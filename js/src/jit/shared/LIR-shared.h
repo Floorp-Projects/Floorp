@@ -2859,6 +2859,23 @@ class LBigIntSub : public LBinaryMath<2> {
   const LDefinition* temp2() { return getTemp(1); }
 };
 
+class LBigIntMul : public LBinaryMath<2> {
+ public:
+  LIR_HEADER(BigIntMul)
+
+  LBigIntMul(const LAllocation& lhs, const LAllocation& rhs,
+             const LDefinition& temp1, const LDefinition& temp2)
+      : LBinaryMath(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
+};
+
 // Adds two string, returning a string.
 class LConcat : public LInstructionHelper<1, 2, 5> {
  public:

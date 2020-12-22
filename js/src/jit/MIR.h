@@ -5970,6 +5970,25 @@ class MBigIntSub : public MBigIntBinaryArithInstruction {
   ALLOW_CLONE(MBigIntSub)
 };
 
+class MBigIntMul : public MBigIntBinaryArithInstruction {
+  MBigIntMul(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    setCommutative();
+
+    // See MBigIntAdd for why we don't guard this instruction.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntMul)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntMul)
+};
+
 class MConcat : public MBinaryInstruction,
                 public MixPolicy<ConvertToStringPolicy<0>,
                                  ConvertToStringPolicy<1>>::Data {
