@@ -248,6 +248,7 @@
     font-size: 14px;
     cursor: pointer;
     border: 1px solid transparent;
+    border-radius: 4px;
     -moz-context-properties: fill;
     fill: var(--customize-menu-primary-text-color);
     background: url('chrome://global/skin/icons/settings.svg') left no-repeat;
@@ -270,7 +271,6 @@
 .external-link:focus-visible,
 .close-button:focus-visible {
   border: 1px solid var(--newtab-focus-border);
-  border-radius: 4px;
   outline: 0;
   box-shadow: $newtab-focus-outline;
 }
