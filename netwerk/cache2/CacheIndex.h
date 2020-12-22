@@ -101,6 +101,8 @@ struct CacheIndexRecord {
         mOnStopTime(kIndexTimeNotAvailable),
         mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN),
         mFlags(0) {}
+
+  ~CacheIndexRecord();
 };
 #pragma pack(pop)
 
@@ -343,6 +345,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   friend class CacheIndexEntryUpdate;
   friend class CacheIndex;
   friend class CacheIndexEntryAutoManage;
+  friend struct CacheIndexRecord;
 
   static const uint32_t kInitializedMask = 0x80000000;
   static const uint32_t kAnonymousMask = 0x40000000;
@@ -815,6 +818,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   friend class CacheIndexEntryAutoManage;
   friend class FileOpenHelper;
   friend class CacheIndexIterator;
+  friend struct CacheIndexRecord;
 
   virtual ~CacheIndex();
 
@@ -1187,6 +1191,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     void RemoveRecord(CacheIndexRecord* aRecord);
     void ReplaceRecord(CacheIndexRecord* aOldRecord,
                        CacheIndexRecord* aNewRecord);
+    bool RecordExisted(CacheIndexRecord* aRecord);
     void SortIfNeeded();
 
     size_t Length() const { return mRecs.Length() - mRemovedElements; }
