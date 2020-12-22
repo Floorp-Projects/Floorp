@@ -9001,6 +9001,63 @@ void CodeGenerator::visitCompareBigIntDouble(LCompareBigIntDouble* lir) {
   masm.storeCallBoolResult(output);
 }
 
+void CodeGenerator::visitCompareBigIntString(LCompareBigIntString* lir) {
+  JSOp op = lir->mir()->jsop();
+  Register left = ToRegister(lir->left());
+  Register right = ToRegister(lir->right());
+
+  // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  if (op == JSOp::Le || op == JSOp::Gt) {
+    pushArg(left);
+    pushArg(right);
+  } else {
+    pushArg(right);
+    pushArg(left);
+  }
+
+  using FnBigIntString =
+      bool (*)(JSContext*, HandleBigInt, HandleString, bool*);
+  using FnStringBigInt =
+      bool (*)(JSContext*, HandleString, HandleBigInt, bool*);
+
+  switch (op) {
+    case JSOp::Eq: {
+      constexpr auto Equal = EqualityKind::Equal;
+      callVM<FnBigIntString, BigIntStringEqual<Equal>>(lir);
+      break;
+    }
+    case JSOp::Ne: {
+      constexpr auto NotEqual = EqualityKind::NotEqual;
+      callVM<FnBigIntString, BigIntStringEqual<NotEqual>>(lir);
+      break;
+    }
+    case JSOp::Lt: {
+      constexpr auto LessThan = ComparisonKind::LessThan;
+      callVM<FnBigIntString, BigIntStringCompare<LessThan>>(lir);
+      break;
+    }
+    case JSOp::Gt: {
+      constexpr auto LessThan = ComparisonKind::LessThan;
+      callVM<FnStringBigInt, StringBigIntCompare<LessThan>>(lir);
+      break;
+    }
+    case JSOp::Le: {
+      constexpr auto GreaterThanOrEqual = ComparisonKind::GreaterThanOrEqual;
+      callVM<FnStringBigInt, StringBigIntCompare<GreaterThanOrEqual>>(lir);
+      break;
+    }
+    case JSOp::Ge: {
+      constexpr auto GreaterThanOrEqual = ComparisonKind::GreaterThanOrEqual;
+      callVM<FnBigIntString, BigIntStringCompare<GreaterThanOrEqual>>(lir);
+      break;
+    }
+    default:
+      MOZ_CRASH("Unexpected compare op");
+  }
+}
+
 void CodeGenerator::visitCompareVM(LCompareVM* lir) {
   pushArg(ToValue(lir, LCompareVM::RhsInput));
   pushArg(ToValue(lir, LCompareVM::LhsInput));
