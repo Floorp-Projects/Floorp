@@ -640,6 +640,8 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
     return true;
   }
 
+  // TODO: Add caching? Note that it needs to be thread-safe for stylo use.
+
   nsAutoCString name;
   gfxPlatformMac::LookupSystemFont(aID, name, aFontStyle);
   aFontName.Append(NS_ConvertUTF8toUTF16(name));
