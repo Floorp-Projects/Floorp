@@ -141,6 +141,12 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     return BoxInputsPolicy::staticAdjustInputs(alloc, def);
   }
 
+  auto replaceOperand = [&](size_t index, auto* replace) {
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(index, replace);
+    return replace->typePolicy()->adjustInputs(alloc, replace);
+  };
+
   // Compare_Boolean specialization is done for "Anything === Bool"
   // If the LHS is boolean, we set the specialization to Compare_Int32.
   // This matches other comparisons of the form bool === bool and
@@ -158,9 +164,7 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     if (rhs->type() != MIRType::Boolean) {
       MInstruction* unbox =
           MUnbox::New(alloc, rhs, MIRType::Boolean, MUnbox::Infallible);
-      def->block()->insertBefore(def, unbox);
-      def->replaceOperand(1, unbox);
-      if (!unbox->typePolicy()->adjustInputs(alloc, unbox)) {
+      if (!replaceOperand(1, unbox)) {
         return false;
       }
     }
@@ -185,9 +189,7 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
     if (rhs->type() != MIRType::String) {
       MInstruction* unbox =
           MUnbox::New(alloc, rhs, MIRType::String, MUnbox::Infallible);
-      def->block()->insertBefore(def, unbox);
-      def->replaceOperand(1, unbox);
-      if (!unbox->typePolicy()->adjustInputs(alloc, unbox)) {
+      if (!replaceOperand(1, unbox)) {
         return false;
       }
     }
@@ -200,6 +202,27 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
   if (compare->compareType() == MCompare::Compare_Undefined ||
       compare->compareType() == MCompare::Compare_Null) {
     // Nothing to do for undefined and null, lowering handles all types.
+    return true;
+  }
+
+  // Compare_BigInt_Int32 specialization is done for "BigInt <cmp> Int32".
+  if (compare->compareType() == MCompare::Compare_BigInt_Int32) {
+    if (MDefinition* in = def->getOperand(0); in->type() != MIRType::BigInt) {
+      auto* replace =
+          MUnbox::New(alloc, in, MIRType::BigInt, MUnbox::Infallible);
+      if (!replaceOperand(0, replace)) {
+        return false;
+      }
+    }
+
+    if (MDefinition* in = def->getOperand(1); in->type() != MIRType::Int32) {
+      auto* replace = MToNumberInt32::New(
+          alloc, in, IntConversionInputKind::NumbersOrBoolsOnly);
+      if (!replaceOperand(1, replace)) {
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -258,10 +281,7 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
         MOZ_CRASH("Unknown compare specialization");
     }
 
-    def->block()->insertBefore(def, replace);
-    def->replaceOperand(i, replace);
-
-    if (!replace->typePolicy()->adjustInputs(alloc, replace)) {
+    if (!replaceOperand(i, replace)) {
       return false;
     }
   }

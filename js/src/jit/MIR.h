@@ -2941,6 +2941,9 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     // BigInt compared to BigInt
     Compare_BigInt,
 
+    // BigInt compared to Int32
+    Compare_BigInt_Int32,
+
     // Wasm Ref/AnyRef/NullRef compared to Ref/AnyRef/NullRef
     Compare_RefOrNull,
 
