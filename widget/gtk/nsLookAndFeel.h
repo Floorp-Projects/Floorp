@@ -35,7 +35,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   LookAndFeelCache GetCacheImpl() override;
   void SetCacheImpl(const LookAndFeelCache& aCache) override;
 
-  void WithThemeConfiguredForContent(const std::function<void()>& aFn) override;
+  void WithThemeConfiguredForContent(
+      const std::function<void(const LookAndFeelTheme& aTheme)>& aFn) override;
+  static void ConfigureTheme(const LookAndFeelTheme& aTheme);
 
   bool IsCSDAvailable() const { return mCSDAvailable; }
 

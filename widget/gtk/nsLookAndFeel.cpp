@@ -975,18 +975,32 @@ static nsCString GetGtkTheme() {
   return ret;
 }
 
+static bool GetPreferDarkTheme() {
+  GtkSettings* settings = gtk_settings_get_default();
+  gboolean preferDarkTheme = FALSE;
+  g_object_get(settings, "gtk-application-prefer-dark-theme", &preferDarkTheme,
+               nullptr);
+  return preferDarkTheme == TRUE;
+}
+
+void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  GtkSettings* settings = gtk_settings_get_default();
+  g_object_set(settings, "gtk-theme-name", aTheme.themeName().get(),
+               "gtk-application-prefer-dark-theme",
+               aTheme.preferDarkTheme() ? TRUE : FALSE, nullptr);
+}
+
 void nsLookAndFeel::WithThemeConfiguredForContent(
-    const std::function<void()>& aFn) {
+    const std::function<void(const LookAndFeelTheme& aTheme)>& aFn) {
   nsWindow::WithSettingsChangesIgnored([&]() {
     // Available on Gtk 3.20+.
     static auto sGtkSettingsResetProperty =
         (void (*)(GtkSettings*, const gchar*))dlsym(
             RTLD_DEFAULT, "gtk_settings_reset_property");
 
-    GtkSettings* settings = gtk_settings_get_default();
-
     nsCString themeName;
-    gboolean preferDarkTheme = FALSE;
+    bool preferDarkTheme = false;
 
     if (!sGtkSettingsResetProperty) {
       // When gtk_settings_reset_property is not available, we instead
@@ -996,8 +1010,7 @@ void nsLookAndFeel::WithThemeConfiguredForContent(
       // could listen to xsettings changes and update the GtkSettings object
       // ourselves in response, if we wanted to fix this.)
       themeName = GetGtkTheme();
-      g_object_get(settings, "gtk-application-prefer-dark-theme",
-                   &preferDarkTheme, nullptr);
+      preferDarkTheme = GetPreferDarkTheme();
     }
 
     bool changed = ConfigureContentGtkTheme();
@@ -1005,17 +1018,22 @@ void nsLookAndFeel::WithThemeConfiguredForContent(
       RefreshImpl();
     }
 
-    aFn();
+    LookAndFeelTheme theme;
+    theme.themeName() = GetGtkTheme();
+    theme.preferDarkTheme() = GetPreferDarkTheme();
+
+    aFn(theme);
 
     if (changed) {
+      GtkSettings* settings = gtk_settings_get_default();
       if (sGtkSettingsResetProperty) {
         sGtkSettingsResetProperty(settings, "gtk-theme-name");
         sGtkSettingsResetProperty(settings,
                                   "gtk-application-prefer-dark-theme");
       } else {
         g_object_set(settings, "gtk-theme-name", themeName.get(),
-                     "gtk-application-prefer-dark-theme", preferDarkTheme,
-                     nullptr);
+                     "gtk-application-prefer-dark-theme",
+                     preferDarkTheme ? TRUE : FALSE, nullptr);
       }
       RefreshImpl();
     }
@@ -1047,10 +1065,7 @@ bool nsLookAndFeel::ConfigureContentGtkTheme() {
   }
 
   // Try to select the light variant of the current theme first...
-  gboolean preferDarkTheme;
-  g_object_get(settings, "gtk-application-prefer-dark-theme", &preferDarkTheme,
-               nullptr);
-  if (preferDarkTheme) {
+  if (GetPreferDarkTheme()) {
     LOG(("    disabling gtk-application-prefer-dark-theme\n"));
     g_object_set(settings, "gtk-application-prefer-dark-theme", FALSE, nullptr);
     changed = true;
