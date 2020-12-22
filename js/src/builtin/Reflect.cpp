@@ -45,7 +45,7 @@ static bool Reflect_deleteProperty(JSContext* cx, unsigned argc, Value* vp) {
   if (!DeleteProperty(cx, target, key, result)) {
     return false;
   }
-  args.rval().setBoolean(result.reallyOk());
+  args.rval().setBoolean(result.ok());
   return true;
 }
 
@@ -125,7 +125,7 @@ static bool Reflect_preventExtensions(JSContext* cx, unsigned argc, Value* vp) {
   if (!PreventExtensions(cx, target, result)) {
     return false;
   }
-  args.rval().setBoolean(result.reallyOk());
+  args.rval().setBoolean(result.ok());
   return true;
 }
 
@@ -156,7 +156,7 @@ static bool Reflect_set(JSContext* cx, unsigned argc, Value* vp) {
   if (!SetProperty(cx, target, key, value, receiver, result)) {
     return false;
   }
-  args.rval().setBoolean(result.reallyOk());
+  args.rval().setBoolean(result.ok());
   return true;
 }
 
@@ -191,7 +191,7 @@ static bool Reflect_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
   if (!SetPrototype(cx, obj, proto, result)) {
     return false;
   }
-  args.rval().setBoolean(result.reallyOk());
+  args.rval().setBoolean(result.ok());
   return true;
 }
 

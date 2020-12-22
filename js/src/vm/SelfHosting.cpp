@@ -689,7 +689,7 @@ static bool intrinsic_DefineProperty(JSContext* cx, unsigned argc, Value* vp) {
     return result.reportError(cx, obj, id);
   }
 
-  args.rval().setBoolean(result.reallyOk());
+  args.rval().setBoolean(result.ok());
   return true;
 }
 
