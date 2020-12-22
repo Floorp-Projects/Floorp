@@ -8,7 +8,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.component_sync_tabs.view.*
 import kotlinx.android.synthetic.main.fragment_synced_tabs.*
+import kotlinx.android.synthetic.main.sync_tabs_error_row.view.*
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -19,6 +23,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.LibraryPageFragment
+import org.mozilla.fenix.theme.ThemeManager
 
 class SyncedTabsFragment : LibraryPageFragment<Tab>() {
     private val syncedTabsFeature = ViewBoundFeatureWrapper<SyncedTabsFeature>()
@@ -41,6 +46,12 @@ class SyncedTabsFragment : LibraryPageFragment<Tab>() {
 
         val backgroundServices = requireContext().components.backgroundServices
 
+        /*
+        * Needed because the synced tabs error layout is also used in tabs tray where there is no private theme.
+        * See https://github.com/mozilla-mobile/fenix/issues/15061
+        */
+        setProperErrorColor(view.synced_tabs_list as RecyclerView)
+
         syncedTabsFeature.set(
             feature = SyncedTabsFeature(
                 context = requireContext(),
@@ -52,6 +63,30 @@ class SyncedTabsFragment : LibraryPageFragment<Tab>() {
             ),
             owner = this,
             view = view
+        )
+    }
+
+    private fun setProperErrorColor(syncedTabsList: RecyclerView) {
+        syncedTabsList.addOnChildAttachStateChangeListener(
+            object : RecyclerView.OnChildAttachStateChangeListener {
+                override fun onChildViewAttachedToWindow(view: View) {
+                    val errorView = view.sync_tabs_error_description
+                    val primaryText = ContextCompat.getColor(
+                        view.context,
+                        ThemeManager.resolveAttribute(R.attr.primaryText, view.context)
+                    )
+                    errorView?.let {
+                        it.setTextColor(primaryText)
+                        syncedTabsList.removeOnChildAttachStateChangeListener(
+                            this
+                        )
+                    }
+                }
+
+                override fun onChildViewDetachedFromWindow(view: View) {
+                    // do nothing
+                }
+            }
         )
     }
 
