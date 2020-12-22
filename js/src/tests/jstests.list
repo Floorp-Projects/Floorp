@@ -708,6 +708,14 @@ skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/Bi
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
 
+# https://github.com/tc39/ecma262/pull/2210
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-integer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-out-of-bounds.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-minus-zero.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-not-integer.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
