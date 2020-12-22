@@ -673,11 +673,10 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
       return false;
     }
 
-    // Typed array elements are non-configurable, writable properties, so
-    // if any elements are present, the typed array cannot be frozen.
+    // Typed array elements are configurable, writable properties, so if any
+    // elements are present, the typed array can neither be sealed nor frozen.
     if (nobj->is<TypedArrayObject>() &&
-        nobj->as<TypedArrayObject>().length().get() > 0 &&
-        level == IntegrityLevel::Frozen) {
+        nobj->as<TypedArrayObject>().length().get() > 0) {
       *result = false;
       return true;
     }

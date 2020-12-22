@@ -12,13 +12,13 @@ const NON_INLINE_STORAGE = 1024;
     assertEq(Object.isFrozen(ta), true);
 }
 
-// Non-empty typed arrays can be sealed.
+// Non-empty typed arrays cannot be sealed.
 for (let length of [INLINE_STORAGE, NON_INLINE_STORAGE]) {
     let ta = new Int32Array(length);
     Object.seal(ta);
 
     assertEq(Object.isExtensible(ta), false);
-    assertEq(Object.isSealed(ta), true);
+    assertEq(Object.isSealed(ta), false);
     assertEq(Object.isFrozen(ta), false);
 }
 
@@ -38,7 +38,7 @@ for (let length of [INLINE_STORAGE, NON_INLINE_STORAGE]) {
     assertThrowsInstanceOf(() => Object.freeze(ta), TypeError);
 
     assertEq(Object.isExtensible(ta), false);
-    assertEq(Object.isSealed(ta), true);
+    assertEq(Object.isSealed(ta), false);
     assertEq(Object.isFrozen(ta), false);
 }
 
@@ -52,13 +52,13 @@ for (let length of [INLINE_STORAGE, NON_INLINE_STORAGE]) {
     assertEq(Object.isFrozen(ta), true);
 }
 
-// Non-extensible non-empty typed arrays are sealed, but aren't frozen.
+// Non-extensible non-empty typed arrays are neither sealed nor frozen.
 for (let length of [INLINE_STORAGE, NON_INLINE_STORAGE]) {
     let ta = new Int32Array(length);
     Object.preventExtensions(ta);
 
     assertEq(Object.isExtensible(ta), false);
-    assertEq(Object.isSealed(ta), true);
+    assertEq(Object.isSealed(ta), false);
     assertEq(Object.isFrozen(ta), false);
 }
 

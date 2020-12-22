@@ -2770,6 +2770,11 @@ bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
     return result.failCantDelete();
   }
 
+  // Typed array elements are configurable, but can't be deleted.
+  if (prop.isTypedArrayElement()) {
+    return result.failCantDelete();
+  }
+
   if (!CallJSDeletePropertyOp(cx, obj->getClass()->getDelProperty(), obj, id,
                               result)) {
     return false;
@@ -2777,9 +2782,6 @@ bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
   if (!result) {
     return true;
   }
-
-  // Typed array elements are non-configurable.
-  MOZ_ASSERT(!prop.isTypedArrayElement());
 
   // Step 5.
   if (prop.isDenseElement()) {
