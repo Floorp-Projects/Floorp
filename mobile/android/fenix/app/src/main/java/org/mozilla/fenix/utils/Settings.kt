@@ -466,6 +466,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         true
     )
 
+    val blockRedirectTrackersInCustomTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_redirect_trackers),
+        true
+    )
+
     val shouldUseFixedTopToolbar: Boolean
         get() {
             return touchExplorationIsEnabled || switchServiceIsEnabled

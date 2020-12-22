@@ -100,6 +100,15 @@
             app:layout_constraintTop_toBottomOf="@id/social_media_trackers" />
 
         <TextView
+            android:id="@+id/redirect_trackers"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_redirect_trackers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content" />
+
+        <TextView
             android:id="@+id/not_blocking_header"
             style="@style/QuickSettingsText"
             android:layout_width="wrap_content"
@@ -156,6 +165,15 @@
             android:text="@string/etp_tracking_content_title"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/social_media_trackers_loaded" />
+
+        <TextView
+            android:id="@+id/redirect_trackers_loaded"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_redirect_trackers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content_loaded" />
 
         <View
             android:id="@+id/line_divider"

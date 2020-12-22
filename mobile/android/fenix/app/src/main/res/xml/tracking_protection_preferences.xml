@@ -70,6 +70,12 @@
         android:key="@string/pref_key_tracking_protection_custom_fingerprinters"
         android:layout="@layout/checkbox_left_preference_etp"
         android:title="@string/preference_enhanced_tracking_protection_custom_fingerprinters" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:dependency="@string/pref_key_tracking_protection_custom_option"
+        android:key="@string/pref_key_tracking_protection_redirect_trackers"
+        android:layout="@layout/checkbox_left_preference_etp"
+        android:title="@string/etp_redirect_trackers_title" />
 
     <Preference
         android:icon="@drawable/ic_internet"

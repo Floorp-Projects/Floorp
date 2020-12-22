@@ -90,8 +90,18 @@ enum class TrackingProtectionCategory(
         R.string.etp_cryptominers_title,
         R.string.etp_cryptominers_description
     ),
-    FINGERPRINTERS(R.string.etp_fingerprinters_title, R.string.etp_fingerprinters_description),
-    TRACKING_CONTENT(R.string.etp_tracking_content_title, R.string.etp_tracking_content_description)
+    FINGERPRINTERS(
+        R.string.etp_fingerprinters_title,
+        R.string.etp_fingerprinters_description
+    ),
+    TRACKING_CONTENT(
+        R.string.etp_tracking_content_title,
+        R.string.etp_tracking_content_description
+    ),
+    REDIRECT_TRACKERS(
+        R.string.etp_redirect_trackers_title,
+        R.string.etp_redirect_trackers_description
+    )
 }
 
 /**

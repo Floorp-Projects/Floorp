@@ -80,7 +80,6 @@
             android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"
-            android:visibility="gone"
             app:categoryItemDescription="@string/etp_redirect_trackers_description"
             app:categoryItemTitle="@string/etp_redirect_trackers_title" />
     </LinearLayout>

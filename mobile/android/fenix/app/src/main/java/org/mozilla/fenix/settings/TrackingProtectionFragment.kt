@@ -41,6 +41,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     private lateinit var customTrackingSelect: DropDownPreference
     private lateinit var customCryptominers: CheckBoxPreference
     private lateinit var customFingerprinters: CheckBoxPreference
+    private lateinit var customRedirectTrackers: CheckBoxPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.tracking_protection_preferences, rootKey)
@@ -145,6 +146,9 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         customFingerprinters =
             requirePreference(R.string.pref_key_tracking_protection_custom_fingerprinters)
 
+        customRedirectTrackers =
+            requirePreference(R.string.pref_key_tracking_protection_redirect_trackers)
+
         customCookies.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                 customCookiesSelect.isVisible = !customCookies.isChecked
@@ -196,6 +200,14 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             }
         }
 
+        customRedirectTrackers.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                return super.onPreferenceChange(preference, newValue).also {
+                    updateTrackingProtectionPolicy()
+                }
+            }
+        }
+
         updateCustomOptionsVisibility()
 
         return radio
@@ -218,5 +230,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         customTrackingSelect.isVisible = isCustomSelected && customTracking.isChecked
         customCryptominers.isVisible = isCustomSelected
         customFingerprinters.isVisible = isCustomSelected
+        customRedirectTrackers.isVisible = isCustomSelected
     }
 }

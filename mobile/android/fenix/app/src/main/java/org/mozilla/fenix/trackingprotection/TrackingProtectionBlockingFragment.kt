@@ -10,7 +10,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_tracking_protection_blocking.*
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -23,7 +22,6 @@ class TrackingProtectionBlockingFragment :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        category_redirect_trackers.isVisible = FeatureFlags.etpCookiePurging
 
         when (args.protectionMode) {
             TrackingProtectionMode.STANDARD -> {
@@ -41,6 +39,8 @@ class TrackingProtectionBlockingFragment :
                     settings.blockCookiesInCustomTrackingProtection
                 category_tracking_content.isVisible =
                     settings.blockTrackingContentInCustomTrackingProtection
+                category_redirect_trackers.isVisible =
+                    settings.blockRedirectTrackersInCustomTrackingProtection
             }
         }
     }

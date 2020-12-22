@@ -18,6 +18,7 @@ import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.details_blocking_header
+import kotlinx.android.synthetic.main.fragment_tracking_protection_blocking.*
 import kotlinx.android.synthetic.main.switch_with_description.view.*
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
@@ -28,6 +29,7 @@ import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMIN
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.TRACKING_CONTENT
+import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.REDIRECT_TRACKERS
 
 /**
  * Interface for the TrackingProtectionPanelViewInteractor. This interface is implemented by objects that want
@@ -170,6 +172,9 @@ class TrackingProtectionPanelView(
         CRYPTOMINERS.name -> {
             if (cryptominers.isGone) cryptominers_loaded else cryptominers
         }
+        REDIRECT_TRACKERS.name -> {
+            if (redirect_trackers.isGone) redirect_trackers_loaded else redirect_trackers
+        }
         else -> null
     }
 
@@ -181,6 +186,7 @@ class TrackingProtectionPanelView(
         fingerprinters.isGone = bucketedTrackers.get(FINGERPRINTERS, true).isEmpty()
         tracking_content.isGone = bucketedTrackers.get(TRACKING_CONTENT, true).isEmpty()
         cryptominers.isGone = bucketedTrackers.get(CRYPTOMINERS, true).isEmpty()
+        redirect_trackers.isGone = bucketedTrackers.get(REDIRECT_TRACKERS, true).isEmpty()
 
         cross_site_tracking_loaded.isGone =
             bucketedTrackers.get(CROSS_SITE_TRACKING_COOKIES, false).isEmpty()
@@ -189,6 +195,7 @@ class TrackingProtectionPanelView(
         fingerprinters_loaded.isGone = bucketedTrackers.get(FINGERPRINTERS, false).isEmpty()
         tracking_content_loaded.isGone = bucketedTrackers.get(TRACKING_CONTENT, false).isEmpty()
         cryptominers_loaded.isGone = bucketedTrackers.get(CRYPTOMINERS, false).isEmpty()
+        redirect_trackers_loaded.isGone = bucketedTrackers.get(REDIRECT_TRACKERS, false).isEmpty()
     }
 
     private fun setCategoryClickListeners() {
@@ -202,6 +209,7 @@ class TrackingProtectionPanelView(
         fingerprinters_loaded.setOnClickListener(this)
         tracking_content_loaded.setOnClickListener(this)
         cryptominers_loaded.setOnClickListener(this)
+        redirect_trackers_loaded.setOnClickListener(this)
     }
 
     override fun onClick(v: View) {
@@ -263,6 +271,7 @@ class TrackingProtectionPanelView(
             R.id.cross_site_tracking, R.id.cross_site_tracking_loaded -> CROSS_SITE_TRACKING_COOKIES
             R.id.tracking_content, R.id.tracking_content_loaded -> TRACKING_CONTENT
             R.id.cryptominers, R.id.cryptominers_loaded -> CRYPTOMINERS
+            R.id.redirect_trackers, R.id.redirect_trackers_loaded -> REDIRECT_TRACKERS
             else -> null
         }
 
@@ -274,13 +283,15 @@ class TrackingProtectionPanelView(
             R.id.cross_site_tracking_loaded,
             R.id.fingerprinters_loaded,
             R.id.tracking_content_loaded,
-            R.id.cryptominers_loaded -> true
+            R.id.cryptominers_loaded,
+            R.id.redirect_trackers_loaded -> true
 
             R.id.social_media_trackers,
             R.id.fingerprinters,
             R.id.cross_site_tracking,
             R.id.tracking_content,
-            R.id.cryptominers -> false
+            R.id.cryptominers,
+            R.id.redirect_trackers -> false
             else -> false
         }
     }

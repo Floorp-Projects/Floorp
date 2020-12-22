@@ -27,11 +27,6 @@ object FeatureFlags {
     const val externalDownloadManager = true
 
     /**
-     * Enables ETP cookie purging
-     */
-    val etpCookiePurging = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables the Nimbus experiments library, especially the settings toggle to opt-out of
      * all experiments.
      */

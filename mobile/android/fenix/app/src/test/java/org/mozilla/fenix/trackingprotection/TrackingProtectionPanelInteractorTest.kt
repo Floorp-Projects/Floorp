@@ -29,6 +29,22 @@ class TrackingProtectionPanelInteractorTest {
     }
 
     @Test
+    fun openDetailsForRedirectTrackers() {
+        val store: TrackingProtectionStore = mockk(relaxed = true)
+        val interactor =
+            TrackingProtectionPanelInteractor(store, mockk(), mockk())
+        interactor.openDetails(TrackingProtectionCategory.REDIRECT_TRACKERS, true)
+        verify {
+            store.dispatch(
+                TrackingProtectionAction.EnterDetailsMode(
+                    TrackingProtectionCategory.REDIRECT_TRACKERS,
+                    true
+                )
+            )
+        }
+    }
+
+    @Test
     fun selectTrackingProtectionSettings() {
         var openSettings = false
         val interactor = TrackingProtectionPanelInteractor(

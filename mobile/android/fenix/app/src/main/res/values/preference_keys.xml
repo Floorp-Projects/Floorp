@@ -149,6 +149,7 @@
     <string name="pref_key_tracking_protection_custom_tracking_content_select" translatable="false">pref_key_tracking_protection_custom_tracking_content_select</string>
     <string name="pref_key_tracking_protection_custom_cryptominers" translatable="false">pref_key_tracking_protection_custom_cryptominers</string>
     <string name="pref_key_tracking_protection_custom_fingerprinters" translatable="false">pref_key_tracking_protection_custom_fingerprinters</string>
+    <string name="pref_key_tracking_protection_redirect_trackers" translatable="false">pref_key_tracking_protection_redirect_trackers</string>
 
     <string name="pref_key_tracking_protection_onboarding" translatable="false">pref_key_tracking_protection_onboarding</string>
 

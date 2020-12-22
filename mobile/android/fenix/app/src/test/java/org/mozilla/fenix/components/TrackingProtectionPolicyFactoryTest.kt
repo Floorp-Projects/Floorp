@@ -13,7 +13,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -346,7 +345,8 @@ class TrackingProtectionPolicyFactoryTest {
                 shouldBlockCookiesInCustom = true,
                 blockTrackingContent = false,
                 blockFingerprinters = true,
-                blockCryptominers = false
+                blockCryptominers = false,
+                blockRedirectTrackers = true
             )
         )
         val actual = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = true)
@@ -359,7 +359,7 @@ class TrackingProtectionPolicyFactoryTest {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
             trackingCategories = allTrackingCategories,
-            cookiePurging = FeatureFlags.etpCookiePurging
+            cookiePurging = true
         )
 
         val factory = TrackingProtectionPolicyFactory(settingsForCustom(shouldBlockCookiesInCustom = true))
@@ -421,7 +421,8 @@ private fun settingsForCustom(
     blockCookiesSelection: String = "all", // values from R.array.cookies_options_entry_values
     blockTrackingContent: Boolean = true,
     blockFingerprinters: Boolean = true,
-    blockCryptominers: Boolean = true
+    blockCryptominers: Boolean = true,
+    blockRedirectTrackers: Boolean = true
 ): Settings = mockSettings(useStrict = false, useCustom = true).apply {
 
     every { blockTrackingContentSelectionInCustomTrackingProtection } returns blockTrackingContentInCustom
@@ -431,6 +432,7 @@ private fun settingsForCustom(
     every { blockTrackingContentInCustomTrackingProtection } returns blockTrackingContent
     every { blockFingerprintersInCustomTrackingProtection } returns blockFingerprinters
     every { blockCryptominersInCustomTrackingProtection } returns blockCryptominers
+    every { blockRedirectTrackersInCustomTrackingProtection } returns blockRedirectTrackers
 }
 
 private fun TrackingProtectionPolicy.assertPolicyEquals(
