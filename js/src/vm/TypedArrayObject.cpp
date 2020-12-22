@@ -1002,38 +1002,27 @@ bool TypedArrayObjectTemplate<uint64_t>::convertValue(JSContext* cx,
 }
 
 // https://tc39.github.io/proposal-bigint/#sec-integerindexedelementset
-// 7.8 IntegerIndexedElementSet ( O, index, value )
+// 9.4.5.11 IntegerIndexedElementSet ( O, index, value )
 template <typename NativeType>
 /* static */ bool TypedArrayObjectTemplate<NativeType>::setElement(
     JSContext* cx, Handle<TypedArrayObject*> obj, uint64_t index, HandleValue v,
     ObjectOpResult& result) {
-  // Steps 1-2 are enforced by the caller.
+  // Step 1 is enforced by the caller.
 
-  // Steps 3-6.
+  // Steps 2-3.
   NativeType nativeValue;
   if (!convertValue(cx, v, &nativeValue)) {
     return false;
   }
 
-  // Step 8.
-  if (obj->hasDetachedBuffer()) {
-    return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
+  // Step 4.
+  if (index < obj->length().get()) {
+    MOZ_ASSERT(!obj->hasDetachedBuffer(),
+               "detaching an array buffer sets the length to zero");
+    TypedArrayObjectTemplate<NativeType>::setIndex(*obj, index, nativeValue);
   }
 
-  // Steps 9-10 are enforced by the caller.
-
-  // Step 11.
-  size_t length = obj->length().get();
-
-  // Step 12.
-  if (index >= length) {
-    return result.failSoft(JSMSG_BAD_INDEX);
-  }
-
-  // Steps 7, 13-16.
-  TypedArrayObjectTemplate<NativeType>::setIndex(*obj, index, nativeValue);
-
-  // Step 17.
+  // Step 5.
   return result.succeed();
 }
 

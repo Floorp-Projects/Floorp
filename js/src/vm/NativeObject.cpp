@@ -1891,24 +1891,21 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
       // means any absent indexed property must be out of range.
       MOZ_ASSERT(index.value() >= obj->as<TypedArrayObject>().length().get());
 
-      // Steps 1-2 are enforced by the caller.
+      // The following steps refer to 9.4.5.11 IntegerIndexedElementSet.
 
-      // Step 3.
+      // Step 1 is enforced by the caller.
+
+      // Steps 2-3.
       // We still need to call ToNumber or ToBigInt, because of its
       // possible side effects.
       if (!obj->as<TypedArrayObject>().convertForSideEffect(cx, v)) {
         return false;
       }
 
-      // Steps 4-5.
-      // ToNumber may have detached the array buffer.
-      if (obj->as<TypedArrayObject>().hasDetachedBuffer()) {
-        return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
-      }
+      // Step 4 (nothing to do, the index is out of range).
 
-      // Steps 6-9.
-      // We (wrongly) ignore out of range defines.
-      return result.failSoft(JSMSG_BAD_INDEX);
+      // Step 5.
+      return result.succeed();
     }
   } else if (obj->is<ArgumentsObject>()) {
     // If this method is called with either |length| or |@@iterator|, the
