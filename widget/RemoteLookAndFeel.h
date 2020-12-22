@@ -51,11 +51,11 @@ class RemoteLookAndFeel final : public nsXPLookAndFeel {
   // implementation.
   //
   // This is called in the parent process when the default LookAndFeel is
-  // refreshed, to invalidate sCachedTables.
+  // refreshed, to invalidate sCachedLookAndFeelData.
   static void ClearCachedData();
 
  private:
-  FullLookAndFeel mTables;
+  LookAndFeelTables mTables;
 
   // A cached copy of the data extracted by ExtractData.
   //
@@ -63,7 +63,7 @@ class RemoteLookAndFeel final : public nsXPLookAndFeel {
   // time we create a new content process.
   //
   // Only used in the parent process.
-  static StaticAutoPtr<FullLookAndFeel> sCachedTables;
+  static StaticAutoPtr<FullLookAndFeel> sCachedLookAndFeelData;
 };
 
 }  // namespace mozilla::widget
