@@ -43,7 +43,6 @@ from .protocol import (ActionSequenceProtocolPart,
                        VirtualAuthenticatorProtocolPart,
                        SetPermissionProtocolPart,
                        PrintProtocolPart)
-from ..testrunner import Stop
 from ..webdriver_server import GeckoDriverServer
 
 
