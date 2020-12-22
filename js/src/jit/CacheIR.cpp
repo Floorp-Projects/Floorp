@@ -3979,6 +3979,11 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
     return AttachDecision::NoAction;
   }
 
+  // InitElem (DefineProperty) has to throw an exception on out-of-bounds.
+  if (handleOutOfBounds && IsPropertyInitOp(JSOp(*pc_))) {
+    return AttachDecision::NoAction;
+  }
+
   writer.guardShapeForClass(objId, tarr->shape());
 
   OperandId rhsValId = emitNumericGuard(rhsId, elementType);
@@ -4006,6 +4011,11 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElementNonInt32Index(
 
   // Don't attach if the input type doesn't match the guard added below.
   if (!ValueIsNumeric(elementType, rhsVal_)) {
+    return AttachDecision::NoAction;
+  }
+
+  // InitElem (DefineProperty) has to throw an exception on out-of-bounds.
+  if (IsPropertyInitOp(JSOp(*pc_))) {
     return AttachDecision::NoAction;
   }
 

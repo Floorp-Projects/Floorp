@@ -18,7 +18,7 @@ assertEq(Object.isSealed(array), false);
 
 array = new Int32Array(2);
 array.b = "test";
-Object.seal(array);
+assertThrowsInstanceOf(() => Object.seal(array), TypeError);
 assertEq(Object.isSealed(array), false);
 assertThrowsInstanceOf(() => array.c = 15, TypeError);
 

@@ -15,7 +15,7 @@ const NON_INLINE_STORAGE = 1024;
 // Non-empty typed arrays cannot be sealed.
 for (let length of [INLINE_STORAGE, NON_INLINE_STORAGE]) {
     let ta = new Int32Array(length);
-    Object.seal(ta);
+    assertThrowsInstanceOf(() => Object.seal(ta), TypeError);
 
     assertEq(Object.isExtensible(ta), false);
     assertEq(Object.isSealed(ta), false);
