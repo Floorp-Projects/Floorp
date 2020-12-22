@@ -2031,74 +2031,6 @@ GeckoDriver.prototype.releaseActions = async function() {
 };
 
 /**
- * An action chain.
- *
- * @param {Object} value
- *     A nested array where the inner array represents each event,
- *     and the outer array represents a collection of events.
- *
- * @return {number}
- *     Last touch ID.
- *
- * @throws {NoSuchWindowError}
- *     Browsing context has been discarded.
- * @throws {UnexpectedAlertOpenError}
- *     A modal dialog is open, blocking this operation.
- * @throws {UnsupportedOperationError}
- *     Not applicable to application.
- */
-GeckoDriver.prototype.actionChain = async function(cmd) {
-  assert.open(this.getBrowsingContext());
-  await this._handleUserPrompts();
-
-  let { chain, nextId } = cmd.parameters;
-
-  switch (this.context) {
-    case Context.Chrome:
-      // be conservative until this has a use case and is established
-      // to work as expected in Fennec
-      assert.firefox();
-
-      return this.legacyactions.dispatchActions(
-        chain,
-        nextId,
-        { frame: this.getCurrentWindow() },
-        this.curBrowser.seenEls
-      );
-
-    case Context.Content:
-      return this.listener.actionChain(chain, nextId);
-
-    default:
-      throw new TypeError(`Unknown context: ${this.context}`);
-  }
-};
-
-/**
- * A multi-action chain.
- *
- * @param {Object} value
- *     A nested array where the inner array represents eache vent,
- *     the middle array represents a collection of events for each
- *     finger, and the outer array represents all fingers.
- *
- * @throws {NoSuchWindowError}
- *     Browsing context has been discarded.
- * @throws {UnexpectedAlertOpenError}
- *     A modal dialog is open, blocking this operation.
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
- */
-GeckoDriver.prototype.multiAction = async function(cmd) {
-  assert.content(this.context);
-  assert.open(this.getBrowsingContext());
-  await this._handleUserPrompts();
-
-  let { value, max_length } = cmd.parameters; // eslint-disable-line camelcase
-  await this.listener.multiAction(value, max_length);
-};
-
-/**
  * Find an element using the indicated search strategy.
  *
  * @param {string} using
@@ -3976,8 +3908,6 @@ GeckoDriver.prototype.commands = {
   "Marionette:Quit": GeckoDriver.prototype.quit,
   "Marionette:SetContext": GeckoDriver.prototype.setContext,
   "Marionette:SetScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
-  "Marionette:ActionChain": GeckoDriver.prototype.actionChain, // bug 1354578, legacy actions
-  "Marionette:MultiAction": GeckoDriver.prototype.multiAction, // bug 1354578, legacy actions
   "Marionette:SingleTap": GeckoDriver.prototype.singleTap,
 
   // Addon service
