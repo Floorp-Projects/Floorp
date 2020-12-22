@@ -1050,13 +1050,14 @@ add_old_configure_assignment("FT2_CFLAGS", ft2_info.cflags)
 
 
 @depends(target, build_project, milestone)
-def remote_default(target, project):
+def remote_default(target, project, milestone):
     # no support for Android
     if target.os == "Android":
         return False
 
-    # enable for Firefox Desktop only
-    return project == "browser"
+    # enable on Firefox Nightly channel only
+    # TODO(ato): https://bugzil.la/1544393
+    return project == "browser" and milestone.is_nightly
 
 
 option("--enable-cdp", default=remote_default, help="{Enable|Disable} remote agent")
