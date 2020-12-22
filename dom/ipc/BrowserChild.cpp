@@ -223,12 +223,8 @@ class BrowserChild::DelayedDeleteRunnable final : public Runnable,
                                                   public nsIRunnablePriority {
   RefPtr<BrowserChild> mBrowserChild;
 
-  // In order to ensure that this runnable runs after everything that could
-  // possibly touch this tab, we send it through the event queue twice. The
-  // first time it runs at normal priority and the second time it runs at
-  // input priority. This ensures that it runs after all events that were in
-  // either queue at the time it was first dispatched. mReadyToDelete starts
-  // out false (when it runs at normal priority) and is then set to true.
+  // In order to try that this runnable runs after everything that could
+  // possibly touch this tab, we send it through the event queue twice.
   bool mReadyToDelete = false;
 
  public:
@@ -248,8 +244,7 @@ class BrowserChild::DelayedDeleteRunnable final : public Runnable,
   }
 
   NS_IMETHOD GetPriority(uint32_t* aPriority) override {
-    *aPriority = mReadyToDelete ? nsIRunnablePriority::PRIORITY_INPUT_HIGH
-                                : nsIRunnablePriority::PRIORITY_NORMAL;
+    *aPriority = nsIRunnablePriority::PRIORITY_NORMAL;
     return NS_OK;
   }
 
