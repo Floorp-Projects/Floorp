@@ -20,9 +20,8 @@ use neqo_common::{
 use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, ResumptionToken, SecretAgentInfo};
 use neqo_qpack::{QpackSettings, Stats as QpackStats};
 use neqo_transport::{
-    AppError, CongestionControlAlgorithm, Connection, ConnectionEvent, ConnectionId,
-    ConnectionIdManager, Output, QuicVersion, Stats as TransportStats, StreamId, StreamType,
-    ZeroRttState,
+    AppError, Connection, ConnectionEvent, ConnectionId, ConnectionIdManager, ConnectionParameters,
+    Output, QuicVersion, Stats as TransportStats, StreamId, StreamType, ZeroRttState,
 };
 use std::cell::RefCell;
 use std::fmt::Display;
@@ -95,19 +94,17 @@ impl Http3Client {
         cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
         local_addr: SocketAddr,
         remote_addr: SocketAddr,
-        cc_algorithm: &CongestionControlAlgorithm,
-        quic_version: QuicVersion,
+        conn_params: &ConnectionParameters,
         http3_parameters: &Http3Parameters,
     ) -> Res<Self> {
         Ok(Self::new_with_conn(
             Connection::new_client(
                 server_name,
-                &[alpn_from_quic_version(quic_version)],
+                &[alpn_from_quic_version(conn_params.get_quic_version())],
                 cid_manager,
                 local_addr,
                 remote_addr,
-                cc_algorithm,
-                quic_version,
+                conn_params,
             )?,
             http3_parameters,
         ))
@@ -190,9 +187,10 @@ impl Http3Client {
         qtrace!([self], "  settings {}", hex_with_len(&settings_slice));
         let mut dec_settings = Decoder::from(settings_slice);
         let mut settings = HSettings::default();
-        settings
-            .decode_frame_contents(&mut dec_settings)
-            .map_err(|_| Error::InvalidResumptionToken)?;
+        Error::map_error(
+            settings.decode_frame_contents(&mut dec_settings),
+            Error::InvalidResumptionToken,
+        )?;
         let tok = dec.decode_remainder();
         qtrace!([self], "  Transport token {}", hex(&tok));
         self.conn.enable_resumption(now, tok)?;
@@ -421,11 +419,9 @@ impl Http3Client {
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
         let stream_id = self.push_handler.borrow_mut().get_active_stream_id(push_id);
-        if let Some(id) = stream_id {
+        stream_id.map_or(Err(Error::InvalidStreamId), |id| {
             self.read_response_data(now, id, buf)
-        } else {
-            Err(Error::InvalidStreamId)
-        }
+        })
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -746,8 +742,8 @@ mod tests {
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_transport::tparams::{self, TransportParameter};
     use neqo_transport::{
-        CloseError, CongestionControlAlgorithm, ConnectionEvent, FixedConnectionIdManager, Output,
-        QuicVersion, State, RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
+        CloseError, ConnectionEvent, ConnectionParameters, FixedConnectionIdManager, Output, State,
+        RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
     };
     use std::convert::TryFrom;
     use std::time::Duration;
@@ -777,8 +773,7 @@ mod tests {
             Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
             loopback(),
             loopback(),
-            &CongestionControlAlgorithm::NewReno,
-            QuicVersion::default(),
+            &ConnectionParameters::default(),
             &Http3Parameters {
                 qpack_settings: QpackSettings {
                     max_table_size_encoder: max_table_size,
@@ -3559,8 +3554,7 @@ mod tests {
             test_fixture::DEFAULT_KEYS,
             test_fixture::DEFAULT_ALPN_H3,
             Rc::new(RefCell::new(FixedConnectionIdManager::new(10))),
-            &CongestionControlAlgorithm::NewReno,
-            QuicVersion::default(),
+            &ConnectionParameters::default(),
         )
         .unwrap();
         // Using a freshly initialized anti-replay context
@@ -4791,7 +4785,7 @@ mod tests {
         // Connect and send a request
         let (mut client, _, _) = connect_and_send_request(true);
 
-        assert_eq!(client.cancel_push(6), Err(Error::InvalidStreamId));
+        assert_eq!(client.cancel_push(6), Err(Error::HttpId));
         assert_eq!(client.state(), Http3State::Connected);
     }
 

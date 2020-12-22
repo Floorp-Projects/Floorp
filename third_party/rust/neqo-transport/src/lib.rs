@@ -34,10 +34,12 @@ mod tracking;
 
 pub use self::cc::CongestionControlAlgorithm;
 pub use self::cid::{ConnectionId, ConnectionIdManager};
-pub use self::connection::{Connection, FixedConnectionIdManager, Output, State, ZeroRttState};
+pub use self::connection::{
+    params::ConnectionParameters, Connection, FixedConnectionIdManager, Output, State,
+    ZeroRttState, LOCAL_STREAM_LIMIT_BIDI, LOCAL_STREAM_LIMIT_UNI,
+};
 pub use self::events::{ConnectionEvent, ConnectionEvents};
-pub use self::frame::CloseError;
-pub use self::frame::StreamType;
+pub use self::frame::{CloseError, StreamType};
 pub use self::packet::QuicVersion;
 pub use self::sender::PacketSender;
 pub use self::stats::Stats;
@@ -46,7 +48,7 @@ pub use self::stream_id::StreamId;
 pub use self::recv_stream::RECV_BUFFER_SIZE;
 pub use self::send_stream::SEND_BUFFER_SIZE;
 
-type TransportError = u64;
+pub type TransportError = u64;
 const ERROR_APPLICATION_CLOSE: TransportError = 12;
 const ERROR_AEAD_LIMIT_REACHED: TransportError = 15;
 

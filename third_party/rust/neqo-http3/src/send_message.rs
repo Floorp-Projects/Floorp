@@ -117,11 +117,7 @@ impl SendMessage {
 
         self.state = SendMessageState::Initialized {
             headers: headers.to_vec(),
-            data: if let Some(d) = data {
-                Some(d.to_vec())
-            } else {
-                None
-            },
+            data: data.map(|d| d.to_vec()),
             fin: true,
         };
         Ok(())
@@ -242,17 +238,15 @@ impl SendMessage {
         };
 
         if let SendMessageState::SendingInitialMessage { ref mut buf, fin } = self.state {
-            let sent = conn
-                .stream_send(self.stream_id, &buf)
-                .map_err(|_| Error::map_send_errors())?;
+            let sent =
+                Error::map_error(conn.stream_send(self.stream_id, &buf), Error::HttpInternal)?;
             qlog::h3_data_moved_down(&mut conn.qlog_mut(), self.stream_id, sent);
 
             qtrace!([label], "{} bytes sent", sent);
 
             if sent == buf.len() {
                 if fin {
-                    conn.stream_close_send(self.stream_id)
-                        .map_err(|_| Error::map_send_errors())?;
+                    Error::map_error(conn.stream_close_send(self.stream_id), Error::HttpInternal)?;
                     self.state = SendMessageState::Closed;
                     qtrace!([label], "done sending request");
                 } else {

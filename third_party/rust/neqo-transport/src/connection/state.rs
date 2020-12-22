@@ -13,7 +13,7 @@ use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::{CloseError, ConnectionError};
 
-#[derive(Clone, Debug, PartialEq, Ord, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 /// The state of the Connection.
 pub enum State {
     Init,
@@ -44,7 +44,7 @@ impl State {
     }
 }
 
-// Implement Ord so that we can enforce monotonic state progression.
+// Implement `PartialOrd` so that we can enforce monotonic state progression.
 impl PartialOrd for State {
     #[allow(clippy::match_same_arms)] // Lint bug: rust-lang/rust-clippy#860
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -68,6 +68,31 @@ impl PartialOrd for State {
             (_, Self::Draining { .. }) => Ordering::Greater,
             (Self::Closed(_), _) => unreachable!(),
         })
+    }
+}
+
+impl Ord for State {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if mem::discriminant(self) == mem::discriminant(other) {
+            return Ordering::Equal;
+        }
+        match (self, other) {
+            (Self::Init, _) => Ordering::Less,
+            (_, Self::Init) => Ordering::Greater,
+            (Self::WaitInitial, _) => Ordering::Less,
+            (_, Self::WaitInitial) => Ordering::Greater,
+            (Self::Handshaking, _) => Ordering::Less,
+            (_, Self::Handshaking) => Ordering::Greater,
+            (Self::Connected, _) => Ordering::Less,
+            (_, Self::Connected) => Ordering::Greater,
+            (Self::Confirmed, _) => Ordering::Less,
+            (_, Self::Confirmed) => Ordering::Greater,
+            (Self::Closing { .. }, _) => Ordering::Less,
+            (_, Self::Closing { .. }) => Ordering::Greater,
+            (Self::Draining { .. }, _) => Ordering::Less,
+            (_, Self::Draining { .. }) => Ordering::Greater,
+            (Self::Closed(_), _) => unreachable!(),
+        }
     }
 }
 

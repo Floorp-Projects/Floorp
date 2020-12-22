@@ -336,8 +336,7 @@ impl PushController {
     ) -> Res<()> {
         qtrace!("Cancel push_id={}", push_id);
 
-        self.check_push_id(push_id)
-            .map_err(|_| Error::InvalidStreamId)?;
+        self.check_push_id(push_id)?;
 
         match self.push_streams.get(push_id) {
             None => {

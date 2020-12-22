@@ -11,7 +11,7 @@ use neqo_crypto::{init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{Error, Http3Server, Http3ServerEvent};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::Server;
-use neqo_transport::{ConnectionEvent, FixedConnectionIdManager, Output};
+use neqo_transport::{ConnectionEvent, ConnectionParameters, FixedConnectionIdManager, Output};
 use std::env;
 
 use std::cell::RefCell;
@@ -487,6 +487,7 @@ impl ServersRunner {
                     anti_replay,
                     Box::new(AllowZeroRtt {}),
                     cid_mgr,
+                    ConnectionParameters::default(),
                 )
                 .expect("We cannot make a server!"),
             ),

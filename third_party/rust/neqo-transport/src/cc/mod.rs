@@ -49,6 +49,7 @@ pub trait CongestionControl: Display + Debug {
     fn on_packet_sent(&mut self, pkt: &SentPacket);
 }
 
+#[derive(Copy, Clone)]
 pub enum CongestionControlAlgorithm {
     NewReno,
 }

@@ -3338,8 +3338,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.4.18"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "chrono",
  "env_logger 0.8.2",
@@ -3350,8 +3350,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.4.18"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "bindgen",
  "log",
@@ -3363,8 +3363,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.4.18"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "log",
  "neqo-common",
@@ -3377,8 +3377,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.4.18"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "lazy_static",
  "log",
@@ -3391,8 +3391,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.4.18"
-source = "git+https://github.com/mozilla/neqo?tag=v0.4.18#b4a1dc52b7dcb689a8369b0f529260cadda224c3"
+version = "0.4.19"
+source = "git+https://github.com/mozilla/neqo?tag=v0.4.19#7bed96666f977cfaef4288ebb792273e0ca0f41c"
 dependencies = [
  "indexmap",
  "lazy_static",
@@ -4038,9 +4038,9 @@ dependencies = [
 
 [[package]]
 name = "qlog"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4767943b701b674b8d5e8535d3242b6cbd8249bf5d72eee0d45f376a2b680ad4"
+checksum = "8777d5490145d6907198d48b3a907447689ce80e071b3d8a16a9d9fb3df02bc1"
 dependencies = [
  "serde",
  "serde_derive",
@@ -4553,6 +4553,7 @@ version = "1.0.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c575e0cc52bdd09b47f330f646cf59afc586e9c4e3ccd6fc1f625b8ea1dad7"
 dependencies = [
+ "indexmap",
  "itoa",
  "ryu",
  "serde",

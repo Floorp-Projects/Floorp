@@ -218,11 +218,11 @@ impl Http3Connection {
         if fin {
             self.new_streams.remove(&stream_id);
             Ok(false)
-        } else if let Some(t) = stream_type {
-            self.new_streams.remove(&stream_id);
-            self.decode_new_stream(conn, t, stream_id)
         } else {
-            Ok(false)
+            stream_type.map_or(Ok(false), |t| {
+                self.new_streams.remove(&stream_id);
+                self.decode_new_stream(conn, t, stream_id)
+            })
         }
     }
 
@@ -488,16 +488,18 @@ impl Http3Connection {
             }
             QPACK_UNI_STREAM_TYPE_ENCODER => {
                 qinfo!([self], "A new remote qpack encoder stream {}", stream_id);
-                self.qpack_decoder
-                    .add_recv_stream(stream_id)
-                    .map_err(|_| Error::HttpStreamCreation)?;
+                Error::map_error(
+                    self.qpack_decoder.add_recv_stream(stream_id),
+                    Error::HttpStreamCreation,
+                )?;
                 Ok(false)
             }
             QPACK_UNI_STREAM_TYPE_DECODER => {
                 qinfo!([self], "A new remote qpack decoder stream {}", stream_id);
-                self.qpack_encoder
-                    .add_recv_stream(stream_id)
-                    .map_err(|_| Error::HttpStreamCreation)?;
+                Error::map_error(
+                    self.qpack_encoder.add_recv_stream(stream_id),
+                    Error::HttpStreamCreation,
+                )?;
                 Ok(false)
             }
             _ => {
