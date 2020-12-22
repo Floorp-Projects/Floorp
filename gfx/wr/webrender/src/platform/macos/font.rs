@@ -421,16 +421,19 @@ impl FontContext {
         size: f64,
         variations: &[FontVariation],
     ) -> Option<(CTFont, CTFontSymbolicTraits)> {
-        match self.ct_fonts.entry((font_key, FontSize::from_f64_px(size), variations.to_vec())) {
-            Entry::Occupied(entry) => Some((*entry.get()).clone()),
-            Entry::Vacant(entry) => {
-                let desc_or_font = self.desc_or_fonts.get(&font_key)?;
-                let ct_font = new_ct_font_with_variations(desc_or_font, size, variations);
-                let traits = ct_font.symbolic_traits();
-                entry.insert((ct_font.clone(), traits));
-                Some((ct_font, traits))
+        // Interacting with CoreText can create autorelease garbage.
+        objc::rc::autoreleasepool(|| {
+            match self.ct_fonts.entry((font_key, FontSize::from_f64_px(size), variations.to_vec())) {
+                Entry::Occupied(entry) => Some((*entry.get()).clone()),
+                Entry::Vacant(entry) => {
+                    let desc_or_font = self.desc_or_fonts.get(&font_key)?;
+                    let ct_font = new_ct_font_with_variations(desc_or_font, size, variations);
+                    let traits = ct_font.symbolic_traits();
+                    entry.insert((ct_font.clone(), traits));
+                    Some((ct_font, traits))
+                }
             }
-        }
+        })
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
