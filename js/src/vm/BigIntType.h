@@ -239,8 +239,10 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   void dump(js::GenericPrinter& out) const;
 #endif
 
- private:
+ public:
   static constexpr size_t DigitBits = sizeof(Digit) * CHAR_BIT;
+
+ private:
   static constexpr size_t HalfDigitBits = DigitBits / 2;
   static constexpr Digit HalfDigitMask = (1ull << HalfDigitBits) - 1;
 
