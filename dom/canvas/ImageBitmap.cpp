@@ -592,6 +592,7 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
       srcSurface->Unmap();
     }
 
+    mAlphaType = gfxAlphaType::Premult;
     mSurface = dstSurface;
   }
 

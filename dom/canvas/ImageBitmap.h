@@ -238,7 +238,7 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
    */
   gfx::IntRect mPictureRect;
 
-  const gfxAlphaType mAlphaType;
+  gfxAlphaType mAlphaType;
 
   RefPtr<ImageBitmapShutdownObserver> mShutdownObserver;
 
