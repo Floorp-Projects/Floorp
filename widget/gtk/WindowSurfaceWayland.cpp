@@ -161,36 +161,14 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 #define BUFFER_BPP 4
 gfx::SurfaceFormat WindowBackBuffer::mFormat = gfx::SurfaceFormat::B8G8R8A8;
 
-static StaticMutex gDelayedCommitLock;
-static GList* gDelayedCommits = nullptr;
-
-static bool DelayedCommitsCheckAndRemoveSurface(
-    WindowSurfaceWayland* aSurface) {
-  StaticMutexAutoLock lock(gDelayedCommitLock);
-  GList* foundCommit = g_list_find(gDelayedCommits, aSurface);
-  if (foundCommit) {
-    gDelayedCommits = g_list_delete_link(gDelayedCommits, foundCommit);
-  }
-  return foundCommit != nullptr;
-}
-
-static bool DelayedCommitsCheckAndAddSurface(WindowSurfaceWayland* aSurface) {
-  StaticMutexAutoLock lock(gDelayedCommitLock);
-  GList* foundCommit = g_list_find(gDelayedCommits, aSurface);
-  if (!foundCommit) {
-    gDelayedCommits = g_list_prepend(gDelayedCommits, aSurface);
-  }
-  return foundCommit == nullptr;
-}
-
 // When a new window is created we may not have a valid wl_surface
 // for drawing (Gtk haven't created it yet). All commits are queued
 // and CommitWaylandBuffer() is called by timer when wl_surface is ready
 // for drawing.
-static void WaylandBufferDelayCommitHandler(WindowSurfaceWayland* aSurface) {
-  if (DelayedCommitsCheckAndRemoveSurface(aSurface)) {
-    aSurface->CommitWaylandBuffer();
-  }
+static int WaylandBufferDelayCommitHandler(void* data) {
+  WindowSurfaceWayland* aSurface = static_cast<WindowSurfaceWayland*>(data);
+  aSurface->CommitWaylandBuffer();
+  return true;
 }
 
 RefPtr<nsWaylandDisplay> WindowBackBuffer::GetWaylandDisplay() {
@@ -476,20 +454,22 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mBufferCommitAllowed(false),
       mBufferNeedsClear(false),
       mSmoothRendering(StaticPrefs::widget_wayland_smooth_rendering()),
-      mIsMainThread(NS_IsMainThread()) {
+      mIsMainThread(NS_IsMainThread()),
+      mSurfaceReadyTimerID() {
   for (int i = 0; i < BACK_BUFFER_NUM; i++) {
     mShmBackupBuffer[i] = nullptr;
   }
 }
 
 WindowSurfaceWayland::~WindowSurfaceWayland() {
+  if (mSurfaceReadyTimerID) {
+    g_source_remove(mSurfaceReadyTimerID);
+    mSurfaceReadyTimerID = 0;
+  }
+
   if (mBufferPendingCommit) {
     NS_WARNING("Deleted WindowSurfaceWayland with a pending commit!");
   }
-
-  // Delete reference to this to prevent WaylandBufferDelayCommitHandler()
-  // operate on released this.
-  DelayedCommitsCheckAndRemoveSurface(this);
 
   if (mFrameCallback) {
     wl_callback_destroy(mFrameCallback);
@@ -972,13 +952,15 @@ void WindowSurfaceWayland::CommitWaylandBuffer() {
     MOZ_ASSERT(!mFrameCallback || waylandSurface != mLastCommittedSurface,
                "Missing wayland surface at frame callback!");
 
-    if (DelayedCommitsCheckAndAddSurface(this)) {
-      MessageLoop::current()->PostDelayedTask(
-          NewRunnableFunction("WaylandBackBufferCommit",
-                              &WaylandBufferDelayCommitHandler, this),
-          EVENT_LOOP_DELAY);
+    if (!mSurfaceReadyTimerID) {
+      mSurfaceReadyTimerID = g_timeout_add(
+          EVENT_LOOP_DELAY, &WaylandBufferDelayCommitHandler, this);
     }
     return;
+  }
+  if (mSurfaceReadyTimerID) {
+    g_source_remove(mSurfaceReadyTimerID);
+    mSurfaceReadyTimerID = 0;
   }
 
   auto unlockContainer = MakeScopeExit([&] {

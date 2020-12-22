@@ -256,6 +256,8 @@ class WindowSurfaceWayland : public WindowSurface {
   bool mSmoothRendering;
 
   bool mIsMainThread;
+
+  gint mSurfaceReadyTimerID;
 };
 
 }  // namespace widget
