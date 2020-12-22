@@ -140,6 +140,8 @@ class ProfileBufferChunk {
 
 #ifdef DEBUG
   ~ProfileBufferChunk() {
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::InUse);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Full);
     MOZ_ASSERT(mInternalHeader.mState == InternalHeader::State::Created ||
                mInternalHeader.mState == InternalHeader::State::Done ||
                mInternalHeader.mState == InternalHeader::State::Recycled);
@@ -150,6 +152,9 @@ class ProfileBufferChunk {
   // skipped if the reader starts with this ProfileBufferChunk.
   [[nodiscard]] SpanOfBytes ReserveInitialBlockAsTail(Length aTailSize) {
 #ifdef DEBUG
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::InUse);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Full);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Done);
     MOZ_ASSERT(mInternalHeader.mState == InternalHeader::State::Created ||
                mInternalHeader.mState == InternalHeader::State::Recycled);
     mInternalHeader.mState = InternalHeader::State::InUse;
@@ -168,6 +173,10 @@ class ProfileBufferChunk {
   // its starting index. The actual size may be smaller, if the block cannot fit
   // in the remaining space.
   [[nodiscard]] ReserveReturn ReserveBlock(Length aBlockSize) {
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Created);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Full);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Done);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Recycled);
     MOZ_ASSERT(mInternalHeader.mState == InternalHeader::State::InUse);
     MOZ_ASSERT(RangeStart() != 0,
                "Expected valid range start before first Reserve()");
@@ -191,6 +200,9 @@ class ProfileBufferChunk {
   // Access to its content is still allowed.
   void MarkDone() {
 #ifdef DEBUG
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Created);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Done);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Recycled);
     MOZ_ASSERT(mInternalHeader.mState == InternalHeader::State::InUse ||
                mInternalHeader.mState == InternalHeader::State::Full);
     mInternalHeader.mState = InternalHeader::State::Done;
@@ -204,6 +216,8 @@ class ProfileBufferChunk {
     // We also allow Created and already-Recycled chunks to be recycled, this
     // way it's easier to recycle chunks when their state is not easily
     // trackable.
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::InUse);
+    MOZ_ASSERT(mInternalHeader.mState != InternalHeader::State::Full);
     MOZ_ASSERT(mInternalHeader.mState == InternalHeader::State::Created ||
                mInternalHeader.mState == InternalHeader::State::Done ||
                mInternalHeader.mState == InternalHeader::State::Recycled);
