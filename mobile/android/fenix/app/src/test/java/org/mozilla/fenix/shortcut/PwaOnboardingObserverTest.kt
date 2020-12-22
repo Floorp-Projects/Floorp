@@ -68,8 +68,10 @@ class PwaOnboardingObserverTest {
 
     @Test
     fun `GIVEN cfr should not yet be shown WHEN installable page is loaded THEN counter is incremented`() {
-        pwaOnboardingObserver.start()
         every { webAppUseCases.isInstallable() } returns true
+        every { settings.userKnowsAboutPwas } returns false
+        every { settings.shouldShowPwaCfr } returns false
+        pwaOnboardingObserver.start()
 
         store.dispatch(ContentAction.UpdateWebAppManifestAction("1", mockk())).joinBlocking()
         verify { settings.incrementVisitedInstallableCount() }
@@ -81,9 +83,10 @@ class PwaOnboardingObserverTest {
 
     @Test
     fun `GIVEN cfr should be shown WHEN installable page is loaded THEN we navigate to onboarding fragment`() {
-        pwaOnboardingObserver.start()
         every { webAppUseCases.isInstallable() } returns true
+        every { settings.userKnowsAboutPwas } returns false
         every { settings.shouldShowPwaCfr } returns true
+        pwaOnboardingObserver.start()
 
         store.dispatch(ContentAction.UpdateWebAppManifestAction("1", mockk())).joinBlocking()
         verify { settings.incrementVisitedInstallableCount() }
@@ -95,8 +98,10 @@ class PwaOnboardingObserverTest {
 
     @Test
     fun `GIVEN web app is not installable WHEN page with manifest is loaded THEN nothing happens`() {
-        pwaOnboardingObserver.start()
         every { webAppUseCases.isInstallable() } returns false
+        every { settings.userKnowsAboutPwas } returns false
+        every { settings.shouldShowPwaCfr } returns true
+        pwaOnboardingObserver.start()
 
         store.dispatch(ContentAction.UpdateWebAppManifestAction("1", mockk())).joinBlocking()
         verify(exactly = 0) { settings.incrementVisitedInstallableCount() }
