@@ -42,6 +42,7 @@ struct ColorRect {
   int height;
   int borderWidth;
   int borderRadius;
+  bool flipIfRTL;
 };
 
 // DrawRect is mostly the same as ColorRect, but exists as an implementation
@@ -187,6 +188,7 @@ static const wchar_t* sSearchbarRegSuffix = L"|SearchbarCSSSpan";
 static const wchar_t* sSpringsCSSRegSuffix = L"|SpringsCSSSpan";
 static const wchar_t* sThemeRegSuffix = L"|Theme";
 static const wchar_t* sMenubarShownRegSuffix = L"|MenubarShown";
+static const wchar_t* sRTLEnabledRegSuffix = L"|RTLEnabled";
 
 struct LoadedCoTaskMemFreeDeleter {
   void operator()(void* ptr) {
@@ -692,8 +694,9 @@ bool RasterizeAnimatedRect(const ColorRect& colorRect,
 
 void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
                     CSSPixelSpan searchbarCSSSpan,
-                    const Vector<CSSPixelSpan>& springs,
-                    const ThemeColors& currentTheme, const bool& menubarShown) {
+                    Vector<CSSPixelSpan>& springs,
+                    const ThemeColors& currentTheme, const bool& menubarShown,
+                    const bool& rtlEnabled) {
   // NOTE: we opt here to paint a pixel buffer for the application chrome by
   // hand, without using native UI library methods. Why do we do this?
   //
@@ -748,10 +751,13 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   int tabPlaceholderBarHeight = CSSToDevPixels(8, sCSSToDevPixelScaling);
   int tabPlaceholderBarWidth = CSSToDevPixels(120, sCSSToDevPixelScaling);
 
-  int toolbarPlaceholderMarginLeft = CSSToDevPixels(9, sCSSToDevPixelScaling);
-  int toolbarPlaceholderMarginRight = CSSToDevPixels(11, sCSSToDevPixelScaling);
   int toolbarPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
-
+  int toolbarPlaceholderMarginRight =
+      rtlEnabled ? CSSToDevPixels(11, sCSSToDevPixelScaling)
+                 : CSSToDevPixels(9, sCSSToDevPixelScaling);
+  int toolbarPlaceholderMarginLeft =
+      rtlEnabled ? CSSToDevPixels(9, sCSSToDevPixelScaling)
+                 : CSSToDevPixels(11, sCSSToDevPixelScaling);
   int placeholderMargin = CSSToDevPixels(8, sCSSToDevPixelScaling);
 
   int menubarHeightDevPixels =
@@ -786,6 +792,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   topBorder.y = 0;
   topBorder.width = sWindowWidth;
   topBorder.height = topBorderHeight;
+  topBorder.flipIfRTL = false;
   if (!rects.append(topBorder)) {
     return;
   }
@@ -796,6 +803,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   menubar.y = topBorder.height;
   menubar.width = sWindowWidth;
   menubar.height = menubarHeightDevPixels;
+  menubar.flipIfRTL = false;
   if (!rects.append(menubar)) {
     return;
   }
@@ -814,6 +822,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   tabBar.y = menubar.height;
   tabBar.width = sWindowWidth;
   tabBar.height = tabBarHeight;
+  tabBar.flipIfRTL = false;
   if (!rects.append(tabBar)) {
     return;
   }
@@ -825,6 +834,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   tabLine.y = menubar.height;
   tabLine.width = selectedTabWidth;
   tabLine.height = tabLineHeight;
+  tabLine.flipIfRTL = true;
   if (!rects.append(tabLine)) {
     return;
   }
@@ -836,6 +846,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   selectedTab.y = tabLine.y + tabLineHeight;
   selectedTab.width = selectedTabWidth;
   selectedTab.height = tabBar.y + tabBar.height - selectedTab.y;
+  selectedTab.flipIfRTL = true;
   if (!rects.append(selectedTab)) {
     return;
   }
@@ -848,6 +859,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   tabTextPlaceholder.width = tabPlaceholderBarWidth;
   tabTextPlaceholder.height = tabPlaceholderBarHeight;
   tabTextPlaceholder.borderRadius = placeholderBorderRadius;
+  tabTextPlaceholder.flipIfRTL = true;
   if (!rects.append(tabTextPlaceholder)) {
     return;
   }
@@ -859,6 +871,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   toolbar.y = tabBar.y + tabBarHeight;
   toolbar.width = sWindowWidth;
   toolbar.height = toolbarHeight;
+  toolbar.flipIfRTL = false;
   if (!rects.append(toolbar)) {
     return;
   }
@@ -870,6 +883,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   chromeContentDivider.y = toolbar.y + toolbar.height;
   chromeContentDivider.width = sWindowWidth;
   chromeContentDivider.height = chromeContentDividerHeight;
+  chromeContentDivider.flipIfRTL = false;
   if (!rects.append(chromeContentDivider)) {
     return;
   }
@@ -886,18 +900,26 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   urlbar.borderRadius = urlbarBorderRadius;
   urlbar.borderWidth = urlbarBorderWidth;
   urlbar.borderColor = urlbarBorderColor;
+  urlbar.flipIfRTL = false;
   if (!rects.append(urlbar)) {
     return;
   }
 
   // The urlbar placeholder rect representating text that will fill the urlbar
+  // If rtl is enabled, it is flipped relative to the the urlbar rectangle, not
+  // sWindowWidth.
   ColorRect urlbarTextPlaceholder = {};
   urlbarTextPlaceholder.color = sToolbarForegroundColor;
-  urlbarTextPlaceholder.x = urlbar.x + urlbarTextPlaceholderMarginLeft;
+  urlbarTextPlaceholder.x =
+      rtlEnabled
+          ? ((urlbar.x + urlbar.width) - urlbarTextPlaceholderMarginLeft -
+             urlbarTextPlaceHolderWidth)
+          : (urlbar.x + urlbarTextPlaceholderMarginLeft);
   urlbarTextPlaceholder.y = urlbar.y + urlbarTextPlaceholderMarginTop;
   urlbarTextPlaceholder.width = urlbarTextPlaceHolderWidth;
   urlbarTextPlaceholder.height = urlbarTextPlaceholderHeight;
   urlbarTextPlaceholder.borderRadius = placeholderBorderRadius;
+  urlbarTextPlaceholder.flipIfRTL = false;
   if (!rects.append(urlbarTextPlaceholder)) {
     return;
   }
@@ -918,20 +940,27 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
     searchbarRect.borderRadius = urlbarBorderRadius;
     searchbarRect.borderWidth = urlbarBorderWidth;
     searchbarRect.borderColor = urlbarBorderColor;
+    searchbarRect.flipIfRTL = false;
     if (!rects.append(searchbarRect)) {
       return;
     }
 
     // The placeholder rect representating text that will fill the searchbar
     // This uses the same margins as the urlbarTextPlaceholder
+    // If rtl is enabled, it is flipped relative to the the searchbar rectangle,
+    // not sWindowWidth.
     ColorRect searchbarTextPlaceholder = {};
     searchbarTextPlaceholder.color = sToolbarForegroundColor;
     searchbarTextPlaceholder.x =
-        searchbarRect.x + urlbarTextPlaceholderMarginLeft;
+        rtlEnabled
+            ? ((searchbarRect.x + searchbarRect.width) -
+               urlbarTextPlaceholderMarginLeft - searchbarTextPlaceholderWidth)
+            : (searchbarRect.x + urlbarTextPlaceholderMarginLeft);
     searchbarTextPlaceholder.y =
         searchbarRect.y + urlbarTextPlaceholderMarginTop;
     searchbarTextPlaceholder.width = searchbarTextPlaceholderWidth;
     searchbarTextPlaceholder.height = urlbarTextPlaceholderHeight;
+    searchbarTextPlaceholder.flipIfRTL = false;
     if (!rects.append(searchbarTextPlaceholder) ||
         !sAnimatedRects->append(searchbarTextPlaceholder)) {
       return;
@@ -957,6 +986,12 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   marginLeftPlaceholder.end = toolbarPlaceholderMarginLeft;
   if (!noPlaceholderSpans.append(marginLeftPlaceholder)) {
     return;
+  }
+
+  if (rtlEnabled) {
+    // If we're RTL, then the springs as ordered in the DOM will be from right
+    // to left, which will break our comparison logic below
+    springs.reverse();
   }
 
   for (auto spring : springs) {
@@ -1010,6 +1045,7 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
     placeholderRect.width = end - start;
     placeholderRect.height = toolbarPlaceholderHeight;
     placeholderRect.borderRadius = placeholderBorderRadius;
+    placeholderRect.flipIfRTL = false;
     if (!rects.append(placeholderRect) ||
         !sAnimatedRects->append(placeholderRect)) {
       return;
@@ -1031,6 +1067,9 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
       (uint32_t*)calloc(sWindowWidth * sTotalChromeHeight, sizeof(uint32_t));
 
   for (auto& rect : *sAnimatedRects) {
+    if (rtlEnabled && rect.flipIfRTL) {
+      rect.x = sWindowWidth - rect.x - rect.width;
+    }
     rect.x = std::clamp(rect.x, 0, sWindowWidth);
     rect.width = std::clamp(rect.width, 0, sWindowWidth - rect.x);
     rect.y = std::clamp(rect.y, 0, sTotalChromeHeight);
@@ -1038,6 +1077,9 @@ void DrawSkeletonUI(HWND hWnd, CSSPixelSpan urlbarCSSSpan,
   }
 
   for (auto& rect : rects) {
+    if (rtlEnabled && rect.flipIfRTL) {
+      rect.x = sWindowWidth - rect.x - rect.width;
+    }
     rect.x = std::clamp(rect.x, 0, sWindowWidth);
     rect.width = std::clamp(rect.width, 0, sWindowWidth - rect.x);
     rect.y = std::clamp(rect.y, 0, sTotalChromeHeight);
@@ -1756,16 +1798,29 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   }
   sMaximized = maximized != 0;
 
-  uint32_t menubarShown;
+  uint32_t menubarShownInt;
   result = ::RegGetValueW(
       regKey, nullptr,
       GetRegValueName(binPath.get(), sMenubarShownRegSuffix).c_str(),
-      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&menubarShown),
+      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&menubarShownInt),
       &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading menubarShown %lu\n", GetLastError());
     return;
   }
+  bool menubarShown = menubarShownInt != 0;
+
+  uint32_t rtlEnabledInt;
+  result = ::RegGetValueW(
+      regKey, nullptr,
+      GetRegValueName(binPath.get(), sRTLEnabledRegSuffix).c_str(),
+      RRF_RT_REG_DWORD, nullptr, reinterpret_cast<PBYTE>(&rtlEnabledInt),
+      &dataLen);
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Error reading rtlEnabled %lu\n", GetLastError());
+    return;
+  }
+  bool rtlEnabled = rtlEnabledInt != 0;
 
   dataLen = sizeof(double);
   result = ::RegGetValueW(
@@ -1916,7 +1971,7 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
   DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbar, searchbar, springs,
-                 currentTheme, menubarShown);
+                 currentTheme, menubarShown, rtlEnabled);
   if (sAnimatedRects) {
     sPreXULSKeletonUIAnimationThread = ::CreateThread(
         nullptr, 256 * 1024, AnimateSkeletonUI, nullptr, 0, nullptr);
@@ -2021,6 +2076,15 @@ void PersistPreXULSkeletonUIValues(const SkeletonUISettings& settings) {
       sizeof(menubarShownDword));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting menubarShown to Windows registry\n");
+  }
+
+  DWORD rtlEnabledDword = settings.rtlEnabled ? 1 : 0;
+  result = ::RegSetValueExW(
+      regKey, GetRegValueName(binPath.get(), sRTLEnabledRegSuffix).c_str(), 0,
+      REG_DWORD, reinterpret_cast<const BYTE*>(&rtlEnabledDword),
+      sizeof(rtlEnabledDword));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting rtlEnabled to Windows registry\n");
   }
 
   result = ::RegSetValueExW(

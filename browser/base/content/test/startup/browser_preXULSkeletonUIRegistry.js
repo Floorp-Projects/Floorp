@@ -99,6 +99,7 @@ add_task(async function testPersistsNecessaryValuesOnChange() {
     "SearchbarCSSSpan",
     "Theme",
     "MenubarShown",
+    "RTLEnabled",
   ];
 
   // Remove all of the registry values to ensure old tests aren't giving us false
