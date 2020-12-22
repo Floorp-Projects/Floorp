@@ -25,9 +25,9 @@ info: |
     If IsCallable(predicate) is false, throw a TypeError exception.
     Let k be 0.
     Repeat, while k < len,
-      Let Pk be ! ToString(𝔽(k)).
+      Let Pk be ! ToString(F(k)).
       Let kValue be ? Get(O, Pk).
-      Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+      Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, F(k), O »)).
       If testResult is true, return kValue.
       Set k to k + 1.
     Return undefined.

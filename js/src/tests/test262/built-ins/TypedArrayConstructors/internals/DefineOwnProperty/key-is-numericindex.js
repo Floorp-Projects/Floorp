@@ -19,7 +19,7 @@ info: |
         Let value be Desc.[[Value]].
         Return ? IntegerIndexedElementSet(O, numericIndex, value).
 
-includes: [testTypedArray.js, propertyHelper.js]
+includes: [testTypedArray.js]
 features: [Reflect, TypedArray]
 ---*/
 
@@ -37,13 +37,11 @@ testWithTypedArrayConstructors(function(TA) {
   );
 
   assert.sameValue(sample[0], 8, "property value was set");
-  var desc = Object.getOwnPropertyDescriptor(sample, "0");
-
-  assert.sameValue(desc.value, 8, "desc.value");
-  assert.sameValue(desc.writable, true, "property is writable");
-
-  verifyEnumerable(sample, "0");
-  verifyNotConfigurable(sample, "0");
+  let descriptor0 = Object.getOwnPropertyDescriptor(sample, "0");
+  assert.sameValue(descriptor0.value, 8);
+  assert.sameValue(descriptor0.configurable, true);
+  assert.sameValue(descriptor0.enumerable, true);
+  assert.sameValue(descriptor0.writable, true);
 });
 
 reportCompare(0, 0);

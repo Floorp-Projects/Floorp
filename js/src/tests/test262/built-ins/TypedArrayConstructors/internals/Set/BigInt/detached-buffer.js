@@ -3,7 +3,7 @@
 /*---
 esid: sec-integer-indexed-exotic-objects-set-p-v-receiver
 description: >
-  Returns true when setting the value of any CanonicalNumericIndexString if buffer is detached.
+  Returns false when setting the value of any CanonicalNumericIndexString if buffer is detached.
 info: |
   [[Set]] ( P, V, Receiver)
 
