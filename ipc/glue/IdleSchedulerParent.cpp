@@ -170,12 +170,15 @@ IPCResult IdleSchedulerParent::RecvIdleTimeUsed(uint64_t aId) {
   // could arrive after the parent has granted the request.
   MOZ_ASSERT(IsWaitingForIdle() || IsDoingIdleTask());
 
-  if (mCurrentRequestId == aId) {
-    if (IsWaitingForIdle()) {
-      remove();
-    }
-    mRequestedIdleBudget = TimeDuration();
+  // The parent process will always know the ID of the current request (since
+  // the IPC channel is reliable).  The IDs are provided so that the client can
+  // check them (it's possible for the client to race ahead of the server).
+  MOZ_ASSERT(mCurrentRequestId == aId);
+
+  if (IsWaitingForIdle()) {
+    remove();
   }
+  mRequestedIdleBudget = TimeDuration();
   Schedule(nullptr);
   return IPC_OK();
 }
