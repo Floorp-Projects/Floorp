@@ -87,6 +87,13 @@ const TEST_MULTISTAGE_CONTENT = {
             navigate: true,
           },
         },
+        secondary_button: {
+          label: "Import",
+          action: {
+            type: "SHOW_MIGRATION_WIZARD",
+            data: { source: "chrome" },
+          },
+        },
         help_text: {
           text: "Here's some sample help text",
           position: "default",
@@ -641,6 +648,7 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
 add_task(async function test_AWMultistage_Themes() {
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+
   const sandbox = sinon.createSandbox();
   // Stub AboutWelcomeParent Content Message Handler
   sandbox
@@ -702,5 +710,61 @@ add_task(async function test_AWMultistage_Themes() {
     eventCall.args[1].event_context.source,
     "automatic",
     "automatic click source recorded in Telemetry"
+  );
+});
+
+add_task(async function test_AWMultistage_Import() {
+  let browser = await openAboutWelcome();
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+
+  // click twice to advance to screen 3
+  await onButtonClick(browser, "button.primary");
+  await onButtonClick(browser, "button.primary");
+
+  const sandbox = sinon.createSandbox();
+  // Stub AboutWelcomeParent Content Message Handler
+  sandbox
+    .stub(aboutWelcomeActor, "onContentMessage")
+    .resolves("")
+    .withArgs("AWPage:IMPORTABLE_SITES")
+    .resolves([]);
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  await onButtonClick(browser, "button.secondary");
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+
+  let actionCall;
+  let eventCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("SPECIAL")) {
+      actionCall = call;
+    } else if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      eventCall = call;
+    }
+  }
+
+  Assert.equal(
+    actionCall.args[0],
+    "AWPage:SPECIAL_ACTION",
+    "Got call to handle special action"
+  );
+  Assert.equal(
+    actionCall.args[1].type,
+    "SHOW_MIGRATION_WIZARD",
+    "Special action SHOW_MIGRATION_WIZARD event handled"
+  );
+  Assert.equal(
+    actionCall.args[1].data.source,
+    "chrome",
+    "Source passed to event handler"
+  );
+  Assert.equal(
+    eventCall.args[0],
+    "AWPage:TELEMETRY_EVENT",
+    "Got call to handle Telemetry event"
   );
 });
