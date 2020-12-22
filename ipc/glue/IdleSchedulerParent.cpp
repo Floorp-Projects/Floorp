@@ -20,8 +20,6 @@ std::bitset<NS_IDLE_SCHEDULER_COUNTER_ARRAY_LENGHT>
 LinkedList<IdleSchedulerParent> IdleSchedulerParent::sDefault;
 LinkedList<IdleSchedulerParent> IdleSchedulerParent::sWaitingForIdle;
 LinkedList<IdleSchedulerParent> IdleSchedulerParent::sIdle;
-AutoTArray<IdleSchedulerParent*, 8>* IdleSchedulerParent::sPrioritized =
-    nullptr;
 Atomic<int32_t> IdleSchedulerParent::sCPUsForChildProcesses(-1);
 uint32_t IdleSchedulerParent::sChildProcessesRunningPrioritizedOperation = 0;
 nsITimer* IdleSchedulerParent::sStarvationPreventer = nullptr;

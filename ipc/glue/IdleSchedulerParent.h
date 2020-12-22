@@ -83,7 +83,6 @@ class IdleSchedulerParent final
   // Child has gotten idle time and is running idle or normal tasks.
   static LinkedList<IdleSchedulerParent> sIdle;
 
-  static AutoTArray<IdleSchedulerParent*, 8>* sPrioritized;
   static Atomic<int32_t> sCPUsForChildProcesses;
 
   // Counting all the child processes which have at least one prioritized
