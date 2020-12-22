@@ -213,46 +213,56 @@ int32_t IdleSchedulerParent::ActiveCount() {
   return 0;
 }
 
+bool IdleSchedulerParent::HasSpareCycles(int32_t aActiveCount) {
+  // Don't bail out so easily if we're running with very few cores.
+  if (sCPUsForChildProcesses > 1 && sCPUsForChildProcesses <= aActiveCount) {
+    // Too many processes are running, bail out.
+    return false;
+  }
+
+  if (sChildProcessesRunningPrioritizedOperation > 0 &&
+      sCPUsForChildProcesses / 2 <= aActiveCount) {
+    // We're running a prioritized operation and don't have too many spare
+    // cores for idle tasks, bail out.
+    return false;
+  }
+
+  return true;
+}
+
+void IdleSchedulerParent::SendIdleTime() {
+  // We would assert that IsWaiting() except after removing the task from it's
+  // list this will return false.  Instead check IsDoingIdleTask()
+  MOZ_ASSERT(IsDoingIdleTask());
+  Unused << SendIdleTime(mCurrentRequestId, mRequestedIdleBudget);
+}
+
 void IdleSchedulerParent::Schedule(IdleSchedulerParent* aRequester) {
-  if (sWaitingForIdle.isEmpty()) {
-    return;
-  }
+  // Tasks won't update the active count until after they receive their message
+  // and start to run, so make a copy of it here and increment it for every task
+  // we schedule. It will become an estimate of how many tasks will be active
+  // shortly.
+  int32_t activeCount = ActiveCount();
 
-  if (!aRequester || !aRequester->mRunningPrioritizedOperation) {
-    int32_t activeCount = ActiveCount();
-    // Don't bail out so easily if we're running with very few cores.
-    if (sCPUsForChildProcesses > 1 && sCPUsForChildProcesses <= activeCount) {
-      // Too many processes are running, bail out.
-      EnsureStarvationTimer();
-      return;
-    }
-
-    if (sChildProcessesRunningPrioritizedOperation > 0 &&
-        sCPUsForChildProcesses / 2 <= activeCount) {
-      // We're running a prioritized operation and don't have too many spare
-      // cores for idle tasks, bail out.
-      EnsureStarvationTimer();
-      return;
-    }
-  }
-
-  // We can run an idle task. If the requester is prioritized, just let it
-  // run itself.
-  RefPtr<IdleSchedulerParent> idleRequester;
   if (aRequester && aRequester->mRunningPrioritizedOperation) {
+    // If the requester is prioritized, just let it run itself.
     if (aRequester->isInList()) {
       aRequester->remove();
     }
-    idleRequester = aRequester;
-  } else {
-    idleRequester = sWaitingForIdle.popFirst();
+    aRequester->SendIdleTime();
+    activeCount++;
   }
 
-  // We would assert that IsWaiting() except after removing the task from it's
-  // list this will return false.  Instead check IsDoingIdleTask()
-  MOZ_ASSERT(idleRequester->IsDoingIdleTask());
-  Unused << idleRequester->SendIdleTime(idleRequester->mCurrentRequestId,
-                                        idleRequester->mRequestedIdleBudget);
+  while (!sWaitingForIdle.isEmpty() && HasSpareCycles(activeCount)) {
+    // We can run an idle task.
+    RefPtr<IdleSchedulerParent> idleRequester = sWaitingForIdle.popFirst();
+    idleRequester->SendIdleTime();
+    activeCount++;
+  }
+
+  if (!sWaitingForIdle.isEmpty()) {
+    EnsureStarvationTimer();
+  }
 }
 
 void IdleSchedulerParent::EnsureStarvationTimer() {

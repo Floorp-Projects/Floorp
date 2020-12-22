@@ -47,6 +47,9 @@ class IdleSchedulerParent final
 
   static int32_t ActiveCount();
   static void Schedule(IdleSchedulerParent* aRequester);
+  static bool HasSpareCycles(int32_t aActiveCount);
+  using PIdleSchedulerParent::SendIdleTime;
+  void SendIdleTime();
 
   static void EnsureStarvationTimer();
   static void StarvationCallback(nsITimer* aTimer, void* aData);
