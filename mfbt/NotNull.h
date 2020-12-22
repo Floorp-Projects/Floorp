@@ -90,6 +90,7 @@ class MovingNotNull;
 // - NotNull<char*>
 // - NotNull<RefPtr<Event>>
 // - NotNull<nsCOMPtr<Event>>
+// - NotNull<UniquePtr<Pointee>>
 //
 // NotNull has the following notable properties.
 //
@@ -112,8 +113,9 @@ class MovingNotNull;
 //   boolean context, which eliminates the possibility of unnecessary null
 //   checks.
 //
-// NotNull currently doesn't work with UniquePtr. See
-// https://github.com/Microsoft/GSL/issues/89 for some discussion.
+// - It is not movable, but copyable if the base pointer type is copyable. It
+//   may be used together with MovingNotNull to avoid unnecessary copies or when
+//   the base pointer type is not copyable (such as UniquePtr<T>).
 //
 template <typename T>
 class NotNull {
