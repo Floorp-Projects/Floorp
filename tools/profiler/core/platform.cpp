@@ -712,9 +712,6 @@ struct LiveProfiledThreadData {
 // bytes.
 constexpr static uint32_t scBytesPerEntry = 8;
 
-// Expected maximum size needed to store one stack sample.
-constexpr static uint32_t scExpectedMaximumStackSize = 64 * 1024;
-
 // This class contains the profiler's global state that is valid only when the
 // profiler is active. When not instantiated, the profiler is inactive.
 //
@@ -729,7 +726,8 @@ class ActivePS {
   // mechanism to control the overal memory limit.
 
   // Minimum chunk size allowed, enough for at least one stack.
-  constexpr static uint32_t scMinimumChunkSize = 2 * scExpectedMaximumStackSize;
+  constexpr static uint32_t scMinimumChunkSize =
+      2 * ProfileBufferChunkManager::scExpectedMaximumStackSize;
 
   // Ideally we want at least 2 unreleased chunks to work with (1 current and 1
   // next), and 2 released chunks (so that one can be recycled when old, leaving
@@ -3261,7 +3259,7 @@ void SamplerThread::Run() {
   // suspended, because that thread could be working with the CorePS::CoreBuffer
   // as well.)
   mozilla::ProfileBufferChunkManagerSingle localChunkManager(
-      scExpectedMaximumStackSize);
+      ProfileBufferChunkManager::scExpectedMaximumStackSize);
   ProfileChunkedBuffer localBuffer(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex, localChunkManager);
   ProfileBuffer localProfileBuffer(localBuffer);
@@ -4532,11 +4530,12 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #endif
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  // Less than 8192 entries (65536 bytes) may not be enough for the most complex
-  // stack, so we should be able to store at least one full stack.
-  // TODO: Review magic numbers.
+  // We want to be able to store at least one full stack.
   PowerOfTwo32 capacity =
-      (aCapacity.Value() >= 8192u) ? aCapacity : PROFILER_DEFAULT_ENTRIES;
+      (aCapacity.Value() >=
+       ProfileBufferChunkManager::scExpectedMaximumStackSize / scBytesPerEntry)
+          ? aCapacity
+          : PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = aDuration;
 
   if (aDuration && *aDuration <= 0) {
@@ -5354,7 +5353,8 @@ UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
 
   auto buffer = MakeUnique<ProfileChunkedBuffer>(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
-      MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
+      MakeUnique<ProfileBufferChunkManagerSingle>(
+          ProfileBufferChunkManager::scExpectedMaximumStackSize));
 
   if (!profiler_capture_backtrace_into(*buffer)) {
     return nullptr;

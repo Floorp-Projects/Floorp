@@ -124,17 +124,15 @@ class ProfileBuffer final {
   uint64_t BufferRangeEnd() const { return mEntries.GetState().mRangeEnd; }
 
  private:
-  // 65536 bytes should be plenty for a single backtrace.
-  static constexpr auto WorkerBufferBytes = MakePowerOfTwo32<65536>();
-
   // Single pre-allocated chunk (to avoid spurious mallocs), used when:
-  // - Duplicating sleeping stacks.
+  // - Duplicating sleeping stacks (hence scExpectedMaximumStackSize).
   // - Adding JIT info.
   // - Streaming stacks to JSON.
   // Mutable because it's accessed from non-multithreaded const methods.
   mutable ProfileBufferChunkManagerSingle mWorkerChunkManager{
-      ProfileBufferChunk::Create(ProfileBufferChunk::SizeofChunkMetadata() +
-                                 WorkerBufferBytes.Value())};
+      ProfileBufferChunk::Create(
+          ProfileBufferChunk::SizeofChunkMetadata() +
+          ProfileBufferChunkManager::scExpectedMaximumStackSize)};
 
   // Time from launch (us) when first sampling was recorded.
   double mFirstSamplingTimeUs = 0.0;
