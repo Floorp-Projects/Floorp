@@ -35,7 +35,6 @@ const PREFS_WHITELIST = [
   "browser.contentblocking.category",
   "browser.display.",
   "browser.download.folderList",
-  "browser.download.hide_plugins_without_extensions",
   "browser.download.lastDir.savePerSite",
   "browser.download.manager.addToRecentDocs",
   "browser.download.manager.resumeOnWakeDelay",
