@@ -524,6 +524,13 @@ class ProfileChunkedBuffer {
     return ResetChunkManager(lock);
   }
 
+  // Clear the contents of this buffer, ready to receive new chunks.
+  // Note that memory is not freed: No chunks are destroyed, they are all
+  // receycled.
+  // Also the range doesn't reset, instead it continues at some point after the
+  // previous range. This may be useful if the caller may be keeping indexes
+  // into old chunks that have now been cleared, using these indexes will fail
+  // gracefully (instead of potentially pointing into new data).
   void Clear() {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     if (MOZ_UNLIKELY(!mChunkManager)) {
@@ -531,17 +538,46 @@ class ProfileChunkedBuffer {
       return;
     }
 
-    Unused << mChunkManager->GetExtantReleasedChunks();
-
     mRangeStart = mRangeEnd = mNextChunkRangeStart;
     mPushedBlockCount = 0;
     mClearedBlockCount = 0;
     mFailedPutBytes = 0;
+
+    // Recycle all released chunks as "next" chunks. This will reduce the number
+    // of future allocations. Also, when using ProfileBufferChunkManagerSingle,
+    // this retrieves the one chunk if it was released.
+    UniquePtr<ProfileBufferChunk> releasedChunks =
+        mChunkManager->GetExtantReleasedChunks();
+    if (releasedChunks) {
+      // Released chunks should be in the "Done" state, they need to be marked
+      // "recycled" before they can be reused.
+      for (ProfileBufferChunk* chunk = releasedChunks.get(); chunk;
+           chunk = chunk->GetNext()) {
+        chunk->MarkRecycled();
+      }
+      mNextChunks = ProfileBufferChunk::Join(std::move(mNextChunks),
+                                             std::move(releasedChunks));
+    }
+
     if (mCurrentChunk) {
+      // We already have a current chunk (empty or in-use), mark it "done" and
+      // then "recycled", ready to be reused.
       mCurrentChunk->MarkDone();
       mCurrentChunk->MarkRecycled();
-      InitializeCurrentChunk(lock);
+    } else {
+      if (!mNextChunks) {
+        // No current chunk, and no next chunks to recycle, nothing more to do.
+        // The next "Put" operation will try to allocate a chunk as needed.
+        return;
+      }
+
+      // No current chunk, take a next chunk.
+      mCurrentChunk = std::exchange(mNextChunks, mNextChunks->ReleaseNext());
     }
+
+    // Here, there was already a current chunk, or one has just been taken.
+    // Make sure it's ready to receive new entries.
+    InitializeCurrentChunk(lock);
   }
 
   // Buffer maximum length in bytes.

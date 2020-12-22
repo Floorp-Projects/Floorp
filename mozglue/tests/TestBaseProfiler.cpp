@@ -2014,16 +2014,29 @@ static void TestChunkedBufferSingle() {
   cbSingle.ReadEach(
       [&](ProfileBufferEntryReader& aER) { MOZ_RELEASE_ASSERT(false); });
 
-  // Note: Clear() currently doesn't recycle the released chunk, so it cannot
-  // record anything anymore!
-  // This proves one of the issues found by bug 1678651.
-  // TODO: Update test when fix is in.
+  // Clear() recycles the released chunk, so we should be able to record new
+  // entries.
   cbSingle.Put(entryBytes, [&](Maybe<ProfileBufferEntryWriter>& aEW) {
-    MOZ_RELEASE_ASSERT(aEW.isNothing());
+    MOZ_RELEASE_ASSERT(aEW.isSome());
+    while (aEW->RemainingBytes() > 0) {
+      **aEW = 'x';
+      ++(*aEW);
+    }
   });
   VERIFY_PCB_START_END_PUSHED_CLEARED_FAILED(
-      cbSingle, 1 + bufferBytes * 2, 1 + bufferBytes * 2, 0, 0,
-      ULEB128Size(entryBytes) + entryBytes);
+      cbSingle, 1 + bufferBytes * 2,
+      1 + bufferBytes * 2 + ULEB128Size(entryBytes) + entryBytes, 1, 0, 0);
+  read = 0;
+  cbSingle.ReadEach([&](ProfileBufferEntryReader& aER) {
+    MOZ_RELEASE_ASSERT(read == 0);
+    MOZ_RELEASE_ASSERT(aER.RemainingBytes() == entryBytes);
+    while (aER.RemainingBytes() > 0) {
+      MOZ_RELEASE_ASSERT(*aER == 'x');
+      ++aER;
+    }
+    ++read;
+  });
+  MOZ_RELEASE_ASSERT(read == 1);
 
   printf("TestChunkedBufferSingle done\n");
 }
