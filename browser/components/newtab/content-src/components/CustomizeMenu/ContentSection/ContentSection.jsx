@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import { actionCreators as ac } from "common/Actions.jsm";
 
 export class ContentSection extends React.PureComponent {
   constructor(props) {
@@ -10,13 +11,27 @@ export class ContentSection extends React.PureComponent {
     this.onPreferenceSelect = this.onPreferenceSelect.bind(this);
   }
 
+  inputUserEvent(eventSource, status) {
+    this.props.dispatch(
+      ac.UserEvent({
+        event: "PREF_CHANGED",
+        source: eventSource,
+        value: { status, menu_source: "CUSTOMIZE_MENU" },
+      })
+    );
+  }
+
   onPreferenceSelect(e) {
     let prefName = e.target.getAttribute("preference");
+    const eventSource = e.target.getAttribute("eventSource");
     let value;
     if (e.target.nodeName === "SELECT") {
       value = parseInt(e.target.value, 10);
     } else if (e.target.nodeName === "INPUT") {
       value = e.target.checked;
+      if (eventSource) {
+        this.inputUserEvent(eventSource, value);
+      }
     }
     this.props.setPref(prefName, value);
   }
@@ -143,6 +158,7 @@ export class ContentSection extends React.PureComponent {
                       type="checkbox"
                       onChange={this.onPreferenceSelect}
                       preference="showSponsored"
+                      eventSource="POCKET_SPOCS"
                     />
                     <label
                       className="sponsored"
@@ -159,6 +175,7 @@ export class ContentSection extends React.PureComponent {
                 type="checkbox"
                 onChange={this.onPreferenceSelect}
                 preference="feeds.section.topstories"
+                eventSource="TOP_STORIES"
               />
               <span className="slider"></span>
             </label>
@@ -179,6 +196,7 @@ export class ContentSection extends React.PureComponent {
               type="checkbox"
               onChange={this.onPreferenceSelect}
               preference="feeds.section.highlights"
+              eventSource="HIGHLIGHTS"
             />
             <span className="slider"></span>
           </label>
