@@ -30,11 +30,11 @@ async function testViewSource(viewSourceUrl) {
         filter.onstop = () => {
           filter.write(new TextEncoder().encode("_SUFFIX"));
           filter.disconnect();
-          browser.test.sendMessage("filter_end");
+          browser.test.notifyPass("filter_end");
         };
-        filter.onerror = function() {
+        filter.onerror = () => {
           browser.test.fail(`Unexpected error: ${filter.error}`);
-          browser.test.sendMessage("filter_end");
+          browser.test.notifyFail("filter_end");
         };
       },
       { urls: ["*://*/dummy"] },
@@ -50,9 +50,13 @@ async function testViewSource(viewSourceUrl) {
           browser.test.fail("Unexpected onstop for redirect");
           browser.test.sendMessage("redirect_done");
         };
-        filter.onerror = function() {
+        filter.onerror = () => {
           browser.test.assertEq(
-            "Channel redirected",
+            // TODO bug 1683862: must be "Channel redirected", but it is not
+            // because document requests are handled differently compared to
+            // other requests, see the comment at the top of
+            // test_ext_webRequest_redirect_StreamFilter.js.
+            "Invalid request ID",
             filter.error,
             "Expected error in filter.onerror"
           );
@@ -76,7 +80,7 @@ async function testViewSource(viewSourceUrl) {
     await extension.awaitMessage("redirect_done");
   }
   info("Awaiting completion of StreamFilter on request");
-  await extension.awaitMessage("filter_end");
+  await extension.awaitFinish("filter_end");
   let contentText = await contentPage.spawn(null, () => {
     return this.content.document.body.textContent;
   });
@@ -89,8 +93,52 @@ add_task(async function test_StreamFilter_viewsource() {
   await testViewSource(`view-source:${BASE_URL}/dummy`);
 });
 
-// Skipped because filter.error is incorrect and test non-deterministic, see
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1683189
-// add_task(async function test_StreamFilter_viewsource_redirect_target() {
-//   await testViewSource(`view-source:${BASE_URL}/redir`);
-// });
+add_task(async function test_StreamFilter_viewsource_redirect_target() {
+  await testViewSource(`view-source:${BASE_URL}/redir`);
+});
+
+// Sanity check: nothing bad happens if the underlying response is aborted.
+add_task(async function test_StreamFilter_viewsource_cancel() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "*://*/*"],
+    },
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          let filter = browser.webRequest.filterResponseData(details.requestId);
+          filter.onstart = () => {
+            filter.disconnect();
+            browser.test.fail("Unexpected filter.onstart");
+            browser.test.notifyFail("filter_end");
+          };
+          filter.onerror = () => {
+            browser.test.assertEq("Invalid request ID", filter.error, "Error?");
+            browser.test.notifyPass("filter_end");
+          };
+        },
+        { urls: ["*://*/dummy"] },
+        ["blocking"]
+      );
+      browser.webRequest.onHeadersReceived.addListener(
+        () => {
+          browser.test.log("Intentionally canceling view-source request");
+          return { cancel: true };
+        },
+        { urls: ["*://*/dummy"] },
+        ["blocking"]
+      );
+    },
+  });
+  await extension.startup();
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/dummy`
+  );
+  await extension.awaitFinish("filter_end");
+  let contentText = await contentPage.spawn(null, () => {
+    return this.content.document.body.textContent;
+  });
+  equal(contentText, "", "view-source request should have been canceled");
+  await contentPage.close();
+  await extension.unload();
+});
