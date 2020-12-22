@@ -74,12 +74,12 @@ class SearchDialogController(
                 navController.navigateSafe(R.id.searchDialogFragment, directions)
             }
             "moz://a" -> openSearchOrUrl(SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO))
-            else -> if (url.isNotBlank()) {
-                openSearchOrUrl(url)
-            } else {
-                dismissDialog()
-            }
+            else ->
+                if (url.isNotBlank()) {
+                    openSearchOrUrl(url)
+                }
         }
+        dismissDialog()
     }
 
     private fun openSearchOrUrl(url: String) {
