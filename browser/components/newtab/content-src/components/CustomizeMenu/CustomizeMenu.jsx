@@ -25,6 +25,7 @@ export class _CustomizeMenu extends React.PureComponent {
           enabledSections={this.props.enabledSections}
           pocketRegion={this.props.pocketRegion}
           mayHaveSponsoredTopSites={this.props.mayHaveSponsoredTopSites}
+          dispatch={this.props.dispatch}
         />
       </div>
     );

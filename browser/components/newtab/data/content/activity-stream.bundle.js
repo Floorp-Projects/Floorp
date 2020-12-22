@@ -802,7 +802,8 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
       setPref: this.setPref,
       enabledSections: enabledSections,
       pocketRegion: pocketRegion,
-      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites
+      mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
+      dispatch: this.props.dispatch
     })));
   }
 
@@ -14189,10 +14190,14 @@ class BackgroundsSection_BackgroundsSection extends external_React_default.a.Pur
   }
 
 }
+// EXTERNAL MODULE: ./common/Actions.jsm
+var Actions = __webpack_require__(1);
+
 // CONCATENATED MODULE: ./content-src/components/CustomizeMenu/ContentSection/ContentSection.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 class ContentSection_ContentSection extends external_React_default.a.PureComponent {
   constructor(props) {
@@ -14200,14 +14205,30 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
     this.onPreferenceSelect = this.onPreferenceSelect.bind(this);
   }
 
+  inputUserEvent(eventSource, status) {
+    this.props.dispatch(Actions["actionCreators"].UserEvent({
+      event: "PREF_CHANGED",
+      source: eventSource,
+      value: {
+        status,
+        menu_source: "CUSTOMIZE_MENU"
+      }
+    }));
+  }
+
   onPreferenceSelect(e) {
     let prefName = e.target.getAttribute("preference");
+    const eventSource = e.target.getAttribute("eventSource");
     let value;
 
     if (e.target.nodeName === "SELECT") {
       value = parseInt(e.target.value, 10);
     } else if (e.target.nodeName === "INPUT") {
       value = e.target.checked;
+
+      if (eventSource) {
+        this.inputUserEvent(eventSource, value);
+      }
     }
 
     this.props.setPref(prefName, value);
@@ -14307,7 +14328,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       checked: showSponsoredPocketEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "showSponsored"
+      preference: "showSponsored",
+      eventSource: "POCKET_SPOCS"
     }), external_React_default.a.createElement("label", {
       className: "sponsored",
       htmlFor: "sponsored-pocket",
@@ -14318,7 +14340,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       checked: pocketEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "feeds.section.topstories"
+      preference: "feeds.section.topstories",
+      eventSource: "TOP_STORIES"
     }), external_React_default.a.createElement("span", {
       className: "slider"
     }))), external_React_default.a.createElement("div", {
@@ -14336,7 +14359,8 @@ class ContentSection_ContentSection extends external_React_default.a.PureCompone
       checked: highlightsEnabled,
       type: "checkbox",
       onChange: this.onPreferenceSelect,
-      preference: "feeds.section.highlights"
+      preference: "feeds.section.highlights",
+      eventSource: "HIGHLIGHTS"
     }), external_React_default.a.createElement("span", {
       className: "slider"
     }))), external_React_default.a.createElement("div", {
@@ -14395,7 +14419,8 @@ class CustomizeMenu_CustomizeMenu extends external_React_default.a.PureComponent
       setPref: this.props.setPref,
       enabledSections: this.props.enabledSections,
       pocketRegion: this.props.pocketRegion,
-      mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites
+      mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
+      dispatch: this.props.dispatch
     }));
   }
 
