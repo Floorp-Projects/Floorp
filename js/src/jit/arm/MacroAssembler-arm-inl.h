@@ -203,6 +203,15 @@ void MacroAssembler::xor32(Imm32 imm, Register dest) {
   ma_eor(imm, dest, scratch, SetCC);
 }
 
+void MacroAssembler::xor32(Imm32 imm, const Address& dest) {
+  ScratchRegisterScope scratch(*this);
+  SecondScratchRegisterScope scratch2(*this);
+
+  ma_ldr(dest, scratch, scratch2);
+  ma_eor(imm, scratch, scratch2);
+  ma_str(scratch, dest, scratch2);
+}
+
 void MacroAssembler::xor32(const Address& src, Register dest) {
   ScratchRegisterScope scratch(*this);
   SecondScratchRegisterScope scratch2(*this);
