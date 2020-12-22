@@ -334,7 +334,9 @@ class OSXBootstrapper(BaseBootstrapper):
         cmd = [self.brew] + extra_brew_args
 
         installed = set(
-            subprocess.check_output(cmd + ["list"], universal_newlines=True).split()
+            subprocess.check_output(
+                cmd + ["list", "--formula"], universal_newlines=True
+            ).split()
         )
         to_install = set(package for package in packages if package not in installed)
 
