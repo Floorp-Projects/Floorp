@@ -6464,7 +6464,7 @@ void nsGlobalWindowOuter::LeaveModalState() {
   nsGlobalWindowOuter* topWin = GetInProcessScriptableTopInternal();
 
   if (!topWin) {
-    NS_ERROR("Uh, LeaveModalState() called w/o a reachable top window?");
+    NS_WARNING("Uh, LeaveModalState() called w/o a reachable top window?");
     return;
   }
 
