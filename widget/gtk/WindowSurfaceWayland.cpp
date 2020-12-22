@@ -444,7 +444,6 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mBufferCommitAllowed(false),
       mBufferNeedsClear(false),
       mSmoothRendering(StaticPrefs::widget_wayland_smooth_rendering()),
-      mIsMainThread(NS_IsMainThread()),
       mSurfaceReadyTimerID(),
       mSurfaceLock("WindowSurfaceWayland lock") {
   for (int i = 0; i < BACK_BUFFER_NUM; i++) {
@@ -676,8 +675,6 @@ static bool IsPopupFullScreenUpdate(
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     const LayoutDeviceIntRegion& aRegion) {
-  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
-
   // Wait until all pending events are processed. There may be queued
   // wl_buffer release event which releases our wl_buffer for further rendering.
   mWaylandDisplay->WaitForSyncEnd();
@@ -935,8 +932,6 @@ void WindowSurfaceWayland::FlushPendingCommitsInternal() {
   LOGWAYLAND(("   mBufferPendingCommit = %d\n", mBufferPendingCommit));
   LOGWAYLAND(("   mBufferCommitAllowed = %d\n", mBufferCommitAllowed));
 
-  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
-
   if (!mBufferCommitAllowed) {
     return;
   }
@@ -1036,8 +1031,6 @@ void WindowSurfaceWayland::FlushPendingCommitsInternal() {
 }
 
 void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
-  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
-
   MutexAutoLock lock(mSurfaceLock);
 
 #ifdef MOZ_LOGGING
@@ -1066,19 +1059,19 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
 }
 
 void WindowSurfaceWayland::FrameCallbackHandler() {
-  MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(mFrameCallback != nullptr,
              "FrameCallbackHandler() called without valid frame callback!");
   MOZ_ASSERT(mLastCommittedSurface != nullptr,
              "FrameCallbackHandler() called without valid wl_surface!");
-
   LOGWAYLAND(
       ("WindowSurfaceWayland::FrameCallbackHandler [%p]\n", (void*)this));
+
+  MutexAutoLock lock(mSurfaceLock);
 
   wl_callback_destroy(mFrameCallback);
   mFrameCallback = nullptr;
 
-  FlushPendingCommits();
+  FlushPendingCommitsInternal();
 }
 
 }  // namespace widget
