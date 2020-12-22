@@ -173,6 +173,7 @@ const SpecialMessageActions = {
       case "SHOW_MIGRATION_WIZARD":
         MigrationUtils.showMigrationWizard(window, [
           MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
+          action.data?.source,
         ]);
         break;
       case "OPEN_PRIVATE_BROWSER_WINDOW":
