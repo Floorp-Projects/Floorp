@@ -959,7 +959,7 @@ void DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
     nsIFrame* aFrame) {
   nsIFrame* frame = aFrame;
   while (frame) {
-    frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
+    frame = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(frame);
     if (!frame) {
       break;
     }

@@ -567,6 +567,14 @@ class nsLayoutUtils {
      * would be undesirable as a 'position:sticky' container for content).
      */
     SCROLLABLE_STOP_AT_PAGE = 0x20,
+    /**
+     * If the SCROLLABLE_FOLLOW_OOF_TO_PLACEHOLDER flag is set, we navigate
+     * from out-of-flow frames to their placeholder frame rather than their
+     * parent frame.
+     * Note, fixed-pos frames are out-of-flow frames, but
+     * SCROLLABLE_FIXEDPOS_FINDS_ROOT takes precedence over this.
+     */
+    SCROLLABLE_FOLLOW_OOF_TO_PLACEHOLDER = 0x40
   };
   /**
    * GetNearestScrollableFrame locates the first ancestor of aFrame
@@ -1352,7 +1360,7 @@ class nsLayoutUtils {
    * If aFrame is an out of flow frame, return its placeholder, otherwise
    * return its (possibly cross-doc) parent.
    */
-  static nsIFrame* GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame);
+  static nsIFrame* GetParentOrPlaceholderForCrossDoc(const nsIFrame* aFrame);
 
   /**
    * Returns the frame that would act as the parent of aFrame when
