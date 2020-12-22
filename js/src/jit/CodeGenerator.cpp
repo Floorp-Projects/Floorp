@@ -8804,6 +8804,33 @@ void CodeGenerator::visitBigIntDecrement(LBigIntDecrement* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitBigIntNegate(LBigIntNegate* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp = ToRegister(ins->temp());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+  auto* ool =
+      oolCallVM<Fn, BigInt::neg>(ins, ArgList(input), StoreRegisterTo(output));
+
+  // -0n == 0n
+  Label lhsNonZero;
+  masm.branchIfBigIntIsNonZero(input, &lhsNonZero);
+  masm.movePtr(input, output);
+  masm.jump(ool->rejoin());
+  masm.bind(&lhsNonZero);
+
+  // Call into the VM when the input uses heap digits.
+  masm.copyBigIntWithInlineDigits(input, output, temp, ool->entry(),
+                                  bigIntsCanBeInNursery());
+
+  // Flip the sign bit.
+  masm.xor32(Imm32(BigInt::signBitMask()),
+             Address(output, BigInt::offsetOfFlags()));
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitFloor(LFloor* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());
