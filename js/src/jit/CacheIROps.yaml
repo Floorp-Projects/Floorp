@@ -2316,14 +2316,14 @@
 
 - name: BigIntIncResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     input: BigIntId
 
 - name: BigIntDecResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 5
   args:
     input: BigIntId

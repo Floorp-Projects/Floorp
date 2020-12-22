@@ -8756,6 +8756,54 @@ void CodeGenerator::visitBigIntMul(LBigIntMul* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitBigIntIncrement(LBigIntIncrement* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+  auto* ool =
+      oolCallVM<Fn, BigInt::inc>(ins, ArgList(input), StoreRegisterTo(output));
+
+  // Call into the VM when the input can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigInt(input, temp1, ool->entry());
+  masm.movePtr(ImmWord(1), temp2);
+
+  masm.branchAddPtr(Assembler::Overflow, temp2, temp1, ool->entry());
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, temp1);
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitBigIntDecrement(LBigIntDecrement* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+  auto* ool =
+      oolCallVM<Fn, BigInt::dec>(ins, ArgList(input), StoreRegisterTo(output));
+
+  // Call into the VM when the input can't be loaded into a pointer-sized
+  // register.
+  masm.loadBigInt(input, temp1, ool->entry());
+  masm.movePtr(ImmWord(1), temp2);
+
+  masm.branchSubPtr(Assembler::Overflow, temp2, temp1, ool->entry());
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt(output, temp1);
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitFloor(LFloor* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());

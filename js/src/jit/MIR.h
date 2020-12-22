@@ -5989,6 +5989,57 @@ class MBigIntMul : public MBigIntBinaryArithInstruction {
   ALLOW_CLONE(MBigIntMul)
 };
 
+class MBigIntUnaryArithInstruction : public MUnaryInstruction,
+                                     public BigIntArithPolicy::Data {
+ protected:
+  MBigIntUnaryArithInstruction(Opcode op, MDefinition* input)
+      : MUnaryInstruction(op, input) {
+    setResultType(MIRType::BigInt);
+    setMovable();
+  }
+
+ public:
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+class MBigIntIncrement : public MBigIntUnaryArithInstruction {
+  explicit MBigIntIncrement(MDefinition* input)
+      : MBigIntUnaryArithInstruction(classOpcode, input) {
+    // See MBigIntAdd for why we don't guard this instruction.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntIncrement)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntIncrement)
+};
+
+class MBigIntDecrement : public MBigIntUnaryArithInstruction {
+  explicit MBigIntDecrement(MDefinition* input)
+      : MBigIntUnaryArithInstruction(classOpcode, input) {
+    // See MBigIntAdd for why we don't guard this instruction.
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntDecrement)
+  TRIVIAL_NEW_WRAPPERS
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
+
+  ALLOW_CLONE(MBigIntDecrement)
+};
+
 class MConcat : public MBinaryInstruction,
                 public MixPolicy<ConvertToStringPolicy<0>,
                                  ConvertToStringPolicy<1>>::Data {

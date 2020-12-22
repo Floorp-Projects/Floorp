@@ -566,6 +566,48 @@ bool RBigIntMul::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MBigIntIncrement::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntIncrement));
+  return true;
+}
+
+RBigIntIncrement::RBigIntIncrement(CompactBufferReader& reader) {}
+
+bool RBigIntIncrement::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue operand(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(operand.isBigInt());
+  if (!js::IncOperation(cx, operand, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
+bool MBigIntDecrement::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntDecrement));
+  return true;
+}
+
+RBigIntDecrement::RBigIntDecrement(CompactBufferReader& reader) {}
+
+bool RBigIntDecrement::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue operand(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(operand.isBigInt());
+  if (!js::DecOperation(cx, operand, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MConcat::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_Concat));
