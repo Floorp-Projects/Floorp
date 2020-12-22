@@ -2003,6 +2003,7 @@ dependencies = [
  "malloc_size_of_derive",
  "mozangle",
  "num-traits",
+ "objc 0.2.7",
  "plane-split",
  "png",
  "rand 0.4.6",
