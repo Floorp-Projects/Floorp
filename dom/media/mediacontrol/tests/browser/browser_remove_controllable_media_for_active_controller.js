@@ -101,6 +101,7 @@ function removePlayingMedia(tab) {
 async function checkOrWaitControllerBecomesActive(tab) {
   const controller = tab.linkedBrowser.browsingContext.mediaController;
   if (!controller.isActive) {
+    info(`wait until controller gets activated`);
     await new Promise(r => (controller.onactivated = r));
   }
   ok(controller.isActive, `controller is active`);
