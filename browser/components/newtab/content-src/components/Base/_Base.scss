@@ -156,7 +156,7 @@ main {
 
 .personalize-button {
   font-size: 12px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 4px;
   background-color: var(--newtab-background-button-color);
   color: var(--newtab-background-button-text-color);
@@ -173,8 +173,7 @@ main {
   }
 
   &:focus-visible {
-    border: 1px solid var(--newtab-focus-border);
-    border-radius: 4px;
+    border-color: var(--newtab-focus-border);
     outline: 0;
     box-shadow: $newtab-focus-outline;
   }

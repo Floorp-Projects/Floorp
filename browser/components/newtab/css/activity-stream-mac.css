@@ -501,7 +501,7 @@ main {
 
 .personalize-button {
   font-size: 12px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 4px;
   background-color: var(--newtab-background-button-color);
   color: var(--newtab-background-button-text-color);
@@ -513,8 +513,7 @@ main {
   .personalize-button:active {
     background-color: var(--newtab-background-button-active-color); }
   .personalize-button:focus-visible {
-    border: 1px solid var(--newtab-focus-border);
-    border-radius: 4px;
+    border-color: var(--newtab-focus-border);
     outline: 0;
     box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
 
@@ -1602,6 +1601,7 @@ main {
     font-size: 14px;
     cursor: pointer;
     border: 1px solid transparent;
+    border-radius: 4px;
     -moz-context-properties: fill;
     fill: var(--customize-menu-primary-text-color);
     background: url("chrome://global/skin/icons/settings.svg") left no-repeat;
@@ -1618,7 +1618,6 @@ main {
 .external-link:focus-visible,
 .close-button:focus-visible {
   border: 1px solid var(--newtab-focus-border);
-  border-radius: 4px;
   outline: 0;
   box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
 
