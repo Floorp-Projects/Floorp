@@ -199,6 +199,10 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                                                 BigIntOperandId rhsId);
 
   template <typename T>
+  MOZ_MUST_USE bool emitBigIntBinaryArithEffectfulResult(BigIntOperandId lhsId,
+                                                         BigIntOperandId rhsId);
+
+  template <typename T>
   MOZ_MUST_USE bool emitBigIntUnaryArithResult(BigIntOperandId inputId);
 
   MOZ_MUST_USE bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
@@ -2456,6 +2460,37 @@ bool WarpCacheIRTranspiler::emitBigIntSubResult(BigIntOperandId lhsId,
 bool WarpCacheIRTranspiler::emitBigIntMulResult(BigIntOperandId lhsId,
                                                 BigIntOperandId rhsId) {
   return emitBigIntBinaryArithResult<MBigIntMul>(lhsId, rhsId);
+}
+
+template <typename T>
+bool WarpCacheIRTranspiler::emitBigIntBinaryArithEffectfulResult(
+    BigIntOperandId lhsId, BigIntOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = T::New(alloc(), lhs, rhs);
+
+  if (ins->isEffectful()) {
+    addEffectful(ins);
+
+    pushResult(ins);
+    return resumeAfter(ins);
+  }
+
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitBigIntDivResult(BigIntOperandId lhsId,
+                                                BigIntOperandId rhsId) {
+  return emitBigIntBinaryArithEffectfulResult<MBigIntDiv>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitBigIntModResult(BigIntOperandId lhsId,
+                                                BigIntOperandId rhsId) {
+  return emitBigIntBinaryArithEffectfulResult<MBigIntMod>(lhsId, rhsId);
 }
 
 bool WarpCacheIRTranspiler::emitBigIntBitAndResult(BigIntOperandId lhsId,
