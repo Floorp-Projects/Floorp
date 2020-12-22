@@ -1276,14 +1276,20 @@ void MacroAssembler::loadBigIntNonZero(Register bigInt, Register dest,
   // Load the first inline digit into the destination register.
   loadPtr(Address(bigInt, BigInt::offsetOfInlineDigits()), dest);
 
+  // Return as a signed pointer.
+  bigIntDigitToSignedPtr(bigInt, dest, fail);
+}
+
+void MacroAssembler::bigIntDigitToSignedPtr(Register bigInt, Register digit,
+                                            Label* fail) {
   // BigInt digits are stored as absolute numbers. Take the failure path when
   // the digit can't be stored in intptr_t.
-  branchTestPtr(Assembler::Signed, dest, dest, fail);
+  branchTestPtr(Assembler::Signed, digit, digit, fail);
 
   // Negate |dest| when the BigInt is negative.
   Label nonNegative;
   branchIfBigIntIsNonNegative(bigInt, &nonNegative);
-  negPtr(dest);
+  negPtr(digit);
   bind(&nonNegative);
 }
 

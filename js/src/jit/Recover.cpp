@@ -566,6 +566,54 @@ bool RBigIntMul::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MBigIntDiv::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntDiv));
+  return true;
+}
+
+RBigIntDiv::RBigIntDiv(CompactBufferReader& reader) {}
+
+bool RBigIntDiv::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  MOZ_ASSERT(!rhs.toBigInt()->isZero(),
+             "division by zero throws and therefore can't be recovered");
+  if (!js::DivValues(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
+bool MBigIntMod::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntMod));
+  return true;
+}
+
+RBigIntMod::RBigIntMod(CompactBufferReader& reader) {}
+
+bool RBigIntMod::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+  RootedValue result(cx);
+
+  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
+  MOZ_ASSERT(!rhs.toBigInt()->isZero(),
+             "division by zero throws and therefore can't be recovered");
+  if (!js::ModValues(cx, &lhs, &rhs, &result)) {
+    return false;
+  }
+
+  iter.storeInstructionResult(result);
+  return true;
+}
+
 bool MBigIntBitAnd::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_BigIntBitAnd));

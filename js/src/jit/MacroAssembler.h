@@ -3733,6 +3733,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadBigIntAbsolute(Register bigInt, Register dest, Label* fail);
 
   /**
+   * In-place modifies the BigInt digit to a signed pointer-sized value. Jumps
+   * to |fail| when the digit exceeds the representable range.
+   */
+  void bigIntDigitToSignedPtr(Register bigInt, Register digit, Label* fail);
+
+  /**
    * Initialize a BigInt from |val|. Clobbers |val|!
    */
   void initializeBigInt64(Scalar::Type type, Register bigInt, Register64 val);

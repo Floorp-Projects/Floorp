@@ -5989,6 +5989,78 @@ class MBigIntMul : public MBigIntBinaryArithInstruction {
   ALLOW_CLONE(MBigIntMul)
 };
 
+class MBigIntDiv : public MBigIntBinaryArithInstruction {
+  bool canBeDivideByZero_;
+
+  MBigIntDiv(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    MOZ_ASSERT(right->type() == MIRType::BigInt);
+    canBeDivideByZero_ =
+        !right->isConstant() || right->toConstant()->toBigInt()->isZero();
+
+    // Throws when the divisor is zero.
+    if (canBeDivideByZero_) {
+      setGuard();
+      setNotMovable();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntDiv)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool canBeDivideByZero() const { return canBeDivideByZero_; }
+
+  AliasSet getAliasSet() const override {
+    if (canBeDivideByZero()) {
+      return AliasSet::Store(AliasSet::ExceptionState);
+    }
+    return AliasSet::None();
+  }
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return !canBeDivideByZero(); }
+
+  ALLOW_CLONE(MBigIntDiv)
+};
+
+class MBigIntMod : public MBigIntBinaryArithInstruction {
+  bool canBeDivideByZero_;
+
+  MBigIntMod(MDefinition* left, MDefinition* right)
+      : MBigIntBinaryArithInstruction(classOpcode, left, right) {
+    MOZ_ASSERT(right->type() == MIRType::BigInt);
+    canBeDivideByZero_ =
+        !right->isConstant() || right->toConstant()->toBigInt()->isZero();
+
+    // Throws when the divisor is zero.
+    if (canBeDivideByZero_) {
+      setGuard();
+      setNotMovable();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(BigIntMod)
+  TRIVIAL_NEW_WRAPPERS
+
+  bool canBeDivideByZero() const { return canBeDivideByZero_; }
+
+  AliasSet getAliasSet() const override {
+    if (canBeDivideByZero()) {
+      return AliasSet::Store(AliasSet::ExceptionState);
+    }
+    return AliasSet::None();
+  }
+
+  MOZ_MUST_USE bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return !canBeDivideByZero(); }
+
+  ALLOW_CLONE(MBigIntMod)
+};
+
 class MBigIntBitAnd : public MBigIntBinaryArithInstruction {
   MBigIntBitAnd(MDefinition* left, MDefinition* right)
       : MBigIntBinaryArithInstruction(classOpcode, left, right) {
