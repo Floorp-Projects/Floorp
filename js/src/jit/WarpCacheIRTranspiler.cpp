@@ -198,6 +198,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitBigIntBinaryArithResult(BigIntOperandId lhsId,
                                                 BigIntOperandId rhsId);
 
+  template <typename T>
+  MOZ_MUST_USE bool emitBigIntUnaryArithResult(BigIntOperandId inputId);
+
   MOZ_MUST_USE bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
                                       MCompare::CompareType compareType);
 
@@ -2453,6 +2456,26 @@ bool WarpCacheIRTranspiler::emitBigIntSubResult(BigIntOperandId lhsId,
 bool WarpCacheIRTranspiler::emitBigIntMulResult(BigIntOperandId lhsId,
                                                 BigIntOperandId rhsId) {
   return emitBigIntBinaryArithResult<MBigIntMul>(lhsId, rhsId);
+}
+
+template <typename T>
+bool WarpCacheIRTranspiler::emitBigIntUnaryArithResult(
+    BigIntOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = T::New(alloc(), input);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitBigIntIncResult(BigIntOperandId inputId) {
+  return emitBigIntUnaryArithResult<MBigIntIncrement>(inputId);
+}
+
+bool WarpCacheIRTranspiler::emitBigIntDecResult(BigIntOperandId inputId) {
+  return emitBigIntUnaryArithResult<MBigIntDecrement>(inputId);
 }
 
 bool WarpCacheIRTranspiler::emitCallStringConcatResult(StringOperandId lhsId,
