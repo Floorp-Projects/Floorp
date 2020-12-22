@@ -143,51 +143,6 @@ skip script test262/language/expressions/template-literal/invalid-legacy-octal-e
 skip script test262/language/literals/string/legacy-non-octal-escape-sequence-9-strict-strict.js
 skip script test262/language/expressions/tagged-template/invalid-escape-sequences.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1079853
-skip script test262/built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/every/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/filter/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/filter/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/find/BigInt/predicate-may-detach-buffer.js
-skip script test262/built-ins/TypedArray/prototype/find/predicate-may-detach-buffer.js
-skip script test262/built-ins/TypedArray/prototype/findIndex/BigInt/predicate-may-detach-buffer.js
-skip script test262/built-ins/TypedArray/prototype/findIndex/predicate-may-detach-buffer.js
-skip script test262/built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/forEach/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/includes/detached-buffer-tointeger.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/infinity-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/infinity-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/enumerate-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/enumerate-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/infinity-with-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/infinity-with-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/tonumber-value-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js
-
 # Lazily resolved "name" and "length" properties on functions violate property key order.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1629803
 skip script test262/built-ins/Object/keys/order-after-define-property.js
@@ -703,6 +658,15 @@ skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
 skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
 skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
+skip script test262/built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/filter/BigInt/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/find/BigInt/predicate-may-detach-buffer.js
+skip script test262/built-ins/TypedArray/prototype/findIndex/BigInt/predicate-may-detach-buffer.js
+skip script test262/built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
 
 # Tests not yet updated for https://github.com/tc39/ecma262/pull/2210
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
@@ -715,6 +679,9 @@ skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-in
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-out-of-bounds.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-minus-zero.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-not-integer.js
+skip script test262/built-ins/TypedArray/prototype/includes/detached-buffer-tointeger.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/tonumber-value-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js
 
 
 ##############################################
