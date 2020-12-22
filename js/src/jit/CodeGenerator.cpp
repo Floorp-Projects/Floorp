@@ -8948,6 +8948,47 @@ void CodeGenerator::visitBigIntNegate(LBigIntNegate* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitBigIntBitNot(LBigIntBitNot* ins) {
+  Register input = ToRegister(ins->input());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register output = ToRegister(ins->output());
+
+  using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+  auto* ool = oolCallVM<Fn, BigInt::bitNot>(ins, ArgList(input),
+                                            StoreRegisterTo(output));
+
+  masm.loadBigIntAbsolute(input, temp1, ool->entry());
+
+  // This follows the C++ implementation because it let's us support the full
+  // range [-2^64, 2^64 - 1] on 64-bit resp. [-2^32, 2^32 - 1] on 32-bit.
+  Label nonNegative, done;
+  masm.branchIfBigIntIsNonNegative(input, &nonNegative);
+  {
+    // ~(-x) == ~(~(x-1)) == x-1
+    masm.subPtr(Imm32(1), temp1);
+    masm.jump(&done);
+  }
+  masm.bind(&nonNegative);
+  {
+    // ~x == -x-1 == -(x+1)
+    masm.movePtr(ImmWord(1), temp2);
+    masm.branchAddPtr(Assembler::CarrySet, temp2, temp1, ool->entry());
+  }
+  masm.bind(&done);
+
+  // Create and return the result.
+  masm.newGCBigInt(output, temp2, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigIntAbsolute(output, temp1);
+
+  // Set the sign bit when the input is positive.
+  masm.branchIfBigIntIsNegative(input, ool->rejoin());
+  masm.or32(Imm32(BigInt::signBitMask()),
+            Address(output, BigInt::offsetOfFlags()));
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitFloor(LFloor* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());
