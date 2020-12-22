@@ -153,13 +153,6 @@ mod test {
 
     #[test]
     fn basic() {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        {
-            use crate::transform::qcms_enable_avx;
-            if is_x86_feature_detected!("avx") {
-                qcms_enable_avx()
-            }
-        };
         let sRGB_profile = crate::c_bindings::qcms_profile_sRGB();
 
         let mut Rec709Primaries = qcms_CIE_xyYTRIPLE {
@@ -535,27 +528,6 @@ mod test {
 
         fn SetUp(&mut self) {
             qcms_enable_iccv4();
-
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            if is_x86_feature_detected!("avx") {
-                qcms_enable_avx()
-            }
-
-            #[cfg(target_arch = "arm")]
-            unsafe {
-                use crate::transform::qcms_enable_neon;
-                if is_arm_feature_detected!("neon") {
-                    qcms_enable_neon()
-                }
-            };
-
-            #[cfg(target_arch = "aarch64")]
-            unsafe {
-                use crate::transform::qcms_enable_neon;
-                if is_aarch64_feature_detected!("neon") {
-                    qcms_enable_neon()
-                }
-            };
         }
 
         unsafe fn TearDown(&mut self) {
@@ -695,7 +667,9 @@ mod test {
 
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             {
-                assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_sse2)));
+                if is_x86_feature_detected!("sse2") {
+                    assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_sse2)));
+                }
                 if is_x86_feature_detected!("avx") {
                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_avx)))
                 }
@@ -722,7 +696,9 @@ mod test {
 
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             {
-                assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgba_out_lut_sse2)));
+                if is_x86_feature_detected!("sse2") {
+                    assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgba_out_lut_sse2)));
+                }
                 if is_x86_feature_detected!("avx") {
                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgba_out_lut_avx)))
                 }
@@ -749,7 +725,9 @@ mod test {
 
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             {
-                assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_bgra_out_lut_sse2)));
+                if is_x86_feature_detected!("sse2") {
+                    assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_bgra_out_lut_sse2)));
+                }
                 if is_x86_feature_detected!("avx") {
                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_bgra_out_lut_avx)))
                 }

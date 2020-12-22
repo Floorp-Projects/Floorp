@@ -55,7 +55,7 @@ use crate::{
 
 use ::libc::{self};
 use std::sync::atomic::Ordering;
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::Arc;
 
 pub const PRECACHE_OUTPUT_SIZE: usize = 8192;
 pub const PRECACHE_OUTPUT_MAX: usize = PRECACHE_OUTPUT_SIZE - 1;
@@ -1008,12 +1008,6 @@ pub unsafe extern "C" fn qcms_transform_release(mut t: *mut qcms_transform) {
     drop(t)
 }
 
-fn sse_version_available() -> i32 {
-    /* we know at build time that 64-bit CPUs always have SSE2
-     * this tells the compiler that non-SSE2 branches will never be
-     * taken (i.e. OK to optimze away the SSE1 and non-SIMD code */
-    return 2;
-}
 const bradford_matrix: matrix = matrix {
     m: [
         [0.8951, 0.2664, -0.1614],
@@ -1221,53 +1215,49 @@ pub fn transform_create(
     }
     if (*in_0).color_space == RGB_SIGNATURE {
         if precache {
-            if cfg!(any(target_arch = "x86", target_arch = "x86_64"))
-                && qcms_supports_avx.load(Ordering::Relaxed)
-            {
-                #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-                {
-                    if in_type == DATA_RGB_8 {
-                        transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_avx)
-                    } else if in_type == DATA_RGBA_8 {
-                        transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_avx)
-                    } else if in_type == DATA_BGRA_8 {
-                        transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_avx)
-                    }
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            if is_x86_feature_detected!("avx") {
+                if in_type == DATA_RGB_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_avx)
+                } else if in_type == DATA_RGBA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_avx)
+                } else if in_type == DATA_BGRA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_avx)
                 }
-            } else if cfg!(all(
-                any(target_arch = "x86", target_arch = "x86_64"),
-                not(miri)
-            )) && sse_version_available() >= 2
-            {
-                #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-                {
-                    if in_type == DATA_RGB_8 {
-                        transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_sse2)
-                    } else if in_type == DATA_RGBA_8 {
-                        transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_sse2)
-                    } else if in_type == DATA_BGRA_8 {
-                        transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_sse2)
-                    }
+            } else if cfg!(not(miri)) && is_x86_feature_detected!("sse2") {
+                if in_type == DATA_RGB_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_sse2)
+                } else if in_type == DATA_RGBA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_sse2)
+                } else if in_type == DATA_BGRA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_sse2)
                 }
-            } else if cfg!(any(target_arch = "arm", target_arch = "aarch64"))
-                && qcms_supports_neon.load(Ordering::Relaxed)
-            {
-                #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
-                {
-                    if in_type == DATA_RGB_8 {
-                        transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_neon)
-                    } else if in_type == DATA_RGBA_8 {
-                        transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_neon)
-                    } else if in_type == DATA_BGRA_8 {
-                        transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_neon)
-                    }
+            }
+
+            #[cfg(target_arch = "arm")]
+            let neon_supported = is_arm_feature_detected!("neon");
+            #[cfg(target_arch = "aarch64")]
+            let neon_supported = is_aarch64_feature_detected!("neon");
+
+            #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+            if neon_supported {
+                if in_type == DATA_RGB_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_neon)
+                } else if in_type == DATA_RGBA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_neon)
+                } else if in_type == DATA_BGRA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_neon)
                 }
-            } else if in_type == DATA_RGB_8 {
-                transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_precache)
-            } else if in_type == DATA_RGBA_8 {
-                transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_precache)
-            } else if in_type == DATA_BGRA_8 {
-                transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_precache)
+            }
+
+            if transform.transform_fn.is_none() {
+                if in_type == DATA_RGB_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_precache)
+                } else if in_type == DATA_RGBA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_rgba_out_lut_precache)
+                } else if in_type == DATA_BGRA_8 {
+                    transform.transform_fn = Some(qcms_transform_data_bgra_out_lut_precache)
+                }
             }
         } else if in_type == DATA_RGB_8 {
             transform.transform_fn = Some(qcms_transform_data_rgb_out_lut)
@@ -1381,15 +1371,4 @@ pub unsafe extern "C" fn qcms_transform_data(
 #[no_mangle]
 pub extern "C" fn qcms_enable_iccv4() {
     qcms_supports_iccv4.store(true, Ordering::Relaxed);
-}
-pub static qcms_supports_avx: AtomicBool = AtomicBool::new(false);
-pub static qcms_supports_neon: AtomicBool = AtomicBool::new(false);
-
-#[no_mangle]
-pub extern "C" fn qcms_enable_avx() {
-    qcms_supports_avx.store(true, Ordering::Relaxed);
-}
-#[no_mangle]
-pub extern "C" fn qcms_enable_neon() {
-    qcms_supports_neon.store(true, Ordering::Relaxed);
 }
