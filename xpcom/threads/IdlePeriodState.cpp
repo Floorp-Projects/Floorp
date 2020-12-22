@@ -196,6 +196,9 @@ void IdlePeriodState::RequestIdleToken(TimeStamp aLocalIdlePeriodHint) {
 void IdlePeriodState::SetIdleToken(uint64_t aId, TimeDuration aDuration) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
+
+  // We check the request ID.  It's possible that the server may be granting a
+  // an ealier request that the client has since cancelled and re-requested.
   if (mIdleRequestId == aId) {
     mIdleToken = TimeStamp::Now() + aDuration;
   }
