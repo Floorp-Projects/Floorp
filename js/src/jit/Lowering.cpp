@@ -1931,6 +1931,13 @@ void LIRGenerator::visitBigIntAdd(MBigIntAdd* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitBigIntSub(MBigIntSub* ins) {
+  auto* lir = new (alloc()) LBigIntSub(useRegister(ins->lhs()),
+                                       useRegister(ins->rhs()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);

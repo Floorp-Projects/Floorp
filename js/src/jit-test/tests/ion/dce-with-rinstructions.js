@@ -1417,6 +1417,15 @@ function rbigintadd(i) {
     return i;
 }
 
+let uceFault_sub_bigint = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sub_bigint'));
+function rbigintsub(i) {
+    var x = 1n - i;
+    if (uceFault_sub_bigint(i) || uceFault_sub_bigint(i))
+        assertEq(x, -98n  /* = 1 - 99 */);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1556,6 +1565,7 @@ for (j = 100 - max; j < 100; j++) {
     rsign_number(i);
     rsign_double(i);
     rbigintadd(BigInt(i));
+    rbigintsub(BigInt(i));
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
