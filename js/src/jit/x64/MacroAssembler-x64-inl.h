@@ -224,6 +224,10 @@ void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
   subPtr(ImmWord(imm.value), dest.reg);
 }
 
+void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
+  imulq(rhs, srcDest);
+}
+
 void MacroAssembler::mul64(Imm64 imm, const Register64& dest,
                            const Register temp) {
   MOZ_ASSERT(temp == InvalidReg);
