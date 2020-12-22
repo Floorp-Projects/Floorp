@@ -1949,6 +1949,13 @@ void LIRGenerator::visitBigIntDiv(MBigIntDiv* ins) { lowerBigIntDiv(ins); }
 
 void LIRGenerator::visitBigIntMod(MBigIntMod* ins) { lowerBigIntMod(ins); }
 
+void LIRGenerator::visitBigIntPow(MBigIntPow* ins) {
+  auto* lir = new (alloc()) LBigIntPow(useRegister(ins->lhs()),
+                                       useRegister(ins->rhs()), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitBigIntBitAnd(MBigIntBitAnd* ins) {
   auto* lir = new (alloc()) LBigIntBitAnd(
       useRegister(ins->lhs()), useRegister(ins->rhs()), temp(), temp());
