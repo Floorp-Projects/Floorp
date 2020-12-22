@@ -769,6 +769,7 @@ gfxCharacterMap* FontFace::GetUnicodeRangeAsCharacterMap() {
     for (auto& range : ranges) {
       mUnicodeRange->SetRange(range.start, range.end);
     }
+    mUnicodeRange->Compact();
   } else {
     mUnicodeRange = nullptr;
   }
