@@ -8794,6 +8794,131 @@ void CodeGenerator::visitCompareS(LCompareS* lir) {
   emitCompareS(lir, op, left, right, output);
 }
 
+void CodeGenerator::visitCompareBigInt(LCompareBigInt* lir) {
+  JSOp op = lir->mir()->jsop();
+  Register left = ToRegister(lir->left());
+  Register right = ToRegister(lir->right());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+  Register temp3 = ToRegister(lir->temp3());
+  Register output = ToRegister(lir->output());
+
+  Label notSame;
+  Label compareSign;
+  Label compareLength;
+  Label compareDigit;
+
+  Label* notSameSign;
+  Label* notSameLength;
+  Label* notSameDigit;
+  if (IsEqualityOp(op)) {
+    notSameSign = &notSame;
+    notSameLength = &notSame;
+    notSameDigit = &notSame;
+  } else {
+    notSameSign = &compareSign;
+    notSameLength = &compareLength;
+    notSameDigit = &compareDigit;
+  }
+
+  // Jump to |notSameSign| when the sign aren't the same.
+  masm.load32(Address(left, BigInt::offsetOfFlags()), temp1);
+  masm.xor32(Address(right, BigInt::offsetOfFlags()), temp1);
+  masm.branchTest32(Assembler::NonZero, temp1, Imm32(BigInt::signBitMask()),
+                    notSameSign);
+
+  // Jump to |notSameLength| when the digits length is different.
+  masm.load32(Address(right, BigInt::offsetOfLength()), temp1);
+  masm.branch32(Assembler::NotEqual, Address(left, BigInt::offsetOfLength()),
+                temp1, notSameLength);
+
+  // Both BigInts have the same sign and the same number of digits. Loop over
+  // each digit, starting with the left-most one, and break from the loop when
+  // the first non-matching digit was found.
+
+  masm.loadBigIntDigits(left, temp2);
+  masm.loadBigIntDigits(right, temp3);
+
+  static_assert(sizeof(BigInt::Digit) == sizeof(void*),
+                "BigInt::Digit is pointer sized");
+
+  masm.computeEffectiveAddress(BaseIndex(temp2, temp1, ScalePointer), temp2);
+  masm.computeEffectiveAddress(BaseIndex(temp3, temp1, ScalePointer), temp3);
+
+  Label start, loop;
+  masm.jump(&start);
+  masm.bind(&loop);
+
+  masm.subPtr(Imm32(sizeof(BigInt::Digit)), temp2);
+  masm.subPtr(Imm32(sizeof(BigInt::Digit)), temp3);
+
+  masm.loadPtr(Address(temp3, 0), output);
+  masm.branchPtr(Assembler::NotEqual, Address(temp2, 0), output, notSameDigit);
+
+  masm.bind(&start);
+  masm.branchSub32(Assembler::NotSigned, Imm32(1), temp1, &loop);
+
+  // No different digits were found, both BigInts are equal to each other.
+
+  Label done;
+  masm.move32(Imm32(op == JSOp::Eq || op == JSOp::StrictEq || op == JSOp::Le ||
+                    op == JSOp::Ge),
+              output);
+  masm.jump(&done);
+
+  if (IsEqualityOp(op)) {
+    masm.bind(&notSame);
+    masm.move32(Imm32(op == JSOp::Ne || op == JSOp::StrictNe), output);
+  } else {
+    Label invertWhenNegative;
+
+    // There are two cases when sign(left) != sign(right):
+    // 1. sign(left) = positive and sign(right) = negative,
+    // 2. or the dual case with reversed signs.
+    //
+    // For case 1, |left| <cmp> |right| is true for cmp=Gt or cmp=Ge and false
+    // for cmp=Lt or cmp=Le. Initialize the result for case 1 and handle case 2
+    // with |invertWhenNegative|.
+    masm.bind(&compareSign);
+    masm.move32(Imm32(op == JSOp::Gt || op == JSOp::Ge), output);
+    masm.jump(&invertWhenNegative);
+
+    // For sign(left) = sign(right) and len(digits(left)) != len(digits(right)),
+    // we have to consider the two cases:
+    // 1. len(digits(left)) < len(digits(right))
+    // 2. len(digits(left)) > len(digits(right))
+    //
+    // For |left| <cmp> |right| with cmp=Lt:
+    // Assume both BigInts are positive, then |left < right| is true for case 1
+    // and false for case 2. When both are negative, the result is reversed.
+    //
+    // The other comparison operators can be handled similarly.
+    //
+    // |temp1| holds the digits length of the right-hand side operand.
+    masm.bind(&compareLength);
+    masm.cmp32Set(JSOpToCondition(op, /* isSigned = */ false),
+                  Address(left, BigInt::offsetOfLength()), temp1, output);
+    masm.jump(&invertWhenNegative);
+
+    // Similar to the case above, compare the current digit to determine the
+    // overall comparison result.
+    //
+    // |temp2| points to the current digit of the left-hand side operand.
+    // |output| holds the current digit of the right-hand side operand.
+    masm.bind(&compareDigit);
+    masm.cmpPtrSet(JSOpToCondition(op, /* isSigned = */ false),
+                   Address(temp2, 0), output, output);
+
+    Label nonNegative;
+    masm.bind(&invertWhenNegative);
+    masm.branchIfBigIntIsNonNegative(left, &nonNegative);
+    masm.xor32(Imm32(1), output);
+    masm.bind(&nonNegative);
+  }
+
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitCompareVM(LCompareVM* lir) {
   pushArg(ToValue(lir, LCompareVM::RhsInput));
   pushArg(ToValue(lir, LCompareVM::LhsInput));
