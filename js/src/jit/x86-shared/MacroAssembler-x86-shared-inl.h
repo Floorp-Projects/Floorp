@@ -630,6 +630,12 @@ void MacroAssembler::branchSubPtr(Condition cond, Register src, Register dest,
   j(cond, label);
 }
 
+void MacroAssembler::branchMulPtr(Condition cond, Register src, Register dest,
+                                  Label* label) {
+  mulPtr(src, dest);
+  j(cond, label);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   subPtr(rhs, lhs);
