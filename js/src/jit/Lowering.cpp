@@ -1959,6 +1959,12 @@ void LIRGenerator::visitBigIntDecrement(MBigIntDecrement* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitBigIntNegate(MBigIntNegate* ins) {
+  auto* lir = new (alloc()) LBigIntNegate(useRegister(ins->input()), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
