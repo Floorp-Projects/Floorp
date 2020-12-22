@@ -77,6 +77,7 @@ namespace jit {
   _(BigIntMul)                 \
   _(BigIntDiv)                 \
   _(BigIntMod)                 \
+  _(BigIntPow)                 \
   _(BigIntBitAnd)              \
   _(BigIntBitOr)               \
   _(BigIntBitXor)              \
@@ -376,6 +377,14 @@ class RBigIntDiv final : public RInstruction {
 class RBigIntMod final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntMod, 2)
+
+  MOZ_MUST_USE bool recover(JSContext* cx,
+                            SnapshotIterator& iter) const override;
+};
+
+class RBigIntPow final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(BigIntPow, 2)
 
   MOZ_MUST_USE bool recover(JSContext* cx,
                             SnapshotIterator& iter) const override;
