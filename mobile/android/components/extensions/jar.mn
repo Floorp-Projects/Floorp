@@ -10,3 +10,5 @@ geckoview.jar:
     content/ext-c-tabs.js
     content/ext-pageAction.js
     content/ext-tabs.js
+    content/ext-downloads.js
+% override chrome://extensions/content/parent/ext-downloads.js chrome://geckoview/content/ext-downloads.js

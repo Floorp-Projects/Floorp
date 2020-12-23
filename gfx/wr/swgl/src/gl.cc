@@ -3763,7 +3763,12 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         // Edge that was previously outside crosses inside.
         // Evaluate plane equation for previous and current end-point
         // based on previous side and calculate relative offset.
-        assert(numClip < nump + 2);
+        if (numClip >= nump + 2) {
+          // If for some reason we produced more vertexes than we support, just
+          // bail out.
+          assert(false);
+          return 0;
+        }
         float prevDist = prevCoord - prevSide * prev.w;
         float curDist = curCoord - prevSide * cur.w;
         // It may happen that after we interpolate by the weight k that due to
@@ -3786,7 +3791,10 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
         // Edge that was previously inside crosses outside.
         // Evaluate plane equation for previous and current end-point
         // based on current side and calculate relative offset.
-        assert(numClip < nump + 2);
+        if (numClip >= nump + 2) {
+          assert(false);
+          return 0;
+        }
         float prevDist = prevCoord - curSide * prev.w;
         float curDist = curCoord - curSide * cur.w;
         // Calculate interpolation weight k and the nudge it inside clipping
@@ -3806,7 +3814,10 @@ static int clip_side(int nump, Point3D* p, Interpolants* interp, Point3D* outP,
     }
     if (!curSide) {
       // The current end point is inside the plane, so output point unmodified.
-      assert(numClip < nump + 2);
+      if (numClip >= nump + 2) {
+        assert(false);
+        return 0;
+      }
       outP[numClip] = cur;
       outInterp[numClip] = curInterp;
       numClip++;

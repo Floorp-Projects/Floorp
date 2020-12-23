@@ -36,8 +36,6 @@ struct LookAndFeelCache {
 };
 
 /**
- * Stores the entirety of a LookAndFeel's data.
- *
  * The format allows for some compression compared with having fixed
  * length arrays for each value type and some indication of whether
  * a value is present.  This is because not all values are present on
@@ -55,7 +53,7 @@ struct LookAndFeelCache {
  * LookAndFeel::FontID value minus 1, as 1 is the minimum value of that
  * enum.)
  */
-struct FullLookAndFeel {
+struct LookAndFeelTables {
     int32_t[] ints;
     float[] floats;
     nscolor[] colors;
@@ -68,6 +66,23 @@ struct FullLookAndFeel {
 
     uint16_t passwordChar;
     bool passwordEcho;
+};
+
+struct LookAndFeelTheme {
+#ifdef MOZ_WIDGET_GTK
+    nsCString themeName;
+    bool preferDarkTheme;
+#endif
+};
+
+/**
+ * Stores the entirety of a LookAndFeel's data.
+ */
+struct FullLookAndFeel {
+    LookAndFeelTables tables;
+#ifdef MOZ_WIDGET_GTK
+    LookAndFeelTheme theme;
+#endif
 };
 
 union LookAndFeelData {

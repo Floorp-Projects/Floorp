@@ -199,11 +199,13 @@
 /* Favicon */
 
 .urlbarView-favicon {
-  min-width: @urlbarViewFaviconWidth@;
+  width: @urlbarViewFaviconWidth@;
   height: @urlbarViewFaviconWidth@;
   margin-inline-end: calc(@urlbarViewIconMarginEnd@);
   background-repeat: no-repeat;
   background-size: contain;
+  object-fit: contain;
+  flex-shrink: 0;
   -moz-context-properties: fill, fill-opacity;
 }
 
@@ -214,12 +216,11 @@
 }
 
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
-  min-width: 24px;
+  width: 24px;
   height: 24px;
   margin-inline-end: 12px;
   flex-basis: 24px;
   flex-grow:  0;
-  flex-shrink: 0;
 }
 
 .urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
@@ -249,7 +250,7 @@
 
 .urlbarView-type-icon {
   position: absolute;
-  min-width: 12px;
+  width: 12px;
   height: 12px;
   margin-bottom: -4px;
   margin-inline-start: 8px;

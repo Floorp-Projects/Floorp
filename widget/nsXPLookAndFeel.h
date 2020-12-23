@@ -84,6 +84,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   using LookAndFeelInt = mozilla::widget::LookAndFeelInt;
   using LookAndFeelFont = mozilla::widget::LookAndFeelFont;
   using LookAndFeelColor = mozilla::widget::LookAndFeelColor;
+  using LookAndFeelTheme = mozilla::widget::LookAndFeelTheme;
 
   virtual LookAndFeelCache GetCacheImpl();
   virtual void SetCacheImpl(const LookAndFeelCache& aCache) {}
@@ -91,8 +92,9 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual void NativeInit() = 0;
 
-  virtual void WithThemeConfiguredForContent(const std::function<void()>& aFn) {
-    aFn();
+  virtual void WithThemeConfiguredForContent(
+      const std::function<void(const LookAndFeelTheme& aTheme)>& aFn) {
+    aFn(LookAndFeelTheme{});
   }
 
  protected:
