@@ -97,6 +97,9 @@ class StackwalkerARM64 : public Stackwalker {
   void CorrectRegLRByFramePointer(const vector<StackFrame*>& frames,
                                   StackFrameARM64* last_frame);
 
+  // Return true if the instruction pointer points into the first 4KiB of memory
+  bool ValidInstructionPointerInFrame(const StackFrameARM64& frame);
+
   // Stores the CPU context corresponding to the youngest stack frame, to
   // be returned by GetContextFrame.
   const MDRawContextARM64* context_;
