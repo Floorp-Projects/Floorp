@@ -32,7 +32,6 @@ import java.lang.IllegalStateException
 import java.math.BigInteger
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
-import java.nio.CharBuffer
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.util.*
@@ -77,14 +76,6 @@ class WebExecutorTest {
         return executor.fetch(request, flags).pollDefault()!!
     }
 
-    fun String.toDirectByteBuffer(): ByteBuffer {
-        val chars = CharBuffer.wrap(this)
-        val buffer = ByteBuffer.allocateDirect(this.length)
-        Charset.forName("UTF-8").newEncoder().encode(chars, buffer, true)
-
-        return buffer
-    }
-
     fun WebResponse.getBodyBytes(): ByteBuffer {
         body!!.use {
             return ByteBuffer.wrap(it.readBytes())
@@ -123,7 +114,7 @@ class WebExecutorTest {
                 .addHeader("Header2", "Value2")
                 .referrer(referrer)
                 .header("Content-Type", "text/plain")
-                .body(bodyString.toDirectByteBuffer())
+                .body(bodyString)
                 .build()
 
         val response = fetch(request)

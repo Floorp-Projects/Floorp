@@ -1636,9 +1636,11 @@ package org.mozilla.geckoview {
 
   public class WebExtension {
     method @Nullable @UiThread public WebExtension.BrowsingDataDelegate getBrowsingDataDelegate();
+    method @Nullable @UiThread public WebExtension.DownloadDelegate getDownloadDelegate();
     method @Nullable @UiThread public WebExtension.TabDelegate getTabDelegate();
     method @AnyThread public void setActionDelegate(@Nullable WebExtension.ActionDelegate);
     method @UiThread public void setBrowsingDataDelegate(@Nullable WebExtension.BrowsingDataDelegate);
+    method @UiThread public void setDownloadDelegate(@Nullable WebExtension.DownloadDelegate);
     method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
     method @UiThread public void setTabDelegate(@Nullable WebExtension.TabDelegate);
     field public final long flags;
@@ -1719,6 +1721,28 @@ package org.mozilla.geckoview {
     field public static final int APP = 8;
     field public static final int BLOCKLIST = 4;
     field public static final int USER = 2;
+  }
+
+  public static class WebExtension.Download {
+    ctor protected Download(int);
+    field @NonNull public final int id;
+  }
+
+  public static interface WebExtension.DownloadDelegate {
+    method @AnyThread @Nullable default public GeckoResult<WebExtension.Download> onDownload(@NonNull WebExtension, @NonNull WebExtension.DownloadRequest);
+  }
+
+  public static class WebExtension.DownloadRequest {
+    ctor protected DownloadRequest(WebExtension.DownloadRequest.Builder);
+    field public static final int CONFLICT_ACTION_OVERWRITE = 1;
+    field public static final int CONFLICT_ACTION_PROMPT = 2;
+    field public static final int CONFLICT_ACTION_UNIQUIFY = 0;
+    field public final boolean allowHttpErrors;
+    field public final int conflictActionFlag;
+    field public final int downloadFlags;
+    field @Nullable public final String filename;
+    field @NonNull public final WebRequest request;
+    field public final boolean saveAs;
   }
 
   public static class WebExtension.Flags {
@@ -1838,6 +1862,7 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtensionController {
+    method @Nullable @UiThread public WebExtension.Download createDownload(int);
     method @AnyThread @NonNull public GeckoResult<WebExtension> disable(@NonNull WebExtension, int);
     method @AnyThread @NonNull public GeckoResult<WebExtension> enable(@NonNull WebExtension, int);
     method @AnyThread @NonNull public GeckoResult<WebExtension> ensureBuiltIn(@NonNull String, @Nullable String);
@@ -1938,6 +1963,7 @@ package org.mozilla.geckoview {
   @AnyThread public static class WebRequest.Builder extends WebMessage.Builder {
     ctor public Builder(@NonNull String);
     method @NonNull public WebRequest.Builder body(@Nullable ByteBuffer);
+    method @NonNull public WebRequest.Builder body(@Nullable String);
     method @NonNull public WebRequest build();
     method @NonNull public WebRequest.Builder cacheMode(int);
     method @NonNull public WebRequest.Builder method(@NonNull String);

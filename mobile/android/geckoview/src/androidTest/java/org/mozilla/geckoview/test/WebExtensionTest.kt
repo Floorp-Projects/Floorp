@@ -4,12 +4,10 @@
 
 package org.mozilla.geckoview.test
 
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import java.util.concurrent.CancellationException;
-import org.hamcrest.core.StringEndsWith.endsWith
+import androidx.test.filters.MediumTest
 import org.hamcrest.core.IsEqual.equalTo
-import org.hamcrest.core.IsNull.nullValue
+import org.hamcrest.core.StringEndsWith.endsWith
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Assume.assumeThat
@@ -17,14 +15,18 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
-import org.mozilla.geckoview.test.util.Callbacks
-import org.mozilla.geckoview.WebExtension.DisabledFlags
-import org.mozilla.geckoview.WebExtensionController.EnableSource
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
-import org.mozilla.geckoview.test.util.RuntimeCreator
+import org.mozilla.geckoview.WebExtension.*
 import org.mozilla.geckoview.WebExtension.BrowsingDataDelegate.Type.*
+import org.mozilla.geckoview.WebExtensionController.EnableSource
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
+import org.mozilla.geckoview.test.util.Callbacks
+import org.mozilla.geckoview.test.util.RuntimeCreator
+import org.mozilla.geckoview.test.util.UiThreadUtils
+import java.nio.charset.Charset
 import java.util.*
+import java.util.concurrent.CancellationException
 import kotlin.collections.HashMap
 
 @RunWith(AndroidJUnit4::class)
@@ -2131,5 +2133,125 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(openOptionsPageResult)
 
         sessionRule.waitForResult(controller.uninstall(optionsExtension))
+    }
+
+    // This test checks if the request from Web Extension is processed correctly in Java
+    // the Boolean flags are true, other options have non-default values
+    @Test
+    fun testDownloadsFlagsTrue() {
+        val uri = createTestUrl("/assets/www/images/test.gif")
+
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val webExtension = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/download-flags-true.xpi"))
+
+        val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
+        val downloadDelegate = object : DownloadDelegate {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.Download>? {
+                assertEquals(webExtension!!.id, source.id)
+                assertEquals(uri, request.request.uri)
+                assertEquals("POST", request.request.method)
+
+                request.request.body?.rewind()
+                val result = Charset.forName("UTF-8").decode(request.request.body!!).toString()
+                assertEquals("postbody", result)
+
+                assertEquals("Mozilla Firefox", request.request.headers.get("User-Agent"))
+                assertEquals("banana.gif", request.filename)
+                assertTrue(request.allowHttpErrors)
+                assertTrue(request.saveAs)
+                assertEquals(GeckoWebExecutor.FETCH_FLAGS_PRIVATE, request.downloadFlags)
+                assertEquals(DownloadRequest.CONFLICT_ACTION_OVERWRITE, request.conflictActionFlag)
+
+                val download = controller.createDownload(1)
+                assertOnDownloadCalled.complete(download)
+                return GeckoResult.fromValue(download)
+            }
+        }
+
+        webExtension.setDownloadDelegate(downloadDelegate)
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        try {
+            sessionRule.waitForResult(assertOnDownloadCalled)
+        } catch (exception: UiThreadUtils.TimeoutException) {
+            controller.setAllowedInPrivateBrowsing(webExtension, true)
+            val downloadCreated = sessionRule.waitForResult(assertOnDownloadCalled)
+            assertNotNull(downloadCreated.id)
+
+            sessionRule.waitForResult(controller.uninstall(webExtension))
+        }
+    }
+
+    // This test checks if the request from Web Extension is processed correctly in Java
+    // the Boolean flags are absent/false, other options have default values
+    @Test
+    fun testDownloadsFlagsFalse() {
+        val uri = createTestUrl("/assets/www/images/test.gif")
+
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val webExtension = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/download-flags-false.xpi"))
+
+        val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
+        val downloadDelegate = object : DownloadDelegate {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.Download>? {
+                assertEquals(webExtension!!.id, source.id)
+                assertEquals(uri, request.request.uri)
+                assertEquals("GET", request.request.method)
+                assertNull(request.request.body)
+                assertEquals(0, request.request.headers.size)
+                assertNull(request.filename)
+                assertFalse(request.allowHttpErrors)
+                assertFalse(request.saveAs)
+                assertEquals(GeckoWebExecutor.FETCH_FLAGS_NONE, request.downloadFlags)
+                assertEquals(DownloadRequest.CONFLICT_ACTION_UNIQUIFY, request.conflictActionFlag)
+
+                val download = controller.createDownload(2)
+                assertOnDownloadCalled.complete(download)
+                return GeckoResult.fromValue(download)
+            }
+        }
+
+        webExtension.setDownloadDelegate(downloadDelegate)
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        val downloadCreated = sessionRule.waitForResult(assertOnDownloadCalled)
+        assertNotNull(downloadCreated.id)
+        sessionRule.waitForResult(controller.uninstall(webExtension))
     }
 }
