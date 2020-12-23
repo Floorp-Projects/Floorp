@@ -24,13 +24,6 @@ class TestCommandLineArguments(MarionetteTestCase):
         super(TestCommandLineArguments, self).tearDown()
 
     def test_remote_agent_enabled(self):
-        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            is_nightly_build = self.marionette.execute_script(
-                """
-                return AppConstants.NIGHTLY_BUILD;
-            """
-            )
-
         debugger_address = self.marionette.session_capabilities.get(
             "moz:debuggerAddress"
         )
@@ -45,13 +38,9 @@ class TestCommandLineArguments(MarionetteTestCase):
             "moz:debuggerAddress"
         )
 
-        # The Remote Agent is only available in Nightly builds
-        if is_nightly_build:
-            self.assertEqual(debugger_address, "localhost:9222")
-            result = requests.get(url="http://{}/json/version".format(debugger_address))
-            self.assertTrue(result.ok)
-        else:
-            self.assertIsNone(debugger_address)
+        self.assertEqual(debugger_address, "localhost:9222")
+        result = requests.get(url="http://{}/json/version".format(debugger_address))
+        self.assertTrue(result.ok)
 
     def test_start_in_safe_mode(self):
         self.marionette.instance.app_args.append("-safe-mode")
