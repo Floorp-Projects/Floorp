@@ -265,7 +265,7 @@ TEST_P(pkixder_DigestAlgorithmIdentifier_Valid, Valid)
   }
 }
 
-INSTANTIATE_TEST_CASE_P(pkixder_DigestAlgorithmIdentifier_Valid,
+INSTANTIATE_TEST_SUITE_P(pkixder_DigestAlgorithmIdentifier_Valid,
                         pkixder_DigestAlgorithmIdentifier_Valid,
                         testing::ValuesIn(VALID_DIGEST_ALGORITHM_TEST_INFO));
 
@@ -301,7 +301,7 @@ TEST_P(pkixder_DigestAlgorithmIdentifier_Invalid, Invalid)
             DigestAlgorithmIdentifier(reader, alg));
 }
 
-INSTANTIATE_TEST_CASE_P(pkixder_DigestAlgorithmIdentifier_Invalid,
+INSTANTIATE_TEST_SUITE_P(pkixder_DigestAlgorithmIdentifier_Invalid,
                         pkixder_DigestAlgorithmIdentifier_Invalid,
                         testing::ValuesIn(INVALID_DIGEST_ALGORITHM_TEST_INFO));
 
@@ -422,7 +422,7 @@ TEST_P(pkixder_SignatureAlgorithmIdentifierValue_Valid, Valid)
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   pkixder_SignatureAlgorithmIdentifierValue_Valid,
   pkixder_SignatureAlgorithmIdentifierValue_Valid,
   testing::ValuesIn(VALID_SIGNATURE_ALGORITHM_VALUE_TEST_INFO));
@@ -474,7 +474,7 @@ TEST_P(pkixder_SignatureAlgorithmIdentifier_Invalid, Invalid)
             SignatureAlgorithmIdentifierValue(reader, publicKeyAlg, digestAlg));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   pkixder_SignatureAlgorithmIdentifier_Invalid,
   pkixder_SignatureAlgorithmIdentifier_Invalid,
   testing::ValuesIn(INVALID_SIGNATURE_ALGORITHM_VALUE_TEST_INFO));

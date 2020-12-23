@@ -103,7 +103,7 @@ TEST_P(QuickDERTest, InvalidLengths) {
   PORT_DestroyCheapArena(&pool);
 }
 
-INSTANTIATE_TEST_CASE_P(QuickderTestsInvalidLengths, QuickDERTest,
-                        testing::ValuesIn(kInvalidDER));
+INSTANTIATE_TEST_SUITE_P(QuickderTestsInvalidLengths, QuickDERTest,
+                         testing::ValuesIn(kInvalidDER));
 
 }  // namespace nss_test

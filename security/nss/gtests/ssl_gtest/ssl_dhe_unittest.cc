@@ -346,11 +346,11 @@ static const bool kTrueFalseArr[] = {true, false};
 static ::testing::internal::ParamGenerator<bool> kTrueFalse =
     ::testing::ValuesIn(kTrueFalseArr);
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DamageYStream, TlsDamageDHYTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10ToV12, kAllY, kTrueFalse));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DamageYDatagram, TlsDamageDHYTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12, kAllY, kTrueFalse));

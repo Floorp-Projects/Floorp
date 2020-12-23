@@ -70,7 +70,7 @@ TEST_F(TlsConnectTest, RenegotiationConfigTls13) {
 
 TEST_P(TlsConnectStream, ConnectTls10AndServerRenegotiateHigher) {
   if (version_ == SSL_LIBRARY_VERSION_TLS_1_0) {
-    return;
+    GTEST_SKIP();
   }
   // Set the client so it will accept any version from 1.0
   // to |version_|.
@@ -110,7 +110,7 @@ TEST_P(TlsConnectStream, ConnectTls10AndServerRenegotiateHigher) {
 
 TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
   if (version_ == SSL_LIBRARY_VERSION_TLS_1_0) {
-    return;
+    GTEST_SKIP();
   }
   // Set the client so it will accept any version from 1.0
   // to |version_|.
@@ -148,7 +148,7 @@ TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
 
 TEST_P(TlsConnectStream, ConnectAndServerRenegotiateLower) {
   if (version_ == SSL_LIBRARY_VERSION_TLS_1_0) {
-    return;
+    GTEST_SKIP();
   }
   Connect();
 
@@ -181,7 +181,7 @@ TEST_P(TlsConnectStream, ConnectAndServerRenegotiateLower) {
 
 TEST_P(TlsConnectStream, ConnectAndServerWontRenegotiateLower) {
   if (version_ == SSL_LIBRARY_VERSION_TLS_1_0) {
-    return;
+    GTEST_SKIP();
   }
   Connect();
 
@@ -200,7 +200,7 @@ TEST_P(TlsConnectStream, ConnectAndServerWontRenegotiateLower) {
 
 TEST_P(TlsConnectStream, ConnectAndClientWontRenegotiateLower) {
   if (version_ == SSL_LIBRARY_VERSION_TLS_1_0) {
-    return;
+    GTEST_SKIP();
   }
   Connect();
 

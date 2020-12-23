@@ -356,7 +356,7 @@ TEST_P(SignParamsSourceTest, CreateRsaPssWithHashMismatch) {
   EXPECT_EQ(nullptr, params);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignParamsTestCases, SignParamsTest,
     ::testing::Combine(::testing::Values(SEC_OID_UNKNOWN, SEC_OID_SHA1,
                                          SEC_OID_SHA224, SEC_OID_SHA256,
@@ -365,9 +365,9 @@ INSTANTIATE_TEST_CASE_P(
                                          SEC_OID_SHA224, SEC_OID_SHA256,
                                          SEC_OID_SHA384, SEC_OID_SHA512)));
 
-INSTANTIATE_TEST_CASE_P(SignParamsSourceTestCases, SignParamsSourceTest,
-                        ::testing::Values(SEC_OID_UNKNOWN, SEC_OID_SHA1,
-                                          SEC_OID_SHA224, SEC_OID_SHA256,
-                                          SEC_OID_SHA384, SEC_OID_SHA512));
+INSTANTIATE_TEST_SUITE_P(SignParamsSourceTestCases, SignParamsSourceTest,
+                         ::testing::Values(SEC_OID_UNKNOWN, SEC_OID_SHA1,
+                                           SEC_OID_SHA224, SEC_OID_SHA256,
+                                           SEC_OID_SHA384, SEC_OID_SHA512));
 
 }  // namespace nss_test

@@ -71,10 +71,10 @@ TEST_P(Pkcs11EcdhNullKeyTest, UseNullPublicValue) {
   Test(Pkcs11KeyPairGenerator(CKM_EC_KEY_PAIR_GEN, GetParam()),
        CKM_ECDH1_DERIVE);
 }
-INSTANTIATE_TEST_CASE_P(Pkcs11EcdhNullKeyTest, Pkcs11EcdhNullKeyTest,
-                        ::testing::Values(SEC_OID_SECG_EC_SECP256R1,
-                                          SEC_OID_SECG_EC_SECP384R1,
-                                          SEC_OID_SECG_EC_SECP521R1,
-                                          SEC_OID_CURVE25519));
+INSTANTIATE_TEST_SUITE_P(Pkcs11EcdhNullKeyTest, Pkcs11EcdhNullKeyTest,
+                         ::testing::Values(SEC_OID_SECG_EC_SECP256R1,
+                                           SEC_OID_SECG_EC_SECP384R1,
+                                           SEC_OID_SECG_EC_SECP521R1,
+                                           SEC_OID_CURVE25519));
 
 }  // namespace nss_test

@@ -553,9 +553,9 @@ TEST_P(Pkcs11CbcPadTest, EncryptDecrypt_ShortValidPadding) {
   EXPECT_EQ(0, memcmp(decrypted.data(), input.data(), decrypted_len));
 }
 
-INSTANTIATE_TEST_CASE_P(EncryptDecrypt, Pkcs11CbcPadTest,
-                        ::testing::Values(CKM_AES_CBC_PAD, CKM_AES_CBC,
-                                          CKM_DES3_CBC_PAD, CKM_DES3_CBC));
+INSTANTIATE_TEST_SUITE_P(EncryptDecrypt, Pkcs11CbcPadTest,
+                         ::testing::Values(CKM_AES_CBC_PAD, CKM_AES_CBC,
+                                           CKM_DES3_CBC_PAD, CKM_DES3_CBC));
 
 class Pkcs11AesCbcWycheproofTest
     : public ::testing::TestWithParam<AesCbcTestVector> {
@@ -602,7 +602,7 @@ class Pkcs11AesCbcWycheproofTest
 
 TEST_P(Pkcs11AesCbcWycheproofTest, TestVectors) { RunTest(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11AesCbcWycheproofTest,
-                        ::testing::ValuesIn(kCbcWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofTestVector, Pkcs11AesCbcWycheproofTest,
+                         ::testing::ValuesIn(kCbcWycheproofVectors));
 
 }  // namespace nss_test

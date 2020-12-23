@@ -304,6 +304,6 @@ TEST_P(pkixcert_IsValidChainForAlgorithm, IsValidChainForAlgorithm)
                            CertPolicyId::anyPolicy, nullptr));
 }
 
-INSTANTIATE_TEST_CASE_P(pkixcert_IsValidChainForAlgorithm,
+INSTANTIATE_TEST_SUITE_P(pkixcert_IsValidChainForAlgorithm,
                         pkixcert_IsValidChainForAlgorithm,
                         testing::ValuesIn(CHAIN_VALIDITY));

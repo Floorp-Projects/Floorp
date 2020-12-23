@@ -376,9 +376,10 @@ TEST_P(TestPolicyVersionRange, TestAllTLSVersionsAndPolicyCombinations) {
   Connect();
 }
 
-INSTANTIATE_TEST_CASE_P(TLSVersionRanges, TestPolicyVersionRange,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           kExpandedVersions, kExpandedVersions,
-                                           kExpandedVersions,
-                                           kExpandedVersions));
+INSTANTIATE_TEST_SUITE_P(TLSVersionRanges, TestPolicyVersionRange,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            kExpandedVersions,
+                                            kExpandedVersions,
+                                            kExpandedVersions,
+                                            kExpandedVersions));
 }  // namespace nss_test

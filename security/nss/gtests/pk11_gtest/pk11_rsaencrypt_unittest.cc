@@ -13,6 +13,7 @@
 #include "nss.h"
 #include "nss_scoped_ptrs.h"
 #include "pk11pub.h"
+#include "databuffer.h"
 
 #include "testvectors/rsa_pkcs1_2048_test-vectors.h"
 #include "testvectors/rsa_pkcs1_3072_test-vectors.h"
@@ -44,27 +45,29 @@ class RsaDecryptWycheproofTest
     rv = PK11_PrivDecryptPKCS1(priv_key.get(), decrypted.data(), &decrypted_len,
                                decrypted.size(), vec.ct.data(), vec.ct.size());
 
-    // RSA_DecryptBlock returns SECFailure with an empty message.
-    if (vec.valid && vec.msg.size()) {
+    if (vec.valid) {
       EXPECT_EQ(SECSuccess, rv);
       decrypted.resize(decrypted_len);
       EXPECT_EQ(vec.msg, decrypted);
     } else {
-      EXPECT_EQ(SECFailure, rv);
+      DataBuffer::SetLogLimit(512);
+      decrypted.resize(decrypted_len);
+      EXPECT_EQ(SECFailure, rv)
+          << "Returned:" << DataBuffer(decrypted.data(), decrypted.size());
     }
   };
 };
 
 TEST_P(RsaDecryptWycheproofTest, Pkcs1Decrypt) { TestDecrypt(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(WycheproofRsa2048DecryptTest, RsaDecryptWycheproofTest,
-                        ::testing::ValuesIn(kRsa2048DecryptWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofRsa2048DecryptTest, RsaDecryptWycheproofTest,
+                         ::testing::ValuesIn(kRsa2048DecryptWycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(WycheproofRsa3072DecryptTest, RsaDecryptWycheproofTest,
-                        ::testing::ValuesIn(kRsa3072DecryptWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofRsa3072DecryptTest, RsaDecryptWycheproofTest,
+                         ::testing::ValuesIn(kRsa3072DecryptWycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(WycheproofRsa4096DecryptTest, RsaDecryptWycheproofTest,
-                        ::testing::ValuesIn(kRsa4096DecryptWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofRsa4096DecryptTest, RsaDecryptWycheproofTest,
+                         ::testing::ValuesIn(kRsa4096DecryptWycheproofVectors));
 
 TEST(RsaEncryptTest, MessageLengths) {
   const uint8_t spki[] = {

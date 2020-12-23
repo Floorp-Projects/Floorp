@@ -502,11 +502,12 @@ static const uint16_t k0RttCipherDefs[] = {TLS_CHACHA20_POLY1305_SHA256,
 
 static const uint16_t kDefaultSuite[] = {TLS_CHACHA20_POLY1305_SHA256};
 
-INSTANTIATE_TEST_CASE_P(Tls13PskTest, Tls13PskTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           ::testing::ValuesIn(kDefaultSuite)));
+INSTANTIATE_TEST_SUITE_P(
+    Tls13PskTest, Tls13PskTest,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                       ::testing::ValuesIn(kDefaultSuite)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Tls13PskTestWithCiphers, Tls13PskTestWithCiphers,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        ::testing::ValuesIn(k0RttCipherDefs)));

@@ -234,13 +234,13 @@ TEST_P(Tls13SkipTest, SkipClientCertificateVerify) {
                  SSL_ERROR_RX_UNEXPECTED_FINISHED);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SkipTls10, TlsSkipTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10));
-INSTANTIATE_TEST_CASE_P(SkipVariants, TlsSkipTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV11V12));
-INSTANTIATE_TEST_CASE_P(Skip13Variants, Tls13SkipTest,
-                        TlsConnectTestBase::kTlsVariantsAll);
+INSTANTIATE_TEST_SUITE_P(SkipVariants, TlsSkipTest,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV11V12));
+INSTANTIATE_TEST_SUITE_P(Skip13Variants, Tls13SkipTest,
+                         TlsConnectTestBase::kTlsVariantsAll);
 }  // namespace nss_test

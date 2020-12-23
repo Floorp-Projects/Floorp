@@ -1800,7 +1800,7 @@ TEST_P(TlsSignatureSchemeConfiguration, SignatureSchemeConfigBoth) {
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, auth_type_, signature_scheme_);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeRsa, TlsSignatureSchemeConfiguration,
     ::testing::Combine(
         TlsConnectTestBase::kTlsVariantsAll, TlsConnectTestBase::kTlsV12,
@@ -1810,7 +1810,7 @@ INSTANTIATE_TEST_CASE_P(
                           ssl_sig_rsa_pkcs1_sha512, ssl_sig_rsa_pss_rsae_sha256,
                           ssl_sig_rsa_pss_rsae_sha384)));
 // RSASSA-PKCS1-v1_5 is not allowed to be used in TLS 1.3
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeRsaTls13, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        TlsConnectTestBase::kTlsV13,
@@ -1819,42 +1819,42 @@ INSTANTIATE_TEST_CASE_P(
                        ::testing::Values(ssl_sig_rsa_pss_rsae_sha256,
                                          ssl_sig_rsa_pss_rsae_sha384)));
 // PSS with SHA-512 needs a bigger key to work.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeBigRsa, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        TlsConnectTestBase::kTlsV12Plus,
                        ::testing::Values(TlsAgent::kRsa2048),
                        ::testing::Values(ssl_auth_rsa_sign),
                        ::testing::Values(ssl_sig_rsa_pss_rsae_sha512)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeRsaSha1, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        TlsConnectTestBase::kTlsV12,
                        ::testing::Values(TlsAgent::kServerRsa),
                        ::testing::Values(ssl_auth_rsa_sign),
                        ::testing::Values(ssl_sig_rsa_pkcs1_sha1)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeEcdsaP256, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        TlsConnectTestBase::kTlsV12Plus,
                        ::testing::Values(TlsAgent::kServerEcdsa256),
                        ::testing::Values(ssl_auth_ecdsa),
                        ::testing::Values(ssl_sig_ecdsa_secp256r1_sha256)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeEcdsaP384, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        TlsConnectTestBase::kTlsV12Plus,
                        ::testing::Values(TlsAgent::kServerEcdsa384),
                        ::testing::Values(ssl_auth_ecdsa),
                        ::testing::Values(ssl_sig_ecdsa_secp384r1_sha384)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeEcdsaP521, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        TlsConnectTestBase::kTlsV12Plus,
                        ::testing::Values(TlsAgent::kServerEcdsa521),
                        ::testing::Values(ssl_auth_ecdsa),
                        ::testing::Values(ssl_sig_ecdsa_secp521r1_sha512)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SignatureSchemeEcdsaSha1, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                        TlsConnectTestBase::kTlsV12,

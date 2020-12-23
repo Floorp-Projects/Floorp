@@ -65,8 +65,8 @@ static const Pkcs11EcdsaTestParams kEcdsaVectors[] = {
       DataBuffer(kP521Data, sizeof(kP521Data)),
       DataBuffer(kP521Signature, sizeof(kP521Signature))}}};
 
-INSTANTIATE_TEST_CASE_P(EcdsaSignVerify, Pkcs11EcdsaTest,
-                        ::testing::ValuesIn(kEcdsaVectors));
+INSTANTIATE_TEST_SUITE_P(EcdsaSignVerify, Pkcs11EcdsaTest,
+                         ::testing::ValuesIn(kEcdsaVectors));
 
 class Pkcs11EcdsaSha256Test : public Pkcs11EcdsaTestBase {
  public:
@@ -208,16 +208,16 @@ class Pkcs11EcdsaWycheproofTest
 
 TEST_P(Pkcs11EcdsaWycheproofTest, Verify) { Derive(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(WycheproofP256SignatureSha256Test,
-                        Pkcs11EcdsaWycheproofTest,
-                        ::testing::ValuesIn(kP256EcdsaSha256Vectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofP256SignatureSha256Test,
+                         Pkcs11EcdsaWycheproofTest,
+                         ::testing::ValuesIn(kP256EcdsaSha256Vectors));
 
-INSTANTIATE_TEST_CASE_P(WycheproofP384SignatureSha384Test,
-                        Pkcs11EcdsaWycheproofTest,
-                        ::testing::ValuesIn(kP384EcdsaSha384Vectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofP384SignatureSha384Test,
+                         Pkcs11EcdsaWycheproofTest,
+                         ::testing::ValuesIn(kP384EcdsaSha384Vectors));
 
-INSTANTIATE_TEST_CASE_P(WycheproofP521SignatureSha512Test,
-                        Pkcs11EcdsaWycheproofTest,
-                        ::testing::ValuesIn(kP521EcdsaSha512Vectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofP521SignatureSha512Test,
+                         Pkcs11EcdsaWycheproofTest,
+                         ::testing::ValuesIn(kP521EcdsaSha512Vectors));
 
 }  // namespace nss_test

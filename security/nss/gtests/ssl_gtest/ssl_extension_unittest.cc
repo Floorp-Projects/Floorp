@@ -1102,7 +1102,7 @@ TEST_P(TlsExtensionTest13, HrrThenRemoveSupportedGroups) {
 TEST_P(TlsExtensionTest13, HrrThenRemoveEch) {
   if (variant_ == ssl_variant_datagram) {
     // ECH not supported in DTLS.
-    return;
+    GTEST_SKIP();
   }
 
   EnsureTlsSetup();
@@ -1273,47 +1273,47 @@ TEST_F(TlsConnectDatagram13, Dtls13RejectLegacyCookie) {
   client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ExtensionStream, TlsExtensionTestGeneric,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsVAll));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ExtensionDatagram, TlsExtensionTestGeneric,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11Plus));
-INSTANTIATE_TEST_CASE_P(ExtensionDatagramOnly, TlsExtensionTestDtls,
-                        TlsConnectTestBase::kTlsV11Plus);
+INSTANTIATE_TEST_SUITE_P(ExtensionDatagramOnly, TlsExtensionTestDtls,
+                         TlsConnectTestBase::kTlsV11Plus);
 
-INSTANTIATE_TEST_CASE_P(ExtensionTls12, TlsExtensionTest12,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV12));
+INSTANTIATE_TEST_SUITE_P(ExtensionTls12, TlsExtensionTest12,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV12));
 
-INSTANTIATE_TEST_CASE_P(ExtensionTls12Plus, TlsExtensionTest12Plus,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV12Plus));
+INSTANTIATE_TEST_SUITE_P(ExtensionTls12Plus, TlsExtensionTest12Plus,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV12Plus));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ExtensionPre13Stream, TlsExtensionTestPre13,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10ToV12));
-INSTANTIATE_TEST_CASE_P(ExtensionPre13Datagram, TlsExtensionTestPre13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV11V12));
+INSTANTIATE_TEST_SUITE_P(ExtensionPre13Datagram, TlsExtensionTestPre13,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV11V12));
 
-INSTANTIATE_TEST_CASE_P(ExtensionTls13, TlsExtensionTest13,
-                        TlsConnectTestBase::kTlsVariantsAll);
+INSTANTIATE_TEST_SUITE_P(ExtensionTls13, TlsExtensionTest13,
+                         TlsConnectTestBase::kTlsVariantsAll);
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     BogusExtensionStream, TlsBogusExtensionTestPre13,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10ToV12));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     BogusExtensionDatagram, TlsBogusExtensionTestPre13,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12));
 
-INSTANTIATE_TEST_CASE_P(BogusExtension13, TlsBogusExtensionTest13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV13));
+INSTANTIATE_TEST_SUITE_P(BogusExtension13, TlsBogusExtensionTest13,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
 
 }  // namespace nss_test

@@ -56,10 +56,10 @@ TEST_P(Blake2BKATKeyed, Keyed) {
   EXPECT_EQ(values, std::get<1>(GetParam()));
 }
 
-INSTANTIATE_TEST_CASE_P(UnkeyedKAT, Blake2BKATUnkeyed,
-                        ::testing::ValuesIn(TestcasesUnkeyed));
-INSTANTIATE_TEST_CASE_P(KeyedKAT, Blake2BKATKeyed,
-                        ::testing::ValuesIn(TestcasesKeyed));
+INSTANTIATE_TEST_SUITE_P(UnkeyedKAT, Blake2BKATUnkeyed,
+                         ::testing::ValuesIn(TestcasesUnkeyed));
+INSTANTIATE_TEST_SUITE_P(KeyedKAT, Blake2BKATKeyed,
+                         ::testing::ValuesIn(TestcasesKeyed));
 
 TEST_F(Blake2BTests, ContextTest) {
   ScopedBLAKE2BContext ctx(BLAKE2B_NewContext());

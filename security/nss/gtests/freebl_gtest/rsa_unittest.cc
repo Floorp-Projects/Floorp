@@ -77,19 +77,23 @@ TEST_F(RSATest, DecryptBlockTestErrors) {
   EXPECT_EQ(SECFailure, rv);
 
   uint8_t in[256] = {0};
-  // This should fail because the padding checks will fail.
+  // This should fail because the padding checks will fail,
+  // however, mitigations for Bleichenbacher attacks transform failures
+  // to a different output.
   rv = RSA_DecryptBlock(key.get(), out, &outputLen, maxOutputLen, in,
                         sizeof(in));
-  EXPECT_EQ(SECFailure, rv);
-  // outputLen should be maxOutputLen.
-  EXPECT_EQ(maxOutputLen, outputLen);
+  EXPECT_EQ(SECSuccess, rv);
+  // outputLen should <= 256-11=245.
+  EXPECT_LE(outputLen, 245u);
 
-  // This should fail because the padding checks will fail.
+  // This should fail because the padding checks will fail,
+  // however, mitigations for Bleichenbacher attacks transform failures
+  // to a different output.
   uint8_t out_long[260] = {0};
   maxOutputLen = sizeof(out_long);
   rv = RSA_DecryptBlock(key.get(), out_long, &outputLen, maxOutputLen, in,
                         sizeof(in));
-  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(SECSuccess, rv);
   // outputLen should <= 256-11=245.
   EXPECT_LE(outputLen, 245u);
   // Everything over 256 must be 0 in the output.

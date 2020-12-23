@@ -90,30 +90,31 @@ class RsaOaepWycheproofTest
 
 TEST_P(RsaOaepWycheproofTest, OaepDecrypt) { TestDecrypt(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(WycheproofRsa2048Sha1OaepTest, RsaOaepWycheproofTest,
-                        ::testing::ValuesIn(kRsaOaep2048Sha1WycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(
+    WycheproofRsa2048Sha1OaepTest, RsaOaepWycheproofTest,
+    ::testing::ValuesIn(kRsaOaep2048Sha1WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     WycheproofOaep2048Sha256Sha1Test, RsaOaepWycheproofTest,
     ::testing::ValuesIn(kRsaOaep2048Sha256Mgf1Sha1WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     WycheproofOaep2048Sha256Sha256Test, RsaOaepWycheproofTest,
     ::testing::ValuesIn(kRsaOaep2048Sha256Mgf1Sha256WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     WycheproofOaep2048Sha384Sha1Test, RsaOaepWycheproofTest,
     ::testing::ValuesIn(kRsaOaep2048Sha384Mgf1Sha1WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     WycheproofOaep2048Sha384Sha384Test, RsaOaepWycheproofTest,
     ::testing::ValuesIn(kRsaOaep2048Sha384Mgf1Sha384WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     WycheproofOaep2048Sha512Sha1Test, RsaOaepWycheproofTest,
     ::testing::ValuesIn(kRsaOaep2048Sha512Mgf1Sha1WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     WycheproofOaep2048Sha512Sha512Test, RsaOaepWycheproofTest,
     ::testing::ValuesIn(kRsaOaep2048Sha512Mgf1Sha512WycheproofVectors));
 
@@ -156,11 +157,32 @@ TEST(Pkcs11RsaOaepTest, TestOaepWrapUnwrap) {
 
   PK11SymKey* p_unwrapped_tmp = nullptr;
 
-  // This fails because this method is broken and assumes CKM_RSA_PKCS and
-  // doesn't understand OAEP.
+  // Extract key's value in order to validate decryption worked.
+  rv = PK11_ExtractKeyValue(to_wrap.get());
+  ASSERT_EQ(rv, SECSuccess);
+
+  // References owned by PKCS#11 layer; no need to scope and free.
+  SECItem* expectedItem = PK11_GetKeyData(to_wrap.get());
+
+  // This assumes CKM_RSA_PKCS and doesn't understand OAEP.
+  // CKM_RSA_PKCS cannot safely return errors, however, as it can lead
+  // to Bleichenbacher-like attacks. To solve this there's a new definition
+  // that generates fake key material based on the message and private key.
+  // This returned key material will not be the key we were expecting, so
+  // make sure that's the case:
   p_unwrapped_tmp = PK11_PubUnwrapSymKey(priv.get(), wrapped.get(), CKM_AES_CBC,
                                          CKA_DECRYPT, 16);
-  ASSERT_EQ(p_unwrapped_tmp, nullptr);
+  // As long as the wrapped data is the same length as the key
+  // (which it should be), then CKM_RSA_PKCS should not fail.
+  ASSERT_NE(p_unwrapped_tmp, nullptr);
+  ScopedPK11SymKey fakeUnwrapped;
+  fakeUnwrapped.reset(p_unwrapped_tmp);
+  rv = PK11_ExtractKeyValue(fakeUnwrapped.get());
+  ASSERT_EQ(rv, SECSuccess);
+
+  // References owned by PKCS#11 layer; no need to scope and free.
+  SECItem* fakeItem = PK11_GetKeyData(fakeUnwrapped.get());
+  ASSERT_NE(SECITEM_CompareItem(fakeItem, expectedItem), 0);
 
   ScopedPK11SymKey unwrapped;
   p_unwrapped_tmp = PK11_PubUnwrapSymKeyWithMechanism(
@@ -170,15 +192,10 @@ TEST(Pkcs11RsaOaepTest, TestOaepWrapUnwrap) {
 
   unwrapped.reset(p_unwrapped_tmp);
 
-  // Extract key's value in order to validate decryption worked.
-  rv = PK11_ExtractKeyValue(to_wrap.get());
-  ASSERT_EQ(rv, SECSuccess);
-
   rv = PK11_ExtractKeyValue(unwrapped.get());
   ASSERT_EQ(rv, SECSuccess);
 
   // References owned by PKCS#11 layer; no need to scope and free.
-  SECItem* expectedItem = PK11_GetKeyData(to_wrap.get());
   SECItem* actualItem = PK11_GetKeyData(unwrapped.get());
 
   ASSERT_EQ(SECITEM_CompareItem(actualItem, expectedItem), 0);

@@ -737,7 +737,7 @@ TEST_P(TlsConnectGenericPre13, TestResumptionOverrideVersion) {
   if (variant_ == ssl_variant_stream) {
     switch (version_) {
       case SSL_LIBRARY_VERSION_TLS_1_0:
-        return;  // Skip the test.
+        GTEST_SKIP();
       case SSL_LIBRARY_VERSION_TLS_1_1:
         override_version = SSL_LIBRARY_VERSION_TLS_1_0;
         break;
@@ -752,7 +752,7 @@ TEST_P(TlsConnectGenericPre13, TestResumptionOverrideVersion) {
       override_version = SSL_LIBRARY_VERSION_DTLS_1_0_WIRE;
     } else {
       ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_1, version_);
-      return;  // Skip the test.
+      GTEST_SKIP();
     }
   }
 

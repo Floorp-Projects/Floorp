@@ -27,7 +27,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 #include "gtest/gtest-typed-test.h"
 
 #include "gtest/gtest.h"
@@ -40,15 +39,14 @@ namespace internal {
 // Skips to the first non-space char in str. Returns an empty string if str
 // contains only whitespace characters.
 static const char* SkipSpaces(const char* str) {
-  while (IsSpace(*str))
-    str++;
+  while (IsSpace(*str)) str++;
   return str;
 }
 
 static std::vector<std::string> SplitIntoTestNames(const char* src) {
   std::vector<std::string> name_vec;
   src = SkipSpaces(src);
-  for (; src != NULL; src = SkipComma(src)) {
+  for (; src != nullptr; src = SkipComma(src)) {
     name_vec.push_back(StripTrailingSpaces(GetPrefixUntilComma(src)));
   }
   return name_vec;
@@ -57,7 +55,7 @@ static std::vector<std::string> SplitIntoTestNames(const char* src) {
 // Verifies that registered_tests match the test names in
 // registered_tests_; returns registered_tests if successful, or
 // aborts the program otherwise.
-const char* TypedTestCasePState::VerifyRegisteredTestNames(
+const char* TypedTestSuitePState::VerifyRegisteredTestNames(
     const char* file, int line, const char* registered_tests) {
   typedef RegisteredTestsMap::const_iterator RegisteredTestIter;
   registered_ = true;
@@ -77,8 +75,7 @@ const char* TypedTestCasePState::VerifyRegisteredTestNames(
 
     bool found = false;
     for (RegisteredTestIter it = registered_tests_.begin();
-         it != registered_tests_.end();
-         ++it) {
+         it != registered_tests_.end(); ++it) {
       if (name == it->first) {
         found = true;
         break;
@@ -89,13 +86,12 @@ const char* TypedTestCasePState::VerifyRegisteredTestNames(
       tests.insert(name);
     } else {
       errors << "No test named " << name
-             << " can be found in this test case.\n";
+             << " can be found in this test suite.\n";
     }
   }
 
   for (RegisteredTestIter it = registered_tests_.begin();
-       it != registered_tests_.end();
-       ++it) {
+       it != registered_tests_.end(); ++it) {
     if (tests.count(it->first) == 0) {
       errors << "You forgot to list test " << it->first << ".\n";
     }

@@ -1126,7 +1126,7 @@ TEST_P(pkixder_universal_types_tests_Integer,
 
 #undef INVALID
 
-INSTANTIATE_TEST_CASE_P(pkixder_universal_types_tests_Integer,
+INSTANTIATE_TEST_SUITE_P(pkixder_universal_types_tests_Integer,
                         pkixder_universal_types_tests_Integer,
                         testing::ValuesIn(INTEGER_TEST_PARAMS));
 

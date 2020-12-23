@@ -173,25 +173,25 @@ TEST_P(Pkcs11HkdfTest, WycheproofVectors) {
                     std::get<2>(GetParam()));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     HkdfSha1, Pkcs11HkdfTest,
     ::testing::Combine(::testing::ValuesIn(kHkdfSha1WycheproofVectors),
                        ::testing::ValuesIn(kHkdfTestTypesAll),
                        ::testing::Values(CKM_SHA_1)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     HkdfSha256, Pkcs11HkdfTest,
     ::testing::Combine(::testing::ValuesIn(kHkdfSha256WycheproofVectors),
                        ::testing::ValuesIn(kHkdfTestTypesAll),
                        ::testing::Values(CKM_SHA256)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     HkdfSha384, Pkcs11HkdfTest,
     ::testing::Combine(::testing::ValuesIn(kHkdfSha384WycheproofVectors),
                        ::testing::ValuesIn(kHkdfTestTypesAll),
                        ::testing::Values(CKM_SHA384)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     HkdfSha512, Pkcs11HkdfTest,
     ::testing::Combine(::testing::ValuesIn(kHkdfSha512WycheproofVectors),
                        ::testing::ValuesIn(kHkdfTestTypesAll),

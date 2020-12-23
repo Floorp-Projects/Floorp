@@ -265,7 +265,7 @@ TEST_P(pkixcheck_CheckSignatureAlgorithm, CheckSignatureAlgorithm)
             trustDomain.checkedModulusSizeInBits);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   pkixcheck_CheckSignatureAlgorithm, pkixcheck_CheckSignatureAlgorithm,
   testing::ValuesIn(CHECKSIGNATUREALGORITHM_TEST_PARAMS));
 

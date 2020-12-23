@@ -114,7 +114,7 @@ TEST_P(pkixcheck_TLSFeaturesSatisfiedInternal, TLSFeaturesSatisfiedInternal) {
             TLSFeaturesSatisfiedInternal(&featuresInput, &responseInput));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   pkixcheck_TLSFeaturesSatisfiedInternal,
   pkixcheck_TLSFeaturesSatisfiedInternal,
   testing::ValuesIn(TLSFEATURESSATISFIED_TEST_PARAMS));

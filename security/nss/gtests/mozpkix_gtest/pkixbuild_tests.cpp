@@ -173,7 +173,7 @@ private:
 class pkixbuild : public ::testing::Test
 {
 public:
-  static void SetUpTestCase()
+  static void SetUpTestSuite()
   {
     if (!trustDomain.SetUpCertChainTail()) {
       abort();
@@ -521,7 +521,7 @@ TEST_P(pkixbuild_IssuerNameCheck, MatchingName)
                            nullptr/*stapledOCSPResponse*/));
 }
 
-INSTANTIATE_TEST_CASE_P(pkixbuild_IssuerNameCheck, pkixbuild_IssuerNameCheck,
+INSTANTIATE_TEST_SUITE_P(pkixbuild_IssuerNameCheck, pkixbuild_IssuerNameCheck,
                         testing::ValuesIn(ISSUER_NAME_CHECK_PARAMS));
 
 

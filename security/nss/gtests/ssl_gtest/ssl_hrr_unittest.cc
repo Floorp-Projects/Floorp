@@ -1321,13 +1321,14 @@ TEST_F(TlsConnectStreamTls13, HrrThenTls12SupportedVersions) {
   client_->CheckErrorCode(SSL_ERROR_PROTOCOL_VERSION_ALERT);
 }
 
-INSTANTIATE_TEST_CASE_P(HelloRetryRequestAgentTests, HelloRetryRequestAgentTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV13));
+INSTANTIATE_TEST_SUITE_P(HelloRetryRequestAgentTests,
+                         HelloRetryRequestAgentTest,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
 #ifndef NSS_DISABLE_TLS_1_3
-INSTANTIATE_TEST_CASE_P(HelloRetryRequestKeyExchangeTests, TlsKeyExchange13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV13));
+INSTANTIATE_TEST_SUITE_P(HelloRetryRequestKeyExchangeTests, TlsKeyExchange13,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
 #endif
 
 }  // namespace nss_test

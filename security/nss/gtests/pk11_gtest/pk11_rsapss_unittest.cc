@@ -224,36 +224,36 @@ static const Pkcs11SignatureTestParams kRsaPssVectors[] = {
     // <ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1-vec.zip>
     VECTOR_N(10)};
 
-INSTANTIATE_TEST_CASE_P(RsaPssSignVerify, Pkcs11RsaPssVectorTest,
-                        ::testing::ValuesIn(kRsaPssVectors));
+INSTANTIATE_TEST_SUITE_P(RsaPssSignVerify, Pkcs11RsaPssVectorTest,
+                         ::testing::ValuesIn(kRsaPssVectors));
 
 TEST_P(Pkcs11RsaPssTestWycheproof, Verify) { TestPss(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Wycheproof2048RsaPssSha120Test, Pkcs11RsaPssTestWycheproof,
     ::testing::ValuesIn(kRsaPss2048Sha120WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Wycheproof2048RsaPssSha25632Test, Pkcs11RsaPssTestWycheproof,
     ::testing::ValuesIn(kRsaPss2048Sha25632WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Wycheproof2048RsaPssSha2560Test, Pkcs11RsaPssTestWycheproof,
     ::testing::ValuesIn(kRsaPss2048Sha2560WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Wycheproof3072RsaPssSha25632Test, Pkcs11RsaPssTestWycheproof,
     ::testing::ValuesIn(kRsaPss3072Sha25632WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Wycheproof4096RsaPssSha25632Test, Pkcs11RsaPssTestWycheproof,
     ::testing::ValuesIn(kRsaPss4096Sha25632WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Wycheproof4096RsaPssSha51232Test, Pkcs11RsaPssTestWycheproof,
     ::testing::ValuesIn(kRsaPss4096Sha51232WycheproofVectors));
 
-INSTANTIATE_TEST_CASE_P(WycheproofRsaPssMiscTest, Pkcs11RsaPssTestWycheproof,
-                        ::testing::ValuesIn(kRsaPssMiscWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofRsaPssMiscTest, Pkcs11RsaPssTestWycheproof,
+                         ::testing::ValuesIn(kRsaPssMiscWycheproofVectors));
 
 }  // namespace nss_test

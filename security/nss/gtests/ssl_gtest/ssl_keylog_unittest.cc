@@ -113,16 +113,16 @@ TEST_P(KeyLogFileTest, KeyLogFile) {
   ASSERT_EXIT(ConnectAndCheck(), ::testing::ExitedWithCode(0), "");
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     KeyLogFileDTLS12, KeyLogFileTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     KeyLogFileTLS12, KeyLogFileTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10ToV12));
 #ifndef NSS_DISABLE_TLS_1_3
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     KeyLogFileTLS13, KeyLogFileTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV13));
@@ -146,16 +146,16 @@ TEST_P(KeyLogFileUnsetTest, KeyLogFile) {
   ASSERT_EXIT(ConnectAndCheck(), ::testing::ExitedWithCode(0), "");
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     KeyLogFileDTLS12, KeyLogFileUnsetTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     KeyLogFileTLS12, KeyLogFileUnsetTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10ToV12));
 #ifndef NSS_DISABLE_TLS_1_3
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     KeyLogFileTLS13, KeyLogFileUnsetTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV13));

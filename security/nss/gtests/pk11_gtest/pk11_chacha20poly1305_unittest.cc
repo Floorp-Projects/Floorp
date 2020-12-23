@@ -469,11 +469,11 @@ TEST_F(Pkcs11ChaCha20Poly1305Test, XorInvalidParams) {
 
 TEST_P(Pkcs11ChaCha20Poly1305Test, TestVectors) { EncryptDecrypt(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(NSSTestVector, Pkcs11ChaCha20Poly1305Test,
-                        ::testing::ValuesIn(kChaCha20Vectors));
+INSTANTIATE_TEST_SUITE_P(NSSTestVector, Pkcs11ChaCha20Poly1305Test,
+                         ::testing::ValuesIn(kChaCha20Vectors));
 
-INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11ChaCha20Poly1305Test,
-                        ::testing::ValuesIn(kChaCha20WycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofTestVector, Pkcs11ChaCha20Poly1305Test,
+                         ::testing::ValuesIn(kChaCha20WycheproofVectors));
 
 // basic message interface it's the most common configuration
 TEST_F(Pkcs11ChaCha20Poly1305Test, ChaCha201305MessageInterfaceBasic) {

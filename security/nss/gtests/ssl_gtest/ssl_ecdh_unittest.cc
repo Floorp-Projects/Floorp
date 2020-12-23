@@ -740,14 +740,14 @@ TEST_P(TlsConnectTls12, ConnectSigAlgDisabledByPolicy) {
   CheckSkeSigScheme(capture_ske, ssl_sig_rsa_pkcs1_sha384);
 }
 
-INSTANTIATE_TEST_CASE_P(KeyExchangeTest, TlsKeyExchangeTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV11Plus));
+INSTANTIATE_TEST_SUITE_P(KeyExchangeTest, TlsKeyExchangeTest,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV11Plus));
 
 #ifndef NSS_DISABLE_TLS_1_3
-INSTANTIATE_TEST_CASE_P(KeyExchangeTest, TlsKeyExchangeTest13,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV13));
+INSTANTIATE_TEST_SUITE_P(KeyExchangeTest, TlsKeyExchangeTest13,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
 #endif
 
 }  // namespace nss_test

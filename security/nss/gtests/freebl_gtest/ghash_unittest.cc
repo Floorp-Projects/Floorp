@@ -49,7 +49,7 @@ TEST_P(GHashTest, KAT_X86_HW) { TestGHash(GetParam(), false); }
 #endif
 TEST_P(GHashTest, KAT_Sftw) { TestGHash(GetParam(), true); }
 
-INSTANTIATE_TEST_CASE_P(NISTTestVector, GHashTest,
-                        ::testing::ValuesIn(kGcmKatValues));
+INSTANTIATE_TEST_SUITE_P(NISTTestVector, GHashTest,
+                         ::testing::ValuesIn(kGcmKatValues));
 
 }  // nss_test

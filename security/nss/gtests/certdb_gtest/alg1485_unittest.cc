@@ -86,10 +86,10 @@ TEST_P(Alg1485CompareTest, CompareAVAStrings) {
   EXPECT_EQ(param.expectedResult, CERT_CompareName(a.get(), b.get()));
 }
 
-INSTANTIATE_TEST_CASE_P(ParseAVAStrings, Alg1485ParseTest,
-                        ::testing::ValuesIn(kAVATestStrings));
-INSTANTIATE_TEST_CASE_P(CompareAVAStrings, Alg1485CompareTest,
-                        ::testing::ValuesIn(kAVACompareStrings));
+INSTANTIATE_TEST_SUITE_P(ParseAVAStrings, Alg1485ParseTest,
+                         ::testing::ValuesIn(kAVATestStrings));
+INSTANTIATE_TEST_SUITE_P(CompareAVAStrings, Alg1485CompareTest,
+                         ::testing::ValuesIn(kAVACompareStrings));
 
 TEST_F(Alg1485Test, ShortOIDTest) {
   // This is not a valid OID (too short). CERT_GetOidString should return 0.

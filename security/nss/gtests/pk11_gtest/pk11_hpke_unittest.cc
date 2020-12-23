@@ -309,8 +309,8 @@ class Pkcs11HpkeTest : public ::testing::TestWithParam<hpke_vector> {
 
 TEST_P(Pkcs11HpkeTest, TestVectors) { RunTestVector(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(Pkcs11HpkeTests, Pkcs11HpkeTest,
-                        ::testing::ValuesIn(kHpkeTestVectors));
+INSTANTIATE_TEST_SUITE_P(Pkcs11HpkeTests, Pkcs11HpkeTest,
+                         ::testing::ValuesIn(kHpkeTestVectors));
 
 TEST_F(Pkcs11HpkeTest, BadEncapsulatedPubKey) {
   ScopedHpkeContext sender(

@@ -244,7 +244,7 @@ TEST_P(pkixcert_extension, ExtensionHandledProperly)
                            nullptr/*stapledOCSPResponse*/));
 }
 
-INSTANTIATE_TEST_CASE_P(pkixcert_extension,
+INSTANTIATE_TEST_SUITE_P(pkixcert_extension,
                         pkixcert_extension,
                         testing::ValuesIn(EXTENSION_TESTCASES));
 
