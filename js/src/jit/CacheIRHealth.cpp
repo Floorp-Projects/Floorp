@@ -172,6 +172,7 @@ static bool addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
 
   if (!zone->scriptFinalWarmUpCountMap->put(
           script, mozilla::MakeTuple(uint32_t(0), filename))) {
+    js_free(filename);
     return false;
   }
 
