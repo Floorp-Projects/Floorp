@@ -16,6 +16,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -455,7 +456,8 @@ private fun RecoverableTab.toSnapshotItem(): SessionManager.Snapshot.Item {
             id = id,
             initialUrl = url,
             contextId = contextId,
-            private = private
+            private = private,
+            source = SessionState.Source.RESTORED
         ).also {
             it.title = title
             it.parentId = parentId

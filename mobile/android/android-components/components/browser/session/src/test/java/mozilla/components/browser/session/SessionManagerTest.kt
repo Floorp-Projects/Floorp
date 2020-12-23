@@ -6,6 +6,7 @@ package mozilla.components.browser.session
 
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -314,6 +315,10 @@ class SessionManagerTest {
         assertTrue(sessionManager.sessions[0].private)
         assertFalse(sessionManager.sessions[1].private)
         assertFalse(sessionManager.sessions[2].private)
+
+        assertEquals(SessionState.Source.RESTORED, sessionManager.sessions[0].source)
+        assertEquals(SessionState.Source.RESTORED, sessionManager.sessions[1].source)
+        assertEquals(SessionState.Source.RESTORED, sessionManager.sessions[2].source)
     }
 
     @Test

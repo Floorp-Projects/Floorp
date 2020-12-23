@@ -165,6 +165,7 @@ private fun JsonReader.tabSession(): RecoverableTab? {
             Keys.SESSION_READER_MODE_KEY -> readerStateActive = nextBooleanOrNull()
             Keys.SESSION_READER_MODE_ACTIVE_URL_KEY -> readerActiveUrl = nextStringOrNull()
             Keys.SESSION_LAST_ACCESS -> lastAccess = nextLong()
+            Keys.SESSION_SOURCE_KEY -> nextString()
             else -> throw IllegalArgumentException("Unknown session key: $name")
         }
     }

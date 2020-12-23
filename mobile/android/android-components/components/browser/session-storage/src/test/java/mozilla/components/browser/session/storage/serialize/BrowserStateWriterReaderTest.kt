@@ -10,9 +10,11 @@ import android.util.JsonWriter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.support.ktx.util.streamJSON
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -88,6 +90,28 @@ class BrowserStateWriterReaderTest {
         assertTrue(restoredTab.readerState.active)
         assertEquals("https://www.example.org", restoredTab.readerState.activeUrl)
     }
+
+    @Test
+    fun `Read tab with session source`() {
+        // We don't write tabs with session source anymore but need to be tolerant to
+        // session source being in the JSON to remain backward compatible.
+        val engineState = createFakeEngineState()
+        val engine = createFakeEngine(engineState)
+        val tab = createTab(url = "https://www.mozilla.org", title = "Mozilla")
+        val file = AtomicFile(
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+        )
+        writeTabWithSource(tab, file)
+
+        // When reading we don't care about the source either as we will just set
+        // it to RESTORED. So we just need to make sure we de-serialized successfully.
+        val reader = BrowserStateReader()
+        val restoredTab = reader.readTab(engine, file)
+        assertNotNull(restoredTab!!)
+
+        assertEquals("https://www.mozilla.org", restoredTab.url)
+        assertEquals("Mozilla", restoredTab.title)
+    }
 }
 
 private fun createFakeEngineState(): EngineSessionState {
@@ -109,4 +133,33 @@ private fun createFakeEngine(engineState: EngineSessionState): Engine {
         engineState
     }
     return engine
+}
+
+private fun writeTabWithSource(tab: TabSessionState, file: AtomicFile) {
+    file.streamJSON { tabWithSource(tab) }
+}
+
+private fun JsonWriter.tabWithSource(
+    tab: TabSessionState
+) {
+    beginObject()
+
+    name(Keys.SESSION_KEY)
+    beginObject().apply {
+        name(Keys.SESSION_URL_KEY)
+        value(tab.content.url)
+
+        name(Keys.SESSION_UUID_KEY)
+        value(tab.id)
+
+        name(Keys.SESSION_TITLE)
+        value(tab.content.title)
+
+        name(Keys.SESSION_SOURCE_KEY)
+        value(tab.source.name)
+
+        endObject()
+    }
+
+    endObject()
 }
