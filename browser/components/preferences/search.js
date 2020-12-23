@@ -412,7 +412,7 @@ var gSearchPane = {
       switch (aVerb) {
         case "engine-added":
           gEngineView._engineStore.addEngine(aEngine);
-          gEngineView.rowCountChanged(gEngineView.lastIndex, 1);
+          gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
           gSearchPane.buildDefaultEngineDropDowns();
           break;
         case "engine-changed":
@@ -533,7 +533,7 @@ var gSearchPane = {
     let index = gEngineView._engineStore.removeEngine(aEngine);
     gEngineView.rowCountChanged(index, -1);
     gEngineView.invalidate();
-    gEngineView.selection.select(Math.min(index, gEngineView.lastIndex));
+    gEngineView.selection.select(Math.min(index, gEngineView.rowCount - 1));
     gEngineView.ensureRowIsVisible(gEngineView.currentIndex);
     document.getElementById("engineList").focus();
   },
@@ -647,7 +647,7 @@ function EngineStore() {
   ]).then(([visibleEngines, defaultEngines]) => {
     for (let engine of visibleEngines) {
       this.addEngine(engine);
-      gEngineView.rowCountChanged(gEngineView.lastIndex, 1);
+      gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
     }
     this._defaultEngines = defaultEngines.map(this._cloneEngine, this);
     gSearchPane.buildDefaultEngineDropDowns();
@@ -813,9 +813,10 @@ EngineView.prototype = {
   _engineStore: null,
   tree: null,
 
-  get lastIndex() {
-    return this.rowCount - 1;
+  get lastEngineIndex() {
+    return this._engineStore.engines.length - 1;
   },
+
   get selectedIndex() {
     var seln = this.selection;
     if (seln.getRangeCount() > 0) {
@@ -825,6 +826,7 @@ EngineView.prototype = {
     }
     return -1;
   },
+
   get selectedEngine() {
     return this._engineStore.engines[this.selectedIndex];
   },
@@ -853,9 +855,11 @@ EngineView.prototype = {
   },
 
   isEngineSelectedAndRemovable() {
+    // We don't allow the last remaining engine to be removed, thus the
+    // `this.lastEngineIndex != 0` check.
     return (
       this.selectedIndex != -1 &&
-      this.lastIndex != 0 &&
+      this.lastEngineIndex != 0 &&
       !this._getLocalShortcut(this.selectedIndex)
     );
   },
