@@ -43,7 +43,7 @@ namespace mozilla {
 
 // Helper function to add a profile marker and log at the same time.
 static void MOZ_FORMAT_PRINTF(2, 3)
-    WmfDeocderModuleMarkerAndLog(const ProfilerString8View& aMarkerTag,
+    WmfDecoderModuleMarkerAndLog(const ProfilerString8View& aMarkerTag,
                                  const char* aFormat, ...) {
   va_list ap;
   va_start(ap, aFormat);
@@ -129,22 +129,22 @@ void WMFDecoderModule::Init() {
   if (testForVPx && StaticPrefs::media_wmf_vp9_enabled_AtStartup()) {
     gfx::WMFVPXVideoCrashGuard guard;
     if (!guard.Crashed()) {
-      WmfDeocderModuleMarkerAndLog("WMFInit VPx Pending",
+      WmfDecoderModuleMarkerAndLog("WMFInit VPx Pending",
                                    "Attempting to create MFT decoder for VPx");
 
       sUsableVPXMFT = CanCreateMFTDecoder(CLSID_WebmMfVpxDec);
 
-      WmfDeocderModuleMarkerAndLog("WMFInit VPx Initialized",
+      WmfDecoderModuleMarkerAndLog("WMFInit VPx Initialized",
                                    "CanCreateMFTDecoder returned %s for VPx",
                                    sUsableVPXMFT ? "true" : "false");
     } else {
-      WmfDeocderModuleMarkerAndLog(
+      WmfDecoderModuleMarkerAndLog(
           "WMFInit VPx Failure",
           "Will not use MFT VPx due to crash guard reporting a crash");
     }
   }
 
-  WmfDeocderModuleMarkerAndLog(
+  WmfDecoderModuleMarkerAndLog(
       "WMFInit Result",
       "WMFDecoderModule::Init finishing with sDXVAEnabled=%s testForVPx=%s "
       "sUsableVPXMFT=%s",
@@ -181,7 +181,7 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     if (aParams.mError) {
       *aParams.mError = result;
     }
-    WmfDeocderModuleMarkerAndLog(
+    WmfDecoderModuleMarkerAndLog(
         "WMFVDecoderCreation Failure",
         "WMFDecoderModule::CreateVideoDecoder failed for manager with "
         "description %s with result: %s",
@@ -189,7 +189,7 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     return nullptr;
   }
 
-  WmfDeocderModuleMarkerAndLog(
+  WmfDecoderModuleMarkerAndLog(
       "WMFVDecoderCreation Success",
       "WMFDecoderModule::CreateVideoDecoder success for manager with "
       "description %s",
@@ -205,7 +205,7 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
       new WMFAudioMFTManager(aParams.AudioConfig()));
 
   if (!manager->Init()) {
-    WmfDeocderModuleMarkerAndLog(
+    WmfDecoderModuleMarkerAndLog(
         "WMFADecoderCreation Failure",
         "WMFDecoderModule::CreateAudioDecoder failed for manager with "
         "description %s",
@@ -213,7 +213,7 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
     return nullptr;
   }
 
-  WmfDeocderModuleMarkerAndLog(
+  WmfDecoderModuleMarkerAndLog(
       "WMFADecoderCreation Success",
       "WMFDecoderModule::CreateAudioDecoder success for manager with "
       "description %s",
