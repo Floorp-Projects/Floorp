@@ -102,6 +102,7 @@ enum HalfCorner : uint8_t;
 enum LogicalSide : uint8_t;
 enum class PseudoStyleType : uint8_t;
 enum class OriginFlags : uint8_t;
+enum class UseBoxSizing : uint8_t;
 
 namespace css {
 class Loader;

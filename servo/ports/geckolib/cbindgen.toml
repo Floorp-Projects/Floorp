@@ -829,14 +829,12 @@ renaming_overrides_prefixing = true
 """
 
 "Ratio" = """
-  inline AspectRatio ToLayoutRatio() const;
+  inline AspectRatio ToLayoutRatio(UseBoxSizing aUseBoxSizing) const;
 """
 
 "GenericAspectRatio" = """
   bool HasRatio() const { return ratio.IsRatio(); }
-  bool HasFiniteRatio() const {
-    return HasRatio() && ratio.AsRatio().ToLayoutRatio();
-  }
+  bool HasFiniteRatio() const { return static_cast<bool>(ToLayoutRatio()); }
   bool BehavesAsAuto() const { return auto_ || !HasFiniteRatio(); }
   inline AspectRatio ToLayoutRatio() const;
 
