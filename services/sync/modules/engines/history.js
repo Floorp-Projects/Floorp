@@ -525,14 +525,20 @@ HistoryTracker.prototype = {
     this._placesObserver = new PlacesWeakCallbackWrapper(
       this.handlePlacesEvents.bind(this)
     );
-    PlacesObservers.addListener(["page-visited"], this._placesObserver);
+    PlacesObservers.addListener(
+      ["page-visited", "history-cleared"],
+      this._placesObserver
+    );
   },
 
   onStop() {
     this._log.info("Removing Places observer.");
     PlacesUtils.history.removeObserver(this);
     if (this._placesObserver) {
-      PlacesObservers.removeListener(["page-visited"], this._placesObserver);
+      PlacesObservers.removeListener(
+        ["page-visited", "history-cleared"],
+        this._placesObserver
+      );
     }
   },
 
@@ -590,12 +596,25 @@ HistoryTracker.prototype = {
       return;
     }
     for (let event of aEvents) {
-      this._log.trace("'page-visited': " + event.url);
-      if (
-        this.engine.shouldSyncURL(event.url) &&
-        (await this.addChangedID(event.pageGuid))
-      ) {
-        this.score += SCORE_INCREMENT_SMALL;
+      switch (event.type) {
+        case "page-visited": {
+          this._log.trace("'page-visited': " + event.url);
+          if (
+            this.engine.shouldSyncURL(event.url) &&
+            (await this.addChangedID(event.pageGuid))
+          ) {
+            this.score += SCORE_INCREMENT_SMALL;
+          }
+          break;
+        }
+        case "history-cleared": {
+          this._log.trace("history-cleared");
+          // Note that we're going to trigger a sync, but none of the cleared
+          // pages are tracked, so the deletions will not be propagated.
+          // See Bug 578694.
+          this.score += SCORE_INCREMENT_XLARGE;
+          break;
+        }
       }
     }
   },

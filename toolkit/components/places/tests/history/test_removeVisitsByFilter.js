@@ -184,10 +184,18 @@ add_task(async function test_removeVisitsByFilter() {
             );
             break;
           }
+          case "history-cleared": {
+            info("history-cleared");
+            this.deferred.reject("Unexpected history-cleared event happens");
+            break;
+          }
         }
       }
     };
-    PlacesObservers.addListener(["page-title-changed"], placesEventListener);
+    PlacesObservers.addListener(
+      ["page-title-changed", "history-cleared"],
+      placesEventListener
+    );
 
     let cbarg;
     if (options.useCallback) {
@@ -265,7 +273,10 @@ add_task(async function test_removeVisitsByFilter() {
     info("Checking frecency change promises.");
     await Promise.all(Array.from(frecencyChangePromises.values()));
     PlacesUtils.history.removeObserver(observer);
-    PlacesObservers.removeListener(["page-title-changed"], placesEventListener);
+    PlacesObservers.removeListener(
+      ["page-title-changed", "history-cleared"],
+      placesEventListener
+    );
   };
 
   let size = 20;
