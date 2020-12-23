@@ -246,7 +246,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "thread:nsThread::Init\n"
          "thread:libglib-2\n"
 
-         // No Bug - This thread does not seem to be stopped/joined
+         // This thread does not seem to be stopped/joined.
+         // ImageBridgeChild should be turned back into a background
+         // task queue in bug 1647628, in which case these suppressions
+         // can be removed.
          "thread:mozilla::layers::ImageBridgeChild\n"
          "race:mozilla::layers::ImageBridgeChild::ShutDown\n"
 
