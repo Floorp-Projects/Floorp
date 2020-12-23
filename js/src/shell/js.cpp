@@ -8790,12 +8790,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 
 #endif
 
-#ifdef JS_CACHEIR_SPEW
-JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
-"rateMyCacheIR()",
-"  Show health rating of CacheIR stubs."),
-#endif
-
     JS_FN_HELP("intern", Intern, 1, 0,
 "intern(str)",
 "  Internalize str in the atom table."),
@@ -9348,6 +9342,12 @@ TestAssertRecoveredOnBailout,
 "setBufferStreamParams(delayMillis, chunkByteSize)",
 "  Set the delay time (between calls to StreamConsumer::consumeChunk) and chunk\n"
 "  size (in bytes)."),
+
+#ifdef JS_CACHEIR_SPEW
+  JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
+"rateMyCacheIR()",
+"  Show health rating of CacheIR stubs."),
+#endif
 
     JS_FS_HELP_END
 };
