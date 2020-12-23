@@ -1609,11 +1609,11 @@ class Document : public nsINode,
  private:
   class SelectorCacheKey {
    public:
-    explicit SelectorCacheKey(const nsAString& aString) : mKey(aString) {
+    explicit SelectorCacheKey(const nsACString& aString) : mKey(aString) {
       MOZ_COUNT_CTOR(SelectorCacheKey);
     }
 
-    nsString mKey;
+    nsCString mKey;
     nsExpirationState mState;
 
     nsExpirationState* GetExpirationState() { return &mState; }
@@ -1627,17 +1627,10 @@ class Document : public nsINode,
   class SelectorCache final : public nsExpirationTracker<SelectorCacheKey, 4> {
    public:
     using SelectorList = UniquePtr<RawServoSelectorList>;
+    using Table = nsDataHashtable<nsCStringHashKey, SelectorList>;
 
     explicit SelectorCache(nsIEventTarget* aEventTarget);
-
-    void CacheList(const nsAString& aSelector, SelectorList aSelectorList) {
-      MOZ_ASSERT(NS_IsMainThread());
-      SelectorCacheKey* key = new SelectorCacheKey(aSelector);
-      mTable.Put(key->mKey, std::move(aSelectorList));
-      AddObject(key);
-    }
-
-    void NotifyExpired(SelectorCacheKey* aSelector) final;
+    void NotifyExpired(SelectorCacheKey*) final;
 
     // We do not call MarkUsed because it would just slow down lookups and
     // because we're OK expiring things after a few seconds even if they're
@@ -1646,14 +1639,15 @@ class Document : public nsINode,
     // If we have an entry and the selector list returned has a null
     // RawServoSelectorList*, that indicates that aSelector has already been
     // parsed and is not a syntactically valid selector.
-    SelectorList* GetList(const nsAString& aSelector) {
-      return mTable.GetValue(aSelector);
+    Table::EntryPtr GetList(const nsACString& aSelector) {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mTable.LookupForAdd(aSelector);
     }
 
     ~SelectorCache();
 
    private:
-    nsDataHashtable<nsStringHashKey, SelectorList> mTable;
+    Table mTable;
   };
 
   SelectorCache& GetSelectorCache() {

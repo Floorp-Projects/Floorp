@@ -63,12 +63,12 @@ interface Element : Node {
   boolean hasAttributes();
 
   [Throws, Pure]
-  Element? closest(DOMString selector);
+  Element? closest(UTF8String selector);
 
   [Throws, Pure]
-  boolean matches(DOMString selector);
+  boolean matches(UTF8String selector);
   [Throws, Pure, BinaryName="matches"]
-  boolean webkitMatchesSelector(DOMString selector);
+  boolean webkitMatchesSelector(UTF8String selector);
 
   [Pure]
   HTMLCollection getElementsByTagName(DOMString localName);
@@ -112,7 +112,7 @@ interface Element : Node {
    * See <http://dev.w3.org/2006/webapi/selectors-api2/#matchesselector>
    */
   [Throws, Pure, BinaryName="matches"]
-  boolean mozMatchesSelector(DOMString selector);
+  boolean mozMatchesSelector(UTF8String selector);
 
   // Pointer events methods.
   [Throws, Pref="dom.w3c_pointer_events.enabled"]
@@ -252,9 +252,9 @@ partial interface Element {
 // http://www.w3.org/TR/selectors-api/#interface-definitions
 partial interface Element {
   [Throws, Pure]
-  Element?  querySelector(DOMString selectors);
+  Element?  querySelector(UTF8String selectors);
   [Throws, Pure]
-  NodeList  querySelectorAll(DOMString selectors);
+  NodeList  querySelectorAll(UTF8String selectors);
 };
 
 // https://dom.spec.whatwg.org/#dictdef-shadowrootinit

@@ -2855,38 +2855,26 @@ uint32_t nsINode::Length() const {
 }
 
 const RawServoSelectorList* nsINode::ParseSelectorList(
-    const nsAString& aSelectorString, ErrorResult& aRv) {
+    const nsACString& aSelectorString, ErrorResult& aRv) {
   Document* doc = OwnerDoc();
 
   Document::SelectorCache& cache = doc->GetSelectorCache();
-  Document::SelectorCache::SelectorList* list = cache.GetList(aSelectorString);
-  if (list) {
-    if (!*list) {
-      // Invalid selector.
-      aRv.ThrowSyntaxError("'"_ns + NS_ConvertUTF16toUTF8(aSelectorString) +
-                           "' is not a valid selector"_ns);
-      return nullptr;
-    }
+  RawServoSelectorList* list =
+      cache.GetList(aSelectorString)
+          .OrInsert([&] {
+            // Note that we want to cache even if null was returned, because we
+            // want to cache the "This is not a valid selector" result.
+            return Servo_SelectorList_Parse(&aSelectorString).Consume();
+          })
+          .get();
 
-    return list->get();
-  }
-
-  NS_ConvertUTF16toUTF8 selectorString(aSelectorString);
-
-  UniquePtr<RawServoSelectorList> selectorList =
-      Servo_SelectorList_Parse(&selectorString).Consume();
-  // We want to cache even if null was returned, because we want to
-  // cache the "This is not a valid selector" result.
-  auto* ret = selectorList.get();
-  cache.CacheList(aSelectorString, std::move(selectorList));
-
-  // Now make sure we throw an exception if the selector was invalid.
-  if (!ret) {
-    aRv.ThrowSyntaxError("'"_ns + selectorString +
+  if (!list) {
+    // Invalid selector.
+    aRv.ThrowSyntaxError("'"_ns + aSelectorString +
                          "' is not a valid selector"_ns);
   }
 
-  return ret;
+  return list;
 }
 
 // Given an id, find first element with that id under aRoot.
@@ -2925,10 +2913,10 @@ inline static Element* FindMatchingElementWithId(
   return nullptr;
 }
 
-Element* nsINode::QuerySelector(const nsAString& aSelector,
+Element* nsINode::QuerySelector(const nsACString& aSelector,
                                 ErrorResult& aResult) {
-  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("nsINode::QuerySelector",
-                                             LAYOUT_SelectorQuery, aSelector);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("nsINode::QuerySelector",
+                                        LAYOUT_SelectorQuery, aSelector);
 
   const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
@@ -2940,9 +2928,9 @@ Element* nsINode::QuerySelector(const nsAString& aSelector,
 }
 
 already_AddRefed<nsINodeList> nsINode::QuerySelectorAll(
-    const nsAString& aSelector, ErrorResult& aResult) {
-  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("nsINode::QuerySelectorAll",
-                                             LAYOUT_SelectorQuery, aSelector);
+    const nsACString& aSelector, ErrorResult& aResult) {
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("nsINode::QuerySelectorAll",
+                                        LAYOUT_SelectorQuery, aSelector);
 
   RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
   const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);

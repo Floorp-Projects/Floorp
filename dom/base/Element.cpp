@@ -3197,7 +3197,7 @@ nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
   return NS_OK;
 }
 
-Element* Element::Closest(const nsAString& aSelector, ErrorResult& aResult) {
+Element* Element::Closest(const nsACString& aSelector, ErrorResult& aResult) {
   const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return nullptr;
@@ -3206,11 +3206,12 @@ Element* Element::Closest(const nsAString& aSelector, ErrorResult& aResult) {
   return const_cast<Element*>(Servo_SelectorList_Closest(this, list));
 }
 
-bool Element::Matches(const nsAString& aSelector, ErrorResult& aResult) {
+bool Element::Matches(const nsACString& aSelector, ErrorResult& aResult) {
   const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return false;
   }
+
   return Servo_SelectorList_Matches(this, list);
 }
 

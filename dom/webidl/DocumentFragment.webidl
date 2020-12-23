@@ -22,9 +22,9 @@ interface DocumentFragment : Node {
 // http://www.w3.org/TR/2012/WD-selectors-api-20120628/#interface-definitions
 partial interface DocumentFragment {
   [Throws]
-  Element?  querySelector(DOMString selectors);
+  Element?  querySelector(UTF8String selectors);
   [Throws]
-  NodeList  querySelectorAll(DOMString selectors);
+  NodeList  querySelectorAll(UTF8String selectors);
 };
 
 DocumentFragment includes ParentNode;
