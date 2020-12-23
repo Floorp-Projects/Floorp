@@ -961,26 +961,26 @@ const Utf16BadCase kUtf16BadCases[] = {
 
 // Parameterized test instantiations:
 
-INSTANTIATE_TEST_CASE_P(Ucs4TestCases, Ucs4Test,
-                        ::testing::ValuesIn(kUcs4Cases));
+INSTANTIATE_TEST_SUITE_P(Ucs4TestCases, Ucs4Test,
+                         ::testing::ValuesIn(kUcs4Cases));
 
-INSTANTIATE_TEST_CASE_P(Iso88591TestCases, Ucs2Test,
-                        ::testing::ValuesIn(kIso88591Cases));
+INSTANTIATE_TEST_SUITE_P(Iso88591TestCases, Ucs2Test,
+                         ::testing::ValuesIn(kIso88591Cases));
 
-INSTANTIATE_TEST_CASE_P(Ucs2TestCases, Ucs2Test,
-                        ::testing::ValuesIn(kUcs2Cases));
+INSTANTIATE_TEST_SUITE_P(Ucs2TestCases, Ucs2Test,
+                         ::testing::ValuesIn(kUcs2Cases));
 
-INSTANTIATE_TEST_CASE_P(Utf16TestCases, Utf16Test,
-                        ::testing::ValuesIn(kUtf16Cases));
+INSTANTIATE_TEST_SUITE_P(Utf16TestCases, Utf16Test,
+                         ::testing::ValuesIn(kUtf16Cases));
 
-INSTANTIATE_TEST_CASE_P(BadUtf8TestCases, BadUtf8Test,
-                        ::testing::ValuesIn(kUtf8BadCases));
+INSTANTIATE_TEST_SUITE_P(BadUtf8TestCases, BadUtf8Test,
+                         ::testing::ValuesIn(kUtf8BadCases));
 
-INSTANTIATE_TEST_CASE_P(BadUtf16TestCases, BadUtf16Test,
-                        ::testing::ValuesIn(kUtf16BadCases));
+INSTANTIATE_TEST_SUITE_P(BadUtf16TestCases, BadUtf16Test,
+                         ::testing::ValuesIn(kUtf16BadCases));
 
-INSTANTIATE_TEST_CASE_P(Iso88591TestCases, Iso88591Test,
-                        ::testing::ValuesIn(kIso88591Cases));
+INSTANTIATE_TEST_SUITE_P(Iso88591TestCases, Iso88591Test,
+                         ::testing::ValuesIn(kIso88591Cases));
 ;
 
 }  // namespace nss_test

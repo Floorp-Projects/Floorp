@@ -426,7 +426,7 @@ TEST_P(TlsHkdfTest, BadExpandLabelWrapperInput) {
 }
 
 static const SSLHashType kHashTypes[] = {ssl_hash_sha256, ssl_hash_sha384};
-INSTANTIATE_TEST_CASE_P(AllHashFuncs, TlsHkdfTest,
-                        ::testing::ValuesIn(kHashTypes));
+INSTANTIATE_TEST_SUITE_P(AllHashFuncs, TlsHkdfTest,
+                         ::testing::ValuesIn(kHashTypes));
 
 }  // namespace nss_test

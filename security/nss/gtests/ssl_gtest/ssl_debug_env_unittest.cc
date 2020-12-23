@@ -28,8 +28,7 @@ extern FILE* ssl_keylog_iob;
 TEST_P(TlsConnectGeneric, DebugEnvTraceFileNotSet) {
   char* ev = PR_GetEnvSecure("SSLDEBUGFILE");
   if (ev && ev[0]) {
-    // note: should use GTEST_SKIP when GTest gets updated to support it
-    return;
+    GTEST_SKIP();
   }
 
   Connect();
@@ -41,8 +40,7 @@ TEST_P(TlsConnectGeneric, DebugEnvTraceFileNotSet) {
 TEST_P(TlsConnectGeneric, DebugEnvKeylogFileNotSet) {
   char* ev = PR_GetEnvSecure("SSLKEYLOGFILE");
   if (ev && ev[0]) {
-    // note: should use GTEST_SKIP when GTest gets updated to support it
-    return;
+    GTEST_SKIP();
   }
 
   Connect();

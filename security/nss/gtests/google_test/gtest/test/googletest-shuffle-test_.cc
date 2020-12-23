@@ -27,7 +27,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 // Verifies that test shuffling works.
 
 #include "gtest/gtest.h"
@@ -41,7 +40,6 @@ using ::testing::Test;
 using ::testing::TestEventListeners;
 using ::testing::TestInfo;
 using ::testing::UnitTest;
-using ::testing::internal::scoped_ptr;
 
 // The test methods are empty, as the sole purpose of this program is
 // to print the test names before/after shuffling.
@@ -77,19 +75,19 @@ TEST(DISABLED_D, DISABLED_B) {}
 // iteration with a "----" marker.
 class TestNamePrinter : public EmptyTestEventListener {
  public:
-  virtual void OnTestIterationStart(const UnitTest& /* unit_test */,
-                                    int /* iteration */) {
+  void OnTestIterationStart(const UnitTest& /* unit_test */,
+                            int /* iteration */) override {
     printf("----\n");
   }
 
-  virtual void OnTestStart(const TestInfo& test_info) {
+  void OnTestStart(const TestInfo& test_info) override {
     printf("%s.%s\n", test_info.test_case_name(), test_info.name());
   }
 };
 
 }  // namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   InitGoogleTest(&argc, argv);
 
   // Replaces the default printer with TestNamePrinter, which prints

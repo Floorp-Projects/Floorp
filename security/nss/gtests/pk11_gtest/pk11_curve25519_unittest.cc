@@ -117,10 +117,10 @@ class Pkcs11Curve25519Test
 
 TEST_P(Pkcs11Curve25519Test, TestVectors) { Derive(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(NSSTestVector, Pkcs11Curve25519Test,
-                        ::testing::ValuesIn(kCurve25519Vectors));
+INSTANTIATE_TEST_SUITE_P(NSSTestVector, Pkcs11Curve25519Test,
+                         ::testing::ValuesIn(kCurve25519Vectors));
 
-INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11Curve25519Test,
-                        ::testing::ValuesIn(kCurve25519WycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofTestVector, Pkcs11Curve25519Test,
+                         ::testing::ValuesIn(kCurve25519WycheproofVectors));
 
 }  // namespace nss_test

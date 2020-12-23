@@ -30,6 +30,12 @@ SECStatus
 HMAC_Init(HMACContext *cx, const SECHashObject *hash_obj,
           const unsigned char *secret, unsigned int secret_len, PRBool isFIPS);
 
+/* like HMAC_Init, except caller passes in an existing context
+ * previously used by either HMAC_Create or HMAC_Init. */
+SECStatus
+HMAC_ReInit(HMACContext *cx, const SECHashObject *hash_obj,
+            const unsigned char *secret, unsigned int secret_len, PRBool isFIPS);
+
 /* reset HMAC for a fresh round */
 extern void
 HMAC_Begin(HMACContext *cx);

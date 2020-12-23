@@ -102,7 +102,7 @@ static const BloomFilterConfig kBloomFilterConfigurations[] = {
     {16, 9},   // This also uses all of the bits from the hashes.
 };
 
-INSTANTIATE_TEST_CASE_P(BloomFilterConfigurations, BloomFilterTest,
-                        ::testing::ValuesIn(kBloomFilterConfigurations));
+INSTANTIATE_TEST_SUITE_P(BloomFilterConfigurations, BloomFilterTest,
+                         ::testing::ValuesIn(kBloomFilterConfigurations));
 
 }  // namespace nss_test

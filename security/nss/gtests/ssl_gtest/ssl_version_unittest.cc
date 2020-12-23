@@ -28,7 +28,7 @@ TEST_P(TlsConnectStream, ServerNegotiateTls10) {
 }
 
 TEST_P(TlsConnectGeneric, ServerNegotiateTls11) {
-  if (version_ < SSL_LIBRARY_VERSION_TLS_1_1) return;
+  if (version_ < SSL_LIBRARY_VERSION_TLS_1_1) GTEST_SKIP();
 
   uint16_t minver, maxver;
   client_->GetVersionRange(&minver, &maxver);
@@ -39,7 +39,7 @@ TEST_P(TlsConnectGeneric, ServerNegotiateTls11) {
 }
 
 TEST_P(TlsConnectGeneric, ServerNegotiateTls12) {
-  if (version_ < SSL_LIBRARY_VERSION_TLS_1_2) return;
+  if (version_ < SSL_LIBRARY_VERSION_TLS_1_2) GTEST_SKIP();
 
   uint16_t minver, maxver;
   client_->GetVersionRange(&minver, &maxver);
@@ -129,7 +129,7 @@ TEST_P(TlsDowngradeTest, TlsDowngradeSentinelTest) {
   static const size_t kRandomLen = 32;
 
   if (c_ver > s_ver) {
-    return;
+    GTEST_SKIP();
   }
 
   client_->SetVersionRange(c_ver, c_ver);
@@ -407,7 +407,7 @@ TEST_F(TlsConnectTest, TlsSupportedVersionsEncoding) {
   EXPECT_EQ(SSL_LIBRARY_VERSION_TLS_1_0, static_cast<int>(version));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TlsDowngradeSentinelTest, TlsDowngradeTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsVAll,

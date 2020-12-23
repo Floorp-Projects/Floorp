@@ -76,11 +76,11 @@ class Pkcs11EcdhTest : public ::testing::TestWithParam<EcdhTestVector> {
 
 TEST_P(Pkcs11EcdhTest, TestVectors) { Derive(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(WycheproofP256EcdhTest, Pkcs11EcdhTest,
-                        ::testing::ValuesIn(kP256EcdhWycheproofVectors));
-INSTANTIATE_TEST_CASE_P(WycheproofP384EcdhTest, Pkcs11EcdhTest,
-                        ::testing::ValuesIn(kP384EcdhWycheproofVectors));
-INSTANTIATE_TEST_CASE_P(WycheproofP521EcdhTest, Pkcs11EcdhTest,
-                        ::testing::ValuesIn(kP521EcdhWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofP256EcdhTest, Pkcs11EcdhTest,
+                         ::testing::ValuesIn(kP256EcdhWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofP384EcdhTest, Pkcs11EcdhTest,
+                         ::testing::ValuesIn(kP384EcdhWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofP521EcdhTest, Pkcs11EcdhTest,
+                         ::testing::ValuesIn(kP521EcdhWycheproofVectors));
 
 }  // namespace nss_test

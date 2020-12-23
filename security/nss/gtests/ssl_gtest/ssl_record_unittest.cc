@@ -307,6 +307,6 @@ auto kContentSizes = ::testing::ValuesIn(kContentSizesArr);
 const static bool kTrueFalseArr[] = {true, false};
 auto kTrueFalse = ::testing::ValuesIn(kTrueFalseArr);
 
-INSTANTIATE_TEST_CASE_P(TlsPadding, TlsPaddingTest,
-                        ::testing::Combine(kContentSizes, kTrueFalse));
+INSTANTIATE_TEST_SUITE_P(TlsPadding, TlsPaddingTest,
+                         ::testing::Combine(kContentSizes, kTrueFalse));
 }  // namespace nss_test

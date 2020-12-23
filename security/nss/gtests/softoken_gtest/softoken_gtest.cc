@@ -515,8 +515,9 @@ static const PasswordPair PASSWORD_CHANGE_TESTS[] = {
     {"password", "password2"},  // non-empty to non-empty password
 };
 
-INSTANTIATE_TEST_CASE_P(SoftokenPasswordChangeTests, SoftokenPasswordChangeTest,
-                        ::testing::ValuesIn(PASSWORD_CHANGE_TESTS));
+INSTANTIATE_TEST_SUITE_P(SoftokenPasswordChangeTests,
+                         SoftokenPasswordChangeTest,
+                         ::testing::ValuesIn(PASSWORD_CHANGE_TESTS));
 
 class SoftokenNoDBTest : public ::testing::Test {};
 
@@ -729,8 +730,8 @@ TEST_P(SoftokenDhValidate, DhVectors) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(DhValidateCases, SoftokenDhValidate,
-                        ::testing::ValuesIn(DH_TEST_VECTORS));
+INSTANTIATE_TEST_SUITE_P(DhValidateCases, SoftokenDhValidate,
+                         ::testing::ValuesIn(DH_TEST_VECTORS));
 
 #ifndef NSS_FIPS_DISABLED
 
@@ -909,14 +910,14 @@ TEST_P(SoftokenFipsDhValidate, DhVectors) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(FipsPasswordCases, SoftokenFipsPasswordTest,
-                        ::testing::ValuesIn(kFipsPasswordCases));
+INSTANTIATE_TEST_SUITE_P(FipsPasswordCases, SoftokenFipsPasswordTest,
+                         ::testing::ValuesIn(kFipsPasswordCases));
 
-INSTANTIATE_TEST_CASE_P(BadFipsPasswordCases, SoftokenFipsBadPasswordTest,
-                        ::testing::ValuesIn(kFipsPasswordBadCases));
+INSTANTIATE_TEST_SUITE_P(BadFipsPasswordCases, SoftokenFipsBadPasswordTest,
+                         ::testing::ValuesIn(kFipsPasswordBadCases));
 
-INSTANTIATE_TEST_CASE_P(FipsDhCases, SoftokenFipsDhValidate,
-                        ::testing::ValuesIn(DH_TEST_VECTORS));
+INSTANTIATE_TEST_SUITE_P(FipsDhCases, SoftokenFipsDhValidate,
+                         ::testing::ValuesIn(DH_TEST_VECTORS));
 #endif
 
 }  // namespace nss_test

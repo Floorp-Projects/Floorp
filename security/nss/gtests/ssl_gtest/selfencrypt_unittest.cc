@@ -275,7 +275,7 @@ TEST_F(SelfEncryptTest128, AESWithMacKeyDecrypt) {
            SEC_ERROR_INVALID_KEY);
 }
 
-INSTANTIATE_TEST_CASE_P(VariousSizes, SelfEncryptTestVariable,
-                        ::testing::Values(0, 15, 16, 31, 255, 256, 257));
+INSTANTIATE_TEST_SUITE_P(VariousSizes, SelfEncryptTestVariable,
+                         ::testing::Values(0, 15, 16, 31, 255, 256, 257));
 
 }  // namespace nss_test

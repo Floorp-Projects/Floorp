@@ -720,6 +720,7 @@ sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
     unsigned int macSize;
     unsigned int outKeySize;
     unsigned int genKeySize;
+    PRBool quickMode = PR_FALSE;
     CK_RV crv;
     prfContext context;
 
@@ -748,6 +749,11 @@ sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
             crv = CKR_KEY_HANDLE_INVALID;
             goto fail;
         }
+        quickMode = PR_TRUE;
+    }
+
+    if (params->ulExtraDataLen != 0) {
+        quickMode = PR_TRUE;
     }
 
     macSize = prf_length(&context);
@@ -756,10 +762,16 @@ sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
         keySize = macSize;
     }
 
-    if (keySize <= inKey->attrib.ulValueLen) {
+    /* In appendix B, we are just expanding or contracting a single key.
+     * If the input key is less than or equal to the the key size we want,
+     * just subset the original key. In quick mode we are actually getting
+     * new keys (salted with our seed data and our gxy key), so we want to
+     * run through our algorithm */
+    if ((!quickMode) && (keySize <= inKey->attrib.ulValueLen)) {
         return sftk_forceAttribute(outKey, CKA_VALUE,
                                    inKey->attrib.pValue, keySize);
     }
+
     outKeySize = PR_ROUNDUP(keySize, macSize);
     outKeyData = PORT_Alloc(outKeySize);
     if (outKeyData == NULL) {
@@ -774,7 +786,7 @@ sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
      *   key is inKey
      */
     thisKey = outKeyData;
-    for (genKeySize = 0; genKeySize <= keySize; genKeySize += macSize) {
+    for (genKeySize = 0; genKeySize < keySize; genKeySize += macSize) {
         PRBool hashedData = PR_FALSE;
         crv = prf_init(&context, inKey->attrib.pValue, inKey->attrib.ulValueLen);
         if (crv != CKR_OK) {

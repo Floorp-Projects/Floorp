@@ -406,9 +406,9 @@ TEST_F(SSLv2ClientHelloTestF, InappropriateFallbackSCSV) {
   EXPECT_EQ(SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT, server_->error_code());
 }
 
-INSTANTIATE_TEST_CASE_P(VersionsStream10Pre13, SSLv2ClientHelloTest,
-                        TlsConnectTestBase::kTlsV10);
-INSTANTIATE_TEST_CASE_P(VersionsStreamPre13, SSLv2ClientHelloTest,
-                        TlsConnectTestBase::kTlsV11V12);
+INSTANTIATE_TEST_SUITE_P(VersionsStream10Pre13, SSLv2ClientHelloTest,
+                         TlsConnectTestBase::kTlsV10);
+INSTANTIATE_TEST_SUITE_P(VersionsStreamPre13, SSLv2ClientHelloTest,
+                         TlsConnectTestBase::kTlsV11V12);
 
 }  // namespace nss_test

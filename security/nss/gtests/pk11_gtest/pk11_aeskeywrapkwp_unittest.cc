@@ -118,6 +118,6 @@ class Pkcs11AESKeyWrapKwpTest
 
 TEST_P(Pkcs11AESKeyWrapKwpTest, TestVectors) { WrapUnwrap(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(Pkcs11NistAESKWPTest, Pkcs11AESKeyWrapKwpTest,
-                        ::testing::ValuesIn(kNistAesKWPVectors));
+INSTANTIATE_TEST_SUITE_P(Pkcs11NistAESKWPTest, Pkcs11AESKeyWrapKwpTest,
+                         ::testing::ValuesIn(kNistAesKWPVectors));
 } /* nss_test */

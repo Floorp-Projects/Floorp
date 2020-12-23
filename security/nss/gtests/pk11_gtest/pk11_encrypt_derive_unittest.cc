@@ -204,8 +204,8 @@ static const CK_MECHANISM_TYPE kEncryptDeriveMechanisms[] = {
 #endif
 };
 
-INSTANTIATE_TEST_CASE_P(EncryptDeriveTests, EncryptDeriveTest,
-                        ::testing::ValuesIn(kEncryptDeriveMechanisms));
+INSTANTIATE_TEST_SUITE_P(EncryptDeriveTests, EncryptDeriveTest,
+                         ::testing::ValuesIn(kEncryptDeriveMechanisms));
 
 // This class handles the case where 3DES takes a 192-bit key
 // where all 24 octets will be used.
@@ -219,7 +219,7 @@ TEST_P(EncryptDerive3Test, Test) { TestEncryptDerive(); }
 static const CK_MECHANISM_TYPE kDES3EncryptDeriveMechanisms[] = {CKM_DES3_ECB,
                                                                  CKM_DES3_CBC};
 
-INSTANTIATE_TEST_CASE_P(Encrypt3DeriveTests, EncryptDerive3Test,
-                        ::testing::ValuesIn(kDES3EncryptDeriveMechanisms));
+INSTANTIATE_TEST_SUITE_P(Encrypt3DeriveTests, EncryptDerive3Test,
+                         ::testing::ValuesIn(kDES3EncryptDeriveMechanisms));
 
 }  // namespace nss_test
