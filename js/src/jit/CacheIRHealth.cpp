@@ -152,14 +152,13 @@ void CacheIRHealth::spewScriptFinalWarmUpCount(JSContext* cx,
   spew->property("finalWarmUpCount", warmUpCount);
 }
 
-static void addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
+static bool addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
   // Create Zone::scriptFilenameMap if necessary.
   JS::Zone* zone = script->zone();
   if (!zone->scriptFinalWarmUpCountMap) {
     auto map = MakeUnique<ScriptFinalWarmUpCountMap>();
     if (!map) {
-      ReportOutOfMemory(cx);
-      return;
+      return false;
     }
 
     zone->scriptFinalWarmUpCountMap = std::move(map);
@@ -167,18 +166,17 @@ static void addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
 
   auto* filename = js_pod_malloc<char>(strlen(script->filename()) + 1);
   if (!filename) {
-    ReportOutOfMemory(cx);
-    return;
+    return false;
   }
   strcpy(filename, script->filename());
 
   if (!zone->scriptFinalWarmUpCountMap->put(
           script, mozilla::MakeTuple(uint32_t(0), filename))) {
-    ReportOutOfMemory(cx);
-    return;
+    return false;
   }
 
   script->setNeedsFinalWarmUpCount();
+  return true;
 }
 
 void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
@@ -188,7 +186,10 @@ void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
     return;
   }
 
-  addScriptToFinalWarmUpCountMap(cx, script);
+  if (!addScriptToFinalWarmUpCountMap(cx, script)) {
+    cx->recoverFromOutOfMemory();
+    return;
+  }
   spew->property("spewContext", uint8_t(context));
 
   jsbytecode* op = entry->pc(script);
@@ -210,7 +211,11 @@ void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
     return;
   }
 
-  addScriptToFinalWarmUpCountMap(cx, script);
+  if (!addScriptToFinalWarmUpCountMap(cx, script)) {
+    cx->recoverFromOutOfMemory();
+    return;
+  }
+
   spew->property("spewContext", uint8_t(context));
 
   jsbytecode* next = script->code();
