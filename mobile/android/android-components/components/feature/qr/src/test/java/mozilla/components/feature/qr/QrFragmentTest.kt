@@ -16,8 +16,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
+import com.google.zxing.LuminanceSource
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
+import com.google.zxing.PlanarYUVLuminanceSource
 import mozilla.components.feature.qr.QrFragment.Companion.chooseOptimalSize
 import mozilla.components.feature.qr.views.AutoFitTextureView
 import mozilla.components.feature.qr.views.CustomViewFinder
@@ -28,7 +30,6 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.fail
 import org.junit.Test
@@ -124,33 +125,46 @@ class QrFragmentTest {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
         val qrFragment = spy(QrFragment.newInstance(listener))
-        val bitmap = mock<BinaryBitmap>()
+        val source = mock<PlanarYUVLuminanceSource>()
         val result = com.google.zxing.Result("qrcode-result", ByteArray(0), emptyArray(), BarcodeFormat.ITF)
         whenever(reader.decodeWithState(any())).thenReturn(result)
         qrFragment.multiFormatReader = reader
         qrFragment.scanCompleteListener = listener
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
 
-        qrFragment.tryScanningBitmap(bitmap)
+        qrFragment.tryScanningSource(source)
 
         verify(listener).onScanComplete(eq("qrcode-result"))
         assertEquals(QrFragment.STATE_QRCODE_EXIST, QrFragment.qrState)
     }
 
     @Test
-    fun `resets state on error`() {
+    fun `resets state after each decoding attempt`() {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
         val qrFragment = spy(QrFragment.newInstance(listener))
+
+        val source = mock<PlanarYUVLuminanceSource>()
+        val invertedSource = mock<PlanarYUVLuminanceSource>()
+
         val bitmap = mock<BinaryBitmap>()
+        val invertedBitmap = mock<BinaryBitmap>()
+
+        whenever(source.invert()).thenReturn(invertedSource)
+
+        with(qrFragment) {
+            whenever(createBinaryBitmap(source)).thenReturn(bitmap)
+            whenever(createBinaryBitmap(invertedSource)).thenReturn(invertedBitmap)
+        }
+
         qrFragment.multiFormatReader = reader
-        whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
+
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
 
-        qrFragment.tryScanningBitmap(bitmap)
+        qrFragment.tryScanningSource(source)
 
         assertEquals(QrFragment.STATE_FIND_QRCODE, QrFragment.qrState)
-        verify(reader).reset()
+        verify(reader, times(2)).reset()
     }
 
     @Test
@@ -158,13 +172,13 @@ class QrFragmentTest {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
         val qrFragment = spy(QrFragment.newInstance(listener))
-        val bitmap = mock<BinaryBitmap>()
+        val source = mock<PlanarYUVLuminanceSource>()
         qrFragment.scanCompleteListener = listener
         qrFragment.multiFormatReader = reader
         whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
         QrFragment.qrState = QrFragment.STATE_FIND_QRCODE
 
-        qrFragment.tryScanningBitmap(bitmap)
+        qrFragment.tryScanningSource(source)
 
         verify(reader, never()).decodeWithState(any())
         verify(listener, never()).onScanComplete(any())
@@ -175,29 +189,36 @@ class QrFragmentTest {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
         val qrFragment = spy(QrFragment.newInstance(listener))
-        val bitmap = mock<BinaryBitmap>()
+        val source = mock<PlanarYUVLuminanceSource>()
         qrFragment.multiFormatReader = reader
         whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
         QrFragment.qrState = QrFragment.STATE_FIND_QRCODE
+        qrFragment.tryScanningSource(source)
 
-        val decodeResult = qrFragment.decodeBitmap(bitmap)
-
-        assertNull(decodeResult)
+        verify(qrFragment, never()).decodeSource(any())
         verify(reader, never()).decodeWithState(any())
         verify(listener, never()).onScanComplete(any())
     }
 
     @Test
-    fun `async scanning decodes original unmodified image`() {
+    fun `async scanning decodes original unmodified source`() {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
-        val qrFragment = QrFragment.newInstance(listener)
+        val qrFragment = spy(QrFragment.newInstance(listener))
         val imageCaptor = argumentCaptor<BinaryBitmap>()
+        val source = mock<LuminanceSource>()
         val bitmap = mock<BinaryBitmap>()
+        val result = mock <com.google.zxing.Result>()
         qrFragment.multiFormatReader = reader
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
 
-        qrFragment.decodeBitmap(bitmap)
+        with(qrFragment) {
+            whenever(createBinaryBitmap(source)).thenReturn(bitmap)
+        }
+
+        whenever(reader.decodeWithState(bitmap)).thenReturn(result)
+
+        qrFragment.tryScanningSource(source)
         verify(reader).decodeWithState(imageCaptor.capture())
         assertSame(bitmap, imageCaptor.value)
     }
@@ -465,5 +486,67 @@ class QrFragmentTest {
         qrFragment.tryOpenCamera(0, 0, skipCheck = true)
         verify(qrFragment.cameraErrorView).visibility = View.VISIBLE
         verify(qrFragment.customViewFinder).visibility = View.GONE
+    }
+
+    @Test
+    fun `tries to decode inverted source on original source decode exception`() {
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val reader = mock<MultiFormatReader>()
+        val qrFragment = spy(QrFragment.newInstance(listener))
+        val imageCaptor = argumentCaptor<BinaryBitmap>()
+
+        val source = mock<LuminanceSource>()
+        val invertedSource = mock<LuminanceSource>()
+        whenever(source.invert()).thenReturn(invertedSource)
+
+        val bitmap = mock<BinaryBitmap>()
+        val invertedBitmap = mock<BinaryBitmap>()
+
+        qrFragment.multiFormatReader = reader
+        QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
+
+        with(qrFragment) {
+            whenever(createBinaryBitmap(source)).thenReturn(bitmap)
+            whenever(createBinaryBitmap(invertedSource)).thenReturn(invertedBitmap)
+        }
+
+        whenever(reader.decodeWithState(bitmap)).thenThrow(NotFoundException::class.java)
+
+        qrFragment.tryScanningSource(source)
+
+        verify(reader, times(2)).decodeWithState(imageCaptor.capture())
+        assertSame(bitmap, imageCaptor.allValues[0])
+        assertSame(invertedBitmap, imageCaptor.allValues[1])
+    }
+
+    @Test
+    fun `tries to decode inverted source when original source returns null`() {
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val reader = mock<MultiFormatReader>()
+        val qrFragment = spy(QrFragment.newInstance(listener))
+        val imageCaptor = argumentCaptor<BinaryBitmap>()
+
+        val source = mock<LuminanceSource>()
+        val invertedSource = mock<LuminanceSource>()
+        whenever(source.invert()).thenReturn(invertedSource)
+
+        val bitmap = mock<BinaryBitmap>()
+        val invertedBitmap = mock<BinaryBitmap>()
+
+        qrFragment.multiFormatReader = reader
+        QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
+
+        with(qrFragment) {
+            whenever(createBinaryBitmap(source)).thenReturn(bitmap)
+            whenever(createBinaryBitmap(invertedSource)).thenReturn(invertedBitmap)
+        }
+
+        whenever(reader.decodeWithState(bitmap)).thenReturn(null)
+
+        qrFragment.tryScanningSource(source)
+
+        verify(reader, times(2)).decodeWithState(imageCaptor.capture())
+        assertSame(bitmap, imageCaptor.allValues[0])
+        assertSame(invertedBitmap, imageCaptor.allValues[1])
     }
 }

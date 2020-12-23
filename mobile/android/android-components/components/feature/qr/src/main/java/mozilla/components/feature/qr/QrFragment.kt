@@ -46,8 +46,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import com.google.zxing.BinaryBitmap
+import com.google.zxing.LuminanceSource
 import com.google.zxing.MultiFormatReader
-import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import kotlinx.coroutines.CoroutineScope
@@ -199,12 +199,11 @@ class QrFragment : Fragment() {
                 val availableImage = image
                 if (availableImage != null && scanCompleteListener != null) {
                     val source = readImageSource(availableImage)
-                    val bitmap = BinaryBitmap(HybridBinarizer(source))
                     if (qrState == STATE_FIND_QRCODE) {
                         qrState = STATE_DECODE_PROGRESS
 
                         coroutineScope.launch {
-                            tryScanningBitmap(bitmap)
+                            tryScanningSource(source)
                         }
                     }
                 }
@@ -607,21 +606,21 @@ class QrFragment : Fragment() {
     }
 
     @VisibleForTesting
-    internal fun tryScanningBitmap(bitmap: BinaryBitmap) {
-        scanCompleteListener?.let {
-            decodeBitmap(bitmap)?.let {
-                scanCompleteListener?.onScanComplete(it)
-            }
+    internal fun tryScanningSource(source: LuminanceSource) {
+        if (qrState != STATE_DECODE_PROGRESS) {
+            return
+        }
+        val result = decodeSource(source) ?: decodeSource(source.invert())
+        result?.let {
+            scanCompleteListener?.onScanComplete(it)
         }
     }
 
     @VisibleForTesting
-    internal fun decodeBitmap(bitmap: BinaryBitmap): String? {
-        if (qrState != STATE_DECODE_PROGRESS) {
-            return null
-        }
-
+    @Suppress("TooGenericExceptionCaught")
+    internal fun decodeSource(source: LuminanceSource): String? {
         return try {
+            val bitmap = createBinaryBitmap(source)
             val rawResult = multiFormatReader.decodeWithState(bitmap)
             if (rawResult != null) {
                 qrState = STATE_QRCODE_EXIST
@@ -630,11 +629,15 @@ class QrFragment : Fragment() {
                 qrState = STATE_FIND_QRCODE
                 null
             }
-        } catch (e: NotFoundException) {
+        } catch (e: Exception) {
             qrState = STATE_FIND_QRCODE
             null
         } finally {
             multiFormatReader.reset()
         }
     }
+
+    @VisibleForTesting
+    internal fun createBinaryBitmap(source: LuminanceSource) =
+        BinaryBitmap(HybridBinarizer(source))
 }

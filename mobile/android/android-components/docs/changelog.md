@@ -20,6 +20,9 @@ permalink: /changelog/
 
 * **browser-icons**
   * Catch `IOException` that may be thrown when deleting icon caches.
+  
+* **feature-qr**
+  * QR Scanner can now scan inverted QR codes, by decoding inverted source when the decoding the original source fails.
 
 # 70.0.0
 
