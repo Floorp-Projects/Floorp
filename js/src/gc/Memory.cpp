@@ -811,6 +811,11 @@ bool MarkPagesUnusedHard(void* region, size_t length) {
 void MarkPagesInUseSoft(void* region, size_t length) {
   CheckDecommit(region, length);
 
+#if defined(XP_DARWIN)
+  while (madvise(region, length, MADV_FREE_REUSE) == -1 && errno == EAGAIN) {
+  }
+#endif
+
   MOZ_MAKE_MEM_UNDEFINED(region, length);
 }
 
