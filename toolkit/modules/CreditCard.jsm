@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["CreditCard"];
+var EXPORTED_SYMBOLS = ["CreditCard", "SUPPORTED_NETWORKS", "NETWORK_NAMES"];
 
 // The list of known and supported credit card network ids ("types")
 // This list mirrors the networks from dom/payments/BasicCardPayment.cpp
