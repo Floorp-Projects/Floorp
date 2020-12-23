@@ -5799,6 +5799,7 @@ dependencies = [
  "log",
  "nsstring",
  "num_cpus",
+ "objc",
  "rayon",
  "swgl",
  "thin-vec",
