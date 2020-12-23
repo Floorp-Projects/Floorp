@@ -864,12 +864,12 @@ class nsContainerFrame : public nsSplittableFrame {
    * Calculate the used values for 'width' and 'height' for a replaced element.
    *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
    *
-   * @param aIntrinsicRatio the aspect ratio calculated by GetAspectRatio().
+   * @param aAspectRatio the aspect ratio calculated by GetAspectRatio().
    */
   mozilla::LogicalSize ComputeSizeWithIntrinsicDimensions(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::IntrinsicSize& aIntrinsicSize,
-      const mozilla::AspectRatio& aIntrinsicRatio,
+      const mozilla::AspectRatio& aAspectRatio,
       const mozilla::LogicalSize& aCBSize, const mozilla::LogicalSize& aMargin,
       const mozilla::LogicalSize& aBorderPadding,
       mozilla::ComputeSizeFlags aFlags);
