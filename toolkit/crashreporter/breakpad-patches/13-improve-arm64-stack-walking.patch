@@ -1,0 +1,79 @@
+diff --git a/src/processor/stackwalker_arm64.cc b/src/processor/stackwalker_arm64.cc
+--- a/src/processor/stackwalker_arm64.cc
++++ b/src/processor/stackwalker_arm64.cc
+@@ -282,16 +282,27 @@ void StackwalkerARM64::CorrectRegLRByFra
+                  << std::hex << (last_last_fp + 8);
+     return;
+   }
+   last_lr = PtrauthStrip(last_lr);
+ 
+   last_frame->context.iregs[MD_CONTEXT_ARM64_REG_LR] = last_lr;
+ }
+ 
++bool StackwalkerARM64::ValidInstructionPointerInFrame(const StackFrameARM64& frame) {
++  const uint64_t ip = frame.context.iregs[MD_CONTEXT_ARM64_REG_PC];
++
++  if ((ip < 0x1000) || (ip > 0x000fffffffffffff)) {
++    // The IP points into the first page or above the user space threshold
++    return false;
++  }
++
++  return true;
++}
++
+ StackFrame* StackwalkerARM64::GetCallerFrame(const CallStack* stack,
+                                              bool stack_scan_allowed) {
+   if (!memory_ || !stack) {
+     BPLOG(ERROR) << "Can't get caller frame without memory or stack";
+     return NULL;
+   }
+ 
+   const vector<StackFrame*> &frames = *stack->frames();
+@@ -300,21 +311,22 @@ StackFrame* StackwalkerARM64::GetCallerF
+ 
+   // See if there is DWARF call frame information covering this address.
+   scoped_ptr<CFIFrameInfo> cfi_frame_info(
+       frame_symbolizer_->FindCFIFrameInfo(last_frame));
+   if (cfi_frame_info.get())
+     frame.reset(GetCallerByCFIFrameInfo(frames, cfi_frame_info.get()));
+ 
+   // If CFI failed, or there wasn't CFI available, fall back to frame pointer.
+-  if (!frame.get())
++  if (!frame.get() || !ValidInstructionPointerInFrame(*frame))
+     frame.reset(GetCallerByFramePointer(frames));
+ 
+   // If everything failed, fall back to stack scanning.
+-  if (stack_scan_allowed && !frame.get())
++  if (stack_scan_allowed &&
++      (!frame.get() || !ValidInstructionPointerInFrame(*frame)))
+     frame.reset(GetCallerByStackScan(frames));
+ 
+   // If nothing worked, tell the caller.
+   if (!frame.get())
+     return NULL;
+ 
+   // Should we terminate the stack walk? (end-of-stack or broken invariant)
+   if (TerminateWalk(frame->context.iregs[MD_CONTEXT_ARM64_REG_PC],
+diff --git a/src/processor/stackwalker_arm64.h b/src/processor/stackwalker_arm64.h
+--- a/src/processor/stackwalker_arm64.h
++++ b/src/processor/stackwalker_arm64.h
+@@ -92,16 +92,19 @@ class StackwalkerARM64 : public Stackwal
+ 
+   // GetCallerByFramePointer() depends on the previous frame having recovered
+   // x30($LR) which may not have been done when using CFI.
+   // This function recovers $LR in the previous frame by using the frame-pointer
+   // two frames back to read it from the stack.
+   void CorrectRegLRByFramePointer(const vector<StackFrame*>& frames,
+                                   StackFrameARM64* last_frame);
+ 
++  // Return true if the instruction pointer points into the first 4KiB of memory
++  bool ValidInstructionPointerInFrame(const StackFrameARM64& frame);
++
+   // Stores the CPU context corresponding to the youngest stack frame, to
+   // be returned by GetContextFrame.
+   const MDRawContextARM64* context_;
+ 
+   // Validity mask for youngest stack frame. This is always
+   // CONTEXT_VALID_ALL in real use; it is only changeable for the sake of
+   // unit tests.
+   uint64_t context_frame_validity_;
