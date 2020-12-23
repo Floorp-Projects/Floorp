@@ -68,13 +68,6 @@ class HistoryObserver extends Observer {
     });
   }
 
-  /**
-   * onClearHistory - Called when the user clears their entire history.
-   */
-  onClearHistory() {
-    this.dispatch({ type: at.PLACES_HISTORY_CLEARED });
-  }
-
   // Empty functions to make xpconnect happy
   onBeginUpdateBatch() {}
 

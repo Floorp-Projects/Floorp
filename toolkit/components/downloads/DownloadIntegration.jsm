@@ -1278,11 +1278,6 @@ DownloadHistoryObserver.prototype = {
     );
   },
 
-  // nsINavHistoryObserver
-  onClearHistory: function DL_onClearHistory() {
-    this._list.removeFinished();
-  },
-
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onDeleteVisits() {},

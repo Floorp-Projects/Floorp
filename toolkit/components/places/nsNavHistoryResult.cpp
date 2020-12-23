@@ -2324,8 +2324,7 @@ nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnClearHistory() {
+nsresult nsNavHistoryQueryResultNode::OnClearHistory() {
   nsresult rv = Refresh();
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
@@ -4240,12 +4239,6 @@ nsNavHistoryResult::OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,
   NS_ENSURE_ARG(aURI);
 
   ENUMERATE_HISTORY_OBSERVERS(OnDeleteURI(aURI, aGUID, aReason));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistoryResult::OnClearHistory() {
-  ENUMERATE_HISTORY_OBSERVERS(OnClearHistory());
   return NS_OK;
 }
 

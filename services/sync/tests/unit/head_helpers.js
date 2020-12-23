@@ -638,7 +638,6 @@ async function promiseVisit(expectedType, expectedURI) {
       onDeleteURI(uri) {
         done("removed", uri.spec);
       },
-      onClearHistory() {},
       onDeleteVisits() {},
     };
     PlacesUtils.history.addObserver(observer, false);

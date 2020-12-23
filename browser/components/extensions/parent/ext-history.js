@@ -104,9 +104,6 @@ const getHistoryObserver = () => {
       }
       onBeginUpdateBatch() {}
       onEndUpdateBatch() {}
-      onClearHistory() {
-        this.emit("visitRemoved", { allHistory: true, urls: [] });
-      }
       onFrecencyChanged() {}
       onManyFrecenciesChanged() {}
       onDeleteVisits(uri, partialRemoval, guid, reason) {

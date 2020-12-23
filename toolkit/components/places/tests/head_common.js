@@ -738,7 +738,6 @@ NavHistoryObserver.prototype = {
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onDeleteURI() {},
-  onClearHistory() {},
   onDeleteVisits() {},
   QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
 };

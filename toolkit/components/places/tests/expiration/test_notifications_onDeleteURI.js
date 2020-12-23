@@ -79,7 +79,6 @@ add_task(async function test_notifications_onDeleteURI() {
     let historyObserver = {
       onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
       onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
-      onClearHistory() {},
       onDeleteURI(aURI, aGUID, aReason) {
         currentTest.receivedNotifications++;
         // Check this uri was not bookmarked.

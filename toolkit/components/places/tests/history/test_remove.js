@@ -45,9 +45,6 @@ add_task(async function test_remove_single() {
       observer = {
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
-        onClearHistory() {
-          reject("Unexpected call to onClearHistory");
-        },
         onFrecencyChanged(aURI) {
           try {
             Assert.ok(!shouldRemove, "Observing onFrecencyChanged");
