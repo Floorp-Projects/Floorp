@@ -118,12 +118,7 @@ CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
 CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
     AutoStructuredSpewer& spew, HandleScript script, jit::ICEntry* entry,
     jsbytecode* pc, JSOp op) {
-  spew->beginObject();
   spew->property("op", CodeName(op));
-
-  if (pc == script->main()) {
-    spew->property("main", true);
-  }
 
   // TODO: If a perf issue arises, look into improving the SrcNotes
   // API call below.
@@ -131,10 +126,7 @@ CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
   spew->property("lineno", PCToLineNumber(script, pc, &column));
   spew->property("column", column);
 
-  Happiness entryHappiness = spewHealthForStubsInCacheIREntry(spew, entry);
-  spew->endObject();
-
-  return entryHappiness;
+  return spewHealthForStubsInCacheIREntry(spew, entry);
 }
 
 void CacheIRHealth::spewScriptFinalWarmUpCount(JSContext* cx,
@@ -195,9 +187,8 @@ void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
 
   jsbytecode* op = entry->pc(script);
   JSOp jsOp = JSOp(*op);
-  spew->property("op", CodeName(jsOp));
 
-  spewHealthForStubsInCacheIREntry(spew, entry);
+  spewJSOpAndCacheIRHealth(spew, script, entry, op, jsOp);
 }
 
 void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
@@ -241,12 +232,14 @@ void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
     MOZ_ASSERT(len);
 
     if (entry) {
+      spew->beginObject();
       Happiness entryHappiness =
           spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
 
       if (entryHappiness < scriptHappiness) {
         scriptHappiness = entryHappiness;
       }
+      spew->endObject();
     }
 
     next += len;
