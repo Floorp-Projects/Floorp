@@ -17,15 +17,16 @@ nscoord AspectRatio::ComputeRatioDependentSize(
   MOZ_ASSERT(*this,
              "Infinite or zero ratio may have undefined behavior when "
              "computing the size");
+  const LogicalSize& boxSizingAdjust = mUseBoxSizing == UseBoxSizing::No
+                                           ? LogicalSize(aWM)
+                                           : aContentBoxSizeToBoxSizingAdjust;
   return aRatioDependentAxis == LogicalAxis::eLogicalAxisInline
-             ? ConvertToWritingMode(aWM).ApplyTo(
-                   aRatioDeterminingSize +
-                   aContentBoxSizeToBoxSizingAdjust.BSize(aWM)) -
-                   aContentBoxSizeToBoxSizingAdjust.ISize(aWM)
+             ? ConvertToWritingMode(aWM).ApplyTo(aRatioDeterminingSize +
+                                                 boxSizingAdjust.BSize(aWM)) -
+                   boxSizingAdjust.ISize(aWM)
              : ConvertToWritingMode(aWM).Inverted().ApplyTo(
-                   aRatioDeterminingSize +
-                   aContentBoxSizeToBoxSizingAdjust.ISize(aWM)) -
-                   aContentBoxSizeToBoxSizingAdjust.BSize(aWM);
+                   aRatioDeterminingSize + boxSizingAdjust.ISize(aWM)) -
+                   boxSizingAdjust.BSize(aWM);
 }
 
 }  // namespace mozilla

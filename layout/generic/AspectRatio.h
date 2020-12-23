@@ -26,17 +26,30 @@ enum LogicalAxis : uint8_t;
 class LogicalSize;
 class WritingMode;
 
+enum class UseBoxSizing : uint8_t {
+  // The aspect ratio works with content box dimensions always.
+  No,
+  // The aspect ratio works with the dimensions of the box specified by
+  // box-sizing.
+  Yes,
+};
+
 struct AspectRatio {
   friend struct IPC::ParamTraits<mozilla::AspectRatio>;
 
-  AspectRatio() : mRatio(0.0f) {}
-  explicit AspectRatio(float aRatio) : mRatio(std::max(aRatio, 0.0f)) {}
+  AspectRatio() = default;
+  explicit AspectRatio(float aRatio,
+                       UseBoxSizing aUseBoxSizing = UseBoxSizing::No)
+      : mRatio(std::max(aRatio, 0.0f)), mUseBoxSizing(aUseBoxSizing) {}
 
-  static AspectRatio FromSize(float aWidth, float aHeight) {
+  static AspectRatio FromSize(float aWidth, float aHeight,
+                              UseBoxSizing aUseBoxSizing = UseBoxSizing::No) {
     if (aWidth == 0.0f || aHeight == 0.0f) {
+      // For the degenerate ratio, we don't care about which box sizing we are
+      // using, so using default constructor is fine.
       return AspectRatio();
     }
-    return AspectRatio(aWidth / aHeight);
+    return AspectRatio(aWidth / aHeight, aUseBoxSizing);
   }
 
   template <typename T, typename Sub>
@@ -65,7 +78,8 @@ struct AspectRatio {
     // 0.0f in the division here (so that valid ratios always generate other
     // valid ratios when inverted).
     return AspectRatio(
-        std::max(std::numeric_limits<float>::epsilon(), 1.0f / mRatio));
+        std::max(std::numeric_limits<float>::epsilon(), 1.0f / mRatio),
+        mUseBoxSizing);
   }
 
   [[nodiscard]] inline AspectRatio ConvertToWritingMode(
@@ -92,6 +106,9 @@ struct AspectRatio {
    *                                          If the callers want the ratio to
    *                                          apply to the content-box size, we
    *                                          should pass a zero LogicalSize.
+   *                                          If mUseBoxSizing is No, we ignore
+   *                                          this parameter because we should
+   *                                          use content box dimensions always.
    *
    * The return value is the content-box size on the ratio-dependent axis.
    * Plese see the definition of the ratio-dependent axis and the
@@ -117,7 +134,8 @@ struct AspectRatio {
 
  private:
   // 0.0f represents no aspect ratio.
-  float mRatio;
+  float mRatio = 0.0f;
+  UseBoxSizing mUseBoxSizing = UseBoxSizing::No;
 };
 
 }  // namespace mozilla

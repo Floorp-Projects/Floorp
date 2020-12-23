@@ -975,15 +975,19 @@ template <>
 void StyleImage::ResolveImage(dom::Document&, const StyleImage*);
 
 template <>
-inline AspectRatio StyleRatio<StyleNonNegativeNumber>::ToLayoutRatio() const {
-  // Basically, 0/1, 1/0, and 0/0 all behave as auto, and so we always return
-  // 0.0 for these edge cases. The caller should take care about it.
-  return AspectRatio::FromSize(_0, _1);
+inline AspectRatio StyleRatio<StyleNonNegativeNumber>::ToLayoutRatio(
+    UseBoxSizing aUseBoxSizing) const {
+  // 0/1, 1/0, and 0/0 are all degenerate ratios (which behave as auto), and we
+  // always return 0.0f.
+  // https://drafts.csswg.org/css-values-4/#degenerate-ratio
+  return AspectRatio::FromSize(_0, _1, aUseBoxSizing);
 }
 
 template <>
 inline AspectRatio StyleAspectRatio::ToLayoutRatio() const {
-  return HasRatio() ? ratio.AsRatio().ToLayoutRatio() : AspectRatio();
+  return HasRatio() ? ratio.AsRatio().ToLayoutRatio(auto_ ? UseBoxSizing::No
+                                                          : UseBoxSizing::Yes)
+                    : AspectRatio();
 }
 
 }  // namespace mozilla
