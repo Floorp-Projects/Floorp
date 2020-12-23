@@ -37,27 +37,18 @@ HMAC_Destroy(HMACContext *cx, PRBool freeit)
         PORT_Free(cx);
 }
 
-SECStatus
-HMAC_Init(HMACContext *cx, const SECHashObject *hash_obj,
-          const unsigned char *secret, unsigned int secret_len, PRBool isFIPS)
+static SECStatus
+hmac_initKey(HMACContext *cx, const unsigned char *secret,
+             unsigned int secret_len, PRBool isFIPS)
 {
     unsigned int i;
     unsigned char hashed_secret[HASH_LENGTH_MAX];
 
     /* required by FIPS 198 Section 3 */
-    if (isFIPS && secret_len < hash_obj->length / 2) {
+    if (isFIPS && secret_len < cx->hashobj->length / 2) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
-    if (cx == NULL) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-    cx->wasAllocated = PR_FALSE;
-    cx->hashobj = hash_obj;
-    cx->hash = cx->hashobj->create();
-    if (cx->hash == NULL)
-        goto loser;
 
     if (secret_len > cx->hashobj->blocklength) {
         cx->hashobj->begin(cx->hash);
@@ -85,6 +76,31 @@ HMAC_Init(HMACContext *cx, const SECHashObject *hash_obj,
 
 loser:
     PORT_Memset(hashed_secret, 0, sizeof hashed_secret);
+    return SECFailure;
+}
+
+SECStatus
+HMAC_Init(HMACContext *cx, const SECHashObject *hash_obj,
+          const unsigned char *secret, unsigned int secret_len, PRBool isFIPS)
+{
+    SECStatus rv;
+
+    if (cx == NULL) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    cx->wasAllocated = PR_FALSE;
+    cx->hashobj = hash_obj;
+    cx->hash = cx->hashobj->create();
+    if (cx->hash == NULL)
+        goto loser;
+
+    rv = hmac_initKey(cx, secret, secret_len, isFIPS);
+    if (rv != SECSuccess)
+        goto loser;
+
+    return rv;
+loser:
     if (cx->hash != NULL)
         cx->hashobj->destroy(cx->hash, PR_TRUE);
     return SECFailure;
@@ -105,6 +121,34 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
         cx = NULL;
     }
     return cx;
+}
+
+/* this allows us to reuse an existing HMACContext with a new key and
+ * Hash function */
+SECStatus
+HMAC_ReInit(HMACContext *cx, const SECHashObject *hash_obj,
+            const unsigned char *secret, unsigned int secret_len, PRBool isFIPS)
+{
+    PRBool wasAllocated;
+    SECStatus rv;
+
+    /* if we are using the same hash, keep the hash contexts and only
+     * init the key */
+    if ((cx->hashobj == hash_obj) && (cx->hash != NULL)) {
+        return hmac_initKey(cx, secret, secret_len, isFIPS);
+    }
+    /* otherwise we destroy the contents of the context and
+     * initalize it from scratch. We need to preseve the current state
+     * of wasAllocated to the final destroy works correctly */
+    wasAllocated = cx->wasAllocated;
+    cx->wasAllocated = PR_FALSE;
+    HMAC_Destroy(cx, PR_FALSE);
+    rv = HMAC_Init(cx, hash_obj, secret, secret_len, isFIPS);
+    if (rv != SECSuccess) {
+        return rv;
+    }
+    cx->wasAllocated = wasAllocated;
+    return SECSuccess;
 }
 
 void

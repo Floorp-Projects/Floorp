@@ -59,15 +59,15 @@ TEST_P(Pkcs11HmacTest, WycheproofVectors) {
   RunTestVector(std::get<0>(GetParam()), std::get<1>(GetParam()));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     HmacSha256, Pkcs11HmacTest,
     ::testing::Combine(::testing::ValuesIn(kHmacSha256WycheproofVectors),
                        ::testing::Values(CKM_SHA256_HMAC)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     HmacSha384, Pkcs11HmacTest,
     ::testing::Combine(::testing::ValuesIn(kHmacSha384WycheproofVectors),
                        ::testing::Values(CKM_SHA384_HMAC)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     HmacSha512, Pkcs11HmacTest,
     ::testing::Combine(::testing::ValuesIn(kHmacSha512WycheproofVectors),
                        ::testing::Values(CKM_SHA512_HMAC)));

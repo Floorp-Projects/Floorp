@@ -73,7 +73,7 @@ class Pkcs11DsaTest : public ::testing::TestWithParam<DsaTestVector> {
 
 TEST_P(Pkcs11DsaTest, WycheproofVectors) { Derive(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(DsaTest, Pkcs11DsaTest,
-                        ::testing::ValuesIn(kDsaWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(DsaTest, Pkcs11DsaTest,
+                         ::testing::ValuesIn(kDsaWycheproofVectors));
 
 }  // namespace nss_test

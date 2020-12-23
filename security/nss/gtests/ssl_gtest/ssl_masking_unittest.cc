@@ -338,13 +338,13 @@ static const uint16_t kMaskingCiphersuites[] = {TLS_CHACHA20_POLY1305_SHA256,
 ::testing::internal::ParamGenerator<uint16_t> kMaskingCiphersuiteParams =
     ::testing::ValuesIn(kMaskingCiphersuites);
 
-INSTANTIATE_TEST_CASE_P(GenericMasking, SuiteTest, kMaskingCiphersuiteParams);
+INSTANTIATE_TEST_SUITE_P(GenericMasking, SuiteTest, kMaskingCiphersuiteParams);
 
-INSTANTIATE_TEST_CASE_P(GenericMasking, VariantTest,
-                        TlsConnectTestBase::kTlsVariantsAll);
+INSTANTIATE_TEST_SUITE_P(GenericMasking, VariantTest,
+                         TlsConnectTestBase::kTlsVariantsAll);
 
-INSTANTIATE_TEST_CASE_P(GenericMasking, VariantSuiteTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           kMaskingCiphersuiteParams));
+INSTANTIATE_TEST_SUITE_P(GenericMasking, VariantSuiteTest,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            kMaskingCiphersuiteParams));
 
 }  // namespace nss_test

@@ -92,8 +92,8 @@ class Pkcs11AesCmacTest : public ::testing::TestWithParam<AesCmacTestVector> {
 
 TEST_P(Pkcs11AesCmacTest, TestVectors) { RunTestVector(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11AesCmacTest,
-                        ::testing::ValuesIn(kCmacWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofTestVector, Pkcs11AesCmacTest,
+                         ::testing::ValuesIn(kCmacWycheproofVectors));
 
 // Sanity check of the PKCS #11 API only. Extensive tests for correctness of
 // underling CMAC implementation conducted in the following file:

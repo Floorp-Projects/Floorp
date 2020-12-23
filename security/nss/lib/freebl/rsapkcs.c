@@ -932,7 +932,162 @@ failure:
     return SECFailure;
 }
 
-/* XXX Doesn't set error code */
+static HMACContext *
+rsa_GetHMACContext(const SECHashObject *hash, RSAPrivateKey *key,
+                   const unsigned char *input, unsigned int inputLen)
+{
+    unsigned char keyHash[HASH_LENGTH_MAX];
+    void *hashContext;
+    HMACContext *hmac = NULL;
+    unsigned int privKeyLen = key->privateExponent.len;
+    unsigned int keyLen;
+    SECStatus rv;
+
+    /* first get the key hash (should store in the key structure) */
+    PORT_Memset(keyHash, 0, sizeof(keyHash));
+    hashContext = (*hash->create)();
+    if (hashContext == NULL) {
+        return NULL;
+    }
+    (*hash->begin)(hashContext);
+    if (privKeyLen < inputLen) {
+        int padLen = inputLen - privKeyLen;
+        while (padLen > sizeof(keyHash)) {
+            (*hash->update)(hashContext, keyHash, sizeof(keyHash));
+            padLen -= sizeof(keyHash);
+        }
+        (*hash->update)(hashContext, keyHash, padLen);
+    }
+    (*hash->update)(hashContext, key->privateExponent.data, privKeyLen);
+    (*hash->end)(hashContext, keyHash, &keyLen, sizeof(keyHash));
+    (*hash->destroy)(hashContext, PR_TRUE);
+
+    /* now create the hmac key */
+    hmac = HMAC_Create(hash, keyHash, keyLen, PR_TRUE);
+    if (hmac == NULL) {
+        PORT_Memset(keyHash, 0, sizeof(keyHash));
+        return NULL;
+    }
+    HMAC_Begin(hmac);
+    HMAC_Update(hmac, input, inputLen);
+    rv = HMAC_Finish(hmac, keyHash, &keyLen, sizeof(keyHash));
+    if (rv != SECSuccess) {
+        PORT_Memset(keyHash, 0, sizeof(keyHash));
+        HMAC_Destroy(hmac, PR_TRUE);
+        return NULL;
+    }
+    /* Finally set the new key into the hash context. We
+     * reuse the original context allocated above so we don't
+     * need to allocate and free another one */
+    rv = HMAC_ReInit(hmac, hash, keyHash, keyLen, PR_TRUE);
+    PORT_Memset(keyHash, 0, sizeof(keyHash));
+    if (rv != SECSuccess) {
+        HMAC_Destroy(hmac, PR_TRUE);
+        return NULL;
+    }
+
+    return hmac;
+}
+
+static SECStatus
+rsa_HMACPrf(HMACContext *hmac, const char *label, int labelLen,
+            int hashLength, unsigned char *output, int length)
+{
+    unsigned char iterator[2] = { 0, 0 };
+    unsigned char encodedLen[2] = { 0, 0 };
+    unsigned char hmacLast[HASH_LENGTH_MAX];
+    unsigned int left = length;
+    unsigned int hashReturn;
+    SECStatus rv = SECSuccess;
+
+    /* encodedLen is in bits, length is in bytes, thus the shifts
+     * do an implied multiply by 8 */
+    encodedLen[0] = (length >> 5) & 0xff;
+    encodedLen[1] = (length << 3) & 0xff;
+
+    while (left > hashLength) {
+        HMAC_Begin(hmac);
+        HMAC_Update(hmac, iterator, 2);
+        HMAC_Update(hmac, (const unsigned char *)label, labelLen);
+        HMAC_Update(hmac, encodedLen, 2);
+        rv = HMAC_Finish(hmac, output, &hashReturn, hashLength);
+        if (rv != SECSuccess) {
+            return rv;
+        }
+        iterator[1]++;
+        if (iterator[1] == 0)
+            iterator[0]++;
+        left -= hashLength;
+        output += hashLength;
+    }
+    if (left) {
+        HMAC_Begin(hmac);
+        HMAC_Update(hmac, iterator, 2);
+        HMAC_Update(hmac, (const unsigned char *)label, labelLen);
+        HMAC_Update(hmac, encodedLen, 2);
+        rv = HMAC_Finish(hmac, hmacLast, &hashReturn, sizeof(hmacLast));
+        if (rv != SECSuccess) {
+            return rv;
+        }
+        PORT_Memcpy(output, hmacLast, left);
+        PORT_Memset(hmacLast, 0, sizeof(hmacLast));
+    }
+    return rv;
+}
+
+/* This function takes a 16-bit input number and
+ * creates the smallest mask which covers
+ * the whole number. Examples:
+ *     0x81 -> 0xff
+ *     0x1af -> 0x1ff
+ *     0x4d1 -> 0x7ff
+ */
+static int
+makeMask16(int len)
+{
+    // or the high bit in each bit location
+    len |= (len >> 1);
+    len |= (len >> 2);
+    len |= (len >> 4);
+    len |= (len >> 8);
+    return len;
+}
+
+#define STRING_AND_LENGTH(s) s, sizeof(s) - 1
+static int
+rsa_GetErrorLength(HMACContext *hmac, int hashLen, int maxLegalLen)
+{
+    unsigned char out[128 * 2];
+    unsigned char *outp;
+    int outLength = 0;
+    int lengthMask;
+    SECStatus rv;
+
+    lengthMask = makeMask16(maxLegalLen);
+    rv = rsa_HMACPrf(hmac, STRING_AND_LENGTH("length"), hashLen,
+                     out, sizeof(out));
+    if (rv != SECSuccess) {
+        return -1;
+    }
+    for (outp = out; outp < out + sizeof(out); outp += 2) {
+        int candidate = outp[0] << 8 | outp[1];
+        candidate = candidate & lengthMask;
+        outLength = PORT_CT_SEL(PORT_CT_LT(candidate, maxLegalLen),
+                                candidate, outLength);
+    }
+    PORT_Memset(out, 0, sizeof(out));
+    return outLength;
+}
+
+/*
+ * This function can only fail in environmental cases: Programming errors
+ * and out of memory situations. It can't fail if the keys are valid and
+ * the inputs are the proper size. If the actual RSA decryption fails, a
+ * fake value and a fake length, both of which have already been generated
+ * based on the key and input, are returned.
+ * Applications are expected to detect decryption failures based on the fact
+ * that the decrypted value (usually a key) doesn't validate. The prevents
+ * Blecheinbaucher style attacks against the key. */
 SECStatus
 RSA_DecryptBlock(RSAPrivateKey *key,
                  unsigned char *output,
@@ -941,56 +1096,122 @@ RSA_DecryptBlock(RSAPrivateKey *key,
                  const unsigned char *input,
                  unsigned int inputLen)
 {
-    PRInt8 rv;
+    SECStatus rv;
+    PRUint32 fail;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
     unsigned int i;
     unsigned char *buffer = NULL;
-    unsigned int outLen = 0;
-    unsigned int copyOutLen = modulusLen - 11;
+    unsigned char *errorBuffer = NULL;
+    unsigned char *bp = NULL;
+    unsigned char *ep = NULL;
+    unsigned int outLen = modulusLen;
+    unsigned int maxLegalLen = modulusLen - 10;
+    unsigned int errorLength;
+    const SECHashObject *hashObj;
+    HMACContext *hmac = NULL;
 
+    /* failures in the top section indicate failures in the environment
+     * (memory) or the library. OK to return errors in these cases because
+     * it doesn't provide any oracle information to attackers. */
     if (inputLen != modulusLen || modulusLen < 10) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
 
-    if (copyOutLen > maxOutputLen) {
-        copyOutLen = maxOutputLen;
-    }
-
-    // Allocate enough space to decrypt + copyOutLen to allow copying outLen later.
-    buffer = PORT_ZAlloc(modulusLen + 1 + copyOutLen);
+    /* Allocate enough space to decrypt */
+    buffer = PORT_ZAlloc(modulusLen);
     if (!buffer) {
-        return SECFailure;
+        goto loser;
+    }
+    errorBuffer = PORT_ZAlloc(modulusLen);
+    if (!errorBuffer) {
+        goto loser;
+    }
+    hashObj = HASH_GetRawHashObject(HASH_AlgSHA256);
+    if (hashObj == NULL) {
+        goto loser;
     }
 
-    // rv is 0 if everything is going well and 1 if an error occurs.
-    rv = RSA_PrivateKeyOp(key, buffer, input) != SECSuccess;
-    rv |= (buffer[0] != RSA_BLOCK_FIRST_OCTET) |
-          (buffer[1] != (unsigned char)RSA_BlockPublic);
+    /* calculate the values to return in the error case rather than
+     * the actual returned values. This data is the same for the
+     * same input and private key. */
+    hmac = rsa_GetHMACContext(hashObj, key, input, inputLen);
+    if (hmac == NULL) {
+        goto loser;
+    }
+    errorLength = rsa_GetErrorLength(hmac, hashObj->length, maxLegalLen);
+    if (((int)errorLength) < 0) {
+        goto loser;
+    }
+    /* we always have to generate a full moduluslen error string. Otherwise
+     * we create a timing dependency on errorLength, which could be used to
+     * determine the difference between errorLength and outputLen and tell
+     * us that there was a pkcs1 decryption failure */
+    rv = rsa_HMACPrf(hmac, STRING_AND_LENGTH("message"),
+                     hashObj->length, errorBuffer, modulusLen);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
 
-    // There have to be at least 8 bytes of padding.
+    HMAC_Destroy(hmac, PR_TRUE);
+    hmac = NULL;
+
+    /* From here on out, we will always return success. If there is
+     * an error, we will return deterministic output based on the key
+     * and the input data. */
+    rv = RSA_PrivateKeyOp(key, buffer, input);
+
+    fail = PORT_CT_NE(rv, SECSuccess);
+    fail |= PORT_CT_NE(buffer[0], RSA_BLOCK_FIRST_OCTET) | PORT_CT_NE(buffer[1], RSA_BlockPublic);
+
+    /* There have to be at least 8 bytes of padding. */
     for (i = 2; i < 10; i++) {
-        rv |= buffer[i] == RSA_BLOCK_AFTER_PAD_OCTET;
+        fail |= PORT_CT_EQ(buffer[i], RSA_BLOCK_AFTER_PAD_OCTET);
     }
 
     for (i = 10; i < modulusLen; i++) {
         unsigned int newLen = modulusLen - i - 1;
-        unsigned int c = (buffer[i] == RSA_BLOCK_AFTER_PAD_OCTET) & (outLen == 0);
-        outLen = constantTimeCondition(c, newLen, outLen);
+        PRUint32 condition = PORT_CT_EQ(buffer[i], RSA_BLOCK_AFTER_PAD_OCTET) & PORT_CT_EQ(outLen, modulusLen);
+        outLen = PORT_CT_SEL(condition, newLen, outLen);
     }
-    rv |= outLen == 0;
-    rv |= outLen > maxOutputLen;
+    // this can only happen if a zero wasn't found above
+    fail |= PORT_CT_GE(outLen, modulusLen);
 
-    // Note that output is set even if SECFailure is returned.
-    PORT_Memcpy(output, buffer + modulusLen - outLen, copyOutLen);
-    *outputLen = constantTimeCondition(outLen > maxOutputLen, maxOutputLen,
-                                       outLen);
+    outLen = PORT_CT_SEL(fail, errorLength, outLen);
+
+    /* index into the correct buffer. Do it before we truncate outLen if the
+     * application was asking for less data than we can return */
+    bp = buffer + modulusLen - outLen;
+    ep = errorBuffer + modulusLen - outLen;
+
+    /* at this point, outLen returns no information about decryption failures,
+     * no need to hide its value. maxOutputLen is how much data the
+     * application is expecting, which is also not sensitive. */
+    if (outLen > maxOutputLen) {
+        outLen = maxOutputLen;
+    }
+
+    /* we can't use PORT_Memcpy because caching could create a time dependency
+     * on the status of fail. */
+    for (i = 0; i < outLen; i++) {
+        output[i] = PORT_CT_SEL(fail, ep[i], bp[i]);
+    }
+
+    *outputLen = outLen;
 
     PORT_Free(buffer);
+    PORT_Free(errorBuffer);
 
-    for (i = 1; i < sizeof(rv) * 8; i <<= 1) {
-        rv |= rv << i;
+    return SECSuccess;
+
+loser:
+    if (hmac) {
+        HMAC_Destroy(hmac, PR_TRUE);
     }
-    return (SECStatus)rv;
+    PORT_Free(buffer);
+    PORT_Free(errorBuffer);
+
+    return SECFailure;
 }
 
 /*

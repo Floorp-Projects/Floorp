@@ -390,7 +390,7 @@ TEST_P(TlsConnectDatagram, ShortRead) {
 TEST_P(TlsConnectStream, ShortRead) {
   // This test behaves oddly with TLS 1.0 because of 1/n+1 splitting,
   // so skip in that case.
-  if (version_ < SSL_LIBRARY_VERSION_TLS_1_1) return;
+  if (version_ < SSL_LIBRARY_VERSION_TLS_1_1) GTEST_SKIP();
 
   Connect();
   server_->SendData(50, 50);
@@ -728,74 +728,74 @@ TEST_P(TlsConnectGeneric, ShutdownOneSideThenCloseTcp) {
   EXPECT_EQ(PR_NOT_CONNECTED_ERROR, PR_GetError());
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     GenericStream, TlsConnectGeneric,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsVAll));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     GenericDatagram, TlsConnectGeneric,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11Plus));
 
-INSTANTIATE_TEST_CASE_P(StreamOnly, TlsConnectStream,
-                        TlsConnectTestBase::kTlsVAll);
-INSTANTIATE_TEST_CASE_P(DatagramOnly, TlsConnectDatagram,
-                        TlsConnectTestBase::kTlsV11Plus);
-INSTANTIATE_TEST_CASE_P(DatagramHolddown, TlsHolddownTest,
-                        TlsConnectTestBase::kTlsV11Plus);
+INSTANTIATE_TEST_SUITE_P(StreamOnly, TlsConnectStream,
+                         TlsConnectTestBase::kTlsVAll);
+INSTANTIATE_TEST_SUITE_P(DatagramOnly, TlsConnectDatagram,
+                         TlsConnectTestBase::kTlsV11Plus);
+INSTANTIATE_TEST_SUITE_P(DatagramHolddown, TlsHolddownTest,
+                         TlsConnectTestBase::kTlsV11Plus);
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Pre12Stream, TlsConnectPre12,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10V11));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Pre12Datagram, TlsConnectPre12,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11));
 
-INSTANTIATE_TEST_CASE_P(Version12Only, TlsConnectTls12,
-                        TlsConnectTestBase::kTlsVariantsAll);
+INSTANTIATE_TEST_SUITE_P(Version12Only, TlsConnectTls12,
+                         TlsConnectTestBase::kTlsVariantsAll);
 #ifndef NSS_DISABLE_TLS_1_3
-INSTANTIATE_TEST_CASE_P(Version13Only, TlsConnectTls13,
-                        TlsConnectTestBase::kTlsVariantsAll);
+INSTANTIATE_TEST_SUITE_P(Version13Only, TlsConnectTls13,
+                         TlsConnectTestBase::kTlsVariantsAll);
 #endif
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Pre13Stream, TlsConnectGenericPre13,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsV10ToV12));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Pre13Datagram, TlsConnectGenericPre13,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11V12));
-INSTANTIATE_TEST_CASE_P(Pre13StreamOnly, TlsConnectStreamPre13,
-                        TlsConnectTestBase::kTlsV10ToV12);
+INSTANTIATE_TEST_SUITE_P(Pre13StreamOnly, TlsConnectStreamPre13,
+                         TlsConnectTestBase::kTlsV10ToV12);
 
-INSTANTIATE_TEST_CASE_P(Version12Plus, TlsConnectTls12Plus,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV12Plus));
+INSTANTIATE_TEST_SUITE_P(Version12Plus, TlsConnectTls12Plus,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV12Plus));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     GenericStream, TlsConnectGenericResumption,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsVAll,
                        ::testing::Values(true, false)));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     GenericDatagram, TlsConnectGenericResumption,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11Plus,
                        ::testing::Values(true, false)));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     GenericStream, TlsConnectGenericResumptionToken,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
                        TlsConnectTestBase::kTlsVAll));
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     GenericDatagram, TlsConnectGenericResumptionToken,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11Plus));
 
-INSTANTIATE_TEST_CASE_P(GenericDatagram, TlsConnectTls13ResumptionToken,
-                        TlsConnectTestBase::kTlsVariantsAll);
+INSTANTIATE_TEST_SUITE_P(GenericDatagram, TlsConnectTls13ResumptionToken,
+                         TlsConnectTestBase::kTlsVariantsAll);
 
 }  // namespace nss_test

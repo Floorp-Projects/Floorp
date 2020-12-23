@@ -69,7 +69,7 @@ char const* const rootName = "Test CA 1";
 class pkixocsp_VerifyEncodedResponse : public ::testing::Test
 {
 public:
-  static void SetUpTestCase()
+  static void SetUpTestSuite()
   {
     rootKeyPair.reset(GenerateKeyPair());
     if (!rootKeyPair) {
@@ -179,7 +179,7 @@ TEST_P(pkixocsp_VerifyEncodedResponse_WithoutResponseBytes, CorrectErrorCode)
                                       response, expired));
 }
 
-INSTANTIATE_TEST_CASE_P(pkixocsp_VerifyEncodedResponse_WithoutResponseBytes,
+INSTANTIATE_TEST_SUITE_P(pkixocsp_VerifyEncodedResponse_WithoutResponseBytes,
                         pkixocsp_VerifyEncodedResponse_WithoutResponseBytes,
                         testing::ValuesIn(WITHOUT_RESPONSEBYTES));
 
@@ -202,9 +202,9 @@ public:
     pkixocsp_VerifyEncodedResponse::SetUp();
   }
 
-  static void SetUpTestCase()
+  static void SetUpTestSuite()
   {
-    pkixocsp_VerifyEncodedResponse::SetUpTestCase();
+    pkixocsp_VerifyEncodedResponse::SetUpTestSuite();
   }
 
   ByteString CreateEncodedOCSPSuccessfulResponse(

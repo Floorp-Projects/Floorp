@@ -158,8 +158,8 @@ class PRNGTest : public ::testing::TestWithParam<PRNGTestValues> {
 
 TEST_P(PRNGTest, HashDRBG) { RunTest(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(NISTTestVector, PRNGTest,
-                        ::testing::ValuesIn(test_vector));
+INSTANTIATE_TEST_SUITE_P(NISTTestVector, PRNGTest,
+                         ::testing::ValuesIn(test_vector));
 
 }  // nss_test
 

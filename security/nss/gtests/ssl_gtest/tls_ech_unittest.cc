@@ -219,7 +219,7 @@ static SECStatus AuthCompleteFail(TlsAgent* agent, PRBool, PRBool) {
 
 TEST_P(TlsAgentEchTest, EchConfigsSupportedYesNo) {
   if (variant_ == ssl_variant_datagram) {
-    return;
+    GTEST_SKIP();
   }
 
   // ECHConfig 2 cipher_suites are unsupported.
@@ -244,7 +244,7 @@ TEST_P(TlsAgentEchTest, EchConfigsSupportedYesNo) {
 
 TEST_P(TlsAgentEchTest, EchConfigsSupportedNoYes) {
   if (variant_ == ssl_variant_datagram) {
-    return;
+    GTEST_SKIP();
   }
 
   // ECHConfig 1 cipher_suites are unsupported.
@@ -269,7 +269,7 @@ TEST_P(TlsAgentEchTest, EchConfigsSupportedNoYes) {
 
 TEST_P(TlsAgentEchTest, EchConfigsSupportedNoNo) {
   if (variant_ == ssl_variant_datagram) {
-    return;
+    GTEST_SKIP();
   }
 
   // ECHConfig 1 and 2 cipher_suites are unsupported.
@@ -1577,9 +1577,9 @@ TEST_F(TlsConnectStreamTls13, EchOuterExtensionsInCHOuter) {
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
 }
 
-INSTANTIATE_TEST_CASE_P(EchAgentTest, TlsAgentEchTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV13));
+INSTANTIATE_TEST_SUITE_P(EchAgentTest, TlsAgentEchTest,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
 #else
 
 TEST_P(TlsAgentEchTest, NoEchWithoutHpke) {
@@ -1596,9 +1596,9 @@ TEST_P(TlsAgentEchTest, NoEchWithoutHpke) {
   ASSERT_EQ(SSL_ERROR_FEATURE_DISABLED, PORT_GetError());
 }
 
-INSTANTIATE_TEST_CASE_P(EchAgentTest, TlsAgentEchTest,
-                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
-                                           TlsConnectTestBase::kTlsV13));
+INSTANTIATE_TEST_SUITE_P(EchAgentTest, TlsAgentEchTest,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
 
 #endif  // NSS_ENABLE_DRAFT_HPKE
 }  // namespace nss_test

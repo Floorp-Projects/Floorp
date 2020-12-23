@@ -117,6 +117,6 @@ class Pkcs11AESKeyWrapTest : public ::testing::TestWithParam<keywrap_vector> {
 
 TEST_P(Pkcs11AESKeyWrapTest, TestVectors) { WrapUnwrap(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(Pkcs11WycheproofAESKWTest, Pkcs11AESKeyWrapTest,
-                        ::testing::ValuesIn(kWycheproofAesKWVectors));
+INSTANTIATE_TEST_SUITE_P(Pkcs11WycheproofAESKWTest, Pkcs11AESKeyWrapTest,
+                         ::testing::ValuesIn(kWycheproofAesKWVectors));
 } /* nss_test */

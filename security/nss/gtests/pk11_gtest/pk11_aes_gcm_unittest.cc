@@ -351,11 +351,11 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<AesGcmKatValue> {
 
 TEST_P(Pkcs11AesGcmTest, TestVectors) { RunTest(GetParam()); }
 
-INSTANTIATE_TEST_CASE_P(NISTTestVector, Pkcs11AesGcmTest,
-                        ::testing::ValuesIn(kGcmKatValues));
+INSTANTIATE_TEST_SUITE_P(NISTTestVector, Pkcs11AesGcmTest,
+                         ::testing::ValuesIn(kGcmKatValues));
 
-INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11AesGcmTest,
-                        ::testing::ValuesIn(kGcmWycheproofVectors));
+INSTANTIATE_TEST_SUITE_P(WycheproofTestVector, Pkcs11AesGcmTest,
+                         ::testing::ValuesIn(kGcmWycheproofVectors));
 
 TEST_F(Pkcs11AesGcmTest, ZeroLengthIV) {
   std::vector<uint8_t> iv(0);
