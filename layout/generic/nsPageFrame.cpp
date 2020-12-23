@@ -522,7 +522,7 @@ static void PaintMarginGuides(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   // Then reset rect, apply the left/right margins, and draw vertical guides
   // extending the full height of the page.
   rect = nsRect(aPt, aFrame->GetSize());
-  rect.Deflate(nsMargin(0, margin.left, 0, margin.right));
+  rect.Deflate(nsMargin(0, margin.right, 0, margin.left));
   r = NSRectToRect(rect, appUnitsPerDevPx);
   aDrawTarget->StrokeLine(r.TopLeft(), r.BottomLeft(), pattern, stroke,
                           options);
