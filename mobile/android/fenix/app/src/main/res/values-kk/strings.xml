@@ -151,8 +151,6 @@
     <string name="browser_menu_find_in_page">Беттен табу</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Жекелік бет</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Жаңа бет</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Жинаққа сақтау</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -357,6 +355,12 @@
     <string name="customize_addon_collection_user_hint">Жинақ иесі (Пайдаланушы идентификаторы)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Қосымшалар жинағы өзгертілген. Өзгерістерді іске асыру үшін қолданба жұмысын аяқтау…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Қосымшаға қолдау жоқ</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Қосымша орнатылған болып тұр</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -711,18 +715,22 @@
     <string name="download_delete_all">Жүктемелерді тазарту</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Жүктемелеріңізді өшіруді шынымен қалайсыз ба?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Жүктемелер өшірілді</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Жүктемелер өшірілді</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s өшірілді</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Жүктемелер жоқ</string>
+    <string name="download_empty_message_1">Жүктеліп алынған файлдар жоқ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d таңдалды</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Ашу</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Өшіру</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Өшіру</string>
 
 
     <!-- Crashes -->
@@ -846,6 +854,8 @@
     <string name="preference_phone_feature_notification">Хабарлама</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Тұрақты қойма</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-мен басқарылатын құрама</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Рұқсат ету үшін сұрау</string>
     <!-- Label that indicates that a permission must be blocked -->

@@ -20,6 +20,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">آپ کے نجی ٹیبز یہاں دکھائے جائیں گے۔</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">بیدو</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 کھلا ٹیب۔ ٹیبز بدلنے کے لئے دبائیں۔</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -78,8 +82,15 @@
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">برخاست کریں</string>
 
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">اختیارات دیکھیں</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">برخاست کریں</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">سیٹنگز پر جائیں</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">برخاست کریں</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -125,12 +136,12 @@
     <string name="browser_menu_install_on_homescreen">تنصیب کریں</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">سینک ہو چکے ٹیبز</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">دوباره سینک کریں</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">صفحہ میں ڈھونڈیں</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">نجی ٹیب</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">نیا ٹیب</string>
 
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">مجموعہ میں محفوظ کریں</string>
@@ -194,6 +205,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">مزید سیکھیں</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">ایک نیا Firefox ٹیب کھولیں</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">تلاش کریں</string>
     <!-- Text preview for larger sized widgets -->
@@ -266,6 +280,8 @@
     <string name="preferences_toolbar">ٹول بار</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">تھیم</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">ابتدائی صفحہ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">تخصیص کریں</string>
     <!-- Preference description for banner about signing in -->
@@ -300,6 +316,8 @@
     <string name="preferences_search_browsing_history">براؤزنگ کی تاریخ تلاش کریں</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">بک مارک تلاش کریں</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs"></string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">اکاؤنٹ کی سیٹنگز</string>
     <!-- Preference for open links in third party apps -->
@@ -317,6 +335,11 @@
     <string name="customize_addon_collection_ok">ٹھیک ہے</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">منسوخ کریں</string>
+
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">مجموعہ کا نام</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">مجموعہ کرنے والا مالک (صارف شناخت)</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -399,6 +422,8 @@
     <string name="preferences_marketing_data">مارکیٹنگ کا ڈیٹا</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">ہمارے موبائل مارکیٹنگ کے وینڈر، Leanplum کے ساتھ %1$s میں آپکے ذریعہ استعمال کی جانے والی خصوصیات کے کوائف کو بانٹتا ہے۔</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">مطالعہ</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">تجربات</string>
 
@@ -481,6 +506,10 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بند کریں</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">حالیہ بند کیے گئے ٹیب</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">تمام سابقات دکھائیں</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tabs">%d ٹیب</string>
@@ -488,6 +517,16 @@
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d ٹیب</string>
 
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">یہاں حالیہ بند کیے گئے ٹیبز نہیں ہیں</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">ٹیبس</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">فہرست</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">گرڈ</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ٹیب بند کریں</string>
 
@@ -499,6 +538,16 @@
     <string name="close_tabs_after_one_week">ایک ہفتہ کے بعد</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ایک مہینے کے بعد</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">دستی طور پر بند کریں</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">ایک دن کے بعد بند کریں</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">ایک ہفتے کے بعد بند کریں</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">ایک ماہ کے بعد بند کریں</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -517,8 +566,12 @@
     <string name="tab_tray_title">ٹیب کھولیں</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">مجموعہ میں محفوظ کریں</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">منتخب کریں</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">تمام ٹیبز شیئر کریں</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">حالیہ بند کیے گئے ٹیبز</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">ٹیب کی سیٹنگز</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -529,8 +582,16 @@
     <string name="tab_tray_menu_home">ہوم پے جائیں</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">ٹیب موڈ ٹوگل کریں</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">بک مارک</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">بند كریں</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">منتخب شدہ ٹیبز کا اشتراک کریں</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">مجموعہ سے ٹیب کو ہٹا دیں</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">ٹیب منتخب کریں</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ٹیب بند کریں</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -564,9 +625,15 @@
     <string name="collection_rename">مجموعہ کا نام تبدیل کریں</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">ٹیب کھولیں</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">مجموعہ کا نام</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">نام تبدیل کریں</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">ہٹائیں</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">سابقات سے حذف کریں</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (نجی موڈ)</string>
 
@@ -616,12 +683,22 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">یہاں کوئی سابقات نہیں ہے</string>
 
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">یہاں کوئی ڈاؤن لوڈ نہیں</string>
-
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">ڈاؤن لوڈ حذف کریں</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">ڈاؤن لوڈز کو ہٹا دیا گیا</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s ہٹائیں</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d منتخب کیا گیا</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">کھولیں</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">ہٹائیں</string>
 
 
     <!-- Crashes -->
@@ -745,6 +822,8 @@
     <string name="preference_phone_feature_location">مقام</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">اعلانات</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM کے زیرانتظام مواد</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">اجازت کے لئے پوچھیں</string>
 
@@ -887,6 +966,10 @@
 
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ٹیبز بند ہوگئیں</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">ٹیبز بند ہوگئیں</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">دیکھیں</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">سر فہرست سائٹوں میں شامل!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1044,6 +1127,8 @@
     <string name="onboarding_tracking_protection_strict_button">سخت (سفارش شدا)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">سخت</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">زیادہ ٹریکر ، اشتہارات اور پاپ اپ کو بلاک کرتا ہے۔ صفحات تیزی سے لوڈ ہوتے ہے ، لیکن کچھ فعالیت کام نہیں کرسکتی ہے۔</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1482,6 +1567,13 @@
     <string name="top_sites_max_limit_title">اعلٰی سائٹ کی حد پوری ہو گئی </string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے سمجھ گیا</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">نام</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ٹھیک ہے</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">منسوخ کریں</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ہٹائیں</string>

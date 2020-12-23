@@ -725,18 +725,22 @@
     <string name="download_delete_all">İndirmeleri sil</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">İndirmelerinizi temizlemek istediğinizden emin misiniz?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">İndirmeler silindi</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">İndirmeler kaldırıldı</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s kaldırıldı</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Hiçbir şey indirilmemiş</string>
+    <string name="download_empty_message_1">Hiçbir şey indirilmemiş</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d indirme seçildi</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Aç</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Sil</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Kaldır</string>
 
 
     <!-- Crashes -->
@@ -860,6 +864,8 @@
     <string name="preference_phone_feature_notification">Bildirim</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Kalıcı depolama</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM denetimli içerikler</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">İzin iste</string>
     <!-- Label that indicates that a permission must be blocked -->

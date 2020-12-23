@@ -728,18 +728,22 @@
     <string name="download_delete_all">Letöltések törlése</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Biztos, hogy törli a letöltéseket?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Letöltések törölve</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Letöltések eltávolítva</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s eltávolítva</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Nincs itt letőltés</string>
+    <string name="download_empty_message_1">Nincsenek letöltött fájlok</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d kiválasztva</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Megnyitás</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Törlés</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Eltávolítás</string>
 
 
     <!-- Crashes -->
@@ -864,6 +868,8 @@
     <string name="preference_phone_feature_notification">Értesítés</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Állandó tároló</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-vezérelt tartalom</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Kérdezzen rá</string>
     <!-- Label that indicates that a permission must be blocked -->

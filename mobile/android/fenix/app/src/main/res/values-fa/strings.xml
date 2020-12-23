@@ -12,7 +12,7 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">غیر فعال شده در حالت مرور خصوصی</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">جست‌وجو یا ورود نشانی</string>
+    <string name="search_hint">جست‌وجو یا ورود آدرس</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">زبانه های باز شما در اینجا نشان داده می شود.</string>
 
@@ -95,6 +95,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">رد کردن</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">طرح بندی برگه های باز را تغییر دهید. به تنظیمات بروید و شبکه را در زیر نمای برگه انتخاب کنید.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">برو به تنظیمات</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -139,7 +141,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">سایت دسک تاپ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">افزودن به صفحه‌ی خانه</string>
+    <string name="browser_menu_add_to_homescreen">افزودن به صفحه خانگی</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">نصب</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
@@ -150,8 +152,6 @@
     <string name="browser_menu_find_in_page">پیدا کردن در صفحه</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">برگه خصوصی</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">زبانه جدید</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">افزودن به مجموعه</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -178,7 +178,7 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">اتصال امکان پذیر نیست. طرح URL غیرقابل تشخیص است.</string>
+    <string name="unknown_scheme_error_message">اتصال امکان پذیر نیست. طرح آدرس غیرقابل تشخیص است.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -269,6 +269,8 @@
     <string name="preferences_open_links_in_a_private_tab">باز کردن پیوند در زبانه خصوصی</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">اجازه گرفتن تصویر از صفحه در حالت مرور خصوصی</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">در صورت اجازه ، هنگام باز شدن چندین برنامه ، برگه های خصوصی نیز قابل مشاهده هستند</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">میانبر مرور خصوصی را اضافه کنید</string>
     <!-- Preference for accessibility -->
@@ -289,6 +291,8 @@
     <string name="preferences_theme">زمینه</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">خانه</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">اشارات</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">سفارشی‌سازی</string>
     <!-- Preference description for banner about signing in -->
@@ -324,6 +328,8 @@
 
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">جست‌و‌جو نشانک‌ها</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">جست‌وجو در زبانه‌های همگام‌سازی شده</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">تنظیمات حساب</string>
     <!-- Preference for enabling url autocomplete-->
@@ -337,6 +343,26 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">اعلان‌ها</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">مجموعه افزودنی سفارشی</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">تایید</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">لغو</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">نام مجموعه</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">مالک مجموعه (شناسه کاربری)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">مجموعه افزونه اصلاح شده است. ترک برنامه برای اعمال تغییرات…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">افزونه پشتیبانی نمی شود</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">افزونه قبلا نصب شده است</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -416,6 +442,10 @@
     <string name="preferences_marketing_data">ارزیابی داده</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">به اشتراک‌ گذاری داده‌هایی در خصوص ویژیگی که شما در %1$s با  Leanplum تیم فروش موبایل ما.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">مطالعات</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">به موزیلا اجازه دهید تا افزونه‌های مطالعاتی را نصب و اجرا کند</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">آزمون ها</string>
     <!-- Summary for experiments preferences -->
@@ -463,6 +493,11 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">موضوع دستگاه را دنبال کنید</string>
 
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">برای جابجایی بین زبانه‌ها، نوار ابزار را به طرفین بکشید</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">برای باز کردن زبانه‌ها، نوار ابزار را به سمت بالا بکشید</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">جلسات</string>
@@ -508,6 +543,15 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">زبانه‌هایی که اخیرا بسته نشدند</string>
 
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">زبانه‌ها</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">نمای زبانه‌ها</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">فهرستی</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">شبکه‌ای</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">بستن زبانه‌ها</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -518,6 +562,15 @@
     <string name="close_tabs_after_one_week">بعد از یک هفته</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">بعد از یک ماه</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">بستن دستی</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">بستن پس از یک روز</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">بستن پس از یک هفته</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">بستن پس از یک ماه</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -536,6 +589,8 @@
     <string name="tab_tray_title">زبانه‌های باز</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">افزودن به مجموعه</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">انتخاب</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">به اشتراک‌گذار همه‌ی زبانه‌ها</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -550,8 +605,18 @@
     <string name="tab_tray_menu_home">برو به خانه</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">تغییر حالت زبانه</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">نشانک‌گذاری</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">بستن</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">هم‌رسانی زبانه‌های انتخاب شده</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">منوی زبانه‌های انتخاب شده</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">حذف زبانه از مجموعه</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">انتخاب زبانه‌ها</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">بستن زبانه</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -587,7 +652,11 @@
     <string name="collection_rename">تغییر نام مجموعه</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">زبانه‌های باز</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">نام مجموعه</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">تغییر نام</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">حذف</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -625,6 +694,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">حذف %1$d مورد</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">امروز</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">دیروز</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 ساعت گذشته</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -636,11 +709,26 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">هیچ تاریخیچه‌ای در اینجا نیست</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">پاک کردن در بارگیری‌ها</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">آیا از پاک کردن بارگیری‌ها مطمئن هستید؟</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">بارگیری‌ها حذف شدند</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s حذف شد</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">اینجا هیچ بارگیری وجود ندارد</string>
+    <string name="download_empty_message_1">تا به حال پرونده‌ای بارگیری نشده است</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d انتخاب شد</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">باز کردن</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">حذف</string>
 
 
     <!-- Crashes -->
@@ -763,6 +851,10 @@
     <string name="preference_phone_feature_location">مکان</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">اعلان‌</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">حافظهٔ دائمی</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">محتوای کنترل شده با DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">درخواست برای اجازه دادن</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -903,6 +995,12 @@
     <string name="snackbar_tab_closed">زبانه بسته شده</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">زبانه‌های بسته شده</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">زبانه بسته شد!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">نشانک‌ها ذخیره شدند!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">نما</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">به سایت های برتر اضافه شد!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1135,11 +1233,13 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[در رایانه خود Firefox را باز کرده و به <b> https://firefox.com/pair </b> بروید]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">آماده برای اسکن</string>
+    <string name="sign_in_ready_for_scan">آمادهٔ اسکن</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">با دوربین خود وارد سیستم شوید</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">به جای آن از ایمیل استفاده کنید</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[حسابی ندارید؟ برای هم‌گام‌سازی بین دستگاه‌های خود <u>یکی ایجاد کنید</u>.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">فایرفاکس همگام سازی با حساب شما را متوقف خواهد کرد، ولی هیچ کدوم از اطلاعات شما بر روی این مرورگر حذف نخواهد شد.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1155,7 +1255,7 @@
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">تنظیمات حفاظتی</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">بهینه سازی محافظت از دنبال کنندگان</string>
+    <string name="preference_enhanced_tracking_protection">محافظت پیشرفته در برابر ردیابی</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">بدون دنبال شدن مرور کنید</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
@@ -1248,6 +1348,11 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | کتابخانه های OSS</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">ردیاب‌هایِ تغییر مسیر</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">کوکی‌های تنظیم شده توسطِ تغییر مسیر به وبسایت‌های ردیابیِ شناخته شده را پاک می‌کند.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">پشتیبانی</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1282,7 +1387,7 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">آدرس به کلیپ‌بورد ریخته شد</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">افزودن به صفحه‌ی خانه</string>
+    <string name="add_to_homescreen_title">افزودن به صفحه خانگی</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">انصراف</string>
     <!-- Add button text for the Add to Homescreen dialog -->
@@ -1315,7 +1420,7 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">ورودهای ذخیره شده</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">ورود به سیستم ذخیره شده یا همگام سازی با%s در اینجا نشان داده می شود.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">اطلاعاتِ ورودی سایت‌هایی که وارد یا به %s همرسانی می‌کنید در اینجا نشان داده می‌شوند.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">در مورد همگام‌سازی بیشتر بدانید.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1324,7 +1429,7 @@
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">ورود و گذرواژه‌های ذخیره نشده در اینجا نشان داده خواهد شد.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">ورود به سیستم و کلمه عبور برای این سایت ها ذخیره نمی شود.</string>
+    <string name="preferences_passwords_exceptions_description">اطلاعات ورود و گذرواژهٔ مربوط به این سایت‌ها ذخیره نخواهند شد.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">حذف تمام استثاناها</string>
     <!-- Hint for search box in logins list -->
@@ -1362,8 +1467,12 @@
     <string name="logins_site_copied">آدرس به داخل کلیپ بورد ریخته شد</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">رونوشت گذرواژه</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">پاک کردن گذرواژه</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">رونوشت نام کاربری</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">پاک کردن نام‌کاربری</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">رونوشت از سایت</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1538,10 +1647,21 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">حد نصاب سایت‌های برتر شما پر شده است</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">برای افزودن یک سایت برتر جدید، یکی را حذف کنید. سایت را لمس و نگه دارید و سپس حذف را انتخاب کنید.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">باشه،‌ متوجه شدم</string>
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">نمایش سایت های پربازدید</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">نام</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">نامِ سایتِ برتر</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">تایید</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">انصراف</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">حذف</string>
@@ -1549,6 +1669,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">نهایت استفاده از %s ببرید.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">برای جزئیات بیشتر کلیک کنید</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">ذخیره کردن چیزهایی که برای شما اهمیت دارد</string>

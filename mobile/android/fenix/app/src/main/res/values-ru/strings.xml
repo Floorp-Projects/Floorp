@@ -49,7 +49,7 @@
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
     <string name="tab_tray_item_unselected_multiselect_content_description">Снят выбор с %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Режим множественного выбора отключен</string>
+    <string name="tab_tray_exit_multiselect_content_description">Режим множественного выбора отключён</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
     <string name="tab_tray_enter_multiselect_content_description">Включен режим множественного выбора, выберите вкладки для сохранения в коллекцию</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
@@ -88,7 +88,7 @@
     <string name="open_in_app_cfr_negative_button_text">Пропустить</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
-    <string name="camera_permissions_needed_message">Требуется доступ к камере. Перейдите в настройки системы, коснитесь разрешений и нажмите «разрешить».</string>
+    <string name="camera_permissions_needed_message">Требуется доступ к камере. Перейдите в системные настройки приложения, выберите «Разрешения», затем нажмите «Камера» и выберите «Разрешить».</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Перейти в настройки</string>
 
@@ -162,8 +162,6 @@
     <string name="browser_menu_find_in_page">Найти на странице</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Приватная вкладка</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Новая вкладка</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">В коллекцию</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -375,6 +373,12 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Коллекция дополнений была изменена. Закрываем приложение, чтобы применить изменения…</string>
 
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Дополнение не поддерживается</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Дополнение уже установлено</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Синхронизировать</string>
@@ -561,7 +565,7 @@
     <string name="recently_closed_tab">%d вкладка</string>
 
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
-    <string name="recently_closed_empty_message">Здесь нет недавно закрытых вкладок</string>
+    <string name="recently_closed_empty_message">Нет недавно закрытых вкладок</string>
 
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
@@ -626,7 +630,7 @@
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Переключить режим просмотра</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
-    <string name="tab_tray_multiselect_menu_item_bookmark">Закладка</string>
+    <string name="tab_tray_multiselect_menu_item_bookmark">Добавить в закладки</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Закрыть</string>
     <!-- Content description for tabs tray multiselect share button -->
@@ -734,18 +738,22 @@
     <string name="download_delete_all">Удалить загрузки</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Вы уверены, что хотите удалить свои загрузки?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Загрузки удалены</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Загрузки удалены</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Файл %1$s удалён</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Здесь ещё нет загрузок</string>
+    <string name="download_empty_message_1">Нет загруженных файлов</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Выбрано: %1$d</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Открыть</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Удалить</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Удалить</string>
 
 
     <!-- Crashes -->
@@ -779,7 +787,7 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s удалит выбранные элементы.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">%1$s удалён</string>
+    <string name="bookmark_delete_folder_snackbar">%1$s удалена</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Создать папку</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -872,6 +880,8 @@
     <string name="preference_phone_feature_notification">Уведомления</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Постоянное хранилище</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Защищённое DRM содержимое</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Всегда спрашивать</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1162,7 +1172,7 @@
     <string name="tip_firefox_preview_moved_description_preview_not_installed">Это приложение больше не будет получать обновлений безопасности. Загрузите новый Nightly и прекратите использование этого приложения.
         \n\nЧтобы переместить ваши закладки, логины и историю в другое приложение, создайте аккаунт Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Получить новый Nightly</string>
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Загрузить новый Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1689,12 +1699,12 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Достигнут лимит топа сайтов</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Чтобы добавить новый сайт в топ, удалите другой. Нажмите и удерживайте карточку с сайтом, затем откройте меню и нажмите удалить.</string>
+    <string name="top_sites_max_limit_content_2">Чтобы добавить новый сайт в топ, удалите другой. Нажмите и удерживайте карточку с сайтом, а затем нажмите «Удалить».</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, понятно</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Показать самые посещаемые сайты</string>
+    <string name="top_sites_toggle_top_frecent_sites">Показывать самые посещаемые сайты</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Имя</string>
@@ -1713,7 +1723,7 @@
     <string name="onboarding_firefox_account_header">Получите максимум от %s.</string>
 
     <!-- Content description radio buttons with a link to more information -->
-    <string name="radio_preference_info_content_description">Щёлкните, чтобы узнать больше</string>
+    <string name="radio_preference_info_content_description">Нажмите, чтобы узнать больше</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Собирайте то, что важно для вас</string>

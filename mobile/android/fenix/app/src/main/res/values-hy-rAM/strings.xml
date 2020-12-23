@@ -155,8 +155,6 @@
     <string name="browser_menu_find_in_page">Գտնել էջում</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Գաղտնի ներդիր</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Նոր ներդիր</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Պահպանել հավաքածուում</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -363,6 +361,12 @@
     <string name="customize_addon_collection_user_hint">Հավաքածուի սեփականատեր (օգտվողի ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Հավելումների հավաքածուն փոփոխվել է: Հավելվածը փակելիս փոփոխությունները կգործադրվեն:</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Հավելումը չի աջակցվում</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Հավելումն արդեն տեղադրված է</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

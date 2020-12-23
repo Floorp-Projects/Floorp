@@ -100,6 +100,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Ignorer</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Endre utsjånad av opne faner. Gå til innstillingar og vel rutenett under fanevising.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Gå til Innstillingar</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->

@@ -146,12 +146,12 @@
     <string name="browser_menu_install_on_homescreen">Instalar</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Llingüetes sincronizaes</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Resincronizar</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page">Alcontrar na páxina</string>
+    <string name="browser_menu_find_in_page">Atopar na páxina</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Llingüeta privada</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Llingüeta nueva</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Guardar nuna coleición</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -178,7 +178,7 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Nun pue coneutase porque nun se reconoz l\'esquema de la URL.</string>
+    <string name="unknown_scheme_error_message">Nun pue conectase porque nun se reconoz l\'esquema de la URL.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -215,6 +215,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Deprender más</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Abrir nuna llingüeta nueva de Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Buscar</string>
 
@@ -340,11 +343,19 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Avisos</string>
 
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Aceutar</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Encaboxar</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Modificóse la coleición de complementos. L\'aplicación va zarrase p\'aplicar los cambeos…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">El complementu nun ta sofitáu</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">El complementu yá ta instaláu</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -438,7 +449,7 @@
     <string name="preferences_sync">Activación de Sync</string>
 
     <!-- Preference for reconnecting to FxA sync -->
-    <string name="preferences_sync_sign_in_to_reconnect">Aniciar sesión pa reconeutar</string>
+    <string name="preferences_sync_sign_in_to_reconnect">Aniciar sesión pa reconectar</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Desaniciar la cuenta</string>
 
@@ -516,7 +527,7 @@
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Llingüetes</string>
     <!-- Title of preference that allows a user to specify the tab view -->
-    <string name="preferences_tab_view">Llista de les llinguüetes</string>
+    <string name="preferences_tab_view">Llista de llingüetes</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">En llista</string>
     <!-- Option for a grid tab view -->
@@ -553,8 +564,12 @@
     <string name="add_tab">Amestar una llingüeta</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">En privao</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Llingüetes abiertes</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Guardar nuna coleición</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Esbillar</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Compartir toles llingüetes</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -606,7 +621,11 @@
     <string name="collection_rename">Renomar la coleición</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Abrir lo qu\'heba</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Nome de la coleición</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Renomar</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Desaniciar</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -626,6 +645,8 @@
     <string name="history_delete_multiple_items_snackbar">Desaniciáronse elementos del historial</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Desanicióse %1$s</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Llimpiar</string>
     <!-- History overflow menu copy button -->
     <string name="history_menu_copy_button">Copiar</string>
     <!-- History overflow menu share button -->
@@ -658,8 +679,14 @@
     <string name="download_delete_all">Desaniciar les descargues</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">¿De xuru que quies llimpiar les descargues?</string>
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Equí nun hai descargues</string>
+
+
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Desaniciáronse les descargues</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Desanicióse %1$s</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Desaniciar</string>
 
 
     <!-- Crashes -->
@@ -768,10 +795,14 @@
     <string name="preference_phone_feature_notification">Avisos</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Almacenamientu permanente</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Conteníu con DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Entrugar pa permitir</string>
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Blóquiase</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Permítese</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Blóquiase por Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
@@ -873,7 +904,7 @@
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Unviu a un preséu</string>
     <!-- Text for the warning message on the Add new device screen -->
-    <string name="sync_add_new_device_message">Nun hai preseos coneutaos</string>
+    <string name="sync_add_new_device_message">Nun hai preseos conectaos</string>
     <!-- Text for the button to learn about sending tabs -->
     <string name="sync_add_new_device_learn_button">Deprender tocante al unviu de llingüetes…</string>
     <!-- Text for the button to connect another device -->
@@ -904,6 +935,12 @@
     <string name="snackbar_tab_closed">Zarróse la llingüeta</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Zarráronse les llingüetes</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">¡Zarráronse les llingüetes!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">¡Guardáronse los marcadores!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Ver</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">¡Amestóse a los sitios destacaos!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -954,7 +991,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Tamañu de fontes automáticu</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">El tamañu de les fontes van casar colos tos axustes d\'Android. Desactiva esta opción pa xestionar esi tamañu equí.</string>
+    <string name="preference_accessibility_auto_size_summary">El tamañu de les fontes va casar colos tos axustes d\'Android. Desactiva esta opción pa xestionar esi tamañu equí.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Desaniciu de los datos de restolar</string>
@@ -1154,7 +1191,7 @@
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s va dexar de sincronizase cola to cuenta mas nun va desaniciar nengún datu d\'esti preséu.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_disconnect">Desconeutar</string>
+    <string name="sign_out_disconnect">Desconectar</string>
 
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Encaboxar</string>
@@ -1332,7 +1369,7 @@
     <!-- Syncing saved logins in Fenix is off -->
     <string name="preferences_passwords_sync_logins_off">Non</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Calca equí pa reconeutar</string>
+    <string name="preferences_passwords_sync_logins_reconnect">Calca equí pa reconectar</string>
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Anicia sesión en Sync</string>
     <!-- Preference to access list of saved logins -->
@@ -1454,7 +1491,7 @@
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Comprueba que la cadena de busca concase col formatu del exemplu</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
-    <string name="search_add_custom_engine_error_cannot_reach">Fallu al coneutar con «%s»</string>
+    <string name="search_add_custom_engine_error_cannot_reach">Fallu al conectar con «%s»</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">Creóse %s</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1556,10 +1593,17 @@
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Amosar los sitios más visitaos</string>
 
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Nome</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Nome del sitiu destacáu</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Aceutar</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Encaboxar</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Desaniciar</string>
 
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->

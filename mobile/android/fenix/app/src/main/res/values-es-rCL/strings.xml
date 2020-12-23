@@ -153,8 +153,6 @@
     <string name="browser_menu_find_in_page">Buscar en la página</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Pestaña privada</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nueva pestaña</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Guardar en la colección</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -361,6 +359,12 @@
     <string name="customize_addon_collection_user_hint">Dueño de la colección (ID de usuario)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Colección de complementos modificada. Cerrando la aplicación para aplicar los cambios…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Complemento no compatible</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Complemento ya está instalado</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -718,18 +722,22 @@
     <string name="download_delete_all">Eliminar descargas</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">¿De verdad quieres limpiar tus descargas?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Descargas eliminadas</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Descargas removidas</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s removido</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">No hay descargas aquí</string>
+    <string name="download_empty_message_1">No hay archivos descargados</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d seleccionadas</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Abrir</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Eliminar</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Remover</string>
 
 
     <!-- Crashes -->
@@ -853,6 +861,8 @@
     <string name="preference_phone_feature_notification">Notificación</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Almacenamiento persistente</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Contenido controlado por DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Pedir permiso</string>
     <!-- Label that indicates that a permission must be blocked -->

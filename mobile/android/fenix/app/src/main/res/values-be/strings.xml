@@ -152,8 +152,6 @@
     <string name="browser_menu_find_in_page">Знайсці на старонцы</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Прыватная картка</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Новая картка</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Захаваць у калекцыі</string>
 
@@ -361,6 +359,12 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Калекцыя дадаткаў зменена. Выхад з праграмы, каб прымяніць змены…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Дадатак не падтрымліваецца</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Дадатак ужо ўсталяваны</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -724,10 +728,12 @@
     <string name="download_delete_all">Выдаліць сцягванні</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Вы сапраўды хочаце выдаліць свае сцягванні?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Сцягванні выдалены</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Сцягванні выдалены</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Выдалена %1$s</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Тут яшчэ няма спамповак</string>
+    <string name="download_empty_message_1">Няма сцягнутых файлаў</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Вылучана: %1$d</string>
@@ -735,8 +741,10 @@
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Адкрыць</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Выдаліць</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Выдаліць</string>
 
 
     <!-- Crashes -->
@@ -864,6 +872,8 @@
     <string name="preference_phone_feature_notification">Абвестка</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Пастаяннае сховішча</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Змесціва пад DRM кантролем</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Запытваць дазвол</string>
     <!-- Label that indicates that a permission must be blocked -->

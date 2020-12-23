@@ -157,8 +157,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_find_in_page">Nadi deg usebter</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Iccer uslig</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Iccer amaynut</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Sekles ɣer tegrumma</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -367,6 +365,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="customize_addon_collection_user_hint">Bab n tegrumma (ID n useqdac)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Tagrumma n yizegrar tettwabeddel. Ffeɣ seg usnas akken ad ddun  yibeddilen…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Azegrir ur yettusefrak ara</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Azegrir yettusebded yakan</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -729,10 +733,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="download_delete_all">Kkes isadaren</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">D tidet tebɣiḍ ad tsefḍeḍ isadaren?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">Isadaren ttwakksen</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Isadaren ttwakksen</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Yettwakkes %1$s</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Ulac isidar da</string>
+    <string name="download_empty_message_1">Ulac ifuyla i d-yettusadren</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d yettwafren</string>
@@ -740,8 +746,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Ldi</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Kkes</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Kkes</string>
 
 
     <!-- Crashes -->
@@ -867,6 +875,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_phone_feature_notification">Alɣu</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Aklas imezgi</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Agbur yettwaḥerzen s DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Suter asireg</string>
     <!-- Label that indicates that a permission must be blocked -->

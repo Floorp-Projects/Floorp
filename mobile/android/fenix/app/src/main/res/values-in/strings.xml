@@ -156,8 +156,6 @@
     <string name="browser_menu_find_in_page">Temukan di laman</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Tab pribadi</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Tab baru</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Simpan ke koleksi</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -371,6 +369,12 @@
     <string name="customize_addon_collection_user_hint">Pemilik koleksi (ID Pengguna)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Koleksi pengaya dimodifikasi. Keluar dari aplikasi untuk menerapkan pengubahan…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Pengaya tidak didukung</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Pengaya telah didukung</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

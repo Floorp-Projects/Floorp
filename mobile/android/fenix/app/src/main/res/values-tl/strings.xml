@@ -58,6 +58,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Alisin</string>
 
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Pumunta sa settings</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_grid_view_banner_negative_button_text">Alisin</string>
 
@@ -108,8 +110,6 @@
     <string name="browser_menu_find_in_page">Hanapin sa pahina</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Pribadong tab</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Bagong tab</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">i-Save sa koleksyon</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -133,6 +133,9 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Itsura</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Mamili ng wika</string>
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Hanapin</string>
 
@@ -244,9 +247,13 @@
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Marketing data</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Mga pag-aaral</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Mga eksperimento</string>
 
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Crash reporter</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Mozilla location service</string>
 
@@ -313,18 +320,38 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grid</string>
 
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Isara ang mga tab</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Buksan ang mga tab</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Magdagdag ng Tab</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Pribado</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Buksan ang mga Tab</string>
     <!-- Text shown in the menu for the collection selector -->
     <string name="tab_tray_menu_select">Pumili</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Bagong Tab</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Bookmark</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Isara</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Ibahagi ang mga tab</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Ibahagi ang tab</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Burahin</string>
 
 
     <!-- Button in the current session menu. Saves the session when pressed -->
     <string name="current_session_save">i-Save</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Ibahagi</string>
     <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Alisin</string>
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
@@ -335,6 +362,8 @@
     <string name="history_menu_copy_button">Kopyahin</string>
 
 
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Ibahagi</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Ngayon</string>
     <!-- Text for the header that groups the history for yesterday -->
@@ -355,6 +384,8 @@
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Kopyahin</string>
 
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Ibahagi</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Burahin</string>
     <!--Bookmark overflow menu save button -->
@@ -385,6 +416,14 @@
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Isara</string>
 
+    <!-- Share screen header -->
+    <string name="share_header_2">Ibahagi</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Ibahagi</string>
+
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Tingnan</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Kopyahin ang URL</string>
 

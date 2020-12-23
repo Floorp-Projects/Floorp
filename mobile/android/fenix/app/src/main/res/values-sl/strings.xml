@@ -155,8 +155,6 @@
     <string name="browser_menu_find_in_page">Najdi na strani</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Zasebni zavihek</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nov zavihek</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Shrani v zbirko</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -365,6 +363,12 @@
     <string name="customize_addon_collection_user_hint">Lastnik zbirke (ID uporabnika)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Zbirka dodatkov je spremenjena. Zapiranje aplikacije za uveljavitev sprememb …</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Dodatek ni podprt</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Dodatek je že nameščen</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

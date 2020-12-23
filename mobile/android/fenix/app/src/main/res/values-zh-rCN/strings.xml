@@ -741,18 +741,22 @@
     <string name="download_delete_all">删除下载项</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">您确定要清除下载项吗？</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">下载项已删除</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">下载项已移除</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">已移除 %1$s</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">暂无下载项</string>
+    <string name="download_empty_message_1">暂无下载的文件</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">已选择 %1$d 个下载项</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">打开</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">删除</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">移除</string>
 
 
     <!-- Crashes -->
@@ -881,6 +885,8 @@
     <string name="preference_phone_feature_notification">通知</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">持久存储</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">受 DRM 控制的内容</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">始终询问</string>
     <!-- Label that indicates that a permission must be blocked -->
