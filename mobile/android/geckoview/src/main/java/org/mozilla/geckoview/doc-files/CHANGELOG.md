@@ -17,6 +17,13 @@ exclude: true
 - Removed deprecated [`ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`].
   Use [`ContentDelegate#onExternalResponse(GeckoSession, WebResponse)`][82.2] instead.
   ([bug 1665157]({{bugzilla}}1665157))
+- Added [`WebExtension.DownloadDelegate`][86.1] and  that can be used to
+  implement the WebExtension `downloads` API.
+  ([bug 1656336]({{bugzilla}}1656336))
+- Added [`WebRequest.Builder#body(@Nullable String)`][86.2] which converts a string to direct byte buffer.
+
+[86.1]: {{javadoc_uri}}/WebExtension.DownloadDelegate.html
+[86.2]: {{javadoc_uri}}/WebRequest.Builder#body-java.lang.String-
 
 ## v85
 - Added [`WebExtension.BrowsingDataDelegate`][85.1] that can be used to
@@ -860,4 +867,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 71df230eba3e3e1bda47ea54767d81aaf592b115
+[api-version]: 604cbae58ecf5cd250c1ee9e75dadf626d601817

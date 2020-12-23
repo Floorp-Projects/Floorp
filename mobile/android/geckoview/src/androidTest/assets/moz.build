@@ -46,6 +46,14 @@ addons = {
         "page.html",
         "manifest.json",
     ],
+    "download-flags-true": [
+        "download.js",
+        "manifest.json",
+    ],
+    "download-flags-false": [
+        "download.js",
+        "manifest.json",
+    ],
 }
 
 for addon, files in addons.items():

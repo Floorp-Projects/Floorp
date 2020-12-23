@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "Download",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "download-flags-true@tests.mozilla.org"
+    }
+  },
+  "description": "Downloads a file",
+  "background": {
+    "scripts": ["download.js"]
+  },
+  "permissions": [
+    "downloads"
+  ]
+}
