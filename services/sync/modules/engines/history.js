@@ -619,14 +619,6 @@ HistoryTracker.prototype = {
     }
   },
 
-  onClearHistory() {
-    this._log.trace("onClearHistory");
-    // Note that we're going to trigger a sync, but none of the cleared
-    // pages are tracked, so the deletions will not be propagated.
-    // See Bug 578694.
-    this.score += SCORE_INCREMENT_XLARGE;
-  },
-
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onBeforeDeleteURI() {},

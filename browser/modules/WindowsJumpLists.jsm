@@ -70,22 +70,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gHistoryObserver", function() {
-  return Object.freeze({
-    onClearHistory() {
-      WinTaskbarJumpList.update();
-    },
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onVisits() {},
-    onFrecencyChanged() {},
-    onManyFrecenciesChanged() {},
-    onDeleteURI() {},
-    onDeleteVisits() {},
-    QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
-  });
-});
-
 /**
  * Global functions
  */
@@ -534,8 +518,6 @@ var WinTaskbarJumpList = {
     Services.obs.addObserver(this, "profile-before-change");
     Services.obs.addObserver(this, "browser:purge-session-history");
     _prefs.addObserver("", this);
-    PlacesUtils.history.addObserver(gHistoryObserver, false);
-
     this._placesObserver = new PlacesWeakCallbackWrapper(
       this.update.bind(this)
     );
@@ -549,8 +531,6 @@ var WinTaskbarJumpList = {
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
-    PlacesUtils.history.removeObserver(gHistoryObserver);
-
     if (this._placesObserver) {
       PlacesUtils.observers.removeListener(
         ["history-cleared"],

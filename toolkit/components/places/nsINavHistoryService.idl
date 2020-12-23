@@ -641,11 +641,6 @@ interface nsINavHistoryObserver : nsISupports
                    in unsigned short aReason);
 
   /**
-   * Notification that all of history is being deleted.
-   */
-  void onClearHistory();
-
-  /**
    * Called when some visits of an history entry are expired.
    *
    * @param aURI
