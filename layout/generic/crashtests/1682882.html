@@ -1,0 +1,27 @@
+<html>
+<head>
+    <style id='style'>
+        * {
+            all: revert;
+        }
+    </style>
+    <script>
+      window.addEventListener('load', () => {
+        const style_0 = document.getElementById('style')
+        const style_1 = document.createElement('style')
+        document.head.appendChild(style_1)
+        style_1.sheet.insertRule(`* { position: absolute; scroll-padding-inline: 3195984415.1022196vh }`, 0)
+        style_1.sheet.insertRule(`*::first-line { border-left-color: transparent }`, 0)
+        style_1.sheet.insertRule(`* ~ * { display: contents }`, 0)
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', 'FOOBAR', false)
+        xhr.send()
+        style_0.innerHTML = '<div></div>'
+      })
+    </script>
+</head>
+<ol hidden>
+    <li>
+    <li contenteditable='true'></li>
+</ol>
+</html>

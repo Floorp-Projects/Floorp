@@ -202,7 +202,9 @@ ComputedStyle* nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(
 
   Element* parentElement =
       mContent ? mContent->GetFlattenedTreeParentElement() : nullptr;
-  if (parentElement && Servo_Element_IsDisplayContents(parentElement)) {
+  // See the similar code in nsIFrame::DoGetParentComputedStyle.
+  if (parentElement && MOZ_LIKELY(parentElement->HasServoData()) &&
+      Servo_Element_IsDisplayContents(parentElement)) {
     RefPtr<ComputedStyle> style =
         ServoStyleSet::ResolveServoStyle(*parentElement);
     *aProviderFrame = nullptr;
