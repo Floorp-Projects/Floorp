@@ -47,18 +47,32 @@ class IdleSchedulerParent final
 
   static int32_t ActiveCount();
   static void Schedule(IdleSchedulerParent* aRequester);
+  static bool HasSpareCycles(int32_t aActiveCount);
+  using PIdleSchedulerParent::SendIdleTime;
+  void SendIdleTime();
 
   static void EnsureStarvationTimer();
   static void StarvationCallback(nsITimer* aTimer, void* aData);
 
   uint64_t mCurrentRequestId = 0;
-  // For now we don't really use idle budget for scheduling.
+  // For now we don't really use idle budget for scheduling.  Zero if the
+  // process isn't requestiong or running an idle task.
   TimeDuration mRequestedIdleBudget;
 
   // Counting all the prioritized operations the process is doing.
   uint32_t mRunningPrioritizedOperation = 0;
 
   uint32_t mChildId = 0;
+
+  // Current state, only one of these may be true at a time.
+  bool IsWaitingForIdle() const {
+    MOZ_ASSERT_IF(isInList(), mRequestedIdleBudget);
+    return isInList();
+  }
+  bool IsDoingIdleTask() const { return !isInList() && mRequestedIdleBudget; }
+  bool IsNotDoingIdleTask() const {
+    return !isInList() && !mRequestedIdleBudget;
+  }
 
   // Shared memory for counting how many child processes are running
   // tasks. This memory is shared across all the child processes.
@@ -74,21 +88,22 @@ class IdleSchedulerParent final
   static std::bitset<NS_IDLE_SCHEDULER_COUNTER_ARRAY_LENGHT>
       sInUseChildCounters;
 
-  // Child is either running non-idle tasks or doesn't have any tasks to run.
-  static LinkedList<IdleSchedulerParent> sDefault;
-
-  // Child has requested idle time, but hasn't got it yet.
+  // Processes on this list have requested idle time, but haven't got it yet.
+  // Their mRequestedIdleBudget field is non-zero.
+  // Child processes not on this list have either been granted their request for
+  // idle time (mRequestedIdleBudget is non-zero) or have not requested idle
+  // time ever or since they last finished an idle task or (mRequestedIdleBudget
+  // is zero),
   static LinkedList<IdleSchedulerParent> sWaitingForIdle;
 
-  // Child has gotten idle time and is running idle or normal tasks.
-  static LinkedList<IdleSchedulerParent> sIdle;
-
-  static AutoTArray<IdleSchedulerParent*, 8>* sPrioritized;
   static Atomic<int32_t> sCPUsForChildProcesses;
 
   // Counting all the child processes which have at least one prioritized
   // operation.
   static uint32_t sChildProcessesRunningPrioritizedOperation;
+
+  // When this hits zero, it's time to free the shared memory and pack up.
+  static uint32_t sChildProcessesAlive;
 
   static nsITimer* sStarvationPreventer;
 };

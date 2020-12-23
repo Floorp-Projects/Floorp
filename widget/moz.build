@@ -346,7 +346,7 @@ else:
         "headless/HeadlessWidgetTypes.ipdlh",
     ]
 
-IPDL_SOURCES += [
+PREPROCESSED_IPDL_SOURCES += [
     "LookAndFeelTypes.ipdlh",
 ]
 

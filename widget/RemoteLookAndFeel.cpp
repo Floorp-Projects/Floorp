@@ -12,6 +12,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPrefs_widget.h"
+#include "nsLookAndFeel.h"
 #include "nsXULAppAPI.h"
 
 #include <limits>
@@ -20,19 +22,35 @@
 
 namespace mozilla::widget {
 
-RemoteLookAndFeel::RemoteLookAndFeel(FullLookAndFeel&& aTables)
-    : mTables(std::move(aTables)) {
+RemoteLookAndFeel::RemoteLookAndFeel(FullLookAndFeel&& aData)
+    : mTables(std::move(aData.tables())) {
   MOZ_ASSERT(XRE_IsContentProcess(),
              "Only content processes should be using a RemoteLookAndFeel");
+
+#ifdef MOZ_WIDGET_GTK
+  if (!StaticPrefs::widget_disable_native_theme_for_content()) {
+    // Configure the theme in this content process with the Gtk theme that was
+    // chosen by WithThemeConfiguredForContent in the parent process.
+    nsLookAndFeel::ConfigureTheme(aData.theme());
+  }
+#endif
 }
 
 RemoteLookAndFeel::~RemoteLookAndFeel() = default;
 
-void RemoteLookAndFeel::SetDataImpl(FullLookAndFeel&& aTables) {
+void RemoteLookAndFeel::SetDataImpl(FullLookAndFeel&& aData) {
   MOZ_ASSERT(XRE_IsContentProcess(),
              "Only content processes should be using a RemoteLookAndFeel");
   MOZ_ASSERT(NS_IsMainThread());
-  mTables = std::move(aTables);
+  mTables = std::move(aData.tables());
+
+#ifdef MOZ_WIDGET_GTK
+  if (!StaticPrefs::widget_disable_native_theme_for_content()) {
+    // Configure the theme in this content process with the Gtk theme that was
+    // chosen by WithThemeConfiguredForContent in the parent process.
+    nsLookAndFeel::ConfigureTheme(aData.theme());
+  }
+#endif
 }
 
 namespace {
@@ -130,14 +148,14 @@ const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Only parent processes should be extracting LookAndFeel data");
 
-  if (sCachedTables) {
-    return sCachedTables;
+  if (sCachedLookAndFeelData) {
+    return sCachedLookAndFeelData;
   }
 
   static bool sInitialized = false;
   if (!sInitialized) {
     sInitialized = true;
-    ClearOnShutdown(&sCachedTables);
+    ClearOnShutdown(&sCachedLookAndFeelData);
   }
 
   FullLookAndFeel* lf = new FullLookAndFeel{};
@@ -148,7 +166,7 @@ const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
   impl->NativeGetInt(IntID::SystemUsesDarkTheme, darkTheme);
   impl->NativeGetInt(IntID::UseAccessibilityTheme, accessibilityTheme);
 
-  impl->WithThemeConfiguredForContent([&]() {
+  impl->WithThemeConfiguredForContent([&](const LookAndFeelTheme& aTheme) {
     for (auto id : MakeEnumeratedRange(IntID::End)) {
       int32_t theInt;
       nsresult rv;
@@ -172,21 +190,21 @@ const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
           rv = impl->NativeGetInt(id, theInt);
           break;
       }
-      AddToMap(&lf->ints(), &lf->intMap(),
+      AddToMap(&lf->tables().ints(), &lf->tables().intMap(),
                NS_SUCCEEDED(rv) ? Some(theInt) : Nothing{});
     }
 
     for (auto id : MakeEnumeratedRange(FloatID::End)) {
       float theFloat;
       nsresult rv = impl->NativeGetFloat(id, theFloat);
-      AddToMap(&lf->floats(), &lf->floatMap(),
+      AddToMap(&lf->tables().floats(), &lf->tables().floatMap(),
                NS_SUCCEEDED(rv) ? Some(theFloat) : Nothing{});
     }
 
     for (auto id : MakeEnumeratedRange(ColorID::End)) {
       nscolor theColor;
       nsresult rv = impl->NativeGetColor(id, theColor);
-      AddToMap(&lf->colors(), &lf->colorMap(),
+      AddToMap(&lf->tables().colors(), &lf->tables().colorMap(),
                NS_SUCCEEDED(rv) ? Some(theColor) : Nothing{});
     }
 
@@ -219,25 +237,29 @@ const FullLookAndFeel* RemoteLookAndFeel::ExtractData() {
 #endif
         maybeFont = Some(std::move(font));
       }
-      AddToMap(&lf->fonts(), &lf->fontMap(), std::move(maybeFont));
+      AddToMap(&lf->tables().fonts(), &lf->tables().fontMap(),
+               std::move(maybeFont));
     }
 
-    lf->passwordChar() = impl->GetPasswordCharacterImpl();
-    lf->passwordEcho() = impl->GetEchoPasswordImpl();
+    lf->tables().passwordChar() = impl->GetPasswordCharacterImpl();
+    lf->tables().passwordEcho() = impl->GetEchoPasswordImpl();
+#ifdef MOZ_WIDGET_GTK
+    lf->theme() = aTheme;
+#endif
   });
 
-  // This assignment to sCachedTables must be done after the
+  // This assignment to sCachedLookAndFeelData must be done after the
   // WithThemeConfiguredForContent call, since it can end up calling RefreshImpl
   // on the LookAndFeel, which will clear out sCachedTables.
-  sCachedTables = lf;
-  return sCachedTables;
+  sCachedLookAndFeelData = lf;
+  return sCachedLookAndFeelData;
 }
 
 void RemoteLookAndFeel::ClearCachedData() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  sCachedTables = nullptr;
+  sCachedLookAndFeelData = nullptr;
 }
 
-StaticAutoPtr<FullLookAndFeel> RemoteLookAndFeel::sCachedTables;
+StaticAutoPtr<FullLookAndFeel> RemoteLookAndFeel::sCachedLookAndFeelData;
 
 }  // namespace mozilla::widget
