@@ -1521,14 +1521,22 @@ impl Device {
             supports_extension(&extensions, "GL_ARB_copy_image")
         };
 
-        let supports_buffer_storage = supports_extension(&extensions, "GL_EXT_buffer_storage") ||
-            supports_extension(&extensions, "GL_ARB_buffer_storage");
+        let is_adreno = renderer_name.starts_with("Adreno");
+
+        // There appears to be a driver bug on older versions of the Adreno
+        // driver which prevents usage of persistenly mapped buffers.
+        // See bugs 1678585 and 1683936.
+        // TODO: only disable feature for affected driver versions.
+        let supports_buffer_storage = if is_adreno {
+            false
+        } else {
+            supports_extension(&extensions, "GL_EXT_buffer_storage") ||
+            supports_extension(&extensions, "GL_ARB_buffer_storage")
+        };
 
         // Due to a bug on Adreno devices, blitting to an fbo bound to
         // a non-0th layer of a texture array is not supported.
         let supports_blit_to_texture_array = !renderer_name.starts_with("Adreno");
-
-        let is_adreno = renderer_name.starts_with("Adreno");
 
         // KHR_blend_equation_advanced renders incorrectly on Adreno
         // devices. This has only been confirmed up to Adreno 5xx, and has been
