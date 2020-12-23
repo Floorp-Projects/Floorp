@@ -70,7 +70,6 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
   NS_IMETHOD OnManyFrecenciesChanged() __VA_ARGS__;                    \
   NS_IMETHOD OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,        \
                          uint16_t aReason) __VA_ARGS__;                \
-  NS_IMETHOD OnClearHistory() __VA_ARGS__;                             \
   NS_IMETHOD OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,        \
                             const nsACString& aGUID, uint16_t aReason, \
                             uint32_t aTransitionType) __VA_ARGS__;
@@ -710,6 +709,7 @@ class nsNavHistoryQueryResultNode final
                    uint32_t aTransitionType, bool aHidden, uint32_t* aAdded);
   nsresult OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
                           const nsACString& aGUID);
+  nsresult OnClearHistory();
   virtual void OnRemoving() override;
 
  public:

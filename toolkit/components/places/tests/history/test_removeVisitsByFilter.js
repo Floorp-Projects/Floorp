@@ -148,9 +148,6 @@ add_task(async function test_removeVisitsByFilter() {
       deferred: PromiseUtils.defer(),
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onClearHistory() {
-        this.deferred.reject("Unexpected call to onClearHistory");
-      },
       onFrecencyChanged(aURI) {
         info("onFrecencyChanged " + aURI.spec);
         let deferred = frecencyChangePromises.get(aURI.spec);

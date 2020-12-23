@@ -553,12 +553,6 @@ nsPlacesExpiration.prototype = {
     } else if (aTopic == TOPIC_TESTING_MODE) {
       this._testingMode = true;
     } else if (aTopic == PlacesUtils.TOPIC_INIT_COMPLETE) {
-      // Ideally we'd add this observer only when notifications start being
-      // triggered. However, that's difficult to work out, so we do it on
-      // TOPIC_INIT_COMPLETE which means we have to take the hit of initializing
-      // this service slightly earlier.
-      PlacesUtils.history.addObserver(this, true);
-
       const placesObserver = new PlacesWeakCallbackWrapper(
         // History status is clean after a clear history.
         () => {
@@ -568,36 +562,6 @@ nsPlacesExpiration.prototype = {
       PlacesObservers.addListener(["history-cleared"], placesObserver);
     }
   },
-
-  // nsINavHistoryObserver
-
-  _inBatchMode: false,
-  onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {
-    this._inBatchMode = true;
-
-    // We do not want to expire while we are doing batch work.
-    if (this._timer) {
-      this._timer.cancel();
-      this._timer = null;
-    }
-  },
-
-  onEndUpdateBatch: function PEX_onEndUpdateBatch() {
-    this._inBatchMode = false;
-
-    // Restore timer.
-    if (!this._timer) {
-      this._newTimer();
-    }
-  },
-
-  onClearHistory: function PEX_onClearHistory() {
-    // History status is clean after a clear history.
-    this.status = STATUS.CLEAN;
-  },
-
-  onDeleteURI() {},
-  onDeleteVisits() {},
 
   // nsITimerCallback
 
@@ -802,10 +766,6 @@ nsPlacesExpiration.prototype = {
    *        LIMIT const for values.
    */
   async _expire(aAction, aLimit) {
-    // Skip expiration during batch mode.
-    if (this._inBatchMode) {
-      return;
-    }
     // Don't try to further expire after shutdown.
     if (this._shuttingDown && aAction != ACTION.SHUTDOWN_DIRTY) {
       return;

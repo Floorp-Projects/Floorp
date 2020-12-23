@@ -343,9 +343,6 @@ var DownloadCache = {
   onDeleteURI(uri) {
     this._data.delete(uri.spec);
   },
-  onClearHistory() {
-    this._data.clear();
-  },
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onFrecencyChanged() {},

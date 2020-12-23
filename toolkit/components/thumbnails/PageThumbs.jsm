@@ -883,10 +883,6 @@ var PageThumbsHistoryObserver = {
     PageThumbsStorage.remove(aURI.spec);
   },
 
-  onClearHistory() {
-    PageThumbsStorage.wipe();
-  },
-
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onDeleteVisits() {},

@@ -84,9 +84,6 @@ add_task(async function test_remove_many() {
     onVisits(aVisits) {
       Assert.ok(false, "Unexpected call to onVisits " + aVisits.length);
     },
-    onClearHistory() {
-      Assert.ok(false, "Unexpected call to onClearHistory");
-    },
     onFrecencyChanged(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);

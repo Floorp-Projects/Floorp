@@ -464,9 +464,6 @@ function getObserverPromise(bookmarkedUri) {
     observer = {
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onClearHistory() {
-        reject(new Error("Unexpected call to onClearHistory"));
-      },
       onFrecencyChanged(aURI) {},
       onManyFrecenciesChanged() {},
       onDeleteURI(aURI) {
