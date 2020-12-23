@@ -918,6 +918,8 @@ var clear = async function(db) {
 
   let observers = PlacesUtils.history.getObservers();
   notify(observers, "onClearHistory");
+  PlacesObservers.notifyListeners([new PlacesHistoryCleared()]);
+
   // Notify frecency change observers.
   notify(observers, "onManyFrecenciesChanged");
 
