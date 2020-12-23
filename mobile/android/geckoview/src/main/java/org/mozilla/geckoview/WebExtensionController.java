@@ -40,6 +40,9 @@ public class WebExtensionController {
     private final MultiMap<MessageRecipient, Message> mPendingMessages;
     private final MultiMap<String, Message> mPendingNewTab;
     private final MultiMap<String, Message> mPendingBrowsingData;
+    private final MultiMap<String, Message> mPendingDownload;
+
+    private final HashMap<Integer, WebExtension.Download> mDownloads;
 
     private static class Message {
         final GeckoBundle bundle;
@@ -202,6 +205,23 @@ public class WebExtensionController {
         @Override
         public WebExtension.TabDelegate getTabDelegate() {
             return mListener.getTabDelegate(mExtension);
+        }
+
+        @Override
+        public void onDownloadDelegate(final WebExtension.DownloadDelegate delegate) {
+            mListener.setDownloadDelegate(mExtension, delegate);
+
+            for (final Message message : mPendingDownload.get(mExtension.id)) {
+                WebExtensionController.this.handleMessage(message.event, message.bundle,
+                        message.callback, message.session);
+            }
+
+            mPendingDownload.remove(mExtension.id);
+        }
+
+        @Override
+        public WebExtension.DownloadDelegate getDownloadDelegate() {
+            return mListener.getDownloadDelegate(mExtension);
         }
     }
 
@@ -789,7 +809,9 @@ public class WebExtensionController {
         mPendingMessages = new MultiMap<>();
         mPendingNewTab = new MultiMap<>();
         mPendingBrowsingData = new MultiMap<>();
+        mPendingDownload = new MultiMap<>();
         mExtensions.setObserver(mInternals);
+        mDownloads = new HashMap<>();
     }
 
     /* package */ void registerWebExtension(final WebExtension webExtension) {
@@ -854,6 +876,9 @@ public class WebExtensionController {
                 return;
             } else if ("GeckoView:BrowsingData:Clear".equals(event)) {
                 browsingDataClear(message, extension);
+                return;
+            } else if ("GeckoView:WebExtension:Download".equals(event)) {
+                download(message, extension);
                 return;
             }
             final String nativeApp = bundle.getString("nativeApp");
@@ -1007,6 +1032,38 @@ public class WebExtensionController {
         message.callback.resolveTo(response);
     }
 
+
+    /* package */ void download(final Message message, final WebExtension extension) {
+        final WebExtension.DownloadDelegate delegate = mListener.getDownloadDelegate(extension);
+        if (delegate == null) {
+            mPendingDownload.add(extension.id, message);
+            return;
+        }
+
+        final GeckoBundle optionsBundle = message.bundle.getBundle("options");
+
+        WebExtension.DownloadRequest request = WebExtension.DownloadRequest.fromBundle(optionsBundle);
+
+        GeckoResult<WebExtension.Download> result = delegate.onDownload(extension, request);
+        if (result == null) {
+            message.callback.sendError("downloads.download() is not supported");
+            return;
+        }
+        result.then(
+                value -> {
+                    if (value != null) {
+                        message.callback.sendSuccess(value.id);
+                    } else {
+                        message.callback.sendError("downloads.download is not supported");
+                        Log.e(LOGTAG, "onDownload returned invalid null id");
+                    }
+                    return GeckoResult.fromValue(value);
+                },
+                error -> {
+                    message.callback.sendError(error.getCause().getMessage());
+                    return GeckoResult.fromException(error);
+                });
+    }
 
     /* package */ void openOptionsPage(
             final Message message,
@@ -1347,8 +1404,16 @@ public class WebExtensionController {
         return null;
     }
 
-    // TODO: implement bug 1538348
-    /* package */ WebExtension.Download createDownload(final String id) {
-        return null;
+    @Nullable
+    @UiThread
+    public WebExtension.Download createDownload(final int id) {
+        if (mDownloads.containsKey(id)) {
+            throw new IllegalArgumentException("Download with this id already exists");
+        } else {
+            WebExtension.Download download = new WebExtension.Download(id);
+            mDownloads.put(id, download);
+
+            return download;
+        }
     }
 }
