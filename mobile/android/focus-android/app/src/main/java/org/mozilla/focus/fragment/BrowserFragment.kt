@@ -746,7 +746,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         menuView?.visibility = View.VISIBLE
         urlView?.text = session.let {
             val contentState = requireComponents.store.contentState(it.id)
-            if (contentState.isSearch) contentState.searchTerms else contentState.url
+            if (contentState?.isSearch == true) contentState.searchTerms else contentState?.url
         }
     }
 

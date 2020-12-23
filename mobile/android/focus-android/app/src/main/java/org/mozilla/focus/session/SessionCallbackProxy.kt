@@ -85,7 +85,7 @@ class SessionCallbackProxy(
 
     override fun onRequest(isTriggeredByUserGesture: Boolean) {
         val contentState = store.contentState(session.id)
-        if (isTriggeredByUserGesture && contentState.isSearch) {
+        if (isTriggeredByUserGesture && contentState?.isSearch == true) {
             // The user actively navigated away (no redirect) from the search page. Clear the
             // search terms.
             store.dispatch(ContentAction.UpdateSearchTermsAction(session.id, ""))

@@ -9,9 +9,9 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.store.BrowserStore
 
 fun BrowserStore.isSearch(sessionId: String): Boolean {
-    return contentState(sessionId).searchTerms.isNotEmpty()
+    return contentState(sessionId)?.searchTerms?.isNotEmpty() == true
 }
 
-fun BrowserStore.contentState(sessionId: String): ContentState {
-    return state.findTabOrCustomTabOrSelectedTab(sessionId)!!.content
+fun BrowserStore.contentState(sessionId: String): ContentState? {
+    return state.findTabOrCustomTabOrSelectedTab(sessionId)?.content
 }

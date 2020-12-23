@@ -17,7 +17,7 @@ class TelemetrySessionObserver(private val store: BrowserStore) : SessionManager
             SessionState.Source.ACTION_VIEW -> TelemetryWrapper.browseIntentEvent()
             SessionState.Source.ACTION_SEND -> {
                 val contentState = store.contentState(session.id)
-                TelemetryWrapper.shareIntentEvent(contentState.searchTerms.isNotEmpty())
+                TelemetryWrapper.shareIntentEvent(contentState?.searchTerms?.isNotEmpty() == true)
             }
             SessionState.Source.TEXT_SELECTION -> TelemetryWrapper.textSelectionIntentEvent()
             SessionState.Source.HOME_SCREEN -> TelemetryWrapper.openHomescreenShortcutEvent()

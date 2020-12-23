@@ -328,12 +328,14 @@ class UrlInputFragment :
         session?.let {
             val contentState = requireComponents.store.contentState(it.id)
             urlView?.setText(
-                if (contentState.isSearch &&
+                if (contentState?.isSearch == true &&
                     !geckoViewAndDDG &&
                     Features.SEARCH_TERMS_OR_URL
-                )
-                    contentState.searchTerms else
+                ) {
+                    contentState.searchTerms
+                } else {
                     it.url
+                }
             )
 
             clearView?.visibility = View.VISIBLE
