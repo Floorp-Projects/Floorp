@@ -127,7 +127,7 @@ describe("PlacesFeed", () => {
       );
       assert.calledWith(
         global.PlacesUtils.observers.addListener,
-        ["bookmark-added", "bookmark-removed"],
+        ["bookmark-added", "bookmark-removed", "history-cleared"],
         feed.placesObserver.handlePlacesEvent
       );
       assert.calledWith(global.Services.obs.addObserver, feed, BLOCKED_EVENT);
@@ -149,7 +149,7 @@ describe("PlacesFeed", () => {
       );
       assert.calledWith(
         global.PlacesUtils.observers.removeListener,
-        ["bookmark-added", "bookmark-removed"],
+        ["bookmark-added", "bookmark-removed", "history-cleared"],
         feed.placesObserver.handlePlacesEvent
       );
       assert.calledWith(
@@ -849,6 +849,15 @@ describe("PlacesFeed", () => {
       dispatch = sandbox.spy();
       observer = new PlacesObserver(dispatch);
     });
+
+    describe("#history-cleared", () => {
+      it("should dispatch a PLACES_HISTORY_CLEARED action", async () => {
+        const args = [{ type: "history-cleared" }];
+        await observer.handlePlacesEvent(args);
+        assert.calledWith(dispatch, { type: at.PLACES_HISTORY_CLEARED });
+      });
+    });
+
     describe("#bookmark-added", () => {
       it("should dispatch a PLACES_BOOKMARK_ADDED action with the bookmark data - http", async () => {
         const args = [

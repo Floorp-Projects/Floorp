@@ -917,11 +917,10 @@ var clear = async function(db) {
   });
 
   let observers = PlacesUtils.history.getObservers();
-  notify(observers, "onClearHistory");
-  PlacesObservers.notifyListeners([new PlacesHistoryCleared()]);
-
   // Notify frecency change observers.
   notify(observers, "onManyFrecenciesChanged");
+
+  PlacesObservers.notifyListeners([new PlacesHistoryCleared()]);
 
   // Trigger frecency updates for all affected origins.
   await db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);

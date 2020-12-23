@@ -193,6 +193,11 @@ var DownloadCache = {
     this._initializePromise = (async () => {
       PlacesUtils.history.addObserver(this, true);
 
+      const placesObserver = new PlacesWeakCallbackWrapper(
+        this.handlePlacesEvents.bind(this)
+      );
+      PlacesObservers.addListener(["history-cleared"], placesObserver);
+
       let pageAnnos = await PlacesUtils.history.fetchAnnotatedPages([
         METADATA_ANNO,
         DESTINATIONFILEURI_ANNO,
@@ -322,6 +327,17 @@ var DownloadCache = {
     "nsINavHistoryObserver",
     "nsISupportsWeakReference",
   ]),
+
+  handlePlacesEvents(events) {
+    for (const event of events) {
+      switch (event.type) {
+        case "history-cleared": {
+          this._data.clear();
+          break;
+        }
+      }
+    }
+  },
 
   // nsINavHistoryObserver
   onDeleteURI(uri) {
