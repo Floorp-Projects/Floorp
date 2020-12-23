@@ -97,12 +97,19 @@ add_task(async function test_remove_single() {
               );
               break;
             }
+            case "history-cleared": {
+              reject("Unexpected history-cleared event happens");
+              break;
+            }
           }
         }
       };
     });
     PlacesUtils.history.addObserver(observer);
-    PlacesObservers.addListener(["page-title-changed"], placesEventListener);
+    PlacesObservers.addListener(
+      ["page-title-changed", "history-cleared"],
+      placesEventListener
+    );
 
     info("Performing removal");
     let removed = false;
@@ -127,7 +134,10 @@ add_task(async function test_remove_single() {
 
     await promiseObserved;
     PlacesUtils.history.removeObserver(observer);
-    PlacesObservers.removeListener(["page-title-changed"], placesEventListener);
+    PlacesObservers.removeListener(
+      ["page-title-changed", "history-cleared"],
+      placesEventListener
+    );
 
     Assert.equal(visits_in_database(uri), 0, "History entry has disappeared");
     Assert.notEqual(

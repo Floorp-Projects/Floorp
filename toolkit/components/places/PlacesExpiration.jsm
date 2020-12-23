@@ -558,6 +558,14 @@ nsPlacesExpiration.prototype = {
       // TOPIC_INIT_COMPLETE which means we have to take the hit of initializing
       // this service slightly earlier.
       PlacesUtils.history.addObserver(this, true);
+
+      const placesObserver = new PlacesWeakCallbackWrapper(
+        // History status is clean after a clear history.
+        () => {
+          this.status = STATUS.CLEAN;
+        }
+      );
+      PlacesObservers.addListener(["history-cleared"], placesObserver);
     }
   },
 

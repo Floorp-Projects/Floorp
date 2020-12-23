@@ -614,7 +614,7 @@ var PlacesProvider = {
       this.handlePlacesEvents.bind(this)
     );
     PlacesObservers.addListener(
-      ["page-visited", "page-title-changed"],
+      ["page-visited", "page-title-changed", "history-cleared"],
       this._placesObserver
     );
   },
@@ -745,6 +745,10 @@ var PlacesProvider = {
         }
         case "page-title-changed": {
           this.onTitleChanged(event.url, event.title, event.pageGuid);
+          break;
+        }
+        case "history-cleared": {
+          this.onClearHistory();
           break;
         }
       }

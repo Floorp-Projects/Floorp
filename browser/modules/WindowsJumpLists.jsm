@@ -535,6 +535,14 @@ var WinTaskbarJumpList = {
     Services.obs.addObserver(this, "browser:purge-session-history");
     _prefs.addObserver("", this);
     PlacesUtils.history.addObserver(gHistoryObserver, false);
+
+    this._placesObserver = new PlacesWeakCallbackWrapper(
+      this.update.bind(this)
+    );
+    PlacesUtils.observers.addListener(
+      ["history-cleared"],
+      this._placesObserver
+    );
   },
 
   _freeObs: function WTBJL__freeObs() {
@@ -542,6 +550,13 @@ var WinTaskbarJumpList = {
     Services.obs.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
     PlacesUtils.history.removeObserver(gHistoryObserver);
+
+    if (this._placesObserver) {
+      PlacesUtils.observers.removeListener(
+        ["history-cleared"],
+        this._placesObserver
+      );
+    }
   },
 
   _updateTimer: function WTBJL__updateTimer() {
@@ -578,10 +593,6 @@ var WinTaskbarJumpList = {
     this._updateIdleObserver();
     delete this._builder;
   },
-
-  /**
-   * Notification handlers
-   */
 
   notify: function WTBJL_notify(aTimer) {
     // Add idle observer on the first notification so it doesn't hit startup.

@@ -265,10 +265,21 @@ this.history = class extends ExtensionAPI {
             let listener = (event, data) => {
               fire.sync(data);
             };
+            const historyClearedListener = events => {
+              fire.sync({ allHistory: true, urls: [] });
+            };
 
             getHistoryObserver().on("visitRemoved", listener);
+            PlacesUtils.observers.addListener(
+              ["history-cleared"],
+              historyClearedListener
+            );
             return () => {
               getHistoryObserver().off("visitRemoved", listener);
+              PlacesUtils.observers.removeListener(
+                ["history-cleared"],
+                historyClearedListener
+              );
             };
           },
         }).api(),
