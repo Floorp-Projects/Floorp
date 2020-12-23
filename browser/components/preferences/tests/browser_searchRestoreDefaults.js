@@ -105,3 +105,88 @@ add_task(async function test_restoreEnabledOnOpenWithEngineHidden() {
 
   gBrowser.removeCurrentTab();
 });
+
+// This removes the last two engines and then the remaining engines from top to
+// bottom, and then it restores the default engines.  See bug 1681818.
+add_task(async function test_removeOutOfOrder() {
+  await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
+
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let restoreDefaultsButton = doc.getElementById("restoreDefaultSearchEngines");
+  Assert.ok(
+    restoreDefaultsButton.disabled,
+    "The restore-defaults button is disabled initially"
+  );
+
+  let tree = doc.querySelector("#engineList");
+  let removeEngineButton = doc.getElementById("removeEngineButton");
+  removeEngineButton.scrollIntoView();
+
+  let defaultEngines = await Services.search.getAppProvidedEngines();
+
+  // Remove the last two engines.  After each removal, the selection should move
+  // to the first local shortcut.
+  for (let i = 0; i < 2; i++) {
+    tree.view.selection.select(defaultEngines.length - i - 1);
+    let updatedPromise = SearchTestUtils.promiseSearchNotification(
+      SearchUtils.MODIFIED_TYPE.CHANGED,
+      SearchUtils.TOPIC_ENGINE_MODIFIED
+    );
+    removeEngineButton.click();
+    await updatedPromise;
+    Assert.ok(
+      removeEngineButton.disabled,
+      "The remove-engine button is disabled because a local shortcut is selected"
+    );
+    Assert.ok(
+      !restoreDefaultsButton.disabled,
+      "The restore-defaults button is enabled after removing an engine"
+    );
+  }
+
+  // Remove the remaining engines from top to bottom except for the final
+  // remaining engine, which by design can't be removed.
+  for (let i = 0; i < defaultEngines.length - 3; i++) {
+    tree.view.selection.select(0);
+    let updatedPromise = SearchTestUtils.promiseSearchNotification(
+      SearchUtils.MODIFIED_TYPE.CHANGED,
+      SearchUtils.TOPIC_ENGINE_MODIFIED
+    );
+    removeEngineButton.click();
+    await updatedPromise;
+    Assert.ok(
+      !restoreDefaultsButton.disabled,
+      "The restore-defaults button is enabled after removing an engine"
+    );
+  }
+  Assert.ok(
+    removeEngineButton.disabled,
+    "The remove-engine button is disabled because only one engine remains"
+  );
+
+  // Click the restore-defaults button.
+  let updatedPromise = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+  restoreDefaultsButton.click();
+  await updatedPromise;
+
+  // Wait for the restore-defaults button to update its state.
+  await TestUtils.waitForCondition(
+    () => restoreDefaultsButton.disabled,
+    "Waiting for the restore-defaults button to become disabled"
+  );
+
+  Assert.ok(
+    restoreDefaultsButton.disabled,
+    "The restore-defaults button is disabled after restoring defaults"
+  );
+  Assert.equal(
+    tree.view.rowCount,
+    defaultEngines.length + UrlbarUtils.LOCAL_SEARCH_MODES.length,
+    "All engines are restored"
+  );
+
+  gBrowser.removeCurrentTab();
+});
