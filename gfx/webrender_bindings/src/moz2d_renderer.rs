@@ -613,6 +613,15 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
     }
 }
 
+// a cross platform wrapper that creates an autorelease pool
+// on macOS
+fn autoreleasepool<T, F: FnOnce() -> T>(f: F) -> T {
+    #[cfg(target_os = "macos")]
+    { objc::rc::autoreleasepool(f) }
+    #[cfg(not(target_os = "macos"))]
+    { f() }
+}
+
 fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
     let descriptor = job.descriptor;
     let buf_size =
@@ -626,7 +635,7 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
     };
     assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
 
-    let result = unsafe {
+    let result = autoreleasepool(|| { unsafe {
         if wr_moz2d_render_cb(
             ByteSlice::new(&job.commands[..]),
             descriptor.format,
@@ -650,7 +659,7 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
         } else {
             panic!("Moz2D replay problem");
         }
-    };
+    }});
 
     (job.request, result)
 }
