@@ -23,6 +23,10 @@ enum PlacesEventType {
    * data: PlacesVisitTitle. Fired whenever a page title changes.
    */
   "page-title-changed",
+  /**
+   * data: PlacesHistoryCleared. Fired whenever history is cleared.
+   */
+  "history-cleared",
 };
 
 [ChromeOnly, Exposed=Window]
@@ -245,4 +249,9 @@ interface PlacesVisitTitle : PlacesEvent {
    * The title of the changed page.
    */
   readonly attribute DOMString title;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesHistoryCleared : PlacesEvent {
+  constructor();
 };
