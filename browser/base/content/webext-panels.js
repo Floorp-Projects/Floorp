@@ -64,6 +64,8 @@ function getBrowser(panel) {
         E10SUtils.EXTENSION_REMOTE_TYPE
       )
     );
+    browser.setAttribute("maychangeremoteness", "true");
+
     readyPromise = promiseEvent(browser, "XULFrameLoaderCreated");
   } else {
     readyPromise = Promise.resolve();
