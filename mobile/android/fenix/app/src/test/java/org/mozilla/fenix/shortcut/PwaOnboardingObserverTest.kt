@@ -20,6 +20,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -64,6 +65,11 @@ class PwaOnboardingObserverTest {
             settings = settings,
             webAppUseCases = webAppUseCases
         )
+    }
+
+    @After
+    fun teardown() {
+        pwaOnboardingObserver.stop()
     }
 
     @Test

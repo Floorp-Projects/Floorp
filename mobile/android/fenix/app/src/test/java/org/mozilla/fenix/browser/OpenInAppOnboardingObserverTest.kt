@@ -23,6 +23,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -75,6 +76,11 @@ class OpenInAppOnboardingObserverTest {
             container = container
         ))
         every { openInAppOnboardingObserver.createInfoBanner() } returns infoBanner
+    }
+
+    @After
+    fun teardown() {
+        openInAppOnboardingObserver.stop()
     }
 
     @Test
