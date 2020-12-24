@@ -32,7 +32,7 @@ impl Default for Intent {
     }
 }
 
-pub type s15Fixed16Number = i32;
+pub(crate) type s15Fixed16Number = i32;
 
 /* produces the nearest float to 'a' with a maximum error
  * of 1/1024 which happens for large values like 0x40000040 */
@@ -52,6 +52,8 @@ mod gtest;
 mod iccread;
 mod matrix;
 mod transform;
+pub use iccread::qcms_CIE_xyY as CIE_xyY;
+pub use iccread::qcms_CIE_xyYTRIPLE as CIE_xyYTRIPLE;
 pub use iccread::qcms_profile as Profile;
 pub use transform::qcms_data_type as DataType;
 pub use transform::Transform;
