@@ -133,7 +133,7 @@ pub enum qcms_data_type {
     DATA_GRAYA_8 = 4,
 }
 
-impl qcms_data_type { 
+impl qcms_data_type {
     fn bytes_per_pixel(&self) -> usize {
         match self {
             DATA_RGB_8 => 3,
@@ -1386,13 +1386,13 @@ pub struct Transform {
 }
 
 impl Transform {
-    pub fn new(input: &qcms_profile,
+    pub fn new(
+        input: &qcms_profile,
         output: &qcms_profile,
         ty: qcms_data_type,
-        intent: qcms_intent) -> Option<Self>
-    {
-        transform_create(input, ty, output, ty, intent)
-            .map(|xfm| Transform { ty, xfm})
+        intent: qcms_intent,
+    ) -> Option<Self> {
+        transform_create(input, ty, output, ty, intent).map(|xfm| Transform { ty, xfm })
     }
 
     pub fn apply(&mut self, data: &mut [u8]) {
@@ -1400,10 +1400,12 @@ impl Transform {
             panic!("incomplete pixels")
         }
         unsafe {
-            qcms_transform_data(self.xfm.as_mut(),
-                            data.as_ptr() as *const libc::c_void,
-                            data.as_mut_ptr()as *mut libc::c_void,
-                            data.len() / self.ty.bytes_per_pixel());
+            qcms_transform_data(
+                self.xfm.as_mut(),
+                data.as_ptr() as *const libc::c_void,
+                data.as_mut_ptr() as *mut libc::c_void,
+                data.len() / self.ty.bytes_per_pixel(),
+            );
         }
     }
 }

@@ -30,8 +30,13 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
     mut greenGamma: f32,
     mut blueGamma: f32,
 ) -> *mut qcms_profile {
-    let profile =
-        qcms_profile::new_rgb_with_gamma_set(white_point, primaries, redGamma, greenGamma, blueGamma);
+    let profile = qcms_profile::new_rgb_with_gamma_set(
+        white_point,
+        primaries,
+        redGamma,
+        greenGamma,
+        blueGamma,
+    );
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -241,7 +246,10 @@ pub extern "C" fn qcms_transform_create(
     }
 }
 
+pub use crate::iccread::qcms_profile;
 pub use crate::iccread::qcms_profile_is_bogus;
 pub use crate::iccread::{icSigGrayData, icSigRgbData};
-pub use crate::iccread::qcms_profile;
-pub use crate::transform::{qcms_profile_precache_output_transform, qcms_transform_data, qcms_transform_release, qcms_enable_iccv4};
+pub use crate::transform::{
+    qcms_enable_iccv4, qcms_profile_precache_output_transform, qcms_transform_data,
+    qcms_transform_release,
+};
