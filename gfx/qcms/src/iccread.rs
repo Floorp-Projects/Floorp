@@ -266,11 +266,23 @@ fn read_uInt8Number(mut mem: &mut mem_source, mut offset: usize) -> uInt8Number 
 fn read_uInt16Number(mut mem: &mut mem_source, mut offset: usize) -> uInt16Number {
     return read_u16(mem, offset);
 }
-unsafe extern "C" fn write_u32(mut mem: *mut libc::c_void, mut offset: usize, mut value: u32) {
-    std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u32, cpu_to_be32(value));
+fn write_u32(mut mem: &mut [u8], mut offset: usize, mut value: u32) {
+    if offset <= mem.len() - std::mem::size_of_val(&value) {
+        panic!("OOB");
+    }
+    let mem = mem.as_mut_ptr();
+    unsafe {
+        std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u32, cpu_to_be32(value));
+    }
 }
-unsafe extern "C" fn write_u16(mut mem: *mut libc::c_void, mut offset: usize, mut value: u16) {
-    std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u16, cpu_to_be16(value));
+fn write_u16(mut mem: &mut [u8], mut offset: usize, mut value: u16) {
+    if offset <= mem.len() - std::mem::size_of_val(&value) {
+        panic!("OOB");
+    }
+    let mem = mem.as_mut_ptr();
+    unsafe {
+        std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u16, cpu_to_be16(value));
+    }
 }
 
 /* An arbitrary 4MB limit on profile size */
@@ -1363,6 +1375,7 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
         free(data);
         return;
     }
+    let data = std::slice::from_raw_parts_mut(data as *mut u8, length as usize);
     // the position of first tag's signature in tag table
     tag_table_offset = (128 + 4) as usize; // the start of tag data elements.
     tag_data_offset = ((128 + 4) as libc::c_uint + 12 * (xyz_count + trc_count)) as usize;
@@ -1423,6 +1436,6 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     write_u32(data, 64, QCMS_INTENT_PERCEPTUAL); // profile->rendering_intent
     write_u32(data, 128, 6); // total tag count
                              // prepare the result
-    *mem = data;
+    *mem = data.as_mut_ptr() as *mut libc::c_void;
     *size = length as usize;
 }
