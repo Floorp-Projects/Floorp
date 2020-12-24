@@ -10,7 +10,7 @@
 
 #include "BaseProfilerSharedLibraries.h"
 
-#include "mozilla/UniquePtr.h"
+#include "mozilla/glue/WindowsUnicode.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WindowsVersion.h"
 
@@ -114,15 +114,15 @@ static bool GetPdbInfo(uintptr_t aStart, std::string& aSignature,
   return true;
 }
 
-static std::string GetVersion(char* dllPath) {
-  DWORD infoSize = GetFileVersionInfoSizeA(dllPath, nullptr);
+static std::string GetVersion(wchar_t* dllPath) {
+  DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
   if (infoSize == 0) {
     return {};
   }
 
   mozilla::UniquePtr<unsigned char[]> infoData =
       mozilla::MakeUnique<unsigned char[]>(infoSize);
-  if (!GetFileVersionInfoA(dllPath, 0, infoSize, infoData.get())) {
+  if (!GetFileVersionInfoW(dllPath, 0, infoSize, infoData.get())) {
     return {};
   }
 
@@ -165,9 +165,14 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   }
 
   for (unsigned int i = 0; i < modulesNum; i++) {
-    char modulePath[MAX_PATH + 1];
-    if (!GetModuleFileNameEx(hProcess, hMods[i], modulePath,
-                             sizeof(modulePath) / sizeof(char))) {
+    wchar_t modulePath[MAX_PATH + 1];
+    if (!GetModuleFileNameExW(hProcess, hMods[i], modulePath,
+                              std::size(modulePath))) {
+      continue;
+    }
+    mozilla::UniquePtr<char[]> utf8ModulePath(
+        mozilla::glue::WideToUTF8(modulePath));
+    if (!utf8ModulePath) {
       continue;
     }
 
@@ -177,7 +182,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       continue;
     }
 
-    std::string modulePathStr(modulePath);
+    std::string modulePathStr(utf8ModulePath.get());
     size_t pos = modulePathStr.find_last_of("\\/");
     std::string moduleNameStr = (pos != std::string::npos)
                                     ? modulePathStr.substr(pos + 1)
@@ -194,11 +199,11 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     // a dummy breakpad id instead.
 #if !defined(_M_ARM64)
 #  if defined(_M_AMD64)
-    LPCSTR kNvidiaShimDriver = "nvd3d9wrapx.dll";
-    LPCSTR kNvidiaInitDriver = "nvinitx.dll";
+    LPCWSTR kNvidiaShimDriver = L"nvd3d9wrapx.dll";
+    LPCWSTR kNvidiaInitDriver = L"nvinitx.dll";
 #  elif defined(_M_IX86)
-    LPCSTR kNvidiaShimDriver = "nvd3d9wrap.dll";
-    LPCSTR kNvidiaInitDriver = "nvinit.dll";
+    LPCWSTR kNvidiaShimDriver = L"nvd3d9wrap.dll";
+    LPCWSTR kNvidiaInitDriver = L"nvinit.dll";
 #  endif
     constexpr std::string_view detoured_dll = "detoured.dll";
     if (std::equal(moduleNameStr.cbegin(), moduleNameStr.cend(),
@@ -206,8 +211,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                    [](char aModuleChar, char aDetouredChar) {
                      return std::tolower(aModuleChar) == aDetouredChar;
                    }) &&
-        !mozilla::IsWin8OrLater() && ::GetModuleHandle(kNvidiaShimDriver) &&
-        !::GetModuleHandle(kNvidiaInitDriver)) {
+        !mozilla::IsWin8OrLater() && ::GetModuleHandleW(kNvidiaShimDriver) &&
+        !::GetModuleHandleW(kNvidiaInitDriver)) {
       const std::string pdbNameStr = "detoured.pdb";
       SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
                           (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
@@ -233,7 +238,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     // can read the memory mapped at the base address before we can safely
     // proceed to actually access those pages.
     HMODULE handleLock =
-        LoadLibraryEx(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+        LoadLibraryExW(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
     MEMORY_BASIC_INFORMATION vmemInfo = {0};
     std::string pdbSig;
     uint32_t pdbAge;
