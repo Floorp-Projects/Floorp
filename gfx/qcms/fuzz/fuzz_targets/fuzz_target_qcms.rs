@@ -62,7 +62,7 @@ use qcms::DataType::*;
      src_bytes_per_pixel = 1;
    }
  
-   qcms_transform_data(transform, src.as_ptr() as *const libc::c_void, dst.as_mut_ptr() as *mut libc::c_void, (SRC_SIZE / src_bytes_per_pixel) as usize);
+   qcms_transform_data(&*transform, src.as_ptr() as *const libc::c_void, dst.as_mut_ptr() as *mut libc::c_void, (SRC_SIZE / src_bytes_per_pixel) as usize);
    qcms_transform_release(transform);
  }
  
