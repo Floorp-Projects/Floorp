@@ -359,7 +359,7 @@ nr_reg_raise_event_recurse(char *name, char *tmp, int action)
 /* NON-STATIC METHODS */
 
 int
-nr_reg_raise_event(char *name, int action)
+nr_reg_raise_event(NR_registry name, int action)
 {
     int r, _status;
     int count;
@@ -417,7 +417,7 @@ NR_reg_register_callback(NR_registry name, char action, void (*cb)(void *cb_arg,
 }
 
 int
-NR_reg_unregister_callback(char *name, char action, void (*cb)(void *cb_arg, char action, NR_registry name))
+NR_reg_unregister_callback(NR_registry name, char action, void (*cb)(void *cb_arg, char action, NR_registry name))
 {
     int r, _status;
     size_t i;

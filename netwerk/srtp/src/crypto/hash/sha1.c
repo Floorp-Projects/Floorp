@@ -285,7 +285,7 @@ void srtp_sha1_update(srtp_sha1_ctx_t *ctx,
  * into the twenty octets located at *output
  */
 
-void srtp_sha1_final(srtp_sha1_ctx_t *ctx, uint32_t *output)
+void srtp_sha1_final(srtp_sha1_ctx_t *ctx, uint32_t output[5])
 {
     uint32_t A, B, C, D, E, TEMP;
     uint32_t W[80];

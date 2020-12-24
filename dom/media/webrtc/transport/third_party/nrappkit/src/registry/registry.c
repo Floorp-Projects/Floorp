@@ -210,14 +210,14 @@ NR_reg_fin(NR_registry name)
 }
 
 int
-NR_reg_get_child_count(char *parent, unsigned int *count)
+NR_reg_get_child_count(NR_registry parent, unsigned int *count)
 {
     assert(sizeof(count) == sizeof(size_t));
     return reg_vtbl->vtbl->get_child_count(parent, (size_t*)count);
 }
 
 int
-NR_reg_get_child_registry(char *parent, unsigned int i, NR_registry child)
+NR_reg_get_child_registry(NR_registry parent, unsigned int i, NR_registry child)
 {
     int r, _status;
     size_t count;
