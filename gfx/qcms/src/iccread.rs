@@ -1074,29 +1074,7 @@ fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
 fn curve_from_gamma(mut gamma: f32) -> Box<curveType> {
     Box::new(curveType::Curve(vec![float_to_u8Fixed8Number(gamma)]))
 }
-//XXX: it would be nice if we had a way of ensuring
-// everything in a profile was initialized regardless of how it was created
-//XXX: should this also be taking a black_point?
-/* similar to CGColorSpaceCreateCalibratedRGB */
-pub fn profile_create_rgb_with_table(
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
-    table: &[u16],
-) -> Option<Box<qcms_profile>> {
-    let mut profile = profile_create();
-    //XXX: should store the whitepoint
-    if !set_rgb_colorants(&mut profile, white_point, primaries) {
-        return None;
-    }
-    profile.redTRC = Some(curve_from_table(table));
-    profile.blueTRC = Some(curve_from_table(table));
-    profile.greenTRC = Some(curve_from_table(table));
-    profile.class_type = DISPLAY_DEVICE_PROFILE;
-    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
-    profile.color_space = RGB_SIGNATURE;
-    profile.pcs = XYZ_TYPE;
-    return Some(profile);
-}
+
 /* from lcms: cmsWhitePointFromTemp */
 /* tempK must be >= 4000. and <= 25000.
  * Invalid values of tempK will return
@@ -1154,7 +1132,31 @@ pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
     return white_point_from_temp(6504);
 }
 
-pub fn profile_sRGB() -> Option<Box<qcms_profile>> {
+impl qcms_profile {
+//XXX: it would be nice if we had a way of ensuring
+// everything in a profile was initialized regardless of how it was created
+//XXX: should this also be taking a black_point?
+/* similar to CGColorSpaceCreateCalibratedRGB */
+pub fn new_rgb_with_table(
+    mut white_point: qcms_CIE_xyY,
+    mut primaries: qcms_CIE_xyYTRIPLE,
+    table: &[u16],
+) -> Option<Box<qcms_profile>> {
+    let mut profile = profile_create();
+    //XXX: should store the whitepoint
+    if !set_rgb_colorants(&mut profile, white_point, primaries) {
+        return None;
+    }
+    profile.redTRC = Some(curve_from_table(table));
+    profile.blueTRC = Some(curve_from_table(table));
+    profile.greenTRC = Some(curve_from_table(table));
+    profile.class_type = DISPLAY_DEVICE_PROFILE;
+    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+    profile.color_space = RGB_SIGNATURE;
+    profile.pcs = XYZ_TYPE;
+    return Some(profile);
+}
+pub fn new_sRGB() -> Option<Box<qcms_profile>> {
     let Rec709Primaries = qcms_CIE_xyYTRIPLE {
         red: {
             qcms_CIE_xyY {
@@ -1181,10 +1183,10 @@ pub fn profile_sRGB() -> Option<Box<qcms_profile>> {
     let D65 = qcms_white_point_sRGB();
     let table = build_sRGB_gamma_table(1024);
 
-    profile_create_rgb_with_table(D65, Rec709Primaries, &table)
+    qcms_profile::new_rgb_with_table(D65, Rec709Primaries, &table)
 }
 
-pub fn profile_create_gray_with_gamma(gamma: f32) -> Option<Box<qcms_profile>> {
+pub fn new_gray_with_gamma(gamma: f32) -> Option<Box<qcms_profile>> {
     let mut profile = profile_create();
 
     profile.grayTRC = Some(curve_from_gamma(gamma));
@@ -1195,7 +1197,8 @@ pub fn profile_create_gray_with_gamma(gamma: f32) -> Option<Box<qcms_profile>> {
     Some(profile)
 }
 
-pub fn profile_create_rgb_with_gamma_set(
+
+pub fn new_rgb_with_gamma_set(
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
     mut redGamma: f32,
@@ -1218,7 +1221,7 @@ pub fn profile_create_rgb_with_gamma_set(
     Some(profile)
 }
 
-pub fn profile_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
+pub fn new_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
     let mut length: u32;
     let mut source: mem_source = mem_source {
         buf: mem,
@@ -1327,6 +1330,7 @@ pub fn profile_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
         return None;
     }
     Some(profile)
+}
 }
 
 #[no_mangle]

@@ -11,7 +11,7 @@ use crate::{
 
 #[no_mangle]
 pub extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
-    let profile = profile_sRGB();
+    let profile = qcms_profile::new_sRGB();
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -31,7 +31,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
     mut blueGamma: f32,
 ) -> *mut qcms_profile {
     let profile =
-        profile_create_rgb_with_gamma_set(white_point, primaries, redGamma, greenGamma, blueGamma);
+        qcms_profile::new_rgb_with_gamma_set(white_point, primaries, redGamma, greenGamma, blueGamma);
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -40,7 +40,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut qcms_profile {
-    let profile = profile_create_gray_with_gamma(gamma);
+    let profile = qcms_profile::new_gray_with_gamma(gamma);
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -64,7 +64,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
     mut num_entries: i32,
 ) -> *mut qcms_profile {
     let table = slice::from_raw_parts(table, num_entries as usize);
-    let profile = profile_create_rgb_with_table(white_point, primaries, table);
+    let profile = qcms_profile::new_rgb_with_table(white_point, primaries, table);
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -78,7 +78,7 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
     mut size: usize,
 ) -> *mut qcms_profile {
     let mem = slice::from_raw_parts(mem as *const libc::c_uchar, size);
-    let profile = profile_from_slice(mem);
+    let profile = qcms_profile::new_from_slice(mem);
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -240,3 +240,8 @@ pub extern "C" fn qcms_transform_create(
         None => null_mut(),
     }
 }
+
+pub use crate::iccread::qcms_profile_is_bogus;
+pub use crate::iccread::{icSigGrayData, icSigRgbData};
+pub use crate::iccread::qcms_profile;
+pub use crate::transform::{qcms_profile_precache_output_transform, qcms_transform_data, qcms_transform_release, qcms_enable_iccv4};

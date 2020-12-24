@@ -42,13 +42,16 @@ fn double_to_s15Fixed16Number(mut v: f64) -> s15Fixed16Number {
 pub mod c_bindings;
 mod chain;
 mod gtest;
-pub mod iccread;
-pub mod matrix;
-pub mod transform;
+mod iccread;
+mod matrix;
+mod transform;
+pub use iccread::qcms_profile as Profile;
+pub use transform::qcms_data_type as DataType;
+pub use transform::Transform;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-pub mod transform_avx;
+mod transform_avx;
 #[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
-pub mod transform_neon;
+mod transform_neon;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-pub mod transform_sse2;
+mod transform_sse2;
 mod transform_util;
