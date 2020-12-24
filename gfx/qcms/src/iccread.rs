@@ -33,10 +33,7 @@ use crate::{
     double_to_s15Fixed16Number,
     transform::{get_rgb_colorants, precache_output, set_rgb_colorants},
 };
-use crate::{
-    matrix::matrix, qcms_intent, s15Fixed16Number, s15Fixed16Number_to_float,
-    QCMS_INTENT_PERCEPTUAL,
-};
+use crate::{matrix::matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
 
 pub static qcms_supports_iccv4: AtomicBool = AtomicBool::new(false);
 
@@ -79,7 +76,7 @@ pub struct qcms_profile {
     pub(crate) class_type: u32,
     pub(crate) color_space: u32,
     pub(crate) pcs: u32,
-    pub(crate) rendering_intent: qcms_intent,
+    pub(crate) rendering_intent: Intent,
     pub(crate) redColorant: XYZNumber,
     pub(crate) blueColorant: XYZNumber,
     pub(crate) greenColorant: XYZNumber,
@@ -1006,11 +1003,15 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
     }))
 }
 fn read_rendering_intent(mut profile: &mut qcms_profile, mut src: &mut mem_source) {
-    profile.rendering_intent = read_u32(src, 64);
-    match profile.rendering_intent {
-        0 | 2 | 1 | 3 => {}
+    let intent = read_u32(src, 64);
+    profile.rendering_intent = match intent {
+        x if x == QCMS_INTENT_PERCEPTUAL as u32 => QCMS_INTENT_PERCEPTUAL,
+        x if x == QCMS_INTENT_RELATIVE_COLORIMETRIC as u32 => QCMS_INTENT_RELATIVE_COLORIMETRIC,
+        x if x == QCMS_INTENT_SATURATION as u32 => QCMS_INTENT_SATURATION,
+        x if x == QCMS_INTENT_ABSOLUTE_COLORIMETRIC as u32 => QCMS_INTENT_ABSOLUTE_COLORIMETRIC,
         _ => {
             invalid_source(src, "unknown rendering intent");
+            Intent::default()
         }
     };
 }
@@ -1438,7 +1439,7 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     write_u32(data, 12, DISPLAY_DEVICE_PROFILE); // profile->class_type
     write_u32(data, 16, RGB_SIGNATURE); // profile->color_space
     write_u32(data, 20, XYZ_TYPE); // profile->pcs
-    write_u32(data, 64, QCMS_INTENT_PERCEPTUAL); // profile->rendering_intent
+    write_u32(data, 64, QCMS_INTENT_PERCEPTUAL as u32); // profile->rendering_intent
     write_u32(data, 128, 6); // total tag count
                              // prepare the result
     *mem = data.as_mut_ptr() as *mut libc::c_void;

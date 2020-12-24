@@ -38,8 +38,8 @@ use crate::{
 };
 use crate::{
     iccread::{qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile, RGB_SIGNATURE},
-    qcms_intent,
     transform_util::clamp_float,
+    Intent,
 };
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use crate::{
@@ -1160,7 +1160,7 @@ pub fn transform_create(
     mut in_type: qcms_data_type,
     mut out: &qcms_profile,
     mut out_type: qcms_data_type,
-    mut intent: qcms_intent,
+    mut intent: Intent,
 ) -> Option<Box<qcms_transform>> {
     // Ensure the requested input and output types make sense.
     let matching_format = match (in_type, out_type) {
@@ -1390,7 +1390,7 @@ impl Transform {
         input: &qcms_profile,
         output: &qcms_profile,
         ty: qcms_data_type,
-        intent: qcms_intent,
+        intent: Intent,
     ) -> Option<Self> {
         transform_create(input, ty, output, ty, intent).map(|xfm| Transform { ty, xfm })
     }

@@ -2,7 +2,7 @@
 mod test {
     use crate::{
         c_bindings::*, iccread::*, transform::qcms_data_type::*, transform::*,
-        transform_util::lut_inverse_interp16, QCMS_INTENT_DEFAULT, QCMS_INTENT_PERCEPTUAL,
+        transform_util::lut_inverse_interp16, Intent::QCMS_INTENT_PERCEPTUAL,
     };
     use libc::c_void;
     use std::ptr::null_mut;
@@ -558,7 +558,7 @@ mod test {
                 ty,
                 &*self.out_profile,
                 ty,
-                QCMS_INTENT_DEFAULT,
+                QCMS_INTENT_PERCEPTUAL,
             ))
         }
 
