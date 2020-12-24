@@ -5,6 +5,8 @@
 
 #include "nsPrintSettingsServiceX.h"
 
+#include "mozilla/Debug.h"
+#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "nsPrintSettingsX.h"
@@ -51,7 +53,7 @@ nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
 
 nsresult nsPrintSettingsServiceX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
                                             uint32_t aFlags) {
-  DebugOnly<nsresult> rv = nsPrintSettingsService::ReadPrefs(aPS, aPrinterName, aFlags);
+  mozilla::DebugOnly<nsresult> rv = nsPrintSettingsService::ReadPrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::ReadPrefs() failed");
 
   RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
@@ -61,7 +63,7 @@ nsresult nsPrintSettingsServiceX::ReadPrefs(nsIPrintSettings* aPS, const nsAStri
 
   // ReadPageFormatFromPrefs may fail (e.g. prefs are missing/broken) but we can
   // safely ignore that and just leave existing/default values in the settings.
-  Unused << printSettingsX->ReadPageFormatFromPrefs();
+  mozilla::Unused << printSettingsX->ReadPageFormatFromPrefs();
 
   return NS_OK;
 }
