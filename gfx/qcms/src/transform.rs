@@ -1365,7 +1365,7 @@ pub fn transform_create(
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data(
-    mut transform: *mut qcms_transform,
+    mut transform: &qcms_transform,
     mut src: *const libc::c_void,
     mut dest: *mut libc::c_void,
     mut length: usize,
@@ -1395,13 +1395,13 @@ impl Transform {
         transform_create(input, ty, output, ty, intent).map(|xfm| Transform { ty, xfm })
     }
 
-    pub fn apply(&mut self, data: &mut [u8]) {
+    pub fn apply(&self, data: &mut [u8]) {
         if data.len() % self.ty.bytes_per_pixel() != 0 {
             panic!("incomplete pixels")
         }
         unsafe {
             qcms_transform_data(
-                self.xfm.as_mut(),
+                &self.xfm,
                 data.as_ptr() as *const libc::c_void,
                 data.as_mut_ptr() as *mut libc::c_void,
                 data.len() / self.ty.bytes_per_pixel(),

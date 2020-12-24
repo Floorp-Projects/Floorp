@@ -189,7 +189,7 @@ mod test {
 
         unsafe {
             qcms_transform_data(
-                transform,
+                &*transform,
                 data.as_ptr() as *const libc::c_void,
                 data.as_mut_ptr() as *mut libc::c_void,
                 data.len() / 3,
@@ -224,7 +224,7 @@ mod test {
         let mut out_data: [u8; 2 * 4] = [0; 8];
         unsafe {
             qcms_transform_data(
-                transform,
+                &*transform,
                 in_data.as_ptr() as *const libc::c_void,
                 out_data.as_mut_ptr() as *mut libc::c_void,
                 in_data.len() / 2,
@@ -320,7 +320,7 @@ mod test {
 
         unsafe {
             qcms_transform_data(
-                transform,
+                &*transform,
                 src.as_ptr() as *const libc::c_void,
                 dst.as_mut_ptr() as *mut libc::c_void,
                 SRC_SIZE,
@@ -772,7 +772,7 @@ mod test {
             pt.SetBuffers(DATA_RGB_8);
             pt.SetTransformForType(DATA_RGB_8);
             qcms_transform_data(
-                pt.transform,
+                &*pt.transform,
                 pt.input.as_mut_ptr() as *mut c_void,
                 pt.output.as_mut_ptr() as *mut c_void,
                 pt.pixels,
@@ -841,7 +841,7 @@ mod test {
         let mut dst = [0u8, 0, 0];
         unsafe {
             qcms_transform_data(
-                transform,
+                &*transform,
                 src.as_ptr() as *const libc::c_void,
                 dst.as_mut_ptr() as *mut libc::c_void,
                 1,
