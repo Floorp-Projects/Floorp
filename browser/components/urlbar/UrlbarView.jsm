@@ -800,7 +800,10 @@ class UrlbarView {
    *     Names must be unique within a view template, but they don't need to be
    *     globally unique.  i.e., two different view templates can use the same
    *     names, and other DOM elements can use the same names in their IDs and
-   *     classes.
+   *     classes.  The name also suffixes the dynamic element's ID: an element
+   *     with name `data` will get the ID `urlbarView-row-{unique number}-data`.
+   *     If there is no name provided for the root element, the root element
+   *     will not get an ID.
    *   {string} tag
    *     The tag name of the object.  It is required for all objects in the
    *     structure except the root object and declares the kind of element that
@@ -808,7 +811,9 @@ class UrlbarView {
    *   {object} [attributes]
    *     An optional mapping from attribute names to values.  For each
    *     name-value pair, an attribute is added to the element created for the
-   *     object.
+   *     object. The `id` attribute is reserved and cannot be set by the
+   *     provider. Element IDs are passed back to the provider in getViewUpdate
+   *     if they are needed.
    *   {array} [children]
    *     An optional list of children.  Each item in the array must be an object
    *     as described here.  For each item, a child element as described by the
@@ -1106,27 +1111,41 @@ class UrlbarView {
   _createRowContentForDynamicType(item, result) {
     let { dynamicType } = result.payload;
     let viewTemplate = UrlbarView.dynamicViewTemplatesByName.get(dynamicType);
-    this._buildViewForDynamicType(dynamicType, item._content, viewTemplate);
+    this._buildViewForDynamicType(
+      dynamicType,
+      item._content,
+      item._elements,
+      viewTemplate
+    );
   }
 
-  _buildViewForDynamicType(type, parentNode, template) {
+  _buildViewForDynamicType(type, parentNode, elementsByName, template) {
     // Add classes to parentNode's classList.
     for (let className of template.classList || []) {
       parentNode.classList.add(className);
     }
     // Set attributes on parentNode.
     for (let [name, value] of Object.entries(template.attributes || {})) {
+      if (name == "id") {
+        // We do not allow dynamic results to set IDs for their Nodes. IDs are
+        // managed by the view to ensure they are unique.
+        Cu.reportError(
+          "Dynamic results are prohibited from setting their own IDs."
+        );
+        continue;
+      }
       parentNode.setAttribute(name, value);
     }
     if (template.name) {
       parentNode.setAttribute("name", template.name);
+      elementsByName.set(template.name, parentNode);
     }
     // Recurse into children.
     for (let childTemplate of template.children || []) {
       let child = this._createElement(childTemplate.tag);
       child.classList.add(`urlbarView-dynamic-${type}-${childTemplate.name}`);
       parentNode.appendChild(child);
-      this._buildViewForDynamicType(type, child, childTemplate);
+      this._buildViewForDynamicType(type, child, elementsByName, childTemplate);
     }
   }
 
@@ -1476,6 +1495,11 @@ class UrlbarView {
   async _updateRowForDynamicType(item, result) {
     item.setAttribute("dynamicType", result.payload.dynamicType);
 
+    let idsByName = new Map();
+    for (let [name, node] of item._elements) {
+      node.id = `${item.id}-${name}`;
+      idsByName.set(name, node.id);
+
     // First, apply highlighting. We do this before updating via getViewUpdate
     // so the dynamic provider can override the highlighting by setting the
     // textContent of the highlighted node, if it wishes.
@@ -1497,14 +1521,20 @@ class UrlbarView {
 
     // Get the view update from the result's provider.
     let provider = UrlbarProvidersManager.getProvider(result.providerName);
-    let viewUpdate = await provider.getViewUpdate(result);
+    let viewUpdate = await provider.getViewUpdate(result, idsByName);
 
     // Update each node in the view by name.
     for (let [nodeName, update] of Object.entries(viewUpdate)) {
-      let node = item.querySelector(
-        `.urlbarView-dynamic-${result.payload.dynamicType}-${nodeName}`
-      );
+      let node = item.querySelector(`#${item.id}-${nodeName}`);
       for (let [attrName, value] of Object.entries(update.attributes || {})) {
+        if (attrName == "id") {
+          // We do not allow dynamic results to set IDs for their Nodes. IDs are
+          // managed by the view to ensure they are unique.
+          Cu.reportError(
+            "Dynamic results are prohibited from setting their own IDs."
+          );
+          continue;
+        }
         node.setAttribute(attrName, value);
       }
       for (let [styleName, value] of Object.entries(update.style || {})) {

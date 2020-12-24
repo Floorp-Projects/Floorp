@@ -54,11 +54,14 @@ this.experiments_urlbar = class extends ExtensionAPI {
             name: "experiments.urlbar.onViewUpdateRequested",
             register: (fire, providerName) => {
               let provider = UrlbarProviderExtension.getOrCreate(providerName);
-              provider.setEventListener("getViewUpdate", result => {
-                return fire.async(result.payload).catch(error => {
-                  throw context.normalizeError(error);
-                });
-              });
+              provider.setEventListener(
+                "getViewUpdate",
+                (result, idsByName) => {
+                  return fire.async(result.payload, idsByName).catch(error => {
+                    throw context.normalizeError(error);
+                  });
+                }
+              );
               return () => provider.setEventListener("getViewUpdate", null);
             },
           }).api(),

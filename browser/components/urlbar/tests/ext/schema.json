@@ -32,6 +32,11 @@
             "name": "payload",
             "type": "object",
             "description": "The result's payload."
+          },
+          {
+            "name": "idsByName",
+            "type": "object",
+            "description": "A Map from an element's name, as defined by the provider; to its ID in the DOM, as defined by the browser."
           }
         ],
         "extraParameters": [
