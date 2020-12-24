@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsUnicodeScriptCodes.h"
 
+#include "gfxTelemetry.h"
 #include "gfxTypes.h"
 #include "gfxSkipChars.h"
 
@@ -787,6 +788,10 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static bool WebRenderEnvvarDisabled();
 
   static const char* WebRenderResourcePathOverride();
+
+  static void DisableWebRender(mozilla::gfx::FeatureStatus aStatus,
+                               const char* aMessage,
+                               const nsACString& aFailureId);
 
   void NotifyFrameStats(nsTArray<mozilla::layers::FrameStats>&& aFrameStats);
 
