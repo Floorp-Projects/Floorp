@@ -15,15 +15,22 @@
 #![feature(raw_ref_op)]
 
 extern crate libc;
+#[repr(u32)]
+#[derive(Clone, Copy)]
+pub enum Intent {
+    QCMS_INTENT_ABSOLUTE_COLORIMETRIC = 3,
+    QCMS_INTENT_SATURATION = 2,
+    QCMS_INTENT_RELATIVE_COLORIMETRIC = 1,
+    QCMS_INTENT_PERCEPTUAL = 0,
+}
 
-pub type qcms_intent = libc::c_uint;
-pub const QCMS_INTENT_DEFAULT: qcms_intent = 0;
-pub const QCMS_INTENT_MAX: qcms_intent = 3;
-pub const QCMS_INTENT_ABSOLUTE_COLORIMETRIC: qcms_intent = 3;
-pub const QCMS_INTENT_SATURATION: qcms_intent = 2;
-pub const QCMS_INTENT_RELATIVE_COLORIMETRIC: qcms_intent = 1;
-pub const QCMS_INTENT_PERCEPTUAL: qcms_intent = 0;
-pub const QCMS_INTENT_MIN: qcms_intent = 0;
+use Intent::*;
+
+impl Default for Intent {
+    fn default() -> Self {
+        QCMS_INTENT_PERCEPTUAL
+    }
+}
 
 pub type s15Fixed16Number = i32;
 

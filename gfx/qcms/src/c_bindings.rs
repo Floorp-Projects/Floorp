@@ -4,9 +4,9 @@ use libc::{fclose, fopen, fread, free, malloc, FILE};
 
 use crate::{
     iccread::*,
-    qcms_intent,
     transform::qcms_data_type,
     transform::{qcms_transform, transform_create},
+    Intent,
 };
 
 #[no_mangle]
@@ -93,7 +93,7 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_get_rendering_intent(
     mut profile: *mut qcms_profile,
-) -> qcms_intent {
+) -> Intent {
     return (*profile).rendering_intent;
 }
 #[no_mangle]
@@ -237,7 +237,7 @@ pub extern "C" fn qcms_transform_create(
     mut in_type: qcms_data_type,
     mut out: &qcms_profile,
     mut out_type: qcms_data_type,
-    mut intent: qcms_intent,
+    mut intent: Intent,
 ) -> *mut qcms_transform {
     let transform = transform_create(in_0, in_type, out, out_type, intent);
     match transform {
