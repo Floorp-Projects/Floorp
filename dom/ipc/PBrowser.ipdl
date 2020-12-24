@@ -366,19 +366,6 @@ parent:
     nested(inside_cpow) async OnEventNeedingAckHandled(EventMessage message);
 
     /**
-     * Tells chrome to start plugin IME.  If this results in a string getting
-     * committed, the result is in aCommitted (otherwise aCommitted is empty).
-     *
-     * aKeyboardEvent     The event with which plugin IME is to be started
-     * panelX and panelY  Location in screen coordinates of the IME input panel
-     *                    (should be just under the plugin)
-     * aCommitted         The string committed during IME -- otherwise empty
-     */
-    nested(inside_cpow) sync StartPluginIME(WidgetKeyboardEvent aKeyboardEvent,
-                                            int32_t panelX, int32_t panelY)
-        returns (nsString aCommitted);
-
-    /**
      * Notifies the parent process of native key event data received in a
      * plugin process directly.
      *

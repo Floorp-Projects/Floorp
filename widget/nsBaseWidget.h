@@ -287,11 +287,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   nsresult NotifyIME(const IMENotification& aIMENotification) final;
-  [[nodiscard]] virtual nsresult StartPluginIME(
-      const mozilla::WidgetKeyboardEvent& aKeyboardEvent, int32_t aPanelX,
-      int32_t aPanelY, nsString& aCommitted) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   [[nodiscard]] virtual nsresult AttachNativeKeyEvent(
       mozilla::WidgetKeyboardEvent& aEvent) override {
     return NS_ERROR_NOT_IMPLEMENTED;

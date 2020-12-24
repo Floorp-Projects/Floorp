@@ -1941,30 +1941,6 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
   int16_t response = kNPEventNotHandled;
   mInstance->HandleEvent(&cocoaEvent, &response,
                          NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
-  if ((response == kNPEventStartIME) &&
-      (cocoaEvent.type == NPCocoaEventKeyDown)) {
-    nsIWidget* widget = mPluginFrame->GetNearestWidget();
-    if (widget) {
-      const WidgetKeyboardEvent* keyEvent = anEvent.AsKeyboardEvent();
-      double screenX, screenY;
-      ConvertPoint(0.0, mPluginFrame->GetScreenRect().height,
-                   NPCoordinateSpacePlugin, &screenX, &screenY,
-                   NPCoordinateSpaceScreen);
-      nsAutoString outText;
-      if (NS_SUCCEEDED(
-              widget->StartPluginIME(*keyEvent, screenX, screenY, outText)) &&
-          !outText.IsEmpty()) {
-        CFStringRef cfString = ::CFStringCreateWithCharacters(
-            kCFAllocatorDefault,
-            reinterpret_cast<const UniChar*>(outText.get()), outText.Length());
-        NPCocoaEvent textEvent;
-        InitializeNPCocoaEvent(&textEvent);
-        textEvent.type = NPCocoaEventTextInput;
-        textEvent.data.text.text = (NPNSString*)cfString;
-        mInstance->HandleEvent(&textEvent, nullptr);
-      }
-    }
-  }
 
   bool handled = (response == kNPEventHandled || response == kNPEventStartIME);
   bool leftMouseButtonDown =
