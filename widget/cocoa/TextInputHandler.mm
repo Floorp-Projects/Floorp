@@ -1794,7 +1794,7 @@ bool TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent, uint32_t aUniqu
   // Don't call interpretKeyEvents when a plugin has focus.  If we call it,
   // for example, a character is inputted twice during a composition in e10s
   // mode.
-  if (!widget->IsPluginFocused() && (IsIMEEnabled() || IsASCIICapableOnly())) {
+  if (IsIMEEnabled() || IsASCIICapableOnly()) {
     MOZ_LOG(gLog, LogLevel::Info,
             ("%p TextInputHandler::HandleKeyDownEvent, calling interpretKeyEvents", this));
     [mView interpretKeyEvents:[NSArray arrayWithObject:aNativeEvent]];

@@ -1853,15 +1853,6 @@ class nsIWidget : public nsISupports {
       int32_t aPanelY, nsString& aCommitted) = 0;
 
   /**
-   * Tells the widget whether or not a plugin (inside the widget) has the
-   * keyboard focus.  Should be sent when the keyboard focus changes too or
-   * from a plugin.
-   *
-   * aFocused  Whether or not a plugin is focused
-   */
-  virtual void SetPluginFocused(bool& aFocused) = 0;
-
-  /**
    * MaybeDispatchInitialFocusEvent will dispatch a focus event after creation
    * of the widget, in the event that we were not able to observe and respond to
    * the initial focus event. This is necessary for the early skeleton UI

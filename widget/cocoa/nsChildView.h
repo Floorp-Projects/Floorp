@@ -483,10 +483,6 @@ class nsChildView final : public nsBaseWidget {
                                                 int32_t aPanelX, int32_t aPanelY,
                                                 nsString& aCommitted) override;
 
-  virtual void SetPluginFocused(bool& aFocused) override;
-
-  bool IsPluginFocused() { return mPluginFocused; }
-
   virtual LayoutDeviceIntPoint GetClientOffset() override;
 
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
@@ -570,8 +566,6 @@ class nsChildView final : public nsBaseWidget {
   bool mVisible;
   bool mDrawing;
   bool mIsDispatchPaint;  // Is a paint event being dispatched
-
-  bool mPluginFocused;
 
   RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
 

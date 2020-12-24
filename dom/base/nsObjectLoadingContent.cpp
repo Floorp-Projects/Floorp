@@ -794,10 +794,6 @@ nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
       new nsSimplePluginEvent(thisContent, doc, u"PluginInstantiated"_ns);
   NS_DispatchToCurrentThread(ev);
 
-#ifdef XP_MACOSX
-  HTMLObjectElement::HandlePluginInstantiated(thisContent->AsElement());
-#endif
-
   return NS_OK;
 }
 
@@ -2716,10 +2712,6 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
 
   nsCOMPtr<nsIContent> thisContent =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-#ifdef XP_MACOSX
-  HTMLObjectElement::HandlePluginCrashed(thisContent->AsElement());
-#endif
 
   PluginDestroyed();
 

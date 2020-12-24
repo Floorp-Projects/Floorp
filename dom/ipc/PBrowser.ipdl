@@ -379,15 +379,6 @@ parent:
         returns (nsString aCommitted);
 
     /**
-     * Tells chrome (and specifically the appropriate widget) whether or not
-     * a plugin (inside the widget) has the keyboard focus.  Should be sent
-     * when the keyboard focus changes too or from a plugin.
-     *
-     * aFocused  Whether or not a plugin is focused
-     */
-    nested(inside_cpow) async SetPluginFocused(bool aFocused);
-
-    /**
      * Notifies the parent process of native key event data received in a
      * plugin process directly.
      *
