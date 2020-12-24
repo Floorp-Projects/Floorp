@@ -155,8 +155,6 @@
     <string name="browser_menu_find_in_page">Najít na stránce</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Anonymní panel</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nový panel</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Uložit do sbírky</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -368,6 +366,9 @@
     <string name="customize_addon_collection_user_hint">Vlastník sbírky (ID uživatele)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Nastavení sbírky změněno. Pro aplikování změn se nyní aplikace ukončí…</string>
+
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Doplněk je již nainstalován</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -605,6 +606,8 @@
     <string name="tab_tray_title">Otevřené panely</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Uložit do sbírky</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Vybrat</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Sdílet všechny panely</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -730,7 +733,7 @@
     <string name="history_empty_message">Zatím nemáte žádnou historii prohlížení</string>
 
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Žádná stahování</string>
+    <string name="download_empty_message_1">Žádné stažené soubory</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Vybráno stahování: %1$d</string>

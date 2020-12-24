@@ -328,7 +328,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Удалённая отладка по USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Показать поисковые системы</string>
+    <string name="preferences_show_search_engines">Показывать поисковые системы</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Поисковые предложения</string>
     <!-- Preference title for switch preference to show voice search button -->
