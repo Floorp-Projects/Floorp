@@ -35,6 +35,7 @@ UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
                     << log.get();
     return nullptr;
   }
+  compositor->UseForSoftwareWebRender();
 
   return MakeUnique<RenderCompositorD3D11SWGL>(compositor, std::move(aWidget),
                                                ctx);
@@ -194,6 +195,30 @@ bool RenderCompositorD3D11SWGL::Resume() { return true; }
 
 LayoutDeviceIntSize RenderCompositorD3D11SWGL::GetBufferSize() {
   return mWidget->GetClientSize();
+}
+
+GLenum RenderCompositorD3D11SWGL::IsContextLost(bool aForce) {
+  // CompositorD3D11 uses ID3D11Device for composite. The device status needs to
+  // be checked.
+  auto reason = GetDevice()->GetDeviceRemovedReason();
+  switch (reason) {
+    case S_OK:
+      return LOCAL_GL_NO_ERROR;
+    case DXGI_ERROR_DEVICE_REMOVED:
+    case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
+      NS_WARNING("Device reset due to system / different device");
+      return LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB;
+    case DXGI_ERROR_DEVICE_HUNG:
+    case DXGI_ERROR_DEVICE_RESET:
+    case DXGI_ERROR_INVALID_CALL:
+      gfxCriticalError() << "Device reset due to WR device: "
+                         << gfx::hexa(reason);
+      return LOCAL_GL_GUILTY_CONTEXT_RESET_ARB;
+    default:
+      gfxCriticalError() << "Device reset with WR device unexpected reason: "
+                         << gfx::hexa(reason);
+      return LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB;
+  }
 }
 
 CompositorCapabilities RenderCompositorD3D11SWGL::GetCompositorCapabilities() {
