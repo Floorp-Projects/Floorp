@@ -479,10 +479,6 @@ class nsChildView final : public nsBaseWidget {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aRect, BackingScaleFactor());
   }
 
-  [[nodiscard]] virtual nsresult StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                                                int32_t aPanelX, int32_t aPanelY,
-                                                nsString& aCommitted) override;
-
   virtual LayoutDeviceIntPoint GetClientOffset() override;
 
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);

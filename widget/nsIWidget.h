@@ -1840,19 +1840,6 @@ class nsIWidget : public nsISupports {
   virtual nsresult NotifyIME(const IMENotification& aIMENotification) = 0;
 
   /**
-   * Start plugin IME.  If this results in a string getting committed, the
-   * result is in aCommitted (otherwise aCommitted is empty).
-   *
-   * aKeyboardEvent     The event with which plugin IME is to be started
-   * panelX and panelY  Location in screen coordinates of the IME input panel
-   *                    (should be just under the plugin)
-   * aCommitted         The string committed during IME -- otherwise empty
-   */
-  [[nodiscard]] virtual nsresult StartPluginIME(
-      const mozilla::WidgetKeyboardEvent& aKeyboardEvent, int32_t aPanelX,
-      int32_t aPanelY, nsString& aCommitted) = 0;
-
-  /**
    * MaybeDispatchInitialFocusEvent will dispatch a focus event after creation
    * of the widget, in the event that we were not able to observe and respond to
    * the initial focus event. This is necessary for the early skeleton UI
