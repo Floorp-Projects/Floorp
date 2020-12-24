@@ -3144,16 +3144,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvStartPluginIME(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvSetPluginFocused(
-    const bool& aFocused) {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return IPC_OK();
-  }
-  widget->SetPluginFocused((bool&)aFocused);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvGetInputContext(
     widget::IMEState* aState) {
   nsCOMPtr<nsIWidget> widget = GetWidget();

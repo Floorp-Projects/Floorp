@@ -235,7 +235,6 @@ nsChildView::nsChildView()
       mVisible(false),
       mDrawing(false),
       mIsDispatchPaint(false),
-      mPluginFocused{false},
       mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
@@ -333,8 +332,6 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   NS_ASSERTION(!mTextInputHandler, "mTextInputHandler has already existed");
   mTextInputHandler = new TextInputHandler(this, mView);
-
-  mPluginFocused = false;
 
   return NS_OK;
 
@@ -1495,19 +1492,6 @@ nsresult nsChildView::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboa
   return NS_OK;
 }
 
-void nsChildView::SetPluginFocused(bool& aFocused) {
-  if (aFocused == mPluginFocused) {
-    return;
-  }
-  if (!aFocused) {
-    ComplexTextInputPanel* ctiPanel = ComplexTextInputPanel::GetSharedComplexTextInputPanel();
-    if (ctiPanel) {
-      ctiPanel->CancelComposition();
-    }
-  }
-  mPluginFocused = aFocused;
-}
-
 void nsChildView::SetInputContext(const InputContext& aContext, const InputContextAction& aAction) {
   NS_ENSURE_TRUE_VOID(mTextInputHandler);
 
@@ -2409,31 +2393,17 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-// ComplexTextInputPanel's interpretKeyEvent hack won't work without this.
-// It makes calls to +[NSTextInputContext currentContext], deep in system
-// code, return the appropriate context.
 - (NSTextInputContext*)inputContext {
-  NSTextInputContext* pluginContext = NULL;
-  if (mGeckoChild && mGeckoChild->IsPluginFocused()) {
-    ComplexTextInputPanel* ctiPanel = ComplexTextInputPanel::GetSharedComplexTextInputPanel();
-    if (ctiPanel) {
-      pluginContext = (NSTextInputContext*)ctiPanel->GetInputContext();
-    }
+  if (!mGeckoChild) {
+    // -[ChildView widgetDestroyed] has been called, but
+    // -[ChildView delayedTearDown] has not yet completed.  Accessing
+    // [super inputContext] now would uselessly recreate a text input context
+    // for us, under which -[ChildView validAttributesForMarkedText] would
+    // be called and the assertion checking for mTextInputHandler would fail.
+    // We return nil to avoid that.
+    return nil;
   }
-  if (pluginContext) {
-    return pluginContext;
-  } else {
-    if (!mGeckoChild) {
-      // -[ChildView widgetDestroyed] has been called, but
-      // -[ChildView delayedTearDown] has not yet completed.  Accessing
-      // [super inputContext] now would uselessly recreate a text input context
-      // for us, under which -[ChildView validAttributesForMarkedText] would
-      // be called and the assertion checking for mTextInputHandler would fail.
-      // We return nil to avoid that.
-      return nil;
-    }
-    return [super inputContext];
-  }
+  return [super inputContext];
 }
 
 - (void)installTextInputHandler:(TextInputHandler*)aHandler {

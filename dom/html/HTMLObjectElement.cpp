@@ -44,9 +44,6 @@ HTMLObjectElement::HTMLObjectElement(
 }
 
 HTMLObjectElement::~HTMLObjectElement() {
-#ifdef XP_MACOSX
-  OnFocusBlurPlugin(this, false);
-#endif
   UnregisterActivityObserver();
   nsImageLoadingContent::Destroy();
 }
@@ -93,109 +90,6 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
 
 NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
 
-#ifdef XP_MACOSX
-
-static nsIWidget* GetWidget(Element* aElement) {
-  return nsContentUtils::WidgetForDocument(aElement->OwnerDoc());
-}
-
-Element* HTMLObjectElement::sLastFocused = nullptr;  // Weak
-
-class PluginFocusSetter : public Runnable {
- public:
-  PluginFocusSetter(nsIWidget* aWidget, Element* aElement)
-      : Runnable("PluginFocusSetter"), mWidget(aWidget), mElement(aElement) {}
-
-  NS_IMETHOD Run() override {
-    if (mElement) {
-      HTMLObjectElement::sLastFocused = mElement;
-      bool value = true;
-      mWidget->SetPluginFocused(value);
-    } else if (!HTMLObjectElement::sLastFocused) {
-      bool value = false;
-      mWidget->SetPluginFocused(value);
-    }
-
-    return NS_OK;
-  }
-
- private:
-  nsCOMPtr<nsIWidget> mWidget;
-  nsCOMPtr<Element> mElement;
-};
-
-void HTMLObjectElement::OnFocusBlurPlugin(Element* aElement, bool aFocus) {
-  // In general we don't want to call nsIWidget::SetPluginFocused() for any
-  // Element that doesn't have a plugin running.  But if SetPluginFocused(true)
-  // was just called for aElement while it had a plugin running, we want to
-  // make sure nsIWidget::SetPluginFocused(false) gets called for it now, even
-  // if aFocus is true.
-  if (aFocus) {
-    nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aElement);
-    bool hasRunningPlugin = false;
-    if (olc) {
-      hasRunningPlugin =
-          static_cast<nsObjectLoadingContent*>(olc.get())->HasRunningPlugin();
-    }
-    if (!hasRunningPlugin) {
-      aFocus = false;
-    }
-  }
-
-  if (aFocus || aElement == sLastFocused) {
-    if (!aFocus) {
-      sLastFocused = nullptr;
-    }
-    nsIWidget* widget = GetWidget(aElement);
-    if (widget) {
-      nsContentUtils::AddScriptRunner(
-          new PluginFocusSetter(widget, aFocus ? aElement : nullptr));
-    }
-  }
-}
-
-void HTMLObjectElement::HandlePluginCrashed(Element* aElement) {
-  OnFocusBlurPlugin(aElement, false);
-}
-
-void HTMLObjectElement::HandlePluginInstantiated(Element* aElement) {
-  // If aElement is already focused when a plugin is instantiated, we need
-  // to initiate a call to nsIWidget::SetPluginFocused(true).  Otherwise
-  // keyboard input won't work in a click-to-play plugin until aElement
-  // loses focus and regains it.
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && fm->GetFocusedElement() == aElement) {
-    OnFocusBlurPlugin(aElement, true);
-  }
-}
-
-void HTMLObjectElement::HandleFocusBlurPlugin(Element* aElement,
-                                              WidgetEvent* aEvent) {
-  if (!aEvent->IsTrusted()) {
-    return;
-  }
-  switch (aEvent->mMessage) {
-    case eFocus: {
-      OnFocusBlurPlugin(aElement, true);
-      break;
-    }
-    case eBlur: {
-      OnFocusBlurPlugin(aElement, false);
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-NS_IMETHODIMP
-HTMLObjectElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
-  HandleFocusBlurPlugin(this, aVisitor.mEvent);
-  return NS_OK;
-}
-
-#endif  // #ifdef XP_MACOSX
-
 nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aContext, aParent);
@@ -222,14 +116,6 @@ nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
 }
 
 void HTMLObjectElement::UnbindFromTree(bool aNullParent) {
-#ifdef XP_MACOSX
-  // When a page is reloaded (when an Document's content is removed), the
-  // focused element isn't necessarily sent an eBlur event. See
-  // nsFocusManager::ContentRemoved(). This means that a widget may think it
-  // still contains a focused plugin when it doesn't -- which in turn can
-  // disable text input in the browser window. See bug 1137229.
-  OnFocusBlurPlugin(this, false);
-#endif
   nsObjectLoadingContent::UnbindFromTree(aNullParent);
   nsGenericHTMLFormElement::UnbindFromTree(aNullParent);
 }

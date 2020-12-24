@@ -292,7 +292,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       int32_t aPanelY, nsString& aCommitted) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual void SetPluginFocused(bool& aFocused) override {}
   [[nodiscard]] virtual nsresult AttachNativeKeyEvent(
       mozilla::WidgetKeyboardEvent& aEvent) override {
     return NS_ERROR_NOT_IMPLEMENTED;
