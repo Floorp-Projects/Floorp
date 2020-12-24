@@ -15499,6 +15499,19 @@
     "description": "The number of times `play/pause/stop` actions are being handled on either default handler or media session action handler.",
     "releaseChannelCollection": "opt-out"
   },
+  "TABS_AUDIO_COMPETITION": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "alwu@mozilla.com"
+    ],
+    "bug_numbers": [1683788],
+    "expires_in_version": "91",
+    "kind": "categorical",
+    "labels": ["None", "Ignored", "ManagedFocusByUser", "ManagedFocusByGecko"],
+    "description": "This probe would be reported whenever (1) media starts without encountering audio competition (2) encountering audio competition but users ignore it (keep all media continually playing) (3) encountering audio competition and users manually handle it (4) encountering audio competition and Gecko handled it. The value of each state would be the total happening count for specific situation during the whole session.",
+    "releaseChannelCollection": "opt-out"
+  },
   "QM_QUOTA_INFO_LOAD_TIME_V0": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
