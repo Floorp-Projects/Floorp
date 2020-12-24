@@ -1630,6 +1630,12 @@ class UrlbarProvider {
    *
    * @param {UrlbarResult} result
    *   The result whose view will be updated.
+   * @param {Map} idsByName
+   *   A Map from an element's name, as defined by the provider; to its ID in
+   *   the DOM, as defined by the browser. The browser manages element IDs for
+   *   dynamic results to prevent collisions. However, a provider may need to
+   *   access the IDs of the elements created for its results. For example, to
+   *   set various `aria` attributes.
    * @returns {object}
    *   A view update object as described above.  The names of properties are the
    *   the names of elements declared in the view template.  The values of
@@ -1639,7 +1645,8 @@ class UrlbarProvider {
    *
    *   {object} [attributes]
    *     A mapping from attribute names to values.  Each name-value pair results
-   *     in an attribute being added to the element.
+   *     in an attribute being added to the element.  The `id` attribute is
+   *     reserved and cannot be set by the provider.
    *   {object} [style]
    *     A plain object that can be used to add inline styles to the element,
    *     like `display: none`.   `element.style` is updated for each name-value
@@ -1650,7 +1657,7 @@ class UrlbarProvider {
    *   {string} [textContent]
    *     A string that will be set as `element.textContent`.
    */
-  getViewUpdate(result) {
+  getViewUpdate(result, idsByName) {
     return null;
   }
 

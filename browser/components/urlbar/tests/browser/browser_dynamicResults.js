@@ -428,7 +428,11 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     }
   }
 
-  getViewUpdate(result) {
+  getViewUpdate(result, idsByName) {
+    for (let child of DYNAMIC_TYPE_VIEW_TEMPLATE.children) {
+      Assert.ok(idsByName.get(child.name), `idsByName contains ${child.name}`);
+    }
+
     return {
       selectable: {
         textContent: "Selectable",
@@ -509,6 +513,13 @@ function checkDOM(parentNode, expectedChildren) {
         `urlbarView-dynamic-${DYNAMIC_TYPE_NAME}-${child.name}`
       ),
       "child.name should be in classList"
+    );
+    // We have to use startsWith/endsWith since the middle of the ID is a random
+    // number.
+    Assert.ok(actualChild.id.startsWith("urlbarView-row-"));
+    Assert.ok(
+      actualChild.id.endsWith(child.name),
+      "The child was assigned the correct ID."
     );
     for (let [name, value] of Object.entries(child.attributes || {})) {
       Assert.equal(actualChild.getAttribute(name), value, `attribute: ${name}`);
