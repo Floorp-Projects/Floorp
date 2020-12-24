@@ -1133,204 +1133,205 @@ pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
 }
 
 impl qcms_profile {
-//XXX: it would be nice if we had a way of ensuring
-// everything in a profile was initialized regardless of how it was created
-//XXX: should this also be taking a black_point?
-/* similar to CGColorSpaceCreateCalibratedRGB */
-pub fn new_rgb_with_table(
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
-    table: &[u16],
-) -> Option<Box<qcms_profile>> {
-    let mut profile = profile_create();
-    //XXX: should store the whitepoint
-    if !set_rgb_colorants(&mut profile, white_point, primaries) {
-        return None;
+    //XXX: it would be nice if we had a way of ensuring
+    // everything in a profile was initialized regardless of how it was created
+    //XXX: should this also be taking a black_point?
+    /* similar to CGColorSpaceCreateCalibratedRGB */
+    pub fn new_rgb_with_table(
+        mut white_point: qcms_CIE_xyY,
+        mut primaries: qcms_CIE_xyYTRIPLE,
+        table: &[u16],
+    ) -> Option<Box<qcms_profile>> {
+        let mut profile = profile_create();
+        //XXX: should store the whitepoint
+        if !set_rgb_colorants(&mut profile, white_point, primaries) {
+            return None;
+        }
+        profile.redTRC = Some(curve_from_table(table));
+        profile.blueTRC = Some(curve_from_table(table));
+        profile.greenTRC = Some(curve_from_table(table));
+        profile.class_type = DISPLAY_DEVICE_PROFILE;
+        profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+        profile.color_space = RGB_SIGNATURE;
+        profile.pcs = XYZ_TYPE;
+        return Some(profile);
     }
-    profile.redTRC = Some(curve_from_table(table));
-    profile.blueTRC = Some(curve_from_table(table));
-    profile.greenTRC = Some(curve_from_table(table));
-    profile.class_type = DISPLAY_DEVICE_PROFILE;
-    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
-    profile.color_space = RGB_SIGNATURE;
-    profile.pcs = XYZ_TYPE;
-    return Some(profile);
-}
-pub fn new_sRGB() -> Option<Box<qcms_profile>> {
-    let Rec709Primaries = qcms_CIE_xyYTRIPLE {
-        red: {
-            qcms_CIE_xyY {
-                x: 0.6400f64,
-                y: 0.3300f64,
-                Y: 1.0f64,
-            }
-        },
-        green: {
-            qcms_CIE_xyY {
-                x: 0.3000f64,
-                y: 0.6000f64,
-                Y: 1.0f64,
-            }
-        },
-        blue: {
-            qcms_CIE_xyY {
-                x: 0.1500f64,
-                y: 0.0600f64,
-                Y: 1.0f64,
-            }
-        },
-    };
-    let D65 = qcms_white_point_sRGB();
-    let table = build_sRGB_gamma_table(1024);
-
-    qcms_profile::new_rgb_with_table(D65, Rec709Primaries, &table)
-}
-
-pub fn new_gray_with_gamma(gamma: f32) -> Option<Box<qcms_profile>> {
-    let mut profile = profile_create();
-
-    profile.grayTRC = Some(curve_from_gamma(gamma));
-    profile.class_type = DISPLAY_DEVICE_PROFILE;
-    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
-    profile.color_space = GRAY_SIGNATURE;
-    profile.pcs = XYZ_TYPE;
-    Some(profile)
-}
-
-
-pub fn new_rgb_with_gamma_set(
-    mut white_point: qcms_CIE_xyY,
-    mut primaries: qcms_CIE_xyYTRIPLE,
-    mut redGamma: f32,
-    mut greenGamma: f32,
-    mut blueGamma: f32,
-) -> Option<Box<qcms_profile>> {
-    let mut profile = profile_create();
-
-    //XXX: should store the whitepoint
-    if !set_rgb_colorants(&mut profile, white_point, primaries) {
-        return None;
-    }
-    profile.redTRC = Some(curve_from_gamma(redGamma));
-    profile.blueTRC = Some(curve_from_gamma(blueGamma));
-    profile.greenTRC = Some(curve_from_gamma(greenGamma));
-    profile.class_type = DISPLAY_DEVICE_PROFILE;
-    profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
-    profile.color_space = RGB_SIGNATURE;
-    profile.pcs = XYZ_TYPE;
-    Some(profile)
-}
-
-pub fn new_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
-    let mut length: u32;
-    let mut source: mem_source = mem_source {
-        buf: mem,
-        valid: false,
-        invalid_reason: None,
-    };
-    let mut index;
-    source.valid = true;
-    let mut src: &mut mem_source = &mut source;
-    if mem.len() < 4 {
-        return None;
-    }
-    length = read_u32(src, 0);
-    if length as usize <= mem.len() {
-        // shrink the area that we can read if appropriate
-        src.buf = &src.buf[0..length as usize];
-    } else {
-        return None;
-    }
-    /* ensure that the profile size is sane so it's easier to reason about */
-    if src.buf.len() <= 64 || src.buf.len() >= MAX_PROFILE_SIZE {
-        return None;
-    }
-    let mut profile = profile_create();
-
-    check_CMM_type_signature(src);
-    check_profile_version(src);
-    read_class_signature(&mut profile, src);
-    read_rendering_intent(&mut profile, src);
-    read_color_space(&mut profile, src);
-    read_pcs(&mut profile, src);
-    //TODO read rest of profile stuff
-    if !src.valid {
-        return None;
-    }
-
-    index = read_tag_table(&mut profile, src);
-    if !src.valid || index.is_empty() {
-        return None;
-    }
-
-    if find_tag(&index, TAG_CHAD).is_some() {
-        profile.chromaticAdaption = read_tag_s15Fixed16ArrayType(src, &index, TAG_CHAD)
-    } else {
-        profile.chromaticAdaption.invalid = true //Signal the data is not present
-    }
-
-    if profile.class_type == DISPLAY_DEVICE_PROFILE
-        || profile.class_type == INPUT_DEVICE_PROFILE
-        || profile.class_type == OUTPUT_DEVICE_PROFILE
-        || profile.class_type == COLOR_SPACE_PROFILE
-    {
-        if profile.color_space == RGB_SIGNATURE {
-            if let Some(A2B0) = find_tag(&index, TAG_A2B0) {
-                let lut_type = read_u32(src, A2B0.offset as usize);
-                if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
-                    profile.A2B0 = read_tag_lutType(src, A2B0)
-                } else if lut_type == LUT_MAB_TYPE {
-                    profile.mAB = read_tag_lutmABType(src, A2B0)
+    pub fn new_sRGB() -> Option<Box<qcms_profile>> {
+        let Rec709Primaries = qcms_CIE_xyYTRIPLE {
+            red: {
+                qcms_CIE_xyY {
+                    x: 0.6400f64,
+                    y: 0.3300f64,
+                    Y: 1.0f64,
                 }
-            }
-            if let Some(B2A0) = find_tag(&index, TAG_B2A0) {
-                let lut_type = read_u32(src, B2A0.offset as usize);
-                if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
-                    profile.B2A0 = read_tag_lutType(src, B2A0)
-                } else if lut_type == LUT_MBA_TYPE {
-                    profile.mBA = read_tag_lutmABType(src, B2A0)
+            },
+            green: {
+                qcms_CIE_xyY {
+                    x: 0.3000f64,
+                    y: 0.6000f64,
+                    Y: 1.0f64,
                 }
-            }
-            if find_tag(&index, TAG_rXYZ).is_some() || !qcms_supports_iccv4.load(Ordering::Relaxed)
-            {
-                profile.redColorant = read_tag_XYZType(src, &index, TAG_rXYZ);
-                profile.greenColorant = read_tag_XYZType(src, &index, TAG_gXYZ);
-                profile.blueColorant = read_tag_XYZType(src, &index, TAG_bXYZ)
-            }
-            if !src.valid {
-                return None;
-            }
+            },
+            blue: {
+                qcms_CIE_xyY {
+                    x: 0.1500f64,
+                    y: 0.0600f64,
+                    Y: 1.0f64,
+                }
+            },
+        };
+        let D65 = qcms_white_point_sRGB();
+        let table = build_sRGB_gamma_table(1024);
 
-            if find_tag(&index, TAG_rTRC).is_some() || !qcms_supports_iccv4.load(Ordering::Relaxed)
-            {
-                profile.redTRC = read_tag_curveType(src, &index, TAG_rTRC);
-                profile.greenTRC = read_tag_curveType(src, &index, TAG_gTRC);
-                profile.blueTRC = read_tag_curveType(src, &index, TAG_bTRC);
-                if profile.redTRC.is_none()
-                    || profile.blueTRC.is_none()
-                    || profile.greenTRC.is_none()
+        qcms_profile::new_rgb_with_table(D65, Rec709Primaries, &table)
+    }
+
+    pub fn new_gray_with_gamma(gamma: f32) -> Option<Box<qcms_profile>> {
+        let mut profile = profile_create();
+
+        profile.grayTRC = Some(curve_from_gamma(gamma));
+        profile.class_type = DISPLAY_DEVICE_PROFILE;
+        profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+        profile.color_space = GRAY_SIGNATURE;
+        profile.pcs = XYZ_TYPE;
+        Some(profile)
+    }
+
+    pub fn new_rgb_with_gamma_set(
+        mut white_point: qcms_CIE_xyY,
+        mut primaries: qcms_CIE_xyYTRIPLE,
+        mut redGamma: f32,
+        mut greenGamma: f32,
+        mut blueGamma: f32,
+    ) -> Option<Box<qcms_profile>> {
+        let mut profile = profile_create();
+
+        //XXX: should store the whitepoint
+        if !set_rgb_colorants(&mut profile, white_point, primaries) {
+            return None;
+        }
+        profile.redTRC = Some(curve_from_gamma(redGamma));
+        profile.blueTRC = Some(curve_from_gamma(blueGamma));
+        profile.greenTRC = Some(curve_from_gamma(greenGamma));
+        profile.class_type = DISPLAY_DEVICE_PROFILE;
+        profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
+        profile.color_space = RGB_SIGNATURE;
+        profile.pcs = XYZ_TYPE;
+        Some(profile)
+    }
+
+    pub fn new_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
+        let mut length: u32;
+        let mut source: mem_source = mem_source {
+            buf: mem,
+            valid: false,
+            invalid_reason: None,
+        };
+        let mut index;
+        source.valid = true;
+        let mut src: &mut mem_source = &mut source;
+        if mem.len() < 4 {
+            return None;
+        }
+        length = read_u32(src, 0);
+        if length as usize <= mem.len() {
+            // shrink the area that we can read if appropriate
+            src.buf = &src.buf[0..length as usize];
+        } else {
+            return None;
+        }
+        /* ensure that the profile size is sane so it's easier to reason about */
+        if src.buf.len() <= 64 || src.buf.len() >= MAX_PROFILE_SIZE {
+            return None;
+        }
+        let mut profile = profile_create();
+
+        check_CMM_type_signature(src);
+        check_profile_version(src);
+        read_class_signature(&mut profile, src);
+        read_rendering_intent(&mut profile, src);
+        read_color_space(&mut profile, src);
+        read_pcs(&mut profile, src);
+        //TODO read rest of profile stuff
+        if !src.valid {
+            return None;
+        }
+
+        index = read_tag_table(&mut profile, src);
+        if !src.valid || index.is_empty() {
+            return None;
+        }
+
+        if find_tag(&index, TAG_CHAD).is_some() {
+            profile.chromaticAdaption = read_tag_s15Fixed16ArrayType(src, &index, TAG_CHAD)
+        } else {
+            profile.chromaticAdaption.invalid = true //Signal the data is not present
+        }
+
+        if profile.class_type == DISPLAY_DEVICE_PROFILE
+            || profile.class_type == INPUT_DEVICE_PROFILE
+            || profile.class_type == OUTPUT_DEVICE_PROFILE
+            || profile.class_type == COLOR_SPACE_PROFILE
+        {
+            if profile.color_space == RGB_SIGNATURE {
+                if let Some(A2B0) = find_tag(&index, TAG_A2B0) {
+                    let lut_type = read_u32(src, A2B0.offset as usize);
+                    if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
+                        profile.A2B0 = read_tag_lutType(src, A2B0)
+                    } else if lut_type == LUT_MAB_TYPE {
+                        profile.mAB = read_tag_lutmABType(src, A2B0)
+                    }
+                }
+                if let Some(B2A0) = find_tag(&index, TAG_B2A0) {
+                    let lut_type = read_u32(src, B2A0.offset as usize);
+                    if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
+                        profile.B2A0 = read_tag_lutType(src, B2A0)
+                    } else if lut_type == LUT_MBA_TYPE {
+                        profile.mBA = read_tag_lutmABType(src, B2A0)
+                    }
+                }
+                if find_tag(&index, TAG_rXYZ).is_some()
+                    || !qcms_supports_iccv4.load(Ordering::Relaxed)
                 {
+                    profile.redColorant = read_tag_XYZType(src, &index, TAG_rXYZ);
+                    profile.greenColorant = read_tag_XYZType(src, &index, TAG_gXYZ);
+                    profile.blueColorant = read_tag_XYZType(src, &index, TAG_bXYZ)
+                }
+                if !src.valid {
                     return None;
                 }
-            }
-        } else if profile.color_space == GRAY_SIGNATURE {
-            profile.grayTRC = read_tag_curveType(src, &index, TAG_kTRC);
-            if profile.grayTRC.is_none() {
+
+                if find_tag(&index, TAG_rTRC).is_some()
+                    || !qcms_supports_iccv4.load(Ordering::Relaxed)
+                {
+                    profile.redTRC = read_tag_curveType(src, &index, TAG_rTRC);
+                    profile.greenTRC = read_tag_curveType(src, &index, TAG_gTRC);
+                    profile.blueTRC = read_tag_curveType(src, &index, TAG_bTRC);
+                    if profile.redTRC.is_none()
+                        || profile.blueTRC.is_none()
+                        || profile.greenTRC.is_none()
+                    {
+                        return None;
+                    }
+                }
+            } else if profile.color_space == GRAY_SIGNATURE {
+                profile.grayTRC = read_tag_curveType(src, &index, TAG_kTRC);
+                if profile.grayTRC.is_none() {
+                    return None;
+                }
+            } else {
+                debug_assert!(false, "read_color_space protects against entering here");
                 return None;
             }
         } else {
-            debug_assert!(false, "read_color_space protects against entering here");
             return None;
         }
-    } else {
-        return None;
-    }
 
-    if !src.valid {
-        return None;
+        if !src.valid {
+            return None;
+        }
+        Some(profile)
     }
-    Some(profile)
-}
 }
 
 #[no_mangle]
