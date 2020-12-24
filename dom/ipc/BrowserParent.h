@@ -383,8 +383,6 @@ class BrowserParent final : public PBrowserParent,
       const WidgetKeyboardEvent& aKeyboardEvent, const int32_t& aPanelX,
       const int32_t& aPanelY, nsString* aCommitted);
 
-  mozilla::ipc::IPCResult RecvSetPluginFocused(const bool& aFocused);
-
   mozilla::ipc::IPCResult RecvGetInputContext(widget::IMEState* aIMEState);
 
   mozilla::ipc::IPCResult RecvSetInputContext(
