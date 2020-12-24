@@ -72,10 +72,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #  include "mozilla/widget/WinMessages.h"
 #endif  // #ifdef XP_WIN
 
-#ifdef XP_MACOSX
-#  include "ComplexTextInputPanel.h"
-#endif
-
 #ifdef MOZ_WIDGET_GTK
 #  include <gdk/gdk.h>
 #  include <gtk/gtk.h>
