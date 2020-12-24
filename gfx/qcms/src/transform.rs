@@ -133,6 +133,18 @@ pub enum qcms_data_type {
     DATA_GRAYA_8 = 4,
 }
 
+impl qcms_data_type { 
+    fn bytes_per_pixel(&self) -> usize {
+        match self {
+            DATA_RGB_8 => 3,
+            DATA_RGBA_8 => 4,
+            DATA_BGRA_8 => 4,
+            DATA_GRAY_8 => 1,
+            DATA_GRAYA_8 => 1,
+        }
+    }
+}
+
 use qcms_data_type::*;
 
 #[repr(C)]
@@ -1366,6 +1378,34 @@ pub unsafe extern "C" fn qcms_transform_data(
         dest as *mut libc::c_uchar,
         length,
     );
+}
+
+pub struct Transform {
+    ty: qcms_data_type,
+    xfm: Box<qcms_transform>,
+}
+
+impl Transform {
+    pub fn new(input: &qcms_profile,
+        output: &qcms_profile,
+        ty: qcms_data_type,
+        intent: qcms_intent) -> Option<Self>
+    {
+        transform_create(input, ty, output, ty, intent)
+            .map(|xfm| Transform { ty, xfm})
+    }
+
+    pub fn apply(&mut self, data: &mut [u8]) {
+        if data.len() % self.ty.bytes_per_pixel() != 0 {
+            panic!("incomplete pixels")
+        }
+        unsafe {
+            qcms_transform_data(self.xfm.as_mut(),
+                            data.as_ptr() as *const libc::c_void,
+                            data.as_mut_ptr()as *mut libc::c_void,
+                            data.len() / self.ty.bytes_per_pixel());
+        }
+    }
 }
 
 #[no_mangle]
