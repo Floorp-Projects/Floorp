@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Problema al cargar la página</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Reintentar</string>
 
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Regresar</string>
-
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_title">No se puede completar solicitud</string>
+    <string name="mozac_browser_errorpages_generic_title">No se pudo completar la solicitud</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[
 	<p>Actualmente, no hay información adicional disponible para este problema o error.</p>
@@ -51,30 +46,27 @@
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">La conexión ha sido interrumpida</string>
+
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
-	<p>El navegador se conectó con éxito, pero se interrumpió la conexión mientras se transfería la información. Vuelva a intentarlo.</p>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>El navegador se conectó exitosamente, pero se interrumpió la conexión mientras se transfería la información. Vuelva a intentarlo.</p>
 	<ul>
 		<li>El sitio podría no estar disponible temporalmente o estar demasiado ocupado. Vuelva a intentarlo en unos minutos.</li>
 		<li>Si no puede cargar ninguna página, revise la conexión wifi o de datos de su dispositivo móvil.</li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">La conexión ha caducado</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-	<p>El sitio solicitado no respondió a una petición de conexión y el navegador ha dejado de esperar una respuesta.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>El sitio solicitado no respondió a una petición de conexión y el navegador ha dejado de esperar una respuesta.</p>
 	<ul>
 		<li>¿Podría estar experimentando el servidor una alta demanda o un corte temporal? Vuelva a intentarlo más tarde.</li>
 		<li>¿No puede navegar por otros sitios? Compruebe la conexión de red del equipo.</li>
-		<li>¿Su red o equipo está protegido por un firewall o un proxy? Una configuración incorrecta puede interferir con la navegación web.</li>
-		<li>¿Todavía con problemas? Consulte con su administrador de red o proveedor de Internet para obtener asistencia técnica.</li>
-	</ul>
-	]]></string>
+		<li>¿Su red o equipo está protegido por un firewall o un proxy? Una configuración incorrecta podría interferir con la navegación web.</li>
+		<li>¿Aun con problemas? Consulte con su administrador de red o proveedor de Internet para obtener asistencia técnica.</li>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_title">No se puede conectar</string>
+    <string name="mozac_browser_errorpages_connection_failure_title">Imposible conectar</string>
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
 	<ul>
@@ -84,36 +76,32 @@
 	]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
-    <string name="mozac_browser_errorpages_unknown_socket_type_title">Respuesta inesperada del servidor</string>
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Respuesta inesperada del servidor, y el navegador no puede continuar</string>
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
 	<p>El sitio respondió a la solicitud de red de una forma inesperada y el navegador no puede continuar.</p>
 	]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_title">La página no está redirigiendo adecuadamente</string>
+    <string name="mozac_browser_errorpages_redirect_loop_title">La página no está redirigiendo de manera adecuada</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-	<p>El navegador se ha detenido intentando recuperar el elemento solicitado. El sitio está redirigiendo la solicitud de una forma que nunca se va a completar.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>El navegador se ha detenido tratando recuperar el elemento solicitado. El sitio está redirigiendo la solicitud de una forma que nunca se va a completar.</p>
 	<ul>
 		<li>¿Tiene desactivadas o bloqueadas las cookies requeridas por este sitio?</li>
 		<li>Si aceptar las cookies del sitio no resuelve el problema, es probable que sea un problema de configuración del servidor y no de su equipo.</li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_title">Modo sin conexión</string>
+    <string name="mozac_browser_errorpages_offline_title">Modo desconectado</string>
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
-	<p>El navegador está operando en modo sin conexión y no puede conectarse con el elemento solicitado.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>El navegador está operando en modo sin conexión y no pudo conectarse con el elemento solicitado.</p>
 	<ul>
 		<li>¿Está conectado el equipo a una red activa?</li>
 		<li>Pulse "Volver a intentarlo" para pasar al modo con conexión y recargar la página.</li>
-	</ul>
-	]]></string>
+	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_title">Puerto restringido por razones de seguridad</string>
+    <string name="mozac_browser_errorpages_port_blocked_title">Puerto restringido, por razones de seguridad</string>
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
 	<p>La dirección solicitada especificaba un puerto (p. ej., <q>mozilla.org:80</q> para el puerto 80 de mozilla.org) que suele usarse para propósitos <em>distintos</em> a navegar por Internet. El navegador ha cancelado la solicitud para su protección y seguridad.</p>
@@ -222,7 +210,7 @@
 	]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_access_denied_title">El acceso al archivo ha sido denegado</string>
+    <string name="mozac_browser_errorpages_file_access_denied_title">El acceso al archivo ha sido denegado archivo</string>
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
 	<ul>
 		<li>Puede haberse eliminado o movido, o sus permisos de archivo pueden estar impidiendo el acceso.</li>

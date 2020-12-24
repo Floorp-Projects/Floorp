@@ -33,4 +33,6 @@
     <string name="mozac_feature_sitepermissions_never_allow">Majub\'ey</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">¿La niya\' q\'ij chi ri %1$s keruyaka\' taq tzij pa jutaqil yakoj?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">¿La niya\' q\'ij chi ri %1$s nutzïj rupam samajin ruma DRM?</string>
 </resources>

@@ -79,6 +79,8 @@
     <string name="mozac_feature_prompts_nov">Pay</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Avi</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">Xestión d\'anicios de sesión</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description">Espander los anicios de sesión suxeríos</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
@@ -88,6 +90,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">¿Reunviar los datos a esti sitiu?</string>
+    <string name="mozac_feature_prompt_repost_message">Refrescar esta páxina podría duplicar les aiciones de recién como l\'unviu d\'un pagu o l\'espublizamientu d\'un artículu.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">Reunviar los datos</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->

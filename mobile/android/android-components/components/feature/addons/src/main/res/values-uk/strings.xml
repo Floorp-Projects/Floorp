@@ -127,7 +127,7 @@
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Додатки</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
-    <string name="mozac_feature_addons_addons_manager">Керування додатками</string>
+    <string name="mozac_feature_addons_addons_manager">Керувати додатками</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Дозволити</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->

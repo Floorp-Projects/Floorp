@@ -33,4 +33,6 @@
     <string name="mozac_feature_sitepermissions_never_allow">Nea</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Bewarjen fan gegevens yn permaninte opslach troch %1$s tastean?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">%1$s tastean om DRM-kontrolearre ynhâld ôf te spyljen?</string>
 </resources>

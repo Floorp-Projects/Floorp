@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">பரிந்துரைத்த உள்நுழைவுகளை விரிவாக்கு</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">பரிந்துரைத்த உள்நுழைவுகள்</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">இத்தளத்திற்குத் தரவை மீண்டும் அனுப்பவா?</string>
+    <string name="mozac_feature_prompt_repost_message">இந்தப் பக்கத்தைப் புதுப்பிப்பது அண்மையச் செயல்களை திரும்பச் செய்யக்கூடும், இருமுறை பணம் அனுப்புதல் அல்லது இருமுறை கருத்திடல் போன்றவை.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">தரவை மீண்டும் அனுப்பு</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">இரத்துசெய்</string>
 </resources>

@@ -3,22 +3,22 @@
     <!-- Title of a dialog for a notification permission request. -->
     <string name="mozac_feature_sitepermissions_notification_title">Permette à %1$s di mandà nutificazioni ?</string>
     <!-- Title of a dialog for a camera permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_title">Permette à %1$s d’impiegà u vostru appareghju-fotò ?</string>
+    <string name="mozac_feature_sitepermissions_camera_title">Permette à %1$s d’impiegà u vostru apparechju-fotò ?</string>
     <!-- Title of a dialog for a microphone permission request. -->
     <string name="mozac_feature_sitepermissions_microfone_title">Permette à %1$s d’impiegà u vostru microfonu ?</string>
     <!-- Title of a dialog for a location permission request. -->
     <string name="mozac_feature_sitepermissions_location_title">Permette à %1$s d’accede à a vostra lucalizazione ?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_and_microphone">Permette à %1$s d’impiegà u vostru appareghju-fotò è u vostru microfonu ?</string>
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">Permette à %1$s d’impiegà u vostru apparechju-fotò è u vostru microfonu ?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">Microfonu 1</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
          back facing camera-->
-    <string name="mozac_feature_sitepermissions_back_facing_camera2">Appareghju-fotò daretu</string>
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">Apparechju-fotò daretu</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
      front facing camera-->
-    <string name="mozac_feature_sitepermissions_selfie_camera2">Appareghju-fotò davanti</string>
+    <string name="mozac_feature_sitepermissions_selfie_camera2">Apparechju-fotò davanti</string>
     <!-- Text for a positive button in a permission request dialog, this button will give
         access to this permission-->
     <string name="mozac_feature_sitepermissions_allow">Permette</string>
@@ -33,4 +33,6 @@
     <string name="mozac_feature_sitepermissions_never_allow">Mai</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Permette à %1$s d’allucà dati in a memoria permanente ?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Permette à %1$s di leghje cuntenutu cuntrollatu da DRM ?</string>
 </resources>

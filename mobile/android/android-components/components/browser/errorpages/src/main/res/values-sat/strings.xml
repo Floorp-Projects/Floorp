@@ -4,10 +4,10 @@
     <string name="mozac_browser_errorpages_page_title">ᱥᱟᱦᱴᱟ ᱞᱟᱫᱮ ᱰᱤᱜᱟᱹᱣ</string>
 
     <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_refresh">ᱫᱚᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮᱸ</string>
+    <string name="mozac_browser_errorpages_page_refresh">ᱫᱚᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ</string>
 
     <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">ᱯᱟᱹᱪᱷᱞᱟᱹ ᱥᱮᱫᱽ ᱥᱮᱱᱚᱜ ᱢᱮᱸ</string>
+    <string name="mozac_browser_errorpages_page_go_back">ᱯᱟᱹᱪᱷᱞᱟᱹ ᱥᱮᱫᱽ ᱥᱮᱱᱚᱜ ᱢᱮ</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ᱱᱮᱦᱚᱨ ᱵᱟᱝ ᱯᱩᱨᱟᱹᱣ ᱞᱮᱱᱟ</string>
@@ -23,7 +23,7 @@
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       ¶•<ul>¶
        • <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱚᱱᱟ ᱫᱚ ᱰᱟᱴᱟ ᱨᱮᱭᱟᱜ ᱚᱛᱷᱮᱱᱴᱤᱥᱤᱴᱭ ᱫᱚ ᱵᱟᱝ ᱯᱩᱥᱴᱟᱹᱣ ᱫᱟᱲᱮᱞᱟᱱᱟ ᱾</li>
-        <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫᱽ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱢᱮᱸ ᱾</li>¶•      
+        <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫᱽ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱢᱮ ᱾</li>¶•      
       </ul>•
     ]]></string>
 
@@ -32,7 +32,7 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[¶
  · <ul>¶
- · <li>ᱱᱚᱶᱟ ᱥᱟᱨᱵᱷᱟᱨ ᱠᱚᱱᱯᱷᱤᱜᱽᱨᱮᱥᱚᱱ ᱥᱟᱶ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ, ᱥᱮ ᱱᱚᱶᱟ ᱡᱟᱦᱟᱸᱭ ᱦᱚᱛᱮᱛᱮ ᱤᱢᱯᱚᱨᱥᱳᱱᱮᱴ ᱨᱤᱠᱟᱹ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱟᱢ ᱞᱟᱦᱟ ᱛᱮ ᱥᱟᱨᱵᱷᱟᱨ ᱥᱟᱶ ᱡᱚᱲᱟᱣ ᱢᱮᱸᱱᱟᱜ ᱢᱮᱸᱭᱟ, ᱤᱨᱳᱨ ᱛᱟᱦᱮᱸ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ, ᱟᱨ ᱛᱟᱭᱚᱢ ᱛᱮᱢ ᱨᱤᱠᱟᱹ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱾</li>¶•</ul>¶•
+ · <li>ᱱᱚᱶᱟ ᱥᱟᱨᱵᱷᱟᱨ ᱠᱚᱱᱯᱷᱤᱜᱽᱨᱮᱥᱚᱱ ᱥᱟᱶ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ, ᱥᱮ ᱱᱚᱶᱟ ᱡᱟᱦᱟᱸᱭ ᱦᱚᱛᱮᱛᱮ ᱤᱢᱯᱚᱨᱥᱳᱱᱮᱴ ᱨᱤᱠᱟᱹ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱟᱢ ᱞᱟᱦᱟ ᱛᱮ ᱥᱟᱨᱵᱷᱟᱨ ᱥᱟᱶ ᱡᱚᱲᱟᱣ ᱢᱮᱱᱟᱜ ᱢᱮᱭᱟ, ᱤᱨᱳᱨ ᱛᱟᱦᱮᱸ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ, ᱟᱨ ᱛᱟᱭᱚᱢ ᱛᱮᱢ ᱨᱤᱠᱟᱹ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱾</li>¶•</ul>¶•
 ]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
@@ -40,15 +40,15 @@
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶•<label> ᱤᱢᱯᱚᱨᱥᱳᱱᱮᱴ ᱥᱟᱭᱤᱴ ᱡᱟᱦᱟᱸᱭ ᱠᱚ ᱨᱤᱠᱟᱹ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱟᱨ ᱟᱢ ᱫᱚ ᱪᱟᱞᱟᱣ ᱛᱮ ᱦᱩᱭ ᱟᱢᱟ ᱾ </label>¶•<br><br>¶•<label>ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱟᱡᱟᱜ ᱩᱯᱨᱩᱢ ᱛᱮ ᱥᱚᱫᱚᱨ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱾ %1$s ᱯᱟᱹᱛᱭᱟᱹᱣ ᱵᱟᱹᱱᱩᱜ <b>%2$s</br>ᱪᱮᱫᱟᱜ ᱥᱮ ᱱᱚᱶᱟ ᱨᱮᱱᱟᱜ ᱥᱟᱨᱴᱤᱯᱷᱤᱠᱮᱴ ᱪᱟᱞᱩ ᱵᱟᱰᱟᱭ ᱵᱟᱹᱱᱩᱜ-ᱟ, ᱥᱟᱨᱴᱤᱯᱷᱤᱠᱮᱴ ᱥᱮᱞᱯᱷ ᱥᱟᱭᱤᱱ ᱜᱮᱭᱟ, ᱥᱮ ᱥᱟᱨᱵᱷᱟᱨ ᱥᱟᱨᱴᱤᱯᱷᱤᱠᱮᱴ ᱵᱟᱝ ᱥᱮᱱ ᱫᱟᱲᱮᱭᱟᱜ ᱱᱤᱦᱟᱹᱛᱤ </label>¶•]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_back">ᱛᱟᱭᱚᱢ ᱥᱮᱱᱚᱜ ᱢᱮᱸ (ᱠᱷᱚᱡᱚᱜ ᱜᱮᱭᱟ)</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_back">ᱛᱟᱭᱚᱢ ᱥᱮᱱᱚᱜ ᱢᱮ (ᱠᱷᱚᱡᱚᱜ ᱜᱮᱭᱟ)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ᱡᱤᱢᱟ ᱦᱟᱛᱟᱣ ᱢᱮᱸ ᱟᱨ ᱥᱮᱱᱚᱜ ᱢᱮᱸ</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ᱡᱤᱢᱟ ᱦᱟᱛᱟᱣ ᱢᱮ ᱟᱨ ᱥᱮᱱᱚᱜ ᱢᱮ</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ᱡᱚᱲᱟᱣ ᱵᱟᱝ ᱧᱮᱞ ᱞᱮᱱᱟ</string>
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[¶•<p>ᱵᱽᱨᱟᱣᱡᱟᱨ ᱡᱚᱲᱟᱣ ᱞᱟᱦᱟ ᱮᱱᱟ, ᱢᱮᱸᱱᱠᱷᱟᱱ ᱡᱚᱲᱟᱣ ᱵᱟᱝ ᱧᱮᱞ ᱮᱱᱟ ᱡᱚᱠᱷᱚᱱ ᱠᱷᱚᱵᱚᱨ ᱵᱷᱮᱡᱟᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱤᱠᱟᱹᱭ ᱢᱮᱸ </p>¶•<ul>•<li>ᱥᱟᱭᱤᱴ ᱵᱟᱝ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱥᱮ ᱠᱟᱹᱢᱤ ᱨᱮ ᱛᱟᱦᱮᱱᱟ ᱾ ᱠᱤᱪᱷᱩ ᱜᱷᱟᱹᱲᱤᱡ ᱛᱟᱭᱚᱢ ᱨᱤᱠᱟᱹᱭ ᱢᱮᱸ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱮᱢ ᱞᱟᱫᱮ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱟᱢᱟᱜ ᱰᱤᱵᱷᱟᱭᱥ ᱨᱮᱱᱟᱜ ᱰᱟᱴᱟ ᱥᱮ ᱣᱟᱭ-ᱯᱷᱟᱭ ᱡᱚᱲᱟᱣ ᱧᱮᱞ ᱞᱮᱜᱟᱭ ᱢᱮᱸ ᱾ </li>¶•</ul¶•]]></string>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[¶•<p>ᱵᱽᱨᱟᱣᱡᱟᱨ ᱡᱚᱲᱟᱣ ᱞᱟᱦᱟ ᱮᱱᱟ, ᱢᱮᱱᱠᱷᱟᱱ ᱡᱚᱲᱟᱣ ᱵᱟᱝ ᱧᱮᱞ ᱮᱱᱟ ᱡᱚᱠᱷᱚᱱ ᱠᱷᱚᱵᱚᱨ ᱵᱷᱮᱡᱟᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱤᱠᱟᱹᱭ ᱢᱮ </p>¶•<ul>•<li>ᱥᱟᱭᱤᱴ ᱵᱟᱝ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱥᱮ ᱠᱟᱹᱢᱤ ᱨᱮ ᱛᱟᱦᱮᱱᱟ ᱾ ᱠᱤᱪᱷᱩ ᱜᱷᱟᱹᱲᱤᱡ ᱛᱟᱭᱚᱢ ᱨᱤᱠᱟᱹᱭ ᱢᱮ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱮᱢ ᱞᱟᱫᱮ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱟᱢᱟᱜ ᱰᱤᱵᱷᱟᱭᱥ ᱨᱮᱱᱟᱜ ᱰᱟᱴᱟ ᱥᱮ ᱣᱟᱭ-ᱯᱷᱟᱭ ᱡᱚᱲᱟᱣ ᱧᱮᱞ ᱞᱮᱜᱟᱭ ᱢᱮ ᱾ </li>¶•</ul¶•]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">ᱡᱚᱯᱚᱲᱟᱣ ᱚᱠᱛᱚ ᱪᱟᱵᱟ ᱮᱱᱟ</string>
@@ -57,10 +57,10 @@
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
       <p>ᱱᱮᱦᱚᱨ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱚ ᱡᱩᱲᱟᱹᱣ ᱵᱟᱭ ᱟᱸᱡᱚᱢ ᱮᱫᱟᱭ ᱟᱨ ᱵᱷᱮᱡᱟ ᱨᱩᱟᱹᱲ ᱮ ᱵᱚᱸᱫᱚ ᱠᱮᱜᱼᱟᱭ ᱾</p>
       <ul>
-        <li>ᱥᱟᱹᱨᱣᱟᱹᱨ ᱦᱟᱤ ᱰᱤᱢᱟᱸᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱛᱷᱟᱱᱤᱛ ᱟᱩᱴᱨᱮᱡ ᱞᱟᱹᱤᱫ ᱦᱩᱭ ᱠᱚᱜᱼᱟ? ᱯᱚᱨᱮ ᱪᱮᱥᱴᱟᱭ ᱢᱮᱸ ᱾</li>
-        <li>ᱟᱢ ᱪᱮᱫ ᱚᱞᱜᱟ ᱥᱟᱭᱤ ᱵᱟᱧ ᱵᱟᱨᱩᱡ ᱫᱟᱲᱟᱭᱟᱜ ᱠᱟᱱᱟᱢ? ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮᱸ ᱾</li>
+        <li>ᱥᱟᱹᱨᱣᱟᱹᱨ ᱦᱟᱤ ᱰᱤᱢᱟᱸᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱛᱷᱟᱱᱤᱛ ᱟᱩᱴᱨᱮᱡ ᱞᱟᱹᱤᱫ ᱦᱩᱭ ᱠᱚᱜᱼᱟ? ᱯᱚᱨᱮ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
+        <li>ᱟᱢ ᱪᱮᱫ ᱚᱞᱜᱟ ᱥᱟᱭᱤ ᱵᱟᱧ ᱵᱟᱨᱩᱡ ᱫᱟᱲᱟᱭᱟᱜ ᱠᱟᱱᱟᱢ? ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
         <li>ᱪᱮᱫ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱫᱚ ᱯᱷᱟᱭᱟᱨᱣᱟᱞᱞ ᱟᱨ ᱵᱟᱝ ᱯᱨᱳᱠᱥᱭ ᱱᱮᱣᱴᱣᱟᱨᱠ ᱯᱨᱚᱴᱮᱠᱴᱮᱰ ᱜᱮᱭᱟ? ᱵᱷᱩᱞ ᱥᱟᱡᱟᱣ ᱠᱚ ᱠᱟᱹᱜᱤᱫ ᱣᱮᱵ ᱵᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱵᱟᱫᱷᱟ ᱮᱢ ᱫᱟᱲᱮᱜᱼᱟᱭ ᱾</li>
-        <li>ᱱᱤᱛ ᱦᱟᱹᱵᱤᱡ ᱥᱸᱝᱠᱚᱴ ᱨᱮ?ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱤᱡ ᱱᱮᱴᱣᱟᱨᱠ ᱟᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱡᱩᱜᱟᱡᱩᱜ ᱢᱮᱸ</li>
+        <li>ᱱᱤᱛ ᱦᱟᱹᱵᱤᱡ ᱥᱸᱝᱠᱚᱴ ᱨᱮ?ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱤᱡ ᱱᱮᱴᱣᱟᱨᱠ ᱟᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱡᱩᱜᱟᱡᱩᱜ ᱢᱮ</li>
       </ul>
     ]]></string>
 
@@ -70,8 +70,8 @@
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
-        <li>ᱥᱟᱭᱤᱴ ᱵᱮᱛᱷᱟᱱᱤᱠ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱟᱨ ᱵᱟᱝ ᱡᱟᱹᱛᱤ ᱵᱤᱡᱭ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱾ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮᱸ ᱾</li>
-        <li>ᱟᱢ ᱡᱚᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱞᱚᱰ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱢ, ᱥᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱟᱨ ᱵᱟᱝ Wi-Fi ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮᱸ ᱾</li>
+        <li>ᱥᱟᱭᱤᱴ ᱵᱮᱛᱷᱟᱱᱤᱠ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱟᱨ ᱵᱟᱝ ᱡᱟᱹᱛᱤ ᱵᱤᱡᱭ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟ ᱾ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
+        <li>ᱟᱢ ᱡᱚᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱞᱚᱰ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱢ, ᱥᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱟᱨ ᱵᱟᱝ Wi-Fi ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
       </ul>
     ]]></string>
 
@@ -119,7 +119,7 @@
     <string name="mozac_browser_errorpages_net_reset_title">ᱡᱚᱱᱚᱲᱟᱹᱣ ᱫᱚ ᱨᱤᱥᱮᱴ ᱮᱱᱟ</string>
 
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
-    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[¶•<p>ᱡᱩᱲᱟᱹᱣ ᱱᱮᱜᱚᱥᱤᱭᱮᱴ ᱡᱚᱠᱷᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱞᱤᱸᱠ ᱠᱚᱴᱟᱣᱮᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱤᱠᱟᱹᱭ ᱢᱮᱸ </p>¶•<ul>•<li>ᱥᱟᱭᱤᱴ ᱵᱟᱝ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱥᱮ ᱠᱟᱹᱢᱤ ᱨᱮ ᱛᱟᱦᱮᱱᱟ ᱾ ᱠᱤᱪᱷᱩ ᱜᱷᱟᱹᱲᱤᱡ ᱛᱟᱭᱚᱢ ᱨᱤᱠᱟᱹᱭ ᱢᱮᱸ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱮᱢ ᱞᱟᱫᱮ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱟᱢᱟᱜ ᱰᱤᱵᱷᱟᱭᱥ ᱨᱮᱱᱟᱜ ᱰᱟᱴᱟ ᱥᱮ ᱣᱟᱭ-ᱯᱷᱟᱭ ᱡᱚᱲᱟᱣ ᱧᱮᱞ ᱞᱮᱜᱟᱭ ᱢᱮᱸ ᱾ </li>¶•</ul¶•]]></string>
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[¶•<p>ᱡᱩᱲᱟᱹᱣ ᱱᱮᱜᱚᱥᱤᱭᱮᱴ ᱡᱚᱠᱷᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱞᱤᱸᱠ ᱠᱚᱴᱟᱣᱮᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱤᱠᱟᱹᱭ ᱢᱮ </p>¶•<ul>•<li>ᱥᱟᱭᱤᱴ ᱵᱟᱝ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ ᱥᱮ ᱠᱟᱹᱢᱤ ᱨᱮ ᱛᱟᱦᱮᱱᱟ ᱾ ᱠᱤᱪᱷᱩ ᱜᱷᱟᱹᱲᱤᱡ ᱛᱟᱭᱚᱢ ᱨᱤᱠᱟᱹᱭ ᱢᱮ ᱾ </li>¶•<li> ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱮᱢ ᱞᱟᱫᱮ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱟᱢᱟᱜ ᱰᱤᱵᱷᱟᱭᱥ ᱨᱮᱱᱟᱜ ᱰᱟᱴᱟ ᱥᱮ ᱣᱟᱭ-ᱯᱷᱟᱭ ᱡᱚᱲᱟᱣ ᱧᱮᱞ ᱞᱮᱜᱟᱭ ᱢᱮ ᱾ </li>¶•</ul¶•]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">ᱨᱮᱫ ᱯᱨᱚᱠᱟᱨ ᱵᱟᱝᱨᱟᱠᱷᱭᱟᱼᱟᱜ ᱠᱟᱱᱟ</string>
@@ -156,7 +156,7 @@
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
       ¶•<ul>¶
-       • <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱮᱢ ᱚᱱᱟ ᱫᱚ ᱤᱱᱣᱮᱞᱤᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱭ ᱥᱟᱯᱯᱚᱴ ᱮᱫ ᱠᱚᱢᱯᱨᱮᱥᱥᱚᱱ ᱯᱷᱚᱨᱢ ᱨᱮ ᱢᱮᱸᱱᱟᱜ ᱠᱷᱟᱹᱛᱤᱨ ᱵᱟᱝ ᱫᱮᱠᱷᱟᱣᱜ ᱠᱟᱱᱟ ᱾</li>
+       • <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱮᱢ ᱚᱱᱟ ᱫᱚ ᱤᱱᱣᱮᱞᱤᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱭ ᱥᱟᱯᱯᱚᱴ ᱮᱫ ᱠᱚᱢᱯᱨᱮᱥᱥᱚᱱ ᱯᱷᱚᱨᱢ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱷᱟᱹᱛᱤᱨ ᱵᱟᱝ ᱫᱮᱠᱷᱟᱣᱜ ᱠᱟᱱᱟ ᱾</li>
         <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱾</li>¶•      
       </ul>•
     ]]></string>
@@ -168,24 +168,24 @@
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
       <p>ᱮᱢ ᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱨᱮ ᱵᱨᱟᱣᱡᱚᱨ ᱦᱚᱥᱴ ᱥᱟᱹᱨᱣᱟᱹᱨ ᱵᱟᱭ ᱧᱟᱢ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱭ ᱾</p>
       <ul>
-        <li>ᱵᱷᱩᱞ ᱴᱭᱯᱤᱝ ᱞᱟᱹᱜᱤᱫ ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮᱸ ᱡᱮᱢᱚᱱ
+        <li>ᱵᱷᱩᱞ ᱴᱭᱯᱤᱝ ᱞᱟᱹᱜᱤᱫ ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱡᱮᱢᱚᱱ
           <strong>ww</strong>.example.com ᱵᱚᱫᱚᱞ ᱛᱮ
           <strong>www</strong>.example.com.</li>
-        <li>ᱟᱢ ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱞᱚᱰ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱢ, ᱢᱮᱸᱱᱠᱷᱟᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱟᱨ ᱵᱟᱝ Wi-Fi ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮᱸ ᱾</li>
+        <li>ᱟᱢ ᱡᱩᱫᱤ ᱥᱟᱦᱴᱟ ᱵᱟᱝ ᱞᱚᱰ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱢ, ᱢᱮᱱᱠᱷᱟᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱟᱨ ᱵᱟᱝ Wi-Fi ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">ᱤᱱᱴᱟᱹᱨᱱᱮᱴ ᱡᱚᱱᱚᱲᱟᱣ ᱵᱟᱹᱱᱩᱜ-ᱟ</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
-    <string name="mozac_browser_errorpages_no_internet_message">ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮᱸ ᱟᱨ ᱵᱟᱝ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱥᱟᱦᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱨᱤᱞᱚᱰ ᱢᱮᱸ ᱾</string>
+    <string name="mozac_browser_errorpages_no_internet_message">ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱟᱨ ᱵᱟᱝ ᱠᱤᱪᱷᱤ ᱥᱚᱢᱚᱭ ᱯᱚᱨᱮ ᱥᱟᱦᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱨᱤᱞᱚᱰ ᱢᱮ ᱾</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ᱫᱚᱦᱲᱟ ᱞᱟᱫᱤ</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ᱵᱷᱩᱞ ᱴᱷᱤᱠᱟᱱᱟᱹ</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
-      <p>ᱮᱢ ᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱫᱚ ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱯᱷᱚᱨᱢᱟᱴ ᱨᱮ ᱢᱮᱸᱱᱟᱜᱼᱟ ᱾ ᱫᱚᱭᱟᱠᱟᱛᱮ ᱡᱟᱭᱜᱟ ᱵᱟᱨ ᱨᱮ  ᱵᱷᱩᱞ ᱠᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮᱸ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮᱸ ᱾</p>
+      <p>ᱮᱢ ᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱫᱚ ᱵᱟᱝ ᱵᱟᱰᱟᱭ ᱯᱷᱚᱨᱢᱟᱴ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ ᱾ ᱫᱚᱭᱟᱠᱟᱛᱮ ᱡᱟᱭᱜᱟ ᱵᱟᱨ ᱨᱮ  ᱵᱷᱩᱞ ᱠᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</p>
     ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ᱴᱷᱤᱠᱬᱟᱹ ᱵᱟᱭ ᱴᱷᱤᱠ ᱟ</string>
@@ -204,14 +204,14 @@
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
       <p>ᱴᱷᱤᱠᱬᱟᱹ ᱫᱚ ᱯᱨᱚᱴᱚᱠᱚᱞ ᱮ ᱫᱮᱠᱷᱟᱣᱮᱫᱟᱭ (ᱡᱮᱢᱚᱱ, <q>wxyz://</q>) ᱵᱨᱟᱣᱡᱟᱹᱨ ᱵᱟᱝ ᱪᱤᱱᱦᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱵᱟᱨᱣᱡᱟᱹᱨ ᱥᱟᱭᱤᱴ ᱨᱮ ᱵᱟᱝ ᱡᱩᱲᱟᱣᱼ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾</p>
       <ul>
-        <li>ᱟᱢ ᱪᱮᱫ ᱢᱟᱹᱞᱴᱤᱢᱤᱰᱤᱭᱟ ᱟᱨ ᱵᱟᱝ ᱵᱟᱝᱼᱚᱞ ᱥᱟᱹᱨᱣᱤᱥ ᱫᱚᱨᱠᱟᱨ ᱥᱮ? ᱡᱟᱹᱥᱛᱤ ᱡᱤᱱᱤᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱭᱤᱴ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮᱸ ᱾</li>
+        <li>ᱟᱢ ᱪᱮᱫ ᱢᱟᱹᱞᱴᱤᱢᱤᱰᱤᱭᱟ ᱟᱨ ᱵᱟᱝ ᱵᱟᱝᱼᱚᱞ ᱥᱟᱹᱨᱣᱤᱥ ᱫᱚᱨᱠᱟᱨ ᱥᱮ? ᱡᱟᱹᱥᱛᱤ ᱡᱤᱱᱤᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱭᱤᱴ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
         <li>ᱠᱤᱪᱷᱤ ᱯᱚᱨᱴᱟᱞ ᱫᱚ ᱛᱷᱟᱰ ᱯᱟᱨᱴᱭ ᱥᱚᱯᱷᱴᱣᱮᱨ ᱟᱨ ᱵᱟᱝ ᱯᱞᱟᱹᱜᱤᱱᱥ ᱫᱚᱨᱠᱟᱨ ᱚᱠᱟ ᱫᱚ ᱵᱨᱟᱩᱡᱟᱹᱨ ᱪᱤᱷᱟᱣ ᱨᱮ ᱜᱚᱲᱚᱟᱭ ᱾</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ᱨᱮᱫ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ</string>
-    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[¶•<ul>¶•<li>ᱪᱮᱫ ᱟᱭᱴᱚᱢ ᱫᱚᱦᱲᱟ ᱛᱮ ᱧᱩᱛᱩᱢ ᱟᱹᱛᱩ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ, ᱚᱪᱚᱫ, ᱥᱮ ᱫᱚᱦᱲᱟ ᱛᱷᱟᱯᱚᱱᱚᱜ-ᱟ?</li>¶•<li>ᱪᱮᱫ ᱮᱰᱨᱮᱥ ᱨᱮ ᱟᱹᱲ ᱠᱮᱯᱤᱴᱭᱞᱤᱡᱮᱥᱚᱱ, ᱥᱮ ᱮᱴᱟᱜ ᱴᱟᱭᱯᱳᱜᱽᱨᱟᱯᱷᱤᱠᱟᱞ ᱨᱮ ᱦᱩᱲᱟᱹᱜ ᱢᱮᱸᱱᱟᱜ-ᱟ?</li>¶•<li> ᱪᱮᱫ ᱟᱢ ᱴᱷᱮᱱ ᱫᱟᱣ ᱮᱢ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱳᱷᱤᱥᱤᱭᱚᱱᱴ ᱯᱚᱨᱢᱤᱥᱚᱱ ᱢᱮᱸᱱᱟᱜ-ᱟ? </li>¶•</ul>¶•]]></string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[¶•<ul>¶•<li>ᱪᱮᱫ ᱟᱭᱴᱚᱢ ᱫᱚᱦᱲᱟ ᱛᱮ ᱧᱩᱛᱩᱢ ᱟᱹᱛᱩ ᱫᱟᱲᱮᱭᱟᱜ-ᱟ, ᱚᱪᱚᱫ, ᱥᱮ ᱫᱚᱦᱲᱟ ᱛᱷᱟᱯᱚᱱᱚᱜ-ᱟ?</li>¶•<li>ᱪᱮᱫ ᱮᱰᱨᱮᱥ ᱨᱮ ᱟᱹᱲ ᱠᱮᱯᱤᱴᱭᱞᱤᱡᱮᱥᱚᱱ, ᱥᱮ ᱮᱴᱟᱜ ᱴᱟᱭᱯᱳᱜᱽᱨᱟᱯᱷᱤᱠᱟᱞ ᱨᱮ ᱦᱩᱲᱟᱹᱜ ᱢᱮᱱᱟᱜ-ᱟ?</li>¶•<li> ᱪᱮᱫ ᱟᱢ ᱴᱷᱮᱱ ᱫᱟᱣ ᱮᱢ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱳᱷᱤᱥᱤᱭᱚᱱᱴ ᱯᱚᱨᱢᱤᱥᱚᱱ ᱢᱮᱱᱟᱜ-ᱟ? </li>¶•</ul>¶•]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">ᱨᱮᱫ ᱨᱮ ᱫᱚᱠᱷᱚᱞ ᱵᱟᱹᱰ</string>
@@ -228,9 +228,9 @@
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
       <p>ᱱᱚᱶᱟ ᱵᱨᱟᱩᱡᱟᱹᱨ ᱫᱚ ᱯᱨᱚᱠᱥᱭ ᱥᱟᱹᱨᱣᱟᱹᱨ ᱞᱟᱹᱤᱫ ᱜᱮ ᱴᱷᱤᱠ ᱟᱠᱟᱱᱟ, ᱦᱮᱞᱮ ᱯᱨᱚᱠᱥᱭ ᱫᱚ ᱵᱟᱭ ᱡᱩᱰᱟᱹᱣ ᱞᱮᱱᱟᱭ ᱾</p>
       <ul>
-        <li>ᱵᱨᱟᱣᱡᱟᱹᱨ ᱯᱨᱚᱠᱥᱭ ᱠᱚᱱᱯᱷᱤᱜᱭᱩᱨᱮᱥᱚᱱ ᱴᱷᱤᱠ ᱜᱮᱭᱟ ᱥᱮ? ᱥᱟᱡᱟᱣ ᱠᱚ ᱧᱮᱞ ᱢᱮᱸ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮᱸ</li>
+        <li>ᱵᱨᱟᱣᱡᱟᱹᱨ ᱯᱨᱚᱠᱥᱭ ᱠᱚᱱᱯᱷᱤᱜᱭᱩᱨᱮᱥᱚᱱ ᱴᱷᱤᱠ ᱜᱮᱭᱟ ᱥᱮ? ᱥᱟᱡᱟᱣ ᱠᱚ ᱧᱮᱞ ᱢᱮ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ</li>
         <li>ᱪᱮᱫ ᱯᱨᱚᱠᱥᱭ ᱥᱟᱹᱨᱣᱤᱥ ᱱᱚᱶᱟ ᱱᱮᱴᱣᱟᱨᱠ ᱥᱟᱞᱟᱜ ᱡᱩᱲᱟᱹᱣ ᱟᱱᱩᱢᱟᱹᱛᱭ ᱮᱢᱚ ᱟᱭ ?</li>
-        <li>ᱱᱤᱛ ᱦᱚᱸ ᱵᱟᱭ ᱴᱷᱤᱠ ᱟ? ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱮᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱠᱟᱛᱷᱟᱜ ᱢᱮᱸ ᱾</li>
+        <li>ᱱᱤᱛ ᱦᱚᱸ ᱵᱟᱭ ᱴᱷᱤᱠ ᱟ? ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱮᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱠᱟᱛᱷᱟᱜ ᱢᱮ ᱾</li>
       </ul>
     ]]></string>
 
@@ -240,9 +240,9 @@
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
       <p>ᱱᱚᱶᱟ ᱵᱨᱟᱩᱡᱟᱹᱨ ᱫᱚ ᱯᱨᱚᱠᱥᱭ ᱥᱟᱹᱨᱣᱟᱹᱨ ᱞᱟᱹᱤᱫ ᱜᱮ ᱴᱷᱤᱠ ᱟᱠᱟᱱᱟ, ᱦᱮᱞᱮ ᱯᱨᱚᱠᱥᱭ ᱫᱚ ᱵᱟᱭ ᱧᱟᱢ ᱞᱟᱱᱟ ᱾</p>
       <ul>
-        <li>ᱵᱨᱟᱣᱡᱟᱹᱨ ᱯᱨᱚᱠᱥᱭ ᱠᱚᱱᱯᱷᱤᱜᱭᱩᱨᱮᱥᱚᱱ ᱴᱷᱤᱠ ᱜᱮᱭᱟ ᱥᱮ? ᱥᱟᱡᱟᱣ ᱠᱚ ᱧᱮᱞ ᱢᱮᱸ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮᱸ</li>
+        <li>ᱵᱨᱟᱣᱡᱟᱹᱨ ᱯᱨᱚᱠᱥᱭ ᱠᱚᱱᱯᱷᱤᱜᱭᱩᱨᱮᱥᱚᱱ ᱴᱷᱤᱠ ᱜᱮᱭᱟ ᱥᱮ? ᱥᱟᱡᱟᱣ ᱠᱚ ᱧᱮᱞ ᱢᱮ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ</li>
         <li>ᱪᱮᱫ ᱯᱨᱚᱠᱥᱭ ᱥᱟᱹᱨᱣᱤᱥ ᱱᱚᱶᱟ ᱱᱮᱴᱣᱟᱨᱠ ᱥᱟᱞᱟᱜ ᱡᱩᱲᱟᱹᱣ ᱟᱱᱩᱢᱟᱹᱛᱭ ᱮᱢᱚ ᱟᱭ ?</li>
-        <li>ᱱᱤᱛ ᱦᱚᱸ ᱵᱟᱭ ᱴᱷᱤᱠ ᱟ? ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱮᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱠᱟᱛᱷᱟᱜ ᱢᱮᱸ ᱾</li>
+        <li>ᱱᱤᱛ ᱦᱚᱸ ᱵᱟᱭ ᱴᱷᱤᱠ ᱟ? ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱮᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱠᱟᱛᱷᱟᱜ ᱢᱮ ᱾</li>
       </ul>
     ]]></string>
 
@@ -251,7 +251,7 @@
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
-      <p> %1$s ᱨᱮ ᱢᱮᱸᱱᱟᱜ ᱟᱠᱟᱱᱟ ᱥᱟᱭᱴ ᱫᱚ ᱟᱴᱴᱟᱠ ᱥᱟᱭᱤᱴ ᱞᱮᱠᱷᱟ ᱛᱮ ᱠᱷᱚᱵᱚᱨ ᱟᱠᱟᱱᱟ ᱟᱨ ᱟᱢᱟᱜ ᱥᱤᱠᱭᱚᱨᱭᱴᱤ ᱞᱟᱫᱜᱤᱫ ᱚᱱᱟ ᱫᱚ ᱵᱚᱸᱫᱚ ᱟᱠᱟᱱᱟ ᱾</p>
+      <p> %1$s ᱨᱮ ᱢᱮᱱᱟᱜ ᱟᱠᱟᱱᱟ ᱥᱟᱭᱴ ᱫᱚ ᱟᱴᱴᱟᱠ ᱥᱟᱭᱤᱴ ᱞᱮᱠᱷᱟ ᱛᱮ ᱠᱷᱚᱵᱚᱨ ᱟᱠᱟᱱᱟ ᱟᱨ ᱟᱢᱟᱜ ᱥᱤᱠᱭᱚᱨᱭᱴᱤ ᱞᱟᱫᱜᱤᱫ ᱚᱱᱟ ᱫᱚ ᱵᱚᱸᱫᱚ ᱟᱠᱟᱱᱟ ᱾</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
@@ -259,7 +259,7 @@
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
-      <p>%1$s ᱨᱮ ᱢᱮᱸᱱᱟᱜ ᱥᱟᱭᱤᱴ ᱫᱚ ᱵᱮᱠᱟᱨ ᱥᱚᱯᱷᱴᱣᱮᱨ ᱠᱚ ᱵᱟᱛᱚᱣ ᱟᱨ ᱟᱢᱟᱜ ᱥᱮᱠᱭᱚᱨᱟᱹᱴᱭ ᱯᱨᱤᱯᱷᱮᱨᱮᱱᱥ ᱦᱤᱥᱟᱹᱵ ᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾</p>
+      <p>%1$s ᱨᱮ ᱢᱮᱱᱟᱜ ᱥᱟᱭᱤᱴ ᱫᱚ ᱵᱮᱠᱟᱨ ᱥᱚᱯᱷᱴᱣᱮᱨ ᱠᱚ ᱵᱟᱛᱚᱣ ᱟᱨ ᱟᱢᱟᱜ ᱥᱮᱠᱭᱚᱨᱟᱹᱴᱭ ᱯᱨᱤᱯᱷᱮᱨᱮᱱᱥ ᱦᱤᱥᱟᱹᱵ ᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
@@ -267,13 +267,13 @@
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
-      <p>%1$s ᱨᱮ ᱢᱮᱸᱱᱟᱜ ᱥᱟᱭᱤᱴ ᱫᱚ ᱠᱷᱟᱹᱛᱨᱟ ᱜᱮᱭᱟ ᱟᱨ ᱟᱢᱟᱜ ᱥᱮᱠᱭᱚᱨᱟᱹᱴᱭ ᱯᱨᱤᱯᱷᱮᱨᱮᱱᱥ ᱦᱤᱥᱟᱹᱵ ᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾</p>
+      <p>%1$s ᱨᱮ ᱢᱮᱱᱟᱜ ᱥᱟᱭᱤᱴ ᱫᱚ ᱠᱷᱟᱹᱛᱨᱟ ᱜᱮᱭᱟ ᱟᱨ ᱟᱢᱟᱜ ᱥᱮᱠᱭᱚᱨᱟᱹᱴᱭ ᱯᱨᱤᱯᱷᱮᱨᱮᱱᱥ ᱦᱤᱥᱟᱹᱵ ᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">ᱮᱲᱮ ᱥᱟᱭᱤᱴ ᱵᱟᱵᱚᱛ</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
-      <p>%1$s ᱨᱮ ᱢᱮᱸᱱᱟᱜ ᱥᱟᱭᱤᱴ ᱫᱚ ᱠᱷᱟᱹᱛᱨᱟ ᱟᱨ ᱮᱲᱮ ᱜᱮᱭᱟ ᱢᱮᱸᱱᱛᱮ ᱠᱚ ᱠᱷᱚᱵᱚᱨ ᱟᱠᱟᱫᱼᱟ ᱟᱨ ᱟᱢᱟᱜ ᱥᱮᱠᱭᱚᱨᱟᱹᱴᱭ ᱯᱨᱤᱯᱷᱮᱨᱮᱱᱥ ᱦᱤᱥᱟᱹᱵ ᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾</p>
+      <p>%1$s ᱨᱮ ᱢᱮᱱᱟᱜ ᱥᱟᱭᱤᱴ ᱫᱚ ᱠᱷᱟᱹᱛᱨᱟ ᱟᱨ ᱮᱲᱮ ᱜᱮᱭᱟ ᱢᱮᱱᱛᱮ ᱠᱚ ᱠᱷᱚᱵᱚᱨ ᱟᱠᱟᱫᱼᱟ ᱟᱨ ᱟᱢᱟᱜ ᱥᱮᱠᱭᱚᱨᱟᱹᱴᱭ ᱯᱨᱤᱯᱷᱮᱨᱮᱱᱥ ᱦᱤᱥᱟᱹᱵ ᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾</p>
     ]]></string>
 </resources>

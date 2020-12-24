@@ -33,4 +33,6 @@
     <string name="mozac_feature_sitepermissions_never_allow">안 함</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">%1$s 페이지가 데이터를 영구 저장소에 저장하도록 허용하시겠습니까?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">%1$s에서 DRM 제어 콘텐츠를 재생하도록 허용하시겠습니까?</string>
 </resources>

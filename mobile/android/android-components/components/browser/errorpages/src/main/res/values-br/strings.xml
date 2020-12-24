@@ -10,17 +10,21 @@
     <string name="mozac_browser_errorpages_page_go_back">Distreiñ</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_title">Nʼhaller ket echuiñ an azgoulenn-mañ.</string>
+    <string name="mozac_browser_errorpages_generic_title">Nʼhaller ket echuiñ an azgoulenn-mañ</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Titouroù ouzhpenn diwar-benn ar gudenn-mañ pe ar fazi-mañ nʼint ket hegerz evit poent.</p>]]></string>
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Titouroù ouzhpenn diwar-benn ar gudenn-mañ pe ar fazi-mañ nʼint ket hegerz evit poent.</p>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Cʼhwitadenn war ar cʼhennaskañ diarvar</string>
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
-         <li>Nʼhall ket bezañ diskouezet ar bajennad emaocʼh o klask gwelout rak nʼhall ket bezañ gwiriet dilested ar roadennoù bet degemeret.</li>
-         <li>Kit e darempred gant percʼhenned al lecʼhienn evit kas keloù dezho a-zivout ar gudenn-mañ.</li>
-       </ul>]]></string>
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Nʼhall ket bezañ diskouezet ar bajennad emaocʼh o klask gwelout rak nʼhall ket bezañ gwiriet dilested ar roadennoù bet degemeret.</li>
+        <li>Kit e darempred gant percʼhenned al lecʼhienn evit kas keloù dezho a-zivout ar gudenn-mañ.</li>
+       </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Cʼhwitadenn war ar cʼhennaskañ diarvar</string>
@@ -55,7 +59,7 @@
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Nʼhe deus ket respontet al lecʼhienn azgoulennet dʼan azgoulenn kennaskañ ha ne cʼhortoz ket mui ar merdeer evit ar respont.</p>
  <ul>
- <li>Marteze eo soulgarget pe sacʼhet an dafariad ? Klaskit diwezhatocʼh.</li> <li>Nʼocʼh ket evit gweladenniñ lecʼhiennoù all ? Gwiriañ ar cʼhennaskañ ouzh ar rouedad.</li>
+ <li>Marteze eo soulgarget pe sacʼhet an dafariad? Klaskit diwezhatocʼh.</li> <li>Nʼocʼh ket evit gweladenniñ lecʼhiennoù all? Gwiriañ ar cʼhennaskañ ouzh ar rouedad.</li>
 <li>Ha gwarezet eo hocʼh urzhiataer gant un tanvoger pe ur proksi? Arventennoù fall a cʼhallfe gwallemellout gant ho merdeiñ.</li><li>Trubuilhoù cʼhoazh? Kit e darempred gant ardoer ho reizhiad pe ho pourchaser internet evit kaout skoazell.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
@@ -79,7 +83,7 @@
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Ne glask ket mui ar merdeer kavout an ergorenn azgoulennet. Emañ al lecʼhienn ocʼh adheñchañ an azgoulenn ken na vo biken echuet.</p>
  <ul>
- <li>Ha diweredekaet pe cʼhennet hocʼh eus an toupinoù azgoulennet gant al lecʼhienn-mañ ?</li>
+ <li>Ha diweredekaet pe cʼhennet hocʼh eus an toupinoù azgoulennet gant al lecʼhienn-mañ?</li>
  <li>Ma nʼeo ket diskoulmet ar gudenn ur wech bet degemeret an toupinoù ez eus ur gudenn gant kefluniadur an dafariad ha nʼeus ket gant hocʼh urzhiataer.</li>
  </ul>]]></string>
 
@@ -87,8 +91,8 @@
     <string name="mozac_browser_errorpages_offline_title">Mod ezlinenn</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Emañ ar merdeer o labourat gant e vod ezlinenn ha n&apos;hall ket kennaskañ ouzh an ergorenn bet goulennet.</p>
- <ul><li>Ha kennasket eo an trevnad ouzh ur rouedad oberiant ?</li>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Emañ ar merdeer o labourat gant e vod ezlinenn ha nʼhall ket kennaskañ ouzh an ergorenn bet goulennet.</p>
+ <ul><li>Ha kennasket eo an trevnad ouzh ur rouedad oberiant?</li>
  <li>Pouezit war "Klask en-dro" evit trecʼhaoliñ etrezek ar mod enlinenn hag adkargañ ar bajennad.</li>
  </ul>]]></string>
 
@@ -159,12 +163,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Komenad dianav</string>
 
-    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Ur cʼhomenad (d.l.e. <q>wxyz://</q>) nad eo ket anavezet gant ar merdeer zo erspizet gant ar chomlecʼh, neuze nʼeo ket ar merdeer evit kennaskañ mat ouzh al lecʼhienn.</p><ul><li>Hag emaocʼh o klask tizhout liesvedia pe gwazerezhioù andestenn ? Gwiriit war al lecʼhienn mar bez ezhomm paramantadurioù all.</li><li>Goulennet e vez meziantoù ouzhpenn pe enlugelladoù gant komenadoù zo a-raok ma vo gouest ar merdeer dʼo anavezout.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Ur cʼhomenad (d.l.e. <q>wxyz://</q>) nad eo ket anavezet gant ar merdeer zo erspizet gant ar chomlecʼh, neuze nʼeo ket ar merdeer evit kennaskañ mat ouzh al lecʼhienn.</p><ul><li>Hag emaocʼh o klask tizhout liesvedia pe gwazerezhioù andestenn? Gwiriit war al lecʼhienn mar bez ezhomm paramantadurioù all.</li><li>Goulennet e vez meziantoù ouzhpenn pe enlugelladoù gant komenadoù zo a-raok ma vo gouest ar merdeer dʼo anavezout.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Restr dianav</string>
 
-    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul><li>Gwiriañ ha dilecʼhiet eo bet, adanvet pe dilamet an ergorenn.</li><li>Gwiriañ anv ar chomlecʼh rak marteze ez eus fazioù pennlizherennoù pe fazioù skrivañ all.</li><li>Hag an aotreoù hocʼh eus evit haeziñ an ergorenn goulennet ?</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul><li>Gwiriañ ha dilecʼhiet eo bet, adanvet pe dilamet an ergorenn.</li><li>Gwiriañ anv ar chomlecʼh rak marteze ez eus fazioù pennlizherennoù pe fazioù skrivañ all.</li><li>Hag an aotreoù hocʼh eus evit haeziñ an ergorenn goulennet?</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Nacʼhet eo bet haeziñ dʼar restr</string>
@@ -174,12 +178,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Dafariad ar proksi en deus nacʼhet ar cʼhennaskañ</string>
 
-    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Kefluniet eo ar merdeer evit ober gant un dafariad proksi, met nacʼhet eo bet ar cʼhennaskañ gant ar proksi.</p><ul><li>Ha kefluniet mat eo proksi ar merdeer ? Gwiriit an arventennoù ha klaskit en-dro.</li><li>Ha gwazerezh ar proksi a aotre kennaskadurioù diouzh ar rouedad-mañ ?</li><li>Trubuilhoù cʼhoazh ? Kit e darempred gant ardoer ar rouedad pe ho pourchaser internet a-benn kaout skoazell.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Kefluniet eo ar merdeer evit ober gant un dafariad proksi, met nacʼhet eo bet ar cʼhennaskañ gant ar proksi.</p><ul><li>Ha kefluniet mat eo proksi ar merdeer? Gwiriit an arventennoù ha klaskit en-dro.</li><li>Ha gwazerezh ar proksi a aotre kennaskadurioù diouzh ar rouedad-mañ?</li><li>Trubuilhoù cʼhoazh? Kit e darempred gant ardoer ar rouedad pe ho pourchaser internet a-benn kaout skoazell.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nʼeo ket bet kavet an dafariad proksi</string>
 
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Kefluniet eo ar merdeer evit ober gant un dafariad proksi, met nʼeo ket bet kavet ar proksi.</p><ul><li>Ha kefluniet mat eo proksi ar merdeer ? Gwiriit an arventennoù ha klaskit en-dro.</li><li>Ha kennasket eo an trevnad ouzh ur rouedad oberiant?</li><li>Trubuilhoù cʼhoazh ? Kit e darempred gant ardoer ar rouedad pe ho pourchaser internet a-benn kaout skoazell.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Kefluniet eo ar merdeer evit ober gant un dafariad proksi, met nʼeo ket bet kavet ar proksi.</p><ul><li>Ha kefluniet mat eo proksi ar merdeer? Gwiriit an arventennoù ha klaskit en-dro.</li><li>Ha kennasket eo an trevnad ouzh ur rouedad oberiant?</li><li>Trubuilhoù cʼhoazh? Kit e darempred gant ardoer ar rouedad pe ho pourchaser internet a-benn kaout skoazell.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Kudenn lecʼhienn dagus</string>

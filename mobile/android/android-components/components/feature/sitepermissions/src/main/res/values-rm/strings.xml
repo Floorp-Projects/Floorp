@@ -33,4 +33,6 @@
     <string name="mozac_feature_sitepermissions_never_allow">Mai</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Permetter a %1$s da memorisar datas en la memoria durabla?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Permetter a %1$s da reproducir cuntegn controllà da DRM?</string>
 </resources>

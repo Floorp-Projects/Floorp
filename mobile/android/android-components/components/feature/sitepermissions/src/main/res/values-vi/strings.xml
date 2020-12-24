@@ -33,4 +33,6 @@
     <string name="mozac_feature_sitepermissions_never_allow">Không bao giờ</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Cho phép %1$s lưu trữ dữ liệu trong bộ nhớ liên tục?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Cho phép %1$s phát nội dung do DRM kiểm soát?</string>
 </resources>
