@@ -5,6 +5,7 @@
 #include "nsPrinterListCUPS.h"
 
 #include "mozilla/IntegerRange.h"
+#include "mozilla/Maybe.h"
 #include "nsCUPSShim.h"
 #include "nsPrinterCUPS.h"
 #include "nsString.h"
@@ -110,9 +111,9 @@ RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
       static_cast<cups_dest_t*>(aInfo.mCupsHandle));
 }
 
-Maybe<PrinterInfo> nsPrinterListCUPS::PrinterByName(
+mozilla::Maybe<PrinterInfo> nsPrinterListCUPS::PrinterByName(
     nsString aPrinterName) const {
-  Maybe<PrinterInfo> rv;
+  mozilla::Maybe<PrinterInfo> rv;
   if (!CupsShim().InitOkay()) {
     return rv;
   }
@@ -160,9 +161,9 @@ Maybe<PrinterInfo> nsPrinterListCUPS::PrinterByName(
   return rv;
 }
 
-Maybe<PrinterInfo> nsPrinterListCUPS::PrinterBySystemName(
+mozilla::Maybe<PrinterInfo> nsPrinterListCUPS::PrinterBySystemName(
     nsString aPrinterName) const {
-  Maybe<PrinterInfo> rv;
+  mozilla::Maybe<PrinterInfo> rv;
   if (!CupsShim().InitOkay()) {
     return rv;
   }

@@ -31,7 +31,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    "ComplexTextInputPanel.mm",
     "GfxInfo.mm",
     "IconLoaderHelperCocoa.mm",
     "NativeKeyBindings.mm",

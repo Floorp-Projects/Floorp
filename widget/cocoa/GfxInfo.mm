@@ -20,6 +20,8 @@
 #import <IOKit/IOKitLib.h>
 #import <Cocoa/Cocoa.h>
 
+#include "jsapi.h"
+
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 
 using namespace mozilla;
