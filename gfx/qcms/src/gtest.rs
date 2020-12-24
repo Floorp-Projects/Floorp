@@ -854,4 +854,20 @@ mod test {
             qcms_profile_release(output);
         }
     }
+
+    #[test]
+    fn identity() {
+        let p1 = crate::Profile::new_sRGB().unwrap();
+        let p2 = crate::Profile::new_sRGB().unwrap();
+        let mut xfm = crate::Transform::new(
+            &p1,
+            &p2,
+            crate::DataType::DATA_RGB_8,
+            crate::Intent::default(),
+        )
+        .unwrap();
+        let mut data = [4, 30, 80];
+        xfm.apply(&mut data);
+        assert_eq!(data, [4, 30, 80]);
+    }
 }
