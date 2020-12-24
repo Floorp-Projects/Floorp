@@ -52,7 +52,6 @@
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
 #include "NativeKeyBindings.h"
-#include "ComplexTextInputPanel.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -1470,27 +1469,6 @@ void nsChildView::UpdateCurrentInputEventCount() {
 bool nsChildView::HasPendingInputEvent() { return DoHasPendingInputEvent(); }
 
 #pragma mark -
-
-nsresult nsChildView::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                                     int32_t aPanelX, int32_t aPanelY, nsString& aCommitted) {
-  NS_ENSURE_TRUE(mView, NS_ERROR_NOT_AVAILABLE);
-
-  ComplexTextInputPanel* ctiPanel = ComplexTextInputPanel::GetSharedComplexTextInputPanel();
-
-  ctiPanel->PlacePanel(aPanelX, aPanelY);
-  // We deliberately don't use TextInputHandler::GetCurrentKeyEvent() to
-  // obtain the NSEvent* we pass to InterpretKeyEvent().  This works fine in
-  // non-e10s mode.  But in e10s mode TextInputHandler::HandleKeyDownEvent()
-  // has already returned, so the relevant KeyEventState* (and its NSEvent*)
-  // is already out of scope.  Furthermore we don't *need* to use it.
-  // StartPluginIME() is only ever called to start a new IME session when none
-  // currently exists.  So nested IME should never reach here, and so it should
-  // be fine to use the last key-down event received by -[ChildView keyDown:]
-  // (as we currently do).
-  ctiPanel->InterpretKeyEvent([mView lastKeyDownEvent], aCommitted);
-
-  return NS_OK;
-}
 
 void nsChildView::SetInputContext(const InputContext& aContext, const InputContextAction& aAction) {
   NS_ENSURE_TRUE_VOID(mTextInputHandler);
