@@ -165,7 +165,7 @@ typedef struct nr_reg_find_children_arg_ {
     size_t         length;
 } nr_reg_find_children_arg;
 
-static int nr_reg_local_iter(char *prefix, int (*action)(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node), void *ptr);
+static int nr_reg_local_iter(NR_registry prefix, int (*action)(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node), void *ptr);
 static int nr_reg_local_iter_delete(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node);
 static int nr_reg_local_find_children(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node);
 static int nr_reg_local_count_children(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node);
@@ -1041,7 +1041,7 @@ nr_reg_local_del(NR_registry name)
 }
 
 int
-nr_reg_local_get_child_count(char *parent, size_t *count)
+nr_reg_local_get_child_count(NR_registry parent, size_t *count)
 {
     int r, _status;
     nr_registry_node *ignore1;
