@@ -92,7 +92,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
       Element* aElement, nsAtom* aPseudo, StyleType aStyleType = eAll);
 
   static already_AddRefed<ComputedStyle> GetComputedStyleNoFlush(
-      Element* aElement, nsAtom* aPseudo, StyleType aStyleType = eAll) {
+      const Element* aElement, nsAtom* aPseudo, StyleType aStyleType = eAll) {
     return DoGetComputedStyleNoFlush(
         aElement, aPseudo, nsContentUtils::GetPresShellForContent(aElement),
         aStyleType);
@@ -158,7 +158,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   void SetFrameComputedStyle(ComputedStyle* aStyle, uint64_t aGeneration);
 
   static already_AddRefed<ComputedStyle> DoGetComputedStyleNoFlush(
-      Element* aElement, nsAtom* aPseudo, mozilla::PresShell* aPresShell,
+      const Element* aElement, nsAtom* aPseudo, mozilla::PresShell* aPresShell,
       StyleType aStyleType);
 
 #define STYLE_STRUCT(name_)                \

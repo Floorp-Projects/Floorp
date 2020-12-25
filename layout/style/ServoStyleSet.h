@@ -210,10 +210,8 @@ class ServoStyleSet {
   // style has been resolved. If the element was unstyled and a new style
   // was resolved, it is not stored in the DOM. (That is, the element remains
   // unstyled.)
-  //
-  // TODO(emilio): Element argument should be `const`.
   already_AddRefed<ComputedStyle> ResolveStyleLazily(
-      dom::Element&, PseudoStyleType = PseudoStyleType::NotPseudo,
+      const dom::Element&, PseudoStyleType = PseudoStyleType::NotPseudo,
       StyleRuleInclusion = StyleRuleInclusion::All);
 
   // Get a ComputedStyle for an anonymous box. The pseudo type must be an

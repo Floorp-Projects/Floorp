@@ -1098,7 +1098,7 @@ void ServoStyleSet::ClearNonInheritingComputedStyles() {
 }
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
-    Element& aElement, PseudoStyleType aPseudoType,
+    const Element& aElement, PseudoStyleType aPseudoType,
     StyleRuleInclusion aRuleInclusion) {
   PreTraverseSync();
   MOZ_ASSERT(GetPresContext(),
@@ -1118,7 +1118,7 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
    * getComputedStyle, the only API where this can be observed, to look at the
    * style of the pseudo-element if it exists instead.
    */
-  Element* elementForStyleResolution = &aElement;
+  const Element* elementForStyleResolution = &aElement;
   PseudoStyleType pseudoTypeForStyleResolution = aPseudoType;
   if (aPseudoType == PseudoStyleType::before) {
     if (Element* pseudo = nsLayoutUtils::GetBeforePseudo(&aElement)) {
