@@ -6,7 +6,6 @@
 
 "use strict";
 
-/* global MozXULElement */
 /* exported init, finish */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -70,24 +69,17 @@ function init() {
     fragment.setAttribute("pack", "end");
 
     if (listItem.blocked) {
-      fragment.appendChild(
-        MozXULElement.parseXULToFragment(
-          `
-        <label class="blockedLabel" data-l10n-id="blocklist-blocked"/>
-      `,
-          ["chrome://mozapps/locale/extensions/blocklist.dtd"]
-        )
-      );
+      const label = document.createXULElement("label");
+      label.className = "blockedLabel";
+      label.setAttribute("data-l10n-id", "blocklist-blocked");
+      fragment.appendChild(label);
       hasHardBlocks = true;
     } else {
-      fragment.appendChild(
-        MozXULElement.parseXULToFragment(
-          `
-        <checkbox class="disableCheckbox" checked="true" data-l10n-id="blocklist-checkbox"/>
-      `,
-          ["chrome://mozapps/locale/extensions/blocklist.dtd"]
-        )
-      );
+      const checkbox = document.createXULElement("checkbox");
+      checkbox.className = "disableCheckbox";
+      checkbox.setAttribute("data-l10n-id", "blocklist-checkbox");
+      checkbox.checked = true;
+      fragment.appendChild(checkbox);
       hasSoftBlocks = true;
     }
 
