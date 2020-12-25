@@ -575,6 +575,8 @@
     <string name="tab_tray_multiselect_menu_item_close">మూసివేయి</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ట్యాబును సేకరణ నుండి తీసివేయి</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">ట్యాబులను ఎంచుకో</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ట్యాబును మూసివేయి</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -672,6 +674,8 @@
     <string name="download_delete_all">దింపుకోళ్ళను తొలగించు</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">నిజంగానే మీ దింపుకోళ్ళను తుడిచేయాలనుకుంటున్నారా?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">దింపుకోళ్ళు తొలగించబడ్డాయి</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message_1">దించుకున్న ఫైళ్ళేమీ లేవు</string>
     <!-- History multi select title in app bar
