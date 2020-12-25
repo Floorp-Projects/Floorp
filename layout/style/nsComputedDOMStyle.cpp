@@ -84,7 +84,8 @@ static nsDOMCSSValueList* GetROCSSValueList(bool aCommaDelimited) {
   return new nsDOMCSSValueList(aCommaDelimited);
 }
 
-static Element* GetRenderedElement(Element* aElement, nsAtom* aPseudo) {
+static const Element* GetRenderedElement(const Element* aElement,
+                                         nsAtom* aPseudo) {
   if (aPseudo == nsCSSPseudoElements::before()) {
     return nsLayoutUtils::GetBeforePseudo(aElement);
   }
@@ -170,7 +171,7 @@ static bool ElementNeedsRestyle(Element* aElement, nsAtom* aPseudo,
 
   // If there's a pseudo, we need to prefer that element, as the pseudo itself
   // may have explicit restyles.
-  Element* styledElement = GetRenderedElement(aElement, aPseudo);
+  const Element* styledElement = GetRenderedElement(aElement, aPseudo);
   // Try to skip the restyle otherwise.
   return Servo_HasPendingRestyleAncestor(
       styledElement ? styledElement : aElement, aMayNeedToFlushLayout);
@@ -497,7 +498,7 @@ static inline PseudoStyleType GetPseudoType(nsAtom* aPseudo) {
 }
 
 already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
-    Element* aElement, nsAtom* aPseudo, PresShell* aPresShell,
+    const Element* aElement, nsAtom* aPseudo, PresShell* aPresShell,
     StyleType aStyleType) {
   MOZ_ASSERT(aElement, "NULL element");
 
@@ -535,7 +536,7 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
   // mPrimaryFrame). Remove it once that's fixed.
   if (inDocWithShell && aStyleType == eAll &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
-    if (Element* element = GetRenderedElement(aElement, aPseudo)) {
+    if (const Element* element = GetRenderedElement(aElement, aPseudo)) {
       if (nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(element)) {
         ComputedStyle* result = styleFrame->Style();
         // Don't use the style if it was influenced by pseudo-elements,
