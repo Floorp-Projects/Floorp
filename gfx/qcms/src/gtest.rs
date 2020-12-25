@@ -857,8 +857,8 @@ mod test {
 
     #[test]
     fn identity() {
-        let p1 = crate::Profile::new_sRGB().unwrap();
-        let p2 = crate::Profile::new_sRGB().unwrap();
+        let p1 = crate::Profile::new_sRGB();
+        let p2 = crate::Profile::new_sRGB();
         let mut xfm = crate::Transform::new(
             &p1,
             &p2,

@@ -12,10 +12,7 @@ use crate::{
 #[no_mangle]
 pub extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
     let profile = qcms_profile::new_sRGB();
-    match profile {
-        Some(profile) => Box::into_raw(profile),
-        None => null_mut(),
-    }
+    Box::into_raw(profile)
 }
 
 //XXX: it would be nice if we had a way of ensuring
@@ -46,10 +43,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut qcms_profile {
     let profile = qcms_profile::new_gray_with_gamma(gamma);
-    match profile {
-        Some(profile) => Box::into_raw(profile),
-        None => null_mut(),
-    }
+    Box::into_raw(profile)
 }
 
 #[no_mangle]

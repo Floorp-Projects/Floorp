@@ -1156,7 +1156,7 @@ impl qcms_profile {
         profile.pcs = XYZ_TYPE;
         return Some(profile);
     }
-    pub fn new_sRGB() -> Option<Box<qcms_profile>> {
+    pub fn new_sRGB() -> Box<qcms_profile> {
         let Rec709Primaries = qcms_CIE_xyYTRIPLE {
             red: {
                 qcms_CIE_xyY {
@@ -1183,10 +1183,10 @@ impl qcms_profile {
         let D65 = qcms_white_point_sRGB();
         let table = build_sRGB_gamma_table(1024);
 
-        qcms_profile::new_rgb_with_table(D65, Rec709Primaries, &table)
+        qcms_profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap()
     }
 
-    pub fn new_gray_with_gamma(gamma: f32) -> Option<Box<qcms_profile>> {
+    pub fn new_gray_with_gamma(gamma: f32) -> Box<qcms_profile> {
         let mut profile = profile_create();
 
         profile.grayTRC = Some(curve_from_gamma(gamma));
@@ -1194,7 +1194,7 @@ impl qcms_profile {
         profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
         profile.color_space = GRAY_SIGNATURE;
         profile.pcs = XYZ_TYPE;
-        Some(profile)
+        profile
     }
 
     pub fn new_rgb_with_gamma_set(
