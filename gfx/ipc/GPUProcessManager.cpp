@@ -455,30 +455,33 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
   }
   // Disable WebRender
   if (aError == wr::WebRenderError::INITIALIZE) {
-    gfxPlatform::DisableWebRender(gfx::FeatureStatus::Unavailable,
-                                  "WebRender initialization failed", aMsg);
+    gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "WebRender initialization failed", aMsg);
   } else if (aError == wr::WebRenderError::MAKE_CURRENT) {
-    gfxPlatform::DisableWebRender(gfx::FeatureStatus::Unavailable,
-                                  "Failed to make render context current",
-                                  "FEATURE_FAILURE_WEBRENDER_MAKE_CURRENT"_ns);
+    gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "Failed to make render context current",
+                      "FEATURE_FAILURE_WEBRENDER_MAKE_CURRENT"_ns);
   } else if (aError == wr::WebRenderError::RENDER) {
-    gfxPlatform::DisableWebRender(gfx::FeatureStatus::Unavailable,
-                                  "Failed to render WebRender",
-                                  "FEATURE_FAILURE_WEBRENDER_RENDER"_ns);
+    gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "Failed to render WebRender",
+                      "FEATURE_FAILURE_WEBRENDER_RENDER"_ns);
   } else if (aError == wr::WebRenderError::NEW_SURFACE) {
-    gfxPlatform::DisableWebRender(gfx::FeatureStatus::Unavailable,
-                                  "Failed to create new surface",
-                                  "FEATURE_FAILURE_WEBRENDER_NEW_SURFACE"_ns);
+    gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "Failed to create new surface",
+                      "FEATURE_FAILURE_WEBRENDER_NEW_SURFACE"_ns);
   } else if (aError == wr::WebRenderError::EXCESSIVE_RESETS) {
-    gfxPlatform::DisableWebRender(
-        gfx::FeatureStatus::Unavailable, "Device resets exceeded threshold",
-        "FEATURE_FAILURE_WEBRENDER_EXCESSIVE_RESETS"_ns);
+    gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER)
+        .ForceDisable(gfx::FeatureStatus::Unavailable,
+                      "Device resets exceeded threshold",
+                      "FEATURE_FAILURE_WEBRENDER_EXCESSIVE_RESETS"_ns);
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid value");
-    gfxPlatform::DisableWebRender(gfx::FeatureStatus::Unavailable,
-                                  "Unhandled failure reason",
-                                  "FEATURE_FAILURE_WEBRENDER_UNHANDLED"_ns);
   }
+  gfx::gfxVars::SetUseWebRender(false);
   gfx::gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
 
 #if defined(MOZ_WIDGET_ANDROID)

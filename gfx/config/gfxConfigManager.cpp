@@ -282,8 +282,17 @@ void gfxConfigManager::ConfigureWebRender() {
   if (!mFeatureWrQualified->IsEnabled()) {
     // No qualified hardware. If we haven't allowed software fallback,
     // then we need to disable WR.
-    mFeatureWr->Disable(FeatureStatus::Disabled, "Not qualified",
-                        "FEATURE_FAILURE_NOT_QUALIFIED"_ns);
+    if (!mFeatureWrSoftware->IsEnabled()) {
+      mFeatureWr->Disable(FeatureStatus::Disabled, "Not qualified",
+                          "FEATURE_FAILURE_NOT_QUALIFIED"_ns);
+    }
+  } else {
+    // Otherwise we have qualified hardware, so we can disable the software
+    // feature. Note that this doesn't override the force-enabled state set by
+    // the pref, so the pref will still enable software.
+    mFeatureWrSoftware->Disable(FeatureStatus::Disabled,
+                                "Overriden by qualified hardware",
+                                "FEATURE_FAILURE_OVERRIDEN"_ns);
   }
 
   // HW_COMPOSITING being disabled implies interfacing with the GPU might break
@@ -297,9 +306,6 @@ void gfxConfigManager::ConfigureWebRender() {
     mFeatureWr->ForceDisable(FeatureStatus::UnavailableInSafeMode,
                              "Safe-mode is enabled",
                              "FEATURE_FAILURE_SAFE_MODE"_ns);
-    mFeatureWrSoftware->ForceDisable(FeatureStatus::UnavailableInSafeMode,
-                                     "Safe-mode is enabled",
-                                     "FEATURE_FAILURE_SAFE_MODE"_ns);
   }
 
   if (mXRenderEnabled) {
@@ -307,9 +313,6 @@ void gfxConfigManager::ConfigureWebRender() {
     // default. If the user opts into it don't enable webrender.
     mFeatureWr->ForceDisable(FeatureStatus::Blocked, "XRender is enabled",
                              "FEATURE_FAILURE_XRENDER"_ns);
-    mFeatureWrSoftware->ForceDisable(FeatureStatus::Blocked,
-                                     "XRender is enabled",
-                                     "FEATURE_FAILURE_XRENDER"_ns);
   }
 
   mFeatureWrAngle->EnableByDefault();
