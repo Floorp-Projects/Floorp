@@ -981,7 +981,6 @@ static StaticRefPtr<InactiveRefreshDriverTimer> sThrottledRateTimer;
 
 void nsRefreshDriver::CreateVsyncRefreshTimer() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mOwnTimer);
 
   PodArrayZero(sJankLevels);
 
@@ -989,29 +988,52 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
     return;
   }
 
-  // If available, we fetch the widget-specific vsync source.
-  nsPresContext* pc = GetPresContext();
-  nsIWidget* widget = pc->GetRootWidget();
-  if (widget) {
-    if (RefPtr<gfx::VsyncSource> localVsyncSource = widget->GetVsyncSource()) {
-      mOwnTimer = new VsyncRefreshDriverTimer(localVsyncSource);
-      sRegularRateTimerList->AppendElement(mOwnTimer.get());
-      return;
-    }
-    if (BrowserChild* browserChild = widget->GetOwningBrowserChild()) {
-      if (RefPtr<VsyncChild> localVsyncSource = browserChild->GetVsyncChild()) {
+  if (!mOwnTimer) {
+    // If available, we fetch the widget-specific vsync source.
+    nsPresContext* pc = GetPresContext();
+    nsIWidget* widget = pc->GetRootWidget();
+    if (widget) {
+      if (RefPtr<gfx::VsyncSource> localVsyncSource =
+              widget->GetVsyncSource()) {
         mOwnTimer = new VsyncRefreshDriverTimer(localVsyncSource);
         sRegularRateTimerList->AppendElement(mOwnTimer.get());
         return;
       }
+      if (BrowserChild* browserChild = widget->GetOwningBrowserChild()) {
+        if (RefPtr<VsyncChild> localVsyncSource =
+                browserChild->GetVsyncChild()) {
+          mOwnTimer = new VsyncRefreshDriverTimer(localVsyncSource);
+          sRegularRateTimerList->AppendElement(mOwnTimer.get());
+          return;
+        }
+      }
     }
   }
-  if (!sRegularRateTimer && XRE_IsParentProcess()) {
-    // Make sure all vsync systems are ready.
-    gfxPlatform::GetPlatform();
-    // In parent process, we can create the VsyncRefreshDriverTimer directly.
-    sRegularRateTimer = new VsyncRefreshDriverTimer();
-    sRegularRateTimerList->AppendElement(sRegularRateTimer);
+  if (!sRegularRateTimer) {
+    if (XRE_IsParentProcess()) {
+      // Make sure all vsync systems are ready.
+      gfxPlatform::GetPlatform();
+      // In parent process, we can create the VsyncRefreshDriverTimer directly.
+      sRegularRateTimer = new VsyncRefreshDriverTimer();
+    } else {
+      PBackgroundChild* actorChild =
+          BackgroundChild::GetOrCreateForCurrentThread();
+      if (NS_WARN_IF(!actorChild)) {
+        return;
+      }
+
+      dom::PVsyncChild* actor = actorChild->SendPVsyncConstructor();
+      if (NS_WARN_IF(!actor)) {
+        return;
+      }
+
+      dom::VsyncChild* child = static_cast<dom::VsyncChild*>(actor);
+
+      RefPtr<RefreshDriverTimer> vsyncRefreshDriverTimer =
+          new VsyncRefreshDriverTimer(child);
+
+      sRegularRateTimer = std::move(vsyncRefreshDriverTimer);
+    }
   }
 }
 
@@ -1101,7 +1123,6 @@ RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
   if (!sRegularRateTimer) {
     double rate = GetRegularTimerInterval();
     sRegularRateTimer = new StartupRefreshDriverTimer(rate);
-    sRegularRateTimerList->AppendElement(sRegularRateTimer);
   }
 
   return sRegularRateTimer;
@@ -2713,30 +2734,47 @@ TimeStamp nsRefreshDriver::GetIdleDeadlineHint(TimeStamp aDefault) {
   // resulting from a tick on the sRegularRateTimer counts as being
   // busy but tasks resulting from a tick on sThrottledRateTimer
   // counts as being idle.
-  TimeStamp hint = aDefault;
+  if (sRegularRateTimer) {
+    return sRegularRateTimer->GetIdleDeadlineHint(aDefault);
+  }
+
+  // The following calculation is only used on platform using per-BrowserChild
+  // Vsync. This is hard to properly map on static calls such as this -
+  // optimally we'd only want to query the timers that are relevant for the
+  // caller, not all in this process. Further more, in this scenario we often
+  // hit cases where timers would return their fallback value that is aDefault,
+  // giving us a much higher value than intended.
+  // For now we use a somewhat simplistic approach that in many situations
+  // gives us similar behaviour to what we would get using sRegularRateTimer:
+  // use the highest result that is still lower than the aDefault fallback.
+  TimeStamp hint = TimeStamp();
   if (sRegularRateTimerList) {
     for (RefreshDriverTimer* timer : *sRegularRateTimerList) {
       TimeStamp newHint = timer->GetIdleDeadlineHint(aDefault);
-      if (newHint > hint) {
+      if (newHint < aDefault && (hint.IsNull() || newHint > hint)) {
         hint = newHint;
       }
     }
   }
-  return hint;
+
+  return hint.IsNull() ? aDefault : hint;
 }
 
 /* static */
 Maybe<TimeStamp> nsRefreshDriver::GetNextTickHint() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (sRegularRateTimer) {
+    return sRegularRateTimer->GetNextTickHint();
+  }
+
   Maybe<TimeStamp> hint = Nothing();
   if (sRegularRateTimerList) {
     for (RefreshDriverTimer* timer : *sRegularRateTimerList) {
-      Maybe<TimeStamp> newHint = timer->GetNextTickHint();
-      if ((newHint.isSome() && hint.isNothing()) ||
-          (newHint.isSome() && hint.isSome() &&
-           newHint.value() > hint.value())) {
-        hint = newHint;
+      if (Maybe<TimeStamp> newHint = timer->GetNextTickHint()) {
+        if (!hint || newHint.value() < hint.value()) {
+          hint = newHint;
+        }
       }
     }
   }
