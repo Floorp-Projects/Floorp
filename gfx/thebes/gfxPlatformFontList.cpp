@@ -611,10 +611,10 @@ class InitOtherFamilyNamesForStylo : public mozilla::Runnable {
 
 #define OTHERNAMES_TIMEOUT 200
 
-void gfxPlatformFontList::InitOtherFamilyNames(
+bool gfxPlatformFontList::InitOtherFamilyNames(
     bool aDeferOtherFamilyNamesLoading) {
   if (mOtherFamilyNamesInitialized) {
-    return;
+    return true;
   }
 
   if (SharedFontList() && !XRE_IsParentProcess()) {
@@ -626,7 +626,7 @@ void gfxPlatformFontList::InitOtherFamilyNames(
       NS_DispatchToMainThread(
           new InitOtherFamilyNamesForStylo(aDeferOtherFamilyNamesLoading));
     }
-    return;
+    return mOtherFamilyNamesInitialized;
   }
 
   // If the font loader delay has been set to zero, we don't defer loading
@@ -646,6 +646,7 @@ void gfxPlatformFontList::InitOtherFamilyNames(
   } else {
     InitOtherFamilyNamesInternal(false);
   }
+  return mOtherFamilyNamesInitialized;
 }
 
 // time limit for loading facename lists (ms)
@@ -2566,17 +2567,17 @@ void gfxPlatformFontList::SetupFamilyCharMap(
   family->SetupFamilyCharMap(list);
 }
 
-void gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
+bool gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
                                                bool aDefer) {
   auto list = SharedFontList();
   MOZ_ASSERT(list);
   if (!list) {
-    return;
+    return false;
   }
   if (list->GetGeneration() != aGeneration) {
-    return;
+    return false;
   }
-  InitOtherFamilyNames(aDefer);
+  return InitOtherFamilyNames(aDefer);
 }
 
 uint32_t gfxPlatformFontList::GetGeneration() const {
