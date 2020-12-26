@@ -924,9 +924,13 @@ Family* FontList::FindFamily(const nsCString& aName, bool aPrimaryNameOnly) {
   Header& header = GetHeader();
 
   Family* families = Families();
+  if (!families) {
+    return nullptr;
+  }
+
   size_t match;
-  if (families && BinarySearchIf(families, 0, header.mFamilyCount,
-                                 FamilyNameComparator(this, aName), &match)) {
+  if (BinarySearchIf(families, 0, header.mFamilyCount,
+                     FamilyNameComparator(this, aName), &match)) {
     return &families[match];
   }
 
@@ -935,11 +939,11 @@ Family* FontList::FindFamily(const nsCString& aName, bool aPrimaryNameOnly) {
   }
 
   if (header.mAliasCount) {
-    families = AliasFamilies();
+    Family* aliases = AliasFamilies();
     size_t match;
-    if (families && BinarySearchIf(families, 0, header.mAliasCount,
-                                   FamilyNameComparator(this, aName), &match)) {
-      return &families[match];
+    if (aliases && BinarySearchIf(aliases, 0, header.mAliasCount,
+                                  FamilyNameComparator(this, aName), &match)) {
+      return &aliases[match];
     }
   }
 
@@ -947,8 +951,8 @@ Family* FontList::FindFamily(const nsCString& aName, bool aPrimaryNameOnly) {
   // For Windows only, because of how DWrite munges font family names in some
   // cases (see
   // https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/02/24/90/36/WPF%20Font%20Selection%20Model.pdf
-  // and discussion on the OpenType list), try stripping any known "regular"
-  // style name from the end of the requested family name.
+  // and discussion on the OpenType list), try stripping a possible style-name
+  // suffix from the end of the requested family name.
   // After the deferred font loader has finished, this is no longer needed as
   // the "real" family names will have been found in AliasFamilies() above.
   if (aName.Contains(' ')) {
@@ -961,38 +965,49 @@ Family* FontList::FindFamily(const nsCString& aName, bool aPrimaryNameOnly) {
       pfl->mLocalNameTable.Clear();
       return nullptr;
     }
-    const nsLiteralCString kStyleSuffixes[] = {" book"_ns,   " medium"_ns,
-                                               " normal"_ns, " regular"_ns,
-                                               " roman"_ns,  " upright"_ns};
-    for (const auto& styleName : kStyleSuffixes) {
-      if (StringEndsWith(aName, styleName)) {
-        // See if we have a known family that matches the "base" family name
-        // with trailing style-name element stripped off.
-        nsAutoCString strippedName(aName.BeginReading(),
-                                   aName.Length() - styleName.Length());
-        families = Families();
-        if (families &&
-            BinarySearchIf(families, 0, header.mFamilyCount,
-                           FamilyNameComparator(this, strippedName), &match)) {
-          // If so, this may be a possible family to satisfy the search; check
-          // if the extended family name was actually found as an alternate
-          // (either it's already in mAliasTable, or it gets added there when
-          // we call ReadFaceNamesForFamily on this candidate).
-          Family* candidateFamily = &families[match];
-          if (pfl->mAliasTable.Lookup(aName)) {
-            return candidateFamily;
-          }
-          // Note that ReadFaceNamesForFamily may store entries in mAliasTable
-          // (and mLocalNameTable), but if this is happening in a content
-          // process (which is the common case) those entries will not be saved
-          // into the shared font list; they're just used here until the "real"
-          // alias list is ready, then discarded.
-          pfl->ReadFaceNamesForFamily(candidateFamily, false);
-          if (pfl->mAliasTable.Lookup(aName)) {
-            return candidateFamily;
-          }
-        }
+
+    // Do we already have an aliasData record for this name? If so, we just
+    // return its base family.
+    if (auto lookup = pfl->mAliasTable.Lookup(aName)) {
+      return FindFamily(lookup.Data()->mBaseFamily, true);
+    }
+
+    // Strip the style suffix (after last space in the name) to get a "base"
+    // family name.
+    const char* data = aName.BeginReading();
+    int32_t index = aName.Length();
+    while (--index > 0) {
+      if (data[index] == ' ') {
         break;
+      }
+    }
+    if (index <= 0) {
+      return nullptr;
+    }
+    nsAutoCString base(Substring(aName, 0, index));
+    if (BinarySearchIf(families, 0, header.mFamilyCount,
+                       FamilyNameComparator(this, base), &match)) {
+      // This may be a possible base family to satisfy the search; call
+      // ReadFaceNamesForFamily and see if the desired name ends up in
+      // mAliasTable.
+      // Note that ReadFaceNamesForFamily may store entries in mAliasTable
+      // (and mLocalNameTable), but if this is happening in a content
+      // process (which is the common case) those entries will not be saved
+      // into the shared font list; they're just used here until the "real"
+      // alias list is ready, then discarded.
+      Family* baseFamily = &families[match];
+      pfl->ReadFaceNamesForFamily(baseFamily, false);
+      if (auto lookup = pfl->mAliasTable.Lookup(aName)) {
+        if (lookup.Data()->mFaces.Length() != baseFamily->NumFaces()) {
+          // If the alias family doesn't have all the faces of the base family,
+          // then style matching may end up resolving to a face that isn't
+          // supposed to be available in the legacy styled family. To ensure
+          // such mis-styling will get fixed, we start the async font info
+          // loader (if it hasn't yet been triggered), which will pull in the
+          // full metadata we need and then force a reflow.
+          pfl->InitOtherFamilyNames(/* aDeferOtherFamilyNamesLoading */ true);
+        }
+        return baseFamily;
       }
     }
   }
