@@ -146,7 +146,7 @@ class FontList {
    * Look up a Family record by name, typically to satisfy the font-family
    * property or a font family listed in preferences.
    */
-  Family* FindFamily(const nsCString& aName);
+  Family* FindFamily(const nsCString& aName, bool aPrimaryNameOnly = false);
 
   /**
    * Look up an individual Face by PostScript or Full name, for @font-face

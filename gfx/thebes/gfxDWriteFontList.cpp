@@ -1854,10 +1854,14 @@ nsresult gfxDWriteFontList::GetFontSubstitutes() {
     RemoveCharsetFromFontSubstitute(actualFontName);
     BuildKeyNameFromFontName(actualFontName);
     if (SharedFontList()) {
-      if (SharedFontList()->FindFamily(substituteName)) {
+      // Font substitutions are recorded for the canonical family names; we
+      // don't need FindFamily to consider localized aliases when searching.
+      if (SharedFontList()->FindFamily(substituteName,
+                                       /*aPrimaryNameOnly*/ true)) {
         continue;
       }
-      if (SharedFontList()->FindFamily(actualFontName)) {
+      if (SharedFontList()->FindFamily(actualFontName,
+                                       /*aPrimaryNameOnly*/ true)) {
         mSubstitutions.Put(substituteName, new nsCString(actualFontName));
       } else if (mSubstitutions.Get(actualFontName)) {
         mSubstitutions.Put(substituteName,
@@ -1897,12 +1901,16 @@ void gfxDWriteFontList::GetDirectWriteSubstitutes() {
     nsAutoCString substituteName(sub.aliasName);
     BuildKeyNameFromFontName(substituteName);
     if (SharedFontList()) {
-      if (SharedFontList()->FindFamily(substituteName)) {
+      // We don't need FindFamily to consider localized aliases when searching
+      // for the DirectWrite substitutes, we know the canonical names.
+      if (SharedFontList()->FindFamily(substituteName,
+                                       /*aPrimaryNameOnly*/ true)) {
         continue;
       }
       nsAutoCString actualFontName(sub.actualName);
       BuildKeyNameFromFontName(actualFontName);
-      if (SharedFontList()->FindFamily(actualFontName)) {
+      if (SharedFontList()->FindFamily(actualFontName,
+                                       /*aPrimaryNameOnly*/ true)) {
         mSubstitutions.Put(substituteName, new nsCString(actualFontName));
       } else {
         mNonExistingFonts.AppendElement(substituteName);
