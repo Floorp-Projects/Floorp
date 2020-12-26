@@ -951,11 +951,11 @@ bool LayerTransactionParent::BindLayerToHandle(RefPtr<Layer> aLayer,
   if (!aHandle || !aLayer) {
     return false;
   }
-  if (auto entry = mLayerMap.LookupForAdd(aHandle.Value())) {
+  auto entry = mLayerMap.LookupForAdd(aHandle.Value());
+  if (entry) {
     return false;
-  } else {
-    entry.OrInsert([&aLayer]() { return aLayer; });
   }
+  entry.OrInsert([&aLayer]() { return aLayer; });
   return true;
 }
 
