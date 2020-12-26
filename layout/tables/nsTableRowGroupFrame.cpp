@@ -1334,17 +1334,15 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
       }
       break;
     }  // if (rowRect.YMost() > availHeight)
-    else {
-      aDesiredSize.Height() = rowRect.YMost();
-      prevRowFrame = rowFrame;
-      // see if there is a page break after the row
-      nsTableRowFrame* nextRow = rowFrame->GetNextRow();
-      if (nextRow && nsTableFrame::PageBreakAfter(rowFrame, nextRow)) {
-        PushChildren(nextRow, rowFrame);
-        aStatus.Reset();
-        aStatus.SetIncomplete();
-        break;
-      }
+    aDesiredSize.Height() = rowRect.YMost();
+    prevRowFrame = rowFrame;
+    // see if there is a page break after the row
+    nsTableRowFrame* nextRow = rowFrame->GetNextRow();
+    if (nextRow && nsTableFrame::PageBreakAfter(rowFrame, nextRow)) {
+      PushChildren(nextRow, rowFrame);
+      aStatus.Reset();
+      aStatus.SetIncomplete();
+      break;
     }
     // after the 1st row that has a height, we can't be on top
     // of the page anymore.
