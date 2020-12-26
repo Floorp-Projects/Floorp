@@ -314,8 +314,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   }
 
   // initialize localized family names
-  void InitOtherFamilyNames(bool aDeferOtherFamilyNamesLoading);
-  void InitOtherFamilyNames(uint32_t aGeneration, bool aDefer);
+  bool InitOtherFamilyNames(bool aDeferOtherFamilyNamesLoading);
+  bool InitOtherFamilyNames(uint32_t aGeneration, bool aDefer);
 
   // pure virtual functions, to be provided by concrete subclasses
 
