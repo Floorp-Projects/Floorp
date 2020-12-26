@@ -128,7 +128,20 @@ gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+// StartLoader is usually called at startup with a (prefs-derived) delay value,
+// so that the async loader runs shortly after startup, to avoid competing for
+// disk i/o etc with other more critical operations.
+// However, it may be called with aDelay=0 if we find that the font info (e.g.
+// localized names) is needed for layout. In this case we start the loader
+// immediately; however, it is still an async process and we may use fallback
+// fonts to satisfy layout until it completes.
 void gfxFontInfoLoader::StartLoader(uint32_t aDelay) {
+  if (aDelay == 0 && (mState == stateTimerOff || mState == stateAsyncLoad)) {
+    // We were asked to load (async) without delay, but have already started,
+    // so just return and let the loader proceed.
+    return;
+  }
+
   NS_ASSERTION(!mFontInfo, "fontinfo should be null when starting font loader");
 
   // sanity check
@@ -137,18 +150,9 @@ void gfxFontInfoLoader::StartLoader(uint32_t aDelay) {
     CancelLoader();
   }
 
-  // set up timer
-  if (!mTimer) {
-    mTimer = NS_NewTimer();
-    if (!mTimer) {
-      NS_WARNING("Failure to create font info loader timer");
-      return;
-    }
-  }
-
   AddShutdownObserver();
 
-  // delay? ==> start async thread after a delay
+  // Caller asked for a delay? ==> start async thread after a delay
   if (aDelay) {
     NS_ASSERTION(!sFontLoaderShutdownObserved,
                  "Bug 1508626 - Setting delay timer for font loader after "
@@ -156,11 +160,29 @@ void gfxFontInfoLoader::StartLoader(uint32_t aDelay) {
     NS_ASSERTION(!gXPCOMThreadsShutDown,
                  "Bug 1508626 - Setting delay timer for font loader after "
                  "shutdown but before observer");
-    mState = stateTimerOnDelay;
+    // Set up delay timer. We don't expect to be called with a delay once
+    // the timer already exists, but if that happens we'll just ignore the
+    // extra call and leave the existing timer to do its thing.
+    MOZ_ASSERT(!mTimer, "duplicate use of StartLoader() with delay?");
+    if (mTimer) {
+      return;
+    }
+    mTimer = NS_NewTimer();
     mTimer->InitWithNamedFuncCallback(DelayedStartCallback, this, aDelay,
                                       nsITimer::TYPE_ONE_SHOT,
                                       "gfxFontInfoLoader::StartLoader");
+    mState = stateTimerOnDelay;
     return;
+  }
+
+  // Either we've been called back by the DelayedStartCallback when its timer
+  // fired, or a layout caller has passed aDelay=0 to ask the loader to run
+  // without further delay.
+
+  // Cancel the delay timer, if any.
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
   }
 
   NS_ASSERTION(

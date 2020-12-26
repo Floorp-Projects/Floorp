@@ -2363,14 +2363,11 @@ void gfxPlatformFontList::InitOtherFamilyNamesInternal(
 
     auto list = SharedFontList();
     if (list) {
-      for (auto& f : mozilla::Range<fontlist::Family>(list->Families(),
-                                                      list->NumFamilies())) {
-        ReadFaceNamesForFamily(&f, false);
-        TimeDuration elapsed = TimeStamp::Now() - start;
-        if (elapsed.ToMilliseconds() > OTHERNAMES_TIMEOUT) {
-          timedOut = true;
-          break;
-        }
+      // If the gfxFontInfoLoader task is not yet running, kick it off now so
+      // that it will load remaining names etc as soon as idle time permits.
+      if (mState == stateInitial || mState == stateTimerOnDelay) {
+        StartLoader(0);
+        timedOut = true;
       }
     } else {
       for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
