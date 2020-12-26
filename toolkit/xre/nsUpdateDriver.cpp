@@ -557,7 +557,8 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   if (*outpid == -1) {
     free(argv);
     return;
-  } else if (*outpid == 0) {
+  }
+  if (*outpid == 0) {
     int execResult = execv(updaterPath.get(), argv);
     free(argv);
     exit(execResult);
