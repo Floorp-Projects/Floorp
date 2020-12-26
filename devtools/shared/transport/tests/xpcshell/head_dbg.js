@@ -11,7 +11,6 @@ var CC = Components.Constructor;
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
-const defer = require("devtools/shared/defer");
 
 const Services = require("Services");
 
