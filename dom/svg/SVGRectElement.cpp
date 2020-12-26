@@ -176,10 +176,11 @@ bool SVGRectElement::GetGeometryBounds(Rect* aBounds,
 void SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath) {
   float x, y, width, height, rx, ry;
 
-  DebugOnly<bool> ok = SVGGeometryProperty::ResolveAllAllowFallback<
-      SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height, SVGT::Rx, SVGT::Ry>(
-      this, &x, &y, &width, &height, &rx, &ry);
-  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAllAllowFallback failed");
+  DebugOnly<bool> ok =
+      SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width,
+                                      SVGT::Height, SVGT::Rx, SVGT::Ry>(
+          this, &x, &y, &width, &height, &rx, &ry);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
 
   if (width <= 0 || height <= 0) {
     aSimplePath->Reset();
@@ -200,8 +201,8 @@ void SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath) {
 already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, width, height, rx, ry;
 
-  if (!SVGGeometryProperty::ResolveAllAllowFallback<
-          SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height, SVGT::Rx, SVGT::Ry>(
+  if (!SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width,
+                                       SVGT::Height, SVGT::Rx, SVGT::Ry>(
           this, &x, &y, &width, &height, &rx, &ry)) {
     // This function might be called for element in display:none subtree
     // (e.g. getTotalLength), we fall back to use SVG attributes.

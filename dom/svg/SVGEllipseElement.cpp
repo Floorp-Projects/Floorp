@@ -148,8 +148,7 @@ bool SVGEllipseElement::GetGeometryBounds(
 already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, rx, ry;
 
-  if (!SVGGeometryProperty::ResolveAllAllowFallback<SVGT::Cx, SVGT::Cy,
-                                                    SVGT::Rx, SVGT::Ry>(
+  if (!SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::Rx, SVGT::Ry>(
           this, &x, &y, &rx, &ry)) {
     // This function might be called for element in display:none subtree
     // (e.g. getTotalLength), we fall back to use SVG attributes.
