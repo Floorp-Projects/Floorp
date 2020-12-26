@@ -27,6 +27,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import android.widget.Toast
+import androidx.annotation.ColorRes
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
@@ -89,6 +90,8 @@ abstract class AbstractFetchDownloadService : Service() {
     private val notificationUpdateScope = MainScope()
 
     protected abstract val httpClient: Client
+
+    protected open val style: Style = Style()
 
     @VisibleForTesting
     internal val broadcastManager by lazy { LocalBroadcastManager.getInstance(this) }
@@ -313,6 +316,15 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     /**
+     * Data class for styling download notifications.
+     * @param notificationAccentColor accent color for all download notifications.
+     */
+    data class Style(
+        @ColorRes
+        val notificationAccentColor: Int = R.color.mozac_feature_downloads_notification
+    )
+
+    /**
      * Updates the notification state with the passed [download] data.
      * Be aware that you need to pass [latestUIStatus] as [DownloadJobState.status] can be modified
      * from another thread, causing inconsistencies in the ui.
@@ -320,12 +332,28 @@ abstract class AbstractFetchDownloadService : Service() {
     @VisibleForTesting
     internal fun updateDownloadNotification(latestUIStatus: Status, download: DownloadJobState) {
         val notification = when (latestUIStatus) {
-            DOWNLOADING -> DownloadNotification.createOngoingDownloadNotification(context, download)
-            PAUSED -> DownloadNotification.createPausedDownloadNotification(context, download)
-            FAILED -> DownloadNotification.createDownloadFailedNotification(context, download)
+            DOWNLOADING -> DownloadNotification.createOngoingDownloadNotification(
+                context,
+                download,
+                style.notificationAccentColor
+            )
+            PAUSED -> DownloadNotification.createPausedDownloadNotification(
+                context,
+                download,
+                style.notificationAccentColor
+            )
+            FAILED -> DownloadNotification.createDownloadFailedNotification(
+                context,
+                download,
+                style.notificationAccentColor
+            )
             COMPLETED -> {
                 addToDownloadSystemDatabaseCompat(download.state)
-                DownloadNotification.createDownloadCompletedNotification(context, download)
+                DownloadNotification.createDownloadCompletedNotification(
+                    context,
+                    download,
+                    style.notificationAccentColor
+                )
             }
             CANCELLED -> {
                 removeNotification(context, download)
@@ -486,7 +514,11 @@ abstract class AbstractFetchDownloadService : Service() {
         return if (SDK_INT >= Build.VERSION_CODES.N) {
             val downloadList = downloadJobs.values.toList()
             val notificationGroup =
-                DownloadNotification.createDownloadGroupNotification(context, downloadList)
+                DownloadNotification.createDownloadGroupNotification(
+                    context,
+                    downloadList,
+                    style.notificationAccentColor
+                )
             NotificationManagerCompat.from(context).apply {
                 notify(NOTIFICATION_DOWNLOAD_GROUP_ID, notificationGroup)
             }
@@ -498,7 +530,11 @@ abstract class AbstractFetchDownloadService : Service() {
 
     internal fun createCompactForegroundNotification(downloadJobState: DownloadJobState): Notification {
         val notification =
-            DownloadNotification.createOngoingDownloadNotification(context, downloadJobState)
+            DownloadNotification.createOngoingDownloadNotification(
+                context,
+                downloadJobState,
+                style.notificationAccentColor
+            )
         compatForegroundNotificationId = downloadJobState.foregroundServiceId
         NotificationManagerCompat.from(context).apply {
             notify(compatForegroundNotificationId, notification)

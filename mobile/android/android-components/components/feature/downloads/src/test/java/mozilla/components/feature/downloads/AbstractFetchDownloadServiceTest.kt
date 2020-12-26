@@ -1249,7 +1249,12 @@ class AbstractFetchDownloadServiceTest {
         service.registerNotificationActionsReceiver()
         service.downloadJobs[download.id] = downloadState
 
-        val notification = DownloadNotification.createOngoingDownloadNotification(testContext, downloadState)
+        val notificationStyle = AbstractFetchDownloadService.Style()
+        val notification = DownloadNotification.createOngoingDownloadNotification(
+            testContext,
+            downloadState,
+            notificationStyle.notificationAccentColor
+        )
 
         NotificationManagerCompat.from(testContext).notify(downloadState.foregroundServiceId, notification)
 

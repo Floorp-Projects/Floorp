@@ -6,6 +6,7 @@ package mozilla.components.feature.downloads
 
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
@@ -156,5 +157,146 @@ class DownloadNotificationTest {
 
         val summary = DownloadNotification.getSummaryList(testContext, listOf(download1, download2))
         assertEquals(listOf("mozilla.txt 10%", "mozilla2.txt 20%"), summary)
+    }
+
+    @Test
+    fun getOngoingNotificationAccentColor() {
+        val download = DownloadJobState(
+            job = null,
+            state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.DOWNLOADING),
+            foregroundServiceId = 1,
+            downloadDeleted = false,
+            currentBytesCopied = 10,
+            status = DownloadState.Status.DOWNLOADING
+        )
+
+        val style = AbstractFetchDownloadService.Style()
+
+        val notification = DownloadNotification.createOngoingDownloadNotification(
+            testContext,
+            download,
+            notificationAccentColor = style.notificationAccentColor
+        )
+
+        val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
+
+        assertEquals(accentColor, notification.color)
+    }
+
+    @Test
+    fun getPausedNotificationAccentColor() {
+        val download = DownloadJobState(
+            job = null,
+            state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.PAUSED),
+            foregroundServiceId = 1,
+            downloadDeleted = false,
+            currentBytesCopied = 10,
+            status = DownloadState.Status.PAUSED
+        )
+
+        val style = AbstractFetchDownloadService.Style()
+
+        val notification = DownloadNotification.createPausedDownloadNotification(
+            testContext,
+            download,
+            notificationAccentColor = style.notificationAccentColor
+        )
+
+        val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
+
+        assertEquals(accentColor, notification.color)
+    }
+
+    @Test
+    fun getCompletedNotificationAccentColor() {
+        val download = DownloadJobState(
+            job = null,
+            state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.COMPLETED),
+            foregroundServiceId = 1,
+            downloadDeleted = false,
+            currentBytesCopied = 10,
+            status = DownloadState.Status.COMPLETED
+        )
+
+        val style = AbstractFetchDownloadService.Style()
+
+        val notification = DownloadNotification.createDownloadCompletedNotification(
+            testContext,
+            download,
+            notificationAccentColor = style.notificationAccentColor
+        )
+
+        val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
+
+        assertEquals(accentColor, notification.color)
+    }
+
+    @Test
+    fun getFailedNotificationAccentColor() {
+        val download = DownloadJobState(
+            job = null,
+            state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.FAILED),
+            foregroundServiceId = 1,
+            downloadDeleted = false,
+            currentBytesCopied = 10,
+            status = DownloadState.Status.FAILED
+        )
+
+        val style = AbstractFetchDownloadService.Style()
+
+        val notification = DownloadNotification.createDownloadFailedNotification(
+            testContext,
+            download,
+            notificationAccentColor = style.notificationAccentColor
+        )
+
+        val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
+
+        assertEquals(accentColor, notification.color)
+    }
+
+    @Test
+    fun getGroupNotificationAccentColor() {
+        val download1 = DownloadJobState(
+            job = null,
+            state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.DOWNLOADING),
+            foregroundServiceId = 1,
+            downloadDeleted = false,
+            currentBytesCopied = 10,
+            status = DownloadState.Status.DOWNLOADING
+        )
+
+        val download2 = DownloadJobState(
+            job = null,
+            state = DownloadState(fileName = "mozilla.txt", url = "mozilla.org/mozilla.txt", contentLength = 100L,
+                currentBytesCopied = 10,
+                status = DownloadState.Status.DOWNLOADING),
+            foregroundServiceId = 1,
+            downloadDeleted = false,
+            currentBytesCopied = 10,
+            status = DownloadState.Status.DOWNLOADING
+        )
+
+        val style = AbstractFetchDownloadService.Style()
+
+        val notification = DownloadNotification.createDownloadGroupNotification(
+            testContext,
+            listOf(download1, download2),
+            notificationAccentColor = style.notificationAccentColor
+        )
+
+        val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
+
+        assertEquals(accentColor, notification.color)
     }
 }
