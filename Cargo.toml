@@ -75,8 +75,8 @@ chardetng = { git = "https://github.com/hsivonen/chardetng", rev="7d5e0608d3e012
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe780032a6bbb23d71be545f9c1834128d75" }
 rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="f3cace4fb8b53db0849c62af4fa62bade5a620f7" }
-nix = { git = "https://github.com/shravanrn/nix/", branch = "r0.13.1", rev="4af6c367603869a30fddb5ffb0aba2b9477ba92e" }
-spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu4", rev = "e9eff10f964957e7a001c5f712effe17ce09aa99" }
+nix = { git = "https://github.com/shravanrn/nix/", rev="4af6c367603869a30fddb5ffb0aba2b9477ba92e" }
+spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu4" }
 # failure's backtrace feature might break our builds, see bug 1608157.
 failure = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
 failure_derive = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
