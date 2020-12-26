@@ -5468,8 +5468,7 @@ mozilla::ipc::IPCResult ContentParent::RecvInitOtherFamilyNames(
     const uint32_t& aGeneration, const bool& aDefer, bool* aLoaded) {
   auto fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
-  fontList->InitOtherFamilyNames(aGeneration, aDefer);
-  *aLoaded = true;
+  *aLoaded = fontList->InitOtherFamilyNames(aGeneration, aDefer);
   return IPC_OK();
 }
 
