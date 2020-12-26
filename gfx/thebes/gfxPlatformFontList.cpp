@@ -1166,16 +1166,15 @@ bool gfxPlatformFontList::FindAndAddFamilies(
             break;
           }
         }
-        nsAutoCString base(Substring(key, 0, index));
-        if (index > 0 && SharedFontList()->FindFamily(base)) {
-          mayDefer = false;
-        } else {
+        if (index <= 0 ||
+            !SharedFontList()->FindFamily(nsAutoCString(key.get(), index))) {
           triggerLoading = false;
         }
       }
       if (triggerLoading) {
-        InitOtherFamilyNames(mayDefer);
-        family = SharedFontList()->FindFamily(key);
+        if (InitOtherFamilyNames(mayDefer)) {
+          family = SharedFontList()->FindFamily(key);
+        }
       }
       if (!family && !mOtherFamilyNamesInitialized &&
           !(aFlags & FindFamiliesFlags::eNoAddToNamesMissedWhenSearching)) {
