@@ -854,9 +854,9 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
 
     mReservationSize = ComputeAllocationSize(aSize);
 
-    mMapping = ::CreateFileMapping(INVALID_HANDLE_VALUE, nullptr,
-                                   PAGE_EXECUTE_READWRITE | SEC_RESERVE, 0,
-                                   mReservationSize, nullptr);
+    mMapping = ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr,
+                                    PAGE_EXECUTE_READWRITE | SEC_RESERVE, 0,
+                                    mReservationSize, nullptr);
     if (!mMapping) {
       SetLastDetourError(MMPOLICY_RESERVE_CREATEFILEMAPPING, ::GetLastError());
       return 0;
