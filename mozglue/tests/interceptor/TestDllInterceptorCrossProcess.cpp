@@ -33,7 +33,7 @@ int ParentMain(int argc, wchar_t* argv[]) {
 
   // We'll add the child process to a job so that, in the event of a failure in
   // this parent process, the child process will be automatically terminated.
-  nsAutoHandle job(::CreateJobObject(nullptr, nullptr));
+  nsAutoHandle job(::CreateJobObjectW(nullptr, nullptr));
   if (!job) {
     printf(
         "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Job creation "
