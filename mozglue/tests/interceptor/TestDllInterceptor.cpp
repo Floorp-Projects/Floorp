@@ -284,6 +284,8 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
               Args&&... aArgs) {
   auto orig_func(
       mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
+  wchar_t dllW[N];
+  std::copy(std::begin(dll), std::end(dll), std::begin(dllW));
 
   bool successful = false;
   WindowsDllInterceptor TestIntercept;
@@ -309,7 +311,7 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
     }
 
     // Test the DLL function we just hooked.
-    HMODULE module = ::LoadLibrary(dll);
+    HMODULE module = ::LoadLibraryW(dllW);
     FARPROC funcAddr = ::GetProcAddress(module, func);
     if (!funcAddr) {
       return false;
@@ -326,7 +328,7 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
     fflush(stdout);
 
     // Print out the function's bytes so that we can easily analyze the error.
-    nsModuleHandle mod(::LoadLibrary(dll));
+    nsModuleHandle mod(::LoadLibraryW(dllW));
     FARPROC funcAddr = ::GetProcAddress(mod, func);
     if (funcAddr) {
       const uint32_t kNumBytesToDump =
@@ -351,6 +353,8 @@ template <typename OrigFuncT, size_t N, typename PredicateT>
 bool TestDetour(const char (&dll)[N], const char* func, PredicateT&& aPred) {
   auto orig_func(
       mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
+  wchar_t dllW[N];
+  std::copy(std::begin(dll), std::end(dll), std::begin(dllW));
 
   bool successful = false;
   WindowsDllInterceptor TestIntercept;
@@ -376,7 +380,7 @@ bool TestDetour(const char (&dll)[N], const char* func, PredicateT&& aPred) {
     }
 
     // Test the DLL function we just hooked.
-    HMODULE module = ::LoadLibrary(dll);
+    HMODULE module = ::LoadLibraryW(dllW);
     FARPROC funcAddr = ::GetProcAddress(module, func);
     if (!funcAddr) {
       return false;
@@ -820,7 +824,7 @@ bool TestAssemblyFunctions() {
     patched_func_called = false;
 
     auto originalFunction = reinterpret_cast<void (*)()>(
-        GetProcAddress(GetModuleHandle(nullptr), testCase.mFunctionName));
+        GetProcAddress(GetModuleHandleW(nullptr), testCase.mFunctionName));
     originalFunction();
 
     if (!patched_func_called) {
