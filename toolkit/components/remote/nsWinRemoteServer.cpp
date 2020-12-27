@@ -63,7 +63,7 @@ LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
     GetMostRecentWindow(getter_AddRefs(win));
     return win ? (LRESULT)hwndForDOMWindow(win) : 0;
   }
-  return DefWindowProc(msgWindow, msg, wp, lp);
+  return DefWindowProcW(msgWindow, msg, wp, lp);
 }
 
 nsresult nsWinRemoteServer::Startup(const char* aAppName,

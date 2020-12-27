@@ -35,8 +35,8 @@ nsresult nsWinRemoteClient::SendCommandLine(
   // Bring the already running Mozilla process to the foreground.
   // nsWindow will restore the window (if minimized) and raise it.
   ::SetForegroundWindow(handle);
-  ::SendMessage(handle, WM_COPYDATA, 0,
-                reinterpret_cast<LPARAM>(sender.CopyData()));
+  ::SendMessageW(handle, WM_COPYDATA, 0,
+                 reinterpret_cast<LPARAM>(sender.CopyData()));
 
   *aSucceeded = true;
 
