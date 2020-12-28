@@ -8,8 +8,6 @@ const Services = require("Services");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DevToolsClient } = require("devtools/client/devtools-client");
 
-const defer = require("devtools/shared/defer");
-
 function dumpn(msg) {
   dump("DBG-TEST: " + msg + "\n");
 }
