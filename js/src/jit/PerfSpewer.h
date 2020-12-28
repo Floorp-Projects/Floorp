@@ -70,8 +70,8 @@ class PerfSpewer {
   BasicBlocksVector basicBlocks_;
 
  public:
-  virtual MOZ_MUST_USE bool startBasicBlock(MBasicBlock* blk,
-                                            MacroAssembler& masm);
+  [[nodiscard]] virtual bool startBasicBlock(MBasicBlock* blk,
+                                             MacroAssembler& masm);
   virtual void endBasicBlock(MacroAssembler& masm);
   void noteEndInlineCode(MacroAssembler& masm);
 

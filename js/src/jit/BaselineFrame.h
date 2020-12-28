@@ -326,10 +326,10 @@ class BaselineFrame {
   void setFlags(uint32_t flags) { flags_ = flags; }
   uint32_t* addressOfFlags() { return &flags_; }
 
-  inline MOZ_MUST_USE bool pushLexicalEnvironment(JSContext* cx,
-                                                  Handle<LexicalScope*> scope);
-  inline MOZ_MUST_USE bool freshenLexicalEnvironment(JSContext* cx);
-  inline MOZ_MUST_USE bool recreateLexicalEnvironment(JSContext* cx);
+  [[nodiscard]] inline bool pushLexicalEnvironment(JSContext* cx,
+                                                   Handle<LexicalScope*> scope);
+  [[nodiscard]] inline bool freshenLexicalEnvironment(JSContext* cx);
+  [[nodiscard]] inline bool recreateLexicalEnvironment(JSContext* cx);
 
   [[nodiscard]] bool initFunctionEnvironmentObjects(JSContext* cx);
   [[nodiscard]] bool pushVarEnvironment(JSContext* cx, HandleScope scope);

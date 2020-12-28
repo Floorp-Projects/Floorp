@@ -971,10 +971,11 @@ class JitcodeRegionEntry {
 
   // Write a run, starting at the given NativeToBytecode entry, into the given
   // buffer writer.
-  static MOZ_MUST_USE bool WriteRun(CompactBufferWriter& writer,
-                                    JSScript** scriptList,
-                                    uint32_t scriptListSize, uint32_t runLength,
-                                    const NativeToBytecode* entry);
+  [[nodiscard]] static bool WriteRun(CompactBufferWriter& writer,
+                                     JSScript** scriptList,
+                                     uint32_t scriptListSize,
+                                     uint32_t runLength,
+                                     const NativeToBytecode* entry);
 
   // Delta Run entry formats are encoded little-endian:
   //
@@ -1219,13 +1220,13 @@ class JitcodeIonTable {
     return payloadEnd() - regionOffset(0);
   }
 
-  static MOZ_MUST_USE bool WriteIonTable(CompactBufferWriter& writer,
-                                         JSScript** scriptList,
-                                         uint32_t scriptListSize,
-                                         const NativeToBytecode* start,
-                                         const NativeToBytecode* end,
-                                         uint32_t* tableOffsetOut,
-                                         uint32_t* numRegionsOut);
+  [[nodiscard]] static bool WriteIonTable(CompactBufferWriter& writer,
+                                          JSScript** scriptList,
+                                          uint32_t scriptListSize,
+                                          const NativeToBytecode* start,
+                                          const NativeToBytecode* end,
+                                          uint32_t* tableOffsetOut,
+                                          uint32_t* numRegionsOut);
 };
 
 }  // namespace jit

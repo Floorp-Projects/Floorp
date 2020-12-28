@@ -80,13 +80,13 @@ enum class MustFlushICache { No, LocalThreadOnly, AllThreads };
 
 enum class FlushICacheSpec { LocalThreadOnly, AllThreads };
 
-extern MOZ_MUST_USE bool ReprotectRegion(void* start, size_t size,
-                                         ProtectionSetting protection,
-                                         MustFlushICache flushICache);
+[[nodiscard]] extern bool ReprotectRegion(void* start, size_t size,
+                                          ProtectionSetting protection,
+                                          MustFlushICache flushICache);
 
 // Functions called at process start-up/shutdown to initialize/release the
 // executable memory region.
-extern MOZ_MUST_USE bool InitProcessExecutableMemory();
+[[nodiscard]] extern bool InitProcessExecutableMemory();
 extern void ReleaseProcessExecutableMemory();
 
 // Allocate/deallocate executable pages.

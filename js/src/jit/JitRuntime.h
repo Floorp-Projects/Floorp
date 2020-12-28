@@ -295,7 +295,7 @@ class JitRuntime {
 
   static void TraceAtomZoneRoots(JSTracer* trc,
                                  const js::AutoAccessAtomsZone& access);
-  static MOZ_MUST_USE bool MarkJitcodeGlobalTableIteratively(GCMarker* marker);
+  [[nodiscard]] static bool MarkJitcodeGlobalTableIteratively(GCMarker* marker);
   static void TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc);
 
   const BaselineICFallbackCode& baselineICFallbackCode() const {

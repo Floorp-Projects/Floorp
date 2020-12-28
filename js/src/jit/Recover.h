@@ -162,8 +162,8 @@ class MOZ_NON_PARAM RInstruction {
   // Function used to recover the value computed by this instruction. This
   // function reads its arguments from the allocations listed on the snapshot
   // iterator and stores its returned value on the snapshot iterator too.
-  virtual MOZ_MUST_USE bool recover(JSContext* cx,
-                                    SnapshotIterator& iter) const = 0;
+  [[nodiscard]] virtual bool recover(JSContext* cx,
+                                     SnapshotIterator& iter) const = 0;
 
   // Decode an RInstruction on top of the reserved storage space, based on the
   // tag written by the writeRecoverData function of the corresponding MIR

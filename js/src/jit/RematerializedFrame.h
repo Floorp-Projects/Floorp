@@ -105,7 +105,7 @@ class RematerializedFrame {
 
   // Rematerialize all remaining frames pointed to by |iter| into |frames|
   // in older-to-younger order, e.g., frames[0] is the oldest frame.
-  static MOZ_MUST_USE bool RematerializeInlineFrames(
+  [[nodiscard]] static bool RematerializeInlineFrames(
       JSContext* cx, uint8_t* top, InlineFrameIterator& iter,
       MaybeReadFallback& fallback, RematerializedFrameVector& frames);
 
