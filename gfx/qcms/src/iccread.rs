@@ -784,41 +784,40 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
     if clut_offset != 0 {
         i = 0;
         while i < num_in_channels as libc::c_uint {
-            (*lut).num_grid_points[i as usize] = read_u8(src, (clut_offset + i) as usize);
-            if (*lut).num_grid_points[i as usize] as i32 == 0 {
+            lut.num_grid_points[i as usize] = read_u8(src, (clut_offset + i) as usize);
+            if lut.num_grid_points[i as usize] as i32 == 0 {
                 invalid_source(src, "bad grid_points");
             }
             i = i + 1
         }
     }
     // Reverse the processing of transformation elements for mBA type.
-    (*lut).reversed = type_0 == LUT_MBA_TYPE;
-    (*lut).num_in_channels = num_in_channels;
-    (*lut).num_out_channels = num_out_channels;
+    lut.reversed = type_0 == LUT_MBA_TYPE;
+    lut.num_in_channels = num_in_channels;
+    lut.num_out_channels = num_out_channels;
     if matrix_offset != 0 {
         // read the matrix if we have it
-        (*lut).e00 = read_s15Fixed16Number(src, (matrix_offset + (4 * 0) as libc::c_uint) as usize); // the caller checks that this doesn't happen
-        (*lut).e01 = read_s15Fixed16Number(src, (matrix_offset + (4 * 1) as libc::c_uint) as usize);
-        (*lut).e02 = read_s15Fixed16Number(src, (matrix_offset + (4 * 2) as libc::c_uint) as usize);
-        (*lut).e10 = read_s15Fixed16Number(src, (matrix_offset + (4 * 3) as libc::c_uint) as usize);
-        (*lut).e11 = read_s15Fixed16Number(src, (matrix_offset + (4 * 4) as libc::c_uint) as usize);
-        (*lut).e12 = read_s15Fixed16Number(src, (matrix_offset + (4 * 5) as libc::c_uint) as usize);
-        (*lut).e20 = read_s15Fixed16Number(src, (matrix_offset + (4 * 6) as libc::c_uint) as usize);
-        (*lut).e21 = read_s15Fixed16Number(src, (matrix_offset + (4 * 7) as libc::c_uint) as usize);
-        (*lut).e22 = read_s15Fixed16Number(src, (matrix_offset + (4 * 8) as libc::c_uint) as usize);
-        (*lut).e03 = read_s15Fixed16Number(src, (matrix_offset + (4 * 9) as libc::c_uint) as usize);
-        (*lut).e13 =
-            read_s15Fixed16Number(src, (matrix_offset + (4 * 10) as libc::c_uint) as usize);
-        (*lut).e23 = read_s15Fixed16Number(src, (matrix_offset + (4 * 11) as libc::c_uint) as usize)
+        lut.e00 = read_s15Fixed16Number(src, (matrix_offset + (4 * 0) as libc::c_uint) as usize); // the caller checks that this doesn't happen
+        lut.e01 = read_s15Fixed16Number(src, (matrix_offset + (4 * 1) as libc::c_uint) as usize);
+        lut.e02 = read_s15Fixed16Number(src, (matrix_offset + (4 * 2) as libc::c_uint) as usize);
+        lut.e10 = read_s15Fixed16Number(src, (matrix_offset + (4 * 3) as libc::c_uint) as usize);
+        lut.e11 = read_s15Fixed16Number(src, (matrix_offset + (4 * 4) as libc::c_uint) as usize);
+        lut.e12 = read_s15Fixed16Number(src, (matrix_offset + (4 * 5) as libc::c_uint) as usize);
+        lut.e20 = read_s15Fixed16Number(src, (matrix_offset + (4 * 6) as libc::c_uint) as usize);
+        lut.e21 = read_s15Fixed16Number(src, (matrix_offset + (4 * 7) as libc::c_uint) as usize);
+        lut.e22 = read_s15Fixed16Number(src, (matrix_offset + (4 * 8) as libc::c_uint) as usize);
+        lut.e03 = read_s15Fixed16Number(src, (matrix_offset + (4 * 9) as libc::c_uint) as usize);
+        lut.e13 = read_s15Fixed16Number(src, (matrix_offset + (4 * 10) as libc::c_uint) as usize);
+        lut.e23 = read_s15Fixed16Number(src, (matrix_offset + (4 * 11) as libc::c_uint) as usize)
     }
     if a_curve_offset != 0 {
-        read_nested_curveType(src, &mut (*lut).a_curves, num_in_channels, a_curve_offset);
+        read_nested_curveType(src, &mut lut.a_curves, num_in_channels, a_curve_offset);
     }
     if m_curve_offset != 0 {
-        read_nested_curveType(src, &mut (*lut).m_curves, num_out_channels, m_curve_offset);
+        read_nested_curveType(src, &mut lut.m_curves, num_out_channels, m_curve_offset);
     }
     if b_curve_offset != 0 {
-        read_nested_curveType(src, &mut (*lut).b_curves, num_out_channels, b_curve_offset);
+        read_nested_curveType(src, &mut lut.b_curves, num_out_channels, b_curve_offset);
     } else {
         invalid_source(src, "B curves required");
     }

@@ -91,16 +91,12 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_get_rendering_intent(
-    mut profile: *mut qcms_profile,
-) -> Intent {
-    return (*profile).rendering_intent;
+pub extern "C" fn qcms_profile_get_rendering_intent(profile: &qcms_profile) -> Intent {
+    return profile.rendering_intent;
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_get_color_space(
-    mut profile: *mut qcms_profile,
-) -> icColorSpaceSignature {
-    return (*profile).color_space;
+pub extern "C" fn qcms_profile_get_color_space(profile: &qcms_profile) -> icColorSpaceSignature {
+    return profile.color_space;
 }
 
 #[no_mangle]

@@ -18,7 +18,7 @@ use qcms::DataType::*;
  {
    // qcms supports GRAY and RGB profiles as input, and RGB as output.
  
-   let src_color_space = qcms_profile_get_color_space(src_profile);
+   let src_color_space = qcms_profile_get_color_space(&*src_profile);
    let mut src_type = if (size & 1) != 0 { DATA_RGBA_8 } else { DATA_RGB_8 };
    if src_color_space == icSigGrayData {
      src_type = if (size & 1) != 0 { DATA_GRAYA_8 } else { DATA_GRAY_8 };
@@ -26,13 +26,13 @@ use qcms::DataType::*;
      return;
    }
  
-   let dst_color_space = qcms_profile_get_color_space(dst_profile);
+   let dst_color_space = qcms_profile_get_color_space(&*dst_profile);
    if dst_color_space != icSigRgbData {
      return;
    }
    let dst_type = if (size & 2) != 0 { DATA_RGBA_8 } else { DATA_RGB_8 };
  
-   let intent = qcms_profile_get_rendering_intent(src_profile);
+   let intent = qcms_profile_get_rendering_intent(&*src_profile);
    // Firefox calls this on the display profile to increase performance.
    // Skip with low probability to increase coverage.
    if (size % 15) != 0 {
