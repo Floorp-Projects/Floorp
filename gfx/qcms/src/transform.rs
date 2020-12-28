@@ -37,7 +37,7 @@ use crate::{
     },
 };
 use crate::{
-    iccread::{qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile, RGB_SIGNATURE},
+    iccread::{qcms_CIE_xyY, qcms_CIE_xyYTRIPLE, qcms_profile, GRAY_SIGNATURE, RGB_SIGNATURE},
     transform_util::clamp_float,
     Intent,
 };
@@ -1316,7 +1316,7 @@ pub fn transform_create(
         transform.matrix[0][2] = result_0.m[2][0];
         transform.matrix[1][2] = result_0.m[2][1];
         transform.matrix[2][2] = result_0.m[2][2]
-    } else if in_0.color_space == 0x47524159 {
+    } else if in_0.color_space == GRAY_SIGNATURE {
         transform.input_gamma_table_gray = build_input_gamma_table(in_0.grayTRC.as_deref());
         if transform.input_gamma_table_gray.is_none() {
             return None;
