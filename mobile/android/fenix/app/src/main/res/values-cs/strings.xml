@@ -732,6 +732,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Zatím nemáte žádnou historii prohlížení</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Smazat stažené soubory</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Opravdu chcete smazat všechny stažené soubory?</string>
     <!-- Text shown when no download exists -->
     <string name="download_empty_message_1">Žádné stažené soubory</string>
     <!-- History multi select title in app bar
@@ -864,6 +869,8 @@
     <string name="preference_phone_feature_location">Poloha</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Oznámení</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Obsah chráněný pomocí DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Vždy se zeptat</string>
     <!-- Label that indicates that a permission must be blocked -->
