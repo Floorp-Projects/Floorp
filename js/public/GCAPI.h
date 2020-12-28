@@ -391,16 +391,6 @@ typedef enum JSGCParamKey {
    * string will be allocated in nursery.
    */
   JSGC_STOP_PRETENURE_STRING_THRESHOLD = 43,
-
-  /**
-   * A number that is incremented on every major GC slice.
-   */
-  JSGC_MAJOR_GC_NUMBER = 44,
-
-  /**
-   * A number that is incremented on every minor GC.
-   */
-  JSGC_MINOR_GC_NUMBER = 45,
 } JSGCParamKey;
 
 /*
