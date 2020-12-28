@@ -288,12 +288,12 @@ wine-5.0:
             sig-url: "{url}.sign"
             key-path: build/unix/build-gcc/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key
 
-cbindgen-0.15.0:
+cbindgen-0.16.0:
     description: cbindgen source code
     fetch:
         type: git
         repo: https://github.com/eqrion/cbindgen
-        revision: 83b3be9f884697a51f8717af8b5498866a81e62e
+        revision: a00b4215a907601680f6e9acaf93df1cbafa8ded
 
 cctools-port:
     description: cctools-port source code
