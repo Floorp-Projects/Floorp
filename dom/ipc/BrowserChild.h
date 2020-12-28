@@ -755,6 +755,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const mozilla::layers::CompositorOptions& aCompositorOptions);
   void InitAPZState();
 
+  void InitVsyncChild();
+
   void DestroyWindow();
 
   void ApplyParentShowInfo(const ParentShowInfo&);

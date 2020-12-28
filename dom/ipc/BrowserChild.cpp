@@ -553,11 +553,27 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
+  InitVsyncChild();
+
   // We've all set up, make sure our visibility state is consistent. This is
   // important for OOP iframes, which start off as hidden.
   UpdateVisibility();
 
   return NS_OK;
+}
+
+void BrowserChild::InitVsyncChild() {
+#if defined(MOZ_WAYLAND)
+  if (!IsWaylandDisabled()) {
+    PVsyncChild* actor = SendPVsyncConstructor();
+    mVsyncChild = static_cast<VsyncChild*>(actor);
+  } else
+#endif
+  {
+    PBackgroundChild* actorChild =
+        BackgroundChild::GetOrCreateForCurrentThread();
+    mVsyncChild = static_cast<VsyncChild*>(actorChild->SendPVsyncConstructor());
+  }
 }
 
 void BrowserChild::NotifyTabContextUpdated() {
@@ -2172,18 +2188,7 @@ bool BrowserChild::DeallocPVsyncChild(PVsyncChild* aActor) {
   return true;
 }
 
-RefPtr<VsyncChild> BrowserChild::GetVsyncChild() {
-  // Initializing mVsyncChild here turns on per-BrowserChild Vsync for a
-  // given platform. Note: this only makes sense if nsWindow returns a
-  // window-specific VsyncSource.
-#if defined(MOZ_WAYLAND)
-  if (!IsWaylandDisabled() && !mVsyncChild) {
-    PVsyncChild* actor = SendPVsyncConstructor();
-    mVsyncChild = static_cast<VsyncChild*>(actor);
-  }
-#endif
-  return mVsyncChild;
-}
+RefPtr<VsyncChild> BrowserChild::GetVsyncChild() { return mVsyncChild; }
 
 mozilla::ipc::IPCResult BrowserChild::RecvActivateFrameEvent(
     const nsString& aType, const bool& capture) {
