@@ -464,10 +464,12 @@ class GCRuntime {
   }
 
   uint64_t gcNumber() const { return number; }
-  void incGcNumber() { ++number; }
 
   uint64_t minorGCCount() const { return minorGCNumber; }
-  void incMinorGcNumber() { ++minorGCNumber; }
+  void incMinorGcNumber() {
+    ++minorGCNumber;
+    ++number;
+  }
 
   uint64_t majorGCCount() const { return majorGCNumber; }
   void incMajorGcNumber() { ++majorGCNumber; }
@@ -687,14 +689,12 @@ class GCRuntime {
                                          const MaybeInvocationKind& gckind,
                                          JS::GCReason reason);
   bool shouldRepeatForDeadZone(JS::GCReason reason);
-
   void incrementalSlice(SliceBudget& budget, const MaybeInvocationKind& gckind,
-                        JS::GCReason reason);
-
-  void waitForBackgroundTasksBeforeSlice();
+                        JS::GCReason reason, AutoGCSession& session);
+  MOZ_MUST_USE bool shouldCollectNurseryForSlice(bool nonincrementalByAPI,
+                                                 SliceBudget& budget);
   bool mightSweepInThisSlice(bool nonIncremental);
-  void collectNurseryFromMajorGC(const MaybeInvocationKind& gckind,
-                                 JS::GCReason reason);
+  bool mightCompactInThisSlice(bool nonIncremental);
   void collectNursery(JSGCInvocationKind kind, JS::GCReason reason,
                       gcstats::PhaseKind phase);
 
