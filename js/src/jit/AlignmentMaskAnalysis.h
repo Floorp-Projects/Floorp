@@ -20,7 +20,7 @@ class AlignmentMaskAnalysis {
  public:
   explicit AlignmentMaskAnalysis(MIRGraph& graph) : graph_(graph) {}
 
-  MOZ_MUST_USE bool analyze();
+  [[nodiscard]] bool analyze();
 };
 
 } /* namespace jit */

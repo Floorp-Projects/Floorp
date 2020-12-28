@@ -1479,7 +1479,7 @@ class TypeAnalyzer {
     return phi;
   }
 
-  MOZ_MUST_USE bool propagateAllPhiSpecializations();
+  [[nodiscard]] bool propagateAllPhiSpecializations();
 
   bool respecialize(MPhi* phi, MIRType type);
   bool propagateSpecialization(MPhi* phi);

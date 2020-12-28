@@ -374,7 +374,7 @@ class SnapshotWriter {
   void trackSnapshot(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId,
                      uint32_t lirOpcode, uint32_t lirId);
 #endif
-  MOZ_MUST_USE bool add(const RValueAllocation& slot);
+  [[nodiscard]] bool add(const RValueAllocation& slot);
 
   uint32_t allocWritten() const { return allocWritten_; }
   void endSnapshot();
