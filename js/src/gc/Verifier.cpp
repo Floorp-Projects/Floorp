@@ -357,6 +357,13 @@ void gc::GCRuntime::endVerifyPreBarriers() {
     zone->setNeedsIncrementalBarrier(false);
   }
 
+  /*
+   * We need to bump gcNumber so that the methodjit knows that jitcode has
+   * been discarded.
+   */
+  MOZ_ASSERT(trc->number == number);
+  number++;
+
   verifyPreData = nullptr;
   MOZ_ASSERT(incrementalState == State::Mark);
   incrementalState = State::NotActive;
