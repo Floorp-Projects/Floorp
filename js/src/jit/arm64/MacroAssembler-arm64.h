@@ -404,39 +404,39 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     sbfx(ARMRegister(dest, 64), ARMRegister(src, 64), JSVAL_TAG_SHIFT,
          (64 - JSVAL_TAG_SHIFT));
   }
-  MOZ_MUST_USE Register extractTag(const Address& address, Register scratch) {
+  [[nodiscard]] Register extractTag(const Address& address, Register scratch) {
     loadPtr(address, scratch);
     splitSignExtTag(scratch, scratch);
     return scratch;
   }
-  MOZ_MUST_USE Register extractTag(const ValueOperand& value,
-                                   Register scratch) {
+  [[nodiscard]] Register extractTag(const ValueOperand& value,
+                                    Register scratch) {
     splitSignExtTag(value.valueReg(), scratch);
     return scratch;
   }
-  MOZ_MUST_USE Register extractObject(const Address& address,
-                                      Register scratch) {
+  [[nodiscard]] Register extractObject(const Address& address,
+                                       Register scratch) {
     loadPtr(address, scratch);
     unboxObject(scratch, scratch);
     return scratch;
   }
-  MOZ_MUST_USE Register extractObject(const ValueOperand& value,
-                                      Register scratch) {
+  [[nodiscard]] Register extractObject(const ValueOperand& value,
+                                       Register scratch) {
     unboxObject(value, scratch);
     return scratch;
   }
-  MOZ_MUST_USE Register extractSymbol(const ValueOperand& value,
-                                      Register scratch) {
+  [[nodiscard]] Register extractSymbol(const ValueOperand& value,
+                                       Register scratch) {
     unboxSymbol(value, scratch);
     return scratch;
   }
-  MOZ_MUST_USE Register extractInt32(const ValueOperand& value,
-                                     Register scratch) {
+  [[nodiscard]] Register extractInt32(const ValueOperand& value,
+                                      Register scratch) {
     unboxInt32(value, scratch);
     return scratch;
   }
-  MOZ_MUST_USE Register extractBoolean(const ValueOperand& value,
-                                       Register scratch) {
+  [[nodiscard]] Register extractBoolean(const ValueOperand& value,
+                                        Register scratch) {
     unboxBoolean(value, scratch);
     return scratch;
   }

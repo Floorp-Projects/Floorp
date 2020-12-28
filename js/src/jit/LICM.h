@@ -17,7 +17,7 @@ namespace jit {
 class MIRGenerator;
 class MIRGraph;
 
-MOZ_MUST_USE bool LICM(MIRGenerator* mir, MIRGraph& graph);
+[[nodiscard]] bool LICM(MIRGenerator* mir, MIRGraph& graph);
 
 }  // namespace jit
 }  // namespace js

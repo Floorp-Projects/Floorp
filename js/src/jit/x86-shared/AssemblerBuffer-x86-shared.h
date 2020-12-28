@@ -161,7 +161,7 @@ class AssemblerBuffer {
   MOZ_ALWAYS_INLINE void putInt(int value) { sizedAppend<4>(value); }
   MOZ_ALWAYS_INLINE void putInt64(int64_t value) { sizedAppend<8>(value); }
 
-  MOZ_MUST_USE bool append(const unsigned char* values, size_t size) {
+  [[nodiscard]] bool append(const unsigned char* values, size_t size) {
     if (MOZ_UNLIKELY(!m_buffer.append(values, size))) {
       oomDetected();
       return false;

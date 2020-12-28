@@ -88,8 +88,8 @@ class JitRealm {
     }
     return nullptr;
   }
-  MOZ_MUST_USE bool putStubCode(JSContext* cx, uint32_t key,
-                                Handle<JitCode*> stubCode) {
+  [[nodiscard]] bool putStubCode(JSContext* cx, uint32_t key,
+                                 Handle<JitCode*> stubCode) {
     MOZ_ASSERT(stubCode);
     if (!stubCodes_->putNew(key, stubCode.get())) {
       ReportOutOfMemory(cx);
@@ -101,10 +101,10 @@ class JitRealm {
   JitRealm();
   ~JitRealm();
 
-  MOZ_MUST_USE bool initialize(JSContext* cx, bool zoneHasNurseryStrings);
+  [[nodiscard]] bool initialize(JSContext* cx, bool zoneHasNurseryStrings);
 
   // Initialize code stubs only used by Ion, not Baseline.
-  MOZ_MUST_USE bool ensureIonStubsExist(JSContext* cx) {
+  [[nodiscard]] bool ensureIonStubsExist(JSContext* cx) {
     if (stubs_[StringConcat]) {
       return true;
     }
@@ -142,7 +142,7 @@ class JitRealm {
     return getStubNoBarrier(RegExpMatcher, requiredBarriersOut);
   }
 
-  MOZ_MUST_USE bool ensureRegExpMatcherStubExists(JSContext* cx) {
+  [[nodiscard]] bool ensureRegExpMatcherStubExists(JSContext* cx) {
     if (stubs_[RegExpMatcher]) {
       return true;
     }
@@ -154,7 +154,7 @@ class JitRealm {
     return getStubNoBarrier(RegExpSearcher, requiredBarriersOut);
   }
 
-  MOZ_MUST_USE bool ensureRegExpSearcherStubExists(JSContext* cx) {
+  [[nodiscard]] bool ensureRegExpSearcherStubExists(JSContext* cx) {
     if (stubs_[RegExpSearcher]) {
       return true;
     }
@@ -166,7 +166,7 @@ class JitRealm {
     return getStubNoBarrier(RegExpTester, requiredBarriersOut);
   }
 
-  MOZ_MUST_USE bool ensureRegExpTesterStubExists(JSContext* cx) {
+  [[nodiscard]] bool ensureRegExpTesterStubExists(JSContext* cx) {
     if (stubs_[RegExpTester]) {
       return true;
     }

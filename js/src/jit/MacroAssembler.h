@@ -4403,8 +4403,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                       IntConversionBehavior::ClampToUint8);
   }
 
-  MOZ_MUST_USE bool icBuildOOLFakeExitFrame(void* fakeReturnAddr,
-                                            AutoSaveLiveRegisters& save);
+  [[nodiscard]] bool icBuildOOLFakeExitFrame(void* fakeReturnAddr,
+                                             AutoSaveLiveRegisters& save);
 
   // Align the stack pointer based on the number of arguments which are pushed
   // on the stack, such that the JitFrameLayout would be correctly aligned on

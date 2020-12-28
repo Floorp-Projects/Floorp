@@ -774,7 +774,7 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.oneByteOp64(OP_MOVSXD_GvEv, offset, base, index, scale, dst);
   }
 
-  MOZ_MUST_USE JmpSrc movl_ripr(RegisterID dst) {
+  [[nodiscard]] JmpSrc movl_ripr(RegisterID dst) {
     m_formatter.oneByteRipOp(OP_MOV_GvEv, 0, (RegisterID)dst);
     JmpSrc label(m_formatter.size());
     spew("movl       " MEM_o32r ", %s", ADDR_o32r(label.offset()),
@@ -782,7 +782,7 @@ class BaseAssemblerX64 : public BaseAssembler {
     return label;
   }
 
-  MOZ_MUST_USE JmpSrc movl_rrip(RegisterID src) {
+  [[nodiscard]] JmpSrc movl_rrip(RegisterID src) {
     m_formatter.oneByteRipOp(OP_MOV_EvGv, 0, (RegisterID)src);
     JmpSrc label(m_formatter.size());
     spew("movl       %s, " MEM_o32r "", GPReg32Name(src),
@@ -790,7 +790,7 @@ class BaseAssemblerX64 : public BaseAssembler {
     return label;
   }
 
-  MOZ_MUST_USE JmpSrc movq_ripr(RegisterID dst) {
+  [[nodiscard]] JmpSrc movq_ripr(RegisterID dst) {
     m_formatter.oneByteRipOp64(OP_MOV_GvEv, 0, dst);
     JmpSrc label(m_formatter.size());
     spew("movq       " MEM_o32r ", %s", ADDR_o32r(label.offset()),
@@ -798,7 +798,7 @@ class BaseAssemblerX64 : public BaseAssembler {
     return label;
   }
 
-  MOZ_MUST_USE JmpSrc movq_rrip(RegisterID src) {
+  [[nodiscard]] JmpSrc movq_rrip(RegisterID src) {
     m_formatter.oneByteRipOp64(OP_MOV_EvGv, 0, (RegisterID)src);
     JmpSrc label(m_formatter.size());
     spew("movq       %s, " MEM_o32r "", GPRegName(src),
@@ -811,7 +811,7 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.oneByteOp64(OP_LEA, offset, base, dst);
   }
 
-  MOZ_MUST_USE JmpSrc leaq_rip(RegisterID dst) {
+  [[nodiscard]] JmpSrc leaq_rip(RegisterID dst) {
     m_formatter.oneByteRipOp64(OP_LEA, 0, dst);
     JmpSrc label(m_formatter.size());
     spew("leaq       " MEM_o32r ", %s", ADDR_o32r(label.offset()),
@@ -883,285 +883,285 @@ class BaseAssemblerX64 : public BaseAssembler {
     twoByteOpInt64Simd("vmovq", VEX_PD, OP2_MOVD_VdEd, src, invalid_xmm, dst);
   }
 
-  MOZ_MUST_USE JmpSrc vmovsd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vmovsd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vmovss_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vmovss_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vmovsd_rrip(XMMRegisterID src) {
+  [[nodiscard]] JmpSrc vmovsd_rrip(XMMRegisterID src) {
     return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_WsdVsd, invalid_xmm,
                             src);
   }
-  MOZ_MUST_USE JmpSrc vmovss_rrip(XMMRegisterID src) {
+  [[nodiscard]] JmpSrc vmovss_rrip(XMMRegisterID src) {
     return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_WsdVsd, invalid_xmm,
                             src);
   }
-  MOZ_MUST_USE JmpSrc vmovdqa_rrip(XMMRegisterID src) {
+  [[nodiscard]] JmpSrc vmovdqa_rrip(XMMRegisterID src) {
     return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_WdqVdq, invalid_xmm,
                             src);
   }
-  MOZ_MUST_USE JmpSrc vmovaps_rrip(XMMRegisterID src) {
+  [[nodiscard]] JmpSrc vmovaps_rrip(XMMRegisterID src) {
     return twoByteRipOpSimd("vmovdqa", VEX_PS, OP2_MOVAPS_WsdVsd, invalid_xmm,
                             src);
   }
 
-  MOZ_MUST_USE JmpSrc vmovaps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vmovaps_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, invalid_xmm,
                             dst);
   }
 
-  MOZ_MUST_USE JmpSrc vmovdqa_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vmovdqa_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, invalid_xmm,
                             dst);
   }
 
-  MOZ_MUST_USE JmpSrc vpaddb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddb", VEX_PD, OP2_PADDB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpaddw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddw", VEX_PD, OP2_PADDW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpaddd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddd", VEX_PD, OP2_PADDD_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpaddq_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddq_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddq", VEX_PD, OP2_PADDQ_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubb", VEX_PD, OP2_PSUBB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubw", VEX_PD, OP2_PSUBW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubd", VEX_PD, OP2_PSUBD_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubq_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubq_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubq", VEX_PD, OP2_PSUBQ_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpmullw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmullw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpmullw", VEX_PD, OP2_PMULLW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpmulld_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmulld_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpmulld", VEX_PD, OP3_PMULLD_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpaddsb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddsb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddsb", VEX_PD, OP2_PADDSB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpaddusb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddusb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddusb", VEX_PD, OP2_PADDUSB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpaddsw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddsw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddsw", VEX_PD, OP2_PADDSW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpaddusw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpaddusw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpaddusw", VEX_PD, OP2_PADDUSW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubsb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubsb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubsb", VEX_PD, OP2_PSUBSB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubusb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubusb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubusb", VEX_PD, OP2_PSUBUSB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubsw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubsw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubsw", VEX_PD, OP2_PSUBSW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpsubusw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpsubusw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpsubusw", VEX_PD, OP2_PSUBUSW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpminsb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpminsb_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpminsb", VEX_PD, OP3_PMINSB_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpminub_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpminub_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpminub", VEX_PD, OP2_PMINUB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpminsw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpminsw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpminsw", VEX_PD, OP2_PMINSW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpminuw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpminuw_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpminuw", VEX_PD, OP3_PMINUW_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpminsd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpminsd_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpminsd", VEX_PD, OP3_PMINSD_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpminud_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpminud_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpminud", VEX_PD, OP3_PMINUD_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpmaxsb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmaxsb_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpmaxsb", VEX_PD, OP3_PMAXSB_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpmaxub_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmaxub_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpmaxub", VEX_PD, OP2_PMAXUB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpmaxsw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmaxsw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpmaxsw", VEX_PD, OP2_PMAXSW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpmaxuw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmaxuw_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpmaxuw", VEX_PD, OP3_PMAXUW_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpmaxsd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmaxsd_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpmaxsd", VEX_PD, OP3_PMAXSD_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpmaxud_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmaxud_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpmaxud", VEX_PD, OP3_PMAXUD_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpand_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpand_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpand", VEX_PD, OP2_PANDDQ_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpxor_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpxor_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpxor", VEX_PD, OP2_PXORDQ_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpor_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpor_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpor", VEX_PD, OP2_PORDQ_VdqWdq, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vaddps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vaddps_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vaddps", VEX_PS, OP2_ADDPS_VpsWps, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vaddpd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vaddpd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vaddpd", VEX_PD, OP2_ADDPD_VpdWpd, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vsubps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vsubps_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vsubps", VEX_PS, OP2_SUBPS_VpsWps, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vsubpd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vsubpd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vsubpd", VEX_PD, OP2_SUBPD_VpdWpd, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vdivps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vdivps_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vdivps", VEX_PS, OP2_DIVPS_VpsWps, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vdivpd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vdivpd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vdivpd", VEX_PD, OP2_DIVPD_VpdWpd, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vmulps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vmulps_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vmulps", VEX_PS, OP2_MULPS_VpsWps, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vmulpd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vmulpd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vmulpd", VEX_PD, OP2_MULPD_VpdWpd, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpacksswb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpacksswb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpacksswb", VEX_PD, OP2_PACKSSWB_VdqWdq,
                             invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpackuswb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpackuswb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpackuswb", VEX_PD, OP2_PACKUSWB_VdqWdq,
                             invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpackssdw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpackssdw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpackssdw", VEX_PD, OP2_PACKSSDW_VdqWdq,
                             invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpackusdw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpackusdw_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpackusdw", VEX_PD, OP3_PACKUSDW_VdqWdq,
                               ESCAPE_38, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vptest_ripr(XMMRegisterID lhs) {
+  [[nodiscard]] JmpSrc vptest_ripr(XMMRegisterID lhs) {
     return threeByteRipOpSimd("vptest", VEX_PD, OP3_PTEST_VdVd, ESCAPE_38,
                               invalid_xmm, lhs);
   }
-  MOZ_MUST_USE JmpSrc vpshufb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpshufb_ripr(XMMRegisterID dst) {
     return threeByteRipOpSimd("vpshufb", VEX_PD, OP3_PSHUFB_VdqWdq, ESCAPE_38,
                               invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vpmaddwd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpmaddwd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpmaddwd", VEX_PD, OP2_PMADDWD_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpcmpeqb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpcmpeqb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpcmpeqb", VEX_PD, OP2_PCMPEQB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpcmpgtb_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpcmpgtb_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpcmpgtb", VEX_PD, OP2_PCMPGTB_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpcmpeqw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpcmpeqw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpcmpeqw", VEX_PD, OP2_PCMPEQW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpcmpgtw_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpcmpgtw_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpcmpgtw", VEX_PD, OP2_PCMPGTW_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpcmpeqd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpcmpeqd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpcmpeqd", VEX_PD, OP2_PCMPEQD_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vpcmpgtd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vpcmpgtd_ripr(XMMRegisterID dst) {
     return twoByteRipOpSimd("vpcmpgtd", VEX_PD, OP2_PCMPGTD_VdqWdq, invalid_xmm,
                             dst);
   }
-  MOZ_MUST_USE JmpSrc vcmpeqps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmpeqps_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps,
                                X86Encoding::ConditionCmp_EQ, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vcmpneqps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmpneqps_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps,
                                X86Encoding::ConditionCmp_NEQ, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vcmpltps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmpltps_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps,
                                X86Encoding::ConditionCmp_LT, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vcmpleps_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmpleps_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps,
                                X86Encoding::ConditionCmp_LE, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vcmpeqpd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmpeqpd_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd,
                                X86Encoding::ConditionCmp_EQ, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vcmpneqpd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmpneqpd_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd,
                                X86Encoding::ConditionCmp_NEQ, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vcmpltpd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmpltpd_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd,
                                X86Encoding::ConditionCmp_LT, invalid_xmm, dst);
   }
-  MOZ_MUST_USE JmpSrc vcmplepd_ripr(XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc vcmplepd_ripr(XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd,
                                X86Encoding::ConditionCmp_LE, invalid_xmm, dst);
   }
@@ -1202,9 +1202,9 @@ class BaseAssemblerX64 : public BaseAssembler {
   }
 
  private:
-  MOZ_MUST_USE JmpSrc twoByteRipOpSimd(const char* name, VexOperandType ty,
-                                       TwoByteOpcodeID opcode,
-                                       XMMRegisterID src0, XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc twoByteRipOpSimd(const char* name, VexOperandType ty,
+                                        TwoByteOpcodeID opcode,
+                                        XMMRegisterID src0, XMMRegisterID dst) {
     if (useLegacySSEEncoding(src0, dst)) {
       m_formatter.legacySSEPrefix(ty);
       m_formatter.twoByteRipOp(opcode, 0, dst);
@@ -1236,10 +1236,10 @@ class BaseAssemblerX64 : public BaseAssembler {
     return label;
   }
 
-  MOZ_MUST_USE JmpSrc twoByteRipOpImmSimd(const char* name, VexOperandType ty,
-                                          TwoByteOpcodeID opcode, uint32_t imm,
-                                          XMMRegisterID src0,
-                                          XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc twoByteRipOpImmSimd(const char* name, VexOperandType ty,
+                                           TwoByteOpcodeID opcode, uint32_t imm,
+                                           XMMRegisterID src0,
+                                           XMMRegisterID dst) {
     MOZ_ASSERT(useLegacySSEEncoding(src0, dst));
     m_formatter.legacySSEPrefix(ty);
     m_formatter.twoByteRipOp(opcode, 0, dst);
@@ -1315,11 +1315,11 @@ class BaseAssemblerX64 : public BaseAssembler {
                                (XMMRegisterID)dst);
   }
 
-  MOZ_MUST_USE JmpSrc threeByteRipOpSimd(const char* name, VexOperandType ty,
-                                         ThreeByteOpcodeID opcode,
-                                         ThreeByteEscape escape,
-                                         XMMRegisterID src0,
-                                         XMMRegisterID dst) {
+  [[nodiscard]] JmpSrc threeByteRipOpSimd(const char* name, VexOperandType ty,
+                                          ThreeByteOpcodeID opcode,
+                                          ThreeByteEscape escape,
+                                          XMMRegisterID src0,
+                                          XMMRegisterID dst) {
     MOZ_ASSERT(useLegacySSEEncoding(src0, dst));
     m_formatter.legacySSEPrefix(ty);
     m_formatter.threeByteRipOp(opcode, escape, 0, dst);

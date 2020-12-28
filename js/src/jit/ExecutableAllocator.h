@@ -170,15 +170,13 @@ class ExecutableAllocator {
                             MustFlushICache flushICache);
 
  public:
-  MOZ_MUST_USE
-  static bool makeWritable(void* start, size_t size) {
+  [[nodiscard]] static bool makeWritable(void* start, size_t size) {
     return ReprotectRegion(start, size, ProtectionSetting::Writable,
                            MustFlushICache::No);
   }
 
-  MOZ_MUST_USE
-  static bool makeExecutableAndFlushICache(FlushICacheSpec flushSpec,
-                                           void* start, size_t size) {
+  [[nodiscard]] static bool makeExecutableAndFlushICache(
+      FlushICacheSpec flushSpec, void* start, size_t size) {
     MustFlushICache mustFlushICache;
     switch (flushSpec) {
       case FlushICacheSpec::LocalThreadOnly:

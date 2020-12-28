@@ -1814,8 +1814,8 @@ class BaseAssembler : public GenericAssembler {
     }
   }
 
-  MOZ_MUST_USE JmpSrc cmpl_im_disp32(int32_t rhs, int32_t offset,
-                                     RegisterID base) {
+  [[nodiscard]] JmpSrc cmpl_im_disp32(int32_t rhs, int32_t offset,
+                                      RegisterID base) {
     spew("cmpl       $0x%x, " MEM_o32b, uint32_t(rhs), ADDR_o32b(offset, base));
     JmpSrc r;
     if (CAN_SIGN_EXTEND_8_32(rhs)) {
@@ -1830,7 +1830,7 @@ class BaseAssembler : public GenericAssembler {
     return r;
   }
 
-  MOZ_MUST_USE JmpSrc cmpl_im_disp32(int32_t rhs, const void* addr) {
+  [[nodiscard]] JmpSrc cmpl_im_disp32(int32_t rhs, const void* addr) {
     spew("cmpl       $0x%x, %p", uint32_t(rhs), addr);
     JmpSrc r;
     if (CAN_SIGN_EXTEND_8_32(rhs)) {
@@ -2502,7 +2502,7 @@ class BaseAssembler : public GenericAssembler {
 
   // Flow control:
 
-  MOZ_MUST_USE JmpSrc call() {
+  [[nodiscard]] JmpSrc call() {
     m_formatter.oneByteOp(OP_CALL_rel32);
     JmpSrc r = m_formatter.immediateRel32();
     spew("call       .Lfrom%d", r.offset());
@@ -2522,7 +2522,7 @@ class BaseAssembler : public GenericAssembler {
   // Comparison of EAX against a 32-bit immediate. The immediate is patched
   // in as if it were a jump target. The intention is to toggle the first
   // byte of the instruction between a CMP and a JMP to produce a pseudo-NOP.
-  MOZ_MUST_USE JmpSrc cmp_eax() {
+  [[nodiscard]] JmpSrc cmp_eax() {
     m_formatter.oneByteOp(OP_CMP_EAXIv);
     JmpSrc r = m_formatter.immediateRel32();
     spew("cmpl       %%eax, .Lfrom%d", r.offset());
@@ -2544,7 +2544,7 @@ class BaseAssembler : public GenericAssembler {
       m_formatter.immediate32(diff - 5);
     }
   }
-  MOZ_MUST_USE JmpSrc jmp() {
+  [[nodiscard]] JmpSrc jmp() {
     m_formatter.oneByteOp(OP_JMP_rel32);
     JmpSrc r = m_formatter.immediateRel32();
     spew("jmp        .Lfrom%d", r.offset());
@@ -2583,7 +2583,7 @@ class BaseAssembler : public GenericAssembler {
     }
   }
 
-  MOZ_MUST_USE JmpSrc jCC(Condition cond) {
+  [[nodiscard]] JmpSrc jCC(Condition cond) {
     m_formatter.twoByteOp(jccRel32(cond));
     JmpSrc r = m_formatter.immediateRel32();
     spew("j%s        .Lfrom%d", CCName(cond), r.offset());
@@ -4227,7 +4227,7 @@ class BaseAssembler : public GenericAssembler {
     const unsigned char* src = m_formatter.buffer();
     memcpy(dst, src, size());
   }
-  MOZ_MUST_USE bool appendRawCode(const uint8_t* code, size_t numBytes) {
+  [[nodiscard]] bool appendRawCode(const uint8_t* code, size_t numBytes) {
     return m_formatter.append(code, numBytes);
   }
 
@@ -5643,7 +5643,7 @@ class BaseAssembler : public GenericAssembler {
       return m_buffer.isAligned(alignment);
     }
 
-    MOZ_MUST_USE bool append(const unsigned char* values, size_t size) {
+    [[nodiscard]] bool append(const unsigned char* values, size_t size) {
       return m_buffer.append(values, size);
     }
 

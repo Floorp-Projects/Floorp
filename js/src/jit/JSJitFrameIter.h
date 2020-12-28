@@ -284,9 +284,9 @@ class JSJitProfilingFrameIterator {
 
   inline JitFrameLayout* framePtr() const;
   inline JSScript* frameScript() const;
-  MOZ_MUST_USE bool tryInitWithPC(void* pc);
-  MOZ_MUST_USE bool tryInitWithTable(JitcodeGlobalTable* table, void* pc,
-                                     bool forLastCallSite);
+  [[nodiscard]] bool tryInitWithPC(void* pc);
+  [[nodiscard]] bool tryInitWithTable(JitcodeGlobalTable* table, void* pc,
+                                      bool forLastCallSite);
 
   void moveToCppEntryFrame();
   void moveToWasmFrame(CommonFrameLayout* frame);
@@ -340,7 +340,7 @@ class RInstructionResults {
 
   ~RInstructionResults();
 
-  MOZ_MUST_USE bool init(JSContext* cx, uint32_t numResults);
+  [[nodiscard]] bool init(JSContext* cx, uint32_t numResults);
   bool isInitialized() const;
   size_t length() const;
 
@@ -439,8 +439,8 @@ class SnapshotIterator {
   Value fromInstructionResult(uint32_t index) const;
 
   Value allocationValue(const RValueAllocation& a, ReadMethod rm = RM_Normal);
-  MOZ_MUST_USE bool allocationReadable(const RValueAllocation& a,
-                                       ReadMethod rm = RM_Normal);
+  [[nodiscard]] bool allocationReadable(const RValueAllocation& a,
+                                        ReadMethod rm = RM_Normal);
   void writeAllocationValuePayload(const RValueAllocation& a, const Value& v);
   void warnUnreadableAllocation();
 
@@ -506,12 +506,12 @@ class SnapshotIterator {
   // recover instructions. This vector should be registered before the
   // beginning of the iteration. This function is in charge of allocating
   // enough space for all instructions results, and return false iff it fails.
-  MOZ_MUST_USE bool initInstructionResults(MaybeReadFallback& fallback);
+  [[nodiscard]] bool initInstructionResults(MaybeReadFallback& fallback);
 
  protected:
   // This function is used internally for computing the result of the recover
   // instructions.
-  MOZ_MUST_USE bool computeInstructionResults(
+  [[nodiscard]] bool computeInstructionResults(
       JSContext* cx, RInstructionResults* results) const;
 
  public:

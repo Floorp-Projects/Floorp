@@ -69,7 +69,7 @@ class OutOfLineTypedArrayIndexToInt32;
 class OutOfLineBoxNonStrictThis;
 
 class CodeGenerator final : public CodeGeneratorSpecific {
-  MOZ_MUST_USE bool generateBody();
+  [[nodiscard]] bool generateBody();
 
   ConstantOrRegister toConstantOrRegister(LInstruction* lir, size_t n,
                                           MIRType type);
@@ -95,16 +95,16 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                 MacroAssembler* masm = nullptr);
   ~CodeGenerator();
 
-  MOZ_MUST_USE bool generate();
-  MOZ_MUST_USE bool generateWasm(wasm::TypeIdDesc funcTypeId,
-                                 wasm::BytecodeOffset trapOffset,
-                                 const wasm::ArgTypeVector& argTys,
-                                 const MachineState& trapExitLayout,
-                                 size_t trapExitLayoutNumWords,
-                                 wasm::FuncOffsets* offsets,
-                                 wasm::StackMaps* stackMaps);
+  [[nodiscard]] bool generate();
+  [[nodiscard]] bool generateWasm(wasm::TypeIdDesc funcTypeId,
+                                  wasm::BytecodeOffset trapOffset,
+                                  const wasm::ArgTypeVector& argTys,
+                                  const MachineState& trapExitLayout,
+                                  size_t trapExitLayoutNumWords,
+                                  wasm::FuncOffsets* offsets,
+                                  wasm::StackMaps* stackMaps);
 
-  MOZ_MUST_USE bool link(JSContext* cx, const WarpSnapshot* snapshot);
+  [[nodiscard]] bool link(JSContext* cx, const WarpSnapshot* snapshot);
 
   void emitOOLTestObject(Register objreg, Label* ifTruthy, Label* ifFalsy,
                          Register scratch);
@@ -243,8 +243,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                            const ConstantOrRegister& id,
                            const ConstantOrRegister& value, bool strict);
 
-  MOZ_MUST_USE bool generateBranchV(const ValueOperand& value, Label* ifTrue,
-                                    Label* ifFalse, FloatRegister fr);
+  [[nodiscard]] bool generateBranchV(const ValueOperand& value, Label* ifTrue,
+                                     Label* ifFalse, FloatRegister fr);
 
   void emitLambdaInit(Register resultReg, Register envChainReg,
                       const LambdaFunctionInfo& info);

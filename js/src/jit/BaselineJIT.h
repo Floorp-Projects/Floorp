@@ -480,7 +480,7 @@ struct alignas(uintptr_t) BaselineBailoutInfo {
   void operator=(const BaselineBailoutInfo&) = delete;
 };
 
-MOZ_MUST_USE bool BailoutIonToBaseline(
+[[nodiscard]] bool BailoutIonToBaseline(
     JSContext* cx, JitActivation* activation, const JSJitFrameIter& iter,
     BaselineBailoutInfo** bailoutInfo,
     const ExceptionBailoutInfo* exceptionInfo);
@@ -597,8 +597,8 @@ class BaselineInterpreter {
   void toggleCodeCoverageInstrumentation(bool enable);
 };
 
-MOZ_MUST_USE bool GenerateBaselineInterpreter(JSContext* cx,
-                                              BaselineInterpreter& interpreter);
+[[nodiscard]] bool GenerateBaselineInterpreter(
+    JSContext* cx, BaselineInterpreter& interpreter);
 
 inline bool IsBaselineJitEnabled(JSContext* cx) {
   if (MOZ_UNLIKELY(!IsBaselineInterpreterEnabled())) {

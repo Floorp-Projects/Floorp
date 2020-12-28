@@ -310,7 +310,7 @@ template <typename Function, Function fun>
 struct TailCallVMFunctionToId;  // Error here? Update TAIL_CALL_VMFUNCTION_LIST?
 
 // GCC warns when the signature does not have matching attributes (for example
-// MOZ_MUST_USE). Squelch this warning to avoid a GCC-only footgun.
+// [[nodiscard]]). Squelch this warning to avoid a GCC-only footgun.
 #if MOZ_IS_GCC
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wignored-attributes"

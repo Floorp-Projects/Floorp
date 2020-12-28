@@ -121,12 +121,13 @@ class MOZ_RAII TrialInliner {
 
   JSContext* cx() { return cx_; }
 
-  MOZ_MUST_USE bool tryInlining();
-  MOZ_MUST_USE bool maybeInlineCall(const ICEntry& entry, BytecodeLocation loc);
-  MOZ_MUST_USE bool maybeInlineGetter(const ICEntry& entry,
-                                      BytecodeLocation loc);
-  MOZ_MUST_USE bool maybeInlineSetter(const ICEntry& entry,
-                                      BytecodeLocation loc);
+  [[nodiscard]] bool tryInlining();
+  [[nodiscard]] bool maybeInlineCall(const ICEntry& entry,
+                                     BytecodeLocation loc);
+  [[nodiscard]] bool maybeInlineGetter(const ICEntry& entry,
+                                       BytecodeLocation loc);
+  [[nodiscard]] bool maybeInlineSetter(const ICEntry& entry,
+                                       BytecodeLocation loc);
 
   static bool canInline(JSFunction* target, HandleScript caller);
 
@@ -135,8 +136,8 @@ class MOZ_RAII TrialInliner {
   void cloneSharedPrefix(ICCacheIRStub* stub, const uint8_t* endOfPrefix,
                          CacheIRWriter& writer);
   ICScript* createInlinedICScript(JSFunction* target, BytecodeLocation loc);
-  MOZ_MUST_USE bool replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
-                                  CacheKind kind);
+  [[nodiscard]] bool replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
+                                   CacheKind kind);
 
   bool shouldInline(JSFunction* target, ICCacheIRStub* stub,
                     BytecodeLocation loc);

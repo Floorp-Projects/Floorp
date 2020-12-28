@@ -353,7 +353,7 @@ class alignas(8) IonScript final : public TrailingArray {
   bool hasProfilingInstrumentation() const {
     return hasProfilingInstrumentation_;
   }
-  MOZ_MUST_USE bool addTraceLoggerEvent(TraceLoggerEvent& event) {
+  [[nodiscard]] bool addTraceLoggerEvent(TraceLoggerEvent& event) {
     MOZ_ASSERT(event.hasTextId());
     return traceLoggerEvents_.append(std::move(event));
   }
@@ -454,8 +454,8 @@ struct IonBlockCounts {
   char* code_;
 
  public:
-  MOZ_MUST_USE bool init(uint32_t id, uint32_t offset, char* description,
-                         uint32_t numSuccessors) {
+  [[nodiscard]] bool init(uint32_t id, uint32_t offset, char* description,
+                          uint32_t numSuccessors) {
     id_ = id;
     offset_ = offset;
     description_ = description;
@@ -543,7 +543,7 @@ struct IonScriptCounts {
     }
   }
 
-  MOZ_MUST_USE bool init(size_t numBlocks) {
+  [[nodiscard]] bool init(size_t numBlocks) {
     blocks_ = js_pod_calloc<IonBlockCounts>(numBlocks);
     if (!blocks_) {
       return false;

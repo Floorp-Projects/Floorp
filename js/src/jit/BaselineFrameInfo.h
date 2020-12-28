@@ -239,7 +239,7 @@ class CompilerFrameInfo : public FrameInfo {
  public:
   CompilerFrameInfo(JSScript* script, MacroAssembler& masm)
       : FrameInfo(masm), script(script), stack(), spIndex(0) {}
-  MOZ_MUST_USE bool init(TempAllocator& alloc);
+  [[nodiscard]] bool init(TempAllocator& alloc);
 
   size_t nlocals() const { return script->nfixed(); }
   size_t nargs() const { return script->function()->nargs(); }

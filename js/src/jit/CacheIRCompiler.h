@@ -374,7 +374,7 @@ class MOZ_RAII CacheRegisterAllocator {
         writer_(writer) {
   }
 
-  MOZ_MUST_USE bool init();
+  [[nodiscard]] bool init();
 
   void initAvailableRegs(const AllocatableGeneralRegisterSet& available) {
     availableRegs_ = available;
@@ -419,7 +419,7 @@ class MOZ_RAII CacheRegisterAllocator {
 
   const SpilledRegisterVector& spilledRegs() const { return spilledRegs_; }
 
-  MOZ_MUST_USE bool setSpilledRegs(const SpilledRegisterVector& regs) {
+  [[nodiscard]] bool setSpilledRegs(const SpilledRegisterVector& regs) {
     spilledRegs_.clear();
     return spilledRegs_.appendAll(regs);
   }
@@ -641,14 +641,14 @@ class FailurePath {
   void setStackPushed(uint32_t i) { stackPushed_ = i; }
   uint32_t stackPushed() const { return stackPushed_; }
 
-  MOZ_MUST_USE bool appendInput(const OperandLocation& loc) {
+  [[nodiscard]] bool appendInput(const OperandLocation& loc) {
     return inputs_.append(loc);
   }
   OperandLocation input(size_t i) const { return inputs_[i]; }
 
   const SpilledRegisterVector& spilledRegs() const { return spilledRegs_; }
 
-  MOZ_MUST_USE bool setSpilledRegs(const SpilledRegisterVector& regs) {
+  [[nodiscard]] bool setSpilledRegs(const SpilledRegisterVector& regs) {
     MOZ_ASSERT(spilledRegs_.empty());
     return spilledRegs_.appendAll(regs);
   }
@@ -747,8 +747,8 @@ class MOZ_RAII CacheIRCompiler {
     MOZ_ASSERT(!writer.failed());
   }
 
-  MOZ_MUST_USE bool addFailurePath(FailurePath** failure);
-  MOZ_MUST_USE bool emitFailurePath(size_t i);
+  [[nodiscard]] bool addFailurePath(FailurePath** failure);
+  [[nodiscard]] bool emitFailurePath(size_t i);
 
   // Returns the set of volatile float registers that are live. These
   // registers need to be saved when making non-GC calls with callWithABI.
@@ -794,22 +794,22 @@ class MOZ_RAII CacheIRCompiler {
   bool emitComparePointerResultShared(JSOp op, TypedOperandId lhsId,
                                       TypedOperandId rhsId);
 
-  MOZ_MUST_USE bool emitMathFunctionNumberResultShared(
+  [[nodiscard]] bool emitMathFunctionNumberResultShared(
       UnaryMathFunction fun, FloatRegister inputScratch, ValueOperand output);
 
   template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool emitBigIntBinaryOperationShared(BigIntOperandId lhsId,
-                                                    BigIntOperandId rhsId);
+  [[nodiscard]] bool emitBigIntBinaryOperationShared(BigIntOperandId lhsId,
+                                                     BigIntOperandId rhsId);
 
   template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool emitBigIntUnaryOperationShared(BigIntOperandId inputId);
+  [[nodiscard]] bool emitBigIntUnaryOperationShared(BigIntOperandId inputId);
 
   bool emitDoubleIncDecResult(bool isInc, NumberOperandId inputId);
 
   using AtomicsReadWriteModifyFn = int32_t (*)(TypedArrayObject*, int32_t,
                                                int32_t);
 
-  MOZ_MUST_USE bool emitAtomicsReadModifyWriteResult(
+  [[nodiscard]] bool emitAtomicsReadModifyWriteResult(
       ObjOperandId objId, Int32OperandId indexId, Int32OperandId valueId,
       Scalar::Type elementType, AtomicsReadWriteModifyFn fn);
 

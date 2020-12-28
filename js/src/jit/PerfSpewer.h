@@ -87,7 +87,7 @@ void writePerfSpewerJitCodeProfile(JitCode* code, const char* msg);
 // wasm doesn't support block annotations.
 class WasmPerfSpewer : public PerfSpewer {
  public:
-  MOZ_MUST_USE bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm) {
+  [[nodiscard]] bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm) {
     return true;
   }
   void endBasicBlock(MacroAssembler& masm) {}

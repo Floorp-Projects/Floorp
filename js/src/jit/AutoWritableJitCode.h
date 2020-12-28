@@ -44,7 +44,7 @@ class MOZ_RAII AutoWritableJitCodeFallible {
       : AutoWritableJitCodeFallible(code->runtimeFromMainThread(), code->raw(),
                                     code->bufferSize()) {}
 
-  MOZ_MUST_USE bool makeWritable() {
+  [[nodiscard]] bool makeWritable() {
     return ExecutableAllocator::makeWritable(addr_, size_);
   }
 

@@ -1903,7 +1903,7 @@ void BaselineInterpreterCodeGen::emitTestBooleanTruthy(bool branchIfTrue,
 
 template <>
 template <typename F1, typename F2>
-MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
+[[nodiscard]] bool BaselineCompilerCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, const F1& ifSet, const F2& ifNotSet,
     Register scratch) {
   return handler.script()->hasFlag(flag) ? ifSet() : ifNotSet();
@@ -1911,7 +1911,7 @@ MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
 
 template <>
 template <typename F1, typename F2>
-MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
+[[nodiscard]] bool BaselineInterpreterCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, const F1& ifSet, const F2& ifNotSet,
     Register scratch) {
   Label flagNotSet, done;
@@ -1938,7 +1938,7 @@ MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
 
 template <>
 template <typename F>
-MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
+[[nodiscard]] bool BaselineCompilerCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, bool value, const F& emit,
     Register scratch) {
   if (handler.script()->hasFlag(flag) == value) {
@@ -1949,7 +1949,7 @@ MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
 
 template <>
 template <typename F>
-MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
+[[nodiscard]] bool BaselineCompilerCodeGen::emitTestScriptFlag(
     JSScript::MutableFlags flag, bool value, const F& emit, Register scratch) {
   if (handler.script()->hasFlag(flag) == value) {
     return emit();
@@ -1959,7 +1959,7 @@ MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
 
 template <>
 template <typename F>
-MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
+[[nodiscard]] bool BaselineInterpreterCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, bool value, const F& emit,
     Register scratch) {
   Label done;
@@ -1979,7 +1979,7 @@ MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
 
 template <>
 template <typename F>
-MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
+[[nodiscard]] bool BaselineInterpreterCodeGen::emitTestScriptFlag(
     JSScript::MutableFlags flag, bool value, const F& emit, Register scratch) {
   Label done;
   loadScript(scratch);
@@ -4669,7 +4669,7 @@ bool BaselineCodeGen<Handler>::emit_Retsub() {
 
 template <>
 template <typename F1, typename F2>
-MOZ_MUST_USE bool BaselineCompilerCodeGen::emitDebugInstrumentation(
+[[nodiscard]] bool BaselineCompilerCodeGen::emitDebugInstrumentation(
     const F1& ifDebuggee, const Maybe<F2>& ifNotDebuggee) {
   // The JIT calls either ifDebuggee or (if present) ifNotDebuggee, because it
   // knows statically whether we're compiling with debug instrumentation.
@@ -4687,7 +4687,7 @@ MOZ_MUST_USE bool BaselineCompilerCodeGen::emitDebugInstrumentation(
 
 template <>
 template <typename F1, typename F2>
-MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitDebugInstrumentation(
+[[nodiscard]] bool BaselineInterpreterCodeGen::emitDebugInstrumentation(
     const F1& ifDebuggee, const Maybe<F2>& ifNotDebuggee) {
   // The interpreter emits both ifDebuggee and (if present) ifNotDebuggee
   // paths, with a toggled jump followed by a branch on the frame's DEBUGGEE

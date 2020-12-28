@@ -207,8 +207,8 @@ def gen_compiler_method(name, args):
     # We generate the signature of the method that needs to be implemented and a
     # separate function forwarding to it. For example:
     #
-    #   MOZ_MUST_USE bool emitGuardShape(ObjOperandId objId, uint32_t shapeOffset);
-    #   MOZ_MUST_USE bool emitGuardShape(CacheIRReader& reader) {
+    #   [[nodiscard]] bool emitGuardShape(ObjOperandId objId, uint32_t shapeOffset);
+    #   [[nodiscard]] bool emitGuardShape(CacheIRReader& reader) {
     #     ObjOperandId objId = reader.objOperandId();
     #     uint32_t shapeOffset = reader.stubOffset();
     #     return emitGuardShape(objId, shapeOffset);
@@ -225,10 +225,10 @@ def gen_compiler_method(name, args):
             args_code += "  {} {} = {};\\\n".format(cpp_type, cpp_name, readexpr)
 
     # Generate signature.
-    code = "MOZ_MUST_USE bool {}({});\\\n".format(method_name, ", ".join(method_args))
+    code = "[[nodiscard]] bool {}({});\\\n".format(method_name, ", ".join(method_args))
 
     # Generate the method forwarding to it.
-    code += "MOZ_MUST_USE bool {}(CacheIRReader& reader) {{\\\n".format(method_name)
+    code += "[[nodiscard]] bool {}(CacheIRReader& reader) {{\\\n".format(method_name)
     code += args_code
     code += "  return {}({});\\\n".format(method_name, ", ".join(cpp_args))
     code += "}\\\n"

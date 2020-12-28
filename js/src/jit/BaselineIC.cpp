@@ -84,16 +84,16 @@ class MOZ_RAII FallbackICCodeCompiler final {
   uint32_t framePushedAtEnterStubFrame_ = 0;
 #endif
 
-  MOZ_MUST_USE bool emitCall(bool isSpread, bool isConstructing);
-  MOZ_MUST_USE bool emitGetElem(bool hasReceiver);
-  MOZ_MUST_USE bool emitGetProp(bool hasReceiver);
+  [[nodiscard]] bool emitCall(bool isSpread, bool isConstructing);
+  [[nodiscard]] bool emitGetElem(bool hasReceiver);
+  [[nodiscard]] bool emitGetProp(bool hasReceiver);
 
  public:
   FallbackICCodeCompiler(JSContext* cx, BaselineICFallbackCode& code,
                          MacroAssembler& masm)
       : code(code), masm(masm), cx(cx) {}
 
-#define DEF_METHOD(kind) MOZ_MUST_USE bool emit_##kind();
+#define DEF_METHOD(kind) [[nodiscard]] bool emit_##kind();
   IC_BASELINE_FALLBACK_CODE_KIND_LIST(DEF_METHOD)
 #undef DEF_METHOD
 
@@ -106,17 +106,17 @@ class MOZ_RAII FallbackICCodeCompiler final {
   void pushStubPayload(MacroAssembler& masm, Register scratch);
 
   // Emits a tail call to a VMFunction wrapper.
-  MOZ_MUST_USE bool tailCallVMInternal(MacroAssembler& masm,
-                                       TailCallVMFunctionId id);
+  [[nodiscard]] bool tailCallVMInternal(MacroAssembler& masm,
+                                        TailCallVMFunctionId id);
 
   template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool tailCallVM(MacroAssembler& masm);
+  [[nodiscard]] bool tailCallVM(MacroAssembler& masm);
 
   // Emits a normal (non-tail) call to a VMFunction wrapper.
-  MOZ_MUST_USE bool callVMInternal(MacroAssembler& masm, VMFunctionId id);
+  [[nodiscard]] bool callVMInternal(MacroAssembler& masm, VMFunctionId id);
 
   template <typename Fn, Fn fn>
-  MOZ_MUST_USE bool callVM(MacroAssembler& masm);
+  [[nodiscard]] bool callVM(MacroAssembler& masm);
 
   // A stub frame is used when a stub wants to call into the VM without
   // performing a tail call. This is required for the return address

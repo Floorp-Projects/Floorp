@@ -91,7 +91,7 @@ class ICState {
 
   // If this returns true, we transitioned to a new mode and the caller
   // should discard all stubs.
-  MOZ_MUST_USE MOZ_ALWAYS_INLINE bool maybeTransition() {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool maybeTransition() {
     // Note: we cannot assert that numOptimizedStubs_ <= MaxOptimizedStubs
     // because old-style baseline ICs may attach more stubs than
     // MaxOptimizedStubs allows.

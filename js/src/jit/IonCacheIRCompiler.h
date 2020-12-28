@@ -25,7 +25,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   IonCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, IonIC* ic,
                      IonScript* ionScript, uint32_t stubDataOffset);
 
-  MOZ_MUST_USE bool init();
+  [[nodiscard]] bool init();
   JitCode* compile(IonICStub* stub);
 
 #ifdef DEBUG
@@ -54,7 +54,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   template <typename Fn, Fn fn>
   void callVM(MacroAssembler& masm);
 
-  MOZ_MUST_USE bool emitAddAndStoreSlotShared(
+  [[nodiscard]] bool emitAddAndStoreSlotShared(
       CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
       uint32_t newShapeOffset, mozilla::Maybe<uint32_t> numNewSlotsOffset);
 

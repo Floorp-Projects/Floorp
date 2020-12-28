@@ -128,7 +128,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
                        SnapshotIterator& iter,
                        const ExceptionBailoutInfo* excInfo);
 
-  MOZ_MUST_USE bool init() {
+  [[nodiscard]] bool init() {
     MOZ_ASSERT(!header_);
     MOZ_ASSERT(bufferUsed_ == 0);
 
@@ -145,7 +145,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return true;
   }
 
-  MOZ_MUST_USE bool buildOneFrame();
+  [[nodiscard]] bool buildOneFrame();
   bool done();
   void nextFrame();
 
@@ -169,24 +169,24 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 
  private:
-  MOZ_MUST_USE bool initFrame();
-  MOZ_MUST_USE bool buildBaselineFrame();
-  MOZ_MUST_USE bool buildArguments();
-  MOZ_MUST_USE bool buildFixedSlots();
-  MOZ_MUST_USE bool fixUpCallerArgs(MutableHandleValueVector savedCallerArgs,
-                                    bool* fixedUp);
-  MOZ_MUST_USE bool buildExpressionStack();
-  MOZ_MUST_USE bool finishLastFrame();
+  [[nodiscard]] bool initFrame();
+  [[nodiscard]] bool buildBaselineFrame();
+  [[nodiscard]] bool buildArguments();
+  [[nodiscard]] bool buildFixedSlots();
+  [[nodiscard]] bool fixUpCallerArgs(MutableHandleValueVector savedCallerArgs,
+                                     bool* fixedUp);
+  [[nodiscard]] bool buildExpressionStack();
+  [[nodiscard]] bool finishLastFrame();
 
-  MOZ_MUST_USE bool prepareForNextFrame(HandleValueVector savedCallerArgs);
-  MOZ_MUST_USE bool finishOuterFrame(uint32_t frameSize);
-  MOZ_MUST_USE bool buildStubFrame(uint32_t frameSize,
-                                   HandleValueVector savedCallerArgs);
-  MOZ_MUST_USE bool buildRectifierFrame(uint32_t actualArgc,
-                                        size_t endOfBaselineStubArgs);
+  [[nodiscard]] bool prepareForNextFrame(HandleValueVector savedCallerArgs);
+  [[nodiscard]] bool finishOuterFrame(uint32_t frameSize);
+  [[nodiscard]] bool buildStubFrame(uint32_t frameSize,
+                                    HandleValueVector savedCallerArgs);
+  [[nodiscard]] bool buildRectifierFrame(uint32_t actualArgc,
+                                         size_t endOfBaselineStubArgs);
 
 #ifdef DEBUG
-  MOZ_MUST_USE bool validateFrame();
+  [[nodiscard]] bool validateFrame();
 #endif
 
 #ifdef DEBUG
@@ -226,7 +226,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return op_ == JSOp::FunApply || IsIonInlinableGetterOrSetterOp(op_);
   }
 
-  MOZ_MUST_USE bool enlarge() {
+  [[nodiscard]] bool enlarge() {
     MOZ_ASSERT(header_ != nullptr);
     if (bufferTotal_ & mozilla::tl::MulOverflowMask<2>::value) {
       ReportOutOfMemory(cx_);
@@ -271,7 +271,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
   size_t framePushed() const { return framePushed_; }
 
-  MOZ_MUST_USE bool subtract(size_t size, const char* info = nullptr) {
+  [[nodiscard]] bool subtract(size_t size, const char* info = nullptr) {
     // enlarge the buffer if need be.
     while (size > bufferAvail_) {
       if (!enlarge()) {
@@ -293,7 +293,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 
   template <typename T>
-  MOZ_MUST_USE bool write(const T& t) {
+  [[nodiscard]] bool write(const T& t) {
     MOZ_ASSERT(!(uintptr_t(&t) >= uintptr_t(header_->copyStackBottom) &&
                  uintptr_t(&t) < uintptr_t(header_->copyStackTop)),
                "Should not reference memory that can be freed");
@@ -305,7 +305,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 
   template <typename T>
-  MOZ_MUST_USE bool writePtr(T* t, const char* info) {
+  [[nodiscard]] bool writePtr(T* t, const char* info) {
     if (!write<T*>(t)) {
       return false;
     }
@@ -317,7 +317,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return true;
   }
 
-  MOZ_MUST_USE bool writeWord(size_t w, const char* info) {
+  [[nodiscard]] bool writeWord(size_t w, const char* info) {
     if (!write<size_t>(w)) {
       return false;
     }
@@ -335,7 +335,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return true;
   }
 
-  MOZ_MUST_USE bool writeValue(const Value& val, const char* info) {
+  [[nodiscard]] bool writeValue(const Value& val, const char* info) {
     if (!write<Value>(val)) {
       return false;
     }
@@ -348,8 +348,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return true;
   }
 
-  MOZ_MUST_USE bool maybeWritePadding(size_t alignment, size_t after,
-                                      const char* info) {
+  [[nodiscard]] bool maybeWritePadding(size_t alignment, size_t after,
+                                       const char* info) {
     MOZ_ASSERT(framePushed_ % sizeof(Value) == 0);
     MOZ_ASSERT(after % sizeof(Value) == 0);
     size_t offset = ComputeByteAlignment(after, alignment);

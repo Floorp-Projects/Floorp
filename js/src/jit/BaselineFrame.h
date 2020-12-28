@@ -96,7 +96,7 @@ class BaselineFrame {
   // This is the old frame pointer saved in the prologue.
   static const uint32_t FramePointerOffset = sizeof(void*);
 
-  MOZ_MUST_USE bool initForOsr(InterpreterFrame* fp, uint32_t numStackValues);
+  [[nodiscard]] bool initForOsr(InterpreterFrame* fp, uint32_t numStackValues);
 
 #ifdef DEBUG
   uint32_t debugFrameSize() const { return debugFrameSize_; }
@@ -195,8 +195,8 @@ class BaselineFrame {
                     BaselineFrame::Size() + offsetOfArg(0));
   }
 
-  MOZ_MUST_USE bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
-                                       ArrayObject* dest) const;
+  [[nodiscard]] bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
+                                        ArrayObject* dest) const;
 
  private:
   Value* evalNewTargetAddress() const {
@@ -331,8 +331,8 @@ class BaselineFrame {
   inline MOZ_MUST_USE bool freshenLexicalEnvironment(JSContext* cx);
   inline MOZ_MUST_USE bool recreateLexicalEnvironment(JSContext* cx);
 
-  MOZ_MUST_USE bool initFunctionEnvironmentObjects(JSContext* cx);
-  MOZ_MUST_USE bool pushVarEnvironment(JSContext* cx, HandleScope scope);
+  [[nodiscard]] bool initFunctionEnvironmentObjects(JSContext* cx);
+  [[nodiscard]] bool pushVarEnvironment(JSContext* cx, HandleScope scope);
 
   void initArgsObjUnchecked(ArgumentsObject& argsobj) {
     flags_ |= HAS_ARGS_OBJ;

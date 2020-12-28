@@ -64,7 +64,7 @@ class MOZ_STACK_CLASS CallInfo {
         ignoresReturnValue_(ignoresReturnValue),
         apply_(JSOp(*pc) == JSOp::FunApply) {}
 
-  MOZ_MUST_USE bool init(MBasicBlock* current, uint32_t argc) {
+  [[nodiscard]] bool init(MBasicBlock* current, uint32_t argc) {
     MOZ_ASSERT(args_.empty());
 
     // Get the arguments in the right order
@@ -125,7 +125,7 @@ class MOZ_STACK_CLASS CallInfo {
 
   void popCallStack(MBasicBlock* current) { current->popn(numFormals()); }
 
-  MOZ_MUST_USE bool pushCallStack(MBasicBlock* current) {
+  [[nodiscard]] bool pushCallStack(MBasicBlock* current) {
     // Ensure sufficient space in the slots: needed for inlining from FunApply.
     if (apply_) {
       uint32_t depth = current->stackDepth() + numFormals();
@@ -153,11 +153,11 @@ class MOZ_STACK_CLASS CallInfo {
   uint32_t argc() const { return args_.length(); }
   uint32_t numFormals() const { return argc() + 2 + constructing(); }
 
-  MOZ_MUST_USE bool setArgs(const MDefinitionVector& args) {
+  [[nodiscard]] bool setArgs(const MDefinitionVector& args) {
     MOZ_ASSERT(args_.empty());
     return args_.appendAll(args);
   }
-  MOZ_MUST_USE bool replaceArgs(const MDefinitionVector& args) {
+  [[nodiscard]] bool replaceArgs(const MDefinitionVector& args) {
     args_.clear();
     return setArgs(args);
   }
@@ -253,7 +253,7 @@ class WarpBuilderShared {
   WarpBuilderShared(WarpSnapshot& snapshot, MIRGenerator& mirGen,
                     MBasicBlock* current_);
 
-  MOZ_MUST_USE bool resumeAfter(MInstruction* ins, BytecodeLocation loc);
+  [[nodiscard]] bool resumeAfter(MInstruction* ins, BytecodeLocation loc);
 
   MConstant* constant(const JS::Value& v);
   void pushConstant(const JS::Value& v);

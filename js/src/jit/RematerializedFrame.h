@@ -143,8 +143,8 @@ class RematerializedFrame {
     envChain_ = &envChain_->as<SpecificEnvironment>().enclosingEnvironment();
   }
 
-  MOZ_MUST_USE bool initFunctionEnvironmentObjects(JSContext* cx);
-  MOZ_MUST_USE bool pushVarEnvironment(JSContext* cx, HandleScope scope);
+  [[nodiscard]] bool initFunctionEnvironmentObjects(JSContext* cx);
+  [[nodiscard]] bool pushVarEnvironment(JSContext* cx, HandleScope scope);
 
   bool hasInitialEnvironment() const { return hasInitialEnv_; }
   CallObject& callObj() const;
