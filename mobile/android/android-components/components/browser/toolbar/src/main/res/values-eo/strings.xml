@@ -13,4 +13,6 @@
     <string name="mozac_browser_toolbar_content_description_site_info">Informo pri retejo</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">Ŝargado</string>
+    <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
+    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">Parto de la enhavo estis blokita de la agordo pri aŭtomata ludado</string>
 </resources>
