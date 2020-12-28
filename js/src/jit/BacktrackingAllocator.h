@@ -687,7 +687,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
   [[nodiscard]] bool splitAndRequeueBundles(LiveBundle* bundle,
                                             const LiveBundleVector& newBundles);
   [[nodiscard]] bool spill(LiveBundle* bundle);
-  AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool
   tryAllocatingRegistersForSpillBundles();
 
   bool isReusedInput(LUse* use, LNode* ins, bool considerCopy);
@@ -697,12 +697,12 @@ class BacktrackingAllocator : protected RegisterAllocator {
   [[nodiscard]] bool insertAllRanges(LiveRangeSet& set, LiveBundle* bundle);
 
   // Reification methods.
-  AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool pickStackSlots();
-  AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool resolveControlFlow();
-  AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool reifyAllocations();
-  AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool populateSafepoints();
-  AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool annotateMoveGroups();
-  AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool deadRange(LiveRange* range);
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool pickStackSlots();
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool resolveControlFlow();
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool reifyAllocations();
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool populateSafepoints();
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool annotateMoveGroups();
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool deadRange(LiveRange* range);
   size_t findFirstNonCallSafepoint(CodePosition from);
   size_t findFirstSafepoint(CodePosition pos, size_t startFrom);
   void addLiveRegistersForRange(VirtualRegister& reg, LiveRange* range);

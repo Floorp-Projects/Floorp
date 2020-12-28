@@ -778,10 +778,10 @@ static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
 
 // Change block so that it ends in a goto to the specific target block.
 // existingPred is an existing predecessor of the block.
-static MOZ_MUST_USE bool UpdateGotoSuccessor(TempAllocator& alloc,
-                                             MBasicBlock* block,
-                                             MBasicBlock* target,
-                                             MBasicBlock* existingPred) {
+[[nodiscard]] static bool UpdateGotoSuccessor(TempAllocator& alloc,
+                                              MBasicBlock* block,
+                                              MBasicBlock* target,
+                                              MBasicBlock* existingPred) {
   MInstruction* ins = block->lastIns();
   MOZ_ASSERT(ins->isGoto());
   ins->toGoto()->target()->removePredecessor(block);
@@ -798,7 +798,7 @@ static MOZ_MUST_USE bool UpdateGotoSuccessor(TempAllocator& alloc,
 // or ifFalse with the same values incoming to ifTrue/ifFalse as block.
 // existingPred is not required to be a predecessor of ifTrue/ifFalse if block
 // already ends in a test going to that block on a true/false result.
-static MOZ_MUST_USE bool UpdateTestSuccessors(
+[[nodiscard]] static bool UpdateTestSuccessors(
     TempAllocator& alloc, MBasicBlock* block, MDefinition* value,
     MBasicBlock* ifTrue, MBasicBlock* ifFalse, MBasicBlock* existingPred) {
   MInstruction* ins = block->lastIns();

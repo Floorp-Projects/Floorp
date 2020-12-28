@@ -2525,7 +2525,7 @@ class SimulatorProcess
   static void recordICacheFlush(void* start, size_t length);
   static void membarrier();
   static ICacheFlushes& getICacheFlushes(vixl::Simulator* sim);
-  static MOZ_MUST_USE bool registerSimulator(vixl::Simulator* sim);
+  [[nodiscard]] static bool registerSimulator(vixl::Simulator* sim);
   static void unregisterSimulator(vixl::Simulator* sim);
 #endif
 

@@ -344,7 +344,8 @@ class MNode : public TempObject {
   inline MDefinition* toDefinition();
   inline MResumePoint* toResumePoint();
 
-  virtual MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const;
+  [[nodiscard]] virtual bool writeRecoverData(
+      CompactBufferWriter& writer) const;
 
 #ifdef JS_JITSPEW
   virtual void dump(GenericPrinter& out) const = 0;
@@ -856,7 +857,7 @@ class MDefinition : public MNode {
   // Mark this instruction as having replaced all uses of ins, as during GVN,
   // returning false if the replacement should not be performed. For use when
   // GVN eliminates instructions which are not equivalent to one another.
-  virtual MOZ_MUST_USE bool updateForReplacement(MDefinition* ins) {
+  [[nodiscard]] virtual bool updateForReplacement(MDefinition* ins) {
     return true;
   }
 
@@ -1444,7 +1445,7 @@ class MConstant : public MNullaryInstruction {
 
   // Try to convert this constant to boolean, similar to js::ToBoolean.
   // Returns false if the type is MIRType::Magic* or MIRType::Object.
-  bool MOZ_MUST_USE valueToBoolean(bool* res) const;
+  [[nodiscard]] bool valueToBoolean(bool* res) const;
 
   // Like valueToBoolean, but returns the result directly instead of using
   // an outparam. Should not be used if this constant might be a magic value
@@ -6623,7 +6624,7 @@ class MPhi final : public MDefinition,
 
   // Mark all phis in |iterators|, and the phis they flow into, as having
   // implicit uses.
-  static MOZ_MUST_USE bool markIteratorPhis(const PhiVector& iterators);
+  [[nodiscard]] static bool markIteratorPhis(const PhiVector& iterators);
 
   // Initializes the operands vector to the given capacity,
   // permitting use of addInput() instead of addInputSlow().

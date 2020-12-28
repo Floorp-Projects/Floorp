@@ -489,7 +489,7 @@ class Range : public TempObject {
   static Range* NaNToZero(TempAllocator& alloc, const Range* op);
   static Range* toIntegerInt32(TempAllocator& alloc, const Range* op);
 
-  static MOZ_MUST_USE bool negativeZeroMul(const Range* lhs, const Range* rhs);
+  [[nodiscard]] static bool negativeZeroMul(const Range* lhs, const Range* rhs);
 
   bool isUnknownInt32() const {
     return isInt32() && lower() == INT32_MIN && upper() == INT32_MAX;

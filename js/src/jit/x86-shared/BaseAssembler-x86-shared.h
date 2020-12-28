@@ -5587,7 +5587,7 @@ class BaseAssembler : public GenericAssembler {
       m_buffer.putInt64Unchecked(imm);
     }
 
-    MOZ_ALWAYS_INLINE MOZ_MUST_USE JmpSrc immediateRel32() {
+    [[nodiscard]] MOZ_ALWAYS_INLINE JmpSrc immediateRel32() {
       m_buffer.putIntUnchecked(0);
       return JmpSrc(m_buffer.size());
     }
