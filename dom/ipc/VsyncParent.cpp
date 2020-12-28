@@ -27,7 +27,7 @@ void VsyncParent::UpdateVsyncSource(
     mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
   }
 
-  if (mObservingVsync) {
+  if (mObservingVsync && mVsyncDispatcher) {
     mVsyncDispatcher->RemoveChildRefreshTimer(this);
   }
   mVsyncDispatcher = mVsyncSource->GetRefreshTimerVsyncDispatcher();
@@ -67,7 +67,9 @@ void VsyncParent::DispatchVsyncEvent(const VsyncEvent& aVsync) {
 mozilla::ipc::IPCResult VsyncParent::RecvObserve() {
   AssertIsOnInitialThread();
   if (!mObservingVsync) {
-    mVsyncDispatcher->AddChildRefreshTimer(this);
+    if (mVsyncDispatcher) {
+      mVsyncDispatcher->AddChildRefreshTimer(this);
+    }
     mObservingVsync = true;
     return IPC_OK();
   }
@@ -77,7 +79,9 @@ mozilla::ipc::IPCResult VsyncParent::RecvObserve() {
 mozilla::ipc::IPCResult VsyncParent::RecvUnobserve() {
   AssertIsOnInitialThread();
   if (mObservingVsync) {
-    mVsyncDispatcher->RemoveChildRefreshTimer(this);
+    if (mVsyncDispatcher) {
+      mVsyncDispatcher->RemoveChildRefreshTimer(this);
+    }
     mObservingVsync = false;
     return IPC_OK();
   }
@@ -87,7 +91,7 @@ mozilla::ipc::IPCResult VsyncParent::RecvUnobserve() {
 void VsyncParent::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   MOZ_ASSERT(!mDestroyed);
   AssertIsOnInitialThread();
-  if (mObservingVsync) {
+  if (mObservingVsync && mVsyncDispatcher) {
     mVsyncDispatcher->RemoveChildRefreshTimer(this);
   }
   mVsyncDispatcher = nullptr;

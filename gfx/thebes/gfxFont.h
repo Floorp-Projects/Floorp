@@ -337,6 +337,8 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
     AgeAllGenerations();
   }
 
+  uint32_t Count() const { return mFonts.Count(); }
+
   void FlushShapedWordCaches();
   void NotifyGlyphsChanged();
 

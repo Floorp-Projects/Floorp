@@ -4851,18 +4851,19 @@ void ContentParent::NotifyUpdatedDictionaries() {
   }
 }
 
-void ContentParent::NotifyUpdatedFonts() {
+void ContentParent::NotifyUpdatedFonts(bool aFullRebuild) {
+  if (gfxPlatformFontList::PlatformFontList()->SharedFontList()) {
+    for (auto* cp : AllProcesses(eLive)) {
+      Unused << cp->SendRebuildFontList(aFullRebuild);
+    }
+    return;
+  }
+
   nsTArray<SystemFontListEntry> fontList;
   gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
 
   for (auto* cp : AllProcesses(eLive)) {
     Unused << cp->SendUpdateFontList(fontList);
-  }
-}
-
-void ContentParent::NotifyRebuildFontList() {
-  for (auto* cp : AllProcesses(eLive)) {
-    Unused << cp->SendRebuildFontList();
   }
 }
 
@@ -5440,7 +5441,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetOutputColorProfileData(
 mozilla::ipc::IPCResult ContentParent::RecvGetFontListShmBlock(
     const uint32_t& aGeneration, const uint32_t& aIndex,
     base::SharedMemoryHandle* aOut) {
-  auto fontList = gfxPlatformFontList::PlatformFontList();
+  auto* fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
   fontList->ShareFontListShmBlockToProcess(aGeneration, aIndex, Pid(), aOut);
   return IPC_OK();
@@ -5449,7 +5450,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetFontListShmBlock(
 mozilla::ipc::IPCResult ContentParent::RecvInitializeFamily(
     const uint32_t& aGeneration, const uint32_t& aFamilyIndex,
     const bool& aLoadCmaps) {
-  auto fontList = gfxPlatformFontList::PlatformFontList();
+  auto* fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
   fontList->InitializeFamily(aGeneration, aFamilyIndex, aLoadCmaps);
   return IPC_OK();
@@ -5458,7 +5459,7 @@ mozilla::ipc::IPCResult ContentParent::RecvInitializeFamily(
 mozilla::ipc::IPCResult ContentParent::RecvSetCharacterMap(
     const uint32_t& aGeneration, const mozilla::fontlist::Pointer& aFacePtr,
     const gfxSparseBitSet& aMap) {
-  auto fontList = gfxPlatformFontList::PlatformFontList();
+  auto* fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
   fontList->SetCharacterMap(aGeneration, aFacePtr, aMap);
   return IPC_OK();
@@ -5466,7 +5467,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetCharacterMap(
 
 mozilla::ipc::IPCResult ContentParent::RecvInitOtherFamilyNames(
     const uint32_t& aGeneration, const bool& aDefer, bool* aLoaded) {
-  auto fontList = gfxPlatformFontList::PlatformFontList();
+  auto* fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
   *aLoaded = fontList->InitOtherFamilyNames(aGeneration, aDefer);
   return IPC_OK();
@@ -5474,9 +5475,17 @@ mozilla::ipc::IPCResult ContentParent::RecvInitOtherFamilyNames(
 
 mozilla::ipc::IPCResult ContentParent::RecvSetupFamilyCharMap(
     const uint32_t& aGeneration, const mozilla::fontlist::Pointer& aFamilyPtr) {
-  auto fontList = gfxPlatformFontList::PlatformFontList();
+  auto* fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
   fontList->SetupFamilyCharMap(aGeneration, aFamilyPtr);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvStartCmapLoading(
+    const uint32_t& aGeneration, const uint32_t& aStartIndex) {
+  auto* fontList = gfxPlatformFontList::PlatformFontList();
+  MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
+  fontList->StartCmapLoading(aGeneration, aStartIndex);
   return IPC_OK();
 }
 
