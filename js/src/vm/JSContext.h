@@ -1186,18 +1186,22 @@ class MOZ_RAII AutoUnsafeCallWithABI {
 
 namespace gc {
 
-// Set/restore the performing GC flag for the current thread.
+// Set/unset the performing GC flag for the current thread.
 class MOZ_RAII AutoSetThreadIsPerformingGC {
   JSContext* cx;
-  bool prev;
 
  public:
-  AutoSetThreadIsPerformingGC()
-      : cx(TlsContext.get()), prev(cx->defaultFreeOp()->isCollecting_) {
-    cx->defaultFreeOp()->isCollecting_ = true;
+  AutoSetThreadIsPerformingGC() : cx(TlsContext.get()) {
+    JSFreeOp* fop = cx->defaultFreeOp();
+    MOZ_ASSERT(!fop->isCollecting());
+    fop->isCollecting_ = true;
   }
 
-  ~AutoSetThreadIsPerformingGC() { cx->defaultFreeOp()->isCollecting_ = prev; }
+  ~AutoSetThreadIsPerformingGC() {
+    JSFreeOp* fop = cx->defaultFreeOp();
+    MOZ_ASSERT(fop->isCollecting());
+    fop->isCollecting_ = false;
+  }
 };
 
 struct MOZ_RAII AutoSetThreadGCUse {
