@@ -67,9 +67,9 @@ class MOZ_STACK_CLASS WarpScriptOracle {
                                       BytecodeLocation loc, ICCacheIRStub* stub,
                                       ICFallbackStub* fallbackStub,
                                       uint8_t* stubDataCopy);
-  MOZ_MUST_USE bool replaceNurseryPointers(ICCacheIRStub* stub,
-                                           const CacheIRStubInfo* stubInfo,
-                                           uint8_t* stubDataCopy);
+  [[nodiscard]] bool replaceNurseryPointers(ICCacheIRStub* stub,
+                                            const CacheIRStubInfo* stubInfo,
+                                            uint8_t* stubDataCopy);
 
  public:
   WarpScriptOracle(JSContext* cx, WarpOracle* oracle, HandleScript script,

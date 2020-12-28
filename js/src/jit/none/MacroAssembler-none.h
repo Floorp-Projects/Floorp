@@ -534,13 +534,13 @@ class MacroAssemblerNone : public Assembler {
     MOZ_CRASH();
   }
   void notBoolean(ValueOperand) { MOZ_CRASH(); }
-  MOZ_MUST_USE Register extractObject(Address, Register) { MOZ_CRASH(); }
-  MOZ_MUST_USE Register extractObject(ValueOperand, Register) { MOZ_CRASH(); }
-  MOZ_MUST_USE Register extractSymbol(ValueOperand, Register) { MOZ_CRASH(); }
-  MOZ_MUST_USE Register extractInt32(ValueOperand, Register) { MOZ_CRASH(); }
-  MOZ_MUST_USE Register extractBoolean(ValueOperand, Register) { MOZ_CRASH(); }
+  [[nodiscard]] Register extractObject(Address, Register) { MOZ_CRASH(); }
+  [[nodiscard]] Register extractObject(ValueOperand, Register) { MOZ_CRASH(); }
+  [[nodiscard]] Register extractSymbol(ValueOperand, Register) { MOZ_CRASH(); }
+  [[nodiscard]] Register extractInt32(ValueOperand, Register) { MOZ_CRASH(); }
+  [[nodiscard]] Register extractBoolean(ValueOperand, Register) { MOZ_CRASH(); }
   template <typename T>
-  MOZ_MUST_USE Register extractTag(T, Register) {
+  [[nodiscard]] Register extractTag(T, Register) {
     MOZ_CRASH();
   }
 

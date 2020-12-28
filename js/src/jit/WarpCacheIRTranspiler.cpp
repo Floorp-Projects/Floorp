@@ -98,10 +98,10 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
     addUnchecked(ins);
   }
 
-  MOZ_MUST_USE bool resumeAfterUnchecked(MInstruction* ins) {
+  [[nodiscard]] bool resumeAfterUnchecked(MInstruction* ins) {
     return WarpBuilderShared::resumeAfter(ins, loc_);
   }
-  MOZ_MUST_USE bool resumeAfter(MInstruction* ins) {
+  [[nodiscard]] bool resumeAfter(MInstruction* ins) {
     MOZ_ASSERT(effectful_ == ins);
     return resumeAfterUnchecked(ins);
   }
@@ -120,7 +120,7 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   void setOperand(OperandId id, MDefinition* def) { operands_[id.id()] = def; }
 
-  MOZ_MUST_USE bool defineOperand(OperandId id, MDefinition* def) {
+  [[nodiscard]] bool defineOperand(OperandId id, MDefinition* def) {
     MOZ_ASSERT(id.id() == operands_.length());
     return operands_.append(def);
   }
@@ -182,34 +182,34 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   // Returns either MConstant or MNurseryIndex. See WarpObjectField.
   MInstruction* objectStubField(uint32_t offset);
 
-  MOZ_MUST_USE bool emitGuardTo(ValOperandId inputId, MIRType type);
+  [[nodiscard]] bool emitGuardTo(ValOperandId inputId, MIRType type);
 
-  MOZ_MUST_USE bool emitToString(OperandId inputId, StringOperandId resultId);
-
-  template <typename T>
-  MOZ_MUST_USE bool emitDoubleBinaryArithResult(NumberOperandId lhsId,
-                                                NumberOperandId rhsId);
+  [[nodiscard]] bool emitToString(OperandId inputId, StringOperandId resultId);
 
   template <typename T>
-  MOZ_MUST_USE bool emitInt32BinaryArithResult(Int32OperandId lhsId,
-                                               Int32OperandId rhsId);
+  [[nodiscard]] bool emitDoubleBinaryArithResult(NumberOperandId lhsId,
+                                                 NumberOperandId rhsId);
 
   template <typename T>
-  MOZ_MUST_USE bool emitBigIntBinaryArithResult(BigIntOperandId lhsId,
-                                                BigIntOperandId rhsId);
+  [[nodiscard]] bool emitInt32BinaryArithResult(Int32OperandId lhsId,
+                                                Int32OperandId rhsId);
 
   template <typename T>
-  MOZ_MUST_USE bool emitBigIntBinaryArithEffectfulResult(BigIntOperandId lhsId,
-                                                         BigIntOperandId rhsId);
+  [[nodiscard]] bool emitBigIntBinaryArithResult(BigIntOperandId lhsId,
+                                                 BigIntOperandId rhsId);
 
   template <typename T>
-  MOZ_MUST_USE bool emitBigIntUnaryArithResult(BigIntOperandId inputId);
+  [[nodiscard]] bool emitBigIntBinaryArithEffectfulResult(BigIntOperandId lhsId,
+                                                          BigIntOperandId rhsId);
 
-  MOZ_MUST_USE bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
-                                      MCompare::CompareType compareType);
+  template <typename T>
+  [[nodiscard]] bool emitBigIntUnaryArithResult(BigIntOperandId inputId);
 
-  MOZ_MUST_USE bool emitNewIteratorResult(MNewIterator::Type type,
-                                          uint32_t templateObjectOffset);
+  [[nodiscard]] bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
+                                       MCompare::CompareType compareType);
+
+  [[nodiscard]] bool emitNewIteratorResult(MNewIterator::Type type,
+                                           uint32_t templateObjectOffset);
 
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
@@ -220,27 +220,27 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   void addDataViewData(MDefinition* obj, Scalar::Type type,
                        MDefinition** offset, MInstruction** elements);
 
-  MOZ_MUST_USE bool emitAtomicsBinaryOp(ObjOperandId objId,
-                                        Int32OperandId indexId,
-                                        Int32OperandId valueId,
-                                        Scalar::Type elementType, AtomicOp op);
+  [[nodiscard]] bool emitAtomicsBinaryOp(ObjOperandId objId,
+                                         Int32OperandId indexId,
+                                         Int32OperandId valueId,
+                                         Scalar::Type elementType, AtomicOp op);
 
-  MOZ_MUST_USE bool emitLoadArgumentSlot(ValOperandId resultId,
-                                         uint32_t slotIndex);
+  [[nodiscard]] bool emitLoadArgumentSlot(ValOperandId resultId,
+                                          uint32_t slotIndex);
 
   // Calls are either Native (native function without a JitEntry),
   // a DOM Native (native function with a JitInfo OpType::Method),
   // or Scripted (scripted function or native function with a JitEntry).
   enum class CallKind { Native, DOM, Scripted };
 
-  MOZ_MUST_USE bool updateCallInfo(MDefinition* callee, CallFlags flags);
+  [[nodiscard]] bool updateCallInfo(MDefinition* callee, CallFlags flags);
 
-  MOZ_MUST_USE bool emitCallFunction(ObjOperandId calleeId,
-                                     Int32OperandId argcId,
-                                     mozilla::Maybe<ObjOperandId> thisObjId,
-                                     CallFlags flags, CallKind kind);
-  MOZ_MUST_USE bool emitFunApplyArgs(WrappedFunction* wrappedTarget,
-                                     CallFlags flags);
+  [[nodiscard]] bool emitCallFunction(ObjOperandId calleeId,
+                                      Int32OperandId argcId,
+                                      mozilla::Maybe<ObjOperandId> thisObjId,
+                                      CallFlags flags, CallKind kind);
+  [[nodiscard]] bool emitFunApplyArgs(WrappedFunction* wrappedTarget,
+                                      CallFlags flags);
 
   MDefinition* convertWasmArg(MDefinition* arg, wasm::ValType::Kind kind);
 
@@ -250,13 +250,14 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   bool maybeCreateThis(MDefinition* callee, CallFlags flags, CallKind kind);
 
-  MOZ_MUST_USE bool emitCallGetterResult(CallKind kind, ValOperandId receiverId,
-                                         uint32_t getterOffset, bool sameRealm,
-                                         uint32_t nargsAndFlagsOffset);
-  MOZ_MUST_USE bool emitCallSetter(CallKind kind, ObjOperandId receiverId,
-                                   uint32_t setterOffset, ValOperandId rhsId,
-                                   bool sameRealm,
-                                   uint32_t nargsAndFlagsOffset);
+  [[nodiscard]] bool emitCallGetterResult(CallKind kind,
+                                          ValOperandId receiverId,
+                                          uint32_t getterOffset, bool sameRealm,
+                                          uint32_t nargsAndFlagsOffset);
+  [[nodiscard]] bool emitCallSetter(CallKind kind, ObjOperandId receiverId,
+                                    uint32_t setterOffset, ValOperandId rhsId,
+                                    bool sameRealm,
+                                    uint32_t nargsAndFlagsOffset);
 
   CACHE_IR_TRANSPILER_GENERATED
 
@@ -271,7 +272,7 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
         stubData_(cacheIRSnapshot->stubData()),
         callInfo_(callInfo) {}
 
-  MOZ_MUST_USE bool transpile(std::initializer_list<MDefinition*> inputs);
+  [[nodiscard]] bool transpile(std::initializer_list<MDefinition*> inputs);
 };
 
 bool WarpCacheIRTranspiler::transpile(

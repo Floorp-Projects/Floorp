@@ -581,7 +581,7 @@ class MOZ_RAII WarpPoppedValueUseChecker {
   WarpPoppedValueUseChecker(MBasicBlock* current, BytecodeLocation loc)
       : current_(current), loc_(loc) {}
 
-  MOZ_MUST_USE bool init() {
+  [[nodiscard]] bool init() {
     // Don't require SSA uses for values popped by these ops.
     switch (loc_.getOp()) {
       case JSOp::Pop:

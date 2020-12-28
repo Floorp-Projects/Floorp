@@ -145,7 +145,7 @@ class JitContext {
 };
 
 // Process-wide initialization of JIT data structures.
-MOZ_MUST_USE bool InitializeJit();
+[[nodiscard]] bool InitializeJit();
 
 // Call this after changing hardware parameters via command line flags (on
 // platforms that support that).

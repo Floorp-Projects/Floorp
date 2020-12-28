@@ -48,7 +48,7 @@ class MIRGenerator final {
 
   TempAllocator& alloc() { return *alloc_; }
   MIRGraph& graph() { return *graph_; }
-  MOZ_MUST_USE bool ensureBallast() { return alloc().ensureBallast(); }
+  [[nodiscard]] bool ensureBallast() { return alloc().ensureBallast(); }
   const JitRuntime* jitRuntime() const { return runtime->jitRuntime(); }
   const CompileInfo& outerInfo() const { return *outerInfo_; }
   const OptimizationInfo& optimizationInfo() const {
@@ -89,7 +89,7 @@ class MIRGenerator final {
     return offThreadStatus_;
   }
 
-  MOZ_MUST_USE bool instrumentedProfiling() {
+  [[nodiscard]] bool instrumentedProfiling() {
     if (!instrumentedProfilingIsCached_) {
       instrumentedProfiling_ = runtime->geckoProfiler().enabled();
       instrumentedProfilingIsCached_ = true;

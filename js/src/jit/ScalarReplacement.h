@@ -16,7 +16,7 @@ namespace jit {
 class MIRGenerator;
 class MIRGraph;
 
-MOZ_MUST_USE bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph);
+[[nodiscard]] bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph);
 
 }  // namespace jit
 }  // namespace js

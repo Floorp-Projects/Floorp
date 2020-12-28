@@ -370,31 +370,32 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   // Extended unboxing API. If the payload is already in a register, returns
   // that register. Otherwise, provides a move to the given scratch register,
   // and returns that.
-  MOZ_MUST_USE Register extractObject(const Address& address, Register scratch);
-  MOZ_MUST_USE Register extractObject(const ValueOperand& value,
-                                      Register scratch) {
-    return value.payloadReg();
-  }
-  MOZ_MUST_USE Register extractString(const ValueOperand& value,
-                                      Register scratch) {
-    return value.payloadReg();
-  }
-  MOZ_MUST_USE Register extractSymbol(const ValueOperand& value,
-                                      Register scratch) {
-    return value.payloadReg();
-  }
-  MOZ_MUST_USE Register extractInt32(const ValueOperand& value,
-                                     Register scratch) {
-    return value.payloadReg();
-  }
-  MOZ_MUST_USE Register extractBoolean(const ValueOperand& value,
+  [[nodiscard]] Register extractObject(const Address& address,
+                                       Register scratch);
+  [[nodiscard]] Register extractObject(const ValueOperand& value,
                                        Register scratch) {
     return value.payloadReg();
   }
-  MOZ_MUST_USE Register extractTag(const Address& address, Register scratch);
-  MOZ_MUST_USE Register extractTag(const BaseIndex& address, Register scratch);
-  MOZ_MUST_USE Register extractTag(const ValueOperand& value,
-                                   Register scratch) {
+  [[nodiscard]] Register extractString(const ValueOperand& value,
+                                       Register scratch) {
+    return value.payloadReg();
+  }
+  [[nodiscard]] Register extractSymbol(const ValueOperand& value,
+                                       Register scratch) {
+    return value.payloadReg();
+  }
+  [[nodiscard]] Register extractInt32(const ValueOperand& value,
+                                      Register scratch) {
+    return value.payloadReg();
+  }
+  [[nodiscard]] Register extractBoolean(const ValueOperand& value,
+                                        Register scratch) {
+    return value.payloadReg();
+  }
+  [[nodiscard]] Register extractTag(const Address& address, Register scratch);
+  [[nodiscard]] Register extractTag(const BaseIndex& address, Register scratch);
+  [[nodiscard]] Register extractTag(const ValueOperand& value,
+                                    Register scratch) {
     return value.typeReg();
   }
 
