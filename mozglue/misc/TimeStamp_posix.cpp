@@ -19,7 +19,7 @@
 #include <string.h>
 
 #if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || \
-    defined(__OpenBSD__) || defined(XP_DARWIN)
+    defined(__OpenBSD__)
 #  include <sys/param.h>
 #  include <sys/sysctl.h>
 #endif
@@ -42,9 +42,6 @@
 #elif defined(__FreeBSD__)
 #  define KP_START_SEC ki_start.tv_sec
 #  define KP_START_USEC ki_start.tv_usec
-#elif defined(XP_DARWIN)
-#  define KP_START_SEC kp_proc.p_un.__p_starttime.tv_sec
-#  define KP_START_USEC kp_proc.p_un.__p_starttime.tv_usec
 #else
 #  define KP_START_SEC p_ustart_sec
 #  define KP_START_USEC p_ustart_usec
@@ -285,7 +282,7 @@ uint64_t TimeStamp::ComputeProcessUptime() {
 }
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || \
-    defined(__OpenBSD__) || defined(XP_DARWIN)
+    defined(__OpenBSD__)
 
 // Computes and returns the process uptime in us on various BSD flavors.
 // Returns 0 if an error was encountered.
