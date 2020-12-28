@@ -293,7 +293,7 @@ mod test {
 
         unsafe { qcms_profile_precache_output_transform(&mut *srgb_profile) };
 
-        let intent = unsafe { qcms_profile_get_rendering_intent(profile) };
+        let intent = unsafe { qcms_profile_get_rendering_intent(&*profile) };
         let transform = unsafe {
             qcms_transform_create(&*profile, DATA_RGB_8, &*srgb_profile, DATA_RGB_8, intent)
         };
