@@ -401,11 +401,7 @@ pub(crate) fn get_rgb_colorants(
 ) -> bool {
     *colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
     *colorants = adapt_matrix_to_D50(*colorants, white_point);
-    return if (*colorants).invalid as i32 != 0 {
-        1
-    } else {
-        0
-    } != 0;
+    return if colorants.invalid { true } else { false };
 }
 /* Alpha is not corrected.
    A rationale for this is found in Alvy Ray's "Should Alpha Be Nonlinear If
@@ -1183,19 +1179,19 @@ pub fn transform_create(
     }
     let mut transform: Box<qcms_transform> = Box::new(Default::default());
     let mut precache: bool = false;
-    if !(*out).output_table_r.is_none()
-        && !(*out).output_table_g.is_none()
-        && !(*out).output_table_b.is_none()
+    if !out.output_table_r.is_none()
+        && !out.output_table_g.is_none()
+        && !out.output_table_b.is_none()
     {
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
     if qcms_supports_iccv4.load(Ordering::Relaxed) as i32 != 0
         && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
-        && (!(*in_0).A2B0.is_none()
-            || !(*out).B2A0.is_none()
-            || !(*in_0).mAB.is_none()
-            || !(*out).mAB.is_none())
+        && (!in_0.A2B0.is_none()
+            || !out.B2A0.is_none()
+            || !in_0.mAB.is_none()
+            || !out.mAB.is_none())
     {
         // Precache the transformation to a CLUT 33x33x33 in size.
         // 33 is used by many profiles and works well in pratice.
@@ -1207,16 +1203,16 @@ pub fn transform_create(
         return result;
     }
     if precache {
-        transform.output_table_r = Some(Arc::clone((*out).output_table_r.as_ref().unwrap()));
-        transform.output_table_g = Some(Arc::clone((*out).output_table_g.as_ref().unwrap()));
-        transform.output_table_b = Some(Arc::clone((*out).output_table_b.as_ref().unwrap()));
+        transform.output_table_r = Some(Arc::clone(out.output_table_r.as_ref().unwrap()));
+        transform.output_table_g = Some(Arc::clone(out.output_table_g.as_ref().unwrap()));
+        transform.output_table_b = Some(Arc::clone(out.output_table_b.as_ref().unwrap()));
     } else {
-        if (*out).redTRC.is_none() || (*out).greenTRC.is_none() || (*out).blueTRC.is_none() {
+        if out.redTRC.is_none() || out.greenTRC.is_none() || out.blueTRC.is_none() {
             return None;
         }
-        transform.output_gamma_lut_r = Some(build_output_lut((*out).redTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_g = Some(build_output_lut((*out).greenTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_b = Some(build_output_lut((*out).blueTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_r = Some(build_output_lut(out.redTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_g = Some(build_output_lut(out.greenTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_b = Some(build_output_lut(out.blueTRC.as_deref().unwrap()));
 
         if transform.output_gamma_lut_r.is_none()
             || transform.output_gamma_lut_g.is_none()
@@ -1225,7 +1221,7 @@ pub fn transform_create(
             return None;
         }
     }
-    if (*in_0).color_space == RGB_SIGNATURE {
+    if in_0.color_space == RGB_SIGNATURE {
         if precache {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             if is_x86_feature_detected!("avx") {
@@ -1279,9 +1275,9 @@ pub fn transform_create(
             transform.transform_fn = Some(qcms_transform_data_bgra_out_lut)
         }
         //XXX: avoid duplicating tables if we can
-        transform.input_gamma_table_r = build_input_gamma_table((*in_0).redTRC.as_deref());
-        transform.input_gamma_table_g = build_input_gamma_table((*in_0).greenTRC.as_deref());
-        transform.input_gamma_table_b = build_input_gamma_table((*in_0).blueTRC.as_deref());
+        transform.input_gamma_table_r = build_input_gamma_table(in_0.redTRC.as_deref());
+        transform.input_gamma_table_g = build_input_gamma_table(in_0.greenTRC.as_deref());
+        transform.input_gamma_table_b = build_input_gamma_table(in_0.blueTRC.as_deref());
         if transform.input_gamma_table_r.is_none()
             || transform.input_gamma_table_g.is_none()
             || transform.input_gamma_table_b.is_none()
@@ -1320,8 +1316,8 @@ pub fn transform_create(
         transform.matrix[0][2] = result_0.m[2][0];
         transform.matrix[1][2] = result_0.m[2][1];
         transform.matrix[2][2] = result_0.m[2][2]
-    } else if (*in_0).color_space == 0x47524159 {
-        transform.input_gamma_table_gray = build_input_gamma_table((*in_0).grayTRC.as_deref());
+    } else if in_0.color_space == 0x47524159 {
+        transform.input_gamma_table_gray = build_input_gamma_table(in_0.grayTRC.as_deref());
         if transform.input_gamma_table_gray.is_none() {
             return None;
         }
@@ -1370,9 +1366,7 @@ pub unsafe extern "C" fn qcms_transform_data(
     mut dest: *mut libc::c_void,
     mut length: usize,
 ) {
-    (*transform)
-        .transform_fn
-        .expect("non-null function pointer")(
+    transform.transform_fn.expect("non-null function pointer")(
         transform,
         src as *const libc::c_uchar,
         dest as *mut libc::c_uchar,
