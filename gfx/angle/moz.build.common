@@ -1,4 +1,10 @@
 AllowCompilerWarnings()
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CXXFLAGS += [
+        '-Wno-final-dtor-non-final-class',
+        '-Wno-implicit-const-int-float-conversion',
+        '-Wno-range-loop-construct',
+    ]
 
 if CONFIG['INTEL_ARCHITECTURE']:
     CXXFLAGS += CONFIG['SSE2_FLAGS']
