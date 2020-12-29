@@ -247,6 +247,7 @@ input[name="password"] {
   cursor: pointer;
   -moz-context-properties: fill;
   fill: currentColor !important;
+  color: inherit !important;
   opacity: var(--reveal-checkbox-opacity);
   flex-shrink: 0;
 }
