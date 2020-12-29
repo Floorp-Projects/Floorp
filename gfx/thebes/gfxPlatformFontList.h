@@ -203,9 +203,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   virtual void GetFontList(nsAtom* aLangGroup, const nsACString& aGenericFamily,
                            nsTArray<nsString>& aListOfFonts);
 
-  // Pass false to notify content that the shared font list has been modified
-  // but not completely invalidated.
-  void UpdateFontList(bool aFullRebuild = true);
+  void UpdateFontList();
 
   virtual void ClearLangGroupPrefFonts();
 
@@ -282,20 +280,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   void SetupFamilyCharMap(uint32_t aGeneration,
                           const mozilla::fontlist::Pointer& aFamilyPtr);
-
-  // Start the async cmap loading process, if not already under way, from the
-  // given family index. (For use in any process that needs font lookups.)
-  void StartCmapLoadingFromFamily(uint32_t aStartIndex);
-
-  // [Parent] Handle request from content process to start cmap loading.
-  void StartCmapLoading(uint32_t aGeneration, uint32_t aStartIndex);
-
-  void CancelLoadCmapsTask() {
-    if (mLoadCmapsRunnable) {
-      mLoadCmapsRunnable->Cancel();
-      mLoadCmapsRunnable = nullptr;
-    }
-  }
 
   // Populate aFamily with face records, and if aLoadCmaps is true, also load
   // their character maps (rather than leaving this to be done lazily).
@@ -495,9 +479,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   // Initialize the current visibility level from user prefs.
   void SetVisibilityLevel();
-
-  // (Re-)initialize the set of codepoints that we know cannot be rendered.
-  void InitializeCodepointsWithNoFonts();
 
   // If using the shared font list, returns a generation count that is
   // incremented if/when the platform list is reinitialized (e.g. because
@@ -881,9 +862,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       mFontEntries;
 
   RefPtr<gfxFontEntry> mDefaultFontEntry;
-
-  RefPtr<mozilla::CancelableRunnable> mLoadCmapsRunnable;
-  uint32_t mStartedLoadingCmapsFrom = 0xffffffffu;
 
   FontVisibility mVisibilityLevel = FontVisibility::Unknown;
 
