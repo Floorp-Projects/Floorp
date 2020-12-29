@@ -356,11 +356,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
       nsTArray<mozilla::dom::SystemFontListEntry>* aFontList) {}
 
   /**
-   * Rebuilds the system font lists (if aFullRebuild is true), or just notifies
-   * content that the list has changed but existing memory mappings are still
-   * valid (aFullRebuild is false).
+   * Rebuilds the any cached system font lists
    */
-  nsresult UpdateFontList(bool aFullRebuild = true);
+  virtual nsresult UpdateFontList();
 
   /**
    * Create the platform font-list object (gfxPlatformFontList concrete
