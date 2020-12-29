@@ -137,10 +137,6 @@ add_task(async function test_reloadButton() {
 });
 
 add_task(async function test_back_keyboard_shortcut() {
-  if (Services.prefs.getIntPref("browser.backspace_action") != 0) {
-    ok(true, "Skipped testing backspace to go back since it's disabled");
-    return;
-  }
   await withTestPage(async function(aBrowser) {
     // Load a new page in the tab so we can test going back
     BrowserTestUtils.loadURI(
@@ -155,7 +151,11 @@ add_task(async function test_back_keyboard_shortcut() {
     await fillTestPage(aBrowser);
 
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
-    EventUtils.synthesizeKey("KEY_Backspace");
+
+    const goBackKeyModifier =
+      AppConstants.platform == "macosx" ? { metaKey: true } : { altKey: true };
+    EventUtils.synthesizeKey("KEY_ArrowLeft", goBackKeyModifier);
+
     await backPromise;
   });
 });
