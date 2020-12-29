@@ -291,10 +291,6 @@ bool WidgetEvent::IsContentCommandEvent() const {
   return mClass == eContentCommandEventClass;
 }
 
-bool WidgetEvent::IsNativeEventDelivererForPlugin() const {
-  return mClass == ePluginEventClass;
-}
-
 /******************************************************************************
  * mozilla::WidgetEvent
  *
@@ -403,14 +399,6 @@ bool WidgetEvent::CanBeSentToRemoteProcess() const {
     case eDragExit:
     case eDrop:
       return true;
-#if defined(XP_WIN)
-    case ePluginInputEvent: {
-      auto evt = static_cast<const NPEvent*>(AsPluginEvent()->mPluginEvent);
-      return evt && evt->event == WM_SETTINGCHANGE &&
-             (evt->wParam == SPI_SETWHEELSCROLLLINES ||
-              evt->wParam == SPI_SETWHEELSCROLLCHARS);
-    }
-#endif
     default:
       return false;
   }
@@ -432,16 +420,6 @@ bool WidgetEvent::WillBeSentToRemoteProcess() const {
   return EventStateManager::IsTopLevelRemoteTarget(originalTarget);
 }
 
-bool WidgetEvent::IsRetargetedNativeEventDelivererForPlugin() const {
-  const WidgetPluginEvent* pluginEvent = AsPluginEvent();
-  return pluginEvent && pluginEvent->mRetargetToFocusedDocument;
-}
-
-bool WidgetEvent::IsNonRetargetedNativeEventDelivererForPlugin() const {
-  const WidgetPluginEvent* pluginEvent = AsPluginEvent();
-  return pluginEvent && !pluginEvent->mRetargetToFocusedDocument;
-}
-
 bool WidgetEvent::IsIMERelatedEvent() const {
   return HasIMEEventMessage() || IsQueryContentEvent() || IsSelectionEvent();
 }
@@ -452,8 +430,7 @@ bool WidgetEvent::IsUsingCoordinates() const {
     return !mouseEvent->IsContextMenuKeyEvent();
   }
   return !HasKeyEventMessage() && !IsIMERelatedEvent() &&
-         !HasPluginActivationEventMessage() &&
-         !IsNativeEventDelivererForPlugin() && !IsContentCommandEvent();
+         !HasPluginActivationEventMessage() && !IsContentCommandEvent();
 }
 
 bool WidgetEvent::IsTargetedAtFocusedWindow() const {
@@ -461,8 +438,7 @@ bool WidgetEvent::IsTargetedAtFocusedWindow() const {
   if (mouseEvent) {
     return mouseEvent->IsContextMenuKeyEvent();
   }
-  return HasKeyEventMessage() || IsIMERelatedEvent() ||
-         IsContentCommandEvent() || IsRetargetedNativeEventDelivererForPlugin();
+  return HasKeyEventMessage() || IsIMERelatedEvent() || IsContentCommandEvent();
 }
 
 bool WidgetEvent::IsTargetedAtFocusedContent() const {
@@ -470,8 +446,7 @@ bool WidgetEvent::IsTargetedAtFocusedContent() const {
   if (mouseEvent) {
     return mouseEvent->IsContextMenuKeyEvent();
   }
-  return HasKeyEventMessage() || IsIMERelatedEvent() ||
-         IsRetargetedNativeEventDelivererForPlugin();
+  return HasKeyEventMessage() || IsIMERelatedEvent();
 }
 
 bool WidgetEvent::IsAllowedToDispatchDOMEvent() const {
@@ -608,7 +583,6 @@ bool WidgetEvent::IsUserAction() const {
     case eTouchEventClass:
     case eCommandEventClass:
     case eContentCommandEventClass:
-    case ePluginEventClass:
       return true;
     case eMouseEventClass:
     case eDragEventClass:

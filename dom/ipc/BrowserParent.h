@@ -569,8 +569,6 @@ class BrowserParent final : public PBrowserParent,
 
   void SendRealTouchEvent(WidgetTouchEvent& aEvent);
 
-  void SendPluginEvent(WidgetPluginEvent& aEvent);
-
   /**
    * Different from above Send*Event(), these methods return true if the
    * event has been posted to the remote process or failed to do that but

@@ -62,7 +62,6 @@ class NativeEventData;
 class WidgetGUIEvent;
 class WidgetInputEvent;
 class WidgetKeyboardEvent;
-class WidgetPluginEvent;
 struct FontRange;
 
 enum class StyleWindowShadow : uint8_t;

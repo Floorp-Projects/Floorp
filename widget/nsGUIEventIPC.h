@@ -927,23 +927,6 @@ struct ParamTraits<mozilla::widget::InputContextAction> {
 };
 
 template <>
-struct ParamTraits<mozilla::WidgetPluginEvent> {
-  typedef mozilla::WidgetPluginEvent paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
-    WriteParam(aMsg, aParam.mRetargetToFocusedDocument);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter,
-                     static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->mRetargetToFocusedDocument);
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::WritingMode> {
   typedef mozilla::WritingMode paramType;
 
