@@ -1011,22 +1011,6 @@ void TISInputSourceWrapper::InitKeyEvent(NSEvent* aNativeKeyEvent, WidgetKeyboar
   // call), so there is no need to retain and release this data.
   aKeyEvent.mNativeKeyEvent = aNativeKeyEvent;
 
-  // Fill in fields used for Cocoa NPAPI plugins
-  if ([aNativeKeyEvent type] == NSKeyDown || [aNativeKeyEvent type] == NSKeyUp) {
-    aKeyEvent.mNativeKeyCode = [aNativeKeyEvent keyCode];
-    aKeyEvent.mNativeModifierFlags = [aNativeKeyEvent modifierFlags];
-    nsAutoString nativeChars;
-    nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], nativeChars);
-    aKeyEvent.mNativeCharacters.Assign(nativeChars);
-    nsAutoString nativeCharsIgnoringModifiers;
-    nsCocoaUtils::GetStringForNSString([aNativeKeyEvent charactersIgnoringModifiers],
-                                       nativeCharsIgnoringModifiers);
-    aKeyEvent.mNativeCharactersIgnoringModifiers.Assign(nativeCharsIgnoringModifiers);
-  } else if ([aNativeKeyEvent type] == NSFlagsChanged) {
-    aKeyEvent.mNativeKeyCode = [aNativeKeyEvent keyCode];
-    aKeyEvent.mNativeModifierFlags = [aNativeKeyEvent modifierFlags];
-  }
-
   aKeyEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
 
   UInt32 kbType = GetKbdType();
@@ -1838,7 +1822,7 @@ bool TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent, uint32_t aUniqu
     //    dispatch keypress event at that time.  Note that the command may have
     //    been a converted or generated action by IME.  Then, we shouldn't do
     //    our default action for this key.
-    if (!(interpretKeyEventsCalled && IsNormalCharInputtingEvent(keypressEvent))) {
+    if (!(interpretKeyEventsCalled && IsNormalCharInputtingEvent(aNativeEvent))) {
       MOZ_LOG(gLog, LogLevel::Info,
               ("%p TextInputHandler::HandleKeyDownEvent, trying to dispatch "
                "eKeyPress event since it's not yet dispatched",
@@ -4928,13 +4912,18 @@ bool TextInputHandlerBase::SetSelection(NSRange& aRange) {
   return false;
 }
 
-/* static */ bool TextInputHandlerBase::IsNormalCharInputtingEvent(
-    const WidgetKeyboardEvent& aKeyEvent) {
-  // this is not character inputting event, simply.
-  if (aKeyEvent.mNativeCharacters.IsEmpty() || aKeyEvent.IsMeta()) {
+/* static */ bool TextInputHandlerBase::IsNormalCharInputtingEvent(NSEvent* aNativeEvent) {
+  if ([aNativeEvent type] != NSKeyDown && [aNativeEvent type] != NSKeyUp) {
     return false;
   }
-  return !IsControlChar(aKeyEvent.mNativeCharacters[0]);
+  nsAutoString nativeChars;
+  nsCocoaUtils::GetStringForNSString([aNativeEvent characters], nativeChars);
+
+  // this is not character inputting event, simply.
+  if (nativeChars.IsEmpty() || ([aNativeEvent modifierFlags] & NSCommandKeyMask)) {
+    return false;
+  }
+  return !IsControlChar(nativeChars[0]);
 }
 
 /* static */ bool TextInputHandlerBase::IsModifierKey(UInt32 aNativeKeyCode) {

@@ -1829,38 +1829,8 @@ static NPCocoaEvent TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent,
       break;
     }
     case eKeyDown:
-    case eKeyUp: {
-      WidgetKeyboardEvent* keyEvent = anEvent->AsKeyboardEvent();
-
-      // That keyEvent->mPluginTextEventString is non-empty is a signal that we
-      // should create a text event for the plugin, instead of a key event.
-      if (anEvent->mMessage == eKeyDown &&
-          !keyEvent->mPluginTextEventString.IsEmpty()) {
-        cocoaEvent.type = NPCocoaEventTextInput;
-        const char16_t* pluginTextEventString =
-            keyEvent->mPluginTextEventString.get();
-        cocoaEvent.data.text.text = (NPNSString*)::CFStringCreateWithCharacters(
-            NULL, reinterpret_cast<const UniChar*>(pluginTextEventString),
-            keyEvent->mPluginTextEventString.Length());
-      } else {
-        cocoaEvent.data.key.keyCode = keyEvent->mNativeKeyCode;
-        cocoaEvent.data.key.isARepeat = keyEvent->mIsRepeat;
-        cocoaEvent.data.key.modifierFlags = keyEvent->mNativeModifierFlags;
-        const char16_t* nativeChars = keyEvent->mNativeCharacters.get();
-        cocoaEvent.data.key.characters =
-            (NPNSString*)::CFStringCreateWithCharacters(
-                NULL, reinterpret_cast<const UniChar*>(nativeChars),
-                keyEvent->mNativeCharacters.Length());
-        const char16_t* nativeCharsIgnoringModifiers =
-            keyEvent->mNativeCharactersIgnoringModifiers.get();
-        cocoaEvent.data.key.charactersIgnoringModifiers =
-            (NPNSString*)::CFStringCreateWithCharacters(
-                NULL,
-                reinterpret_cast<const UniChar*>(nativeCharsIgnoringModifiers),
-                keyEvent->mNativeCharactersIgnoringModifiers.Length());
-      }
+    case eKeyUp:
       break;
-    }
     case eFocus:
     case eBlur:
       cocoaEvent.data.focus.hasFocus = (anEvent->mMessage == eFocus);
