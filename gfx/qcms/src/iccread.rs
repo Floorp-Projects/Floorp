@@ -233,7 +233,7 @@ fn read_u32(mut mem: &mut mem_source, mut offset: usize) -> u32 {
             std::ptr::read_unaligned(mem.buf.as_ptr().offset(offset as isize) as *const be32)
         };
         return be32_to_cpu(k);
-    };
+    }
 }
 fn read_u16(mut mem: &mut mem_source, mut offset: usize) -> u16 {
     if offset > mem.buf.len() - 2 {
@@ -244,7 +244,7 @@ fn read_u16(mut mem: &mut mem_source, mut offset: usize) -> u16 {
             std::ptr::read_unaligned(mem.buf.as_ptr().offset(offset as isize) as *const be16)
         };
         return be16_to_cpu(k);
-    };
+    }
 }
 fn read_u8(mut mem: &mut mem_source, mut offset: usize) -> u8 {
     if offset > mem.buf.len() - 1 {
@@ -252,7 +252,7 @@ fn read_u8(mut mem: &mut mem_source, mut offset: usize) -> u8 {
         return 0u8;
     } else {
         return unsafe { *(mem.buf.as_ptr().offset(offset as isize) as *mut u8) };
-    };
+    }
 }
 fn read_s15Fixed16Number(mut mem: &mut mem_source, mut offset: usize) -> s15Fixed16Number {
     return read_u32(mem, offset) as s15Fixed16Number;
@@ -1068,7 +1068,7 @@ fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
         return 0u16;
     } else {
         return (a * 256.0 + 0.5).floor() as u16;
-    };
+    }
 }
 
 fn curve_from_gamma(mut gamma: f32) -> Box<curveType> {

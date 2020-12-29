@@ -57,7 +57,7 @@ pub fn clamp_float(mut a: f32) -> f32 {
     } else {
         // a < 0 or a is NaN
         return 0.;
-    };
+    }
 }
 /* value must be a value between 0 and 1 */
 //XXX: is the above a good restriction to have?
