@@ -703,11 +703,6 @@ void nsPluginFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner) {
   }
 }
 
-bool nsPluginFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
-  if (aTabIndex) *aTabIndex = -1;
-  return nsIFrame::IsFocusable(aTabIndex, aWithMouse);
-}
-
 bool nsPluginFrame::IsHidden(bool aCheckVisibilityStyle) const {
   if (aCheckVisibilityStyle) {
     if (!StyleVisibility()->IsVisibleOrCollapsed()) return true;
