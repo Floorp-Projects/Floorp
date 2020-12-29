@@ -605,10 +605,12 @@ child:
     async UpdateFontList(SystemFontListEntry[] fontList);
 
     /**
-     * The shared font list has been reinitialized by the parent;
-     * child processes must discard and recreate their mappings to it.
+     * The shared font list has been updated by the parent, so child processes
+     * should globally reflow everything to pick up new character coverage etc.
+     * If aFullRebuild is true, child processes must discard and recreate
+     * their mappings to the shmem blocks, as those are no longer valid.
      */
-    async RebuildFontList();
+    async RebuildFontList(bool aFulLRebuild);
 
     /**
      * The shared font list has been modified, potentially adding matches
@@ -1431,6 +1433,23 @@ parent:
      * they depend on lazily-loaded font names.
      */
     sync InitOtherFamilyNames(uint32_t aGeneration, bool aDefer) returns (bool aLoaded);
+
+    /**
+     * Ask the parent to load all font character maps, as we need to do an
+     * exhaustive font-fallback search. This is done asynchronously; when it
+     * finishes, the parent will trigger global reflow so that font selection
+     * is re-done in all content, making use of the newly-loaded cmaps.
+     * Normally this will only happen once per browser session (unless the
+     * font list is rebuilt due to installation/removal of system fonts).
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aStartIndex
+     *   The family index to start from; the sender has determined that cmaps
+     *   up to this point are already loaded.
+     */
+    async StartCmapLoading(uint32_t aGeneration, uint32_t aStartIndex);
 
     /**
      * Ask the parent for a specific hyphenation resource (identified by URI)
