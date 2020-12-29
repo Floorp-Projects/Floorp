@@ -819,13 +819,13 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
   static bool IsPrintableChar(char16_t aChar);
 
   /**
-   * IsNormalCharInputtingEvent() checks whether aKeyEvent causes text input.
+   * IsNormalCharInputtingEvent() checks whether aNativeEvent causes text input.
    *
-   * @param aKeyEvent             A key event.
+   * @param aNativeEvent          A key event.
    * @return                      TRUE if the key event causes text input.
    *                              Otherwise, FALSE.
    */
-  static bool IsNormalCharInputtingEvent(const WidgetKeyboardEvent& aKeyEvent);
+  static bool IsNormalCharInputtingEvent(NSEvent* aNativeEvent);
 
   /**
    * IsModifierKey() checks whether the native keyCode is for a modifier key.

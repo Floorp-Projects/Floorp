@@ -424,13 +424,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent> {
     WriteParam(aMsg, aParam.mUniqueId);
     WriteParam(aMsg, aParam.mIsSynthesizedByTIP);
     WriteParam(aMsg, aParam.mMaybeSkippableInRemoteProcess);
-#ifdef XP_MACOSX
-    WriteParam(aMsg, aParam.mNativeKeyCode);
-    WriteParam(aMsg, aParam.mNativeModifierFlags);
-    WriteParam(aMsg, aParam.mNativeCharacters);
-    WriteParam(aMsg, aParam.mNativeCharactersIgnoringModifiers);
-    WriteParam(aMsg, aParam.mPluginTextEventString);
-#endif
 
     // An OS-specific native event might be attached in |mNativeKeyEvent|,  but
     // that cannot be copied across process boundaries.
@@ -462,13 +455,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent> {
         ReadParam(aMsg, aIter, &aResult->mUniqueId) &&
         ReadParam(aMsg, aIter, &aResult->mIsSynthesizedByTIP) &&
         ReadParam(aMsg, aIter, &aResult->mMaybeSkippableInRemoteProcess) &&
-#ifdef XP_MACOSX
-        ReadParam(aMsg, aIter, &aResult->mNativeKeyCode) &&
-        ReadParam(aMsg, aIter, &aResult->mNativeModifierFlags) &&
-        ReadParam(aMsg, aIter, &aResult->mNativeCharacters) &&
-        ReadParam(aMsg, aIter, &aResult->mNativeCharactersIgnoringModifiers) &&
-        ReadParam(aMsg, aIter, &aResult->mPluginTextEventString) &&
-#endif
         ReadParam(aMsg, aIter, &aResult->mEditCommandsForSingleLineEditor) &&
         ReadParam(aMsg, aIter, &aResult->mEditCommandsForMultiLineEditor) &&
         ReadParam(aMsg, aIter, &aResult->mEditCommandsForRichTextEditor) &&
