@@ -70,6 +70,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsCanvasFrame.h"
 
+#include "nsFieldSetFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsRange.h"
 #include "nsITextControlFrame.h"
@@ -10088,6 +10089,13 @@ void nsIFrame::GetFirstLeaf(nsIFrame** aFrame) {
 
 bool nsIFrame::IsFocusableDueToScrollFrame() {
   if (!IsScrollFrame()) {
+    if (nsFieldSetFrame* fieldset = do_QueryFrame(this)) {
+      // TODO: Do we have similar special-cases like this where we can have
+      // anonymous scrollable boxes hanging off a primary frame?
+      if (nsIFrame* inner = fieldset->GetInner()) {
+        return inner->IsFocusableDueToScrollFrame();
+      }
+    }
     return false;
   }
   if (!mContent->IsHTMLElement()) {
