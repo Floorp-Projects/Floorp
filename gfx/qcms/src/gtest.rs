@@ -549,7 +549,7 @@ mod test {
                 qcms_transform_release(self.transform)
             }
             self.transform = transform;
-            !(self.transform == null_mut())
+            self.transform != null_mut()
         }
 
         unsafe fn SetTransformForType(&mut self, ty: qcms_data_type) -> bool {
@@ -630,16 +630,16 @@ mod test {
 
         unsafe fn VerifyOutput(&self, buf: &[u8]) -> bool {
             match self.storage_type {
-                DATA_RGB_8 => return CmpRgbBuffer(buf, &self.output, self.pixels),
-                DATA_RGBA_8 => return CmpRgbaBuffer(buf, &self.output, self.pixels),
-                DATA_BGRA_8 => return CmpBgraBuffer(buf, &self.output, self.pixels),
+                DATA_RGB_8 => CmpRgbBuffer(buf, &self.output, self.pixels),
+                DATA_RGBA_8 => CmpRgbaBuffer(buf, &self.output, self.pixels),
+                DATA_BGRA_8 => CmpBgraBuffer(buf, &self.output, self.pixels),
                 _ => unreachable!("Unknown type!"),
             }
         }
 
         unsafe fn ProduceVerifyOutput(&mut self, trans_fn: transform_fn_t) -> bool {
             self.ProduceOutput(trans_fn);
-            return self.VerifyOutput(&self.reference);
+            self.VerifyOutput(&self.reference)
         }
 
         unsafe fn PrecacheOutput(&mut self) {
