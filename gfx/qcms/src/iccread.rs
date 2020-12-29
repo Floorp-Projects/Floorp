@@ -197,12 +197,12 @@ struct mem_source<'a> {
 pub type uInt8Number = u8;
 #[inline]
 fn uInt8Number_to_float(mut a: uInt8Number) -> f32 {
-    return a as i32 as f32 / 255.0;
+    a as i32 as f32 / 255.0
 }
 
 #[inline]
 fn uInt16Number_to_float(mut a: uInt16Number) -> f32 {
-    return a as i32 as f32 / 65535.0;
+    a as i32 as f32 / 65535.0
 }
 
 fn cpu_to_be32(mut v: u32) -> be32 {
@@ -227,41 +227,41 @@ fn read_u32(mut mem: &mut mem_source, mut offset: usize) -> u32 {
      * mem->size is guaranteed to be > 4 */
     if offset > mem.buf.len() - 4 {
         invalid_source(mem, "Invalid offset");
-        return 0;
+        0
     } else {
         let k = unsafe {
-            std::ptr::read_unaligned(mem.buf.as_ptr().offset(offset as isize) as *const be32)
+            std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be32)
         };
-        return be32_to_cpu(k);
+        be32_to_cpu(k)
     }
 }
 fn read_u16(mut mem: &mut mem_source, mut offset: usize) -> u16 {
     if offset > mem.buf.len() - 2 {
         invalid_source(mem, "Invalid offset");
-        return 0u16;
+        0u16
     } else {
         let k = unsafe {
-            std::ptr::read_unaligned(mem.buf.as_ptr().offset(offset as isize) as *const be16)
+            std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be16)
         };
-        return be16_to_cpu(k);
+        be16_to_cpu(k)
     }
 }
 fn read_u8(mut mem: &mut mem_source, mut offset: usize) -> u8 {
     if offset > mem.buf.len() - 1 {
         invalid_source(mem, "Invalid offset");
-        return 0u8;
+        0u8
     } else {
-        return unsafe { *(mem.buf.as_ptr().offset(offset as isize) as *mut u8) };
+        unsafe { *(mem.buf.as_ptr().add(offset) as *mut u8) }
     }
 }
 fn read_s15Fixed16Number(mut mem: &mut mem_source, mut offset: usize) -> s15Fixed16Number {
-    return read_u32(mem, offset) as s15Fixed16Number;
+    read_u32(mem, offset) as s15Fixed16Number
 }
 fn read_uInt8Number(mut mem: &mut mem_source, mut offset: usize) -> uInt8Number {
-    return read_u8(mem, offset);
+    read_u8(mem, offset)
 }
 fn read_uInt16Number(mut mem: &mut mem_source, mut offset: usize) -> uInt16Number {
-    return read_u16(mem, offset);
+    read_u16(mem, offset)
 }
 fn write_u32(mut mem: &mut [u8], mut offset: usize, mut value: u32) {
     if offset <= mem.len() - std::mem::size_of_val(&value) {
@@ -269,7 +269,7 @@ fn write_u32(mut mem: &mut [u8], mut offset: usize, mut value: u32) {
     }
     let mem = mem.as_mut_ptr();
     unsafe {
-        std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u32, cpu_to_be32(value));
+        std::ptr::write_unaligned(mem.add(offset) as *mut u32, cpu_to_be32(value));
     }
 }
 fn write_u16(mut mem: &mut [u8], mut offset: usize, mut value: u16) {
@@ -278,7 +278,7 @@ fn write_u16(mut mem: &mut [u8], mut offset: usize, mut value: u16) {
     }
     let mem = mem.as_mut_ptr();
     unsafe {
-        std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u16, cpu_to_be16(value));
+        std::ptr::write_unaligned(mem.add(offset) as *mut u16, cpu_to_be16(value));
     }
 }
 
@@ -461,10 +461,10 @@ pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut qcms_profile) -> bool 
     if profile.color_space != RGB_SIGNATURE {
         return false;
     }
-    if !profile.A2B0.is_none()
-        || !profile.B2A0.is_none()
-        || !profile.mAB.is_none()
-        || !profile.mBA.is_none()
+    if profile.A2B0.is_some()
+        || profile.B2A0.is_some()
+        || profile.mAB.is_some()
+        || profile.mBA.is_some()
     {
         return false;
     }
@@ -500,7 +500,7 @@ pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut qcms_profile) -> bool 
         {
             return true;
         }
-        i = i + 1
+        i += 1
     }
     if !cfg!(target_os = "macos") {
         negative = (rX < 0.)
@@ -526,7 +526,7 @@ pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut qcms_profile) -> bool 
         return true;
     }
     // All Good
-    return false;
+    false
 }
 
 const TAG_bXYZ: u32 = 0x6258595a;
@@ -581,14 +581,14 @@ fn read_tag_s15Fixed16ArrayType(
             matrix.m[(i as i32 / 3) as usize][(i as i32 % 3) as usize] = s15Fixed16Number_to_float(
                 read_s15Fixed16Number(src, (offset + 8 + (i as i32 * 4) as libc::c_uint) as usize),
             );
-            i = i + 1
+            i += 1
         }
         matrix.invalid = false
     } else {
         matrix.invalid = true;
         invalid_source(src, "missing sf32tag");
     }
-    return matrix;
+    matrix
 }
 fn read_tag_XYZType(mut src: &mut mem_source, mut index: &tag_index, mut tag_id: u32) -> XYZNumber {
     let mut num: XYZNumber = {
@@ -608,7 +608,7 @@ fn read_tag_XYZType(mut src: &mut mem_source, mut index: &tag_index, mut tag_id:
     } else {
         invalid_source(src, "missing xyztag");
     }
-    return num;
+    num
 }
 // Read the tag at a given offset rather then the tag_index.
 // This method is used when reading mAB tags where nested curveType are
@@ -639,7 +639,7 @@ fn read_curveType(
             table.push(read_u16(src, (offset + 12 + i * 2) as usize));
         }
         *len = 12 + count * 2;
-        return Some(Box::new(curveType::Curve(table)));
+        Some(Box::new(curveType::Curve(table)))
     } else {
         count = read_u16(src, (offset + 8) as usize) as u32;
         if count > 4 {
@@ -661,7 +661,7 @@ fn read_curveType(
                 invalid_source(src, "parametricCurve definition causes division by zero");
             }
         }
-        return Some(Box::new(curveType::Parametric(params)));
+        Some(Box::new(curveType::Parametric(params)))
     }
 }
 fn read_tag_curveType(
@@ -676,7 +676,7 @@ fn read_tag_curveType(
     } else {
         invalid_source(src, "missing curvetag");
     }
-    return None;
+    None
 }
 // arbitrary
 fn read_nested_curveType(
@@ -695,10 +695,10 @@ fn read_nested_curveType(
             invalid_source(src, "invalid nested curveType curve");
             break;
         } else {
-            channel_offset = channel_offset + tag_len;
+            channel_offset += tag_len;
             // 4 byte aligned
             if tag_len % 4 != 0 {
-                channel_offset = channel_offset + (4 - tag_len % 4)
+                channel_offset += 4 - tag_len % 4
             }
             i += 1
         }
@@ -745,36 +745,36 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
     // Convert offsets relative to the tag to relative to the profile
     // preserve zero for optional fields
     if a_curve_offset != 0 {
-        a_curve_offset = a_curve_offset + offset
+        a_curve_offset += offset
     }
     if clut_offset != 0 {
-        clut_offset = clut_offset + offset
+        clut_offset += offset
     }
     if m_curve_offset != 0 {
-        m_curve_offset = m_curve_offset + offset
+        m_curve_offset += offset
     }
     if matrix_offset != 0 {
-        matrix_offset = matrix_offset + offset
+        matrix_offset += offset
     }
     if b_curve_offset != 0 {
-        b_curve_offset = b_curve_offset + offset
+        b_curve_offset += offset
     }
     if clut_offset != 0 {
         debug_assert!(num_in_channels as i32 == 3);
         // clut_size can not overflow since lg(256^num_in_channels) = 24 bits.
         i = 0;
         while i < num_in_channels as libc::c_uint {
-            clut_size = clut_size * read_u8(src, (clut_offset + i) as usize) as libc::c_uint;
+            clut_size *= read_u8(src, (clut_offset + i) as usize) as libc::c_uint;
             if clut_size == 0 {
                 invalid_source(src, "bad clut_size");
             }
-            i = i + 1
+            i += 1
         }
     } else {
         clut_size = 0
     }
     // 24bits * 3 won't overflow either
-    clut_size = clut_size * num_out_channels as libc::c_uint;
+    clut_size *= num_out_channels as libc::c_uint;
     if clut_size > 500000 {
         return None;
     }
@@ -788,7 +788,7 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
             if lut.num_grid_points[i as usize] as i32 == 0 {
                 invalid_source(src, "bad grid_points");
             }
-            i = i + 1
+            i += 1
         }
     }
     // Reverse the processing of transformation elements for mBA type.
@@ -847,7 +847,7 @@ fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lu
     if !src.valid {
         return None;
     }
-    return Some(lut);
+    Some(lut)
 }
 fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutType>> {
     let mut offset: u32 = tag.offset;
@@ -982,8 +982,8 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
         }
     }
     Some(Box::new(lutType {
-        num_input_table_entries: num_input_table_entries,
-        num_output_table_entries: num_output_table_entries,
+        num_input_table_entries,
+        num_output_table_entries,
         num_input_channels: in_chan,
         num_output_channels: out_chan,
         num_clut_grid_points: grid_points,
@@ -1056,18 +1056,18 @@ fn build_sRGB_gamma_table(mut num_entries: i32) -> Vec<u16> {
         }
         table.push(output.floor() as u16);
     }
-    return table;
+    table
 }
 fn curve_from_table(mut table: &[u16]) -> Box<curveType> {
-    return Box::new(curveType::Curve(table.to_vec()));
+    Box::new(curveType::Curve(table.to_vec()))
 }
 fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
     if a > 255.0 + 255.0 / 256f32 {
-        return 0xffffu16;
+        0xffffu16
     } else if a < 0.0 {
-        return 0u16;
+        0u16
     } else {
-        return (a * 256.0 + 0.5).floor() as u16;
+        (a * 256.0 + 0.5).floor() as u16
     }
 }
 
@@ -1125,11 +1125,11 @@ fn white_point_from_temp(mut temp_K: i32) -> qcms_CIE_xyY {
     white_point.x = x;
     white_point.y = y;
     white_point.Y = 1.0f64;
-    return white_point;
+    white_point
 }
 #[no_mangle]
 pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
-    return white_point_from_temp(6504);
+    white_point_from_temp(6504)
 }
 
 impl qcms_profile {
@@ -1154,7 +1154,7 @@ impl qcms_profile {
         profile.rendering_intent = QCMS_INTENT_PERCEPTUAL;
         profile.color_space = RGB_SIGNATURE;
         profile.pcs = XYZ_TYPE;
-        return Some(profile);
+        Some(profile)
     }
     pub fn new_sRGB() -> Box<qcms_profile> {
         let Rec709Primaries = qcms_CIE_xyYTRIPLE {
@@ -1316,9 +1316,7 @@ impl qcms_profile {
                 }
             } else if profile.color_space == GRAY_SIGNATURE {
                 profile.grayTRC = read_tag_curveType(src, &index, TAG_kTRC);
-                if profile.grayTRC.is_none() {
-                    return None;
-                }
+                profile.grayTRC.as_ref()?;
             } else {
                 debug_assert!(false, "read_color_space protects against entering here");
                 return None;
@@ -1363,7 +1361,7 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     if mem.is_null() || size.is_null() {
         return;
     }
-    *mem = 0 as *mut libc::c_void;
+    *mem = std::ptr::null_mut::<libc::c_void>();
     *size = 0;
     /*
     	* total length = icc profile header(128) + tag count(4) +
@@ -1413,9 +1411,9 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
             tag_data_offset + 16,
             double_to_s15Fixed16Number(colorants.m[2][index as usize] as f64) as u32,
         );
-        tag_table_offset = tag_table_offset + 12;
-        tag_data_offset = tag_data_offset + 20;
-        index = index + 1
+        tag_table_offset += 12;
+        tag_data_offset += 20;
+        index += 1
     }
     // Part2 : write rTRC, gTRC and bTRC
     index = 0;
@@ -1429,9 +1427,9 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
         // reserved 4 bytes.
         write_u32(data, tag_data_offset + 8, 1); // count
         write_u16(data, tag_data_offset + 12, float_to_u8Fixed8Number(gamma));
-        tag_table_offset = tag_table_offset + 12;
-        tag_data_offset = tag_data_offset + 16;
-        index = index + 1
+        tag_table_offset += 12;
+        tag_data_offset += 16;
+        index += 1
     }
     /* Part3 : write profile header
      *
