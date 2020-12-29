@@ -1515,17 +1515,7 @@ void nsPluginInstanceOwner::HandleNoConsumedCompositionMessage(
     }
   }
 
-  NPEvent npevent;
   if (aPluginEvent->lParam & GCS_RESULTSTR) {
-    // GCS_RESULTSTR's default proc will generate WM_CHAR. So emulate it.
-    for (size_t i = 0; i < aCompositionEvent->mData.Length(); i++) {
-      WidgetPluginEvent charEvent(true, ePluginInputEvent, widget);
-      npevent.event = WM_CHAR;
-      npevent.wParam = aCompositionEvent->mData[i];
-      npevent.lParam = 0;
-      charEvent.mPluginEvent.Copy(npevent);
-      ProcessEvent(charEvent);
-    }
     return;
   }
   if (!mSentStartComposition) {

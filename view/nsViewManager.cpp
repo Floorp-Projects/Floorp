@@ -713,8 +713,7 @@ void nsViewManager::DispatchEvent(WidgetGUIEvent* aEvent, nsView* aView,
        // create and destroy widgets.
        mouseEvent->mMessage != eMouseExitFromWidget &&
        mouseEvent->mMessage != eMouseEnterIntoWidget) ||
-      aEvent->HasKeyEventMessage() || aEvent->HasIMEEventMessage() ||
-      aEvent->mMessage == ePluginInputEvent) {
+      aEvent->HasKeyEventMessage() || aEvent->HasIMEEventMessage()) {
     gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
 
@@ -731,7 +730,6 @@ void nsViewManager::DispatchEvent(WidgetGUIEvent* aEvent, nsView* aView,
   nsIFrame* frame = view->GetFrame();
   if (!frame && (dispatchUsingCoordinates || aEvent->HasKeyEventMessage() ||
                  aEvent->IsIMERelatedEvent() ||
-                 aEvent->IsNonRetargetedNativeEventDelivererForPlugin() ||
                  aEvent->HasPluginActivationEventMessage())) {
     while (view && !view->GetFrame()) {
       view = view->GetParent();

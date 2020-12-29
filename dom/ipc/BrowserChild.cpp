@@ -1904,14 +1904,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvPluginEvent(
-    const WidgetPluginEvent& aEvent) {
-  WidgetPluginEvent localEvent(aEvent);
-  localEvent.mWidget = mPuppetWidget;
-  DispatchWidgetEventViaAPZ(localEvent);
-  return IPC_OK();
-}
-
 void BrowserChild::RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
                                        const WidgetKeyboardEvent& aEvent,
                                        nsTArray<CommandInt>& aCommands) {

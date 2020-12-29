@@ -771,10 +771,6 @@ class WidgetEvent : public WidgetEventTime {
    * Returns true if the event is a content command event.
    */
   bool IsContentCommandEvent() const;
-  /**
-   * Returns true if the event is a native event deliverer event for plugin.
-   */
-  bool IsNativeEventDelivererForPlugin() const;
 
   /**
    * Returns true if the event mMessage is one of mouse events.
@@ -808,16 +804,6 @@ class WidgetEvent : public WidgetEventTime {
    * will be posted to the remote process later.
    */
   bool WillBeSentToRemoteProcess() const;
-  /**
-   * Returns true if the event is native event deliverer event for plugin and
-   * it should be retarted to focused document.
-   */
-  bool IsRetargetedNativeEventDelivererForPlugin() const;
-  /**
-   * Returns true if the event is native event deliverer event for plugin and
-   * it should NOT be retarted to focused document.
-   */
-  bool IsNonRetargetedNativeEventDelivererForPlugin() const;
   /**
    * Returns true if the event is related to IME handling.  It includes
    * IME events, query content events and selection events.
