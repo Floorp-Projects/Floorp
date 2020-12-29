@@ -316,9 +316,6 @@ NS_EVENT_MESSAGE(eEdgeUIStarted)
 NS_EVENT_MESSAGE(eEdgeUICanceled)
 NS_EVENT_MESSAGE(eEdgeUICompleted)
 
-// These are used to send native events to plugins.
-NS_EVENT_MESSAGE(ePluginInputEvent)
-
 // Events to manipulate selection (WidgetSelectionEvent)
 // Clear any previous selection and set the given range as the selection
 NS_EVENT_MESSAGE(eSetSelection)
