@@ -10199,7 +10199,7 @@
 
 - name: webgl.disable-fail-if-major-performance-caveat
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: webgl.disable-DOM-blit-uploads
