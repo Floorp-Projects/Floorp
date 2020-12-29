@@ -21,18 +21,11 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use ::libc;
-
 use crate::{
     iccread::{curveType, qcms_profile},
     s15Fixed16Number_to_float,
 };
 use crate::{matrix::matrix, transform::PRECACHE_OUTPUT_MAX, transform::PRECACHE_OUTPUT_SIZE};
-
-pub type int32_t = i32;
-
-pub type uint8_t = libc::c_uchar;
-pub type uint16_t = libc::c_ushort;
 
 //XXX: could use a bettername
 pub type uint16_fract_t = u16;
