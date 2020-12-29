@@ -219,15 +219,11 @@ pub(crate) fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec
         curveType::Parametric(params) => {
             compute_curve_gamma_table_type_parametric(&mut gamma_table, params)
         }
-        curveType::Curve(data) => {
-            if data.len() == 0 {
-                compute_curve_gamma_table_type0(&mut gamma_table);
-            } else if data.len() == 1 {
-                compute_curve_gamma_table_type1(&mut gamma_table, data[0]);
-            } else {
-                compute_curve_gamma_table_type2(&mut gamma_table, data);
-            }
-        }
+        curveType::Curve(data) => match data.len() {
+            0 => compute_curve_gamma_table_type0(&mut gamma_table),
+            1 => compute_curve_gamma_table_type1(&mut gamma_table, data[0]),
+            _ => compute_curve_gamma_table_type2(&mut gamma_table, data),
+        },
     }
 
     return Some(gamma_table);
@@ -418,24 +414,21 @@ pub(crate) fn compute_precache(
             compute_precache_lut(output, &inverted);
         }
         curveType::Curve(data) => {
-            if data.len() == 0 {
-                compute_precache_linear(output);
-            } else if data.len() == 1 {
-                compute_precache_pow(
-                    output,
-                    (1.0f64 / u8Fixed8Number_to_float(data[0]) as f64) as f32,
-                );
-            } else {
-                let mut inverted_size_0: i32 = data.len() as i32;
-                //XXX: the choice of a minimum of 256 here is not backed by any theory,
-                //     measurement or data, howeve r it is what lcms uses.
-                //     the maximum number we would need is 65535 because that's the
-                //     accuracy used for computing the pre cache table
-                if inverted_size_0 < 256 {
-                    inverted_size_0 = 256
-                } //XXX turn this conversion into a function
-                let mut inverted_0 = invert_lut(data, inverted_size_0);
-                compute_precache_lut(output, &inverted_0);
+            match data.len() {
+                0 => compute_precache_linear(output),
+                1 => compute_precache_pow(output, 1. / u8Fixed8Number_to_float(data[0])),
+                _ => {
+                    let mut inverted_size = data.len() as i32;
+                    //XXX: the choice of a minimum of 256 here is not backed by any theory,
+                    //     measurement or data, howeve r it is what lcms uses.
+                    //     the maximum number we would need is 65535 because that's the
+                    //     accuracy used for computing the pre cache table
+                    if inverted_size < 256 {
+                        inverted_size = 256
+                    } //XXX turn this conversion into a function
+                    let mut inverted = invert_lut(data, inverted_size);
+                    compute_precache_lut(output, &inverted);
+                }
             }
         }
     }
@@ -473,20 +466,22 @@ pub(crate) fn build_output_lut(mut trc: &curveType) -> Vec<u16> {
             return output;
         }
         curveType::Curve(data) => {
-            if data.len() == 0 {
-                return build_linear_table(4096);
-            } else if data.len() == 1 {
-                let mut gamma: f32 = (1.0f64 / u8Fixed8Number_to_float(data[0]) as f64) as f32;
-                return build_pow_table(gamma, 4096);
-            } else {
-                //XXX: the choice of a minimum of 256 here is not backed by any theory,
-                //     measurement or data, however it is what lcms uses.
-                let mut output_gamma_lut_length = data.len();
-                if output_gamma_lut_length < 256 {
-                    output_gamma_lut_length = 256
+            return match data.len() {
+                0 => build_linear_table(4096),
+                1 => {
+                    let mut gamma = 1. / u8Fixed8Number_to_float(data[0]);
+                    build_pow_table(gamma, 4096)
                 }
-                return invert_lut(data, output_gamma_lut_length as i32);
-            }
+                _ => {
+                    //XXX: the choice of a minimum of 256 here is not backed by any theory,
+                    //     measurement or data, however it is what lcms uses.
+                    let mut output_gamma_lut_length = data.len();
+                    if output_gamma_lut_length < 256 {
+                        output_gamma_lut_length = 256
+                    }
+                    invert_lut(data, output_gamma_lut_length as i32)
+                }
+            };
         }
     }
 }
