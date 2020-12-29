@@ -203,11 +203,11 @@ impl GrayFormat for GrayAlpha {
 #[inline]
 fn clamp_u8(mut v: f32) -> u8 {
     if v > 255. {
-        return 255;
+        255
     } else if v < 0. {
-        return 0;
+        0
     } else {
-        return (v + 0.5).floor() as u8;
+        (v + 0.5).floor() as u8
     }
 }
 
@@ -278,7 +278,7 @@ fn build_RGB_to_XYZ_transfer_matrix(
     result.m[2][1] = (coefs.v[1] as f64 * (1.0f64 - xg - yg)) as f32;
     result.m[2][2] = (coefs.v[2] as f64 * (1.0f64 - xb - yb)) as f32;
     result.invalid = primaries_invert.invalid;
-    return result;
+    result
 }
 /* CIE Illuminant D50 */
 const D50_XYZ: CIE_XYZ = CIE_XYZ {
@@ -297,7 +297,7 @@ fn xyY2XYZ(mut source: qcms_CIE_xyY) -> CIE_XYZ {
     dest.X = source.x / source.y * source.Y;
     dest.Y = source.Y;
     dest.Z = (1f64 - source.x - source.y) / source.y * source.Y;
-    return dest;
+    dest
 }
 /* from lcms: ComputeChromaticAdaption */
 // Compute chromatic adaption matrix using chad as cone matrix
@@ -340,7 +340,7 @@ fn compute_chromatic_adaption(
     cone.m[2][2] = cone_dest_rgb.v[2] / cone_source_rgb.v[2];
     cone.invalid = false;
     // Normalize
-    return matrix_multiply(chad_inv, matrix_multiply(cone, chad));
+    matrix_multiply(chad_inv, matrix_multiply(cone, chad))
 }
 /* from lcms: cmsAdaptionMatrix */
 // Returns the final chrmatic adaptation from illuminant FromIll to Illuminant ToIll
@@ -357,7 +357,7 @@ fn adaption_matrix(mut source_illumination: CIE_XYZ, mut target_illumination: CI
         };
         init
     };
-    return compute_chromatic_adaption(source_illumination, target_illumination, lam_rigg);
+    compute_chromatic_adaption(source_illumination, target_illumination, lam_rigg)
 }
 /* from lcms: cmsAdaptMatrixToD50 */
 fn adapt_matrix_to_D50(mut r: matrix, mut source_white_pt: qcms_CIE_xyY) -> matrix {
@@ -370,7 +370,7 @@ fn adapt_matrix_to_D50(mut r: matrix, mut source_white_pt: qcms_CIE_xyY) -> matr
     if Bradford.invalid {
         return matrix_invalid();
     }
-    return matrix_multiply(Bradford, r);
+    matrix_multiply(Bradford, r)
 }
 pub(crate) fn set_rgb_colorants(
     mut profile: &mut qcms_profile,
@@ -392,7 +392,7 @@ pub(crate) fn set_rgb_colorants(
     profile.blueColorant.X = double_to_s15Fixed16Number(colorants.m[0][2] as f64);
     profile.blueColorant.Y = double_to_s15Fixed16Number(colorants.m[1][2] as f64);
     profile.blueColorant.Z = double_to_s15Fixed16Number(colorants.m[2][2] as f64);
-    return true;
+    true
 }
 pub(crate) fn get_rgb_colorants(
     mut colorants: &mut matrix,
@@ -401,7 +401,7 @@ pub(crate) fn get_rgb_colorants(
 ) -> bool {
     *colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
     *colorants = adapt_matrix_to_D50(*colorants, white_point);
-    return if colorants.invalid { true } else { false };
+    colorants.invalid
 }
 /* Alpha is not corrected.
    A rationale for this is found in Alvy Ray's "Should Alpha Be Nonlinear If
@@ -446,14 +446,14 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
             linear as f64,
             &(*transform).output_gamma_lut_b.as_ref().unwrap(),
         );
-        *dest.offset(F::kRIndex as isize) = clamp_u8(out_device_r * 255f32);
-        *dest.offset(F::kGIndex as isize) = clamp_u8(out_device_g * 255f32);
-        *dest.offset(F::kBIndex as isize) = clamp_u8(out_device_b * 255f32);
+        *dest.add(F::kRIndex) = clamp_u8(out_device_r * 255f32);
+        *dest.add(F::kGIndex) = clamp_u8(out_device_g * 255f32);
+        *dest.add(F::kBIndex) = clamp_u8(out_device_b * 255f32);
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = alpha
+            *dest.add(F::kAIndex) = alpha
         }
         dest = dest.offset(components as isize);
-        i = i + 1
+        i += 1
     }
 }
 unsafe extern "C" fn qcms_transform_data_gray_out_lut(
@@ -528,14 +528,14 @@ unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F
         let mut linear: f32 = *input_gamma_table_gray.offset(device as isize);
         /* we could round here... */
         let mut gray: u16 = (linear * PRECACHE_OUTPUT_MAX as f32) as u16;
-        *dest.offset(F::kRIndex as isize) = (output_table_r).data[gray as usize];
-        *dest.offset(F::kGIndex as isize) = (output_table_g).data[gray as usize];
-        *dest.offset(F::kBIndex as isize) = (output_table_b).data[gray as usize];
+        *dest.add(F::kRIndex) = (output_table_r).data[gray as usize];
+        *dest.add(F::kGIndex) = (output_table_g).data[gray as usize];
+        *dest.add(F::kBIndex) = (output_table_b).data[gray as usize];
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = alpha
+            *dest.add(F::kAIndex) = alpha
         }
         dest = dest.offset(components as isize);
-        i = i + 1
+        i += 1
     }
 }
 unsafe extern "C" fn qcms_transform_data_gray_out_precache(
@@ -595,12 +595,12 @@ unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
     let mut mat: *const [f32; 4] = (*transform).matrix.as_ptr();
     let mut i: libc::c_uint = 0;
     while (i as usize) < length {
-        let mut device_r: libc::c_uchar = *src.offset(F::kRIndex as isize);
-        let mut device_g: libc::c_uchar = *src.offset(F::kGIndex as isize);
-        let mut device_b: libc::c_uchar = *src.offset(F::kBIndex as isize);
+        let mut device_r: libc::c_uchar = *src.add(F::kRIndex);
+        let mut device_g: libc::c_uchar = *src.add(F::kGIndex);
+        let mut device_b: libc::c_uchar = *src.add(F::kBIndex);
         let mut alpha: libc::c_uchar = 0;
         if F::kAIndex != 0xff {
-            alpha = *src.offset(F::kAIndex as isize)
+            alpha = *src.add(F::kAIndex)
         }
         src = src.offset(components as isize);
 
@@ -624,14 +624,14 @@ unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
         let mut r: u16 = (out_linear_r * PRECACHE_OUTPUT_MAX as f32) as u16;
         let mut g: u16 = (out_linear_g * PRECACHE_OUTPUT_MAX as f32) as u16;
         let mut b: u16 = (out_linear_b * PRECACHE_OUTPUT_MAX as f32) as u16;
-        *dest.offset(F::kRIndex as isize) = (output_table_r).data[r as usize];
-        *dest.offset(F::kGIndex as isize) = (output_table_g).data[g as usize];
-        *dest.offset(F::kBIndex as isize) = (output_table_b).data[b as usize];
+        *dest.add(F::kRIndex) = (output_table_r).data[r as usize];
+        *dest.add(F::kGIndex) = (output_table_g).data[g as usize];
+        *dest.add(F::kBIndex) = (output_table_b).data[b as usize];
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = alpha
+            *dest.add(F::kAIndex) = alpha
         }
         dest = dest.offset(components as isize);
-        i = i + 1
+        i += 1
     }
 }
 #[no_mangle]
@@ -719,7 +719,7 @@ static void qcms_transform_data_clut(const qcms_transform *transform, const unsi
 }
 */
 fn int_div_ceil(mut value: i32, mut div: i32) -> i32 {
-    return (value + div - 1) / div;
+    (value + div - 1) / div
 }
 // Using lcms' tetra interpolation algorithm.
 unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
@@ -754,12 +754,12 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
     let mut clut_b: f32;
     let mut i: libc::c_uint = 0;
     while (i as usize) < length {
-        let mut in_r: libc::c_uchar = *src.offset(F::kRIndex as isize);
-        let mut in_g: libc::c_uchar = *src.offset(F::kGIndex as isize);
-        let mut in_b: libc::c_uchar = *src.offset(F::kBIndex as isize);
+        let mut in_r: libc::c_uchar = *src.add(F::kRIndex);
+        let mut in_g: libc::c_uchar = *src.add(F::kGIndex);
+        let mut in_b: libc::c_uchar = *src.add(F::kBIndex);
         let mut in_a: libc::c_uchar = 0;
         if F::kAIndex != 0xff {
-            in_a = *src.offset(F::kAIndex as isize)
+            in_a = *src.add(F::kAIndex)
         }
         src = src.offset(components as isize);
         let mut linear_r: f32 = in_r as i32 as f32 / 255.0;
@@ -883,14 +883,14 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
         clut_r = c0_r + c1_r * rx + c2_r * ry + c3_r * rz;
         clut_g = c0_g + c1_g * rx + c2_g * ry + c3_g * rz;
         clut_b = c0_b + c1_b * rx + c2_b * ry + c3_b * rz;
-        *dest.offset(F::kRIndex as isize) = clamp_u8(clut_r * 255.0);
-        *dest.offset(F::kGIndex as isize) = clamp_u8(clut_g * 255.0);
-        *dest.offset(F::kBIndex as isize) = clamp_u8(clut_b * 255.0);
+        *dest.add(F::kRIndex) = clamp_u8(clut_r * 255.0);
+        *dest.add(F::kGIndex) = clamp_u8(clut_g * 255.0);
+        *dest.add(F::kBIndex) = clamp_u8(clut_b * 255.0);
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = in_a
+            *dest.add(F::kAIndex) = in_a
         }
         dest = dest.offset(components as isize);
-        i = i + 1
+        i += 1
     }
 }
 unsafe extern "C" fn qcms_transform_data_tetra_clut_rgb(
@@ -931,12 +931,12 @@ unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
     let input_gamma_table_g = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
     let input_gamma_table_b = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
     while (i as usize) < length {
-        let mut device_r: libc::c_uchar = *src.offset(F::kRIndex as isize);
-        let mut device_g: libc::c_uchar = *src.offset(F::kGIndex as isize);
-        let mut device_b: libc::c_uchar = *src.offset(F::kBIndex as isize);
+        let mut device_r: libc::c_uchar = *src.add(F::kRIndex);
+        let mut device_g: libc::c_uchar = *src.add(F::kGIndex);
+        let mut device_b: libc::c_uchar = *src.add(F::kBIndex);
         let mut alpha: libc::c_uchar = 0;
         if F::kAIndex != 0xff {
-            alpha = *src.offset(F::kAIndex as isize)
+            alpha = *src.add(F::kAIndex)
         }
         src = src.offset(components as isize);
 
@@ -968,14 +968,14 @@ unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
             out_linear_b as f64,
             (*transform).output_gamma_lut_b.as_ref().unwrap(),
         );
-        *dest.offset(F::kRIndex as isize) = clamp_u8(out_device_r * 255f32);
-        *dest.offset(F::kGIndex as isize) = clamp_u8(out_device_g * 255f32);
-        *dest.offset(F::kBIndex as isize) = clamp_u8(out_device_b * 255f32);
+        *dest.add(F::kRIndex) = clamp_u8(out_device_r * 255f32);
+        *dest.add(F::kGIndex) = clamp_u8(out_device_g * 255f32);
+        *dest.add(F::kBIndex) = clamp_u8(out_device_b * 255f32);
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = alpha
+            *dest.add(F::kAIndex) = alpha
         }
         dest = dest.offset(components as isize);
-        i = i + 1
+        i += 1
     }
 }
 #[no_mangle]
@@ -1052,10 +1052,10 @@ fn compute_whitepoint_adaption(mut X: f32, mut Y: f32, mut Z: f32) -> matrix {
         m: [[p, 0., 0.], [0., y, 0.], [0., 0., b]],
         invalid: false,
     };
-    return matrix_multiply(
+    matrix_multiply(
         bradford_matrix_inv,
         matrix_multiply(white_adaption, bradford_matrix),
-    );
+    )
 }
 #[no_mangle]
 pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_profile) {
@@ -1065,11 +1065,11 @@ pub extern "C" fn qcms_profile_precache_output_transform(mut profile: &mut qcms_
     }
     if qcms_supports_iccv4.load(Ordering::Relaxed) {
         /* don't precache since we will use the B2A LUT */
-        if !profile.B2A0.is_none() {
+        if profile.B2A0.is_some() {
             return;
         }
         /* don't precache since we will use the mBA LUT */
-        if !profile.mBA.is_none() {
+        if profile.mBA.is_some() {
             return;
         }
     }
@@ -1148,7 +1148,7 @@ fn transform_precacheLUT_float(
         return None;
     }
 
-    return Some(transform);
+    Some(transform)
 }
 
 pub fn transform_create(
@@ -1163,14 +1163,8 @@ pub fn transform_create(
         (DATA_RGB_8, DATA_RGB_8) => true,
         (DATA_RGBA_8, DATA_RGBA_8) => true,
         (DATA_BGRA_8, DATA_BGRA_8) => true,
-        (DATA_GRAY_8, out_type) => match out_type {
-            DATA_RGB_8 | DATA_RGBA_8 | DATA_BGRA_8 => true,
-            _ => false,
-        },
-        (DATA_GRAYA_8, out_type) => match out_type {
-            DATA_RGBA_8 | DATA_BGRA_8 => true,
-            _ => false,
-        },
+        (DATA_GRAY_8, out_type) => matches!(out_type, DATA_RGB_8 | DATA_RGBA_8 | DATA_BGRA_8),
+        (DATA_GRAYA_8, out_type) => matches!(out_type, DATA_RGBA_8 | DATA_BGRA_8),
         _ => false,
     };
     if !matching_format {
@@ -1179,19 +1173,19 @@ pub fn transform_create(
     }
     let mut transform: Box<qcms_transform> = Box::new(Default::default());
     let mut precache: bool = false;
-    if !out.output_table_r.is_none()
-        && !out.output_table_g.is_none()
-        && !out.output_table_b.is_none()
+    if out.output_table_r.is_some()
+        && out.output_table_g.is_some()
+        && out.output_table_b.is_some()
     {
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
     if qcms_supports_iccv4.load(Ordering::Relaxed) as i32 != 0
         && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
-        && (!in_0.A2B0.is_none()
-            || !out.B2A0.is_none()
-            || !in_0.mAB.is_none()
-            || !out.mAB.is_none())
+        && (in_0.A2B0.is_some()
+            || out.B2A0.is_some()
+            || in_0.mAB.is_some()
+            || out.mAB.is_some())
     {
         // Precache the transformation to a CLUT 33x33x33 in size.
         // 33 is used by many profiles and works well in pratice.
@@ -1301,9 +1295,9 @@ pub fn transform_create(
                 if result_0.m[i as usize][j as usize] != result_0.m[i as usize][j as usize] {
                     return None;
                 }
-                j = j + 1
+                j += 1
             }
-            i = i + 1
+            i += 1
         }
         /* store the results in column major mode
          * this makes doing the multiplication with sse easier */
@@ -1318,9 +1312,7 @@ pub fn transform_create(
         transform.matrix[2][2] = result_0.m[2][2]
     } else if in_0.color_space == GRAY_SIGNATURE {
         transform.input_gamma_table_gray = build_input_gamma_table(in_0.grayTRC.as_deref());
-        if transform.input_gamma_table_gray.is_none() {
-            return None;
-        }
+        transform.input_gamma_table_gray.as_ref()?;
         if precache {
             if out_type == DATA_RGB_8 {
                 transform.transform_fn = Some(qcms_transform_data_gray_out_precache)
@@ -1357,7 +1349,7 @@ pub fn transform_create(
         return None;
     }
     debug_assert!(transform.transform_fn.is_some());
-    return Some(transform);
+    Some(transform)
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data(

@@ -52,7 +52,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma(
     mut primaries: qcms_CIE_xyYTRIPLE,
     mut gamma: f32,
 ) -> *mut qcms_profile {
-    return qcms_profile_create_rgb_with_gamma_set(white_point, primaries, gamma, gamma, gamma);
+    qcms_profile_create_rgb_with_gamma_set(white_point, primaries, gamma, gamma, gamma)
 }
 
 #[no_mangle]
@@ -86,11 +86,11 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
 
 #[no_mangle]
 pub extern "C" fn qcms_profile_get_rendering_intent(profile: &qcms_profile) -> Intent {
-    return profile.rendering_intent;
+    profile.rendering_intent
 }
 #[no_mangle]
 pub extern "C" fn qcms_profile_get_color_space(profile: &qcms_profile) -> icColorSpaceSignature {
-    return profile.color_space;
+    profile.color_space
 }
 
 #[no_mangle]
@@ -107,7 +107,7 @@ unsafe extern "C" fn qcms_data_from_file(
     let mut read_length: usize;
     let mut length_be: be32 = 0;
     let mut data: *mut libc::c_void;
-    *mem = 0 as *mut libc::c_void;
+    *mem = std::ptr::null_mut::<libc::c_void>();
     *size = 0;
     if fread(
         &mut length_be as *mut be32 as *mut libc::c_void,
@@ -135,7 +135,7 @@ unsafe extern "C" fn qcms_data_from_file(
         (length as libc::c_ulong - ::std::mem::size_of::<be32>() as libc::c_ulong) as u32;
     /* read the rest profile */
     read_length = fread(
-        (data as *mut libc::c_uchar).offset(::std::mem::size_of::<be32>() as isize)
+        (data as *mut libc::c_uchar).add(::std::mem::size_of::<be32>())
             as *mut libc::c_void,
         1,
         remaining_length as usize,
@@ -154,26 +154,26 @@ unsafe extern "C" fn qcms_data_from_file(
 pub unsafe extern "C" fn qcms_profile_from_file(mut file: *mut FILE) -> *mut qcms_profile {
     let mut length: usize = 0;
     let mut profile: *mut qcms_profile;
-    let mut data: *mut libc::c_void = 0 as *mut libc::c_void;
+    let mut data: *mut libc::c_void = std::ptr::null_mut::<libc::c_void>();
     qcms_data_from_file(file, &mut data, &mut length);
     if data.is_null() || length == 0 {
-        return 0 as *mut qcms_profile;
+        return std::ptr::null_mut::<qcms_profile>();
     }
     profile = qcms_profile_from_memory(data, length);
     free(data);
-    return profile;
+    profile
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_from_path(
     mut path: *const libc::c_char,
 ) -> *mut qcms_profile {
-    let mut profile: *mut qcms_profile = 0 as *mut qcms_profile;
+    let mut profile: *mut qcms_profile = std::ptr::null_mut::<qcms_profile>();
     let mut file = fopen(path, b"rb\x00" as *const u8 as *const libc::c_char);
     if !file.is_null() {
         profile = qcms_profile_from_file(file);
         fclose(file);
     }
-    return profile;
+    profile
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_data_from_path(
@@ -181,7 +181,7 @@ pub unsafe extern "C" fn qcms_data_from_path(
     mut mem: *mut *mut libc::c_void,
     mut size: *mut usize,
 ) {
-    *mem = 0 as *mut libc::c_void;
+    *mem = std::ptr::null_mut::<libc::c_void>();
     *size = 0;
     let file = fopen(path, b"rb\x00" as *const u8 as *const libc::c_char);
     if !file.is_null() {

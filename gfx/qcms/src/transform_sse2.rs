@@ -68,13 +68,13 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
         return;
     }
     /* one pixel is handled outside of the loop */
-    length = length - 1;
+    length -= 1;
     /* setup for transforming 1st pixel */
-    vec_r = _mm_load_ss(&*igtbl_r.offset(*src.offset(F::kRIndex as isize) as isize));
-    vec_g = _mm_load_ss(&*igtbl_g.offset(*src.offset(F::kGIndex as isize) as isize));
-    vec_b = _mm_load_ss(&*igtbl_b.offset(*src.offset(F::kBIndex as isize) as isize));
+    vec_r = _mm_load_ss(&*igtbl_r.offset(*src.add(F::kRIndex) as isize));
+    vec_g = _mm_load_ss(&*igtbl_g.offset(*src.add(F::kGIndex) as isize));
+    vec_b = _mm_load_ss(&*igtbl_b.offset(*src.add(F::kBIndex) as isize));
     if F::kAIndex != 0xff {
-        alpha = *src.offset(F::kAIndex as isize)
+        alpha = *src.add(F::kAIndex)
     }
     src = src.offset(components as isize);
     let mut i: libc::c_uint = 0;
@@ -89,8 +89,8 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
         vec_b = _mm_mul_ps(vec_b, mat2);
         /* store alpha for this pixel; load alpha for next */
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = alpha;
-            alpha = *src.offset(F::kAIndex as isize)
+            *dest.add(F::kAIndex) = alpha;
+            alpha = *src.add(F::kAIndex)
         }
         /* crunch, crunch, crunch */
         vec_r = _mm_add_ps(vec_r, _mm_add_ps(vec_g, vec_b));
@@ -100,16 +100,16 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
         /* store calc'd output tables indices */
         _mm_store_si128(output as *mut __m128i, _mm_cvtps_epi32(result));
         /* load gamma values for next loop while store completes */
-        vec_r = _mm_load_ss(&*igtbl_r.offset(*src.offset(F::kRIndex as isize) as isize));
-        vec_g = _mm_load_ss(&*igtbl_g.offset(*src.offset(F::kGIndex as isize) as isize));
-        vec_b = _mm_load_ss(&*igtbl_b.offset(*src.offset(F::kBIndex as isize) as isize));
+        vec_r = _mm_load_ss(&*igtbl_r.offset(*src.add(F::kRIndex) as isize));
+        vec_g = _mm_load_ss(&*igtbl_g.offset(*src.add(F::kGIndex) as isize));
+        vec_b = _mm_load_ss(&*igtbl_b.offset(*src.add(F::kBIndex) as isize));
         src = src.offset(components as isize);
         /* use calc'd indices to output RGB values */
-        *dest.offset(F::kRIndex as isize) = *otdata_r.offset(*output.offset(0isize) as isize);
-        *dest.offset(F::kGIndex as isize) = *otdata_g.offset(*output.offset(1isize) as isize);
-        *dest.offset(F::kBIndex as isize) = *otdata_b.offset(*output.offset(2isize) as isize);
+        *dest.add(F::kRIndex) = *otdata_r.offset(*output.offset(0isize) as isize);
+        *dest.add(F::kGIndex) = *otdata_g.offset(*output.offset(1isize) as isize);
+        *dest.add(F::kBIndex) = *otdata_b.offset(*output.offset(2isize) as isize);
         dest = dest.offset(components as isize);
-        i = i + 1
+        i += 1
     }
     /* handle final (maybe only) pixel */
     vec_r = _mm_shuffle_ps(vec_r, vec_r, 0);
@@ -119,16 +119,16 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
     vec_g = _mm_mul_ps(vec_g, mat1);
     vec_b = _mm_mul_ps(vec_b, mat2);
     if F::kAIndex != 0xff {
-        *dest.offset(F::kAIndex as isize) = alpha
+        *dest.add(F::kAIndex) = alpha
     }
     vec_r = _mm_add_ps(vec_r, _mm_add_ps(vec_g, vec_b));
     vec_r = _mm_max_ps(min, vec_r);
     vec_r = _mm_min_ps(max, vec_r);
     result = _mm_mul_ps(vec_r, scale);
     _mm_store_si128(output as *mut __m128i, _mm_cvtps_epi32(result));
-    *dest.offset(F::kRIndex as isize) = *otdata_r.offset(*output.offset(0isize) as isize);
-    *dest.offset(F::kGIndex as isize) = *otdata_g.offset(*output.offset(1isize) as isize);
-    *dest.offset(F::kBIndex as isize) = *otdata_b.offset(*output.offset(2isize) as isize);
+    *dest.add(F::kRIndex) = *otdata_r.offset(*output.offset(0isize) as isize);
+    *dest.add(F::kGIndex) = *otdata_g.offset(*output.offset(1isize) as isize);
+    *dest.add(F::kBIndex) = *otdata_b.offset(*output.offset(2isize) as isize);
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_sse2(

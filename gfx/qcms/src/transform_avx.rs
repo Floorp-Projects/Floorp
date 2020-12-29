@@ -84,24 +84,24 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     /* If there are at least 2 pixels, then we can load their components into
     a single 256-bit register for processing. */
     if length > 1 {
-        vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.offset(F::kRIndex as isize) as isize));
-        vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.offset(F::kGIndex as isize) as isize));
-        vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.offset(F::kBIndex as isize) as isize));
+        vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.add(F::kRIndex) as isize));
+        vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.add(F::kGIndex) as isize));
+        vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.add(F::kBIndex) as isize));
         vec_r1 = _mm_broadcast_ss(
-            &*igtbl_r.offset(*src.offset((F::kRIndex + components as usize) as isize) as isize),
+            &*igtbl_r.offset(*src.add(F::kRIndex + components as usize) as isize),
         );
         vec_g1 = _mm_broadcast_ss(
-            &*igtbl_g.offset(*src.offset((F::kGIndex + components as usize) as isize) as isize),
+            &*igtbl_g.offset(*src.add(F::kGIndex + components as usize) as isize),
         );
         vec_b1 = _mm_broadcast_ss(
-            &*igtbl_b.offset(*src.offset((F::kBIndex + components as usize) as isize) as isize),
+            &*igtbl_b.offset(*src.add(F::kBIndex + components as usize) as isize),
         );
         vec_r = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_r0), vec_r1, 1);
         vec_g = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_g0), vec_g1, 1);
         vec_b = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_b0), vec_b1, 1);
         if F::kAIndex != 0xff {
-            alpha1 = *src.offset(F::kAIndex as isize);
-            alpha2 = *src.offset((F::kAIndex + components as usize) as isize)
+            alpha1 = *src.add(F::kAIndex);
+            alpha2 = *src.add(F::kAIndex + components as usize)
         }
     }
     /* If there are at least 4 pixels, then we can iterate and preload the
@@ -115,10 +115,10 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
         vec_b = _mm256_mul_ps(vec_b, mat2);
         /* store alpha for these pixels; load alpha for next two */
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = alpha1;
-            *dest.offset((F::kAIndex + components as usize) as isize) = alpha2;
-            alpha1 = *src.offset(F::kAIndex as isize);
-            alpha2 = *src.offset((F::kAIndex + components as usize) as isize)
+            *dest.add(F::kAIndex) = alpha1;
+            *dest.add(F::kAIndex + components as usize) = alpha2;
+            alpha1 = *src.add(F::kAIndex);
+            alpha2 = *src.add(F::kAIndex + components as usize)
         }
         /* crunch, crunch, crunch */
         vec_r = _mm256_add_ps(vec_r, _mm256_add_ps(vec_g, vec_b));
@@ -128,33 +128,33 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
         /* store calc'd output tables indices */
         _mm256_store_si256(output as *mut __m256i, _mm256_cvtps_epi32(result));
         /* load gamma values for next loop while store completes */
-        vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.offset(F::kRIndex as isize) as isize));
-        vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.offset(F::kGIndex as isize) as isize));
-        vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.offset(F::kBIndex as isize) as isize));
+        vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.add(F::kRIndex) as isize));
+        vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.add(F::kGIndex) as isize));
+        vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.add(F::kBIndex) as isize));
         vec_r1 = _mm_broadcast_ss(
-            &*igtbl_r.offset(*src.offset((F::kRIndex + components as usize) as isize) as isize),
+            &*igtbl_r.offset(*src.add(F::kRIndex + components as usize) as isize),
         );
         vec_g1 = _mm_broadcast_ss(
-            &*igtbl_g.offset(*src.offset((F::kGIndex + components as usize) as isize) as isize),
+            &*igtbl_g.offset(*src.add(F::kGIndex + components as usize) as isize),
         );
         vec_b1 = _mm_broadcast_ss(
-            &*igtbl_b.offset(*src.offset((F::kBIndex + components as usize) as isize) as isize),
+            &*igtbl_b.offset(*src.add(F::kBIndex + components as usize) as isize),
         );
         vec_r = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_r0), vec_r1, 1);
         vec_g = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_g0), vec_g1, 1);
         vec_b = _mm256_insertf128_ps(_mm256_castps128_ps256(vec_b0), vec_b1, 1);
         /* use calc'd indices to output RGB values */
-        *dest.offset(F::kRIndex as isize) = *otdata_r.offset(*output.offset(0isize) as isize);
-        *dest.offset(F::kGIndex as isize) = *otdata_g.offset(*output.offset(1isize) as isize);
-        *dest.offset(F::kBIndex as isize) = *otdata_b.offset(*output.offset(2isize) as isize);
-        *dest.offset((F::kRIndex + components as usize) as isize) =
+        *dest.add(F::kRIndex) = *otdata_r.offset(*output.offset(0isize) as isize);
+        *dest.add(F::kGIndex) = *otdata_g.offset(*output.offset(1isize) as isize);
+        *dest.add(F::kBIndex) = *otdata_b.offset(*output.offset(2isize) as isize);
+        *dest.add(F::kRIndex + components as usize) =
             *otdata_r.offset(*output.offset(4isize) as isize);
-        *dest.offset((F::kGIndex + components as usize) as isize) =
+        *dest.add(F::kGIndex + components as usize) =
             *otdata_g.offset(*output.offset(5isize) as isize);
-        *dest.offset((F::kBIndex + components as usize) as isize) =
+        *dest.add(F::kBIndex + components as usize) =
             *otdata_b.offset(*output.offset(6isize) as isize);
         dest = dest.offset((2 * components) as isize);
-        length = length - 2
+        length -= 2
     }
     /* There are 0-3 pixels remaining. If there are 2-3 remaining, then we know
     we have already populated the necessary registers to start the transform. */
@@ -163,46 +163,46 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
         vec_g = _mm256_mul_ps(vec_g, mat1);
         vec_b = _mm256_mul_ps(vec_b, mat2);
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = alpha1;
-            *dest.offset((F::kAIndex + components as usize) as isize) = alpha2
+            *dest.add(F::kAIndex) = alpha1;
+            *dest.add(F::kAIndex + components as usize) = alpha2
         }
         vec_r = _mm256_add_ps(vec_r, _mm256_add_ps(vec_g, vec_b));
         vec_r = _mm256_max_ps(min, vec_r);
         vec_r = _mm256_min_ps(max, vec_r);
         result = _mm256_mul_ps(vec_r, scale);
         _mm256_store_si256(output as *mut __m256i, _mm256_cvtps_epi32(result));
-        *dest.offset(F::kRIndex as isize) = *otdata_r.offset(*output.offset(0isize) as isize);
-        *dest.offset(F::kGIndex as isize) = *otdata_g.offset(*output.offset(1isize) as isize);
-        *dest.offset(F::kBIndex as isize) = *otdata_b.offset(*output.offset(2isize) as isize);
-        *dest.offset((F::kRIndex + components as usize) as isize) =
+        *dest.add(F::kRIndex) = *otdata_r.offset(*output.offset(0isize) as isize);
+        *dest.add(F::kGIndex) = *otdata_g.offset(*output.offset(1isize) as isize);
+        *dest.add(F::kBIndex) = *otdata_b.offset(*output.offset(2isize) as isize);
+        *dest.add(F::kRIndex + components as usize) =
             *otdata_r.offset(*output.offset(4isize) as isize);
-        *dest.offset((F::kGIndex + components as usize) as isize) =
+        *dest.add(F::kGIndex + components as usize) =
             *otdata_g.offset(*output.offset(5isize) as isize);
-        *dest.offset((F::kBIndex + components as usize) as isize) =
+        *dest.add(F::kBIndex + components as usize) =
             *otdata_b.offset(*output.offset(6isize) as isize);
         src = src.offset((2 * components) as isize);
         dest = dest.offset((2 * components) as isize);
-        length = length - 2
+        length -= 2
     }
     /* There may be 0-1 pixels remaining. */
     if length == 1 {
-        vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.offset(F::kRIndex as isize) as isize));
-        vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.offset(F::kGIndex as isize) as isize));
-        vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.offset(F::kBIndex as isize) as isize));
+        vec_r0 = _mm_broadcast_ss(&*igtbl_r.offset(*src.add(F::kRIndex) as isize));
+        vec_g0 = _mm_broadcast_ss(&*igtbl_g.offset(*src.add(F::kGIndex) as isize));
+        vec_b0 = _mm_broadcast_ss(&*igtbl_b.offset(*src.add(F::kBIndex) as isize));
         vec_r0 = _mm_mul_ps(vec_r0, _mm256_castps256_ps128(mat0));
         vec_g0 = _mm_mul_ps(vec_g0, _mm256_castps256_ps128(mat1));
         vec_b0 = _mm_mul_ps(vec_b0, _mm256_castps256_ps128(mat2));
         if F::kAIndex != 0xff {
-            *dest.offset(F::kAIndex as isize) = *src.offset(F::kAIndex as isize)
+            *dest.add(F::kAIndex) = *src.add(F::kAIndex)
         }
         vec_r0 = _mm_add_ps(vec_r0, _mm_add_ps(vec_g0, vec_b0));
         vec_r0 = _mm_max_ps(_mm256_castps256_ps128(min), vec_r0);
         vec_r0 = _mm_min_ps(_mm256_castps256_ps128(max), vec_r0);
         vec_r0 = _mm_mul_ps(vec_r0, _mm256_castps256_ps128(scale));
         _mm_store_si128(output as *mut __m128i, _mm_cvtps_epi32(vec_r0));
-        *dest.offset(F::kRIndex as isize) = *otdata_r.offset(*output.offset(0isize) as isize);
-        *dest.offset(F::kGIndex as isize) = *otdata_g.offset(*output.offset(1isize) as isize);
-        *dest.offset(F::kBIndex as isize) = *otdata_b.offset(*output.offset(2isize) as isize)
+        *dest.add(F::kRIndex) = *otdata_r.offset(*output.offset(0isize) as isize);
+        *dest.add(F::kGIndex) = *otdata_g.offset(*output.offset(1isize) as isize);
+        *dest.add(F::kBIndex) = *otdata_b.offset(*output.offset(2isize) as isize)
     };
 }
 #[no_mangle]

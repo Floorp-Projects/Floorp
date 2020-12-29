@@ -38,12 +38,12 @@ pub(crate) type s15Fixed16Number = i32;
  * of 1/1024 which happens for large values like 0x40000040 */
 #[inline]
 fn s15Fixed16Number_to_float(mut a: s15Fixed16Number) -> f32 {
-    return a as f32 / 65536.0;
+    a as f32 / 65536.0
 }
 
 #[inline]
 fn double_to_s15Fixed16Number(mut v: f64) -> s15Fixed16Number {
-    return (v * 65536f64) as i32;
+    (v * 65536f64) as i32
 }
 
 pub mod c_bindings;
