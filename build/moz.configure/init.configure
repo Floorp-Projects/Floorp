@@ -873,7 +873,7 @@ def real_host(value, shell):
     try:
         return split_triplet(host)
     except ValueError as e:
-        die(e.message)
+        die(e)
 
 
 host = help_host_target | real_host
@@ -923,7 +923,7 @@ def real_target(value, host, shell, project, application):
     try:
         return split_triplet(config_sub(shell, target))
     except ValueError as e:
-        die(e.message)
+        die(e)
 
 
 target = help_host_target | real_target
