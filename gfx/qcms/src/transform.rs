@@ -208,7 +208,7 @@ fn clamp_u8(mut v: f32) -> u8 {
         return 0;
     } else {
         return (v + 0.5).floor() as u8;
-    };
+    }
 }
 
 // Build a White point, primary chromas transfer matrix from RGB to CIE XYZ
