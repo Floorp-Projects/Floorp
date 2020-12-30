@@ -2298,7 +2298,7 @@ void gfxFcPlatformFontList::CheckFontUpdates(nsITimer* aTimer, void* aThis) {
     pfl->UpdateFontList();
     pfl->ForceGlobalReflow();
 
-    mozilla::dom::ContentParent::NotifyUpdatedFonts();
+    mozilla::dom::ContentParent::NotifyUpdatedFonts(true);
   }
 }
 

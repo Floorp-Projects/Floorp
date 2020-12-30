@@ -1,3 +1,7 @@
+# Font-matching reftests may fail intermittently/transiently due to asynch fallback,
+# so we disable the async mechanism for this directory.
+defaults pref(gfx.font_rendering.fallback.async,false)
+
 == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
 
 # tests for bug 1394311 (case-insensitive lang tag processing)
