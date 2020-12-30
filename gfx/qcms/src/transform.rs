@@ -1173,19 +1173,14 @@ pub fn transform_create(
     }
     let mut transform: Box<qcms_transform> = Box::new(Default::default());
     let mut precache: bool = false;
-    if out.output_table_r.is_some()
-        && out.output_table_g.is_some()
-        && out.output_table_b.is_some()
+    if out.output_table_r.is_some() && out.output_table_g.is_some() && out.output_table_b.is_some()
     {
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
     if qcms_supports_iccv4.load(Ordering::Relaxed) as i32 != 0
         && (in_type == DATA_RGB_8 || in_type == DATA_RGBA_8 || in_type == DATA_BGRA_8)
-        && (in_0.A2B0.is_some()
-            || out.B2A0.is_some()
-            || in_0.mAB.is_some()
-            || out.mAB.is_some())
+        && (in_0.A2B0.is_some() || out.B2A0.is_some() || in_0.mAB.is_some() || out.mAB.is_some())
     {
         // Precache the transformation to a CLUT 33x33x33 in size.
         // 33 is used by many profiles and works well in pratice.
