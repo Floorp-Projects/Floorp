@@ -27,7 +27,7 @@ use std::{
 };
 
 use crate::transform::{precache_output, set_rgb_colorants};
-use crate::{matrix::matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
+use crate::{matrix::Matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
 
 pub static qcms_supports_iccv4: AtomicBool = AtomicBool::new(false);
 
@@ -66,7 +66,7 @@ pub const LAB_SIGNATURE: u32 = 0x4C616220;
 
 #[repr(C)]
 #[derive(Default)]
-pub struct qcms_profile {
+pub struct Profile {
     pub(crate) class_type: u32,
     pub(crate) color_space: u32,
     pub(crate) pcs: u32,
@@ -82,7 +82,7 @@ pub struct qcms_profile {
     pub(crate) B2A0: Option<Box<lutType>>,
     pub(crate) mAB: Option<Box<lutmABType>>,
     pub(crate) mBA: Option<Box<lutmABType>>,
-    pub(crate) chromaticAdaption: matrix,
+    pub(crate) chromaticAdaption: Matrix,
     pub(crate) output_table_r: Option<Arc<precache_output>>,
     pub(crate) output_table_g: Option<Arc<precache_output>>,
     pub(crate) output_table_b: Option<Arc<precache_output>>,
@@ -308,7 +308,7 @@ const COLOR_SPACE_PROFILE: u32 = 0x73706163; // 'spac'
 const ABSTRACT_PROFILE: u32 = 0x61627374; // 'abst'
 const NAMED_COLOR_PROFILE: u32 = 0x6e6d636c; // 'nmcl'
 
-fn read_class_signature(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
+fn read_class_signature(mut profile: &mut Profile, mut mem: &mut mem_source) {
     profile.class_type = read_u32(mem, 12);
     match profile.class_type {
         DISPLAY_DEVICE_PROFILE
@@ -320,7 +320,7 @@ fn read_class_signature(mut profile: &mut qcms_profile, mut mem: &mut mem_source
         }
     };
 }
-fn read_color_space(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
+fn read_color_space(mut profile: &mut Profile, mut mem: &mut mem_source) {
     profile.color_space = read_u32(mem, 16);
     match profile.color_space {
         RGB_SIGNATURE | GRAY_SIGNATURE => {}
@@ -329,7 +329,7 @@ fn read_color_space(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
         }
     };
 }
-fn read_pcs(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
+fn read_pcs(mut profile: &mut Profile, mut mem: &mut mem_source) {
     profile.pcs = read_u32(mem, 20);
     match profile.pcs {
         XYZ_SIGNATURE | LAB_SIGNATURE => {}
@@ -338,7 +338,7 @@ fn read_pcs(mut profile: &mut qcms_profile, mut mem: &mut mem_source) {
         }
     };
 }
-fn read_tag_table(mut profile: &mut qcms_profile, mut mem: &mut mem_source) -> Vec<tag> {
+fn read_tag_table(mut profile: &mut Profile, mut mem: &mut mem_source) -> Vec<tag> {
     let count = read_u32(mem, 128);
     if count > MAX_TAG_COUNT {
         invalid_source(mem, "max number of tags exceeded");
@@ -432,7 +432,7 @@ authorization from SunSoft Inc.
 // true if the profile looks bogus and should probably be
 // ignored.
 #[no_mangle]
-pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut qcms_profile) -> bool {
+pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut Profile) -> bool {
     let mut sum: [f32; 3] = [0.; 3];
     let mut target: [f32; 3] = [0.; 3];
     let mut tolerance: [f32; 3] = [0.; 3];
@@ -552,9 +552,9 @@ fn read_tag_s15Fixed16ArrayType(
     mut src: &mut mem_source,
     mut index: &tag_index,
     mut tag_id: u32,
-) -> matrix {
+) -> Matrix {
     let mut tag = find_tag(index, tag_id);
-    let mut matrix: matrix = matrix {
+    let mut matrix: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -991,7 +991,7 @@ fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutTy
         output_table,
     }))
 }
-fn read_rendering_intent(mut profile: &mut qcms_profile, mut src: &mut mem_source) {
+fn read_rendering_intent(mut profile: &mut Profile, mut src: &mut mem_source) {
     let intent = read_u32(src, 64);
     profile.rendering_intent = match intent {
         x if x == QCMS_INTENT_PERCEPTUAL as u32 => QCMS_INTENT_PERCEPTUAL,
@@ -1004,8 +1004,8 @@ fn read_rendering_intent(mut profile: &mut qcms_profile, mut src: &mut mem_sourc
         }
     };
 }
-fn profile_create() -> Box<qcms_profile> {
-    Box::new(qcms_profile::default())
+fn profile_create() -> Box<Profile> {
+    Box::new(Profile::default())
 }
 /* build sRGB gamma table */
 /* based on cmsBuildParametricGamma() */
@@ -1122,7 +1122,7 @@ pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
     white_point_from_temp(6504)
 }
 
-impl qcms_profile {
+impl Profile {
     //XXX: it would be nice if we had a way of ensuring
     // everything in a profile was initialized regardless of how it was created
     //XXX: should this also be taking a black_point?
@@ -1131,7 +1131,7 @@ impl qcms_profile {
         mut white_point: qcms_CIE_xyY,
         mut primaries: qcms_CIE_xyYTRIPLE,
         table: &[u16],
-    ) -> Option<Box<qcms_profile>> {
+    ) -> Option<Box<Profile>> {
         let mut profile = profile_create();
         //XXX: should store the whitepoint
         if !set_rgb_colorants(&mut profile, white_point, primaries) {
@@ -1146,7 +1146,7 @@ impl qcms_profile {
         profile.pcs = XYZ_TYPE;
         Some(profile)
     }
-    pub fn new_sRGB() -> Box<qcms_profile> {
+    pub fn new_sRGB() -> Box<Profile> {
         let Rec709Primaries = qcms_CIE_xyYTRIPLE {
             red: {
                 qcms_CIE_xyY {
@@ -1173,10 +1173,10 @@ impl qcms_profile {
         let D65 = qcms_white_point_sRGB();
         let table = build_sRGB_gamma_table(1024);
 
-        qcms_profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap()
+        Profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap()
     }
 
-    pub fn new_gray_with_gamma(gamma: f32) -> Box<qcms_profile> {
+    pub fn new_gray_with_gamma(gamma: f32) -> Box<Profile> {
         let mut profile = profile_create();
 
         profile.grayTRC = Some(curve_from_gamma(gamma));
@@ -1193,7 +1193,7 @@ impl qcms_profile {
         mut redGamma: f32,
         mut greenGamma: f32,
         mut blueGamma: f32,
-    ) -> Option<Box<qcms_profile>> {
+    ) -> Option<Box<Profile>> {
         let mut profile = profile_create();
 
         //XXX: should store the whitepoint
@@ -1210,7 +1210,7 @@ impl qcms_profile {
         Some(profile)
     }
 
-    pub fn new_from_slice(mem: &[u8]) -> Option<Box<qcms_profile>> {
+    pub fn new_from_slice(mem: &[u8]) -> Option<Box<Profile>> {
         let mut length: u32;
         let mut source: mem_source = mem_source {
             buf: mem,

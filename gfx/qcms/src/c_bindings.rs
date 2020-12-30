@@ -5,7 +5,7 @@ use libc::{fclose, fopen, fread, free, malloc, memset, FILE};
 use crate::{
     double_to_s15Fixed16Number,
     iccread::*,
-    matrix::matrix,
+    matrix::Matrix,
     transform::get_rgb_colorants,
     transform::qcms_data_type,
     transform::{qcms_transform, transform_create},
@@ -13,8 +13,8 @@ use crate::{
 };
 
 #[no_mangle]
-pub extern "C" fn qcms_profile_sRGB() -> *mut qcms_profile {
-    let profile = qcms_profile::new_sRGB();
+pub extern "C" fn qcms_profile_sRGB() -> *mut Profile {
+    let profile = Profile::new_sRGB();
     Box::into_raw(profile)
 }
 
@@ -29,14 +29,9 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
     mut redGamma: f32,
     mut greenGamma: f32,
     mut blueGamma: f32,
-) -> *mut qcms_profile {
-    let profile = qcms_profile::new_rgb_with_gamma_set(
-        white_point,
-        primaries,
-        redGamma,
-        greenGamma,
-        blueGamma,
-    );
+) -> *mut Profile {
+    let profile =
+        Profile::new_rgb_with_gamma_set(white_point, primaries, redGamma, greenGamma, blueGamma);
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -44,8 +39,8 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut qcms_profile {
-    let profile = qcms_profile::new_gray_with_gamma(gamma);
+pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut Profile {
+    let profile = Profile::new_gray_with_gamma(gamma);
     Box::into_raw(profile)
 }
 
@@ -54,7 +49,7 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma(
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
     mut gamma: f32,
-) -> *mut qcms_profile {
+) -> *mut Profile {
     qcms_profile_create_rgb_with_gamma_set(white_point, primaries, gamma, gamma, gamma)
 }
 
@@ -64,9 +59,9 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
     mut primaries: qcms_CIE_xyYTRIPLE,
     mut table: *const u16,
     mut num_entries: i32,
-) -> *mut qcms_profile {
+) -> *mut Profile {
     let table = slice::from_raw_parts(table, num_entries as usize);
-    let profile = qcms_profile::new_rgb_with_table(white_point, primaries, table);
+    let profile = Profile::new_rgb_with_table(white_point, primaries, table);
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -78,9 +73,9 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
 pub unsafe extern "C" fn qcms_profile_from_memory(
     mut mem: *const libc::c_void,
     mut size: usize,
-) -> *mut qcms_profile {
+) -> *mut Profile {
     let mem = slice::from_raw_parts(mem as *const libc::c_uchar, size);
-    let profile = qcms_profile::new_from_slice(mem);
+    let profile = Profile::new_from_slice(mem);
     match profile {
         Some(profile) => Box::into_raw(profile),
         None => null_mut(),
@@ -88,16 +83,16 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
 }
 
 #[no_mangle]
-pub extern "C" fn qcms_profile_get_rendering_intent(profile: &qcms_profile) -> Intent {
+pub extern "C" fn qcms_profile_get_rendering_intent(profile: &Profile) -> Intent {
     profile.rendering_intent
 }
 #[no_mangle]
-pub extern "C" fn qcms_profile_get_color_space(profile: &qcms_profile) -> icColorSpaceSignature {
+pub extern "C" fn qcms_profile_get_color_space(profile: &Profile) -> icColorSpaceSignature {
     profile.color_space
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_release(mut profile: *mut qcms_profile) {
+pub unsafe extern "C" fn qcms_profile_release(mut profile: *mut Profile) {
     drop(Box::from_raw(profile));
 }
 unsafe extern "C" fn qcms_data_from_file(
@@ -153,23 +148,21 @@ unsafe extern "C" fn qcms_data_from_file(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_from_file(mut file: *mut FILE) -> *mut qcms_profile {
+pub unsafe extern "C" fn qcms_profile_from_file(mut file: *mut FILE) -> *mut Profile {
     let mut length: usize = 0;
-    let mut profile: *mut qcms_profile;
+    let mut profile: *mut Profile;
     let mut data: *mut libc::c_void = std::ptr::null_mut::<libc::c_void>();
     qcms_data_from_file(file, &mut data, &mut length);
     if data.is_null() || length == 0 {
-        return std::ptr::null_mut::<qcms_profile>();
+        return std::ptr::null_mut::<Profile>();
     }
     profile = qcms_profile_from_memory(data, length);
     free(data);
     profile
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_profile_from_path(
-    mut path: *const libc::c_char,
-) -> *mut qcms_profile {
-    let mut profile: *mut qcms_profile = std::ptr::null_mut::<qcms_profile>();
+pub unsafe extern "C" fn qcms_profile_from_path(mut path: *const libc::c_char) -> *mut Profile {
+    let mut profile: *mut Profile = std::ptr::null_mut::<Profile>();
     let mut file = fopen(path, b"rb\x00" as *const u8 as *const libc::c_char);
     if !file.is_null() {
         profile = qcms_profile_from_file(file);
@@ -225,9 +218,9 @@ pub unsafe extern "C" fn qcms_data_from_unicode_path(
 
 #[no_mangle]
 pub extern "C" fn qcms_transform_create(
-    mut in_0: &qcms_profile,
+    mut in_0: &Profile,
     mut in_type: qcms_data_type,
-    mut out: &qcms_profile,
+    mut out: &Profile,
     mut out_type: qcms_data_type,
     mut intent: Intent,
 ) -> *mut qcms_transform {
@@ -253,7 +246,7 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     let mut tag_table_offset: usize;
     let mut tag_data_offset: usize;
     let mut data: *mut libc::c_void;
-    let mut colorants: matrix = matrix {
+    let mut colorants: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
@@ -364,8 +357,8 @@ pub unsafe extern "C" fn qcms_transform_data(
     );
 }
 
-pub use crate::iccread::qcms_profile;
 pub use crate::iccread::qcms_profile_is_bogus;
+pub use crate::iccread::Profile as qcms_profile;
 pub use crate::iccread::{icSigGrayData, icSigRgbData};
 pub use crate::transform::{
     qcms_enable_iccv4, qcms_profile_precache_output_transform, qcms_transform_release,
